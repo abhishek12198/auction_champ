@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <template id="template_tournament_details_report" name="Tournament Details Report">
+    <t t-name="module_name.template_tournament_details_report">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&amp;display=swap');
+
+            .container {
+                width: 100%;
+                margin: 0 auto;
+                padding: 20px;
+                font-family: 'Roboto', sans-serif;
+                box-sizing: border-box;
+            }
+
+            .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 2px solid #ddd;
+                padding-bottom: 10px;
+                margin-bottom: 20px;
+            }
+
+            .tournament-logo {
+                max-height: 80px;
+            }
+
+            .tournament-name {
+                font-size: 24px;
+                font-weight: 700;
+                color: #333;
+                text-align: center;
+                flex: 1;
+            }
+
+            .square-box {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border: 2px solid #ddd;
+                padding: 20px;
+                border-radius: 8px;
+                background-color: #f9f9f9;
+            }
+
+            .team-logo, .icon-player {
+                max-height: 150px;
+                max-width: 150px;
+                border-radius: 8px;
+            }
+
+            .team-logo {
+                margin-right: 20px;
+            }
+        </style>
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <div class="page">
+                        <!-- Header with Tournament Logo and Name -->
+                        <div class="header">
+                            <img t-att-src="image_data_uri(docs.tournament_id.logo)" alt="Tournament Logo" class="tournament-logo" style="width: 40px; height:40px;"/>
+                            <div class="tournament-name">
+                                <t t-esc="docs.name"/>
+                            </div>
+                        </div>
+
+                        <!-- Square Box with Team Logo and Icon Player Photo -->
+                        <div class="square-box">
+                            <img t-att-src="image_data_uri(docs.logo)" alt="Team Logo" class="team-logo" style="width: 40px; height:40px;"/>
+                            <img t-att-src="image_data_uri(docs.key_player_ids.photo)" alt="Icon Player Photo" class="icon-player" style="width: 40px; height:40px;"/>
+                        </div>
+                </div>
+            </t>
+        </t>
+    </t>
+</template>
+
+
+</odoo>

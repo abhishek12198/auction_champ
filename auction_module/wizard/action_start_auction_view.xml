@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_auction_start_auction_form" model="ir.ui.view">
+            <field name="name">auction.start.auction.form</field>
+            <field name="model">auction.start.auction</field>
+            <field name="arch" type="xml">
+                <form string="Auction">
+                    <group col="4">
+                            <field name="max_points" string="Max Points"/>
+                            <field name="max_players" string="Max no of players"/>
+                            <field name="base_point"/>
+                            <field name="max_limited" widget="radio"/>
+                            <field name="max_point_player" attrs="{'required': [('max_limited', '=', 'yes')],'invisible': [('max_limited', '!=', 'yes')]}"/>
+                    </group>
+                    <notebook>
+                        <page string="Teams">
+                            <field name="team_ids">
+                                <kanban class="o_kanban_mobile" create="0" edit="0">
+                                    <field name="name"/>
+                                    <field name="logo"/>
+                                    <field name="tournament_id"/>
+                                    <field name="manager"/>
+                                    <field name="key_player_ids"/>
+                                    <field name="id"/>
+                                    <templates>
+                                        <t t-name="kanban-box">
+                                            <div class="oe_kanban_global_click o_kanban_record">
+                                                <div class="o_kanban_image">
+                                                    <img alt="Avatar" t-att-src="kanban_image('auction.team', 'logo', record.id.raw_value)"/>
+                                                </div>
+
+                                                <div class="o_kanban_details">
+                                                    <strong t-esc="record.name.raw_value"/>
+
+                                                    <div t-if="record.manager">
+                                                        <span> Manager: </span>
+                                                        <field name="manager"/>
+                                                    </div>
+                                                    <div t-if="record.key_player_ids">
+                                                        <span> Icon Player: </span>
+                                                        <field name="key_player_ids" widget="many2many_tags"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </templates>
+                                </kanban>
+                            </field>
+                        </page>
+                    </notebook>
+                    <footer>
+                        <button string="Apply" type="object"  class="btn-primary" name="button_start_auction" confirm="This will start auction process, click Ok to continue"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_auction_start_auction" model="ir.actions.act_window">
+            <field name="name">Set Auction Rules</field>
+            <field name="res_model">auction.start.auction</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+
+        </record>
+
+    </data>
+</odoo>

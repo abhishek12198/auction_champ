@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="player_template_new" name="Player Auction">
+    <html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Cricket Auction Player Display</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .player-card {
+            display: flex;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 90vw; /* Adjusts width to 90% of the viewport */
+            max-width: 1200px; /* Limits max width for large screens */
+            height: 50vh; /* Adjusts height to 50% of the viewport */
+        }
+        .player-photo {
+            width: 40%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .player-info {
+            width: 60%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .player-info h2 {
+            font-size: 3vw; /* Makes font size responsive */
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .player-info p {
+            font-size: 2vw; /* Responsive font size */
+            margin: 5px 0;
+            color: #555;
+        }
+        .player-info .role {
+            color: #1e90ff;
+            font-weight: bold;
+        }
+        .contact {
+            margin-top: 20px;
+            font-size: 1.8vw;
+            color: #777;
+        }
+        @media (max-width: 768px) {
+            .player-card {
+                flex-direction: column;
+                height: auto;
+            }
+            .player-photo {
+                width: 100%;
+                height: 250px;
+            }
+            .player-info {
+                width: 100%;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="player-card">
+    <img t-att-src="image_data_uri(player.photo)" alt="Player Image" class="player-image"/>
+    <div class="player-info">
+        <h2>Player Name</h2>
+        <p class="role">Player Role: All-rounder</p>
+        <p>Batting Style: Left-hand Bat</p>
+        <p>Bowling Style: Left-arm Fast</p>
+        <p class="contact">Contact: 987-654-3210</p>
+    </div>
+</div>
+
+</body>
+</html>
+</template>
+
+</odoo>

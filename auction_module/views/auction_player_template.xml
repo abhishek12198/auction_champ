@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="player_template" name="Player Auction">
+        <html lang="en">
+            <head>
+                <meta charset="UTF-8"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+                <title>Player View</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                        background-image: url('/auction_module/static/src/background/bgm_5.jpg');
+                        background-repeat: no-repeat;
+                        background-size: cover;
+                        background-position: center;
+                        height: auto;
+                    }
+                    .team-logo {
+                        width: 80px;
+                        height: 80px;
+                        margin-right: 10px;
+                    }
+                    .player-card {
+                        width: 1000px;
+                        height: 1000px;
+                        border-radius: 5px;
+                        padding: 20px;
+                        margin: 20px auto;
+                        text-align: center;
+                    }
+                    .player-image {
+                        width: 500px;
+                        height: 800px;
+                        margin-bottom: 10px;
+                        object-fit: contain;
+                    }
+                    .left-watermark {
+                        width: 100px;
+                        margin-left: 10px;
+                        margin-bottom: 10px;
+                    }
+                    .button {
+                        display: inline-block;
+                        padding: 10px 20px;
+                        margin: 5px;
+                        border: none;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        background-color: #0779DE;
+                        color: white;
+                        font-weight: bold;
+                        text-transform: uppercase;
+                    }
+                    .button:hover {
+                        background-color: #055bb5;
+                    }
+                    .badge {
+                        display: inline-block;
+                        padding: 0.5em 1em;
+                        font-size: 0.995rem;
+                        font-weight: 500;
+                        line-height: 1;
+                        color: #fff;
+                        text-align: center;
+                        white-space: nowrap;
+                        vertical-align: baseline;
+                        border-radius: 12px;
+                        margin-right: 5px;
+                    }
+                    .badge-primary {
+                        background-color: #007bff;
+                    }
+                    .badge-success {
+                        background-color: #28a745;
+                    }
+                    .badge-warning {
+                        background-color: #ffc107;
+                        color: #212529;
+                    }
+                    .reset {
+                        background-color: #1C6FB4;
+                        color: white;
+                    }
+                    .responsive-img {
+                        max-width: 100%;
+                        height: auto;
+                    }
+                    p {
+                        font-family: Arial, sans-serif;
+                    }
+                    .large-title {
+                        font-size: 45px;
+                        font-weight: bold;
+                        font-family: "Lucida Console", "Courier New", monospace;
+                        color: #0779DE;
+                    }
+                    .large-text {
+                        font-size: 40px;
+                        font-family: 'Brush Script MT', cursive;
+                        color: #0779DE;
+                    }
+                    .bold-text {
+                        font-family: 'Brush Script MT', cursive;
+                        font-weight: bold;
+                    }
+                    .italic-text {
+                        font-style: italic;
+                    }
+                    h2 {
+                        font-family: Arial, sans-serif;
+                    }
+
+                    /* Modal Styles */
+                    .modal {
+                        display: none; /* Hidden by default */
+                        position: fixed; /* Stay in place */
+                        z-index: 1000; /* Sit on top */
+                        left: 0;
+                        top: 0;
+                        width: 100%; /* Full width */
+                        height: 100%; /* Full height */
+                        overflow: auto; /* Enable scroll if needed */
+                        background-color: rgba(0, 0, 0, 0.4); /* Black with opacity */
+                    }
+
+                    /* Modal Content Box */
+                    .modal-content {
+                        background-color: #fefefe;
+                        margin: 15% auto; /* 15% from the top and centered */
+                        padding: 20px;
+                        border: 1px solid #0779DE; /* Border color matching the theme */
+                        width: 80%; /* Could be more or less, depending on screen size */
+                        box-shadow: 0 5px 15px rgba(0,0,0,.5);
+                        border-radius: 10px;
+                    }
+
+                    /* Form Input Styles */
+                    .modal-content input[type="text"],
+                    .modal-content input[type="number"],
+                    .modal-content select {
+                        width: 100%;
+                        padding: 10px;
+                        margin: 10px 0;
+                        display: inline-block;
+                        border: 1px solid #ccc;
+                        border-radius: 4px;
+                        box-sizing: border-box;
+                    }
+
+                    /* Submit Button in Modal */
+                    .modal-content .button {
+                        width: 100%;
+                        background-color: #0779DE;
+                        color: white;
+                        padding: 14px 20px;
+                        margin: 8px 0;
+                        border: none;
+                        border-radius: 4px;
+                        cursor: pointer;
+                    }
+
+                    .modal-content .button:hover {
+                        background-color: #055bb5;
+                    }
+
+                    /* Close Button */
+                    .close {
+                        color: #aaa;
+                        float: right;
+                        font-size: 28px;
+                        font-weight: bold;
+                    }
+
+                    .close:hover,
+                    .close:focus {
+                        color: #055bb5; /* Blue color matching the theme */
+                        text-decoration: none;
+                        cursor: pointer;
+                    }
+
+                    /* Sold Badge Styles */
+                    .sold-badge {
+                        display: inline-block;
+                        padding: 0.75em 1.5em;
+                        font-size: 1.2rem;
+                        font-weight: bold;
+                        color: white;
+                        background-color: red;
+                        border-radius: 10px;
+                        margin-top: 20px;
+                    }
+
+                    .sold-to-team {
+                        font-size: 1.5rem;
+                        color: #28a745;
+                        font-weight: bold;
+                    }
+
+                    /* Red Badge for Important Notes */
+                    .badge-important {
+                        background-color: red;
+                        color: white;
+                        padding: 0.5em 1em;
+                        font-size: 1.1rem;
+                        font-weight: bold;
+                        border-radius: 12px;
+                        display: inline-block;
+                        margin-bottom: 10px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div class="logo_right" style="float: right;">
+                        <img t-att-src="image_data_uri(env['auction.tournament'].search([('active', '=', True)], limit=1).logo)" style="max-height:120pt;max-width:90%" alt="Team Image"/>
+                    </div>
+                </div>
+
+                <div class="player-card" t-if="player.id">
+                    <table>
+                        <tr>
+                            <td style="text-align: left;">
+                                <img t-att-src="image_data_uri(player.photo)" alt="Player Image" class="player-image"/>
+                            </td>
+                            <td style="width: 30px;"></td>
+                            <td>
+                                <p class="large-title"><span t-esc="player.name.upper()"/></p>
+                                <p class="badge badge-warning"><span t-esc="player.role"/></p>
+
+                                <!-- Display the red badge if player has important notes -->
+                                <t t-if="player.notes">
+                                    <p class="badge-important">
+                                        <span t-esc="player.notes"/>
+                                    </p>
+                                </t>
+
+                                <p class="large-text">Serial No: <span t-esc="player.sl_no"/></p>
+                                <p class="large-text">Batting Style: <span t-esc="player.batting_style"/></p>
+                                <p class="large-text">Bowling Style: <span t-esc="player.bowling_style"/></p>
+                                <p class="large-text">Contact: <span t-esc="player.contact"/></p>
+                                <p t-if="player.address" class="large-text">Location: <span t-esc="player.address"/></p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- The Modal -->
+                <div id="myModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close">&amp;times;</span>
+                        <h2>Player Auction</h2>
+                        <form id="auctionForm">
+                            <div>
+                                <label for="team">Sold to:</label>
+                                <select id="team" name="team">
+                                    <t t-foreach="auction_ids" t-as="auction">
+                                        <option t-att-value="auction.team_id.id"
+                                                t-att-data-remaining-points="auction.remaining_points"
+                                                t-att-data-remaining-players="auction.remaining_players_count">
+                                            <t t-esc="auction.team_id.name" />
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="points">Sold for Points:</label>
+                                <input type="number" id="points" name="points" required="1"/>
+                            </div>
+                            <div>
+                                <label for="remainingPoints">Points Remaining:</label>
+                                <input type="number" id="remainingPoints" name="remainingPoints" required="1" readonly="1"/>
+                            </div>
+                            <div>
+                                <label for="remainingPlayers">Remaining Players:</label>
+                                <input type="number" id="remainingPlayers" name="remainingPlayers" required="1" readonly="1"/>
+                            </div>
+                            <button type="submit" class="button">Sell</button>
+                        </form>
+                    </div>
+                </div>
+            </body>
+        </html>
+    </template>
+</odoo>

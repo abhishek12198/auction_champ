@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="live_updates_template" name="Live Updates Page">
+    <div class="live-updates-wrapper">
+        <div class="updates-header">
+            <h1>Auction Live Updates</h1>
+            <p class="subtitle">Stay updated in real-time</p>
+        </div>
+
+        <div id="live_updates" class="updates-container">
+            <!-- Live updates will be dynamically inserted here -->
+        </div>
+    </div>
+
+    <style>
+        /* Full page layout */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+
+        /* Live Updates Wrapper */
+        .live-updates-wrapper {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #ff7e5f, #feb47b);
+            color: white;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        /* Header Styling */
+        .updates-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .updates-header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+        }
+
+        .updates-header .subtitle {
+            font-size: 1.2rem;
+        }
+
+        /* Updates Container Styling */
+        .updates-container {
+            width: 100%;
+            max-width: 900px;
+            height: 70%;
+            max-height: 600px;
+            overflow-y: auto;
+            padding: 20px;
+            border-top: 2px solid #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+        }
+
+        /* Individual Update Styling */
+        .update-item {
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Hover effect for updates */
+        .update-item:hover {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-5px);
+        }
+
+        /* Avatar styling */
+        .update-item .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+
+        .update-item strong {
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+
+        .update-item small {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        /* Scrollbar customization */
+        .updates-container::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .updates-container::-webkit-scrollbar-thumb {
+            background: #3498db;
+            border-radius: 5px;
+        }
+
+        .updates-container::-webkit-scrollbar-thumb:hover {
+            background: #2980b9;
+        }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 768px) {
+            /* Tablet view */
+            .live-updates-wrapper {
+                padding: 15px;
+            }
+
+            .updates-header h1 {
+                font-size: 2.5rem;
+            }
+
+            .updates-header .subtitle {
+                font-size: 1rem;
+            }
+
+            .update-item {
+                padding: 12px;
+            }
+
+            .update-item .avatar {
+                width: 40px;
+                height: 40px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            /* Mobile view */
+            .live-updates-wrapper {
+                padding: 10px;
+            }
+
+            .updates-header h1 {
+                font-size: 2rem;
+            }
+
+            .updates-header .subtitle {
+                font-size: 1rem;
+            }
+
+            .update-item {
+                padding: 10px;
+            }
+
+            .update-item .avatar {
+                width: 35px;
+                height: 35px;
+            }
+        }
+    </style>
+
+    <script>
+        function fetchUpdates() {
+            fetch('/get_live_updates', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            }).then(response => response.json()).then(function (data) {
+                let updatesContainer = document.getElementById('live_updates');
+                updatesContainer.innerHTML = ''; // Clear previous updates
+                if (Array.isArray(data.result)) {
+                    data.result.forEach(update => {
+                        let updateElement = document.createElement('div');
+                        updateElement.className = 'update-item';
+                        updateElement.innerHTML = `
+                            &lt;img src="data:image/jpeg;base64,${update.avatar_base64}" class="avatar" alt="Avatar"&gt;
+                            &lt;div&gt;
+                                &lt;strong&gt;${update.message}&lt;/strong&gt;
+                                &lt;br&gt;
+                                &lt;small&gt;(${update.timestamp})&lt;/small&gt;
+                            &lt;/div&gt;
+                        `;
+                        updatesContainer.appendChild(updateElement);
+                    });
+                }
+            });
+        }
+
+        setInterval(fetchUpdates, 3000); // Fetch updates every 3 seconds
+        fetchUpdates(); // Initial fetch when the page loads
+    </script>
+
+</template>
+
+</odoo>

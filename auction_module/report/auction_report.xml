@@ -1,0 +1,13 @@
+<odoo>
+    <data>
+        <record id="action_report_auction_players" model="ir.actions.report">
+            <field name="name">Auction Players</field>
+            <field name="model">auction.auction</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">auction_module.report_auction_auction_document</field>
+            <field name="report_file">auction_module.report_auction_auction_document</field>
+            <field name="print_report_name">'%s Players List' % ((object.team_id.name or 'Team'))</field>
+        </record>
+
+    </data>
+</odoo>

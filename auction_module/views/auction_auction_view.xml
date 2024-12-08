@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_auction_auction_search" model="ir.ui.view">
+            <field name="name">auction.auction.search</field>
+            <field name="model">auction.auction</field>
+            <field name="arch" type="xml">
+                <search string="Player">
+                    <field name="team_id" filter_domain="[('team_id','ilike',self)]" string="Team"/>
+                    <field name="manager" filter_domain="[('manager','ilike',self)]" string="Manager"/>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_auction_auction_tree" model="ir.ui.view">
+            <field name="name">auction.auction.tree</field>
+            <field name="model">auction.auction</field>
+            <field name="arch" type="xml">
+                <tree string="Auction" create="0" edit="0" delete="1">
+                    <field name="team_id"/>
+                    <field name="manager"/>
+                    <field name="remaining_points"/>
+                    <field name="remaining_players_count"/>
+
+                    <button name="%(auction_module.action_auction_view_team_details)d" type="action" string="View Summary" class="btn-primary"/>
+
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_auction_auction_form" model="ir.ui.view">
+            <field name="name">auction.auction.form</field>
+            <field name="model">auction.auction</field>
+            <field name="arch" type="xml">
+                <form string="Auction" create="0" edit="0" delete="0">
+                    <header>
+                        <button name="%(auction_module.action_report_auction_players)d" type="action" string="Print Players List" class="btn-primary" attrs="{'invisible': [('remaining_players_count', '!=', 0)]}"/>
+                    </header>
+                    <field name="team_logo" widget='image' class="oe_avatar"/>
+                    <group col="4">
+                            <field name="team_id"/>
+                            <field name="manager"/>
+                            <field name="total_point" string="Max Points allocated" readonly="1"/>
+                            <field name="remaining_points"/>
+                            <field name="max_players" string="Max players allocated"/>
+                            <field name="remaining_players_count" readonly="1"/>
+
+                    </group>
+                    <notebook>
+                        <page string="Players">
+                            <field name="player_ids" nolabel="1">
+                                <tree editable="bottom">
+                                    <field name="player_id"/>
+                                    <field name="contact"/>
+                                    <field name="points"/>
+                                    <button name="%(auction_module.action_edit_player_point)d" type="action" string="Modify Points" class="oe_link"/>
+                                    <button name="action_recall_to_auction" type="object" string="Recall to Auction" confirm="This action will bring the selected player back to auction. Click on Ok to continue. Else click on Cancel"/>
+
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Other Details">
+                            <group>
+                                <field name="base_point" readonly="1"/>
+                                <field name="max_limited" readonly="1"/>
+                                <field name="max_points" readonly="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_auction_auction" model="ir.actions.act_window">
+            <field name="name">Auction List</field>
+            <field name="res_model">auction.auction</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_auction_auction_search"/>
+            <field name="help" type="html">
+              <p class="o_view_nocontent_smiling_face">
+                Create Auctions
+              </p><p>
+                Auction Mains
+              </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

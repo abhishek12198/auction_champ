@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_edit_player_point_form" model="ir.ui.view">
+            <field name="name">auction.edit.player.point.form</field>
+            <field name="model">auction.edit.player.point</field>
+            <field name="arch" type="xml">
+                <form string="Auction">
+                    <field name="player_photo" widget='image' class="oe_avatar"/>
+                    <div class="oe_title oe_inline">
+                        <label for="player_id"/>
+                        <h1><field name="player_id" readonly="1" force_save="1"/> </h1>
+                    </div>
+                    <div class="oe_title oe_inline">
+                        <label for="points"/>
+                        <h1><field name="points"/></h1>
+                    </div>
+                    <group string="Other Details">
+                        <field name="contact"/>
+                        <field name="previous_points" readonly="1" force_save="1" string="Previous Value of this player"/>
+                        <field name="points_gain" readonly="1" force_save="1" string="Points Gained/Lost"/>
+                    </group>
+                    <footer>
+                        <button string="Update" type="object"  class="btn-primary" name="button_update_points" confirm="Please confirm the modification of point, click Ok to continue"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_edit_player_point" model="ir.actions.act_window">
+            <field name="name">Modify Player Points</field>
+            <field name="res_model">auction.edit.player.point</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+
+        </record>
+
+    </data>
+</odoo>

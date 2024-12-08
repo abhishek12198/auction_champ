@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_auction_tournament_search" model="ir.ui.view">
+            <field name="name">auction.tournament.search</field>
+            <field name="model">auction.tournament</field>
+            <field name="arch" type="xml">
+                <search string="Tournament">
+                    <field name="name" filter_domain="[('name','ilike',self)]" string="Name"/>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_auction_tournament_tree" model="ir.ui.view">
+            <field name="name">auction.tournament.tree</field>
+            <field name="model">auction.tournament</field>
+            <field name="arch" type="xml">
+                <tree string="Team">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_auction_tournament_form" model="ir.ui.view">
+            <field name="name">auction.tournament.form</field>
+            <field name="model">auction.tournament</field>
+            <field name="arch" type="xml">
+                <form string="Team">
+                    <field name="logo" widget='image'/>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                        </group>
+
+                    </group>
+                    <notebook>
+                        <page string="Teams">
+                            <field name="team_ids" widget="many2many">
+                                <kanban class="o_kanban_mobile">
+                                    <field name="name"/>
+                                    <field name="logo"/>
+                                    <field name="tournament_id"/>
+                                    <field name="manager"/>
+                                    <field name="key_player_ids"/>
+                                    <field name="id"/>
+                                    <templates>
+                                        <t t-name="kanban-box">
+                                            <div class="oe_kanban_global_click o_kanban_record">
+                                                <div class="o_kanban_image">
+                                                    <img alt="Avatar" t-att-src="kanban_image('auction.team', 'logo', record.id.raw_value)"/>
+                                                </div>
+
+                                                <div class="o_kanban_details">
+                                                    <strong t-esc="record.name.raw_value"/>
+
+                                                    <div t-if="record.manager">
+                                                        <span> Manager: </span>
+                                                        <field name="manager"/>
+                                                    </div>
+                                                    <div t-if="record.key_player_ids">
+                                                        <span> Icon Player: </span>
+                                                        <field name="key_player_ids" widget="many2many_tags"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </templates>
+                                </kanban>
+                            </field>
+                        </page>
+                        <page string="Other Details">
+                            <group>
+                                <field name="venue"/>
+                                <field name="player_appearance_algorithm" widget="radio"/>
+                                <field name="report_footer" widget="image"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_auction_tournament" model="ir.actions.act_window">
+            <field name="name">Tournament</field>
+            <field name="res_model">auction.tournament</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_auction_tournament_search"/>
+            <field name="help" type="html">
+              <p class="o_view_nocontent_smiling_face">
+                Create a Team
+              </p><p>
+                This menu to create or import the tournament.
+              </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="auction_details_show" name="Player Auction">
+        <t t-name="module_name.template_tournament_details">
+            <head>
+                <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+                <title>Auction Point Details</title>
+                <style>
+                    /* Import Google Fonts */
+                    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&amp;family=Roboto:wght@400;500&amp;display=swap');
+
+                    .tournament-container {
+                        width: 80%;
+                        margin: 0 auto;
+                        padding: 20px;
+                        border: 1px solid #ddd;
+                        border-radius: 8px;
+                        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                        background-color: #f9f9f9;
+                        font-family: 'Roboto', sans-serif;
+                    }
+                    .tournament-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 20px;
+                    }
+                    .player-photo {
+                        width: 100px;
+                        height: 100px;
+                        border-radius: 50%;
+                        margin-right: 10px;
+                    }
+                    .player-detail {
+                        font-size: 20px;
+                        vertical-align: middle;
+                        color: #333;
+                        font-family: 'Roboto', sans-serif;
+                    }
+                    .view-players-btn {
+                        background-color: #004080;
+                        color: #fff;
+                        border: none;
+                        padding: 10px 15px;
+                        font-size: 16px;
+                        cursor: pointer;
+                        transition: background-color 0.3s ease;
+                        border-radius: 4px;
+                    }
+                    .view-players-btn:hover {
+                        background-color: #003366;
+                    }
+                    .tournament-logo {
+                        max-height: 100px;
+                    }
+                    .tournament-title {
+                        font-size: 24px;
+                        font-weight: bold;
+                        color: #333;
+                        font-family: 'Playfair Display', serif;
+                    }
+                    .tournament-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 20px;
+                    }
+                    .tournament-table th, .tournament-table td {
+                        padding: 10px;
+                        text-align: left;
+                        border: 1px solid #ddd;
+                    }
+                    .tournament-table th {
+                        background-color: #004080;
+                        color: white;
+                        font-weight: 500;
+                        font-family: 'Playfair Display', serif;
+                    }
+                    .tournament-table tr:nth-child(even) {
+                        background-color: #f2f2f2;
+                    }
+                    .highlight-zero {
+                        background-color: #ffcccc !important;
+                    }
+
+                    /* Modal Styles */
+                    .modal {
+                        display: none;
+                        position: fixed;
+                        z-index: 1;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                        height: 100%;
+                        overflow: auto;
+                        background-color: rgb(0,0,0);
+                        background-color: rgba(0,0,0,0.4);
+                        padding-top: 60px;
+                    }
+
+                    .modal-content {
+                        background-color: #fefefe;
+                        margin: 5% auto;
+                        padding: 20px;
+                        border: 1px solid #888;
+                        width: 80%;
+                    }
+
+                    .close {
+                        color: #aaa;
+                        float: right;
+                        font-size: 28px;
+                        font-weight: bold;
+                    }
+
+                    .close:hover,
+                    .close:focus {
+                        color: black;
+                        text-decoration: none;
+                        cursor: pointer;
+                    }
+                    .team-manager-line {
+                        display: flex;
+                        justify-content: space-between;
+                        font-size: 18px;
+                        color: #004080;
+                        font-weight: bold;
+                        margin-bottom: 20px;
+                    }
+                    .team-logo-modal {
+                        width: 40px;
+                        height: 40px;
+                        margin-right: 10px;
+                    }
+                </style>
+            </head>
+            <div class="tournament-container">
+                <!-- Header with Tournament Logo and Title -->
+                <div class="tournament-header">
+                    <div class="tournament-title">Auction Balance Points</div>
+                    <img t-att-src="image_data_uri(env['auction.tournament'].search([('active', '=', True)], limit=1).logo)" alt="Tournament Logo" class="tournament-logo"/>
+                </div>
+
+                <!-- Tournament Details Table -->
+                <table class="tournament-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align: center;" colspan="2">Team Name</th>
+                            <th style="text-align: center;">Manager</th>
+                            <th style="text-align: center;">Players needed</th>
+                            <th style="text-align: center;">Points Left</th>
+                            <th style="text-align: center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="teams" t-as="team">
+
+                            <tr t-att-class="team.remaining_players_count == 0 and 'highlight-zero' or ''">
+                                <td style="border-right: 0px; width: 10px;">
+                                    <img t-att-src="image_data_uri(team.team_id.logo)" alt="Tournament Logo" class="team-logo" style="width: 40px; height: 40px;"/>
+                                </td>
+                                <td style="vertical-align: middle; border-left: 0px;">
+                                    <t t-esc="team.team_id.name"/>
+                                </td>
+                                <td><t t-esc="team.manager"/></td>
+                                <td><t t-esc="team.remaining_players_count"/></td>
+                                <td><t t-esc="team.remaining_points"/></td>
+                                <td>
+                                    <button type="button" class="view-players-btn"  t-att-data-team-logo="team.team_id.logo" t-att-data-team-name="team.team_id.name" t-att-data-manager="team.manager" t-att-data-team-id="team.team_id.id" onclick="openModal(this)">View Players</button>
+                                </td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Player Details Modal -->
+            <div id="playerModal" class="modal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeModal()">&amp;times;</span>
+                     <div class="team-manager-line">
+                        <img id="modal-team-logo" class="team-logo-modal" />
+                        <span id="modal-team-name"></span>
+                        <span id="modal-manager-name"></span>
+                    </div>
+                    <table class="tournament-table">
+                        <thead>
+                            <tr>
+                                <th>Player Name</th>
+                                <th>Points</th>
+                                <th>Role</th>
+                                <th>Contact</th>
+                            </tr>
+                        </thead>
+                        <tbody id="player-details">
+                            <!-- Player details will be inserted here dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <script>
+
+                setTimeout(function() {
+                    location.reload();
+                }, 60000); // Reloads the page every 60 seconds
+                function openModal(button) {
+                    var teamId = button.getAttribute('data-team-id');
+                    var teamName = button.getAttribute('data-team-name');
+                    var managerName = button.getAttribute('data-manager');
+                    var teamLogo = button.getAttribute('data-team-logo');
+                    // Set team and manager names in the modal
+                    document.getElementById('modal-team-logo').src = "data:image/png;base64," + teamLogo;
+                    document.getElementById('modal-team-name').innerText = "Team: " + teamName;
+                    document.getElementById('modal-manager-name').innerText = " | Manager: " + managerName;
+
+                    // Call Odoo backend to get the player data
+                    $.ajax({
+                        url: '/get_players/' + teamId,  // Change the URL since we're sending data via JSON
+                        type: 'POST',  // POST request
+                        contentType: 'application/json',  // This ensures that the request is sent as JSON
+                        data: JSON.stringify({team_id: teamId}),  // Send the data as a JSON object
+                        success: function(response) {
+                            console.log(response);
+                            if (response.result.status === 'success') {
+                                var playerDetails = '';
+                                response.result.players.forEach(function(player) {
+                                    // Add the player row with the photo
+
+                                    playerDetails += `
+                                        <tr>
+                                            <td class="player-detail"><img src="data:image/png;base64,` + player.photo + `" class="player-photo"/>` + player.name + `</td>
+                                            <td class="player-detail">` + player.points + `</td>
+                                            <td class="player-detail">` + player.role + `</td>
+                                            <td class="player-detail">` + player.contact + `</td>
+
+                                        </tr>`;
+                                });
+
+                                document.getElementById('player-details').innerHTML = playerDetails;
+                                document.getElementById('playerModal').style.display = 'block';
+                            } else {
+                                var message = "Players not added in "+  response.result.team
+                                alert(message);
+                            }
+                        },
+                        error: function() {
+                            alert("Failed to fetch player data.");
+                        }
+                    });
+                }
+                function closeModal() {
+                    document.getElementById('playerModal').style.display = 'none';
+                }
+
+                // Close modal if user clicks outside modal content
+                window.onclick = function(event) {
+                    var modal = document.getElementById('playerModal');
+                    if (event.target == modal) {
+                        modal.style.display = 'none';
+                    }
+                }
+
+            </script>
+        </t>
+    </template>
+
+</odoo>

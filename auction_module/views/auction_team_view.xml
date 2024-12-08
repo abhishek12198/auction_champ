@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_auction_team_search" model="ir.ui.view">
+            <field name="name">auction.team.search</field>
+            <field name="model">auction.team</field>
+            <field name="arch" type="xml">
+                <search string="Team">
+                    <field name="name" filter_domain="[('name','ilike',self)]" string="Name"/>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_auction_team_kanban" model="ir.ui.view">
+            <field name="name">auction.team.kanban</field>
+            <field name="model">auction.team</field>
+            <field name="arch" type="xml">
+                <kanban class="o_kanban_mobile">
+                    <field name="name"/>
+                    <field name="logo"/>
+                    <field name="tournament_id"/>
+                    <field name="manager"/>
+                    <field name="key_player_ids"/>
+                    <field name="id"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div class="oe_kanban_global_click o_kanban_record">
+                                <div class="o_kanban_image">
+                                    <img alt="Avatar" t-att-src="kanban_image('auction.team', 'logo', record.id.raw_value)"/>
+                                </div>
+
+                                <div class="o_kanban_details">
+                                    <strong t-esc="record.name.raw_value"/>
+
+                                    <div t-if="record.manager">
+                                        <span> Manager: </span>
+                                        <field name="manager"/>
+                                    </div>
+                                    <div t-if="record.key_player_ids">
+                                        <span> Icon Player: </span>
+                                        <field name="key_player_ids" widget="many2many_tags"/>
+                                    </div>
+                                    <div t-if="record.tournament_id.name">
+                                        <span> League: </span>
+                                        <field name="tournament_id"/>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+        <record id="view_auction_team_tree" model="ir.ui.view">
+            <field name="name">auction.team.tree</field>
+            <field name="model">auction.team</field>
+            <field name="arch" type="xml">
+                <tree string="Team">
+                    <field name="name"/>
+                    <field name="manager"/>
+                    <field name="key_player_ids" widget="many2many_tags"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_auction_team_form" model="ir.ui.view">
+            <field name="name">auction.team.form</field>
+            <field name="model">auction.team</field>
+            <field name="arch" type="xml">
+                <form string="Team">
+
+                   <!-- <field name="avatar_128" invisible="1"/>-->
+                    <field name="logo" widget='image' class="oe_avatar"/>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="manager" required="1"/>
+
+                        </group>
+
+                    </group>
+                    <group string="Icon Players">
+                            <field name="key_player_ids" nolabel="1" domain="[('state', 'in', ['draft', 'auction'])]" options="{'no_create': 1}" readonly="1">
+                                <tree editable="bottom" create="0" delete="0" write="0">
+                                    <field name="name"/>
+                                    <field name="contact"/>
+                                    <field name="role"/>
+                                    <field name="batting_style"/>
+                                    <field name="bowling_style"/>
+                                </tree>
+                                <form>
+                                    <widget name="web_ribbon" title="Icon Player" bg_color="bg-info" attrs="{'invisible': [('icon_player', '=', False)]}"/>
+
+                                    <field name="photo" widget='image' class="oe_avatar"/>
+                                    <group col="4">
+                                            <field name="name"/>
+                                            <field name="contact"/>
+                                            <field name="batting_style"/>
+                                            <field name="bowling_style"/>
+                                            <field name="role"/>
+                                            <field name="amount_paid" widget="boolean_toggle"/>
+                                            <field name="photo_url" readonly="1" widget="url"/>
+                                            <field name="icon_player" invisible="1"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </group>
+
+                </form>
+            </field>
+        </record>
+
+        <record id="action_auction_team" model="ir.actions.act_window">
+            <field name="name">Team</field>
+            <field name="res_model">auction.team</field>
+            <field name="view_mode">kanban,tree,form</field>
+            <field name="search_view_id" ref="view_auction_team_search"/>
+            <field name="help" type="html">
+              <p class="o_view_nocontent_smiling_face">
+                Create a Team
+              </p><p>
+                This menu to create or import the teams for auction.
+              </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

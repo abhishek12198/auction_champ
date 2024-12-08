@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="player_template_blank"  name="Auction Player Template">
+        <html lang="en">
+            <script type="text/javascript">
+                    odoo.define('auction.auction_player', function (require) {
+                        'use strict';
+
+                        var core = require('web.core');
+                        var Dialog = require('web.Dialog');
+
+                        var _t = core._t;
+
+                        function redirectToURL(url) {
+                            window.location.href = url;
+                        }
+
+                        var AuctionPlayer = {
+                            showModal: function (ev) {
+                                ev.preventDefault();
+                                var self = this;
+                                Dialog.confirm(this, _t("Are you sure you want to mark this player as SOLD?"), {
+                                    confirm_callback: function () {
+                                        // Code to mark the player as SOLD
+                                        // You can call a controller method here to handle this action
+                                    },
+                                });
+                            },
+                        };
+
+                        core.action_registry.add('auction_player', AuctionPlayer);
+                    });
+            </script>
+            <head>
+                <meta charset="UTF-8"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+                <title>Auction Player Template</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                        background-image: url('/auction_module/static/src/background/bpl_season_1.jpeg');
+                        background-repeat: no-repeat;
+                        background-size: cover;
+                        background-position: center;
+                        height : auto;
+
+                    }
+                    .player-card {
+                        width: 1000px;
+                        height: 1000px;
+                        border-radius: 5px;
+                        padding: 20px;
+                        margin: 20px auto;
+                        text-align: center;
+                    }
+                    .player-image {
+                        width: 500px;
+                        height: auto;
+                        margin-bottom: 10px;
+
+                    }
+                    .button {
+                        display: inline-block;
+                        padding: 10px 20px;
+                        margin: 5px;
+                        border: none;
+                        border-radius: 5px;
+                        cursor: pointer;
+                    }
+                    .sold {
+                        background-color: #4CAF50;
+                        color: white;
+                    }
+                    .unsold {
+                        background-color: #f44336;
+                        color: white;
+                    }
+                    .reset {
+                        background-color: #1C6FB4;
+                        color: white;
+                    }
+                    .responsive-img {
+                            max-width: 100%;
+                            height: auto;
+                        }
+                    p {
+                        font-family: Arial, sans-serif;
+                    }
+                    .large-title {
+                        font-size: 50px;
+                        font-weight: bold;
+                        font-family: "Lucida Console", "Courier New", monospace;
+                        color: #E0F2F6;
+                    }
+                    /* Applying font size */
+                    .large-text {
+                        font-size: 40px;
+                        color: #E0F2F6;
+                    }
+
+                    /* Applying font weight */
+                    .bold-text {
+                        font-weight: bold;
+                    }
+
+                    /* Applying font style (italic) */
+                    .italic-text {
+                        font-style: italic;
+                    }
+                    h2 {
+                        font-family: Arial, sans-serif;
+                    }
+
+                </style>
+            </head>
+            <body>
+                <div class="header">
+
+                    <div class="logo_right" style="float: right;">
+                            <!--<img t-att-src="image_data_uri(env['auction.tournament'].search([('active', '=', True)], limit=1).logo)" style="max-height:120pt;max-width:90%" alt="Team Image"/>-->
+                           <!-- <img t-att-src="'/path/to/your/right_logo.png'" style="width: 100px; height: auto;"/>-->
+                        </div>
+
+                    </div>
+                <div style="text-align: center; margin-top: 300px;" >
+                    <h1 style="font-size: 48px; color: #DE0707;">Welcome to <span t-esc="env['auction.tournament'].search([('active', '=', True)], limit=1).name"/> auction!</h1>
+
+                    <h2 t-if="tournament.venue" style="font-size: 40px; color: #DE0707;">Venue: <span t-esc="env['auction.tournament'].search([('active', '=', True)], limit=1).venue"/> </h2>
+                    <h1 style="font-size: 48px; color: #DE0707;">Auction will start soon!</h1>
+                </div>
+
+            </body>
+            <div style="page-break-after: always;"></div>
+        </html>
+</template>
+
+<template id="auction_completed_message" name="Auction Completed">
+    <t t-name="module_name.template_auction_completed">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&amp;display=swap');
+
+            /* Overall Page Background */
+            body {
+                background: linear-gradient(to bottom, #e0f7fa, #b2ebf2); /* Light blue gradient background */
+                margin: 0;
+                padding: 0;
+                font-family: 'Roboto', sans-serif;
+            }
+
+            .message-container {
+                width: 80%;
+                margin: 0 auto;
+                padding: 30px;
+                text-align: center;
+                border-radius: 12px;
+                background: linear-gradient(to right, #ff7e5f, #feb47b); /* Vibrant gradient background */
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                color: #fff;
+                position: relative; /* Ensure logo can be positioned absolutely */
+            }
+            .tournament-logo {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                max-height: 80px;
+            }
+            .message-header {
+                font-size: 36px;
+                font-weight: 700;
+                margin-bottom: 20px;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            }
+            .message-body {
+                font-size: 24px;
+                font-weight: 400;
+                line-height: 1.5;
+                margin-bottom: 30px;
+            }
+            .thank-you-note {
+                font-size: 20px;
+                font-weight: 400;
+                color: #ffffff;
+                background: rgba(0, 0, 0, 0.2);
+                padding: 10px 20px;
+                border-radius: 8px;
+                display: inline-block;
+            }
+        </style>
+
+        <div class="message-container">
+            <!-- Tournament Logo -->
+            <img t-att-src="image_data_uri(env['auction.tournament'].search([('active', '=', True)], limit=1).logo)" alt="Tournament Logo" class="tournament-logo"/>
+
+            <div class="message-header">The Auction Completed</div>
+            <div class="message-body">
+                Thanking you all. All the best for the matches!
+            </div>
+            <div class="thank-you-note">Thank you for participating!</div>
+        </div>
+    </t>
+</template>
+
+<template id="welcome_message_template" name="Welcome to Tournament">
+    <t t-name="module_name.template_welcome_message">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&amp;display=swap');
+
+            /* Overall Page Background */
+            body {
+                background: linear-gradient(to bottom, #f3e5f5, #e1bee7); /* Soft purple gradient background */
+                margin: 0;
+                padding: 0;
+                font-family: 'Roboto', sans-serif;
+            }
+
+            .message-container {
+                width: 80%;
+                margin: 0 auto;
+                padding: 40px;
+                text-align: center;
+                border-radius: 12px;
+                background: linear-gradient(to right, #4caf50, #81c784); /* Fresh green gradient background */
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                color: #fff;
+                position: relative; /* Ensure logo can be positioned absolutely */
+            }
+            .tournament-logo {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                max-height: 100px;
+            }
+            .message-header {
+                font-size: 32px;
+                font-weight: 700;
+                margin-bottom: 20px;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            }
+            .message-body {
+                font-size: 24px;
+                font-weight: 400;
+                line-height: 1.5;
+                margin-bottom: 30px;
+            }
+            .thank-you-note {
+                font-size: 20px;
+                font-weight: 400;
+                color: #ffffff;
+                background: rgba(0, 0, 0, 0.2);
+                padding: 10px 20px;
+                border-radius: 8px;
+                display: inline-block;
+            }
+        </style>
+
+        <div class="message-container">
+            <!-- Tournament Logo -->
+            <img t-att-src="image_data_uri(env['auction.tournament'].search([('active', '=', True)], limit=1).logo)" alt="Tournament Logo" class="tournament-logo"/>
+
+            <div class="message-header">Welcome to the Tournament!</div>
+            <div class="message-body">
+                <t t-esc="'Welcome to ' + env['auction.tournament'].search([('active', '=', True)], limit=1).name"/>. We are excited to have all the managers participating.
+            </div>
+            <div class="thank-you-note">Best of luck!</div>
+        </div>
+    </t>
+</template>
+
+
+
+</odoo>

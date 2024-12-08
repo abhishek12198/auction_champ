@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_auction_sell_player" model="ir.ui.view">
+            <field name="name">auction.sell.player.form</field>
+            <field name="model">auction.sell.player</field>
+            <field name="arch" type="xml">
+                <form string="Auction" class="custom_wizard_popup">
+                    <field name="player_photo" widget='image' class="oe_avatar"/>
+                    <div class="oe_title oe_inline">
+                        <label for="player_id"/>
+                        <h1><field name="player_id" readonly="1" force_save="1"/> </h1>
+                    </div>
+                    <div class="oe_title oe_inline">
+                        <label for="team_id"/>
+                        <h1><field name="team_id" required="1" options="{'no_open': True, 'no_create': True}"/></h1>
+                    </div>
+                    <div class="oe_title oe_inline">
+                        <label for="final_point"/>
+                        <h1><field name="final_point"/></h1>
+                    </div>
+                    <group>
+
+
+                        <field name="team_auction_id" invisible="1"/>
+                    </group>
+                    <group string="Team Details">
+                        <group>
+                            <field name="points_remaining" readonly="1" force_save="1"/>
+                            <field name="players_remaining" readonly="1" force_save="1"/>
+                        </group>
+                        <group attrs="{'invisible': [('team_auction_id', '=', False)]}">
+                            <field name="suggestion" readonly="1" nolabel="1"/>
+                        </group>
+                    </group>
+
+                    <footer>
+                        <button string="Sell" type="object"  class="btn-primary" name="button_sell_player" confirm="On click will sell this player to the selected team, click Ok to continue"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_auction_sell_player" model="ir.actions.act_window">
+            <field name="name">Sell Player</field>
+            <field name="res_model">auction.sell.player</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+
+        </record>
+
+    </data>
+</odoo>

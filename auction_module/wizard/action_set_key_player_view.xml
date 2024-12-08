@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_auction_set_key_player" model="ir.ui.view">
+            <field name="name">auction.set.key.player.form</field>
+            <field name="model">auction.set.key.player</field>
+            <field name="arch" type="xml">
+                <form string="Auction">
+
+                    <div class="oe_title oe_inline">
+                        <label for="player_id"/>
+                        <h1><field name="player_id" readonly="1" force_save="1"/> </h1>
+                    </div>
+                    <div class="oe_title oe_inline">
+                        <label for="team_id"/>
+                        <h1><field name="team_id" required="1" options="{'no_open': True, 'no_create': True}"/></h1>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <!-- Image 1 with uniform size -->
+                        <div  class="custom-image-size">
+                            <field name="player_photo" widget="image" class="oe_inline" readonly="1"
+                               style="width: 150px; height: 150px; object-fit: contain;"/>
+
+                        </div>
+
+                        <!-- Thicker Arrow -->
+                        <span style="margin: 0 15px; font-size: 30px; font-weight: bold;">
+                            &#10145; <!-- Thicker arrow (Unicode Character) -->
+                        </span>
+                        <div  class="custom-image-size">
+                        <!-- Image 2 with uniform size -->
+                            <field name="team_logo" widget="image" class="oe_inline" readonly="1"
+                                   style="width: 150px; height: 150px; object-fit: contain;"/>
+                        </div>
+                    </div>
+
+
+
+                    <footer>
+                        <button string="Set" type="object"  class="btn-primary" name="button_set_keyplayer" confirm="On click will set this player as key player to the assigned team, click Ok to continue"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_auction_set_key_player" model="ir.actions.act_window">
+            <field name="name">Assign Key Player</field>
+            <field name="res_model">auction.set.key.player</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+
+        </record>
+
+    </data>
+</odoo>

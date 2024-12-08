@@ -1,0 +1,12 @@
+<odoo>
+    <data>
+        <!-- Server Action -->
+        <record id="action_print_player_card" model="ir.actions.server">
+            <field name="name">Print Player Cards</field>
+            <field name="model_id" ref="model_auction_team_player"/>
+            <field name="binding_model_id" ref="model_auction_team_player"/>
+            <field name="state">code</field>
+            <field name="code">records.action_player_card_report()</field>
+        </record>
+    </data>
+</odoo>

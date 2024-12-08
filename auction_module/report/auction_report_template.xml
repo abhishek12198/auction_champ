@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <template id="report_auction_auction_document" name="Auction Player Template">
+        <t t-name="auction_module.report_auction_auction_document">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="doc">
+                    <div class="page">
+                        <!-- Header -->
+
+                         <div class="header" style="margin-top: 100px; width:100%;">
+                             <table>
+                                 <tr>
+                                     <td style="width: 300px;">
+                                        <img t-att-src="image_data_uri(doc.team_id.logo)" alt="Team Logo" style="max-height: 100px; max-width: 100px;"/>
+                                     </td>
+                                     <td style="width: 600px;">
+                                        <strong><h4><span t-esc="doc.tournament_id.name" /></h4></strong>
+                                        <p><span t-esc="doc.tournament_id.venue" /></p>
+                                     </td>
+                                     <td>
+                                        <img t-att-src="image_data_uri(doc.tournament_id.logo)" alt="Tournament Logo" style="max-height: 100px; max-width: 100px;"/>
+                                     </td>
+                                 </tr>
+                             </table>
+
+
+                        </div>
+                        <!-- Body -->
+                        <div class="body">
+                            <table style="width: 100%; margin-bottom: 30px; border-collapse: collapse;">
+                                <tr>
+                                    <td style="padding: 10px; border: 1px solid #ddd;">
+                                        <h4>Team Name: <t t-esc="doc.team_id.name"/></h4>
+                                    </td>
+                                    <td style="padding: 10px; border: 1px solid #ddd;">
+                                        <h4>Manager: <t t-esc="doc.manager"/></h4>
+                                    </td>
+                                    <td style="padding: 10px; border: 1px solid #ddd;">
+                                        <h4>Icon Player: <t t-esc="','.join([player_id.name for player_id in doc.team_id.key_player_ids])"/></h4>
+                                    </td>
+                                </tr>
+                            </table>
+
+
+
+                            <table class="table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                                <thead>
+                                    <tr style="background-color: #064595; border-bottom: 1px solid #ddd;">
+                                         <th style="color: #FFFFFF; padding: 8px; border: 1px solid #ddd; font-family: Arial, sans-serif;">Sl No</th>
+                                        <th colspan="2" style="color: #FFFFFF; padding: 8px; border: 1px solid #ddd; font-family: Arial, sans-serif;">Player</th>
+                                        <th style="color: #FFFFFF; padding: 8px; border: 1px solid #ddd; font-family: Arial, sans-serif;">Mobile Number</th>
+                                        <th style="color: #FFFFFF; padding: 8px; border: 1px solid #ddd; font-family: Arial, sans-serif;">Points</th>
+                                        <th style="color: #FFFFFF; padding: 8px; border: 1px solid #ddd; font-family: Arial, sans-serif;">Role</th>
+                                        <!-- Add more columns as needed -->
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="doc.player_ids" t-as="player">
+                                        <tr>
+                                            <td style="padding: 8px; border: 1px solid #ddd; font-family: Arial, sans-serif;"><t t-esc="player.player_id.sl_no"/></td>
+                                            <td style="padding: 8px; border-bottom: 1px solid #ddd; border-left: 1px solid #ddd; border-right: 0px; font-family: Arial, sans-serif;"><img t-att-src="image_data_uri(player.player_id.photo)" alt="Tournament Logo" style="height: 40px; width: 40px;"/></td>
+                                            <td style="padding: 8px; border-bottom: 1px solid #ddd; border-right: 1px solid #ddd; border-left: 0px; font-family: Arial, sans-serif;"><t t-esc="player.player_id.name"/></td>
+                                            <td style="padding: 8px; border: 1px solid #ddd; font-family: Arial, sans-serif;"><t t-esc="player.contact"/></td>
+                                            <td style="padding: 8px; border: 1px solid #ddd; font-family: Arial, sans-serif;"><t t-esc="player.points"/></td>
+                                            <td style="padding: 8px; border: 1px solid #ddd; font-family: Arial, sans-serif;"><t t-esc="player.player_id.role"/></td>
+                                            <!-- Add more cells as needed -->
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+
+                        </div>
+                       <!-- <t t-if="not doc.tournament_id.report_footer">
+                            <div class="footer" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; width:100%;">
+                             <table>
+                                 <tr>
+                                     <td style="width: 300px;">
+                                        <img t-att-src="image_data_uri(doc.team_id.logo)" alt="Team Logo" style="max-height: 100px; max-width: 100px;"/>
+                                     </td>
+                                     <td style="width: 600px;">
+                                        <strong><h4><span t-esc="doc.tournament_id.name" /></h4></strong>
+                                        <p><span t-esc="doc.tournament_id.venue" /></p>
+                                     </td>
+                                     <td>
+                                        <img t-att-src="image_data_uri(doc.tournament_id.logo)" alt="Tournament Logo" style="max-height: 100px; max-width: 100px;"/>
+                                     </td>
+                                 </tr>
+                             </table>
+
+
+                        </div>
+                        </t>-->
+                        <!--<t t-if="doc.tournament_id.report_footer">
+                            <div class="footer" style="display: flex; justify-content: center; align-items: center; margin-top: 20px; padding: 10px; border-top: 1px solid #ddd; background-color: #064595;">
+                        </div>
+                        </t>-->
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

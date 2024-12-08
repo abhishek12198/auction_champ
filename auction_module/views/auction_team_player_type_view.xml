@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_auction_team_player_type_search" model="ir.ui.view">
+            <field name="name">auction.team.player.type.search</field>
+            <field name="model">auction.team.player.type</field>
+            <field name="arch" type="xml">
+                <search string="Player Type">
+                    <field name="name" filter_domain="[('name','ilike',self)]" string="Name"/>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_auction_team_player_type_tree" model="ir.ui.view">
+            <field name="name">auction.team.player.type.tree</field>
+            <field name="model">auction.team.player.type</field>
+            <field name="arch" type="xml">
+                <tree string="Team">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_auction_team_player_type_form" model="ir.ui.view">
+            <field name="name">auction.team.player.type.form</field>
+            <field name="model">auction.team.player.type</field>
+            <field name="arch" type="xml">
+                <form string="Team">
+                    <group>required
+                        <group>
+                            <field name="name" required="1"/>
+                            <field name="base_point" required="1"/>
+                        </group>
+
+                    </group>
+
+                </form>
+            </field>
+        </record>
+
+        <record id="action_auction_player_type" model="ir.actions.act_window">
+            <field name="name">Player Type(s)</field>
+            <field name="res_model">auction.team.player.type</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_auction_tournament_search"/>
+            <field name="help" type="html">
+              <p class="o_view_nocontent_smiling_face">
+                Create a Team
+              </p><p>
+                This menu to create or import the tournament.
+              </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

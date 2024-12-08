@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data noupdate="0">
+
+    <record model="ir.module.category" id="auction_categ">
+        <field name="description">Auction</field>
+        <field name="sequence">7</field>
+        <field name="name">Auction</field>
+    </record>
+
+    <record id="group_auction_group_admin" model="res.groups">
+        <field name="name">Administrator</field>
+        <field name="comment">Administrator</field>
+        <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+        <field name="category_id" ref="auction_module.auction_categ"/>
+    </record>
+
+    <record id="group_auction_group" model="res.groups">
+        <field name="name">User</field>
+        <field name="comment">User</field>
+        <field name="category_id" ref="auction_module.auction_categ"/>
+    </record>
+
+
+</data>
+
+
+</odoo>

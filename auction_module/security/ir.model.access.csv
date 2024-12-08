@@ -1,0 +1,16 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_auction_tournament_base_user,auction.tournament,auction_module.model_auction_tournament,base.group_user,1,1,1,1
+access_auction_tournament_point_split_player_base_user,auction.tournament.point.split,auction_module.model_auction_tournament_point_split,base.group_user,1,1,1,1
+access_auction_team_base_user,auction.team,auction_module.model_auction_team,base.group_user,1,1,1,1
+access_auction_team_player_type_base_user,auction.team.player.type,auction_module.model_auction_team_player_type,base.group_user,1,1,1,1
+access_auction_team_player_base_user,auction.team.player,auction_module.model_auction_team_player,base.group_user,1,1,1,1
+access_auction_auction_base_user,auction.auction,auction_module.model_auction_auction,base.group_user,1,1,1,1
+access_auction_history_base_user,auction.history,auction_module.model_auction_history,base.group_user,1,1,1,1
+access_auction_auction_player_base_user,auction.auction.player,auction_module.model_auction_auction_player,base.group_user,1,1,1,1
+access_auction_start_auction_player_base_user,auction.start.auction,auction_module.model_auction_start_auction,base.group_user,1,1,1,1
+access_auction_sell_player_base_user,auction.sell.player,auction_module.model_auction_sell_player,base.group_user,1,1,1,1
+access_auction_set_key_player_base_user,auction.set.key.player,auction_module.model_auction_set_key_player,base.group_user,1,1,1,1
+access_auction_player_auction_base_user,auction.player.auction,auction_module.model_auction_player_auction,base.group_user,1,1,1,1
+access_auction_edit_player_point_base_user,auction.edit.player.point,auction_module.model_auction_edit_player_point,base.group_user,1,1,1,1
+access_auction_view_team_details_base_user,auction.view.team.details,auction_module.model_auction_view_team_details,base.group_user,1,1,1,1
+access_my_service,my_service,base.model_res_users,,1,1,1,1

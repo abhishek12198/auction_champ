@@ -1,0 +1,1293 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* auction_module
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 15.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-10-18 15:00+0000\n"
+"PO-Revision-Date: 2024-10-18 15:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_view_team_details_form
+msgid "&gt;"
+msgstr "&gt;"
+
+#. module: auction_module
+#: model:ir.actions.report,print_report_name:auction_module.action_report_auction_players
+msgid "'%s Players List' % ((object.team_id.name or 'Team'))"
+msgstr "'%s കളിക്കാരുടെ പട്ടിക' % ((object.team_id.name or 'ടീം'))"
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.welcome_message_template
+msgid ". We are excited to have all the managers participating."
+msgstr ". എല്ലാ മാനേജർമാരും പങ്കെടുക്കുന്നതിൽ ഞങ്ങൾക്ക് സന്തോഷമുണ്ട്."
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.auction_details_show
+msgid "<span class=\"close\" onclick=\"closeModal()\">&amp;times;</span>"
+msgstr "<span class=\"close\" onclick=\"closeModal()\">&amp;times;</span>"
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.player_template
+msgid "<span class=\"close\">&amp;times;</span>"
+msgstr "<span class=\"close\">&amp;times;</span>"
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_kanban
+msgid "<span> Contact: </span>"
+msgstr "<span> ബന്ധപ്പെടേണ്ട നമ്പർ: </span>"
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_start_auction_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_kanban
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_tournament_form
+msgid "<span> Icon Player: </span>"
+msgstr "<span> ഐക്കൺ പ്ലേയർ: </span>"
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_kanban
+msgid "<span> League: </span>"
+msgstr "<span> ലീഗ്: </span>"
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_start_auction_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_kanban
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_tournament_form
+msgid "<span> Manager: </span>"
+msgstr "<span> മാനേജർ: </span>"
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_kanban
+msgid "<span> Role: </span>"
+msgstr "<span> വിഭാഗം: </span>"
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_kanban
+msgid "<span> Serial No: </span>"
+msgstr "<span> സീരിയൽ നമ്പർ: </span>"
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_kanban
+msgid "<span> Team: </span>"
+msgstr "<span> ടീം: </span>"
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.auction_details_show
+msgid "Actions"
+msgstr "പ്രവർത്തനങ്ങൾ"
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction__active
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__active
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament__active
+msgid "Active"
+msgstr "സജീവമാണോ?"
+
+#. module: auction_module
+#: model:ir.model.fields,help:auction_module.field_auction_auction__team_logo
+#: model:ir.model.fields,help:auction_module.field_auction_team__logo
+#: model:ir.model.fields,help:auction_module.field_auction_view_team_details__team_logo
+msgid "Add team logo"
+msgstr "ടീം ലോഗോ ചേർക്കുക"
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__address
+msgid "Address"
+msgstr "വിലാസം"
+
+#. module: auction_module
+#: model:res.groups,comment:auction_module.group_auction_group_admin
+#: model:res.groups,name:auction_module.group_auction_group_admin
+msgid "Administrator"
+msgstr "അഡ്മിനിസ്ട്രേറ്റർ"
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__amount_paid
+msgid "Amount Paid"
+msgstr "തുക അടച്ചിട്ടുണ്ടോ?"
+
+#. module: auction_module
+#: model:ir.actions.act_window,name:auction_module.action_auction_set_key_player
+msgid "Assign Key Player"
+msgstr "ഐക്കൺ പ്ലെയർ അസൈൻ ചെയ്യുക"
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction_player__auction_id
+#: model:ir.module.category,description:auction_module.auction_categ
+#: model:ir.module.category,name:auction_module.auction_categ
+#: model:ir.ui.menu,name:auction_module.menu_action_auction_auction
+#: model:ir.ui.menu,name:auction_module.menu_action_auction_auction1
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_auction_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_auction_tree
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_sell_player
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_set_key_player
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_set_to_auction_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_start_auction_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_view_team_details_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_edit_player_point_form
+msgid "Auction"
+msgstr "ലേലം"
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.auction_details_show
+msgid "Auction Balance Points"
+msgstr "ലേല ബാലൻസ് പോയിൻ്റുകൾ"
+
+#. module: auction_module
+#: model:ir.actions.act_window,name:auction_module.action_auction_auction
+msgid "Auction List"
+msgstr "ലേല പട്ടിക"
+
+#. module: auction_module
+#: model_terms:ir.actions.act_window,help:auction_module.action_auction_auction
+msgid "Auction Mains"
+msgstr "ലേല മെയിൻസ്"
+
+#. module: auction_module
+#: model:ir.actions.report,name:auction_module.action_report_auction_players
+msgid "Auction Players"
+msgstr "ലേലത്തിൽ പങ്കെടുക്കുന്ന കളിക്കാർ"
+
+#. module: auction_module
+#: model:ir.actions.act_url,name:auction_module.action_view_auction_details
+msgid "Auction Points Table"
+msgstr "ലേല പോയിൻ്റ് പട്ടിക"
+
+#. module: auction_module
+#: model:ir.ui.menu,name:auction_module.menu_action_auction_root
+msgid "Auction Settings"
+msgstr "ലേല ക്രമീകരണങ്ങൾ"
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_start_auction_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_kanban
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_kanban
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_tournament_form
+msgid "Avatar"
+msgstr "അവതാർ"
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction__base_point
+msgid "Base Point"
+msgstr "അടിസ്ഥാന പോയിൻ്റ്"
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_start_auction__base_point
+msgid "Base point for a player"
+msgstr "ഒരു കളിക്കാരൻ്റെ അടിസ്ഥാന പോയിൻ്റ്"
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player_type__base_point
+msgid "Base point to call"
+msgstr "വിളിക്കാനുള്ള അടിസ്ഥാന പോയിൻ്റ്"
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__batting_style
+msgid "Batting Style"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.player_card_template
+#: model_terms:ir.ui.view,arch_db:auction_module.player_template
+msgid "Batting Style:"
+msgstr "ബാറ്റിംഗ് ശൈലി"
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.welcome_message_template
+msgid "Best of luck!"
+msgstr "ആശംസകൾ!"
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__bowling_style
+msgid "Bowling Style"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.player_card_template
+#: model_terms:ir.ui.view,arch_db:auction_module.player_template
+msgid "Bowling Style:"
+msgstr "ബൗളിംഗ് ശൈലി"
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_tree
+msgid "Bring to Auction"
+msgstr "ലേലത്തിൽ കൊണ്ടുവരിക"
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_sell_player
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_set_key_player
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_set_to_auction_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_start_auction_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_edit_player_point_form
+msgid "Cancel"
+msgstr "റദ്ദാക്കുക"
+
+#. module: auction_module
+#: model:ir.ui.menu,name:auction_module.menu_action_auction_conf
+msgid "Configuration"
+msgstr "കോൺഫിഗറേഷൻ"
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction_player__contact
+#: model_terms:ir.ui.view,arch_db:auction_module.auction_details_show
+msgid "Contact"
+msgstr "ബന്ധപ്പെടേണ്ട നമ്പർ"
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.player_card_template
+#: model_terms:ir.ui.view,arch_db:auction_module.player_template
+msgid "Contact:"
+msgstr "ബന്ധപ്പെടേണ്ട നമ്പർ:"
+
+#. module: auction_module
+#: model_terms:ir.actions.act_window,help:auction_module.action_auction_auction
+msgid "Create Auctions"
+msgstr "ലേലങ്ങൾ സൃഷ്ടിക്കുക"
+
+#. module: auction_module
+#: model_terms:ir.actions.act_window,help:auction_module.action_auction_player_type
+#: model_terms:ir.actions.act_window,help:auction_module.action_auction_team
+#: model_terms:ir.actions.act_window,help:auction_module.action_auction_team_key_player
+#: model_terms:ir.actions.act_window,help:auction_module.action_auction_team_player_auction
+#: model_terms:ir.actions.act_window,help:auction_module.action_auction_team_player_draft
+#: model_terms:ir.actions.act_window,help:auction_module.action_auction_team_player_sold
+#: model_terms:ir.actions.act_window,help:auction_module.action_auction_team_player_unpaid
+#: model_terms:ir.actions.act_window,help:auction_module.action_auction_team_player_unsold
+#: model_terms:ir.actions.act_window,help:auction_module.action_auction_tournament
+msgid "Create a Team"
+msgstr "ഒരു ടീം ഉണ്ടാക്കുക"
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction__create_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction_player__create_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_edit_player_point__create_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_player_auction__create_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_sell_player__create_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_set_key_player__create_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_start_auction__create_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_team__create_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__create_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player_type__create_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament__create_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament_point_split__create_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_view_team_details__create_uid
+msgid "Created by"
+msgstr "ഉണ്ടാക്കിയത്"
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction__create_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction_player__create_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_edit_player_point__create_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_player_auction__create_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_sell_player__create_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_set_key_player__create_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_start_auction__create_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_team__create_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__create_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player_type__create_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament__create_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament_point_split__create_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_view_team_details__create_date
+msgid "Created on"
+msgstr "എപ്പോൾ ഉണ്ടാക്കി"
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction__display_name
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction_player__display_name
+#: model:ir.model.fields,field_description:auction_module.field_auction_edit_player_point__display_name
+#: model:ir.model.fields,field_description:auction_module.field_auction_player_auction__display_name
+#: model:ir.model.fields,field_description:auction_module.field_auction_sell_player__display_name
+#: model:ir.model.fields,field_description:auction_module.field_auction_set_key_player__display_name
+#: model:ir.model.fields,field_description:auction_module.field_auction_start_auction__display_name
+#: model:ir.model.fields,field_description:auction_module.field_auction_team__display_name
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__display_name
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player_type__display_name
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament__display_name
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament_point_split__display_name
+#: model:ir.model.fields,field_description:auction_module.field_auction_view_team_details__display_name
+msgid "Display Name"
+msgstr "പ്രദർശന നാമം"
+
+#. module: auction_module
+#: model:ir.actions.act_window,name:auction_module.action_auction_team_player_draft
+#: model:ir.model.fields.selection,name:auction_module.selection__auction_team_player__state__draft
+#: model:ir.ui.menu,name:auction_module.menu_action_auction_draft_players
+msgid "Draft"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament__report_footer
+msgid "Footer"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_search
+msgid "Group By"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_view_team_details__html_field
+msgid "Html Field"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction__id
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction_player__id
+#: model:ir.model.fields,field_description:auction_module.field_auction_edit_player_point__id
+#: model:ir.model.fields,field_description:auction_module.field_auction_player_auction__id
+#: model:ir.model.fields,field_description:auction_module.field_auction_sell_player__id
+#: model:ir.model.fields,field_description:auction_module.field_auction_set_key_player__id
+#: model:ir.model.fields,field_description:auction_module.field_auction_start_auction__id
+#: model:ir.model.fields,field_description:auction_module.field_auction_team__id
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__id
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player_type__id
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament__id
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament_point_split__id
+#: model:ir.model.fields,field_description:auction_module.field_auction_view_team_details__id
+msgid "ID"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_kanban
+msgid "Icon"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_form
+msgid "Icon Player"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.report_auction_auction_document
+msgid "Icon Player:"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.actions.act_window,name:auction_module.action_auction_team_key_player
+#: model:ir.model.fields,field_description:auction_module.field_auction_team__key_player_ids
+#: model:ir.ui.menu,name:auction_module.menu_action_auction_team_key_player
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_form
+msgid "Icon Players"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields.selection,name:auction_module.selection__auction_team_player__state__auction
+msgid "In Auction"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_search
+msgid "Inactive Players"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__icon_player
+msgid "Key Player"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction____last_update
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction_player____last_update
+#: model:ir.model.fields,field_description:auction_module.field_auction_edit_player_point____last_update
+#: model:ir.model.fields,field_description:auction_module.field_auction_player_auction____last_update
+#: model:ir.model.fields,field_description:auction_module.field_auction_sell_player____last_update
+#: model:ir.model.fields,field_description:auction_module.field_auction_set_key_player____last_update
+#: model:ir.model.fields,field_description:auction_module.field_auction_start_auction____last_update
+#: model:ir.model.fields,field_description:auction_module.field_auction_team____last_update
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player____last_update
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player_type____last_update
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament____last_update
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament_point_split____last_update
+#: model:ir.model.fields,field_description:auction_module.field_auction_view_team_details____last_update
+msgid "Last Modified on"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction__write_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction_player__write_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_edit_player_point__write_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_player_auction__write_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_sell_player__write_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_set_key_player__write_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_start_auction__write_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_team__write_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__write_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player_type__write_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament__write_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament_point_split__write_uid
+#: model:ir.model.fields,field_description:auction_module.field_auction_view_team_details__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction__write_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction_player__write_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_edit_player_point__write_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_player_auction__write_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_sell_player__write_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_set_key_player__write_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_start_auction__write_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_team__write_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__write_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player_type__write_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament__write_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament_point_split__write_date
+#: model:ir.model.fields,field_description:auction_module.field_auction_view_team_details__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.actions.act_url,name:auction_module.action_launch_auction
+#: model:ir.ui.menu,name:auction_module.menu_action_launch_auction_root
+msgid "Launch Auction"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields.selection,name:auction_module.selection__auction_tournament__player_appearance_algorithm__linear
+msgid "Linear"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.player_card_template
+#: model_terms:ir.ui.view,arch_db:auction_module.player_template
+msgid "Location:"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament__logo
+msgid "Logo"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.actions.act_window,name:auction_module.action_player_set_to_auction
+msgid "Make ready for auction"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction__manager
+#: model:ir.model.fields,field_description:auction_module.field_auction_team__manager
+#: model_terms:ir.ui.view,arch_db:auction_module.auction_details_show
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_auction_search
+msgid "Manager"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.report_auction_auction_document
+msgid "Manager:"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction__max_limited
+#: model:ir.model.fields,field_description:auction_module.field_auction_start_auction__max_limited
+msgid "Max Limited"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_start_auction__max_point_player
+msgid "Max Point for a player"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction__max_points
+#: model:ir.model.fields,field_description:auction_module.field_auction_start_auction__max_points
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_start_auction_form
+msgid "Max Points"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_auction_form
+msgid "Max Points allocated"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction__max_players
+#: model:ir.model.fields,field_description:auction_module.field_auction_start_auction__max_players
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_start_auction_form
+msgid "Max no of players"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_auction_form
+msgid "Max players allocated"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament__team_max_points
+msgid "Max points alloted for a team"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_edit_player_point__contact
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__contact
+#: model_terms:ir.ui.view,arch_db:auction_module.report_auction_auction_document
+msgid "Mobile Number"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.actions.act_window,name:auction_module.action_edit_player_point
+msgid "Modify Player Points"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_auction_form
+msgid "Modify Points"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_type_search
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_search
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_tournament_search
+msgid "Name"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__name
+msgid "Name of the player"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament__name
+msgid "Name of the tournament"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_search
+msgid "Name/Contact"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields.selection,name:auction_module.selection__auction_auction__max_limited__no
+#: model:ir.model.fields.selection,name:auction_module.selection__auction_start_auction__max_limited__no
+msgid "No"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament_point_split__no_of_calls
+msgid "No of Calls"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_sell_player
+msgid ""
+"On click will sell this player to the selected team, click Ok to continue"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_set_key_player
+msgid ""
+"On click will set this player as key player to the assigned team, click Ok "
+"to continue"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament__organizer_uid
+msgid "Organizer"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament__organizer_uids
+msgid "Organizers"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_auction_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_tournament_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_edit_player_point_form
+msgid "Other Details"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__payment_url
+msgid "Payment URL"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_edit_player_point__player_photo
+#: model:ir.model.fields,field_description:auction_module.field_auction_sell_player__player_photo
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__photo
+msgid "Photo"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__photo_url
+msgid "Photo URL"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction_player__player_id
+#: model:ir.model.fields,field_description:auction_module.field_auction_edit_player_point__player_id
+#: model:ir.model.fields,field_description:auction_module.field_auction_sell_player__player_id
+#: model:ir.model.fields,field_description:auction_module.field_auction_set_key_player__player_id
+#: model_terms:ir.ui.view,arch_db:auction_module.report_auction_auction_document
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_auction_search
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_search
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_tree
+msgid "Player"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament__player_appearance_algorithm
+msgid "Player Appearance Algorithm"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.player_template
+msgid "Player Auction"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model,name:auction_module.model_report_auction_module_player_card_template
+msgid "Player Card Template"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.player_card_template
+#: model_terms:ir.ui.view,arch_db:auction_module.player_template
+msgid "Player Image"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.auction_details_show
+msgid "Player Name"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_set_key_player__player_photo
+msgid "Player Photo"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_type_search
+msgid "Player Type"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.actions.act_window,name:auction_module.action_auction_player_type
+msgid "Player Type(s)"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.actions.act_window,name:auction_module.action_auction_team_player_sold
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction__player_ids
+#: model:ir.ui.menu,name:auction_module.menu_action_auction_player
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_auction_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_view_team_details_form
+msgid "Players"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.actions.act_url,name:auction_module.action_print_players_cards
+msgid "Players Card"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_sell_player__players_remaining
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_view_team_details_form
+msgid "Players Remaining"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.player_template
+msgid "Players Remaining:"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.ui.menu,name:auction_module.menu_action_auction_sold_players
+msgid "Players Sold"
+msgstr ""
+
+#. module: auction_module
+#: code:addons/auction_module/wizard/action_start_auction.py:0
+#: model:ir.actions.act_window,name:auction_module.action_auction_team_player_auction
+#: model:ir.ui.menu,name:auction_module.menu_action_auction_active_players
+#, python-format
+msgid "Players in Auction"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.auction_details_show
+msgid "Players needed"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_edit_player_point_form
+msgid "Please confirm the modification of point, click Ok to continue"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament_point_split__points
+msgid "Point"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction_player__points
+#: model:ir.model.fields,field_description:auction_module.field_auction_edit_player_point__points
+#: model_terms:ir.ui.view,arch_db:auction_module.auction_details_show
+#: model_terms:ir.ui.view,arch_db:auction_module.report_auction_auction_document
+msgid "Points"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_edit_player_point__points_gain
+msgid "Points Gain"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_edit_player_point_form
+msgid "Points Gained/Lost"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.auction_details_show
+msgid "Points Left"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_sell_player__points_remaining
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_view_team_details_form
+msgid "Points Remaining"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.player_template
+msgid "Points Remaining:"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament__points_split_ids
+msgid "Points Split"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_edit_player_point__previous_points
+msgid "Previous Points"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_edit_player_point_form
+msgid "Previous Value of this player"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_view_team_details_form
+msgid "Print"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.ui.menu,name:auction_module.menu_print_player_card
+msgid "Print Player Card"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.actions.server,name:auction_module.action_print_player_card
+msgid "Print Player Cards"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_auction_form
+msgid "Print Players List"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields.selection,name:auction_module.selection__auction_tournament__player_appearance_algorithm__random
+msgid "Random"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_auction_form
+msgid "Recall to Auction"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction__remaining_players_count
+#: model:ir.model.fields,field_description:auction_module.field_auction_view_team_details__remaining_players_count
+msgid "Remaining players required"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction__remaining_points
+#: model:ir.model.fields,field_description:auction_module.field_auction_view_team_details__remaining_points
+msgid "Remaining points"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.ui.menu,name:auction_module.menu_action_auction_reporting
+msgid "Reporting"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_kanban
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_tree
+msgid "Revoke Icon Player"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_kanban
+msgid "Revoke Key Player"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__role
+#: model_terms:ir.ui.view,arch_db:auction_module.auction_details_show
+#: model_terms:ir.ui.view,arch_db:auction_module.report_auction_auction_document
+msgid "Role"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.player_card_template
+msgid "Role:"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_player_auction__player_ids
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_set_to_auction_form
+msgid "Selected Players"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_sell_player
+msgid "Sell"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.actions.act_window,name:auction_module.action_auction_sell_player
+msgid "Sell Player"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_kanban
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_tree
+msgid "Sell to Team"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.player_template
+msgid "Serial No:"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_set_key_player
+msgid "Set"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_kanban
+msgid "Set Icon Player"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_set_to_auction_form
+msgid "Set to Auction"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_kanban
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_tree
+msgid "Set to Unsold"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__sl_no
+#: model_terms:ir.ui.view,arch_db:auction_module.report_auction_auction_document
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_search
+msgid "Sl No"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields.selection,name:auction_module.selection__auction_team_player__state__sold
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_form
+msgid "Sold"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_sell_player__team_id
+msgid "Sold To"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.player_template
+msgid "Sold for Points:"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_sell_player__final_point
+msgid "Sold for(Points)"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.player_template
+msgid "Sold to:"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.actions.act_window,name:auction_module.action_auction_start_auction
+#: model:ir.ui.menu,name:auction_module.menu_action_auction_start_auction
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_start_auction_form
+msgid "Start Auction"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__state
+msgid "State"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.player_template
+msgid "Submit"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_sell_player__suggestion
+#: model:ir.model.fields,field_description:auction_module.field_auction_view_team_details__suggestion
+msgid "Suggestion"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.actions.act_window,name:auction_module.action_auction_team
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction__team_id
+#: model:ir.model.fields,field_description:auction_module.field_auction_set_key_player__team_id
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__assigned_team_id
+#: model:ir.model.fields,field_description:auction_module.field_auction_view_team_details__team_id
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_auction_search
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_search
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_type_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_type_tree
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_search
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_tree
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_tournament_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_tournament_tree
+msgid "Team"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_sell_player__team_auction_id
+msgid "Team Auction"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_sell_player
+msgid "Team Details"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.player_card_template
+#: model_terms:ir.ui.view,arch_db:auction_module.player_template
+#: model_terms:ir.ui.view,arch_db:auction_module.player_template_blank
+msgid "Team Image"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction__team_logo
+#: model:ir.model.fields,field_description:auction_module.field_auction_set_key_player__team_logo
+#: model:ir.model.fields,field_description:auction_module.field_auction_team__logo
+#: model:ir.model.fields,field_description:auction_module.field_auction_view_team_details__team_logo
+#: model_terms:ir.ui.view,arch_db:auction_module.report_auction_auction_document
+msgid "Team Logo"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_team__name
+#: model_terms:ir.ui.view,arch_db:auction_module.auction_details_show
+msgid "Team Name"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.report_auction_auction_document
+msgid "Team Name:"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.ui.menu,name:auction_module.menu_action_auction_team
+msgid "Team(s)"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_start_auction__team_ids
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament__team_ids
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_start_auction_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_tournament_form
+msgid "Teams"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament__template_image
+msgid "Template Image"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.auction_completed_message
+msgid "Thank you for participating!"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.auction_completed_message
+msgid "Thanking you all. All the best for the matches!"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.auction_completed_message
+msgid "The Auction Completed"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_auction_form
+msgid ""
+"This action will bring the selected player back to auction. Click on Ok to "
+"continue. Else click on Cancel"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.actions.act_window,help:auction_module.action_auction_team_key_player
+#: model_terms:ir.actions.act_window,help:auction_module.action_auction_team_player_auction
+#: model_terms:ir.actions.act_window,help:auction_module.action_auction_team_player_draft
+#: model_terms:ir.actions.act_window,help:auction_module.action_auction_team_player_sold
+#: model_terms:ir.actions.act_window,help:auction_module.action_auction_team_player_unpaid
+#: model_terms:ir.actions.act_window,help:auction_module.action_auction_team_player_unsold
+msgid "This menu to create or import the players."
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.actions.act_window,help:auction_module.action_auction_team
+msgid "This menu to create or import the teams for auction."
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.actions.act_window,help:auction_module.action_auction_player_type
+#: model_terms:ir.actions.act_window,help:auction_module.action_auction_tournament
+msgid "This menu to create or import the tournament."
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_tree
+msgid ""
+"This will bring the player back to Auction from Unsold mode. Click on Ok to "
+"continue. Otherwise click on Cancel"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_set_to_auction_form
+msgid ""
+"This will change all the selected players ready for Auction., click Ok to "
+"continue"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_form
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_kanban
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_tree
+msgid ""
+"This will revoke the player from the icon player list and bring to auction. "
+"Click on Ok to continue. Otherwise click on Cancel"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_kanban
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_tree
+msgid ""
+"This will set the player to Unsold and later you can bring back to Auction. "
+"Click on Ok to continue. Otherwise click on Cancel"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_start_auction_form
+msgid "This will start auction process, click Ok to continue"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction__total_point
+msgid "Total points"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.actions.act_window,name:auction_module.action_auction_tournament
+#: model:ir.model.fields,field_description:auction_module.field_auction_auction__tournament_id
+#: model:ir.model.fields,field_description:auction_module.field_auction_player_auction__tournament_id
+#: model:ir.model.fields,field_description:auction_module.field_auction_team__tournament_id
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player__tournament_id
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament_point_split__tournament_id
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_tournament_search
+msgid "Tournament"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.auction_completed_message
+#: model_terms:ir.ui.view,arch_db:auction_module.auction_details_show
+#: model_terms:ir.ui.view,arch_db:auction_module.report_auction_auction_document
+#: model_terms:ir.ui.view,arch_db:auction_module.welcome_message_template
+msgid "Tournament Logo"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.ui.menu,name:auction_module.menu_action_auction_tournament
+msgid "Tournament(s)"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_res_users__tournament_ids
+msgid "Tournaments"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_team_player_type__name
+msgid "Type of the player"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.actions.act_window,name:auction_module.action_auction_team_player_unpaid
+#: model:ir.ui.menu,name:auction_module.menu_action_auction_unpaid_players
+msgid "Unpaid Players"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields.selection,name:auction_module.selection__auction_team_player__state__unsold
+msgid "Unsold"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.actions.act_window,name:auction_module.action_auction_team_player_unsold
+#: model:ir.ui.menu,name:auction_module.menu_action_auction_unsold_players
+msgid "Unsold Players"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_edit_player_point_form
+msgid "Update"
+msgstr ""
+
+#. module: auction_module
+#: model:res.groups,comment:auction_module.group_auction_group
+#: model:res.groups,name:auction_module.group_auction_group
+msgid "User"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model,name:auction_module.model_res_users
+msgid "Users"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields,field_description:auction_module.field_auction_tournament__venue
+msgid "Venue"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.ui.menu,name:auction_module.menu_action_auction_view_points
+msgid "View Auction Points"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.actions.act_window,name:auction_module.action_auction_view_team_details
+msgid "View Details"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.auction_details_show
+msgid "View Players"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_auction_tree
+msgid "View Summary"
+msgstr ""
+
+#. module: auction_module
+#: code:addons/auction_module/wizard/action_sell_player.py:0
+#: code:addons/auction_module/wizard/action_sell_player.py:0
+#: code:addons/auction_module/wizard/action_sell_player.py:0
+#, python-format
+msgid "Warning"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.welcome_message_template
+msgid "Welcome to the Tournament!"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model.fields.selection,name:auction_module.selection__auction_auction__max_limited__yes
+#: model:ir.model.fields.selection,name:auction_module.selection__auction_start_auction__max_limited__yes
+msgid "Yes"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model,name:auction_module.model_auction_auction
+msgid "auction.auction"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model,name:auction_module.model_auction_auction_player
+msgid "auction.auction.player"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model,name:auction_module.model_auction_edit_player_point
+msgid "auction.edit.player.point"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model,name:auction_module.model_auction_player_auction
+msgid "auction.player.auction"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model,name:auction_module.model_auction_sell_player
+msgid "auction.sell.player"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model,name:auction_module.model_auction_set_key_player
+msgid "auction.set.key.player"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model,name:auction_module.model_auction_start_auction
+msgid "auction.start.auction"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model,name:auction_module.model_auction_team
+msgid "auction.team"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model,name:auction_module.model_auction_team_player
+msgid "auction.team.player"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model,name:auction_module.model_auction_team_player_type
+msgid "auction.team.player.type"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model,name:auction_module.model_auction_tournament
+msgid "auction.tournament"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model,name:auction_module.model_auction_tournament_point_split
+msgid "auction.tournament.point.split"
+msgstr ""
+
+#. module: auction_module
+#: model:ir.model,name:auction_module.model_auction_view_team_details
+msgid "auction.view.team.details"
+msgstr ""
+
+#. module: auction_module
+#: model_terms:ir.ui.view,arch_db:auction_module.view_auction_team_player_type_form
+msgid "required"
+msgstr ""
