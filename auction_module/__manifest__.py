@@ -48,7 +48,6 @@
                 ],
             'web.assets_frontend': [
                 'auction_module/static/src/js/auction.js',
-                '/auction_module/static/src/js/spacebar.js',
 
             ],
         },
