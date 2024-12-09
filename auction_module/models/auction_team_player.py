@@ -40,6 +40,13 @@ class AuctionTeamPlayer(models.Model):
     assigned_team_id = fields.Many2one('auction.team', 'Team')
     icon_player = fields.Boolean("Key Player")
     notes = fields.Char()
+    #other details
+    current_team = fields.Char("Current Team")
+    jersy_size = fields.Char('Jersy Size')
+    jersy_number = fields.Char("Number in Jersy")
+    jersy_name = fields.Char("Name in Jersy")
+
+
 
 
     def print_player_card(self):

@@ -148,6 +148,16 @@
                             <field name="icon_player" invisible="1"/>
                             <field name="sl_no" invisible="1"/>
                     </group>
+                    <notebook>
+                        <page string="Other Details">
+                            <group>
+                                <field name="current_team"/>
+                                <field name="jersy_name"/>
+                                <field name="jersy_size"/>
+                                <field name="jersy_number"/>
+                            </group>
+                        </page>
+                    </notebook>
                 </form>
             </field>
         </record>
