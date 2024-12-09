@@ -8,7 +8,6 @@ import requests
 import base64
 import werkzeug
 import werkzeug.exceptions
-from twilio.rest import Client
 
 class AuctionTeamPlayer(models.Model):
     _name = 'auction.team.player'
@@ -42,75 +41,6 @@ class AuctionTeamPlayer(models.Model):
     icon_player = fields.Boolean("Key Player")
     notes = fields.Char()
 
-    # def action_send_whatsapp(self):
-    #     account_sid = 'ACe03cfa5fad6b7c9e71a01c6347536cdf'  # Replace with your Twilio Account SID
-    #     auth_token = 'd125e462e6e15690dab9a4b7e6b38b23'  # Replace with your Twilio Auth Token
-    #     group_id = 'H72h0IsRWldBDFgmKzwzmU'
-    #     # access_token = 'd125e462e6e15690dab9a4b7e6b38b23'
-    #     client = Client(account_sid, auth_token)
-    #     group_id = 'whatsapp:+919746355169'
-    #     from_whatsapp_number = 'whatsapp:+14155238886'
-    #     message_body = 'Priyan sold to Hunters for 2300.'
-    #     message = client.messages.create(
-    #         from_=from_whatsapp_number,
-    #         body=message_body,
-    #         to=group_id
-    #     )
-    #
-    #     print(f"Message sent successfully with SID: {message.sid}")
-    # @api.model
-    # def send_whatsapp_message(self, group_id, message, attachment_url=None):
-    #     # WhatsApp API Credentials
-    #     access_token = 'YOUR_ACCESS_TOKEN'  # Get from Meta for Developers
-    #     phone_number_id = 'YOUR_PHONE_NUMBER_ID'  # WhatsApp Business Number ID
-    #     api_url = f'https://graph.facebook.com/v16.0/{phone_number_id}/messages'
-    #
-    #     headers = {
-    #         'Authorization': f'Bearer {access_token}',
-    #         'Content-Type': 'application/json',
-    #     }
-    #
-    #     # Message Data
-    #     data = {
-    #         "messaging_product": "whatsapp",
-    #         "to": group_id,  # Use the group's WhatsApp number or ID
-    #         "type": "text",
-    #         "text": {"body": message},
-    #     }
-    #
-    #     # If attachment is provided
-    #     if attachment_url:
-    #         # Upload media first
-    #         upload_url = f"https://graph.facebook.com/v16.0/{phone_number_id}/media"
-    #         media_data = {
-    #             "messaging_product": "whatsapp",
-    #             "type": "document",
-    #             "url": attachment_url,  # URL of your document
-    #         }
-    #         response = requests.post(upload_url, headers=headers, json=media_data)
-    #         response_data = response.json()
-    #
-    #         if 'id' in response_data:
-    #             media_id = response_data['id']
-    #             # Modify message data to send the attachment
-    #             data = {
-    #                 "messaging_product": "whatsapp",
-    #                 "to": group_id,
-    #                 "type": "document",
-    #                 "document": {
-    #                     "id": media_id,
-    #                     "caption": "Here is the attachment",
-    #                 },
-    #             }
-    #         else:
-    #             raise Exception(f"Media upload failed: {response_data.get('error', {})}")
-    #
-    #     # Send Message
-    #     response = requests.post(api_url, headers=headers, json=data)
-    #     if response.status_code == 200:
-    #         return True
-    #     else:
-    #         raise Exception(f"Failed to send WhatsApp message: {response.json()}")
 
     def print_player_card(self):
         players = self.search([])
