@@ -43,7 +43,6 @@
     'assets': {
             'web.assets_backend': [
                     '/auction_module/static/src/css/wizard_style.css',
-                    '/auction_module/static/src/js/spacebar.js',
 
                 ],
             'web.assets_frontend': [
