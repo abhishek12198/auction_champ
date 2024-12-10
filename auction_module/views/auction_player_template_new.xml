@@ -1,94 +1,178 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <template id="player_template_new" name="Player Auction">
+<template id="player_template_new" name="Player Auction">
     <html lang="en">
-<head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Cricket Auction Player Display</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-        .player-card {
-            display: flex;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            width: 90vw; /* Adjusts width to 90% of the viewport */
-            max-width: 1200px; /* Limits max width for large screens */
-            height: 50vh; /* Adjusts height to 50% of the viewport */
-        }
-        .player-photo {
-            width: 40%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .player-info {
-            width: 60%;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .player-info h2 {
-            font-size: 3vw; /* Makes font size responsive */
-            margin-bottom: 15px;
-            color: #333;
-        }
-        .player-info p {
-            font-size: 2vw; /* Responsive font size */
-            margin: 5px 0;
-            color: #555;
-        }
-        .player-info .role {
-            color: #1e90ff;
-            font-weight: bold;
-        }
-        .contact {
-            margin-top: 20px;
-            font-size: 1.8vw;
-            color: #777;
-        }
-        @media (max-width: 768px) {
-            .player-card {
-                flex-direction: column;
-                height: auto;
-            }
-            .player-photo {
-                width: 100%;
-                height: 250px;
-            }
-            .player-info {
-                width: 100%;
-                padding: 15px;
-            }
-        }
-    </style>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <!-- google font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Teko:wght@600&amp;display=swap"
+      rel="stylesheet"
+    />
 
-<div class="player-card">
-    <img t-att-src="image_data_uri(player.photo)" alt="Player Image" class="player-image"/>
-    <div class="player-info">
-        <h2>Player Name</h2>
-        <p class="role">Player Role: All-rounder</p>
-        <p>Batting Style: Left-hand Bat</p>
-        <p>Bowling Style: Left-arm Fast</p>
-        <p class="contact">Contact: 987-654-3210</p>
+    <link rel="stylesheet" href="/auction_module/static/src/assets/css/style.css" />
+    <title>Player Display</title>
+
+    <!--<style></style>-->
+  </head>
+  <body style="min-height: 100vh">
+    <header class="single-header">
+      <div class="py-3 text-center">
+        <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo" />
+      </div>
+      <div class="container">
+        <div class="position-relative" style="column-gap: 8px">
+          <!--<a
+            class="back-btn d-none d-sm-flex justify-content-center align-items-center position-absolute"
+            href="#"
+          >
+            <img
+              src="/auction_module/static/src/assets/images/back-btn.svg"
+              alt="back button"
+              width="43px"
+              height="43px"
+              style="background-color: transparent"
+            />
+          </a>-->
+          <div
+            class="team-name d-flex justify-content-center justify-content-sm-end align-items-center"
+          >
+            <div class="d-none d-sm-block bg-white" style="min-height: 58px">
+              <div>
+                <h3><span t-esc="player.tournament_id.name"/></h3>
+                <p><span t-esc="player.tournament_id.description"/></p>
+              </div>
+            </div>
+            <img
+              t-att-src="image_data_uri(player.tournament_id.logo)"
+              alt="team-logo"
+              width="91"
+              height="91"
+              class="team-single-logo"
+            />
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="container h-100">
+      <div
+        class="row auction-single justify-content-center justify-content-lg-between gap-4"
+      >
+        <div class="col-sm-3 single-player-details">
+          <h3 class="stroke-only"><span t-esc="player.sl_no"/></h3>
+          <h4 class="player-name"><span t-esc="player.name"/></h4>
+          <p class="player-possition"><span t-esc="player.role"/></p>
+        </div>
+
+        <div class="col-sm-3">
+          <div class="position-relative single-player-image">
+            <div class="sp-image m-auto">
+              <div class="sp-image-before"></div>
+              <!-- Use an image with dimensions 380x553 for optimal results and to ensure it fits well within the design. -->
+              <img
+                t-att-src="image_data_uri(player.photo)"
+                alt="player-image"
+                id="loadImage"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="col-4 col-lg-5">
+          <div class="player-profession m-auto">
+            <div class="player-profession-header">
+              <p>Details</p>
+            </div>
+            <div class="player-profession-body">
+              <div>
+                <p>Batting Style</p>
+                <p>Bowling Style</p>
+                <p>Contact No</p>
+                <p>Location</p>
+              </div>
+              <div>
+                <p><span>:</span> <span t-esc="player.batting_style"/></p>
+                <p><span>:</span> <span t-esc="player.bowling_style"/></p>
+                <p><span>:</span> <span t-esc="player.contact"/></p>
+                <p>
+                  <span>:</span> <span t-esc="player.address"/>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="auction-single-buttons d-flex align-items-center justify-content-center gap-3 mt-4"
+          >
+            <button disabled="1">Set as unsold</button>
+            <button class="sell" disabled="1">Sell to Team</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="next-player m-auto pb-5 pb-sm-5">
+        <div style="cursor: pointer" onclick="changeImage()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            onclick=""
+          >
+            <path
+              d="M8 16C5.76667 16 3.875 15.225 2.325 13.675C0.775 12.125 0 10.2333 0 8C0 5.76667 0.775 3.875 2.325 2.325C3.875 0.775 5.76667 0 8 0C9.15 0 10.25 0.237333 11.3 0.712C12.35 1.18667 13.25 1.866 14 2.75V0H16V7H9V5H13.2C12.6667 4.06667 11.9377 3.33333 11.013 2.8C10.0883 2.26667 9.084 2 8 2C6.33333 2 4.91667 2.58333 3.75 3.75C2.58333 4.91667 2 6.33333 2 8C2 9.66667 2.58333 11.0833 3.75 12.25C4.91667 13.4167 6.33333 14 8 14C9.28333 14 10.4417 13.6333 11.475 12.9C12.5083 12.1667 13.2333 11.2 13.65 10H15.75C15.2833 11.7667 14.3333 13.2083 12.9 14.325C11.4667 15.4417 9.83333 16 8 16Z"
+              fill="#0A1429"
+            />
+          </svg>
+          <p>Next Player</p>
+        </div>
+        <!--<p class="d-none d-lg-block">Or</p>
+        <p class="d-none d-lg-block">Click space bar</p>-->
+      </div>
     </div>
-</div>
 
-</body>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+      let array = [
+        "https://images.pexels.com/photos/27219452/pexels-photo-27219452/free-photo-of-woman-in-white-dress-lying-down-on-couch.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1260&amp;h=750&amp;dpr=1",
+        "https://images.pexels.com/photos/28857430/pexels-photo-28857430/free-photo-of-stack-of-delicious-homemade-cookies-on-plate.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=600&amp;lazy=load",
+        "https://images.pexels.com/photos/29248997/pexels-photo-29248997/free-photo-of-contemplative-man-holding-a-large-clock-outdoors.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=600&amp;lazy=load",
+        "./assets/images/player-image.png",
+      ];
+
+      let image = document.getElementById("loadImage");
+      let currentIndex = 0;
+
+      function changeImage() {
+        window.location.reload();
+
+      }
+
+      document.addEventListener("keydown", (event) => {
+        // alert("space clicked");
+        if (event.code === "Space") {
+          event.preventDefault();
+          changeImage();
+        }
+      });
+    </script>
+  </body>
 </html>
 </template>
 

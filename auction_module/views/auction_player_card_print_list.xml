@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <odoo>
+    <template id="report_player_card_list">
+        <t t-call="web.basic_layout">
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; padding: 20px; background: #f3f4f7; box-sizing: border-box;">
+                <t t-foreach="docs" t-as="doc">
+                    <!-- Individual Player Card -->
+                    <div style="width: 48%; height: 150px; background: white; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); margin-bottom: 20px; padding: 10px; box-sizing: border-box; font-family: Arial, sans-serif; position: relative; overflow: hidden;">
+
+                        <!-- Tournament Logo -->
+                        <div style="position: absolute; top: 10px; left: 10px;">
+                            <img t-if="doc.tournament_id.logo"
+                                t-att-src="image_data_uri(doc.tournament_id.logo)"
+                                style="width: 30px; height: 30px; object-fit: contain; border-radius: 5px;"/>
+                        </div>
+
+                        <!-- Header -->
+                        <div style="text-align: center; margin-bottom: 5px;">
+                            <h4 style="margin: 0; font-size: 14px; color: #2a5298;">Player Card</h4>
+                            <p style="margin: 0; font-size: 10px; color: #555;"><span t-esc="doc.tournament_id.name or 'N/A'"/></p>
+                        </div>
+
+                        <!-- Player Info -->
+                        <div style="display: flex; align-items: center;">
+                            <!-- Player Photo -->
+                            <div style="flex: 1; text-align: center; position: relative;">
+                                <img t-if="doc.photo"
+                                    t-att-src="image_data_uri(doc.photo)"
+                                    style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid #2a5298;"/>
+
+                                <!-- Serial Number Tag -->
+                                <div style="position: absolute; top: 0; right: -5px; background: #ff5722; color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px;">
+                                    <strong>#<span t-esc="doc.sl_no"/></strong>
+                                </div>
+                            </div>
+
+                            <!-- Player Details -->
+                            <div style="flex: 2; padding-left: 10px;">
+                                <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                                    <tr>
+                                        <td style="padding: 2px; font-weight: bold; color: #333;">Name:</td>
+                                        <td style="padding: 2px; color: #555;"><span t-esc="doc.name"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 2px; font-weight: bold; color: #333;">Role:</td>
+                                        <td style="padding: 2px; color: #555;"><span t-esc="doc.role or 'N/A'"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 2px; font-weight: bold; color: #333;">Contact:</td>
+                                        <td style="padding: 2px; color: #555;"><span t-esc="doc.contact or 'N/A'"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 2px; font-weight: bold; color: #333;">Location:</td>
+                                        <td style="padding: 2px; color: #555;"><span t-esc="doc.address or 'N/A'"/></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Footer (Optional) -->
+                        <div style="text-align: center; margin-top: 5px; font-size: 10px; color: #777;">
+                            <em>Powered by AuctionChamp</em>
+                        </div>
+                    </div>
+                </t>
+            </div>
+        </t>
+    </template>
+</odoo>
+
+
+
+</odoo>

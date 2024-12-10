@@ -22,7 +22,8 @@ class AuctionTournament(models.Model):
 
         return defaults
 
-    name = fields.Char(string="Name of the tournament", required=True)
+    name = fields.Char(string="Name", required=True)
+    description = fields.Char(string="Short Description", required=True)
     venue = fields.Text("Venue")
     logo = fields.Binary('Logo')
     active = fields.Boolean(default=True)

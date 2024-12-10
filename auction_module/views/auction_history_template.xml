@@ -186,7 +186,20 @@
                     data.result.forEach(update => {
                         let updateElement = document.createElement('div');
                         updateElement.className = 'update-item';
-                        updateElement.innerHTML = `
+                        if (update.avatar_team){
+                            updateElement.innerHTML = `
+                            &lt;img src="data:image/jpeg;base64,${update.avatar_base64}" class="avatar" alt="Avatar"&gt;
+
+                            &lt;div&gt;
+                                &lt;strong&gt;${update.message}&lt;/strong&gt;
+                                &lt;br&gt;
+                                &lt;small&gt;(${update.timestamp})&lt;/small&gt;
+                            &lt;/div&gt;
+                            &lt;img src="data:image/jpeg;base64,${update.avatar_team}" class="avatar" alt="Avatar"&gt;
+                        `;
+                        }
+                        else{
+                            updateElement.innerHTML = `
                             &lt;img src="data:image/jpeg;base64,${update.avatar_base64}" class="avatar" alt="Avatar"&gt;
                             &lt;div&gt;
                                 &lt;strong&gt;${update.message}&lt;/strong&gt;
@@ -194,6 +207,9 @@
                                 &lt;small&gt;(${update.timestamp})&lt;/small&gt;
                             &lt;/div&gt;
                         `;
+                        }
+
+
                         updatesContainer.appendChild(updateElement);
                     });
                 }

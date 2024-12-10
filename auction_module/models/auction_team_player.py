@@ -46,12 +46,12 @@ class AuctionTeamPlayer(models.Model):
     jersy_number = fields.Char("Number in Jersy")
     jersy_name = fields.Char("Name in Jersy")
 
+    def print_player_cards(self):
+        return self.env.ref('auction_module.action_report_player_card').report_action(self)
 
-
-
-    def print_player_card(self):
-        players = self.search([])
-        return self.env.ref('auction_module.action_player_card_auction').report_action(players.ids)
+    # def print_player_card(self):
+    #     players = self.search([])
+    #     return self.env.ref('auction_module.action_player_card_auction').report_action(players.ids)
 
     @api.model
     def action_player_card_report(self):

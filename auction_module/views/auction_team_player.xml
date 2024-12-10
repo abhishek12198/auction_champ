@@ -98,6 +98,7 @@
             <field name="name">auction.team.tree</field>
             <field name="model">auction.team.player</field>
             <field name="arch" type="xml">
+
                 <tree string="Player" default_order="icon_player desc, sl_no">
                     <field name="sl_no"/>
                     <field name="name"/>
@@ -133,6 +134,7 @@
                         <button name="action_revoke_key_player" string="Revoke Icon Player" attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '!=', True)]}"  class="btn btn-secondary oe_kanban_button" type="object"  confirm="This will revoke the player from the icon player list and bring to auction. Click on Ok to continue. Otherwise click on Cancel"/>
                         <!--<button name="action_send_whatsapp" string="Send Whatsapp"   class="btn btn-secondary oe_kanban_button" type="object"  confirm="Send Whatsapp message"/>
 -->
+                    <button name="print_player_cards" type="object" string="Print Player Cards" class="btn-primary"/>
                     </header>
                     <field name="photo" widget='image' class="oe_avatar"/>
                     <group col="4">

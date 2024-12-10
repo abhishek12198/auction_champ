@@ -29,18 +29,17 @@ class Auction(http.Controller):
     #history part
     @http.route('/live_updates', type='http', auth='public', website=True)
     def live_updates_page(self):
-        print("----------------")
         return request.render('auction_module.live_updates_template')
 
     @http.route('/get_live_updates', type='json', auth='public')
     def get_live_updates(self):
         records = request.env['auction.history'].sudo().search([], order='create_date desc', limit=50)
-        print("----------------shshsh")
         return [
             {
                 'message': rec.message,
-                'timestamp': rec.create_date.strftime('%Y-%m-%d %H:%M:%S'),
+                'timestamp': rec.create_date.strftime('%d-%m-%Y %H:%M:%S'),
                 'avatar_base64':rec.player_photo,
+                'avatar_team':  rec.team_id and rec.team_id.logo or False,
                 # 'author': rec.author
             }
             for rec in records
@@ -73,10 +72,16 @@ class Auction(http.Controller):
         tournament_id = request.env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
         if player:
             auction_ids = request.env['auction.auction'].sudo().search([])
-            r = request.render("auction_module.player_template", {'player': player, 'tournament': tournament_id, 'auction_ids': auction_ids})
+            r = request.render("auction_module.player_template_new", {'player': player, 'tournament': tournament_id, 'auction_ids': auction_ids})
         else:
             r = request.render("auction_module.welcome_message_template", {'tournament': tournament_id})
         return r
+
+    @http.route('/auction/get/players/team/<int:team_id>', type='http', auth='public', website=True)
+    def get_team_players(self, team_id):
+        team_players = request.env['auction.auction.player'].search([('auction_id.team_id', '=', team_id)])
+        team = request.env['auction.team'].browse(team_id)
+        return request.render('auction_module.auction_team_players_template', {'players': team_players, 'team': team})
 
     @http.route('/get_players/<int:team_id>', type='json', auth="user", methods=['POST'], csrf=False)
     def get_players(self, team_id):
@@ -95,7 +100,7 @@ class Auction(http.Controller):
                             'points': 'ICON PLAYER',
                             'role': icon_player.role,
                             'contact': icon_player.contact,
-                            'photo': icon_player.photo
+                            'c': icon_player.photo
                         })
             if players:
                 for player in players:
@@ -108,7 +113,7 @@ class Auction(http.Controller):
                     })
             else:
                 return {'status': 'error', 'message': 'No players found', 'team': team.name}
-            return {'status': 'success', 'players': player_data, 'team': team.name}
+            return {'status': 'success', 'players': player_data, 'team': team.name, 'team_obj': team}
 
         except Exception as e:
             # Log the exception

@@ -1,268 +1,314 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <template id="auction_details_show" name="Player Auction">
-        <t t-name="module_name.template_tournament_details">
-            <head>
-                <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-                <title>Auction Point Details</title>
-                <style>
-                    /* Import Google Fonts */
-                    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&amp;family=Roboto:wght@400;500&amp;display=swap');
-
-                    .tournament-container {
-                        width: 80%;
-                        margin: 0 auto;
-                        padding: 20px;
-                        border: 1px solid #ddd;
-                        border-radius: 8px;
-                        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-                        background-color: #f9f9f9;
-                        font-family: 'Roboto', sans-serif;
-                    }
-                    .tournament-header {
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        margin-bottom: 20px;
-                    }
-                    .player-photo {
-                        width: 100px;
-                        height: 100px;
-                        border-radius: 50%;
-                        margin-right: 10px;
-                    }
-                    .player-detail {
-                        font-size: 20px;
-                        vertical-align: middle;
-                        color: #333;
-                        font-family: 'Roboto', sans-serif;
-                    }
-                    .view-players-btn {
-                        background-color: #004080;
-                        color: #fff;
-                        border: none;
-                        padding: 10px 15px;
-                        font-size: 16px;
-                        cursor: pointer;
-                        transition: background-color 0.3s ease;
-                        border-radius: 4px;
-                    }
-                    .view-players-btn:hover {
-                        background-color: #003366;
-                    }
-                    .tournament-logo {
-                        max-height: 100px;
-                    }
-                    .tournament-title {
-                        font-size: 24px;
-                        font-weight: bold;
-                        color: #333;
-                        font-family: 'Playfair Display', serif;
-                    }
-                    .tournament-table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-top: 20px;
-                    }
-                    .tournament-table th, .tournament-table td {
-                        padding: 10px;
-                        text-align: left;
-                        border: 1px solid #ddd;
-                    }
-                    .tournament-table th {
-                        background-color: #004080;
-                        color: white;
-                        font-weight: 500;
-                        font-family: 'Playfair Display', serif;
-                    }
-                    .tournament-table tr:nth-child(even) {
-                        background-color: #f2f2f2;
-                    }
-                    .highlight-zero {
-                        background-color: #ffcccc !important;
-                    }
-
-                    /* Modal Styles */
-                    .modal {
-                        display: none;
-                        position: fixed;
-                        z-index: 1;
-                        left: 0;
-                        top: 0;
-                        width: 100%;
-                        height: 100%;
-                        overflow: auto;
-                        background-color: rgb(0,0,0);
-                        background-color: rgba(0,0,0,0.4);
-                        padding-top: 60px;
-                    }
-
-                    .modal-content {
-                        background-color: #fefefe;
-                        margin: 5% auto;
-                        padding: 20px;
-                        border: 1px solid #888;
-                        width: 80%;
-                    }
-
-                    .close {
-                        color: #aaa;
-                        float: right;
-                        font-size: 28px;
-                        font-weight: bold;
-                    }
-
-                    .close:hover,
-                    .close:focus {
-                        color: black;
-                        text-decoration: none;
-                        cursor: pointer;
-                    }
-                    .team-manager-line {
-                        display: flex;
-                        justify-content: space-between;
-                        font-size: 18px;
-                        color: #004080;
-                        font-weight: bold;
-                        margin-bottom: 20px;
-                    }
-                    .team-logo-modal {
-                        width: 40px;
-                        height: 40px;
-                        margin-right: 10px;
-                    }
-                </style>
-            </head>
-            <div class="tournament-container">
-                <!-- Header with Tournament Logo and Title -->
-                <div class="tournament-header">
-                    <div class="tournament-title">Auction Balance Points</div>
-                    <img t-att-src="image_data_uri(env['auction.tournament'].search([('active', '=', True)], limit=1).logo)" alt="Tournament Logo" class="tournament-logo"/>
-                </div>
-
-                <!-- Tournament Details Table -->
-                <table class="tournament-table">
-                    <thead>
-                        <tr>
-                            <th style="text-align: center;" colspan="2">Team Name</th>
-                            <th style="text-align: center;">Manager</th>
-                            <th style="text-align: center;">Players needed</th>
-                            <th style="text-align: center;">Points Left</th>
-                            <th style="text-align: center;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <t t-foreach="teams" t-as="team">
-
-                            <tr t-att-class="team.remaining_players_count == 0 and 'highlight-zero' or ''">
-                                <td style="border-right: 0px; width: 10px;">
-                                    <img t-att-src="image_data_uri(team.team_id.logo)" alt="Tournament Logo" class="team-logo" style="width: 40px; height: 40px;"/>
-                                </td>
-                                <td style="vertical-align: middle; border-left: 0px;">
-                                    <t t-esc="team.team_id.name"/>
-                                </td>
-                                <td><t t-esc="team.manager"/></td>
-                                <td><t t-esc="team.remaining_players_count"/></td>
-                                <td><t t-esc="team.remaining_points"/></td>
-                                <td>
-                                    <button type="button" class="view-players-btn"  t-att-data-team-logo="team.team_id.logo" t-att-data-team-name="team.team_id.name" t-att-data-manager="team.manager" t-att-data-team-id="team.team_id.id" onclick="openModal(this)">View Players</button>
-                                </td>
-                            </tr>
-                        </t>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Player Details Modal -->
-            <div id="playerModal" class="modal">
-                <div class="modal-content">
-                    <span class="close" onclick="closeModal()">&amp;times;</span>
-                     <div class="team-manager-line">
-                        <img id="modal-team-logo" class="team-logo-modal" />
-                        <span id="modal-team-name"></span>
-                        <span id="modal-manager-name"></span>
+<template id="auction_details_show" name="Player Auction">
+            <html lang="en">
+              <head>
+                <meta charset="UTF-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <link
+                  href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+                  rel="stylesheet"
+                  integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+                  crossorigin="anonymous"
+                />
+                <link rel="stylesheet" href="/auction_module/static/src/assets/css/style.css" />
+                <title>Auction Points</title>
+              </head>
+              <body>
+                <header class="py-3 text-center">
+                  <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo" />
+                </header>
+                <section class="top-part mt-4">
+                  <div class="container">
+                    <div
+                      class="listing-header flex-wrap d-flex align-items-center justify-content-between"
+                      style="column-gap: 10px; row-gap: 25px"
+                    >
+                      <div
+                        class="balance-point flex-wrap d-sm-flex d-block align-items-center"
+                        style="row-gap: 10px"
+                      >
+                        <h3 class="me-2 me-sm-0">Auction Balance Points</h3>
+                        <div class="list-view ms-sm-4">
+                          <ul class="d-flex p-0 align-items-center m-0">
+                            <li id="list-view" class="active">
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 16 16"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  d="M1.5 7H0.5C0.224 7 0 7.224 0 7.5V8.5C0 8.776 0.224 9 0.5 9H1.5C1.776 9 2 8.776 2 8.5V7.5C2 7.224 1.776 7 1.5 7ZM15.5 7.5H5C4.724 7.5 4.5 7.724 4.5 8C4.5 8.276 4.724 8.5 5 8.5H15.5C15.776 8.5 16 8.276 16 8C16 7.724 15.776 7.5 15.5 7.5ZM1.5 11H0.5C0.224 11 0 11.224 0 11.5V12.5C0 12.776 0.224 13 0.5 13H1.5C1.776 13 2 12.776 2 12.5V11.5C2 11.224 1.776 11 1.5 11ZM15.5 11.5H5C4.724 11.5 4.5 11.724 4.5 12C4.5 12.276 4.724 12.5 5 12.5H15.5C15.776 12.5 16 12.276 16 12C16 11.724 15.776 11.5 15.5 11.5ZM1.5 3H0.5C0.224 3 0 3.224 0 3.5V4.5C0 4.776 0.224 5 0.5 5H1.5C1.776 5 2 4.776 2 4.5V3.5C2 3.224 1.776 3 1.5 3ZM5 4.5H15.5C15.776 4.5 16 4.276 16 4C16 3.724 15.776 3.5 15.5 3.5H5C4.724 3.5 4.5 3.724 4.5 4C4.5 4.276 4.724 4.5 5 4.5Z"
+                                  fill="#393939"
+                                />
+                              </svg>
+                              List
+                            </li>
+                            <li id="grid-view">
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 16 16"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  d="M3.5 2C3.10218 2 2.72064 2.15804 2.43934 2.43934C2.15804 2.72064 2 3.10218 2 3.5V5.5C2 5.89782 2.15804 6.27936 2.43934 6.56066C2.72064 6.84196 3.10218 7 3.5 7H5.5C5.89782 7 6.27936 6.84196 6.56066 6.56066C6.84196 6.27936 7 5.89782 7 5.5V3.5C7 3.10218 6.84196 2.72064 6.56066 2.43934C6.27936 2.15804 5.89782 2 5.5 2H3.5ZM10.5 2C10.1022 2 9.72064 2.15804 9.43934 2.43934C9.15804 2.72064 9 3.10218 9 3.5V5.5C9 5.89782 9.15804 6.27936 9.43934 6.56066C9.72064 6.84196 10.1022 7 10.5 7H12.5C12.8978 7 13.2794 6.84196 13.5607 6.56066C13.842 6.27936 14 5.89782 14 5.5V3.5C14 3.10218 13.842 2.72064 13.5607 2.43934C13.2794 2.15804 12.8978 2 12.5 2H10.5ZM3.5 9C3.10218 9 2.72064 9.15804 2.43934 9.43934C2.15804 9.72064 2 10.1022 2 10.5V12.5C2 12.8978 2.15804 13.2794 2.43934 13.5607C2.72064 13.842 3.10218 14 3.5 14H5.5C5.89782 14 6.27936 13.842 6.56066 13.5607C6.84196 13.2794 7 12.8978 7 12.5V10.5C7 10.1022 6.84196 9.72064 6.56066 9.43934C6.27936 9.15804 5.89782 9 5.5 9H3.5ZM10.5 9C10.1022 9 9.72064 9.15804 9.43934 9.43934C9.15804 9.72064 9 10.1022 9 10.5V12.5C9 12.8978 9.15804 13.2794 9.43934 13.5607C9.72064 13.842 10.1022 14 10.5 14H12.5C12.8978 14 13.2794 13.842 13.5607 13.5607C13.842 13.2794 14 12.8978 14 12.5V10.5C14 10.1022 13.842 9.72064 13.5607 9.43934C13.2794 9.15804 12.8978 9 12.5 9H10.5Z"
+                                  fill="#393939"
+                                />
+                              </svg>
+                              Grid
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                      <div class="league-name-logo d-flex align-items-center">
+                        <div class="league-name d-md-block d-none">
+                          <h2><span t-esc="env['auction.tournament'].search([('active', '=', True)], limit=1).name"/></h2>
+                          <p class="text-end"><span t-esc="env['auction.tournament'].search([('active', '=', True)], limit=1).description"/></p>
+                        </div>
+                        <div class="league-logo">
+                          <img
+                            t-att-src="image_data_uri(env['auction.tournament'].search([('active', '=', True)], limit=1).logo)"
+                            alt="Season Logo"
+                            width="70"
+                            height="70"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <table class="tournament-table">
-                        <thead>
-                            <tr>
-                                <th>Player Name</th>
-                                <th>Points</th>
-                                <th>Role</th>
-                                <th>Contact</th>
-                            </tr>
-                        </thead>
-                        <tbody id="player-details">
-                            <!-- Player details will be inserted here dynamically -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                  </div>
+                </section>
 
-            <script>
+                <section class="full-listing mt-4 list-view">
+                  <div class="container">
+                    <div class="club-listing list-view">
+                      <!-- table title -->
 
-                setTimeout(function() {
-                    location.reload();
-                }, 60000); // Reloads the page every 60 seconds
-                function openModal(button) {
-                    var teamId = button.getAttribute('data-team-id');
-                    var teamName = button.getAttribute('data-team-name');
-                    var managerName = button.getAttribute('data-manager');
-                    var teamLogo = button.getAttribute('data-team-logo');
-                    // Set team and manager names in the modal
-                    document.getElementById('modal-team-logo').src = "data:image/png;base64," + teamLogo;
-                    document.getElementById('modal-team-name').innerText = "Team: " + teamName;
-                    document.getElementById('modal-manager-name').innerText = " | Manager: " + managerName;
+                      <div
+                        class="table-title d-flex align-items-center justify-content-between px-lg-5 px-4 py-2"
+                        style="column-gap: 15px"
+                      >
+                        <div class="team-name">
+                          <p>Team Name</p>
+                        </div>
+                        <div
+                          class="manager d-flex align-items-center justify-content-center"
+                        >
+                          <img
+                            src="/auction_module/static/src/assets/images/manager.svg"
+                            alt="manager"
+                            width="20"
+                            height="20"
+                          />
+                          <p class="ms-2">Manager</p>
+                        </div>
+                        <div
+                          class="player-needed d-flex align-items-center justify-content-center"
+                        >
+                          <img
+                            src="/auction_module/static/src/assets/images/player-needed.svg"
+                            alt="player needed"
+                            width="20"
+                            height="20"
+                          />
+                          <p class="ms-2">Players Needed</p>
+                        </div>
+                        <div
+                          class="points-left d-flex align-items-center justify-content-center"
+                        >
+                          <img
+                            src="/auction_module/static/src/assets/images/points-left.svg"
+                            alt="points-left"
+                            width="20"
+                            height="20"
+                          />
+                          <p class="ms-2">Points left</p>
+                        </div>
+                        <div class="actions">
+                          <p class="text-center">Actions</p>
+                        </div>
+                      </div>
 
-                    // Call Odoo backend to get the player data
-                    $.ajax({
-                        url: '/get_players/' + teamId,  // Change the URL since we're sending data via JSON
-                        type: 'POST',  // POST request
-                        contentType: 'application/json',  // This ensures that the request is sent as JSON
-                        data: JSON.stringify({team_id: teamId}),  // Send the data as a JSON object
-                        success: function(response) {
-                            console.log(response);
-                            if (response.result.status === 'success') {
-                                var playerDetails = '';
-                                response.result.players.forEach(function(player) {
-                                    // Add the player row with the photo
+                      <!-- table content -->
+                      <t t-foreach="teams" t-as="team">
+                        <div class="club-full-list mb-5">
+                          <div
+                            class="each-club-list d-flex align-items-center justify-content-between px-lg-5 px-4 py-3 mt-2"
+                            style="column-gap: 15px">
+                            <div class="team-name d-flex align-items-center">
+                                <img
+                                  t-att-src="image_data_uri(team.team_id.logo)"
+                                  alt="AuctionChamp"
+                                  width="40"
+                                  height="40"
+                                />
+                              <p class="ms-2"><span t-esc="team.team_id.name"/></p>
+                            </div>
+                            <!--Manager -->
+                            <div class="manager d-flex align-items-center justify-content-center">
+                            <label for="player-needed" class="d-none">
+                              <img
+                                src="/auction_module/static/src/assets/images/manager-grid.svg"
+                                alt="players needed"
+                                width="20"
+                                height="20"
+                              />
+                              Manager
+                            </label>
+                            <div
+                              class="manager-name-image d-flex align-items-center justify-content-center">
+                              <div class="multiple-icon d-flex">
+                                <!--<img
+                                  src="/auction_module/static/src/assets/images/RR.webp"
+                                  alt="Team Manager"
+                                  width="36"
+                                  height="36"
+                                />-->
+                                <!--<img
+                                  src="./assets/images/RR.webp"
+                                  alt="Team Manager"
+                                  width="36"
+                                  height="36"
+                                />-->
+                              </div>
+                              <p class="ms-2 text-nowrap"><span t-esc="team.manager"/></p>
+                            </div>
+                          </div>
+                            <!--End manager -->
+                            <div
+                            class="player-needed d-flex align-items-center justify-content-center">
+                            <label for="player-needed" class="d-none">
+                              <img
+                                src="/auction_module/static/src/assets/images/players-grid.svg"
+                                alt="players needed"
+                                width="20"
+                                height="20"
+                              />
+                              Players needed
+                            </label>
+                            <p class="ms-2"><span t-esc="team.remaining_players_count"/></p>
+                          </div>
+                            <!--End playere needsd -->
+                            <div
+                            class="points-left d-flex align-items-center justify-content-center"
+                          >
+                            <label for="player-needed" class="d-none">
+                              <img
+                                src="/auction_module/static/src/assets/images/points-grid.svg"
+                                alt="players needed"
+                                width="20"
+                                height="20"
+                              />
+                              Points Left
+                            </label>
+                            <p class="ms-2"><span t-esc="team.remaining_points"></span> <span>pts</span></p>
+                          </div>
+                            <!--End pints remaining -->
+                            <div class="actions">
+                            <p
+                              class="text-center d-flex align-items-center justify-content-center"
+                              style="column-gap: 10px"
+                            >
+                              <a t-att-href="'/auction/get/players/team/%s' % team.team_id.id">
+                                <svg
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M15 12C15 12.7956 14.6839 13.5587 14.1213 14.1213C13.5587 14.6839 12.7956 15 12 15C11.2044 15 10.4413 14.6839 9.87868 14.1213C9.31607 13.5587 9 12.7956 9 12C9 11.2044 9.31607 10.4413 9.87868 9.87868C10.4413 9.31607 11.2044 9 12 9C12.7956 9 13.5587 9.31607 14.1213 9.87868C14.6839 10.4413 15 11.2044 15 12Z"
+                                    stroke="#2E5AEA"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                  />
+                                  <path
+                                    d="M2 12C3.6 7.903 7.336 5 12 5C16.664 5 20.4 7.903 22 12C20.4 16.097 16.664 19 12 19C7.336 19 3.6 16.097 2 12Z"
+                                    stroke="#2E5AEA"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                  />
+                                </svg>
+                                View
+                              </a>
+                            </p>
+                          </div>
+                            <!-- End button action-->
+                          </div>
+                        </div>
+                      </t>
 
-                                    playerDetails += `
-                                        <tr>
-                                            <td class="player-detail"><img src="data:image/png;base64,` + player.photo + `" class="player-photo"/>` + player.name + `</td>
-                                            <td class="player-detail">` + player.points + `</td>
-                                            <td class="player-detail">` + player.role + `</td>
-                                            <td class="player-detail">` + player.contact + `</td>
+                    </div>
+                  </div>
+                </section>
 
-                                        </tr>`;
-                                });
+                <script>
+                  const button = document.getElementById("grid-view");
+                  const button2 = document.getElementById("list-view");
+                  const targets = document.querySelectorAll(".club-full-list");
+                  const grid_labels = document.querySelectorAll("label");
+                  const table_title = document.querySelectorAll(".table-title");
+                  const club_lists = document.querySelectorAll(".club-listing");
+                  const full_listings = document.querySelectorAll(".full-listing");
+                  const listItems = document.querySelectorAll(".balance-point ul > li");
 
-                                document.getElementById('player-details').innerHTML = playerDetails;
-                                document.getElementById('playerModal').style.display = 'block';
-                            } else {
-                                var message = "Players not added in "+  response.result.team
-                                alert(message);
-                            }
-                        },
-                        error: function() {
-                            alert("Failed to fetch player data.");
-                        }
+                  button.addEventListener("click", () => {
+                    targets.forEach((target) => {
+                      target.classList.add("grid-view-on");
                     });
-                }
-                function closeModal() {
-                    document.getElementById('playerModal').style.display = 'none';
-                }
+                    grid_labels.forEach((grid_label) => {
+                      grid_label.classList.remove("d-none");
+                    });
+                    table_title.forEach((table_titl) => {
+                      table_titl.classList.add("d-none");
+                    });
+                    club_lists.forEach((club_list) => {
+                      club_list.classList.remove("list-view");
+                    });
+                    full_listings.forEach((full_list) => {
+                      full_list.classList.remove("list-view");
+                    });
+                  });
 
-                // Close modal if user clicks outside modal content
-                window.onclick = function(event) {
-                    var modal = document.getElementById('playerModal');
-                    if (event.target == modal) {
-                        modal.style.display = 'none';
-                    }
-                }
+                  button2.addEventListener("click", () => {
+                    targets.forEach((target) => {
+                      target.classList.remove("grid-view-on");
+                    });
+                    grid_labels.forEach((grid_label) => {
+                      grid_label.classList.add("d-none");
+                    });
+                    table_title.forEach((table_titl) => {
+                      table_titl.classList.remove("d-none");
+                    });
+                    club_lists.forEach((club_list) => {
+                      club_list.classList.add("list-view");
+                    });
+                    full_listings.forEach((full_list) => {
+                      full_list.classList.add("list-view");
+                    });
+                  });
 
-            </script>
-        </t>
-    </template>
+                  listItems.forEach((item) => {
+                    item.addEventListener("click", () => {
+                      listItems.forEach((li) => li.classList.remove("active"));
+                      item.classList.add("active");
+                    });
+                  });
+                </script>
+                <script
+                  src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+                  integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+                  crossorigin="anonymous"
+                ></script>
+              </body>
+    </html>
+</template>
 
 </odoo>
