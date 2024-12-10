@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 {
-    'name' : 'Auction',
+    'name' : 'Auction Champ',
     'version' : '1.2',
     'summary': 'Sports Auction module',
     'sequence': 10,
@@ -18,12 +18,12 @@
         'data/report_paper_format_landscape.xml',
         'views/auction_tournament_view.xml',
         'views/auction_team_player_type_view.xml',
-
         'wizard/action_sell_player_view.xml',
         'wizard/action_set_key_player_view.xml',
         'views/auction_team_player.xml',
         'views/auction_team_players_template.xml',
         'views/auction_player_card_print_list.xml',
+        'views/auction_history_view.xml',
         'views/auction_player_template_new.xml',
         'views/auction_blank_templates.xml',
         'views/auction_show_balance_template1.xml',

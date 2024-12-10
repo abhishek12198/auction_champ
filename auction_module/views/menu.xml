@@ -146,6 +146,16 @@
             groups="auction_module.group_auction_group_admin"
         />
 
+        <!-- history menu -->
+
+         <menuitem
+            id="menu_action_auction_history_tree"
+            name="Auction History"
+            parent="mail.mail_menu_technical"
+            action="action_auction_history_tree"
+            sequence="10"
+            groups="auction_module.group_auction_group_admin"
+        />
 
 
     </data>
