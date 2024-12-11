@@ -235,8 +235,9 @@ a {
   --bs-gutter-x: 0;
 }
 .player-image-side img {
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 10px;
+  background-color: beige;
 }
 .players-list-in-club .row > div {
   border-radius: 10px;
@@ -366,10 +367,10 @@ a {
   line-height: 8rem;
 }
 .player-name {
-  font-family: "Sportypo", sans-serif;
-  font-size: 1.75rem;
-  line-height: 3rem;
-  font-weight: 500;
+  font-family: poppins;
+  font-size: 50px;
+  line-height: 60px;
+  font-weight: bold;
   color: #0a1429;
 }
 .player-possition {

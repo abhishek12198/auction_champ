@@ -16,6 +16,7 @@
             <field name="report_type">qweb-pdf</field>
             <field name="report_name">auction_module.report_player_card_list</field>
             <field name="report_file">auction_module.report_player_card_list</field>
+            <field name="paperformat_id" ref="auction_module.paperformat_card_landscape"/>
             <!--<field name="print_report_name">"Player Card - %s" % (object.name)</field>-->
             <field name="binding_model_id" ref="model_auction_team_player"/>
         </record>

@@ -134,8 +134,9 @@
                       </div>
 
                       <!-- table content -->
-                      <t t-foreach="teams" t-as="team">
+
                         <div class="club-full-list mb-5">
+                          <t t-foreach="teams" t-as="team">
                           <div
                             class="each-club-list d-flex align-items-center justify-content-between px-lg-5 px-4 py-3 mt-2"
                             style="column-gap: 15px">
@@ -242,8 +243,9 @@
                           </div>
                             <!-- End button action-->
                           </div>
+                          </t>
                         </div>
-                      </t>
+
 
                     </div>
                   </div>
