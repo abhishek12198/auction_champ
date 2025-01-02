@@ -29,7 +29,7 @@ class AuctionTeamPlayer(models.Model):
     batting_style = fields.Char(string="Batting Style", required=True)
     bowling_style = fields.Char(string="Bowling Style", required=True)
     role = fields.Char()
-
+    player_type = fields.Selection([('domestic', 'Domestic'), ('foreign', 'Foreign')], default='domestic')
     photo = fields.Binary("Photo")
     photo_url = fields.Char("Photo URL")
     payment_url = fields.Char("Payment URL")
@@ -102,6 +102,14 @@ class AuctionTeamPlayer(models.Model):
             vals.update({'amount_paid': False})
         player = super(AuctionTeamPlayer, self).create(vals)
         return player
+
+    def write(self, vals):
+        if 'photo_url' in vals:
+            image_base64 = self.get_base64_from_url(vals.get('photo_url', False))
+            if image_base64:
+                vals.update({'photo': image_base64})
+        res = super(AuctionTeamPlayer, self).write(vals)
+        return res
 
     def get_auction_players(self):
         players_domain = [('icon_player', '=', False),('state', '=', 'auction')]

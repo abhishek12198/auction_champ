@@ -57,7 +57,7 @@ class Auction(http.Controller):
 
 
 
-    @http.route(['''/auction/show/team/balance'''], type='http', auth="public", website=True, sitemap=True)
+    @http.route(['''/auction/show/team/balance'''], type='http', auth="public", website=True)
     def auction_team_balance(self, **kwargs):
         auctions = request.env['auction.auction'].sudo().search([])
         tournament = auctions.mapped('tournament_id')

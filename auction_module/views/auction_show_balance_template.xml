@@ -138,7 +138,7 @@
                 <!-- Header with Tournament Logo and Title -->
                 <div class="tournament-header">
                     <div class="tournament-title">Auction Balance Points</div>
-                    <img t-att-src="image_data_uri(env['auction.tournament'].search([('active', '=', True)], limit=1).logo)" alt="Tournament Logo" class="tournament-logo"/>
+                    <img t-att-src="image_data_uri(env['auction.tournament'].sudo().search([('active', '=', True)], limit=1).logo)" alt="Tournament Logo" class="tournament-logo"/>
                 </div>
 
                 <!-- Tournament Details Table -->

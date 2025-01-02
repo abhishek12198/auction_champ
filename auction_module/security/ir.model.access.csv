@@ -14,3 +14,4 @@ access_auction_player_auction_base_user,auction.player.auction,auction_module.mo
 access_auction_edit_player_point_base_user,auction.edit.player.point,auction_module.model_auction_edit_player_point,base.group_user,1,1,1,1
 access_auction_view_team_details_base_user,auction.view.team.details,auction_module.model_auction_view_team_details,base.group_user,1,1,1,1
 access_my_service,my_service,base.model_res_users,,1,1,1,1
+

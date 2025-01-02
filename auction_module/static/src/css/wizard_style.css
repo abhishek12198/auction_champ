@@ -43,3 +43,18 @@
     opacity: 0.9; /* Optional: slight transparency for a realistic effect */
     z-index: 10; /* Ensure it appears on top of other elements */
 }
+
+/* Add space between selection badges */
+.o_field_widget.o_field_selection_badge .o_selection_badge {
+    margin-right: 10px; /* Space between each badge (adjust as needed) */
+    margin-bottom: 5px; /* Space between rows of badges (if they wrap) */
+}
+
+/* Optional: Increase space on hover and active states */
+.o_field_widget.o_field_selection_badge .o_selection_badge.active {
+    background-color: #495057c2;
+    color: white;
+    border: 2px solid #495057c2;
+    font-weight: bold;
+    margin-right: 12px; /* Increase margin if needed on active state */
+}

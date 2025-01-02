@@ -20,7 +20,7 @@
     />
 
     <link rel="stylesheet" href="/auction_module/static/src/assets/css/style.css" />
-    <title>Player Display</title>
+    <title>Player Showcase</title>
 
     <!--<style></style>-->
   </head>
@@ -70,7 +70,7 @@
       >
         <div class="col-sm-3 single-player-details">
           <h3 class="stroke-only"><span t-esc="player.sl_no"/></h3>
-          <h4 class="player-name"><span t-esc="player.name"/></h4>
+          <h4 class="player-name"><span t-esc="player.name.upper()"/></h4>
           <p class="player-possition"><span t-esc="player.role"/></p>
         </div>
 
@@ -91,7 +91,7 @@
         <div class="col-4 col-lg-5">
           <div class="player-profession m-auto">
             <div class="player-profession-header">
-              <p>Details</p>
+              <p>Player Attributes</p>
             </div>
             <div class="player-profession-body">
               <div>

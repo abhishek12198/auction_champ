@@ -7,14 +7,33 @@
             <field name="model">auction.sell.player</field>
             <field name="arch" type="xml">
                 <form string="Auction" class="custom_wizard_popup">
-                    <field name="player_photo" widget='image' class="oe_avatar"/>
-                    <div class="oe_title oe_inline">
-                        <label for="player_id"/>
-                        <h1><field name="player_id" readonly="1" force_save="1"/> </h1>
+                    <!-- This is for showing the team transition -->
+                    <div style="display: flex; align-items: center;">
+                        <!-- Image 1 with uniform size -->
+                        <div  class="custom-image-size">
+                            <field name="player_photo" widget="image" class="oe_inline" readonly="1"
+                               style="width: 150px; height: 150px; object-fit: contain;"/>
+
+                        </div>
+
+                        <!-- Thicker Arrow -->
+                        <span style="margin: 0 15px; font-size: 30px; font-weight: bold;">
+                            &#10145; <!-- Thicker arrow (Unicode Character) -->
+                        </span>
+                        <div  class="custom-image-size">
+                        <!-- Image 2 with uniform size -->
+                            <field name="team_logo" widget="image" class="oe_inline" readonly="1"
+                                   style="width: 150px; height: 150px; object-fit: contain;"/>
+                        </div>
                     </div>
+                    <!--<field name="player_photo" widget='image' class="oe_avatar"/>-->
+                    <!--<div class="oe_title oe_inline">
+                        <label for="player_id" string="Player Name"/>
+                        <h1><field name="player_id" readonly="1" force_save="1"/> </h1>
+                    </div>-->
                     <div class="oe_title oe_inline">
-                        <label for="team_id"/>
-                        <h1><field name="team_id" required="1" options="{'no_open': True, 'no_create': True}"/></h1>
+                        <label for="team_id" string="Select the Team to sell"/>
+                        <h1><field name="team_id" required="1" options="{'no_open': True, 'no_create': True}" widget="selection_badge"/></h1>
                     </div>
                     <div class="oe_title oe_inline">
                         <label for="final_point"/>
@@ -27,6 +46,8 @@
                     </group>
                     <group string="Team Details">
                         <group>
+                            <field name="player_id" readonly="1" force_save="1" options="{'no_open': 1}"/>
+                            <field name="team_name" readonly="1" force_save="1" string="Selling to"/>
                             <field name="points_remaining" readonly="1" force_save="1"/>
                             <field name="players_remaining" readonly="1" force_save="1"/>
                         </group>

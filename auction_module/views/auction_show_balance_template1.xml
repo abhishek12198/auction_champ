@@ -29,7 +29,7 @@
                         class="balance-point flex-wrap d-sm-flex d-block align-items-center"
                         style="row-gap: 10px"
                       >
-                        <h3 class="me-2 me-sm-0">Auction Balance Points</h3>
+                        <h3 class="me-2 me-sm-0">Bid Summary</h3>
                         <div class="list-view ms-sm-4">
                           <ul class="d-flex p-0 align-items-center m-0">
                             <li id="list-view" class="active">
@@ -67,12 +67,12 @@
                       </div>
                       <div class="league-name-logo d-flex align-items-center">
                         <div class="league-name d-md-block d-none">
-                          <h2><span t-esc="env['auction.tournament'].search([('active', '=', True)], limit=1).name"/></h2>
-                          <p class="text-end"><span t-esc="env['auction.tournament'].search([('active', '=', True)], limit=1).description"/></p>
+                          <h2><span t-esc="env['auction.tournament'].sudo().search([('active', '=', True)], limit=1).name"/></h2>
+                          <p class="text-end"><span t-esc="env['auction.tournament'].sudo().search([('active', '=', True)], limit=1).description"/></p>
                         </div>
                         <div class="league-logo">
                           <img
-                            t-att-src="image_data_uri(env['auction.tournament'].search([('active', '=', True)], limit=1).logo)"
+                            t-att-src="image_data_uri(env['auction.tournament'].sudo().search([('active', '=', True)], limit=1).logo)"
                             alt="Season Logo"
                             width="70"
                             height="70"

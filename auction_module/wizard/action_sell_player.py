@@ -11,13 +11,15 @@ import werkzeug.exceptions
 class SellPlayer(models.TransientModel):
     _name = 'auction.sell.player'
 
-    final_point = fields.Integer(string="Sold for(Points)", required=True)
+    final_point = fields.Integer(string="Selling for (Points)", required=True)
     team_id = fields.Many2one('auction.team', 'Sold To', required=True)
+    team_name = fields.Char(related='team_id.name', string='Team Name')
     points_remaining = fields.Integer()
     players_remaining = fields.Integer()
     team_auction_id = fields.Many2one('auction.auction')
     player_id = fields.Many2one('auction.team.player', 'Player')
     player_photo = fields.Binary(related='player_id.photo')
+    team_logo = fields.Binary(related='team_id.logo')
     suggestion = fields.Html()
 
     @api.onchange('team_auction_id')
@@ -95,11 +97,9 @@ class SellPlayer(models.TransientModel):
 
         players_remaining = self.players_remaining - 1
         points_remaining = self.points_remaining
-        print(players_remaining, points_remaining)
         temp_number = players_remaining * auction_base_point
         print(points_remaining, temp_number)
         max_limit_player = points_remaining - temp_number
-        print(self_final_point, max_limit_player, "===========>")
         if self_final_point > max_limit_player:
             self.final_point = max_limit_player
             message = 'Limit Exceeded! You can assign max points for this player up to ' + str(
@@ -124,7 +124,6 @@ class SellPlayer(models.TransientModel):
     @api.onchange('team_id')
     def onchange_team_id(self):
         if self.team_id:
-            print(self.team_id)
             team_auction_record = self.env['auction.auction'].search([('team_id', '=', self.team_id.id)])
             if team_auction_record:
                 if team_auction_record.remaining_points == 0 or team_auction_record.remaining_players_count == 0:

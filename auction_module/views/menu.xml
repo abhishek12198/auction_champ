@@ -28,7 +28,7 @@
           sequence="20" web_icon="auction_module,static/src/description/auctions_settings.png"/>
 
         <menuitem id="menu_action_launch_auction_root"
-          name="Launch Auction"
+          name="Player Showcase"
           action="action_launch_auction"
           sequence="21" web_icon="auction_module,static/src/description/auction.png"/>
 
@@ -94,20 +94,20 @@
           sequence="1"/>
 -->
         <menuitem id="menu_action_auction_start_auction"
-          name="Set Auction Rules"
+          name="Auction Rules Setup"
           parent="menu_action_auction_auction"
           groups="auction_module.group_auction_group_admin"
           action="action_auction_start_auction"
           sequence="2"/>
 
         <menuitem id="menu_action_auction_auction1"
-          name="Auction"
+          name="Auction Team(s)"
           parent="menu_action_auction_auction"
           action="auction_module.action_auction_auction"
           sequence="1"/>
 
         <menuitem id="menu_action_auction_view_points"
-          name="View Auction Points"
+          name="Auction Bid Summary"
           parent="menu_action_auction_auction"
           action="auction_module.action_view_auction_details"
           sequence="3"/>

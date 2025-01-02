@@ -143,12 +143,14 @@
                             <field name="batting_style"/>
                             <field name="bowling_style"/>
                             <field name="role"/>
+                            <field name="player_type" widget="radio"/>
                             <field name="address"/>
                             <field name="notes"/>
                             <field name="amount_paid" widget="boolean_toggle"/>
                             <field name="photo_url" invisible="1" widget="url" />
                             <field name="icon_player" invisible="1"/>
                             <field name="sl_no" invisible="1"/>
+
                     </group>
                     <notebook>
                         <page string="Other Details">
