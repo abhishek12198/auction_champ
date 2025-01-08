@@ -29,7 +29,8 @@ class Auction(http.Controller):
     #history part
     @http.route('/live_updates', type='http', auth='public', website=True)
     def live_updates_page(self):
-        return request.render('auction_module.live_updates_template')
+        tournament_id = request.env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
+        return request.render('auction_module.live_updates_template', {'tournament': tournament_id})
 
     @http.route('/get_live_updates', type='json', auth='public')
     def get_live_updates(self):

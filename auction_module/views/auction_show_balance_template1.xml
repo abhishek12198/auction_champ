@@ -13,7 +13,7 @@
                   crossorigin="anonymous"
                 />
                 <link rel="stylesheet" href="/auction_module/static/src/assets/css/style.css" />
-                <title>Auction Points</title>
+                <title>Auction Bid Summary</title>
               </head>
               <body>
                 <header class="py-3 text-center">
@@ -252,6 +252,9 @@
                 </section>
 
                 <script>
+                  setTimeout(function() {
+                    location.reload();
+                  }, 60000); // Reloads the page every 60 seconds
                   const button = document.getElementById("grid-view");
                   const button2 = document.getElementById("list-view");
                   const targets = document.querySelectorAll(".club-full-list");

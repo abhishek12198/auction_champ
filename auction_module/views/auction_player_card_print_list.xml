@@ -115,7 +115,7 @@
                             <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo" style="max-height: 100px;" />
 
                             <!-- Right Image -->
-                            <img t-att-src="image_data_uri(doc.tournament_id.logo)" alt="Player Photo" style="max-height: 100px; margin-left: 400px;" />
+                            <img t-att-src="image_data_uri(doc.tournament_id.logo)" alt="Player Photo" style="max-height: 100px; margin-left: 350px;" />
                         </div>
                     </header>
                     <div class="container h-100">

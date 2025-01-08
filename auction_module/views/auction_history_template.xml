@@ -4,8 +4,17 @@
 <template id="live_updates_template" name="Live Updates Page">
     <div class="live-updates-wrapper">
         <div class="updates-header">
-            <h1>Auction Live Updates</h1>
-            <p class="subtitle">Stay updated in real-time</p>
+            <h1><span t-esc="tournament.name"/> - <span t-esc="tournament.description"/>
+            <img
+              t-att-src="image_data_uri(tournament.logo)"
+              alt="team-logo"
+              width="91"
+              height="91"
+              class="team-single-logo"
+            />
+            </h1>
+            <h2>Auction Live Updates</h2>
+           
         </div>
 
         <div id="live_updates" class="updates-container">
@@ -35,7 +44,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(135deg, #ff7e5f, #feb47b);
+            background: linear-gradient(135deg, #0a58bb, #607a9b);
             color: white;
             padding: 20px;
             overflow: hidden;
