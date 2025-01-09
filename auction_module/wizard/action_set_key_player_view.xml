@@ -14,7 +14,7 @@
                     </div>
                     <div class="oe_title oe_inline">
                         <label for="team_id"/>
-                        <h1><field name="team_id" required="1" options="{'no_open': True, 'no_create': True}"/></h1>
+                        <h1><field name="team_id" required="1" options="{'no_open': True, 'no_create': True}" widget="selection_badge"/></h1>
                     </div>
                     <div style="display: flex; align-items: center;">
                         <!-- Image 1 with uniform size -->

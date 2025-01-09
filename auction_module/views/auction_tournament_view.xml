@@ -70,12 +70,16 @@
                                 </kanban>
                             </field>
                         </page>
+
                         <page string="Other Details">
                             <group>
                                 <field name="venue"/>
                                 <field name="player_appearance_algorithm" widget="radio"/>
                                 <field name="report_footer" widget="image"/>
                             </group>
+                        </page>
+                        <page string="Rules &amp; Regulations">
+                            <field name="rules_regulations"/>
                         </page>
                     </notebook>
                 </form>

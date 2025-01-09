@@ -45,6 +45,8 @@
     'assets': {
             'web.assets_backend': [
                     '/auction_module/static/src/css/wizard_style.css',
+                    '/auction_module/static/src/css/sticky_header.css',
+                    '/auction_module/static/src/js/tree_sticky_header.js',
 
                 ],
             'web.assets_frontend': [

@@ -127,7 +127,7 @@
 
                     </div>
                 <div style="text-align: center; margin-top: 300px;" >
-                    <h1 style="font-size: 48px; color: #DE0707;">Welcome to <span t-esc="env['auction.tournament'].sudo().search([('active', '=', True)], limit=1).name"/> auction!</h1>
+                    <h1 style="font-size: 48px; color: #DE0707;">Welcome to <span t-esc="env['auction.tournament'].sudo().search([('active', '=', True)], limit=1).name"/>-<span t-esc="env['auction.tournament'].sudo().search([('active', '=', True)], limit=1).description"/> auction!</h1>
 
                     <h2 t-if="tournament.venue" style="font-size: 40px; color: #DE0707;">Venue: <span t-esc="env['auction.tournament'].search([('active', '=', True)], limit=1).venue"/> </h2>
                     <h1 style="font-size: 48px; color: #DE0707;">Auction will start soon!</h1>
@@ -264,7 +264,9 @@
             <div class="message-header">Welcome to the Tournament!</div>
             <div class="message-body">
                 <t t-esc="'Welcome to ' + env['auction.tournament'].search([('active', '=', True)], limit=1).name"/>. We are excited to have all the managers participating.
+
             </div>
+            <span t-esc="env['auction.tournament'].search([('active', '=', True)], limit=1).rules_regulations"></span>
             <div class="thank-you-note">Best of luck!</div>
         </div>
     </t>

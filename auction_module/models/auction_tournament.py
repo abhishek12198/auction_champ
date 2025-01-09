@@ -38,3 +38,4 @@ class AuctionTournament(models.Model):
     team_ids = fields.One2many('auction.team', 'tournament_id', 'Teams')
     template_image = fields.Binary('Template Image')
     report_footer = fields.Binary('Footer')
+    rules_regulations = fields.Html("Rules and Regulations")

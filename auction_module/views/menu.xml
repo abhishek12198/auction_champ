@@ -81,6 +81,12 @@
           action="action_auction_team_player_unpaid"
           sequence="6"/>
 
+        <menuitem id="menu_action_auction_team_player_jersy"
+          name="Players-Jersy"
+          parent="menu_action_auction_player"
+          action="action_auction_team_player_jersy"
+          sequence="7"/>
+
         <menuitem id="menu_action_auction_conf"
           name="Configuration"
           parent="menu_action_auction_root"

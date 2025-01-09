@@ -252,9 +252,7 @@
                 </section>
 
                 <script>
-                  setTimeout(function() {
-                    location.reload();
-                  }, 60000); // Reloads the page every 60 seconds
+
                   const button = document.getElementById("grid-view");
                   const button2 = document.getElementById("list-view");
                   const targets = document.querySelectorAll(".club-full-list");

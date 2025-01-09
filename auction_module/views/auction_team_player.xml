@@ -94,6 +94,7 @@
         </record>
 
 
+
         <record id="view_auction_team_player_tree" model="ir.ui.view">
             <field name="name">auction.team.tree</field>
             <field name="model">auction.team.player</field>
@@ -118,6 +119,48 @@
                 </tree>
             </field>
         </record>
+
+
+        <record id="view_auction_team_player_tree_icon" model="ir.ui.view">
+            <field name="name">auction.team.tree</field>
+            <field name="model">auction.team.player</field>
+            <field name="arch" type="xml">
+
+                <tree string="Player" default_order="icon_player desc, sl_no">
+                    <field name="sl_no"/>
+                    <field name="name"/>
+                    <field name="contact"/>
+                    <field name="role"/>
+                    <field name="amount_paid" widget="boolean_toggle"/>
+                    <field name="photo_url" invisible="1"/>
+                    <field name="tournament_id"/>
+                    <field name="state"/>
+                    <field name="assigned_team_id"/>
+                    <field name="icon_player" invisible="1"/>
+                    <field name="sl_no" widget="handle"/>
+                    <button name="%(auction_module.action_auction_sell_player)d" string="Sell to Team" type="action" class="oe_highlight" attrs="{'invisible': [('state', '!=', 'auction')]}"></button>
+                    <button name="action_unsold" string="Set to Unsold" type="object"   attrs="{'invisible': [('state', '!=', 'auction')]}" confirm="This will set the player to Unsold and later you can bring back to Auction. Click on Ok to continue. Otherwise click on Cancel"></button>
+                    <button name="action_auction" string="Bring to Auction" type="object"  attrs="{'invisible': [('state', '!=', 'unsold')]}" confirm="This will bring the player back to Auction from Unsold mode. Click on Ok to continue. Otherwise click on Cancel"></button>
+                    <button name="action_revoke_key_player" string="Revoke Icon Player" attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '!=', True)]}"  class="btn btn-secondary oe_kanban_button" type="object"  confirm="This will revoke the player from the icon player list and bring to auction. Click on Ok to continue. Otherwise click on Cancel"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_auction_team_player_jersy_tree" model="ir.ui.view">
+            <field name="name">auction.team.jersy.tree</field>
+            <field name="model">auction.team.player</field>
+            <field name="arch" type="xml">
+                <tree string="Player" default_order="icon_player desc, sl_no">
+                    <field name="sl_no"/>
+                    <field name="name"/>
+                    <field name="contact"/>
+                    <field name="jersy_name"/>
+                    <field name="jersy_size"/>
+                    <field name="jersy_number"/>
+                </tree>
+            </field>
+        </record>
+
 
 
 
@@ -166,7 +209,7 @@
             </field>
         </record>
 
-        <record id="action_auction_team_player_draft" model="ir.actions.act_window">
+       <!-- <record id="action_auction_team_player_draft" model="ir.actions.act_window">
             <field name="name">Players</field>
             <field name="res_model">auction.team.player</field>
             <field name="view_mode">tree,form</field>
@@ -179,7 +222,11 @@
                 This menu to create or import the players.
               </p>
             </field>
-        </record>
+        </record>-->
+
+
+
+
         <record id="action_auction_team_player_draft" model="ir.actions.act_window">
             <field name="name">Draft</field>
             <field name="res_model">auction.team.player</field>
@@ -194,6 +241,26 @@
               </p>
             </field>
         </record>
+        <!-- -->
+        <record id="action_auction_team_player_draft_kanban" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">kanban</field>
+            <field name="view_id" ref="view_auction_team_player_kanban"/>
+            <field name="act_window_id" ref="action_auction_team_player_draft"/>
+        </record>
+        <record id="action_auction_team_player_draft_tree" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="view_auction_team_player_tree"/>
+            <field name="act_window_id" ref="action_auction_team_player_draft"/>
+        </record>
+        <record id="action_auction_team_player_draft_form" model="ir.actions.act_window.view">
+            <field eval="3" name="sequence"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_auction_team_player_form"/>
+            <field name="act_window_id" ref="action_auction_team_player_draft"/>
+        </record>
+
 
         <record id="action_auction_team_player_sold" model="ir.actions.act_window">
             <field name="name">Players</field>
@@ -211,6 +278,26 @@
             </field>
         </record>
 
+        <!-- -->
+        <record id="action_auction_team_player_sold_kanban" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">kanban</field>
+            <field name="view_id" ref="view_auction_team_player_kanban"/>
+            <field name="act_window_id" ref="action_auction_team_player_sold"/>
+        </record>
+        <record id="action_auction_team_player_sold_tree" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="view_auction_team_player_tree"/>
+            <field name="act_window_id" ref="action_auction_team_player_sold"/>
+        </record>
+        <record id="action_auction_team_player_sold_form" model="ir.actions.act_window.view">
+            <field eval="3" name="sequence"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_auction_team_player_form"/>
+            <field name="act_window_id" ref="action_auction_team_player_sold"/>
+        </record>
+
         <record id="action_auction_team_player_auction" model="ir.actions.act_window">
             <field name="name">Players in Auction</field>
             <field name="res_model">auction.team.player</field>
@@ -224,6 +311,26 @@
                 This menu to create or import the players.
               </p>
             </field>
+        </record>
+
+        <!-- -->
+        <record id="action_auction_team_player_auction_kanban" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">kanban</field>
+            <field name="view_id" ref="view_auction_team_player_kanban"/>
+            <field name="act_window_id" ref="action_auction_team_player_auction"/>
+        </record>
+        <record id="action_auction_team_player_auction_tree" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="view_auction_team_player_tree"/>
+            <field name="act_window_id" ref="action_auction_team_player_auction"/>
+        </record>
+        <record id="action_auction_team_player_auction_form" model="ir.actions.act_window.view">
+            <field eval="3" name="sequence"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_auction_team_player_form"/>
+            <field name="act_window_id" ref="action_auction_team_player_auction"/>
         </record>
 
         <record id="action_auction_team_key_player" model="ir.actions.act_window">
@@ -242,6 +349,26 @@
             </field>
         </record>
 
+        <!-- -->
+        <record id="action_auction_team_key_player_kanban" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">kanban</field>
+            <field name="view_id" ref="view_auction_team_player_kanban"/>
+            <field name="act_window_id" ref="action_auction_team_key_player"/>
+        </record>
+        <record id="action_auction_team_key_player_tree" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="view_auction_team_player_tree_icon"/>
+            <field name="act_window_id" ref="action_auction_team_key_player"/>
+        </record>
+        <record id="action_auction_team_key_player_form" model="ir.actions.act_window.view">
+            <field eval="3" name="sequence"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_auction_team_player_form"/>
+            <field name="act_window_id" ref="action_auction_team_key_player"/>
+        </record>
+
 
         <record id="action_auction_team_player_unsold" model="ir.actions.act_window">
             <field name="name">Unsold Players</field>
@@ -258,6 +385,26 @@
             </field>
         </record>
 
+        <!-- -->
+        <record id="action_auction_team_player_unsold_kanban" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">kanban</field>
+            <field name="view_id" ref="view_auction_team_player_kanban"/>
+            <field name="act_window_id" ref="action_auction_team_player_unsold"/>
+        </record>
+        <record id="action_auction_team_player_unsold_tree" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="view_auction_team_player_tree"/>
+            <field name="act_window_id" ref="action_auction_team_player_unsold"/>
+        </record>
+        <record id="action_auction_team_player_unsold_form" model="ir.actions.act_window.view">
+            <field eval="3" name="sequence"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_auction_team_player_form"/>
+            <field name="act_window_id" ref="action_auction_team_player_unsold"/>
+        </record>
+
         <record id="action_auction_team_player_unpaid" model="ir.actions.act_window">
             <field name="name">Unpaid Players</field>
             <field name="res_model">auction.team.player</field>
@@ -272,6 +419,63 @@
               </p>
             </field>
         </record>
+
+        <!-- -->
+        <record id="action_auction_team_player_unpaid_kanban" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">kanban</field>
+            <field name="view_id" ref="view_auction_team_player_kanban"/>
+            <field name="act_window_id" ref="action_auction_team_player_unpaid"/>
+        </record>
+        <record id="action_auction_team_player_unpaid_tree" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="view_auction_team_player_tree"/>
+            <field name="act_window_id" ref="action_auction_team_player_unpaid"/>
+        </record>
+        <record id="action_auction_team_player_unpaid_form" model="ir.actions.act_window.view">
+            <field eval="3" name="sequence"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_auction_team_player_form"/>
+            <field name="act_window_id" ref="action_auction_team_player_unpaid"/>
+        </record>
+
+
+        <record id="action_auction_team_player_jersy" model="ir.actions.act_window">
+            <field name="name">Players-Jersy</field>
+            <field name="res_model">auction.team.player</field>
+            <field name="view_mode">kanban,tree,form</field>
+            <field name="domain">[('state', 'not in', ['draft', 'unsold'])]</field>
+            <field name="search_view_id" ref="view_auction_team_player_search"/>
+            <field name="help" type="html">
+              <p class="o_view_nocontent_smiling_face">
+                Create a Team
+              </p><p>
+                This menu to create or import the players.
+              </p>
+            </field>
+        </record>
+
+        <!-- -->
+        <record id="action_auction_team_player_jersy_kanban" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">kanban</field>
+            <field name="view_id" ref="view_auction_team_player_kanban"/>
+            <field name="act_window_id" ref="action_auction_team_player_jersy"/>
+        </record>
+        <record id="action_auction_team_player_jersy_tree" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="view_auction_team_player_jersy_tree"/>
+            <field name="act_window_id" ref="action_auction_team_player_jersy"/>
+        </record>
+        <record id="action_auction_team_player_jersy_form" model="ir.actions.act_window.view">
+            <field eval="3" name="sequence"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_auction_team_player_form"/>
+            <field name="act_window_id" ref="action_auction_team_player_jersy"/>
+        </record>
+
 
 
 

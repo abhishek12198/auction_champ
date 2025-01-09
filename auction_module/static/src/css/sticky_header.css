@@ -1,0 +1,20 @@
+/* Apply sticky behavior to header row */
+.o_list_view .o_list_table thead th {
+    position: sticky;
+    top: 0; /* Sticky to the top when scrolling vertically */
+    background: #f9f9f9; /* Set header background color */
+    z-index: 2; /* Ensure header stays on top */
+    border-bottom: 1px solid #ddd; /* Border below header */
+}
+
+/* Ensure the table layout is properly set */
+.o_list_view .o_list_table {
+    table-layout: auto; /* Allows dynamic column width */
+    border-collapse: collapse;
+}
+
+/* Optional: Improve header styling */
+.o_list_view .o_list_table thead th {
+    padding: 10px;
+    font-weight: bold;
+}
