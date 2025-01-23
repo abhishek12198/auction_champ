@@ -225,7 +225,7 @@
             });
         }
 
-        setInterval(fetchUpdates, 20000); // Fetch updates every 20 seconds
+        setInterval(fetchUpdates, 60000); // Fetch updates every 60 seconds
         fetchUpdates(); // Initial fetch when the page loads
     </script>
 

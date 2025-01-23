@@ -47,6 +47,16 @@
                                     <h2 class="player-name">
                                         <span t-esc="doc.name" />
                                         <!-- Display "ICON PLAYER" tag if the boolean is set -->
+                                        <t t-if="doc.player_type == 'foreign'">
+                                            <span class="badge bg-success text-dark" style="margin-left: 10px;">FOREIGN PLAYER</span>
+                                            <!-- Display Team Information -->
+
+                                        </t>
+                                        <t t-if="doc.player_type == 'domestic'">
+                                            <span class="badge bg-info text-dark" style="margin-left: 10px;">DOMESTIC PLAYER</span>
+                                            <!-- Display Team Information -->
+
+                                        </t>
                                         <t t-if="doc.icon_player">
                                             <span class="badge bg-warning text-dark" style="margin-left: 10px;">ICON PLAYER</span>
                                             <!-- Display Team Information -->
