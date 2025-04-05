@@ -45,37 +45,38 @@
                                     <h3 class="stroke-only pt-5 text-left"><span t-esc="doc.sl_no" /></h3>
 
                                     <h2 class="player-name">
-                                        <span t-esc="doc.name" />
+                                        <span t-esc="doc.name.upper()" />
                                         <!-- Display "ICON PLAYER" tag if the boolean is set -->
-                                        <t t-if="doc.player_type == 'foreign'">
-                                            <span class="badge bg-success text-dark" style="margin-left: 10px;">FOREIGN PLAYER</span>
-                                            <!-- Display Team Information -->
+<!--                                        <t t-if="doc.player_type == 'foreign'">-->
+<!--                                            <span class="badge bg-success text-dark" style="margin-left: 10px;">FOREIGN PLAYER</span>-->
+<!--                                            &lt;!&ndash; Display Team Information &ndash;&gt;-->
 
-                                        </t>
-                                        <t t-if="doc.player_type == 'domestic'">
-                                            <span class="badge bg-info text-dark" style="margin-left: 10px;">DOMESTIC PLAYER</span>
-                                            <!-- Display Team Information -->
+<!--                                        </t>-->
+<!--                                        <t t-if="doc.player_type == 'domestic'">-->
+<!--                                            <span class="badge bg-info text-dark" style="margin-left: 10px;">DOMESTIC PLAYER</span>-->
+<!--                                            &lt;!&ndash; Display Team Information &ndash;&gt;-->
 
-                                        </t>
-                                        <t t-if="doc.icon_player">
-                                            <span class="badge bg-warning text-dark" style="margin-left: 10px;">ICON PLAYER</span>
-                                            <!-- Display Team Information -->
-                                            <div class="team-info mt-3">
-                                                <p style="margin-bottom: 5px;">
-                                                    <strong>Team:</strong> <span t-esc="doc.assigned_team_id.name" />
-                                                </p>
-                                                <img
-                                                    t-att-src="image_data_uri(doc.assigned_team_id.logo)"
-                                                    alt="Team Logo"
-                                                    style="max-height: 50px;"
-                                                />
-                                            </div>
-                                        </t>
+<!--                                        </t>-->
+<!--                                        <t t-if="doc.icon_player">-->
+<!--                                            <span class="badge bg-warning text-dark" style="margin-left: 10px;">ICON PLAYER</span>-->
+<!--                                            &lt;!&ndash; Display Team Information &ndash;&gt;-->
+<!--                                            <div class="team-info mt-3">-->
+<!--                                                <p style="margin-bottom: 5px;">-->
+<!--                                                    <strong>Team:</strong> <span t-esc="doc.assigned_team_id.name" />-->
+<!--                                                </p>-->
+<!--                                                <img-->
+<!--                                                    t-att-src="image_data_uri(doc.assigned_team_id.logo)"-->
+<!--                                                    alt="Team Logo"-->
+<!--                                                    style="max-height: 50px;"-->
+<!--                                                />-->
+<!--                                            </div>-->
+<!--                                        </t>-->
                                     </h2>
                                     <p class="player-possition">Role:<span t-esc="doc.role" /></p>
                                     <p class="player-possition"><span>Batting Style:</span> <span t-esc="doc.batting_style" /></p>
                                     <p class="player-possition"><span>Bowling Style:</span> <span t-esc="doc.bowling_style" /></p>
                                     <p class="player-possition"><span>Mobile:</span> <span t-esc="doc.contact" /></p>
+                                    <p class="player-possition"><span>Place:</span> <span t-esc="doc.address" /></p>
                                 </div>
                             </div>
                         </div>
