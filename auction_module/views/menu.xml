@@ -137,7 +137,7 @@
           sequence="2"/>
 
 
-        <menuitem id="menu_action_auction_reporting"
+        <!--<menuitem id="menu_action_auction_reporting"
           name="Reporting"
           parent="menu_action_auction_root"
           groups="auction_module.group_auction_group_admin"
@@ -150,7 +150,7 @@
             action="action_print_players_cards"
             sequence="10"
             groups="auction_module.group_auction_group_admin"
-        />
+        />-->
 
         <!-- history menu -->
 
