@@ -329,6 +329,12 @@
                       item.classList.add("active");
                     });
                   });
+
+                  window.addEventListener('DOMContentLoaded', function () {
+                      setTimeout(function () {
+                          window.location.reload();
+                      }, 60000);
+                  });
                 </script>
                 <script
                   src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
