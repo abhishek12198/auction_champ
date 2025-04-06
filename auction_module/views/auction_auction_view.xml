@@ -22,7 +22,7 @@
                     <field name="manager"/>
                     <field name="remaining_points"/>
                     <field name="remaining_players_count"/>
-
+                    <field name="max_call"/>
                     <button name="%(auction_module.action_auction_view_team_details)d" type="action" string="View Summary" class="btn-primary"/>
 
                 </tree>
@@ -45,7 +45,7 @@
                             <field name="remaining_points"/>
                             <field name="max_players" string="Max players allocated"/>
                             <field name="remaining_players_count" readonly="1"/>
-
+                            <field name="max_call"/>
                     </group>
                     <notebook>
                         <page string="Players">

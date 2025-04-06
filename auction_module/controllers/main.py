@@ -62,7 +62,10 @@ class Auction(http.Controller):
     def auction_team_balance(self, **kwargs):
         auctions = request.env['auction.auction'].sudo().search([])
         tournament = auctions.mapped('tournament_id')
-        result = request.render("auction_module.auction_details_show", {'teams': auctions, 'tournament': tournament})
+        type = 'internal'
+        if request.env.user.login == 'public':
+            type = 'public'
+        result = request.render("auction_module.auction_details_show", {'teams': auctions, 'tournament': tournament, 'type': type})
 
         return result
 

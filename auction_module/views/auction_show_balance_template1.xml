@@ -118,7 +118,7 @@
                           <p class="ms-2">Players Needed</p>
                         </div>
                         <div
-                          class="points-left d-flex align-items-center justify-content-center"
+                          class="max-call d-flex align-items-center justify-content-center"
                         >
                           <img
                             src="/auction_module/static/src/assets/images/points-left.svg"
@@ -128,7 +128,18 @@
                           />
                           <p class="ms-2">Points left</p>
                         </div>
-                        <div class="actions">
+                        <div
+                          class="points-left d-flex align-items-center justify-content-center"
+                        >
+                          <img
+                            src="/auction_module/static/src/assets/images/points-left.svg"
+                            alt="points-left"
+                            width="10"
+                            height="20"
+                          />
+                          <p  class="ms-2">Max call</p>
+                        </div>
+                        <div class="actions" t-if="type == 'internal'">
                           <p class="text-center">Actions</p>
                         </div>
                       </div>
@@ -208,8 +219,22 @@
                             </label>
                             <p class="ms-2"><span t-esc="team.remaining_points"></span> <span>pts</span></p>
                           </div>
+                            <div
+                            class="max-call d-flex align-items-center justify-content-center"
+                          >
+                            <label for="player-needed" class="d-none">
+                              <img
+                                src="/auction_module/static/src/assets/images/points-grid.svg"
+                                alt="players needed"
+                                width="10"
+                                height="10"
+                              />
+                              Max call
+                            </label>
+                            <p class="ms-2"><span t-esc="team.max_call"></span> <span>pts</span></p>
+                          </div>
                             <!--End pints remaining -->
-                            <div class="actions">
+                            <div class="actions" t-if="type == 'internal'">
                             <p
                               class="text-center d-flex align-items-center justify-content-center"
                               style="column-gap: 10px"
