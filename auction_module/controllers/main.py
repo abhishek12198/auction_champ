@@ -34,7 +34,7 @@ class Auction(http.Controller):
 
     @http.route('/get_live_updates', type='json', auth='public')
     def get_live_updates(self):
-        records = request.env['auction.history'].sudo().search([], order='create_date desc', limit=50)
+        records = request.env['auction.history'].sudo().search([], order='create_date desc', limit=100)
         return [
             {
                 'message': rec.message,

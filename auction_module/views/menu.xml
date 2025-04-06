@@ -20,6 +20,11 @@
             <field name="target">new</field>
         </record>
 
+         <record id="action_live_updates" model="ir.actions.act_url">
+            <field name="name">Live Updates</field>
+            <field name="url">/live_updates</field>
+            <field name="target">new</field>
+        </record>
 
         <!-- Define the menu item -->
 
@@ -117,6 +122,13 @@
           parent="menu_action_auction_auction"
           action="auction_module.action_view_auction_details"
           sequence="3"/>
+
+
+        <menuitem id="menu_action_live_updates"
+          name="Auction Live Updates"
+          parent="menu_action_auction_auction"
+          action="auction_module.action_live_updates"
+          sequence="4"/>
 
 
         <menuitem id="menu_action_auction_tournament"
