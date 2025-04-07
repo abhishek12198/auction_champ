@@ -42,7 +42,7 @@
                                 </tr>
                             </table>
 
-
+                            <t t-set="player_row_range" t-value="list(range(1, doc.max_players + 1))"/>
 
                             <table class="table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
                                 <thead>
@@ -66,6 +66,18 @@
                                             <td style="padding: 8px; border: 1px solid #ddd; font-family: Arial, sans-serif;"><t t-esc="player.player_id.role"/></td>
                                             <!-- Add more cells as needed -->
                                         </tr>
+                                    </t>
+                                    <t t-if="not doc.player_ids">
+                                        <t t-foreach="player_row_range" t-as="i">
+                                            <tr  style="height: 40px;">
+                                                <td style="padding: 8px; border: 1px solid #ddd; font-family: Arial, sans-serif;"></td>
+                                                <td style="padding: 8px; border-bottom: 1px solid #ddd; border-left: 1px solid #ddd; border-right: 0px; font-family: Arial, sans-serif;"></td>
+                                                <td style="padding: 8px; border-bottom: 1px solid #ddd; border-right: 1px solid #ddd; border-left: 0px; font-family: Arial, sans-serif;"></td>
+                                                <td style="padding: 8px; border: 1px solid #ddd; font-family: Arial, sans-serif;"></td>
+                                                <td style="padding: 8px; border: 1px solid #ddd; font-family: Arial, sans-serif;"></td>
+                                                <td style="padding: 8px; border: 1px solid #ddd; font-family: Arial, sans-serif;"></td>
+                                            </tr>
+                                        </t>
                                     </t>
                                 </tbody>
                             </table>
