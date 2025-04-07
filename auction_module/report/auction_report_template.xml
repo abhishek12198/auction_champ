@@ -15,7 +15,7 @@
                                         <img t-att-src="image_data_uri(doc.team_id.logo)" alt="Team Logo" style="max-height: 100px; max-width: 100px;"/>
                                      </td>
                                      <td style="width: 600px;">
-                                        <strong><h4><span t-esc="doc.tournament_id.name" /></h4></strong>
+                                        <strong><h4><span t-esc="doc.tournament_id.name" />-<span t-esc="doc.tournament_id.description" /></h4></strong>
                                         <p><span t-esc="doc.tournament_id.venue" /></p>
                                      </td>
                                      <td>
