@@ -51,7 +51,12 @@
                                         <th colspan="2" style="color: #FFFFFF; padding: 8px; border: 1px solid #ddd; font-family: Arial, sans-serif;">Player</th>
                                         <th style="color: #FFFFFF; padding: 8px; border: 1px solid #ddd; font-family: Arial, sans-serif;">Mobile Number</th>
                                         <th style="color: #FFFFFF; padding: 8px; border: 1px solid #ddd; font-family: Arial, sans-serif;">Points</th>
-                                        <th style="color: #FFFFFF; padding: 8px; border: 1px solid #ddd; font-family: Arial, sans-serif;">Role</th>
+                                        <t t-if="doc.player_ids">
+                                            <th style="color: #FFFFFF; padding: 8px; border: 1px solid #ddd; font-family: Arial, sans-serif;">Role</th>
+                                        </t>
+                                        <t t-if="not doc.player_ids">
+                                            <th style="color: #FFFFFF; padding: 8px; border: 1px solid #ddd; font-family: Arial, sans-serif;">Remaining</th>
+                                        </t>
                                         <!-- Add more columns as needed -->
                                     </tr>
                                 </thead>
