@@ -70,7 +70,7 @@
       >
         <div class="col-sm-3 single-player-details">
           <h3 class="stroke-only"><span t-esc="player.sl_no"/></h3>
-          <h4 class="player-name"><span t-esc="player.name.upper()"/></h4>
+          <h5 class="player-name"><span t-esc="player.name.title()"/></h5>
           <p class="player-possition"><span t-esc="player.role"/></p>
         </div>
 
