@@ -18,6 +18,7 @@
             <field name="arch" type="xml">
                 <tree string="Team">
                     <field name="name"/>
+                    <field name="tournament_type"/>
                 </tree>
             </field>
         </record>
@@ -32,6 +33,7 @@
                         <group>
                             <field name="name"/>
                             <field name="description"/>
+                            <field name="tournament_type" widget="radio"/>
                         </group>
 
                     </group>
@@ -56,7 +58,7 @@
                                                     <strong t-esc="record.name.raw_value"/>
 
                                                     <div t-if="record.manager">
-                                                        <span> Manager: </span>
+                                                        <span> Owner: </span>
                                                         <field name="manager"/>
                                                     </div>
                                                     <div t-if="record.key_player_ids">

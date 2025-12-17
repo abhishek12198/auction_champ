@@ -8,7 +8,7 @@
             <field name="arch" type="xml">
                 <search string="Player">
                     <field name="team_id" filter_domain="[('team_id','ilike',self)]" string="Team"/>
-                    <field name="manager" filter_domain="[('manager','ilike',self)]" string="Manager"/>
+                    <field name="manager" filter_domain="[('manager','ilike',self)]" string="Owner"/>
                 </search>
             </field>
         </record>

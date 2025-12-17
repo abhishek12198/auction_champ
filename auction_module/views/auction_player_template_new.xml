@@ -38,7 +38,7 @@
             <img
               src="/auction_module/static/src/assets/images/back-btn.svg"
               alt="back button"
-              width="43px"
+              width="43px"i
               height="43px"
               style="background-color: transparent"
             />
@@ -97,16 +97,22 @@
               <div>
                 <p>Batting Style</p>
                 <p>Bowling Style</p>
-                <p>Contact No</p>
+                <p>Mobile No</p>
+                <p>Blood Group<span class="blood-emoji">🩸</span></p>
                 <p>Location</p>
+
               </div>
               <div>
                 <p><span>:</span> <span t-esc="player.batting_style"/></p>
                 <p><span>:</span> <span t-esc="player.bowling_style"/></p>
                 <p><span>:</span> <span t-esc="player.contact"/></p>
                 <p>
-                  <span>:</span> <span t-esc="player.address"/>
+                  <span>:</span> <span  style="color:#e53935; font-weight:bold;" t-if="player.blood_group" t-esc="player.blood_group"/><span t-if="not player.blood_group">NA</span>
                 </p>
+                <p>
+                  <span>:</span> <span t-if="player.address" t-esc="player.address"/><span t-if="not player.address">NA</span>
+                </p>
+
               </div>
             </div>
           </div>

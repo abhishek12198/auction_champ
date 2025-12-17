@@ -146,7 +146,7 @@
                     <thead>
                         <tr>
                             <th style="text-align: center;" colspan="2">Team Name</th>
-                            <th style="text-align: center;">Manager</th>
+                            <th style="text-align: center;">Owner</th>
                             <th style="text-align: center;">Players needed</th>
                             <th style="text-align: center;">Points Left</th>
                             <th style="text-align: center;">Actions</th>

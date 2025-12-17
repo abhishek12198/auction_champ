@@ -98,7 +98,6 @@ class SellPlayer(models.TransientModel):
         players_remaining = self.players_remaining - 1
         points_remaining = self.points_remaining
         temp_number = players_remaining * auction_base_point
-        print(points_remaining, temp_number)
         max_limit_player = points_remaining - temp_number
         if self_final_point > max_limit_player:
             self.final_point = max_limit_player
@@ -114,9 +113,9 @@ class SellPlayer(models.TransientModel):
     @api.onchange('players_remaining')
     def onchange_players_remaining(self):
         domain = {'domain': {'team_id': [('id', 'in', [])]}}
-        auctions = self.env['auction.auction'].search([('remaining_players_count', '>', 0)])
+        auctions = self.env['auction.auction'].search([])
+        # auctions = self.env['auction.auction'].search([('remaining_players_count', '>', 0)])
         if auctions:
-            print(len(auctions))
             team_ids = auctions.mapped('team_id')
             domain = {'domain': {'team_id': [('id', 'in', team_ids.ids)]}}
         return domain
@@ -126,7 +125,7 @@ class SellPlayer(models.TransientModel):
         if self.team_id:
             team_auction_record = self.env['auction.auction'].search([('team_id', '=', self.team_id.id)])
             if team_auction_record:
-                if team_auction_record.remaining_points == 0 or team_auction_record.remaining_players_count == 0:
+                if team_auction_record.remaining_points == 0:
                     raise ValidationError("Team is full or the points are empty")
                 self.team_auction_id = team_auction_record.id
                 self.points_remaining = team_auction_record.remaining_points
@@ -140,6 +139,7 @@ class SellPlayer(models.TransientModel):
 
     def button_sell_player(self):
         player_id = self.env.context.get('active_id', False)
+        message = ''
         if player_id:
             player = self.env['auction.team.player'].browse(player_id)
             auction = self.team_auction_id
@@ -149,10 +149,49 @@ class SellPlayer(models.TransientModel):
 
             }
             message = player.name + ' sold to the '+ auction.team_id.name + ' for ' +str(self.final_point) + ' points successfully!'
-            auction.player_ids = [(0, 0, auction_line_data)]
-            player.assigned_team_id = auction.team_id and auction.team_id.id or False
-            player.state = 'sold'
-            player.create_auction_history(auction.team_id.id, message, tournament_id=player.tournament_id.id, player=player)
-            self.env.user.notify_success(message)
+            auction_player_line = self.env['auction.auction.player'].search([('player_id', '=', player.id)])
+            if not auction_player_line:
+                auction.player_ids = [(0, 0, auction_line_data)]
+                player.assigned_team_id = auction.team_id and auction.team_id.id or False
+                player.state = 'sold'
+                player.create_auction_history(auction.team_id.id, message, tournament_id=player.tournament_id.id, player=player)
+            else:
+                auction_line_data.update({'auction_id': auction.id})
+                auction_player_line.write(auction_line_data)
+            # Side-effect notification (does NOT affect navigation)
+            self.env.user.notify_success(
+                message=message,
+                title="CONGRATULATIONS!"  # 👈 key marker
+            )
+
+            # Close wizard
+            return {'type': 'ir.actions.act_window_close'}
+
+        # 3️⃣ Close wizard
+        return {'type': 'ir.actions.act_window_close'}
+        # action = self.env.ref('auction_module.action_auction_team_player_auction').read()[0]
+        # action['context'] = dict(
+        #     self.env.context,
+        #     show_sell_toast=True,
+        #     toast_message=message
+        # )
+        # return action
+        # return {
+        #     'type': 'ir.actions.client',
+        #     'tag': 'display_notification',
+        #     'params': {
+        #         'title': '🎉 Congratulations',
+        #         'message': message,
+        #         'type': 'success',
+        #         'sticky': False,
+        #     }
+        # }
+        # return {
+        #     'type': 'ir.actions.client',
+        #     'tag': 'show_sell_toast',
+        #     'params': {
+        #         'message': message,
+        #     }
+        # }
 
 

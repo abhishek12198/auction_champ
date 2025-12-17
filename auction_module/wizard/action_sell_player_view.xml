@@ -57,7 +57,7 @@
                     </group>
 
                     <footer>
-                        <button string="Sell" type="object"  class="btn-primary" name="button_sell_player" confirm="On click will sell this player to the selected team, click Ok to continue"/>
+                        <button string="Sell" type="object"  class="btn-primary" name="button_sell_player"  onclick="window.playSoldSound()"/>
                         <button string="Cancel" class="btn-secondary" special="cancel"/>
                 </footer>
                 </form>

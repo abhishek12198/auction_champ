@@ -263,7 +263,7 @@
 
             <div class="message-header">Welcome to the Tournament!</div>
             <div class="message-body">
-                <t t-esc="'Welcome to ' + env['auction.tournament'].search([('active', '=', True)], limit=1).name"/>. We are excited to have all the managers participating.
+                <t t-esc="'Welcome to ' + env['auction.tournament'].search([('active', '=', True)], limit=1).name"/>. We are excited to have all the owners participating.
 
             </div>
             <span t-esc="env['auction.tournament'].search([('active', '=', True)], limit=1).rules_regulations"></span>

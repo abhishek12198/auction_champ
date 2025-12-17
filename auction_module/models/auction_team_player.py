@@ -8,7 +8,8 @@ import requests
 import base64
 import werkzeug
 import werkzeug.exceptions
-
+from urllib.parse import urlparse, parse_qs
+import re
 class AuctionTeamPlayer(models.Model):
     _name = 'auction.team.player'
 
@@ -29,7 +30,7 @@ class AuctionTeamPlayer(models.Model):
     batting_style = fields.Char(string="Batting Style", required=True, default='Right Handed Batter')
     bowling_style = fields.Char(string="Bowling Style", required=True, default='Right Arm')
     role = fields.Char()
-    player_type = fields.Selection([('domestic', 'Domestic'), ('foreign', 'Foreign')], default='domestic')
+    player_type = fields.Selection([('icon', 'Icon'), ('domestic', 'Domestic'), ('foreign', 'Foreign')], default='domestic')
     photo = fields.Binary("Photo")
     photo_url = fields.Char("Photo URL")
     payment_url = fields.Char("Payment URL")
@@ -37,6 +38,7 @@ class AuctionTeamPlayer(models.Model):
     amount_paid = fields.Boolean(default=True)
     active = fields.Boolean(default=True)
     tournament_id = fields.Many2one('auction.tournament', 'Tournament')
+    tournament_type = fields.Selection(related='tournament_id.tournament_type')
     assigned_team_id = fields.Many2one('auction.team', 'Team')
     icon_player = fields.Boolean("Key Player")
     notes = fields.Char()
@@ -45,6 +47,7 @@ class AuctionTeamPlayer(models.Model):
     jersy_size = fields.Char('Jersy Size')
     jersy_number = fields.Char("Number in Jersy")
     jersy_name = fields.Char("Name in Jersy")
+    blood_group = fields.Char("Blood Group")
 
     def print_player_cards(self):
         return self.env.ref('auction_module.action_report_player_card').report_action(self)
@@ -89,17 +92,58 @@ class AuctionTeamPlayer(models.Model):
             # Handle any errors that occur during the download
             return None
 
+
+    def get_image_base64_from_google_url(self, url):
+        """
+        Converts a Google Drive 'open?id=' URL into a direct download URL
+        and returns Base64 encoded binary.
+        """
+
+        try:
+            if not url:
+                return False
+
+            parsed = urlparse(url)
+            query = parse_qs(parsed.query)
+            file_id = query.get("id", [None])[0]
+
+            if not file_id:
+                return False
+
+            # Convert to direct download URL
+            download_url = f"https://drive.google.com/uc?export=download&id={file_id}"
+
+            # Download the file
+            response = requests.get(download_url, allow_redirects=True, timeout=20)
+            response.raise_for_status()
+
+            # Must be an image
+            if "image" not in response.headers.get("Content-Type", ""):
+                print("Not an image, Google returned:", response.headers.get("Content-Type"))
+                return False
+
+            return base64.b64encode(response.content)
+
+        except Exception as e:
+            print("Google Drive image fetch error:", e)
+            return False
+
+
     @api.model
     def create(self, vals):
         tournament_id = self.env['auction.tournament'].search([('active', '=', True)], limit=1)
         if tournament_id:
             vals.update({'tournament_id': tournament_id.id})
+        if 'Icon' in  vals.get('player_type', False):
+            vals.update({'player_type': 'icon'})
         if vals.get('photo_url', False):
             image_base64 = self.get_base64_from_url(vals.get('photo_url', False))
             if image_base64:
                vals.update({'photo': image_base64})
+
         if not vals.get('payment_url', False):
             vals.update({'amount_paid': False})
+        print(vals, "ssssss")
         player = super(AuctionTeamPlayer, self).create(vals)
         return player
 

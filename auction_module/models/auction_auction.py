@@ -15,7 +15,7 @@ class Auction(models.Model):
     _order = 'remaining_players_count,id'
     team_id = fields.Many2one('auction.team', 'Team')
     team_logo = fields.Binary(related='team_id.logo')
-    manager = fields.Char(related='team_id.manager', string="Manager")
+    manager = fields.Char(related='team_id.manager', string="Owner")
     player_ids = fields.One2many('auction.auction.player', 'auction_id', 'Players')
     total_point = fields.Integer(string="Total points")
     active = fields.Boolean(default=True)

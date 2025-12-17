@@ -110,6 +110,8 @@
                     <field name="role"/>
                     <field name="amount_paid" widget="boolean_toggle"/>
                     <field name="photo_url" invisible="1"/>
+                    <field name="blood_group"/>
+
                     <field name="tournament_id"/>
                     <field name="state"/>
                     <field name="assigned_team_id" invisible="1"/>
@@ -136,6 +138,7 @@
                     <field name="role"/>
                     <field name="amount_paid" widget="boolean_toggle"/>
                     <field name="photo_url" invisible="1"/>
+                    <field name="blood_group"/>
                     <field name="tournament_id"/>
                     <field name="state"/>
                     <field name="assigned_team_id"/>
@@ -178,11 +181,8 @@
                         <field name="state" widget="statusbar" clickable="1"/>
                         <button name="%(auction_module.action_auction_set_key_player)d" attrs="{'invisible': ['|',('state', '!=', 'auction'),('icon_player', '=', True)]}" type="action" class="oe_highlight" string="Set Icon Player"/>
                         <button name="action_revoke_key_player" string="Revoke Icon Player" attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '!=', True)]}"  class="btn btn-secondary oe_kanban_button" type="object"  confirm="This will revoke the player from the icon player list and bring to auction. Click on Ok to continue. Otherwise click on Cancel"/>
-                        <!--<button name="action_send_whatsapp" string="Send Whatsapp"   class="btn btn-secondary oe_kanban_button" type="object"  confirm="Send Whatsapp message"/>
--->
-                    <button name="print_player_cards" type="object" string="Print Player Cards" class="btn-primary"/>
                     </header>
-                    <field name="photo" widget='image' class="oe_avatar"/>
+                    <field name="photo" widget='image' class="oe_avatar player_avatar_big" options="{'zoom': true, 'preview_image': 'photo'}"/>
                     <group col="4">
                             <field name="name"/>
                             <field name="contact"/>
@@ -205,6 +205,8 @@
                                 <field name="jersy_name"/>
                                 <field name="jersy_size"/>
                                 <field name="jersy_number"/>
+                                <field name="blood_group"/>
+
                             </group>
                         </page>
                     </notebook>

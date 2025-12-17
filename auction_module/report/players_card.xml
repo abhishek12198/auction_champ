@@ -108,7 +108,7 @@
                 <div class="page">
                     <div class="header">
                         <div class="logo_right" style="float: right;">
-                            <img t-att-src="image_data_uri(env['auction.tournament'].search([('active', '=', True)], limit=1).logo)" style="max-height:100pt;max-width:80%" alt="Team Image"/>
+                            <img t-att-src="image_data_uri(env['auction.tournament'].search([('active', '=', True)], limit=1).logo)" style="max-height:100pt;max-width:100%" alt="Team Image"/>
                         </div>
                     </div>
                     <div class="player-card" t-if="player.id">

@@ -73,10 +73,12 @@
 <!--                                        </t>-->
                                     </h2>
                                     <p class="player-possition">Role:<span t-esc="doc.role" /></p>
-                                    <p class="player-possition"><span>Batting Style:</span> <span t-esc="doc.batting_style" /></p>
-                                    <p class="player-possition"><span>Bowling Style:</span> <span t-esc="doc.bowling_style" /></p>
-                                    <p class="player-possition"><span>Mobile:</span> <span t-esc="doc.contact" /></p>
-                                    <p class="player-possition"><span>Place:</span> <span t-esc="doc.address" /></p>
+                                    <p t-if="doc.tournament_id.tournament_type=='cricket'" class="player-possition"><span>Batting Style:</span> <span t-esc="doc.batting_style" /></p>
+                                    <p t-if="doc.tournament_id.tournament_type=='cricket'" class="player-possition"><span>Bowling Style:</span> <span t-esc="doc.bowling_style" /></p>
+                                    <p class="player-possition"><span>Mobile No:</span> <span t-esc="doc.contact" /></p>
+                                    <p class="player-possition"><span>Blood Group:</span> <span style="color:#e53935; font-weight:bold;" t-if="doc.blood_group" t-esc="doc.blood_group" /><span t-if="not doc.blood_group" >NA</span></p>
+                                    <p class="player-possition" t-if="doc.address"><span>Location:</span> <span t-if="doc.address" t-esc="doc.address" /><span t-if="not doc.address">NA</span></p>
+
                                 </div>
                             </div>
                         </div>

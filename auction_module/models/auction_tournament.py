@@ -39,3 +39,4 @@ class AuctionTournament(models.Model):
     template_image = fields.Binary('Template Image')
     report_footer = fields.Binary('Footer')
     rules_regulations = fields.Html("Rules and Regulations")
+    tournament_type = fields.Selection([('cricket', 'Cricket'), ('football', 'Football')], default='cricket')

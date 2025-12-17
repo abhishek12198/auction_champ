@@ -44,9 +44,14 @@
     ],
     'assets': {
             'web.assets_backend': [
+                    '/auction_module/static/src/js/center_toast.js',
                     '/auction_module/static/src/css/wizard_style.css',
                     '/auction_module/static/src/css/sticky_header.css',
-                    '/auction_module/static/src/js/tree_sticky_header.js',
+                    # '/auction_module/static/src/js/tree_sticky_header.js',
+                    '/auction_module/static/src/js/sold_sound.js',
+                    '/auction_module/static/src/js/sold_toast.js',
+                    # '/auction_module/static/src/js/sell_toast_hook.js',
+                    '/auction_module/static/src/css/sold_toast.css',
 
                 ],
             'web.assets_frontend': [

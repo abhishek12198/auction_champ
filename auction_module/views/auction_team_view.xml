@@ -34,7 +34,7 @@
                                     <strong t-esc="record.name.raw_value"/>
 
                                     <div t-if="record.manager">
-                                        <span> Manager: </span>
+                                        <span> Owner: </span>
                                         <field name="manager"/>
                                     </div>
                                     <div t-if="record.key_player_ids">
