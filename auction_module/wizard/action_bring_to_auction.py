@@ -17,9 +17,9 @@ class BringUnsoldPlayers(models.TransientModel):
     @api.model
     def default_get(self, fields):
         players = self.env['auction.team.player'].browse(self.env.context.get('active_ids', []))
-        if any(player.state != "unsold" for player in players):
-            raise ValidationError("Only the players in Unsold status can be brought back to Auction! "
-                                  "Please unselect the players which are not in Unsold status!")
+        if any(player.state not in ["unsold", "sold"] for player in players):
+            raise ValidationError("Only the players in Sold/Unsold status can be brought back to Auction! "
+                                  "Please unselect the players which are not in Sold/Unsold status!")
         defaults = super(BringUnsoldPlayers, self).default_get(fields)
         if self.env.context.get('active_ids', []):
             defaults.update({'player_ids': [(6, 0, self.env.context.get('active_ids', []))]})
@@ -29,8 +29,11 @@ class BringUnsoldPlayers(models.TransientModel):
         return defaults
 
     def button_set_to_auction(self):
-        players = self.player_ids
-        players.with_context({'mass_update' : True}).action_auction()
+        players_unsold = self.player_ids.filtered(lambda player: player.state == 'unsold')
+        players_sold = self.player_ids.filtered(lambda player: player.state == 'sold')
+        if players_unsold:
+            players_unsold.with_context({'mass_update' : True}).action_auction()
 
-
+        if players_sold:
+            players_sold.with_context({'mass_update' : True}).action_recall_auction_sold()
 

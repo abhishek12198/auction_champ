@@ -11,7 +11,7 @@
                         <field name="tournament_id" readonly="1" force_save="1"/>
                     </group>
                     <group string="Selected Players">
-                            <field name="player_ids" nolabel="1">
+                            <field name="player_ids" nolabel="1" readonly="1" force_save="1">
                                 <tree editable="bottom">
                                     <field name="sl_no"/>
                                     <field name="name"/>

@@ -194,12 +194,15 @@ class AuctionTeamPlayer(models.Model):
                 self.env.user.notify_success(message)
 
     def action_recall_auction_sold(self):
+        context = self.env.context.copy()
         for player in self:
             if player.state == 'sold':
                 auction_player = self.env['auction.auction.player'].search([('player_id', '=', player.id)])
                 if auction_player:
                     auction_player.action_recall_to_auction()
-
+        if context.get('mass_update', False):
+            message =  'Selected players brought back to auction successfully!. The player will be available in the auction'
+            self.env.user.notify_success(message)
 
     def action_auction(self):
         context = self.env.context.copy()

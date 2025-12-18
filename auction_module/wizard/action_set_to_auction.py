@@ -17,6 +17,10 @@ class SetAuctionPlayer(models.TransientModel):
     @api.model
     def default_get(self, fields):
         defaults = super(SetAuctionPlayer, self).default_get(fields)
+        players = self.env['auction.team.player'].browse(self.env.context.get('active_ids', []))
+        if any(player.state not in ["draft"] for player in players):
+            raise ValidationError("Only the players in Draft status can be moved to Auction! "
+                                  "Please unselect the players which are not in Draft status!")
         if self.env.context.get('active_ids', []):
             defaults.update({'player_ids': [(6, 0, self.env.context.get('active_ids', []))]})
         tournament_id = self.env['auction.tournament'].search([('active', '=', True)], limit=1)

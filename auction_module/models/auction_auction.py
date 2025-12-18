@@ -66,12 +66,13 @@ class AuctionPlayer(models.Model):
     points = fields.Integer(string='Points')
 
     def action_recall_to_auction(self):
+        context = self.env.context.copy()
         for player in self:
             player_obj = player.player_id
             player.player_id.assigned_team_id = False
             player.player_id.state = 'auction'
 
             player.unlink()
-            message = player_obj.name + ' brought back to auction successfully!. The player will be available in the auction'
-            self.env.user.notify_success(message)
-
+            if not context.get('mass_update', False):
+                message = player_obj.name + ' brought back to auction successfully!. The player will be available in the auction'
+                self.env.user.notify_success(message)
