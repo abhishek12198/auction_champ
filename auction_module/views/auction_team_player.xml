@@ -88,6 +88,9 @@
                                     <button name="%(auction_module.action_auction_set_key_player)d" attrs="{'invisible': ['|',('state', '!=', 'auction'),('icon_player', '=', True)]}" string="Set Icon Player" class="oe_link" type="action" >
                                         Set Icon Player
                                     </button>
+                                    <button name="action_recall_auction_sold" attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '=', True)]}" string="Revoke Key Player" class="btn btn-secondary oe_kanban_button" type="object"  confirm="This will recall the player to Auction. Click on Ok to continue. Otherwise click on Cancel">
+                                        Recall to Auction
+                                    </button>
                                 </div>
                             </div>
                         </t>
@@ -121,6 +124,7 @@
                     <button name="action_unsold" string="Set to Unsold" type="object"   attrs="{'invisible': [('state', '!=', 'auction')]}" confirm="This will set the player to Unsold and later you can bring back to Auction. Click on Ok to continue. Otherwise click on Cancel"></button>
                     <button name="action_auction" string="Bring to Auction" type="object"  attrs="{'invisible': [('state', '!=', 'unsold')]}" confirm="This will bring the player back to Auction from Unsold mode. Click on Ok to continue. Otherwise click on Cancel"></button>
                     <button name="action_revoke_key_player" string="Revoke Icon Player" attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '!=', True)]}"  class="btn btn-secondary oe_kanban_button" type="object"  confirm="This will revoke the player from the icon player list and bring to auction. Click on Ok to continue. Otherwise click on Cancel"/>
+                    <button name="action_recall_auction_sold" string="Recall to Auction" attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '=', True)]}"  class="btn btn-secondary oe_kanban_button" type="object"  confirm="This will recall the sold player and bring to auction. Click on Ok to continue. Otherwise click on Cancel"/>
                 </tree>
             </field>
         </record>
@@ -148,6 +152,7 @@
                     <button name="action_unsold" string="Set to Unsold" type="object"   attrs="{'invisible': [('state', '!=', 'auction')]}" confirm="This will set the player to Unsold and later you can bring back to Auction. Click on Ok to continue. Otherwise click on Cancel"></button>
                     <button name="action_auction" string="Bring to Auction" type="object"  attrs="{'invisible': [('state', '!=', 'unsold')]}" confirm="This will bring the player back to Auction from Unsold mode. Click on Ok to continue. Otherwise click on Cancel"></button>
                     <button name="action_revoke_key_player" string="Revoke Icon Player" attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '!=', True)]}"  class="btn btn-secondary oe_kanban_button" type="object"  confirm="This will revoke the player from the icon player list and bring to auction. Click on Ok to continue. Otherwise click on Cancel"/>
+                    <button name="action_recall_auction_sold" string="Recall to Auction" attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '=', True)]}"  class="btn btn-secondary oe_kanban_button" type="object"  confirm="This will recall the sold player and bring to auction. Click on Ok to continue. Otherwise click on Cancel"/>
                 </tree>
             </field>
         </record>
@@ -181,6 +186,7 @@
                         <field name="state" widget="statusbar" clickable="1"/>
                         <button name="%(auction_module.action_auction_set_key_player)d" attrs="{'invisible': ['|',('state', '!=', 'auction'),('icon_player', '=', True)]}" type="action" class="oe_highlight" string="Set Icon Player"/>
                         <button name="action_revoke_key_player" string="Revoke Icon Player" attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '!=', True)]}"  class="btn btn-secondary oe_kanban_button" type="object"  confirm="This will revoke the player from the icon player list and bring to auction. Click on Ok to continue. Otherwise click on Cancel"/>
+                        <button name="action_recall_auction_sold" string="Recall to Auction" attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '=', True)]}"  class="btn btn-secondary oe_kanban_button" type="object"  confirm="This will recall the sold player and bring to auction. Click on Ok to continue. Otherwise click on Cancel"/>
                     </header>
                     <field name="photo" widget='image' class="oe_avatar player_avatar_big" options="{'zoom': true, 'preview_image': 'photo'}"/>
                     <group col="4">
