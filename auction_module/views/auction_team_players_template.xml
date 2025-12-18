@@ -1,7 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
+
+
     <template id="auction_team_players_template" name="Players">
+    <t t-call="website.layout">
+        <t t-set="body_class" t-value="'hide-main-menu'"/>
+            <t t-set="no_header" t-value="True"/>
+    <t t-set="no_footer" t-value="True"/>
+         <div id="wrapwrap">
+        <!-- your existing HTML body ONLY -->
+
         <html lang="en">
+
             <head>
                 <meta charset="UTF-8"/>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -9,13 +20,23 @@
                 <link rel="stylesheet" href="/auction_module/static/src/assets/css/style.css" />
                 <title>Auction Champ List</title>
             </head>
-            <body>
+            <body >
+                <div id="screenshot_container">
+
+
                 <header class="py-3 text-center">
                     <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo"/>
+                    <button t-if="players" type="button" role="button"
+                        t-att-data-filename="'%s_squad.png' % (team.name,)"
+                        class="o_take_screenshot squad-snapshot-btn">
+                    Squad Snapshot 📸
+                </button>
                 </header>
 
-                <section class="players-list-in-club mb-5">
+                <section class="players-list-in-club mb-5" >
+
                     <div class="container">
+
                         <div class="team-logo-rising position-relative d-flex align-items-center justify-content-center my-lg-5 my-4" style="column-gap: 8px;">
                             <a  class="back-btn d-none d-sm-block position-absolute" href="/auction/show/team/balance">
                                 <img src="/auction_module/static/src/assets/images/back-btn.svg" alt="back button" width="43px" height="43px" style="background-color: transparent;"/>
@@ -25,32 +46,77 @@
                         </div>
                         <t t-if="players">
                             <div class="row" style="row-gap: 30px;">
+<!--                                <div t-foreach="players" t-as="player" class="col-12 col-xl-4 col-md-6 px-2">-->
+<!--                                    <div class="bg-white p-3">-->
+<!--                                            <div class="player-small-card align-items-center d-flex">-->
+<!--                                                <div class="player-image-side">-->
+<!--                                                    <img t-att-src="image_data_uri(player.player_id.photo)" alt="Player card" width="130" height="130"/>-->
+<!--                                                </div>-->
+<!--                                                <div class="player-details ms-3 w-100 d-flex flex-column justify-content-between" style="row-gap: 20px;">-->
+<!--                                                    <div class="name-point align-items-center flex-wrap d-flex justify-content-between" style="row-gap: 6px;">-->
+<!--                                                        <h3><span t-esc="player.player_id.name"/></h3>-->
+<!--                                                        <div class="player-point d-flex align-items-center  px-2 py-1">-->
+<!--                                                            <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">-->
+<!--                                                                <path d="M20.6665 2.45352C22.6934 3.62377 24.3766 5.30695 25.5469 7.33389C26.7171 9.36083 27.3332 11.6601 27.3332 14.0006C27.3332 16.3411 26.717 18.6404 25.5468 20.6673C24.3765 22.6942 22.6933 24.3774 20.6664 25.5476C18.6394 26.7178 16.3401 27.3339 13.9996 27.3339C11.6591 27.3338 9.35986 26.7177 7.33295 25.5474C5.30604 24.3771 3.62289 22.6939 2.45268 20.6669C1.28248 18.64 0.666444 16.3407 0.666504 14.0002L0.673171 13.5682C0.747842 11.2655 1.4179 9.02146 2.61802 7.05484C3.81815 5.08822 5.50738 3.46612 7.52103 2.34669C9.53468 1.22727 11.804 0.648711 14.1078 0.667433C16.4117 0.686154 18.6713 1.30151 20.6665 2.45352ZM13.9998 6.00018C13.6462 6.00018 13.3071 6.14066 13.057 6.39071C12.807 6.64076 12.6665 6.97989 12.6665 7.33352C11.6056 7.33352 10.5882 7.75494 9.83808 8.50509C9.08793 9.25523 8.6665 10.2726 8.6665 11.3335C8.6665 12.3944 9.08793 13.4118 9.83808 14.1619C10.5882 14.9121 11.6056 15.3335 12.6665 15.3335V18.0002C12.4454 18.0124 12.2246 17.9705 12.0234 17.878C11.8221 17.7855 11.6465 17.6453 11.5118 17.4695L11.4212 17.3349C11.2387 17.0407 10.9491 16.8289 10.6134 16.7445C10.2777 16.66 9.92226 16.7094 9.62232 16.8822C9.32239 17.055 9.10142 17.3378 9.00616 17.6706C8.91089 18.0034 8.94879 18.3602 9.11184 18.6655C9.45215 19.2557 9.93759 19.7492 10.5221 20.0993C11.1066 20.4493 11.7709 20.6442 12.4518 20.6655H12.6665C12.6662 20.9923 12.786 21.3079 13.003 21.5522C13.2201 21.7965 13.5193 21.9526 13.8438 21.9908L13.9998 22.0002C14.3535 22.0002 14.6926 21.8597 14.9426 21.6097C15.1927 21.3596 15.3332 21.0205 15.3332 20.6668L15.5678 20.6602C16.6073 20.6001 17.5824 20.1371 18.2859 19.3695C18.9894 18.6019 19.3659 17.5902 19.3353 16.5495C19.3047 15.5087 18.8696 14.5209 18.1223 13.7959C17.3749 13.0709 16.3744 12.6658 15.3332 12.6668V10.0002C15.8105 9.98418 16.2278 10.1868 16.4878 10.5308L16.5785 10.6655C16.7609 10.9597 17.0506 11.1714 17.3863 11.2559C17.722 11.3404 18.0774 11.291 18.3774 11.1181C18.6773 10.9453 18.8983 10.6626 18.9935 10.3298C19.0888 9.99701 19.0509 9.64021 18.8878 9.33485C18.5477 8.74438 18.0623 8.2506 17.4778 7.90035C16.8933 7.5501 16.2289 7.35498 15.5478 7.33352H15.3332C15.3332 6.97989 15.1927 6.64076 14.9426 6.39071C14.6926 6.14066 14.3535 6.00018 13.9998 6.00018ZM15.3332 15.3335C15.6868 15.3335 16.0259 15.474 16.276 15.724C16.526 15.9741 16.6665 16.3132 16.6665 16.6668C16.6665 17.0205 16.526 17.3596 16.276 17.6097C16.0259 17.8597 15.6868 18.0002 15.3332 18.0002V15.3335ZM12.6665 10.0002V12.6668C12.3129 12.6668 11.9737 12.5264 11.7237 12.2763C11.4736 12.0263 11.3332 11.6871 11.3332 11.3335C11.3332 10.9799 11.4736 10.6408 11.7237 10.3907C11.9737 10.1407 12.3129 10.0002 12.6665 10.0002Z" fill="#FFC812"/>-->
+<!--                                                            </svg>-->
+<!--                                                            <p class="ms-2"><span t-esc="player.points"/> <span>pts</span></p>-->
+<!--                                                        </div>-->
+<!--                                                    </div>-->
+<!--                                                    <div class="player-expertise d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">-->
+
+<!--                                                        <p  class="batter"><span t-esc="player.player_id.role"/></p>-->
+<!--                                                        &lt;!&ndash;<p class="bowler">Bowler</p>-->
+<!--                                                        <p class="all-rounder">All Rounder</p>&ndash;&gt;-->
+<!--                                                    </div>-->
+<!--                                                    <a href="#">-->
+<!--                                                        <img src="/auction_module/static/src/assets/images/phone.svg" alt="phone" width="18" height="18"/>-->
+<!--                                                        <span t-esc="player.contact"/>-->
+<!--                                                    </a>-->
+<!--                                                </div>-->
+<!--                                            </div>-->
+<!--                                        </div>-->
+<!--                                </div>-->
                                 <div t-foreach="players" t-as="player" class="col-12 col-xl-4 col-md-6 px-2">
                                     <div class="bg-white p-3">
                                             <div class="player-small-card align-items-center d-flex">
                                                 <div class="player-image-side">
-                                                    <img t-att-src="image_data_uri(player.player_id.photo)" alt="Player card" width="130" height="130"/>
+                                                    <img t-att-src="image_data_uri(player.get('photo'))" alt="Player card" width="130" height="130"/>
                                                 </div>
                                                 <div class="player-details ms-3 w-100 d-flex flex-column justify-content-between" style="row-gap: 20px;">
                                                     <div class="name-point align-items-center flex-wrap d-flex justify-content-between" style="row-gap: 6px;">
-                                                        <h3><span t-esc="player.player_id.name"/></h3>
-                                                        <div class="player-point d-flex align-items-center  px-2 py-1">
-                                                            <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                <path d="M20.6665 2.45352C22.6934 3.62377 24.3766 5.30695 25.5469 7.33389C26.7171 9.36083 27.3332 11.6601 27.3332 14.0006C27.3332 16.3411 26.717 18.6404 25.5468 20.6673C24.3765 22.6942 22.6933 24.3774 20.6664 25.5476C18.6394 26.7178 16.3401 27.3339 13.9996 27.3339C11.6591 27.3338 9.35986 26.7177 7.33295 25.5474C5.30604 24.3771 3.62289 22.6939 2.45268 20.6669C1.28248 18.64 0.666444 16.3407 0.666504 14.0002L0.673171 13.5682C0.747842 11.2655 1.4179 9.02146 2.61802 7.05484C3.81815 5.08822 5.50738 3.46612 7.52103 2.34669C9.53468 1.22727 11.804 0.648711 14.1078 0.667433C16.4117 0.686154 18.6713 1.30151 20.6665 2.45352ZM13.9998 6.00018C13.6462 6.00018 13.3071 6.14066 13.057 6.39071C12.807 6.64076 12.6665 6.97989 12.6665 7.33352C11.6056 7.33352 10.5882 7.75494 9.83808 8.50509C9.08793 9.25523 8.6665 10.2726 8.6665 11.3335C8.6665 12.3944 9.08793 13.4118 9.83808 14.1619C10.5882 14.9121 11.6056 15.3335 12.6665 15.3335V18.0002C12.4454 18.0124 12.2246 17.9705 12.0234 17.878C11.8221 17.7855 11.6465 17.6453 11.5118 17.4695L11.4212 17.3349C11.2387 17.0407 10.9491 16.8289 10.6134 16.7445C10.2777 16.66 9.92226 16.7094 9.62232 16.8822C9.32239 17.055 9.10142 17.3378 9.00616 17.6706C8.91089 18.0034 8.94879 18.3602 9.11184 18.6655C9.45215 19.2557 9.93759 19.7492 10.5221 20.0993C11.1066 20.4493 11.7709 20.6442 12.4518 20.6655H12.6665C12.6662 20.9923 12.786 21.3079 13.003 21.5522C13.2201 21.7965 13.5193 21.9526 13.8438 21.9908L13.9998 22.0002C14.3535 22.0002 14.6926 21.8597 14.9426 21.6097C15.1927 21.3596 15.3332 21.0205 15.3332 20.6668L15.5678 20.6602C16.6073 20.6001 17.5824 20.1371 18.2859 19.3695C18.9894 18.6019 19.3659 17.5902 19.3353 16.5495C19.3047 15.5087 18.8696 14.5209 18.1223 13.7959C17.3749 13.0709 16.3744 12.6658 15.3332 12.6668V10.0002C15.8105 9.98418 16.2278 10.1868 16.4878 10.5308L16.5785 10.6655C16.7609 10.9597 17.0506 11.1714 17.3863 11.2559C17.722 11.3404 18.0774 11.291 18.3774 11.1181C18.6773 10.9453 18.8983 10.6626 18.9935 10.3298C19.0888 9.99701 19.0509 9.64021 18.8878 9.33485C18.5477 8.74438 18.0623 8.2506 17.4778 7.90035C16.8933 7.5501 16.2289 7.35498 15.5478 7.33352H15.3332C15.3332 6.97989 15.1927 6.64076 14.9426 6.39071C14.6926 6.14066 14.3535 6.00018 13.9998 6.00018ZM15.3332 15.3335C15.6868 15.3335 16.0259 15.474 16.276 15.724C16.526 15.9741 16.6665 16.3132 16.6665 16.6668C16.6665 17.0205 16.526 17.3596 16.276 17.6097C16.0259 17.8597 15.6868 18.0002 15.3332 18.0002V15.3335ZM12.6665 10.0002V12.6668C12.3129 12.6668 11.9737 12.5264 11.7237 12.2763C11.4736 12.0263 11.3332 11.6871 11.3332 11.3335C11.3332 10.9799 11.4736 10.6408 11.7237 10.3907C11.9737 10.1407 12.3129 10.0002 12.6665 10.0002Z" fill="#FFC812"/>
-                                                            </svg>
-                                                            <p class="ms-2"><span t-esc="player.points"/> <span>pts</span></p>
+                                                        <h3><span t-esc="player.get('name')"/></h3>
+                                                        <div t-if="not player.get('point') == 'ICON'"  class="player-point d-flex align-items-center  px-2 py-1">
+                                                            <div t-if="not player.get('point') == 'ICON'" >
+                                                                <svg  width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                    <path d="M20.6665 2.45352C22.6934 3.62377 24.3766 5.30695 25.5469 7.33389C26.7171 9.36083 27.3332 11.6601 27.3332 14.0006C27.3332 16.3411 26.717 18.6404 25.5468 20.6673C24.3765 22.6942 22.6933 24.3774 20.6664 25.5476C18.6394 26.7178 16.3401 27.3339 13.9996 27.3339C11.6591 27.3338 9.35986 26.7177 7.33295 25.5474C5.30604 24.3771 3.62289 22.6939 2.45268 20.6669C1.28248 18.64 0.666444 16.3407 0.666504 14.0002L0.673171 13.5682C0.747842 11.2655 1.4179 9.02146 2.61802 7.05484C3.81815 5.08822 5.50738 3.46612 7.52103 2.34669C9.53468 1.22727 11.804 0.648711 14.1078 0.667433C16.4117 0.686154 18.6713 1.30151 20.6665 2.45352ZM13.9998 6.00018C13.6462 6.00018 13.3071 6.14066 13.057 6.39071C12.807 6.64076 12.6665 6.97989 12.6665 7.33352C11.6056 7.33352 10.5882 7.75494 9.83808 8.50509C9.08793 9.25523 8.6665 10.2726 8.6665 11.3335C8.6665 12.3944 9.08793 13.4118 9.83808 14.1619C10.5882 14.9121 11.6056 15.3335 12.6665 15.3335V18.0002C12.4454 18.0124 12.2246 17.9705 12.0234 17.878C11.8221 17.7855 11.6465 17.6453 11.5118 17.4695L11.4212 17.3349C11.2387 17.0407 10.9491 16.8289 10.6134 16.7445C10.2777 16.66 9.92226 16.7094 9.62232 16.8822C9.32239 17.055 9.10142 17.3378 9.00616 17.6706C8.91089 18.0034 8.94879 18.3602 9.11184 18.6655C9.45215 19.2557 9.93759 19.7492 10.5221 20.0993C11.1066 20.4493 11.7709 20.6442 12.4518 20.6655H12.6665C12.6662 20.9923 12.786 21.3079 13.003 21.5522C13.2201 21.7965 13.5193 21.9526 13.8438 21.9908L13.9998 22.0002C14.3535 22.0002 14.6926 21.8597 14.9426 21.6097C15.1927 21.3596 15.3332 21.0205 15.3332 20.6668L15.5678 20.6602C16.6073 20.6001 17.5824 20.1371 18.2859 19.3695C18.9894 18.6019 19.3659 17.5902 19.3353 16.5495C19.3047 15.5087 18.8696 14.5209 18.1223 13.7959C17.3749 13.0709 16.3744 12.6658 15.3332 12.6668V10.0002C15.8105 9.98418 16.2278 10.1868 16.4878 10.5308L16.5785 10.6655C16.7609 10.9597 17.0506 11.1714 17.3863 11.2559C17.722 11.3404 18.0774 11.291 18.3774 11.1181C18.6773 10.9453 18.8983 10.6626 18.9935 10.3298C19.0888 9.99701 19.0509 9.64021 18.8878 9.33485C18.5477 8.74438 18.0623 8.2506 17.4778 7.90035C16.8933 7.5501 16.2289 7.35498 15.5478 7.33352H15.3332C15.3332 6.97989 15.1927 6.64076 14.9426 6.39071C14.6926 6.14066 14.3535 6.00018 13.9998 6.00018ZM15.3332 15.3335C15.6868 15.3335 16.0259 15.474 16.276 15.724C16.526 15.9741 16.6665 16.3132 16.6665 16.6668C16.6665 17.0205 16.526 17.3596 16.276 17.6097C16.0259 17.8597 15.6868 18.0002 15.3332 18.0002V15.3335ZM12.6665 10.0002V12.6668C12.3129 12.6668 11.9737 12.5264 11.7237 12.2763C11.4736 12.0263 11.3332 11.6871 11.3332 11.3335C11.3332 10.9799 11.4736 10.6408 11.7237 10.3907C11.9737 10.1407 12.3129 10.0002 12.6665 10.0002Z" fill="#FFC812"/>
+                                                                </svg>
+                                                            </div>
+                                                            <p class="ms-2"><span t-if="not player.get('point') == 'ICON'" t-esc="player.get('point')"/> <span t-if="not player.get('point') == 'ICON'">pts</span></p>
+                                                        </div>
+                                                        <div t-if="player.get('point') == 'ICON'"  class="icon-player-point d-flex align-items-center  px-2 py-1">
+                                                            <p class="bowler"><span t-if="player.get('point') == 'ICON'">ICON PLAYER</span></p>
                                                         </div>
                                                     </div>
                                                     <div class="player-expertise d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
 
-                                                        <p  class="batter"><span t-esc="player.player_id.role"/></p>
+                                                        <p  class="batter"><span t-esc="player.get('role')"/></p>
                                                         <!--<p class="bowler">Bowler</p>
                                                         <p class="all-rounder">All Rounder</p>-->
                                                     </div>
-                                                    <a href="tel: +91 1234567890">
+                                                    <a href="#">
                                                         <img src="/auction_module/static/src/assets/images/phone.svg" alt="phone" width="18" height="18"/>
-                                                        <span t-esc="player.contact"/>
+                                                        <span t-esc="player.get('contact')"/>
                                                     </a>
+                                                    <!--<div class="d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
+
+                                                      <strong>  Batting Style : </strong><span t-esc="player.get('batting_style')"/>
+                                                    </div>
+                                                    <div class="d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
+
+                                                        <strong>Bowling Style : </strong><span t-esc="player.get('bowling_style')"/>
+                                                    </div>-->
+
+
                                                 </div>
                                             </div>
                                         </div>
@@ -497,8 +563,13 @@
                     </div>
                 </section>
 
+                </div>
+
                 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
             </body>
             </html>
+        </div>
+    </t>
+
     </template>
 </odoo>

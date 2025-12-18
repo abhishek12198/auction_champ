@@ -37,9 +37,9 @@
         'wizard/action_view_team_details_view.xml',
         'views/auction_auction_view.xml',
         'wizard/action_start_auction_view.xml',
-
+        'wizard/action_bring_to_auction_view.xml',
         'wizard/action_set_to_auction_view.xml',
-
+        'views/auction_status_template.xml',
         'views/menu.xml',
     ],
     'assets': {
@@ -47,15 +47,20 @@
                     '/auction_module/static/src/js/center_toast.js',
                     '/auction_module/static/src/css/wizard_style.css',
                     '/auction_module/static/src/css/sticky_header.css',
-                    # '/auction_module/static/src/js/tree_sticky_header.js',
+                    '/auction_module/static/src/lib/html2canvas.min.js',
                     '/auction_module/static/src/js/sold_sound.js',
                     '/auction_module/static/src/js/sold_toast.js',
-                    # '/auction_module/static/src/js/sell_toast_hook.js',
+                    '/auction_module/static/src/js/screenshot.js',
                     '/auction_module/static/src/css/sold_toast.css',
+                    '/auction_module/static/src/css/auction_status.css',
+                    '/auction_module/static/src/js/auction_status.js',
 
                 ],
             'web.assets_frontend': [
-                'auction_module/static/src/js/auction.js',
+                '/auction_module/static/src/lib/html2canvas.min.js',
+                '/auction_module/static/src/js/screenshot.js',
+                '/auction_module/static/src/js/auction.js',
+
 
             ],
         },

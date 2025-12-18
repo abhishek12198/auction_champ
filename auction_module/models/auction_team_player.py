@@ -155,6 +155,11 @@ class AuctionTeamPlayer(models.Model):
         res = super(AuctionTeamPlayer, self).write(vals)
         return res
 
+    def get_icon_players(self, team_id):
+        players_domain = [('icon_player', '=', True), ('assigned_team_id', '=', team_id)]
+        players = self.search(players_domain, order='sl_no asc')
+        return players
+
     def get_auction_players(self):
         players_domain = [('icon_player', '=', False),('state', '=', 'auction')]
         players = self.search(players_domain, order='sl_no asc')
@@ -189,11 +194,16 @@ class AuctionTeamPlayer(models.Model):
                 self.env.user.notify_success(message)
 
     def action_auction(self):
+        context = self.env.context.copy()
         for player in self:
             if player.state == 'unsold':
                 player.state = 'auction'
-                message = player.name + ' brought to auction successfully!'
-                self.env.user.notify_success(message)
+                if not context.get('mass_update', False):
+                    message = player.name + ' brought to auction successfully!'
+                    self.env.user.notify_success(message)
+        if context.get('mass_update', False):
+            message = 'Selected players brought to auction successfully!'
+            self.env.user.notify_success(message)
 
     def action_revoke_key_player(self):
         for player in self:

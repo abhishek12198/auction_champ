@@ -1,0 +1,21 @@
+<odoo>
+    <template id="auction_live_page" name="Live Auction">
+        <t t-call="website.layout">
+            <t t-set="no_header" t-value="True"/>
+            <t t-set="no_footer" t-value="True"/>
+
+            <div class="container py-3">
+                <h4 class="text-center text-primary fw-bold">
+                    🔴 Live Auction Updates
+                </h4>
+
+                <div id="auction_feed" class="auction-feed mt-3">
+                    <!-- Cards injected by JS -->
+                </div>
+            </div>
+
+            <script src="/auction_module/static/src/js/auction_status.js"/>
+            <link rel="stylesheet" href="/auction_module/static/src/css/auction_status.css"/>
+        </t>
+    </template>
+</odoo>

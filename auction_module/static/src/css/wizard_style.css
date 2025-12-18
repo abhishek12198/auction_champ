@@ -114,3 +114,65 @@
     from { opacity: 1; }
     to   { opacity: 0; transform: translate(-50%, -60%) scale(0.85); }
 }
+body.hide-main-menu .oe_main_menu_navbar {
+    display: none !important;
+}
+
+/* ===============================
+   HEADER LAYOUT
+================================ */
+
+.auction-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    background: #ffffff;
+    border-bottom: 1px solid #e6e6e6;
+}
+
+/* Logo sizing control */
+.auction-logo {
+    height: 48px;
+    width: auto;
+}
+
+/* ===============================
+   SQUAD SNAPSHOT BUTTON
+================================ */
+
+.squad-snapshot-btn {
+    background: linear-gradient(135deg, #1e88e5, #1565c0);
+    color: #ffffff;
+    border: none;
+    border-radius: 999px; /* fully rounded */
+    padding: 10px 22px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    box-shadow: 0 6px 18px rgba(30, 136, 229, 0.35);
+    transition: all 0.25s ease;
+}
+
+/* Hover effect */
+.squad-snapshot-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(30, 136, 229, 0.45);
+    background: linear-gradient(135deg, #1976d2, #0d47a1);
+}
+
+/* Click effect */
+.squad-snapshot-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(30, 136, 229, 0.3);
+}
+
+/* Remove browser focus outline */
+.squad-snapshot-btn:focus {
+    outline: none;
+}

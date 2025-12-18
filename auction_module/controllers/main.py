@@ -83,9 +83,36 @@ class Auction(http.Controller):
 
     @http.route('/auction/get/players/team/<int:team_id>', type='http', auth='public', website=True)
     def get_team_players(self, team_id):
+        player_data_list = []
         team_players = request.env['auction.auction.player'].search([('auction_id.team_id', '=', team_id)])
+
         team = request.env['auction.team'].browse(team_id)
-        return request.render('auction_module.auction_team_players_template', {'players': team_players, 'team': team})
+        icon_players = request.env['auction.team.player'].get_icon_players(team_id)
+        if icon_players:
+            for icon in icon_players:
+                player_data = {
+                    'name': icon.name,
+                    'photo': icon.photo,
+                    'point': 'ICON',
+                    'role': icon.role,
+                    'batting_style': icon.batting_style,
+                    'bowling_style': icon.batting_style,
+                    'contact': icon.contact,
+                }
+                player_data_list.append(player_data)
+        if team_players:
+            for player in team_players:
+                player_data = {
+                    'name': player.player_id.name,
+                    'photo': player.player_id.photo,
+                    'point': player.points,
+                    'role': player.player_id.role,
+                    'batting_style': player.player_id.batting_style,
+                    'bowling_style': player.player_id.batting_style,
+                    'contact': player.player_id.contact,
+                }
+                player_data_list.append(player_data)
+        return request.render('auction_module.auction_team_players_template', {'players': player_data_list, 'team': team})
 
     @http.route('/get_players/<int:team_id>', type='json', auth="user", methods=['POST'], csrf=False)
     def get_players(self, team_id):
@@ -221,3 +248,36 @@ class Auction(http.Controller):
             ]
         )
         return response
+
+    @http.route('/auction/live', type='http', auth='public', website=True)
+    def auction_live_page(self, **kw):
+        return request.render('auction_module.auction_live_page')
+
+    @http.route('/auction/status/data', type='http', auth='public', website=True, csrf=False)
+    def auction_status_data(self, last_id=0, **kw):
+
+        last_id = int(last_id or 0)
+
+        records = request.env['auction.history'].sudo().search(
+            [('id', '>', last_id)],
+            order='id asc',
+            limit=20
+        )
+
+        data = []
+        for rec in records:
+            data.append({
+                'id': int(rec.id),
+                'message': str(rec.message or ''),
+                'image_url': f"/web/image/auction.history/{rec.id}/player_photo",
+            })
+
+        payload = {
+            'records': data,
+            'last_id': int(data[-1]['id']) if data else last_id
+        }
+
+        return request.make_response(
+            json.dumps(payload),
+            headers=[('Content-Type', 'application/json')]
+        )
