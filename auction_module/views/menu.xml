@@ -130,6 +130,12 @@
           action="auction_module.action_live_updates"
           sequence="4"/>
 
+        <menuitem id="menu_action_team_pool_wizard"
+          name="Pool Generator"
+          parent="menu_action_auction_auction"
+          action="auction_module.action_team_pool_wizard"
+          sequence="5"/>
+
 
         <menuitem id="menu_action_auction_tournament"
           name="Tournament(s)"

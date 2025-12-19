@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_team_pool_wizard_form" model="ir.ui.view">
+        <field name="name">auction.team.pool.wizard.form</field>
+        <field name="model">auction.team.pool.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Team Pool Generator" class="o_form_sheet">
+                <group string="Select Teams">
+                    <field name="team_ids" nolabel="1">
+                        <kanban class="o_kanban_mobile" create="0" edit="0">
+                            <field name="name"/>
+                            <field name="logo"/>
+                            <field name="tournament_id"/>
+                            <field name="manager"/>
+                            <field name="key_player_ids"/>
+                            <field name="id"/>
+                            <templates>
+                                <t t-name="kanban-box">
+                                    <div class="oe_kanban_global_click o_kanban_record">
+                                        <div class="o_kanban_image">
+                                            <img alt="Avatar" t-att-src="kanban_image('auction.team', 'logo', record.id.raw_value)"/>
+                                        </div>
+
+                                        <div class="o_kanban_details">
+                                            <strong t-esc="record.name.raw_value"/>
+
+                                            <div t-if="record.manager">
+                                                <span> Manager: </span>
+                                                <field name="manager"/>
+                                            </div>
+                                            <div t-if="record.key_player_ids">
+                                                <span> Icon Player: </span>
+                                                <field name="key_player_ids" widget="many2many_tags"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </t>
+                            </templates>
+                        </kanban>
+                    </field>
+
+                </group>
+                <group>
+                    <field name="pool_count"/>
+                </group>
+                <footer>
+                    <button
+                        name="action_generate_pools"
+                        type="object"
+                        string="Generate Pools"
+                        class="btn btn-primary"
+                    />
+
+                    <button
+                        name="action_reset"
+                        string="Reset"
+                        class="btn btn-secondary"
+                        type="object"
+                    />
+                </footer>
+
+                <div class="mt-3 text-end" attrs="{'invisible': [('result_html', '=', False)]}">
+                    <a
+                        href="#"
+                        class="btn btn-outline-primary o_take_pool_snapshot"
+                        role="button"
+                    >
+                        📸 Take Pool Snapshot
+                    </a>
+                </div>
+
+                <separator string="Pool Result"/>
+
+                <div id="pool_snapshot_container">
+                    <field name="result_html" nolabel="1"/>
+                </div>
+            </form>
+        </field>
+    </record>
+    <record id="action_team_pool_wizard" model="ir.actions.act_window">
+        <field name="name">Team Pool Generator</field>
+        <field name="res_model">auction.team.pool.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+    </record>
+
+</odoo>

@@ -46,7 +46,7 @@ class Auction(models.Model):
                 players_recruited = len(record.player_ids)
             record.remaining_players_count = record.max_players - players_recruited
 
-    @api.depends('player_ids', 'remaining_players_count','max_players')
+    @api.depends('player_ids', 'remaining_players_count','max_players', 'max_limited')
     def _calculate_max_call(self):
         for record in self:
             if record.max_players == record.remaining_players_count:

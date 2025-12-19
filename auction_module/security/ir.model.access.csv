@@ -12,6 +12,7 @@ access_auction_sell_player_base_user,auction.sell.player,auction_module.model_au
 access_auction_set_key_player_base_user,auction.set.key.player,auction_module.model_auction_set_key_player,base.group_user,1,1,1,1
 access_auction_player_auction_base_user,auction.player.auction,auction_module.model_auction_player_auction,base.group_user,1,1,1,1
 access_auction_bring_unsold_players_base_user,auction.bring.unsold.players,auction_module.model_auction_bring_unsold_players,base.group_user,1,1,1,1
+access_auction_team_pool_wizard_base_user,auction.team.pool.wizard,auction_module.model_auction_team_pool_wizard,base.group_user,1,1,1,1
 access_auction_edit_player_point_base_user,auction.edit.player.point,auction_module.model_auction_edit_player_point,base.group_user,1,1,1,1
 access_auction_view_team_details_base_user,auction.view.team.details,auction_module.model_auction_view_team_details,base.group_user,1,1,1,1
 access_my_service,my_service,base.model_res_users,,1,1,1,1
