@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none"
+     xmlns="http://www.w3.org/2000/svg">
+
+    <!-- Soft background -->
+    <rect x="10" y="10" width="180" height="180" rx="24"
+          fill="#F8F9FA" stroke="#DEE2E6" stroke-dasharray="6 6"/>
+
+    <!-- Player circle -->
+    <circle cx="100" cy="78" r="34" fill="#E9ECEF"/>
+
+    <!-- Head -->
+    <circle cx="100" cy="70" r="14" fill="#ADB5BD"/>
+
+    <!-- Body -->
+    <path d="M70 122C70 104 86 96 100 96C114 96 130 104 130 122"
+          stroke="#ADB5BD"
+          stroke-width="8"
+          stroke-linecap="round"/>
+
+    <!-- Disabled / empty mark -->
+    <line x1="128" y1="38" x2="158" y2="68"
+          stroke="#DC3545" stroke-width="4" stroke-linecap="round"/>
+    <line x1="158" y1="38" x2="128" y2="68"
+          stroke="#DC3545" stroke-width="4" stroke-linecap="round"/>
+
+</svg>

@@ -123,6 +123,24 @@
                                 </div>
                             </div>
                         </t>
+                        <t t-else="">
+                        <!-- ❌ NO PLAYERS AVAILABLE -->
+
+                        <div class="empty-state text-center mt-5">
+                            <img src="/auction_module/static/src/assets/images/no_players.svg"
+                                 class="mb-3"
+                                 style="max-width:180px; opacity:0.8;"/>
+
+                            <h4 class="fw-bold text-muted">
+                                Players not recruited yet!
+                            </h4>
+
+                            <p class="text-secondary mt-2">
+                                This team has not recruited any players yet.<br/>
+                                Please check back after the auction or recruitment process.
+                            </p>
+                        </div>
+                    </t>
                         <!--<div class="row" style="row-gap: 15px;">
                             <div class="col-12 col-xl-4 col-md-6 px-2">
                                 <div class="bg-white p-3">

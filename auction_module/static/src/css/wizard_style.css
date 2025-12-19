@@ -176,3 +176,17 @@ body.hide-main-menu .oe_main_menu_navbar {
 .squad-snapshot-btn:focus {
     outline: none;
 }
+.empty-state {
+    padding: 40px 20px;
+    border-radius: 16px;
+    background: #f8f9fa;
+    border: 1px dashed #dcdcdc;
+}
+
+.empty-state h4 {
+    color: #555;
+}
+
+.empty-state p {
+    font-size: 15px;
+}
