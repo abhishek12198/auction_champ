@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Define the menu item -->
+
+        <menuitem id="menu_action_question_root"
+          name="Question Management"
+          sequence="20"/>
+
+        <menuitem id="menu_action_question_config"
+          name="Configuration"
+          parent="menu_action_question_root"
+          sequence="1"/>
+
+        <menuitem id="menu_action_odoo_question"
+          name="Question Master"
+          parent="menu_action_question_config"
+          action="action_odoo_question"
+          sequence="1"/>
+
+        <menuitem id="menu_action_odoo_survey"
+          name="Survey Master"
+          parent="menu_action_question_config"
+          action="action_odoo_survey"
+          sequence="2"/>
+
+
+
+    </data>
+</odoo>

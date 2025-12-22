@@ -1,0 +1,9 @@
+.o-qa-matrix {
+  .o-qa-section { margin-bottom: 12px; border: 1px solid #e0e0e0; border-radius: 8px; }
+  .o-qa-section-title { font-weight: 600; padding: 8px 12px; background: #f7f7f9; border-bottom: 1px solid #eee; }
+  .o-qa-section-body { padding: 8px 12px; }
+  .o-qa-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center; padding: 6px 0; }
+  .o-qa-question .o-qa-text { font-size: 14px; }
+  .o-qa-hint { color: #888; }
+  .o-qa-answer .o_input { width: 100%; }
+}

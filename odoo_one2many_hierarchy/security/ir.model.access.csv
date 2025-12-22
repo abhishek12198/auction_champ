@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_odoo_question_base_user,odoo.question,odoo_one2many_hierarchy.model_odoo_question,base.group_user,1,1,1,1
+access_odoo_survey_base_user,odoo.survey,odoo_one2many_hierarchy.model_odoo_survey,base.group_user,1,1,1,1
+access_odoo_survey_question_base_user,odoo.survey.question,odoo_one2many_hierarchy.model_odoo_survey_question,base.group_user,1,1,1,1
+
+

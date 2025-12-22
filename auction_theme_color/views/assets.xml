@@ -1,0 +1,7 @@
+<odoo>
+  <template id="assets_backend" inherit_id="web.assets_backend" name="Primary Color Theme">
+    <xpath expr="." position="inside">
+      <link rel="stylesheet/scss" type="text/scss" href="/auction_theme_color/static/src/css/custom_primary.scss"/>
+    </xpath>
+  </template>
+</odoo>

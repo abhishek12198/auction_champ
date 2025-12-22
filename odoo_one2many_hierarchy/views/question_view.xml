@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_odoo_question_search" model="ir.ui.view">
+            <field name="name">odoo.question.search</field>
+            <field name="model">odoo.question</field>
+            <field name="arch" type="xml">
+                <search string="Questions">
+                    <field name="name" filter_domain="[('name','ilike',self)]" string="Question"/>
+                    <field name="category" filter_domain="[('category','ilike',self)]" string="Category"/>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_odoo_question_tree" model="ir.ui.view">
+            <field name="name">odoo.question.tree</field>
+            <field name="model">odoo.question</field>
+            <field name="arch" type="xml">
+                <tree string="Auction">
+                    <field name="name"/>
+                    <field name="category"/>
+                    <field name="type"/>
+
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_odoo_question_form" model="ir.ui.view">
+            <field name="name">odoo.question.form</field>
+            <field name="model">odoo.question</field>
+            <field name="arch" type="xml">
+                <form string="Question">
+
+                    <group col="4">
+                            <field name="name"/>
+                            <field name="category"/>
+                            <field name="type"/>
+
+                    </group>
+
+                </form>
+            </field>
+        </record>
+
+        <record id="action_odoo_question" model="ir.actions.act_window">
+            <field name="name">Question</field>
+            <field name="res_model">odoo.question</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_odoo_question_search"/>
+            <field name="help" type="html">
+              <p class="o_view_nocontent_smiling_face">
+                Create Questions
+              </p><p>
+
+              </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

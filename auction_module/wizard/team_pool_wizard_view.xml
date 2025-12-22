@@ -49,6 +49,7 @@
                         type="object"
                         string="Generate Pools"
                         class="btn btn-primary"
+                        attrs="{'invisible': [('result_html', '!=', False)]}"
                     />
 
                     <button
@@ -56,6 +57,7 @@
                         string="Reset"
                         class="btn btn-secondary"
                         type="object"
+                        attrs="{'invisible': [('result_html', '=', False)]}"
                     />
                 </footer>
 

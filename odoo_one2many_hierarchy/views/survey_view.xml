@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_odoo_survey_search" model="ir.ui.view">
+            <field name="name">odoo.survey.search</field>
+            <field name="model">odoo.survey</field>
+            <field name="arch" type="xml">
+                <search string="Survey">
+                    <field name="name" filter_domain="[('name','ilike',self)]" string="Question"/>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_odoo_survey_tree" model="ir.ui.view">
+            <field name="name">odoo.survey.tree</field>
+            <field name="model">odoo.survey</field>
+            <field name="arch" type="xml">
+                <tree string="Survey">
+                    <field name="name"/>
+
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_odoo_survey_form" model="ir.ui.view">
+            <field name="name">odoo.survey.form</field>
+            <field name="model">odoo.survey</field>
+            <field name="arch" type="xml">
+                <form string="Survey">
+
+                    <group col="4">
+                            <field name="name"/>
+
+
+                    </group>
+                    <group>
+                        <field name="survey_question_ids" widget="qa_matrix"/>
+                    </group>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_odoo_survey" model="ir.actions.act_window">
+            <field name="name">Survey</field>
+            <field name="res_model">odoo.survey</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_odoo_survey_search"/>
+            <field name="help" type="html">
+              <p class="o_view_nocontent_smiling_face">
+                Create Survey
+              </p><p>
+
+              </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

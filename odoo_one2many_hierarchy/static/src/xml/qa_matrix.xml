@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<t t-name="odoo_one2many_hierarchy.QAMatrix">
+  <div class="o-qa-matrix">
+    <t t-if="Object.keys(groups).length === 0">
+      <div class="o_empty o_view_nocontent_smiling_face">
+        <p>No questions to show. Create master questions first.</p>
+      </div>
+    </t>
+
+    <t t-foreach="Object.keys(groups).sort()" t-as="cat">
+      <div class="o-qa-section" style="margin-bottom:12px;border:1px solid #e0e0e0;border-radius:8px;">
+        <div class="o-qa-section-title" style="font-weight:600;padding:8px 12px;background:#f7f7f9;border-bottom:1px solid #eee;">
+          <span t-esc="cat"/>
+        </div>
+        <div class="o-qa-section-body" style="padding:8px 12px;">
+          <t t-foreach="groups[cat]" t-as="q">
+            <t t-set="existing" t-value="answerMap[q.id] ? answerMap[q.id].data.answer : ''"/>
+            <div class="o-qa-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center;padding:6px 0;">
+              <div class="o-qa-question">
+                <div class="o-qa-text" t-esc="q.name"/>
+                <div class="o-qa-hint" t-if="q.category">
+                  <small>Category: <t t-esc="q.category"/></small>
+                </div>
+              </div>
+              <div class="o-qa-answer">
+                <t t-if="q.type === 'char'">
+                  <input type="text" class="o_input o-qa-input"
+                         t-att-data-qid="q.id"
+                         t-att-data-qcat="q.category or ''"
+                         t-att-data-qtype="q.type"
+                         t-att-data-qname="q.name"
+                         t-att-value="existing or ''"/>
+                </t>
+
+                <t t-if="q.type === 'selection'">
+                  <!-- You can extend to load selection options from a custom field later -->
+                  <input type="text" class="o_input o-qa-input"
+                         placeholder="Enter option key"
+                         t-att-data-qid="q.id"
+                         t-att-data-qcat="q.category or ''"
+                         t-att-data-qtype="q.type"
+                         t-att-data-qname="q.name"
+                         t-att-value="existing or ''"/>
+                </t>
+
+                <t t-if="q.type === 'date'">
+                  <input type="date" class="o_input o-qa-input"
+                         t-att-data-qid="q.id"
+                         t-att-data-qcat="q.category or ''"
+                         t-att-data-qtype="q.type"
+                         t-att-data-qname="q.name"
+                         t-att-value="existing or ''"/>
+                </t>
+
+                <t t-if="q.type === 'datetime'">
+                  <input type="datetime-local" class="o_input o-qa-input"
+                         t-att-data-qid="q.id"
+                         t-att-data-qcat="q.category or ''"
+                         t-att-data-qtype="q.type"
+                         t-att-data-qname="q.name"
+                         t-att-value="existing or ''"/>
+                </t>
+
+                <t t-if="q.type === 'boolean'">
+                  <input type="checkbox" class="o-qa-input"
+                         t-att-data-qid="q.id"
+                         t-att-data-qcat="q.category or ''"
+                         t-att-data-qtype="q.type"
+                         t-att-data-qname="q.name"
+                         t-att-checked="(existing === 'True') ? true : undefined"/>
+                </t>
+              </div>
+            </div>
+          </t>
+        </div>
+      </div>
+    </t>
+  </div>
+</t>

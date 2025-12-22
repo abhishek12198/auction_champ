@@ -1,0 +1,7 @@
+$o-brand-odoo: #007bff !default;  // 💡 Change this to your custom primary color
+
+$o-brand-primary: $o-brand-odoo !default;
+
+body {
+  --brand-primary: #{$o-brand-primary};
+}

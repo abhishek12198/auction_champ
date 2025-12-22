@@ -22,7 +22,7 @@
 
          <record id="action_live_updates" model="ir.actions.act_url">
             <field name="name">Live Updates</field>
-            <field name="url">/live_updates</field>
+            <field name="url">/auction/live</field>
             <field name="target">new</field>
         </record>
 
