@@ -27,7 +27,7 @@ class Auction(models.Model):
     remaining_players_count = fields.Integer(compute='_calculate_remaining_players_count', store=True, string="Remaining players required")
     tournament_id = fields.Many2one('auction.tournament', 'Tournament')
     max_call = fields.Integer(compute='_calculate_max_call', store=True, string="Max Call")
-
+    auction_bid_slab_ids = fields.One2many('auction.auction.bid.slab', 'auction_id', 'Slab')
 
 
     @api.depends('player_ids', 'player_ids.points')
@@ -46,15 +46,74 @@ class Auction(models.Model):
                 players_recruited = len(record.player_ids)
             record.remaining_players_count = record.max_players - players_recruited
 
-    @api.depends('player_ids', 'remaining_players_count','max_players', 'max_limited')
+    @api.depends(
+        'player_ids',
+        'remaining_players_count',
+        'max_players',
+        'max_limited',
+        'remaining_points',
+        'base_point',
+        'auction_bid_slab_ids'
+    )
     def _calculate_max_call(self):
         for record in self:
-            if record.max_players == record.remaining_players_count:
-                rem_player_count = record.remaining_players_count - 1
-                record.max_call = record.total_point - (rem_player_count * record.base_point)
-            elif record.max_players != record.remaining_players_count:
-                rem_player_count = record.remaining_players_count - 1
-                record.max_call = record.remaining_points - (rem_player_count * record.base_point)
+            record.max_call = record.get_max_bid_for_team(record)
+
+    # @api.depends('player_ids', 'remaining_players_count','max_players', 'max_limited')
+    # def _calculate_max_call(self):
+    #     for record in self:
+    #         max_call = record.get_max_bid_for_team(record)
+    #         record.max_call = max_call
+    #         # if record.max_players == record.remaining_players_count:
+    #         #     rem_player_count = record.remaining_players_count - 1
+    #         #     record.max_call = record.total_point - (rem_player_count * record.base_point)
+    #         # elif record.max_players != record.remaining_players_count:
+    #         #     rem_player_count = record.remaining_players_count - 1
+    #
+    #         #     record.max_call = record.remaining_points - (rem_player_count * record.base_point)
+
+    def _get_budget_safe_max(self, team):
+        remaining_points = team.remaining_points
+        remaining_players = team.remaining_players_count
+        base = team.base_point  # IMPORTANT: use team, not self
+
+        if remaining_players <= 0:
+            return 0
+
+        safe_max = remaining_points - ((remaining_players - 1) * base)
+        return max(safe_max, 0)
+
+    def _get_rule_cap(self, safe_max):
+        if self.max_limited == 'yes':
+            return min(self.max_points, safe_max)
+        return safe_max
+
+    def _snap_to_slab(self, amount):
+        """
+        Adjust amount DOWN to the nearest valid slab step
+        """
+        for slab in self.auction_bid_slab_ids.sorted('from_amount', reverse=True):
+            if amount >= slab.from_amount:
+                base = slab.from_amount
+                inc = slab.increment
+
+                snapped = base + ((amount - base) // inc) * inc
+                return min(snapped, amount)
+
+        return amount
+
+    def get_max_bid_for_team(self, team):
+        self.ensure_one()
+
+        # 1️⃣ Budget safety
+        safe_max = self._get_budget_safe_max(team)
+
+        # 2️⃣ Auction rule cap
+        rule_cap = self._get_rule_cap(safe_max)
+
+        # 3️⃣ Slab snapping
+        return self._snap_to_slab(rule_cap)
+
 
 class AuctionPlayer(models.Model):
 
@@ -76,3 +135,12 @@ class AuctionPlayer(models.Model):
             if not context.get('mass_update', False):
                 message = player_obj.name + ' brought back to auction successfully!. The player will be available in the auction'
                 self.env.user.notify_success(message)
+
+class AuctionBidSlab(models.Model):
+
+    _name = 'auction.auction.bid.slab'
+
+    auction_id = fields.Many2one('auction.auction', ondelete='cascade')
+    from_amount = fields.Integer(required=True)
+    to_amount = fields.Integer(required=True)
+    increment = fields.Integer(required=True)

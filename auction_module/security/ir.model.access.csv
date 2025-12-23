@@ -5,9 +5,11 @@ access_auction_team_base_user,auction.team,auction_module.model_auction_team,bas
 access_auction_team_player_type_base_user,auction.team.player.type,auction_module.model_auction_team_player_type,base.group_user,1,1,1,1
 access_auction_team_player_base_user,auction.team.player,auction_module.model_auction_team_player,base.group_user,1,1,1,1
 access_auction_auction_base_user,auction.auction,auction_module.model_auction_auction,base.group_user,1,1,1,1
+access_auction_auction_bid_slab_base_user,auction_auction_bid_slab,auction_module.model_auction_auction_bid_slab,base.group_user,1,1,1,1
 access_auction_history_base_user,auction.history,auction_module.model_auction_history,base.group_user,1,1,1,1
 access_auction_auction_player_base_user,auction.auction.player,auction_module.model_auction_auction_player,base.group_user,1,1,1,1
 access_auction_start_auction_player_base_user,auction.start.auction,auction_module.model_auction_start_auction,base.group_user,1,1,1,1
+access_auction_bid_slab_base_user,auction_bid_slab,auction_module.model_auction_bid_slab,base.group_user,1,1,1,1
 access_auction_sell_player_base_user,auction.sell.player,auction_module.model_auction_sell_player,base.group_user,1,1,1,1
 access_auction_set_key_player_base_user,auction.set.key.player,auction_module.model_auction_set_key_player,base.group_user,1,1,1,1
 access_auction_player_auction_base_user,auction.player.auction,auction_module.model_auction_player_auction,base.group_user,1,1,1,1

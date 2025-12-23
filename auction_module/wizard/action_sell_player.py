@@ -27,20 +27,21 @@ class SellPlayer(models.TransientModel):
         suggestion_html = ""
         if self.team_auction_id.max_limited == 'yes':
             suggestion_html = f"""
-                        <strong><p style="color: blue; text-align: right;">One player can go maximum points upto {self.team_auction_id.max_points}</p></strong>
-                    """
+                                <strong><p style="color: blue; text-align: right;">One player can go maximum points upto {self.team_auction_id.max_call}</p></strong>
+                                <strong><p style="color: blue; text-align: right;">Remaining players you can bid for base points  {base_point}</p></strong>
+                            """
         else:
             remaining_players = self.team_auction_id.remaining_players_count - 1
             base_point = self.team_auction_id.base_point
             max_points_for_next_player = self.team_auction_id.remaining_points - (remaining_players * base_point)
             if self.team_auction_id.remaining_players_count > 1:
                 suggestion_html = f"""
-                                <strong><p style="color: blue; text-align: right;">One player can go maximum points upto {max_points_for_next_player}</p></strong>
+                                <strong><p style="color: blue; text-align: right;">One player can go maximum points upto {self.team_auction_id.max_call}</p></strong>
                                 <strong><p style="color: blue; text-align: right;">Remaining players you can bid for base points  {base_point}</p></strong>
                             """
             else:
                 suggestion_html = f"""
-                                    <strong><p style="color: blue; text-align: right;">This player can go maximum points upto {max_points_for_next_player}</p></strong>
+                                    <strong><p style="color: blue; text-align: right;">This player can go maximum points upto {self.team_auction_id.max_call}</p></strong>
                                     """
 
         self.suggestion = suggestion_html

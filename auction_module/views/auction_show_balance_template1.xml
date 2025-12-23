@@ -137,7 +137,7 @@
                             width="10"
                             height="20"
                           />
-                          <p  class="ms-2">Max call</p>
+                          <p  class="ms-2">Next Max call</p>
                         </div>
                         <div class="actions" t-if="type == 'internal'">
                           <p class="text-center">Actions</p>
@@ -229,7 +229,7 @@
                                 width="10"
                                 height="10"
                               />
-                              Max call
+                              Next Max call
                             </label>
                             <p class="ms-2"><span t-esc="team.max_call"></span> <span>pts</span></p>
                           </div>

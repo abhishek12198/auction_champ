@@ -22,7 +22,7 @@
                     <field name="manager"/>
                     <field name="remaining_points"/>
                     <field name="remaining_players_count"/>
-                    <field name="max_call"/>
+                    <field name="max_call" string="Next Max call"/>
                     <button name="%(auction_module.action_auction_view_team_details)d" type="action" string="View Summary" class="btn-primary"/>
 
                 </tree>
@@ -60,12 +60,22 @@
                                 </tree>
                             </field>
                         </page>
+                        <page string="Auction Slab">
+                            <field name="auction_bid_slab_ids" nolabel="1">
+                                    <tree editable="bottom">
+                                        <field name="from_amount" string="From"/>
+                                        <field name="to_amount" string="To"/>
+                                        <field name="increment"/>
+                                    </tree>
+                                </field>
+                        </page>
                         <page string="Other Details">
                             <group>
                                 <field name="base_point" readonly="1"/>
                                 <field name="max_limited" readonly="1"/>
                                 <field name="max_points" readonly="1"/>
                             </group>
+
                         </page>
                     </notebook>
                 </form>

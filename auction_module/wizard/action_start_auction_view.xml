@@ -49,6 +49,17 @@
                                 </kanban>
                             </field>
                         </page>
+                        <page string="Slab Setup">
+                            <group>
+                                <field name="auction_bid_slab_ids" nolabel="1">
+                                    <tree editable="bottom">
+                                        <field name="from_amount" string="From"/>
+                                        <field name="to_amount" string="To"/>
+                                        <field name="increment"/>
+                                    </tree>
+                                </field>
+                            </group>
+                        </page>
                     </notebook>
                     <footer>
                         <button string="Apply" type="object"  class="btn-primary" name="button_start_auction" confirm="This will start auction process, click Ok to continue"/>

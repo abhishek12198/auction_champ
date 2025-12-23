@@ -17,6 +17,7 @@ class StartAuction(models.TransientModel):
     team_ids = fields.Many2many('auction.team', 'start_auction_team_rel', 'auction_start_id', 'team_id', 'Teams')
     max_limited = fields.Selection([('yes', 'Yes'), ('no', 'No')], default='no')
     max_point_player = fields.Integer('Max Point for a player')
+    auction_bid_slab_ids = fields.One2many('auction.bid.slab', 'wizard_id', 'Slab')
 
     @api.onchange('max_limited')
     def onchange_max_limited(self):
@@ -39,7 +40,7 @@ class StartAuction(models.TransientModel):
         if not len(self.team_ids) >= 2:
             raise ValidationError("Select atleast two teams")
         tournament_id = self.env['auction.tournament'].search([('active', '=', True)], limit=1)
-
+        bid_slab_data = [(0, 0, {'from_amount': line.from_amount, 'to_amount': line.to_amount,'increment': line.increment}) for line in self.auction_bid_slab_ids]
         if self.team_ids:
             existing_auctions  = auction_obj.search([('team_id', 'in', self.team_ids.ids)])
             if existing_auctions:
@@ -52,6 +53,7 @@ class StartAuction(models.TransientModel):
                     'base_point': self.base_point,
                     'max_limited': self.max_limited,
                     'max_points': self.max_point_player,
+                    'auction_bid_slab_ids': bid_slab_data,
                 }
 
                 auction_data.update({'tournament_id': tournament_id.id})
@@ -69,3 +71,12 @@ class StartAuction(models.TransientModel):
             'context': {'create': False},
         }
 
+class AuctionBidSlab(models.TransientModel):
+
+    _name = 'auction.bid.slab'
+
+    wizard_id = fields.Many2one('auction.start.auction', ondelete='cascade')
+
+    from_amount = fields.Integer(required=True)
+    to_amount = fields.Integer(required=True)
+    increment = fields.Integer(required=True)
