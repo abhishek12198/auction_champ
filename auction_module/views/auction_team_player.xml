@@ -26,10 +26,13 @@
             <field name="name">auction.team.player.kanban</field>
             <field name="model">auction.team.player</field>
             <field name="arch" type="xml">
+
                 <kanban class="o_kanban_mobile" default_order="assigned_team_id, icon_player desc, sl_no">
+
+                    <!-- Fields -->
                     <field name="sl_no"/>
                     <field name="id"/>
-                    <field name="name"/>
+                    <field name="name" class="text-uppercase"/>
                     <field name="contact"/>
                     <field name="role"/>
                     <field name="batting_style"/>
@@ -40,64 +43,119 @@
                     <field name="tournament_id"/>
                     <field name="state"/>
                     <field name="assigned_team_id"/>
+
                     <templates>
                         <t t-name="kanban-box">
-                            <div class="oe_kanban_global_click o_kanban_record">
-                                 <!-- Ribbon shown if is_priority is True -->
-                                    <t t-if="record.icon_player.raw_value">
-                                        <img t-att-src="'/auction_module/static/src/background/seal.png'" class="o_kanban_seal_image" alt="Icon"/>
-                                         <!--<div class="o_kanban_seal">Icon Player</div>-->
-                                        <!--<div class="o_kanban_ribbon o_kanban_ribbon_info">
-                                            Icon Player
-                                        </div>-->
-                                    </t>
+                            <div class="oe_kanban_global_click o_kanban_record player-kanban-card">
+
+                                <!-- Icon Player Seal -->
+                                <t t-if="record.icon_player.raw_value">
+                                    <img
+                                        t-att-src="'/auction_module/static/src/background/seal.png'"
+                                        class="o_kanban_seal_image"
+                                        alt="Icon Player"/>
+                                </t>
+
+                                <!-- Player Image -->
                                 <div class="o_kanban_image">
-                                    <img alt="Avatar" t-att-src="kanban_image('auction.team.player', 'photo', record.id.raw_value)"/>
+                                    <img
+                                        alt="Player Photo"
+                                        t-att-src="kanban_image('auction.team.player', 'photo', record.id.raw_value)"/>
                                 </div>
 
+                                <!-- Player Details -->
                                 <div class="o_kanban_details">
 
-                                    <strong t-esc="record.name.raw_value"/>
+                                    <!-- Player Name -->
+                                    <strong t-esc="record.name.raw_value" class="text-uppercase"/>
+
                                     <div t-if="record.sl_no">
-                                        <span> Serial No: </span>
+                                        <span>Serial No:</span>
                                         <field name="sl_no"/>
                                     </div>
+
                                     <div t-if="record.contact">
-                                        <span> Contact: </span>
+                                        <span>Contact:</span>
                                         <field name="contact"/>
                                     </div>
+
                                     <div t-if="record.role">
-                                        <span> Role: </span>
+                                        <span>Role:</span>
                                         <field name="role"/>
                                     </div>
 
                                     <div t-if="record.assigned_team_id">
-                                        <span> Team: </span>
+                                        <span>Team:</span>
                                         <field name="assigned_team_id"/>
                                     </div>
 
-                                    <button name="%(auction_module.action_auction_sell_player)d"  type="action" class="btn btn-primary oe_kanban_button" attrs="{'invisible': [('state', '!=', 'auction')]}">
-                                        Sell to Team
-                                    </button>
-                                    <button name="action_unsold" string="Set to Unsold" class="btn btn-secondary oe_kanban_button" type="object"   attrs="{'invisible': [('state', '!=', 'auction')]}" confirm="This will set the player to Unsold and later you can bring back to Auction. Click on Ok to continue. Otherwise click on Cancel">
-                                        Set to Unsold
-                                    </button>
-                                    <button name="action_revoke_key_player" attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '!=', True)]}" string="Revoke Key Player" class="btn btn-secondary oe_kanban_button" type="object"  confirm="This will revoke the player from the icon player list and bring to auction. Click on Ok to continue. Otherwise click on Cancel">
-                                        Revoke Icon Player
-                                    </button>
-                                    <button name="%(auction_module.action_auction_set_key_player)d" attrs="{'invisible': ['|',('state', '!=', 'auction'),('icon_player', '=', True)]}" string="Set Icon Player" class="oe_link" type="action" >
-                                        Set Icon Player
-                                    </button>
-                                    <button name="action_recall_auction_sold" attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '=', True)]}" string="Revoke Key Player" class="btn btn-secondary oe_kanban_button" type="object"  confirm="This will recall the player to Auction. Click on Ok to continue. Otherwise click on Cancel">
-                                        Recall to Auction
-                                    </button>
-                                </div>
-                            </div>
-                        </t>
-                    </templates>
-                </kanban>
-            </field>
+                                    <!-- ================= ACTION ICON BAR ================= -->
+                                    <div class="kanban-action-bar">
+
+                                        <!-- Sell Player -->
+                                        <button
+                                            name="%(auction_module.action_auction_sell_player)d"
+                                            type="action"
+                                            class="kanban-icon-btn sell"
+                                            title="Sell Player to Team"
+                                            attrs="{'invisible': [('state', '!=', 'auction')]}">
+                                            <i class="fa fa-gavel"/>
+                                        </button>
+
+                                        <!-- Set Unsold -->
+                                        <button
+                                            name="action_unsold"
+                                            type="object"
+                                            class="kanban-icon-btn unsold"
+                                            title="Mark Player as Unsold"
+                                            attrs="{'invisible': [('state', '!=', 'auction')]}"
+                                            confirm="This will set the player to Unsold and later you can bring back to Auction.">
+                                            <i class="fa fa-ban"/>
+                                        </button>
+
+                                        <!-- Set Icon Player -->
+                                        <button
+                                            name="%(auction_module.action_auction_set_key_player)d"
+                                            type="action"
+                                            class="kanban-icon-btn icon"
+                                            title="Set as Icon Player"
+                                            attrs="{'invisible': ['|',('state', '!=', 'auction'),('icon_player', '=', True)]}">
+                                            <i class="fa fa-star"/>
+                                        </button>
+
+                                        <!-- Revoke Icon Player -->
+                                        <button
+                                            name="action_revoke_key_player"
+                                            type="object"
+                                            class="kanban-icon-btn revoke"
+                                            title="Revoke Icon Player"
+                                            attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '!=', True)]}"
+                                            confirm="This will revoke the player from Icon Player list and bring back to Auction.">
+                                            <i class="fa fa-star-o"/>
+                                        </button>
+
+                                        <!-- Recall to Auction -->
+                                        <button
+                                            name="action_recall_auction_sold"
+                                            type="object"
+                                            class="kanban-icon-btn recall"
+                                            title="Recall Player to Auction"
+                                            attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '=', True)]}"
+                                            confirm="This will recall the player to Auction.">
+                                            <i class="fa fa-refresh"/>
+                                        </button>
+
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </t>
+                            </templates>
+                        </kanban>
+
+                </field>
         </record>
+
 
 
 
@@ -108,7 +166,7 @@
 
                 <tree string="Player" default_order="icon_player desc, sl_no">
                     <field name="sl_no"/>
-                    <field name="name"/>
+                    <field name="name" class="text-uppercase"/>
                     <field name="contact"/>
                     <field name="role"/>
                     <field name="amount_paid" widget="boolean_toggle"/>
@@ -137,7 +195,7 @@
 
                 <tree string="Player" default_order="icon_player desc, sl_no">
                     <field name="sl_no"/>
-                    <field name="name"/>
+                    <field name="name" class="text-uppercase"/>
                     <field name="contact"/>
                     <field name="role"/>
                     <field name="amount_paid" widget="boolean_toggle"/>
@@ -190,7 +248,7 @@
                     </header>
                     <field name="photo" widget='image' class="oe_avatar player_avatar_big" options="{'zoom': true, 'preview_image': 'photo'}"/>
                     <group col="4">
-                            <field name="name"/>
+                            <field name="name" class="text-uppercase"/>
                             <field name="contact"/>
                             <field name="batting_style"/>
                             <field name="bowling_style"/>

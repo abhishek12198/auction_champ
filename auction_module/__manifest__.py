@@ -54,6 +54,7 @@
                     '/auction_module/static/src/js/screenshot.js',
                     '/auction_module/static/src/js/pool_snapshot.js',
                     '/auction_module/static/src/css/sold_toast.css',
+                    '/auction_module/static/src/css/kanban.css',
                     '/auction_module/static/src/css/auction_status.css',
                     '/auction_module/static/src/js/auction_status.js',
 

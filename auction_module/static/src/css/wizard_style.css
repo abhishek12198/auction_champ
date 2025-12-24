@@ -190,3 +190,6 @@ body.hide-main-menu .oe_main_menu_navbar {
 .empty-state p {
     font-size: 15px;
 }
+.text-uppercase {
+    text-transform: uppercase;
+}
