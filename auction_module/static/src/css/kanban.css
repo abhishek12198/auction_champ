@@ -1,127 +1,219 @@
-/* ================= HORIZONTAL PLAYER CARD ================= */
+/* ═══════════════════════════════════════════════════
+   SPORT PLAYER TRADING CARD — KANBAN
+   ═══════════════════════════════════════════════════ */
 
-.player-horizontal-card {
-    display: flex;
+.player-kanban-card {
     background: #ffffff;
-    border-radius: 14px;
+    border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-    transition: all 0.25s ease;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
-.player-horizontal-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 14px 30px rgba(0,0,0,0.18);
+.player-kanban-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
 }
 
-/* LEFT PHOTO */
-.player-photo {
-    width: 140px;
-    min-width: 140px;
-    height: 100%;
-    background: #000;
+/* ── PHOTO SECTION ── */
+.pkc-photo {
+    position: relative;
+    height: 210px;
+    overflow: hidden;
+    background: #1a2744;
+    flex-shrink: 0;
 }
 
-.player-photo img {
+.pkc-photo img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: top center;
+    display: block;
 }
 
-/* RIGHT DETAILS */
-.player-info {
-    padding: 12px 14px;
-    flex: 1;
-}
-
-/* Name */
-.player-name {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 6px;
-    color: #212529;
-}
-
-/* Info rows */
-.info-row {
-    font-size: 13px;
-    margin-bottom: 3px;
-    color: #495057;
-}
-
-.info-row span {
-    font-weight: 600;
-    color: #6c757d;
-}
-
-/* Seal */
-.player-seal {
+/* Gradient overlay at bottom of photo */
+.pkc-photo::after {
+    content: '';
     position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 42px;
-    z-index: 2;
+    bottom: 0; left: 0; right: 0;
+    height: 70px;
+    background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 100%);
+    pointer-events: none;
 }
 
-/* ACTION BAR */
-.kanban-action-bar {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-/* ICON BUTTONS */
-.kanban-icon-btn {
+/* Serial number stamp — top left */
+.pkc-sl-stamp {
+    position: absolute;
+    top: 10px;
+    left: 10px;
     width: 36px;
     height: 36px;
     border-radius: 50%;
+    background: #2252b5;
+    color: #fdce33;
+    font-weight: 900;
+    font-size: 1rem;
+    text-align: center;
+    line-height: 36px;
+    box-shadow: 0 0 0 3px #fdce33, 0 0 0 5.5px #2252b5, 0 3px 10px rgba(0,0,0,0.4);
+    z-index: 3;
+}
+
+/* State ribbon — bottom of photo, above gradient */
+.pkc-state-ribbon {
+    position: absolute;
+    bottom: 0;
+    left: 0; right: 0;
+    text-align: center;
+    padding: 5px 10px;
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    z-index: 3;
+}
+
+.pkc-state-draft   { color: #cbd5e1; }
+.pkc-state-auction { color: #fbbf24; }
+.pkc-state-sold    { color: #4ade80; }
+.pkc-state-unsold  { color: #f87171; }
+
+/* ── CARD BODY ── */
+.pkc-body {
+    padding: 12px 14px 10px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Player name */
+.pkc-name {
+    font-size: 1rem;
+    font-weight: 900;
+    color: #0a1429;
+    text-transform: uppercase;
+    line-height: 1.2;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0.5px;
+}
+
+/* Badge row */
+.pkc-badges {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+/* Role badge */
+.pkc-role-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #2252b5, #3b72e8);
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Tier badge — bg set dynamically via inline style */
+.pkc-tier-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Icon player badge */
+.pkc-icon-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: #fff;
+    letter-spacing: 0.5px;
+}
+
+/* Divider */
+.pkc-divider {
+    height: 1px;
+    background: #f1f5f9;
+    margin: 2px 0 8px;
+}
+
+/* Info rows */
+.pkc-info-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.77rem;
+    color: #475569;
+    margin-bottom: 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pkc-info-row i {
+    color: #2252b5;
+    font-size: 0.75rem;
+    width: 14px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.pkc-info-row.pkc-blood i { color: #ef4444; }
+
+/* ── ACTION BAR ── */
+.kanban-action-bar {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+    flex-wrap: wrap;
+}
+
+/* Icon buttons */
+.kanban-icon-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
     border: none;
-    background: #f1f3f5;
+    background: #f1f5f9;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: transform 0.18s ease, background 0.18s ease;
+    padding: 0;
 }
 
 .kanban-icon-btn:hover {
-    transform: scale(1.15);
-    background: #e9ecef;
+    transform: scale(1.18);
+    background: #e2e8f0;
 }
 
 .kanban-icon-btn i {
-    font-size: 16px;
+    font-size: 15px;
 }
 
-/* COLORS */
-.kanban-icon-btn.sell i   { color: #28a745; }
-.kanban-icon-btn.unsold i { color: #dc3545; }
-.kanban-icon-btn.icon i   { color: #f1c40f; }
-.kanban-icon-btn.revoke i { color: #fd7e14; }
-.kanban-icon-btn.recall i { color: #0d6efd; }
-
-/* Role badge base */
-.player_role_badge {
-    font-size: 16px;
-    padding: 3px 8px;
-    border-radius: 14px;
-    display: inline-block;
-    line-height: 1;
-}
-
-
-/* BATTER - ORANGE */
-.role_batter {
-    background: linear-gradient(135deg, #ff9800, #ffb74d);
-}
-
-/* BOWLER - PURPLE */
-.role_bowler {
-    background: linear-gradient(135deg, #7b1fa2, #ba68c8);
-}
-
-/* ALL ROUNDER - GREEN */
-.role_allrounder {
-    background: linear-gradient(135deg, #2e7d32, #66bb6a);
-}
+/* Button icon colours */
+.kanban-icon-btn.sell   i { color: #16a34a; }
+.kanban-icon-btn.unsold i { color: #dc2626; }
+.kanban-icon-btn.icon   i { color: #f59e0b; }
+.kanban-icon-btn.revoke i { color: #ea580c; }
+.kanban-icon-btn.recall i { color: #2563eb; }

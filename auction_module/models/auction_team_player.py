@@ -42,6 +42,7 @@ class AuctionTeamPlayer(models.Model):
     assigned_team_id = fields.Many2one('auction.team', 'Team')
     icon_player = fields.Boolean("Key Player")
     tier_id = fields.Many2one('auction.player.tier', string='Tier')
+    tier_color = fields.Selection(related='tier_id.color', string='Tier Color')
     notes = fields.Char()
     #other details
     current_team = fields.Char("Current Team")
