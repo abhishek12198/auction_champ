@@ -12,7 +12,10 @@ class TeamPoolWizard(models.TransientModel):
         string='Select Teams',
         required=True
     )
-
+    selected_team_count = fields.Integer(
+        string='No of Teams Selected',
+        required=True,
+    )
     pool_count = fields.Integer(
         string='Number of Pools',
         required=True,
@@ -23,6 +26,11 @@ class TeamPoolWizard(models.TransientModel):
         string='Pool Result',
         readonly=True
     )
+
+    @api.onchange('team_ids')
+    def onchange_team_ids(self):
+        if self.team_ids:
+            self.selected_team_count = len(self.team_ids)
 
     def action_dummy(self):
         return

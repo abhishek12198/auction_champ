@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="player_sequence_selector">
+
+<t t-call="website.layout" t-options="{'no_header': True, 'no_footer': True}">
+
+<div class="auction-container">
+
+<h1 class="auction-title">
+Auction Player Queue
+</h1>
+
+<div id="auction_grid" class="auction-grid">
+</div>
+
+</div>
+
+</t>
+
+</template>
+
+</odoo>

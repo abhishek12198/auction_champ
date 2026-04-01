@@ -26,6 +26,81 @@ from odoo.tools import sql
 
 class Auction(http.Controller):
 
+    @http.route('/auction/player_selector', type='http', auth='public', website=True)
+    def player_selector(self, **kw):
+        return request.render(
+            'auction_module.player_sequence_selector'
+        )
+
+    #sequence_template_part
+    @http.route('/auction/get_players_queue', type='json', auth='public', website=True)
+    def get_players_queue(self):
+
+        players = request.env['auction.team.player'].sudo().get_auction_players(
+        )
+
+        return [
+            {'serial': p.sl_no, 'id': p.id}
+            for p in players
+        ]
+
+    @http.route('/auction/get_player_data', type='json', auth='public', website=True)
+    def get_player_data(self, player_id):
+        """Fetch full player data for modal display"""
+        player = request.env['auction.team.player'].sudo().browse(int(player_id))
+
+        if not player.exists():
+            return {}
+
+        # Convert photo to base64 if exists
+        photo_base64 = ""
+        if player.photo:
+            photo_base64 = player.photo.decode('utf-8') if isinstance(player.photo, bytes) else player.photo
+
+        return {
+            'id': player.id,
+            'sl_no': player.sl_no,
+            'name': player.name,
+            'role': player.role or 'N/A',
+            'batting_style': player.batting_style or 'N/A',
+            'bowling_style': player.bowling_style or 'N/A',
+            'contact': player.contact or 'N/A',
+            'blood_group': player.blood_group or 'N/A',
+            'address': player.address or 'N/A',
+            'photo': photo_base64,
+            'tournament_id': player.tournament_id.id if player.tournament_id else None,
+            'tournament_name': player.tournament_id.name if player.tournament_id else '',
+        }
+
+    @http.route('/auction/player_modal/<int:player_id>', type='http', auth='public', website=True)
+    def get_player_modal(self, player_id):
+        """Render player template for modal display"""
+        player = request.env['auction.team.player'].sudo().browse(int(player_id))
+
+        if not player.exists():
+            return request.make_response('{"error": "Player not found"}', headers=[('Content-Type', 'application/json')])
+
+        tournament_id = request.env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
+
+        html_content = request.env['ir.ui.view']._render_template('auction_module.player_template_modal_content', {
+            'player': player,
+            'tournament': tournament_id
+        })
+
+        return request.make_response(html_content, headers=[('Content-Type', 'text/html; charset=utf-8')])
+
+    # @http.route('/auction/get_players_queue', type='http', auth='public', website=True)
+    # def get_players_queue(self):
+    #
+    #     players = request.env['auction.team.player'].sudo().get_auction_players(
+    #     )
+    #
+    #     result = [
+    #         {'serial': p.serial_number}
+    #         for p in players
+    #     ]
+    #
+    #     return json.dumps(result)
     #history part
     @http.route('/live_updates', type='http', auth='public', website=True)
     def live_updates_page(self):
@@ -98,6 +173,10 @@ class Auction(http.Controller):
                     'batting_style': icon.batting_style,
                     'bowling_style': icon.batting_style,
                     'contact': icon.contact,
+                    'p_type': icon.p_type,
+                    'p_category': icon.p_category,
+                    'tier_color': icon.tier_id.color if icon.tier_id else '#01cfff',
+                    'tier_name': icon.tier_id.name if icon.tier_id else '',
                 }
                 player_data_list.append(player_data)
         if team_players:
@@ -110,6 +189,10 @@ class Auction(http.Controller):
                     'batting_style': player.player_id.batting_style,
                     'bowling_style': player.player_id.batting_style,
                     'contact': player.player_id.contact,
+                    'p_type': player.player_id.p_type,
+                    'p_category': player.player_id.p_category,
+                    'tier_color': player.player_id.tier_id.color if player.player_id.tier_id else '#01cfff',
+                    'tier_name': player.player_id.tier_id.name if player.player_id.tier_id else '',
                 }
                 player_data_list.append(player_data)
         return request.render('auction_module.auction_team_players_template', {'players': player_data_list, 'team': team})

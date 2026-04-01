@@ -387,10 +387,11 @@ a {
 }
 .player-name {
   font-family: poppins;
-  font-size: 60px;
-  line-height: 60px;
+  font-size: clamp(1.2rem, 2.5vw, 2.2rem);
+  line-height: 1.3;
   font-weight: bold;
   color: #0a1429;
+  white-space: nowrap;
 }
 .player-possition {
   font-family: poppins;
@@ -452,6 +453,35 @@ a {
   display: flex;
   gap: 10px;
 }
+.player-attr-grid {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: max-content 1fr;
+  row-gap: 14px;
+  align-items: center;
+  width: 100%;
+}
+.player-attr-label {
+  color: #393939;
+  font-weight: 400;
+  font-size: 0.95rem;
+  line-height: 1.5rem;
+  white-space: nowrap;
+  padding-right: 0.5rem;
+}
+.player-attr-label::after {
+  content: " :";
+}
+.player-attr-value {
+  color: #0a1429;
+  font-weight: 500;
+  font-size: 0.95rem;
+  line-height: 1.5rem;
+  padding-left: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .auction-single-buttons button {
   /* border: ; */
@@ -479,7 +509,8 @@ a {
 
 .single-player-image .sp-image {
   max-width: 390px;
-  max-height: 567px;
+  height: 580px;
+  max-height: 640px;
   overflow: hidden;
   position: relative;
   text-align: end;
@@ -521,7 +552,7 @@ a {
   background-color: inherit;
   transform: skewy(-10deg);
   transform-origin: top left;
-  background-color: #01cfff;
+  background-color: var(--tier-color, #01cfff);
   z-index: 3;
 }
 .single-player-image .sp-image-before {
@@ -534,7 +565,7 @@ a {
   /* background-color: inherit;
     transform: skewy(-10deg);
     transform-origin: top left;  */
-  background-color: #01cfff;
+  background-color: var(--tier-color, #01cfff);
 }
 
 .single-player-image img {
@@ -551,20 +582,30 @@ a {
   text-align: center;
 }
 
-.next-player > div {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
+.next-player-btn {
+  display: inline-flex;
   align-items: center;
+  gap: 0.6rem;
   margin-top: 2rem;
   margin-bottom: 0.75rem;
+  padding: 0.75rem 2rem;
+  background-color: #2252b5;
+  color: #fff;
+  font-family: "Poppins", sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.15s ease;
+  letter-spacing: 0.5px;
 }
-
-.next-player p {
-  color: #949494;
+.next-player-btn:hover {
+  background-color: #1a3f96;
+  transform: translateY(-2px);
 }
-.next-player > div p {
-  color: #0a1429;
+.next-player-btn:active {
+  transform: translateY(0);
 }
 
 .auction-single {
@@ -596,9 +637,6 @@ a {
     font-size: 10rem;
     line-height: 8rem;
   }
-  .player-name {
-    font-size: 2.2rem;
-  }
 }
 @media (max-width: 1300px) {
   .club-full-list.grid-view-on {
@@ -613,12 +651,10 @@ a {
     font-size: 10rem;
     line-height: 6rem;
   }
-  .player-name {
-    font-size: 2.2rem;
-  }
 
   .single-player-image .sp-image {
     max-width: 300px;
+    height: 440px;
   }
   .player-profession {
     max-width: 400px;

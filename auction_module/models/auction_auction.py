@@ -28,6 +28,7 @@ class Auction(models.Model):
     tournament_id = fields.Many2one('auction.tournament', 'Tournament')
     max_call = fields.Integer(compute='_calculate_max_call', store=True, string="Max Call")
     auction_bid_slab_ids = fields.One2many('auction.auction.bid.slab', 'auction_id', 'Slab')
+    tier_limit_ids = fields.One2many('auction.auction.tier.limit', 'auction_id', 'Tier Limits')
 
 
     @api.depends('player_ids', 'player_ids.points')
@@ -144,3 +145,14 @@ class AuctionBidSlab(models.Model):
     from_amount = fields.Integer(required=True)
     to_amount = fields.Integer(required=True)
     increment = fields.Integer(required=True)
+
+
+class AuctionAuctionTierLimit(models.Model):
+    _name = 'auction.auction.tier.limit'
+    _description = 'Auction Team Tier Limit'
+
+    auction_id = fields.Many2one('auction.auction', ondelete='cascade')
+    tier_id = fields.Many2one('auction.player.tier', string='Tier', required=True)
+    max_players = fields.Integer(string='Max Players', required=True, default=1)
+    base_point = fields.Integer(string='Base Point', default=0,
+        help="Minimum bid for a player of this tier. Leave 0 to use the global base point.")

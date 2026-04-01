@@ -41,6 +41,7 @@ class AuctionTeamPlayer(models.Model):
     tournament_type = fields.Selection(related='tournament_id.tournament_type')
     assigned_team_id = fields.Many2one('auction.team', 'Team')
     icon_player = fields.Boolean("Key Player")
+    tier_id = fields.Many2one('auction.player.tier', string='Tier')
     notes = fields.Char()
     #other details
     current_team = fields.Char("Current Team")
@@ -48,6 +49,8 @@ class AuctionTeamPlayer(models.Model):
     jersy_number = fields.Char("Number in Jersy")
     jersy_name = fields.Char("Name in Jersy")
     blood_group = fields.Char("Blood Group")
+    p_type =   fields.Char("Type")
+    p_category = fields.Char("Category")
 
     def print_player_cards(self):
         return self.env.ref('auction_module.action_report_player_card').report_action(self)
@@ -136,6 +139,7 @@ class AuctionTeamPlayer(models.Model):
             vals.update({'tournament_id': tournament_id.id})
         if 'Icon' in  vals.get('player_type', False):
             vals.update({'player_type': 'icon'})
+
         if vals.get('photo_url', False):
             image_base64 = self.get_base64_from_url(vals.get('photo_url', False))
             if image_base64:
@@ -143,8 +147,8 @@ class AuctionTeamPlayer(models.Model):
 
         if not vals.get('payment_url', False):
             vals.update({'amount_paid': False})
-        print(vals, "ssssss")
         player = super(AuctionTeamPlayer, self).create(vals)
+        print(vals, "After printing vals")
         return player
 
     def write(self, vals):

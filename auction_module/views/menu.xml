@@ -154,6 +154,13 @@
           groups="auction_module.group_auction_group_admin"
           sequence="2"/>
 
+        <menuitem id="menu_action_auction_player_tier"
+          name="Player Tier(s)"
+          parent="menu_action_auction_conf"
+          action="action_auction_player_tier"
+          groups="auction_module.group_auction_group_admin"
+          sequence="3"/>
+
 
         <!--<menuitem id="menu_action_auction_reporting"
           name="Reporting"

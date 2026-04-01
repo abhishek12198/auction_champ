@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_auction_player_tier_search" model="ir.ui.view">
+            <field name="name">auction.player.tier.search</field>
+            <field name="model">auction.player.tier</field>
+            <field name="arch" type="xml">
+                <search string="Player Tier">
+                    <field name="name" filter_domain="[('name','ilike',self)]" string="Name"/>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_auction_player_tier_tree" model="ir.ui.view">
+            <field name="name">auction.player.tier.tree</field>
+            <field name="model">auction.player.tier</field>
+            <field name="arch" type="xml">
+                <tree string="Player Tier">
+                    <field name="name"/>
+                    <field name="description"/>
+                    <field name="color"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_auction_player_tier_form" model="ir.ui.view">
+            <field name="name">auction.player.tier.form</field>
+            <field name="model">auction.player.tier</field>
+            <field name="arch" type="xml">
+                <form string="Player Tier">
+                    <group>
+                        <group>
+                            <field name="name" required="1"/>
+                            <field name="description"/>
+                            <field name="color" widget="selection_badge"/>
+                        </group>
+                    </group>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_auction_player_tier" model="ir.actions.act_window">
+            <field name="name">Player Tier(s)</field>
+            <field name="res_model">auction.player.tier</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_auction_player_tier_search"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create a Player Tier
+                </p><p>
+                    Use this menu to create or manage player tiers.
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

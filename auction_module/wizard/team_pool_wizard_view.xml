@@ -41,7 +41,9 @@
 
                 </group>
                 <group>
+                    <field name="selected_team_count"  readonly="1" force_save="1"/>
                     <field name="pool_count"/>
+
                 </group>
                 <footer>
                     <button

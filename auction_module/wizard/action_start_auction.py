@@ -18,6 +18,7 @@ class StartAuction(models.TransientModel):
     max_limited = fields.Selection([('yes', 'Yes'), ('no', 'No')], default='no')
     max_point_player = fields.Integer('Max Point for a player')
     auction_bid_slab_ids = fields.One2many('auction.bid.slab', 'wizard_id', 'Slab')
+    tier_limit_ids = fields.One2many('auction.start.auction.tier.limit', 'wizard_id', 'Tier Limits')
 
     @api.onchange('max_limited')
     def onchange_max_limited(self):
@@ -41,6 +42,7 @@ class StartAuction(models.TransientModel):
             raise ValidationError("Select atleast two teams")
         tournament_id = self.env['auction.tournament'].search([('active', '=', True)], limit=1)
         bid_slab_data = [(0, 0, {'from_amount': line.from_amount, 'to_amount': line.to_amount,'increment': line.increment}) for line in self.auction_bid_slab_ids]
+        tier_limit_data = [(0, 0, {'tier_id': line.tier_id.id, 'max_players': line.max_players, 'base_point': line.base_point}) for line in self.tier_limit_ids]
         if self.team_ids:
             existing_auctions  = auction_obj.search([('team_id', 'in', self.team_ids.ids)])
             if existing_auctions:
@@ -54,6 +56,7 @@ class StartAuction(models.TransientModel):
                     'max_limited': self.max_limited,
                     'max_points': self.max_point_player,
                     'auction_bid_slab_ids': bid_slab_data,
+                    'tier_limit_ids': tier_limit_data,
                 }
 
                 auction_data.update({'tournament_id': tournament_id.id})
@@ -80,3 +83,14 @@ class AuctionBidSlab(models.TransientModel):
     from_amount = fields.Integer(required=True)
     to_amount = fields.Integer(required=True)
     increment = fields.Integer(required=True)
+
+
+class AuctionStartAuctionTierLimit(models.TransientModel):
+    _name = 'auction.start.auction.tier.limit'
+    _description = 'Auction Setup Tier Limit'
+
+    wizard_id = fields.Many2one('auction.start.auction', ondelete='cascade')
+    tier_id = fields.Many2one('auction.player.tier', string='Tier', required=True)
+    max_players = fields.Integer(string='Max Players per Team', required=True, default=1)
+    base_point = fields.Integer(string='Base Point', default=0,
+        help="Minimum bid for a player of this tier. Leave 0 to use the global base point.")

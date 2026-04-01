@@ -169,6 +169,7 @@
                     <field name="name" class="text-uppercase"/>
                     <field name="contact"/>
                     <field name="role"/>
+                    <field name="tier_id"/>
                     <field name="amount_paid" widget="boolean_toggle"/>
                     <field name="photo_url" invisible="1"/>
                     <field name="blood_group"/>
@@ -253,6 +254,7 @@
                             <field name="batting_style"/>
                             <field name="bowling_style"/>
                             <field name="role"/>
+                            <field name="tier_id"/>
                             <field name="player_type" widget="radio"/>
                             <field name="address"/>
                             <field name="notes"/>
@@ -270,7 +272,8 @@
                                 <field name="jersy_size"/>
                                 <field name="jersy_number"/>
                                 <field name="blood_group"/>
-
+                                <field name="p_type"/>
+                                <field name="p_category"/>
                             </group>
                         </page>
                     </notebook>

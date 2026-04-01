@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="player_template_modal_content" name="Player Modal Content">
+    <link rel="stylesheet" href="/auction_module/static/src/assets/css/style.css" />
+
+    <style>
+        /* Modal responsive styles */
+        .player-modal-content {
+            width: 100%;
+            padding: 0;
+        }
+
+        .player-modal-content .single-header {
+            padding: 1rem 0;
+            width: 100%;
+        }
+
+        .player-modal-content .single-header .py-3 {
+            padding: 0.5rem 0 !important;
+        }
+
+        .player-modal-content .single-header img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .player-modal-content .container {
+            padding: 0 1rem;
+            max-width: 100%;
+        }
+
+        .player-modal-content .auction-single {
+            gap: 1.5rem !important;
+            padding: 1rem 0;
+        }
+
+        .player-modal-content .single-player-details {
+            min-width: 150px;
+        }
+
+        .player-modal-content .single-player-image {
+            flex: 0 0 auto;
+        }
+
+        .player-modal-content .sp-image {
+            width: 280px;
+            height: auto;
+        }
+
+        .player-modal-content .sp-image img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+        }
+
+        .player-modal-content .player-profession {
+            width: 100%;
+        }
+
+        .player-modal-content .auction-single-buttons {
+            flex-wrap: wrap;
+            gap: 1rem !important;
+        }
+
+        .player-modal-content .auction-single-buttons button {
+            flex: 1;
+            min-width: 150px;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        /* Mobile responsive (768px and below) */
+        @media (max-width: 768px) {
+            .player-modal-content .auction-single {
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 1rem !important;
+            }
+
+            .player-modal-content .single-player-details {
+                text-align: center;
+            }
+
+            .player-modal-content .sp-image {
+                width: 220px;
+                height: auto;
+            }
+
+            .player-modal-content .col-sm-3,
+            .player-modal-content .col-4,
+            .player-modal-content .col-lg-5 {
+                max-width: 100% !important;
+                flex-basis: 100% !important;
+            }
+
+            .player-modal-content .player-profession-body {
+                display: block !important;
+            }
+
+            .player-modal-content .player-profession-body > div {
+                margin-bottom: 0.5rem;
+            }
+
+            .player-modal-content .auction-single-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .player-modal-content .auction-single-buttons button {
+                width: 100%;
+            }
+
+            .player-modal-content .container {
+                padding: 0 0.5rem;
+            }
+
+            .player-modal-content .stroke-only {
+                font-size: 2rem;
+            }
+        }
+
+        /* Extra small devices (480px and below) */
+        @media (max-width: 480px) {
+            .player-modal-content .single-header {
+                padding: 0.5rem 0;
+            }
+
+            .player-modal-content .single-header img {
+                width: 60px !important;
+                height: 60px !important;
+            }
+
+            .player-modal-content .sp-image {
+                width: 180px;
+                height: auto;
+            }
+
+            .player-modal-content .stroke-only {
+                font-size: 1.5rem;
+            }
+
+            .player-modal-content .player-name {
+                font-size: 1rem;
+            }
+
+            .player-modal-content .player-profession-header p,
+            .player-modal-content .player-profession-body p {
+                font-size: 0.85rem;
+            }
+
+            .player-modal-content .auction-single-buttons button {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+
+    <div class="player-modal-content">
+        <header class="single-header">
+            <div class="py-3 text-center">
+                <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo" style="max-width: 120px; height: auto;" />
+            </div>
+            <div class="container">
+                <div class="position-relative" style="column-gap: 8px">
+                    <div class="team-name d-flex justify-content-center justify-content-sm-end align-items-center">
+                        <div class="d-none d-sm-block bg-white" style="min-height: 58px">
+                            <h3 style="margin-bottom: 0.25rem;"><span t-esc="player.tournament_id.name"/></h3>
+                            <p style="margin-bottom: 0;"><span t-esc="player.tournament_id.description"/></p>
+                        </div>
+                        <img t-att-src="image_data_uri(player.tournament_id.logo)" alt="team-logo" width="91" height="91" class="team-single-logo" style="max-width: 100px; height: auto;" />
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <div class="row auction-single justify-content-center justify-content-lg-between gap-4">
+                <div class="col-sm-3 single-player-details">
+                    <h3 class="stroke-only"><span t-esc="player.sl_no"/></h3>
+                    <h6 class="player-name"><span t-esc="player.name.upper()"/></h6>
+                    <p class="player-possition"><span t-esc="player.role"/></p>
+                    <t t-if="player.tier_id">
+                        <span class="player-tier-badge"
+                              t-att-style="'background-color: ' + (player.tier_id.color or '#3498db') + '; color: #fff; padding: 3px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; display: inline-block; margin-top: 6px; letter-spacing: 0.5px;'">
+                            <t t-esc="player.tier_id.name"/>
+                        </span>
+                    </t>
+                </div>
+
+                <div class="col-sm-3">
+                    <div class="position-relative single-player-image">
+                        <div class="sp-image m-auto">
+                            <div class="sp-image-before" t-att-style="'--tier-color: ' + (player.tier_id.color if player.tier_id else '#01cfff')"></div>
+                            <img t-att-src="image_data_uri(player.photo)" alt="player-image" id="loadImage" style="width: 100%; height: auto; object-fit: cover;" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-4 col-lg-5">
+                    <div class="player-profession m-auto">
+                        <div class="player-profession-header">
+                            <p style="margin-bottom: 1rem; font-weight: bold;">Player Attributes</p>
+                        </div>
+                        <div class="player-profession-body">
+                            <div>
+                                <p style="margin-bottom: 0.5rem;">Batting Style</p>
+                                <p style="margin-bottom: 0.5rem;">Bowling Style</p>
+                                <p style="margin-bottom: 0.5rem;">Mobile No</p>
+                                <p style="margin-bottom: 0.5rem;">Blood Group<span class="blood-emoji">🩸</span></p>
+                                <p style="margin-bottom: 0.5rem;">Location</p>
+                            </div>
+                            <div>
+                                <p style="margin-bottom: 0.5rem;"><span>:</span> <span t-esc="player.batting_style"/></p>
+                                <p style="margin-bottom: 0.5rem;"><span>:</span> <span t-esc="player.bowling_style"/></p>
+                                <p style="margin-bottom: 0.5rem;"><span>:</span> <span t-esc="player.contact"/></p>
+                                <p style="margin-bottom: 0.5rem;">
+                                    <span>:</span>
+                                    <span style="color:#e53935; font-weight:bold;" t-if="player.blood_group" t-esc="player.blood_group"/>
+                                    <span t-if="not player.blood_group">NA</span>
+                                </p>
+                                <p style="margin-bottom: 0.5rem;">
+                                    <span>:</span>
+                                    <span t-if="player.address" t-esc="player.address"/>
+                                    <span t-if="not player.address">NA</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="auction-single-buttons d-flex align-items-center justify-content-center gap-3 mt-4">
+                        <button class="btn btn-primary" onclick="setPlayerUnsold(this)" style="padding: 0.75rem 1.5rem;">Set as unsold</button>
+                        <button class="btn btn-success sell" onclick="sellPlayerToTeam(this)" style="padding: 0.75rem 1.5rem;">Sell to Team</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+</odoo>

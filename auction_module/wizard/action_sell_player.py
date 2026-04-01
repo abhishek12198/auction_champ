@@ -22,28 +22,40 @@ class SellPlayer(models.TransientModel):
     team_logo = fields.Binary(related='team_id.logo')
     suggestion = fields.Html()
 
+    @api.model
+    def _get_effective_base_point(self, auction, player):
+        """Return tier-specific base_point if configured (> 0), else fall back to the global base_point."""
+        if player and player.tier_id and auction.tier_limit_ids:
+            tier_limit = auction.tier_limit_ids.filtered(
+                lambda l: l.tier_id.id == player.tier_id.id
+            )
+            if tier_limit and tier_limit[0].base_point > 0:
+                return tier_limit[0].base_point
+        return auction.base_point
+
     @api.onchange('team_auction_id')
     def onchange_team_auction_id(self):
         suggestion_html = ""
+        if not self.team_auction_id:
+            return
+        player = self.env['auction.team.player'].browse(self.env.context.get('active_id'))
+        effective_base = self._get_effective_base_point(self.team_auction_id, player)
         if self.team_auction_id.max_limited == 'yes':
             suggestion_html = f"""
                                 <strong><p style="color: blue; text-align: right;">One player can go maximum points upto {self.team_auction_id.max_call}</p></strong>
-                                <strong><p style="color: blue; text-align: right;">Remaining players you can bid for base points  {base_point}</p></strong>
+                                <strong><p style="color: blue; text-align: right;">Remaining players you can bid for base points  {effective_base}</p></strong>
                             """
         else:
             remaining_players = self.team_auction_id.remaining_players_count - 1
-            base_point = self.team_auction_id.base_point
-            max_points_for_next_player = self.team_auction_id.remaining_points - (remaining_players * base_point)
             if self.team_auction_id.remaining_players_count > 1:
                 suggestion_html = f"""
                                 <strong><p style="color: blue; text-align: right;">One player can go maximum points upto {self.team_auction_id.max_call}</p></strong>
-                                <strong><p style="color: blue; text-align: right;">Remaining players you can bid for base points  {base_point}</p></strong>
+                                <strong><p style="color: blue; text-align: right;">Remaining players you can bid for base points  {effective_base}</p></strong>
                             """
             else:
                 suggestion_html = f"""
                                     <strong><p style="color: blue; text-align: right;">This player can go maximum points upto {self.team_auction_id.max_call}</p></strong>
                                     """
-
         self.suggestion = suggestion_html
 
     @api.model
@@ -58,11 +70,15 @@ class SellPlayer(models.TransientModel):
                     raise ValidationError(message)
 
             defaults.update({'player_id': self.env.context.get('active_id', False)})
-        auction_base_value = list(set(self.env['auction.auction'].search([]).mapped('base_point')))
-        if auction_base_value:
-            defaults.update({'final_point': auction_base_value[0]})
-        else:
-            defaults.update({'final_point': 1000})
+
+        # Determine effective base point: use tier-specific if configured
+        player = self.env['auction.team.player'].browse(self.env.context.get('active_id', False))
+        auctions = self.env['auction.auction'].search([])
+        initial_base = 1000
+        if auctions:
+            auction = auctions[0]
+            initial_base = self._get_effective_base_point(auction, player)
+        defaults.update({'final_point': initial_base})
         return defaults
 
     @api.onchange('final_point', 'team_auction_id', 'team_id')
@@ -70,7 +86,8 @@ class SellPlayer(models.TransientModel):
         if not self.team_auction_id:
             return
 
-        auction_base_point = self.team_auction_id.base_point
+        player = self.env['auction.team.player'].browse(self.env.context.get('active_id'))
+        auction_base_point = self._get_effective_base_point(self.team_auction_id, player)
         auction_max_limited = self.team_auction_id.max_limited
         self_final_point = self.final_point
 
@@ -98,7 +115,9 @@ class SellPlayer(models.TransientModel):
 
         players_remaining = self.players_remaining - 1
         points_remaining = self.points_remaining
-        temp_number = players_remaining * auction_base_point
+        # Budget safety uses the global base_point for remaining slots (tier of other players is unknown)
+        global_base_point = self.team_auction_id.base_point
+        temp_number = players_remaining * global_base_point
         max_limit_player = points_remaining - temp_number
         if self_final_point > max_limit_player:
             self.final_point = max_limit_player
@@ -131,6 +150,24 @@ class SellPlayer(models.TransientModel):
                 self.team_auction_id = team_auction_record.id
                 self.points_remaining = team_auction_record.remaining_points
                 self.players_remaining = team_auction_record.remaining_players_count
+
+                # Tier limit warning
+                player = self.env['auction.team.player'].browse(self.env.context.get('active_id'))
+                if player and player.tier_id and team_auction_record.tier_limit_ids:
+                    tier_limit = team_auction_record.tier_limit_ids.filtered(
+                        lambda l: l.tier_id.id == player.tier_id.id
+                    )
+                    if tier_limit:
+                        already_sold = self.env['auction.auction.player'].search_count([
+                            ('auction_id', '=', team_auction_record.id),
+                            ('player_id.tier_id', '=', player.tier_id.id),
+                        ])
+                        remaining_slots = tier_limit[0].max_players - already_sold
+                        if remaining_slots <= 0:
+                            raise ValidationError(
+                                "This team has already reached the maximum limit of %d player(s) "
+                                "allowed from the '%s' tier." % (tier_limit[0].max_players, player.tier_id.name)
+                            )
             else:
                 raise ValidationError("This team is not a part of the current Auction")
         else:
@@ -144,6 +181,27 @@ class SellPlayer(models.TransientModel):
         if player_id:
             player = self.env['auction.team.player'].browse(player_id)
             auction = self.team_auction_id
+
+            # Tier limit hard check
+            if player.tier_id and auction.tier_limit_ids:
+                tier_limit = auction.tier_limit_ids.filtered(
+                    lambda l: l.tier_id.id == player.tier_id.id
+                )
+                if tier_limit:
+                    already_sold = self.env['auction.auction.player'].search_count([
+                        ('auction_id', '=', auction.id),
+                        ('player_id.tier_id', '=', player.tier_id.id),
+                    ])
+                    if already_sold >= tier_limit[0].max_players:
+                        raise UserError(
+                            "Cannot sell '%s' to %s — the team has already reached the "
+                            "maximum limit of %d player(s) from the '%s' tier." % (
+                                player.name,
+                                auction.team_id.name,
+                                tier_limit[0].max_players,
+                                player.tier_id.name,
+                            )
+                        )
             auction_line_data = {
                 'player_id': player.id,
                 'points': self.final_point,

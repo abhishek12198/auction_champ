@@ -60,6 +60,20 @@
                                 </field>
                             </group>
                         </page>
+                        <page string="Tier Limits">
+                            <p class="text-muted" style="margin-bottom: 8px;">
+                                Define the maximum number of players each team can bag from each tier.
+                                Tiers not listed here have no limit.
+                                Set Base Point to 0 to use the global base point for that tier.
+                            </p>
+                            <field name="tier_limit_ids" nolabel="1">
+                                <tree editable="bottom">
+                                    <field name="tier_id"/>
+                                    <field name="max_players" string="Max Players per Team"/>
+                                    <field name="base_point" string="Base Point (0 = global)"/>
+                                </tree>
+                            </field>
+                        </page>
                     </notebook>
                     <footer>
                         <button string="Apply" type="object"  class="btn-primary" name="button_start_auction" confirm="This will start auction process, click Ok to continue"/>
