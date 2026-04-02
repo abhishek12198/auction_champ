@@ -40,3 +40,10 @@ class AuctionTournament(models.Model):
     report_footer = fields.Binary('Footer')
     rules_regulations = fields.Html("Rules and Regulations")
     tournament_type = fields.Selection([('cricket', 'Cricket'), ('football', 'Football')], default='cricket')
+    player_display_template = fields.Selection([
+        ('vanilla', 'Vanilla'),
+        ('butterscotch', 'Butterscotch'),
+        ('strawberry', 'Strawberry'),
+        ('cherry', 'Cherry'),
+    ], string='Theme'
+              '', default='vanilla', required=True)

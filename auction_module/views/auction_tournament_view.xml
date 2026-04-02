@@ -28,12 +28,13 @@
             <field name="model">auction.tournament</field>
             <field name="arch" type="xml">
                 <form string="Team">
-                    <field name="logo" widget='image'/>
+                    <field name="logo" widget='image' class="oe_avatar player_avatar_big" />
                     <group>
                         <group>
                             <field name="name"/>
                             <field name="description"/>
                             <field name="tournament_type" widget="radio"/>
+
                         </group>
 
                     </group>
@@ -75,6 +76,7 @@
 
                         <page string="Other Details">
                             <group>
+                                <field name="player_display_template" widget="radio" options="{'horizontal': True}"/>
                                 <field name="venue"/>
                                 <field name="player_appearance_algorithm" widget="radio"/>
                                 <field name="report_footer" widget="image"/>

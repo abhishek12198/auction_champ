@@ -24,7 +24,7 @@
 
     <!--<style></style>-->
   </head>
-  <body style="min-height: 100vh">
+  <body style="min-height: 100vh" t-att-data-player-id="player.id">
     <header class="single-header">
       <div class="py-3 text-center">
         <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo" />
@@ -132,7 +132,7 @@
           <div
             class="auction-single-buttons d-flex align-items-center justify-content-center gap-3 mt-4"
           >
-            <button disabled="1">Set as unsold</button>
+            <button onclick="setPlayerUnsold()">Set as unsold</button>
             <button class="sell" disabled="1">Sell to Team</button>
           </div>
         </div>
@@ -177,6 +177,41 @@
           changeImage();
         }
       });
+
+      function setPlayerUnsold() {
+        if (!confirm('This will set the player to Unsold and later you can bring back to Auction. Click on Ok to continue. Otherwise click on Cancel')) {
+          return;
+        }
+        var playerId = parseInt(document.body.getAttribute('data-player-id'));
+        if (!playerId) {
+          alert('Error: Player ID not found');
+          return;
+        }
+        fetch('/web/dataset/call_kw', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            method: 'call',
+            params: {
+              model: 'auction.team.player',
+              method: 'action_unsold',
+              args: [[playerId]],
+              kwargs: {}
+            }
+          })
+        }).then(function(response) {
+          return response.json();
+        }).then(function(result) {
+          if (result.error) {
+            alert('Failed to mark player as unsold');
+          } else {
+            changeImage();
+          }
+        }).catch(function() {
+          alert('Failed to mark player as unsold');
+        });
+      }
     </script>
   </body>
 </html>

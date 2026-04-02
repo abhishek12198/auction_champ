@@ -1,3 +1,29 @@
+.auction-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px 48px;
+}
+
+/* Override Odoo's SPA overflow rules for this standalone page */
+html, body {
+    height: auto !important;
+    overflow: auto !important;
+}
+
+.auction-title {
+    font-family: 'Teko', sans-serif;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 600;
+    color: #fdce33;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    text-align: center;
+    margin: 36px 0 8px;
+    -webkit-text-stroke: 1.5px #2252b5;
+    text-shadow: 0 4px 24px rgba(34, 82, 181, 0.35);
+    line-height: 1.1;
+}
+
 .auction-grid{
 display:grid;
 grid-template-columns:repeat(auto-fill,minmax(120px,1fr));

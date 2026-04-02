@@ -54,7 +54,16 @@ class AuctionTeamPlayer(models.Model):
     p_category = fields.Char("Category")
 
     def print_player_cards(self):
-        return self.env.ref('auction_module.action_report_player_card').report_action(self)
+        tournament = self.env['auction.tournament'].search([('active', '=', True)], limit=1)
+        template = tournament.player_display_template if tournament else 'vanilla'
+        report_map = {
+            'vanilla':       'auction_module.action_report_player_card',
+            'butterscotch':  'auction_module.action_report_player_card_butterscotch',
+            'strawberry':    'auction_module.action_report_player_card_strawberry',
+            'cherry':        'auction_module.action_report_player_card_cherry',
+        }
+        report_ref = report_map.get(template, 'auction_module.action_report_player_card')
+        return self.env.ref(report_ref).report_action(self)
 
     # def print_player_card(self):
     #     players = self.search([])
@@ -62,14 +71,21 @@ class AuctionTeamPlayer(models.Model):
 
     @api.model
     def action_player_card_report(self):
-        report_data = {
-                'type': 'ir.actions.report',
-                'report_name': 'auction_module.player_card_template',
-                'report_type': 'qweb-pdf',
-                'data': {'model': 'auction.team.player'},
-
+        tournament = self.env['auction.tournament'].search([('active', '=', True)], limit=1)
+        template = tournament.player_display_template if tournament else 'vanilla'
+        report_map = {
+            'vanilla':      'auction_module.report_player_card_list',
+            'butterscotch': 'auction_module.report_player_card_list_butterscotch',
+            'strawberry':   'auction_module.report_player_card_list_strawberry',
+            'cherry':       'auction_module.report_player_card_list_cherry',
         }
-        return report_data
+        report_name = report_map.get(template, 'auction_module.report_player_card_list')
+        return {
+            'type': 'ir.actions.report',
+            'report_name': report_name,
+            'report_type': 'qweb-pdf',
+            'data': {'model': 'auction.team.player'},
+        }
 
     @api.model
     def _get_report_values(self, docids, data=None):

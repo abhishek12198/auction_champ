@@ -2,22 +2,52 @@
 <odoo>
 
 <template id="player_sequence_selector">
+    <html lang="en">
+        <head>
+            <meta charset="utf-8"/>
+            <meta name="viewport" content="width=device-width, initial-scale=1"/>
+            <title>Auction Player Queue</title>
 
-<t t-call="website.layout" t-options="{'no_header': True, 'no_footer': True}">
+            <!-- Bootstrap -->
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+                  rel="stylesheet"
+                  integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+                  crossorigin="anonymous"/>
+            <!-- Google Fonts: Teko -->
+            <link rel="preconnect" href="https://fonts.googleapis.com"/>
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
+            <link href="https://fonts.googleapis.com/css2?family=Teko:wght@600&amp;display=swap" rel="stylesheet"/>
 
-<div class="auction-container">
+            <!-- Theme stylesheet -->
+            <link rel="stylesheet" href="/auction_module/static/src/assets/css/style.css"/>
 
-<h1 class="auction-title">
-Auction Player Queue
-</h1>
+            <!-- Odoo assets (CSS only) -->
+            <t t-call-assets="web.assets_common" t-js="false"/>
+            <t t-call-assets="web.assets_frontend" t-js="false"/>
+        </head>
+        <body style="min-height: 100vh">
 
-<div id="auction_grid" class="auction-grid">
-</div>
+            <!-- Banner — same as auction_player_template_new.xml -->
+            <header class="single-header">
+                <div class="py-3 text-center">
+                    <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo"/>
+                </div>
+            </header>
 
-</div>
+            <div class="auction-container">
 
-</t>
+                <h1 class="auction-title">Auction Player Queue</h1>
 
+                <div id="auction_grid" class="auction-grid">
+                </div>
+
+            </div>
+
+            <!-- Odoo assets (JS only) -->
+            <t t-call-assets="web.assets_common" t-css="false"/>
+            <t t-call-assets="web.assets_frontend" t-css="false"/>
+        </body>
+    </html>
 </template>
 
 </odoo>

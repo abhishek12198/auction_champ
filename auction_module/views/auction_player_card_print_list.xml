@@ -1,132 +1,134 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
+    <!-- ── Vanilla card body (called per-doc by dispatcher) ── -->
+    <template id="report_player_card_vanilla_page">
+        <html lang="en">
+            <head>
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1" />
+                <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet" />
+                <title>Player Card</title>
+            </head>
+            <body style="margin:0; padding:24px; background:#e8eaf0; font-family:'Poppins',sans-serif;">
+                <table style="width:100%; max-width:780px; margin:0 auto; border-collapse:collapse; border-radius:10px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.18);">
+                    <!-- Header -->
+                    <tr>
+                        <td colspan="2" style="background:#2252b5; padding:14px 20px;">
+                            <table style="width:100%; border-collapse:collapse;">
+                                <tr>
+                                    <td style="width:70px; vertical-align:middle;">
+                                        <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo" style="height:56px; display:block;"/>
+                                    </td>
+                                    <td style="text-align:center; vertical-align:middle;">
+                                        <div style="color:#fdce33; font-size:0.65rem; font-weight:700; letter-spacing:3px; text-transform:uppercase;">Official Player Card</div>
+                                        <div style="color:#ffffff; font-size:1rem; font-weight:700; margin-top:3px;" t-esc="doc.tournament_id.name"/>
+                                    </td>
+                                    <td style="width:80px; text-align:right; vertical-align:middle;">
+                                        <img t-att-src="image_data_uri(doc.tournament_id.logo)" alt="Tournament Logo" style="height:72px; width:72px; object-fit:contain; display:block; margin-left:auto;"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <!-- Body -->
+                    <tr>
+                        <td t-att-style="'width:260px; min-width:260px; vertical-align:top; padding:0; background:#1a2744; border-left:6px solid ' + (doc.tier_id.color if doc.tier_id else '#1a2744') + ';'">
+                            <img t-att-src="image_data_uri(doc.photo)" alt="Player Photo"
+                                 t-att-style="'width:254px; height:340px; object-fit:cover; object-position:top center; display:block; border-top:6px solid ' + (doc.tier_id.color if doc.tier_id else '#1a2744') + '; border-bottom:6px solid ' + (doc.tier_id.color if doc.tier_id else '#1a2744') + ';'"/>
+                        </td>
+                        <td style="vertical-align:top; padding:22px 26px; background:#ffffff; position:relative;">
+                            <div style="position:absolute; top:12px; right:14px; width:62px; height:62px; border-radius:50%; background:#2252b5; transform:rotate(-12deg); box-shadow:0 0 0 4px #fdce33, 0 0 0 7px #2252b5, 0 6px 18px rgba(34,82,181,0.45); text-align:center; line-height:62px;">
+                                <span style="color:#fdce33; font-size:1.6rem; font-weight:900; letter-spacing:-1px; vertical-align:middle;"><t t-esc="doc.sl_no"/></span>
+                            </div>
+                            <div style="font-size:1.55rem; font-weight:900; color:#0a1429; line-height:1.2; margin-bottom:4px; white-space:nowrap;" t-esc="doc.name.upper()"/>
+                            <div style="font-size:0.95rem; font-weight:700; font-style:italic; color:#2252b5; margin-bottom:10px;" t-esc="doc.role"/>
+                            <t t-if="doc.tier_id">
+                                <div style="margin-bottom:14px;">
+                                    <span t-att-style="'background:' + (doc.tier_id.color or '#3498db') + '; color:#fff; padding:4px 16px; border-radius:20px; font-size:0.78rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;'">
+                                        <t t-esc="doc.tier_id.name"/>
+                                    </span>
+                                </div>
+                            </t>
+                            <table style="width:100%; border-collapse:collapse; margin-bottom:14px;">
+                                <tr><td style="height:2px; background:#2252b5; padding:0;"></td></tr>
+                            </table>
+                            <table style="width:100%; border-collapse:collapse;">
+                                <t t-if="doc.tournament_id.tournament_type == 'cricket' and doc.batting_style">
+                                    <tr>
+                                        <td style="color:#6b7280; font-size:0.82rem; font-weight:500; padding:7px 10px 7px 0; white-space:nowrap; width:44%; border-bottom:1px solid #f0f0f0; vertical-align:middle;">Batting Style</td>
+                                        <td style="color:#0a1429; font-size:0.82rem; font-weight:600; padding:7px 0; border-bottom:1px solid #f0f0f0; vertical-align:middle;">: <t t-esc="doc.batting_style"/></td>
+                                    </tr>
+                                </t>
+                                <t t-if="doc.tournament_id.tournament_type == 'cricket' and doc.bowling_style">
+                                    <tr>
+                                        <td style="color:#6b7280; font-size:0.82rem; font-weight:500; padding:7px 10px 7px 0; white-space:nowrap; width:44%; border-bottom:1px solid #f0f0f0; vertical-align:middle;">Bowling Style</td>
+                                        <td style="color:#0a1429; font-size:0.82rem; font-weight:600; padding:7px 0; border-bottom:1px solid #f0f0f0; vertical-align:middle;">: <t t-esc="doc.bowling_style"/></td>
+                                    </tr>
+                                </t>
+                                <t t-if="doc.blood_group">
+                                    <tr>
+                                        <td style="color:#6b7280; font-size:0.82rem; font-weight:500; padding:7px 10px 7px 0; white-space:nowrap; width:44%; border-bottom:1px solid #f0f0f0; vertical-align:middle;">Blood Group 🩸</td>
+                                        <td style="color:#e53935; font-size:0.82rem; font-weight:700; padding:7px 0; border-bottom:1px solid #f0f0f0; vertical-align:middle;">: <t t-esc="doc.blood_group"/></td>
+                                    </tr>
+                                </t>
+                                <t t-if="doc.p_category">
+                                    <tr>
+                                        <td style="color:#6b7280; font-size:0.82rem; font-weight:500; padding:7px 10px 7px 0; white-space:nowrap; width:44%; border-bottom:1px solid #f0f0f0; vertical-align:middle;">Player Category</td>
+                                        <td style="color:#0a1429; font-size:0.82rem; font-weight:600; padding:7px 0; border-bottom:1px solid #f0f0f0; vertical-align:middle;">: <t t-esc="doc.p_category"/></td>
+                                    </tr>
+                                </t>
+                                <t t-if="doc.address">
+                                    <tr>
+                                        <td style="color:#6b7280; font-size:0.82rem; font-weight:500; padding:7px 10px 7px 0; white-space:nowrap; width:44%; border-bottom:1px solid #f0f0f0; vertical-align:middle;">Location</td>
+                                        <td style="color:#0a1429; font-size:0.82rem; font-weight:600; padding:7px 0; border-bottom:1px solid #f0f0f0; vertical-align:middle;">: <t t-esc="doc.address"/></td>
+                                    </tr>
+                                </t>
+                                <t t-if="doc.contact">
+                                    <tr>
+                                        <td style="color:#6b7280; font-size:0.82rem; font-weight:500; padding:7px 10px 7px 0; white-space:nowrap; width:44%; vertical-align:middle;">Mobile 📱</td>
+                                        <td style="color:#0a1429; font-size:0.82rem; font-weight:600; padding:7px 0; vertical-align:middle;">: <t t-esc="doc.contact"/></td>
+                                    </tr>
+                                </t>
+                            </table>
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td colspan="2" style="background:#2252b5; padding:8px 20px; text-align:center;">
+                            <span style="color:#fdce33; font-size:0.65rem; font-weight:700; letter-spacing:3px; text-transform:uppercase;">Auction Player Card</span>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+        </html>
+    </template>
+
+    <!-- ── Dispatcher: bound to the Print button, picks theme per doc ── -->
     <template id="report_player_card_list">
         <t t-foreach="docs" t-as="doc">
-            <page t-call="web.basic_layout">
-                <html lang="en">
-                    <head>
-                        <link rel="preconnect" href="https://fonts.googleapis.com" />
-                        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1" />
-                        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet" />
-                        <title>Player Card</title>
-                    </head>
-                    <body style="margin:0; padding:24px; background:#e8eaf0; font-family:'Poppins',sans-serif;">
-
-                        <!-- Card Wrapper -->
-                        <table style="width:100%; max-width:780px; margin:0 auto; border-collapse:collapse; border-radius:10px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.18);">
-
-                            <!-- Header -->
-                            <tr>
-                                <td colspan="2" style="background:#2252b5; padding:14px 20px;">
-                                    <table style="width:100%; border-collapse:collapse;">
-                                        <tr>
-                                            <td style="width:70px; vertical-align:middle;">
-                                                <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo" style="height:56px; display:block;"/>
-                                            </td>
-                                            <td style="text-align:center; vertical-align:middle;">
-                                                <div style="color:#fdce33; font-size:0.65rem; font-weight:700; letter-spacing:3px; text-transform:uppercase;">Official Player Card</div>
-                                                <div style="color:#ffffff; font-size:1rem; font-weight:700; margin-top:3px;" t-esc="doc.tournament_id.name"/>
-                                            </td>
-                                            <td style="width:80px; text-align:right; vertical-align:middle;">
-                                                <img t-att-src="image_data_uri(doc.tournament_id.logo)" alt="Tournament Logo" style="height:72px; width:72px; object-fit:contain; display:block; margin-left:auto;"/>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-
-                            <!-- Body: Photo | Details -->
-                            <tr>
-                                <!-- Player Photo -->
-                                <td t-att-style="'width:260px; min-width:260px; vertical-align:top; padding:0; background:#1a2744; border-left:6px solid ' + (doc.tier_id.color if doc.tier_id else '#1a2744') + ';'">
-                                    <img t-att-src="image_data_uri(doc.photo)" alt="Player Photo"
-                                         t-att-style="'width:254px; height:340px; object-fit:cover; object-position:top center; display:block; border-top:6px solid ' + (doc.tier_id.color if doc.tier_id else '#1a2744') + '; border-bottom:6px solid ' + (doc.tier_id.color if doc.tier_id else '#1a2744') + ';'"/>
-                                </td>
-
-                                <!-- Player Details -->
-                                <td style="vertical-align:top; padding:22px 26px; background:#ffffff; position:relative;">
-
-                                    <!-- Serial Number Stamp -->
-                                    <div style="position:absolute; top:12px; right:14px; width:62px; height:62px; border-radius:50%; background:#2252b5; transform:rotate(-12deg); box-shadow:0 0 0 4px #fdce33, 0 0 0 7px #2252b5, 0 6px 18px rgba(34,82,181,0.45); text-align:center; line-height:62px;">
-                                        <span style="color:#fdce33; font-size:1.6rem; font-weight:900; letter-spacing:-1px; vertical-align:middle;"><t t-esc="doc.sl_no"/></span>
-                                    </div>
-
-                                    <!-- Name -->
-                                    <div style="font-size:1.55rem; font-weight:900; color:#0a1429; line-height:1.2; margin-bottom:4px; white-space:nowrap;" t-esc="doc.name.upper()"/>
-
-                                    <!-- Role -->
-                                    <div style="font-size:0.95rem; font-weight:700; font-style:italic; color:#2252b5; margin-bottom:10px;" t-esc="doc.role"/>
-
-                                    <!-- Tier Badge -->
-                                    <t t-if="doc.tier_id">
-                                        <div style="margin-bottom:14px;">
-                                            <span t-att-style="'background:' + (doc.tier_id.color or '#3498db') + '; color:#fff; padding:4px 16px; border-radius:20px; font-size:0.78rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;'">
-                                                <t t-esc="doc.tier_id.name"/>
-                                            </span>
-                                        </div>
-                                    </t>
-
-                                    <!-- Blue Divider -->
-                                    <table style="width:100%; border-collapse:collapse; margin-bottom:14px;">
-                                        <tr><td style="height:2px; background:#2252b5; padding:0;"></td></tr>
-                                    </table>
-
-                                    <!-- Attributes Table -->
-                                    <table style="width:100%; border-collapse:collapse;">
-                                        <t t-if="doc.tournament_id.tournament_type == 'cricket' and doc.batting_style">
-                                            <tr>
-                                                <td style="color:#6b7280; font-size:0.82rem; font-weight:500; padding:7px 10px 7px 0; white-space:nowrap; width:44%; border-bottom:1px solid #f0f0f0; vertical-align:middle;">Batting Style</td>
-                                                <td style="color:#0a1429; font-size:0.82rem; font-weight:600; padding:7px 0; border-bottom:1px solid #f0f0f0; vertical-align:middle;">: <t t-esc="doc.batting_style"/></td>
-                                            </tr>
-                                        </t>
-                                        <t t-if="doc.tournament_id.tournament_type == 'cricket' and doc.bowling_style">
-                                            <tr>
-                                                <td style="color:#6b7280; font-size:0.82rem; font-weight:500; padding:7px 10px 7px 0; white-space:nowrap; width:44%; border-bottom:1px solid #f0f0f0; vertical-align:middle;">Bowling Style</td>
-                                                <td style="color:#0a1429; font-size:0.82rem; font-weight:600; padding:7px 0; border-bottom:1px solid #f0f0f0; vertical-align:middle;">: <t t-esc="doc.bowling_style"/></td>
-                                            </tr>
-                                        </t>
-                                        <t t-if="doc.blood_group">
-                                            <tr>
-                                                <td style="color:#6b7280; font-size:0.82rem; font-weight:500; padding:7px 10px 7px 0; white-space:nowrap; width:44%; border-bottom:1px solid #f0f0f0; vertical-align:middle;">Blood Group 🩸</td>
-                                                <td style="color:#e53935; font-size:0.82rem; font-weight:700; padding:7px 0; border-bottom:1px solid #f0f0f0; vertical-align:middle;">: <t t-esc="doc.blood_group"/></td>
-                                            </tr>
-                                        </t>
-                                        <t t-if="doc.p_category">
-                                            <tr>
-                                                <td style="color:#6b7280; font-size:0.82rem; font-weight:500; padding:7px 10px 7px 0; white-space:nowrap; width:44%; border-bottom:1px solid #f0f0f0; vertical-align:middle;">Player Category</td>
-                                                <td style="color:#0a1429; font-size:0.82rem; font-weight:600; padding:7px 0; border-bottom:1px solid #f0f0f0; vertical-align:middle;">: <t t-esc="doc.p_category"/></td>
-                                            </tr>
-                                        </t>
-                                        <t t-if="doc.address">
-                                            <tr>
-                                                <td style="color:#6b7280; font-size:0.82rem; font-weight:500; padding:7px 10px 7px 0; white-space:nowrap; width:44%; border-bottom:1px solid #f0f0f0; vertical-align:middle;">Location</td>
-                                                <td style="color:#0a1429; font-size:0.82rem; font-weight:600; padding:7px 0; border-bottom:1px solid #f0f0f0; vertical-align:middle;">: <t t-esc="doc.address"/></td>
-                                            </tr>
-                                        </t>
-                                        <t t-if="doc.contact">
-                                            <tr>
-                                                <td style="color:#6b7280; font-size:0.82rem; font-weight:500; padding:7px 10px 7px 0; white-space:nowrap; width:44%; vertical-align:middle;">Mobile 📱</td>
-                                                <td style="color:#0a1429; font-size:0.82rem; font-weight:600; padding:7px 0; vertical-align:middle;">: <t t-esc="doc.contact"/></td>
-                                            </tr>
-                                        </t>
-                                    </table>
-
-                                </td>
-                            </tr>
-
-                            <!-- Footer -->
-                            <tr>
-                                <td colspan="2" style="background:#2252b5; padding:8px 20px; text-align:center;">
-                                    <span style="color:#fdce33; font-size:0.65rem; font-weight:700; letter-spacing:3px; text-transform:uppercase;">Auction Player Card</span>
-                                </td>
-                            </tr>
-
-                        </table>
-
-                    </body>
-                </html>
-            </page>
+            <t t-if="doc.tournament_id.player_display_template == 'butterscotch'">
+                <page t-call="web.basic_layout">
+                    <t t-call="auction_module.report_player_card_butterscotch_page"/>
+                </page>
+            </t>
+            <t t-elif="doc.tournament_id.player_display_template == 'strawberry'">
+                <page t-call="web.basic_layout">
+                    <t t-call="auction_module.report_player_card_strawberry_page"/>
+                </page>
+            </t>
+            <t t-elif="doc.tournament_id.player_display_template == 'cherry'">
+                <page t-call="web.basic_layout">
+                    <t t-call="auction_module.report_player_card_cherry_page"/>
+                </page>
+            </t>
+            <t t-else="">
+                <page t-call="web.basic_layout">
+                    <t t-call="auction_module.report_player_card_vanilla_page"/>
+                </page>
+            </t>
         </t>
     </template>
 
 </odoo>
+

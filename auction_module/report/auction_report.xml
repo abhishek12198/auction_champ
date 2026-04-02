@@ -9,7 +9,7 @@
             <field name="print_report_name">'%s Players List' % ((object.team_id.name or 'Team'))</field>
         </record>
 
-        <!-- Player card list print-->
+        <!-- Player card list print – dispatcher (bound to Print menu, picks theme per doc) -->
         <record id="action_report_player_card" model="ir.actions.report">
             <field name="name">Player Card</field>
             <field name="model">auction.team.player</field>
@@ -19,6 +19,37 @@
             <field name="paperformat_id" ref="auction_module.paperformat_card_landscape"/>
             <field name="print_report_name">"Player Card - %s" % (object.tournament_id.name)</field>
             <field name="binding_model_id" ref="model_auction_team_player"/>
+        </record>
+
+        <!-- Player card list print – Butterscotch -->
+        <record id="action_report_player_card_butterscotch" model="ir.actions.report">
+            <field name="name">Player Card (Butterscotch)</field>
+            <field name="model">auction.team.player</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">auction_module.report_player_card_list_butterscotch</field>
+            <field name="report_file">auction_module.report_player_card_list_butterscotch</field>
+            <field name="paperformat_id" ref="auction_module.paperformat_card_landscape"/>
+            <field name="print_report_name">"Player Card - %s" % (object.tournament_id.name)</field>
+        </record>
+        <!-- Player card list print – Strawberry -->
+        <record id="action_report_player_card_strawberry" model="ir.actions.report">
+            <field name="name">Player Card (Strawberry)</field>
+            <field name="model">auction.team.player</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">auction_module.report_player_card_list_strawberry</field>
+            <field name="report_file">auction_module.report_player_card_list_strawberry</field>
+            <field name="paperformat_id" ref="auction_module.paperformat_card_landscape"/>
+            <field name="print_report_name">"Player Card - %s" % (object.tournament_id.name)</field>
+        </record>
+
+        <record id="action_report_player_card_cherry" model="ir.actions.report">
+            <field name="name">Player Card (Cherry)</field>
+            <field name="model">auction.team.player</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">auction_module.report_player_card_list_cherry</field>
+            <field name="report_file">auction_module.report_player_card_list_cherry</field>
+            <field name="paperformat_id" ref="auction_module.paperformat_card_landscape"/>
+            <field name="print_report_name">"Player Card - %s" % (object.tournament_id.name)</field>
         </record>
     </data>
 </odoo>

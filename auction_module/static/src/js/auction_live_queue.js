@@ -64,7 +64,9 @@ odoo.define('auction_module.auction_live_queue', function (require) {
                         position: relative;
                         width: 90%;
                         height: 100vh;
-                        background: white;
+                        background-image: url('/auction_module/static/src/assets/images/full-bg.png');
+                        background-size: cover;
+                        background-position: center;
                         box-shadow: -5px 0 25px rgba(0, 0, 0, 0.3);
                         overflow-y: auto;
                         animation: slideInRight 0.4s ease-out;
@@ -74,7 +76,8 @@ odoo.define('auction_module.auction_live_queue', function (require) {
                     .player-drawer-header {
                         position: sticky;
                         top: 0;
-                        background: white;
+                        background: rgba(0, 0, 0, 0.45);
+                        backdrop-filter: blur(6px);
                         padding: 1.5rem;
                         border-bottom: 1px solid #f0f0f0;
                         z-index: 10001;
@@ -85,7 +88,7 @@ odoo.define('auction_module.auction_live_queue', function (require) {
                         border: none;
                         font-size: 3rem;
                         cursor: pointer;
-                        color: #333;
+                        color: #fff;
                         padding: 0;
                         width: 50px;
                         height: 50px;
@@ -174,6 +177,10 @@ odoo.define('auction_module.auction_live_queue', function (require) {
     }
 
     window.setPlayerUnsold = function() {
+        if (!confirm('This will set the player to Unsold and later you can bring back to Auction. Click on Ok to continue. Otherwise click on Cancel')) {
+            return;
+        }
+
         var playerId = getCurrentPlayerId();
 
         if (!playerId) {

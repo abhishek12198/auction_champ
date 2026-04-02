@@ -151,7 +151,15 @@ class Auction(http.Controller):
         tournament_id = request.env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
         if player:
             auction_ids = request.env['auction.auction'].sudo().search([])
-            r = request.render("auction_module.player_template_new", {'player': player, 'tournament': tournament_id, 'auction_ids': auction_ids})
+            template_map = {
+                'vanilla':       'auction_module.player_template_new',
+                'butterscotch':  'auction_module.player_template_butterscotch',
+                'strawberry':    'auction_module.player_template_strawberry',
+                'cherry':        'auction_module.player_template_cherry',
+            }
+            chosen = tournament_id.player_display_template if tournament_id else 'vanilla'
+            template_ref = template_map.get(chosen, 'auction_module.player_template_new')
+            r = request.render(template_ref, {'player': player, 'tournament': tournament_id, 'auction_ids': auction_ids})
         else:
             r = request.render("auction_module.welcome_message_template", {'tournament': tournament_id})
         return r
