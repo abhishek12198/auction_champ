@@ -150,7 +150,7 @@
                           <t t-foreach="teams" t-as="team">
                           <div
                             class="each-club-list d-flex align-items-center justify-content-between px-lg-5 px-4 py-3 mt-2"
-                            style="column-gap: 15px">
+                            style="column-gap: 15px" t-attf-data-auction-id="#{team.id}">
                             <div class="team-name d-flex align-items-center">
                                 <img
                                   t-att-src="image_data_uri(team.team_id.logo)"
@@ -202,7 +202,7 @@
                               />
                               Players needed
                             </label>
-                            <p class="ms-2"><span t-esc="team.remaining_players_count"/></p>
+                            <p class="ms-2"><span t-attf-id="team-players-#{team.id}" t-esc="team.remaining_players_count"/></p>
                           </div>
                             <!--End playere needsd -->
                             <div
@@ -217,7 +217,7 @@
                               />
                               Points Left
                             </label>
-                            <p class="ms-2"><span t-esc="team.remaining_points"></span> <span>pts</span></p>
+                            <p class="ms-2"><span t-attf-id="team-points-#{team.id}" t-esc="team.remaining_points"></span> <span>pts</span></p>
                           </div>
                             <div
                             class="max-call d-flex align-items-center justify-content-center"
@@ -231,7 +231,7 @@
                               />
                               Next Max call
                             </label>
-                            <p class="ms-2"><span t-esc="team.max_call"></span> <span>pts</span></p>
+                            <p class="ms-2"><span t-attf-id="team-maxcall-#{team.id}" t-esc="team.max_call"></span> <span>pts</span></p>
                           </div>
                             <!--End pints remaining -->
                             <div class="actions" t-if="type == 'internal'">
@@ -330,11 +330,23 @@
                     });
                   });
 
-                  window.addEventListener('DOMContentLoaded', function () {
-                      setTimeout(function () {
-                          window.location.reload();
-                      }, 60000);
-                  });
+                  function refreshBalance() {
+                    fetch('/auction/show/team/balance/json')
+                      .then(function(r) { return r.json(); })
+                      .then(function(data) {
+                        data.teams.forEach(function(team) {
+                          var el;
+                          el = document.getElementById('team-players-' + team.id);
+                          if (el) el.textContent = team.remaining_players_count;
+                          el = document.getElementById('team-points-' + team.id);
+                          if (el) el.textContent = team.remaining_points;
+                          el = document.getElementById('team-maxcall-' + team.id);
+                          if (el) el.textContent = team.max_call;
+                        });
+                      })
+                      .catch(function() { /* silent fail on network error */ });
+                  }
+                  setInterval(refreshBalance, 5000);
                 </script>
                 <script
                   src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"

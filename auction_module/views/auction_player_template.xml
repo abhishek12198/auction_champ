@@ -184,40 +184,133 @@
       });
 
       function setPlayerUnsold() {
-        if (!confirm('This will set the player to Unsold and later you can bring back to Auction. Click on Ok to continue. Otherwise click on Cancel')) {
-          return;
-        }
-        var playerId = parseInt(document.body.getAttribute('data-player-id'));
-        if (!playerId) {
-          alert('Error: Player ID not found');
-          return;
-        }
-        fetch('/web/dataset/call_kw', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            method: 'call',
-            params: {
-              model: 'auction.team.player',
-              method: 'action_unsold',
-              args: [[playerId]],
-              kwargs: {}
+        var modal = document.getElementById('unsoldConfirmModal');
+        modal.style.display = 'flex';
+      }
+
+      (function() {
+        document.addEventListener('DOMContentLoaded', function() {
+          document.getElementById('unsoldModalCancel').addEventListener('click', function() {
+            document.getElementById('unsoldConfirmModal').style.display = 'none';
+          });
+          document.getElementById('unsoldModalConfirm').addEventListener('click', function() {
+            document.getElementById('unsoldConfirmModal').style.display = 'none';
+            var playerId = parseInt(document.body.getAttribute('data-player-id'));
+            if (!playerId) {
+              showUnsoldToast('Error: Player ID not found', true);
+              return;
             }
-          })
-        }).then(function(response) {
-          return response.json();
-        }).then(function(result) {
-          if (result.error) {
-            alert('Failed to mark player as unsold');
-          } else {
-            changeImage();
-          }
-        }).catch(function() {
-          alert('Failed to mark player as unsold');
+            fetch('/web/dataset/call_kw', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                jsonrpc: '2.0',
+                method: 'call',
+                params: {
+                  model: 'auction.team.player',
+                  method: 'action_unsold',
+                  args: [[playerId]],
+                  kwargs: {}
+                }
+              })
+            }).then(function(response) {
+              return response.json();
+            }).then(function(result) {
+              if (result.error) {
+                showUnsoldToast('Failed to mark player as unsold', true);
+              } else {
+                var secs = (result.result &amp;&amp; result.result.display_seconds > 0) ? result.result.display_seconds : 5;
+                showUnsoldStamp(secs, '#b71c1c', '#fff');
+            }).catch(function() {
+              showUnsoldToast('Failed to mark player as unsold', true);
+            });
+          });
         });
+      })();
+
+      function showUnsoldToast(message, isError) {
+        var toast = document.getElementById('unsoldToast');
+        toast.textContent = message;
+        toast.style.background = isError ? '#c0392b' : '#27ae60';
+        toast.style.display = 'block';
+        setTimeout(function() { toast.style.display = 'none'; }, 3500);
+      }
+
+      function showUnsoldStamp(displaySeconds, stampColor, stampText) {
+        if (!document.getElementById('_unsoldStampCSS')) {
+          var s = document.createElement('style');
+          s.id = '_unsoldStampCSS';
+          s.textContent = '@keyframes _unsoldDrop{0%{transform:rotate(-22deg) scale(2.4);opacity:0}100%{transform:rotate(-22deg) scale(1);opacity:.92}}@keyframes _unsoldFadeIn{from{opacity:0}to{opacity:1}}';
+          document.head.appendChild(s);
+        }
+        var img = document.getElementById('loadImage');
+        var r = img.getBoundingClientRect();
+        var ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;z-index:9500;top:'+r.top+'px;left:'+r.left+'px;width:'+r.width+'px;height:'+r.height+'px;background:rgba(0,0,0,0.48);display:flex;align-items:center;justify-content:center;animation:_unsoldFadeIn .35s ease;pointer-events:none;';
+        var stamp = document.createElement('div');
+        stamp.style.cssText = 'background:'+stampColor+';color:'+stampText+';font-size:clamp(1.8rem,5vw,3.2rem);font-weight:900;letter-spacing:6px;padding:8px 36px;border:5px solid rgba(255,255,255,0.85);border-radius:6px;box-shadow:0 0 0 3px '+stampColor+',0 8px 40px rgba(0,0,0,.5);opacity:0;animation:_unsoldDrop .5s cubic-bezier(.34,1.3,.64,1) .15s forwards;text-shadow:2px 3px 8px rgba(0,0,0,.4);';
+        stamp.textContent = 'UNSOLD';
+        var barWrap = document.createElement('div');
+        barWrap.style.cssText = 'position:absolute;bottom:12px;left:16px;right:16px;';
+        var barTrack = document.createElement('div');
+        barTrack.style.cssText = 'background:rgba(255,255,255,0.25);border-radius:4px;height:6px;overflow:hidden;';
+        var bar = document.createElement('div');
+        bar.style.cssText = 'height:100%;width:100%;background:'+stampColor+';border-radius:4px;transition:width '+displaySeconds+'s linear;';
+        barTrack.appendChild(bar);
+        barWrap.appendChild(barTrack);
+        ov.appendChild(stamp);
+        ov.appendChild(barWrap);
+        document.body.appendChild(ov);
+        requestAnimationFrame(function() { requestAnimationFrame(function() { bar.style.width = '0%'; }); });
+        setTimeout(function() { if (ov.parentNode) ov.parentNode.removeChild(ov); changeImage(); }, displaySeconds * 1000);
+      }
+
+      function openBidSummary() {
+        document.getElementById('bidSummaryFrame').src = '/auction/show/team/balance';
+        document.getElementById('bidSummaryDrawer').style.right = '0';
+        document.getElementById('bidSummaryTabArrow').innerHTML = '&#x2192;';
+        document.getElementById('bidSummaryOverlay').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+      }
+      function closeBidSummary() {
+        document.getElementById('bidSummaryDrawer').style.right = '-820px';
+        document.getElementById('bidSummaryTabArrow').innerHTML = '&#x2190;';
+        document.getElementById('bidSummaryOverlay').style.display = 'none';
+        document.body.style.overflow = '';
+      }
+      function toggleBidSummary() {
+        var r = document.getElementById('bidSummaryDrawer').style.right;
+        if (r === '0px' || r === '0') { closeBidSummary(); } else { openBidSummary(); }
       }
     </script>
+      <!-- Bid Summary Drawer -->
+      <div id="bidSummaryDrawer" style="position:fixed; top:0; right:-820px; width:820px; max-width:95vw; height:100vh; z-index:9800; display:flex; flex-direction:column; background:#fff; border-left:3px solid #004080; box-shadow:-6px 0 32px rgba(0,0,50,0.18); transition:right .35s cubic-bezier(.4,0,.2,1);">
+        <!-- Fold/unfold tab -->
+        <div onclick="toggleBidSummary()" style="position:absolute; left:-44px; top:50%; transform:translateY(-50%); width:44px; height:130px; background:#004080; border-radius:8px 0 0 8px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; box-shadow:-4px 2px 14px rgba(0,0,50,0.3); z-index:1;">
+          <span id="bidSummaryTabArrow" style="color:#fff; font-size:1.2rem; line-height:1;">&#x2190;</span>
+          <span style="color:#fff; writing-mode:vertical-rl; transform:rotate(180deg); font-size:0.58rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; opacity:0.9;">Summary</span>
+        </div>
+        <div style="padding:16px 20px; background:#004080; color:#fff; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
+          <span style="font-size:1.05rem; font-weight:700; letter-spacing:.3px;">&#x1F4CA; Auction Bid Summary</span>
+          <button onclick="closeBidSummary()" style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:#fff; width:32px; height:32px; border-radius:6px; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1;">&#x2715;</button>
+        </div>
+        <iframe id="bidSummaryFrame" style="flex:1; border:none; width:100%;" title="Bid Summary"></iframe>
+      </div>
+      <div id="bidSummaryOverlay" onclick="closeBidSummary()" style="display:none; position:fixed; inset:0; z-index:9700; background:rgba(0,0,0,0.4);"></div>
+      <!-- Unsold Confirmation Modal -->
+      <div id="unsoldConfirmModal" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.65); align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:14px; padding:36px 28px 28px; max-width:400px; width:92%; box-shadow:0 12px 40px rgba(0,0,0,0.35); text-align:center; font-family:inherit;">
+          <div style="width:56px; height:56px; border-radius:50%; background:#fff4f4; border:2px solid #e53935; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; font-size:1.6rem;">⚠️</div>
+          <h5 style="margin:0 0 10px; font-size:1.15rem; font-weight:700; color:#1a1a1a;">Set Player as Unsold?</h5>
+          <p style="color:#666; margin:0 0 26px; font-size:0.9rem; line-height:1.5;">This will set the player to Unsold. You can bring them back to Auction later.</p>
+          <div style="display:flex; gap:12px; justify-content:center;">
+            <button id="unsoldModalCancel" style="padding:10px 28px; border-radius:8px; border:1px solid #ddd; background:#f5f5f5; color:#444; font-size:0.95rem; cursor:pointer; font-weight:500;">Cancel</button>
+            <button id="unsoldModalConfirm" style="padding:10px 28px; border-radius:8px; border:none; background:#e53935; color:#fff; font-size:0.95rem; font-weight:700; cursor:pointer; letter-spacing:0.3px;">Confirm</button>
+          </div>
+        </div>
+      </div>
+      <!-- Toast notification -->
+      <div id="unsoldToast" style="display:none; position:fixed; bottom:28px; left:50%; transform:translateX(-50%); z-index:10001; color:#fff; padding:12px 28px; border-radius:8px; font-size:0.95rem; font-weight:600; box-shadow:0 4px 16px rgba(0,0,0,0.3);"></div>
   </body>
 </html>
 </template>

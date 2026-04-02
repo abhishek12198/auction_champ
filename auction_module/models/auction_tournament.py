@@ -47,3 +47,8 @@ class AuctionTournament(models.Model):
         ('cherry', 'Cherry'),
     ], string='Theme'
               '', default='vanilla', required=True)
+    sold_display_seconds = fields.Integer(
+        string='Sold Screen Duration (seconds)',
+        default=5,
+        help='How many seconds to show the SOLD celebration screen before advancing to the next player.'
+    )

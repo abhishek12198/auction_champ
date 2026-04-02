@@ -120,10 +120,14 @@ class AuctionPlayer(models.Model):
 
     _name = 'auction.auction.player'
 
-    auction_id = fields.Many2one('auction.auction', 'Auction', ondelete='cascade',)
+    auction_id = fields.Many2one('auction.auction', 'Auction', ondelete='cascade')
     player_id = fields.Many2one('auction.team.player', 'Player')
-    contact = fields.Char(related='player_id.contact', string='Contact')
-    points = fields.Integer(string='Points')
+    contact    = fields.Char(related='player_id.contact',      string='Contact')
+    role       = fields.Char(related='player_id.role',         string='Role')
+    tier_id    = fields.Many2one(related='player_id.tier_id',  string='Tier', comodel_name='auction.player.tier')
+    player_type = fields.Selection(related='player_id.player_type', string='Type')
+    icon_player = fields.Boolean(related='player_id.icon_player',   string='Key Player')
+    points = fields.Integer(string='Sold For (pts)')
 
     def action_recall_to_auction(self):
         context = self.env.context.copy()

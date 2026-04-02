@@ -53,6 +53,144 @@ class AuctionTeamPlayer(models.Model):
     p_type =   fields.Char("Type")
     p_category = fields.Char("Category")
 
+    @api.model
+    def get_sell_teams_data(self, player_id):
+        """Return available teams + auction data for the web sell modal."""
+        player = self.browse(int(player_id))
+        auctions = self.env['auction.auction'].search([])
+        teams = []
+        for auction in auctions:
+            if auction.remaining_players_count <= 0 or auction.remaining_points <= 0:
+                continue
+
+            # Compute effective base point for this player's tier
+            effective_base = auction.base_point
+            if player.tier_id and auction.tier_limit_ids:
+                tier_limit = auction.tier_limit_ids.filtered(
+                    lambda l: l.tier_id.id == player.tier_id.id
+                )
+                if tier_limit and tier_limit[0].base_point > 0:
+                    effective_base = tier_limit[0].base_point
+
+            # Tier limit remaining slots
+            # Exclude the current player from the count to avoid stale-record false positives
+            # (e.g. if a player was previously sold to this team without proper record cleanup).
+            tier_slots_ok = True
+            if player.tier_id and auction.tier_limit_ids:
+                tier_limit = auction.tier_limit_ids.filtered(
+                    lambda l: l.tier_id.id == player.tier_id.id
+                )
+                if tier_limit:
+                    already_sold = self.env['auction.auction.player'].search_count([
+                        ('auction_id', '=', auction.id),
+                        ('player_id.tier_id', '=', player.tier_id.id),
+                        ('player_id', '!=', player.id),
+                    ])
+                    if already_sold >= tier_limit[0].max_players:
+                        tier_slots_ok = False
+
+            # Check the team can actually afford the tier's minimum bid.
+            # max_call is derived from the global base point; a tier's effective_base may be higher.
+            budget_ok = (effective_base <= auction.max_call)
+
+            slabs = [
+                {'from_amount': s.from_amount, 'to_amount': s.to_amount, 'increment': s.increment}
+                for s in auction.auction_bid_slab_ids.sorted('from_amount')
+            ]
+
+            teams.append({
+                'team_id': auction.team_id.id,
+                'team_name': auction.team_id.name,
+                'auction_id': auction.id,
+                'remaining_points': auction.remaining_points,
+                'remaining_players': auction.remaining_players_count,
+                'base_point': auction.base_point,
+                'effective_base_point': effective_base,
+                'max_call': auction.max_call,
+                'tier_slots_ok': tier_slots_ok,
+                'budget_ok': budget_ok,
+                'slabs': slabs,
+            })
+        return teams
+
+    @api.model
+    def action_sell_from_web(self, player_id, team_id, final_point):
+        """Execute sell from the web auction template. Returns dict with success/error."""
+        player = self.browse(int(player_id))
+        if not player.exists():
+            return {'success': False, 'error': 'Player not found'}
+
+        # Icon player guard
+        icon_players = self.env['auction.team'].search([]).mapped('key_player_ids')
+        if player.id in icon_players.ids:
+            return {'success': False, 'error': '%s is an icon player and cannot be sold via auction' % player.name}
+
+        auction = self.env['auction.auction'].search([('team_id', '=', int(team_id))], limit=1)
+        if not auction:
+            return {'success': False, 'error': 'Selected team is not part of the current auction'}
+
+        # Tier limit check
+        if player.tier_id and auction.tier_limit_ids:
+            tier_limit = auction.tier_limit_ids.filtered(lambda l: l.tier_id.id == player.tier_id.id)
+            if tier_limit:
+                already_sold = self.env['auction.auction.player'].search_count([
+                    ('auction_id', '=', auction.id),
+                    ('player_id.tier_id', '=', player.tier_id.id),
+                ])
+                if already_sold >= tier_limit[0].max_players:
+                    return {
+                        'success': False,
+                        'error': '%s has already reached the maximum of %d player(s) from the "%s" tier' % (
+                            auction.team_id.name, tier_limit[0].max_players, player.tier_id.name
+                        )
+                    }
+
+        # Effective base point (tier-specific)
+        effective_base = auction.base_point
+        if player.tier_id and auction.tier_limit_ids:
+            tier_limit = auction.tier_limit_ids.filtered(lambda l: l.tier_id.id == player.tier_id.id)
+            if tier_limit and tier_limit[0].base_point > 0:
+                effective_base = tier_limit[0].base_point
+
+        if final_point < effective_base:
+            return {'success': False, 'error': 'Points cannot be below the base point of %d' % effective_base}
+
+        # Budget safety check
+        remaining_players = auction.remaining_players_count
+        budget_max = auction.remaining_points - ((remaining_players - 1) * auction.base_point)
+        if final_point > budget_max:
+            return {'success': False, 'error': 'Budget exceeded! Maximum allowed for this player: %d pts' % budget_max}
+
+        # Max points cap
+        if auction.max_limited == 'yes' and final_point > auction.max_points:
+            return {'success': False, 'error': 'Points exceed the auction cap of %d' % auction.max_points}
+
+        # Execute the sell
+        auction_line_data = {'player_id': player.id, 'points': final_point}
+        message = '%s sold to %s for %d points!' % (player.name, auction.team_id.name, final_point)
+
+        existing = self.env['auction.auction.player'].search([('player_id', '=', player.id)])
+        if not existing:
+            auction.player_ids = [(0, 0, auction_line_data)]
+            player.assigned_team_id = auction.team_id.id
+            player.state = 'sold'
+            player.create_auction_history(auction.team_id.id, message, tournament_id=player.tournament_id.id, player=player)
+        else:
+            auction_line_data['auction_id'] = auction.id
+            existing.write(auction_line_data)
+
+        self.env.user.notify_success(message=message, title='CONGRATULATIONS!')
+        return {
+            'success': True,
+            'message': message,
+            'player_id': player.id,
+            'player_name': player.name,
+            'team_id': auction.team_id.id,
+            'team_name': auction.team_id.name,
+            'final_point': final_point,
+            'display_seconds': player.tournament_id.sold_display_seconds if player.tournament_id else 5,
+        }
+
     def print_player_cards(self):
         tournament = self.env['auction.tournament'].search([('active', '=', True)], limit=1)
         template = tournament.player_display_template if tournament else 'vanilla'
@@ -213,6 +351,11 @@ class AuctionTeamPlayer(models.Model):
                 player.create_unsold_auction_history( message, tournament_id=player.tournament_id.id,
                                               player=player)
                 self.env.user.notify_success(message)
+        display_seconds = self[0].tournament_id.sold_display_seconds if self and self[0].tournament_id else 5
+        return {
+            'success': True,
+            'display_seconds': display_seconds if display_seconds and display_seconds > 0 else 5,
+        }
 
     def action_recall_auction_sold(self):
         context = self.env.context.copy()

@@ -33,51 +33,84 @@
             <field name="name">auction.auction.form</field>
             <field name="model">auction.auction</field>
             <field name="arch" type="xml">
-                <form string="Auction" create="0" edit="0" delete="0">
+                <form string="Team Auction Summary" create="0" edit="0" delete="0">
                     <header>
-                        <button name="%(auction_module.action_report_auction_players)d" type="action" string="Print Players List" class="btn-primary" attrs="{'invisible': [('remaining_players_count', '!=', 0)]}"/>
+                        <button name="%(auction_module.action_report_auction_players)d"
+                                type="action" string="🖨 Print Squad List" class="btn-primary"
+                                attrs="{'invisible': [('remaining_players_count', '!=', 0)]}"/>
                     </header>
-                    <field name="team_logo" widget='image' class="oe_avatar"/>
-                    <group col="4">
-                            <field name="team_id"/>
-                            <field name="manager"/>
-                            <field name="total_point" string="Max Points allocated" readonly="1"/>
-                            <field name="remaining_points"/>
-                            <field name="max_players" string="Max players allocated"/>
-                            <field name="remaining_players_count" readonly="1"/>
-                            <field name="max_call"/>
-                    </group>
-                    <notebook>
-                        <page string="Players">
-                            <field name="player_ids" nolabel="1">
-                                <tree editable="bottom">
-                                    <field name="player_id"/>
-                                    <field name="contact"/>
-                                    <field name="points"/>
-                                    <button name="%(auction_module.action_edit_player_point)d" type="action" string="Modify Points" class="oe_link"/>
-                                    <button name="action_recall_to_auction" type="object" string="Recall to Auction" confirm="This action will bring the selected player back to auction. Click on Ok to continue. Else click on Cancel"/>
+                    <sheet>
+                        <!-- Team identity ─────────────────────────────────── -->
+                        <field name="team_logo" widget="image" class="oe_avatar" readonly="1"/>
+                        <div class="oe_title">
+                            <label class="o_form_label" for="team_id"/>
+                            <h1><field name="team_id" readonly="1"/></h1>
+                            <h2 style="color:#888;font-weight:400;">
+                                <field name="manager" readonly="1" placeholder="No manager set"/>
+                            </h2>
+                        </div>
 
-                                </tree>
-                            </field>
-                        </page>
-                        <page string="Auction Slab">
-                            <field name="auction_bid_slab_ids" nolabel="1">
-                                    <tree editable="bottom">
-                                        <field name="from_amount" string="From"/>
-                                        <field name="to_amount" string="To"/>
-                                        <field name="increment"/>
+                        <!-- Key numbers ────────────────────────────────────── -->
+                        <group>
+                            <group string="Budget">
+                                <field name="total_point"  string="Total Points Allocated" readonly="1"/>
+                                <field name="base_point"   string="Global Base Bid"         readonly="1"/>
+                                <field name="max_limited"  string="Max Bid Cap"              readonly="1"/>
+                                <field name="max_points"   string="Cap Amount"               readonly="1"
+                                       attrs="{'invisible': [('max_limited', '!=', 'yes')]}"/>
+                            </group>
+                            <group string="Squad">
+                                <field name="max_players"             string="Max Squad Size"   readonly="1"/>
+                                <field name="remaining_players_count" string="Slots Remaining"  readonly="1"/>
+                                <field name="remaining_points"        string="Remaining Budget" readonly="1"/>
+                                <field name="max_call"                string="Max Call"         readonly="1"/>
+                            </group>
+                        </group>
+
+                        <!-- Tabs ────────────────────────────────────────────── -->
+                        <notebook>
+                            <page string="Signed Players">
+                                <field name="player_ids" nolabel="1">
+                                    <tree create="0" decoration-success="icon_player == True"
+                                          decoration-muted="player_type == 'foreign'">
+                                        <field name="player_id"   string="Player"     optional="show"/>
+                                        <field name="role"        string="Role"       optional="show"/>
+                                        <field name="tier_id"     string="Tier"       optional="show"/>
+                                        <field name="player_type" string="Type"       optional="show"
+                                               widget="badge"/>
+                                        <field name="icon_player" string="Key Player" optional="show"
+                                               widget="boolean_toggle"/>
+                                        <field name="points"      string="Sold For"   optional="show"/>
+                                        <field name="contact"     string="Contact"    optional="hide"/>
+                                        <button name="%(auction_module.action_edit_player_point)d"
+                                                type="action" string="Edit Points" class="oe_link"
+                                                icon="fa-edit"/>
+                                        <button name="action_recall_to_auction" type="object"
+                                                string="Recall" class="oe_link" icon="fa-undo"
+                                                confirm="Bring this player back to auction? This will remove them from the team."/>
                                     </tree>
                                 </field>
-                        </page>
-                        <page string="Other Details">
-                            <group>
-                                <field name="base_point" readonly="1"/>
-                                <field name="max_limited" readonly="1"/>
-                                <field name="max_points" readonly="1"/>
-                            </group>
-
-                        </page>
-                    </notebook>
+                            </page>
+                            <page string="Tier Limits">
+                                <field name="tier_limit_ids" nolabel="1">
+                                    <tree editable="bottom">
+                                        <field name="tier_id"     string="Tier"          required="1"/>
+                                        <field name="max_players" string="Max per Team"  required="1"/>
+                                        <field name="base_point"  string="Min Bid (0 = global base)"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="Bid Slabs">
+                                <field name="auction_bid_slab_ids" nolabel="1">
+                                    <tree editable="bottom">
+                                        <field name="from_amount" string="From (pts)"/>
+                                        <field name="to_amount"   string="To (pts)"/>
+                                        <field name="increment"   string="Increment"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
                 </form>
             </field>
         </record>

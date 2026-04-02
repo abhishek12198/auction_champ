@@ -20,6 +20,17 @@ class StartAuction(models.TransientModel):
     auction_bid_slab_ids = fields.One2many('auction.bid.slab', 'wizard_id', 'Slab')
     tier_limit_ids = fields.One2many('auction.start.auction.tier.limit', 'wizard_id', 'Tier Limits')
 
+    @api.model
+    def default_get(self, fields_list):
+        res = super(StartAuction, self).default_get(fields_list)
+        tiers = self.env['auction.player.tier'].search([])
+        if tiers and 'tier_limit_ids' in fields_list:
+            res['tier_limit_ids'] = [
+                (0, 0, {'tier_id': tier.id, 'max_players': 1, 'base_point': 0})
+                for tier in tiers
+            ]
+        return res
+
     @api.onchange('max_limited')
     def onchange_max_limited(self):
         if self.max_limited == 'no':

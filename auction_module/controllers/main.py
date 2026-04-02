@@ -141,8 +141,22 @@ class Auction(http.Controller):
         if request.env.user.login == 'public':
             type = 'public'
         result = request.render("auction_module.auction_details_show", {'teams': auctions, 'tournament': tournament, 'type': type})
-
         return result
+
+    @http.route(['''/auction/show/team/balance/json'''], type='http', auth="public", website=True)
+    def auction_team_balance_json(self, **kwargs):
+        auctions = request.env['auction.auction'].sudo().search([])
+        teams_data = []
+        for auction in auctions:
+            teams_data.append({
+                'id': auction.id,
+                'remaining_players_count': auction.remaining_players_count,
+                'remaining_points': auction.remaining_points,
+                'max_call': auction.max_call,
+            })
+        data = json.dumps({'teams': teams_data})
+        headers = [('Content-Type', 'application/json'), ('Cache-Control', 'no-store')]
+        return request.make_response(data, headers)
 
     @http.route(['''/auction/display_auction/'''], type='http', auth="public", website=True, sitemap=True)
     def display_auction(self,**kwargs):

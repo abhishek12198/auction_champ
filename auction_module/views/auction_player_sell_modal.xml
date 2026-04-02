@@ -1,0 +1,746 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="player_sell_modal">
+<style>
+  /* ── CSS variables: Vanilla ──────────────────────────────── */
+  #sellModal {
+    --sm-header-bg:       linear-gradient(135deg,#0f1f44 0%,#1a2c5e 100%);
+    --sm-header-stripe:   #fdce33;
+    --sm-accent:          #fdce33;
+    --sm-accent-dim:      rgba(253,206,51,0.18);
+    --sm-primary:         #2252b5;
+    --sm-primary-dark:    #0f1f44;
+    --sm-primary-light:   #e8edf9;
+    --sm-btn-bg:          linear-gradient(135deg,#0f1f44,#2252b5);
+    --sm-badge-active:    #2252b5;
+    --sm-transfer-bg:     #f4f6f9;
+    --sm-detail-bg:       #f4f6f9;
+    --sm-maxcall-color:   #16a34a;
+    --sm-suggest-color:   #1d4ed8;
+    --sm-sold-ribbon:     #2252b5;
+    --sm-sold-bg:         linear-gradient(160deg,#0f1f44 0%,#1a2c5e 60%,#243d7a 100%);
+    --sm-font:            'Poppins','Rajdhani',sans-serif;
+    --sm-title-font:      'Poppins','Teko',sans-serif;
+  }
+  /* ── Butterscotch ──────────────────────────────────────────── */
+  #sellModal[data-theme="butterscotch"] {
+    --sm-header-bg:       linear-gradient(135deg,#0d0800 0%,#1a1005 100%);
+    --sm-header-stripe:   #f0ad4e;
+    --sm-accent:          #f0ad4e;
+    --sm-accent-dim:      rgba(240,173,78,0.16);
+    --sm-primary:         #d4820a;
+    --sm-primary-dark:    #7a4200;
+    --sm-primary-light:   #fff8ee;
+    --sm-btn-bg:          linear-gradient(135deg,#7a4200,#d4820a);
+    --sm-badge-active:    #d4820a;
+    --sm-transfer-bg:     #fffbf5;
+    --sm-detail-bg:       #fff8ee;
+    --sm-maxcall-color:   #d4820a;
+    --sm-suggest-color:   #92400e;
+    --sm-sold-ribbon:     #d4820a;
+    --sm-sold-bg:         linear-gradient(160deg,#0d0800 0%,#1a1005 60%,#2a1a00 100%);
+    --sm-font:            'Rajdhani',sans-serif;
+    --sm-title-font:      'Teko','Rajdhani',sans-serif;
+  }
+  /* ── Strawberry ──────────────────────────────────────────── */
+  #sellModal[data-theme="strawberry"] {
+    --sm-header-bg:       linear-gradient(135deg,#880E4F 0%,#C2185B 100%);
+    --sm-header-stripe:   #FFD6E8;
+    --sm-accent:          #FFD6E8;
+    --sm-accent-dim:      rgba(233,30,99,0.13);
+    --sm-primary:         #C2185B;
+    --sm-primary-dark:    #880E4F;
+    --sm-primary-light:   #FFF0F5;
+    --sm-btn-bg:          linear-gradient(135deg,#880E4F,#E91E63);
+    --sm-badge-active:    #C2185B;
+    --sm-transfer-bg:     #FFF0F5;
+    --sm-detail-bg:       #FFF5F9;
+    --sm-maxcall-color:   #16a34a;
+    --sm-suggest-color:   #9d174d;
+    --sm-sold-ribbon:     #C2185B;
+    --sm-sold-bg:         linear-gradient(160deg,#880E4F 0%,#C2185B 60%,#E91E63 100%);
+    --sm-font:            'Nunito',sans-serif;
+    --sm-title-font:      'Teko','Nunito',sans-serif;
+  }
+  /* ── Cherry ──────────────────────────────────────────────── */
+  #sellModal[data-theme="cherry"] {
+    --sm-header-bg:       linear-gradient(135deg,#060606 0%,#1a0608 100%);
+    --sm-header-stripe:   #DC143C;
+    --sm-accent:          #DC143C;
+    --sm-accent-dim:      rgba(220,20,60,0.16);
+    --sm-primary:         #DC143C;
+    --sm-primary-dark:    #8B0000;
+    --sm-primary-light:   #fff5f6;
+    --sm-btn-bg:          linear-gradient(135deg,#8B0000,#DC143C);
+    --sm-badge-active:    #DC143C;
+    --sm-transfer-bg:     #f9f9f9;
+    --sm-detail-bg:       #f9f9f9;
+    --sm-maxcall-color:   #16a34a;
+    --sm-suggest-color:   #9b1c1c;
+    --sm-sold-ribbon:     #DC143C;
+    --sm-sold-bg:         linear-gradient(160deg,#060606 0%,#1a0608 60%,#2a0a10 100%);
+    --sm-font:            'Rajdhani',sans-serif;
+    --sm-title-font:      'Teko','Rajdhani',sans-serif;
+  }
+
+  /* ── Overlay ─────────────────────────────────────────────── */
+  #sellModal {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.82);
+    z-index: 9999;
+    align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  #sellModal.open { display: flex; }
+
+  /* ── Card ────────────────────────────────────────────────── */
+  .sm-card {
+    background: #fff;
+    border-radius: 18px;
+    width: 100%; max-width: 680px;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+    overflow: hidden;
+    font-family: var(--sm-font);
+    animation: smSlideIn .25s cubic-bezier(.34,1.2,.64,1);
+  }
+  @keyframes smSlideIn {
+    from { transform: translateY(32px) scale(.97); opacity: 0; }
+    to   { transform: translateY(0) scale(1);     opacity: 1; }
+  }
+
+  /* ── Header ──────────────────────────────────────────────── */
+  .sm-header {
+    background: var(--sm-header-bg);
+    padding: 0 24px 16px; position: relative;
+  }
+  .sm-header::before {
+    content: ''; display: block; height: 4px;
+    background: var(--sm-header-stripe);
+    margin: 0 -24px 14px;
+    box-shadow: 0 0 16px var(--sm-accent-dim);
+  }
+  .sm-header-row { display: flex; justify-content: space-between; align-items: center; }
+  .sm-header-label {
+    color: var(--sm-accent); font-size: .62rem; font-weight: 700;
+    letter-spacing: 4px; text-transform: uppercase; margin-bottom: 2px;
+  }
+  .sm-header-title {
+    color: #fff; font-family: var(--sm-title-font);
+    font-size: 1.6rem; font-weight: 700; letter-spacing: 2px; line-height: 1;
+  }
+  .sm-close-btn {
+    background: rgba(255,255,255,.13); border: none;
+    color: #fff; width: 34px; height: 34px; border-radius: 50%;
+    font-size: 1.1rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .2s;
+  }
+  .sm-close-btn:hover { background: rgba(255,255,255,.28); }
+
+  /* ── Transfer strip ──────────────────────────────────────── */
+  .sm-transfer-row {
+    padding: 14px 24px; background: var(--sm-transfer-bg);
+    border-bottom: 1px solid rgba(0,0,0,.07);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .sm-avatar {
+    width: 58px; height: 58px; border-radius: 50%;
+    object-fit: cover; object-position: top center;
+    border: 2px solid rgba(0,0,0,.12); flex-shrink: 0;
+  }
+  .sm-player-info { flex: 1; min-width: 0; }
+  .sm-player-info strong {
+    display: block; font-size: .95rem; color: #0d1b2a; font-weight: 800;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sm-player-info span {
+    font-size: .72rem; color: #64748b;
+    letter-spacing: 1px; text-transform: uppercase; font-weight: 600;
+  }
+  .sm-arrow {
+    color: var(--sm-primary); font-size: 1.8rem;
+    flex-shrink: 0; font-weight: 700;
+  }
+  .sm-team-logo-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 4px; min-width: 66px; flex-shrink: 0;
+  }
+  .sm-team-logo {
+    width: 58px; height: 58px; border-radius: 10px;
+    object-fit: contain; border: 2px solid rgba(0,0,0,.12); display: none;
+  }
+  .sm-team-logo-placeholder {
+    width: 58px; height: 58px; border-radius: 10px;
+    border: 2px dashed rgba(0,0,0,.18); background: #f8fafc;
+    display: flex; align-items: center; justify-content: center;
+    color: #94a3b8; font-size: 1.5rem;
+  }
+  .sm-team-name-label {
+    font-size: .65rem; font-weight: 700; color: #0d1b2a; text-align: center;
+    max-width: 70px; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; display: none;
+  }
+
+  /* ── Section ─────────────────────────────────────────────── */
+  .sm-section { padding: 14px 24px 6px; }
+  .sm-section-label {
+    font-size: .65rem; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--sm-primary);
+    margin-bottom: 9px; display: block;
+  }
+  .sm-team-badges { display: flex; flex-wrap: wrap; gap: 8px; min-height: 36px; }
+  .sm-badge {
+    padding: 8px 20px; border-radius: 24px;
+    border: 2px solid rgba(0,0,0,.15); background: #fff;
+    color: #0d1b2a; font-weight: 700; font-size: .84rem;
+    cursor: pointer; transition: all .18s; font-family: var(--sm-font);
+  }
+  .sm-badge:hover { border-color: var(--sm-primary); background: var(--sm-primary-light); color: var(--sm-primary); }
+  .sm-badge.active { background: var(--sm-badge-active); color: #fff; border-color: var(--sm-badge-active); }
+  .sm-badge.tier-full { opacity: .4; cursor: not-allowed; }
+  .sm-no-teams { color: #94a3b8; font-size: .85rem; padding: 4px 0; }
+
+  /* ── Points ──────────────────────────────────────────────── */
+  .sm-points-wrap { display: flex; align-items: center; gap: 12px; }
+  .sm-pts-btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 2px solid rgba(0,0,0,.12); background: #f8fafc;
+    font-size: 1.4rem; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--sm-primary); transition: all .18s;
+  }
+  .sm-pts-btn:hover { border-color: var(--sm-primary); background: var(--sm-primary-light); }
+  #sellPoints {
+    flex: 1; text-align: center; font-size: 1.6rem; font-weight: 800;
+    border: 2px solid rgba(0,0,0,.12); border-radius: 10px;
+    padding: 9px 12px; outline: none; color: #0d1b2a;
+    font-family: var(--sm-font); transition: border-color .18s;
+  }
+  #sellPoints:focus { border-color: var(--sm-primary); }
+
+  /* ── Details strip ───────────────────────────────────────── */
+  #teamDetailsStrip {
+    display: none; margin: 10px 24px 0;
+    background: var(--sm-detail-bg);
+    border: 1px solid rgba(0,0,0,.08);
+    border-left: 4px solid var(--sm-primary);
+    border-radius: 10px; padding: 12px 16px;
+    flex-direction: row;
+  }
+  .sm-detail-item { flex: 1; text-align: center; padding: 0 8px; }
+  .sm-detail-item + .sm-detail-item { border-left: 1px solid rgba(0,0,0,.1); }
+  .sm-detail-key { font-size: .58rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #64748b; margin-bottom: 3px; }
+  .sm-detail-val { font-size: 1.2rem; font-weight: 800; color: #0d1b2a; }
+  .sm-detail-val.green { color: var(--sm-maxcall-color); }
+
+  #sellSuggestion {
+    display: none; margin: 8px 24px 0; padding: 8px 14px;
+    background: var(--sm-accent-dim); border-radius: 8px;
+    font-size: .8rem; font-weight: 600; color: var(--sm-suggest-color);
+  }
+  #sellError {
+    display: none; margin: 8px 24px 0; padding: 10px 14px;
+    background: #fef2f2; border-left: 4px solid #ef4444;
+    border-radius: 8px; color: #b91c1c; font-size: .84rem; font-weight: 600;
+  }
+
+  /* ── Footer ──────────────────────────────────────────────── */
+  .sm-footer {
+    padding: 14px 24px 20px; display: flex; gap: 12px;
+    justify-content: flex-end; border-top: 1px solid rgba(0,0,0,.08);
+    margin-top: 14px;
+  }
+  .sm-btn-cancel {
+    padding: 12px 28px; border: 2px solid rgba(0,0,0,.14);
+    border-radius: 8px; background: transparent; color: #64748b;
+    font-weight: 700; cursor: pointer; font-size: .9rem;
+    font-family: var(--sm-font); transition: border-color .18s;
+  }
+  .sm-btn-cancel:hover { border-color: #94a3b8; }
+  .sm-btn-sell {
+    padding: 12px 36px; background: var(--sm-btn-bg);
+    border: none; border-radius: 8px; color: #fff; font-weight: 700;
+    cursor: pointer; font-size: .9rem; font-family: var(--sm-font);
+    box-shadow: 0 4px 14px var(--sm-accent-dim);
+    transition: transform .18s, box-shadow .18s, opacity .18s;
+  }
+  .sm-btn-sell:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px var(--sm-accent-dim); }
+  .sm-btn-sell:disabled { opacity: .38; cursor: not-allowed; transform: none; }
+
+  /* ════════════════════════════════════════════════════════════
+     SOLD CELEBRATION SCREEN
+  ════════════════════════════════════════════════════════════ */
+  #smSoldScreen {
+    display: none;
+    flex-direction: column; align-items: center;
+    background: var(--sm-sold-bg);
+    min-height: 460px;
+  }
+  #smSoldScreen.visible {
+    display: flex;
+    animation: smFadeIn .35s ease;
+  }
+  @keyframes smFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* Photo + stamp container */
+  .sm-sold-photo-wrap {
+    position: relative; width: 100%;
+    max-height: 360px; overflow: hidden;
+    flex-shrink: 0;
+  }
+  .sm-sold-photo {
+    width: 100%; max-height: 360px;
+    object-fit: cover; object-position: top center;
+    display: block;
+    filter: brightness(0.88) saturate(1.1);
+  }
+
+  /* Dark vignette */
+  .sm-sold-photo-wrap::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.72) 100%);
+    pointer-events: none;
+  }
+
+  /* SOLD ribbon — diagonal across the photo */
+  .sm-sold-ribbon {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none; z-index: 3;
+  }
+  .sm-sold-stamp {
+    background: var(--sm-sold-ribbon);
+    color: #fff;
+    font-family: var(--sm-title-font);
+    font-size: 4.5rem; font-weight: 900;
+    letter-spacing: 10px;
+    padding: 8px 48px;
+    transform: rotate(-22deg);
+    border: 6px solid rgba(255,255,255,0.85);
+    border-radius: 6px;
+    box-shadow:
+      0 0 0 3px var(--sm-sold-ribbon),
+      0 8px 40px rgba(0,0,0,0.5);
+    opacity: 0;
+    animation: stampDrop .5s cubic-bezier(.34,1.3,.64,1) .15s forwards;
+    text-shadow: 2px 3px 8px rgba(0,0,0,0.4);
+  }
+  @keyframes stampDrop {
+    0%   { transform: rotate(-22deg) scale(2.4); opacity: 0; }
+    100% { transform: rotate(-22deg) scale(1);   opacity: 0.92; }
+  }
+
+  /* Sold info panel */
+  .sm-sold-info {
+    width: 100%; padding: 22px 28px 10px;
+    display: flex; align-items: center; gap: 18px;
+    z-index: 5; margin-top: -8px;
+  }
+  .sm-sold-team-logo {
+    width: 72px; height: 72px; border-radius: 12px;
+    object-fit: contain;
+    border: 3px solid rgba(255,255,255,0.35);
+    background: rgba(255,255,255,0.1);
+    padding: 4px; flex-shrink: 0;
+  }
+  .sm-sold-text { flex: 1; }
+  .sm-sold-label {
+    font-size: .65rem; font-weight: 700; letter-spacing: 4px;
+    text-transform: uppercase; color: var(--sm-accent); margin-bottom: 3px;
+  }
+  .sm-sold-team-name {
+    font-family: var(--sm-title-font);
+    font-size: 1.8rem; font-weight: 700;
+    color: #ffffff; line-height: 1.05; letter-spacing: 1px;
+  }
+  .sm-sold-points {
+    font-size: 1rem; font-weight: 700; color: rgba(255,255,255,.75);
+    letter-spacing: 1px;
+  }
+  .sm-sold-points span {
+    font-family: var(--sm-title-font);
+    font-size: 1.4rem; font-weight: 700;
+    color: var(--sm-accent);
+  }
+
+  /* Countdown bar */
+  .sm-countdown-wrap {
+    width: calc(100% - 56px); margin: 8px 28px 24px;
+  }
+  .sm-countdown-label {
+    font-size: .78rem; font-weight: 600; color: rgba(255,255,255,.65);
+    margin-bottom: 8px; text-align: center; letter-spacing: 1px;
+  }
+  .sm-countdown-label strong { color: #fff; font-size: 1rem; }
+  .sm-progress-track {
+    width: 100%; height: 6px; border-radius: 6px;
+    background: rgba(255,255,255,.18); overflow: hidden;
+  }
+  .sm-progress-bar {
+    height: 100%; border-radius: 6px;
+    background: var(--sm-header-stripe);
+    width: 100%;
+    transition: width 1s linear;
+    box-shadow: 0 0 8px var(--sm-accent-dim);
+  }
+  .sm-skip-btn {
+    display: block; margin: 0 auto 24px;
+    padding: 10px 32px; border-radius: 50px;
+    background: rgba(255,255,255,.12); border: 2px solid rgba(255,255,255,.3);
+    color: #fff; font-weight: 700; font-size: .88rem;
+    cursor: pointer; font-family: var(--sm-font);
+    transition: background .2s, border-color .2s;
+  }
+  .sm-skip-btn:hover { background: rgba(255,255,255,.22); border-color: rgba(255,255,255,.55); }
+</style>
+
+<!-- ── Modal overlay ──────────────────────────────────────────── -->
+<div id="sellModal" t-att-data-theme="player.tournament_id.player_display_template or 'vanilla'">
+  <div class="sm-card">
+
+    <!-- ── SELL FORM (default) ──────────────────────────────── -->
+    <div id="smFormPanel">
+
+      <!-- Header -->
+      <div class="sm-header">
+        <div class="sm-header-row">
+          <div>
+            <div class="sm-header-label">Auction</div>
+            <div class="sm-header-title">SELL PLAYER</div>
+          </div>
+          <button class="sm-close-btn" onclick="closeSellModal()">&#x2715;</button>
+        </div>
+      </div>
+
+      <!-- Player → Team strip -->
+      <div class="sm-transfer-row">
+        <img class="sm-avatar"
+             t-att-src="'/web/image/auction.team.player/%d/photo' % player.id"
+             alt="Player" />
+        <div class="sm-player-info">
+          <strong t-esc="player.name"/>
+          <span t-esc="player.role or ''"/>
+        </div>
+        <div class="sm-arrow">&#10145;</div>
+        <div class="sm-team-logo-wrap">
+          <div class="sm-team-logo-placeholder" id="smTeamPlaceholder">&#127959;</div>
+          <img id="smTeamLogo" class="sm-team-logo" alt="Team Logo"/>
+          <div id="smTeamNameLabel" class="sm-team-name-label"></div>
+        </div>
+      </div>
+
+      <!-- Team selector -->
+      <div class="sm-section">
+        <span class="sm-section-label">Select Team</span>
+        <div id="smTeamBadges" class="sm-team-badges">
+          <span class="sm-no-teams">Loading teams&#8230;</span>
+        </div>
+      </div>
+
+      <!-- Points input -->
+      <div class="sm-section" style="padding-top:12px;">
+        <span class="sm-section-label">Selling Points</span>
+        <div class="sm-points-wrap">
+          <button class="sm-pts-btn" onclick="smAdjustPoints(-1)">&#8722;</button>
+          <input type="number" id="sellPoints" value="0" min="0" />
+          <button class="sm-pts-btn" onclick="smAdjustPoints(1)">&#43;</button>
+        </div>
+      </div>
+
+      <!-- Team details -->
+      <div id="teamDetailsStrip" style="display:none;">
+        <div class="sm-detail-item">
+          <div class="sm-detail-key">Remaining Pts</div>
+          <div class="sm-detail-val" id="smRemainingPts">&#8212;</div>
+        </div>
+        <div class="sm-detail-item">
+          <div class="sm-detail-key">Players Left</div>
+          <div class="sm-detail-val" id="smRemainingPlayers">&#8212;</div>
+        </div>
+        <div class="sm-detail-item">
+          <div class="sm-detail-key">Max Call</div>
+          <div class="sm-detail-val green" id="smMaxCall">&#8212;</div>
+        </div>
+      </div>
+
+      <div id="sellSuggestion"></div>
+      <div id="sellError"></div>
+
+      <!-- Footer -->
+      <div class="sm-footer">
+        <button class="sm-btn-cancel" onclick="closeSellModal()">Cancel</button>
+        <button class="sm-btn-sell" id="smBtnSell" disabled="disabled" onclick="smSubmitSell()">Sell Player</button>
+      </div>
+
+    </div><!-- /smFormPanel -->
+
+    <!-- ── SOLD CELEBRATION SCREEN ──────────────────────────── -->
+    <div id="smSoldScreen">
+
+      <!-- Player photo with SOLD stamp -->
+      <div class="sm-sold-photo-wrap">
+        <img id="smSoldPhoto" class="sm-sold-photo" src="" alt="Player" />
+        <div class="sm-sold-ribbon">
+          <div class="sm-sold-stamp">SOLD</div>
+        </div>
+      </div>
+
+      <!-- Team info -->
+      <div class="sm-sold-info">
+        <img id="smSoldTeamLogo" class="sm-sold-team-logo" src="" alt="Team" />
+        <div class="sm-sold-text">
+          <div class="sm-sold-label">Sold To</div>
+          <div class="sm-sold-team-name" id="smSoldTeamName"></div>
+          <div class="sm-sold-points">for <span id="smSoldPoints"></span> points</div>
+        </div>
+      </div>
+
+      <!-- Countdown -->
+      <div class="sm-countdown-wrap">
+        <div class="sm-countdown-label">Next player in <strong id="smCountdownNum">5</strong> seconds</div>
+        <div class="sm-progress-track">
+          <div class="sm-progress-bar" id="smProgressBar"></div>
+        </div>
+      </div>
+      <button class="sm-skip-btn" onclick="smSkipToNext()">&#9654; Next Player Now</button>
+
+    </div><!-- /smSoldScreen -->
+
+  </div>
+</div>
+
+<script>//<![CDATA[
+(function() {
+  var smTeamsData     = [];
+  var smSelectedTeam  = null;
+  var smPlayerId      = null;
+  var smCountdownTimer = null;
+
+  /* ── Open / Close ──────────────────────────────────────────── */
+  window.openSellModal = function() {
+    smPlayerId     = parseInt(document.body.getAttribute('data-player-id'));
+    smSelectedTeam = null;
+    smTeamsData    = [];
+    if (smCountdownTimer) { clearInterval(smCountdownTimer); smCountdownTimer = null; }
+
+    // Show form, hide sold screen
+    document.getElementById('smFormPanel').style.display = 'block';
+    document.getElementById('smSoldScreen').classList.remove('visible');
+
+    // Reset form
+    document.getElementById('smTeamBadges').innerHTML = '<span class="sm-no-teams">Loading teams\u2026</span>';
+    document.getElementById('smTeamPlaceholder').style.display = 'flex';
+    document.getElementById('smTeamLogo').style.display = 'none';
+    document.getElementById('smTeamNameLabel').style.display = 'none';
+    document.getElementById('teamDetailsStrip').style.display = 'none';
+    document.getElementById('sellSuggestion').style.display = 'none';
+    document.getElementById('sellError').style.display = 'none';
+    document.getElementById('smBtnSell').disabled = true;
+    document.getElementById('smBtnSell').textContent = 'Sell Player';
+    document.getElementById('sellPoints').value = 0;
+    document.getElementById('sellModal').classList.add('open');
+    smLoadTeams(smPlayerId);
+  };
+
+  window.closeSellModal = function() {
+    if (smCountdownTimer) { clearInterval(smCountdownTimer); smCountdownTimer = null; }
+    document.getElementById('sellModal').classList.remove('open');
+  };
+
+  window.smSkipToNext = function() {
+    if (smCountdownTimer) { clearInterval(smCountdownTimer); smCountdownTimer = null; }
+    window.location.reload();
+  };
+
+  /* ── Load teams ─────────────────────────────────────────────── */
+  function smLoadTeams(playerId) {
+    fetch('/web/dataset/call_kw', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        jsonrpc: '2.0', method: 'call',
+        params: { model: 'auction.team.player', method: 'get_sell_teams_data', args: [playerId], kwargs: {} }
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) { smShowError('Failed to load teams. Please try again.'); return; }
+      smTeamsData = data.result || [];
+      smRenderBadges(smTeamsData);
+    })
+    .catch(function() { smShowError('Network error loading teams.'); });
+  }
+
+  function smRenderBadges(teams) {
+    var container = document.getElementById('smTeamBadges');
+    if (!teams.length) {
+      container.innerHTML = '<span class="sm-no-teams">No teams available</span>';
+      return;
+    }
+    container.innerHTML = '';
+    teams.forEach(function(team) {
+      var btn = document.createElement('button');
+      var disabled = !team.tier_slots_ok || !team.budget_ok;
+      btn.className = 'sm-badge' + (disabled ? ' tier-full' : '');
+      btn.textContent = team.team_name;
+      btn.dataset.teamId = team.team_id;
+      if (!team.tier_slots_ok) {
+        btn.title = 'Tier slot full for this team';
+        btn.disabled = true;
+      } else if (!team.budget_ok) {
+        btn.title = 'Insufficient budget \u2014 cannot meet this tier\u2019s minimum bid';
+        btn.disabled = true;
+      } else {
+        btn.onclick = function() { smSelectTeam(team); };
+      }
+      container.appendChild(btn);
+    });
+  }
+
+  /* ── Select team ─────────────────────────────────────────────── */
+  function smSelectTeam(team) {
+    smSelectedTeam = team;
+    document.querySelectorAll('.sm-badge').forEach(function(b) {
+      b.classList.toggle('active', b.dataset.teamId == team.team_id);
+    });
+    var logo = document.getElementById('smTeamLogo');
+    logo.src = '/web/image/auction.team/' + team.team_id + '/logo';
+    logo.style.display = 'block';
+    document.getElementById('smTeamPlaceholder').style.display = 'none';
+    var lbl = document.getElementById('smTeamNameLabel');
+    lbl.textContent = team.team_name; lbl.style.display = 'block';
+
+    document.getElementById('smRemainingPts').textContent     = team.remaining_points;
+    document.getElementById('smRemainingPlayers').textContent = team.remaining_players;
+    document.getElementById('smMaxCall').textContent          = team.max_call;
+    document.getElementById('teamDetailsStrip').style.display = 'flex';
+
+    var sug = document.getElementById('sellSuggestion');
+    sug.innerHTML = team.remaining_players > 1
+      ? '\u2139 Max bid <strong>' + team.max_call + ' pts</strong> &#160;|&#160; Base for remaining: <strong>' + team.effective_base_point + ' pts</strong>'
+      : '\u2139 Last player slot! Max bid: <strong>' + team.max_call + ' pts</strong>';
+    sug.style.display = 'block';
+
+    var input = document.getElementById('sellPoints');
+    input.value = team.effective_base_point;
+    input.min   = team.effective_base_point;
+    input.max   = team.max_call;
+    document.getElementById('smBtnSell').disabled = false;
+    smHideError();
+  }
+
+  /* ── Adjust points ───────────────────────────────────────────── */
+  window.smAdjustPoints = function(dir) {
+    if (!smSelectedTeam) return;
+    var input   = document.getElementById('sellPoints');
+    var current = parseInt(input.value) || smSelectedTeam.effective_base_point;
+    var inc     = smGetIncrement(current, smSelectedTeam.slabs);
+    var next    = Math.min(Math.max(current + dir * inc, smSelectedTeam.effective_base_point), smSelectedTeam.max_call);
+    input.value = next;
+    smHideError();
+  };
+
+  function smGetIncrement(amount, slabs) {
+    if (!slabs || !slabs.length) return 50;
+    for (var i = 0; i < slabs.length; i++) {
+      var s = slabs[i];
+      if (amount >= s.from_amount && amount <= s.to_amount) return s.increment;
+    }
+    return slabs[slabs.length - 1].increment || 50;
+  }
+
+  /* ── Submit sell ─────────────────────────────────────────────── */
+  window.smSubmitSell = function() {
+    if (!smSelectedTeam || !smPlayerId) return;
+    var finalPoint = parseInt(document.getElementById('sellPoints').value);
+    if (isNaN(finalPoint) || finalPoint <= 0) { smShowError('Please enter a valid points value.'); return; }
+
+    var btn = document.getElementById('smBtnSell');
+    btn.disabled = true; btn.textContent = 'Selling\u2026';
+    smHideError();
+
+    fetch('/web/dataset/call_kw', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        jsonrpc: '2.0', method: 'call',
+        params: {
+          model: 'auction.team.player', method: 'action_sell_from_web',
+          args: [smPlayerId, smSelectedTeam.team_id, finalPoint], kwargs: {}
+        }
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) {
+        var msg = data.error.data ? data.error.data.message : data.error.message;
+        smShowError('Error: ' + msg);
+        btn.disabled = false; btn.textContent = 'Sell Player'; return;
+      }
+      var result = data.result;
+      if (!result.success) {
+        smShowError(result.error);
+        btn.disabled = false; btn.textContent = 'Sell Player'; return;
+      }
+      smShowSoldScreen(result);
+    })
+    .catch(function() {
+      smShowError('Network error. Please try again.');
+      btn.disabled = false; btn.textContent = 'Sell Player';
+    });
+  };
+
+  /* ── Sold celebration screen ─────────────────────────────────── */
+  function smShowSoldScreen(result) {
+    // Hide form, show sold screen
+    document.getElementById('smFormPanel').style.display = 'none';
+    var soldScreen = document.getElementById('smSoldScreen');
+
+    // Fill in data
+    document.getElementById('smSoldPhoto').src     = '/web/image/auction.team.player/' + result.player_id + '/photo';
+    document.getElementById('smSoldTeamLogo').src  = '/web/image/auction.team/' + result.team_id + '/logo';
+    document.getElementById('smSoldTeamName').textContent = result.team_name;
+    document.getElementById('smSoldPoints').textContent   = result.final_point;
+
+    // Re-trigger stamp animation by cloning the stamp element
+    var oldStamp = document.querySelector('.sm-sold-stamp');
+    var newStamp = oldStamp.cloneNode(true);
+    oldStamp.parentNode.replaceChild(newStamp, oldStamp);
+
+    soldScreen.classList.add('visible');
+
+    // Countdown
+    var totalSecs = (result.display_seconds && result.display_seconds > 0) ? result.display_seconds : 5;
+    var remaining = totalSecs;
+    var bar = document.getElementById('smProgressBar');
+    bar.style.transition = 'none';
+    bar.style.width = '100%';
+    document.getElementById('smCountdownNum').textContent = remaining;
+
+    // Force reflow then start shrinking
+    bar.offsetWidth;
+    bar.style.transition = 'width ' + totalSecs + 's linear';
+    bar.style.width = '0%';
+
+    smCountdownTimer = setInterval(function() {
+      remaining -= 1;
+      document.getElementById('smCountdownNum').textContent = remaining;
+      if (remaining <= 0) {
+        clearInterval(smCountdownTimer);
+        smCountdownTimer = null;
+        window.location.reload();
+      }
+    }, 1000);
+  }
+
+  function smShowError(msg) { var el = document.getElementById('sellError'); el.textContent = msg; el.style.display = 'block'; }
+  function smHideError()    { document.getElementById('sellError').style.display = 'none'; }
+
+  // Close on overlay click (only on form panel, not during sold screen)
+  document.getElementById('sellModal').addEventListener('click', function(e) {
+    if (e.target === this && document.getElementById('smFormPanel').style.display !== 'none') closeSellModal();
+  });
+})();
+//]]></script>
+</template>
+</odoo>

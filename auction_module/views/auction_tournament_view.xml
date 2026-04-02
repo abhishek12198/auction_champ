@@ -27,65 +27,134 @@
             <field name="name">auction.tournament.form</field>
             <field name="model">auction.tournament</field>
             <field name="arch" type="xml">
-                <form string="Team">
-                    <field name="logo" widget='image' class="oe_avatar player_avatar_big" />
-                    <group>
-                        <group>
-                            <field name="name"/>
-                            <field name="description"/>
-                            <field name="tournament_type" widget="radio"/>
+                <form string="Tournament">
+                    <sheet>
+                        <field name="active" invisible="1"/>
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                                attrs="{'invisible': [('active', '=', True)]}"/>
 
+                        <!-- ── Header: Logo + Title ── -->
+                        <div class="d-flex align-items-start mb-3">
+                            <field name="logo" widget="image" class="oe_avatar mr-3"
+                                   options="{'preview_image': 'logo', 'size': [128, 128]}"/>
+                            <div class="flex-grow-1">
+                                <div class="oe_title">
+                                    <label for="name" class="oe_edit_only"/>
+                                    <h1>
+                                        <field name="name" placeholder="e.g. IPL Auction 2025"/>
+                                    </h1>
+                                    <label for="description" class="oe_edit_only"/>
+                                    <h4 class="text-muted">
+                                        <field name="description" placeholder="Short description of the tournament"/>
+                                    </h4>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── Core Settings: 2-column grid ── -->
+                        <group>
+                            <group string="Tournament Info">
+                                <field name="tournament_type" widget="radio" options="{'horizontal': True}"/>
+                                <field name="organizer_uid"/>
+                                <field name="organizer_uids" widget="many2many_tags"
+                                       options="{'color_field': 'color'}"/>
+                            </group>
+                            <group string="Auction Configuration">
+                                <field name="team_max_points"/>
+                                <field name="player_appearance_algorithm" widget="radio"/>
+                            </group>
                         </group>
 
-                    </group>
-                    <notebook>
-                        <page string="Teams">
-                            <field name="team_ids" widget="many2many">
-                                <kanban class="o_kanban_mobile">
-                                    <field name="name"/>
-                                    <field name="logo"/>
-                                    <field name="tournament_id"/>
-                                    <field name="manager"/>
-                                    <field name="key_player_ids"/>
-                                    <field name="id"/>
-                                    <templates>
-                                        <t t-name="kanban-box">
-                                            <div class="oe_kanban_global_click o_kanban_record">
-                                                <div class="o_kanban_image">
-                                                    <img alt="Avatar" t-att-src="kanban_image('auction.team', 'logo', record.id.raw_value)"/>
-                                                </div>
+                        <!-- ── Notebook ── -->
+                        <notebook>
 
-                                                <div class="o_kanban_details">
-                                                    <strong t-esc="record.name.raw_value"/>
-
-                                                    <div t-if="record.manager">
-                                                        <span> Owner: </span>
-                                                        <field name="manager"/>
+                            <!-- Tab 1: Teams -->
+                            <page string="Teams" name="teams">
+                                <field name="team_ids" widget="many2many">
+                                    <kanban class="o_kanban_mobile">
+                                        <field name="name"/>
+                                        <field name="logo"/>
+                                        <field name="tournament_id"/>
+                                        <field name="manager"/>
+                                        <field name="key_player_ids"/>
+                                        <field name="id"/>
+                                        <templates>
+                                            <t t-name="kanban-box">
+                                                <div class="oe_kanban_global_click o_kanban_record">
+                                                    <div class="o_kanban_image">
+                                                        <img alt="Avatar" t-att-src="kanban_image('auction.team', 'logo', record.id.raw_value)"/>
                                                     </div>
-                                                    <div t-if="record.key_player_ids">
-                                                        <span> Icon Player: </span>
-                                                        <field name="key_player_ids" widget="many2many_tags"/>
+                                                    <div class="o_kanban_details">
+                                                        <strong t-esc="record.name.raw_value"/>
+                                                        <div t-if="record.manager.raw_value">
+                                                            <span class="text-muted">Owner: </span>
+                                                            <field name="manager"/>
+                                                        </div>
+                                                        <div t-if="record.key_player_ids.raw_value">
+                                                            <span class="text-muted">Icon Player: </span>
+                                                            <field name="key_player_ids" widget="many2many_tags"/>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </t>
-                                    </templates>
-                                </kanban>
-                            </field>
-                        </page>
+                                            </t>
+                                        </templates>
+                                    </kanban>
+                                </field>
+                            </page>
 
-                        <page string="Other Details">
-                            <group>
-                                <field name="player_display_template" widget="radio" options="{'horizontal': True}"/>
-                                <field name="venue"/>
-                                <field name="player_appearance_algorithm" widget="radio"/>
-                                <field name="report_footer" widget="image"/>
-                            </group>
-                        </page>
-                        <page string="Rules &amp; Regulations">
-                            <field name="rules_regulations"/>
-                        </page>
-                    </notebook>
+                            <!-- Tab 2: Points & Bid Slabs -->
+                            <page string="Points &amp; Bid Slabs" name="points_slabs">
+                                <separator string="Bid Point Slabs"/>
+                                <p class="text-muted o_form_label">
+                                    Define the bidding increments at each point level. Teams can raise bids in steps defined here.
+                                </p>
+                                <field name="points_split_ids" nolabel="1">
+                                    <tree editable="bottom">
+                                        <field name="points" string="Starting Points"/>
+                                        <field name="no_of_calls" string="Bid Step (No. of Calls)"/>
+                                    </tree>
+                                </field>
+                            </page>
+
+                            <!-- Tab 3: Presentation & Theme -->
+                            <page string="Presentation &amp; Theme" name="presentation">
+                                <separator string="Auction Display Theme"/>
+                                <group>
+                                    <group>
+                                        <field name="player_display_template" widget="radio"
+                                               options="{'horizontal': True}"/>
+                                        <field name="sold_display_seconds"/>
+                                    </group>
+                                </group>
+
+                                <separator string="Print &amp; Report Assets"/>
+                                <group>
+                                    <group string="Template Background Image">
+                                        <field name="template_image" widget="image" nolabel="1"
+                                               options="{'size': [300, 180]}"/>
+                                    </group>
+                                    <group string="Report Footer Image">
+                                        <field name="report_footer" widget="image" nolabel="1"
+                                               options="{'size': [300, 120]}"/>
+                                    </group>
+                                </group>
+                            </page>
+
+                            <!-- Tab 4: Venue -->
+                            <page string="Venue" name="venue">
+                                <group>
+                                    <field name="venue" nolabel="1"
+                                           placeholder="Enter the venue name, address, city and any other location details..."/>
+                                </group>
+                            </page>
+
+                            <!-- Tab 5: Rules & Regulations -->
+                            <page string="Rules &amp; Regulations" name="rules">
+                                <field name="rules_regulations" nolabel="1"/>
+                            </page>
+
+                        </notebook>
+                    </sheet>
                 </form>
             </field>
         </record>

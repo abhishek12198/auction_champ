@@ -267,45 +267,109 @@
             <field name="name">auction.team.player.form</field>
             <field name="model">auction.team.player</field>
             <field name="arch" type="xml">
-                <form string="Team">
-                    <widget name="web_ribbon" title="Sold" bg_color="bg-success" attrs="{'invisible': ['|', ('state', '!=', 'sold'), ('icon_player', '=', True)]}"/>
-                    <widget name="web_ribbon" title="Icon Player" bg_color="bg-info" attrs="{'invisible': [('icon_player', '=', False)]}"/>
-                    <header>
-                        <field name="state" widget="statusbar" clickable="1"/>
-                        <button name="%(auction_module.action_auction_set_key_player)d" attrs="{'invisible': ['|',('state', '!=', 'auction'),('icon_player', '=', True)]}" type="action" class="oe_highlight" string="Set Icon Player"/>
-                        <button name="action_revoke_key_player" string="Revoke Icon Player" attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '!=', True)]}"  class="btn btn-secondary oe_kanban_button" type="object"  confirm="This will revoke the player from the icon player list and bring to auction. Click on Ok to continue. Otherwise click on Cancel"/>
-                        <button name="action_recall_auction_sold" string="Recall to Auction" attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '=', True)]}"  class="btn btn-secondary oe_kanban_button" type="object"  confirm="This will recall the sold player and bring to auction. Click on Ok to continue. Otherwise click on Cancel"/>
-                    </header>
-                    <field name="photo" widget='image' class="oe_avatar player_avatar_big" options="{'zoom': true, 'preview_image': 'photo'}"/>
-                    <group col="4">
-                            <field name="name" class="text-uppercase"/>
-                            <field name="contact"/>
-                            <field name="batting_style"/>
-                            <field name="bowling_style"/>
-                            <field name="role"/>
-                            <field name="tier_id"/>
-                            <field name="player_type" widget="radio"/>
-                            <field name="address"/>
-                            <field name="notes"/>
-                            <field name="amount_paid" widget="boolean_toggle"/>
-                            <field name="photo_url" invisible="1" widget="url" />
-                            <field name="icon_player" invisible="1"/>
-                            <field name="sl_no" invisible="1"/>
+                <form string="Player Profile">
 
-                    </group>
-                    <notebook>
-                        <page string="Other Details">
-                            <group>
-                                <field name="current_team"/>
-                                <field name="jersy_name"/>
-                                <field name="jersy_size"/>
-                                <field name="jersy_number"/>
-                                <field name="blood_group"/>
-                                <field name="p_type"/>
-                                <field name="p_category"/>
+                    <!-- Ribbons ──────────────────────────────────────── -->
+                    <widget name="web_ribbon" title="Sold" bg_color="bg-success"
+                            attrs="{'invisible': ['|', ('state', '!=', 'sold'), ('icon_player', '=', True)]}"/>
+                    <widget name="web_ribbon" title="⭐ Icon Player" bg_color="bg-info"
+                            attrs="{'invisible': [('icon_player', '=', False)]}"/>
+
+                    <!-- Header ───────────────────────────────────────── -->
+                    <header>
+                        <field name="state" widget="statusbar" clickable="1"
+                               statusbar_visible="draft,auction,sold,unsold"/>
+                        <button name="%(auction_module.action_auction_set_key_player)d"
+                                type="action" class="oe_highlight" string="⭐ Set as Icon Player"
+                                attrs="{'invisible': ['|', ('state', '!=', 'auction'), ('icon_player', '=', True)]}"/>
+                        <button name="action_revoke_key_player" type="object"
+                                string="Revoke Icon Player"
+                                attrs="{'invisible': ['|', ('state', '!=', 'sold'), ('icon_player', '!=', True)]}"
+                                confirm="This will revoke the player from the Icon Player list and bring them back to auction."/>
+                        <button name="action_recall_auction_sold" type="object"
+                                string="↩ Recall to Auction"
+                                attrs="{'invisible': ['|', ('state', '!=', 'sold'), ('icon_player', '=', True)]}"
+                                confirm="This will recall the sold player and bring them back to auction."/>
+                    </header>
+
+                    <sheet>
+
+                        <!-- Photo + Name / Role / Tier ─────────────── -->
+                        <field name="photo" widget="image" class="oe_avatar"
+                               options="{'zoom': true, 'preview_image': 'photo'}"/>
+                        <div class="oe_title">
+                            <label class="o_form_label" for="name"/>
+                            <h1>
+                                <field name="name" class="text-uppercase"
+                                       placeholder="Full Name"/>
+                            </h1>
+                            <h5 style="color:#888;font-weight:400;margin-top:4px;">
+                                <field name="role" placeholder="Role (e.g. All-Rounder)"/>
+                                &#160;&#8212;&#160;
+                                <field name="tier_id" placeholder="Tier"/>
+                            </h5>
+                        </div>
+
+                        <!-- Row 1 – Classification & Ownership ─────── -->
+                        <group>
+                            <group string="Player Category">
+                                <field name="player_type" widget="radio"/>
+                                <field name="icon_player" string="Key / Icon Player"
+                                       widget="boolean_toggle" invisible="1"/>
                             </group>
-                        </page>
-                    </notebook>
+                            <group string="Tournament &amp; Team">
+                                <field name="tournament_id"/>
+                                <field name="assigned_team_id" string="Assigned Team"
+                                       readonly="1"/>
+                                <field name="current_team"
+                                       string="Previous / Current Club"/>
+                            </group>
+                        </group>
+
+                        <!-- Row 2 – Playing Style &amp; Contact ──────── -->
+                        <group>
+                            <group string="Playing Style">
+                                <field name="batting_style"/>
+                                <field name="bowling_style"/>
+                            </group>
+                            <group string="Contact Details">
+                                <field name="contact" string="Mobile Number"/>
+                                <field name="address"/>
+                                <field name="amount_paid" string="Payment Received"
+                                       widget="boolean_toggle"/>
+                            </group>
+                        </group>
+
+                        <!-- Tabs ─────────────────────────────────────── -->
+                        <notebook>
+                            <page string="Jersey Details">
+                                <group>
+                                    <group string="Jersey">
+                                        <field name="jersy_name"   string="Name on Jersey"/>
+                                        <field name="jersy_number" string="Jersey Number"/>
+                                        <field name="jersy_size"   string="Jersey Size"/>
+                                    </group>
+                                    <group string="Admin">
+                                        <field name="payment_url" string="Payment Proof URL"
+                                               widget="url"/>
+                                        <field name="notes"/>
+                                    </group>
+                                </group>
+                            </page>
+                            <page string="Other Info">
+                                <group>
+                                    <field name="blood_group"/>
+                                    <field name="p_type"     string="Type"/>
+                                    <field name="p_category" string="Category"/>
+                                </group>
+                            </page>
+                        </notebook>
+
+                        <!-- Technical / invisible fields ─────────────── -->
+                        <field name="photo_url" invisible="1"/>
+                        <field name="sl_no"     invisible="1"/>
+
+                    </sheet>
                 </form>
             </field>
         </record>
