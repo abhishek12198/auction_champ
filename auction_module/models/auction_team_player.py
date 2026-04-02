@@ -42,6 +42,7 @@ class AuctionTeamPlayer(models.Model):
     assigned_team_id = fields.Many2one('auction.team', 'Team')
     icon_player = fields.Boolean("Key Player")
     tier_id = fields.Many2one('auction.player.tier', string='Tier')
+    previous_tier_id = fields.Many2one('auction.player.tier', string='Previous Tier', help='Stores the tier before the player was promoted to Icon Player, used to restore on revoke.')
     tier_color = fields.Selection(related='tier_id.color', string='Tier Color')
     notes = fields.Char()
     #other details
@@ -388,10 +389,11 @@ class AuctionTeamPlayer(models.Model):
                     'assigned_team_id': False,
                     'state': 'auction',
                     'icon_player': False,
-
+                    'tier_id': player.previous_tier_id.id if player.previous_tier_id else False,
+                    'previous_tier_id': False,
                 })
                 team_id.key_player_ids = [(3, player.id)]
-                message = player.name + 'has been revoked from icon player list and brought to auction successfully!'
+                message = player.name + ' has been revoked from icon player list and brought back to auction successfully!'
                 self.env.user.notify_success(message)
 
     def button_sell_player(self, player_id, other_data):

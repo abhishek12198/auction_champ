@@ -37,16 +37,25 @@ class SetKeyPlayer(models.TransientModel):
         if player_id:
             player = self.player_id
             team = self.team_id
-            #assiging_icon
+
+            # Find the icon tier (only one should exist due to constraint)
+            icon_tier = self.env['auction.player.tier'].search([('is_an_icon_tier', '=', True)], limit=1)
+            if not icon_tier:
+                raise UserError(
+                    'No Icon Tier is configured. Please mark one tier as "Icon Tier" in Player Tiers before promoting a player.'
+                )
+
             player.write({
                 'icon_player': True,
                 'state': 'sold',
-                'assigned_team_id': team.id
+                'assigned_team_id': team.id,
+                'previous_tier_id': player.tier_id.id if player.tier_id else False,
+                'tier_id': icon_tier.id,
             })
 
             team.key_player_ids = [(4, player.id)]
 
-            message = player.name + ' set as Icon player for the team '+ team.name + ' successfully!'
+            message = player.name + ' set as Icon Player for team ' + team.name + ' and moved to "%s" tier successfully!' % icon_tier.name
             self.env.user.notify_success(message)
 
 

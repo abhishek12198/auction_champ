@@ -2,359 +2,639 @@
 <odoo>
 
 <template id="auction_details_show" name="Player Auction">
-            <html lang="en">
-              <head>
-                <meta charset="UTF-8" />
-                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                <link
-                  href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
-                  rel="stylesheet"
-                  integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
-                  crossorigin="anonymous"
-                />
-                <link rel="stylesheet" href="/auction_module/static/src/assets/css/style.css" />
-                <title>Auction Bid Summary</title>
-              </head>
-              <body>
-                <header class="py-3 text-center">
-                  <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo" />
-                </header>
-                <section class="top-part mt-4">
-                  <div class="container">
-                    <div
-                      class="listing-header flex-wrap d-flex align-items-center justify-content-between"
-                      style="column-gap: 10px; row-gap: 25px"
-                    >
-                      <div
-                        class="balance-point flex-wrap d-sm-flex d-block align-items-center"
-                        style="row-gap: 10px"
-                      >
-                        <h3 class="me-2 me-sm-0">Bid Summary</h3>
-                        <div class="list-view ms-sm-4">
-                          <ul class="d-flex p-0 align-items-center m-0">
-                            <li id="list-view" class="active">
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 16 16"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  d="M1.5 7H0.5C0.224 7 0 7.224 0 7.5V8.5C0 8.776 0.224 9 0.5 9H1.5C1.776 9 2 8.776 2 8.5V7.5C2 7.224 1.776 7 1.5 7ZM15.5 7.5H5C4.724 7.5 4.5 7.724 4.5 8C4.5 8.276 4.724 8.5 5 8.5H15.5C15.776 8.5 16 8.276 16 8C16 7.724 15.776 7.5 15.5 7.5ZM1.5 11H0.5C0.224 11 0 11.224 0 11.5V12.5C0 12.776 0.224 13 0.5 13H1.5C1.776 13 2 12.776 2 12.5V11.5C2 11.224 1.776 11 1.5 11ZM15.5 11.5H5C4.724 11.5 4.5 11.724 4.5 12C4.5 12.276 4.724 12.5 5 12.5H15.5C15.776 12.5 16 12.276 16 12C16 11.724 15.776 11.5 15.5 11.5ZM1.5 3H0.5C0.224 3 0 3.224 0 3.5V4.5C0 4.776 0.224 5 0.5 5H1.5C1.776 5 2 4.776 2 4.5V3.5C2 3.224 1.776 3 1.5 3ZM5 4.5H15.5C15.776 4.5 16 4.276 16 4C16 3.724 15.776 3.5 15.5 3.5H5C4.724 3.5 4.5 3.724 4.5 4C4.5 4.276 4.724 4.5 5 4.5Z"
-                                  fill="#393939"
-                                />
-                              </svg>
-                              List
-                            </li>
-                            <li id="grid-view">
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 16 16"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  d="M3.5 2C3.10218 2 2.72064 2.15804 2.43934 2.43934C2.15804 2.72064 2 3.10218 2 3.5V5.5C2 5.89782 2.15804 6.27936 2.43934 6.56066C2.72064 6.84196 3.10218 7 3.5 7H5.5C5.89782 7 6.27936 6.84196 6.56066 6.56066C6.84196 6.27936 7 5.89782 7 5.5V3.5C7 3.10218 6.84196 2.72064 6.56066 2.43934C6.27936 2.15804 5.89782 2 5.5 2H3.5ZM10.5 2C10.1022 2 9.72064 2.15804 9.43934 2.43934C9.15804 2.72064 9 3.10218 9 3.5V5.5C9 5.89782 9.15804 6.27936 9.43934 6.56066C9.72064 6.84196 10.1022 7 10.5 7H12.5C12.8978 7 13.2794 6.84196 13.5607 6.56066C13.842 6.27936 14 5.89782 14 5.5V3.5C14 3.10218 13.842 2.72064 13.5607 2.43934C13.2794 2.15804 12.8978 2 12.5 2H10.5ZM3.5 9C3.10218 9 2.72064 9.15804 2.43934 9.43934C2.15804 9.72064 2 10.1022 2 10.5V12.5C2 12.8978 2.15804 13.2794 2.43934 13.5607C2.72064 13.842 3.10218 14 3.5 14H5.5C5.89782 14 6.27936 13.842 6.56066 13.5607C6.84196 13.2794 7 12.8978 7 12.5V10.5C7 10.1022 6.84196 9.72064 6.56066 9.43934C6.27936 9.15804 5.89782 9 5.5 9H3.5ZM10.5 9C10.1022 9 9.72064 9.15804 9.43934 9.43934C9.15804 9.72064 9 10.1022 9 10.5V12.5C9 12.8978 9.15804 13.2794 9.43934 13.5607C9.72064 13.842 10.1022 14 10.5 14H12.5C12.8978 14 13.2794 13.842 13.5607 13.5607C13.842 13.2794 14 12.8978 14 12.5V10.5C14 10.1022 13.842 9.72064 13.5607 9.43934C13.2794 9.15804 12.8978 9 12.5 9H10.5Z"
-                                  fill="#393939"
-                                />
-                              </svg>
-                              Grid
-                            </li>
-                          </ul>
-                        </div>
-                      </div>
-                      <div class="league-name-logo d-flex align-items-center">
-                        <div class="league-name d-md-block d-none">
-                          <h2><span t-esc="env['auction.tournament'].sudo().search([('active', '=', True)], limit=1).name"/></h2>
-                          <p class="text-end"><span t-esc="env['auction.tournament'].sudo().search([('active', '=', True)], limit=1).description"/></p>
-                        </div>
-                        <div class="league-logo">
-                          <img
-                            t-att-src="image_data_uri(env['auction.tournament'].sudo().search([('active', '=', True)], limit=1).logo)"
-                            alt="Season Logo"
-                            width="70"
-                            height="70"
-                          />
-                        </div>
-                      </div>
-                    </div>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+            crossorigin="anonymous"/>
+      <link rel="preconnect" href="https://fonts.googleapis.com"/>
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
+      <link href="https://fonts.googleapis.com/css2?family=Teko:wght@600&amp;family=Poppins:wght@400;500;600;700&amp;display=swap"
+            rel="stylesheet"/>
+      <link rel="stylesheet" href="/auction_module/static/src/assets/css/style.css"/>
+      <title>Auction Bid Summary</title>
+
+      <style>
+        /* ── CSS custom properties — one block per theme ──────────────────── */
+
+        /* VANILLA (default / light) */
+        :root {
+          --b-primary:      #004080;
+          --b-primary-dk:   #002a5c;
+          --b-primary-lt:   rgba(0,64,128,0.12);
+          --b-glow:         rgba(0,64,128,0.20);
+          --b-body-bg:      #eef2f7;
+          --b-surface:      #fff;
+          --b-surface2:     #f0f4f8;
+          --b-border:       rgba(0,64,128,0.15);
+          --b-text:         #1a1a2e;
+          --b-text-muted:   #555;
+          --b-header-bg:    linear-gradient(135deg,#004080,#002a5c);
+          --b-header-text:  #fff;
+          --b-th-bg:        #004080;
+          --b-th-text:      #fff;
+          --b-row-hover:    rgba(0,64,128,0.06);
+          --b-badge-bg:     rgba(0,64,128,0.10);
+          --b-badge-text:   #004080;
+          --b-icon-stroke:  #004080;
+          --b-view-btn-bg:  rgba(0,64,128,0.08);
+          --b-view-link:    #2E5AEA;
+          --b-li-active-bg: #004080;
+          --b-li-active-c:  #fff;
+          --b-li-c:         #393939;
+        }
+
+        <t t-if="theme == 'cherry'">
+        :root {
+          --b-primary:      #DC143C;
+          --b-primary-dk:   #8B0000;
+          --b-primary-lt:   rgba(220,20,60,0.15);
+          --b-glow:         rgba(220,20,60,0.30);
+          --b-body-bg:      #0d0d0d;
+          --b-surface:      #1e1e1e;
+          --b-surface2:     #181818;
+          --b-border:       rgba(220,20,60,0.25);
+          --b-text:         #f5f5f5;
+          --b-text-muted:   #aaa;
+          --b-header-bg:    linear-gradient(135deg,#0a0a0a,#2a0a10);
+          --b-header-text:  #f5f5f5;
+          --b-th-bg:        #2a0a10;
+          --b-th-text:      #f5a0a0;
+          --b-row-hover:    rgba(220,20,60,0.08);
+          --b-badge-bg:     rgba(220,20,60,0.15);
+          --b-badge-text:   #FF6B6B;
+          --b-icon-stroke:  #DC143C;
+          --b-view-btn-bg:  rgba(220,20,60,0.10);
+          --b-view-link:    #FF6B6B;
+          --b-li-active-bg: #DC143C;
+          --b-li-active-c:  #fff;
+          --b-li-c:         #ccc;
+        }
+        </t>
+        <t t-elif="theme == 'butterscotch'">
+        :root {
+          --b-primary:      #F5C842;
+          --b-primary-dk:   #C8960C;
+          --b-primary-lt:   rgba(245,200,66,0.15);
+          --b-glow:         rgba(245,200,66,0.35);
+          --b-body-bg:      #0d0d1f;
+          --b-surface:      #181828;
+          --b-surface2:     #12121e;
+          --b-border:       rgba(245,200,66,0.20);
+          --b-text:         #f5f0e0;
+          --b-text-muted:   #b0a880;
+          --b-header-bg:    linear-gradient(135deg,#0d0d1f,#1a1400);
+          --b-header-text:  #F5C842;
+          --b-th-bg:        #1a1400;
+          --b-th-text:      #F5C842;
+          --b-row-hover:    rgba(245,200,66,0.06);
+          --b-badge-bg:     rgba(245,200,66,0.12);
+          --b-badge-text:   #F5C842;
+          --b-icon-stroke:  #F5C842;
+          --b-view-btn-bg:  rgba(245,200,66,0.10);
+          --b-view-link:    #F5C842;
+          --b-li-active-bg: #F5C842;
+          --b-li-active-c:  #0d0d1f;
+          --b-li-c:         #b0a880;
+        }
+        </t>
+        <t t-elif="theme == 'strawberry'">
+        :root {
+          --b-primary:      #C2185B;
+          --b-primary-dk:   #880E4F;
+          --b-primary-lt:   rgba(194,24,91,0.12);
+          --b-glow:         rgba(194,24,91,0.25);
+          --b-body-bg:      #FFF0F5;
+          --b-surface:      #fff;
+          --b-surface2:     #fce4ec;
+          --b-border:       rgba(194,24,91,0.18);
+          --b-text:         #2d0a1e;
+          --b-text-muted:   #7a4060;
+          --b-header-bg:    linear-gradient(135deg,#880E4F,#C2185B);
+          --b-header-text:  #fff;
+          --b-th-bg:        #C2185B;
+          --b-th-text:      #fff;
+          --b-row-hover:    rgba(194,24,91,0.06);
+          --b-badge-bg:     rgba(194,24,91,0.10);
+          --b-badge-text:   #C2185B;
+          --b-icon-stroke:  #C2185B;
+          --b-view-btn-bg:  rgba(194,24,91,0.08);
+          --b-view-link:    #C2185B;
+          --b-li-active-bg: #C2185B;
+          --b-li-active-c:  #fff;
+          --b-li-c:         #7a4060;
+        }
+        </t>
+
+        /* ── Global reset ──────────────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+          background: var(--b-body-bg);
+          color: var(--b-text);
+          font-family: 'Poppins', sans-serif;
+          margin: 0;
+          min-height: 100vh;
+        }
+
+        /* ── Page header ─────────────────────────────────────────────────── */
+        .bs-header {
+          background: var(--b-header-bg);
+          color: var(--b-header-text);
+          padding: 18px 0 14px;
+          text-align: center;
+          border-bottom: 3px solid var(--b-primary);
+          box-shadow: 0 4px 20px var(--b-glow);
+        }
+        .bs-header img { filter: drop-shadow(0 2px 8px var(--b-glow)); }
+
+        /* ── Top section ─────────────────────────────────────────────────── */
+        .bs-top {
+          background: var(--b-surface);
+          border-bottom: 2px solid var(--b-border);
+          padding: 18px 0;
+          box-shadow: 0 2px 12px var(--b-glow);
+        }
+        .bs-page-title {
+          font-family: 'Teko', sans-serif;
+          font-size: 2rem;
+          letter-spacing: 1px;
+          color: var(--b-primary);
+          margin: 0;
+          line-height: 1.1;
+        }
+        .bs-tournament-name {
+          font-family: 'Teko', sans-serif;
+          font-size: 1.15rem;
+          font-weight: 600;
+          color: var(--b-primary);
+          margin: 0;
+          line-height: 1.1;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+        }
+        .bs-tournament-desc {
+          font-size: 0.74rem;
+          color: var(--b-text-muted);
+          margin: 0;
+          line-height: 1.3;
+        }
+        .bs-league-logo-wrap {
+          background: var(--b-header-bg);
+          border-radius: 12px;
+          padding: 6px;
+          border: 2px solid var(--b-primary);
+          box-shadow: 0 0 14px var(--b-glow);
+        }
+
+        /* ── View toggle pills ───────────────────────────────────────────── */
+        .bs-view-pills {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          background: var(--b-surface2);
+          border-radius: 20px;
+          padding: 4px;
+          border: 1.5px solid var(--b-border);
+        }
+        .bs-view-pills li {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          padding: 5px 14px;
+          border-radius: 16px;
+          cursor: pointer;
+          font-size: 0.82rem;
+          font-weight: 600;
+          color: var(--b-li-c);
+          list-style: none;
+          transition: background 0.2s, color 0.2s;
+          user-select: none;
+        }
+        .bs-view-pills li.active {
+          background: var(--b-li-active-bg);
+          color: var(--b-li-active-c);
+          box-shadow: 0 2px 8px var(--b-glow);
+        }
+        .bs-view-pills li svg path { fill: currentColor; }
+
+        /* ── Table header ────────────────────────────────────────────────── */
+        .bs-table-header {
+          background: var(--b-th-bg);
+          color: var(--b-th-text);
+          border-radius: 12px 12px 0 0;
+          padding: 12px 40px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          column-gap: 15px;
+          font-size: 0.78rem;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+          border: 1.5px solid var(--b-border);
+          border-bottom: none;
+        }
+
+        /* ── Table wrapper ───────────────────────────────────────────────── */
+        .bs-table-wrap {
+          background: var(--b-surface);
+          border: 1.5px solid var(--b-border);
+          border-top: none;
+          border-radius: 0 0 14px 14px;
+          overflow: hidden;
+          box-shadow: 0 4px 24px var(--b-glow);
+          margin-bottom: 40px;
+        }
+
+        /* ── Each row ────────────────────────────────────────────────────── */
+        .bs-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 14px 40px;
+          column-gap: 15px;
+          border-bottom: 1px solid var(--b-border);
+          transition: background 0.2s;
+        }
+        .bs-row:last-child { border-bottom: none; }
+        .bs-row:hover { background: var(--b-row-hover); }
+
+        /* ── Column definitions (mirrors old classes) ────────────────────── */
+        .bs-col-team   { flex: 0 0 200px; min-width: 140px; }
+        .bs-col-mgr    { flex: 0 0 160px; min-width: 110px; text-align: center; }
+        .bs-col-needed { flex: 0 0 130px; min-width: 90px;  text-align: center; }
+        .bs-col-pts    { flex: 0 0 140px; min-width: 100px; text-align: center; }
+        .bs-col-call   { flex: 0 0 140px; min-width: 100px; text-align: center; }
+        .bs-col-act    { flex: 0 0 90px;  min-width: 70px;  text-align: center; }
+
+        .bs-team-logo {
+          width: 40px; height: 40px;
+          border-radius: 50%;
+          border: 2px solid var(--b-primary);
+          box-shadow: 0 0 8px var(--b-glow);
+          object-fit: cover;
+          flex-shrink: 0;
+        }
+        .bs-team-name-text {
+          font-weight: 600;
+          font-size: 0.92rem;
+          color: var(--b-text);
+          margin: 0;
+        }
+
+        /* ── Stat badge ──────────────────────────────────────────────────── */
+        .bs-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          background: var(--b-badge-bg);
+          color: var(--b-badge-text);
+          border: 1.5px solid var(--b-border);
+          border-radius: 20px;
+          padding: 4px 14px;
+          font-size: 0.82rem;
+          font-weight: 700;
+          min-width: 60px;
+          justify-content: center;
+        }
+        .bs-badge-unit {
+          font-size: 0.68rem;
+          font-weight: 400;
+          opacity: 0.75;
+        }
+
+        /* ── View action link ────────────────────────────────────────────── */
+        .bs-view-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          color: var(--b-view-link);
+          font-weight: 600;
+          font-size: 0.82rem;
+          text-decoration: none;
+          background: var(--b-view-btn-bg);
+          border: 1.5px solid var(--b-border);
+          border-radius: 8px;
+          padding: 5px 12px;
+          transition: background 0.2s;
+        }
+        .bs-view-link:hover {
+          background: var(--b-primary-lt);
+          color: var(--b-primary);
+        }
+
+        /* ── Grid view ───────────────────────────────────────────────────── */
+        .bs-grid-wrap {
+          display: none;
+          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+          gap: 20px;
+          margin-bottom: 40px;
+        }
+        .bs-grid-wrap.active { display: grid; }
+
+        .bs-card {
+          background: var(--b-surface);
+          border: 1.5px solid var(--b-border);
+          border-radius: 14px;
+          padding: 20px 18px 16px;
+          box-shadow: 0 4px 16px var(--b-glow);
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .bs-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px var(--b-glow); }
+        .bs-card-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding-bottom: 10px;
+          border-bottom: 1.5px solid var(--b-border);
+        }
+        .bs-card-title {
+          font-weight: 700;
+          font-size: 0.95rem;
+          color: var(--b-text);
+          margin: 0;
+          line-height: 1.2;
+        }
+        .bs-card-mgr {
+          font-size: 0.75rem;
+          color: var(--b-text-muted);
+          margin: 0;
+        }
+        .bs-card-stats {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        .bs-stat-item {
+          flex: 1 0 85px;
+          background: var(--b-surface2);
+          border: 1px solid var(--b-border);
+          border-radius: 8px;
+          padding: 6px 10px;
+          text-align: center;
+        }
+        .bs-stat-label {
+          font-size: 0.65rem;
+          color: var(--b-text-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.4px;
+          margin: 0;
+        }
+        .bs-stat-value {
+          font-size: 1rem;
+          font-weight: 700;
+          color: var(--b-primary);
+          margin: 0;
+          line-height: 1.2;
+        }
+
+        /* ── Responsive ──────────────────────────────────────────────────── */
+        @media (max-width: 768px) {
+          .bs-col-mgr, .bs-col-call { display: none !important; }
+          .bs-table-header .bs-col-mgr,
+          .bs-table-header .bs-col-call { display: none !important; }
+          .bs-row { padding: 12px 20px; }
+          .bs-table-header { padding: 10px 20px; }
+        }
+      </style>
+    </head>
+
+    <body>
+      <!-- ── Page header ──────────────────────────────────────────────────── -->
+      <header class="bs-header">
+        <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo" height="56"/>
+      </header>
+
+      <!-- ── Top bar: tournament title → Bid Summary → view toggle | logo ── -->
+      <section class="bs-top">
+        <div class="container">
+          <div class="d-flex flex-wrap align-items-center justify-content-between" style="row-gap:14px; column-gap:12px;">
+
+            <!-- Left: tournament name + description stacked above "Bid Summary" + pills -->
+            <div class="d-flex flex-wrap align-items-end gap-3">
+              <div>
+                <t t-if="tournament">
+                  <p class="bs-tournament-name mb-0">
+                    <t t-esc="tournament.name"/>
+                  </p>
+                  <p class="bs-tournament-desc mb-1">
+                    <t t-esc="tournament.description"/>
+                  </p>
+                </t>
+                <h3 class="bs-page-title">Bid Summary</h3>
+              </div>
+              <ul class="bs-view-pills m-0 p-0" style="margin-bottom:3px !important;">
+                <li id="list-view" class="active">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1.5 7H0.5C0.224 7 0 7.224 0 7.5V8.5C0 8.776 0.224 9 0.5 9H1.5C1.776 9 2 8.776 2 8.5V7.5C2 7.224 1.776 7 1.5 7ZM15.5 7.5H5C4.724 7.5 4.5 7.724 4.5 8C4.5 8.276 4.724 8.5 5 8.5H15.5C15.776 8.5 16 8.276 16 8C16 7.724 15.776 7.5 15.5 7.5ZM1.5 11H0.5C0.224 11 0 11.224 0 11.5V12.5C0 12.776 0.224 13 0.5 13H1.5C1.776 13 2 12.776 2 12.5V11.5C2 11.224 1.776 11 1.5 11ZM15.5 11.5H5C4.724 11.5 4.5 11.724 4.5 12C4.5 12.276 4.724 12.5 5 12.5H15.5C15.776 12.5 16 12.276 16 12C16 11.724 15.776 11.5 15.5 11.5ZM1.5 3H0.5C0.224 3 0 3.224 0 3.5V4.5C0 4.776 0.224 5 0.5 5H1.5C1.776 5 2 4.776 2 4.5V3.5C2 3.224 1.776 3 1.5 3ZM5 4.5H15.5C15.776 4.5 16 4.276 16 4C16 3.724 15.776 3.5 15.5 3.5H5C4.724 3.5 4.5 3.724 4.5 4C4.5 4.276 4.724 4.5 5 4.5Z" fill="currentColor"/>
+                  </svg>
+                  List
+                </li>
+                <li id="grid-view">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3.5 2C3.10218 2 2.72064 2.15804 2.43934 2.43934C2.15804 2.72064 2 3.10218 2 3.5V5.5C2 5.89782 2.15804 6.27936 2.43934 6.56066C2.72064 6.84196 3.10218 7 3.5 7H5.5C5.89782 7 6.27936 6.84196 6.56066 6.56066C6.84196 6.27936 7 5.89782 7 5.5V3.5C7 3.10218 6.84196 2.72064 6.56066 2.43934C6.27936 2.15804 5.89782 2 5.5 2H3.5ZM10.5 2C10.1022 2 9.72064 2.15804 9.43934 2.43934C9.15804 2.72064 9 3.10218 9 3.5V5.5C9 5.89782 9.15804 6.27936 9.43934 6.56066C9.72064 6.84196 10.1022 7 10.5 7H12.5C12.8978 7 13.2794 6.84196 13.5607 6.56066C13.842 6.27936 14 5.89782 14 5.5V3.5C14 3.10218 13.842 2.72064 13.5607 2.43934C13.2794 2.15804 12.8978 2 12.5 2H10.5ZM3.5 9C3.10218 9 2.72064 9.15804 2.43934 9.43934C2.15804 9.72064 2 10.1022 2 10.5V12.5C2 12.8978 2.15804 13.2794 2.43934 13.5607C2.72064 13.842 3.10218 14 3.5 14H5.5C5.89782 14 6.27936 13.842 6.56066 13.5607C6.84196 13.2794 7 12.8978 7 12.5V10.5C7 10.1022 6.84196 9.72064 6.56066 9.43934C6.27936 9.15804 5.89782 9 5.5 9H3.5ZM10.5 9C10.1022 9 9.72064 9.15804 9.43934 9.43934C9.15804 9.72064 9 10.1022 9 10.5V12.5C9 12.8978 9.15804 13.2794 9.43934 13.5607C9.72064 13.842 10.1022 14 10.5 14H12.5C12.8978 14 13.2794 13.842 13.5607 13.5607C13.842 13.2794 14 12.8978 14 12.5V10.5C14 10.1022 13.842 9.72064 13.5607 9.43934C13.2794 9.15804 12.8978 9 12.5 9H10.5Z" fill="currentColor"/>
+                  </svg>
+                  Grid
+                </li>
+              </ul>
+            </div>
+
+            <!-- Right: tournament logo only -->
+            <div class="bs-league-logo-wrap" t-if="tournament and tournament.logo">
+              <img t-att-src="image_data_uri(tournament.logo)" alt="Logo" width="64" height="64"
+                   style="border-radius:8px; display:block;"/>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ── LIST VIEW ────────────────────────────────────────────────────── -->
+      <section class="mt-4" id="list-section">
+        <div class="container">
+
+          <!-- Table header row -->
+          <div class="bs-table-header">
+            <div class="bs-col-team">Team Name</div>
+            <div class="bs-col-mgr">Manager</div>
+            <div class="bs-col-needed">Players Needed</div>
+            <div class="bs-col-pts">Points Left</div>
+            <div class="bs-col-call">Next Max Call</div>
+            <div class="bs-col-act" t-if="type == 'internal'">Actions</div>
+          </div>
+
+          <div class="bs-table-wrap">
+            <t t-foreach="teams" t-as="team">
+              <div class="bs-row" t-attf-data-auction-id="#{team.id}">
+
+                <!-- Team -->
+                <div class="bs-col-team d-flex align-items-center gap-2">
+                  <img t-att-src="image_data_uri(team.team_id.logo)"
+                       alt="Team Logo" class="bs-team-logo"/>
+                  <p class="bs-team-name-text"><t t-esc="team.team_id.name"/></p>
+                </div>
+
+                <!-- Manager -->
+                <div class="bs-col-mgr">
+                  <span style="font-size:0.85rem; color:var(--b-text-muted);">
+                    <t t-esc="team.manager"/>
+                  </span>
+                </div>
+
+                <!-- Players needed -->
+                <div class="bs-col-needed">
+                  <span class="bs-badge">
+                    <span t-attf-id="team-players-#{team.id}"><t t-esc="team.remaining_players_count"/></span>
+                  </span>
+                </div>
+
+                <!-- Points left -->
+                <div class="bs-col-pts">
+                  <span class="bs-badge">
+                    <span t-attf-id="team-points-#{team.id}"><t t-esc="team.remaining_points"/></span>
+                    <span class="bs-badge-unit">pts</span>
+                  </span>
+                </div>
+
+                <!-- Max call -->
+                <div class="bs-col-call">
+                  <span class="bs-badge">
+                    <span t-attf-id="team-maxcall-#{team.id}"><t t-esc="team.max_call"/></span>
+                    <span class="bs-badge-unit">pts</span>
+                  </span>
+                </div>
+
+                <!-- Actions -->
+                <div class="bs-col-act" t-if="type == 'internal'">
+                  <a t-att-href="'/auction/get/players/team/%s' % team.team_id.id" class="bs-view-link">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M15 12C15 12.7956 14.6839 13.5587 14.1213 14.1213C13.5587 14.6839 12.7956 15 12 15C11.2044 15 10.4413 14.6839 9.87868 14.1213C9.31607 13.5587 9 12.7956 9 12C9 11.2044 9.31607 10.4413 9.87868 9.87868C10.4413 9.31607 11.2044 9 12 9C12.7956 9 13.5587 9.31607 14.1213 9.87868C14.6839 10.4413 15 11.2044 15 12Z"
+                            t-attf-stroke="#{theme == 'butterscotch' and '#F5C842' or theme == 'cherry' and '#FF6B6B' or theme == 'strawberry' and '#C2185B' or '#2E5AEA'}"
+                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M2 12C3.6 7.903 7.336 5 12 5C16.664 5 20.4 7.903 22 12C20.4 16.097 16.664 19 12 19C7.336 19 3.6 16.097 2 12Z"
+                            t-attf-stroke="#{theme == 'butterscotch' and '#F5C842' or theme == 'cherry' and '#FF6B6B' or theme == 'strawberry' and '#C2185B' or '#2E5AEA'}"
+                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    View
+                  </a>
+                </div>
+
+              </div>
+            </t>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ── GRID VIEW ────────────────────────────────────────────────────── -->
+      <section class="mt-4" id="grid-section" style="display:none;">
+        <div class="container">
+          <div class="bs-grid-wrap active">
+            <t t-foreach="teams" t-as="team">
+              <div class="bs-card">
+                <div class="bs-card-header">
+                  <img t-att-src="image_data_uri(team.team_id.logo)"
+                       alt="Team Logo" class="bs-team-logo"/>
+                  <div>
+                    <p class="bs-card-title"><t t-esc="team.team_id.name"/></p>
+                    <p class="bs-card-mgr"><t t-esc="team.manager"/></p>
                   </div>
-                </section>
-
-                <section class="full-listing mt-4 list-view">
-                  <div class="container">
-                    <div class="club-listing list-view">
-                      <!-- table title -->
-
-                      <div
-                        class="table-title d-flex align-items-center justify-content-between px-lg-5 px-4 py-2"
-                        style="column-gap: 15px"
-                      >
-                        <div class="team-name">
-                          <p>Team Name</p>
-                        </div>
-                        <div
-                          class="manager d-flex align-items-center justify-content-center"
-                        >
-                          <img
-                            src="/auction_module/static/src/assets/images/manager.svg"
-                            alt="manager"
-                            width="20"
-                            height="20"
-                          />
-                          <p class="ms-2">Manager</p>
-                        </div>
-                        <div
-                          class="player-needed d-flex align-items-center justify-content-center"
-                        >
-                          <img
-                            src="/auction_module/static/src/assets/images/player-needed.svg"
-                            alt="player needed"
-                            width="20"
-                            height="20"
-                          />
-                          <p class="ms-2">Players Needed</p>
-                        </div>
-                        <div
-                          class="max-call d-flex align-items-center justify-content-center"
-                        >
-                          <img
-                            src="/auction_module/static/src/assets/images/points-left.svg"
-                            alt="points-left"
-                            width="20"
-                            height="20"
-                          />
-                          <p class="ms-2">Points left</p>
-                        </div>
-                        <div
-                          class="points-left d-flex align-items-center justify-content-center"
-                        >
-                          <img
-                            src="/auction_module/static/src/assets/images/points-left.svg"
-                            alt="points-left"
-                            width="10"
-                            height="20"
-                          />
-                          <p  class="ms-2">Next Max call</p>
-                        </div>
-                        <div class="actions" t-if="type == 'internal'">
-                          <p class="text-center">Actions</p>
-                        </div>
-                      </div>
-
-                      <!-- table content -->
-
-                        <div class="club-full-list mb-5">
-                          <t t-foreach="teams" t-as="team">
-                          <div
-                            class="each-club-list d-flex align-items-center justify-content-between px-lg-5 px-4 py-3 mt-2"
-                            style="column-gap: 15px" t-attf-data-auction-id="#{team.id}">
-                            <div class="team-name d-flex align-items-center">
-                                <img
-                                  t-att-src="image_data_uri(team.team_id.logo)"
-                                  alt="AuctionChamp"
-                                  width="40"
-                                  height="40"
-                                />
-                              <p class="ms-2"><span t-esc="team.team_id.name"/></p>
-                            </div>
-                            <!--Manager -->
-                            <div class="manager d-flex align-items-center justify-content-center">
-                            <label for="player-needed" class="d-none">
-                              <img
-                                src="/auction_module/static/src/assets/images/manager-grid.svg"
-                                alt="players needed"
-                                width="20"
-                                height="20"
-                              />
-                              Manager
-                            </label>
-                            <div
-                              class="manager-name-image d-flex align-items-center justify-content-center">
-                              <div class="multiple-icon d-flex">
-                                <!--<img
-                                  src="/auction_module/static/src/assets/images/RR.webp"
-                                  alt="Team Manager"
-                                  width="36"
-                                  height="36"
-                                />-->
-                                <!--<img
-                                  src="./assets/images/RR.webp"
-                                  alt="Team Manager"
-                                  width="36"
-                                  height="36"
-                                />-->
-                              </div>
-                              <p class="ms-2 text-nowrap"><span t-esc="team.manager"/></p>
-                            </div>
-                          </div>
-                            <!--End manager -->
-                            <div
-                            class="player-needed d-flex align-items-center justify-content-center">
-                            <label for="player-needed" class="d-none">
-                              <img
-                                src="/auction_module/static/src/assets/images/players-grid.svg"
-                                alt="players needed"
-                                width="20"
-                                height="20"
-                              />
-                              Players needed
-                            </label>
-                            <p class="ms-2"><span t-attf-id="team-players-#{team.id}" t-esc="team.remaining_players_count"/></p>
-                          </div>
-                            <!--End playere needsd -->
-                            <div
-                            class="points-left d-flex align-items-center justify-content-center"
-                          >
-                            <label for="player-needed" class="d-none">
-                              <img
-                                src="/auction_module/static/src/assets/images/points-grid.svg"
-                                alt="players needed"
-                                width="20"
-                                height="20"
-                              />
-                              Points Left
-                            </label>
-                            <p class="ms-2"><span t-attf-id="team-points-#{team.id}" t-esc="team.remaining_points"></span> <span>pts</span></p>
-                          </div>
-                            <div
-                            class="max-call d-flex align-items-center justify-content-center"
-                          >
-                            <label for="player-needed" class="d-none">
-                              <img
-                                src="/auction_module/static/src/assets/images/points-grid.svg"
-                                alt="players needed"
-                                width="10"
-                                height="10"
-                              />
-                              Next Max call
-                            </label>
-                            <p class="ms-2"><span t-attf-id="team-maxcall-#{team.id}" t-esc="team.max_call"></span> <span>pts</span></p>
-                          </div>
-                            <!--End pints remaining -->
-                            <div class="actions" t-if="type == 'internal'">
-                            <p
-                              class="text-center d-flex align-items-center justify-content-center"
-                              style="column-gap: 10px"
-                            >
-                              <a t-att-href="'/auction/get/players/team/%s' % team.team_id.id">
-                                <svg
-                                  width="24"
-                                  height="24"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    d="M15 12C15 12.7956 14.6839 13.5587 14.1213 14.1213C13.5587 14.6839 12.7956 15 12 15C11.2044 15 10.4413 14.6839 9.87868 14.1213C9.31607 13.5587 9 12.7956 9 12C9 11.2044 9.31607 10.4413 9.87868 9.87868C10.4413 9.31607 11.2044 9 12 9C12.7956 9 13.5587 9.31607 14.1213 9.87868C14.6839 10.4413 15 11.2044 15 12Z"
-                                    stroke="#2E5AEA"
-                                    stroke-width="1.5"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                  />
-                                  <path
-                                    d="M2 12C3.6 7.903 7.336 5 12 5C16.664 5 20.4 7.903 22 12C20.4 16.097 16.664 19 12 19C7.336 19 3.6 16.097 2 12Z"
-                                    stroke="#2E5AEA"
-                                    stroke-width="1.5"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                  />
-                                </svg>
-                                View
-                              </a>
-                            </p>
-                          </div>
-                            <!-- End button action-->
-                          </div>
-                          </t>
-                        </div>
-
-
-                    </div>
+                </div>
+                <div class="bs-card-stats">
+                  <div class="bs-stat-item">
+                    <p class="bs-stat-label">Players Needed</p>
+                    <p class="bs-stat-value">
+                      <span t-attf-id="grid-team-players-#{team.id}"><t t-esc="team.remaining_players_count"/></span>
+                    </p>
                   </div>
-                </section>
+                  <div class="bs-stat-item">
+                    <p class="bs-stat-label">Pts Left</p>
+                    <p class="bs-stat-value">
+                      <span t-attf-id="grid-team-points-#{team.id}"><t t-esc="team.remaining_points"/></span>
+                    </p>
+                  </div>
+                  <div class="bs-stat-item">
+                    <p class="bs-stat-label">Max Call</p>
+                    <p class="bs-stat-value">
+                      <span t-attf-id="grid-team-maxcall-#{team.id}"><t t-esc="team.max_call"/></span>
+                    </p>
+                  </div>
+                </div>
+                <div t-if="type == 'internal'" class="text-end" style="margin-top:4px;">
+                  <a t-att-href="'/auction/get/players/team/%s' % team.team_id.id" class="bs-view-link">
+                    View Squad
+                  </a>
+                </div>
+              </div>
+            </t>
+          </div>
+        </div>
+      </section>
 
-                <script>
+      <!-- ── Scripts ──────────────────────────────────────────────────────── -->
+      <script>
+        (function() {
+          var btnGrid   = document.getElementById('grid-view');
+          var btnList   = document.getElementById('list-view');
+          var secList   = document.getElementById('list-section');
+          var secGrid   = document.getElementById('grid-section');
+          var pills     = [btnList, btnGrid];
 
-                  const button = document.getElementById("grid-view");
-                  const button2 = document.getElementById("list-view");
-                  const targets = document.querySelectorAll(".club-full-list");
-                  const grid_labels = document.querySelectorAll("label");
-                  const table_title = document.querySelectorAll(".table-title");
-                  const club_lists = document.querySelectorAll(".club-listing");
-                  const full_listings = document.querySelectorAll(".full-listing");
-                  const listItems = document.querySelectorAll(".balance-point ul > li");
+          btnGrid.addEventListener('click', function() {
+            secList.style.display = 'none';
+            secGrid.style.display = '';
+            pills.forEach(function(p) { p.classList.remove('active'); });
+            btnGrid.classList.add('active');
+          });
 
-                  button.addEventListener("click", () => {
-                    targets.forEach((target) => {
-                      target.classList.add("grid-view-on");
-                    });
-                    grid_labels.forEach((grid_label) => {
-                      grid_label.classList.remove("d-none");
-                    });
-                    table_title.forEach((table_titl) => {
-                      table_titl.classList.add("d-none");
-                    });
-                    club_lists.forEach((club_list) => {
-                      club_list.classList.remove("list-view");
-                    });
-                    full_listings.forEach((full_list) => {
-                      full_list.classList.remove("list-view");
-                    });
-                  });
+          btnList.addEventListener('click', function() {
+            secGrid.style.display = 'none';
+            secList.style.display = '';
+            pills.forEach(function(p) { p.classList.remove('active'); });
+            btnList.classList.add('active');
+          });
 
-                  button2.addEventListener("click", () => {
-                    targets.forEach((target) => {
-                      target.classList.remove("grid-view-on");
-                    });
-                    grid_labels.forEach((grid_label) => {
-                      grid_label.classList.add("d-none");
-                    });
-                    table_title.forEach((table_titl) => {
-                      table_titl.classList.remove("d-none");
-                    });
-                    club_lists.forEach((club_list) => {
-                      club_list.classList.add("list-view");
-                    });
-                    full_listings.forEach((full_list) => {
-                      full_list.classList.add("list-view");
-                    });
-                  });
+          /* ── Live refresh every 5 s ─────────────────────────────────── */
+          function refreshBalance() {
+            fetch('/auction/show/team/balance/json')
+              .then(function(r) { return r.json(); })
+              .then(function(data) {
+                data.teams.forEach(function(team) {
+                  var el;
+                  /* list view */
+                  el = document.getElementById('team-players-' + team.id);
+                  if (el) el.textContent = team.remaining_players_count;
+                  el = document.getElementById('team-points-' + team.id);
+                  if (el) el.textContent = team.remaining_points;
+                  el = document.getElementById('team-maxcall-' + team.id);
+                  if (el) el.textContent = team.max_call;
+                  /* grid view */
+                  el = document.getElementById('grid-team-players-' + team.id);
+                  if (el) el.textContent = team.remaining_players_count;
+                  el = document.getElementById('grid-team-points-' + team.id);
+                  if (el) el.textContent = team.remaining_points;
+                  el = document.getElementById('grid-team-maxcall-' + team.id);
+                  if (el) el.textContent = team.max_call;
+                });
+              })
+              .catch(function() { /* silent fail */ });
+          }
+          setInterval(refreshBalance, 5000);
+        })();
+      </script>
 
-                  listItems.forEach((item) => {
-                    item.addEventListener("click", () => {
-                      listItems.forEach((li) => li.classList.remove("active"));
-                      item.classList.add("active");
-                    });
-                  });
-
-                  function refreshBalance() {
-                    fetch('/auction/show/team/balance/json')
-                      .then(function(r) { return r.json(); })
-                      .then(function(data) {
-                        data.teams.forEach(function(team) {
-                          var el;
-                          el = document.getElementById('team-players-' + team.id);
-                          if (el) el.textContent = team.remaining_players_count;
-                          el = document.getElementById('team-points-' + team.id);
-                          if (el) el.textContent = team.remaining_points;
-                          el = document.getElementById('team-maxcall-' + team.id);
-                          if (el) el.textContent = team.max_call;
-                        });
-                      })
-                      .catch(function() { /* silent fail on network error */ });
-                  }
-                  setInterval(refreshBalance, 5000);
-                </script>
-                <script
-                  src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-                  integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
-                  crossorigin="anonymous"
-                ></script>
-              </body>
-    </html>
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+              integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+              crossorigin="anonymous"></script>
+    </body>
+  </html>
 </template>
 
 </odoo>

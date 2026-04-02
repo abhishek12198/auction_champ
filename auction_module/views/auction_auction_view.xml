@@ -93,8 +93,8 @@
                             </page>
                             <page string="Tier Limits">
                                 <field name="tier_limit_ids" nolabel="1">
-                                    <tree editable="bottom">
-                                        <field name="tier_id"     string="Tier"          required="1"/>
+                                    <tree editable="bottom" create="0">
+                                        <field name="tier_id"     string="Tier"          required="1" domain="[('is_an_icon_tier', '=', False)]"/>
                                         <field name="max_players" string="Max per Team"  required="1"/>
                                         <field name="base_point"  string="Min Bid (0 = global base)"/>
                                     </tree>

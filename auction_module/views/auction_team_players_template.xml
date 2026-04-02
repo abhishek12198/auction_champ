@@ -1,603 +1,784 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+<template id="auction_team_players_template" name="Players">
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+            crossorigin="anonymous"/>
+      <link rel="preconnect" href="https://fonts.googleapis.com"/>
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
+      <link href="https://fonts.googleapis.com/css2?family=Teko:wght@600;700&amp;family=Poppins:wght@400;500;600;700&amp;display=swap"
+            rel="stylesheet"/>
+      <link rel="stylesheet" href="/auction_module/static/src/assets/css/style.css"/>
+      <title>Squad</title>
 
+      <style>
+        /* ── Theme custom properties ───────────────────────────────────────── */
 
-    <template id="auction_team_players_template" name="Players">
-    <t t-call="website.layout">
-        <t t-set="body_class" t-value="'hide-main-menu'"/>
-            <t t-set="no_header" t-value="True"/>
-    <t t-set="no_footer" t-value="True"/>
-         <div id="wrapwrap">
-        <!-- your existing HTML body ONLY -->
+        /* VANILLA */
+        :root {
+          --p-primary:      #004080;
+          --p-primary-dk:   #002a5c;
+          --p-primary-lt:   rgba(0,64,128,0.12);
+          --p-glow:         rgba(0,64,128,0.22);
+          --p-body-bg:      #eef2f7;
+          --p-surface:      #fff;
+          --p-surface2:     #f0f4f8;
+          --p-border:       rgba(0,64,128,0.15);
+          --p-text:         #1a1a2e;
+          --p-text-muted:   #556;
+          --p-header-bg:    linear-gradient(135deg,#004080,#002a5c);
+          --p-header-text:  #fff;
+          --p-card-bg:      #fff;
+          --p-card-foot:    #f0f4f8;
+          --p-icon-crown:   #f5a623;
+          --p-pts-bg:       rgba(0,64,128,0.10);
+          --p-pts-text:     #004080;
+          --p-tag-bg:       rgba(0,64,128,0.08);
+          --p-tag-text:     #004080;
+          --p-tag-border:   rgba(0,64,128,0.20);
+          --p-back-bg:      rgba(0,64,128,0.10);
+          --p-back-text:    #004080;
+          --p-snap-bg:      #004080;
+          --p-snap-text:    #fff;
+          --p-empty-icon:   #004080;
+        }
 
-        <html lang="en">
+        <t t-if="theme == 'cherry'">
+        :root {
+          --p-primary:      #DC143C;
+          --p-primary-dk:   #8B0000;
+          --p-primary-lt:   rgba(220,20,60,0.15);
+          --p-glow:         rgba(220,20,60,0.32);
+          --p-body-bg:      #0d0d0d;
+          --p-surface:      #1e1e1e;
+          --p-surface2:     #181818;
+          --p-border:       rgba(220,20,60,0.22);
+          --p-text:         #f5f5f5;
+          --p-text-muted:   #aaa;
+          --p-header-bg:    linear-gradient(135deg,#0a0a0a,#2a0a10);
+          --p-header-text:  #f5f5f5;
+          --p-card-bg:      #1e1e1e;
+          --p-card-foot:    #181818;
+          --p-icon-crown:   #FFD700;
+          --p-pts-bg:       rgba(220,20,60,0.15);
+          --p-pts-text:     #ff6b6b;
+          --p-tag-bg:       rgba(220,20,60,0.12);
+          --p-tag-text:     #ff9090;
+          --p-tag-border:   rgba(220,20,60,0.28);
+          --p-back-bg:      rgba(220,20,60,0.12);
+          --p-back-text:    #ff6b6b;
+          --p-snap-bg:      #DC143C;
+          --p-snap-text:    #fff;
+          --p-empty-icon:   #DC143C;
+        }
+        </t>
+        <t t-elif="theme == 'butterscotch'">
+        :root {
+          --p-primary:      #F5C842;
+          --p-primary-dk:   #C8960C;
+          --p-primary-lt:   rgba(245,200,66,0.15);
+          --p-glow:         rgba(245,200,66,0.35);
+          --p-body-bg:      #0d0d1f;
+          --p-surface:      #181828;
+          --p-surface2:     #12121e;
+          --p-border:       rgba(245,200,66,0.20);
+          --p-text:         #f5f0e0;
+          --p-text-muted:   #b0a880;
+          --p-header-bg:    linear-gradient(135deg,#0d0d1f,#1a1400);
+          --p-header-text:  #F5C842;
+          --p-card-bg:      #181828;
+          --p-card-foot:    #12121e;
+          --p-icon-crown:   #FFD700;
+          --p-pts-bg:       rgba(245,200,66,0.12);
+          --p-pts-text:     #F5C842;
+          --p-tag-bg:       rgba(245,200,66,0.10);
+          --p-tag-text:     #F5C842;
+          --p-tag-border:   rgba(245,200,66,0.25);
+          --p-back-bg:      rgba(245,200,66,0.10);
+          --p-back-text:    #F5C842;
+          --p-snap-bg:      #F5C842;
+          --p-snap-text:    #0d0d1f;
+          --p-empty-icon:   #F5C842;
+        }
+        </t>
+        <t t-elif="theme == 'strawberry'">
+        :root {
+          --p-primary:      #C2185B;
+          --p-primary-dk:   #880E4F;
+          --p-primary-lt:   rgba(194,24,91,0.12);
+          --p-glow:         rgba(194,24,91,0.25);
+          --p-body-bg:      #FFF0F5;
+          --p-surface:      #fff;
+          --p-surface2:     #fce4ec;
+          --p-border:       rgba(194,24,91,0.18);
+          --p-text:         #2d0a1e;
+          --p-text-muted:   #7a4060;
+          --p-header-bg:    linear-gradient(135deg,#880E4F,#C2185B);
+          --p-header-text:  #fff;
+          --p-card-bg:      #fff;
+          --p-card-foot:    #fce4ec;
+          --p-icon-crown:   #f5a623;
+          --p-pts-bg:       rgba(194,24,91,0.10);
+          --p-pts-text:     #C2185B;
+          --p-tag-bg:       rgba(194,24,91,0.08);
+          --p-tag-text:     #C2185B;
+          --p-tag-border:   rgba(194,24,91,0.22);
+          --p-back-bg:      rgba(194,24,91,0.08);
+          --p-back-text:    #C2185B;
+          --p-snap-bg:      #C2185B;
+          --p-snap-text:    #fff;
+          --p-empty-icon:   #C2185B;
+        }
+        </t>
 
-            <head>
-                <meta charset="UTF-8"/>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous"/>
-                <link rel="stylesheet" href="/auction_module/static/src/assets/css/style.css" />
-                <title>Auction Champ List</title>
-            </head>
-            <body >
-                <div id="screenshot_container">
+        /* ── Reset &amp; base ──────────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+          background: var(--p-body-bg);
+          color: var(--p-text);
+          font-family: 'Poppins', sans-serif;
+          margin: 0;
+          min-height: 100vh;
+        }
 
+        /* ── Page header ─────────────────────────────────────────────────── */
+        .tp-header {
+          background: var(--p-header-bg);
+          color: var(--p-header-text);
+          padding: 16px 0 12px;
+          border-bottom: 3px solid var(--p-primary);
+          box-shadow: 0 4px 20px var(--p-glow);
+          text-align: center;
+          position: relative;
+        }
+        .tp-header img.logo { filter: drop-shadow(0 2px 8px var(--p-glow)); }
 
-                <header class="py-3 text-center">
-                    <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo"/>
-                    <button t-if="players" type="button" role="button"
-                        t-att-data-filename="'%s_squad.png' % (team.name,)"
-                        class="o_take_screenshot squad-snapshot-btn">
-                    Squad Snapshot 📸
-                </button>
-                </header>
+        /* ── Action buttons in header ────────────────────────────────────── */
+        .tp-header-actions {
+          position: absolute;
+          right: 24px;
+          top: 50%;
+          transform: translateY(-50%);
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .tp-back-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(255,255,255,0.18);
+          color: var(--p-header-text);
+          border: 2px solid rgba(255,255,255,0.55);
+          border-radius: 8px;
+          padding: 8px 18px;
+          font-size: 0.85rem;
+          font-weight: 700;
+          text-decoration: none;
+          letter-spacing: 0.3px;
+          backdrop-filter: blur(4px);
+          transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+        }
+        .tp-back-btn:hover {
+          background: rgba(255,255,255,0.32);
+          border-color: #fff;
+          color: #fff;
+          box-shadow: 0 4px 18px rgba(0,0,0,0.25);
+          text-decoration: none;
+        }
+        .tp-snap-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: var(--p-snap-bg);
+          color: var(--p-snap-text);
+          border: 2px solid transparent;
+          border-radius: 8px;
+          padding: 8px 18px;
+          font-size: 0.85rem;
+          font-weight: 700;
+          cursor: pointer;
+          letter-spacing: 0.3px;
+          box-shadow: 0 3px 14px var(--p-glow), 0 0 0 2px rgba(255,255,255,0.15);
+          transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+        }
+        .tp-snap-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 22px var(--p-glow), 0 0 0 2px rgba(255,255,255,0.25);
+          opacity: 0.93;
+        }
+        .tp-snap-btn:active { transform: translateY(0); }
 
-                <section class="players-list-in-club mb-5" >
+        /* ── Team hero banner ────────────────────────────────────────────── */
+        .tp-team-hero {
+          background: var(--p-surface);
+          border-bottom: 2px solid var(--p-border);
+          box-shadow: 0 2px 14px var(--p-glow);
+          padding: 24px 0 20px;
+        }
+        .tp-team-logo-ring {
+          width: 88px; height: 88px;
+          border-radius: 50%;
+          border: 3px solid var(--p-primary);
+          box-shadow: 0 0 18px var(--p-glow), 0 0 0 5px var(--p-primary-lt);
+          object-fit: cover;
+          background: var(--p-surface2);
+        }
+        .tp-team-name {
+          font-family: 'Teko', sans-serif;
+          font-size: 2.4rem;
+          font-weight: 700;
+          color: var(--p-primary);
+          letter-spacing: 1px;
+          margin: 0;
+          line-height: 1.1;
+        }
+        .tp-team-meta {
+          font-size: 0.82rem;
+          color: var(--p-text-muted);
+          margin: 0;
+        }
+        .tp-team-meta span {
+          font-weight: 600;
+          color: var(--p-text);
+        }
+        .tp-player-count {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: var(--p-pts-bg);
+          color: var(--p-pts-text);
+          border: 1.5px solid var(--p-border);
+          border-radius: 20px;
+          padding: 4px 14px;
+          font-size: 0.82rem;
+          font-weight: 700;
+        }
 
-                    <div class="container">
+        /* ── Section divider label ───────────────────────────────────────── */
+        .tp-section-label {
+          font-family: 'Teko', sans-serif;
+          font-size: 1.25rem;
+          letter-spacing: 1px;
+          color: var(--p-primary);
+          text-transform: uppercase;
+          padding-bottom: 6px;
+          border-bottom: 2px solid var(--p-primary);
+          margin-bottom: 20px;
+          display: inline-block;
+        }
 
-                        <div class="team-logo-rising position-relative d-flex align-items-center justify-content-center my-lg-5 my-4" style="column-gap: 8px;">
-                            <a  class="back-btn d-none d-sm-block position-absolute" href="/auction/show/team/balance">
-                                <img src="/auction_module/static/src/assets/images/back-btn.svg" alt="back button" width="43px" height="43px" style="background-color: transparent;"/>
-                            </a>
-                            <img t-att-src="image_data_uri(team.logo)" alt="team-logo" width="70" height="70" class="p-1"/>
-                            <h1 class="rising-team-name"><span t-esc="team.name"/></h1>
-                        </div>
-                        <t t-if="players">
-                            <div class="row" style="row-gap: 30px;">
-<!--                                <div t-foreach="players" t-as="player" class="col-12 col-xl-4 col-md-6 px-2">-->
-<!--                                    <div class="bg-white p-3">-->
-<!--                                            <div class="player-small-card align-items-center d-flex">-->
-<!--                                                <div class="player-image-side">-->
-<!--                                                    <img t-att-src="image_data_uri(player.player_id.photo)" alt="Player card" width="130" height="130"/>-->
-<!--                                                </div>-->
-<!--                                                <div class="player-details ms-3 w-100 d-flex flex-column justify-content-between" style="row-gap: 20px;">-->
-<!--                                                    <div class="name-point align-items-center flex-wrap d-flex justify-content-between" style="row-gap: 6px;">-->
-<!--                                                        <h3><span t-esc="player.player_id.name"/></h3>-->
-<!--                                                        <div class="player-point d-flex align-items-center  px-2 py-1">-->
-<!--                                                            <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">-->
-<!--                                                                <path d="M20.6665 2.45352C22.6934 3.62377 24.3766 5.30695 25.5469 7.33389C26.7171 9.36083 27.3332 11.6601 27.3332 14.0006C27.3332 16.3411 26.717 18.6404 25.5468 20.6673C24.3765 22.6942 22.6933 24.3774 20.6664 25.5476C18.6394 26.7178 16.3401 27.3339 13.9996 27.3339C11.6591 27.3338 9.35986 26.7177 7.33295 25.5474C5.30604 24.3771 3.62289 22.6939 2.45268 20.6669C1.28248 18.64 0.666444 16.3407 0.666504 14.0002L0.673171 13.5682C0.747842 11.2655 1.4179 9.02146 2.61802 7.05484C3.81815 5.08822 5.50738 3.46612 7.52103 2.34669C9.53468 1.22727 11.804 0.648711 14.1078 0.667433C16.4117 0.686154 18.6713 1.30151 20.6665 2.45352ZM13.9998 6.00018C13.6462 6.00018 13.3071 6.14066 13.057 6.39071C12.807 6.64076 12.6665 6.97989 12.6665 7.33352C11.6056 7.33352 10.5882 7.75494 9.83808 8.50509C9.08793 9.25523 8.6665 10.2726 8.6665 11.3335C8.6665 12.3944 9.08793 13.4118 9.83808 14.1619C10.5882 14.9121 11.6056 15.3335 12.6665 15.3335V18.0002C12.4454 18.0124 12.2246 17.9705 12.0234 17.878C11.8221 17.7855 11.6465 17.6453 11.5118 17.4695L11.4212 17.3349C11.2387 17.0407 10.9491 16.8289 10.6134 16.7445C10.2777 16.66 9.92226 16.7094 9.62232 16.8822C9.32239 17.055 9.10142 17.3378 9.00616 17.6706C8.91089 18.0034 8.94879 18.3602 9.11184 18.6655C9.45215 19.2557 9.93759 19.7492 10.5221 20.0993C11.1066 20.4493 11.7709 20.6442 12.4518 20.6655H12.6665C12.6662 20.9923 12.786 21.3079 13.003 21.5522C13.2201 21.7965 13.5193 21.9526 13.8438 21.9908L13.9998 22.0002C14.3535 22.0002 14.6926 21.8597 14.9426 21.6097C15.1927 21.3596 15.3332 21.0205 15.3332 20.6668L15.5678 20.6602C16.6073 20.6001 17.5824 20.1371 18.2859 19.3695C18.9894 18.6019 19.3659 17.5902 19.3353 16.5495C19.3047 15.5087 18.8696 14.5209 18.1223 13.7959C17.3749 13.0709 16.3744 12.6658 15.3332 12.6668V10.0002C15.8105 9.98418 16.2278 10.1868 16.4878 10.5308L16.5785 10.6655C16.7609 10.9597 17.0506 11.1714 17.3863 11.2559C17.722 11.3404 18.0774 11.291 18.3774 11.1181C18.6773 10.9453 18.8983 10.6626 18.9935 10.3298C19.0888 9.99701 19.0509 9.64021 18.8878 9.33485C18.5477 8.74438 18.0623 8.2506 17.4778 7.90035C16.8933 7.5501 16.2289 7.35498 15.5478 7.33352H15.3332C15.3332 6.97989 15.1927 6.64076 14.9426 6.39071C14.6926 6.14066 14.3535 6.00018 13.9998 6.00018ZM15.3332 15.3335C15.6868 15.3335 16.0259 15.474 16.276 15.724C16.526 15.9741 16.6665 16.3132 16.6665 16.6668C16.6665 17.0205 16.526 17.3596 16.276 17.6097C16.0259 17.8597 15.6868 18.0002 15.3332 18.0002V15.3335ZM12.6665 10.0002V12.6668C12.3129 12.6668 11.9737 12.5264 11.7237 12.2763C11.4736 12.0263 11.3332 11.6871 11.3332 11.3335C11.3332 10.9799 11.4736 10.6408 11.7237 10.3907C11.9737 10.1407 12.3129 10.0002 12.6665 10.0002Z" fill="#FFC812"/>-->
-<!--                                                            </svg>-->
-<!--                                                            <p class="ms-2"><span t-esc="player.points"/> <span>pts</span></p>-->
-<!--                                                        </div>-->
-<!--                                                    </div>-->
-<!--                                                    <div class="player-expertise d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">-->
+        /* ── Player card ─────────────────────────────────────────────────── */
+        .tp-card {
+          background: var(--p-card-bg);
+          border: 1.5px solid var(--p-border);
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 4px 18px var(--p-glow);
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          transition: transform 0.2s, box-shadow 0.2s;
+          position: relative;
+        }
+        .tp-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 10px 32px var(--p-glow);
+        }
 
-<!--                                                        <p  class="batter"><span t-esc="player.player_id.role"/></p>-->
-<!--                                                        &lt;!&ndash;<p class="bowler">Bowler</p>-->
-<!--                                                        <p class="all-rounder">All Rounder</p>&ndash;&gt;-->
-<!--                                                    </div>-->
-<!--                                                    <a href="#">-->
-<!--                                                        <img src="/auction_module/static/src/assets/images/phone.svg" alt="phone" width="18" height="18"/>-->
-<!--                                                        <span t-esc="player.contact"/>-->
-<!--                                                    </a>-->
-<!--                                                </div>-->
-<!--                                            </div>-->
-<!--                                        </div>-->
-<!--                                </div>-->
-                                <div t-foreach="players" t-as="player" class="col-12 col-xl-4 col-md-6 px-2">
-                                    <div class="bg-white p-3">
-                                            <div class="player-small-card align-items-center d-flex">
-                                                <div class="player-image-side position-relative">
-                                                    <img t-att-src="image_data_uri(player.get('photo'))" alt="Player card" width="130" height="130"/>
-                                                    <div class="player-badges-container position-absolute top-0 end-0" style="display: flex; flex-direction: column; gap: 4px; padding: 4px;">
-                                                        <t t-if="player.get('tier_name')">
-                                                            <span class="badge badge-stamp" t-att-style="'background-color: %s; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; text-align: center; max-width: 55px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;' % player.get('tier_color', '#01cfff')" t-esc="player.get('tier_name')"/>
-                                                        </t>
-                                                    </div>
-                                                </div>
-                                                <div class="player-details ms-3 w-100 d-flex flex-column justify-content-between" style="row-gap: 20px;">
-                                                    <div class="name-point align-items-center flex-wrap d-flex justify-content-between" style="row-gap: 6px;">
-                                                        <h3><span t-esc="player.get('name')"/></h3>
-                                                        <div t-if="not player.get('point') == 'ICON'"  class="player-point d-flex align-items-center  px-2 py-1">
-                                                            <div t-if="not player.get('point') == 'ICON'" >
-                                                                <svg  width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                    <path d="M20.6665 2.45352C22.6934 3.62377 24.3766 5.30695 25.5469 7.33389C26.7171 9.36083 27.3332 11.6601 27.3332 14.0006C27.3332 16.3411 26.717 18.6404 25.5468 20.6673C24.3765 22.6942 22.6933 24.3774 20.6664 25.5476C18.6394 26.7178 16.3401 27.3339 13.9996 27.3339C11.6591 27.3338 9.35986 26.7177 7.33295 25.5474C5.30604 24.3771 3.62289 22.6939 2.45268 20.6669C1.28248 18.64 0.666444 16.3407 0.666504 14.0002L0.673171 13.5682C0.747842 11.2655 1.4179 9.02146 2.61802 7.05484C3.81815 5.08822 5.50738 3.46612 7.52103 2.34669C9.53468 1.22727 11.804 0.648711 14.1078 0.667433C16.4117 0.686154 18.6713 1.30151 20.6665 2.45352ZM13.9998 6.00018C13.6462 6.00018 13.3071 6.14066 13.057 6.39071C12.807 6.64076 12.6665 6.97989 12.6665 7.33352C11.6056 7.33352 10.5882 7.75494 9.83808 8.50509C9.08793 9.25523 8.6665 10.2726 8.6665 11.3335C8.6665 12.3944 9.08793 13.4118 9.83808 14.1619C10.5882 14.9121 11.6056 15.3335 12.6665 15.3335V18.0002C12.4454 18.0124 12.2246 17.9705 12.0234 17.878C11.8221 17.7855 11.6465 17.6453 11.5118 17.4695L11.4212 17.3349C11.2387 17.0407 10.9491 16.8289 10.6134 16.7445C10.2777 16.66 9.92226 16.7094 9.62232 16.8822C9.32239 17.055 9.10142 17.3378 9.00616 17.6706C8.91089 18.0034 8.94879 18.3602 9.11184 18.6655C9.45215 19.2557 9.93759 19.7492 10.5221 20.0993C11.1066 20.4493 11.7709 20.6442 12.4518 20.6655H12.6665C12.6662 20.9923 12.786 21.3079 13.003 21.5522C13.2201 21.7965 13.5193 21.9526 13.8438 21.9908L13.9998 22.0002C14.3535 22.0002 14.6926 21.8597 14.9426 21.6097C15.1927 21.3596 15.3332 21.0205 15.3332 20.6668L15.5678 20.6602C16.6073 20.6001 17.5824 20.1371 18.2859 19.3695C18.9894 18.6019 19.3659 17.5902 19.3353 16.5495C19.3047 15.5087 18.8696 14.5209 18.1223 13.7959C17.3749 13.0709 16.3744 12.6658 15.3332 12.6668V10.0002C15.8105 9.98418 16.2278 10.1868 16.4878 10.5308L16.5785 10.6655C16.7609 10.9597 17.0506 11.1714 17.3863 11.2559C17.722 11.3404 18.0774 11.291 18.3774 11.1181C18.6773 10.9453 18.8983 10.6626 18.9935 10.3298C19.0888 9.99701 19.0509 9.64021 18.8878 9.33485C18.5477 8.74438 18.0623 8.2506 17.4778 7.90035C16.8933 7.5501 16.2289 7.35498 15.5478 7.33352H15.3332C15.3332 6.97989 15.1927 6.64076 14.9426 6.39071C14.6926 6.14066 14.3535 6.00018 13.9998 6.00018ZM15.3332 15.3335C15.6868 15.3335 16.0259 15.474 16.276 15.724C16.526 15.9741 16.6665 16.3132 16.6665 16.6668C16.6665 17.0205 16.526 17.3596 16.276 17.6097C16.0259 17.8597 15.6868 18.0002 15.3332 18.0002V15.3335ZM12.6665 10.0002V12.6668C12.3129 12.6668 11.9737 12.5264 11.7237 12.2763C11.4736 12.0263 11.3332 11.6871 11.3332 11.3335C11.3332 10.9799 11.4736 10.6408 11.7237 10.3907C11.9737 10.1407 12.3129 10.0002 12.6665 10.0002Z" fill="#FFC812"/>
-                                                                </svg>
-                                                            </div>
-                                                            <p class="ms-2"><span t-if="not player.get('point') == 'ICON'" t-esc="player.get('point')"/> <span t-if="not player.get('point') == 'ICON'">pts</span></p>
-                                                        </div>
-                                                        <div t-if="player.get('point') == 'ICON'"  class="icon-player-point d-flex align-items-center  px-2 py-1">
-                                                            <p class="bowler"><span t-if="player.get('point') == 'ICON'">ICON PLAYER</span></p>
-                                                        </div>
-                                                    </div>
-                                                    <div class="player-expertise d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
+        /* Left accent stripe */
+        .tp-card::before {
+          content: '';
+          position: absolute;
+          left: 0; top: 0; bottom: 0;
+          width: 4px;
+          background: var(--p-primary);
+          border-radius: 16px 0 0 16px;
+        }
 
-                                                        <p  class="batter"><span t-esc="player.get('role')"/></p>
-                                                        <t t-if="player.get('p_category')">
-                                                            <p class="batter" style="background-color: #FF9800; color: white;"><span t-esc="player.get('p_category')"/></p>
-                                                        </t>
-                                                        <!--<p class="bowler">Bowler</p>
-                                                        <p class="all-rounder">All Rounder</p>-->
-                                                    </div>
-                                                    <t t-if="player.get('contact')">
-                                                        <a href="#">
-                                                            <img src="/auction_module/static/src/assets/images/phone.svg" alt="phone" width="18" height="18"/>
-                                                            <span t-esc="player.get('contact')"/>
-                                                        </a>
-                                                    </t>
-                                                    <!--<div class="d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
+        /* ── Card photo strip ────────────────────────────────────────────── */
+        .tp-card-photo-wrap {
+          position: relative;
+          background: var(--p-surface2);
+          height: 210px;
+          overflow: hidden;
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .tp-card-photo {
+          width: 100%; height: 100%;
+          object-fit: contain;
+          object-position: center top;
+          display: block;
+        }
+        .tp-card-photo-placeholder {
+          width: 100%; height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 4rem;
+          opacity: 0.35;
+          color: var(--p-primary);
+        }
+        /* Subtle gradient at bottom of photo */
+        .tp-card-photo-wrap::after {
+          content: '';
+          position: absolute;
+          bottom: 0; left: 0; right: 0;
+          height: 40px;
+          background: linear-gradient(transparent, var(--p-card-bg));
+          pointer-events: none;
+        }
 
-                                                      <strong>  Batting Style : </strong><span t-esc="player.get('batting_style')"/>
-                                                    </div>
-                                                    <div class="d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
+        /* ── Tier badge (top-right of photo) ─────────────────────────────── */
+        .tp-tier-badge {
+          position: absolute;
+          top: 10px; right: 10px;
+          padding: 3px 10px;
+          border-radius: 12px;
+          font-size: 0.7rem;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+          z-index: 2;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
 
-                                                        <strong>Bowling Style : </strong><span t-esc="player.get('bowling_style')"/>
-                                                    </div>-->
+        /* ICON crown badge */
+        .tp-icon-crown {
+          position: absolute;
+          top: 8px; left: 10px;
+          background: rgba(0,0,0,0.6);
+          color: var(--p-icon-crown);
+          border-radius: 10px;
+          padding: 3px 8px;
+          font-size: 0.7rem;
+          font-weight: 800;
+          letter-spacing: 0.6px;
+          z-index: 2;
+          border: 1px solid var(--p-icon-crown);
+        }
 
+        /* ── Card body ───────────────────────────────────────────────────── */
+        .tp-card-body {
+          padding: 14px 16px 10px 20px;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .tp-player-name {
+          font-family: 'Teko', sans-serif;
+          font-size: 1.35rem;
+          font-weight: 700;
+          color: var(--p-text);
+          margin: 0;
+          line-height: 1.1;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
 
-                                                </div>
-                                            </div>
-                                        </div>
-                                </div>
-                            </div>
-                        </t>
-                        <t t-else="">
-                        <!-- ❌ NO PLAYERS AVAILABLE -->
+        /* ── Tags row ────────────────────────────────────────────────────── */
+        .tp-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 5px;
+        }
+        .tp-tag {
+          display: inline-block;
+          padding: 3px 10px;
+          border-radius: 12px;
+          font-size: 0.7rem;
+          font-weight: 600;
+          background: var(--p-tag-bg);
+          color: var(--p-tag-text);
+          border: 1px solid var(--p-tag-border);
+          letter-spacing: 0.3px;
+          white-space: nowrap;
+        }
+        .tp-tag-orange {
+          background: rgba(255,152,0,0.12);
+          color: #e65100;
+          border-color: rgba(255,152,0,0.30);
+        }
 
-                        <div class="empty-state text-center mt-5">
-                            <img src="/auction_module/static/src/assets/images/no_players.svg"
-                                 class="mb-3"
-                                 style="max-width:180px; opacity:0.8;"/>
+        /* ── Stats row ───────────────────────────────────────────────────── */
+        .tp-stats {
+          display: flex;
+          gap: 6px;
+          flex-wrap: wrap;
+        }
+        .tp-stat {
+          flex: 1 0 70px;
+          background: var(--p-surface2);
+          border: 1px solid var(--p-border);
+          border-radius: 8px;
+          padding: 5px 8px;
+          text-align: center;
+        }
+        .tp-stat-label {
+          font-size: 0.6rem;
+          color: var(--p-text-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.4px;
+          margin: 0;
+        }
+        .tp-stat-value {
+          font-size: 0.88rem;
+          font-weight: 700;
+          color: var(--p-text);
+          margin: 0;
+          line-height: 1.2;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
 
-                            <h4 class="fw-bold text-muted">
-                                Players not recruited yet!
-                            </h4>
+        /* ── Card footer ─────────────────────────────────────────────────── */
+        .tp-card-foot {
+          background: var(--p-card-foot);
+          border-top: 1.5px solid var(--p-border);
+          padding: 10px 20px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+        }
+        .tp-pts-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          background: var(--p-pts-bg);
+          color: var(--p-pts-text);
+          border: 1.5px solid var(--p-border);
+          border-radius: 16px;
+          padding: 4px 12px;
+          font-size: 0.82rem;
+          font-weight: 700;
+        }
+        .tp-pts-badge .pts-icon { font-size: 0.9rem; }
+        .tp-pts-label { font-size: 0.62rem; opacity: 0.7; margin-left: 2px; }
+        .tp-icon-label {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          background: rgba(255,215,0,0.12);
+          color: #b8860b;
+          border: 1.5px solid rgba(255,215,0,0.35);
+          border-radius: 16px;
+          padding: 4px 12px;
+          font-size: 0.78rem;
+          font-weight: 700;
+        }
+        .tp-contact {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 0.78rem;
+          color: var(--p-text-muted);
+          text-decoration: none;
+        }
+        .tp-contact:hover { color: var(--p-primary); }
 
-                            <p class="text-secondary mt-2">
-                                This team has not recruited any players yet.<br/>
-                                Please check back after the auction or recruitment process.
-                            </p>
-                        </div>
-                    </t>
-                        <!--<div class="row" style="row-gap: 15px;">
-                            <div class="col-12 col-xl-4 col-md-6 px-2">
-                                <div class="bg-white p-3">
-                                    <div class="player-small-card align-items-center d-flex">
-                                        <div class="player-image-side">
-                                            <img src="./assets/images/msd.jpg" alt="Player card" width="130" height="130"/>
-                                        </div>
-                                        <div class="player-details ms-3 w-100 d-flex flex-column justify-content-between" style="row-gap: 20px;">
-                                            <div class="name-point align-items-center flex-wrap d-flex justify-content-between" style="row-gap: 6px;">
-                                                <h3>MS Dhoni</h3>
-                                                <div class="player-point d-flex align-items-center  px-2 py-1">
-                                                    <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M20.6665 2.45352C22.6934 3.62377 24.3766 5.30695 25.5469 7.33389C26.7171 9.36083 27.3332 11.6601 27.3332 14.0006C27.3332 16.3411 26.717 18.6404 25.5468 20.6673C24.3765 22.6942 22.6933 24.3774 20.6664 25.5476C18.6394 26.7178 16.3401 27.3339 13.9996 27.3339C11.6591 27.3338 9.35986 26.7177 7.33295 25.5474C5.30604 24.3771 3.62289 22.6939 2.45268 20.6669C1.28248 18.64 0.666444 16.3407 0.666504 14.0002L0.673171 13.5682C0.747842 11.2655 1.4179 9.02146 2.61802 7.05484C3.81815 5.08822 5.50738 3.46612 7.52103 2.34669C9.53468 1.22727 11.804 0.648711 14.1078 0.667433C16.4117 0.686154 18.6713 1.30151 20.6665 2.45352ZM13.9998 6.00018C13.6462 6.00018 13.3071 6.14066 13.057 6.39071C12.807 6.64076 12.6665 6.97989 12.6665 7.33352C11.6056 7.33352 10.5882 7.75494 9.83808 8.50509C9.08793 9.25523 8.6665 10.2726 8.6665 11.3335C8.6665 12.3944 9.08793 13.4118 9.83808 14.1619C10.5882 14.9121 11.6056 15.3335 12.6665 15.3335V18.0002C12.4454 18.0124 12.2246 17.9705 12.0234 17.878C11.8221 17.7855 11.6465 17.6453 11.5118 17.4695L11.4212 17.3349C11.2387 17.0407 10.9491 16.8289 10.6134 16.7445C10.2777 16.66 9.92226 16.7094 9.62232 16.8822C9.32239 17.055 9.10142 17.3378 9.00616 17.6706C8.91089 18.0034 8.94879 18.3602 9.11184 18.6655C9.45215 19.2557 9.93759 19.7492 10.5221 20.0993C11.1066 20.4493 11.7709 20.6442 12.4518 20.6655H12.6665C12.6662 20.9923 12.786 21.3079 13.003 21.5522C13.2201 21.7965 13.5193 21.9526 13.8438 21.9908L13.9998 22.0002C14.3535 22.0002 14.6926 21.8597 14.9426 21.6097C15.1927 21.3596 15.3332 21.0205 15.3332 20.6668L15.5678 20.6602C16.6073 20.6001 17.5824 20.1371 18.2859 19.3695C18.9894 18.6019 19.3659 17.5902 19.3353 16.5495C19.3047 15.5087 18.8696 14.5209 18.1223 13.7959C17.3749 13.0709 16.3744 12.6658 15.3332 12.6668V10.0002C15.8105 9.98418 16.2278 10.1868 16.4878 10.5308L16.5785 10.6655C16.7609 10.9597 17.0506 11.1714 17.3863 11.2559C17.722 11.3404 18.0774 11.291 18.3774 11.1181C18.6773 10.9453 18.8983 10.6626 18.9935 10.3298C19.0888 9.99701 19.0509 9.64021 18.8878 9.33485C18.5477 8.74438 18.0623 8.2506 17.4778 7.90035C16.8933 7.5501 16.2289 7.35498 15.5478 7.33352H15.3332C15.3332 6.97989 15.1927 6.64076 14.9426 6.39071C14.6926 6.14066 14.3535 6.00018 13.9998 6.00018ZM15.3332 15.3335C15.6868 15.3335 16.0259 15.474 16.276 15.724C16.526 15.9741 16.6665 16.3132 16.6665 16.6668C16.6665 17.0205 16.526 17.3596 16.276 17.6097C16.0259 17.8597 15.6868 18.0002 15.3332 18.0002V15.3335ZM12.6665 10.0002V12.6668C12.3129 12.6668 11.9737 12.5264 11.7237 12.2763C11.4736 12.0263 11.3332 11.6871 11.3332 11.3335C11.3332 10.9799 11.4736 10.6408 11.7237 10.3907C11.9737 10.1407 12.3129 10.0002 12.6665 10.0002Z" fill="#FFC812"/>
-                                                    </svg>
-                                                    <p class="ms-2">1000 <span>pts</span></p>
-                                                </div>
-                                            </div>
-                                            <div class="player-expertise d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
-                                                <p class="batter">Batter</p>
-                                                <p class="bowler">Bowler</p>
-                                                <p class="all-rounder">All Rounder</p>
-                                            </div>
-                                            <a href="tel: +91 1234567890">
-                                                <img src="./assets/images/phone.svg" alt="phone" width="18" height="18"/>
-                                                +91 1234567890
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-xl-4 col-md-6 px-2">
-                                <div class="bg-white p-3">
-                                    <div class="player-small-card align-items-center d-flex">
-                                        <div class="player-image-side">
-                                            <img src="./assets/images/msd.jpg" alt="Player card" width="130" height="130"/>
-                                        </div>
-                                        <div class="player-details ms-3 w-100 d-flex flex-column justify-content-between" style="row-gap: 20px;">
-                                            <div class="name-point align-items-center flex-wrap d-flex justify-content-between" style="row-gap: 6px;">
-                                                <h3>MS Dhoni</h3>
-                                                <div class="player-point d-flex align-items-center  px-2 py-1">
-                                                    <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M20.6665 2.45352C22.6934 3.62377 24.3766 5.30695 25.5469 7.33389C26.7171 9.36083 27.3332 11.6601 27.3332 14.0006C27.3332 16.3411 26.717 18.6404 25.5468 20.6673C24.3765 22.6942 22.6933 24.3774 20.6664 25.5476C18.6394 26.7178 16.3401 27.3339 13.9996 27.3339C11.6591 27.3338 9.35986 26.7177 7.33295 25.5474C5.30604 24.3771 3.62289 22.6939 2.45268 20.6669C1.28248 18.64 0.666444 16.3407 0.666504 14.0002L0.673171 13.5682C0.747842 11.2655 1.4179 9.02146 2.61802 7.05484C3.81815 5.08822 5.50738 3.46612 7.52103 2.34669C9.53468 1.22727 11.804 0.648711 14.1078 0.667433C16.4117 0.686154 18.6713 1.30151 20.6665 2.45352ZM13.9998 6.00018C13.6462 6.00018 13.3071 6.14066 13.057 6.39071C12.807 6.64076 12.6665 6.97989 12.6665 7.33352C11.6056 7.33352 10.5882 7.75494 9.83808 8.50509C9.08793 9.25523 8.6665 10.2726 8.6665 11.3335C8.6665 12.3944 9.08793 13.4118 9.83808 14.1619C10.5882 14.9121 11.6056 15.3335 12.6665 15.3335V18.0002C12.4454 18.0124 12.2246 17.9705 12.0234 17.878C11.8221 17.7855 11.6465 17.6453 11.5118 17.4695L11.4212 17.3349C11.2387 17.0407 10.9491 16.8289 10.6134 16.7445C10.2777 16.66 9.92226 16.7094 9.62232 16.8822C9.32239 17.055 9.10142 17.3378 9.00616 17.6706C8.91089 18.0034 8.94879 18.3602 9.11184 18.6655C9.45215 19.2557 9.93759 19.7492 10.5221 20.0993C11.1066 20.4493 11.7709 20.6442 12.4518 20.6655H12.6665C12.6662 20.9923 12.786 21.3079 13.003 21.5522C13.2201 21.7965 13.5193 21.9526 13.8438 21.9908L13.9998 22.0002C14.3535 22.0002 14.6926 21.8597 14.9426 21.6097C15.1927 21.3596 15.3332 21.0205 15.3332 20.6668L15.5678 20.6602C16.6073 20.6001 17.5824 20.1371 18.2859 19.3695C18.9894 18.6019 19.3659 17.5902 19.3353 16.5495C19.3047 15.5087 18.8696 14.5209 18.1223 13.7959C17.3749 13.0709 16.3744 12.6658 15.3332 12.6668V10.0002C15.8105 9.98418 16.2278 10.1868 16.4878 10.5308L16.5785 10.6655C16.7609 10.9597 17.0506 11.1714 17.3863 11.2559C17.722 11.3404 18.0774 11.291 18.3774 11.1181C18.6773 10.9453 18.8983 10.6626 18.9935 10.3298C19.0888 9.99701 19.0509 9.64021 18.8878 9.33485C18.5477 8.74438 18.0623 8.2506 17.4778 7.90035C16.8933 7.5501 16.2289 7.35498 15.5478 7.33352H15.3332C15.3332 6.97989 15.1927 6.64076 14.9426 6.39071C14.6926 6.14066 14.3535 6.00018 13.9998 6.00018ZM15.3332 15.3335C15.6868 15.3335 16.0259 15.474 16.276 15.724C16.526 15.9741 16.6665 16.3132 16.6665 16.6668C16.6665 17.0205 16.526 17.3596 16.276 17.6097C16.0259 17.8597 15.6868 18.0002 15.3332 18.0002V15.3335ZM12.6665 10.0002V12.6668C12.3129 12.6668 11.9737 12.5264 11.7237 12.2763C11.4736 12.0263 11.3332 11.6871 11.3332 11.3335C11.3332 10.9799 11.4736 10.6408 11.7237 10.3907C11.9737 10.1407 12.3129 10.0002 12.6665 10.0002Z" fill="#FFC812"/>
-                                                    </svg>
-                                                    <p class="ms-2">1000 <span>pts</span></p>
-                                                </div>
-                                            </div>
-                                            <div class="player-expertise d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
-                                                <p class="batter">Batter</p>
-                                                <p class="bowler">Bowler</p>
-                                                <p class="all-rounder">All Rounder</p>
-                                            </div>
-                                            <a href="tel: +91 1234567890">
-                                                <img src="./assets/images/phone.svg" alt="phone" width="18" height="18"/>
-                                                +91 1234567890
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-xl-4 col-md-6 px-2">
-                                <div class="bg-white p-3">
-                                    <div class="player-small-card align-items-center d-flex">
-                                        <div class="player-image-side">
-                                            <img src="./assets/images/msd.jpg" alt="Player card" width="130" height="130"/>
-                                        </div>
-                                        <div class="player-details ms-3 w-100 d-flex flex-column justify-content-between" style="row-gap: 20px;">
-                                            <div class="name-point align-items-center flex-wrap d-flex justify-content-between" style="row-gap: 6px;">
-                                                <h3>MS Dhoni</h3>
-                                                <div class="player-point d-flex align-items-center  px-2 py-1">
-                                                    <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M20.6665 2.45352C22.6934 3.62377 24.3766 5.30695 25.5469 7.33389C26.7171 9.36083 27.3332 11.6601 27.3332 14.0006C27.3332 16.3411 26.717 18.6404 25.5468 20.6673C24.3765 22.6942 22.6933 24.3774 20.6664 25.5476C18.6394 26.7178 16.3401 27.3339 13.9996 27.3339C11.6591 27.3338 9.35986 26.7177 7.33295 25.5474C5.30604 24.3771 3.62289 22.6939 2.45268 20.6669C1.28248 18.64 0.666444 16.3407 0.666504 14.0002L0.673171 13.5682C0.747842 11.2655 1.4179 9.02146 2.61802 7.05484C3.81815 5.08822 5.50738 3.46612 7.52103 2.34669C9.53468 1.22727 11.804 0.648711 14.1078 0.667433C16.4117 0.686154 18.6713 1.30151 20.6665 2.45352ZM13.9998 6.00018C13.6462 6.00018 13.3071 6.14066 13.057 6.39071C12.807 6.64076 12.6665 6.97989 12.6665 7.33352C11.6056 7.33352 10.5882 7.75494 9.83808 8.50509C9.08793 9.25523 8.6665 10.2726 8.6665 11.3335C8.6665 12.3944 9.08793 13.4118 9.83808 14.1619C10.5882 14.9121 11.6056 15.3335 12.6665 15.3335V18.0002C12.4454 18.0124 12.2246 17.9705 12.0234 17.878C11.8221 17.7855 11.6465 17.6453 11.5118 17.4695L11.4212 17.3349C11.2387 17.0407 10.9491 16.8289 10.6134 16.7445C10.2777 16.66 9.92226 16.7094 9.62232 16.8822C9.32239 17.055 9.10142 17.3378 9.00616 17.6706C8.91089 18.0034 8.94879 18.3602 9.11184 18.6655C9.45215 19.2557 9.93759 19.7492 10.5221 20.0993C11.1066 20.4493 11.7709 20.6442 12.4518 20.6655H12.6665C12.6662 20.9923 12.786 21.3079 13.003 21.5522C13.2201 21.7965 13.5193 21.9526 13.8438 21.9908L13.9998 22.0002C14.3535 22.0002 14.6926 21.8597 14.9426 21.6097C15.1927 21.3596 15.3332 21.0205 15.3332 20.6668L15.5678 20.6602C16.6073 20.6001 17.5824 20.1371 18.2859 19.3695C18.9894 18.6019 19.3659 17.5902 19.3353 16.5495C19.3047 15.5087 18.8696 14.5209 18.1223 13.7959C17.3749 13.0709 16.3744 12.6658 15.3332 12.6668V10.0002C15.8105 9.98418 16.2278 10.1868 16.4878 10.5308L16.5785 10.6655C16.7609 10.9597 17.0506 11.1714 17.3863 11.2559C17.722 11.3404 18.0774 11.291 18.3774 11.1181C18.6773 10.9453 18.8983 10.6626 18.9935 10.3298C19.0888 9.99701 19.0509 9.64021 18.8878 9.33485C18.5477 8.74438 18.0623 8.2506 17.4778 7.90035C16.8933 7.5501 16.2289 7.35498 15.5478 7.33352H15.3332C15.3332 6.97989 15.1927 6.64076 14.9426 6.39071C14.6926 6.14066 14.3535 6.00018 13.9998 6.00018ZM15.3332 15.3335C15.6868 15.3335 16.0259 15.474 16.276 15.724C16.526 15.9741 16.6665 16.3132 16.6665 16.6668C16.6665 17.0205 16.526 17.3596 16.276 17.6097C16.0259 17.8597 15.6868 18.0002 15.3332 18.0002V15.3335ZM12.6665 10.0002V12.6668C12.3129 12.6668 11.9737 12.5264 11.7237 12.2763C11.4736 12.0263 11.3332 11.6871 11.3332 11.3335C11.3332 10.9799 11.4736 10.6408 11.7237 10.3907C11.9737 10.1407 12.3129 10.0002 12.6665 10.0002Z" fill="#FFC812"/>
-                                                    </svg>
-                                                    <p class="ms-2">1000 <span>pts</span></p>
-                                                </div>
-                                            </div>
-                                            <div class="player-expertise d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
-                                                <p class="batter">Batter</p>
-                                                <p class="bowler">Bowler</p>
-                                                <p class="all-rounder">All Rounder</p>
-                                            </div>
-                                            <a href="tel: +91 1234567890">
-                                                <img src="./assets/images/phone.svg" alt="phone" width="18" height="18"/>
-                                                +91 1234567890
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-xl-4 col-md-6 px-2">
-                                <div class="bg-white p-3">
-                                    <div class="player-small-card align-items-center d-flex">
-                                        <div class="player-image-side">
-                                            <img src="./assets/images/msd.jpg" alt="Player card" width="130" height="130"/>
-                                        </div>
-                                        <div class="player-details ms-3 w-100 d-flex flex-column justify-content-between" style="row-gap: 20px;">
-                                            <div class="name-point align-items-center flex-wrap d-flex justify-content-between" style="row-gap: 6px;">
-                                                <h3>MS Dhoni</h3>
-                                                <div class="player-point d-flex align-items-center  px-2 py-1">
-                                                    <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M20.6665 2.45352C22.6934 3.62377 24.3766 5.30695 25.5469 7.33389C26.7171 9.36083 27.3332 11.6601 27.3332 14.0006C27.3332 16.3411 26.717 18.6404 25.5468 20.6673C24.3765 22.6942 22.6933 24.3774 20.6664 25.5476C18.6394 26.7178 16.3401 27.3339 13.9996 27.3339C11.6591 27.3338 9.35986 26.7177 7.33295 25.5474C5.30604 24.3771 3.62289 22.6939 2.45268 20.6669C1.28248 18.64 0.666444 16.3407 0.666504 14.0002L0.673171 13.5682C0.747842 11.2655 1.4179 9.02146 2.61802 7.05484C3.81815 5.08822 5.50738 3.46612 7.52103 2.34669C9.53468 1.22727 11.804 0.648711 14.1078 0.667433C16.4117 0.686154 18.6713 1.30151 20.6665 2.45352ZM13.9998 6.00018C13.6462 6.00018 13.3071 6.14066 13.057 6.39071C12.807 6.64076 12.6665 6.97989 12.6665 7.33352C11.6056 7.33352 10.5882 7.75494 9.83808 8.50509C9.08793 9.25523 8.6665 10.2726 8.6665 11.3335C8.6665 12.3944 9.08793 13.4118 9.83808 14.1619C10.5882 14.9121 11.6056 15.3335 12.6665 15.3335V18.0002C12.4454 18.0124 12.2246 17.9705 12.0234 17.878C11.8221 17.7855 11.6465 17.6453 11.5118 17.4695L11.4212 17.3349C11.2387 17.0407 10.9491 16.8289 10.6134 16.7445C10.2777 16.66 9.92226 16.7094 9.62232 16.8822C9.32239 17.055 9.10142 17.3378 9.00616 17.6706C8.91089 18.0034 8.94879 18.3602 9.11184 18.6655C9.45215 19.2557 9.93759 19.7492 10.5221 20.0993C11.1066 20.4493 11.7709 20.6442 12.4518 20.6655H12.6665C12.6662 20.9923 12.786 21.3079 13.003 21.5522C13.2201 21.7965 13.5193 21.9526 13.8438 21.9908L13.9998 22.0002C14.3535 22.0002 14.6926 21.8597 14.9426 21.6097C15.1927 21.3596 15.3332 21.0205 15.3332 20.6668L15.5678 20.6602C16.6073 20.6001 17.5824 20.1371 18.2859 19.3695C18.9894 18.6019 19.3659 17.5902 19.3353 16.5495C19.3047 15.5087 18.8696 14.5209 18.1223 13.7959C17.3749 13.0709 16.3744 12.6658 15.3332 12.6668V10.0002C15.8105 9.98418 16.2278 10.1868 16.4878 10.5308L16.5785 10.6655C16.7609 10.9597 17.0506 11.1714 17.3863 11.2559C17.722 11.3404 18.0774 11.291 18.3774 11.1181C18.6773 10.9453 18.8983 10.6626 18.9935 10.3298C19.0888 9.99701 19.0509 9.64021 18.8878 9.33485C18.5477 8.74438 18.0623 8.2506 17.4778 7.90035C16.8933 7.5501 16.2289 7.35498 15.5478 7.33352H15.3332C15.3332 6.97989 15.1927 6.64076 14.9426 6.39071C14.6926 6.14066 14.3535 6.00018 13.9998 6.00018ZM15.3332 15.3335C15.6868 15.3335 16.0259 15.474 16.276 15.724C16.526 15.9741 16.6665 16.3132 16.6665 16.6668C16.6665 17.0205 16.526 17.3596 16.276 17.6097C16.0259 17.8597 15.6868 18.0002 15.3332 18.0002V15.3335ZM12.6665 10.0002V12.6668C12.3129 12.6668 11.9737 12.5264 11.7237 12.2763C11.4736 12.0263 11.3332 11.6871 11.3332 11.3335C11.3332 10.9799 11.4736 10.6408 11.7237 10.3907C11.9737 10.1407 12.3129 10.0002 12.6665 10.0002Z" fill="#FFC812"/>
-                                                    </svg>
-                                                    <p class="ms-2">1000 <span>pts</span></p>
-                                                </div>
-                                            </div>
-                                            <div class="player-expertise d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
-                                                <p class="batter">Batter</p>
-                                                <p class="bowler">Bowler</p>
-                                                <p class="all-rounder">All Rounder</p>
-                                            </div>
-                                            <a href="tel: +91 1234567890">
-                                                <img src="./assets/images/phone.svg" alt="phone" width="18" height="18"/>
-                                                +91 1234567890
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-xl-4 col-md-6 px-2">
-                                <div class="bg-white p-3">
-                                    <div class="player-small-card align-items-center d-flex">
-                                        <div class="player-image-side">
-                                            <img src="./assets/images/msd.jpg" alt="Player card" width="130" height="130"/>
-                                        </div>
-                                        <div class="player-details ms-3 w-100 d-flex flex-column justify-content-between" style="row-gap: 20px;">
-                                            <div class="name-point align-items-center flex-wrap d-flex justify-content-between" style="row-gap: 6px;">
-                                                <h3>MS Dhoni</h3>
-                                                <div class="player-point d-flex align-items-center  px-2 py-1">
-                                                    <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M20.6665 2.45352C22.6934 3.62377 24.3766 5.30695 25.5469 7.33389C26.7171 9.36083 27.3332 11.6601 27.3332 14.0006C27.3332 16.3411 26.717 18.6404 25.5468 20.6673C24.3765 22.6942 22.6933 24.3774 20.6664 25.5476C18.6394 26.7178 16.3401 27.3339 13.9996 27.3339C11.6591 27.3338 9.35986 26.7177 7.33295 25.5474C5.30604 24.3771 3.62289 22.6939 2.45268 20.6669C1.28248 18.64 0.666444 16.3407 0.666504 14.0002L0.673171 13.5682C0.747842 11.2655 1.4179 9.02146 2.61802 7.05484C3.81815 5.08822 5.50738 3.46612 7.52103 2.34669C9.53468 1.22727 11.804 0.648711 14.1078 0.667433C16.4117 0.686154 18.6713 1.30151 20.6665 2.45352ZM13.9998 6.00018C13.6462 6.00018 13.3071 6.14066 13.057 6.39071C12.807 6.64076 12.6665 6.97989 12.6665 7.33352C11.6056 7.33352 10.5882 7.75494 9.83808 8.50509C9.08793 9.25523 8.6665 10.2726 8.6665 11.3335C8.6665 12.3944 9.08793 13.4118 9.83808 14.1619C10.5882 14.9121 11.6056 15.3335 12.6665 15.3335V18.0002C12.4454 18.0124 12.2246 17.9705 12.0234 17.878C11.8221 17.7855 11.6465 17.6453 11.5118 17.4695L11.4212 17.3349C11.2387 17.0407 10.9491 16.8289 10.6134 16.7445C10.2777 16.66 9.92226 16.7094 9.62232 16.8822C9.32239 17.055 9.10142 17.3378 9.00616 17.6706C8.91089 18.0034 8.94879 18.3602 9.11184 18.6655C9.45215 19.2557 9.93759 19.7492 10.5221 20.0993C11.1066 20.4493 11.7709 20.6442 12.4518 20.6655H12.6665C12.6662 20.9923 12.786 21.3079 13.003 21.5522C13.2201 21.7965 13.5193 21.9526 13.8438 21.9908L13.9998 22.0002C14.3535 22.0002 14.6926 21.8597 14.9426 21.6097C15.1927 21.3596 15.3332 21.0205 15.3332 20.6668L15.5678 20.6602C16.6073 20.6001 17.5824 20.1371 18.2859 19.3695C18.9894 18.6019 19.3659 17.5902 19.3353 16.5495C19.3047 15.5087 18.8696 14.5209 18.1223 13.7959C17.3749 13.0709 16.3744 12.6658 15.3332 12.6668V10.0002C15.8105 9.98418 16.2278 10.1868 16.4878 10.5308L16.5785 10.6655C16.7609 10.9597 17.0506 11.1714 17.3863 11.2559C17.722 11.3404 18.0774 11.291 18.3774 11.1181C18.6773 10.9453 18.8983 10.6626 18.9935 10.3298C19.0888 9.99701 19.0509 9.64021 18.8878 9.33485C18.5477 8.74438 18.0623 8.2506 17.4778 7.90035C16.8933 7.5501 16.2289 7.35498 15.5478 7.33352H15.3332C15.3332 6.97989 15.1927 6.64076 14.9426 6.39071C14.6926 6.14066 14.3535 6.00018 13.9998 6.00018ZM15.3332 15.3335C15.6868 15.3335 16.0259 15.474 16.276 15.724C16.526 15.9741 16.6665 16.3132 16.6665 16.6668C16.6665 17.0205 16.526 17.3596 16.276 17.6097C16.0259 17.8597 15.6868 18.0002 15.3332 18.0002V15.3335ZM12.6665 10.0002V12.6668C12.3129 12.6668 11.9737 12.5264 11.7237 12.2763C11.4736 12.0263 11.3332 11.6871 11.3332 11.3335C11.3332 10.9799 11.4736 10.6408 11.7237 10.3907C11.9737 10.1407 12.3129 10.0002 12.6665 10.0002Z" fill="#FFC812"/>
-                                                    </svg>
-                                                    <p class="ms-2">1000 <span>pts</span></p>
-                                                </div>
-                                            </div>
-                                            <div class="player-expertise d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
-                                                <p class="batter">Batter</p>
-                                                <p class="bowler">Bowler</p>
-                                                <p class="all-rounder">All Rounder</p>
-                                            </div>
-                                            <a href="tel: +91 1234567890">
-                                                <img src="./assets/images/phone.svg" alt="phone" width="18" height="18"/>
-                                                +91 1234567890
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-xl-4 col-md-6 px-2">
-                                <div class="bg-white p-3">
-                                    <div class="player-small-card align-items-center d-flex">
-                                        <div class="player-image-side">
-                                            <img src="./assets/images/msd.jpg" alt="Player card" width="130" height="130"/>
-                                        </div>
-                                        <div class="player-details ms-3 w-100 d-flex flex-column justify-content-between" style="row-gap: 20px;">
-                                            <div class="name-point align-items-center flex-wrap d-flex justify-content-between" style="row-gap: 6px;">
-                                                <h3>MS Dhoni</h3>
-                                                <div class="player-point d-flex align-items-center  px-2 py-1">
-                                                    <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M20.6665 2.45352C22.6934 3.62377 24.3766 5.30695 25.5469 7.33389C26.7171 9.36083 27.3332 11.6601 27.3332 14.0006C27.3332 16.3411 26.717 18.6404 25.5468 20.6673C24.3765 22.6942 22.6933 24.3774 20.6664 25.5476C18.6394 26.7178 16.3401 27.3339 13.9996 27.3339C11.6591 27.3338 9.35986 26.7177 7.33295 25.5474C5.30604 24.3771 3.62289 22.6939 2.45268 20.6669C1.28248 18.64 0.666444 16.3407 0.666504 14.0002L0.673171 13.5682C0.747842 11.2655 1.4179 9.02146 2.61802 7.05484C3.81815 5.08822 5.50738 3.46612 7.52103 2.34669C9.53468 1.22727 11.804 0.648711 14.1078 0.667433C16.4117 0.686154 18.6713 1.30151 20.6665 2.45352ZM13.9998 6.00018C13.6462 6.00018 13.3071 6.14066 13.057 6.39071C12.807 6.64076 12.6665 6.97989 12.6665 7.33352C11.6056 7.33352 10.5882 7.75494 9.83808 8.50509C9.08793 9.25523 8.6665 10.2726 8.6665 11.3335C8.6665 12.3944 9.08793 13.4118 9.83808 14.1619C10.5882 14.9121 11.6056 15.3335 12.6665 15.3335V18.0002C12.4454 18.0124 12.2246 17.9705 12.0234 17.878C11.8221 17.7855 11.6465 17.6453 11.5118 17.4695L11.4212 17.3349C11.2387 17.0407 10.9491 16.8289 10.6134 16.7445C10.2777 16.66 9.92226 16.7094 9.62232 16.8822C9.32239 17.055 9.10142 17.3378 9.00616 17.6706C8.91089 18.0034 8.94879 18.3602 9.11184 18.6655C9.45215 19.2557 9.93759 19.7492 10.5221 20.0993C11.1066 20.4493 11.7709 20.6442 12.4518 20.6655H12.6665C12.6662 20.9923 12.786 21.3079 13.003 21.5522C13.2201 21.7965 13.5193 21.9526 13.8438 21.9908L13.9998 22.0002C14.3535 22.0002 14.6926 21.8597 14.9426 21.6097C15.1927 21.3596 15.3332 21.0205 15.3332 20.6668L15.5678 20.6602C16.6073 20.6001 17.5824 20.1371 18.2859 19.3695C18.9894 18.6019 19.3659 17.5902 19.3353 16.5495C19.3047 15.5087 18.8696 14.5209 18.1223 13.7959C17.3749 13.0709 16.3744 12.6658 15.3332 12.6668V10.0002C15.8105 9.98418 16.2278 10.1868 16.4878 10.5308L16.5785 10.6655C16.7609 10.9597 17.0506 11.1714 17.3863 11.2559C17.722 11.3404 18.0774 11.291 18.3774 11.1181C18.6773 10.9453 18.8983 10.6626 18.9935 10.3298C19.0888 9.99701 19.0509 9.64021 18.8878 9.33485C18.5477 8.74438 18.0623 8.2506 17.4778 7.90035C16.8933 7.5501 16.2289 7.35498 15.5478 7.33352H15.3332C15.3332 6.97989 15.1927 6.64076 14.9426 6.39071C14.6926 6.14066 14.3535 6.00018 13.9998 6.00018ZM15.3332 15.3335C15.6868 15.3335 16.0259 15.474 16.276 15.724C16.526 15.9741 16.6665 16.3132 16.6665 16.6668C16.6665 17.0205 16.526 17.3596 16.276 17.6097C16.0259 17.8597 15.6868 18.0002 15.3332 18.0002V15.3335ZM12.6665 10.0002V12.6668C12.3129 12.6668 11.9737 12.5264 11.7237 12.2763C11.4736 12.0263 11.3332 11.6871 11.3332 11.3335C11.3332 10.9799 11.4736 10.6408 11.7237 10.3907C11.9737 10.1407 12.3129 10.0002 12.6665 10.0002Z" fill="#FFC812"/>
-                                                    </svg>
-                                                    <p class="ms-2">1000 <span>pts</span></p>
-                                                </div>
-                                            </div>
-                                            <div class="player-expertise d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
-                                                <p class="batter">Batter</p>
-                                                <p class="bowler">Bowler</p>
-                                                <p class="all-rounder">All Rounder</p>
-                                            </div>
-                                            <a href="tel: +91 1234567890">
-                                                <img src="./assets/images/phone.svg" alt="phone" width="18" height="18"/>
-                                                +91 1234567890
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-xl-4 col-md-6 px-2">
-                                <div class="bg-white p-3">
-                                    <div class="player-small-card align-items-center d-flex">
-                                        <div class="player-image-side">
-                                            <img src="./assets/images/msd.jpg" alt="Player card" width="130" height="130"/>
-                                        </div>
-                                        <div class="player-details ms-3 w-100 d-flex flex-column justify-content-between" style="row-gap: 20px;">
-                                            <div class="name-point align-items-center flex-wrap d-flex justify-content-between" style="row-gap: 6px;">
-                                                <h3>MS Dhoni</h3>
-                                                <div class="player-point d-flex align-items-center  px-2 py-1">
-                                                    <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M20.6665 2.45352C22.6934 3.62377 24.3766 5.30695 25.5469 7.33389C26.7171 9.36083 27.3332 11.6601 27.3332 14.0006C27.3332 16.3411 26.717 18.6404 25.5468 20.6673C24.3765 22.6942 22.6933 24.3774 20.6664 25.5476C18.6394 26.7178 16.3401 27.3339 13.9996 27.3339C11.6591 27.3338 9.35986 26.7177 7.33295 25.5474C5.30604 24.3771 3.62289 22.6939 2.45268 20.6669C1.28248 18.64 0.666444 16.3407 0.666504 14.0002L0.673171 13.5682C0.747842 11.2655 1.4179 9.02146 2.61802 7.05484C3.81815 5.08822 5.50738 3.46612 7.52103 2.34669C9.53468 1.22727 11.804 0.648711 14.1078 0.667433C16.4117 0.686154 18.6713 1.30151 20.6665 2.45352ZM13.9998 6.00018C13.6462 6.00018 13.3071 6.14066 13.057 6.39071C12.807 6.64076 12.6665 6.97989 12.6665 7.33352C11.6056 7.33352 10.5882 7.75494 9.83808 8.50509C9.08793 9.25523 8.6665 10.2726 8.6665 11.3335C8.6665 12.3944 9.08793 13.4118 9.83808 14.1619C10.5882 14.9121 11.6056 15.3335 12.6665 15.3335V18.0002C12.4454 18.0124 12.2246 17.9705 12.0234 17.878C11.8221 17.7855 11.6465 17.6453 11.5118 17.4695L11.4212 17.3349C11.2387 17.0407 10.9491 16.8289 10.6134 16.7445C10.2777 16.66 9.92226 16.7094 9.62232 16.8822C9.32239 17.055 9.10142 17.3378 9.00616 17.6706C8.91089 18.0034 8.94879 18.3602 9.11184 18.6655C9.45215 19.2557 9.93759 19.7492 10.5221 20.0993C11.1066 20.4493 11.7709 20.6442 12.4518 20.6655H12.6665C12.6662 20.9923 12.786 21.3079 13.003 21.5522C13.2201 21.7965 13.5193 21.9526 13.8438 21.9908L13.9998 22.0002C14.3535 22.0002 14.6926 21.8597 14.9426 21.6097C15.1927 21.3596 15.3332 21.0205 15.3332 20.6668L15.5678 20.6602C16.6073 20.6001 17.5824 20.1371 18.2859 19.3695C18.9894 18.6019 19.3659 17.5902 19.3353 16.5495C19.3047 15.5087 18.8696 14.5209 18.1223 13.7959C17.3749 13.0709 16.3744 12.6658 15.3332 12.6668V10.0002C15.8105 9.98418 16.2278 10.1868 16.4878 10.5308L16.5785 10.6655C16.7609 10.9597 17.0506 11.1714 17.3863 11.2559C17.722 11.3404 18.0774 11.291 18.3774 11.1181C18.6773 10.9453 18.8983 10.6626 18.9935 10.3298C19.0888 9.99701 19.0509 9.64021 18.8878 9.33485C18.5477 8.74438 18.0623 8.2506 17.4778 7.90035C16.8933 7.5501 16.2289 7.35498 15.5478 7.33352H15.3332C15.3332 6.97989 15.1927 6.64076 14.9426 6.39071C14.6926 6.14066 14.3535 6.00018 13.9998 6.00018ZM15.3332 15.3335C15.6868 15.3335 16.0259 15.474 16.276 15.724C16.526 15.9741 16.6665 16.3132 16.6665 16.6668C16.6665 17.0205 16.526 17.3596 16.276 17.6097C16.0259 17.8597 15.6868 18.0002 15.3332 18.0002V15.3335ZM12.6665 10.0002V12.6668C12.3129 12.6668 11.9737 12.5264 11.7237 12.2763C11.4736 12.0263 11.3332 11.6871 11.3332 11.3335C11.3332 10.9799 11.4736 10.6408 11.7237 10.3907C11.9737 10.1407 12.3129 10.0002 12.6665 10.0002Z" fill="#FFC812"/>
-                                                    </svg>
-                                                    <p class="ms-2">1000 <span>pts</span></p>
-                                                </div>
-                                            </div>
-                                            <div class="player-expertise d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
-                                                <p class="batter">Batter</p>
-                                                <p class="bowler">Bowler</p>
-                                                <p class="all-rounder">All Rounder</p>
-                                            </div>
-                                            <a href="tel: +91 1234567890">
-                                                <img src="./assets/images/phone.svg" alt="phone" width="18" height="18"/>
-                                                +91 1234567890
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-xl-4 col-md-6 px-2">
-                                <div class="bg-white p-3">
-                                    <div class="player-small-card align-items-center d-flex">
-                                        <div class="player-image-side">
-                                            <img src="./assets/images/msd.jpg" alt="Player card" width="130" height="130"/>
-                                        </div>
-                                        <div class="player-details ms-3 w-100 d-flex flex-column justify-content-between" style="row-gap: 20px;">
-                                            <div class="name-point align-items-center flex-wrap d-flex justify-content-between" style="row-gap: 6px;">
-                                                <h3>MS Dhoni</h3>
-                                                <div class="player-point d-flex align-items-center  px-2 py-1">
-                                                    <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M20.6665 2.45352C22.6934 3.62377 24.3766 5.30695 25.5469 7.33389C26.7171 9.36083 27.3332 11.6601 27.3332 14.0006C27.3332 16.3411 26.717 18.6404 25.5468 20.6673C24.3765 22.6942 22.6933 24.3774 20.6664 25.5476C18.6394 26.7178 16.3401 27.3339 13.9996 27.3339C11.6591 27.3338 9.35986 26.7177 7.33295 25.5474C5.30604 24.3771 3.62289 22.6939 2.45268 20.6669C1.28248 18.64 0.666444 16.3407 0.666504 14.0002L0.673171 13.5682C0.747842 11.2655 1.4179 9.02146 2.61802 7.05484C3.81815 5.08822 5.50738 3.46612 7.52103 2.34669C9.53468 1.22727 11.804 0.648711 14.1078 0.667433C16.4117 0.686154 18.6713 1.30151 20.6665 2.45352ZM13.9998 6.00018C13.6462 6.00018 13.3071 6.14066 13.057 6.39071C12.807 6.64076 12.6665 6.97989 12.6665 7.33352C11.6056 7.33352 10.5882 7.75494 9.83808 8.50509C9.08793 9.25523 8.6665 10.2726 8.6665 11.3335C8.6665 12.3944 9.08793 13.4118 9.83808 14.1619C10.5882 14.9121 11.6056 15.3335 12.6665 15.3335V18.0002C12.4454 18.0124 12.2246 17.9705 12.0234 17.878C11.8221 17.7855 11.6465 17.6453 11.5118 17.4695L11.4212 17.3349C11.2387 17.0407 10.9491 16.8289 10.6134 16.7445C10.2777 16.66 9.92226 16.7094 9.62232 16.8822C9.32239 17.055 9.10142 17.3378 9.00616 17.6706C8.91089 18.0034 8.94879 18.3602 9.11184 18.6655C9.45215 19.2557 9.93759 19.7492 10.5221 20.0993C11.1066 20.4493 11.7709 20.6442 12.4518 20.6655H12.6665C12.6662 20.9923 12.786 21.3079 13.003 21.5522C13.2201 21.7965 13.5193 21.9526 13.8438 21.9908L13.9998 22.0002C14.3535 22.0002 14.6926 21.8597 14.9426 21.6097C15.1927 21.3596 15.3332 21.0205 15.3332 20.6668L15.5678 20.6602C16.6073 20.6001 17.5824 20.1371 18.2859 19.3695C18.9894 18.6019 19.3659 17.5902 19.3353 16.5495C19.3047 15.5087 18.8696 14.5209 18.1223 13.7959C17.3749 13.0709 16.3744 12.6658 15.3332 12.6668V10.0002C15.8105 9.98418 16.2278 10.1868 16.4878 10.5308L16.5785 10.6655C16.7609 10.9597 17.0506 11.1714 17.3863 11.2559C17.722 11.3404 18.0774 11.291 18.3774 11.1181C18.6773 10.9453 18.8983 10.6626 18.9935 10.3298C19.0888 9.99701 19.0509 9.64021 18.8878 9.33485C18.5477 8.74438 18.0623 8.2506 17.4778 7.90035C16.8933 7.5501 16.2289 7.35498 15.5478 7.33352H15.3332C15.3332 6.97989 15.1927 6.64076 14.9426 6.39071C14.6926 6.14066 14.3535 6.00018 13.9998 6.00018ZM15.3332 15.3335C15.6868 15.3335 16.0259 15.474 16.276 15.724C16.526 15.9741 16.6665 16.3132 16.6665 16.6668C16.6665 17.0205 16.526 17.3596 16.276 17.6097C16.0259 17.8597 15.6868 18.0002 15.3332 18.0002V15.3335ZM12.6665 10.0002V12.6668C12.3129 12.6668 11.9737 12.5264 11.7237 12.2763C11.4736 12.0263 11.3332 11.6871 11.3332 11.3335C11.3332 10.9799 11.4736 10.6408 11.7237 10.3907C11.9737 10.1407 12.3129 10.0002 12.6665 10.0002Z" fill="#FFC812"/>
-                                                    </svg>
-                                                    <p class="ms-2">1000 <span>pts</span></p>
-                                                </div>
-                                            </div>
-                                            <div class="player-expertise d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
-                                                <p class="batter">Batter</p>
-                                                <p class="bowler">Bowler</p>
-                                                <p class="all-rounder">All Rounder</p>
-                                            </div>
-                                            <a href="tel: +91 1234567890">
-                                                <img src="./assets/images/phone.svg" alt="phone" width="18" height="18"/>
-                                                +91 1234567890
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-xl-4 col-md-6 px-2">
-                                <div class="bg-white p-3">
-                                    <div class="player-small-card align-items-center d-flex">
-                                        <div class="player-image-side">
-                                            <img src="./assets/images/msd.jpg" alt="Player card" width="130" height="130"/>
-                                        </div>
-                                        <div class="player-details ms-3 w-100 d-flex flex-column justify-content-between" style="row-gap: 20px;">
-                                            <div class="name-point align-items-center flex-wrap d-flex justify-content-between" style="row-gap: 6px;">
-                                                <h3>MS Dhoni</h3>
-                                                <div class="player-point d-flex align-items-center  px-2 py-1">
-                                                    <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M20.6665 2.45352C22.6934 3.62377 24.3766 5.30695 25.5469 7.33389C26.7171 9.36083 27.3332 11.6601 27.3332 14.0006C27.3332 16.3411 26.717 18.6404 25.5468 20.6673C24.3765 22.6942 22.6933 24.3774 20.6664 25.5476C18.6394 26.7178 16.3401 27.3339 13.9996 27.3339C11.6591 27.3338 9.35986 26.7177 7.33295 25.5474C5.30604 24.3771 3.62289 22.6939 2.45268 20.6669C1.28248 18.64 0.666444 16.3407 0.666504 14.0002L0.673171 13.5682C0.747842 11.2655 1.4179 9.02146 2.61802 7.05484C3.81815 5.08822 5.50738 3.46612 7.52103 2.34669C9.53468 1.22727 11.804 0.648711 14.1078 0.667433C16.4117 0.686154 18.6713 1.30151 20.6665 2.45352ZM13.9998 6.00018C13.6462 6.00018 13.3071 6.14066 13.057 6.39071C12.807 6.64076 12.6665 6.97989 12.6665 7.33352C11.6056 7.33352 10.5882 7.75494 9.83808 8.50509C9.08793 9.25523 8.6665 10.2726 8.6665 11.3335C8.6665 12.3944 9.08793 13.4118 9.83808 14.1619C10.5882 14.9121 11.6056 15.3335 12.6665 15.3335V18.0002C12.4454 18.0124 12.2246 17.9705 12.0234 17.878C11.8221 17.7855 11.6465 17.6453 11.5118 17.4695L11.4212 17.3349C11.2387 17.0407 10.9491 16.8289 10.6134 16.7445C10.2777 16.66 9.92226 16.7094 9.62232 16.8822C9.32239 17.055 9.10142 17.3378 9.00616 17.6706C8.91089 18.0034 8.94879 18.3602 9.11184 18.6655C9.45215 19.2557 9.93759 19.7492 10.5221 20.0993C11.1066 20.4493 11.7709 20.6442 12.4518 20.6655H12.6665C12.6662 20.9923 12.786 21.3079 13.003 21.5522C13.2201 21.7965 13.5193 21.9526 13.8438 21.9908L13.9998 22.0002C14.3535 22.0002 14.6926 21.8597 14.9426 21.6097C15.1927 21.3596 15.3332 21.0205 15.3332 20.6668L15.5678 20.6602C16.6073 20.6001 17.5824 20.1371 18.2859 19.3695C18.9894 18.6019 19.3659 17.5902 19.3353 16.5495C19.3047 15.5087 18.8696 14.5209 18.1223 13.7959C17.3749 13.0709 16.3744 12.6658 15.3332 12.6668V10.0002C15.8105 9.98418 16.2278 10.1868 16.4878 10.5308L16.5785 10.6655C16.7609 10.9597 17.0506 11.1714 17.3863 11.2559C17.722 11.3404 18.0774 11.291 18.3774 11.1181C18.6773 10.9453 18.8983 10.6626 18.9935 10.3298C19.0888 9.99701 19.0509 9.64021 18.8878 9.33485C18.5477 8.74438 18.0623 8.2506 17.4778 7.90035C16.8933 7.5501 16.2289 7.35498 15.5478 7.33352H15.3332C15.3332 6.97989 15.1927 6.64076 14.9426 6.39071C14.6926 6.14066 14.3535 6.00018 13.9998 6.00018ZM15.3332 15.3335C15.6868 15.3335 16.0259 15.474 16.276 15.724C16.526 15.9741 16.6665 16.3132 16.6665 16.6668C16.6665 17.0205 16.526 17.3596 16.276 17.6097C16.0259 17.8597 15.6868 18.0002 15.3332 18.0002V15.3335ZM12.6665 10.0002V12.6668C12.3129 12.6668 11.9737 12.5264 11.7237 12.2763C11.4736 12.0263 11.3332 11.6871 11.3332 11.3335C11.3332 10.9799 11.4736 10.6408 11.7237 10.3907C11.9737 10.1407 12.3129 10.0002 12.6665 10.0002Z" fill="#FFC812"/>
-                                                    </svg>
-                                                    <p class="ms-2">1000 <span>pts</span></p>
-                                                </div>
-                                            </div>
-                                            <div class="player-expertise d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
-                                                <p class="batter">Batter</p>
-                                                <p class="bowler">Bowler</p>
-                                                <p class="all-rounder">All Rounder</p>
-                                            </div>
-                                            <a href="tel: +91 1234567890">
-                                                <img src="./assets/images/phone.svg" alt="phone" width="18" height="18"/>
-                                                +91 1234567890
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-xl-4 col-md-6 px-2">
-                                <div class="bg-white p-3">
-                                    <div class="player-small-card align-items-center d-flex">
-                                        <div class="player-image-side">
-                                            <img src="./assets/images/msd.jpg" alt="Player card" width="130" height="130"/>
-                                        </div>
-                                        <div class="player-details ms-3 w-100 d-flex flex-column justify-content-between" style="row-gap: 20px;">
-                                            <div class="name-point align-items-center flex-wrap d-flex justify-content-between" style="row-gap: 6px;">
-                                                <h3>MS Dhoni</h3>
-                                                <div class="player-point d-flex align-items-center  px-2 py-1">
-                                                    <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M20.6665 2.45352C22.6934 3.62377 24.3766 5.30695 25.5469 7.33389C26.7171 9.36083 27.3332 11.6601 27.3332 14.0006C27.3332 16.3411 26.717 18.6404 25.5468 20.6673C24.3765 22.6942 22.6933 24.3774 20.6664 25.5476C18.6394 26.7178 16.3401 27.3339 13.9996 27.3339C11.6591 27.3338 9.35986 26.7177 7.33295 25.5474C5.30604 24.3771 3.62289 22.6939 2.45268 20.6669C1.28248 18.64 0.666444 16.3407 0.666504 14.0002L0.673171 13.5682C0.747842 11.2655 1.4179 9.02146 2.61802 7.05484C3.81815 5.08822 5.50738 3.46612 7.52103 2.34669C9.53468 1.22727 11.804 0.648711 14.1078 0.667433C16.4117 0.686154 18.6713 1.30151 20.6665 2.45352ZM13.9998 6.00018C13.6462 6.00018 13.3071 6.14066 13.057 6.39071C12.807 6.64076 12.6665 6.97989 12.6665 7.33352C11.6056 7.33352 10.5882 7.75494 9.83808 8.50509C9.08793 9.25523 8.6665 10.2726 8.6665 11.3335C8.6665 12.3944 9.08793 13.4118 9.83808 14.1619C10.5882 14.9121 11.6056 15.3335 12.6665 15.3335V18.0002C12.4454 18.0124 12.2246 17.9705 12.0234 17.878C11.8221 17.7855 11.6465 17.6453 11.5118 17.4695L11.4212 17.3349C11.2387 17.0407 10.9491 16.8289 10.6134 16.7445C10.2777 16.66 9.92226 16.7094 9.62232 16.8822C9.32239 17.055 9.10142 17.3378 9.00616 17.6706C8.91089 18.0034 8.94879 18.3602 9.11184 18.6655C9.45215 19.2557 9.93759 19.7492 10.5221 20.0993C11.1066 20.4493 11.7709 20.6442 12.4518 20.6655H12.6665C12.6662 20.9923 12.786 21.3079 13.003 21.5522C13.2201 21.7965 13.5193 21.9526 13.8438 21.9908L13.9998 22.0002C14.3535 22.0002 14.6926 21.8597 14.9426 21.6097C15.1927 21.3596 15.3332 21.0205 15.3332 20.6668L15.5678 20.6602C16.6073 20.6001 17.5824 20.1371 18.2859 19.3695C18.9894 18.6019 19.3659 17.5902 19.3353 16.5495C19.3047 15.5087 18.8696 14.5209 18.1223 13.7959C17.3749 13.0709 16.3744 12.6658 15.3332 12.6668V10.0002C15.8105 9.98418 16.2278 10.1868 16.4878 10.5308L16.5785 10.6655C16.7609 10.9597 17.0506 11.1714 17.3863 11.2559C17.722 11.3404 18.0774 11.291 18.3774 11.1181C18.6773 10.9453 18.8983 10.6626 18.9935 10.3298C19.0888 9.99701 19.0509 9.64021 18.8878 9.33485C18.5477 8.74438 18.0623 8.2506 17.4778 7.90035C16.8933 7.5501 16.2289 7.35498 15.5478 7.33352H15.3332C15.3332 6.97989 15.1927 6.64076 14.9426 6.39071C14.6926 6.14066 14.3535 6.00018 13.9998 6.00018ZM15.3332 15.3335C15.6868 15.3335 16.0259 15.474 16.276 15.724C16.526 15.9741 16.6665 16.3132 16.6665 16.6668C16.6665 17.0205 16.526 17.3596 16.276 17.6097C16.0259 17.8597 15.6868 18.0002 15.3332 18.0002V15.3335ZM12.6665 10.0002V12.6668C12.3129 12.6668 11.9737 12.5264 11.7237 12.2763C11.4736 12.0263 11.3332 11.6871 11.3332 11.3335C11.3332 10.9799 11.4736 10.6408 11.7237 10.3907C11.9737 10.1407 12.3129 10.0002 12.6665 10.0002Z" fill="#FFC812"/>
-                                                    </svg>
-                                                    <p class="ms-2">1000 <span>pts</span></p>
-                                                </div>
-                                            </div>
-                                            <div class="player-expertise d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
-                                                <p class="batter">Batter</p>
-                                                <p class="bowler">Bowler</p>
-                                                <p class="all-rounder">All Rounder</p>
-                                            </div>
-                                            <a href="tel: +91 1234567890">
-                                                <img src="./assets/images/phone.svg" alt="phone" width="18" height="18"/>
-                                                +91 1234567890
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-xl-4 col-md-6 px-2">
-                                <div class="bg-white p-3">
-                                    <div class="player-small-card align-items-center d-flex">
-                                        <div class="player-image-side">
-                                            <img src="./assets/images/msd.jpg" alt="Player card" width="130" height="130"/>
-                                        </div>
-                                        <div class="player-details ms-3 w-100 d-flex flex-column justify-content-between" style="row-gap: 20px;">
-                                            <div class="name-point align-items-center flex-wrap d-flex justify-content-between" style="row-gap: 6px;">
-                                                <h3>MS Dhoni</h3>
-                                                <div class="player-point d-flex align-items-center  px-2 py-1">
-                                                    <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M20.6665 2.45352C22.6934 3.62377 24.3766 5.30695 25.5469 7.33389C26.7171 9.36083 27.3332 11.6601 27.3332 14.0006C27.3332 16.3411 26.717 18.6404 25.5468 20.6673C24.3765 22.6942 22.6933 24.3774 20.6664 25.5476C18.6394 26.7178 16.3401 27.3339 13.9996 27.3339C11.6591 27.3338 9.35986 26.7177 7.33295 25.5474C5.30604 24.3771 3.62289 22.6939 2.45268 20.6669C1.28248 18.64 0.666444 16.3407 0.666504 14.0002L0.673171 13.5682C0.747842 11.2655 1.4179 9.02146 2.61802 7.05484C3.81815 5.08822 5.50738 3.46612 7.52103 2.34669C9.53468 1.22727 11.804 0.648711 14.1078 0.667433C16.4117 0.686154 18.6713 1.30151 20.6665 2.45352ZM13.9998 6.00018C13.6462 6.00018 13.3071 6.14066 13.057 6.39071C12.807 6.64076 12.6665 6.97989 12.6665 7.33352C11.6056 7.33352 10.5882 7.75494 9.83808 8.50509C9.08793 9.25523 8.6665 10.2726 8.6665 11.3335C8.6665 12.3944 9.08793 13.4118 9.83808 14.1619C10.5882 14.9121 11.6056 15.3335 12.6665 15.3335V18.0002C12.4454 18.0124 12.2246 17.9705 12.0234 17.878C11.8221 17.7855 11.6465 17.6453 11.5118 17.4695L11.4212 17.3349C11.2387 17.0407 10.9491 16.8289 10.6134 16.7445C10.2777 16.66 9.92226 16.7094 9.62232 16.8822C9.32239 17.055 9.10142 17.3378 9.00616 17.6706C8.91089 18.0034 8.94879 18.3602 9.11184 18.6655C9.45215 19.2557 9.93759 19.7492 10.5221 20.0993C11.1066 20.4493 11.7709 20.6442 12.4518 20.6655H12.6665C12.6662 20.9923 12.786 21.3079 13.003 21.5522C13.2201 21.7965 13.5193 21.9526 13.8438 21.9908L13.9998 22.0002C14.3535 22.0002 14.6926 21.8597 14.9426 21.6097C15.1927 21.3596 15.3332 21.0205 15.3332 20.6668L15.5678 20.6602C16.6073 20.6001 17.5824 20.1371 18.2859 19.3695C18.9894 18.6019 19.3659 17.5902 19.3353 16.5495C19.3047 15.5087 18.8696 14.5209 18.1223 13.7959C17.3749 13.0709 16.3744 12.6658 15.3332 12.6668V10.0002C15.8105 9.98418 16.2278 10.1868 16.4878 10.5308L16.5785 10.6655C16.7609 10.9597 17.0506 11.1714 17.3863 11.2559C17.722 11.3404 18.0774 11.291 18.3774 11.1181C18.6773 10.9453 18.8983 10.6626 18.9935 10.3298C19.0888 9.99701 19.0509 9.64021 18.8878 9.33485C18.5477 8.74438 18.0623 8.2506 17.4778 7.90035C16.8933 7.5501 16.2289 7.35498 15.5478 7.33352H15.3332C15.3332 6.97989 15.1927 6.64076 14.9426 6.39071C14.6926 6.14066 14.3535 6.00018 13.9998 6.00018ZM15.3332 15.3335C15.6868 15.3335 16.0259 15.474 16.276 15.724C16.526 15.9741 16.6665 16.3132 16.6665 16.6668C16.6665 17.0205 16.526 17.3596 16.276 17.6097C16.0259 17.8597 15.6868 18.0002 15.3332 18.0002V15.3335ZM12.6665 10.0002V12.6668C12.3129 12.6668 11.9737 12.5264 11.7237 12.2763C11.4736 12.0263 11.3332 11.6871 11.3332 11.3335C11.3332 10.9799 11.4736 10.6408 11.7237 10.3907C11.9737 10.1407 12.3129 10.0002 12.6665 10.0002Z" fill="#FFC812"/>
-                                                    </svg>
-                                                    <p class="ms-2">1000 <span>pts</span></p>
-                                                </div>
-                                            </div>
-                                            <div class="player-expertise d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
-                                                <p class="batter">Batter</p>
-                                                <p class="bowler">Bowler</p>
-                                                <p class="all-rounder">All Rounder</p>
-                                            </div>
-                                            <a href="tel: +91 1234567890">
-                                                <img src="./assets/images/phone.svg" alt="phone" width="18" height="18"/>
-                                                +91 1234567890
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-xl-4 col-md-6 px-2">
-                                <div class="bg-white p-3">
-                                    <div class="player-small-card align-items-center d-flex">
-                                        <div class="player-image-side">
-                                            <img src="./assets/images/msd.jpg" alt="Player card" width="130" height="130"/>
-                                        </div>
-                                        <div class="player-details ms-3 w-100 d-flex flex-column justify-content-between" style="row-gap: 20px;">
-                                            <div class="name-point align-items-center flex-wrap d-flex justify-content-between" style="row-gap: 6px;">
-                                                <h3>MS Dhoni</h3>
-                                                <div class="player-point d-flex align-items-center  px-2 py-1">
-                                                    <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M20.6665 2.45352C22.6934 3.62377 24.3766 5.30695 25.5469 7.33389C26.7171 9.36083 27.3332 11.6601 27.3332 14.0006C27.3332 16.3411 26.717 18.6404 25.5468 20.6673C24.3765 22.6942 22.6933 24.3774 20.6664 25.5476C18.6394 26.7178 16.3401 27.3339 13.9996 27.3339C11.6591 27.3338 9.35986 26.7177 7.33295 25.5474C5.30604 24.3771 3.62289 22.6939 2.45268 20.6669C1.28248 18.64 0.666444 16.3407 0.666504 14.0002L0.673171 13.5682C0.747842 11.2655 1.4179 9.02146 2.61802 7.05484C3.81815 5.08822 5.50738 3.46612 7.52103 2.34669C9.53468 1.22727 11.804 0.648711 14.1078 0.667433C16.4117 0.686154 18.6713 1.30151 20.6665 2.45352ZM13.9998 6.00018C13.6462 6.00018 13.3071 6.14066 13.057 6.39071C12.807 6.64076 12.6665 6.97989 12.6665 7.33352C11.6056 7.33352 10.5882 7.75494 9.83808 8.50509C9.08793 9.25523 8.6665 10.2726 8.6665 11.3335C8.6665 12.3944 9.08793 13.4118 9.83808 14.1619C10.5882 14.9121 11.6056 15.3335 12.6665 15.3335V18.0002C12.4454 18.0124 12.2246 17.9705 12.0234 17.878C11.8221 17.7855 11.6465 17.6453 11.5118 17.4695L11.4212 17.3349C11.2387 17.0407 10.9491 16.8289 10.6134 16.7445C10.2777 16.66 9.92226 16.7094 9.62232 16.8822C9.32239 17.055 9.10142 17.3378 9.00616 17.6706C8.91089 18.0034 8.94879 18.3602 9.11184 18.6655C9.45215 19.2557 9.93759 19.7492 10.5221 20.0993C11.1066 20.4493 11.7709 20.6442 12.4518 20.6655H12.6665C12.6662 20.9923 12.786 21.3079 13.003 21.5522C13.2201 21.7965 13.5193 21.9526 13.8438 21.9908L13.9998 22.0002C14.3535 22.0002 14.6926 21.8597 14.9426 21.6097C15.1927 21.3596 15.3332 21.0205 15.3332 20.6668L15.5678 20.6602C16.6073 20.6001 17.5824 20.1371 18.2859 19.3695C18.9894 18.6019 19.3659 17.5902 19.3353 16.5495C19.3047 15.5087 18.8696 14.5209 18.1223 13.7959C17.3749 13.0709 16.3744 12.6658 15.3332 12.6668V10.0002C15.8105 9.98418 16.2278 10.1868 16.4878 10.5308L16.5785 10.6655C16.7609 10.9597 17.0506 11.1714 17.3863 11.2559C17.722 11.3404 18.0774 11.291 18.3774 11.1181C18.6773 10.9453 18.8983 10.6626 18.9935 10.3298C19.0888 9.99701 19.0509 9.64021 18.8878 9.33485C18.5477 8.74438 18.0623 8.2506 17.4778 7.90035C16.8933 7.5501 16.2289 7.35498 15.5478 7.33352H15.3332C15.3332 6.97989 15.1927 6.64076 14.9426 6.39071C14.6926 6.14066 14.3535 6.00018 13.9998 6.00018ZM15.3332 15.3335C15.6868 15.3335 16.0259 15.474 16.276 15.724C16.526 15.9741 16.6665 16.3132 16.6665 16.6668C16.6665 17.0205 16.526 17.3596 16.276 17.6097C16.0259 17.8597 15.6868 18.0002 15.3332 18.0002V15.3335ZM12.6665 10.0002V12.6668C12.3129 12.6668 11.9737 12.5264 11.7237 12.2763C11.4736 12.0263 11.3332 11.6871 11.3332 11.3335C11.3332 10.9799 11.4736 10.6408 11.7237 10.3907C11.9737 10.1407 12.3129 10.0002 12.6665 10.0002Z" fill="#FFC812"/>
-                                                    </svg>
-                                                    <p class="ms-2">1000 <span>pts</span></p>
-                                                </div>
-                                            </div>
-                                            <div class="player-expertise d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
-                                                <p class="batter">Batter</p>
-                                                <p class="bowler">Bowler</p>
-                                                <p class="all-rounder">All Rounder</p>
-                                            </div>
-                                            <a href="tel: +91 1234567890">
-                                                <img src="./assets/images/phone.svg" alt="phone" width="18" height="18"/>
-                                                +91 1234567890
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-xl-4 col-md-6 px-2">
-                                <div class="bg-white p-3">
-                                    <div class="player-small-card align-items-center d-flex">
-                                        <div class="player-image-side">
-                                            <img src="./assets/images/msd.jpg" alt="Player card" width="130" height="130"/>
-                                        </div>
-                                        <div class="player-details ms-3 w-100 d-flex flex-column justify-content-between" style="row-gap: 20px;">
-                                            <div class="name-point align-items-center flex-wrap d-flex justify-content-between" style="row-gap: 6px;">
-                                                <h3>MS Dhoni</h3>
-                                                <div class="player-point d-flex align-items-center  px-2 py-1">
-                                                    <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M20.6665 2.45352C22.6934 3.62377 24.3766 5.30695 25.5469 7.33389C26.7171 9.36083 27.3332 11.6601 27.3332 14.0006C27.3332 16.3411 26.717 18.6404 25.5468 20.6673C24.3765 22.6942 22.6933 24.3774 20.6664 25.5476C18.6394 26.7178 16.3401 27.3339 13.9996 27.3339C11.6591 27.3338 9.35986 26.7177 7.33295 25.5474C5.30604 24.3771 3.62289 22.6939 2.45268 20.6669C1.28248 18.64 0.666444 16.3407 0.666504 14.0002L0.673171 13.5682C0.747842 11.2655 1.4179 9.02146 2.61802 7.05484C3.81815 5.08822 5.50738 3.46612 7.52103 2.34669C9.53468 1.22727 11.804 0.648711 14.1078 0.667433C16.4117 0.686154 18.6713 1.30151 20.6665 2.45352ZM13.9998 6.00018C13.6462 6.00018 13.3071 6.14066 13.057 6.39071C12.807 6.64076 12.6665 6.97989 12.6665 7.33352C11.6056 7.33352 10.5882 7.75494 9.83808 8.50509C9.08793 9.25523 8.6665 10.2726 8.6665 11.3335C8.6665 12.3944 9.08793 13.4118 9.83808 14.1619C10.5882 14.9121 11.6056 15.3335 12.6665 15.3335V18.0002C12.4454 18.0124 12.2246 17.9705 12.0234 17.878C11.8221 17.7855 11.6465 17.6453 11.5118 17.4695L11.4212 17.3349C11.2387 17.0407 10.9491 16.8289 10.6134 16.7445C10.2777 16.66 9.92226 16.7094 9.62232 16.8822C9.32239 17.055 9.10142 17.3378 9.00616 17.6706C8.91089 18.0034 8.94879 18.3602 9.11184 18.6655C9.45215 19.2557 9.93759 19.7492 10.5221 20.0993C11.1066 20.4493 11.7709 20.6442 12.4518 20.6655H12.6665C12.6662 20.9923 12.786 21.3079 13.003 21.5522C13.2201 21.7965 13.5193 21.9526 13.8438 21.9908L13.9998 22.0002C14.3535 22.0002 14.6926 21.8597 14.9426 21.6097C15.1927 21.3596 15.3332 21.0205 15.3332 20.6668L15.5678 20.6602C16.6073 20.6001 17.5824 20.1371 18.2859 19.3695C18.9894 18.6019 19.3659 17.5902 19.3353 16.5495C19.3047 15.5087 18.8696 14.5209 18.1223 13.7959C17.3749 13.0709 16.3744 12.6658 15.3332 12.6668V10.0002C15.8105 9.98418 16.2278 10.1868 16.4878 10.5308L16.5785 10.6655C16.7609 10.9597 17.0506 11.1714 17.3863 11.2559C17.722 11.3404 18.0774 11.291 18.3774 11.1181C18.6773 10.9453 18.8983 10.6626 18.9935 10.3298C19.0888 9.99701 19.0509 9.64021 18.8878 9.33485C18.5477 8.74438 18.0623 8.2506 17.4778 7.90035C16.8933 7.5501 16.2289 7.35498 15.5478 7.33352H15.3332C15.3332 6.97989 15.1927 6.64076 14.9426 6.39071C14.6926 6.14066 14.3535 6.00018 13.9998 6.00018ZM15.3332 15.3335C15.6868 15.3335 16.0259 15.474 16.276 15.724C16.526 15.9741 16.6665 16.3132 16.6665 16.6668C16.6665 17.0205 16.526 17.3596 16.276 17.6097C16.0259 17.8597 15.6868 18.0002 15.3332 18.0002V15.3335ZM12.6665 10.0002V12.6668C12.3129 12.6668 11.9737 12.5264 11.7237 12.2763C11.4736 12.0263 11.3332 11.6871 11.3332 11.3335C11.3332 10.9799 11.4736 10.6408 11.7237 10.3907C11.9737 10.1407 12.3129 10.0002 12.6665 10.0002Z" fill="#FFC812"/>
-                                                    </svg>
-                                                    <p class="ms-2">1000 <span>pts</span></p>
-                                                </div>
-                                            </div>
-                                            <div class="player-expertise d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
-                                                <p class="batter">Batter</p>
-                                                <p class="bowler">Bowler</p>
-                                                <p class="all-rounder">All Rounder</p>
-                                            </div>
-                                            <a href="tel: +91 1234567890">
-                                                <img src="./assets/images/phone.svg" alt="phone" width="18" height="18"/>
-                                                +91 1234567890
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-xl-4 col-md-6 px-2">
-                                <div class="bg-white p-3">
-                                    <div class="player-small-card align-items-center d-flex">
-                                        <div class="player-image-side">
-                                            <img src="./assets/images/msd.jpg" alt="Player card" width="130" height="130"/>
-                                        </div>
-                                        <div class="player-details ms-3 w-100 d-flex flex-column justify-content-between" style="row-gap: 20px;">
-                                            <div class="name-point align-items-center flex-wrap d-flex justify-content-between" style="row-gap: 6px;">
-                                                <h3>MS Dhoni</h3>
-                                                <div class="player-point d-flex align-items-center  px-2 py-1">
-                                                    <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M20.6665 2.45352C22.6934 3.62377 24.3766 5.30695 25.5469 7.33389C26.7171 9.36083 27.3332 11.6601 27.3332 14.0006C27.3332 16.3411 26.717 18.6404 25.5468 20.6673C24.3765 22.6942 22.6933 24.3774 20.6664 25.5476C18.6394 26.7178 16.3401 27.3339 13.9996 27.3339C11.6591 27.3338 9.35986 26.7177 7.33295 25.5474C5.30604 24.3771 3.62289 22.6939 2.45268 20.6669C1.28248 18.64 0.666444 16.3407 0.666504 14.0002L0.673171 13.5682C0.747842 11.2655 1.4179 9.02146 2.61802 7.05484C3.81815 5.08822 5.50738 3.46612 7.52103 2.34669C9.53468 1.22727 11.804 0.648711 14.1078 0.667433C16.4117 0.686154 18.6713 1.30151 20.6665 2.45352ZM13.9998 6.00018C13.6462 6.00018 13.3071 6.14066 13.057 6.39071C12.807 6.64076 12.6665 6.97989 12.6665 7.33352C11.6056 7.33352 10.5882 7.75494 9.83808 8.50509C9.08793 9.25523 8.6665 10.2726 8.6665 11.3335C8.6665 12.3944 9.08793 13.4118 9.83808 14.1619C10.5882 14.9121 11.6056 15.3335 12.6665 15.3335V18.0002C12.4454 18.0124 12.2246 17.9705 12.0234 17.878C11.8221 17.7855 11.6465 17.6453 11.5118 17.4695L11.4212 17.3349C11.2387 17.0407 10.9491 16.8289 10.6134 16.7445C10.2777 16.66 9.92226 16.7094 9.62232 16.8822C9.32239 17.055 9.10142 17.3378 9.00616 17.6706C8.91089 18.0034 8.94879 18.3602 9.11184 18.6655C9.45215 19.2557 9.93759 19.7492 10.5221 20.0993C11.1066 20.4493 11.7709 20.6442 12.4518 20.6655H12.6665C12.6662 20.9923 12.786 21.3079 13.003 21.5522C13.2201 21.7965 13.5193 21.9526 13.8438 21.9908L13.9998 22.0002C14.3535 22.0002 14.6926 21.8597 14.9426 21.6097C15.1927 21.3596 15.3332 21.0205 15.3332 20.6668L15.5678 20.6602C16.6073 20.6001 17.5824 20.1371 18.2859 19.3695C18.9894 18.6019 19.3659 17.5902 19.3353 16.5495C19.3047 15.5087 18.8696 14.5209 18.1223 13.7959C17.3749 13.0709 16.3744 12.6658 15.3332 12.6668V10.0002C15.8105 9.98418 16.2278 10.1868 16.4878 10.5308L16.5785 10.6655C16.7609 10.9597 17.0506 11.1714 17.3863 11.2559C17.722 11.3404 18.0774 11.291 18.3774 11.1181C18.6773 10.9453 18.8983 10.6626 18.9935 10.3298C19.0888 9.99701 19.0509 9.64021 18.8878 9.33485C18.5477 8.74438 18.0623 8.2506 17.4778 7.90035C16.8933 7.5501 16.2289 7.35498 15.5478 7.33352H15.3332C15.3332 6.97989 15.1927 6.64076 14.9426 6.39071C14.6926 6.14066 14.3535 6.00018 13.9998 6.00018ZM15.3332 15.3335C15.6868 15.3335 16.0259 15.474 16.276 15.724C16.526 15.9741 16.6665 16.3132 16.6665 16.6668C16.6665 17.0205 16.526 17.3596 16.276 17.6097C16.0259 17.8597 15.6868 18.0002 15.3332 18.0002V15.3335ZM12.6665 10.0002V12.6668C12.3129 12.6668 11.9737 12.5264 11.7237 12.2763C11.4736 12.0263 11.3332 11.6871 11.3332 11.3335C11.3332 10.9799 11.4736 10.6408 11.7237 10.3907C11.9737 10.1407 12.3129 10.0002 12.6665 10.0002Z" fill="#FFC812"/>
-                                                    </svg>
-                                                    <p class="ms-2">1000 <span>pts</span></p>
-                                                </div>
-                                            </div>
-                                            <div class="player-expertise d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
-                                                <p class="batter">Batter</p>
-                                                <p class="bowler">Bowler</p>
-                                                <p class="all-rounder">All Rounder</p>
-                                            </div>
-                                            <a href="tel: +91 1234567890">
-                                                <img src="./assets/images/phone.svg" alt="phone" width="18" height="18"/>
-                                                +91 1234567890
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-xl-4 col-md-6 px-2">
-                                <div class="bg-white p-3">
-                                    <div class="player-small-card align-items-center d-flex">
-                                        <div class="player-image-side">
-                                            <img src="./assets/images/msd.jpg" alt="Player card" width="130" height="130"/>
-                                        </div>
-                                        <div class="player-details ms-3 w-100 d-flex flex-column justify-content-between" style="row-gap: 20px;">
-                                            <div class="name-point align-items-center flex-wrap d-flex justify-content-between" style="row-gap: 6px;">
-                                                <h3>MS Dhoni</h3>
-                                                <div class="player-point d-flex align-items-center  px-2 py-1">
-                                                    <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M20.6665 2.45352C22.6934 3.62377 24.3766 5.30695 25.5469 7.33389C26.7171 9.36083 27.3332 11.6601 27.3332 14.0006C27.3332 16.3411 26.717 18.6404 25.5468 20.6673C24.3765 22.6942 22.6933 24.3774 20.6664 25.5476C18.6394 26.7178 16.3401 27.3339 13.9996 27.3339C11.6591 27.3338 9.35986 26.7177 7.33295 25.5474C5.30604 24.3771 3.62289 22.6939 2.45268 20.6669C1.28248 18.64 0.666444 16.3407 0.666504 14.0002L0.673171 13.5682C0.747842 11.2655 1.4179 9.02146 2.61802 7.05484C3.81815 5.08822 5.50738 3.46612 7.52103 2.34669C9.53468 1.22727 11.804 0.648711 14.1078 0.667433C16.4117 0.686154 18.6713 1.30151 20.6665 2.45352ZM13.9998 6.00018C13.6462 6.00018 13.3071 6.14066 13.057 6.39071C12.807 6.64076 12.6665 6.97989 12.6665 7.33352C11.6056 7.33352 10.5882 7.75494 9.83808 8.50509C9.08793 9.25523 8.6665 10.2726 8.6665 11.3335C8.6665 12.3944 9.08793 13.4118 9.83808 14.1619C10.5882 14.9121 11.6056 15.3335 12.6665 15.3335V18.0002C12.4454 18.0124 12.2246 17.9705 12.0234 17.878C11.8221 17.7855 11.6465 17.6453 11.5118 17.4695L11.4212 17.3349C11.2387 17.0407 10.9491 16.8289 10.6134 16.7445C10.2777 16.66 9.92226 16.7094 9.62232 16.8822C9.32239 17.055 9.10142 17.3378 9.00616 17.6706C8.91089 18.0034 8.94879 18.3602 9.11184 18.6655C9.45215 19.2557 9.93759 19.7492 10.5221 20.0993C11.1066 20.4493 11.7709 20.6442 12.4518 20.6655H12.6665C12.6662 20.9923 12.786 21.3079 13.003 21.5522C13.2201 21.7965 13.5193 21.9526 13.8438 21.9908L13.9998 22.0002C14.3535 22.0002 14.6926 21.8597 14.9426 21.6097C15.1927 21.3596 15.3332 21.0205 15.3332 20.6668L15.5678 20.6602C16.6073 20.6001 17.5824 20.1371 18.2859 19.3695C18.9894 18.6019 19.3659 17.5902 19.3353 16.5495C19.3047 15.5087 18.8696 14.5209 18.1223 13.7959C17.3749 13.0709 16.3744 12.6658 15.3332 12.6668V10.0002C15.8105 9.98418 16.2278 10.1868 16.4878 10.5308L16.5785 10.6655C16.7609 10.9597 17.0506 11.1714 17.3863 11.2559C17.722 11.3404 18.0774 11.291 18.3774 11.1181C18.6773 10.9453 18.8983 10.6626 18.9935 10.3298C19.0888 9.99701 19.0509 9.64021 18.8878 9.33485C18.5477 8.74438 18.0623 8.2506 17.4778 7.90035C16.8933 7.5501 16.2289 7.35498 15.5478 7.33352H15.3332C15.3332 6.97989 15.1927 6.64076 14.9426 6.39071C14.6926 6.14066 14.3535 6.00018 13.9998 6.00018ZM15.3332 15.3335C15.6868 15.3335 16.0259 15.474 16.276 15.724C16.526 15.9741 16.6665 16.3132 16.6665 16.6668C16.6665 17.0205 16.526 17.3596 16.276 17.6097C16.0259 17.8597 15.6868 18.0002 15.3332 18.0002V15.3335ZM12.6665 10.0002V12.6668C12.3129 12.6668 11.9737 12.5264 11.7237 12.2763C11.4736 12.0263 11.3332 11.6871 11.3332 11.3335C11.3332 10.9799 11.4736 10.6408 11.7237 10.3907C11.9737 10.1407 12.3129 10.0002 12.6665 10.0002Z" fill="#FFC812"/>
-                                                    </svg>
-                                                    <p class="ms-2">1000 <span>pts</span></p>
-                                                </div>
-                                            </div>
-                                            <div class="player-expertise d-flex align-items-center flex-wrap" style="column-gap: 5px; row-gap: 5px;">
-                                                <p class="batter">Batter</p>
-                                                <p class="bowler">Bowler</p>
-                                                <p class="all-rounder">All Rounder</p>
-                                            </div>
-                                            <a href="tel: +91 1234567890">
-                                                <img src="./assets/images/phone.svg" alt="phone" width="18" height="18"/>
-                                                +91 1234567890
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>-->
-                    </div>
-                </section>
+        /* ── Empty state ─────────────────────────────────────────────────── */
+        .tp-empty {
+          text-align: center;
+          padding: 80px 20px;
+        }
+        .tp-empty-icon {
+          font-size: 4rem;
+          color: var(--p-empty-icon);
+          opacity: 0.3;
+          margin-bottom: 16px;
+        }
+        .tp-empty h4 {
+          color: var(--p-text-muted);
+          font-weight: 600;
+          margin-bottom: 8px;
+        }
+        .tp-empty p { color: var(--p-text-muted); font-size: 0.9rem; }
 
-                </div>
+        /* ── Responsive ──────────────────────────────────────────────────── */
+        @media (max-width: 576px) {
+          .tp-header-actions { position: static; transform: none; margin-top: 10px; justify-content: center; }
+          .tp-team-name { font-size: 1.8rem; }
+          .tp-card-photo-wrap { height: 140px; }
+        }
 
-                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-            </body>
-            </html>
+        /* ── Snapshot-specific overrides (always 4-per-row, capped width) ── */
+        #screenshot_container {
+          max-width: 1280px;
+          margin: 0 auto;
+        }
+        #screenshot_container .tp-card-photo-wrap {
+          height: 180px;
+        }
+      </style>
+    </head>
+
+    <body>
+      <!-- ── Page header ──────────────────────────────────────────────────── -->
+      <header class="tp-header">
+        <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo" height="52" class="logo"/>
+        <div class="tp-header-actions">
+          <a href="/auction/show/team/balance" class="tp-back-btn">
+            <!-- Chart/summary icon -->
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M14 17.5h7M17.5 14v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Bid Summary
+          </a>
+          <t t-if="players">
+            <button type="button"
+                    t-att-data-filename="'%s_squad.png' % (team.name,)"
+                    class="tp-snap-btn o_take_screenshot">
+              <!-- Camera SVG icon -->
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M23 19C23 19.5304 22.7893 20.0391 22.4142 20.4142C22.0391 20.7893 21.5304 21 21 21H3C2.46957 21 1.96086 20.7893 1.58579 20.4142C1.21071 20.0391 1 19.5304 1 19V8C1 7.46957 1.21071 6.96086 1.58579 6.58579C1.96086 6.21071 2.46957 6 3 6H7L9 3H15L17 6H21C21.5304 6 22.0391 6.21071 22.4142 6.58579C22.7893 6.96086 23 7.46957 23 8V19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="12" cy="13" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Squad Snapshot
+            </button>
+          </t>
         </div>
-    </t>
+      </header>
 
-    </template>
+      <!-- screenshot_container wraps team banner + squad so the snapshot captures everything -->
+      <div id="screenshot_container" style="background:var(--p-body-bg);">
+
+      <!-- ── Team hero ────────────────────────────────────────────────────── -->
+      <section class="tp-team-hero">
+        <div class="container">
+          <div class="d-flex flex-wrap align-items-center gap-4" style="row-gap:14px;">
+
+            <!-- Logo -->
+            <img t-att-src="image_data_uri(team.logo)" alt="Team Logo" class="tp-team-logo-ring"/>
+
+            <!-- Name + meta -->
+            <div style="flex:1; min-width:180px;">
+              <h1 class="tp-team-name"><t t-esc="team.name"/></h1>
+              <p class="tp-team-meta">
+                Manager: <span><t t-esc="team.manager or '—'"/></span>
+                <t t-if="tournament">
+                  &#160;&#183;&#160; <span><t t-esc="tournament.name"/></span>
+                </t>
+              </p>
+            </div>
+
+            <!-- Player count pill -->
+            <div>
+              <span class="tp-player-count">
+                &#128100; <t t-esc="len(players)"/> Player<t t-if="len(players) != 1">s</t>
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Squad grid ───────────────────────────────────────────────────── -->
+      <section class="mt-4 mb-5">
+        <div class="container">
+
+          <t t-if="players">
+            <!-- Icon Players section (if any) -->
+            <t t-set="icon_list" t-value="[p for p in players if p.get('is_icon')]"/>
+            <t t-if="icon_list">
+              <div class="mb-4">
+                <span class="tp-section-label">&#9733; Icon Players</span>
+                <div class="row g-3">
+                  <t t-foreach="icon_list" t-as="player">
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                      <t t-call="auction_module.tp_player_card"/>
+                    </div>
+                  </t>
+                </div>
+              </div>
+            </t>
+
+            <!-- Auctioned Players section -->
+            <t t-set="auc_list" t-value="[p for p in players if not p.get('is_icon')]"/>
+            <t t-if="auc_list">
+              <div>
+                <span class="tp-section-label">&#127942; Auctioned Squad</span>
+                <div class="row g-3">
+                  <t t-foreach="auc_list" t-as="player">
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                      <t t-call="auction_module.tp_player_card"/>
+                    </div>
+                  </t>
+                </div>
+              </div>
+            </t>
+          </t>
+
+          <!-- Empty state -->
+          <t t-else="">
+            <div class="tp-empty">
+              <div class="tp-empty-icon">&#127942;</div>
+              <h4>Squad not yet assembled</h4>
+              <p>This team has not recruited any players yet.<br/>
+                 Check back once the auction begins.</p>
+            </div>
+          </t>
+
+        </div>
+      </section>
+
+      <!-- end screenshot_container -->
+      </div>
+
+      <!-- html2canvas (local copy, no CDN needed) -->
+      <script src="/auction_module/static/src/lib/html2canvas.min.js"></script>
+
+      <!-- Screenshot handler -->
+      <script>
+        document.addEventListener('click', function(ev) {
+          var btn = ev.target.closest('.o_take_screenshot');
+          if (!btn) return;
+          ev.preventDefault();
+          ev.stopPropagation();
+
+          var container = document.getElementById('screenshot_container');
+          if (!container) { console.error('screenshot_container not found'); return; }
+
+          var fileName = btn.dataset.filename || 'squad.png';
+          btn.style.visibility = 'hidden';
+
+          html2canvas(container, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: getComputedStyle(document.body).getPropertyValue('--p-body-bg').trim() || '#ffffff',
+            scrollX: 0,
+            scrollY: 0,
+            windowWidth: 1280,
+            windowHeight: container.scrollHeight,
+          }).then(function(canvas) {
+            btn.style.visibility = 'visible';
+            var link = document.createElement('a');
+            link.href = canvas.toDataURL('image/png');
+            link.download = fileName;
+            link.click();
+          }).catch(function(err) {
+            btn.style.visibility = 'visible';
+            console.error('Screenshot failed', err);
+          });
+        });
+      </script>
+
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+              integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+              crossorigin="anonymous"></script>
+    </body>
+  </html>
+</template>
+
+<!-- ── Reusable player card sub-template ───────────────────────────────── -->
+<template id="tp_player_card" name="Team Player Card">
+  <div class="tp-card">
+
+    <!-- Photo strip -->
+    <div class="tp-card-photo-wrap">
+      <t t-if="player.get('photo')">
+        <img t-att-src="image_data_uri(player.get('photo'))"
+             alt="Player photo" class="tp-card-photo"/>
+      </t>
+      <t t-else="">
+        <div class="tp-card-photo-placeholder">&#128100;</div>
+      </t>
+
+      <!-- Tier badge -->
+      <t t-if="player.get('tier_name')">
+        <span class="tp-tier-badge"
+              t-attf-style="background:#{player.get('tier_color','#01cfff')}22; color:#{player.get('tier_color','#01cfff')}; border:1.5px solid #{player.get('tier_color','#01cfff')}55;">
+          <t t-esc="player.get('tier_name')"/>
+        </span>
+      </t>
+
+      <!-- Icon crown -->
+      <t t-if="player.get('is_icon')">
+        <span class="tp-icon-crown">&#9733; ICON</span>
+      </t>
+    </div>
+
+    <!-- Card body -->
+    <div class="tp-card-body">
+
+      <!-- Name -->
+      <p class="tp-player-name"><t t-esc="player.get('name', '—')"/></p>
+
+      <!-- Tags: role, p_type, p_category -->
+      <div class="tp-tags">
+        <t t-if="player.get('role')">
+          <span class="tp-tag"><t t-esc="player.get('role')"/></span>
+        </t>
+        <t t-if="player.get('p_type')">
+          <span class="tp-tag"><t t-esc="player.get('p_type')"/></span>
+        </t>
+        <t t-if="player.get('p_category')">
+          <span class="tp-tag tp-tag-orange"><t t-esc="player.get('p_category')"/></span>
+        </t>
+      </div>
+
+      <!-- Stats: batting + bowling style -->
+      <t t-if="player.get('batting_style') or player.get('bowling_style')">
+        <div class="tp-stats">
+          <t t-if="player.get('batting_style')">
+            <div class="tp-stat">
+              <p class="tp-stat-label">Batting</p>
+              <p class="tp-stat-value"><t t-esc="player.get('batting_style')"/></p>
+            </div>
+          </t>
+          <t t-if="player.get('bowling_style')">
+            <div class="tp-stat">
+              <p class="tp-stat-label">Bowling</p>
+              <p class="tp-stat-value"><t t-esc="player.get('bowling_style')"/></p>
+            </div>
+          </t>
+        </div>
+      </t>
+
+    </div>
+
+    <!-- Card footer: points + contact -->
+    <div class="tp-card-foot">
+
+      <!-- Points -->
+      <t t-if="player.get('point') == 'ICON'">
+        <span class="tp-icon-label">&#9733; Icon Player</span>
+      </t>
+      <t t-else="">
+        <span class="tp-pts-badge">
+          <span class="pts-icon">&#128176;</span>
+          <t t-esc="player.get('point', 0)"/>
+          <span class="tp-pts-label">pts</span>
+        </span>
+      </t>
+
+      <!-- Contact -->
+      <t t-if="player.get('contact')">
+        <a t-attf-href="tel:#{player.get('contact')}" class="tp-contact">
+          &#128222; <t t-esc="player.get('contact')"/>
+        </a>
+      </t>
+
+    </div>
+
+  </div>
+</template>
+
 </odoo>

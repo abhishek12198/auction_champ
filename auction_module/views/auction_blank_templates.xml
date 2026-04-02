@@ -204,72 +204,426 @@
     </t>
 </template>
 
-<template id="welcome_message_template" name="Welcome to Tournament">
-    <t t-name="module_name.template_welcome_message">
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&amp;display=swap');
-
-            /* Overall Page Background */
-            body {
-                background: linear-gradient(to bottom, #f3e5f5, #e1bee7); /* Soft purple gradient background */
-                margin: 0;
-                padding: 0;
-                font-family: 'Roboto', sans-serif;
-            }
-
-            .message-container {
-                width: 80%;
-                margin: 0 auto;
-                padding: 40px;
-                text-align: center;
-                border-radius: 12px;
-                background: linear-gradient(to right, #4caf50, #81c784); /* Fresh green gradient background */
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-                color: #fff;
-                position: relative; /* Ensure logo can be positioned absolutely */
-            }
-            .tournament-logo {
-                position: absolute;
-                top: 20px;
-                right: 20px;
-                max-height: 100px;
-            }
-            .message-header {
-                font-size: 32px;
-                font-weight: 700;
-                margin-bottom: 20px;
-                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-            }
-            .message-body {
-                font-size: 24px;
-                font-weight: 400;
-                line-height: 1.5;
-                margin-bottom: 30px;
-            }
-            .thank-you-note {
-                font-size: 20px;
-                font-weight: 400;
-                color: #ffffff;
-                background: rgba(0, 0, 0, 0.2);
-                padding: 10px 20px;
-                border-radius: 8px;
-                display: inline-block;
-            }
-        </style>
-
-        <div class="message-container">
-            <!-- Tournament Logo -->
-            <img t-att-src="image_data_uri(env['auction.tournament'].search([('active', '=', True)], limit=1).logo)" alt="Tournament Logo" class="tournament-logo"/>
-
-            <div class="message-header">Welcome to the Tournament!</div>
-            <div class="message-body">
-                <t t-esc="'Welcome to ' + env['auction.tournament'].search([('active', '=', True)], limit=1).name"/>. We are excited to have all the owners participating.
-
-            </div>
-            <span t-esc="env['auction.tournament'].search([('active', '=', True)], limit=1).rules_regulations"></span>
-            <div class="thank-you-note">Best of luck!</div>
-        </div>
+<template id="1" name="Welcome to Tournament">
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Auction Welcome</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&amp;family=Open+Sans:wght@400;600&amp;display=swap" rel="stylesheet"/>
+  <style>
+    /* ── Theme variables ─────────────────────────────────────────────── */
+    :root {
+      --w-primary:      #004080;
+      --w-primary-dk:   #002a5c;
+      --w-primary-lt:   rgba(0,64,128,0.10);
+      --w-accent:       #FFD700;
+      --w-bg:           #0a1628;
+      --w-bg2:          #0d1e38;
+      --w-surface:      rgba(255,255,255,0.05);
+      --w-surface-bd:   rgba(255,255,255,0.10);
+      --w-header-bg:    linear-gradient(135deg, #002a5c 0%, #004080 100%);
+      --w-text:         #e8f0fe;
+      --w-text-muted:   rgba(255,255,255,0.55);
+      --w-rule-bg:      rgba(0,64,128,0.18);
+      --w-rule-bd:      rgba(0,64,128,0.45);
+      --w-rule-num:     #004080;
+      --w-glow:         rgba(0,64,128,0.45);
+      --w-divider:      rgba(255,215,0,0.35);
+    }
+    <t t-if="theme == 'cherry'">
+    :root {
+      --w-primary:      #DC143C;
+      --w-primary-dk:   #8B0000;
+      --w-primary-lt:   rgba(220,20,60,0.12);
+      --w-accent:       #FF6B6B;
+      --w-bg:           #0a0008;
+      --w-bg2:          #1a0008;
+      --w-surface:      rgba(255,255,255,0.04);
+      --w-surface-bd:   rgba(220,20,60,0.25);
+      --w-header-bg:    linear-gradient(135deg, #0a0a0a 0%, #2a0a10 100%);
+      --w-text:         #f5e8e8;
+      --w-text-muted:   rgba(245,232,232,0.55);
+      --w-rule-bg:      rgba(220,20,60,0.12);
+      --w-rule-bd:      rgba(220,20,60,0.40);
+      --w-rule-num:     #DC143C;
+      --w-glow:         rgba(220,20,60,0.50);
+      --w-divider:      rgba(220,20,60,0.45);
+    }
     </t>
+    <t t-elif="theme == 'butterscotch'">
+    :root {
+      --w-primary:      #F5C842;
+      --w-primary-dk:   #C8960C;
+      --w-primary-lt:   rgba(245,200,66,0.12);
+      --w-accent:       #FFE082;
+      --w-bg:           #0d0d1f;
+      --w-bg2:          #1a1400;
+      --w-surface:      rgba(255,255,255,0.04);
+      --w-surface-bd:   rgba(245,200,66,0.22);
+      --w-header-bg:    linear-gradient(135deg, #0d0d1f 0%, #1a1400 100%);
+      --w-text:         #fff8e1;
+      --w-text-muted:   rgba(255,248,225,0.55);
+      --w-rule-bg:      rgba(245,200,66,0.10);
+      --w-rule-bd:      rgba(245,200,66,0.38);
+      --w-rule-num:     #F5C842;
+      --w-glow:         rgba(245,200,66,0.45);
+      --w-divider:      rgba(245,200,66,0.40);
+    }
+    </t>
+    <t t-elif="theme == 'strawberry'">
+    :root {
+      --w-primary:      #C2185B;
+      --w-primary-dk:   #880E4F;
+      --w-primary-lt:   rgba(194,24,91,0.10);
+      --w-accent:       #F48FB1;
+      --w-bg:           #1a0010;
+      --w-bg2:          #2d0018;
+      --w-surface:      rgba(255,255,255,0.04);
+      --w-surface-bd:   rgba(194,24,91,0.25);
+      --w-header-bg:    linear-gradient(135deg, #880E4F 0%, #C2185B 100%);
+      --w-text:         #fce4ec;
+      --w-text-muted:   rgba(252,228,236,0.55);
+      --w-rule-bg:      rgba(194,24,91,0.12);
+      --w-rule-bd:      rgba(194,24,91,0.40);
+      --w-rule-num:     #C2185B;
+      --w-glow:         rgba(194,24,91,0.50);
+      --w-divider:      rgba(194,24,91,0.45);
+    }
+    </t>
+
+    /* ── Base ─────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      min-height: 100vh;
+      background: var(--w-bg);
+      font-family: 'Open Sans', sans-serif;
+      color: var(--w-text);
+    }
+    body {
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, var(--w-primary-lt), transparent),
+        radial-gradient(ellipse 60% 40% at 90% 90%, var(--w-primary-lt), transparent);
+      background-color: var(--w-bg);
+    }
+
+    /* ── Layout wrapper ───────────────────────────────────────────────── */
+    .wc-wrapper {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    /* ── Hero header ──────────────────────────────────────────────────── */
+    .wc-hero {
+      background: var(--w-header-bg);
+      border-radius: 18px;
+      padding: 40px 48px 36px;
+      display: flex;
+      align-items: center;
+      gap: 36px;
+      box-shadow: 0 8px 40px var(--w-glow), 0 2px 0 var(--w-surface-bd) inset;
+      border: 1px solid var(--w-surface-bd);
+      position: relative;
+      overflow: hidden;
+    }
+    .wc-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 40px,
+        rgba(255,255,255,0.015) 40px,
+        rgba(255,255,255,0.015) 41px
+      );
+    }
+    .wc-hero-logo {
+      width: 110px;
+      height: 110px;
+      object-fit: contain;
+      border-radius: 12px;
+      border: 2px solid var(--w-surface-bd);
+      background: rgba(0,0,0,0.25);
+      padding: 6px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+    }
+    .wc-hero-logo-placeholder {
+      width: 110px;
+      height: 110px;
+      flex-shrink: 0;
+      border-radius: 12px;
+      border: 2px dashed var(--w-surface-bd);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.4;
+    }
+    .wc-hero-text { flex: 1; position: relative; }
+    .wc-hero-eyebrow {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--w-accent);
+      margin-bottom: 8px;
+      opacity: 0.9;
+    }
+    .wc-hero-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 2.4rem;
+      font-weight: 900;
+      line-height: 1.15;
+      color: #fff;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+      margin-bottom: 6px;
+    }
+    .wc-hero-desc {
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.72);
+      font-style: italic;
+      margin-bottom: 18px;
+    }
+    .wc-hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .wc-hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0,0,0,0.30);
+      border: 1px solid var(--w-surface-bd);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 0.82rem;
+      color: var(--w-accent);
+      font-weight: 600;
+    }
+    .wc-hero-badge svg { opacity: 0.85; }
+
+    /* ── Waiting banner ───────────────────────────────────────────────── */
+    .wc-waiting {
+      text-align: center;
+      padding: 22px 28px;
+      border-radius: 14px;
+      background: var(--w-surface);
+      border: 1px solid var(--w-surface-bd);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+    }
+    .wc-waiting-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--w-accent);
+      animation: pulse 1.6s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.75); }
+    }
+    .wc-waiting-text {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--w-accent);
+      text-transform: uppercase;
+    }
+
+    /* ── Section header ───────────────────────────────────────────────── */
+    .wc-section-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 3.5px;
+      text-transform: uppercase;
+      color: var(--w-primary);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .wc-section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--w-divider);
+    }
+
+    /* ── Rules panel ──────────────────────────────────────────────────── */
+    .wc-rules-panel {
+      background: var(--w-surface);
+      border: 1px solid var(--w-surface-bd);
+      border-radius: 16px;
+      padding: 32px 36px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.20);
+    }
+    /* Style injected HTML from the rules_regulations field */
+    .wc-rules-body {
+      color: var(--w-text);
+      font-size: 1rem;
+      line-height: 1.85;
+    }
+    .wc-rules-body h1,
+    .wc-rules-body h2,
+    .wc-rules-body h3 {
+      font-family: 'Montserrat', sans-serif;
+      color: var(--w-accent);
+      margin: 1.2em 0 0.5em;
+    }
+    .wc-rules-body h1 { font-size: 1.4rem; }
+    .wc-rules-body h2 { font-size: 1.2rem; }
+    .wc-rules-body h3 { font-size: 1.05rem; }
+    .wc-rules-body p { margin-bottom: 0.9em; }
+    .wc-rules-body ul,
+    .wc-rules-body ol {
+      padding-left: 1.5em;
+      margin-bottom: 1em;
+    }
+    .wc-rules-body li { margin-bottom: 0.45em; }
+    .wc-rules-body strong { color: var(--w-accent); }
+    .wc-rules-body em { color: var(--w-text-muted); }
+    .wc-rules-body a { color: var(--w-primary); }
+    .wc-rules-body hr {
+      border: none;
+      border-top: 1px solid var(--w-divider);
+      margin: 1.4em 0;
+    }
+    .wc-rules-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1em;
+      font-size: 0.93rem;
+    }
+    .wc-rules-body th {
+      background: var(--w-rule-bg);
+      color: var(--w-accent);
+      padding: 8px 12px;
+      border: 1px solid var(--w-rule-bd);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+    }
+    .wc-rules-body td {
+      padding: 7px 12px;
+      border: 1px solid var(--w-surface-bd);
+      color: var(--w-text);
+    }
+    .wc-rules-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--w-text-muted);
+      font-size: 0.95rem;
+      font-style: italic;
+    }
+
+    /* ── Footer ───────────────────────────────────────────────────────── */
+    .wc-footer {
+      text-align: center;
+      font-size: 0.80rem;
+      color: var(--w-text-muted);
+      letter-spacing: 0.5px;
+    }
+    .wc-footer strong { color: var(--w-accent); }
+  </style>
+</head>
+<body>
+  <div class="wc-wrapper">
+
+    <!-- ── Hero ─────────────────────────────────────────────────────── -->
+    <div class="wc-hero">
+      <t t-if="tournament and tournament.logo">
+        <img class="wc-hero-logo"
+             t-att-src="'data:image/png;base64,' + tournament.logo.decode('utf-8')"
+             alt="Tournament Logo"/>
+      </t>
+      <t t-else="">
+        <div class="wc-hero-logo-placeholder">
+          <svg width="40" height="40" fill="none" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M8 12l2.5 2.5L16 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </t>
+      <div class="wc-hero-text">
+        <div class="wc-hero-eyebrow">&#127942; Official Auction &#127942;</div>
+        <div class="wc-hero-title">
+          <t t-if="tournament">
+            <t t-esc="tournament.name"/>
+          </t>
+          <t t-else="">Welcome to the Auction</t>
+        </div>
+        <t t-if="tournament and tournament.description">
+          <div class="wc-hero-desc"><t t-esc="tournament.description"/></div>
+        </t>
+        <div class="wc-hero-meta">
+          <t t-if="tournament and tournament.venue">
+            <span class="wc-hero-badge">
+              <svg width="13" height="13" fill="none" viewBox="0 0 24 24">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                <circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <t t-esc="tournament.venue"/>
+            </span>
+          </t>
+          <t t-if="tournament and tournament.tournament_type">
+            <span class="wc-hero-badge">
+              <svg width="13" height="13" fill="none" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              </svg>
+              <t t-esc="dict(tournament._fields['tournament_type'].selection).get(tournament.tournament_type, tournament.tournament_type)"/>
+            </span>
+          </t>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Waiting banner ──────────────────────────────────────────── -->
+    <div class="wc-waiting">
+      <div class="wc-waiting-dot"/>
+      <div class="wc-waiting-text">Auction will begin shortly &#8212; Please wait</div>
+      <div class="wc-waiting-dot" style="animation-delay:0.55s"/>
+    </div>
+
+    <!-- ── Rules and Regulations ───────────────────────────────────── -->
+    <div class="wc-rules-panel">
+      <div class="wc-section-title">
+        <svg width="15" height="15" fill="none" viewBox="0 0 24 24">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Rules &amp; Regulations
+      </div>
+      <t t-if="tournament and tournament.rules_regulations">
+        <div class="wc-rules-body">
+          <t t-raw="tournament.rules_regulations"/>
+        </div>
+      </t>
+      <t t-else="">
+        <div class="wc-rules-empty">
+          No rules and regulations have been configured for this tournament yet.
+        </div>
+      </t>
+    </div>
+
+    <!-- ── Footer ──────────────────────────────────────────────────── -->
+    <div class="wc-footer">
+      Powered by <strong>AuctionChamp</strong> &#183; All participants must adhere to the rules above
+    </div>
+
+  </div>
+</body>
+</html>
 </template>
 
 

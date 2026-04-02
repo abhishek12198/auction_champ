@@ -102,9 +102,6 @@
         object-fit: contain;
         object-position: right center;
         opacity: .95;
-        border-radius: 6px;
-        background: rgba(255,255,255,.15);
-        padding: 4px;
       }
 
       /* ── Main layout ─────────────────────────────────────────── */
@@ -517,7 +514,7 @@
         document.body.style.overflow = 'hidden';
       }
       function closeBidSummary() {
-        document.getElementById('bidSummaryDrawer').style.right = '-820px';
+        document.getElementById('bidSummaryDrawer').style.right = '-1150px';
         document.getElementById('bidSummaryTabArrow').innerHTML = '&#x2190;';
         document.getElementById('bidSummaryOverlay').style.display = 'none';
         document.body.style.overflow = '';
@@ -528,7 +525,7 @@
       }
     </script>
       <!-- Bid Summary Drawer — Strawberry Theme -->
-      <div id="bidSummaryDrawer" style="position:fixed; top:0; right:-820px; width:820px; max-width:95vw; height:100vh; z-index:9800; display:flex; flex-direction:column; background:#fff; border-left:4px solid #C2185B; box-shadow:-6px 0 32px rgba(194,24,91,0.2); transition:right .35s cubic-bezier(.4,0,.2,1);">
+      <div id="bidSummaryDrawer" style="position:fixed; top:0; right:-1150px; width:1150px; max-width:96vw; height:100vh; z-index:9800; display:flex; flex-direction:column; background:#fff; border-left:4px solid #C2185B; box-shadow:-6px 0 32px rgba(194,24,91,0.2); transition:right .35s cubic-bezier(.4,0,.2,1);">
         <!-- Fold/unfold tab -->
         <div onclick="toggleBidSummary()" style="position:absolute; left:-44px; top:50%; transform:translateY(-50%); width:44px; height:130px; background:linear-gradient(180deg,#880E4F,#C2185B); border-radius:8px 0 0 8px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; box-shadow:-4px 2px 14px rgba(194,24,91,0.35); z-index:1;">
           <span id="bidSummaryTabArrow" style="color:#fff; font-size:1.2rem; line-height:1;">&#x2190;</span>

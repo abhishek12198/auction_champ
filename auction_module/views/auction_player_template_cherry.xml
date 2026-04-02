@@ -103,9 +103,6 @@
         object-fit: contain;
         object-position: right center;
         opacity: .92;
-        border-radius: 6px;
-        background: rgba(220,20,60,.08);
-        padding: 4px;
         filter: drop-shadow(0 0 8px rgba(220,20,60,.25));
       }
 
@@ -520,7 +517,7 @@
         document.body.style.overflow = 'hidden';
       }
       function closeBidSummary() {
-        document.getElementById('bidSummaryDrawer').style.right = '-820px';
+        document.getElementById('bidSummaryDrawer').style.right = '-1150px';
         document.getElementById('bidSummaryTabArrow').innerHTML = '&#x2190;';
         document.getElementById('bidSummaryOverlay').style.display = 'none';
         document.body.style.overflow = '';
@@ -531,7 +528,7 @@
       }
     </script>
       <!-- Bid Summary Drawer — Cherry Theme -->
-      <div id="bidSummaryDrawer" style="position:fixed; top:0; right:-820px; width:820px; max-width:95vw; height:100vh; z-index:9800; display:flex; flex-direction:column; background:#1e1e1e; border-left:3px solid #DC143C; box-shadow:-6px 0 40px rgba(220,20,60,0.3); transition:right .35s cubic-bezier(.4,0,.2,1);">
+      <div id="bidSummaryDrawer" style="position:fixed; top:0; right:-1150px; width:1150px; max-width:96vw; height:100vh; z-index:9800; display:flex; flex-direction:column; background:#1e1e1e; border-left:3px solid #DC143C; box-shadow:-6px 0 40px rgba(220,20,60,0.3); transition:right .35s cubic-bezier(.4,0,.2,1);">
         <!-- Fold/unfold tab -->
         <div onclick="toggleBidSummary()" style="position:absolute; left:-44px; top:50%; transform:translateY(-50%); width:44px; height:130px; background:linear-gradient(180deg,#5a0010,#8B0000); border-radius:8px 0 0 8px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; box-shadow:-4px 2px 14px rgba(220,20,60,0.4); z-index:1; border:1px solid rgba(220,20,60,0.3);">
           <span id="bidSummaryTabArrow" style="color:#f5a0a0; font-size:1.2rem; line-height:1;">&#x2190;</span>

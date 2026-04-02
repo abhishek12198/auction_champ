@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from odoo import fields, models
+from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class AuctionPlayerTier(models.Model):
@@ -22,3 +23,19 @@ class AuctionPlayerTier(models.Model):
         ('#7f8c8d', 'Gray'),
         ('#ffffff', 'White'),
     ], string='Color', default='#3498db')
+    is_an_icon_tier = fields.Boolean(string='Icon Tier', default=False)
+
+    @api.constrains('is_an_icon_tier')
+    def _check_single_icon_tier(self):
+        for record in self:
+            if record.is_an_icon_tier:
+                existing = self.search([
+                    ('is_an_icon_tier', '=', True),
+                    ('id', '!=', record.id),
+                ])
+                if existing:
+                    raise ValidationError(
+                        'Only one tier can be marked as the Icon Tier. '
+                        '"%s" is already set as the Icon Tier. '
+                        'Please unmark it first before setting a new one.' % existing[0].name
+                    )

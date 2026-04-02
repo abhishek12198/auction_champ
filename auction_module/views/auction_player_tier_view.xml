@@ -33,6 +33,7 @@
                         <group>
                             <field name="name" required="1"/>
                             <field name="description"/>
+                            <field name="is_an_icon_tier"/>
                             <field name="color" widget="selection_badge"/>
                         </group>
                     </group>

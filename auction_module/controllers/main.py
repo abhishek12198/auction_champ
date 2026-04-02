@@ -74,20 +74,37 @@ class Auction(http.Controller):
 
     @http.route('/auction/player_modal/<int:player_id>', type='http', auth='public', website=True)
     def get_player_modal(self, player_id):
-        """Render player template for modal display"""
+        """Render themed player card for the sequence-selector drawer."""
         player = request.env['auction.team.player'].sudo().browse(int(player_id))
-
         if not player.exists():
-            return request.make_response('{"error": "Player not found"}', headers=[('Content-Type', 'application/json')])
+            return request.make_response('{"error": "Player not found"}',
+                                         headers=[('Content-Type', 'application/json')])
 
-        tournament_id = request.env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
+        tournament = request.env['auction.tournament'].sudo().search(
+            [('active', '=', True)], limit=1)
 
-        html_content = request.env['ir.ui.view']._render_template('auction_module.player_template_modal_content', {
-            'player': player,
-            'tournament': tournament_id
-        })
+        theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
 
-        return request.make_response(html_content, headers=[('Content-Type', 'text/html; charset=utf-8')])
+        _unsold_color = {
+            'cherry':       '#DC143C',
+            'butterscotch': '#F5C842',
+            'strawberry':   '#C2185B',
+        }.get(theme, '#b71c1c')
+
+        _unsold_text = '#090912' if theme == 'butterscotch' else '#fff'
+
+        html_content = request.env['ir.ui.view']._render_template(
+            'auction_module.player_template_modal_content', {
+                'player':               player,
+                'tournament':           tournament,
+                'theme':                theme,
+                'unsold_color':         _unsold_color,
+                'unsold_text_color':    _unsold_text,
+                'sold_display_seconds': tournament.sold_display_seconds if tournament else 5,
+            })
+
+        return request.make_response(html_content,
+                                     headers=[('Content-Type', 'text/html; charset=utf-8')])
 
     # @http.route('/auction/get_players_queue', type='http', auth='public', website=True)
     # def get_players_queue(self):
@@ -136,11 +153,17 @@ class Auction(http.Controller):
     @http.route(['''/auction/show/team/balance'''], type='http', auth="public", website=True)
     def auction_team_balance(self, **kwargs):
         auctions = request.env['auction.auction'].sudo().search([])
-        tournament = auctions.mapped('tournament_id')
-        type = 'internal'
+        tournament = request.env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
+        theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
+        access_type = 'internal'
         if request.env.user.login == 'public':
-            type = 'public'
-        result = request.render("auction_module.auction_details_show", {'teams': auctions, 'tournament': tournament, 'type': type})
+            access_type = 'public'
+        result = request.render("auction_module.auction_details_show", {
+            'teams': auctions,
+            'tournament': tournament,
+            'type': access_type,
+            'theme': theme,
+        })
         return result
 
     @http.route(['''/auction/show/team/balance/json'''], type='http', auth="public", website=True)
@@ -175,7 +198,10 @@ class Auction(http.Controller):
             template_ref = template_map.get(chosen, 'auction_module.player_template_new')
             r = request.render(template_ref, {'player': player, 'tournament': tournament_id, 'auction_ids': auction_ids})
         else:
-            r = request.render("auction_module.welcome_message_template", {'tournament': tournament_id})
+            r = request.render("auction_module.welcome_message_template", {
+                'tournament': tournament_id,
+                'theme': tournament_id.player_display_template if tournament_id else 'vanilla',
+            })
         return r
 
     @http.route('/auction/get/players/team/<int:team_id>', type='http', auth='public', website=True)
@@ -184,6 +210,9 @@ class Auction(http.Controller):
         team_players = request.env['auction.auction.player'].search([('auction_id.team_id', '=', team_id)])
 
         team = request.env['auction.team'].browse(team_id)
+        tournament = team.tournament_id
+        theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
+
         icon_players = request.env['auction.team.player'].get_icon_players(team_id)
         if icon_players:
             for icon in icon_players:
@@ -193,12 +222,13 @@ class Auction(http.Controller):
                     'point': 'ICON',
                     'role': icon.role,
                     'batting_style': icon.batting_style,
-                    'bowling_style': icon.batting_style,
+                    'bowling_style': icon.bowling_style,
                     'contact': icon.contact,
                     'p_type': icon.p_type,
                     'p_category': icon.p_category,
                     'tier_color': icon.tier_id.color if icon.tier_id else '#01cfff',
-                    'tier_name': icon.tier_id.name if icon.tier_id else '',
+                    'tier_name': icon.tier_id.name if icon.tier_id else 'Icon',
+                    'is_icon': True,
                 }
                 player_data_list.append(player_data)
         if team_players:
@@ -209,15 +239,21 @@ class Auction(http.Controller):
                     'point': player.points,
                     'role': player.player_id.role,
                     'batting_style': player.player_id.batting_style,
-                    'bowling_style': player.player_id.batting_style,
+                    'bowling_style': player.player_id.bowling_style,
                     'contact': player.player_id.contact,
                     'p_type': player.player_id.p_type,
                     'p_category': player.player_id.p_category,
                     'tier_color': player.player_id.tier_id.color if player.player_id.tier_id else '#01cfff',
                     'tier_name': player.player_id.tier_id.name if player.player_id.tier_id else '',
+                    'is_icon': False,
                 }
                 player_data_list.append(player_data)
-        return request.render('auction_module.auction_team_players_template', {'players': player_data_list, 'team': team})
+        return request.render('auction_module.auction_team_players_template', {
+            'players': player_data_list,
+            'team': team,
+            'tournament': tournament,
+            'theme': theme,
+        })
 
     @http.route('/get_players/<int:team_id>', type='json', auth="user", methods=['POST'], csrf=False)
     def get_players(self, team_id):

@@ -127,17 +127,7 @@
                                     </group>
                                 </group>
 
-                                <separator string="Print &amp; Report Assets"/>
-                                <group>
-                                    <group string="Template Background Image">
-                                        <field name="template_image" widget="image" nolabel="1"
-                                               options="{'size': [300, 180]}"/>
-                                    </group>
-                                    <group string="Report Footer Image">
-                                        <field name="report_footer" widget="image" nolabel="1"
-                                               options="{'size': [300, 120]}"/>
-                                    </group>
-                                </group>
+
                             </page>
 
                             <!-- Tab 4: Venue -->

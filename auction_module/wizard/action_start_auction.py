@@ -23,7 +23,7 @@ class StartAuction(models.TransientModel):
     @api.model
     def default_get(self, fields_list):
         res = super(StartAuction, self).default_get(fields_list)
-        tiers = self.env['auction.player.tier'].search([])
+        tiers = self.env['auction.player.tier'].search([('is_an_icon_tier', '!=', True)])
         if tiers and 'tier_limit_ids' in fields_list:
             res['tier_limit_ids'] = [
                 (0, 0, {'tier_id': tier.id, 'max_players': 1, 'base_point': 0})
