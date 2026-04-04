@@ -225,8 +225,22 @@
             });
         }
 
-        setInterval(fetchUpdates, 3000); // Fetch updates every 3 seconds
+        /* Pause polling when tab is hidden, resume when visible */
+        var _historyTimer = null;
+        function startHistoryPolling() {
+          if (_historyTimer) return;
+          _historyTimer = setInterval(fetchUpdates, 3000);
+        }
+        function stopHistoryPolling() {
+          if (_historyTimer) { clearInterval(_historyTimer); _historyTimer = null; }
+        }
+        document.addEventListener('visibilitychange', function() {
+          if (document.hidden) { stopHistoryPolling(); }
+          else { fetchUpdates(); startHistoryPolling(); }
+        });
+        window.addEventListener('beforeunload', stopHistoryPolling);
         fetchUpdates(); // Initial fetch when the page loads
+        startHistoryPolling();
     </script>
 
 </template>

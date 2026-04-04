@@ -89,9 +89,16 @@ class Auction(http.Controller):
             'cherry':       '#DC143C',
             'butterscotch': '#F5C842',
             'strawberry':   '#C2185B',
+            'pistah':       '#6BBF4E',
         }.get(theme, '#b71c1c')
 
         _unsold_text = '#090912' if theme == 'butterscotch' else '#fff'
+
+        sold_points = 0
+        if player.state == 'sold':
+            auction_line = request.env['auction.auction.player'].sudo().search(
+                [('player_id', '=', player.id)], limit=1)
+            sold_points = auction_line.points if auction_line else 0
 
         html_content = request.env['ir.ui.view']._render_template(
             'auction_module.player_template_modal_content', {
@@ -101,6 +108,7 @@ class Auction(http.Controller):
                 'unsold_color':         _unsold_color,
                 'unsold_text_color':    _unsold_text,
                 'sold_display_seconds': tournament.sold_display_seconds if tournament else 5,
+                'sold_points':          sold_points,
             })
 
         return request.make_response(html_content,
@@ -158,7 +166,11 @@ class Auction(http.Controller):
         access_type = 'internal'
         if request.env.user.login == 'public':
             access_type = 'public'
-        result = request.render("auction_module.auction_details_show", {
+        balance_template_map = {
+            'pistah': 'auction_module.auction_details_show_pistah',
+        }
+        template_ref = balance_template_map.get(theme, 'auction_module.auction_details_show')
+        result = request.render(template_ref, {
             'teams': auctions,
             'tournament': tournament,
             'type': access_type,
@@ -193,6 +205,7 @@ class Auction(http.Controller):
                 'butterscotch':  'auction_module.player_template_butterscotch',
                 'strawberry':    'auction_module.player_template_strawberry',
                 'cherry':        'auction_module.player_template_cherry',
+                'pistah':        'auction_module.player_template_pistah',
             }
             chosen = tournament_id.player_display_template if tournament_id else 'vanilla'
             template_ref = template_map.get(chosen, 'auction_module.player_template_new')
@@ -212,7 +225,7 @@ class Auction(http.Controller):
         team = request.env['auction.team'].browse(team_id)
         tournament = team.tournament_id
         theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
-
+        print(tournament.player_display_template)
         icon_players = request.env['auction.team.player'].get_icon_players(team_id)
         if icon_players:
             for icon in icon_players:
@@ -248,7 +261,11 @@ class Auction(http.Controller):
                     'is_icon': False,
                 }
                 player_data_list.append(player_data)
-        return request.render('auction_module.auction_team_players_template', {
+        players_template_map = {
+            'pistah': 'auction_module.auction_team_players_template_pistah',
+        }
+        template_ref = players_template_map.get(theme, 'auction_module.auction_team_players_template')
+        return request.render(template_ref, {
             'players': player_data_list,
             'team': team,
             'tournament': tournament,
@@ -421,4 +438,170 @@ class Auction(http.Controller):
         return request.make_response(
             json.dumps(payload),
             headers=[('Content-Type', 'application/json')]
+        )
+
+    # ─────────────────────────────────────────────────────────────────
+    #  PUBLIC LIVE AUCTION BOARD
+    # ─────────────────────────────────────────────────────────────────
+
+    # Whitelist of models and fields that public users may fetch images from.
+    _PUBLIC_IMAGE_FIELDS = {
+        'auction.team.player': ['photo'],
+        'auction.team':        ['logo'],
+        'auction.tournament':  ['logo'],
+        'auction.history':     ['player_photo'],
+    }
+
+    @http.route('/auction/public/image/<string:model>/<int:record_id>/<string:field>',
+                type='http', auth='public', website=True, csrf=False)
+    def auction_public_image(self, model, record_id, field, **kw):
+        """Serve binary images to unauthenticated users for the public live-board."""
+        allowed_fields = self._PUBLIC_IMAGE_FIELDS.get(model)
+        if not allowed_fields or field not in allowed_fields:
+            return request.not_found()
+
+        record = request.env[model].sudo().browse(record_id)
+        if not record.exists():
+            return request.not_found()
+
+        binary = getattr(record, field, None)
+        if not binary:
+            return request.not_found()
+
+        image_bytes = base64.b64decode(binary)
+        return request.make_response(image_bytes, headers=[
+            ('Content-Type', 'image/png'),
+            ('Cache-Control', 'public, max-age=300'),  # 5-min browser cache
+        ])
+
+    @http.route('/auction/live-board', type='http', auth='public', website=True)
+    def auction_live_board(self, **kw):
+        tournament = request.env['auction.tournament'].sudo().search(
+            [('active', '=', True)], limit=1
+        )
+        theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
+        return request.render('auction_module.public_live_board_template', {
+            'tournament': tournament,
+            'theme': theme,
+        })
+
+    @http.route('/auction/live-board/data', type='http', auth='public', website=True, csrf=False)
+    def auction_live_board_data(self, **kw):
+        env = request.env
+        tournament = env['auction.tournament'].sudo().search(
+            [('active', '=', True)], limit=1
+        )
+
+        def pub_img(model, record_id, field):
+            return '/auction/public/image/%s/%d/%s' % (model, record_id, field)
+
+        result = {
+            'tournament': {},
+            'current_player': None,
+            'sold_info': None,
+            'recent_history': [],
+            'teams': [],
+            'theme': 'vanilla',
+            'no_auction': True,
+        }
+
+        if tournament:
+            result['theme'] = tournament.player_display_template or 'vanilla'
+            result['tournament'] = {
+                'name': tournament.name or '',
+                'description': tournament.description or '',
+                'logo_url': pub_img('auction.tournament', tournament.id, 'logo') if tournament.logo else '',
+            }
+
+        # ── Current player: ONLY show the player explicitly flagged as on stage ──
+        current_player = env['auction.team.player'].sudo().search([
+            ('is_on_stage', '=', True),
+        ], limit=1)
+
+        if current_player:
+            result['no_auction'] = False
+
+            # Base price: check all auctions (no tournament filter to be safe)
+            base_price = 0
+            t_id = tournament.id if tournament else False
+            auc_domain = [('tournament_id', '=', t_id)] if t_id else []
+            auctions_all = env['auction.auction'].sudo().search(auc_domain)
+            if not auctions_all:
+                auctions_all = env['auction.auction'].sudo().search([])
+            for auc in auctions_all:
+                base = auc.base_point or 0
+                if current_player.tier_id and auc.tier_limit_ids:
+                    tl = auc.tier_limit_ids.filtered(
+                        lambda l: l.tier_id.id == current_player.tier_id.id
+                    )
+                    if tl and tl[0].base_point > 0:
+                        base = tl[0].base_point
+                if base > base_price:
+                    base_price = base
+
+            result['current_player'] = {
+                'id': current_player.id,
+                'name': current_player.name or '',
+                'photo_url': pub_img('auction.team.player', current_player.id, 'photo') if current_player.photo else '',
+                'role': current_player.role or '',
+                'tier_name': current_player.tier_id.name if current_player.tier_id else '',
+                'tier_color': current_player.tier_color or '#2252b5',
+                'state': current_player.state,
+                'sl_no': current_player.sl_no or 0,
+                'icon_player': current_player.icon_player,
+                'base_price': base_price,
+                'batting_style': current_player.batting_style or '',
+                'bowling_style': current_player.bowling_style or '',
+            }
+
+            # ── If sold, get final points from auction line ──
+            if current_player.state == 'sold' and current_player.assigned_team_id:
+                auc_line = env['auction.auction.player'].sudo().search(
+                    [('player_id', '=', current_player.id)], limit=1
+                )
+                team = current_player.assigned_team_id
+                result['sold_info'] = {
+                    'team_name': team.name or '',
+                    'team_logo_url': pub_img('auction.team', team.id, 'logo') if team.logo else '',
+                    'amount': auc_line.points if auc_line else 0,
+                }
+
+        # ── Recent history (last 5 transactions) ──
+        hist_domain = [('tournament_id', '=', tournament.id)] if tournament else []
+        history = env['auction.history'].sudo().search(
+            hist_domain, order='create_date desc', limit=5
+        )
+        if not history:
+            history = env['auction.history'].sudo().search(
+                [], order='create_date desc', limit=5
+            )
+        result['recent_history'] = [
+            {
+                'message': rec.message or '',
+                'team_logo_url': pub_img('auction.team', rec.team_id.id, 'logo') if rec.team_id and rec.team_id.logo else '',
+                'player_photo_url': pub_img('auction.history', rec.id, 'player_photo') if rec.player_photo else '',
+                'timestamp': rec.create_date.strftime('%H:%M') if rec.create_date else '',
+            }
+            for rec in history
+        ]
+
+        # ── Teams (from auctions in this tournament) ──
+        auc_domain = [('tournament_id', '=', tournament.id)] if tournament else []
+        auctions = env['auction.auction'].sudo().search(auc_domain)
+        if not auctions:
+            auctions = env['auction.auction'].sudo().search([])
+        for auc in auctions:
+            team = auc.team_id
+            if team:
+                result['teams'].append({
+                    'id': team.id,
+                    'name': team.name or '',
+                    'logo_url': pub_img('auction.team', team.id, 'logo') if team.logo else '',
+                    'remaining_points': auc.remaining_points,
+                    'manager': team.manager or '',
+                })
+
+        return request.make_response(
+            json.dumps(result),
+            headers=[('Content-Type', 'application/json'), ('Cache-Control', 'no-store')]
         )

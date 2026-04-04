@@ -51,5 +51,15 @@
             <field name="paperformat_id" ref="auction_module.paperformat_card_landscape"/>
             <field name="print_report_name">"Player Card - %s" % (object.tournament_id.name)</field>
         </record>
+
+        <record id="action_report_player_card_pistah" model="ir.actions.report">
+            <field name="name">Player Card (Pistah)</field>
+            <field name="model">auction.team.player</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">auction_module.report_player_card_list_pistah</field>
+            <field name="report_file">auction_module.report_player_card_list_pistah</field>
+            <field name="paperformat_id" ref="auction_module.paperformat_card_landscape"/>
+            <field name="print_report_name">"Player Card - %s" % (object.tournament_id.name)</field>
+        </record>
     </data>
 </odoo>

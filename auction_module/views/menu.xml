@@ -130,6 +130,17 @@
           action="auction_module.action_live_updates"
           sequence="4"/>
 
+        <record id="action_public_live_board" model="ir.actions.act_url">
+            <field name="name">Public Live Board</field>
+            <field name="url">/auction/live-board</field>
+            <field name="target">new</field>
+        </record>
+        <menuitem id="menu_action_public_live_board"
+          name="Public Live Bid Board"
+          parent="menu_action_auction_auction"
+          action="auction_module.action_public_live_board"
+          sequence="5"/>
+
         <menuitem id="menu_action_team_pool_wizard"
           name="Pool Generator"
           parent="menu_action_auction_auction"

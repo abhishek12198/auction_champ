@@ -204,7 +204,7 @@
     </t>
 </template>
 
-<template id="1" name="Welcome to Tournament">
+<template id="welcome_message_template" name="Welcome to Tournament">
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -289,6 +289,26 @@
       --w-rule-num:     #C2185B;
       --w-glow:         rgba(194,24,91,0.50);
       --w-divider:      rgba(194,24,91,0.45);
+    }
+    </t>
+    <t t-elif="theme == 'pistah'">
+    :root {
+      --w-primary:      #6BBF4E;
+      --w-primary-dk:   #2E7D32;
+      --w-primary-lt:   rgba(107,191,78,0.10);
+      --w-accent:       #A8E063;
+      --w-bg:           #060e08;
+      --w-bg2:          #0d1f11;
+      --w-surface:      rgba(255,255,255,0.04);
+      --w-surface-bd:   rgba(107,191,78,0.22);
+      --w-header-bg:    linear-gradient(135deg, #2E7D32 0%, #388e3c 100%);
+      --w-text:         #e8f5e9;
+      --w-text-muted:   rgba(232,245,233,0.55);
+      --w-rule-bg:      rgba(107,191,78,0.10);
+      --w-rule-bd:      rgba(107,191,78,0.38);
+      --w-rule-num:     #6BBF4E;
+      --w-glow:         rgba(107,191,78,0.48);
+      --w-divider:      rgba(107,191,78,0.38);
     }
     </t>
 
@@ -626,6 +646,896 @@
 </html>
 </template>
 
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     PUBLIC LIVE AUCTION BOARD  (/auction/live-board)
+     IPL-grade public page — themed, auto-refreshing, responsive
+     ══════════════════════════════════════════════════════════════════════ -->
+<template id="public_live_board_template" name="Public Live Auction Board">
+<t t-set="theme_val" t-value="theme or 'vanilla'"/>
+<html t-att-data-theme="theme_val">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Live Auction Board</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<style>
+/* ── THEME VARIABLES ─────────────────────────────────────────────── */
+:root {
+  --lb-bg: #070c18;
+  --lb-header-from: #0b1120;
+  --lb-header-to: #162048;
+  --lb-accent: #3b72e8;
+  --lb-accent2: #5d93ff;
+  --lb-glow: rgba(59,114,232,0.35);
+  --lb-live-dot: #ef4444;
+  --lb-sold-color: #22c55e;
+  --lb-card: rgba(255,255,255,0.045);
+  --lb-card-border: rgba(255,255,255,0.08);
+  --lb-text: #e8edf8;
+  --lb-sub: #8896b3;
+  --lb-panel: #0d1526;
+  --lb-sep: rgba(255,255,255,0.06);
+  --lb-bid-from: #0d1e45;
+  --lb-bid-to: #162d6e;
+  --lb-sold-from: #052e16;
+  --lb-sold-to: #14532d;
+}
+[data-theme="cherry"] {
+  --lb-bg: #110206;
+  --lb-header-from: #130408;
+  --lb-header-to: #5a0a0a;
+  --lb-accent: #e02626;
+  --lb-accent2: #f87171;
+  --lb-glow: rgba(220,38,38,0.38);
+  --lb-live-dot: #f97316;
+  --lb-card: rgba(255,255,255,0.04);
+  --lb-card-border: rgba(220,38,38,0.15);
+  --lb-text: #fef0f0;
+  --lb-sub: #f0948a;
+  --lb-panel: #180306;
+  --lb-sep: rgba(220,38,38,0.12);
+  --lb-bid-from: #3b0a0a;
+  --lb-bid-to: #7f1d1d;
+}
+[data-theme="butterscotch"] {
+  --lb-bg: #0e0800;
+  --lb-header-from: #120900;
+  --lb-header-to: #5c2d00;
+  --lb-accent: #d97706;
+  --lb-accent2: #fbbf24;
+  --lb-glow: rgba(217,119,6,0.38);
+  --lb-live-dot: #ef4444;
+  --lb-card: rgba(255,255,255,0.04);
+  --lb-card-border: rgba(217,119,6,0.18);
+  --lb-text: #fef3c7;
+  --lb-sub: #d4a843;
+  --lb-panel: #150b00;
+  --lb-sep: rgba(217,119,6,0.12);
+  --lb-bid-from: #3b1e00;
+  --lb-bid-to: #78350f;
+}
+[data-theme="strawberry"] {
+  --lb-bg: #100009;
+  --lb-header-from: #13000b;
+  --lb-header-to: #5c0830;
+  --lb-accent: #db2777;
+  --lb-accent2: #f472b6;
+  --lb-glow: rgba(219,39,119,0.38);
+  --lb-live-dot: #f97316;
+  --lb-card: rgba(255,255,255,0.04);
+  --lb-card-border: rgba(219,39,119,0.18);
+  --lb-text: #fce7f3;
+  --lb-sub: #e879a0;
+  --lb-panel: #16000d;
+  --lb-sep: rgba(219,39,119,0.12);
+  --lb-bid-from: #3b0021;
+  --lb-bid-to: #831843;
+}
+[data-theme="pistah"] {
+  --lb-bg: #060e08;
+  --lb-header-from: #030a04;
+  --lb-header-to: #0d1f11;
+  --lb-accent: #6BBF4E;
+  --lb-accent2: #A8E063;
+  --lb-glow: rgba(107,191,78,0.38);
+  --lb-live-dot: #A8E063;
+  --lb-card: rgba(107,191,78,0.04);
+  --lb-card-border: rgba(107,191,78,0.15);
+  --lb-text: #e8f5e9;
+  --lb-sub: #90c87a;
+  --lb-panel: #0b1a0e;
+  --lb-sep: rgba(107,191,78,0.12);
+  --lb-bid-from: #0d2e10;
+  --lb-bid-to: #1b5e20;
+  --lb-sold-from: #0d2e10;
+  --lb-sold-to: #1b5e20;
+}
+
+/* ── RESET &amp; BASE ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--lb-bg);
+  color: var(--lb-text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+img { display: block; }
+
+/* ── HEADER ──────────────────────────────────────────────────────── */
+.lb-header {
+  background: linear-gradient(135deg, var(--lb-header-from) 0%, var(--lb-header-to) 100%);
+  border-bottom: 1px solid var(--lb-card-border);
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+.lb-hdr-left {
+  display: flex; align-items: center; gap: 14px; min-width: 0;
+}
+.lb-t-logo {
+  width: 52px; height: 52px;
+  border-radius: 10px; overflow: hidden; flex-shrink: 0;
+  border: 2px solid var(--lb-card-border);
+  background: rgba(255,255,255,0.06);
+  display: flex; align-items: center; justify-content: center;
+}
+.lb-t-logo img { width: 100%; height: 100%; object-fit: contain; }
+.lb-t-name { font-size: 1.15rem; font-weight: 800; color: var(--lb-text); letter-spacing: .3px; }
+.lb-t-desc { font-size: .72rem; color: var(--lb-sub); margin-top: 2px; }
+.lb-hdr-center { flex: 1; display: flex; justify-content: center; }
+.lb-live-badge {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(239,68,68,0.15);
+  border: 1.5px solid rgba(239,68,68,0.4);
+  border-radius: 30px;
+  padding: 6px 16px;
+  font-size: .8rem; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #ff5757;
+}
+.lb-live-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--lb-live-dot);
+  animation: blink 1.2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+.lb-hdr-right {
+  display: flex; align-items: center; gap: 18px; flex-shrink: 0;
+}
+.lb-clock { font-size: .88rem; font-weight: 600; color: var(--lb-sub); font-variant-numeric: tabular-nums; }
+
+/* ── MAIN GRID ────────────────────────────────────────────────────── */
+.lb-main {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 20px;
+  padding: 20px 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ── PLAYER PANEL ─────────────────────────────────────────────────── */
+.lb-player-panel {
+  display: flex; flex-direction: column; gap: 0;
+  background: var(--lb-card);
+  border: 1px solid var(--lb-card-border);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.lb-photo-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3/4;
+  background: linear-gradient(180deg, var(--lb-panel) 0%, rgba(0,0,0,0.7) 100%);
+  overflow: hidden;
+}
+#lb-player-img {
+  width: 100%; height: 100%; object-fit: cover; object-position: top center;
+  transition: opacity .4s;
+}
+.lb-photo-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 6rem; opacity: .18;
+}
+.lb-sl-overlay {
+  position: absolute; top: 12px; left: 12px;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px; padding: 4px 10px;
+  font-size: .72rem; font-weight: 800; color: #fff; letter-spacing: .5px;
+}
+.lb-state-overlay {
+  position: absolute; top: 12px; right: 12px;
+  border-radius: 8px; padding: 5px 12px;
+  font-size: .68rem; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase;
+}
+.lb-state-auction { background: rgba(245,158,11,0.9); color: #fff; animation: state-pulse 2s ease-in-out infinite; }
+.lb-state-sold     { background: rgba(22,163,74,0.9); color: #fff; }
+.lb-state-unsold   { background: rgba(220,38,38,0.9); color: #fff; }
+@keyframes state-pulse { 0%,100%{opacity:1} 50%{opacity:.7} }
+
+/* ── SOLD / UNSOLD STAMP OVERLAY ─────────────────────────────────── */
+.lb-stamp-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  animation: stampIn .35s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes stampIn {
+  from { transform: scale(1.6) rotate(-8deg); opacity: 0; }
+  to   { transform: scale(1)   rotate(-8deg); opacity: 1; }
+}
+/* dark tint behind stamp */
+.lb-stamp-overlay::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.55);
+}
+.lb-stamp-box {
+  position: relative;
+  transform: rotate(-8deg);
+  text-align: center;
+  padding: 14px 28px;
+  border-radius: 10px;
+  border-width: 5px;
+  border-style: solid;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.15);
+}
+/* SOLD stamp */
+.lb-stamp-sold .lb-stamp-box {
+  background: rgba(15,50,15,0.88);
+  border-color: #22c55e;
+}
+.lb-stamp-sold .lb-stamp-word {
+  font-size: 2.6rem; font-weight: 900; letter-spacing: 8px;
+  color: #22c55e; text-transform: uppercase;
+  text-shadow: 0 0 18px rgba(34,197,94,0.7);
+  line-height: 1;
+}
+.lb-stamp-sold .lb-stamp-pts {
+  font-size: 1.05rem; font-weight: 800; color: #86efac;
+  margin-top: 5px; letter-spacing: 1px;
+}
+.lb-stamp-sold .lb-stamp-team {
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  margin-top: 8px;
+}
+.lb-stamp-sold .lb-stamp-team-logo {
+  width: 32px; height: 32px; border-radius: 6px; overflow: hidden;
+  background: rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+}
+.lb-stamp-sold .lb-stamp-team-logo img { width: 100%; height: 100%; object-fit: contain; }
+.lb-stamp-sold .lb-stamp-team-name {
+  font-size: .88rem; font-weight: 800; color: #fff; letter-spacing: .5px;
+}
+/* UNSOLD stamp */
+.lb-stamp-unsold .lb-stamp-box {
+  background: rgba(50,10,10,0.88);
+  border-color: #ef4444;
+}
+.lb-stamp-unsold .lb-stamp-word {
+  font-size: 2.4rem; font-weight: 900; letter-spacing: 6px;
+  color: #ef4444; text-transform: uppercase;
+  text-shadow: 0 0 18px rgba(239,68,68,0.7);
+  line-height: 1;
+}
+.lb-stamp-unsold .lb-stamp-sub {
+  font-size: .76rem; font-weight: 700; color: #fca5a5;
+  margin-top: 6px; letter-spacing: 1.5px; text-transform: uppercase;
+}
+.lb-photo-gradient {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 120px;
+  background: linear-gradient(to top, var(--lb-panel), transparent);
+}
+.lb-photo-name {
+  position: absolute; bottom: 14px; left: 14px; right: 14px;
+}
+.lb-player-name-big {
+  font-size: 1.3rem; font-weight: 900; color: #fff;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+  line-height: 1.15;
+}
+.lb-player-sub { font-size: .72rem; color: rgba(255,255,255,0.65); margin-top: 3px; }
+
+.lb-player-meta {
+  padding: 14px 16px 16px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.lb-badges-row { display: flex; gap: 7px; flex-wrap: wrap; }
+.lb-badge {
+  font-size: .62rem; font-weight: 800; padding: 3px 10px; border-radius: 20px;
+  text-transform: uppercase; letter-spacing: .6px;
+}
+.lb-b-tier   { color: #fff; /* bg set inline */ }
+.lb-b-role   { background: var(--lb-accent); color: #fff; }
+.lb-b-icon   { background: linear-gradient(135deg,#d97706,#fbbf24); color: #fff; }
+.lb-b-dom    { background: #0891b2; color: #fff; }
+.lb-b-for    { background: #059669; color: #fff; }
+.lb-b-ico    { background: #7c3aed; color: #fff; }
+.lb-stats-row {
+  display: flex; gap: 8px;
+}
+.lb-stat-chip {
+  flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--lb-sep);
+  border-radius: 10px; padding: 8px 6px; text-align: center;
+}
+.lb-stat-lbl { font-size: .52rem; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--lb-sub); margin-bottom: 3px; }
+.lb-stat-val { font-size: .8rem; font-weight: 700; color: var(--lb-text); }
+.lb-base-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 14px;
+  border: 1px solid var(--lb-sep);
+}
+.lb-base-lbl { font-size: .65rem; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--lb-sub); }
+.lb-base-val { font-size: 1rem; font-weight: 900; color: var(--lb-accent2); }
+
+/* ── BID PANEL ───────────────────────────────────────────────────── */
+.lb-bid-panel {
+  display: flex; flex-direction: column; gap: 16px;
+}
+
+/* Current bid / sold card */
+.lb-status-card {
+  border-radius: 20px; overflow: hidden;
+  border: 1px solid var(--lb-card-border);
+  min-height: 200px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.lb-status-auction {
+  background: linear-gradient(135deg, var(--lb-bid-from) 0%, var(--lb-bid-to) 100%);
+  padding: 28px;
+}
+.lb-status-sold {
+  background: linear-gradient(135deg, var(--lb-sold-from) 0%, var(--lb-sold-to) 100%);
+  padding: 28px;
+}
+.lb-status-waiting {
+  background: var(--lb-card);
+  padding: 28px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px;
+}
+.lb-status-label {
+  font-size: .65rem; font-weight: 900; letter-spacing: 2.5px; text-transform: uppercase;
+  opacity: .7; margin-bottom: 6px;
+}
+.lb-sold-trophy { font-size: 3rem; text-align: center; margin-bottom: 6px; }
+.lb-sold-amount {
+  font-size: 2.6rem; font-weight: 900; color: var(--lb-sold-color);
+  text-align: center; letter-spacing: -1px;
+  text-shadow: 0 0 30px rgba(34,197,94,0.4);
+}
+.lb-sold-pts { font-size: .9rem; font-weight: 600; opacity: .7; }
+.lb-sold-team {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  margin-top: 12px;
+}
+.lb-sold-team-logo {
+  width: 56px; height: 56px; border-radius: 12px; overflow: hidden;
+  border: 2px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+}
+.lb-sold-team-logo img { width: 100%; height: 100%; object-fit: contain; }
+.lb-sold-team-name { font-size: 1.3rem; font-weight: 900; color: #fff; }
+.lb-sold-team-mgr { font-size: .7rem; color: rgba(255,255,255,.55); margin-top: 3px; }
+.lb-auction-pulse {
+  font-size: .8rem; color: var(--lb-sub); text-align: center;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.lb-auction-spinner {
+  width: 14px; height: 14px; border: 2px solid var(--lb-card-border);
+  border-top-color: var(--lb-accent); border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* ── HISTORY CARD ────────────────────────────────────────────────── */
+.lb-history-card {
+  background: var(--lb-card);
+  border: 1px solid var(--lb-card-border);
+  border-radius: 20px;
+  padding: 18px 18px 12px;
+  flex: 1;
+}
+.lb-section-title {
+  font-size: .62rem; font-weight: 900; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--lb-accent); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.lb-section-title::after {
+  content: ''; flex: 1; height: 1px; background: var(--lb-sep);
+}
+.lb-history-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--lb-sep);
+}
+.lb-history-item:last-child { border-bottom: none; }
+.lb-history-avatar {
+  width: 38px; height: 38px; border-radius: 8px; overflow: hidden; flex-shrink: 0;
+  background: rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+}
+.lb-history-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.lb-history-avatar-ph { font-size: 1rem; opacity: .5; }
+.lb-history-msg { flex: 1; font-size: .75rem; color: var(--lb-text); line-height: 1.4; }
+.lb-history-time { font-size: .65rem; color: var(--lb-sub); flex-shrink: 0; }
+.lb-history-empty { text-align: center; color: var(--lb-sub); font-size: .8rem; padding: 20px 0; }
+
+/* ── TEAMS STRIP ─────────────────────────────────────────────────── */
+.lb-teams-wrap {
+  padding: 0 24px 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.lb-teams-card {
+  background: var(--lb-card);
+  border: 1px solid var(--lb-card-border);
+  border-radius: 20px;
+  padding: 18px 20px;
+}
+.lb-teams-grid {
+  display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px;
+}
+.lb-team-chip {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--lb-sep);
+  border-radius: 12px;
+  padding: 8px 14px 8px 8px;
+  min-width: 160px;
+}
+.lb-team-chip-logo {
+  width: 36px; height: 36px; border-radius: 8px; overflow: hidden; flex-shrink: 0;
+  background: rgba(255,255,255,0.06);
+  display: flex; align-items: center; justify-content: center;
+}
+.lb-team-chip-logo img { width: 100%; height: 100%; object-fit: contain; }
+.lb-team-chip-logo-ph { font-size: 1.1rem; opacity: .5; }
+.lb-team-chip-name { font-size: .8rem; font-weight: 700; color: var(--lb-text); }
+.lb-team-chip-pts  { font-size: .62rem; color: var(--lb-sub); margin-top: 1px; }
+
+/* ── NO AUCTION STATE ────────────────────────────────────────────── */
+.lb-waiting-full {
+  min-height: 50vh;
+  display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px;
+  color: var(--lb-sub); text-align: center; padding: 40px;
+}
+.lb-waiting-icon { font-size: 4rem; opacity: .3; }
+.lb-waiting-text { font-size: 1.1rem; font-weight: 600; }
+
+/* ── FOOTER BAR ──────────────────────────────────────────────────── */
+.lb-footer {
+  text-align: center;
+  padding: 10px 24px 18px;
+  font-size: .65rem; color: var(--lb-sub);
+  border-top: 1px solid var(--lb-sep);
+}
+
+/* ── RESPONSIVE ──────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .lb-main { grid-template-columns: 1fr; padding: 14px 14px; }
+  .lb-player-panel { max-width: 100%; }
+  .lb-photo-wrap { aspect-ratio: 4/3; }
+  .lb-header { padding: 12px 16px; }
+  .lb-t-name { font-size: .95rem; }
+}
+@media (max-width: 600px) {
+  .lb-header { flex-wrap: wrap; gap: 10px; }
+  .lb-hdr-center { order: 3; width: 100%; justify-content: flex-start; }
+  .lb-sold-amount { font-size: 2rem; }
+  .lb-teams-wrap { padding: 0 14px 14px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="lb-header">
+  <div class="lb-hdr-left">
+    <t t-if="tournament and tournament.logo">
+      <div class="lb-t-logo">
+        <img t-att-src="'/auction/public/image/auction.tournament/%d/logo' % tournament.id" alt="Logo"/>
+      </div>
+    </t>
+    <t t-else="">
+      <div class="lb-t-logo" style="font-size:1.4rem;">🏆</div>
+    </t>
+    <div>
+      <div class="lb-t-name" id="hdr-t-name">
+        <t t-if="tournament"><t t-esc="tournament.name"/></t>
+        <t t-else="">Live Auction Board</t>
+      </div>
+      <div class="lb-t-desc" id="hdr-t-desc">
+        <t t-if="tournament and tournament.description"><t t-esc="tournament.description"/></t>
+      </div>
+    </div>
+  </div>
+  <div class="lb-hdr-center">
+    <div class="lb-live-badge"><span class="lb-live-dot"></span> LIVE</div>
+  </div>
+  <div class="lb-hdr-right">
+    <div class="lb-clock" id="lb-clock">--:--:--</div>
+  </div>
+</header>
+
+<!-- MAIN CONTENT (populated by JS) -->
+<main class="lb-main" id="lb-main">
+  <!-- Left: Player Panel -->
+  <section class="lb-player-panel" id="lb-player-panel">
+    <div class="lb-photo-wrap">
+      <div class="lb-photo-placeholder" id="lb-photo-ph">👤</div>
+      <img id="lb-player-img" src="" alt="Player" style="display:none;position:absolute;top:0;left:0;"/>
+      <div class="lb-sl-overlay" id="lb-sl-overlay" style="display:none;">#<span id="lb-sl-num">--</span></div>
+      <div class="lb-state-overlay lb-state-auction" id="lb-state-overlay" style="display:none;">LIVE</div>
+      <!-- SOLD STAMP -->
+      <div class="lb-stamp-overlay lb-stamp-sold" id="lb-sold-stamp" style="display:none;">
+        <div class="lb-stamp-box">
+          <div class="lb-stamp-word">SOLD</div>
+          <div class="lb-stamp-pts" id="stamp-pts"></div>
+          <div class="lb-stamp-team">
+            <div class="lb-stamp-team-logo" id="stamp-team-logo-wrap">
+              <img id="stamp-team-logo" src="" alt=""/>
+            </div>
+            <div class="lb-stamp-team-name" id="stamp-team-name"></div>
+          </div>
+        </div>
+      </div>
+      <!-- UNSOLD STAMP -->
+      <div class="lb-stamp-overlay lb-stamp-unsold" id="lb-unsold-stamp" style="display:none;">
+        <div class="lb-stamp-box">
+          <div class="lb-stamp-word">UNSOLD</div>
+          <div class="lb-stamp-sub">Goes back to pool</div>
+        </div>
+      </div>
+      <div class="lb-photo-gradient"></div>
+      <div class="lb-photo-name">
+        <div class="lb-player-name-big" id="lb-pname">Waiting for next player…</div>
+        <div class="lb-player-sub" id="lb-psub"></div>
+      </div>
+    </div>
+    <div class="lb-player-meta">
+      <div class="lb-badges-row" id="lb-badges-row"></div>
+      <div class="lb-stats-row" id="lb-stats-row" style="display:none;">
+        <div class="lb-stat-chip" id="lb-bat-chip">
+          <div class="lb-stat-lbl">Batting</div>
+          <div class="lb-stat-val" id="lb-bat-val">—</div>
+        </div>
+        <div class="lb-stat-chip" id="lb-bowl-chip">
+          <div class="lb-stat-lbl">Bowling</div>
+          <div class="lb-stat-val" id="lb-bowl-val">—</div>
+        </div>
+      </div>
+      <div class="lb-base-row" id="lb-base-row" style="display:none;">
+        <div class="lb-base-lbl">Base Price</div>
+        <div class="lb-base-val" id="lb-base-val">— pts</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Right: Bid status + History -->
+  <section class="lb-bid-panel" id="lb-bid-panel">
+    <!-- Status card -->
+    <div class="lb-status-card" id="lb-status-card">
+      <div class="lb-status-waiting">
+        <div class="lb-auction-spinner"></div>
+        <div class="lb-auction-pulse">Waiting for auction to begin…</div>
+      </div>
+    </div>
+
+    <!-- History card -->
+    <div class="lb-history-card">
+      <div class="lb-section-title"><i class="fa fa-history"></i> Recent Transactions</div>
+      <div id="lb-history-list">
+        <div class="lb-history-empty">No transactions yet</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- TEAMS STRIP -->
+<div class="lb-teams-wrap">
+  <div class="lb-teams-card" id="lb-teams-card" style="display:none;">
+    <div class="lb-section-title"><i class="fa fa-shield-halved"></i> Participating Teams</div>
+    <div class="lb-teams-grid" id="lb-teams-grid"></div>
+  </div>
+</div>
+
+<div class="lb-footer" id="lb-footer">
+  <t t-if="tournament"><t t-esc="tournament.name"/> · </t>Live Auction Board · Auto-refreshes every 4 seconds
+</div>
+
+<script><![CDATA[
+(function(){
+  let lastPlayerId = null;
+  let lastState    = null;
+
+  function fmtPts(n) {
+    if (!n) return '0 pts';
+    if (n >= 100000) return (n/100000).toFixed(2).replace(/\.?0+$/,'') + 'L pts';
+    if (n >= 1000)   return (n/1000).toFixed(1).replace(/\.?0+$/,'') + 'K pts';
+    return n + ' pts';
+  }
+
+  function safeImg(url) {
+    return url || '';
+  }
+
+  // ── Clock ──────────────────────────────────────────────────────
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('lb-clock').textContent =
+      now.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  }
+  var _clockTimer = setInterval(updateClock, 1000);
+  updateClock();
+  window.addEventListener('beforeunload', function() { clearInterval(_clockTimer); });
+
+  // ── Render Player Panel ────────────────────────────────────────
+  function renderPlayer(p) {
+    if (!p) {
+      document.getElementById('lb-pname').textContent = 'Waiting for next player…';
+      document.getElementById('lb-psub').textContent = '';
+      document.getElementById('lb-photo-ph').style.display = 'flex';
+      document.getElementById('lb-player-img').style.display = 'none';
+      document.getElementById('lb-sl-overlay').style.display = 'none';
+      document.getElementById('lb-state-overlay').style.display = 'none';
+      document.getElementById('lb-sold-stamp').style.display   = 'none';
+      document.getElementById('lb-unsold-stamp').style.display = 'none';
+      document.getElementById('lb-badges-row').innerHTML = '';
+      document.getElementById('lb-stats-row').style.display = 'none';
+      document.getElementById('lb-base-row').style.display = 'none';
+      return;
+    }
+
+    // Photo
+    const img = document.getElementById('lb-player-img');
+    const ph  = document.getElementById('lb-photo-ph');
+    if (p.photo_url) {
+      img.src = p.photo_url;
+      img.style.display = 'block';
+      ph.style.display  = 'none';
+    } else {
+      img.style.display = 'none';
+      ph.style.display  = 'flex';
+    }
+
+    // Name + sub
+    document.getElementById('lb-pname').textContent = p.name || '—';
+    document.getElementById('lb-psub').textContent  =
+      [p.role, p.tier_name].filter(Boolean).join(' · ');
+
+    // SL badge
+    const slEl = document.getElementById('lb-sl-overlay');
+    if (p.sl_no) { slEl.style.display = ''; document.getElementById('lb-sl-num').textContent = p.sl_no; }
+    else           { slEl.style.display = 'none'; }
+
+    // State overlay
+    const stEl = document.getElementById('lb-state-overlay');
+    stEl.style.display = '';
+    stEl.className = 'lb-state-overlay lb-state-' + (p.state || 'auction');
+    stEl.textContent = p.state === 'sold' ? 'SOLD' : p.state === 'unsold' ? 'UNSOLD' : 'LIVE';
+
+    // Sold / Unsold stamp
+    const soldStamp   = document.getElementById('lb-sold-stamp');
+    const unsoldStamp = document.getElementById('lb-unsold-stamp');
+    if (p.state === 'sold' && p.sold_info) {
+      soldStamp.style.display  = '';
+      unsoldStamp.style.display = 'none';
+      // reset animation
+      soldStamp.style.animation = 'none';
+      soldStamp.offsetHeight; // reflow
+      soldStamp.style.animation = '';
+      document.getElementById('stamp-pts').textContent = fmtPts(p.sold_info.amount);
+      document.getElementById('stamp-team-name').textContent = p.sold_info.team_name || '';
+      const logoImg  = document.getElementById('stamp-team-logo');
+      const logoWrap = document.getElementById('stamp-team-logo-wrap');
+      if (p.sold_info.team_logo_url) {
+        logoImg.src = p.sold_info.team_logo_url;
+        logoWrap.style.display = '';
+      } else {
+        logoWrap.style.display = 'none';
+      }
+      stEl.style.display = 'none'; // stamp replaces the badge
+    } else if (p.state === 'unsold') {
+      unsoldStamp.style.display = '';
+      soldStamp.style.display   = 'none';
+      // reset animation
+      unsoldStamp.style.animation = 'none';
+      unsoldStamp.offsetHeight;
+      unsoldStamp.style.animation = '';
+      stEl.style.display = 'none'; // stamp replaces the badge
+    } else {
+      soldStamp.style.display   = 'none';
+      unsoldStamp.style.display = 'none';
+    }
+
+    // Badges
+    let badgesHtml = '';
+    if (p.tier_name) {
+      badgesHtml += `<span class="lb-badge lb-b-tier" style="background:${p.tier_color || '#2252b5'}">${p.tier_name}</span>`;
+    }
+    if (p.role) {
+      badgesHtml += `<span class="lb-badge lb-b-role">${p.role}</span>`;
+    }
+    if (p.icon_player) {
+      badgesHtml += `<span class="lb-badge lb-b-icon">⭐ Icon</span>`;
+    }
+    document.getElementById('lb-badges-row').innerHTML = badgesHtml;
+
+    // Batting / Bowling stats
+    if (p.batting_style || p.bowling_style) {
+      document.getElementById('lb-stats-row').style.display = 'flex';
+      document.getElementById('lb-bat-val').textContent  = p.batting_style  || '—';
+      document.getElementById('lb-bowl-val').textContent = p.bowling_style || '—';
+    } else {
+      document.getElementById('lb-stats-row').style.display = 'none';
+    }
+
+    // Base price
+    if (p.base_price) {
+      document.getElementById('lb-base-row').style.display = '';
+      document.getElementById('lb-base-val').textContent = fmtPts(p.base_price);
+    } else {
+      document.getElementById('lb-base-row').style.display = 'none';
+    }
+  }
+
+  // ── Render Status Card ─────────────────────────────────────────
+  function renderStatus(currentPlayer, soldInfo) {
+    const card = document.getElementById('lb-status-card');
+
+    if (!currentPlayer) {
+      card.innerHTML = `<div class="lb-status-waiting">
+        <div class="lb-auction-spinner"></div>
+        <div class="lb-auction-pulse">Waiting for auction to begin…</div>
+      </div>`;
+      return;
+    }
+
+    if (currentPlayer.state === 'sold' && soldInfo) {
+      const logoHtml = soldInfo.team_logo_url
+        ? `<img src="${soldInfo.team_logo_url}" alt="logo" onerror="this.parentElement.innerHTML='🏆'">`
+        : '🏆';
+      card.innerHTML = `<div class="lb-status-sold">
+        <div class="lb-status-label">🏆 Sold!</div>
+        <div class="lb-sold-amount">${fmtPts(soldInfo.amount)}</div>
+        <div class="lb-sold-team">
+          <div class="lb-sold-team-logo">${logoHtml}</div>
+          <div>
+            <div class="lb-sold-team-name">${soldInfo.team_name}</div>
+          </div>
+        </div>
+      </div>`;
+    } else if (currentPlayer.state === 'auction') {
+      card.innerHTML = `<div class="lb-status-auction">
+        <div class="lb-status-label">🎯 In Auction — Bidding in Progress</div>
+        <div style="margin-top:18px; display:flex; align-items:center; gap:12px;">
+          <div class="lb-auction-spinner" style="width:20px;height:20px;border-width:3px;"></div>
+          <div style="font-size:1.05rem;font-weight:700;color:rgba(255,255,255,0.8);">
+            Accepting bids from teams…
+          </div>
+        </div>
+        <div style="margin-top:14px;font-size:.72rem;opacity:.6;">
+          Base price: <strong>${fmtPts(currentPlayer.base_price)}</strong>
+        </div>
+      </div>`;
+    } else {
+      card.innerHTML = `<div class="lb-status-waiting">
+        <div class="lb-auction-spinner"></div>
+        <div class="lb-auction-pulse">Loading…</div>
+      </div>`;
+    }
+  }
+
+  // ── Render History ─────────────────────────────────────────────
+  function renderHistory(history) {
+    const list = document.getElementById('lb-history-list');
+    if (!history || !history.length) {
+      list.innerHTML = '<div class="lb-history-empty">No transactions yet</div>';
+      return;
+    }
+    list.innerHTML = history.map(h => {
+      const avatarHtml = h.team_logo_url
+        ? `<img src="${h.team_logo_url}" alt="" onerror="this.parentElement.innerHTML='🏅'">`
+        : '<span class="lb-history-avatar-ph">🏅</span>';
+      return `<div class="lb-history-item">
+        <div class="lb-history-avatar">${avatarHtml}</div>
+        <div class="lb-history-msg">${h.message || ''}</div>
+        <div class="lb-history-time">${h.timestamp || ''}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Render Teams Strip ─────────────────────────────────────────
+  function renderTeams(teams) {
+    const card = document.getElementById('lb-teams-card');
+    const grid = document.getElementById('lb-teams-grid');
+    if (!teams || !teams.length) { card.style.display = 'none'; return; }
+    card.style.display = '';
+    grid.innerHTML = teams.map(t => {
+      const logoHtml = t.logo_url
+        ? `<img src="${t.logo_url}" alt="" onerror="this.parentElement.innerHTML='🛡'">`
+        : '<span class="lb-team-chip-logo-ph">🛡</span>';
+      return `<div class="lb-team-chip">
+        <div class="lb-team-chip-logo">${logoHtml}</div>
+        <div>
+          <div class="lb-team-chip-name">${t.name}</div>
+          <div class="lb-team-chip-pts">${fmtPts(t.remaining_points)} left</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Polling ────────────────────────────────────────────────────
+  function poll() {
+    fetch('/auction/live-board/data', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(data => {
+        // Apply theme
+        if (data.theme) {
+          document.documentElement.setAttribute('data-theme', data.theme);
+        }
+
+        const p = data.current_player;
+        const newId    = p ? p.id    : null;
+        const newState = p ? p.state : null;
+
+        // If player changed or state changed (e.g. auction→sold), flash the player panel
+        const playerChanged = (newId !== lastPlayerId) || (newState !== lastState);
+        if (playerChanged && (lastPlayerId !== null || newId !== null)) {
+          const panel = document.getElementById('lb-player-panel');
+          panel.style.transition = 'opacity 0.3s';
+          panel.style.opacity = '0';
+          setTimeout(function() {
+            renderPlayer(p);
+            renderStatus(p, data.sold_info);
+            panel.style.opacity = '1';
+          }, 300);
+        } else {
+          renderPlayer(p);
+          renderStatus(p, data.sold_info);
+        }
+
+        lastPlayerId = newId;
+        lastState    = newState;
+
+        renderHistory(data.recent_history);
+        renderTeams(data.teams);
+      })
+      .catch(function() {});
+  }
+
+  // Initial load + periodic refresh with Page Visibility pause
+  var _pollTimer = null;
+  function startPolling() { if (!_pollTimer) _pollTimer = setInterval(poll, 4000); }
+  function stopPolling()  { if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; } }
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) { stopPolling(); }
+    else { poll(); startPolling(); }
+  });
+  window.addEventListener('beforeunload', function() { stopPolling(); clearInterval(_clockTimer); });
+  poll();
+  startPolling();
+})();
+]]></script>
+
+</body>
+</html>
+</template>
 
 
 </odoo>

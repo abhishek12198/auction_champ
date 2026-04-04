@@ -74,8 +74,9 @@
     object-fit: fill;
 }
 
-/* VERY IMPORTANT: reserve space in form header */
-.o_form_sheet_bg {
+/* Reserve space in the player form header for the large avatar on the right.
+   Scoped via :has() so it only activates on forms that actually contain the avatar. */
+.o_form_sheet_bg:has(.player_avatar_big) {
     padding-right: 240px !important;
 }
 

@@ -217,3 +217,352 @@
 .kanban-icon-btn.icon   i { color: #f59e0b; }
 .kanban-icon-btn.revoke i { color: #ea580c; }
 .kanban-icon-btn.recall i { color: #2563eb; }
+
+/* ══════════════════════════════════════════════════════════════════
+   Auction Kanban  (.auk-*)  — auction.auction cards
+   ══════════════════════════════════════════════════════════════════ */
+.o_auction_kanban_view .o_kanban_record { padding: 0; border: none; box-shadow: none; background: transparent; }
+.o_auction_kanban_view .o_kanban_renderer { background: #eef2f8; padding: 16px; gap: 18px; }
+
+.auk-card {
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  width: 300px;
+  transition: box-shadow .2s, transform .2s;
+}
+.auk-card:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.14), 0 0 0 1px rgba(46,109,164,.2);
+  transform: translateY(-2px);
+}
+
+/* Header */
+.auk-header {
+  background: linear-gradient(135deg, #1a3a5c 0%, #2e6da4 100%);
+  padding: 14px 14px 12px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.auk-logo-wrap {
+  width: 50px; height: 50px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.12);
+  border: 1.5px solid rgba(255,255,255,0.22);
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.auk-logo-wrap img { width: 100%; height: 100%; object-fit: contain; }
+.auk-logo-placeholder { opacity: .55; }
+.auk-team-info { flex: 1; min-width: 0; }
+.auk-team-name { color: #fff; font-size: .98rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.auk-owner { color: rgba(255,255,255,.65); font-size: .73rem; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.auk-badge { font-size: .58rem; font-weight: 800; letter-spacing: .8px; padding: 3px 8px; border-radius: 20px; flex-shrink: 0; text-transform: uppercase; }
+.auk-badge-full { background: #27ae60; color: #fff; }
+.auk-badge-low  { background: #e74c3c; color: #fff; }
+
+/* Bars */
+.auk-divider { height: 1px; background: linear-gradient(to right, transparent, #dde4f0, transparent); }
+.auk-bars { padding: 13px 14px 4px; display: flex; flex-direction: column; gap: 10px; }
+.auk-bar-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.auk-bar-label { font-size: .64rem; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; color: #8a94a6; }
+.auk-bar-value { font-size: .76rem; font-weight: 600; color: #2e6da4; }
+.auk-track { height: 6px; background: #e8edf5; border-radius: 3px; overflow: hidden; }
+.auk-fill  { height: 100%; border-radius: 3px; transition: width .4s ease; min-width: 2px; }
+
+/* Chips */
+.auk-chips { display: flex; gap: 7px; padding: 11px 14px 4px; }
+.auk-chip { flex: 1; background: #f4f7fb; border-radius: 9px; padding: 8px 4px; text-align: center; border: 1px solid #e5ecf5; }
+.auk-chip-accent { background: linear-gradient(135deg,#1a3a5c,#2e6da4); border-color: transparent; }
+.auk-chip-label { font-size: .58rem; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: #8a94a6; margin-bottom: 3px; }
+.auk-chip-accent .auk-chip-label { color: rgba(255,255,255,.65); }
+.auk-chip-value { font-size: .98rem; font-weight: 700; color: #1a3a5c; line-height: 1; }
+.auk-chip-accent .auk-chip-value { color: #fff; }
+
+/* Footer */
+.auk-footer { padding: 11px 14px 13px; }
+.auk-btn-summary {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%;
+  background: linear-gradient(135deg, #1a3a5c, #2e6da4);
+  color: #fff !important; border: none; border-radius: 8px;
+  padding: 9px 12px; font-size: .79rem; font-weight: 600; cursor: pointer;
+  letter-spacing: .3px; transition: opacity .2s, transform .15s;
+}
+.auk-btn-summary:hover { opacity: .87; transform: translateY(-1px); }
+
+/* ══════════════════════════════════════════════════════════════════
+   Player Kanban v2  (.pk2-*)  — compact professional cards
+   ══════════════════════════════════════════════════════════════════ */
+.pk2-card {
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+  width: 300px;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  transition: box-shadow .2s, transform .2s;
+}
+.pk2-card:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.14), 0 0 0 1px rgba(34,82,181,.18);
+  transform: translateY(-2px);
+}
+
+/* Header — tier color drives the card header */
+.pk2-header {
+  /* dark overlay on top of tier color → text always readable regardless of tier hue */
+  background:
+    linear-gradient(160deg, rgba(10,15,35,0.68) 0%, rgba(10,15,35,0.44) 100%),
+    var(--pk2-tier, #2252b5);
+  padding: 13px 13px 11px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  position: relative;
+}
+/* Pure-white left strip so it shows on any tier color */
+.pk2-header::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 5px;
+  background: rgba(255,255,255,0.35);
+}
+/* Solid tier-color top edge for extra identification at a glance */
+.pk2-card {
+  border-top: 4px solid var(--pk2-tier, #2252b5);
+}
+.pk2-photo {
+  width: 54px; height: 54px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.1);
+}
+.pk2-photo img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
+.pk2-photo-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; opacity: .6;
+}
+.pk2-title { flex: 1; min-width: 0; }
+.pk2-name {
+  color: #fff; font-size: .95rem; font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.2;
+}
+.pk2-sub { color: rgba(255,255,255,.6); font-size: .7rem; margin-top: 3px; }
+.pk2-state-badge {
+  font-size: .58rem; font-weight: 800; letter-spacing: .8px;
+  padding: 3px 8px; border-radius: 20px; flex-shrink: 0; text-transform: uppercase;
+}
+.pk2-s-draft   { background: rgba(255,255,255,.18); color: #e2e8f0; }
+.pk2-s-auction { background: #f59e0b; color: #fff; }
+.pk2-s-sold    { background: #16a34a; color: #fff; }
+.pk2-s-unsold  { background: #dc2626; color: #fff; }
+
+/* Divider */
+.pk2-divider { height: 1px; background: linear-gradient(to right, transparent, #dde4f0, transparent); }
+
+/* Badge row */
+.pk2-badges {
+  display: flex; gap: 5px; flex-wrap: wrap;
+  padding: 9px 12px 7px; align-items: center;
+  min-height: 34px;
+}
+.pk2-badge {
+  font-size: .6rem; font-weight: 700; padding: 2px 9px; border-radius: 20px;
+  text-transform: uppercase; letter-spacing: .4px; color: #fff;
+}
+.pk2-b-role   { background: linear-gradient(135deg, #2252b5, #3b72e8); }
+.pk2-b-icon   { background: linear-gradient(135deg, #d97706, #fbbf24); }
+.pk2-b-tier   { /* background set inline from tier_color */ font-size: .62rem; padding: 2px 10px; }
+.pk2-b-type-icon     { background: #7c3aed; }
+.pk2-b-type-domestic { background: #0891b2; }
+.pk2-b-type-foreign  { background: #059669; }
+
+/* Info rows */
+.pk2-info { padding: 2px 12px 8px; display: flex; flex-direction: column; gap: 5px; }
+.pk2-info-row {
+  display: flex; align-items: center; gap: 7px;
+  font-size: .74rem; color: #475569;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pk2-info-row i { color: #2252b5; width: 13px; text-align: center; flex-shrink: 0; font-size: .7rem; }
+.pk2-info-row.pk2-team i { color: #16a34a; }
+
+/* Stats chips */
+.pk2-stats { display: flex; gap: 6px; padding: 4px 12px 10px; }
+.pk2-stat {
+  flex: 1; background: #f4f7fb; border-radius: 8px;
+  padding: 6px 4px; text-align: center; border: 1px solid #e5ecf5;
+  min-width: 0;
+}
+.pk2-stat-label {
+  font-size: .54rem; font-weight: 700; letter-spacing: .5px;
+  text-transform: uppercase; color: #8a94a6; margin-bottom: 2px;
+}
+.pk2-stat-value { font-size: .72rem; font-weight: 600; color: #1a2744; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Action bar */
+.pk2-actions {
+  display: flex; gap: 5px; padding: 8px 12px 12px;
+  border-top: 1px solid #f1f5f9; flex-wrap: wrap;
+}
+.pk2-btn {
+  flex: 1; min-width: 40px; height: 32px;
+  border: none; border-radius: 8px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .68rem; font-weight: 600; gap: 3px;
+  transition: transform .15s, opacity .2s;
+}
+.pk2-btn:hover { transform: translateY(-1px); opacity: .85; }
+.pk2-btn i { font-size: .78rem; }
+.pk2-btn-sell   { background: #dcfce7; color: #16a34a; }
+.pk2-btn-unsold { background: #fee2e2; color: #dc2626; }
+.pk2-btn-icon   { background: #fef9c3; color: #d97706; }
+.pk2-btn-revoke { background: #ffedd5; color: #ea580c; }
+.pk2-btn-recall { background: #dbeafe; color: #2563eb; }
+.pk2-btn-print  { background: #f1f5f9; color: #475569; }
+
+/* ══════════════════════════════════════════════════════════════════
+   Player Jersey Kanban  (.pjk-*)  — jersey-card style
+   ══════════════════════════════════════════════════════════════════ */
+.pjk-card {
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  width: 260px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  transition: box-shadow .2s, transform .2s;
+}
+.pjk-card:hover {
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15), 0 0 0 1px rgba(34,82,181,.2);
+  transform: translateY(-3px);
+}
+
+/* Jersey graphic area */
+.pjk-jersey-area {
+  position: relative;
+  background: var(--pjk-color, #1a2744);
+  /* diagonal stripe like a jersey */
+  background-image: linear-gradient(
+    148deg,
+    rgba(255,255,255,0.0) 0%,
+    rgba(255,255,255,0.0) 45%,
+    rgba(255,255,255,0.06) 45%,
+    rgba(255,255,255,0.06) 55%,
+    rgba(255,255,255,0.0) 55%
+  );
+  padding: 18px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 120px;
+}
+/* top ribbon: state badge */
+.pjk-state-ribbon {
+  position: absolute;
+  top: 10px; right: 10px;
+  font-size: .56rem; font-weight: 800; letter-spacing: .8px;
+  padding: 3px 9px; border-radius: 20px; text-transform: uppercase;
+}
+.pjk-sr-sold    { background: #16a34a; color: #fff; }
+.pjk-sr-auction { background: #f59e0b; color: #fff; }
+.pjk-sr-unsold  { background: #dc2626; color: #fff; }
+.pjk-sr-draft   { background: rgba(255,255,255,.2); color: #e2e8f0; }
+
+/* Icon star top-left */
+.pjk-icon-star {
+  position: absolute;
+  top: 10px; left: 10px;
+  font-size: .9rem;
+}
+
+/* Large jersey number */
+.pjk-number {
+  font-size: 3.4rem;
+  font-weight: 900;
+  color: rgba(255,255,255,0.92);
+  line-height: 1;
+  letter-spacing: -2px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  margin-top: 4px;
+}
+.pjk-number-empty {
+  font-size: 2rem;
+  font-weight: 900;
+  color: rgba(255,255,255,0.25);
+  line-height: 1;
+  letter-spacing: -1px;
+  margin-top: 8px;
+}
+/* Jersey name on shirt */
+.pjk-shirt-name {
+  font-size: .72rem;
+  font-weight: 800;
+  color: rgba(255,255,255,0.80);
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  margin-top: 4px;
+  max-width: 200px;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Body section */
+.pjk-body { padding: 11px 13px 13px; }
+
+/* Player row: avatar + name */
+.pjk-player-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+.pjk-avatar {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid #e5ecf5;
+  background: #f0f4fa;
+}
+.pjk-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
+.pjk-avatar-ph { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+.pjk-player-name {
+  font-size: .88rem; font-weight: 700; color: #1a2744;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pjk-team-name {
+  font-size: .68rem; color: #64748b; margin-top: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pjk-team-name i { color: #16a34a; margin-right: 3px; }
+
+/* Divider */
+.pjk-divider { height: 1px; background: #f1f5f9; margin-bottom: 9px; }
+
+/* Meta chips row */
+.pjk-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.pjk-chip {
+  display: flex; flex-direction: column; align-items: center;
+  flex: 1; min-width: 52px;
+  background: #f4f7fb; border-radius: 8px;
+  padding: 5px 4px; border: 1px solid #e8edf5;
+}
+.pjk-chip-label {
+  font-size: .52rem; font-weight: 700; letter-spacing: .6px;
+  text-transform: uppercase; color: #94a3b8; margin-bottom: 2px;
+}
+.pjk-chip-value {
+  font-size: .75rem; font-weight: 700; color: #1a2744;
+  text-align: center;
+}

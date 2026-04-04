@@ -30,7 +30,6 @@ class AuctionTeamPlayer(models.Model):
     batting_style = fields.Char(string="Batting Style", required=True, default='Right Handed Batter')
     bowling_style = fields.Char(string="Bowling Style", required=True, default='Right Arm')
     role = fields.Char()
-    player_type = fields.Selection([('icon', 'Icon'), ('domestic', 'Domestic'), ('foreign', 'Foreign')], default='domestic')
     photo = fields.Binary("Photo")
     photo_url = fields.Char("Photo URL")
     payment_url = fields.Char("Payment URL")
@@ -41,6 +40,8 @@ class AuctionTeamPlayer(models.Model):
     tournament_type = fields.Selection(related='tournament_id.tournament_type')
     assigned_team_id = fields.Many2one('auction.team', 'Team')
     icon_player = fields.Boolean("Key Player")
+    is_on_stage = fields.Boolean("Currently on Stage", default=False,
+                                  help="True when this player is actively displayed in the auction stage. Only one player should have this True at a time.")
     tier_id = fields.Many2one('auction.player.tier', string='Tier')
     previous_tier_id = fields.Many2one('auction.player.tier', string='Previous Tier', help='Stores the tier before the player was promoted to Icon Player, used to restore on revoke.')
     tier_color = fields.Selection(related='tier_id.color', string='Tier Color')
@@ -175,6 +176,8 @@ class AuctionTeamPlayer(models.Model):
             auction.player_ids = [(0, 0, auction_line_data)]
             player.assigned_team_id = auction.team_id.id
             player.state = 'sold'
+            # is_on_stage stays True so the live board can show the SOLD stamp
+            # until the next player is called via get_random_player()
             player.create_auction_history(auction.team_id.id, message, tournament_id=player.tournament_id.id, player=player)
         else:
             auction_line_data['auction_id'] = auction.id
@@ -200,6 +203,7 @@ class AuctionTeamPlayer(models.Model):
             'butterscotch':  'auction_module.action_report_player_card_butterscotch',
             'strawberry':    'auction_module.action_report_player_card_strawberry',
             'cherry':        'auction_module.action_report_player_card_cherry',
+            'pistah':        'auction_module.action_report_player_card_pistah',
         }
         report_ref = report_map.get(template, 'auction_module.action_report_player_card')
         return self.env.ref(report_ref).report_action(self)
@@ -217,6 +221,7 @@ class AuctionTeamPlayer(models.Model):
             'butterscotch': 'auction_module.report_player_card_list_butterscotch',
             'strawberry':   'auction_module.report_player_card_list_strawberry',
             'cherry':       'auction_module.report_player_card_list_cherry',
+            'pistah':       'auction_module.report_player_card_list_pistah',
         }
         report_name = report_map.get(template, 'auction_module.report_player_card_list')
         return {
@@ -293,8 +298,6 @@ class AuctionTeamPlayer(models.Model):
         tournament_id = self.env['auction.tournament'].search([('active', '=', True)], limit=1)
         if tournament_id:
             vals.update({'tournament_id': tournament_id.id})
-        if 'Icon' in  vals.get('player_type', False):
-            vals.update({'player_type': 'icon'})
 
         if vals.get('photo_url', False):
             image_base64 = self.get_base64_from_url(vals.get('photo_url', False))
@@ -328,26 +331,31 @@ class AuctionTeamPlayer(models.Model):
     def get_random_player(self):
         tournament_id = self.env['auction.tournament'].search([('active', '=', True)], limit=1)
         random_player = False
-        # icon_players = self.env['auction.team'].search([]).mapped('key_player_ids')
-        # players_domain = [('state', '=', 'auction')]
-        # if icon_players:
-        #     players_domain.append(('id', 'not in', icon_players.ids))
 
         players = self.get_auction_players()
         if players:
             player_ids = players.ids
             if tournament_id.player_appearance_algorithm == 'random':
-
                 random_player_id = random.choice(player_ids)
                 random_player = self.browse(random_player_id)
             else:
                 random_player = self.browse(player_ids[0])
+
+        # ── Stage tracking: clear all, mark only the selected player ──
+        on_stage = self.search([('is_on_stage', '=', True)])
+        if on_stage:
+            on_stage.sudo().write({'is_on_stage': False})
+        if random_player:
+            random_player.sudo().write({'is_on_stage': True})
+
         return random_player
 
     def action_unsold(self):
         for player in self:
             if player.state == 'auction':
                 player.state = 'unsold'
+                # is_on_stage stays True so the live board shows the UNSOLD stamp
+                # until the next player is called via get_random_player()
                 message = player.name + ' is Unsold!'
                 player.create_unsold_auction_history( message, tournament_id=player.tournament_id.id,
                                               player=player)
@@ -410,6 +418,7 @@ class AuctionTeamPlayer(models.Model):
         auction.player_ids = [(0, 0, auction_line_data)]
         player.assigned_team_id = auction.team_id and auction.team_id.id or False
         player.state = 'sold'
+        # is_on_stage stays True — cleared on next player call
         self.create_auction_history(team_id.id, message, tournament_id=player.tournament_id.id, player=player)
         self.env.user.notify_success(message)
 

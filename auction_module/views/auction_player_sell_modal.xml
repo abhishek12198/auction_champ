@@ -83,6 +83,26 @@
     --sm-title-font:      'Teko','Rajdhani',sans-serif;
   }
 
+  #sellModal[data-theme="pistah"] {
+    --sm-header-bg:       linear-gradient(135deg,#030a04 0%,#0d1f11 100%);
+    --sm-header-stripe:   #6BBF4E;
+    --sm-accent:          #6BBF4E;
+    --sm-accent-dim:      rgba(107,191,78,0.15);
+    --sm-primary:         #6BBF4E;
+    --sm-primary-dark:    #2E7D32;
+    --sm-primary-light:   #f1faf0;
+    --sm-btn-bg:          linear-gradient(135deg,#2E7D32,#388e3c);
+    --sm-badge-active:    #6BBF4E;
+    --sm-transfer-bg:     #f4faf2;
+    --sm-detail-bg:       #f1faf0;
+    --sm-maxcall-color:   #2E7D32;
+    --sm-suggest-color:   #1b5e20;
+    --sm-sold-ribbon:     #6BBF4E;
+    --sm-sold-bg:         linear-gradient(160deg,#030a04 0%,#0d1f11 60%,#112b14 100%);
+    --sm-font:            'Exo 2','Rajdhani',sans-serif;
+    --sm-title-font:      'Orbitron','Exo 2',sans-serif;
+  }
+
   /* ── Overlay ─────────────────────────────────────────────── */
   #sellModal {
     display: none; position: fixed; inset: 0;
@@ -217,6 +237,26 @@
     font-family: var(--sm-font); transition: border-color .18s;
   }
   #sellPoints:focus { border-color: var(--sm-primary); }
+
+  /* ── Preset point quick-select buttons ───────────────────── */
+  .sm-presets {
+    display: flex; flex-wrap: wrap; gap: 7px;
+    margin-top: 10px;
+  }
+  .sm-preset-btn {
+    padding: 5px 14px; border-radius: 20px;
+    border: 1.5px solid var(--sm-primary); background: var(--sm-primary-light);
+    color: var(--sm-primary); font-weight: 700; font-size: .78rem;
+    cursor: pointer; transition: all .15s; font-family: var(--sm-font);
+    letter-spacing: .5px;
+  }
+  .sm-preset-btn:hover {
+    background: var(--sm-primary); color: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,.15);
+  }
+  .sm-preset-btn.sm-preset-active {
+    background: var(--sm-primary); color: #fff;
+  }
 
   /* ── Details strip ───────────────────────────────────────── */
   #teamDetailsStrip {
@@ -445,6 +485,22 @@
           <input type="number" id="sellPoints" value="0" min="0" />
           <button class="sm-pts-btn" onclick="smAdjustPoints(1)">&#43;</button>
         </div>
+        <!-- Quick-select preset buttons (set in tournament settings) -->
+        <t t-set="raw_presets" t-value="player.tournament_id.preset_points or ''"/>
+        <t t-if="raw_presets.strip()">
+          <div class="sm-presets" id="smPresetBtns">
+            <t t-foreach="raw_presets.split(',')" t-as="pt">
+              <t t-set="pt_clean" t-value="pt.strip()"/>
+              <t t-if="pt_clean and pt_clean.isdigit()">
+                <button type="button" class="sm-preset-btn"
+                        t-att-data-val="pt_clean"
+                        t-att-onclick="'smSetPoints(' + pt_clean + ', this)'">
+                  <t t-esc="pt_clean"/>
+                </button>
+              </t>
+            </t>
+          </div>
+        </t>
       </div>
 
       <!-- Team details -->
@@ -625,6 +681,7 @@
     input.value = team.effective_base_point;
     input.min   = team.effective_base_point;
     input.max   = team.max_call;
+    smClearPresetActive();
     document.getElementById('smBtnSell').disabled = false;
     smHideError();
   }
@@ -637,8 +694,24 @@
     var inc     = smGetIncrement(current, smSelectedTeam.slabs);
     var next    = Math.min(Math.max(current + dir * inc, smSelectedTeam.effective_base_point), smSelectedTeam.max_call);
     input.value = next;
+    smClearPresetActive();
     smHideError();
   };
+
+  /* ── Set preset point value ──────────────────────────────────── */
+  window.smSetPoints = function(val, btn) {
+    var input = document.getElementById('sellPoints');
+    input.value = val;
+    // Highlight active preset button
+    smClearPresetActive();
+    if (btn) btn.classList.add('sm-preset-active');
+    smHideError();
+  };
+
+  function smClearPresetActive() {
+    var btns = document.querySelectorAll('.sm-preset-btn');
+    for (var i = 0; i < btns.length; i++) btns[i].classList.remove('sm-preset-active');
+  }
 
   function smGetIncrement(amount, slabs) {
     if (!slabs || !slabs.length) return 50;

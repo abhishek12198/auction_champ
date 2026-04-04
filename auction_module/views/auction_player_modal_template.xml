@@ -127,6 +127,68 @@
       .player-modal-content .auction-single-buttons { flex-direction:column; width:100%; }
       .player-modal-content .auction-single-buttons button { width:100%; }
     }
+
+    /* ── Player photo sold / unsold stamp overlays ─────────────── */
+    .sp-image { position:relative; overflow:hidden; }
+    .ps-stamp-overlay {
+      position:absolute; inset:0; z-index:10;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(0,0,0,0.52);
+    }
+    .ps-stamp-box {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      padding:10px 28px 12px;
+      border-radius:7px;
+      border-width:5px; border-style:solid;
+      box-shadow:0 8px 32px rgba(0,0,0,0.5);
+      transform:rotate(-22deg);
+      animation:psStampDrop .45s cubic-bezier(.34,1.3,.64,1) forwards;
+    }
+    @keyframes psStampDrop {
+      0%   { transform:rotate(-22deg) scale(2.2); opacity:0; }
+      100% { transform:rotate(-22deg) scale(1);   opacity:0.93; }
+    }
+
+    /* SOLD stamp */
+    .ps-stamp-sold .ps-stamp-box {
+      background:rgba(10,40,10,0.88);
+      border-color:#22c55e;
+    }
+    .ps-stamp-sold .ps-stamp-word {
+      font-size:clamp(2rem,5vw,3rem); font-weight:900; letter-spacing:8px;
+      color:#22c55e; text-transform:uppercase; line-height:1;
+      text-shadow:0 0 16px rgba(34,197,94,0.65);
+    }
+    .ps-stamp-sold .ps-stamp-pts {
+      font-size:clamp(0.85rem,1.6vw,1rem); font-weight:800; color:#86efac;
+      margin-top:5px; letter-spacing:1px;
+    }
+    .ps-stamp-sold .ps-stamp-team {
+      display:flex; align-items:center; justify-content:center; gap:7px;
+      margin-top:8px;
+    }
+    .ps-stamp-sold .ps-stamp-team-logo {
+      width:28px; height:28px; border-radius:5px; overflow:hidden;
+      background:rgba(255,255,255,0.1); flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .ps-stamp-sold .ps-stamp-team-logo img { width:100%; height:100%; object-fit:contain; }
+    .ps-stamp-sold .ps-stamp-team-name {
+      font-size:clamp(0.72rem,1.2vw,0.84rem); font-weight:800; color:#fff;
+      letter-spacing:.5px; max-width:110px;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+
+    /* UNSOLD stamp */
+    .ps-stamp-unsold .ps-stamp-box {
+      background:rgba(50,5,5,0.88);
+      border-color:#ef4444;
+    }
+    .ps-stamp-unsold .ps-stamp-word {
+      font-size:clamp(1.7rem,4.5vw,2.6rem); font-weight:900; letter-spacing:6px;
+      color:#ef4444; text-transform:uppercase; line-height:1;
+      text-shadow:0 0 16px rgba(239,68,68,0.65);
+    }
   </style>
 
   <!-- ── Player card ──────────────────────────────────────────────────── -->
@@ -180,6 +242,38 @@
               <div class="sp-image-before"
                    t-att-style="'--tier-color:' + (player.tier_id.color if player.tier_id else '#01cfff')"/>
               <img t-att-src="image_data_uri(player.photo)" alt="player-image" id="loadImage"/>
+
+              <!-- SOLD stamp -->
+              <t t-if="player.state == 'sold'">
+                <div class="ps-stamp-overlay ps-stamp-sold">
+                  <div class="ps-stamp-box">
+                    <div class="ps-stamp-word">SOLD</div>
+                    <t t-if="sold_points">
+                      <div class="ps-stamp-pts"><t t-esc="sold_points"/> pts</div>
+                    </t>
+                    <t t-if="player.assigned_team_id">
+                      <div class="ps-stamp-team">
+                        <t t-if="player.assigned_team_id.logo">
+                          <div class="ps-stamp-team-logo">
+                            <img t-att-src="image_data_uri(player.assigned_team_id.logo)" alt=""/>
+                          </div>
+                        </t>
+                        <div class="ps-stamp-team-name"><t t-esc="player.assigned_team_id.name"/></div>
+                      </div>
+                    </t>
+                  </div>
+                </div>
+              </t>
+
+              <!-- UNSOLD stamp -->
+              <t t-if="player.state == 'unsold'">
+                <div class="ps-stamp-overlay ps-stamp-unsold">
+                  <div class="ps-stamp-box">
+                    <div class="ps-stamp-word">UNSOLD</div>
+                  </div>
+                </div>
+              </t>
+
             </div>
           </div>
         </div>

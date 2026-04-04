@@ -13,6 +13,122 @@
             </field>
         </record>
 
+        <!-- ── Kanban View ─────────────────────────────────────────────── -->
+        <record id="view_auction_auction_kanban" model="ir.ui.view">
+            <field name="name">auction.auction.kanban</field>
+            <field name="model">auction.auction</field>
+            <field name="arch" type="xml">
+                <kanban create="0" delete="0" class="o_auction_kanban_view">
+                    <field name="team_id"/>
+                    <field name="manager"/>
+                    <field name="total_point"/>
+                    <field name="remaining_points"/>
+                    <field name="max_players"/>
+                    <field name="remaining_players_count"/>
+                    <field name="max_call"/>
+                    <field name="base_point"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <t t-set="players_in"   t-value="record.max_players.raw_value - record.remaining_players_count.raw_value"/>
+                            <t t-set="squad_pct"    t-value="record.max_players.raw_value ? Math.floor(players_in * 100 / record.max_players.raw_value) : 0"/>
+                            <t t-set="budget_used"  t-value="record.total_point.raw_value - record.remaining_points.raw_value"/>
+                            <t t-set="budget_pct"   t-value="record.total_point.raw_value ? Math.floor(budget_used * 100 / record.total_point.raw_value) : 0"/>
+                            <t t-set="squad_full"   t-value="record.remaining_players_count.raw_value === 0"/>
+                            <t t-set="budget_low"   t-value="record.remaining_points.raw_value &lt; record.base_point.raw_value * 2"/>
+                            <t t-set="budget_color" t-value="budget_pct &gt; 85 ? '#e74c3c' : budget_pct &gt; 65 ? '#f39c12' : '#2e80d8'"/>
+                            <t t-set="squad_color"  t-value="squad_pct &gt;= 100 ? '#27ae60' : squad_pct &gt;= 60 ? '#f39c12' : '#2e80d8'"/>
+
+                            <div class="auk-card oe_kanban_global_click">
+
+                                <!-- ── Header ────────────────────────────── -->
+                                <div class="auk-header">
+                                    <div class="auk-logo-wrap">
+                                        <img t-attf-src="/web/image/auction.team/#{record.team_id.raw_value}/logo"
+                                             alt="Team Logo"
+                                             style="width:100%;height:100%;object-fit:contain;"
+                                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+                                        <div class="auk-logo-placeholder" style="display:none;width:100%;height:100%;align-items:center;justify-content:center;">
+                                            <svg width="26" height="26" fill="none" viewBox="0 0 24 24">
+                                                <circle cx="12" cy="8" r="4" stroke="rgba(255,255,255,0.6)" stroke-width="1.8"/>
+                                                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="rgba(255,255,255,0.6)" stroke-width="1.8" stroke-linecap="round"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+
+                                    <div class="auk-team-info">
+                                        <div class="auk-team-name"><field name="team_id"/></div>
+                                        <div class="auk-owner">
+                                            <t t-if="record.manager.raw_value">
+                                                <field name="manager"/>
+                                            </t>
+                                        </div>
+                                    </div>
+
+                                    <t t-if="squad_full">
+                                        <span class="auk-badge auk-badge-full">FULL</span>
+                                    </t>
+                                    <t t-elif="budget_low">
+                                        <span class="auk-badge auk-badge-low">LOW</span>
+                                    </t>
+                                </div>
+
+                                <!-- ── Divider ────────────────────────────── -->
+                                <div class="auk-divider"/>
+
+                                <!-- ── Progress bars ──────────────────────── -->
+                                <div class="auk-bars">
+                                    <div>
+                                        <div class="auk-bar-header">
+                                            <span class="auk-bar-label">Budget Used</span>
+                                            <span class="auk-bar-value"><field name="remaining_points"/> pts left</span>
+                                        </div>
+                                        <div class="auk-track">
+                                            <div class="auk-fill" t-attf-style="width:#{budget_pct}%;background:#{budget_color};"/>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="auk-bar-header">
+                                            <span class="auk-bar-label">Squad Filled</span>
+                                            <span class="auk-bar-value"><t t-esc="players_in"/> / <field name="max_players"/></span>
+                                        </div>
+                                        <div class="auk-track">
+                                            <div class="auk-fill" t-attf-style="width:#{squad_pct}%;background:#{squad_color};"/>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ── Stat chips ─────────────────────────── -->
+                                <div class="auk-chips">
+                                    <div class="auk-chip">
+                                        <div class="auk-chip-label">Base Bid</div>
+                                        <div class="auk-chip-value"><field name="base_point"/></div>
+                                    </div>
+                                    <div class="auk-chip">
+                                        <div class="auk-chip-label">Slots Left</div>
+                                        <div class="auk-chip-value"><field name="remaining_players_count"/></div>
+                                    </div>
+                                    <div class="auk-chip auk-chip-accent">
+                                        <div class="auk-chip-label">Max Call</div>
+                                        <div class="auk-chip-value"><field name="max_call"/></div>
+                                    </div>
+                                </div>
+
+                                <!-- ── Action button ──────────────────────── -->
+                                <div class="auk-footer">
+                                    <button name="%(auction_module.action_auction_view_team_details)d"
+                                            type="action" class="auk-btn-summary">
+                                        View Squad Summary
+                                    </button>
+                                </div>
+
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+        <!-- ── Tree View ──────────────────────────────────────────────── -->
         <record id="view_auction_auction_tree" model="ir.ui.view">
             <field name="name">auction.auction.tree</field>
             <field name="model">auction.auction</field>
@@ -24,7 +140,6 @@
                     <field name="remaining_players_count"/>
                     <field name="max_call" string="Next Max call"/>
                     <button name="%(auction_module.action_auction_view_team_details)d" type="action" string="View Summary" class="btn-primary"/>
-
                 </tree>
             </field>
         </record>
@@ -72,12 +187,10 @@
                             <page string="Signed Players">
                                 <field name="player_ids" nolabel="1">
                                     <tree create="0" decoration-success="icon_player == True"
-                                          decoration-muted="player_type == 'foreign'">
+                                          >
                                         <field name="player_id"   string="Player"     optional="show"/>
                                         <field name="role"        string="Role"       optional="show"/>
                                         <field name="tier_id"     string="Tier"       optional="show"/>
-                                        <field name="player_type" string="Type"       optional="show"
-                                               widget="badge"/>
                                         <field name="icon_player" string="Key Player" optional="show"
                                                widget="boolean_toggle"/>
                                         <field name="points"      string="Sold For"   optional="show"/>
@@ -118,7 +231,7 @@
         <record id="action_auction_auction" model="ir.actions.act_window">
             <field name="name">Auction List</field>
             <field name="res_model">auction.auction</field>
-            <field name="view_mode">tree,form</field>
+            <field name="view_mode">kanban,tree,form</field>
             <field name="search_view_id" ref="view_auction_auction_search"/>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">

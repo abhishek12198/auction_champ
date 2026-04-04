@@ -124,6 +124,9 @@
                                         <field name="player_display_template" widget="radio"
                                                options="{'horizontal': True}"/>
                                         <field name="sold_display_seconds"/>
+                                        <field name="preset_points"
+                                               placeholder="e.g. 100,200,500,1000,1500"
+                                               help="Comma-separated point values shown as quick-select buttons in the Sell Player modal"/>
                                     </group>
                                 </group>
 

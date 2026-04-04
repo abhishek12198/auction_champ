@@ -45,10 +45,16 @@ class AuctionTournament(models.Model):
         ('butterscotch', 'Butterscotch'),
         ('strawberry', 'Strawberry'),
         ('cherry', 'Cherry'),
+        ('pistah', 'Pistah'),
     ], string='Theme'
               '', default='vanilla', required=True)
     sold_display_seconds = fields.Integer(
         string='Sold Screen Duration (seconds)',
         default=5,
         help='How many seconds to show the SOLD celebration screen before advancing to the next player.'
+    )
+    preset_points = fields.Char(
+        string='Quick-Select Points',
+        help='Comma-separated point values shown as quick-select buttons in the Sell Player modal. '
+             'Example: 100,200,500,1000,1500'
     )

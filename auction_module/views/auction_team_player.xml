@@ -10,8 +10,6 @@
                     <field name="sl_no" filter_domain="[('sl_no','=',self)]" string="Sl No"/>
                     <field name="name" filter_domain="['|',('contact','ilike',self),('name','ilike',self)]" string="Name/Contact"/>
                     <field name="assigned_team_id" filter_domain="[('assigned_team_id','ilike',self)]" string="Team"/>
-                    <filter string="Domestic Players" name="domestic" domain="[('player_type', '=', 'domestic')]"/>
-                    <filter string="Foreign Players" name="inactive" domain="[('player_type', '=', 'foreign')]"/>
                     <filter string="Inactive Players" name="inactive" domain="[('active', '=', False)]"/>
 
                     <group expand="0" string="Group By">
@@ -27,7 +25,7 @@
             <field name="model">auction.team.player</field>
             <field name="arch" type="xml">
 
-                <kanban class="o_kanban_mobile" default_order="assigned_team_id, icon_player desc, sl_no">
+                <kanban default_order="assigned_team_id, icon_player desc, sl_no">
 
                     <!-- Fields -->
                     <field name="sl_no"/>
@@ -50,131 +48,161 @@
 
                     <templates>
                         <t t-name="kanban-box">
-                            <div class="oe_kanban_global_click player-kanban-card"
-                                 t-att-style="'border-top: 5px solid ' + (record.tier_color.raw_value || '#2252b5') + ';'">
+                            <div class="oe_kanban_global_click pk2-card"
+                                 t-att-style="'--pk2-tier: ' + (record.tier_color.raw_value || '#fdce33')">
 
-                                <!-- ── PHOTO SECTION ── -->
-                                <div class="pkc-photo">
-                                    <img t-att-src="kanban_image('auction.team.player', 'photo', record.id.raw_value)" alt="Player Photo"/>
-
-                                    <!-- Serial Number Stamp -->
-                                    <div class="pkc-sl-stamp">
-                                        <t t-esc="record.sl_no.raw_value"/>
+                                <!-- ── HEADER: photo + name + state ── -->
+                                <div class="pk2-header">
+                                    <div class="pk2-photo">
+                                        <t t-if="record.photo.raw_value">
+                                            <img t-att-src="kanban_image('auction.team.player', 'photo', record.id.raw_value)"
+                                                 alt="Player" onerror="this.parentElement.innerHTML='&lt;div class=pk2-photo-placeholder&gt;👤&lt;/div&gt;'"/>
+                                        </t>
+                                        <t t-else="">
+                                            <div class="pk2-photo-placeholder">👤</div>
+                                        </t>
                                     </div>
-
-                                    <!-- State Ribbon -->
-                                    <div t-attf-class="pkc-state-ribbon pkc-state-#{record.state.raw_value}">
-                                        <t t-esc="record.state.value"/>
+                                    <div class="pk2-title">
+                                        <div class="pk2-name" t-esc="record.name.raw_value"/>
+                                        <div class="pk2-sub">
+                                            <t t-if="record.sl_no.raw_value">
+                                                #<t t-esc="record.sl_no.raw_value"/>
+                                                <t t-if="record.tier_id.raw_value"> · <t t-esc="record.tier_id.value"/></t>
+                                            </t>
+                                        </div>
                                     </div>
+                                    <span t-attf-class="pk2-state-badge pk2-s-#{record.state.raw_value}"
+                                          t-esc="record.state.value"/>
                                 </div>
 
-                                <!-- ── CARD BODY ── -->
-                                <div class="pkc-body">
+                                <div class="pk2-divider"/>
 
-                                    <!-- Player Name -->
-                                    <div class="pkc-name" t-esc="record.name.raw_value"/>
+                                <!-- ── BADGE ROW ── -->
+                                <div class="pk2-badges">
+                                    <t t-if="record.tier_id.raw_value">
+                                        <span class="pk2-badge pk2-b-tier"
+                                              t-att-style="'background:' + (record.tier_color.raw_value || '#2252b5')"
+                                              t-esc="record.tier_id.value"/>
+                                    </t>
+                                    <t t-if="record.role.raw_value">
+                                        <span class="pk2-badge pk2-b-role" t-esc="record.role.raw_value"/>
+                                    </t>
+                                    <t t-if="record.icon_player.raw_value">
+                                        <span class="pk2-badge pk2-b-icon">⭐ Icon</span>
+                                    </t>
 
-                                    <!-- Badges: Role + Tier -->
-                                    <div class="pkc-badges">
-                                        <t t-if="record.role.raw_value">
-                                            <span class="pkc-role-badge" t-esc="record.role.raw_value"/>
-                                        </t>
-                                        <t t-if="record.tier_id.raw_value">
-                                            <span class="pkc-tier-badge"
-                                                  t-att-style="'background:' + (record.tier_color.raw_value || '#2252b5') + ';'"
-                                                  t-esc="record.tier_id.value"/>
-                                        </t>
-                                        <t t-if="record.icon_player.raw_value">
-                                            <span class="pkc-icon-badge">⭐ Icon</span>
-                                        </t>
-                                    </div>
+                                </div>
 
-                                    <div class="pkc-divider"/>
-
-                                    <!-- Info Rows -->
+                                <!-- ── INFO ROWS ── -->
+                                <div class="pk2-info">
                                     <t t-if="record.assigned_team_id.raw_value">
-                                        <div class="pkc-info-row">
-                                            <i class="fa fa-shield"/> <span t-esc="record.assigned_team_id.value"/>
-                                        </div>
-                                    </t>
-                                    <t t-if="record.contact.raw_value">
-                                        <div class="pkc-info-row">
-                                            <i class="fa fa-phone"/> <span t-esc="record.contact.raw_value"/>
-                                        </div>
-                                    </t>
-                                    <t t-if="record.batting_style.raw_value">
-                                        <div class="pkc-info-row">
-                                            <i class="fa fa-circle-o"/> <span t-esc="record.batting_style.raw_value"/>
-                                        </div>
-                                    </t>
-                                    <t t-if="record.bowling_style.raw_value">
-                                        <div class="pkc-info-row">
-                                            <i class="fa fa-dot-circle-o"/> <span t-esc="record.bowling_style.raw_value"/>
-                                        </div>
-                                    </t>
-                                    <t t-if="record.blood_group.raw_value">
-                                        <div class="pkc-info-row pkc-blood">
-                                            <i class="fa fa-tint"/> <span t-esc="record.blood_group.raw_value"/>
+                                        <div class="pk2-info-row pk2-team">
+                                            <i class="fa fa-shield"/>
+                                            <span t-esc="record.assigned_team_id.value"/>
+                                            <t t-if="record.amount_paid.raw_value">
+                                                <b style="margin-left:auto;color:#16a34a;">₹<t t-esc="record.amount_paid.raw_value"/></b>
+                                            </t>
                                         </div>
                                     </t>
                                     <t t-if="record.p_category.raw_value">
-                                        <div class="pkc-info-row">
-                                            <i class="fa fa-tag"/> <span t-esc="record.p_category.raw_value"/>
+                                        <div class="pk2-info-row">
+                                            <i class="fa fa-tag"/> <span t-esc="record.p_category.value"/>
                                         </div>
                                     </t>
+                                </div>
 
-                                    <!-- ── ACTION BAR ── -->
-                                    <div class="kanban-action-bar">
-
-                                        <!-- Sell Player -->
-                                        <button name="%(auction_module.action_auction_sell_player)d"
-                                                type="action"
-                                                class="kanban-icon-btn sell"
-                                                title="Sell Player to Team"
-                                                attrs="{'invisible': [('state', '!=', 'auction')]}">
-                                            <i class="fa fa-gavel"/>
-                                        </button>
-
-                                        <!-- Set Unsold -->
-                                        <button name="action_unsold"
-                                                type="object"
-                                                class="kanban-icon-btn unsold"
-                                                title="Mark Player as Unsold"
-                                                attrs="{'invisible': [('state', '!=', 'auction')]}"
-                                                confirm="This will set the player to Unsold and later you can bring back to Auction.">
-                                            <i class="fa fa-ban"/>
-                                        </button>
-
-                                        <!-- Set Icon Player -->
-                                        <button name="%(auction_module.action_auction_set_key_player)d"
-                                                type="action"
-                                                class="kanban-icon-btn icon"
-                                                title="Set as Icon Player"
-                                                attrs="{'invisible': ['|',('state', '!=', 'auction'),('icon_player', '=', True)]}">
-                                            <i class="fa fa-star"/>
-                                        </button>
-
-                                        <!-- Revoke Icon Player -->
-                                        <button name="action_revoke_key_player"
-                                                type="object"
-                                                class="kanban-icon-btn revoke"
-                                                title="Revoke Icon Player"
-                                                attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '!=', True)]}"
-                                                confirm="This will revoke the player from Icon Player list and bring back to Auction.">
-                                            <i class="fa fa-star-o"/>
-                                        </button>
-
-                                        <!-- Recall to Auction -->
-                                        <button name="action_recall_auction_sold"
-                                                type="object"
-                                                class="kanban-icon-btn recall"
-                                                title="Recall Player to Auction"
-                                                attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '=', True)]}"
-                                                confirm="This will recall the player to Auction.">
-                                            <i class="fa fa-refresh"/>
-                                        </button>
-
+                                <!-- ── STATS: Batting / Bowling ── -->
+                                <t t-if="record.batting_style.raw_value or record.bowling_style.raw_value">
+                                    <div class="pk2-stats">
+                                        <t t-if="record.batting_style.raw_value">
+                                            <div class="pk2-stat">
+                                                <div class="pk2-stat-label">Bat</div>
+                                                <div class="pk2-stat-value" t-esc="record.batting_style.raw_value"/>
+                                            </div>
+                                        </t>
+                                        <t t-if="record.bowling_style.raw_value">
+                                            <div class="pk2-stat">
+                                                <div class="pk2-stat-label">Bowl</div>
+                                                <div class="pk2-stat-value" t-esc="record.bowling_style.raw_value"/>
+                                            </div>
+                                        </t>
+                                        <t t-if="record.blood_group.raw_value">
+                                            <div class="pk2-stat">
+                                                <div class="pk2-stat-label">Blood</div>
+                                                <div class="pk2-stat-value" t-esc="record.blood_group.raw_value"/>
+                                            </div>
+                                        </t>
                                     </div>
+                                </t>
+
+                                <!-- ── ACTION BUTTONS ── -->
+                                <div class="pk2-actions">
+
+                                    <!-- Sell Player -->
+                                    <button name="%(auction_module.action_auction_sell_player)d"
+                                            type="action"
+                                            class="pk2-btn pk2-btn-sell"
+                                            title="Sell Player to Team"
+                                            attrs="{'invisible': [('state', '!=', 'auction')]}">
+                                        <i class="fa fa-gavel"/> Sell
+                                    </button>
+
+                                    <!-- Set Unsold -->
+                                    <button name="action_unsold"
+                                            type="object"
+                                            class="pk2-btn pk2-btn-unsold"
+                                            title="Mark as Unsold"
+                                            attrs="{'invisible': [('state', '!=', 'auction')]}"
+                                            confirm="This will set the player to Unsold. You can bring them back to Auction later.">
+                                        <i class="fa fa-ban"/> Unsold
+                                    </button>
+
+                                    <!-- Set Icon Player -->
+                                    <button name="%(auction_module.action_auction_set_key_player)d"
+                                            type="action"
+                                            class="pk2-btn pk2-btn-icon"
+                                            title="Set as Icon Player"
+                                            attrs="{'invisible': ['|',('state', '!=', 'auction'),('icon_player', '=', True)]}">
+                                        <i class="fa fa-star"/> Icon
+                                    </button>
+
+                                    <!-- Revoke Icon Player -->
+                                    <button name="action_revoke_key_player"
+                                            type="object"
+                                            class="pk2-btn pk2-btn-revoke"
+                                            title="Revoke Icon Status"
+                                            attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '!=', True)]}"
+                                            confirm="This will revoke Icon Player status and bring the player back to Auction.">
+                                        <i class="fa fa-star-o"/> Revoke
+                                    </button>
+
+                                    <!-- Recall to Auction -->
+                                    <button name="action_recall_auction_sold"
+                                            type="object"
+                                            class="pk2-btn pk2-btn-recall"
+                                            title="Recall to Auction"
+                                            attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '=', True)]}"
+                                            confirm="This will recall the player back to Auction.">
+                                        <i class="fa fa-refresh"/> Recall
+                                    </button>
+
+                                    <!-- Bring to Auction (from unsold) -->
+                                    <button name="action_auction"
+                                            type="object"
+                                            class="pk2-btn pk2-btn-recall"
+                                            title="Bring to Auction"
+                                            attrs="{'invisible': [('state', '!=', 'unsold')]}">
+                                        <i class="fa fa-arrow-up"/> Auction
+                                    </button>
+
+                                    <!-- Print Player Card -->
+                                    <button name="print_player_cards"
+                                            type="object"
+                                            class="pk2-btn pk2-btn-print"
+                                            title="Print Player Card">
+                                        <i class="fa fa-print"/> Print
+                                    </button>
+
                                 </div>
 
                             </div>
@@ -242,6 +270,119 @@
                     <button name="action_revoke_key_player" string="Revoke Icon Player" attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '!=', True)]}"  class="btn btn-secondary oe_kanban_button" type="object"  confirm="This will revoke the player from the icon player list and bring to auction. Click on Ok to continue. Otherwise click on Cancel"/>
                     <button name="action_recall_auction_sold" string="Recall to Auction" attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '=', True)]}"  class="btn btn-secondary oe_kanban_button" type="object"  confirm="This will recall the sold player and bring to auction. Click on Ok to continue. Otherwise click on Cancel"/>
                 </tree>
+            </field>
+        </record>
+
+        <!-- ══ JERSEY KANBAN VIEW ══ -->
+        <record id="view_auction_team_player_jersy_kanban" model="ir.ui.view">
+            <field name="name">auction.team.player.jersy.kanban</field>
+            <field name="model">auction.team.player</field>
+            <field name="arch" type="xml">
+                <kanban default_order="assigned_team_id, sl_no">
+
+                    <field name="id"/>
+                    <field name="name"/>
+                    <field name="photo"/>
+                    <field name="state"/>
+                    <field name="jersy_name"/>
+                    <field name="jersy_number"/>
+                    <field name="jersy_size"/>
+                    <field name="assigned_team_id"/>
+                    <field name="role"/>
+                    <field name="tier_id"/>
+                    <field name="tier_color"/>
+                    <field name="icon_player"/>
+                    <field name="sl_no"/>
+
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div class="oe_kanban_global_click pjk-card"
+                                 t-att-style="'--pjk-color: ' + (record.tier_color.raw_value || '#1a2744')">
+
+                                <!-- ── JERSEY GRAPHIC AREA ── -->
+                                <div class="pjk-jersey-area">
+
+                                    <!-- State ribbon top-right -->
+                                    <span t-attf-class="pjk-state-ribbon pjk-sr-#{record.state.raw_value}"
+                                          t-esc="record.state.value"/>
+
+                                    <!-- Icon star top-left -->
+                                    <t t-if="record.icon_player.raw_value">
+                                        <span class="pjk-icon-star">⭐</span>
+                                    </t>
+
+                                    <!-- Jersey Number (large) -->
+                                    <t t-if="record.jersy_number.raw_value">
+                                        <div class="pjk-number" t-esc="record.jersy_number.raw_value"/>
+                                    </t>
+                                    <t t-else="">
+                                        <div class="pjk-number-empty">#--</div>
+                                    </t>
+
+                                    <!-- Name on shirt -->
+                                    <t t-if="record.jersy_name.raw_value">
+                                        <div class="pjk-shirt-name" t-esc="record.jersy_name.raw_value"/>
+                                    </t>
+
+                                </div>
+
+                                <!-- ── PLAYER INFO BODY ── -->
+                                <div class="pjk-body">
+
+                                    <!-- Avatar + Player Name + Team -->
+                                    <div class="pjk-player-row">
+                                        <div class="pjk-avatar">
+                                            <t t-if="record.photo.raw_value">
+                                                <img t-att-src="kanban_image('auction.team.player', 'photo', record.id.raw_value)"
+                                                     alt="Player" onerror="this.parentElement.innerHTML='&lt;div class=pjk-avatar-ph&gt;👤&lt;/div&gt;'"/>
+                                            </t>
+                                            <t t-else="">
+                                                <div class="pjk-avatar-ph">👤</div>
+                                            </t>
+                                        </div>
+                                        <div style="min-width:0;flex:1;">
+                                            <div class="pjk-player-name" t-esc="record.name.raw_value"/>
+                                            <t t-if="record.assigned_team_id.raw_value">
+                                                <div class="pjk-team-name">
+                                                    <i class="fa fa-shield"/>
+                                                    <t t-esc="record.assigned_team_id.value"/>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </div>
+
+                                    <div class="pjk-divider"/>
+
+                                    <!-- Chips: Size · Role · Tier -->
+                                    <div class="pjk-chips">
+                                        <t t-if="record.jersy_size.raw_value">
+                                            <div class="pjk-chip">
+                                                <span class="pjk-chip-label">Size</span>
+                                                <span class="pjk-chip-value" t-esc="record.jersy_size.raw_value"/>
+                                            </div>
+                                        </t>
+                                        <t t-if="record.role.raw_value">
+                                            <div class="pjk-chip">
+                                                <span class="pjk-chip-label">Role</span>
+                                                <span class="pjk-chip-value" t-esc="record.role.raw_value"/>
+                                            </div>
+                                        </t>
+                                        <t t-if="record.tier_id.raw_value">
+                                            <div class="pjk-chip"
+                                                 t-att-style="'border-color: ' + (record.tier_color.raw_value || '#e8edf5')">
+                                                <span class="pjk-chip-label">Tier</span>
+                                                <span class="pjk-chip-value"
+                                                      t-att-style="'color: ' + (record.tier_color.raw_value || '#1a2744')"
+                                                      t-esc="record.tier_id.value"/>
+                                            </div>
+                                        </t>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
             </field>
         </record>
 
@@ -313,7 +454,6 @@
                         <!-- Row 1 – Classification & Ownership ─────── -->
                         <group>
                             <group string="Player Category">
-                                <field name="player_type" widget="radio"/>
                                 <field name="icon_player" string="Key / Icon Player"
                                        widget="boolean_toggle" invisible="1"/>
                             </group>
@@ -623,9 +763,9 @@
 
         <!-- -->
         <record id="action_auction_team_player_jersy_kanban" model="ir.actions.act_window.view">
-            <field eval="2" name="sequence"/>
+            <field eval="1" name="sequence"/>
             <field name="view_mode">kanban</field>
-            <field name="view_id" ref="view_auction_team_player_kanban"/>
+            <field name="view_id" ref="view_auction_team_player_jersy_kanban"/>
             <field name="act_window_id" ref="action_auction_team_player_jersy"/>
         </record>
         <record id="action_auction_team_player_jersy_tree" model="ir.actions.act_window.view">

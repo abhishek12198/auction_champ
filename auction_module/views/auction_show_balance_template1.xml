@@ -626,7 +626,22 @@
               })
               .catch(function() { /* silent fail */ });
           }
-          setInterval(refreshBalance, 5000);
+
+          /* Pause polling when tab is hidden, resume when visible */
+          var _balanceTimer = null;
+          function startBalancePolling() {
+            if (_balanceTimer) return;
+            _balanceTimer = setInterval(refreshBalance, 5000);
+          }
+          function stopBalancePolling() {
+            if (_balanceTimer) { clearInterval(_balanceTimer); _balanceTimer = null; }
+          }
+          document.addEventListener('visibilitychange', function() {
+            if (document.hidden) { stopBalancePolling(); }
+            else { refreshBalance(); startBalancePolling(); }
+          });
+          window.addEventListener('beforeunload', stopBalancePolling);
+          startBalancePolling();
         })();
       </script>
 

@@ -2,7 +2,6 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_auction_tournament_base_user,auction.tournament,auction_module.model_auction_tournament,base.group_user,1,1,1,1
 access_auction_tournament_point_split_player_base_user,auction.tournament.point.split,auction_module.model_auction_tournament_point_split,base.group_user,1,1,1,1
 access_auction_team_base_user,auction.team,auction_module.model_auction_team,base.group_user,1,1,1,1
-access_auction_team_player_type_base_user,auction.team.player.type,auction_module.model_auction_team_player_type,base.group_user,1,1,1,1
 access_auction_team_player_base_user,auction.team.player,auction_module.model_auction_team_player,base.group_user,1,1,1,1
 access_auction_auction_base_user,auction.auction,auction_module.model_auction_auction,base.group_user,1,1,1,1
 access_auction_auction_bid_slab_base_user,auction_auction_bid_slab,auction_module.model_auction_auction_bid_slab,base.group_user,1,1,1,1

@@ -6,7 +6,6 @@ from . import auction_team
 from . import auction_history
 from . import res_users
 from . import auction_auction
-from . import auction_team_player_type
 from . import auction_player_tier
 from . import auction_team_player
 

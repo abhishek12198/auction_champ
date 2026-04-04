@@ -1,0 +1,772 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     Auction Team Players – Pistah Edition
+     "Operative Roster" UI
+     Template ID : auction_team_players_template_pistah
+     Sub-template: tp_player_card_pistah
+     Route       : /auction/get/players/team/<id>  (when theme == 'pistah')
+     ═══════════════════════════════════════════════════════════════════ -->
+
+<template id="auction_team_players_template_pistah" name="Team Players – Pistah">
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+            crossorigin="anonymous"/>
+      <link rel="preconnect" href="https://fonts.googleapis.com"/>
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
+      <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Exo+2:wght@300;400;500;600;700;800&amp;display=swap"
+            rel="stylesheet"/>
+      <title>Operative Roster – Pistah</title>
+
+      <style>
+        /* ── Reset ─────────────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* ── Design tokens ──────────────────────────────────────────── */
+        :root {
+          --p:          #6BBF4E;
+          --p-dk:       #2E7D32;
+          --p-br:       #A8E063;
+          --p-glow:     rgba(107,191,78,0.28);
+          --p-glow-s:   rgba(107,191,78,0.55);
+          --p-border:   rgba(107,191,78,0.38);
+          --bg:         #060e08;
+          --bg-s:       #0b1a0e;
+          --bg-p:       #0d1f11;
+          --bg-c:       #111f14;
+          --text:       #e8f5e9;
+          --text-dim:   rgba(232,245,233,0.52);
+          --divider:    rgba(107,191,78,0.18);
+          --gold:       #FFD700;
+          --gold-bg:    rgba(255,215,0,0.12);
+          --gold-brd:   rgba(255,215,0,0.35);
+        }
+
+        html, body {
+          background: var(--bg);
+          color: var(--text);
+          font-family: 'Exo 2', sans-serif;
+          min-height: 100vh;
+        }
+
+        /* ── Ambient glow layer ─────────────────────────────────────── */
+        body::before {
+          content: '';
+          position: fixed; inset: 0; z-index: 0; pointer-events: none;
+          background:
+            radial-gradient(ellipse 70% 55% at 10% 40%, rgba(107,191,78,.06) 0%, transparent 65%),
+            radial-gradient(ellipse 50% 70% at 90% 15%, rgba(46,125,50,.07) 0%, transparent 55%),
+            linear-gradient(180deg, #060e08 0%, #081208 100%);
+        }
+        header, section, main, div.or-screenshot { position: relative; z-index: 1; }
+
+        /* ────────────────────────────────────────────────────────────── */
+        /* HEADER                                                         */
+        /* ────────────────────────────────────────────────────────────── */
+        .or-header {
+          position: relative; z-index: 20;
+          display: flex; align-items: center; justify-content: space-between;
+          flex-wrap: wrap; gap: 10px;
+          padding: 0 clamp(16px, 5vw, 52px);
+          min-height: clamp(60px, 9vw, 78px);
+          background: linear-gradient(90deg, #030a04 0%, #081508 40%, #0a1c0c 70%, #030a04 100%);
+          border-bottom: 1.5px solid var(--p-border);
+          box-shadow: 0 2px 24px var(--p-glow), inset 0 -1px 0 rgba(107,191,78,.10);
+        }
+        /* Top 3-px accent stripe */
+        .or-header::before {
+          content: '';
+          position: absolute; top: 0; left: 0; right: 0; height: 3px;
+          background: linear-gradient(90deg,
+            transparent 0%, var(--p-dk) 15%, var(--p) 40%,
+            var(--p-br) 50%, var(--p) 60%, var(--p-dk) 85%, transparent 100%);
+          box-shadow: 0 0 10px rgba(107,191,78,.6);
+        }
+        .or-header-logo img {
+          height: clamp(30px, 5.5vw, 50px);
+          filter: drop-shadow(0 0 8px var(--p-glow-s));
+        }
+        .or-header-actions {
+          display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+        }
+
+        /* Back / Snapshot buttons */
+        .or-cmd-btn {
+          display: inline-flex; align-items: center; gap: 8px;
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.55rem, 1.3vw, 0.68rem);
+          font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+          text-decoration: none; white-space: nowrap;
+          border-radius: 5px; padding: clamp(6px,1.2vw,9px) clamp(12px,2.5vw,18px);
+          transition: all 0.2s; cursor: pointer;
+        }
+        .or-cmd-btn-ghost {
+          color: var(--p-br);
+          background: rgba(107,191,78,.08);
+          border: 1.5px solid var(--p-border);
+        }
+        .or-cmd-btn-ghost:hover {
+          background: rgba(107,191,78,.20);
+          box-shadow: 0 0 12px var(--p-glow-s);
+          color: #fff; text-decoration: none;
+        }
+        .or-cmd-btn-solid {
+          color: #060e08;
+          background: var(--p);
+          border: 1.5px solid var(--p);
+          box-shadow: 0 2px 12px var(--p-glow);
+        }
+        .or-cmd-btn-solid:hover {
+          background: var(--p-br);
+          border-color: var(--p-br);
+          box-shadow: 0 4px 20px var(--p-glow-s);
+          transform: translateY(-1px);
+          color: #060e08;
+        }
+        .or-cmd-btn-solid:active { transform: translateY(0); }
+
+        /* ────────────────────────────────────────────────────────────── */
+        /* MISSION BRIEFING BANNER (team hero)                            */
+        /* ────────────────────────────────────────────────────────────── */
+        .or-briefing {
+          background: var(--bg-s);
+          border-bottom: 1px solid var(--divider);
+          padding: clamp(18px, 3vw, 30px) clamp(16px, 5vw, 52px);
+        }
+        .or-briefing-inner {
+          display: flex; align-items: flex-start; gap: clamp(16px, 3vw, 32px);
+          flex-wrap: wrap;
+        }
+
+        /* Team logo with corner-bracket frame */
+        .or-logo-frame {
+          position: relative; flex-shrink: 0;
+          width: clamp(72px, 10vw, 96px);
+          height: clamp(72px, 10vw, 96px);
+        }
+        .or-logo-frame img {
+          width: 100%; height: 100%;
+          object-fit: cover; border-radius: 8px;
+          border: 1.5px solid var(--p-border);
+          box-shadow: 0 0 18px var(--p-glow);
+          display: block;
+        }
+        /* Corner brackets — top-left */
+        .or-logo-frame::before {
+          content: '';
+          position: absolute; top: -5px; left: -5px;
+          width: 16px; height: 16px;
+          border-top: 2px solid var(--p);
+          border-left: 2px solid var(--p);
+        }
+        /* Corner brackets — bottom-right */
+        .or-logo-frame::after {
+          content: '';
+          position: absolute; bottom: -5px; right: -5px;
+          width: 16px; height: 16px;
+          border-bottom: 2px solid var(--p);
+          border-right: 2px solid var(--p);
+        }
+
+        /* Data fields beside logo */
+        .or-briefing-data { flex: 1; min-width: clamp(180px, 30vw, 220px); }
+        .or-briefing-label {
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.5rem, 1.1vw, 0.6rem);
+          font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+          color: var(--p); margin-bottom: 2px;
+        }
+        .or-briefing-team-name {
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(1.1rem, 3.5vw, 2rem);
+          font-weight: 900; letter-spacing: 2px; text-transform: uppercase;
+          color: var(--p-br);
+          text-shadow: 0 0 22px var(--p-glow-s);
+          line-height: 1.1; margin-bottom: 10px;
+        }
+
+        .or-briefing-fields {
+          display: flex; flex-wrap: wrap; gap: 10px 20px;
+          margin-top: 6px;
+        }
+        .or-field { display: flex; flex-direction: column; gap: 1px; }
+        .or-field-key {
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.48rem, 1vw, 0.56rem);
+          font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+          color: var(--p); opacity: 0.8;
+        }
+        .or-field-val {
+          font-size: clamp(0.72rem, 1.5vw, 0.84rem);
+          font-weight: 600; color: var(--text);
+        }
+
+        /* Operative count pill */
+        .or-count-pill {
+          display: inline-flex; align-items: center; gap: 7px;
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.6rem, 1.4vw, 0.72rem);
+          font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+          color: var(--p-br);
+          background: rgba(107,191,78,.10);
+          border: 1.5px solid var(--p-border);
+          border-radius: 6px; padding: 6px 14px;
+          box-shadow: 0 0 10px var(--p-glow);
+          white-space: nowrap; align-self: flex-start; margin-top: 4px;
+        }
+        .or-count-dot {
+          width: 7px; height: 7px; border-radius: 50%;
+          background: var(--p);
+          box-shadow: 0 0 6px var(--p-glow-s);
+          animation: blink 2s ease-in-out infinite;
+          flex-shrink: 0;
+        }
+        @keyframes blink {
+          0%,100% { opacity:1; box-shadow: 0 0 6px var(--p-glow-s); }
+          50%      { opacity:.3; box-shadow: 0 0 12px var(--p-glow-s); }
+        }
+
+        /* ────────────────────────────────────────────────────────────── */
+        /* SECTION DIVIDERS                                               */
+        /* ────────────────────────────────────────────────────────────── */
+        .or-section-hdr {
+          display: flex; align-items: center; gap: 12px;
+          margin-bottom: clamp(16px, 2.5vw, 22px);
+        }
+        .or-section-hdr-line {
+          flex: 1; height: 1px;
+          background: linear-gradient(90deg, var(--p-border), transparent);
+        }
+        .or-section-hdr-label {
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.6rem, 1.5vw, 0.75rem);
+          font-weight: 900; letter-spacing: 2.5px; text-transform: uppercase;
+          color: var(--p-br);
+          text-shadow: 0 0 10px var(--p-glow-s);
+          padding: 4px 14px;
+          background: var(--bg-p);
+          border: 1px solid var(--p-border);
+          border-radius: 4px;
+          white-space: nowrap;
+        }
+
+        /* ────────────────────────────────────────────────────────────── */
+        /* OPERATIVE (PLAYER) CARD                                        */
+        /* ────────────────────────────────────────────────────────────── */
+        .or-card {
+          background: var(--bg-s);
+          border: 1.5px solid var(--p-border);
+          border-radius: 10px;
+          overflow: hidden;
+          display: flex; flex-direction: column;
+          height: 100%;
+          position: relative;
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .or-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 10px 36px var(--p-glow), 0 0 0 1px var(--p-border);
+        }
+        /* Subtle diagonal gradient overlay */
+        .or-card::after {
+          content: '';
+          position: absolute; inset: 0; pointer-events: none;
+          background: linear-gradient(135deg, rgba(107,191,78,.04) 0%, transparent 50%);
+        }
+
+        /* Top scan-stripe */
+        .or-card-stripe {
+          height: 3px; flex-shrink: 0;
+          background: linear-gradient(90deg,
+            transparent 0%, var(--p-dk) 20%, var(--p) 50%, var(--p-dk) 80%, transparent 100%);
+          box-shadow: 0 0 7px rgba(107,191,78,.5);
+        }
+
+        /* ── Photo area ─────────────────────────────────────────────── */
+        .or-card-photo-wrap {
+          position: relative;
+          background: var(--bg-p);
+          height: clamp(160px, 22vw, 210px);
+          overflow: hidden; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .or-card-photo {
+          width: 100%; height: 100%;
+          object-fit: contain; object-position: center top; display: block;
+        }
+        .or-card-photo-placeholder {
+          font-size: clamp(3rem, 6vw, 4.5rem);
+          color: var(--p); opacity: 0.25;
+        }
+        /* Gradient fade at bottom of photo */
+        .or-card-photo-wrap::after {
+          content: '';
+          position: absolute; bottom: 0; left: 0; right: 0; height: 45px;
+          background: linear-gradient(transparent, var(--bg-s));
+          pointer-events: none;
+        }
+        /* Corner brackets on photo */
+        .or-card-photo-wrap::before {
+          content: '';
+          position: absolute; top: 8px; left: 8px; z-index: 2;
+          width: 18px; height: 18px;
+          border-top: 2px solid var(--p);
+          border-left: 2px solid var(--p);
+          pointer-events: none;
+        }
+        .or-photo-br-corner {
+          position: absolute; bottom: 8px; right: 8px; z-index: 2;
+          width: 18px; height: 18px;
+          border-bottom: 2px solid var(--p);
+          border-right: 2px solid var(--p);
+          pointer-events: none;
+        }
+
+        /* Tier badge */
+        .or-tier-badge {
+          position: absolute; top: 9px; right: 9px; z-index: 3;
+          padding: 3px 9px; border-radius: 4px;
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.5rem, 1.1vw, 0.6rem);
+          font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+          box-shadow: 0 2px 8px rgba(0,0,0,.4);
+        }
+        /* Icon crown (top-left) */
+        .or-icon-crown {
+          position: absolute; top: 9px; left: 9px; z-index: 3;
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.48rem, 1vw, 0.58rem);
+          font-weight: 900; letter-spacing: 1px;
+          color: var(--gold);
+          background: rgba(0,0,0,.65);
+          border: 1px solid var(--gold-brd);
+          border-radius: 4px; padding: 3px 7px;
+        }
+
+        /* ── Card body ──────────────────────────────────────────────── */
+        .or-card-body {
+          padding: clamp(10px, 1.8vw, 14px) clamp(12px, 2vw, 16px);
+          flex: 1; display: flex; flex-direction: column; gap: 8px;
+        }
+        .or-player-name {
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.72rem, 1.8vw, 0.9rem);
+          font-weight: 700; letter-spacing: 0.5px; color: var(--text);
+          line-height: 1.25;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        /* Tags */
+        .or-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+        .or-tag {
+          font-family: 'Exo 2', sans-serif;
+          font-size: clamp(0.58rem, 1.2vw, 0.68rem);
+          font-weight: 600; letter-spacing: 0.3px;
+          padding: 2px 8px; border-radius: 3px;
+          background: rgba(107,191,78,.09);
+          color: var(--p-br);
+          border: 1px solid var(--p-border);
+          white-space: nowrap;
+        }
+        .or-tag-orange {
+          background: rgba(255,152,0,.10);
+          color: #FFB74D;
+          border-color: rgba(255,152,0,.28);
+        }
+
+        /* Stats grid */
+        .or-stats { display: flex; gap: 6px; flex-wrap: wrap; }
+        .or-stat {
+          flex: 1 0 clamp(60px, 9vw, 80px);
+          background: var(--bg-p);
+          border: 1px solid var(--divider);
+          border-radius: 5px; padding: 5px 7px; text-align: center;
+        }
+        .or-stat-label {
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.44rem, 0.9vw, 0.52rem);
+          font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+          color: var(--p); margin-bottom: 2px;
+        }
+        .or-stat-value {
+          font-size: clamp(0.62rem, 1.3vw, 0.74rem);
+          font-weight: 600; color: var(--text);
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        /* ── Card footer ────────────────────────────────────────────── */
+        .or-card-foot {
+          background: var(--bg-p);
+          border-top: 1px solid var(--divider);
+          padding: clamp(8px, 1.5vw, 11px) clamp(12px, 2vw, 16px);
+          display: flex; align-items: center;
+          justify-content: space-between; gap: 8px;
+        }
+        /* Points chip */
+        .or-pts-chip {
+          display: inline-flex; align-items: baseline; gap: 4px;
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.68rem, 1.5vw, 0.82rem);
+          font-weight: 900; color: var(--p-br);
+          text-shadow: 0 0 8px var(--p-glow-s);
+          background: rgba(107,191,78,.09);
+          border: 1px solid var(--p-border);
+          border-radius: 4px; padding: 4px 10px;
+        }
+        .or-pts-chip-u {
+          font-family: 'Exo 2', sans-serif;
+          font-size: 0.62em; font-weight: 400; color: var(--text-dim);
+        }
+        /* Icon label */
+        .or-icon-lbl {
+          display: inline-flex; align-items: center; gap: 5px;
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.56rem, 1.2vw, 0.66rem);
+          font-weight: 700; letter-spacing: 1px;
+          color: var(--gold);
+          background: var(--gold-bg);
+          border: 1.5px solid var(--gold-brd);
+          border-radius: 4px; padding: 4px 10px;
+        }
+        /* Contact link */
+        .or-contact {
+          display: inline-flex; align-items: center; gap: 5px;
+          font-size: clamp(0.66rem, 1.3vw, 0.76rem);
+          font-weight: 600; color: var(--text-dim);
+          text-decoration: none; transition: color 0.18s;
+        }
+        .or-contact:hover { color: var(--p-br); }
+
+        /* ────────────────────────────────────────────────────────────── */
+        /* EMPTY STATE                                                     */
+        /* ────────────────────────────────────────────────────────────── */
+        .or-empty {
+          text-align: center;
+          padding: clamp(50px, 10vw, 90px) 20px;
+        }
+        .or-empty-icon {
+          font-size: clamp(3rem, 7vw, 5rem);
+          color: var(--p); opacity: 0.22; margin-bottom: 18px;
+        }
+        .or-empty h4 {
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.8rem, 2vw, 1rem);
+          font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+          color: var(--text-dim); margin-bottom: 8px;
+        }
+        .or-empty p {
+          font-size: clamp(0.76rem, 1.5vw, 0.88rem);
+          color: var(--text-dim);
+        }
+
+        /* ────────────────────────────────────────────────────────────── */
+        /* SNAPSHOT OVERRIDES                                              */
+        /* ────────────────────────────────────────────────────────────── */
+        #or_screenshot { max-width: 1280px; margin: 0 auto; }
+        #or_screenshot .or-card-photo-wrap { height: 190px; }
+
+        /* ────────────────────────────────────────────────────────────── */
+        /* RESPONSIVE                                                      */
+        /* ────────────────────────────────────────────────────────────── */
+        @media (max-width: 576px) {
+          .or-header-actions { padding: 8px 0; }
+          .or-briefing-team-name { font-size: 1.2rem; }
+          .or-logo-frame { width: 64px; height: 64px; }
+        }
+        @media (max-width: 400px) {
+          .or-cmd-btn { padding: 6px 10px; font-size: 0.54rem; }
+        }
+      </style>
+    </head>
+
+    <body>
+
+      <!-- ══════════════════════════════════════════════════════════════
+           HEADER  —  Logo · Back to command center · Squad snapshot
+           ══════════════════════════════════════════════════════════════ -->
+      <header class="or-header">
+        <div class="or-header-logo">
+          <img src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
+        </div>
+        <div class="or-header-actions">
+          <!-- Back to Bid Command -->
+          <a href="/auction/show/team/balance" class="or-cmd-btn or-cmd-btn-ghost">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            COMMAND CENTER
+          </a>
+          <!-- Squad snapshot -->
+          <t t-if="players">
+            <button type="button"
+                    t-att-data-filename="'%s_roster.png' % (team.name,)"
+                    class="or-cmd-btn or-cmd-btn-solid o_take_screenshot">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M23 19C23 19.5304 22.7893 20.0391 22.4142 20.4142C22.0391 20.7893 21.5304 21 21 21H3C2.46957 21 1.96086 20.7893 1.58579 20.4142C1.21071 20.0391 1 19.5304 1 19V8C1 7.46957 1.21071 6.96086 1.58579 6.58579C1.96086 6.21071 2.46957 6 3 6H7L9 3H15L17 6H21C21.5304 6 22.0391 6.21071 22.4142 6.58579C22.7893 6.96086 23 7.46957 23 8V19Z"
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="12" cy="13" r="4" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              CAPTURE ROSTER
+            </button>
+          </t>
+        </div>
+      </header>
+
+      <!-- Wrapper captured by screenshot -->
+      <div id="or_screenshot" style="background:var(--bg);">
+
+        <!-- ════════════════════════════════════════════════════════════
+             MISSION BRIEFING BANNER  —  Team hero
+             ════════════════════════════════════════════════════════════ -->
+        <section class="or-briefing">
+          <div class="or-briefing-inner">
+
+            <!-- Logo with corner-bracket frame -->
+            <div class="or-logo-frame">
+              <img t-att-src="image_data_uri(team.logo)" alt="Team Logo"/>
+            </div>
+
+            <!-- Data fields -->
+            <div class="or-briefing-data">
+              <div class="or-briefing-label">Operative Unit</div>
+              <div class="or-briefing-team-name"><t t-esc="team.name"/></div>
+              <div class="or-briefing-fields">
+                <div class="or-field">
+                  <span class="or-field-key">Commander</span>
+                  <span class="or-field-val"><t t-esc="team.manager or '—'"/></span>
+                </div>
+                <t t-if="tournament">
+                  <div class="or-field">
+                    <span class="or-field-key">Tournament</span>
+                    <span class="or-field-val"><t t-esc="tournament.name"/></span>
+                  </div>
+                </t>
+              </div>
+            </div>
+
+            <!-- Operative count -->
+            <div class="or-count-pill">
+              <span class="or-count-dot"></span>
+              OPERATIVES:&#160;
+              <t t-esc="len(players)"/>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════════════
+             SQUAD GRID
+             ════════════════════════════════════════════════════════════ -->
+        <section style="padding: clamp(20px,3.5vw,40px) clamp(16px,5vw,52px); padding-bottom: clamp(40px,6vw,60px);">
+
+          <t t-if="players">
+
+            <!-- ── Icon Operatives ──────────────────────────────────── -->
+            <t t-set="icon_list" t-value="[p for p in players if p.get('is_icon')]"/>
+            <t t-if="icon_list">
+              <div style="margin-bottom: clamp(28px,4vw,44px);">
+                <div class="or-section-hdr">
+                  <div class="or-section-hdr-label">&#9733; Icon Operatives</div>
+                  <div class="or-section-hdr-line"></div>
+                </div>
+                <div class="row g-3">
+                  <t t-foreach="icon_list" t-as="player">
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                      <t t-call="auction_module.tp_player_card_pistah"/>
+                    </div>
+                  </t>
+                </div>
+              </div>
+            </t>
+
+            <!-- ── Field Roster ─────────────────────────────────────── -->
+            <t t-set="auc_list" t-value="[p for p in players if not p.get('is_icon')]"/>
+            <t t-if="auc_list">
+              <div>
+                <div class="or-section-hdr">
+                  <div class="or-section-hdr-label">&#9670; Field Roster</div>
+                  <div class="or-section-hdr-line"></div>
+                </div>
+                <div class="row g-3">
+                  <t t-foreach="auc_list" t-as="player">
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                      <t t-call="auction_module.tp_player_card_pistah"/>
+                    </div>
+                  </t>
+                </div>
+              </div>
+            </t>
+
+          </t>
+
+          <!-- Empty state -->
+          <t t-else="">
+            <div class="or-empty">
+              <div class="or-empty-icon">&#9670;</div>
+              <h4>No Operatives Deployed</h4>
+              <p>This unit has no players assigned yet.<br/>
+                 Check back once the auction operation begins.</p>
+            </div>
+          </t>
+
+        </section>
+
+      </div><!-- end #or_screenshot -->
+
+      <!-- ══════════════════════════════════════════════════════════════
+           SCRIPTS
+           ══════════════════════════════════════════════════════════════ -->
+      <script src="/auction_module/static/src/lib/html2canvas.min.js"></script>
+      <script>
+        document.addEventListener('click', function (ev) {
+          var btn = ev.target.closest('.o_take_screenshot');
+          if (!btn) return;
+          ev.preventDefault(); ev.stopPropagation();
+
+          var container = document.getElementById('or_screenshot');
+          if (!container) { console.error('or_screenshot not found'); return; }
+
+          var fileName = btn.dataset.filename || 'roster.png';
+          btn.style.visibility = 'hidden';
+
+          html2canvas(container, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#060e08',
+            scrollX: 0, scrollY: 0,
+            windowWidth: 1280,
+            windowHeight: container.scrollHeight,
+          }).then(function (canvas) {
+            btn.style.visibility = 'visible';
+            var link = document.createElement('a');
+            link.href = canvas.toDataURL('image/png');
+            link.download = fileName;
+            link.click();
+          }).catch(function (err) {
+            btn.style.visibility = 'visible';
+            console.error('Screenshot failed', err);
+          });
+        });
+      </script>
+
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+              integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+              crossorigin="anonymous"></script>
+    </body>
+  </html>
+</template>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     PISTAH PLAYER CARD SUB-TEMPLATE
+     ═══════════════════════════════════════════════════════════════════ -->
+<template id="tp_player_card_pistah" name="Pistah Operative Card">
+  <div class="or-card">
+
+    <!-- Top scan-stripe -->
+    <div class="or-card-stripe"></div>
+
+    <!-- Photo strip -->
+    <div class="or-card-photo-wrap">
+      <t t-if="player.get('photo')">
+        <img t-att-src="image_data_uri(player.get('photo'))"
+             alt="Player photo" class="or-card-photo"/>
+      </t>
+      <t t-else="">
+        <div class="or-card-photo-placeholder">&#128100;</div>
+      </t>
+      <!-- bottom-right corner bracket (top-left handled by ::before) -->
+      <div class="or-photo-br-corner"></div>
+
+      <!-- Tier badge (top-right) -->
+      <t t-if="player.get('tier_name')">
+        <span class="or-tier-badge"
+              t-attf-style="background:#{player.get('tier_color','#6BBF4E')}22; color:#{player.get('tier_color','#6BBF4E')}; border:1.5px solid #{player.get('tier_color','#6BBF4E')}55;">
+          <t t-esc="player.get('tier_name')"/>
+        </span>
+      </t>
+
+      <!-- Icon crown (top-left) -->
+      <t t-if="player.get('is_icon')">
+        <span class="or-icon-crown">&#9733; ICON</span>
+      </t>
+    </div>
+
+    <!-- Card body -->
+    <div class="or-card-body">
+
+      <!-- Operative name -->
+      <p class="or-player-name"><t t-esc="player.get('name', '—')"/></p>
+
+      <!-- Role / type / category tags -->
+      <div class="or-tags">
+        <t t-if="player.get('role')">
+          <span class="or-tag"><t t-esc="player.get('role')"/></span>
+        </t>
+        <t t-if="player.get('p_type')">
+          <span class="or-tag"><t t-esc="player.get('p_type')"/></span>
+        </t>
+        <t t-if="player.get('p_category')">
+          <span class="or-tag or-tag-orange"><t t-esc="player.get('p_category')"/></span>
+        </t>
+      </div>
+
+      <!-- Batting / bowling stat blocks -->
+      <t t-if="player.get('batting_style') or player.get('bowling_style')">
+        <div class="or-stats">
+          <t t-if="player.get('batting_style')">
+            <div class="or-stat">
+              <p class="or-stat-label">Batting</p>
+              <p class="or-stat-value"><t t-esc="player.get('batting_style')"/></p>
+            </div>
+          </t>
+          <t t-if="player.get('bowling_style')">
+            <div class="or-stat">
+              <p class="or-stat-label">Bowling</p>
+              <p class="or-stat-value"><t t-esc="player.get('bowling_style')"/></p>
+            </div>
+          </t>
+        </div>
+      </t>
+
+    </div>
+
+    <!-- Card footer: points + contact -->
+    <div class="or-card-foot">
+
+      <!-- Points or Icon label -->
+      <t t-if="player.get('point') == 'ICON'">
+        <span class="or-icon-lbl">&#9733; ICON OPERATIVE</span>
+      </t>
+      <t t-else="">
+        <span class="or-pts-chip">
+          &#9670;
+          <t t-esc="player.get('point', 0)"/>
+          <span class="or-pts-chip-u">pts</span>
+        </span>
+      </t>
+
+      <!-- Contact -->
+      <t t-if="player.get('contact')">
+        <a t-attf-href="tel:#{player.get('contact')}" class="or-contact">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.64 11a19.79 19.79 0 01-3.07-8.67A2 2 0 012.55 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.91 7.46a16 16 0 006.61 6.61l.86-.86a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"
+                  stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <t t-esc="player.get('contact')"/>
+        </a>
+      </t>
+
+    </div>
+  </div>
+</template>
+
+</odoo>

@@ -1,0 +1,706 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     Auction Bid Summary – Pistah Edition
+     "Tactical Command Center" UI
+     Template ID : auction_details_show_pistah
+     Route       : /auction/show/team/balance  (when theme == 'pistah')
+     ═══════════════════════════════════════════════════════════════════ -->
+
+<template id="auction_details_show_pistah" name="Auction Bid Summary – Pistah">
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+            crossorigin="anonymous"/>
+      <link rel="preconnect" href="https://fonts.googleapis.com"/>
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
+      <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Exo+2:wght@300;400;500;600;700;800&amp;display=swap"
+            rel="stylesheet"/>
+      <title>Bid Command – Pistah</title>
+
+      <style>
+        /* ── Reset ───────────────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* ── Pistah design tokens ────────────────────────────────────── */
+        :root {
+          --p:          #6BBF4E;
+          --p-dk:       #2E7D32;
+          --p-br:       #A8E063;
+          --p-glow:     rgba(107,191,78,0.28);
+          --p-glow-s:   rgba(107,191,78,0.55);
+          --p-border:   rgba(107,191,78,0.38);
+          --bg:         #060e08;
+          --bg-s:       #0b1a0e;
+          --bg-p:       #0d1f11;
+          --bg-c:       #111f14;
+          --text:       #e8f5e9;
+          --text-dim:   rgba(232,245,233,0.52);
+          --divider:    rgba(107,191,78,0.18);
+        }
+
+        html, body {
+          background: var(--bg);
+          color: var(--text);
+          font-family: 'Exo 2', sans-serif;
+          min-height: 100vh;
+        }
+
+        /* ── Ambient radial glows ────────────────────────────────────── */
+        body::before {
+          content: '';
+          position: fixed; inset: 0; z-index: 0; pointer-events: none;
+          background:
+            radial-gradient(ellipse 70% 55% at 10% 50%, rgba(107,191,78,.06) 0%, transparent 65%),
+            radial-gradient(ellipse 50% 70% at 90% 15%, rgba(46,125,50,.08) 0%, transparent 55%),
+            linear-gradient(180deg, #060e08 0%, #081208 100%);
+        }
+        /* Everything above the ambient layer */
+        header, section, main { position: relative; z-index: 1; }
+
+        /* ────────────────────────────────────────────────────────────── */
+        /* HEADER                                                         */
+        /* ────────────────────────────────────────────────────────────── */
+        .pc-header {
+          position: relative; z-index: 20;
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 0 clamp(16px, 5vw, 52px);
+          height: clamp(58px, 9vw, 78px);
+          background: linear-gradient(90deg, #030a04 0%, #081508 40%, #0a1c0c 70%, #030a04 100%);
+          border-bottom: 1.5px solid var(--p-border);
+          box-shadow: 0 2px 24px var(--p-glow), inset 0 -1px 0 rgba(107,191,78,.12);
+        }
+        /* Top 3-px accent stripe */
+        .pc-header::before {
+          content: '';
+          position: absolute; top: 0; left: 0; right: 0; height: 3px;
+          background: linear-gradient(90deg,
+            transparent 0%, var(--p-dk) 15%, var(--p) 40%,
+            var(--p-br) 50%, var(--p) 60%, var(--p-dk) 85%, transparent 100%);
+          box-shadow: 0 0 10px rgba(107,191,78,.6);
+        }
+        .pc-header-logo img {
+          height: clamp(30px, 5.5vw, 52px);
+          filter: drop-shadow(0 0 8px var(--p-glow-s));
+        }
+        .pc-live {
+          display: flex; align-items: center; gap: 7px;
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.58rem, 1.4vw, 0.72rem);
+          font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+          color: var(--p-br);
+        }
+        .pc-live-dot {
+          width: 8px; height: 8px; border-radius: 50%;
+          background: var(--p);
+          box-shadow: 0 0 7px var(--p-glow-s);
+          animation: blink 2s ease-in-out infinite;
+        }
+        @keyframes blink {
+          0%, 100% { opacity: 1;   box-shadow: 0 0 7px  var(--p-glow-s); }
+          50%       { opacity: 0.3; box-shadow: 0 0 14px var(--p-glow-s); }
+        }
+
+        /* ────────────────────────────────────────────────────────────── */
+        /* COMMAND STRIP (sub-header)                                     */
+        /* ────────────────────────────────────────────────────────────── */
+        .pc-cmd {
+          background: var(--bg-s);
+          border-bottom: 1px solid var(--divider);
+          padding: clamp(12px, 2.5vw, 22px) clamp(16px, 5vw, 52px);
+          display: flex; align-items: center;
+          justify-content: space-between; flex-wrap: wrap; gap: 14px;
+        }
+        .pc-cmd-left { display: flex; flex-direction: column; gap: 1px; }
+        .pc-tourn-name {
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.6rem, 1.6vw, 0.82rem);
+          font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+          color: var(--p);
+        }
+        .pc-tourn-desc {
+          font-size: clamp(0.62rem, 1.4vw, 0.74rem);
+          color: var(--text-dim);
+        }
+        .pc-title {
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(1.05rem, 3.8vw, 2.1rem);
+          font-weight: 900; letter-spacing: 4px; text-transform: uppercase;
+          color: var(--p-br);
+          text-shadow: 0 0 22px var(--p-glow-s);
+          line-height: 1.1;
+          margin-top: 2px;
+        }
+
+        /* MODE TOGGLE  (TABLE | NODE) */
+        .pc-toggle {
+          display: flex; align-items: stretch;
+          background: var(--bg-p);
+          border: 1.5px solid var(--p-border);
+          border-radius: 6px; overflow: hidden;
+          flex-shrink: 0;
+        }
+        .pc-toggle-btn {
+          padding: clamp(7px, 1.4vw, 11px) clamp(14px, 3vw, 26px);
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.58rem, 1.4vw, 0.7rem);
+          font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase;
+          color: var(--text-dim); background: transparent;
+          border: none; cursor: pointer;
+          display: flex; align-items: center; gap: 7px;
+          transition: all 0.2s; white-space: nowrap;
+        }
+        .pc-toggle-btn.active {
+          background: var(--p-dk);
+          color: var(--p-br);
+          box-shadow: inset 0 0 14px rgba(107,191,78,.22);
+          text-shadow: 0 0 8px var(--p-glow-s);
+        }
+        .pc-toggle-sep {
+          width: 1px; background: var(--p-border); align-self: stretch;
+        }
+
+        /* Tournament logo pill */
+        .pc-t-logo {
+          background: linear-gradient(135deg, #0a1a0c, #0d1f11);
+          border: 2px solid var(--p-border);
+          border-radius: 10px; padding: 6px;
+          box-shadow: 0 0 18px var(--p-glow);
+          flex-shrink: 0;
+        }
+
+        /* ────────────────────────────────────────────────────────────── */
+        /* SHARED CONTENT PADDING                                         */
+        /* ────────────────────────────────────────────────────────────── */
+        .pc-content {
+          padding: clamp(18px, 3.5vw, 36px) clamp(16px, 5vw, 52px);
+        }
+
+        /* ────────────────────────────────────────────────────────────── */
+        /* TABLE VIEW                                                     */
+        /* ────────────────────────────────────────────────────────────── */
+        .pc-table-wrap {
+          border: 1.5px solid var(--p-border);
+          border-radius: 10px; overflow: hidden;
+          box-shadow: 0 0 32px var(--p-glow), inset 0 0 0 1px rgba(107,191,78,.04);
+          overflow-x: auto;           /* horizontal scroll on tiny screens */
+        }
+
+        /* Header row */
+        .pc-th {
+          display: flex; align-items: center;
+          padding: 11px 22px;
+          background: var(--bg-p);
+          border-bottom: 1.5px solid var(--p-border);
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.52rem, 1.1vw, 0.65rem);
+          font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase;
+          color: var(--p); column-gap: 12px;
+          min-width: 520px;           /* prevents columns collapsing below readable width */
+        }
+
+        /* Data rows */
+        .pc-tr {
+          display: flex; align-items: center;
+          padding: 13px 22px;
+          border-bottom: 1px solid var(--divider);
+          background: var(--bg-s);
+          position: relative; transition: background 0.18s;
+          column-gap: 12px;
+          min-width: 520px;
+        }
+        .pc-tr:last-child { border-bottom: none; }
+        /* Left edge glow on hover */
+        .pc-tr::before {
+          content: '';
+          position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+          background: linear-gradient(180deg, transparent, var(--p) 50%, transparent);
+          opacity: 0; transition: opacity 0.18s;
+        }
+        .pc-tr:hover { background: rgba(107,191,78,.045); }
+        .pc-tr:hover::before { opacity: 1; }
+
+        /* Column widths */
+        .pc-c-team   { flex: 0 0 clamp(150px, 22vw, 220px); }
+        .pc-c-mgr    { flex: 0 0 clamp(110px, 16vw, 170px); text-align: center; }
+        .pc-c-needed { flex: 0 0 clamp(80px, 11vw, 120px);  text-align: center; }
+        .pc-c-pts    { flex: 0 0 clamp(90px, 12vw, 130px);  text-align: center; }
+        .pc-c-call   { flex: 0 0 clamp(90px, 12vw, 130px);  text-align: center; }
+        .pc-c-act    { flex: 1 0 70px;                        text-align: right; }
+
+        /* Team cell contents */
+        .pc-team-cell { display: flex; align-items: center; gap: 11px; }
+        .pc-team-logo {
+          width: clamp(34px, 4.5vw, 44px); height: clamp(34px, 4.5vw, 44px);
+          border-radius: 6px;
+          border: 1.5px solid var(--p-border);
+          box-shadow: 0 0 8px var(--p-glow);
+          object-fit: cover; flex-shrink: 0;
+        }
+        .pc-team-name {
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.6rem, 1.4vw, 0.76rem);
+          font-weight: 700; letter-spacing: 0.4px; color: var(--text);
+          line-height: 1.3;
+        }
+        .pc-mgr-text {
+          font-size: clamp(0.68rem, 1.4vw, 0.8rem); color: var(--text-dim);
+        }
+
+        /* Stat chip */
+        .pc-chip {
+          display: inline-flex; align-items: baseline; gap: 3px;
+          background: rgba(107,191,78,.09);
+          border: 1px solid var(--p-border);
+          border-radius: 4px;
+          padding: 4px 10px;
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.66rem, 1.4vw, 0.8rem);
+          font-weight: 700; color: var(--p-br);
+          text-shadow: 0 0 6px var(--p-glow-s);
+        }
+        .pc-chip-u {
+          font-family: 'Exo 2', sans-serif;
+          font-size: 0.62em; font-weight: 400; color: var(--text-dim);
+        }
+
+        /* Engage button */
+        .pc-engage {
+          display: inline-flex; align-items: center; gap: 5px;
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.52rem, 1.2vw, 0.63rem);
+          font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+          text-decoration: none;
+          color: var(--p-br);
+          background: rgba(107,191,78,.10);
+          border: 1.5px solid var(--p-border);
+          border-radius: 5px; padding: 6px 11px;
+          transition: all 0.18s; white-space: nowrap;
+        }
+        .pc-engage:hover {
+          background: rgba(107,191,78,.24);
+          box-shadow: 0 0 12px var(--p-glow-s);
+          color: #fff;
+        }
+
+        /* ────────────────────────────────────────────────────────────── */
+        /* NODE (GRID) VIEW                                               */
+        /* ────────────────────────────────────────────────────────────── */
+        .pc-node-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(clamp(240px, 26vw, 310px), 1fr));
+          gap: clamp(14px, 2.5vw, 24px);
+        }
+
+        .pc-node-card {
+          background: var(--bg-s);
+          border: 1.5px solid var(--p-border);
+          border-radius: 10px; overflow: hidden;
+          position: relative;
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .pc-node-card::after {
+          content: '';
+          position: absolute; inset: 0; pointer-events: none;
+          background: linear-gradient(135deg, rgba(107,191,78,.04) 0%, transparent 55%);
+        }
+        .pc-node-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 10px 36px var(--p-glow), 0 0 0 1px var(--p-border);
+        }
+
+        /* Top scan-stripe */
+        .pc-node-stripe {
+          height: 3px;
+          background: linear-gradient(90deg,
+            transparent 0%, var(--p-dk) 20%, var(--p) 50%, var(--p-dk) 80%, transparent 100%);
+          box-shadow: 0 0 8px rgba(107,191,78,.5);
+        }
+
+        .pc-node-body { padding: clamp(14px, 2vw, 20px) clamp(14px, 2vw, 20px); }
+
+        /* Team row inside card */
+        .pc-node-team-row {
+          display: flex; align-items: center; gap: 13px;
+          padding-bottom: clamp(10px, 1.8vw, 14px);
+          margin-bottom: clamp(10px, 1.8vw, 14px);
+          border-bottom: 1px solid var(--divider);
+        }
+        .pc-node-logo-wrap { position: relative; flex-shrink: 0; }
+        .pc-node-logo {
+          width: clamp(44px, 7vw, 58px); height: clamp(44px, 7vw, 58px);
+          border-radius: 8px;
+          border: 2px solid var(--p-border);
+          box-shadow: 0 0 12px var(--p-glow);
+          object-fit: cover;
+        }
+        /* Online pulse badge */
+        .pc-node-badge {
+          position: absolute; bottom: -4px; right: -4px;
+          width: 12px; height: 12px; border-radius: 50%;
+          background: var(--p);
+          border: 2px solid var(--bg-s);
+          box-shadow: 0 0 6px var(--p-glow-s);
+          animation: blink 2.4s ease-in-out infinite;
+        }
+        .pc-node-name {
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.66rem, 1.7vw, 0.84rem);
+          font-weight: 700; letter-spacing: 0.5px; color: var(--text);
+          line-height: 1.25;
+        }
+        .pc-node-mgr {
+          font-size: clamp(0.66rem, 1.4vw, 0.75rem);
+          color: var(--text-dim); margin-top: 3px;
+        }
+
+        /* 3-stat grid */
+        .pc-node-stats {
+          display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+          margin-bottom: clamp(10px, 2vw, 14px);
+        }
+        .pc-node-stat {
+          background: var(--bg-p);
+          border: 1px solid var(--divider);
+          border-radius: 7px;
+          padding: clamp(7px, 1.5vw, 10px) 6px;
+          text-align: center;
+        }
+        .pc-node-stat-lbl {
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.48rem, 1.1vw, 0.58rem);
+          font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+          color: var(--p); line-height: 1.25; margin-bottom: 5px;
+        }
+        .pc-node-stat-val {
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.9rem, 2.2vw, 1.2rem);
+          font-weight: 900; color: var(--p-br);
+          text-shadow: 0 0 8px var(--p-glow-s);
+          line-height: 1;
+        }
+        .pc-node-stat-u {
+          font-family: 'Exo 2', sans-serif;
+          font-size: 0.62em; font-weight: 400; color: var(--text-dim);
+        }
+
+        /* Card footer */
+        .pc-node-footer {
+          border-top: 1px solid var(--divider);
+          padding-top: clamp(9px, 1.8vw, 12px);
+          display: flex; justify-content: flex-end;
+        }
+
+        /* ────────────────────────────────────────────────────────────── */
+        /* RESPONSIVE BREAKPOINTS                                         */
+        /* ────────────────────────────────────────────────────────────── */
+
+        /* Below 860px — hide Manager + Max Call columns in table */
+        @media (max-width: 860px) {
+          .pc-c-mgr, .pc-c-call { display: none !important; }
+        }
+
+        /* Below 600px — hide Actions column; shrink node card columns */
+        @media (max-width: 600px) {
+          .pc-c-act { display: none !important; }
+          .pc-title { letter-spacing: 2px; }
+          .pc-node-grid {
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          }
+        }
+
+        /* Below 480px — single-column node grid, tighter table padding */
+        @media (max-width: 480px) {
+          .pc-node-grid { grid-template-columns: 1fr; }
+          .pc-tr, .pc-th { padding-left: 14px; padding-right: 14px; }
+          .pc-content { padding-left: 12px; padding-right: 12px; }
+          .pc-cmd { padding-left: 12px; padding-right: 12px; }
+          .pc-header { padding-left: 12px; padding-right: 12px; }
+        }
+      </style>
+    </head>
+
+    <body>
+
+      <!-- ══════════════════════════════════════════════════════════════
+           HEADER  —  Logo · Live indicator
+           ══════════════════════════════════════════════════════════════ -->
+      <header class="pc-header">
+        <div class="pc-header-logo">
+          <img src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ Logo"/>
+        </div>
+        <div class="pc-live">
+          <span class="pc-live-dot"></span>
+          LIVE
+        </div>
+      </header>
+
+      <!-- ══════════════════════════════════════════════════════════════
+           COMMAND STRIP  —  Tournament info · Title · Mode toggle · Logo
+           ══════════════════════════════════════════════════════════════ -->
+      <section class="pc-cmd">
+
+        <!-- Left: tournament name + description stacked above "BID COMMAND" -->
+        <div class="pc-cmd-left">
+          <t t-if="tournament">
+            <span class="pc-tourn-name"><t t-esc="tournament.name"/></span>
+            <span class="pc-tourn-desc"><t t-esc="tournament.description"/></span>
+          </t>
+          <span class="pc-title">Bid Command</span>
+        </div>
+
+        <!-- Right: mode toggle + tournament logo -->
+        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+
+          <!-- TABLE / NODE toggle -->
+          <div class="pc-toggle">
+            <button class="pc-toggle-btn active" id="pc-table-btn" type="button">
+              <!-- list icon -->
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1.5 3H0.5C0.224 3 0 3.224 0 3.5V4.5C0 4.776 0.224 5 0.5 5H1.5C1.776 5 2 4.776 2 4.5V3.5C2 3.224 1.776 3 1.5 3ZM5 4.5H15.5C15.776 4.5 16 4.276 16 4C16 3.724 15.776 3.5 15.5 3.5H5C4.724 3.5 4.5 3.724 4.5 4C4.5 4.276 4.724 4.5 5 4.5ZM1.5 7H0.5C0.224 7 0 7.224 0 7.5V8.5C0 8.776 0.224 9 0.5 9H1.5C1.776 9 2 8.776 2 8.5V7.5C2 7.224 1.776 7 1.5 7ZM15.5 7.5H5C4.724 7.5 4.5 7.724 4.5 8C4.5 8.276 4.724 8.5 5 8.5H15.5C15.776 8.5 16 8.276 16 8C16 7.724 15.776 7.5 15.5 7.5ZM1.5 11H0.5C0.224 11 0 11.224 0 11.5V12.5C0 12.776 0.224 13 0.5 13H1.5C1.776 13 2 12.776 2 12.5V11.5C2 11.224 1.776 11 1.5 11ZM15.5 11.5H5C4.724 11.5 4.5 11.724 4.5 12C4.5 12.276 4.724 12.5 5 12.5H15.5C15.776 12.5 16 12.276 16 12C16 11.724 15.776 11.5 15.5 11.5Z" fill="currentColor"/>
+              </svg>
+              TABLE
+            </button>
+            <div class="pc-toggle-sep"></div>
+            <button class="pc-toggle-btn" id="pc-node-btn" type="button">
+              <!-- grid icon -->
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3.5 2C3.10218 2 2.72064 2.15804 2.43934 2.43934C2.15804 2.72064 2 3.10218 2 3.5V5.5C2 5.89782 2.15804 6.27936 2.43934 6.56066C2.72064 6.84196 3.10218 7 3.5 7H5.5C5.89782 7 6.27936 6.84196 6.56066 6.56066C6.84196 6.27936 7 5.89782 7 5.5V3.5C7 3.10218 6.84196 2.72064 6.56066 2.43934C6.27936 2.15804 5.89782 2 5.5 2H3.5ZM10.5 2C10.1022 2 9.72064 2.15804 9.43934 2.43934C9.15804 2.72064 9 3.10218 9 3.5V5.5C9 5.89782 9.15804 6.27936 9.43934 6.56066C9.72064 6.84196 10.1022 7 10.5 7H12.5C12.8978 7 13.2794 6.84196 13.5607 6.56066C13.842 6.27936 14 5.89782 14 5.5V3.5C14 3.10218 13.842 2.72064 13.5607 2.43934C13.2794 2.15804 12.8978 2 12.5 2H10.5ZM3.5 9C3.10218 9 2.72064 9.15804 2.43934 9.43934C2.15804 9.72064 2 10.1022 2 10.5V12.5C2 12.8978 2.15804 13.2794 2.43934 13.5607C2.72064 13.842 3.10218 14 3.5 14H5.5C5.89782 14 6.27936 13.842 6.56066 13.5607C6.84196 13.2794 7 12.8978 7 12.5V10.5C7 10.1022 6.84196 9.72064 6.56066 9.43934C6.27936 9.15804 5.89782 9 5.5 9H3.5ZM10.5 9C10.1022 9 9.72064 9.15804 9.43934 9.43934C9.15804 9.72064 9 10.1022 9 10.5V12.5C9 12.8978 9.15804 13.2794 9.43934 13.5607C9.72064 13.842 10.1022 14 10.5 14H12.5C12.8978 14 13.2794 13.842 13.5607 13.5607C13.842 13.2794 14 12.8978 14 12.5V10.5C14 10.1022 13.842 9.72064 13.5607 9.43934C13.2794 9.15804 12.8978 9 12.5 9H10.5Z" fill="currentColor"/>
+              </svg>
+              NODE
+            </button>
+          </div>
+
+          <!-- Tournament logo -->
+          <div class="pc-t-logo" t-if="tournament and tournament.logo">
+            <img t-att-src="image_data_uri(tournament.logo)" alt="Tournament Logo"
+                 width="54" height="54" style="border-radius:6px; display:block;"/>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════
+           TABLE VIEW  —  Horizontally scrollable on narrow viewports
+           ══════════════════════════════════════════════════════════════ -->
+      <section class="pc-content" id="pc-table-section">
+        <div class="pc-table-wrap">
+
+          <!-- Header row -->
+          <div class="pc-th">
+            <div class="pc-c-team">Operator</div>
+            <div class="pc-c-mgr">Manager</div>
+            <div class="pc-c-needed">Needed</div>
+            <div class="pc-c-pts">Pts Left</div>
+            <div class="pc-c-call">Max Call</div>
+            <div class="pc-c-act" t-if="type == 'internal'">Access</div>
+          </div>
+
+          <!-- Data rows -->
+          <t t-foreach="teams" t-as="team">
+            <div class="pc-tr" t-attf-data-auction-id="#{team.id}">
+
+              <!-- Team name + logo -->
+              <div class="pc-c-team">
+                <div class="pc-team-cell">
+                  <img t-att-src="image_data_uri(team.team_id.logo)"
+                       alt="Team Logo" class="pc-team-logo"/>
+                  <span class="pc-team-name"><t t-esc="team.team_id.name"/></span>
+                </div>
+              </div>
+
+              <!-- Manager -->
+              <div class="pc-c-mgr">
+                <span class="pc-mgr-text"><t t-esc="team.manager"/></span>
+              </div>
+
+              <!-- Players needed -->
+              <div class="pc-c-needed">
+                <span class="pc-chip">
+                  <span t-attf-id="team-players-#{team.id}">
+                    <t t-esc="team.remaining_players_count"/>
+                  </span>
+                </span>
+              </div>
+
+              <!-- Points left -->
+              <div class="pc-c-pts">
+                <span class="pc-chip">
+                  <span t-attf-id="team-points-#{team.id}">
+                    <t t-esc="team.remaining_points"/>
+                  </span>
+                  <span class="pc-chip-u">pts</span>
+                </span>
+              </div>
+
+              <!-- Max call -->
+              <div class="pc-c-call">
+                <span class="pc-chip">
+                  <span t-attf-id="team-maxcall-#{team.id}">
+                    <t t-esc="team.max_call"/>
+                  </span>
+                  <span class="pc-chip-u">pts</span>
+                </span>
+              </div>
+
+              <!-- Actions (internal only) -->
+              <div class="pc-c-act" t-if="type == 'internal'">
+                <a t-att-href="'/auction/get/players/team/%s' % team.team_id.id"
+                   class="pc-engage">&#9654; ENGAGE</a>
+              </div>
+
+            </div>
+          </t>
+
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════
+           NODE VIEW  —  Responsive tactical card grid
+           ══════════════════════════════════════════════════════════════ -->
+      <section class="pc-content" id="pc-node-section" style="display:none;">
+        <div class="pc-node-grid">
+          <t t-foreach="teams" t-as="team">
+            <div class="pc-node-card">
+
+              <!-- Top accent stripe -->
+              <div class="pc-node-stripe"></div>
+
+              <div class="pc-node-body">
+
+                <!-- Team logo + name + manager -->
+                <div class="pc-node-team-row">
+                  <div class="pc-node-logo-wrap">
+                    <img t-att-src="image_data_uri(team.team_id.logo)"
+                         alt="Team Logo" class="pc-node-logo"/>
+                    <span class="pc-node-badge"></span>
+                  </div>
+                  <div>
+                    <div class="pc-node-name"><t t-esc="team.team_id.name"/></div>
+                    <div class="pc-node-mgr"><t t-esc="team.manager"/></div>
+                  </div>
+                </div>
+
+                <!-- Stat grid: Players Needed | Pts Left | Max Call -->
+                <div class="pc-node-stats">
+                  <div class="pc-node-stat">
+                    <div class="pc-node-stat-lbl">Players<br/>Needed</div>
+                    <div class="pc-node-stat-val">
+                      <span t-attf-id="grid-team-players-#{team.id}">
+                        <t t-esc="team.remaining_players_count"/>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="pc-node-stat">
+                    <div class="pc-node-stat-lbl">Pts<br/>Left</div>
+                    <div class="pc-node-stat-val">
+                      <span t-attf-id="grid-team-points-#{team.id}">
+                        <t t-esc="team.remaining_points"/>
+                      </span>
+                      <span class="pc-node-stat-u">pts</span>
+                    </div>
+                  </div>
+                  <div class="pc-node-stat">
+                    <div class="pc-node-stat-lbl">Max<br/>Call</div>
+                    <div class="pc-node-stat-val">
+                      <span t-attf-id="grid-team-maxcall-#{team.id}">
+                        <t t-esc="team.max_call"/>
+                      </span>
+                      <span class="pc-node-stat-u">pts</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Footer: View squad (internal only) -->
+                <div t-if="type == 'internal'" class="pc-node-footer">
+                  <a t-att-href="'/auction/get/players/team/%s' % team.team_id.id"
+                     class="pc-engage">&#9654; ENGAGE</a>
+                </div>
+
+              </div>
+            </div>
+          </t>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════
+           SCRIPTS
+           ══════════════════════════════════════════════════════════════ -->
+      <script>
+        (function () {
+          var tblBtn  = document.getElementById('pc-table-btn');
+          var nodeBtn = document.getElementById('pc-node-btn');
+          var tblSec  = document.getElementById('pc-table-section');
+          var nodeSec = document.getElementById('pc-node-section');
+
+          /* ── Mode toggle ──────────────────────────────────────────── */
+          nodeBtn.addEventListener('click', function () {
+            tblSec.style.display  = 'none';
+            nodeSec.style.display = '';
+            tblBtn.classList.remove('active');
+            nodeBtn.classList.add('active');
+          });
+
+          tblBtn.addEventListener('click', function () {
+            nodeSec.style.display = 'none';
+            tblSec.style.display  = '';
+            nodeBtn.classList.remove('active');
+            tblBtn.classList.add('active');
+          });
+
+          /* ── Live data refresh every 5 seconds ───────────────────── */
+          function refreshBalance() {
+            fetch('/auction/show/team/balance/json')
+              .then(function (r) { return r.json(); })
+              .then(function (data) {
+                data.teams.forEach(function (team) {
+                  var el;
+                  /* table view elements */
+                  el = document.getElementById('team-players-' + team.id);
+                  if (el) el.textContent = team.remaining_players_count;
+                  el = document.getElementById('team-points-' + team.id);
+                  if (el) el.textContent = team.remaining_points;
+                  el = document.getElementById('team-maxcall-' + team.id);
+                  if (el) el.textContent = team.max_call;
+                  /* node view elements */
+                  el = document.getElementById('grid-team-players-' + team.id);
+                  if (el) el.textContent = team.remaining_players_count;
+                  el = document.getElementById('grid-team-points-' + team.id);
+                  if (el) el.textContent = team.remaining_points;
+                  el = document.getElementById('grid-team-maxcall-' + team.id);
+                  if (el) el.textContent = team.max_call;
+                });
+              })
+              .catch(function () { /* silent fail — keep current data */ });
+          }
+
+          /* Pause polling when tab is hidden, resume when visible */
+          var _balanceTimer = null;
+          function startBalancePolling() {
+            if (_balanceTimer) return;
+            _balanceTimer = setInterval(refreshBalance, 5000);
+          }
+          function stopBalancePolling() {
+            if (_balanceTimer) { clearInterval(_balanceTimer); _balanceTimer = null; }
+          }
+          document.addEventListener('visibilitychange', function () {
+            if (document.hidden) { stopBalancePolling(); }
+            else { refreshBalance(); startBalancePolling(); }
+          });
+          window.addEventListener('beforeunload', stopBalancePolling);
+          startBalancePolling();
+        })();
+      </script>
+
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+              integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+              crossorigin="anonymous"></script>
+    </body>
+  </html>
+</template>
+
+</odoo>
