@@ -419,27 +419,7 @@
     /* ── Spacer: pushes buttons to bottom via margin-top:auto ─ */
     /* (no explicit spacer div needed) */
 
-    /* ── Tier description block ──────────────────────────── */
-    .pt-tier-desc-block {
-      position: relative; z-index: 2;
-      background: rgba(107,191,78,.04);
-      border: 1px solid rgba(107,191,78,.14);
-      border-left: 3px solid var(--pistah);
-      border-radius: 6px;
-      padding: 12px 14px;
-      display: flex; flex-direction: column; gap: 5px;
-    }
-    .pt-tier-desc-label {
-      font-family: 'Orbitron', sans-serif;
-      font-size: .52rem; font-weight: 700;
-      letter-spacing: 2px; text-transform: uppercase;
-      color: var(--pistah); opacity: .9;
-    }
-    .pt-tier-desc-text {
-      font-size: .82rem; color: var(--text-dim); line-height: 1.55;
-    }
-
-    /* ── Base-price strip (shown when no tier desc) ───────── */
+    /* ── Base-price strip ────────────────────────────────── */
     .pt-base-strip {
       position: relative; z-index: 2;
       display: flex; align-items: center; justify-content: space-between;
@@ -502,11 +482,41 @@
       display: flex; align-items: center;
       background: rgba(107,191,78,.06);
     }
+    /* ── Scrolling ticker ─────────────────────────────────── */
     .pt-teams-ticker {
       flex: 1;
-      display: flex; align-items: center; gap: 28px;
-      padding: 0 20px;
       overflow: hidden;
+      position: relative;
+      mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        black 3%,
+        black 97%,
+        transparent 100%
+      );
+      -webkit-mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        black 3%,
+        black 97%,
+        transparent 100%
+      );
+    }
+    .pt-ticker-track {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 0 24px;
+      width: max-content;               /* let it grow as wide as needed */
+      animation: pt-ticker-scroll var(--pt-ticker-dur, 60s) linear infinite;
+      will-change: transform;
+    }
+    .pt-ticker-track:hover {
+      animation-play-state: paused;    /* pause on hover for readability */
+    }
+    @keyframes pt-ticker-scroll {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }  /* -50% = one full copy width */
     }
     .pt-team-chip {
       display: flex; align-items: center; gap: 8px;
@@ -584,6 +594,31 @@
       font-size: .95rem; font-weight: 600;
       box-shadow: 0 4px 16px rgba(0,0,0,.5);
     }
+
+    /* ── Cricket Watermark ─────────────────────────────────── */
+    .pt-cricket-wm {
+      margin-top: auto;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px 16px 8px;
+      pointer-events: none;
+      user-select: none;
+      position: relative;
+    }
+    .pt-cricket-wm-rule {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(107,191,78,.2), transparent);
+    }
+    .pt-cricket-wm-icons {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      opacity: 0.28;
+    }
   </style>
 </head>
 
@@ -629,7 +664,7 @@
   </header>
 
   <!-- ── MAIN STAGE ─────────────────────────────────────────── -->
-  <main class="pt-stage">
+  <main class="pt-stage" data-player-zone="">
 
     <!-- LEFT: PHOTO PANEL -->
     <div class="pt-photo-panel">
@@ -720,20 +755,62 @@
         </t>
       </div>
 
-      <!-- Tier description — fills empty vertical space when available -->
-      <t t-if="player.tier_id and player.tier_id.description">
-        <div class="pt-tier-desc-block">
-          <span class="pt-tier-desc-label">Tier Details</span>
-          <span class="pt-tier-desc-text"><t t-esc="player.tier_id.description"/></span>
-        </div>
-      </t>
-      <!-- Base price strip — fallback when no tier description -->
-      <t t-elif="player.base_price">
+      <!-- Base price from auction tier setup -->
+      <t t-if="player.effective_base_price">
         <div class="pt-base-strip">
           <span class="pt-base-strip-label">Base Price</span>
-          <span class="pt-base-strip-val"><t t-esc="'{:,}'.format(int(player.base_price or 0))"/> pts</span>
+          <span class="pt-base-strip-val"><t t-esc="'{:,}'.format(int(player.effective_base_price or 0))"/> pts</span>
         </div>
       </t>
+
+      <!-- Cricket Watermark Row — fills empty space between stats and buttons -->
+      <div class="pt-cricket-wm">
+        <div class="pt-cricket-wm-rule"></div>
+        <div class="pt-cricket-wm-icons">
+
+          <!-- Cricket Bat -->
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Blade: rounded oval body -->
+            <ellipse cx="22" cy="17" rx="8" ry="13" fill="rgba(107,191,78,.15)" stroke="rgba(107,191,78,.9)" stroke-width="1.4"/>
+            <!-- Shoulder ridges -->
+            <line x1="15" y1="22" x2="29" y2="22" stroke="rgba(107,191,78,.5)" stroke-width="0.8"/>
+            <line x1="15" y1="26" x2="29" y2="26" stroke="rgba(107,191,78,.5)" stroke-width="0.8"/>
+            <!-- Handle grip -->
+            <rect x="19.5" y="30" width="5" height="10" rx="2.5" fill="rgba(107,191,78,.2)" stroke="rgba(107,191,78,.9)" stroke-width="1.4"/>
+            <!-- Grip wrap marks -->
+            <line x1="19.5" y1="33" x2="24.5" y2="33" stroke="rgba(107,191,78,.6)" stroke-width="0.9"/>
+            <line x1="19.5" y1="36" x2="24.5" y2="36" stroke="rgba(107,191,78,.6)" stroke-width="0.9"/>
+            <line x1="19.5" y1="39" x2="24.5" y2="39" stroke="rgba(107,191,78,.6)" stroke-width="0.9"/>
+          </svg>
+
+          <!-- Cricket Ball -->
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="22" cy="22" r="16" fill="rgba(107,191,78,.10)" stroke="rgba(107,191,78,.9)" stroke-width="1.4"/>
+            <!-- Vertical seam curves -->
+            <path d="M16 7 Q12 14 13 22 Q14 30 16 37" stroke="rgba(107,191,78,.75)" stroke-width="1.1" stroke-linecap="round" fill="none"/>
+            <path d="M28 7 Q32 14 31 22 Q30 30 28 37" stroke="rgba(107,191,78,.75)" stroke-width="1.1" stroke-linecap="round" fill="none"/>
+            <!-- Horizontal seam curves -->
+            <path d="M8 17 Q15 21 22 20 Q29 19 36 21" stroke="rgba(107,191,78,.55)" stroke-width="0.9" stroke-linecap="round" fill="none"/>
+            <path d="M8 27 Q15 24 22 25 Q29 26 36 24" stroke="rgba(107,191,78,.55)" stroke-width="0.9" stroke-linecap="round" fill="none"/>
+          </svg>
+
+          <!-- Cricket Stumps + Bails -->
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Ground line -->
+            <line x1="6" y1="38" x2="38" y2="38" stroke="rgba(107,191,78,.5)" stroke-width="1" stroke-linecap="round"/>
+            <!-- Three stumps -->
+            <line x1="14" y1="10" x2="14" y2="38" stroke="rgba(107,191,78,.9)" stroke-width="2.2" stroke-linecap="round"/>
+            <line x1="22" y1="10" x2="22" y2="38" stroke="rgba(107,191,78,.9)" stroke-width="2.2" stroke-linecap="round"/>
+            <line x1="30" y1="10" x2="30" y2="38" stroke="rgba(107,191,78,.9)" stroke-width="2.2" stroke-linecap="round"/>
+            <!-- Bail 1 (stump 1 → stump 2) -->
+            <path d="M12 10 Q14 7 18 10 Q20 11 22 10" stroke="rgba(107,191,78,.9)" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <!-- Bail 2 (stump 2 → stump 3) -->
+            <path d="M22 10 Q24 7 28 10 Q30 11 32 10" stroke="rgba(107,191,78,.9)" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+
+        </div>
+        <div class="pt-cricket-wm-rule"></div>
+      </div>
 
     </div><!-- /pt-info-panel -->
 
@@ -772,30 +849,107 @@
     <div class="pt-footer-label">Teams</div>
     <div class="pt-teams-ticker">
       <t t-if="auction_ids">
-        <t t-foreach="auction_ids" t-as="a">
-          <div class="pt-team-chip">
-            <t t-if="a.team_id and a.team_id.logo">
-              <img t-att-src="image_data_uri(a.team_id.logo)"
-                   t-att-alt="a.team_id.name"/>
-            </t>
-            <span class="pt-team-chip-name">
-              <t t-esc="a.team_id.name if a.team_id else 'Team'"/>
-            </span>
-            <span class="pt-team-chip-pts">
-              <t t-esc="'{:,}'.format(a.remaining_points or 0)"/> pts
-            </span>
-          </div>
-        </t>
+        <!-- Track is rendered twice; CSS animates it by -50% for a seamless loop -->
+        <div class="pt-ticker-track" id="ptTickerTrack">
+          <!-- copy 1 -->
+          <t t-foreach="auction_ids" t-as="a">
+            <div class="pt-team-chip">
+              <t t-if="a.team_id and a.team_id.logo">
+                <img t-att-src="image_data_uri(a.team_id.logo)"
+                     t-att-alt="a.team_id.name"/>
+              </t>
+              <span class="pt-team-chip-name">
+                <t t-esc="a.team_id.name if a.team_id else 'Team'"/>
+              </span>
+              <span class="pt-team-chip-pts">
+                <t t-esc="'{:,}'.format(a.remaining_points or 0)"/> pts
+              </span>
+            </div>
+          </t>
+          <!-- copy 2 — identical, aria-hidden so screen readers skip it -->
+          <t t-foreach="auction_ids" t-as="a">
+            <div class="pt-team-chip" aria-hidden="true">
+              <t t-if="a.team_id and a.team_id.logo">
+                <img t-att-src="image_data_uri(a.team_id.logo)"
+                     t-att-alt="a.team_id.name"/>
+              </t>
+              <span class="pt-team-chip-name">
+                <t t-esc="a.team_id.name if a.team_id else 'Team'"/>
+              </span>
+              <span class="pt-team-chip-pts">
+                <t t-esc="'{:,}'.format(a.remaining_points or 0)"/> pts
+              </span>
+            </div>
+          </t>
+        </div>
       </t>
     </div>
   </footer>
+
+  <script>
+    /* Calibrate ticker speed to content width so it feels consistent
+       regardless of team count (target ~90 px/s).
+       If all teams fit on screen without scrolling, disable animation. */
+    (function () {
+      var track = document.getElementById('ptTickerTrack');
+      if (!track) return;
+      var singleW = track.scrollWidth / 2;   /* width of one copy */
+      var viewW   = track.parentElement.offsetWidth;
+      if (singleW &lt;= viewW) {
+        /* All teams fit — no scrolling needed, centre them instead */
+        track.style.animation = 'none';
+        track.style.justifyContent = 'center';
+      } else {
+        var dur = Math.max(20, Math.round(singleW / 90)); /* min 20 s */
+        track.style.setProperty('--pt-ticker-dur', dur + 's');
+      }
+    })();
+  </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
           integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
           crossorigin="anonymous"></script>
 
   <script>
-    function changeImage() { window.location.reload(); }
+    async function changeImage() {
+      var toast = document.getElementById('ac-next-toast');
+      var bar   = document.getElementById('ac-next-bar');
+      if (toast) {
+        toast.style.display  = 'flex';
+        toast.style.opacity  = '1';
+        bar.style.transition = 'none';
+        bar.style.width      = '0%';
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            bar.style.transition = 'width 1.2s cubic-bezier(.4,0,.2,1)';
+            bar.style.width      = '80%';
+          });
+        });
+      }
+      try {
+        var resp = await fetch(window.location.href, {cache: 'no-store'});
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        var html = await resp.text();
+        var parser = new DOMParser();
+        var newDoc = parser.parseFromString(html, 'text/html');
+        var pid = newDoc.body.getAttribute('data-player-id');
+        if (pid) document.body.setAttribute('data-player-id', pid);
+        var zone    = document.querySelector('[data-player-zone]');
+        var newZone = newDoc.querySelector('[data-player-zone]');
+        if (zone &amp;&amp; newZone) { zone.innerHTML = newZone.innerHTML; }
+        if (toast) {
+          bar.style.transition = 'width 0.15s ease';
+          bar.style.width      = '100%';
+          setTimeout(function() {
+            toast.style.opacity = '0';
+            setTimeout(function() { toast.style.display = 'none'; }, 400);
+          }, 250);
+        }
+      } catch(e) {
+        console.error('Next player load failed:', e);
+        window.location.reload();
+      }
+    }
 
     document.addEventListener('keydown', function(e) {
       if (e.code === 'Space') { e.preventDefault(); changeImage(); }
@@ -913,9 +1067,42 @@
     </div>
   </div>
 
+  <!-- Next-player progress toast -->
+  <div id="ac-next-toast" style="display:none;opacity:0;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:10002;min-width:220px;max-width:320px;background:#0a1a0d;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.6);overflow:hidden;flex-direction:column;transition:opacity .4s;border:1px solid rgba(107,191,78,.2);">
+    <div style="padding:12px 20px 10px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:1.1rem;">⚡</span>
+      <span style="color:#e8f5e9;font-size:0.85rem;font-weight:600;letter-spacing:.5px;">Loading Next Player…</span>
+    </div>
+    <div style="height:3px;background:rgba(255,255,255,.1);">
+      <div id="ac-next-bar" style="height:100%;width:0%;background:#6BBF4E;border-radius:2px;transition:width .3s;"></div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div id="ptToast" style="display:none;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:10001;color:#fff;padding:12px 28px;border-radius:8px;font-size:.95rem;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.5);"></div>
 
+  <!-- Fullscreen Toggle -->
+  <button id="fs-btn" onclick="toggleFullscreen()" title="Enter Fullscreen" style="position:fixed;top:14px;right:14px;z-index:9999;width:38px;height:38px;border-radius:8px;background:rgba(6,14,8,0.8);border:1.5px solid rgba(107,191,78,0.5);color:#6BBF4E;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:0;transition:background .2s,box-shadow .2s;" onmouseover="this.style.boxShadow='0 0 12px rgba(107,191,78,0.45)'" onmouseout="this.style.boxShadow='none'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
+  <script>
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(function(e) { console.warn(e); });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+    document.addEventListener('fullscreenchange', function() {
+      var btn = document.getElementById('fs-btn');
+      if (!btn) return;
+      if (document.fullscreenElement) {
+        btn.title = 'Exit Fullscreen';
+        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>';
+      } else {
+        btn.title = 'Enter Fullscreen';
+        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>';
+      }
+    });
+  </script>
   <t t-call="auction_module.player_sell_modal"/>
 </body>
 </html>

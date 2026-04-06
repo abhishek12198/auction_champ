@@ -45,6 +45,11 @@ class AuctionTeamPlayer(models.Model):
     tier_id = fields.Many2one('auction.player.tier', string='Tier')
     previous_tier_id = fields.Many2one('auction.player.tier', string='Previous Tier', help='Stores the tier before the player was promoted to Icon Player, used to restore on revoke.')
     tier_color = fields.Selection(related='tier_id.color', string='Tier Color')
+    base_price = fields.Integer(string='Base Price')
+    effective_base_price = fields.Integer(
+        string='Effective Base Price',
+        compute='_compute_effective_base_price',
+    )
     notes = fields.Char()
     #other details
     current_team = fields.Char("Current Team")
@@ -54,6 +59,28 @@ class AuctionTeamPlayer(models.Model):
     blood_group = fields.Char("Blood Group")
     p_type =   fields.Char("Type")
     p_category = fields.Char("Category")
+
+    def _compute_effective_base_price(self):
+        """Return the base price for this player from the auction setup.
+        Uses the tier-specific base_point if configured, otherwise the global base_point."""
+        for player in self:
+            auction = self.env['auction.auction'].search(
+                [('tournament_id', '=', player.tournament_id.id)], limit=1
+            ) if player.tournament_id else self.env['auction.auction'].search([], limit=1)
+
+            if not auction:
+                player.effective_base_price = 0
+                continue
+
+            base = auction.base_point
+            if player.tier_id and auction.tier_limit_ids:
+                tier_limit = auction.tier_limit_ids.filtered(
+                    lambda l: l.tier_id.id == player.tier_id.id
+                )
+                if tier_limit and tier_limit[0].base_point > 0:
+                    base = tier_limit[0].base_point
+
+            player.effective_base_price = base
 
     @api.model
     def get_sell_teams_data(self, player_id):
@@ -196,7 +223,8 @@ class AuctionTeamPlayer(models.Model):
         }
 
     def print_player_cards(self):
-        tournament = self.env['auction.tournament'].search([('active', '=', True)], limit=1)
+        # Use the player's own tournament theme, not the globally "active" tournament
+        tournament = self[0].tournament_id if self else None
         template = tournament.player_display_template if tournament else 'vanilla'
         report_map = {
             'vanilla':       'auction_module.action_report_player_card',
@@ -214,22 +242,8 @@ class AuctionTeamPlayer(models.Model):
 
     @api.model
     def action_player_card_report(self):
-        tournament = self.env['auction.tournament'].search([('active', '=', True)], limit=1)
-        template = tournament.player_display_template if tournament else 'vanilla'
-        report_map = {
-            'vanilla':      'auction_module.report_player_card_list',
-            'butterscotch': 'auction_module.report_player_card_list_butterscotch',
-            'strawberry':   'auction_module.report_player_card_list_strawberry',
-            'cherry':       'auction_module.report_player_card_list_cherry',
-            'pistah':       'auction_module.report_player_card_list_pistah',
-        }
-        report_name = report_map.get(template, 'auction_module.report_player_card_list')
-        return {
-            'type': 'ir.actions.report',
-            'report_name': report_name,
-            'report_type': 'qweb-pdf',
-            'data': {'model': 'auction.team.player'},
-        }
+        # Kept for backward compatibility – delegates to print_player_cards
+        return self.print_player_cards()
 
     @api.model
     def _get_report_values(self, docids, data=None):

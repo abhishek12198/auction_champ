@@ -1198,7 +1198,7 @@ img { display: block; }
       <div class="lb-stamp-overlay lb-stamp-unsold" id="lb-unsold-stamp" style="display:none;">
         <div class="lb-stamp-box">
           <div class="lb-stamp-word">UNSOLD</div>
-          <div class="lb-stamp-sub">Goes back to pool</div>
+          <!--<div class="lb-stamp-sub">Goes back to pool</div>-->
         </div>
       </div>
       <div class="lb-photo-gradient"></div>

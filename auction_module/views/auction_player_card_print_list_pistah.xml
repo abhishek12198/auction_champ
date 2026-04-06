@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- ── Pistah card body (called per-doc by dispatcher) ── -->
+    <!-- ── Pistah card – "Stadium Banner" layout ── -->
     <template id="report_player_card_pistah_page">
         <html lang="en">
             <head>
@@ -16,42 +16,75 @@
                 </style>
             </head>
             <body>
-                <table cellpadding="0" cellspacing="0" border="0"
-                       style="width:100%; height:100%; border-collapse:collapse; background:#060e08;">
 
-                    <!-- Top accent stripe -->
+                <!-- ════════════════════════════════════════════════════
+                     OUTER CARD — full-width "Stadium Banner" layout
+                     Structure:  (1) top accent
+                                 (2) header bar
+                                 (3) FULL-WIDTH photo banner
+                                 (4) green divider
+                                 (5) tier + base price strip
+                                 (6) stat chips – horizontal row
+                                 (7) location row
+                                 (8) footer
+                                 (9) bottom accent
+                ══════════════════════════════════════════════════════ -->
+                <table cellpadding="0" cellspacing="0" border="0"
+                       style="width:100%; border-collapse:collapse; background:#060e08;
+                              border:1.5px solid rgba(107,191,78,0.3);
+                              box-shadow:0 0 60px rgba(107,191,78,0.1);">
+
+                    <!-- 1. TOP ACCENT STRIPE -->
                     <tr>
-                        <td colspan="2" style="height:5px; padding:0; line-height:0; font-size:0;
-                            background:linear-gradient(90deg, transparent, #2E7D32, #6BBF4E, #A8E063, #6BBF4E, #2E7D32, transparent);">&#160;</td>
+                        <td colspan="10" style="height:5px; padding:0; line-height:0; font-size:0;
+                            background:linear-gradient(90deg,
+                                transparent 0%, #2E7D32 15%,
+                                #6BBF4E 35%, #A8E063 50%,
+                                #6BBF4E 65%, #2E7D32 85%, transparent 100%);">&#160;</td>
                     </tr>
 
-                    <!-- Header row -->
+                    <!-- 2. HEADER BAR -->
                     <tr>
-                        <td colspan="2" style="background:linear-gradient(90deg, #030a04, #0d1f11, #030a04);
-                            border-bottom:1px solid rgba(107,191,78,0.25); padding:10px 20px;">
-                            <table cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+                        <td colspan="10" style="background:linear-gradient(90deg, #030a04 0%, #091a0c 50%, #030a04 100%);
+                            border-bottom:1px solid rgba(107,191,78,0.18); padding:10px 22px;">
+                            <table cellpadding="0" cellspacing="0" border="0" style="width:100%; border-collapse:collapse;">
                                 <tr>
-                                    <td style="width:50px;">
+                                    <!-- Tournament logo -->
+                                    <td style="width:44px; vertical-align:middle;">
                                         <t t-if="doc.tournament_id and doc.tournament_id.logo">
                                             <img t-att-src="image_data_uri(doc.tournament_id.logo)"
-                                                 style="height:36px; width:auto; object-fit:contain;" />
+                                                 style="height:38px; width:auto; display:block; object-fit:contain;" />
                                         </t>
                                     </td>
-                                    <td style="padding-left:10px;">
-                                        <div style="font-family:'Orbitron',sans-serif; font-size:0.8rem; font-weight:700;
-                                            letter-spacing:2px; text-transform:uppercase; color:#e8f5e9; line-height:1.2;">
-                                            <t t-esc="doc.tournament_id.name if doc.tournament_id else 'Live Auction'"/>
+                                    <!-- Tournament info -->
+                                    <td style="vertical-align:middle; padding-left:12px;">
+                                        <div style="font-size:0.52rem; color:#546E7A; font-weight:700;
+                                            letter-spacing:3px; text-transform:uppercase; line-height:1;">
+                                            OFFICIAL PLAYER CARD
                                         </div>
-                                        <div style="font-size:0.6rem; color:#778899; letter-spacing:1.5px; text-transform:uppercase; margin-top:2px;">
-                                            Player Card
+                                        <div style="font-family:'Orbitron',sans-serif; font-size:0.82rem;
+                                            font-weight:700; color:#e8f5e9; letter-spacing:1.5px;
+                                            text-transform:uppercase; line-height:1.3; margin-top:3px;">
+                                            <t t-esc="doc.tournament_id.name if doc.tournament_id else 'Pistah Auction'"/>
                                         </div>
                                     </td>
-                                    <td style="text-align:right;">
-                                        <div style="display:inline-block; padding:3px 12px; border-radius:20px;
-                                            border:1px solid rgba(107,191,78,0.35); background:rgba(107,191,78,0.08);
-                                            font-family:'Orbitron',sans-serif; font-size:0.58rem; font-weight:700;
-                                            letter-spacing:2px; text-transform:uppercase; color:#A8E063;">
-                                            #<t t-esc="'%02d' % (doc.sl_no or 0)"/>
+                                    <!-- Serial number badge – glowing circle -->
+                                    <td style="width:58px; text-align:right; vertical-align:middle;">
+                                        <div style="display:inline-block; width:50px; height:50px;
+                                            border-radius:50%;
+                                            background:#060e08;
+                                            border:2px solid #6BBF4E;
+                                            box-shadow:0 0 14px rgba(107,191,78,0.55),
+                                                        0 0 28px rgba(107,191,78,0.15);
+                                            text-align:center; line-height:1; padding-top:8px;">
+                                            <div style="font-family:'Orbitron',sans-serif; font-size:0.48rem;
+                                                color:#6BBF4E; text-transform:uppercase; letter-spacing:1.5px;">
+                                                NO.
+                                            </div>
+                                            <div style="font-family:'Orbitron',sans-serif; font-size:1.05rem;
+                                                font-weight:900; color:#A8E063; line-height:1.1; letter-spacing:-1px;">
+                                                <t t-esc="'%02d' % (doc.sl_no or 0)"/>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -59,173 +92,351 @@
                         </td>
                     </tr>
 
-                    <!-- Main content: photo left | info right -->
-                    <tr style="height:1px;">
-                        <!-- Photo cell -->
-                        <td style="width:42%; vertical-align:top; padding:0; position:relative; overflow:hidden;">
-                            <div style="position:relative; width:100%; height:100%; min-height:300px; overflow:hidden;">
-                                <!-- Serial watermark -->
-                                <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-                                    font-family:'Orbitron',sans-serif; font-size:9rem; font-weight:900;
-                                    color:rgba(107,191,78,0.04); white-space:nowrap; pointer-events:none; z-index:1; line-height:1;">
+                    <!-- 3. FULL-WIDTH PHOTO BANNER -->
+                    <tr>
+                        <td colspan="10" style="padding:0; height:290px; overflow:hidden;
+                            background:#070f09; position:relative; line-height:0; font-size:0;">
+                            <div style="position:relative; width:100%; height:290px; overflow:hidden;">
+
+                                <!-- Serial watermark – very large, centred, ultra-faint -->
+                                <div style="position:absolute; top:50%; left:50%;
+                                    transform:translate(-50%,-50%);
+                                    font-family:'Orbitron',sans-serif; font-size:18rem; font-weight:900;
+                                    color:rgba(107,191,78,0.03); white-space:nowrap; z-index:1;
+                                    line-height:1; letter-spacing:-14px; pointer-events:none;">
                                     <t t-esc="'%02d' % (doc.sl_no or 0)"/>
                                 </div>
+
+                                <!-- Blurred background fill (PDF-safe: fallback to plain dark bg if unsupported) -->
                                 <t t-if="doc.photo">
                                     <img t-att-src="image_data_uri(doc.photo)"
                                          style="position:absolute; inset:0; width:100%; height:100%;
-                                         object-fit:cover; object-position:top center; z-index:2;" />
+                                         object-fit:cover; object-position:top center;
+                                         filter:blur(14px) brightness(0.25) saturate(0.4);
+                                         transform:scale(1.08); z-index:2;" />
                                 </t>
-                                <!-- Bottom gradient overlay on photo -->
-                                <div style="position:absolute; bottom:0; left:0; right:0; height:90px; z-index:3;
-                                    background:linear-gradient(to top, rgba(6,14,8,0.95) 0%, transparent 100%);">
+
+                                <!-- Main photo – centred, portrait-friendly, no stretch -->
+                                <t t-if="doc.photo">
+                                    <img t-att-src="image_data_uri(doc.photo)"
+                                         style="position:absolute; left:50%; top:0;
+                                         transform:translateX(-50%);
+                                         height:100%; width:auto;
+                                         object-fit:contain; object-position:top center; z-index:3;" />
+                                </t>
+
+                                <!-- Left-edge dark vignette -->
+                                <div style="position:absolute; inset:0; z-index:4;
+                                    background:linear-gradient(90deg,
+                                        rgba(6,14,8,0.75) 0%,
+                                        rgba(6,14,8,0.20) 25%,
+                                        rgba(6,14,8,0.00) 60%,
+                                        rgba(6,14,8,0.65) 100%);">
                                 </div>
-                                <!-- Name on photo -->
-                                <div style="position:absolute; bottom:10px; left:14px; right:14px; z-index:4;">
-                                    <div style="font-family:'Orbitron',sans-serif; font-size:0.85rem; font-weight:700;
-                                        color:#fff; text-transform:uppercase; letter-spacing:1.5px; line-height:1.2;">
-                                        <t t-esc="doc.name"/>
-                                    </div>
+
+                                <!-- Bottom fade to card surface -->
+                                <div style="position:absolute; bottom:0; left:0; right:0;
+                                    height:110px; z-index:5;
+                                    background:linear-gradient(to top,
+                                        rgba(6,14,8,1) 0%, rgba(6,14,8,0.7) 35%,
+                                        transparent 100%);">
+                                </div>
+
+                                <!-- Top scan-line accent -->
+                                <div style="position:absolute; top:0; left:0; right:0;
+                                    height:3px; z-index:6;
+                                    background:linear-gradient(90deg,
+                                        transparent 0%, rgba(107,191,78,0.5) 25%,
+                                        rgba(168,224,99,0.9) 50%,
+                                        rgba(107,191,78,0.5) 75%, transparent 100%);">
+                                </div>
+
+                                <!-- Player name + role overlay – bottom-left -->
+                                <div style="position:absolute; bottom:18px; left:22px;
+                                    right:22px; z-index:7;">
                                     <t t-if="doc.role">
-                                        <div style="font-family:'Exo 2',sans-serif; font-size:0.6rem; font-weight:700;
-                                            color:#A8E063; letter-spacing:2px; text-transform:uppercase; margin-top:2px;">
+                                        <div style="display:inline-block; padding:2px 11px;
+                                            margin-bottom:7px;
+                                            background:rgba(107,191,78,0.14);
+                                            border:1px solid rgba(107,191,78,0.4);
+                                            border-radius:3px;
+                                            font-family:'Exo 2',sans-serif; font-size:0.58rem;
+                                            font-weight:700; color:#A8E063;
+                                            letter-spacing:2px; text-transform:uppercase;">
                                             <t t-esc="doc.role"/>
                                         </div>
                                     </t>
+                                    <div style="font-family:'Orbitron',sans-serif; font-size:1.45rem;
+                                        font-weight:900; color:#ffffff; text-transform:uppercase;
+                                        letter-spacing:2px; line-height:1.1;
+                                        text-shadow:0 2px 14px rgba(0,0,0,0.85),
+                                                     0 0 32px rgba(107,191,78,0.12);">
+                                        <t t-esc="doc.name"/>
+                                    </div>
                                 </div>
-                                <!-- Diagonal green slash on right edge -->
-                                <div style="position:absolute; top:0; right:-1px; bottom:0; width:20px; z-index:5;
-                                    background:linear-gradient(to right, transparent 0%, rgba(107,191,78,0.15) 50%, rgba(6,14,8,0.8) 100%);">
+
+                                <!-- Right-edge slash overlay -->
+                                <div style="position:absolute; top:0; right:0; bottom:0;
+                                    width:90px; z-index:4;
+                                    background:linear-gradient(270deg,
+                                        rgba(6,14,8,0.85) 0%, transparent 100%);">
                                 </div>
+
                             </div>
                         </td>
+                    </tr>
 
-                        <!-- Green divider line -->
-                        <td style="width:3px; padding:0; background:linear-gradient(180deg,
-                            transparent 0%, #2E7D32 15%, #6BBF4E 50%, #2E7D32 85%, transparent 100%);
-                            box-shadow: 0 0 8px rgba(107,191,78,0.3);">
-                        </td>
+                    <!-- 4. GREEN DIVIDER STRIP -->
+                    <tr>
+                        <td colspan="10" style="height:3px; padding:0; line-height:0; font-size:0;
+                            background:linear-gradient(90deg,
+                                transparent 0%, #2E7D32 10%,
+                                #6BBF4E 30%, #A8E063 50%,
+                                #6BBF4E 70%, #2E7D32 90%, transparent 100%);
+                            box-shadow:0 0 10px rgba(107,191,78,0.45);">&#160;</td>
+                    </tr>
 
-                        <!-- Info panel -->
-                        <td style="vertical-align:top; padding:16px 18px 12px;
-                            background:linear-gradient(160deg, #0a1a0c 0%, #0d1f11 60%, #0b1a0e 100%);">
-
-                            <!-- Tier badge -->
-                            <t t-if="doc.tier_id">
-                                <div style="display:inline-block; padding:3px 14px; border-radius:4px; margin-bottom:10px;
-                                    border:1px solid rgba(107,191,78,0.4); background:rgba(107,191,78,0.08);
-                                    font-family:'Orbitron',sans-serif; font-size:0.6rem; font-weight:700;
-                                    letter-spacing:2px; text-transform:uppercase; color:#A8E063;">
-                                    <t t-esc="doc.tier_id.name"/>
-                                </div>
-                            </t>
-
-                            <!-- Green divider rule -->
-                            <div style="height:2px; margin-bottom:12px;
-                                background:linear-gradient(90deg, #6BBF4E 0%, #A8E063 30%, rgba(107,191,78,0.15) 70%, transparent 100%);
-                                border-radius:1px; box-shadow:0 0 6px rgba(107,191,78,0.35);">
-                            </div>
-
-                            <!-- Stats table -->
-                            <table cellpadding="0" cellspacing="0" border="0" style="width:100%; border-collapse:separate; border-spacing:4px;">
-                                <t t-if="doc.batting_style">
-                                    <tr>
-                                        <td style="padding:7px 10px; background:rgba(107,191,78,0.05);
-                                            border:1px solid rgba(107,191,78,0.12); border-radius:6px; width:50%;">
-                                            <div style="font-size:0.75rem; font-weight:700; color:#e8f5e9; line-height:1.2;">
-                                                <t t-esc="doc.batting_style"/>
+                    <!-- 5. TIER BADGE + BASE PRICE STRIP -->
+                    <tr>
+                        <td colspan="10" style="padding:12px 22px 6px;
+                            background:linear-gradient(180deg, #0a1a0c 0%, #0d1f11 100%);">
+                            <table cellpadding="0" cellspacing="0" border="0"
+                                   style="width:100%; border-collapse:collapse;">
+                                <tr>
+                                    <!-- Tier badge -->
+                                    <td style="vertical-align:middle;">
+                                        <t t-if="doc.tier_id">
+                                            <span t-att-style="
+                                                'display:inline-block; padding:5px 18px; border-radius:4px; '
+                                                + 'background:' + (doc.tier_id.color or '#6BBF4E') + '1A; '
+                                                + 'border:1.5px solid ' + (doc.tier_id.color or '#6BBF4E') + '55; '
+                                                + 'font-family:Orbitron,sans-serif; font-size:0.65rem; font-weight:700; '
+                                                + 'letter-spacing:2.5px; text-transform:uppercase; '
+                                                + 'color:' + (doc.tier_id.color or '#A8E063') + ';'">
+                                                <t t-esc="doc.tier_id.name"/>
+                                            </span>
+                                        </t>
+                                        <t t-else="">
+                                            <span style="display:inline-block; padding:5px 18px; border-radius:4px;
+                                                background:rgba(107,191,78,0.08);
+                                                border:1.5px solid rgba(107,191,78,0.3);
+                                                font-family:'Orbitron',sans-serif; font-size:0.65rem;
+                                                font-weight:700; letter-spacing:2.5px;
+                                                text-transform:uppercase; color:#6BBF4E;">
+                                                OPEN
+                                            </span>
+                                        </t>
+                                    </td>
+                                    <!-- Flex spacer -->
+                                    <td style="width:100%;"></td>
+                                    <!-- Base price chip -->
+                                    <t t-if="doc.effective_base_price">
+                                        <td style="text-align:right; vertical-align:middle; white-space:nowrap;">
+                                            <div style="display:inline-block; padding:5px 16px;
+                                                background:rgba(107,191,78,0.08);
+                                                border:1px solid rgba(107,191,78,0.3);
+                                                border-radius:4px;">
+                                                <div style="font-family:'Exo 2',sans-serif; font-size:0.5rem;
+                                                    color:#546E7A; font-weight:700; letter-spacing:2.5px;
+                                                    text-transform:uppercase; margin-bottom:2px;">
+                                                    BASE PRICE
+                                                </div>
+                                                <div style="font-family:'Orbitron',sans-serif; font-size:1rem;
+                                                    font-weight:900; color:#A8E063; letter-spacing:-0.5px;
+                                                    line-height:1;">
+                                                    <t t-esc="doc.effective_base_price"/>
+                                                    <span style="font-size:0.58rem; font-weight:600;
+                                                        color:#6BBF4E; margin-left:2px;">pts</span>
+                                                </div>
                                             </div>
-                                            <div style="font-size:0.55rem; font-weight:600; letter-spacing:2px;
-                                                text-transform:uppercase; color:#778899; margin-top:2px;">Batting</div>
                                         </td>
-                                        <t t-if="doc.bowling_style">
-                                            <td style="padding:7px 10px; background:rgba(107,191,78,0.05);
-                                                border:1px solid rgba(107,191,78,0.12); border-radius:6px; width:50%;">
-                                                <div style="font-size:0.75rem; font-weight:700; color:#e8f5e9; line-height:1.2;">
+                                    </t>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Green rule under tier strip -->
+                    <tr>
+                        <td colspan="10" style="padding:0 22px 0;">
+                            <div style="height:1.5px;
+                                background:linear-gradient(90deg,
+                                    #6BBF4E 0%, #A8E063 20%,
+                                    rgba(107,191,78,0.25) 65%, transparent 100%);
+                                border-radius:1px;">
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- 6. STAT CHIPS – horizontal row -->
+                    <tr>
+                        <td colspan="10" style="padding:10px 22px 10px;
+                            background:#0d1f11;">
+                            <table cellpadding="0" cellspacing="0" border="0"
+                                   style="width:100%; border-collapse:collapse;">
+                                <tr>
+
+                                    <!-- Batting -->
+                                    <t t-if="doc.batting_style">
+                                        <td style="padding-right:6px; vertical-align:top;">
+                                            <div style="background:rgba(107,191,78,0.05);
+                                                border:1px solid rgba(107,191,78,0.16);
+                                                border-left:3px solid #6BBF4E;
+                                                border-radius:0 6px 6px 0; padding:8px 11px;">
+                                                <div style="font-size:0.48rem; font-weight:700;
+                                                    color:#546E7A; letter-spacing:2.5px;
+                                                    text-transform:uppercase; margin-bottom:4px;">
+                                                    &#9632; BATTING
+                                                </div>
+                                                <div style="font-family:'Exo 2',sans-serif;
+                                                    font-size:0.8rem; font-weight:700;
+                                                    color:#e8f5e9; line-height:1.25;">
+                                                    <t t-esc="doc.batting_style"/>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </t>
+
+                                    <!-- Bowling -->
+                                    <t t-if="doc.bowling_style">
+                                        <td style="padding-right:6px; vertical-align:top;">
+                                            <div style="background:rgba(107,191,78,0.05);
+                                                border:1px solid rgba(107,191,78,0.16);
+                                                border-left:3px solid #A8E063;
+                                                border-radius:0 6px 6px 0; padding:8px 11px;">
+                                                <div style="font-size:0.48rem; font-weight:700;
+                                                    color:#546E7A; letter-spacing:2.5px;
+                                                    text-transform:uppercase; margin-bottom:4px;">
+                                                    &#9632; BOWLING
+                                                </div>
+                                                <div style="font-family:'Exo 2',sans-serif;
+                                                    font-size:0.8rem; font-weight:700;
+                                                    color:#e8f5e9; line-height:1.25;">
                                                     <t t-esc="doc.bowling_style"/>
                                                 </div>
-                                                <div style="font-size:0.55rem; font-weight:600; letter-spacing:2px;
-                                                    text-transform:uppercase; color:#778899; margin-top:2px;">Bowling</div>
-                                            </td>
-                                        </t>
-                                    </tr>
-                                </t>
-                                <t t-if="doc.p_category or doc.blood_group">
-                                    <tr>
-                                        <t t-if="doc.p_category">
-                                            <td style="padding:7px 10px; background:rgba(107,191,78,0.05);
-                                                border:1px solid rgba(107,191,78,0.12); border-radius:6px;">
-                                                <div style="font-size:0.75rem; font-weight:700; color:#e8f5e9; line-height:1.2;">
+                                            </div>
+                                        </td>
+                                    </t>
+
+                                    <!-- Category -->
+                                    <t t-if="doc.p_category">
+                                        <td style="padding-right:6px; vertical-align:top;">
+                                            <div style="background:rgba(107,191,78,0.05);
+                                                border:1px solid rgba(107,191,78,0.16);
+                                                border-left:3px solid #2E7D32;
+                                                border-radius:0 6px 6px 0; padding:8px 11px;">
+                                                <div style="font-size:0.48rem; font-weight:700;
+                                                    color:#546E7A; letter-spacing:2.5px;
+                                                    text-transform:uppercase; margin-bottom:4px;">
+                                                    &#9632; CATEGORY
+                                                </div>
+                                                <div style="font-family:'Exo 2',sans-serif;
+                                                    font-size:0.8rem; font-weight:700;
+                                                    color:#e8f5e9; line-height:1.25;">
                                                     <t t-esc="doc.p_category"/>
                                                 </div>
-                                                <div style="font-size:0.55rem; font-weight:600; letter-spacing:2px;
-                                                    text-transform:uppercase; color:#778899; margin-top:2px;">Category</div>
-                                            </td>
-                                        </t>
-                                        <t t-if="doc.blood_group">
-                                            <td style="padding:7px 10px; background:rgba(107,191,78,0.05);
-                                                border:1px solid rgba(107,191,78,0.12); border-radius:6px;">
-                                                <div style="font-size:0.75rem; font-weight:800; color:#A8E063; line-height:1.2;">
+                                            </div>
+                                        </td>
+                                    </t>
+
+                                    <!-- Blood group -->
+                                    <t t-if="doc.blood_group">
+                                        <td style="vertical-align:top;">
+                                            <div style="background:rgba(107,191,78,0.05);
+                                                border:1px solid rgba(107,191,78,0.16);
+                                                border-left:3px solid #546E7A;
+                                                border-radius:0 6px 6px 0; padding:8px 11px;">
+                                                <div style="font-size:0.48rem; font-weight:700;
+                                                    color:#546E7A; letter-spacing:2.5px;
+                                                    text-transform:uppercase; margin-bottom:4px;">
+                                                    &#9632; BLOOD
+                                                </div>
+                                                <div style="font-family:'Orbitron',sans-serif;
+                                                    font-size:0.85rem; font-weight:800;
+                                                    color:#A8E063; line-height:1.25;">
                                                     <t t-esc="doc.blood_group"/>
                                                 </div>
-                                                <div style="font-size:0.55rem; font-weight:600; letter-spacing:2px;
-                                                    text-transform:uppercase; color:#778899; margin-top:2px;">Blood Group</div>
-                                            </td>
-                                        </t>
-                                    </tr>
-                                </t>
-                                <t t-if="doc.address">
-                                    <tr>
-                                        <td colspan="2" style="padding:7px 10px; background:rgba(107,191,78,0.05);
-                                            border:1px solid rgba(107,191,78,0.12); border-radius:6px;">
-                                            <div style="font-size:0.75rem; font-weight:700; color:#e8f5e9; line-height:1.2;">
-                                                <t t-esc="doc.address"/>
                                             </div>
-                                            <div style="font-size:0.55rem; font-weight:600; letter-spacing:2px;
-                                                text-transform:uppercase; color:#778899; margin-top:2px;">Location</div>
+                                        </td>
+                                    </t>
+
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- 7. LOCATION ROW -->
+                    <t t-if="doc.address">
+                        <tr>
+                            <td colspan="10" style="padding:0 22px 12px; background:#0d1f11;">
+                                <table cellpadding="0" cellspacing="0" border="0"
+                                       style="width:100%; border-collapse:collapse;
+                                              background:rgba(107,191,78,0.04);
+                                              border:1px solid rgba(107,191,78,0.12);
+                                              border-radius:6px;">
+                                    <tr>
+                                        <td style="padding:8px 14px; white-space:nowrap;
+                                            border-right:1px solid rgba(107,191,78,0.12);
+                                            width:1%;">
+                                            <span style="font-size:0.48rem; font-weight:700;
+                                                color:#546E7A; letter-spacing:2.5px;
+                                                text-transform:uppercase;">
+                                                &#9632; LOCATION
+                                            </span>
+                                        </td>
+                                        <td style="padding:8px 14px;">
+                                            <span style="font-family:'Exo 2',sans-serif;
+                                                font-size:0.8rem; font-weight:600;
+                                                color:#B0BEC5; line-height:1.2;">
+                                                <t t-esc="doc.address"/>
+                                            </span>
                                         </td>
                                     </tr>
-                                </t>
+                                </table>
+                            </td>
+                        </tr>
+                    </t>
+
+                    <!-- 8. FOOTER -->
+                    <tr>
+                        <td colspan="10" style="padding:8px 22px;
+                            background:#030a04;
+                            border-top:1px solid rgba(107,191,78,0.16);">
+                            <table cellpadding="0" cellspacing="0" border="0"
+                                   style="width:100%; border-collapse:collapse;">
+                                <tr>
+                                    <td style="vertical-align:middle;">
+                                        <span style="font-family:'Orbitron',sans-serif;
+                                            font-size:0.54rem; font-weight:700;
+                                            color:#2E7D32; letter-spacing:3px;
+                                            text-transform:uppercase;">
+                                            PISTAH EDITION
+                                        </span>
+                                    </td>
+                                    <td style="text-align:center; vertical-align:middle;">
+                                        <span style="font-family:'Exo 2',sans-serif;
+                                            font-size:0.54rem; color:#546E7A;
+                                            letter-spacing:2px; text-transform:uppercase;">
+                                            Auction Champ
+                                        </span>
+                                    </td>
+                                    <td style="text-align:right; vertical-align:middle;">
+                                        <span style="font-family:'Orbitron',sans-serif;
+                                            font-size:0.54rem; font-weight:700;
+                                            color:#2E7D32; letter-spacing:2px;">
+                                            PLAYER #<t t-esc="'%02d' % (doc.sl_no or 0)"/>
+                                        </span>
+                                    </td>
+                                </tr>
                             </table>
-
-                            <!-- Base price block -->
-                            <t t-if="doc.tier_id and doc.tier_id.description">
-                                <div style="margin-top:12px; border:1px solid rgba(107,191,78,0.35); border-radius:8px;
-                                    overflow:hidden; background:rgba(107,191,78,0.04);">
-                                    <table cellpadding="0" cellspacing="0" border="0" style="width:100%; border-collapse:collapse;">
-                                        <tr>
-                                            <td style="padding:8px 14px; background:rgba(107,191,78,0.12);
-                                                border-right:1px solid rgba(107,191,78,0.25);
-                                                font-family:'Orbitron',sans-serif; font-size:0.55rem; font-weight:700;
-                                                letter-spacing:2px; text-transform:uppercase; color:#6BBF4E;
-                                                white-space:nowrap; width:35%;">Tier Info</td>
-                                            <td style="padding:8px 14px;
-                                                font-family:'Exo 2',sans-serif; font-size:0.85rem; font-weight:700;
-                                                color:#A8E063;">
-                                                <t t-esc="doc.tier_id.description"/>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </div>
-                            </t>
-
                         </td>
                     </tr>
 
-                    <!-- Footer row -->
+                    <!-- 9. BOTTOM ACCENT STRIPE -->
                     <tr>
-                        <td colspan="2" style="background:#030a04; padding:7px 20px;
-                            text-align:center; border-top:1px solid rgba(107,191,78,0.2);">
-                            <span style="color:#546E7A; font-family:'Exo 2',sans-serif; font-size:0.58rem;
-                                font-weight:600; letter-spacing:3px; text-transform:uppercase;">
-                                Auction Champ · Pistah Edition
-                            </span>
-                        </td>
-                    </tr>
-
-                    <!-- Bottom accent stripe -->
-                    <tr>
-                        <td colspan="2" style="height:4px; padding:0; line-height:0; font-size:0;
-                            background:linear-gradient(90deg, transparent, #2E7D32, #6BBF4E, #2E7D32, transparent);">&#160;</td>
+                        <td colspan="10" style="height:4px; padding:0; line-height:0; font-size:0;
+                            background:linear-gradient(90deg,
+                                transparent, #2E7D32, #6BBF4E, #2E7D32, transparent);">&#160;</td>
                     </tr>
 
                 </table>

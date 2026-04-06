@@ -186,22 +186,80 @@
                         <notebook>
                             <page string="Signed Players">
                                 <field name="player_ids" nolabel="1">
-                                    <tree create="0" decoration-success="icon_player == True"
-                                          >
-                                        <field name="player_id"   string="Player"     optional="show"/>
-                                        <field name="role"        string="Role"       optional="show"/>
-                                        <field name="tier_id"     string="Tier"       optional="show"/>
-                                        <field name="icon_player" string="Key Player" optional="show"
-                                               widget="boolean_toggle"/>
-                                        <field name="points"      string="Sold For"   optional="show"/>
-                                        <field name="contact"     string="Contact"    optional="hide"/>
-                                        <button name="%(auction_module.action_edit_player_point)d"
-                                                type="action" string="Edit Points" class="oe_link"
-                                                icon="fa-edit"/>
-                                        <button name="action_recall_to_auction" type="object"
-                                                string="Recall" class="oe_link" icon="fa-undo"
-                                                confirm="Bring this player back to auction? This will remove them from the team."/>
-                                    </tree>
+                                    <kanban create="0" delete="0" class="o_signed_players_kanban">
+                                        <field name="player_id"/>
+                                        <field name="role"/>
+                                        <field name="tier_id"/>
+                                        <field name="tier_color"/>
+                                        <field name="icon_player"/>
+                                        <field name="points"/>
+                                        <templates>
+                                            <t t-name="kanban-box">
+                                                <t t-set="tc"  t-value="record.tier_color.raw_value || '#3498db'"/>
+                                                <t t-set="pid" t-value="record.player_id.raw_value"/>
+                                                <div class="pk2-card" t-attf-style="--pk2-tier:#{tc}">
+
+                                                    <!-- ── Header ────────────────────────────────── -->
+                                                    <div class="pk2-header">
+                                                        <div class="pk2-photo">
+                                                            <img t-attf-src="/web/image/auction.team.player/#{pid}/photo"
+                                                                 alt="Photo"
+                                                                 style="width:100%;height:100%;object-fit:cover;object-position:top center;"
+                                                                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+                                                            <div class="pk2-photo-placeholder" style="display:none;">&#128100;</div>
+                                                        </div>
+                                                        <div class="pk2-title">
+                                                            <div class="pk2-name" t-esc="record.player_id.value"/>
+                                                            <div t-if="record.role.raw_value" class="pk2-sub" t-esc="record.role.value"/>
+                                                        </div>
+                                                        <t t-if="record.icon_player.raw_value">
+                                                            <span class="pk2-state-badge pk2-s-icon">&#11088; ICON</span>
+                                                        </t>
+                                                    </div>
+
+                                                    <!-- ── Tier + Role badges ─────────────────────── -->
+                                                    <div class="pk2-badges">
+                                                        <t t-if="record.tier_id.raw_value">
+                                                            <span class="pk2-badge pk2-b-tier"
+                                                                  t-attf-style="background:#{tc};"
+                                                                  t-esc="record.tier_id.value"/>
+                                                        </t>
+                                                        <t t-if="record.role.raw_value">
+                                                            <span class="pk2-badge pk2-b-role" t-esc="record.role.value"/>
+                                                        </t>
+                                                    </div>
+
+                                                    <!-- ── Points chip ────────────────────────────── -->
+                                                    <div class="pk2-stats">
+                                                        <div class="pk2-stat pk2-stat-sold"
+                                                             t-attf-style="border-color:#{tc}33; background:#{tc}0d;">
+                                                            <div class="pk2-stat-label">Sold For</div>
+                                                            <div class="pk2-stat-value pk2-pts-val"
+                                                                 t-attf-style="color:#{tc};">
+                                                                <t t-esc="record.points.value"/> pts
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- ── Action buttons ─────────────────────────── -->
+                                                    <div class="pk2-actions">
+                                                        <button name="%(auction_module.action_edit_player_point)d"
+                                                                type="action"
+                                                                class="pk2-btn pk2-btn-edit">
+                                                            <i class="fa fa-pencil"/> Edit Points
+                                                        </button>
+                                                        <button name="action_recall_to_auction"
+                                                                type="object"
+                                                                class="pk2-btn pk2-btn-recall"
+                                                                confirm="Bring this player back to auction? This will remove them from the team.">
+                                                            <i class="fa fa-undo"/> Recall
+                                                        </button>
+                                                    </div>
+
+                                                </div>
+                                            </t>
+                                        </templates>
+                                    </kanban>
                                 </field>
                             </page>
                             <page string="Tier Limits">

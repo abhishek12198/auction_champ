@@ -562,7 +562,28 @@
   font-size: .52rem; font-weight: 700; letter-spacing: .6px;
   text-transform: uppercase; color: #94a3b8; margin-bottom: 2px;
 }
-.pjk-chip-value {
-  font-size: .75rem; font-weight: 700; color: #1a2744;
-  text-align: center;
+/* ══════════════════════════════════════════════════════════════════
+   Signed-Players Kanban  — one2many inside auction.auction form
+   ══════════════════════════════════════════════════════════════════ */
+.o_signed_players_kanban .o_kanban_renderer {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 14px 0;
+  background: transparent;
+  align-items: flex-start;
 }
+.o_signed_players_kanban .o_kanban_group { flex: none; background: transparent; box-shadow: none; padding: 0; }
+.o_signed_players_kanban .o_kanban_record { padding: 0; border: none; box-shadow: none; background: transparent; }
+
+/* Icon badge variant */
+.pk2-s-icon { background: linear-gradient(135deg, #d97706, #fbbf24); color: #fff; }
+
+/* Edit-Points button */
+.pk2-btn-edit { background: #ede9fe; color: #7c3aed; }
+.pk2-btn-edit:hover { background: #ddd6fe; }
+
+/* Sold-for stat chip overrides */
+.pk2-stat-sold { border-width: 1.5px; }
+.pk2-pts-val { font-size: .9rem; font-weight: 800; }
+

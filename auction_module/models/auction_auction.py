@@ -127,6 +127,12 @@ class AuctionPlayer(models.Model):
     tier_id    = fields.Many2one(related='player_id.tier_id',  string='Tier', comodel_name='auction.player.tier')
     icon_player = fields.Boolean(related='player_id.icon_player',   string='Key Player')
     points = fields.Integer(string='Sold For (pts)')
+    # Fields used by the signed-players kanban card
+    tier_color = fields.Char(string='Tier Color', compute='_compute_tier_color')
+
+    def _compute_tier_color(self):
+        for rec in self:
+            rec.tier_color = rec.player_id.tier_id.color or '#3498db'
 
     def action_recall_to_auction(self):
         context = self.env.context.copy()

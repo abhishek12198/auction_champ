@@ -344,7 +344,7 @@
     </header>
 
     <!-- ── MAIN STAGE ──────────────────────────────────────── -->
-    <div class="ch-stage">
+    <div class="ch-stage" data-player-zone="">
 
       <!-- Left: identity -->
       <div class="ch-identity">
@@ -434,7 +434,45 @@
     ></script>
 
     <script>
-      function changeImage() { window.location.reload(); }
+      async function changeImage() {
+        var toast = document.getElementById('ac-next-toast');
+        var bar   = document.getElementById('ac-next-bar');
+        if (toast) {
+          toast.style.display  = 'flex';
+          toast.style.opacity  = '1';
+          bar.style.transition = 'none';
+          bar.style.width      = '0%';
+          requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+              bar.style.transition = 'width 1.2s cubic-bezier(.4,0,.2,1)';
+              bar.style.width      = '80%';
+            });
+          });
+        }
+        try {
+          var resp = await fetch(window.location.href, {cache: 'no-store'});
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          var html = await resp.text();
+          var parser = new DOMParser();
+          var newDoc = parser.parseFromString(html, 'text/html');
+          var pid = newDoc.body.getAttribute('data-player-id');
+          if (pid) document.body.setAttribute('data-player-id', pid);
+          var zone    = document.querySelector('[data-player-zone]');
+          var newZone = newDoc.querySelector('[data-player-zone]');
+          if (zone &amp;&amp; newZone) { zone.innerHTML = newZone.innerHTML; }
+          if (toast) {
+            bar.style.transition = 'width 0.15s ease';
+            bar.style.width      = '100%';
+            setTimeout(function() {
+              toast.style.opacity = '0';
+              setTimeout(function() { toast.style.display = 'none'; }, 400);
+            }, 250);
+          }
+        } catch(e) {
+          console.error('Next player load failed:', e);
+          window.location.reload();
+        }
+      }
 
       document.addEventListener("keydown", function(event) {
         if (event.code === "Space") { event.preventDefault(); changeImage(); }
@@ -555,6 +593,38 @@
       </div>
       <!-- Toast notification -->
       <div id="unsoldToast" style="display:none; position:fixed; bottom:28px; left:50%; transform:translateX(-50%); z-index:10001; color:#fff; padding:12px 28px; border-radius:8px; font-size:0.95rem; font-weight:600; box-shadow:0 4px 16px rgba(0,0,0,0.5);"></div>
+    <!-- Next-player progress toast -->
+    <div id="ac-next-toast" style="display:none;opacity:0;position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:10002;min-width:220px;max-width:320px;background:#1a0008;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.6);overflow:hidden;flex-direction:column;transition:opacity .4s;border:1px solid rgba(220,20,60,.25);">
+      <div style="padding:12px 20px 10px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:1.1rem;">⚡</span>
+        <span style="color:#fce4ec;font-size:0.85rem;font-weight:600;letter-spacing:.5px;">Loading Next Player…</span>
+      </div>
+      <div style="height:3px;background:rgba(255,255,255,.1);">
+        <div id="ac-next-bar" style="height:100%;width:0%;background:#DC143C;border-radius:2px;transition:width .3s;"></div>
+      </div>
+    </div>
+    <!-- Fullscreen Toggle -->
+    <button id="fs-btn" onclick="toggleFullscreen()" title="Enter Fullscreen" style="position:fixed;top:14px;right:14px;z-index:9999;width:38px;height:38px;border-radius:8px;background:rgba(13,13,13,0.75);border:1.5px solid rgba(220,20,60,0.45);color:#DC143C;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:0;transition:background .2s,box-shadow .2s;" onmouseover="this.style.boxShadow='0 0 12px rgba(220,20,60,0.45)'" onmouseout="this.style.boxShadow='none'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
+    <script>
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(function(e) { console.warn(e); });
+        } else {
+          document.exitFullscreen();
+        }
+      }
+      document.addEventListener('fullscreenchange', function() {
+        var btn = document.getElementById('fs-btn');
+        if (!btn) return;
+        if (document.fullscreenElement) {
+          btn.title = 'Exit Fullscreen';
+          btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>';
+        } else {
+          btn.title = 'Enter Fullscreen';
+          btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>';
+        }
+      });
+    </script>
     <t t-call="auction_module.player_sell_modal"/>
   </body>
 </html>

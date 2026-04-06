@@ -522,6 +522,8 @@
         }
         #screenshot_container .tp-card-photo-wrap {
           height: 180px;
+          position: relative;
+          overflow: hidden;
         }
       </style>
     </head>
@@ -658,6 +660,30 @@
           var fileName = btn.dataset.filename || 'squad.png';
           btn.style.visibility = 'hidden';
 
+          /* Fix photo proportions — html2canvas ignores object-fit, so we
+             compute contained dimensions and apply them as explicit px values. */
+          var photoImgs = container.querySelectorAll('.tp-card-photo');
+          var restoreList = [];
+          photoImgs.forEach(function(img) {
+            if (!img.naturalWidth || !img.naturalHeight) return;
+            var wrap = img.closest('.tp-card-photo-wrap');
+            if (!wrap) return;
+            var wrapW = wrap.offsetWidth;
+            var wrapH = wrap.offsetHeight;
+            var scale = Math.min(wrapW / img.naturalWidth, wrapH / img.naturalHeight);
+            var dispW = Math.round(img.naturalWidth  * scale);
+            var dispH = Math.round(img.naturalHeight * scale);
+            /* Save originals */
+            restoreList.push({img: img, style: img.getAttribute('style') || ''});
+            /* Center within wrap using absolute positioning */
+            img.style.position   = 'absolute';
+            img.style.top        = Math.round((wrapH - dispH) / 2) + 'px';
+            img.style.left       = Math.round((wrapW - dispW) / 2) + 'px';
+            img.style.width      = dispW + 'px';
+            img.style.height     = dispH + 'px';
+            img.style.objectFit  = 'unset';
+          });
+
           html2canvas(container, {
             scale: 2,
             useCORS: true,
@@ -668,6 +694,10 @@
             windowWidth: 1280,
             windowHeight: container.scrollHeight,
           }).then(function(canvas) {
+            /* Restore original image styles */
+            restoreList.forEach(function(r) {
+              r.img.setAttribute('style', r.style);
+            });
             btn.style.visibility = 'visible';
             var link = document.createElement('a');
             link.href = canvas.toDataURL('image/png');
