@@ -59,6 +59,7 @@
     ],
     'assets': {
             'web.assets_backend': [
+                    '/auction_module/static/src/js/dropdown_fix.js',
                     '/auction_module/static/src/js/center_toast.js',
                     '/auction_module/static/src/css/wizard_style.css',
                     '/auction_module/static/src/css/sticky_header.css',

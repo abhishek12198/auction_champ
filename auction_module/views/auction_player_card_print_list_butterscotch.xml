@@ -107,7 +107,9 @@
                     <!-- Footer -->
                     <tr>
                         <td colspan="2" style="background:#090912; padding:8px 20px; text-align:center; border-top:2px solid #C8960C;">
-                            <span style="color:#F5C842; font-family:'Teko',sans-serif; font-size:0.65rem; font-weight:700; letter-spacing:4px; text-transform:uppercase;">Auction Champ - Player Card</span>
+                            <span style="font-family:'Teko',sans-serif; font-size:0.62rem; letter-spacing:3px; text-transform:uppercase;">
+                                <span style="color:rgba(245,200,66,0.5); font-weight:400;">Powered by&#160;</span><span style="color:#F5C842; font-weight:700; letter-spacing:4px;">AuctionChamp</span>
+                            </span>
                         </td>
                     </tr>
                 </table>

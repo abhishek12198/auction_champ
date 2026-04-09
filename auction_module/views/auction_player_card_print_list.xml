@@ -96,7 +96,9 @@
                     <!-- Footer -->
                     <tr>
                         <td colspan="2" style="background:#2252b5; padding:8px 20px; text-align:center;">
-                            <span style="color:#fdce33; font-size:0.65rem; font-weight:700; letter-spacing:3px; text-transform:uppercase;">Auction Player Card</span>
+                            <span style="font-size:0.62rem; letter-spacing:3px; text-transform:uppercase;">
+                                <span style="color:rgba(253,206,51,0.5); font-weight:400;">Powered by&#160;</span><span style="color:#fdce33; font-weight:700; letter-spacing:4px;">AuctionChamp</span>
+                            </span>
                         </td>
                     </tr>
                 </table>
