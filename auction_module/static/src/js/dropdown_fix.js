@@ -15,7 +15,7 @@ import { patch } from "@web/core/utils/patch";
  */
 patch(Dropdown.prototype, "auction_module.dropdown_null_guard", {
     onDropdownStateChanged(payload) {
-        if (!this.el) {
+        if (!this.el || !this.el.parentElement) {
             return;
         }
         return this._super(payload);

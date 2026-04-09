@@ -92,6 +92,12 @@
           action="action_auction_team_player_jersy"
           sequence="7"/>
 
+        <menuitem id="menu_action_auction_pdf_to_png"
+          name="Convert PDF to PNG"
+          parent="menu_action_auction_player"
+          action="action_auction_pdf_to_png"
+          sequence="20"/>
+
         <menuitem id="menu_action_auction_conf"
           name="Configuration"
           parent="menu_action_auction_root"
@@ -147,6 +153,18 @@
           action="auction_module.action_team_pool_wizard"
           sequence="5"/>
 
+
+        <record id="action_manual_auction" model="ir.actions.act_url">
+            <field name="name">Manual Auction</field>
+            <field name="url">/auction/player_selector</field>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="menu_action_manual_auction"
+          name="Manual Auction"
+          parent="menu_action_auction_auction"
+          action="auction_module.action_manual_auction"
+          sequence="99"/>
 
         <menuitem id="menu_action_auction_tournament"
           name="Tournament(s)"

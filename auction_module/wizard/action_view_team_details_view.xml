@@ -6,30 +6,15 @@
             <field name="name">auction.view.team.details.form</field>
             <field name="model">auction.view.team.details</field>
             <field name="arch" type="xml">
-                <form string="Auction">
+                <form string="Team Squad Summary">
                     <header>
-                        <button name="button_print_players_list" class="oe_highlight" string="Print" type="object"></button>
+                        <button name="button_print_roster" class="oe_highlight" string="Print Roster" type="object"/>
+                        <button name="button_print_team_template" string="Print Template" type="object"/>
                     </header>
-                    <field name="team_logo" widget='image' class="oe_avatar"/>
-                    <div class="oe_title oe_inline">
-                        <label for="team_id"/>
-                        <h1><field name="team_id" readonly="1" force_save="1" options="{'no_open': 1}"/> </h1>
-                    </div>
-                    <u><h4>Players</h4></u>
                     <group>
                         <field name="html_field" readonly="1" nolabel="1"/>
                     </group>
-                    <group>
-                            <field name="remaining_points" string="Points Remaining" readonly="1" force_save="1"/>
-                            <field name="remaining_players_count" string="Players Remaining" readonly="1" force_save="1"/>
-                    </group>
-                    <group>
-                        <field name="suggestion" readonly="1" nolabel="1"/>
-                    </group>
-
-                    <footer>
->
-                    </footer>
+                    <footer/>
                 </form>
             </field>
         </record>

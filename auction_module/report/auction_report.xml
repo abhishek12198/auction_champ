@@ -6,7 +6,19 @@
             <field name="report_type">qweb-pdf</field>
             <field name="report_name">auction_module.report_auction_auction_document</field>
             <field name="report_file">auction_module.report_auction_auction_document</field>
-            <field name="print_report_name">'%s Players List' % ((object.team_id.name or 'Team'))</field>
+            <field name="paperformat_id" ref="auction_module.paperformat_a4_roster"/>
+            <field name="print_report_name">'%s Squad Roster' % ((object.team_id.name or 'Team'))</field>
+        </record>
+
+        <!-- Blank squad template (placeholder rows for manual fill-in) -->
+        <record id="action_report_auction_template" model="ir.actions.report">
+            <field name="name">Squad Template</field>
+            <field name="model">auction.auction</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">auction_module.report_auction_blank_template</field>
+            <field name="report_file">auction_module.report_auction_blank_template</field>
+            <field name="paperformat_id" ref="auction_module.paperformat_a4_roster"/>
+            <field name="print_report_name">'%s Squad Template' % ((object.team_id.name or 'Team'))</field>
         </record>
 
         <!-- Player card list print – Vanilla (not bound to Print menu; use Print Player Cards action instead) -->

@@ -1,118 +1,1168 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-
 <template id="player_sequence_selector">
-    <html lang="en">
-        <head>
-            <meta charset="utf-8"/>
-            <meta name="viewport" content="width=device-width, initial-scale=1"/>
-            <title>Auction Player Queue</title>
+<html lang="en" t-att-data-theme="theme">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Manual Auction</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&amp;family=Rajdhani:wght@400;500;600;700&amp;family=Nunito:wght@600;700;800&amp;family=Teko:wght@600;700&amp;display=swap" rel="stylesheet"/>
+  <t t-call-assets="web.assets_common" t-js="false"/>
+  <t t-call-assets="web.assets_frontend" t-js="false"/>
+  <style>
+/* ═══ THEMES ══════════════════════════════════════════════════════════ */
+[data-theme="vanilla"]{
+  --accent:#E8A020;--accent2:#FFD166;--accent-glow:rgba(232,160,32,.35);
+  --bg:#060C1A;--bg-s:#0B1529;--bg-p:#0F2447;--bg-c:#142954;
+  --tx:#EEF4FF;--tx-d:rgba(200,220,255,.55);--div:rgba(232,160,32,.3);
+  --btn-bg:#0F2447;--btn-bd:#E8A020;--btn-hbg:#E8A020;--btn-tx:#EEF4FF;--btn-htx:#060C1A;
+  --hf:'Orbitron',sans-serif;--bf:'Rajdhani',sans-serif;
+  --badge:#E8A020;--badge-tx:#060C1A;
+  --card-bg:#0B1529;--card-bd:#1E3A6A;
+  --stamp-c:#E8A020;--stamp-tx:#060C1A;
+  --sold-bg:#E8A020;--sold-tx:#060C1A;
+  --unsold-bg:#DC143C;--unsold-tx:#fff;
+  --action-unsold:#DC143C;--action-unsold-h:#b71c1c;
+  --action-sell:#E8A020;--action-sell-h:#c8860a;--action-sell-tx:#060C1A;
+}
+[data-theme="butterscotch"]{
+  --accent:#F5C842;--accent2:#FF9F1C;--accent-glow:rgba(245,200,66,.35);
+  --bg:#090912;--bg-s:#0f0f20;--bg-p:#161630;--bg-c:#1d1d3a;
+  --tx:#fff;--tx-d:rgba(255,255,255,.55);--div:rgba(245,200,66,.3);
+  --btn-bg:#1d1d3a;--btn-bd:#F5C842;--btn-hbg:#F5C842;--btn-tx:#fff;--btn-htx:#090912;
+  --hf:'Teko',sans-serif;--bf:'Rajdhani',sans-serif;
+  --badge:#F5C842;--badge-tx:#090912;
+  --card-bg:#0f0f20;--card-bd:#2a2a50;
+  --stamp-c:#F5C842;--stamp-tx:#090912;
+  --sold-bg:#F5C842;--sold-tx:#090912;
+  --unsold-bg:#e53935;--unsold-tx:#fff;
+  --action-unsold:#e53935;--action-unsold-h:#b71c1c;
+  --action-sell:#F5C842;--action-sell-h:#d4a200;--action-sell-tx:#090912;
+}
+[data-theme="strawberry"]{
+  --accent:#E91E63;--accent2:#C2185B;--accent-glow:rgba(233,30,99,.25);
+  --bg:#FFF0F5;--bg-s:#FFE4EE;--bg-p:#FCE4EC;--bg-c:#fff;
+  --tx:#1a0a12;--tx-d:rgba(26,10,18,.55);--div:rgba(194,24,91,.25);
+  --btn-bg:#fff;--btn-bd:#C2185B;--btn-hbg:#E91E63;--btn-tx:#C2185B;--btn-htx:#fff;
+  --hf:'Nunito',sans-serif;--bf:'Nunito',sans-serif;
+  --badge:#E91E63;--badge-tx:#fff;
+  --card-bg:#fff;--card-bd:rgba(194,24,91,.25);
+  --stamp-c:#C2185B;--stamp-tx:#fff;
+  --sold-bg:#E91E63;--sold-tx:#fff;
+  --unsold-bg:#616161;--unsold-tx:#fff;
+  --action-unsold:#616161;--action-unsold-h:#424242;
+  --action-sell:#C2185B;--action-sell-h:#880E4F;--action-sell-tx:#fff;
+}
+[data-theme="cherry"]{
+  --accent:#DC143C;--accent2:#FF1744;--accent-glow:rgba(220,20,60,.3);
+  --bg:#0d0d0d;--bg-s:#181818;--bg-p:#1e1e1e;--bg-c:#242424;
+  --tx:#f5f5f5;--tx-d:rgba(245,245,245,.55);--div:rgba(220,20,60,.35);
+  --btn-bg:#1e1e1e;--btn-bd:#DC143C;--btn-hbg:#DC143C;--btn-tx:#f5f5f5;--btn-htx:#f5f5f5;
+  --hf:'Teko',sans-serif;--bf:'Rajdhani',sans-serif;
+  --badge:#DC143C;--badge-tx:#fff;
+  --card-bg:#181818;--card-bd:#3a0a10;
+  --stamp-c:#DC143C;--stamp-tx:#fff;
+  --sold-bg:#DC143C;--sold-tx:#fff;
+  --unsold-bg:#424242;--unsold-tx:#fff;
+  --action-unsold:#616161;--action-unsold-h:#424242;
+  --action-sell:#DC143C;--action-sell-h:#9b0d2a;--action-sell-tx:#fff;
+}
+[data-theme="pistah"]{
+  --accent:#6BBF4E;--accent2:#A8E063;--accent-glow:rgba(107,191,78,.35);
+  --bg:#060e08;--bg-s:#0b1a0e;--bg-p:#0d1f11;--bg-c:#111f14;
+  --tx:#e8f5e9;--tx-d:rgba(232,245,233,.55);--div:rgba(107,191,78,.3);
+  --btn-bg:#0d1f11;--btn-bd:#6BBF4E;--btn-hbg:#6BBF4E;--btn-tx:#e8f5e9;--btn-htx:#060e08;
+  --hf:'Orbitron',sans-serif;--bf:'Rajdhani',sans-serif;
+  --badge:#6BBF4E;--badge-tx:#060e08;
+  --card-bg:#0b1a0e;--card-bd:#1a3a1e;
+  --stamp-c:#6BBF4E;--stamp-tx:#060e08;
+  --sold-bg:#6BBF4E;--sold-tx:#060e08;
+  --unsold-bg:#e53935;--unsold-tx:#fff;
+  --action-unsold:#e53935;--action-unsold-h:#b71c1c;
+  --action-sell:#6BBF4E;--action-sell-h:#4a9e30;--action-sell-tx:#060e08;
+}
 
-            <!-- Bootstrap -->
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
-                  rel="stylesheet"
-                  integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
-                  crossorigin="anonymous"/>
-            <!-- Google Fonts: Teko -->
-            <link rel="preconnect" href="https://fonts.googleapis.com"/>
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
-            <link href="https://fonts.googleapis.com/css2?family=Teko:wght@600&amp;display=swap" rel="stylesheet"/>
+/* ═══ BASE ═══════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(--bf);overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 70% 50% at 15% 40%,var(--accent-glow) 0%,transparent 60%),
+             radial-gradient(ellipse 50% 70% at 85% 70%,var(--accent-glow) 0%,transparent 60%)}
 
-            <!-- Theme stylesheet -->
-            <link rel="stylesheet" href="/auction_module/static/src/assets/css/style.css"/>
+/* ═══ HEADER ════════════════════════════════════════════════════════ */
+.mq-header{position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:66px;background:var(--bg-p);border-bottom:2px solid var(--div);
+  box-shadow:0 2px 24px var(--accent-glow)}
+.mq-header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent,var(--accent) 30%,var(--accent2) 50%,var(--accent) 70%,transparent);
+  box-shadow:0 0 10px var(--accent-glow)}
+.mq-hl{display:flex;align-items:center;gap:12px}
+.mq-logo{width:44px;height:44px;border-radius:50%;border:2px solid var(--accent);object-fit:contain;background:var(--bg-c)}
+.mq-logo-ph{width:44px;height:44px;border-radius:50%;border:2px solid var(--accent);background:var(--bg-c);
+  display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--accent)}
+.mq-tname{font-family:var(--hf);font-size:.95rem;font-weight:700;letter-spacing:1px}
+.mq-tsub{font-size:.62rem;color:var(--tx-d);letter-spacing:2px;text-transform:uppercase}
+.mq-hc{font-family:var(--hf);font-size:1rem;font-weight:700;letter-spacing:4px;
+  text-transform:uppercase;color:var(--accent);text-shadow:0 0 12px var(--accent-glow)}
+.mq-hr{display:flex;align-items:center;gap:8px}
+.mq-live-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);
+  box-shadow:0 0 8px var(--accent);animation:mq-pulse 1.5s infinite}
+@keyframes mq-pulse{0%,100%{box-shadow:0 0 6px var(--accent);opacity:1}50%{box-shadow:0 0 18px var(--accent);opacity:.6}}
+.mq-icon-btn{background:transparent;border:1px solid var(--div);border-radius:6px;
+  padding:5px 10px;color:var(--tx-d);cursor:pointer;font-size:13px;transition:all .2s;white-space:nowrap}
+.mq-icon-btn:hover{border-color:var(--accent);color:var(--accent)}
+.mq-icon-btn.bid{border-color:var(--accent);color:var(--accent);font-weight:600}
+.mq-icon-btn.bid:hover{background:var(--accent);color:var(--badge-tx)}
 
-            <!-- Odoo assets (CSS only) -->
-            <t t-call-assets="web.assets_common" t-js="false"/>
-            <t t-call-assets="web.assets_frontend" t-js="false"/>
+/* ═══ STATS ══════════════════════════════════════════════════════════ */
+.mq-stats{position:relative;z-index:10;display:flex;background:var(--bg-s);border-bottom:1px solid var(--div)}
+.mq-stat{flex:1;text-align:center;padding:8px 6px;border-right:1px solid var(--div)}
+.mq-stat:last-child{border-right:none}
+.mq-sl{font-size:.56rem;text-transform:uppercase;letter-spacing:2px;color:var(--tx-d);margin-bottom:1px}
+.mq-sv{font-family:var(--hf);font-size:.95rem;font-weight:700;color:var(--accent)}
 
-            <style>
-                /* ── Player drawer overlay (opened by openPlayerDrawer()) ── */
-                .player-drawer-overlay {
-                    position: fixed;
-                    top: 0; left: 0;
-                    width: 100%; height: 100%;
-                    z-index: 9999;
-                    display: flex;
-                    align-items: flex-start;
-                    justify-content: flex-end;
-                }
-                .player-drawer-backdrop {
-                    position: absolute;
-                    top: 0; left: 0;
-                    width: 100%; height: 100%;
-                    background: rgba(0,0,0,0.55);
-                    backdrop-filter: blur(3px);
-                    animation: _seqFadeIn 0.3s ease-in-out;
-                }
-                .player-drawer-container {
-                    position: relative;
-                    width: 90%;
-                    height: 100vh;
-                    background: #0a0a1a;
-                    box-shadow: -5px 0 25px rgba(0,0,0,0.35);
-                    overflow-y: auto;
-                    animation: _seqSlideIn 0.4s ease-out;
-                    z-index: 10000;
-                }
-                .player-drawer-header {
-                    position: sticky;
-                    top: 0;
-                    background: rgba(0,0,0,0.5);
-                    backdrop-filter: blur(6px);
-                    padding: 1rem 1.5rem;
-                    border-bottom: 1px solid rgba(255,255,255,0.1);
-                    z-index: 10001;
-                }
-                .player-drawer-close {
-                    background: none;
-                    border: none;
-                    font-size: 2.8rem;
-                    cursor: pointer;
-                    color: #fff;
-                    padding: 0;
-                    width: 48px; height: 48px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    transition: transform 0.2s;
-                }
-                .player-drawer-close:hover { transform: scale(1.2); color: #e53935; }
-                .player-drawer-content { min-height: calc(100vh - 70px); }
-                body.drawer-open { overflow: hidden; }
-                @keyframes _seqFadeIn {
-                    from { opacity: 0; } to { opacity: 1; }
-                }
-                @keyframes _seqSlideIn {
-                    from { transform: translateX(100%); } to { transform: translateX(0); }
-                }
-                @keyframes slideOutRight {
-                    from { transform: translateX(0); } to { transform: translateX(100%); }
-                }
-            </style>
-        </head>
-        <body style="min-height: 100vh">
+/* ═══ GRID ═══════════════════════════════════════════════════════════ */
+.mq-grid-hd{position:relative;z-index:10;display:flex;align-items:center;
+  justify-content:space-between;padding:16px 24px 10px}
+.mq-grid-title{font-family:var(--hf);font-size:.82rem;letter-spacing:3px;text-transform:uppercase}
+.mq-grid-title span{color:var(--accent);border-bottom:2px solid var(--accent);padding-bottom:2px}
+.mq-badge{background:var(--badge);color:var(--badge-tx);font-size:.68rem;font-weight:800;padding:3px 12px;border-radius:20px}
+.mq-wrap{position:relative;z-index:10;padding:0 24px 88px}
+.mq-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px}
+.mq-btn{width:100%;aspect-ratio:1;background:var(--btn-bg);border:1.5px solid var(--btn-bd);
+  border-radius:10px;color:var(--btn-tx);font-family:var(--hf);font-size:1.3rem;font-weight:700;
+  cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  letter-spacing:1px;position:relative;overflow:hidden}
+.mq-btn::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 0%,var(--accent-glow) 0%,transparent 70%);opacity:0;transition:opacity .2s}
+.mq-btn:hover{background:var(--btn-hbg);color:var(--btn-htx);
+  box-shadow:0 0 16px var(--accent-glow),0 4px 20px rgba(0,0,0,.4);transform:translateY(-3px) scale(1.06)}
+.mq-btn:hover::before{opacity:1}
+.mq-num{font-size:inherit;font-weight:700;line-height:1;position:relative;z-index:1}
+.mq-lbl{font-size:0.48rem;font-weight:700;letter-spacing:1.5px;line-height:1;position:relative;z-index:1;
+  text-transform:uppercase;opacity:.95}
+/* SOLD — gold */
+.mq-btn.sold{background:rgba(218,165,32,.18);border:1.5px solid #DAA520;color:#DAA520;cursor:default}
+.mq-btn.sold::before{display:none}
+.mq-btn.sold:hover{transform:none;box-shadow:none;background:rgba(218,165,32,.18);color:#DAA520}
+/* UNSOLD — crimson */
+.mq-btn.unsold{background:rgba(220,20,60,.18);border:1.5px solid #DC143C;color:#DC143C;cursor:default}
+.mq-btn.unsold::before{display:none}
+.mq-btn.unsold:hover{transform:none;box-shadow:none;background:rgba(220,20,60,.18);color:#DC143C}
+.mq-empty{text-align:center;padding:60px 20px;color:var(--tx-d)}
+.mq-empty-icon{font-size:2.8rem;margin-bottom:10px}
 
-            <!-- Banner — same as auction_player_template_new.xml -->
-            <header class="single-header">
-                <div class="py-3 text-center">
-                    <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo"/>
-                </div>
-            </header>
+/* ═══ PLAYER DRAWER ══════════════════════════════════════════════════ */
+.pc-overlay{position:fixed;inset:0;z-index:800;pointer-events:none}
+.pc-overlay.open{pointer-events:all}
+.pc-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+  opacity:0;transition:opacity .3s}
+.pc-overlay.open .pc-backdrop{opacity:1}
+.pc-panel{position:absolute;top:0;right:-100%;width:min(1060px,90%);height:100vh;
+  background:var(--card-bg);border-left:2px solid var(--div);display:flex;flex-direction:column;
+  transition:right .38s cubic-bezier(.4,0,.2,1);box-shadow:-6px 0 40px rgba(0,0,0,.5)}
+.pc-overlay.open .pc-panel{right:0}
+.pc-ph{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;
+  background:var(--bg-p);border-bottom:2px solid var(--div);flex-shrink:0;gap:12px}
+.pc-ph-left{display:flex;align-items:center;gap:10px}
+.pc-logo{height:36px;width:auto;object-fit:contain;opacity:.92}
+.pc-ph-title{font-family:var(--hf);font-size:.82rem;font-weight:700;letter-spacing:3px;
+  text-transform:uppercase;color:var(--accent)}
+.pc-close{background:none;border:none;color:var(--tx);font-size:2rem;cursor:pointer;
+  width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+  border-radius:6px;transition:all .2s}
+.pc-close:hover{background:rgba(220,20,60,.15);color:#e53935}
+.pc-body{flex:1;overflow:hidden;display:flex;flex-direction:row}
 
-            <div class="auction-container">
+/* Player photo */
+.pc-photo-wrap{position:relative;background:var(--bg-p);display:flex;align-items:center;justify-content:center;
+  padding:32px 24px;width:420px;min-width:280px;flex-shrink:0;overflow:hidden}
+.pc-photo{max-height:100%;max-width:100%;width:100%;height:100%;object-fit:contain;border-radius:10px;
+  box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.pc-photo-ph{width:160px;height:200px;border-radius:8px;background:var(--bg-c);
+  display:flex;align-items:center;justify-content:center;font-size:5rem;color:var(--tx-d);
+  border:2px dashed var(--div)}
+.pc-stamp-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  pointer-events:none;background:rgba(0,0,0,.45)}
+.pc-stamp{font-family:var(--hf);font-size:clamp(2rem,6vw,3.5rem);font-weight:900;
+  letter-spacing:6px;padding:10px 32px;border:5px solid rgba(255,255,255,.85);
+  border-radius:6px;text-shadow:2px 3px 8px rgba(0,0,0,.4);transform:rotate(-22deg);
+  animation:stampDrop .5s cubic-bezier(.34,1.3,.64,1) forwards}
+@keyframes stampDrop{from{transform:rotate(-22deg) scale(2.4);opacity:0}to{transform:rotate(-22deg) scale(1);opacity:.93}}
+.pc-bar-wrap{position:absolute;bottom:10px;left:16px;right:16px}
+.pc-bar-track{background:rgba(255,255,255,.25);border-radius:4px;height:5px;overflow:hidden}
+.pc-bar-fill{height:100%;width:100%;border-radius:4px;transition:width linear}
 
-                <h1 class="auction-title">Auction Player Queue</h1>
+/* Player info */
+.pc-info{padding:28px 32px;flex:1;overflow-y:auto;display:flex;flex-direction:column;justify-content:center}
+.pc-serial{font-family:var(--hf);font-size:4rem;font-weight:900;color:var(--accent);
+  line-height:1;margin-bottom:6px;text-shadow:0 0 20px var(--accent-glow)}
+.pc-name{font-family:var(--hf);font-size:2rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:3px;margin-bottom:12px}
+.pc-tier-badge{display:inline-block;background:var(--badge);color:var(--badge-tx);
+  font-size:.8rem;font-weight:800;padding:5px 18px;border-radius:20px;
+  letter-spacing:1px;text-transform:uppercase;margin-bottom:18px}
+.pc-attrs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+.pc-attr{background:var(--bg-c);border-radius:10px;padding:12px 16px;border:1px solid var(--card-bd)}
+.pc-attr-label{font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--tx-d);margin-bottom:4px}
+.pc-attr-val{font-size:1.05rem;font-weight:600;color:var(--tx)}
+.pc-state-banner{margin-top:12px;padding:8px 14px;border-radius:8px;text-align:center;
+  font-family:var(--hf);font-size:.85rem;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+.pc-state-banner.sold{background:var(--sold-bg);color:var(--sold-tx)}
+.pc-state-banner.unsold{background:var(--unsold-bg);color:var(--unsold-tx)}
+.pc-loading{padding:40px;text-align:center;color:var(--tx-d)}
 
-                <div id="auction_grid" class="auction-grid">
-                </div>
+/* Action bar */
+.pc-actions{display:flex;gap:12px;padding:14px 18px;background:var(--bg-p);
+  border-top:1px solid var(--div);flex-shrink:0}
+.pc-action-btn{flex:1;padding:13px;border:none;border-radius:10px;font-family:var(--hf);
+  font-size:.95rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  cursor:pointer;transition:all .2s}
+.pc-action-btn.unsold-btn{background:var(--action-unsold);color:#fff}
+.pc-action-btn.unsold-btn:hover{background:var(--action-unsold-h);transform:translateY(-1px)}
+.pc-action-btn.sell-btn{background:var(--action-sell);color:var(--action-sell-tx)}
+.pc-action-btn.sell-btn:hover{background:var(--action-sell-h);transform:translateY(-1px)}
+.pc-action-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
 
-            </div>
+/* ═══ CONFIRM MODAL ══════════════════════════════════════════════════ */
+.cm-overlay{position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.7);
+  display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.cm-overlay.open{display:flex}
+.cm-box{background:var(--bg-p);border:2px solid var(--div);border-radius:14px;
+  padding:28px 32px;width:min(380px,90%);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.cm-icon{font-size:2.5rem;margin-bottom:10px}
+.cm-title{font-family:var(--hf);font-size:1.1rem;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:6px}
+.cm-sub{font-size:.85rem;color:var(--tx-d);margin-bottom:22px}
+.cm-btns{display:flex;gap:10px;justify-content:center}
+.cm-cancel{padding:10px 24px;border-radius:8px;border:1px solid var(--div);
+  background:transparent;color:var(--tx-d);cursor:pointer;font-size:.88rem;transition:all .2s}
+.cm-cancel:hover{border-color:var(--accent);color:var(--tx)}
+.cm-confirm{padding:10px 24px;border-radius:8px;border:none;background:var(--action-unsold);
+  color:#fff;cursor:pointer;font-size:.88rem;font-weight:700;transition:all .2s}
+.cm-confirm:hover{background:var(--action-unsold-h)}
 
-            <!-- Odoo assets (JS only) -->
-            <t t-call-assets="web.assets_common" t-css="false"/>
-            <t t-call-assets="web.assets_frontend" t-css="false"/>
-        </body>
-    </html>
+/* ═══ SELL MODAL ══════════════════════════════════════════════════════ */
+.sm-overlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.8);
+  display:none;align-items:flex-start;justify-content:center;
+  backdrop-filter:blur(4px);overflow-y:auto;padding:20px}
+.sm-overlay.open{display:flex}
+.sm-box{background:var(--card-bg);border:2px solid var(--div);border-radius:16px;
+  width:min(540px,100%);margin:auto;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6)}
+.sm-head{background:var(--bg-p);padding:16px 20px;border-bottom:2px solid var(--div);
+  display:flex;align-items:center;justify-content:space-between}
+.sm-head::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent)}
+.sm-head{position:relative}
+.sm-head-left{display:flex;flex-direction:column}
+.sm-head-title{font-family:var(--hf);font-size:.82rem;letter-spacing:3px;
+  text-transform:uppercase;color:var(--accent);margin-bottom:2px}
+.sm-head-player{font-family:var(--hf);font-size:1.1rem;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.sm-close{background:none;border:none;color:var(--tx-d);font-size:1.8rem;cursor:pointer;
+  padding:0;width:36px;height:36px;display:flex;align-items:center;justify-content:center}
+.sm-close:hover{color:#e53935}
+.sm-section{padding:16px 20px}
+.sm-section-label{font-size:.62rem;text-transform:uppercase;letter-spacing:2px;color:var(--tx-d);margin-bottom:10px}
+.sm-team-grid{display:flex;flex-wrap:wrap;gap:8px}
+.sm-team-btn{padding:8px 16px;border-radius:8px;border:1.5px solid var(--div);
+  background:var(--bg-c);color:var(--tx);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s}
+.sm-team-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.sm-team-btn.active{border-color:var(--accent);background:var(--accent);color:var(--badge-tx);font-weight:700}
+.sm-team-btn:disabled{opacity:.4;cursor:not-allowed}
+.sm-no-teams{color:var(--tx-d);font-size:.85rem}
+.sm-team-detail{background:var(--bg-c);border:1px solid var(--card-bd);border-radius:10px;
+  padding:10px 16px;display:none;gap:20px;flex-wrap:wrap;margin-top:8px}
+.sm-team-detail.show{display:flex}
+.sm-td-item{text-align:center}
+.sm-td-label{font-size:.58rem;text-transform:uppercase;letter-spacing:1px;color:var(--tx-d);margin-bottom:2px}
+.sm-td-val{font-family:var(--hf);font-size:1rem;font-weight:700;color:var(--accent)}
+.sm-suggestion{font-size:.8rem;color:var(--tx-d);padding:6px 12px;border-radius:6px;
+  background:var(--bg-c);border-left:3px solid var(--accent);display:none;margin-top:6px}
+.sm-suggestion.show{display:block}
+.sm-pts-row{display:flex;align-items:center;gap:10px}
+.sm-pts-btn{width:40px;height:40px;border-radius:8px;border:1.5px solid var(--div);
+  background:var(--bg-c);color:var(--tx);font-size:1.3rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:700;flex-shrink:0}
+.sm-pts-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.sm-pts-btn:disabled{opacity:.4;cursor:not-allowed}
+.sm-pts-input{flex:1;padding:10px 14px;border-radius:8px;border:1.5px solid var(--div);
+  background:var(--bg-c);color:var(--tx);font-family:var(--hf);font-size:1.2rem;font-weight:700;
+  text-align:center;outline:none}
+.sm-pts-input:focus{border-color:var(--accent)}
+.sm-presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.sm-preset{padding:5px 12px;border-radius:6px;border:1px solid var(--div);background:var(--bg-c);
+  color:var(--tx-d);font-size:.78rem;cursor:pointer;transition:all .2s}
+.sm-preset:hover{border-color:var(--accent);color:var(--accent)}
+.sm-preset.active{background:var(--accent);color:var(--badge-tx);border-color:var(--accent)}
+.sm-error{color:#e53935;font-size:.82rem;padding:6px 12px;background:rgba(220,20,60,.1);
+  border-radius:6px;border-left:3px solid #e53935;display:none;margin-top:6px}
+.sm-error.show{display:block}
+.sm-footer{padding:14px 20px;border-top:1px solid var(--div)}
+.sm-sell-btn{width:100%;padding:14px;border:none;border-radius:10px;
+  background:var(--action-sell);color:var(--action-sell-tx);
+  font-family:var(--hf);font-size:1rem;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;cursor:pointer;transition:all .2s}
+.sm-sell-btn:hover:not(:disabled){opacity:.88;transform:translateY(-1px)}
+.sm-sell-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.sm-sold-screen{display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 24px;text-align:center}
+.sm-sold-screen.show{display:flex}
+.sm-sold-screen .sm-sold-label{font-family:var(--hf);font-size:2rem;font-weight:900;
+  letter-spacing:6px;color:var(--sold-bg);animation:stampDrop .5s cubic-bezier(.34,1.3,.64,1) forwards;margin-bottom:16px}
+.sm-sold-team{font-family:var(--hf);font-size:1.2rem;font-weight:700;letter-spacing:2px;margin-bottom:4px}
+.sm-sold-pts{font-size:.9rem;color:var(--tx-d);margin-bottom:20px}
+.sm-sold-bar-wrap{width:100%;max-width:280px}
+.sm-sold-bar-track{background:rgba(255,255,255,.2);border-radius:4px;height:6px;overflow:hidden}
+.sm-sold-bar-fill{height:100%;width:100%;background:var(--sold-bg);border-radius:4px;transition:width linear}
+.sm-divider{height:1px;background:var(--div);margin:0}
+
+/* ═══ BID SUMMARY DRAWER ══════════════════════════════════════════════ */
+.bs-overlay{position:fixed;inset:0;z-index:900;pointer-events:none}
+.bs-overlay.open{pointer-events:all}
+.bs-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(3px);
+  opacity:0;transition:opacity .3s}
+.bs-overlay.open .bs-backdrop{opacity:1}
+.bs-panel{position:absolute;top:0;left:-100%;width:min(700px,92%);height:100vh;
+  background:var(--bg-s);border-right:2px solid var(--div);display:flex;flex-direction:column;
+  transition:left .38s cubic-bezier(.4,0,.2,1);box-shadow:6px 0 40px rgba(0,0,0,.5)}
+.bs-overlay.open .bs-panel{left:0}
+.bs-ph{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;
+  background:var(--bg-p);border-bottom:2px solid var(--div);flex-shrink:0}
+.bs-ph-title{font-family:var(--hf);font-size:.82rem;font-weight:700;letter-spacing:3px;
+  text-transform:uppercase;color:var(--accent)}
+.bs-close{background:none;border:none;color:var(--tx);font-size:2rem;cursor:pointer;
+  width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+  border-radius:6px;transition:all .2s}
+.bs-close:hover{color:#e53935}
+.bs-iframe{flex:1;width:100%;border:none}
+
+/* ═══ RESPONSIVE ═══════════════════════════════════════════════════════ */
+@media(max-width:720px){
+  .mq-header{padding:0 12px}.mq-hc{display:none}
+  .mq-grid-hd,.mq-wrap{padding-left:12px;padding-right:12px}
+  .mq-grid{grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:7px}
+  .pc-body{flex-direction:column;overflow-y:auto}
+  .pc-photo-wrap{width:auto;min-width:unset;height:220px;flex-shrink:0}
+  .pc-info{justify-content:flex-start}
+  .pc-serial{font-size:2.5rem}
+  .pc-name{font-size:1.3rem}
+  .pc-attrs{grid-template-columns:1fr}
+}
+
+/* ── Full-screen stamp celebration overlay ─────────────── */
+.stamp-screen{position:fixed;inset:0;z-index:2000;display:none;flex-direction:column;
+  align-items:center;justify-content:center;background:rgba(0,0,0,.92);
+  backdrop-filter:blur(10px);animation:ssIn .3s ease}
+.stamp-screen.show{display:flex}
+@keyframes ssIn{from{opacity:0}to{opacity:1}}
+.ss-inner{display:flex;flex-direction:row;align-items:center;gap:48px;
+  padding:40px;max-width:900px;width:100%}
+.ss-photo-side{flex-shrink:0;position:relative}
+.ss-photo{width:260px;height:330px;object-fit:contain;border-radius:14px;
+  box-shadow:0 20px 64px rgba(0,0,0,.7);display:block}
+.ss-photo-ph{width:260px;height:330px;border-radius:14px;background:var(--bg-c);
+  display:flex;align-items:center;justify-content:center;font-size:7rem;color:var(--tx-d)}
+.ss-stamp-overlay{position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;background:rgba(0,0,0,.45);border-radius:14px}
+.ss-stamp-text{font-family:var(--hf);font-size:clamp(2rem,5vw,3.2rem);font-weight:900;
+  letter-spacing:8px;padding:12px 32px;border:5px solid rgba(255,255,255,.85);
+  border-radius:8px;text-shadow:2px 4px 10px rgba(0,0,0,.5);transform:rotate(-22deg);
+  animation:stampDrop .5s cubic-bezier(.34,1.3,.64,1) forwards}
+.ss-info-side{flex:1;min-width:0}
+.ss-serial{font-family:var(--hf);font-size:3.5rem;font-weight:900;line-height:1;
+  margin-bottom:6px}
+.ss-name{font-family:var(--hf);font-size:2rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:3px;color:#fff;margin-bottom:12px;word-break:break-word}
+.ss-tier-badge{display:inline-block;font-size:.8rem;font-weight:800;padding:5px 18px;
+  border-radius:20px;letter-spacing:1px;text-transform:uppercase;margin-bottom:20px;color:#fff}
+.ss-sub{font-size:1.1rem;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:28px;
+  min-height:1.4em;line-height:1.5}
+.ss-bar-wrap{width:100%;max-width:340px}
+.ss-bar-track{background:rgba(255,255,255,.2);border-radius:4px;height:6px;overflow:hidden}
+.ss-bar-fill{height:100%;width:100%;border-radius:4px;transition:width linear}
+@media(max-width:680px){
+  .ss-inner{flex-direction:column;align-items:center;text-align:center;gap:24px;padding:24px}
+  .ss-photo{width:180px;height:230px}
+  .ss-photo-ph{width:180px;height:230px}
+  .ss-serial{font-size:2.5rem}
+  .ss-name{font-size:1.4rem}
+}
+
+/* ── Footer ticker ─────────────────────────────────────────── */
+.mq-footer{position:fixed;bottom:0;left:0;right:0;height:48px;
+  background:var(--bg-p);border-top:2px solid var(--accent);
+  display:flex;align-items:stretch;z-index:600;overflow:hidden;
+  box-shadow:0 -4px 24px rgba(0,0,0,.35)}
+.mq-footer-label{display:flex;align-items:center;padding:0 18px;
+  font-family:var(--hf);font-size:.62rem;font-weight:900;letter-spacing:3px;
+  text-transform:uppercase;color:var(--accent);background:var(--bg-c);
+  border-right:2px solid var(--div);white-space:nowrap;flex-shrink:0;gap:6px}
+.mq-ticker-wrap{flex:1;overflow:hidden;position:relative;display:flex;align-items:center}
+.mq-ticker-track{display:flex;align-items:center;will-change:transform;height:100%}
+@keyframes tickerMove{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.mq-ticker-item{display:inline-flex;align-items:center;gap:10px;
+  padding:0 26px;border-right:1px solid var(--div);white-space:nowrap;height:100%}
+.mq-ticker-team{font-family:var(--hf);font-size:.82rem;font-weight:700;color:var(--tx)}
+.mq-ticker-purse{font-size:.82rem;font-weight:700;color:var(--accent)}
+.mq-ticker-max{font-size:.68rem;color:var(--tx-d);padding:2px 7px;
+  border-radius:4px;border:1px solid var(--div);background:var(--bg-c)}
+.mq-ticker-dot{width:6px;height:6px;border-radius:50%;background:var(--div);flex-shrink:0}
+.mq-ticker-no-data{font-size:.78rem;color:var(--tx-d);padding:0 20px}
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ──────────────────────────────────────────────── -->
+<header class="mq-header">
+  <div class="mq-hl">
+    <t t-if="tournament and tournament.logo">
+      <img class="mq-logo" t-att-src="'/web/image/auction.tournament/'+str(tournament.id)+'/logo'" alt="logo"/>
+    </t>
+    <t t-else=""><div class="mq-logo-ph">&#9733;</div></t>
+    <div>
+      <div class="mq-tname"><t t-if="tournament"><t t-esc="tournament.name"/></t><t t-else="">Auction Champ</t></div>
+      <div class="mq-tsub">Manual Auction Console</div>
+    </div>
+  </div>
+  <div class="mq-hc">&#9917; Player Queue</div>
+  <div class="mq-hr">
+    <span class="mq-live-dot"></span>
+    <button class="mq-icon-btn bid" onclick="openBidSummary()">&#9776; Bid Summary</button>
+    <button class="mq-icon-btn" onclick="toggleFS()" id="fsBtn">&#x26F6;</button>
+  </div>
+</header>
+
+<!-- ── STATS ────────────────────────────────────────────────── -->
+<div class="mq-stats">
+  <div class="mq-stat"><div class="mq-sl">Total</div><div class="mq-sv" id="sStat">—</div></div>
+  <div class="mq-stat"><div class="mq-sl">Remaining</div><div class="mq-sv" id="rStat">—</div></div>
+  <div class="mq-stat"><div class="mq-sl">Sold</div><div class="mq-sv" id="soldStat">—</div></div>
+  <div class="mq-stat"><div class="mq-sl">Tournament</div>
+    <div class="mq-sv" style="font-size:.72rem;letter-spacing:1px;">
+      <t t-if="tournament"><t t-esc="tournament.name"/></t><t t-else="">—</t>
+    </div>
+  </div>
+</div>
+
+<!-- ── GRID ─────────────────────────────────────────────────── -->
+<div class="mq-grid-hd">
+  <div class="mq-grid-title">Select <span>Player</span></div>
+  <span class="mq-badge" id="gBadge">0 players</span>
+</div>
+<div class="mq-wrap">
+  <div id="auction_grid" class="mq-grid"></div>
+  <div id="mq_empty" class="mq-empty" style="display:none">
+    <div class="mq-empty-icon">&#9917;</div>
+    <div>No players in the auction queue</div>
+  </div>
+</div>
+
+<!-- ── PLAYER DRAWER ─────────────────────────────────────────── -->
+<div id="playerDrawer" class="pc-overlay" onclick="handlePCBackdropClick(event)">
+  <div class="pc-backdrop"></div>
+  <div class="pc-panel" id="pcPanel">
+    <div class="pc-ph">
+      <div class="pc-ph-left">
+        <img class="pc-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="logo"/>
+        <span class="pc-ph-title">Player Details</span>
+      </div>
+      <button class="pc-close" onclick="closePlayerDrawer()">&#215;</button>
+    </div>
+    <div class="pc-body" id="pcBody">
+      <div class="pc-loading">Loading&#8230;</div>
+    </div>
+    <div class="pc-actions" id="pcActions" style="display:none">
+      <button class="pc-action-btn unsold-btn" id="btnUnsold" onclick="openUnsoldConfirm()">
+        &#10007; Set Unsold
+      </button>
+      <button class="pc-action-btn sell-btn" id="btnSell" onclick="openSellModal()">
+        &#10003; Sell to Team
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── UNSOLD CONFIRM MODAL ─────────────────────────────────── -->
+<div id="unsoldModal" class="cm-overlay">
+  <div class="cm-box">
+    <div class="cm-icon">&#9888;</div>
+    <div class="cm-title">Mark as Unsold?</div>
+    <div class="cm-sub" id="cmSub">This player will be marked as unsold.</div>
+    <div class="cm-btns">
+      <button class="cm-cancel" onclick="closeUnsoldConfirm()">Cancel</button>
+      <button class="cm-confirm" onclick="doUnsold()">Confirm Unsold</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SELL MODAL ──────────────────────────────────────────── -->
+<div id="sellModal" class="sm-overlay">
+  <div class="sm-box">
+    <!-- Form panel -->
+    <div id="smForm">
+      <div class="sm-head">
+        <div class="sm-head-left">
+          <span class="sm-head-title">Sell Player</span>
+          <span class="sm-head-player" id="smPlayerName"></span>
+        </div>
+        <button class="sm-close" onclick="closeSellModal()">&#215;</button>
+      </div>
+      <div class="sm-section">
+        <div class="sm-section-label">Select Team</div>
+        <div class="sm-team-grid" id="smTeams">
+          <span class="sm-no-teams">Loading teams&#8230;</span>
+        </div>
+        <div class="sm-team-detail" id="smTeamDetail">
+          <div class="sm-td-item"><div class="sm-td-label">Remaining Pts</div><div class="sm-td-val" id="smRemPts">—</div></div>
+          <div class="sm-td-item"><div class="sm-td-label">Remaining Players</div><div class="sm-td-val" id="smRemPlayers">—</div></div>
+          <div class="sm-td-item"><div class="sm-td-label">Max Call</div><div class="sm-td-val" id="smMaxCall">—</div></div>
+        </div>
+        <div class="sm-suggestion" id="smSug"></div>
+      </div>
+      <div class="sm-divider"></div>
+      <div class="sm-section">
+        <div class="sm-section-label">Points</div>
+        <div class="sm-pts-row">
+          <button class="sm-pts-btn" onclick="adjPts(-1)" id="smMinus">&#8722;</button>
+          <input class="sm-pts-input" type="number" id="smPoints" value="0" min="0"/>
+          <button class="sm-pts-btn" onclick="adjPts(1)" id="smPlus">&#43;</button>
+        </div>
+        <div class="sm-presets" id="smPresets"></div>
+        <div class="sm-error" id="smError"></div>
+      </div>
+      <div class="sm-footer">
+        <button class="sm-sell-btn" id="smSellBtn" onclick="doSell()" disabled="1">Sell Player</button>
+      </div>
+    </div>
+    <!-- Sold screen -->
+    <div class="sm-sold-screen" id="smSoldScreen">
+      <div class="sm-sold-label">SOLD!</div>
+      <div class="sm-sold-team" id="smSoldTeam"></div>
+      <div class="sm-sold-pts" id="smSoldPts"></div>
+      <div class="sm-sold-bar-wrap">
+        <div class="sm-sold-bar-track">
+          <div class="sm-sold-bar-fill" id="smSoldBar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── STAMP CELEBRATION SCREEN ─────────────────────────── -->
+<div id="stampScreen" class="stamp-screen">
+  <div class="ss-inner">
+    <div class="ss-photo-side">
+      <div id="ssPhotoEl"></div>
+      <div class="ss-stamp-overlay">
+        <div id="ssStampText" class="ss-stamp-text"></div>
+      </div>
+    </div>
+    <div class="ss-info-side">
+      <div class="ss-serial" id="ssSerial"></div>
+      <div class="ss-name" id="ssName"></div>
+      <div id="ssTierBadge" class="ss-tier-badge"></div>
+      <div class="ss-sub" id="ssSub"></div>
+      <div class="ss-bar-wrap">
+        <div class="ss-bar-track">
+          <div id="ssBar" class="ss-bar-fill"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── BID SUMMARY DRAWER ─────────────────────────────────── -->
+<div id="bsDrawer" class="bs-overlay" onclick="handleBSBackdropClick(event)">
+  <div class="bs-backdrop"></div>
+  <div class="bs-panel">
+    <div class="bs-ph">
+      <span class="bs-ph-title">&#9776; Bid Summary</span>
+      <button class="bs-close" onclick="closeBidSummary()">&#215;</button>
+    </div>
+    <iframe class="bs-iframe" id="bsIframe" src="about:blank"></iframe>
+  </div>
+</div>
+
+<!-- ── FOOTER TICKER ─────────────────────────────────────── -->
+<div class="mq-footer">
+  <div class="mq-footer-label">&#128176; PURSE</div>
+  <div class="mq-ticker-wrap">
+    <div class="mq-ticker-track" id="tickerTrack">
+      <span class="mq-ticker-no-data">Loading&#8230;</span>
+    </div>
+  </div>
+</div>
+
+<t t-call-assets="web.assets_common" t-css="false"/>
+<t t-call-assets="web.assets_frontend" t-css="false"/>
+
+<script>//<![CDATA[
+(function() {
+  'use strict';
+
+  /* ── State ─────────────────────────────────────────────── */
+  var currentPlayerId = null;
+  var currentPlayerName = '';
+  var currentPlayerState = '';
+  var currentPlayerPhoto = '';
+  var currentPlayerSerial = '';
+  var currentPlayerTierName = '';
+  var currentPlayerTierColor = '#3498db';
+  var smSelectedTeam = null;
+  var smTeamsData = [];
+  var smSoldTimer = null;
+  var smPlayerIdForSell = null;
+
+  /* ── RPC helper ────────────────────────────────────────── */
+  function rpc(url, params) {
+    return fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({jsonrpc: '2.0', method: 'call', params: params})
+    }).then(function(r) { return r.json(); });
+  }
+
+  function callKw(model, method, args, kwargs) {
+    return rpc('/web/dataset/call_kw', {
+      model: model, method: method, args: args, kwargs: kwargs || {}
+    });
+  }
+
+  /* ── Grid ──────────────────────────────────────────────── */
+  function loadGrid() {
+    rpc('/auction/get_players_queue', {}).then(function(res) {
+      var players = res.result || [];
+      var grid   = document.getElementById('auction_grid');
+      var empty  = document.getElementById('mq_empty');
+      var badge  = document.getElementById('gBadge');
+      var sStat  = document.getElementById('sStat');
+      var rStat  = document.getElementById('rStat');
+      var sdStat = document.getElementById('soldStat');
+      if (!grid) return;
+      grid.innerHTML = '';
+      if (!players.length) {
+        if (empty) empty.style.display = 'block';
+        if (badge) badge.textContent = '0 players';
+        if (sStat) sStat.textContent = '0';
+        if (rStat) rStat.textContent = '0';
+        if (sdStat) sdStat.textContent = '0';
+        return;
+      }
+      if (empty) empty.style.display = 'none';
+      var soldCount = 0, unsoldCount = 0;
+      players.forEach(function(p) {
+      var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'mq-btn';
+        btn.dataset.id = p.id;
+        var numSpan = document.createElement('span');
+        numSpan.className = 'mq-num';
+        numSpan.textContent = p.serial;
+        btn.appendChild(numSpan);
+        if (p.state === 'sold') {
+          btn.classList.add('sold');
+          soldCount++;
+          var lbl = document.createElement('span');
+          lbl.className = 'mq-lbl';
+          lbl.textContent = '✔ SOLD';
+          btn.appendChild(lbl);
+        } else if (p.state === 'unsold') {
+          btn.classList.add('unsold');
+          unsoldCount++;
+          var lbl = document.createElement('span');
+          lbl.className = 'mq-lbl';
+          lbl.textContent = '✖ UNSOLD';
+          btn.appendChild(lbl);
+        }
+        btn.onclick = function() { openPlayerDrawer(p.id); };
+        grid.appendChild(btn);
+      });
+      var total     = players.length;
+      var remaining = total - soldCount - unsoldCount;
+      if (badge)  badge.textContent  = total + ' player' + (total !== 1 ? 's' : '');
+      if (sStat)  sStat.textContent  = total;
+      if (rStat)  rStat.textContent  = remaining;
+      if (sdStat) sdStat.textContent = soldCount;
+    }).catch(function(e) { console.error('loadGrid:', e); });
+  }
+
+  /* ── Footer ticker ──────────────────────────────────────── */
+  function loadTicker() {
+    callKw('auction.auction', 'search_read', [], {
+      domain: [],
+      fields: ['team_id', 'remaining_points', 'max_call', 'remaining_players_count']
+    }).then(function(res) {
+      var teams = res.result || [];
+      var track = document.getElementById('tickerTrack');
+      if (!track) return;
+      if (!teams.length) {
+        track.innerHTML = '<span class="mq-ticker-no-data">No team data</span>';
+        track.style.animation = 'none';
+        return;
+      }
+      var html = '';
+      /* Double items for seamless infinite loop */
+      for (var loop = 0; loop < 2; loop++) {
+        teams.forEach(function(t) {
+          var teamName = t.team_id ? t.team_id[1] : '—';
+          html +=
+            '<div class="mq-ticker-item">' +
+            '<span class="mq-ticker-team">' + escHtml(teamName) + '</span>' +
+            '<span class="mq-ticker-dot"></span>' +
+            '<span class="mq-ticker-purse">&#x1F4B0; ' + t.remaining_points + ' pts</span>' +
+            '<span class="mq-ticker-max">Max: ' + t.max_call + '</span>' +
+            '</div>';
+        });
+      }
+      track.innerHTML = html;
+      var duration = Math.max(12, teams.length * 4);
+      track.style.animation = 'tickerMove ' + duration + 's linear infinite';
+    }).catch(function() {});
+  }
+
+  /* ── Player Drawer ─────────────────────────────────────── */
+  window.openPlayerDrawer = function(playerId) {
+    currentPlayerId = playerId;
+    var overlay = document.getElementById('playerDrawer');
+    var body    = document.getElementById('pcBody');
+    var actions = document.getElementById('pcActions');
+    if (body) body.innerHTML = '<div class="pc-loading">Loading player&#8230;</div>';
+    if (actions) actions.style.display = 'none';
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    callKw('auction.team.player', 'read',
+      [[playerId], ['sl_no', 'name', 'role', 'batting_style', 'bowling_style', 'photo', 'tier_id', 'tier_color', 'state', 'contact']]
+    ).then(function(res) {
+      var p = (res.result || [])[0];
+      if (!p) { if (body) body.innerHTML = '<div class="pc-loading">Player not found.</div>'; return; }
+      currentPlayerName      = p.name || '';
+      currentPlayerState     = p.state || '';
+      currentPlayerPhoto     = p.photo || '';
+      currentPlayerSerial    = p.sl_no || '';
+      currentPlayerTierName  = p.tier_id ? p.tier_id[1] : '';
+      currentPlayerTierColor = p.tier_color || '#3498db';
+      renderPlayerCard(p, body);
+      if (actions) {
+        actions.style.display = p.state === 'sold' || p.state === 'unsold' ? 'none' : 'flex';
+      }
+      /* Sync live board: mark this player as on-stage */
+      callKw('auction.team.player', 'action_set_on_stage', [[playerId]]).catch(function(){});
+    }).catch(function() {
+      if (body) body.innerHTML = '<div class="pc-loading">Error loading player.</div>';
+    });
+  };
+
+  window.closePlayerDrawer = function(keepOnStage) {
+    var overlay = document.getElementById('playerDrawer');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    /* Clear on-stage only when dismissed without action; sold/unsold pass keepOnStage=true */
+    if (!keepOnStage && currentPlayerId) {
+      callKw('auction.team.player', 'write', [[currentPlayerId], {'is_on_stage': false}]).catch(function(){});
+    }
+    currentPlayerId = null;
+    setTimeout(loadGrid,   300);
+    setTimeout(loadTicker, 350);
+  };
+
+  window.handlePCBackdropClick = function(e) {
+    if (e.target.classList.contains('pc-backdrop') || e.target === document.getElementById('playerDrawer')) {
+      closePlayerDrawer();
+    }
+  };
+
+  function renderPlayerCard(p, container) {
+    var photo = '';
+    if (p.photo) {
+      photo = '<img class="pc-photo" src="data:image/png;base64,' + p.photo + '" alt="' + escHtml(p.name) + '"/>';
+    } else {
+      photo = '<div class="pc-photo-ph">&#128100;</div>';
+    }
+    var tierColor  = p.tier_color || '#3498db';
+    var tierGlow   = tierColor + '55'; /* 33% alpha glow */
+    var tier = p.tier_id
+      ? '<span class="pc-tier-badge" style="background:' + escHtml(tierColor) + ';color:#fff;box-shadow:0 0 12px ' + escHtml(tierGlow) + '">'
+          + escHtml(p.tier_id[1]) + '</span>'
+      : '';
+    var stateBanner = '';
+    if (p.state === 'sold')   stateBanner = '<div class="pc-state-banner sold">&#10003; Sold</div>';
+    if (p.state === 'unsold') stateBanner = '<div class="pc-state-banner unsold">&#10005; Unsold</div>';
+
+    container.innerHTML =
+      '<div class="pc-photo-wrap" id="pcPhotoWrap" style="border-left:4px solid ' + escHtml(tierColor) + ';box-shadow:inset -200px 0 120px -80px ' + escHtml(tierGlow) + '">' + photo + '</div>' +
+      '<div class="pc-info">' +
+        '<div class="pc-serial" style="color:' + escHtml(tierColor) + ';text-shadow:0 0 24px ' + escHtml(tierGlow) + '">#' + escHtml(String(p.sl_no)) + '</div>' +
+        '<div class="pc-name">' + escHtml(p.name) + '</div>' +
+        tier +
+        '<div class="pc-attrs">' +
+          attr('Role', p.role || '—') +
+          attr('Batting', p.batting_style || '—') +
+          attr('Bowling', p.bowling_style || '—') +
+          attr('Contact', p.contact || '—') +
+        '</div>' +
+        stateBanner +
+      '</div>';
+  }
+
+  function attr(label, val) {
+    return '<div class="pc-attr">' +
+      '<div class="pc-attr-label">' + escHtml(label) + '</div>' +
+      '<div class="pc-attr-val">' + escHtml(val) + '</div>' +
+      '</div>';
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── Unsold flow ───────────────────────────────────────── */
+  window.openUnsoldConfirm = function() {
+    var sub = document.getElementById('cmSub');
+    if (sub) sub.textContent = 'Mark "' + currentPlayerName + '" as unsold?';
+    document.getElementById('unsoldModal').classList.add('open');
+  };
+
+  window.closeUnsoldConfirm = function() {
+    document.getElementById('unsoldModal').classList.remove('open');
+  };
+
+  window.doUnsold = function() {
+    closeUnsoldConfirm();
+    if (!currentPlayerId) return;
+    callKw('auction.team.player', 'action_unsold', [[currentPlayerId]]).then(function(res) {
+      var result = res.result || {};
+      var secs   = result.display_seconds > 0 ? result.display_seconds : 5;
+      showStamp('UNSOLD', secs, function() { closePlayerDrawer(true); });
+    }).catch(function() { closePlayerDrawer(); });
+  };
+
+  /* ── Sell flow ─────────────────────────────────────────── */
+  window.openSellModal = function() {
+    if (!currentPlayerId) return;
+    smPlayerIdForSell = currentPlayerId;
+    smSelectedTeam    = null;
+    smTeamsData       = [];
+    var nm = document.getElementById('smPlayerName');
+    if (nm) nm.textContent = currentPlayerName;
+    /* reset form */
+    document.getElementById('smTeams').innerHTML = '<span class="sm-no-teams">Loading teams\u2026</span>';
+    document.getElementById('smTeamDetail').classList.remove('show');
+    document.getElementById('smSug').classList.remove('show');
+    document.getElementById('smPoints').value = 0;
+    document.getElementById('smPresets').innerHTML = '';
+    smShowError('');
+    var sellBtn = document.getElementById('smSellBtn');
+    if (sellBtn) { sellBtn.disabled = true; sellBtn.textContent = 'Sell Player'; }
+    document.getElementById('smForm').style.display = 'block';
+    document.getElementById('smSoldScreen').classList.remove('show');
+    document.getElementById('sellModal').classList.add('open');
+    smLoadTeams();
+  };
+
+  window.closeSellModal = function() {
+    if (smSoldTimer) { clearInterval(smSoldTimer); smSoldTimer = null; }
+    document.getElementById('sellModal').classList.remove('open');
+  };
+
+  function smLoadTeams() {
+    callKw('auction.team.player', 'get_sell_teams_data', [smPlayerIdForSell]).then(function(res) {
+      smTeamsData = res.result || [];
+      smRenderTeams(smTeamsData);
+    }).catch(function() {
+      document.getElementById('smTeams').innerHTML = '<span class="sm-no-teams">Network error loading teams.</span>';
+    });
+  }
+
+  function smRenderTeams(teams) {
+    var container = document.getElementById('smTeams');
+    if (!teams.length) {
+      container.innerHTML = '<span class="sm-no-teams">No teams available.</span>';
+      return;
+    }
+    container.innerHTML = '';
+    teams.forEach(function(t) {
+      var disabled = !t.tier_slots_ok || !t.budget_ok;
+      var btn = document.createElement('button');
+      btn.className = 'sm-team-btn' + (disabled ? ' tier-full' : '');
+      btn.textContent = t.team_name;
+      btn.dataset.teamId = t.team_id;
+      btn.disabled = disabled;
+      if (disabled) {
+        btn.title = !t.tier_slots_ok ? 'Tier slot full' : 'Insufficient budget';
+      } else {
+        btn.onclick = function() { smSelectTeam(t); };
+      }
+      container.appendChild(btn);
+    });
+  }
+
+  function smSelectTeam(team) {
+    smSelectedTeam = team;
+    document.querySelectorAll('.sm-team-btn').forEach(function(b) {
+      b.classList.toggle('active', b.dataset.teamId == team.team_id);
+    });
+    /* details strip */
+    document.getElementById('smRemPts').textContent     = team.remaining_points;
+    document.getElementById('smRemPlayers').textContent  = team.remaining_players;
+    document.getElementById('smMaxCall').textContent     = team.max_call;
+    document.getElementById('smTeamDetail').classList.add('show');
+    /* suggestion */
+    var sug = document.getElementById('smSug');
+    sug.innerHTML = team.remaining_players > 1
+      ? '\u2139 Max bid <strong>' + team.max_call + ' pts</strong> | Base for remaining: <strong>' + team.effective_base_point + ' pts</strong>'
+      : '\u2139 Last slot! Max bid: <strong>' + team.max_call + ' pts</strong>';
+    sug.classList.add('show');
+    /* points */
+    var inp = document.getElementById('smPoints');
+    inp.value = team.effective_base_point;
+    inp.min   = team.effective_base_point;
+    inp.max   = team.max_call;
+    smRenderPresets(team);
+    smShowError('');
+    var sellBtn = document.getElementById('smSellBtn');
+    if (sellBtn) sellBtn.disabled = false;
+  }
+
+  function smRenderPresets(team) {
+    var container = document.getElementById('smPresets');
+    container.innerHTML = '';
+    var presets = [];
+    var base = team.effective_base_point;
+    var max  = team.max_call;
+
+    if (team.preset_points && team.preset_points.length > 0) {
+      /* Use explicit tournament preset_points — filter to valid range, always include base & max */
+      presets = team.preset_points.filter(function(v) { return v >= base && v <= max; });
+      if (!presets.length || presets[0] !== base) presets.unshift(base);
+      if (presets[presets.length - 1] !== max) presets.push(max);
+    } else if (team.slabs && team.slabs.length > 0) {
+      /* Generate from tournament slabs */
+      var inc = smGetInc(base, team.slabs);
+      for (var v = base; v <= max && presets.length < 8; v += inc) {
+        presets.push(v);
+        inc = smGetInc(v, team.slabs);
+      }
+      if (!presets.length || presets[presets.length - 1] !== max) presets.push(max);
+    } else {
+      /* No config at all — just show base and max */
+      presets = [base];
+      if (base !== max) presets.push(max);
+    }
+
+    presets.forEach(function(val) {
+      var btn = document.createElement('button');
+      btn.className = 'sm-preset';
+      btn.textContent = val;
+      btn.type = 'button';
+      btn.onclick = function() {
+        document.getElementById('smPoints').value = val;
+        document.querySelectorAll('.sm-preset').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+      };
+      container.appendChild(btn);
+    });
+  }
+
+  window.adjPts = function(dir) {
+    if (!smSelectedTeam) return;
+    var inp     = document.getElementById('smPoints');
+    var current = parseInt(inp.value) || smSelectedTeam.effective_base_point;
+    var inc     = smGetInc(current, smSelectedTeam.slabs);
+    var next    = Math.min(Math.max(current + dir * inc, smSelectedTeam.effective_base_point), smSelectedTeam.max_call);
+    inp.value   = next;
+    smShowError('');
+  };
+
+  function smGetInc(amount, slabs) {
+    if (!slabs || !slabs.length) return 50;
+    for (var i = 0; i < slabs.length; i++) {
+      if (amount >= slabs[i].from_amount && amount <= slabs[i].to_amount) return slabs[i].increment;
+    }
+    return slabs[slabs.length - 1].increment || 50;
+  }
+
+  function smShowError(msg) {
+    var el = document.getElementById('smError');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.toggle('show', !!msg);
+  }
+
+  window.doSell = function() {
+    if (!smSelectedTeam || !smPlayerIdForSell) return;
+    var finalPts = parseInt(document.getElementById('smPoints').value);
+    if (isNaN(finalPts) || finalPts <= 0) { smShowError('Please enter valid points.'); return; }
+    var btn = document.getElementById('smSellBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Selling\u2026'; }
+    smShowError('');
+    callKw('auction.team.player', 'action_sell_from_web',
+           [smPlayerIdForSell, smSelectedTeam.team_id, finalPts]).then(function(res) {
+      var data = res.result;
+      if (!data || !data.success) {
+        smShowError(data ? data.error : 'Sell failed. Please try again.');
+        if (btn) { btn.disabled = false; btn.textContent = 'Sell Player'; }
+        return;
+      }
+      smShowSoldScreen(data);
+    }).catch(function() {
+      smShowError('Network error. Please try again.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Sell Player'; }
+    });
+  };
+
+  function smShowSoldScreen(data) {
+    var secs = data.display_seconds > 0 ? data.display_seconds : 5;
+    closeSellModal();
+    var subText = 'Sold to \u00a0' + data.team_name + '\u00a0 for \u00a0' + data.final_point + ' pts';
+    showStamp('SOLD', secs, subText, function() { closePlayerDrawer(true); });
+  }
+
+  /* ── Full-screen stamp overlay ─────────────────────────── */
+  function showStamp(text, secs, subText, onDone) {
+    /* Support legacy 3-arg call: showStamp(text, secs, onDone) */
+    if (typeof subText === 'function') { onDone = subText; subText = ''; }
+
+    var cs = getComputedStyle(document.documentElement);
+    var bg = text === 'UNSOLD'
+      ? (cs.getPropertyValue('--unsold-bg').trim() || '#DC143C')
+      : (cs.getPropertyValue('--sold-bg').trim()   || '#E8A020');
+    var tx = text === 'UNSOLD'
+      ? (cs.getPropertyValue('--unsold-tx').trim() || '#fff')
+      : (cs.getPropertyValue('--sold-tx').trim()   || '#000');
+
+    /* Player photo */
+    var photoEl = document.getElementById('ssPhotoEl');
+    if (photoEl) {
+      photoEl.innerHTML = currentPlayerPhoto
+        ? '<img class="ss-photo" src="data:image/png;base64,' + currentPlayerPhoto
+            + '" alt="player" style="border:3px solid ' + currentPlayerTierColor + '"/>'
+        : '<div class="ss-photo-ph">&#128100;</div>';
+    }
+
+    /* Stamp label */
+    var stampEl = document.getElementById('ssStampText');
+    if (stampEl) {
+      stampEl.textContent = text;
+      stampEl.style.cssText = 'background:' + bg + ';color:' + tx
+        + ';box-shadow:0 0 0 3px ' + bg + ',0 8px 40px rgba(0,0,0,.5)';
+      /* Restart animation */
+      stampEl.style.animation = 'none';
+      void stampEl.offsetHeight;
+      stampEl.style.animation = '';
+    }
+
+    /* Serial & name */
+    var serialEl = document.getElementById('ssSerial');
+    if (serialEl) { serialEl.textContent = '#' + currentPlayerSerial; serialEl.style.color = currentPlayerTierColor; }
+    var nameEl = document.getElementById('ssName');
+    if (nameEl) nameEl.textContent = currentPlayerName;
+
+    /* Tier badge */
+    var badgeEl = document.getElementById('ssTierBadge');
+    if (badgeEl) {
+      if (currentPlayerTierName) {
+        badgeEl.textContent = currentPlayerTierName;
+        badgeEl.style.background = currentPlayerTierColor;
+        badgeEl.style.display = 'inline-block';
+      } else {
+        badgeEl.style.display = 'none';
+      }
+    }
+
+    /* Sub-text (e.g. "Sold to TeamX for 500 pts") */
+    var subEl = document.getElementById('ssSub');
+    if (subEl) { subEl.textContent = subText || ''; subEl.style.color = bg; }
+
+    /* Progress bar */
+    var bar = document.getElementById('ssBar');
+    if (bar) {
+      bar.style.background = bg;
+      bar.style.transition = 'none';
+      bar.style.width = '100%';
+    }
+
+    /* Show overlay (dismiss on click) */
+    var screen = document.getElementById('stampScreen');
+    screen.classList.add('show');
+    screen.onclick = function() {
+      screen.classList.remove('show');
+      screen.onclick = null;
+      if (onDone) onDone();
+    };
+
+    if (bar) {
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          bar.style.transition = 'width ' + secs + 's linear';
+          bar.style.width = '0%';
+        });
+      });
+    }
+
+    setTimeout(function() {
+      screen.classList.remove('show');
+      screen.onclick = null;
+      if (onDone) onDone();
+    }, secs * 1000);
+  }
+
+  /* ── Bid Summary ───────────────────────────────────────── */
+  window.openBidSummary = function() {
+    var iframe = document.getElementById('bsIframe');
+    if (iframe && iframe.src === 'about:blank') {
+      iframe.src = '/auction/show/team/balance';
+    }
+    document.getElementById('bsDrawer').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeBidSummary = function() {
+    document.getElementById('bsDrawer').classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  window.handleBSBackdropClick = function(e) {
+    if (e.target.classList.contains('bs-backdrop') || e.target === document.getElementById('bsDrawer')) {
+      closeBidSummary();
+    }
+  };
+
+  /* ── Fullscreen ────────────────────────────────────────── */
+  window.toggleFS = function() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(function() {});
+    } else {
+      document.exitFullscreen().catch(function() {});
+    }
+  };
+  document.addEventListener('fullscreenchange', function() {
+    var btn = document.getElementById('fsBtn');
+    if (btn) btn.textContent = document.fullscreenElement ? '\u2715' : '\u26F6';
+  });
+
+  /* ── Keyboard close ────────────────────────────────────── */
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape') return;
+    if (document.getElementById('sellModal').classList.contains('open')) { closeSellModal(); return; }
+    if (document.getElementById('unsoldModal').classList.contains('open')) { closeUnsoldConfirm(); return; }
+    if (document.getElementById('playerDrawer').classList.contains('open')) { closePlayerDrawer(); return; }
+    if (document.getElementById('bsDrawer').classList.contains('open')) { closeBidSummary(); }
+  });
+
+  /* ── Init ──────────────────────────────────────────────── */
+  window._auctionReloadGrid = loadGrid;
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(loadGrid,   100);
+    setTimeout(loadTicker, 200);
+  });
+})();
+//]]></script>
+
+</body>
+</html>
 </template>
-
 </odoo>

@@ -2,10 +2,7 @@ let last_id = 0;
 
 function fetchAuctionUpdates() {
     const feed = document.getElementById('auction_feed');
-    if (!feed) {
-        console.warn('auction_feed not found');
-        return;
-    }
+    if (!feed) return;
 
     fetch(`/auction/status/data?last_id=${last_id}`)
         .then(r => r.json())
@@ -30,6 +27,7 @@ function fetchAuctionUpdates() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (!document.getElementById('auction_feed')) return;
     fetchAuctionUpdates();
     setInterval(fetchAuctionUpdates, 3000);
 });

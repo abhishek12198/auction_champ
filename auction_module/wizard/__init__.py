@@ -10,3 +10,4 @@ from . import action_view_team_details
 from . import action_set_key_player
 from . import team_pool_wizard
 from . import action_set_to_draft
+from . import auction_pdf_to_png

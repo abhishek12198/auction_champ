@@ -22,3 +22,4 @@ access_auction_auction_tier_limit_base_user,auction.auction.tier.limit,auction_m
 access_auction_start_auction_tier_limit_base_user,auction.start.auction.tier.limit,auction_module.model_auction_start_auction_tier_limit,base.group_user,1,1,1,1
 access_my_service,my_service,base.model_res_users,,1,1,1,1
 
+access_auction_pdf_to_png_base_user,auction.pdf.to.png,auction_module.model_auction_pdf_to_png,base.group_user,1,1,1,1

@@ -54,6 +54,7 @@
         'wizard/action_set_to_auction_view.xml',
         'wizard/action_set_to_draft_view.xml',
         'wizard/team_pool_wizard_view.xml',
+        'wizard/auction_pdf_to_png_view.xml',
         'views/auction_status_template.xml',
         'views/menu.xml',
     ],

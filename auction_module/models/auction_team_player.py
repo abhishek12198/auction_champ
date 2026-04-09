@@ -86,6 +86,34 @@ class AuctionTeamPlayer(models.Model):
     def get_sell_teams_data(self, player_id):
         """Return available teams + auction data for the web sell modal."""
         player = self.browse(int(player_id))
+
+        # ── Tournament-level bid config ───────────────────────────────────
+        tournament = self.env['auction.tournament'].sudo().search(
+            [('active', '=', True)], limit=1
+        )
+        tournament_preset_points = []
+        tournament_slabs = []
+        if tournament:
+            if tournament.preset_points:
+                try:
+                    tournament_preset_points = [
+                        int(x.strip())
+                        for x in tournament.preset_points.split(',')
+                        if x.strip().lstrip('-').isdigit()
+                    ]
+                except Exception:
+                    pass
+
+            splits = tournament.points_split_ids.sorted('points')
+            split_list = list(splits)
+            for i, split in enumerate(split_list):
+                to_amt = (split_list[i + 1].points - 1) if i + 1 < len(split_list) else 99999999
+                tournament_slabs.append({
+                    'from_amount': split.points,
+                    'to_amount': to_amt,
+                    'increment': split.no_of_calls,
+                })
+
         auctions = self.env['auction.auction'].search([])
         teams = []
         for auction in auctions:
@@ -119,13 +147,7 @@ class AuctionTeamPlayer(models.Model):
                         tier_slots_ok = False
 
             # Check the team can actually afford the tier's minimum bid.
-            # max_call is derived from the global base point; a tier's effective_base may be higher.
             budget_ok = (effective_base <= auction.max_call)
-
-            slabs = [
-                {'from_amount': s.from_amount, 'to_amount': s.to_amount, 'increment': s.increment}
-                for s in auction.auction_bid_slab_ids.sorted('from_amount')
-            ]
 
             teams.append({
                 'team_id': auction.team_id.id,
@@ -138,7 +160,8 @@ class AuctionTeamPlayer(models.Model):
                 'max_call': auction.max_call,
                 'tier_slots_ok': tier_slots_ok,
                 'budget_ok': budget_ok,
-                'slabs': slabs,
+                'preset_points': tournament_preset_points,
+                'slabs': tournament_slabs,
             })
         return teams
 
@@ -363,6 +386,15 @@ class AuctionTeamPlayer(models.Model):
             random_player.sudo().write({'is_on_stage': True})
 
         return random_player
+
+    def action_set_on_stage(self):
+        """Mark this player as the current on-stage player for the live board."""
+        all_on_stage = self.search([('is_on_stage', '=', True)])
+        if all_on_stage:
+            all_on_stage.sudo().write({'is_on_stage': False})
+        for player in self:
+            player.sudo().write({'is_on_stage': True})
+        return {'success': True}
 
     def action_unsold(self):
         for player in self:

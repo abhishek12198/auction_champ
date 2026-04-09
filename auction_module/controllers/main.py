@@ -28,19 +28,26 @@ class Auction(http.Controller):
 
     @http.route('/auction/player_selector', type='http', auth='public', website=True)
     def player_selector(self, **kw):
+        tournament = request.env['auction.tournament'].sudo().search(
+            [('active', '=', True)], limit=1)
+        theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
         return request.render(
-            'auction_module.player_sequence_selector'
+            'auction_module.player_sequence_selector',
+            {'tournament': tournament, 'theme': theme}
         )
 
     #sequence_template_part
     @http.route('/auction/get_players_queue', type='json', auth='public', website=True)
     def get_players_queue(self):
-
-        players = request.env['auction.team.player'].sudo().get_auction_players(
+        tournament = request.env['auction.tournament'].sudo().search(
+            [('active', '=', True)], limit=1
         )
-
+        domain = [('icon_player', '=', False)]
+        if tournament:
+            domain.append(('tournament_id', '=', tournament.id))
+        players = request.env['auction.team.player'].sudo().search(domain, order='sl_no asc')
         return [
-            {'serial': p.sl_no, 'id': p.id}
+            {'serial': p.sl_no, 'id': p.id, 'state': p.state}
             for p in players
         ]
 
@@ -71,6 +78,33 @@ class Auction(http.Controller):
             'tournament_id': player.tournament_id.id if player.tournament_id else None,
             'tournament_name': player.tournament_id.name if player.tournament_id else '',
         }
+
+    @http.route('/auction/player_card/<int:player_id>', type='http', auth='public', website=True)
+    def get_player_card(self, player_id):
+        """Render the full themed player card page for iframe embedding in the selector drawer."""
+        player = request.env['auction.team.player'].sudo().browse(int(player_id))
+        if not player.exists():
+            return request.not_found()
+
+        tournament = request.env['auction.tournament'].sudo().search(
+            [('active', '=', True)], limit=1)
+        theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
+        auction_ids = request.env['auction.auction'].sudo().search(
+            [('tournament_id', '=', tournament.id)] if tournament else [])
+
+        template_map = {
+            'vanilla':      'auction_module.player_template_new',
+            'butterscotch': 'auction_module.player_template_butterscotch',
+            'strawberry':   'auction_module.player_template_strawberry',
+            'cherry':       'auction_module.player_template_cherry',
+            'pistah':       'auction_module.player_template_pistah',
+        }
+        template_ref = template_map.get(theme, 'auction_module.player_template_new')
+        return request.render(template_ref, {
+            'player':      player,
+            'tournament':  tournament,
+            'auction_ids': auction_ids,
+        })
 
     @http.route('/auction/player_modal/<int:player_id>', type='http', auth='public', website=True)
     def get_player_modal(self, player_id):
@@ -160,8 +194,9 @@ class Auction(http.Controller):
 
     @http.route(['''/auction/show/team/balance'''], type='http', auth="public", website=True)
     def auction_team_balance(self, **kwargs):
-        auctions = request.env['auction.auction'].sudo().search([])
         tournament = request.env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
+        domain = [('tournament_id', '=', tournament.id)] if tournament else []
+        auctions = request.env['auction.auction'].sudo().search(domain)
         theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
         access_type = 'internal'
         if request.env.user.login == 'public':
@@ -180,7 +215,9 @@ class Auction(http.Controller):
 
     @http.route(['''/auction/show/team/balance/json'''], type='http', auth="public", website=True)
     def auction_team_balance_json(self, **kwargs):
-        auctions = request.env['auction.auction'].sudo().search([])
+        tournament = request.env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
+        domain = [('tournament_id', '=', tournament.id)] if tournament else []
+        auctions = request.env['auction.auction'].sudo().search(domain)
         teams_data = []
         for auction in auctions:
             teams_data.append({
@@ -199,7 +236,9 @@ class Auction(http.Controller):
         player = request.env['auction.team.player'].sudo().get_random_player()
         tournament_id = request.env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
         if player:
-            auction_ids = request.env['auction.auction'].sudo().search([])
+            auction_ids = request.env['auction.auction'].sudo().search(
+                [('tournament_id', '=', tournament_id.id)] if tournament_id else []
+            )
             template_map = {
                 'vanilla':       'auction_module.player_template_new',
                 'butterscotch':  'auction_module.player_template_butterscotch',
@@ -223,9 +262,8 @@ class Auction(http.Controller):
         team_players = request.env['auction.auction.player'].search([('auction_id.team_id', '=', team_id)])
 
         team = request.env['auction.team'].browse(team_id)
-        tournament = team.tournament_id
+        tournament = request.env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
         theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
-        print(tournament.player_display_template)
         icon_players = request.env['auction.team.player'].get_icon_players(team_id)
         if icon_players:
             for icon in icon_players:
