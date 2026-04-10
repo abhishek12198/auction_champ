@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data noupdate="0">
+
+    <!-- ============================================================
+         USER group — can view Player Showcase + run auction
+         (Original external IDs reused to update existing DB records)
+    ============================================================ -->
+
+    <record id="access_auction_tournament_base_user" model="ir.model.access">
+        <field name="name">auction.tournament (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_tournament"/>
+        <field name="group_id" ref="auction_module.group_auction_group"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="access_auction_tournament_point_split_player_base_user" model="ir.model.access">
+        <field name="name">auction.tournament.point.split (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_tournament_point_split"/>
+        <field name="group_id" ref="auction_module.group_auction_group"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="access_auction_team_base_user" model="ir.model.access">
+        <field name="name">auction.team (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_team"/>
+        <field name="group_id" ref="auction_module.group_auction_group"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="access_auction_team_player_base_user" model="ir.model.access">
+        <field name="name">auction.team.player (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_team_player"/>
+        <field name="group_id" ref="auction_module.group_auction_group"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="access_auction_auction_base_user" model="ir.model.access">
+        <field name="name">auction.auction (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_auction"/>
+        <field name="group_id" ref="auction_module.group_auction_group"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_auction_bid_slab_base_user" model="ir.model.access">
+        <field name="name">auction.auction.bid.slab (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_auction_bid_slab"/>
+        <field name="group_id" ref="auction_module.group_auction_group"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="access_auction_history_base_user" model="ir.model.access">
+        <field name="name">auction.history (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_history"/>
+        <field name="group_id" ref="auction_module.group_auction_group"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="access_auction_auction_player_base_user" model="ir.model.access">
+        <field name="name">auction.auction.player (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_auction_player"/>
+        <field name="group_id" ref="auction_module.group_auction_group"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_start_auction_player_base_user" model="ir.model.access">
+        <field name="name">auction.start.auction (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_start_auction"/>
+        <field name="group_id" ref="auction_module.group_auction_group"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="access_auction_bid_slab_base_user" model="ir.model.access">
+        <field name="name">auction.bid.slab (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_bid_slab"/>
+        <field name="group_id" ref="auction_module.group_auction_group"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="access_auction_sell_player_base_user" model="ir.model.access">
+        <field name="name">auction.sell.player (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_sell_player"/>
+        <field name="group_id" ref="auction_module.group_auction_group"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_set_key_player_base_user" model="ir.model.access">
+        <field name="name">auction.set.key.player (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_set_key_player"/>
+        <field name="group_id" ref="auction_module.group_auction_group"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_player_auction_base_user" model="ir.model.access">
+        <field name="name">auction.player.auction (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_player_auction"/>
+        <field name="group_id" ref="auction_module.group_auction_group"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_player_draft_base_user" model="ir.model.access">
+        <field name="name">auction.player.draft (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_player_draft"/>
+        <field name="group_id" ref="auction_module.group_auction_group"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="access_auction_bring_unsold_players_base_user" model="ir.model.access">
+        <field name="name">auction.bring.unsold.players (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_bring_unsold_players"/>
+        <field name="group_id" ref="auction_module.group_auction_group"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_edit_player_point_base_user" model="ir.model.access">
+        <field name="name">auction.edit.player.point (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_edit_player_point"/>
+        <field name="group_id" ref="auction_module.group_auction_group"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_view_team_details_base_user" model="ir.model.access">
+        <field name="name">auction.view.team.details (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_view_team_details"/>
+        <field name="group_id" ref="auction_module.group_auction_group"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_player_tier_base_user" model="ir.model.access">
+        <field name="name">auction.player.tier (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_player_tier"/>
+        <field name="group_id" ref="auction_module.group_auction_group"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="access_auction_auction_tier_limit_base_user" model="ir.model.access">
+        <field name="name">auction.auction.tier.limit (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_auction_tier_limit"/>
+        <field name="group_id" ref="auction_module.group_auction_group"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="access_auction_start_auction_tier_limit_base_user" model="ir.model.access">
+        <field name="name">auction.start.auction.tier.limit (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_start_auction_tier_limit"/>
+        <field name="group_id" ref="auction_module.group_auction_group"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- All-users rule for res.users (kept as-is, no group restriction) -->
+    <record id="access_my_service" model="ir.model.access">
+        <field name="name">my_service</field>
+        <field name="model_id" ref="base.model_res_users"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- Pool Generator — update existing record to use our group -->
+    <record id="access_auction_team_pool_wizard_base_user" model="ir.model.access">
+        <field name="name">auction.team.pool.wizard (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_team_pool_wizard"/>
+        <field name="group_id" ref="auction_module.group_auction_pool_generator"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- PDF to PNG — update existing record to use our group -->
+    <record id="access_auction_pdf_to_png_base_user" model="ir.model.access">
+        <field name="name">auction.pdf.to.png (user)</field>
+        <field name="model_id" ref="auction_module.model_auction_pdf_to_png"/>
+        <field name="group_id" ref="auction_module.group_auction_pdf_to_png"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- ============================================================
+         PLAYER SETUP group — full CRUD on player data
+    ============================================================ -->
+
+    <record id="access_auction_team_player_setup" model="ir.model.access">
+        <field name="name">auction.team.player (setup)</field>
+        <field name="model_id" ref="auction_module.model_auction_team_player"/>
+        <field name="group_id" ref="auction_module.group_auction_player_setup"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_player_draft_setup" model="ir.model.access">
+        <field name="name">auction.player.draft (setup)</field>
+        <field name="model_id" ref="auction_module.model_auction_player_draft"/>
+        <field name="group_id" ref="auction_module.group_auction_player_setup"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- ============================================================
+         ADMINISTRATOR group — full access to every model
+    ============================================================ -->
+
+    <record id="access_auction_tournament_admin" model="ir.model.access">
+        <field name="name">auction.tournament (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_tournament"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_tournament_point_split_admin" model="ir.model.access">
+        <field name="name">auction.tournament.point.split (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_tournament_point_split"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_team_admin" model="ir.model.access">
+        <field name="name">auction.team (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_team"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_team_player_admin" model="ir.model.access">
+        <field name="name">auction.team.player (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_team_player"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_auction_admin" model="ir.model.access">
+        <field name="name">auction.auction (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_auction"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_auction_bid_slab_admin" model="ir.model.access">
+        <field name="name">auction.auction.bid.slab (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_auction_bid_slab"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_history_admin" model="ir.model.access">
+        <field name="name">auction.history (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_history"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_auction_player_admin" model="ir.model.access">
+        <field name="name">auction.auction.player (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_auction_player"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_start_auction_admin" model="ir.model.access">
+        <field name="name">auction.start.auction (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_start_auction"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_bid_slab_admin" model="ir.model.access">
+        <field name="name">auction.bid.slab (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_bid_slab"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_sell_player_admin" model="ir.model.access">
+        <field name="name">auction.sell.player (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_sell_player"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_set_key_player_admin" model="ir.model.access">
+        <field name="name">auction.set.key.player (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_set_key_player"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_player_auction_admin" model="ir.model.access">
+        <field name="name">auction.player.auction (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_player_auction"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_player_draft_admin" model="ir.model.access">
+        <field name="name">auction.player.draft (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_player_draft"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_bring_unsold_players_admin" model="ir.model.access">
+        <field name="name">auction.bring.unsold.players (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_bring_unsold_players"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_team_pool_wizard_admin" model="ir.model.access">
+        <field name="name">auction.team.pool.wizard (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_team_pool_wizard"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_edit_player_point_admin" model="ir.model.access">
+        <field name="name">auction.edit.player.point (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_edit_player_point"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_view_team_details_admin" model="ir.model.access">
+        <field name="name">auction.view.team.details (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_view_team_details"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_player_tier_admin" model="ir.model.access">
+        <field name="name">auction.player.tier (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_player_tier"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_auction_tier_limit_admin" model="ir.model.access">
+        <field name="name">auction.auction.tier.limit (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_auction_tier_limit"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_start_auction_tier_limit_admin" model="ir.model.access">
+        <field name="name">auction.start.auction.tier.limit (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_start_auction_tier_limit"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="access_auction_pdf_to_png_admin" model="ir.model.access">
+        <field name="name">auction.pdf.to.png (admin)</field>
+        <field name="model_id" ref="auction_module.model_auction_pdf_to_png"/>
+        <field name="group_id" ref="auction_module.group_auction_group_admin"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+</data>
+</odoo>
