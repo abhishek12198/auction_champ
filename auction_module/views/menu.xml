@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
+        <!-- Hide Discuss and Website menus — only visible to Odoo Technical Admins -->
+        <record id="mail.mail_menu" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6, 0, [ref('base.group_no_one')])]"/>
+        </record>
+        <record id="website.menu_website" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6, 0, [ref('base.group_no_one')])]"/>
+        </record>
+
         <record id="action_launch_auction" model="ir.actions.act_url">
-            <field name="name">Launch Auction</field>
-            <field name="url">/auction/display_auction</field>
+            <field name="name">Player Showcase</field>
+            <field name="url">/auction/showcase</field>
             <field name="target">new</field>
         </record>
 
@@ -30,73 +38,82 @@
 
         <menuitem id="menu_action_auction_root"
           name="Auction Settings"
-          sequence="20" web_icon="auction_module,static/src/description/auctions_settings.png"/>
+          sequence="20" web_icon="auction_module,static/src/description/auctions_settings.png"
+          groups="auction_module.group_auction_group"/>
 
         <menuitem id="menu_action_launch_auction_root"
           name="Player Showcase"
           action="action_launch_auction"
-          sequence="21" web_icon="auction_module,static/src/description/auction.png"/>
+          sequence="21" web_icon="auction_module,static/src/description/auction.png"
+          groups="auction_module.group_auction_group"/>
 
         <menuitem id="menu_action_auction_auction"
           name="Auction"
           parent="menu_action_auction_root"
-          sequence="1"/>
+          sequence="1"
+          groups="auction_module.group_auction_group"/>
 
         <menuitem id="menu_action_auction_player"
           name="Players"
           parent="menu_action_auction_root"
-          sequence="2"/>
+          sequence="2"
+          groups="auction_module.group_auction_player_setup"/>
 
         <menuitem id="menu_action_auction_draft_players"
           name="Draft"
           parent="menu_action_auction_player"
           action="action_auction_team_player_draft"
-          sequence="1"/>
+          sequence="1"
+          groups="auction_module.group_auction_player_setup"/>
 
         <menuitem id="menu_action_auction_active_players"
           name="Players in Auction"
           parent="menu_action_auction_player"
           action="action_auction_team_player_auction"
-          sequence="2"/>
+          sequence="2"
+          groups="auction_module.group_auction_player_setup"/>
 
         <menuitem id="menu_action_auction_team_key_player"
           name="Icon Players"
           parent="menu_action_auction_player"
           action="action_auction_team_key_player"
-          sequence="3"/>
+          sequence="3"
+          groups="auction_module.group_auction_player_setup"/>
 
          <menuitem id="menu_action_auction_sold_players"
           name="Players Sold"
           parent="menu_action_auction_player"
           action="action_auction_team_player_sold"
-          sequence="4"/>
-
-
+          sequence="4"
+          groups="auction_module.group_auction_player_setup"/>
 
         <menuitem id="menu_action_auction_unsold_players"
           name="Unsold Players"
           parent="menu_action_auction_player"
           action="action_auction_team_player_unsold"
-          sequence="5"/>
-
+          sequence="5"
+          groups="auction_module.group_auction_player_setup"/>
 
         <menuitem id="menu_action_auction_unpaid_players"
           name="Unpaid Players"
           parent="menu_action_auction_player"
           action="action_auction_team_player_unpaid"
-          sequence="6"/>
+          sequence="6"
+          groups="auction_module.group_auction_player_setup"/>
 
         <menuitem id="menu_action_auction_team_player_jersy"
           name="Players-Jersy"
           parent="menu_action_auction_player"
           action="action_auction_team_player_jersy"
-          sequence="7"/>
+          sequence="7"
+          groups="auction_module.group_auction_jersey_view"/>
 
         <menuitem id="menu_action_auction_pdf_to_png"
           name="Convert PDF to PNG"
           parent="menu_action_auction_player"
           action="action_auction_pdf_to_png"
-          sequence="20"/>
+          sequence="20"
+          groups="auction_module.group_auction_pdf_to_png"/>
 
         <menuitem id="menu_action_auction_conf"
           name="Configuration"
@@ -121,20 +138,16 @@
           name="Auction Team(s)"
           parent="menu_action_auction_auction"
           action="auction_module.action_auction_auction"
-          sequence="1"/>
+          sequence="1"
+          groups="auction_module.group_auction_group"/>
 
         <menuitem id="menu_action_auction_view_points"
           name="Auction Bid Summary"
           parent="menu_action_auction_auction"
           action="auction_module.action_view_auction_details"
-          sequence="3"/>
+          sequence="3"
+          groups="auction_module.group_auction_group"/>
 
-
-        <menuitem id="menu_action_live_updates"
-          name="Auction Live Updates"
-          parent="menu_action_auction_auction"
-          action="auction_module.action_live_updates"
-          sequence="4"/>
 
         <record id="action_public_live_board" model="ir.actions.act_url">
             <field name="name">Public Live Board</field>
@@ -145,26 +158,17 @@
           name="Public Live Bid Board"
           parent="menu_action_auction_auction"
           action="auction_module.action_public_live_board"
-          sequence="5"/>
+          sequence="5"
+          groups="auction_module.group_auction_bid_board"/>
 
         <menuitem id="menu_action_team_pool_wizard"
           name="Pool Generator"
           parent="menu_action_auction_auction"
           action="auction_module.action_team_pool_wizard"
-          sequence="5"/>
+          sequence="6"
+          groups="auction_module.group_auction_pool_generator"/>
 
 
-        <record id="action_manual_auction" model="ir.actions.act_url">
-            <field name="name">Manual Auction</field>
-            <field name="url">/auction/player_selector</field>
-            <field name="target">new</field>
-        </record>
-
-        <menuitem id="menu_action_manual_auction"
-          name="Manual Auction"
-          parent="menu_action_auction_auction"
-          action="auction_module.action_manual_auction"
-          sequence="99"/>
 
         <menuitem id="menu_action_auction_tournament"
           name="Tournament(s)"
