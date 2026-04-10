@@ -199,7 +199,8 @@
                                     <button name="print_player_cards"
                                             type="object"
                                             class="pk2-btn pk2-btn-print"
-                                            title="Print Player Card">
+                                            title="Print Player Card"
+                                            groups="auction_module.group_auction_player_card_print">
                                         <i class="fa fa-print"/> Print
                                     </button>
 
@@ -482,7 +483,7 @@
 
                         <!-- Tabs ─────────────────────────────────────── -->
                         <notebook>
-                            <page string="Jersey Details">
+                            <page string="Jersey Details" groups="auction_module.group_auction_jersey_view">
                                 <group>
                                     <group string="Jersey">
                                         <field name="jersy_name"   string="Name on Jersey"/>

@@ -27,7 +27,7 @@ class AuctionTournament(models.Model):
     venue = fields.Text("Venue")
     logo = fields.Binary('Logo')
     active = fields.Boolean(default=True)
-    player_appearance_algorithm = fields.Selection([('linear', 'Linear'), ('random', 'Random')], default="linear")
+    player_appearance_algorithm = fields.Selection([('linear', 'Manual'), ('random', 'Random')], default="linear")
     team_max_points = fields.Integer(string="Max points alloted for a team")
     organizer_uid = fields.Many2one('res.users', 'Organizer')
     points_split_ids = fields.One2many('auction.tournament.point.split', 'tournament_id', 'Points Split')

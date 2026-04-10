@@ -14,7 +14,7 @@
     'depends': ['bus','website', 'web_notify'],
     'data': [
         'security/security.xml',
-        'security/ir_model_access.xml',
+        'security/ir.model.access.csv',
         'data/report_paper_format_landscape.xml',
         'views/auction_tournament_view.xml',
         'views/auction_player_tier_view.xml',

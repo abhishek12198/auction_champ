@@ -449,6 +449,16 @@ class Auction(http.Controller):
     def auction_live_page(self, **kw):
         return request.render('auction_module.auction_live_page')
 
+    @http.route('/auction/showcase', type='http', auth='user', website=True)
+    def auction_showcase(self, **kw):
+        """Redirect to the correct player showcase based on tournament algorithm."""
+        tournament = request.env['auction.tournament'].sudo().search(
+            [('active', '=', True)], limit=1
+        )
+        if tournament and tournament.player_appearance_algorithm == 'linear':
+            return request.redirect('/auction/player_selector')
+        return request.redirect('/auction/display_auction')
+
     @http.route('/auction/status/data', type='http', auth='public', website=True, csrf=False)
     def auction_status_data(self, last_id=0, **kw):
 

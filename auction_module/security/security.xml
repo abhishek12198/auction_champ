@@ -8,19 +8,77 @@
         <field name="name">Auction</field>
     </record>
 
-    <record id="group_auction_group_admin" model="res.groups">
-        <field name="name">Administrator</field>
-        <field name="comment">Administrator</field>
-        <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
-        <field name="category_id" ref="auction_module.auction_categ"/>
-    </record>
-
+    <!-- Base user group — can do auction (Auction Team(s)) and Player Showcase -->
     <record id="group_auction_group" model="res.groups">
         <field name="name">User</field>
-        <field name="comment">User</field>
+        <field name="comment">Can access Player Showcase and Auction Team(s) to run auction and revert actions.</field>
         <field name="category_id" ref="auction_module.auction_categ"/>
     </record>
 
+    <!-- Player Setup — can manage all player data (all Players menus except PDF to PNG / Jersey) -->
+    <record id="group_auction_player_setup" model="res.groups">
+        <field name="name">Player Setup</field>
+        <field name="comment">Full access to Players menus (Draft, Auction, Icon, Sold, Unsold, Unpaid). CRUD on player records.</field>
+        <field name="category_id" ref="auction_module.auction_categ"/>
+        <field name="implied_ids" eval="[(4, ref('auction_module.group_auction_group'))]"/>
+    </record>
+
+    <!-- Player Card Print — shows Print button in player kanban / form / list -->
+    <record id="group_auction_player_card_print" model="res.groups">
+        <field name="name">Player Card Print</field>
+        <field name="comment">Allows printing player cards from kanban, form and list views.</field>
+        <field name="category_id" ref="auction_module.auction_categ"/>
+        <field name="implied_ids" eval="[(4, ref('auction_module.group_auction_group'))]"/>
+    </record>
+
+    <!-- Player Jersey View — shows jersey fields and Players-Jersey menu -->
+    <record id="group_auction_jersey_view" model="res.groups">
+        <field name="name">Player Jersey View</field>
+        <field name="comment">Enables jersey fields (name, number, size) and the Players-Jersey menu.</field>
+        <field name="category_id" ref="auction_module.auction_categ"/>
+        <field name="implied_ids" eval="[(4, ref('auction_module.group_auction_group'))]"/>
+    </record>
+
+    <!-- PDF to PNG — access to Convert PDF to PNG menu and wizard -->
+    <record id="group_auction_pdf_to_png" model="res.groups">
+        <field name="name">PDF to PNG</field>
+        <field name="comment">Can upload PDF player card sheets and download ZIP of PNG images.</field>
+        <field name="category_id" ref="auction_module.auction_categ"/>
+        <field name="implied_ids" eval="[(4, ref('auction_module.group_auction_group'))]"/>
+    </record>
+
+    <!-- Pool Generator — access to Pool Generator menu -->
+    <record id="group_auction_pool_generator" model="res.groups">
+        <field name="name">Pool Generator</field>
+        <field name="comment">Can access Pool Generator to assign teams to auction pools.</field>
+        <field name="category_id" ref="auction_module.auction_categ"/>
+        <field name="implied_ids" eval="[(4, ref('auction_module.group_auction_group'))]"/>
+    </record>
+
+    <!-- Bid Board — access to Public Live Bid Board menu -->
+    <record id="group_auction_bid_board" model="res.groups">
+        <field name="name">Bid Board</field>
+        <field name="comment">Can access and share the Public Live Bid Board link with external viewers.</field>
+        <field name="category_id" ref="auction_module.auction_categ"/>
+        <field name="implied_ids" eval="[(4, ref('auction_module.group_auction_group'))]"/>
+    </record>
+
+    <!-- Administrator — full access; implies all sub-groups -->
+    <record id="group_auction_group_admin" model="res.groups">
+        <field name="name">Administrator</field>
+        <field name="comment">Full access to all auction features and configuration.</field>
+        <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+        <field name="category_id" ref="auction_module.auction_categ"/>
+        <field name="implied_ids" eval="[
+            (4, ref('auction_module.group_auction_group')),
+            (4, ref('auction_module.group_auction_player_setup')),
+            (4, ref('auction_module.group_auction_player_card_print')),
+            (4, ref('auction_module.group_auction_jersey_view')),
+            (4, ref('auction_module.group_auction_pdf_to_png')),
+            (4, ref('auction_module.group_auction_pool_generator')),
+            (4, ref('auction_module.group_auction_bid_board')),
+        ]"/>
+    </record>
 
 </data>
 

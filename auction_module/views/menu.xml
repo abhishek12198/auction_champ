@@ -57,7 +57,7 @@
           name="Players"
           parent="menu_action_auction_root"
           sequence="2"
-          groups="auction_module.group_auction_player_setup"/>
+          groups="auction_module.group_auction_player_setup,auction_module.group_auction_pdf_to_png"/>
 
         <menuitem id="menu_action_auction_draft_players"
           name="Draft"
