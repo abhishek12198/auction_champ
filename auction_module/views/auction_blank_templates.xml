@@ -1117,6 +1117,62 @@ img { display: block; }
 .lb-waiting-icon { font-size: 4rem; opacity: .3; }
 .lb-waiting-text { font-size: 1.1rem; font-weight: 600; }
 
+/* ── MVP / TOP BUYS CARD ─────────────────────────────────────────── */
+.lb-mvp-card {
+  background: var(--lb-card);
+  border: 1px solid var(--lb-card-border);
+  border-radius: 20px;
+  padding: 18px 18px 12px;
+  flex-shrink: 0;
+}
+.lb-mvp-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 6px;
+  border-bottom: 1px solid var(--lb-sep);
+  border-radius: 8px;
+}
+.lb-mvp-item:last-child { border-bottom: none; }
+.lb-mvp-item-1 {
+  background: linear-gradient(90deg, rgba(251,191,36,0.10) 0%, transparent 80%);
+}
+.lb-mvp-rank {
+  flex-shrink: 0; width: 22px; text-align: center;
+  font-size: .85rem; font-weight: 900; line-height: 1;
+}
+.lb-mvp-rank-gold   { color: #fbbf24; }
+.lb-mvp-rank-silver { color: #94a3b8; }
+.lb-mvp-rank-bronze { color: #b45309; }
+.lb-mvp-rank-num    { color: var(--lb-sub); font-size: .7rem; }
+.lb-mvp-avatar {
+  position: relative;
+  width: 34px; height: 34px; border-radius: 8px; overflow: visible; flex-shrink: 0;
+}
+.lb-mvp-avatar-inner {
+  width: 34px; height: 34px; border-radius: 8px; overflow: hidden;
+  background: rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+}
+.lb-mvp-avatar-inner img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+.lb-mvp-avatar-ph { font-size: .95rem; opacity: .5; }
+.lb-mvp-crown {
+  position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
+  font-size: .65rem; line-height: 1; pointer-events: none;
+}
+.lb-mvp-info { flex: 1; min-width: 0; }
+.lb-mvp-name { font-size: .76rem; font-weight: 800; color: var(--lb-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lb-mvp-sub  { font-size: .6rem; color: var(--lb-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.lb-mvp-right { flex-shrink: 0; text-align: right; }
+.lb-mvp-pts   { font-size: .82rem; font-weight: 900; color: var(--lb-accent2); }
+.lb-mvp-team  { display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-top: 2px; }
+.lb-mvp-team-logo {
+  width: 14px; height: 14px; border-radius: 3px; overflow: hidden; flex-shrink: 0;
+  background: rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+}
+.lb-mvp-team-logo img { width: 100%; height: 100%; object-fit: contain; }
+.lb-mvp-team-name { font-size: .58rem; color: var(--lb-sub); }
+.lb-mvp-empty { text-align: center; color: var(--lb-sub); font-size: .8rem; padding: 16px 0; }
+
 /* ── FOOTER BAR ──────────────────────────────────────────────────── */
 .lb-footer {
   text-align: center;
@@ -1241,6 +1297,14 @@ img { display: block; }
       <div class="lb-section-title"><i class="fa fa-history"></i> Recent Transactions</div>
       <div id="lb-history-list">
         <div class="lb-history-empty">No transactions yet</div>
+      </div>
+    </div>
+
+    <!-- MVP / Top Buys card -->
+    <div class="lb-mvp-card">
+      <div class="lb-section-title"><i class="fa fa-trophy"></i> Top Buys &amp; MVP Board</div>
+      <div id="lb-mvp-list">
+        <div class="lb-mvp-empty">No sold players yet</div>
       </div>
     </div>
   </section>
@@ -1460,6 +1524,46 @@ img { display: block; }
     }).join('');
   }
 
+  // ── Render MVP / Top Buys ──────────────────────────────────────
+  function renderTopPlayers(topPlayers) {
+    const list = document.getElementById('lb-mvp-list');
+    if (!topPlayers || !topPlayers.length) {
+      list.innerHTML = '<div class="lb-mvp-empty">No sold players yet</div>';
+      return;
+    }
+    const medals = ['👑', '🥈', '🥉'];
+    const rankClasses = ['lb-mvp-rank-gold', 'lb-mvp-rank-silver', 'lb-mvp-rank-bronze', 'lb-mvp-rank-num', 'lb-mvp-rank-num'];
+    list.innerHTML = topPlayers.map((p, idx) => {
+      const isMvp = idx === 0;
+      const rankIcon  = medals[idx] !== undefined ? medals[idx] : String(p.rank);
+      const rankClass = rankClasses[idx] || 'lb-mvp-rank-num';
+      const avatarHtml = p.player_photo_url
+        ? `<img src="${p.player_photo_url}" alt="" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=lb-mvp-avatar-ph>👤</span>'">`
+        : '<span class="lb-mvp-avatar-ph">👤</span>';
+      const teamLogoHtml = p.team_logo_url
+        ? `<div class="lb-mvp-team-logo"><img src="${p.team_logo_url}" alt=""></div>`
+        : '';
+      return `<div class="lb-mvp-item${isMvp ? ' lb-mvp-item-1' : ''}">
+        <div class="lb-mvp-rank ${rankClass}">${rankIcon}</div>
+        <div class="lb-mvp-avatar">
+          <div class="lb-mvp-avatar-inner">${avatarHtml}</div>
+          ${isMvp ? '<div class="lb-mvp-crown">👑</div>' : ''}
+        </div>
+        <div class="lb-mvp-info">
+          <div class="lb-mvp-name">${p.player_name || '—'}</div>
+          <div class="lb-mvp-sub">${p.role || ''}</div>
+        </div>
+        <div class="lb-mvp-right">
+          <div class="lb-mvp-pts">${fmtPts(p.points)}</div>
+          <div class="lb-mvp-team">
+            ${teamLogoHtml}
+            <span class="lb-mvp-team-name">${p.team_name || ''}</span>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
   // ── Render Teams Strip ─────────────────────────────────────────
   function renderTeams(teams) {
     const card = document.getElementById('lb-teams-card');
@@ -1514,6 +1618,7 @@ img { display: block; }
         lastState    = newState;
 
         renderHistory(data.recent_history);
+        renderTopPlayers(data.top_players || []);
         renderTeams(data.teams);
       })
       .catch(function() {});

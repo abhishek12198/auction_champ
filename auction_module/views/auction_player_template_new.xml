@@ -70,8 +70,8 @@
       >
         <div class="col-sm-3 single-player-details">
           <h3 class="stroke-only"><span t-esc="player.sl_no"/></h3>
-          <h6 class="player-name"><span t-esc="player.name.upper()"/></h6>
-          <p class="player-possition"><span t-esc="player.role"/></p>
+          <h6 class="player-name"><span data-sm-name="" t-esc="player.name.upper()"/></h6>
+          <p class="player-possition"><span data-sm-role="" t-esc="player.role"/></p>
           <t t-if="player.tier_id">
             <span class="player-tier-badge"
                   t-att-style="'background-color: ' + (player.tier_id.color or '#3498db') + '; color: #fff; padding: 6px 18px; border-radius: 16px; font-size: 1.1rem; font-weight: 700; display: inline-block; margin-top: 10px; letter-spacing: 1px; text-transform: uppercase;'">

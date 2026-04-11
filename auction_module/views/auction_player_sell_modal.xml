@@ -454,12 +454,12 @@
 
       <!-- Player → Team strip -->
       <div class="sm-transfer-row">
-        <img class="sm-avatar"
+        <img class="sm-avatar" id="smPlayerAvatar"
              t-att-src="'/web/image/auction.team.player/%d/photo' % player.id"
              alt="Player" />
         <div class="sm-player-info">
-          <strong t-esc="player.name"/>
-          <span t-esc="player.role or ''"/>
+          <strong id="smPlayerName" t-esc="player.name"/>
+          <span id="smPlayerRole" t-esc="player.role or ''"/>
         </div>
         <div class="sm-arrow">&#10145;</div>
         <div class="sm-team-logo-wrap">
@@ -578,6 +578,19 @@
     smSelectedTeam = null;
     smTeamsData    = [];
     if (smCountdownTimer) { clearInterval(smCountdownTimer); smCountdownTimer = null; }
+
+    // Sync player photo + info to whoever is currently on screen
+    var smAvatar = document.getElementById('smPlayerAvatar');
+    if (smAvatar) smAvatar.src = '/web/image/auction.team.player/' + smPlayerId + '/photo';
+    var zone = document.querySelector('[data-player-zone]');
+    if (zone) {
+      var nameEl  = zone.querySelector('[data-sm-name]');
+      var roleEl  = zone.querySelector('[data-sm-role]');
+      var modalName = document.getElementById('smPlayerName');
+      var modalRole = document.getElementById('smPlayerRole');
+      if (nameEl  && modalName) modalName.textContent = nameEl.textContent.trim();
+      if (roleEl  && modalRole) modalRole.textContent = roleEl.textContent.trim();
+    }
 
     // Show form, hide sold screen
     document.getElementById('smFormPanel').style.display = 'block';

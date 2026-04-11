@@ -689,9 +689,9 @@
         <div class="pt-photo-serial">
           #<t t-esc="'%02d' % (player.sl_no or 0)"/>
         </div>
-        <div class="pt-player-name"><t t-esc="player.name"/></div>
+        <div class="pt-player-name" data-sm-name=""><t t-esc="player.name"/></div>
         <t t-if="player.role">
-          <div class="pt-player-role"><t t-esc="player.role"/></div>
+          <div class="pt-player-role" data-sm-role=""><t t-esc="player.role"/></div>
         </t>
       </div>
     </div>

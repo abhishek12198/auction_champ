@@ -1,633 +1,664 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-<template id="player_template_cherry" name="Player Auction – Cherry">
+  <template id="player_template_cherry" name="Player Auction – Cherry">
     <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
-      crossorigin="anonymous"
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600;700&amp;family=Rajdhani:wght@400;500;600;700&amp;display=swap"
-      rel="stylesheet"
-    />
-    <title>Player Showcase</title>
-    <style>
-      /* ── Base ─────────────────────────────────────────────── */
-      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    <head>
+      <meta charset="UTF-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <link rel="preconnect" href="https://fonts.googleapis.com"/>
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
+      <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Saira:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&amp;display=swap" rel="stylesheet"/>
+      <title>Player Showcase – Cherry</title>
+      <style>
+        /* ── Reset ──────────────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+          --cherry:        #DC143C;
+          --cherry-dark:   #8B0000;
+          --cherry-bright: #FF1744;
+          --cherry-mid:    #B01030;
+          --cherry-glow:   rgba(220,20,60,0.35);
+          --cherry-border: rgba(220,20,60,0.38);
+          --gold:          #D4AF37;
+          --gold-dim:      rgba(212,175,55,0.65);
+          --bg:            #080206;
+          --bg-surface:    #100408;
+          --bg-panel:      #160609;
+          --text-main:     #f8eaec;
+          --text-dim:      rgba(248,234,236,0.52);
+          --divider:       rgba(220,20,60,0.20);
+        }
+        html, body {
+          height: 100vh; overflow: hidden;
+          background: var(--bg); color: var(--text-main);
+          font-family: 'Saira', sans-serif;
+        }
+        body::before {
+          content: '';
+          position: fixed; inset: 0; pointer-events: none; z-index: 0;
+          background:
+            radial-gradient(ellipse 80% 60% at 30% 50%, rgba(220,20,60,.04) 0%, transparent 58%),
+            radial-gradient(ellipse 50% 70% at 75% 25%, rgba(139,0,0,.07) 0%, transparent 52%);
+        }
 
-      :root {
-        --cherry:       #DC143C;
-        --cherry-dark:  #8B0000;
-        --cherry-bright:#FF1744;
-        --cherry-glow:  rgba(220, 20, 60, 0.30);
-        --border-red:   rgba(220, 20, 60, 0.40);
-        --bg:           #0d0d0d;
-        --bg-surface:   #181818;
-        --bg-card:      #1e1e1e;
-        --bg-card2:     #242424;
-        --white:        #ffffff;
-        --text-main:    #f5f5f5;
-        --text-dim:     rgba(245, 245, 245, 0.55);
-        --divider:      rgba(220, 20, 60, 0.35);
-      }
+        /* ══════════════════════════════════════════════════════════════
+           HEADER
+        ══════════════════════════════════════════════════════════════ */
+        .cr-header {
+          position: relative; z-index: 20;
+          display: flex; align-items: center; justify-content: space-between;
+          height: 68px; padding: 0 32px;
+          background: linear-gradient(90deg, #040103 0%, #100408 40%, #140508 70%, #040103 100%);
+          border-bottom: 1.5px solid var(--cherry-border);
+          box-shadow: 0 2px 20px rgba(220,20,60,.15), inset 0 -1px 0 rgba(220,20,60,.10);
+        }
+        .cr-header::before {
+          content: '';
+          position: absolute; top: 0; left: 0; right: 0; height: 2px;
+          background: linear-gradient(90deg,
+            transparent 0%, var(--cherry-dark) 15%, var(--cherry) 40%,
+            var(--cherry-bright) 50%, var(--cherry) 60%,
+            var(--cherry-dark) 85%, transparent 100%);
+          box-shadow: 0 0 10px rgba(220,20,60,.45);
+        }
+        .cr-header-brand { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; }
+        .cr-brand-logo { height: 44px; width: auto; object-fit: contain; filter: drop-shadow(0 0 7px rgba(220,20,60,.45)); }
+        .cr-brand-text { display: flex; flex-direction: column; }
+        .cr-brand-name { font-family: 'Bebas Neue', sans-serif; font-size: .95rem; letter-spacing: 2px; color: var(--text-main); line-height: 1; }
+        .cr-brand-sub  { font-size: .58rem; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; color: var(--cherry); }
+        .cr-header-center { flex: 1; display: flex; justify-content: center; align-items: center; gap: 12px; }
+        .cr-tourn-logo {
+          height: 52px; width: auto; flex-shrink: 0; object-fit: contain; border-radius: 8px;
+          border: 1.5px solid var(--cherry-border); padding: 3px;
+          box-shadow: 0 0 16px var(--cherry-glow), 0 0 0 1px rgba(220,20,60,.08);
+          background: rgba(220,20,60,.05);
+        }
+        .cr-tourn-info   { display: flex; flex-direction: column; gap: 2px; }
+        .cr-tourn-name   { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 2px; color: var(--text-main); line-height: 1; text-shadow: 0 0 12px rgba(220,20,60,.28); }
+        .cr-tourn-desc   { font-size: .62rem; font-weight: 400; letter-spacing: 1.5px; color: var(--text-dim); }
+        .cr-header-right { flex: 0 0 auto; }
+        .cr-live-badge   { display: flex; align-items: center; gap: 7px; padding: 5px 13px; border-radius: 28px; background: rgba(220,20,60,.10); border: 1px solid rgba(220,20,60,.33); font-family: 'Bebas Neue', sans-serif; font-size: .85rem; letter-spacing: 3px; color: var(--cherry-bright); }
+        .cr-live-dot     { width: 8px; height: 8px; border-radius: 50%; background: var(--cherry); box-shadow: 0 0 8px var(--cherry), 0 0 16px var(--cherry-glow); animation: crPulse 1.4s ease-in-out infinite; }
+        @keyframes crPulse {
+          0%,100% { opacity:1; transform:scale(1); }
+          50%      { opacity:.45; transform:scale(.78); }
+        }
 
-      html, body {
-        min-height: 100vh;
-        background: var(--bg);
-        color: var(--text-main);
-        font-family: 'Rajdhani', sans-serif;
-        overflow-x: hidden;
-      }
+        /* ══════════════════════════════════════════════════════════════
+           ARENA  (identity bar + main row + actions bar)
+        ══════════════════════════════════════════════════════════════ */
+        .cr-arena {
+          position: relative; z-index: 5;
+          height: calc(100vh - 68px - 52px);
+          display: flex; flex-direction: column; overflow: hidden;
+        }
 
-      /* ── Dramatic red scanline vignette ────────────────────── */
-      body::before {
-        content: '';
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background:
-          radial-gradient(ellipse at top left, rgba(220,20,60,.12) 0%, transparent 55%),
-          radial-gradient(ellipse at bottom right, rgba(139,0,0,.14) 0%, transparent 55%);
-        pointer-events: none; z-index: 0;
-      }
+        /* ── IDENTITY BAR ────────────────────────────────────────────── */
+        .cr-id-bar {
+          flex-shrink: 0;
+          display: flex; align-items: center;
+          height: 72px; padding: 0 24px 0 0; overflow: hidden;
+          background: linear-gradient(135deg, #1c0408 0%, #2a0610 40%, #200509 70%, #160408 100%);
+          border-bottom: 2px solid var(--cherry);
+          box-shadow: 0 4px 28px rgba(220,20,60,.20), inset 0 1px 0 rgba(220,20,60,.12);
+        }
+        .cr-id-bar::before {
+          content: ''; flex-shrink: 0;
+          width: 5px; height: 100%; margin-right: 20px;
+          background: linear-gradient(to bottom, var(--cherry-bright), var(--cherry-dark));
+        }
+        .cr-id-serial   { flex-shrink: 0; display: flex; align-items: baseline; gap: 2px; padding-right: 20px; }
+        .cr-serial-hash { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; color: var(--gold-dim); line-height: 1; }
+        .cr-serial-num  {
+          font-family: 'Bebas Neue', sans-serif; font-size: 3.4rem; line-height: .9;
+          background: linear-gradient(135deg, var(--gold) 30%, #fff8dc 65%, var(--gold-dim) 100%);
+          -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+          background-clip: text; filter: drop-shadow(0 0 10px rgba(212,175,55,.45));
+        }
+        .cr-id-vsep { flex-shrink: 0; width: 1.5px; height: 48px; background: linear-gradient(to bottom, transparent, var(--cherry), transparent); margin: 0 20px; }
+        .cr-id-name  { flex: 1; min-width: 0; font-family: 'Bebas Neue', sans-serif; font-size: 2.8rem; color: #fff; letter-spacing: 3px; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 20px rgba(220,20,60,.28), 0 2px 8px rgba(0,0,0,.5); }
+        .cr-id-meta  { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; margin-left: 16px; }
+        .cr-role-tag { font-size: .7rem; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: var(--cherry-bright); background: rgba(220,20,60,.12); border: 1px solid rgba(220,20,60,.33); border-radius: 4px; padding: 3px 10px; }
+        .cr-tier-badge { font-size: .68rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; border-radius: 4px; padding: 3px 10px; }
 
-      /* ── Header ─────────────────────────────────────────────── */
-      .ch-header {
-        position: relative; z-index: 10;
-        display: grid;
-        grid-template-columns: 1fr auto 1fr;
-        align-items: center;
-        padding: 16px 40px;
-        background: linear-gradient(135deg, #0a0a0a 0%, #1a0608 50%, #0a0a0a 100%);
-        border-bottom: 3px solid var(--cherry);
-        box-shadow: 0 4px 32px rgba(220,20,60,.30), inset 0 -1px 0 rgba(220,20,60,.2);
-      }
+        /* ── MAIN ROW ────────────────────────────────────────────────── */
+        .cr-main { flex: 1; display: grid; grid-template-columns: 58% 42%; overflow: hidden; }
 
-      /* red top stripe */
-      .ch-header::before {
-        content: '';
-        position: absolute; top: 0; left: 0; right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, transparent, var(--cherry), var(--cherry-bright), var(--cherry), transparent);
-      }
+        /* ── PHOTO COLUMN ──────────────────────────────────────────── */
+        .cr-photo-col { position: relative; overflow: hidden; background: #060104; }
+        .cr-photo-blur {
+          position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;
+          object-fit: cover; object-position: center;
+          filter: blur(20px) brightness(0.20) saturate(0.5); transform: scale(1.08);
+        }
+        .cr-photo-col::after {
+          content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+          background: linear-gradient(to right, transparent 55%, rgba(8,2,6,.58) 82%, var(--bg-panel) 100%);
+        }
+        .cr-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: center bottom; z-index: 2; }
+        .cr-corner { position: absolute; z-index: 4; width: 32px; height: 32px; }
+        .cr-corner-tl { top:12px; left:12px; border-top:3px solid var(--cherry); border-left:3px solid var(--cherry); box-shadow:-2px -2px 10px var(--cherry-glow); }
+        .cr-corner-tr { top:12px; right:12px; border-top:3px solid var(--cherry); border-right:3px solid var(--cherry); box-shadow:2px -2px 10px var(--cherry-glow); }
+        .cr-corner-bl { bottom:12px; left:12px; border-bottom:3px solid var(--cherry); border-left:3px solid var(--cherry); box-shadow:-2px 2px 10px var(--cherry-glow); }
+        .cr-corner-br { bottom:12px; right:12px; border-bottom:3px solid var(--cherry); border-right:3px solid var(--cherry); box-shadow:2px 2px 10px var(--cherry-glow); }
+        .cr-photo-wm { position: absolute; z-index: 2; bottom: 10px; left: 10px; font-family: 'Bebas Neue', sans-serif; font-size: 18rem; line-height: 1; color: rgba(220,20,60,.05); pointer-events: none; user-select: none; }
 
-      .ch-header-info { display: flex; flex-direction: column; }
-      .ch-header-info h2 {
-        font-family: 'Teko', sans-serif;
-        font-size: 1.8rem; font-weight: 700;
-        color: var(--white);
-        line-height: 1; text-transform: uppercase; letter-spacing: 2px; margin: 0;
-      }
-      .ch-header-info p {
-        font-size: .85rem; color: rgba(255,255,255,.65);
-        letter-spacing: 1px; margin: 0;
-      }
+        /* ── STATS COLUMN ──────────────────────────────────────────── */
+        .cr-stats-col {
+          position: relative; display: flex; flex-direction: column;
+          padding: 18px 24px 14px 20px; overflow: hidden;
+          background: linear-gradient(160deg, #100408 0%, #160609 50%, #120507 100%);
+          border-left: 1px solid rgba(220,20,60,.14);
+        }
+        .cr-stats-col::before {
+          content: ''; position: absolute; inset: 0; pointer-events: none;
+          background-image:
+            repeating-linear-gradient(0deg,   rgba(220,20,60,.012) 0, rgba(220,20,60,.012) 1px, transparent 1px, transparent 56px),
+            repeating-linear-gradient(90deg,  rgba(220,20,60,.012) 0, rgba(220,20,60,.012) 1px, transparent 1px, transparent 56px);
+        }
+        .cr-stats-header { position: relative; z-index: 2; font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 4px; color: var(--cherry); border-bottom: 1.5px solid var(--divider); padding-bottom: 8px; margin-bottom: 12px; }
+        .cr-stat-row { position: relative; z-index: 2; display: flex; align-items: stretch; border-radius: 6px; overflow: hidden; background: rgba(220,20,60,.03); border: 1px solid rgba(220,20,60,.10); margin-bottom: 7px; transition: border-color .2s, background .2s; }
+        .cr-stat-row:hover { border-color: rgba(220,20,60,.28); background: rgba(220,20,60,.07); }
+        .cr-stat-key { flex: 0 0 104px; padding: 9px 12px; font-size: .68rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-main); background: rgba(220,20,60,.17); border-right: 1px solid rgba(220,20,60,.18); display: flex; align-items: center; }
+        .cr-stat-val { flex: 1; padding: 9px 13px; font-size: .88rem; font-weight: 500; color: var(--text-main); display: flex; align-items: center; }
+        .cr-stat-val.cr-blood { color: var(--cherry-bright); font-weight: 800; }
+        .cr-base-price-box { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding: 11px 16px; background: rgba(212,175,55,.06); border: 1px solid rgba(212,175,55,.22); border-radius: 7px; }
+        .cr-base-label { font-family: 'Bebas Neue', sans-serif; font-size: .9rem; letter-spacing: 2.5px; color: var(--gold-dim); }
+        .cr-base-val   { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 1px; color: var(--gold); text-shadow: 0 0 12px rgba(212,175,55,.45); }
+        .cr-wm { position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 18px; padding: 10px 0 4px; opacity: .20; pointer-events: none; user-select: none; }
+        .cr-wm-rule { flex: 1; height: 1px; background: linear-gradient(to right, transparent, rgba(220,20,60,.4), transparent); }
 
-      .ch-header-center { display: flex; justify-content: center; align-items: center; }
-      .ch-header-center .brand-logo {
-        width: 110px; height: 110px;
-        object-fit: contain;
-        filter: brightness(0) invert(1) sepia(0.8) saturate(600%) hue-rotate(320deg) brightness(1.1) drop-shadow(0 0 14px rgba(220,20,60,0.6));
-      }
+        /* ── ACTIONS BAR ───────────────────────────────────────────── */
+        .cr-actions {
+          flex-shrink: 0; display: flex; align-items: center; gap: 14px;
+          height: 78px; padding: 0 32px;
+          background: linear-gradient(90deg, #0a0204 0%, #160508 30%, #1e0810 50%, #160508 70%, #0a0204 100%);
+          border-top: 1px solid rgba(220,20,60,.18);
+          box-shadow: inset 0 1px 0 rgba(220,20,60,.10), 0 -4px 24px rgba(0,0,0,.35);
+        }
+        /* All three buttons: equal flex, uniform pill shape, same height */
+        .cr-btn {
+          flex: 1; height: 50px;
+          display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+          border: none; cursor: pointer;
+          font-family: 'Bebas Neue', sans-serif; font-size: .95rem; letter-spacing: 2px;
+          border-radius: 50px; transition: all .22s ease; white-space: nowrap;
+        }
+        /* Unsold — ghost danger: subtle red outline, transparent fill */
+        .cr-btn-unsold {
+          background: rgba(220,20,60,.06);
+          border: 1.5px solid rgba(220,20,60,.42);
+          color: var(--cherry);
+          box-shadow: inset 0 0 0 0 rgba(220,20,60,0);
+        }
+        .cr-btn-unsold:hover {
+          background: rgba(220,20,60,.14);
+          border-color: var(--cherry);
+          box-shadow: 0 0 18px rgba(220,20,60,.22), inset 0 0 12px rgba(220,20,60,.06);
+          transform: translateY(-1px);
+        }
+        .cr-btn-unsold:active { transform: translateY(0); }
+        /* Sell — primary cherry gradient: the star of the bar */
+        .cr-btn-sell {
+          background: linear-gradient(135deg, var(--cherry-dark) 0%, var(--cherry) 55%, var(--cherry-bright) 100%);
+          color: #fff; border: 1.5px solid rgba(255,80,100,.35);
+          box-shadow: 0 4px 20px rgba(220,20,60,.42), 0 1px 0 rgba(255,255,255,.12) inset;
+        }
+        .cr-btn-sell:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 30px rgba(220,20,60,.62), 0 1px 0 rgba(255,255,255,.18) inset;
+          filter: brightness(1.08);
+        }
+        .cr-btn-sell:active:not(:disabled) { transform: translateY(0); filter: brightness(.96); }
+        .cr-btn-sell:disabled { opacity: .38; cursor: not-allowed; }
+        /* Next — gold outlined: secondary forward action */
+        .cr-btn-next {
+          background: rgba(212,175,55,.07);
+          border: 1.5px solid rgba(212,175,55,.35);
+          color: var(--gold);
+        }
+        .cr-btn-next:hover {
+          background: rgba(212,175,55,.16);
+          border-color: var(--gold);
+          box-shadow: 0 0 18px rgba(212,175,55,.24);
+          transform: translateY(-1px);
+        }
+        .cr-btn-next:active { transform: translateY(0); }
 
-      .ch-header-logo { display: flex; justify-content: flex-end; align-items: center; }
-      .ch-header-logo img {
-        width: 100%;
-        max-height: 110px;
-        object-fit: contain;
-        object-position: right center;
-        opacity: .92;
-        filter: drop-shadow(0 0 8px rgba(220,20,60,.25));
-      }
+        /* ── FOOTER TICKER ─────────────────────────────────────────── */
+        .cr-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 52px; z-index: 30; display: flex; align-items: center; background: linear-gradient(90deg, #040103 0%, #0e0407 50%, #040103 100%); border-top: 1px solid rgba(220,20,60,.20); overflow: hidden; }
+        .cr-footer-label { flex-shrink: 0; padding: 0 16px; font-family: 'Bebas Neue', sans-serif; font-size: .78rem; letter-spacing: 2px; color: var(--cherry); border-right: 1px solid rgba(220,20,60,.18); height: 100%; display: flex; align-items: center; background: rgba(220,20,60,.04); }
+        .cr-teams-ticker { flex: 1; overflow: hidden; position: relative; mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%); -webkit-mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%); }
+        .cr-ticker-track { display: flex; align-items: center; gap: 20px; padding: 0 20px; width: max-content; animation: crTickerScroll var(--cr-ticker-dur, 60s) linear infinite; will-change: transform; }
+        .cr-ticker-track:hover { animation-play-state: paused; }
+        @keyframes crTickerScroll {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .cr-team-chip { display: flex; align-items: center; gap: 7px; flex-shrink: 0; padding: 4px 12px 4px 7px; border-radius: 18px; border: 1px solid rgba(220,20,60,.13); background: rgba(220,20,60,.04); }
+        .cr-team-chip img { width: 26px; height: 26px; border-radius: 50%; object-fit: contain; border: 1px solid rgba(220,20,60,.18); }
+        .cr-team-chip-name { font-size: .7rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim); }
+        .cr-team-chip-pts  { font-family: 'Bebas Neue', sans-serif; font-size: .8rem; letter-spacing: 1px; color: var(--cherry); margin-left: 3px; }
+      </style>
+    </head>
 
-      /* ── Main layout ─────────────────────────────────────────── */
-      .ch-stage {
-        position: relative; z-index: 5;
-        display: grid;
-        grid-template-columns: 260px 1fr 340px;
-        gap: 28px;
-        max-width: 1300px;
-        margin: 36px auto;
-        padding: 0 24px;
-        align-items: start;
-      }
+    <body t-att-data-player-id="player.id">
 
-      /* ── Left – identity ─────────────────────────────────────── */
-      .ch-identity { display: flex; flex-direction: column; gap: 12px; }
-
-      .ch-serial {
-        font-family: 'Teko', sans-serif;
-        font-size: 7rem; font-weight: 700; line-height: 1;
-        background: linear-gradient(135deg, var(--cherry) 20%, var(--white) 80%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        filter: drop-shadow(0 0 18px var(--cherry-glow));
-      }
-
-      .ch-divider {
-        height: 3px;
-        background: linear-gradient(90deg, var(--cherry), var(--cherry-bright), transparent);
-        border-radius: 2px;
-        box-shadow: 0 0 8px rgba(220,20,60,.5);
-      }
-
-      .ch-player-name {
-        font-family: 'Teko', sans-serif;
-        font-size: 2.6rem; font-weight: 600;
-        text-transform: uppercase; letter-spacing: 2px;
-        color: var(--white); line-height: 1.1;
-      }
-
-      .ch-role {
-        font-size: 1rem; font-weight: 700;
-        letter-spacing: 3px; text-transform: uppercase;
-        color: var(--cherry);
-      }
-
-      .ch-tier-badge {
-        display: inline-block;
-        padding: 6px 20px; border-radius: 30px;
-        font-size: .95rem; font-weight: 700;
-        letter-spacing: 2px; text-transform: uppercase;
-        width: fit-content;
-      }
-
-      /* ── Center – photo ──────────────────────────────────────── */
-      .ch-photo-wrap { display: flex; justify-content: center; align-items: flex-start; }
-
-      .ch-photo-frame { position: relative; width: 320px; }
-
-      /* corner ornaments */
-      .ch-photo-frame::before, .ch-photo-frame::after {
-        content: '';
-        position: absolute;
-        width: 40px; height: 40px;
-        border-color: var(--cherry);
-        border-style: solid;
-        z-index: 3;
-      }
-      .ch-photo-frame::before { top: -6px; left: -6px; border-width: 3px 0 0 3px; box-shadow: -3px -3px 8px rgba(220,20,60,.4); }
-      .ch-photo-frame::after  { bottom: -6px; right: -6px; border-width: 0 3px 3px 0; box-shadow: 3px 3px 8px rgba(220,20,60,.4); }
-
-      .ch-photo-inner {
-        position: relative; border-radius: 6px; overflow: hidden;
-        background: var(--bg-surface);
-        box-shadow:
-          0 0 0 2px var(--cherry),
-          0 0 40px rgba(220,20,60,.20),
-          0 24px 60px rgba(0,0,0,.6);
-      }
-      /* tier-coloured bottom bar */
-      .ch-photo-inner::after {
-        content: '';
-        position: absolute;
-        bottom: 0; left: 0; right: 0; height: 6px;
-        background: var(--tier-color, var(--cherry));
-        box-shadow: 0 0 20px var(--tier-color, var(--cherry));
-      }
-      .ch-photo-inner img {
-        display: block; width: 100%;
-        aspect-ratio: 380/553;
-        object-fit: cover; object-position: top center;
-      }
-      /* dark vignette overlay */
-      .ch-photo-inner::before {
-        content: '';
-        position: absolute; inset: 0;
-        background: linear-gradient(to bottom, transparent 55%, rgba(0,0,0,.55) 100%);
-        z-index: 1; pointer-events: none;
-      }
-
-      /* ── Right – attributes ──────────────────────────────────── */
-      .ch-attrs-panel { display: flex; flex-direction: column; gap: 10px; }
-
-      .ch-attrs-title {
-        font-family: 'Teko', sans-serif;
-        font-size: 1.4rem; font-weight: 600;
-        letter-spacing: 4px; text-transform: uppercase;
-        color: var(--cherry);
-        border-bottom: 2px solid var(--divider);
-        padding-bottom: 8px;
-      }
-
-      .ch-attr-row {
-        display: flex; align-items: stretch;
-        background: var(--bg-card);
-        border: 1px solid var(--border-red);
-        border-radius: 8px; overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,.3);
-        transition: border-color .2s, box-shadow .2s;
-      }
-      .ch-attr-row:hover {
-        border-color: var(--cherry);
-        box-shadow: 0 4px 16px rgba(220,20,60,.20);
-      }
-
-      .ch-attr-key {
-        flex: 0 0 130px; padding: 10px 14px;
-        font-size: .8rem; font-weight: 700;
-        letter-spacing: 1.5px; text-transform: uppercase;
-        color: var(--white);
-        background: var(--cherry);
-        display: flex; align-items: center;
-      }
-
-      .ch-attr-val {
-        flex: 1; padding: 10px 16px;
-        font-size: .95rem; font-weight: 600;
-        color: var(--text-main);
-        display: flex; align-items: center;
-        background: var(--bg-card);
-      }
-
-      /* ── Action buttons ──────────────────────────────────────── */
-      .ch-actions {
-        position: relative; z-index: 5;
-        display: flex; justify-content: center; align-items: center;
-        gap: 16px; margin-top: 16px;
-      }
-
-      .ch-btn {
-        padding: 12px 32px; border-radius: 50px;
-        font-family: 'Rajdhani', sans-serif;
-        font-size: 1rem; font-weight: 700;
-        letter-spacing: 1px; text-transform: uppercase;
-        cursor: pointer; border: none; transition: all .25s;
-      }
-
-      .ch-btn-unsold {
-        background: transparent;
-        border: 2px solid var(--border-red);
-        color: var(--cherry);
-      }
-      .ch-btn-unsold:hover {
-        border-color: var(--cherry);
-        background: rgba(220,20,60,.10);
-      }
-
-      .ch-btn-sell {
-        background: linear-gradient(135deg, var(--cherry-dark), var(--cherry-bright));
-        color: var(--white);
-        box-shadow: 0 4px 18px rgba(220,20,60,.45);
-      }
-      .ch-btn-sell:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 28px rgba(220,20,60,.60);
-      }
-      .ch-btn-sell:disabled { opacity: .4; cursor: not-allowed; }
-
-      /* ── Next-player strip ──────────────────────────────────── */
-      .ch-next-strip {
-        position: relative; z-index: 5;
-        display: flex; justify-content: center;
-        padding: 24px 0 40px;
-      }
-
-      .ch-next-btn {
-        display: inline-flex; align-items: center; gap: 10px;
-        padding: 14px 44px;
-        background: linear-gradient(135deg, var(--cherry-dark), var(--cherry-bright));
-        border: none; border-radius: 50px;
-        color: var(--white);
-        font-family: 'Teko', sans-serif;
-        font-size: 1.4rem; font-weight: 600;
-        letter-spacing: 3px; text-transform: uppercase;
-        cursor: pointer; transition: all .25s;
-        box-shadow: 0 6px 24px rgba(220,20,60,.45);
-      }
-      .ch-next-btn:hover {
-        transform: scale(1.04);
-        box-shadow: 0 10px 32px rgba(220,20,60,.65);
-      }
-      .ch-next-btn svg { transition: transform .25s; }
-      .ch-next-btn:hover svg { transform: translateX(4px); }
-
-      /* ── Responsive ──────────────────────────────────────────── */
-      @media (max-width: 1024px) {
-        .ch-stage { grid-template-columns: 1fr 1fr; }
-        .ch-photo-wrap { grid-column: 1 / -1; justify-content: center; }
-        .ch-photo-frame { width: 280px; }
-      }
-      @media (max-width: 640px) {
-        .ch-stage { grid-template-columns: 1fr; padding: 0 16px; }
-        .ch-header { grid-template-columns: 1fr; text-align: center; gap: 8px; padding: 14px 20px; }
-        .ch-header-logo { justify-content: center; }
-        .ch-header-center .brand-logo { width: 80px; height: 80px; }
-        .ch-serial { font-size: 5rem; }
-        .ch-player-name { font-size: 2rem; }
-        .ch-photo-frame { width: 240px; }
-      }
-    </style>
-  </head>
-
-  <body t-att-data-player-id="player.id">
-
-    <!-- ── HEADER ───────────────────────────────────────────── -->
-    <header class="ch-header">
-      <div class="ch-header-info">
-        <h2><t t-esc="player.tournament_id.name"/></h2>
-        <p><t t-esc="player.tournament_id.description"/></p>
-      </div>
-      <div class="ch-header-center">
-        <img src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ Logo" class="brand-logo" />
-      </div>
-      <div class="ch-header-logo">
-        <img t-att-src="image_data_uri(player.tournament_id.logo)" alt="Tournament Logo" />
-      </div>
-    </header>
-
-    <!-- ── MAIN STAGE ──────────────────────────────────────── -->
-    <div class="ch-stage" data-player-zone="">
-
-      <!-- Left: identity -->
-      <div class="ch-identity">
-        <div class="ch-serial"><t t-esc="player.sl_no"/></div>
-        <div class="ch-divider"></div>
-        <div class="ch-player-name"><t t-esc="player.name.upper()"/></div>
-        <div class="ch-role"><t t-esc="player.role"/></div>
-        <t t-if="player.tier_id">
-          <span class="ch-tier-badge"
-                t-att-style="'background-color: ' + (player.tier_id.color or '#DC143C') + '28; color: ' + (player.tier_id.color or '#DC143C') + '; border: 1.5px solid ' + (player.tier_id.color or '#DC143C') + '80;'">
-            <t t-esc="player.tier_id.name"/>
-          </span>
-        </t>
-        <div class="ch-actions">
-          <button class="ch-btn ch-btn-unsold" onclick="setPlayerUnsold()">Set Unsold</button>
-          <button class="ch-btn ch-btn-sell" onclick="openSellModal()">Sell to Team</button>
-        </div>
-      </div>
-
-      <!-- Center: photo -->
-      <div class="ch-photo-wrap">
-        <div class="ch-photo-frame">
-          <div class="ch-photo-inner"
-               t-att-style="'--tier-color: ' + (player.tier_id.color if player.tier_id else '#DC143C')">
-            <img t-att-src="image_data_uri(player.photo)" alt="Player Photo" id="loadImage" />
+      <!-- HEADER ─────────────────────────────────────────────────── -->
+      <header class="cr-header">
+        <div class="cr-header-brand">
+          <img src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ" class="cr-brand-logo"/>
+          <div class="cr-brand-text">
+            <div class="cr-brand-name">Auction Champ</div>
+            <div class="cr-brand-sub">Cherry Edition</div>
           </div>
         </div>
-      </div>
+        <div class="cr-header-center">
+          <t t-if="tournament and tournament.logo">
+            <img class="cr-tourn-logo" t-att-src="image_data_uri(tournament.logo)" alt="Tournament Logo"/>
+          </t>
+          <t t-if="tournament">
+            <div class="cr-tourn-info">
+              <div class="cr-tourn-name"><t t-esc="tournament.name"/></div>
+              <t t-if="tournament.description">
+                <div class="cr-tourn-desc"><t t-esc="tournament.description"/></div>
+              </t>
+            </div>
+          </t>
+        </div>
+        <div class="cr-header-right">
+          <div class="cr-live-badge">
+            <span class="cr-live-dot"></span>
+            LIVE
+          </div>
+        </div>
+      </header>
 
-      <!-- Right: attributes -->
-      <div class="ch-attrs-panel">
-        <div class="ch-attrs-title">Player Attributes</div>
-        <t t-if="player.batting_style">
-          <div class="ch-attr-row">
-            <span class="ch-attr-key">Batting</span>
-            <span class="ch-attr-val"><t t-esc="player.batting_style"/></span>
-          </div>
-        </t>
-        <t t-if="player.bowling_style">
-          <div class="ch-attr-row">
-            <span class="ch-attr-key">Bowling</span>
-            <span class="ch-attr-val"><t t-esc="player.bowling_style"/></span>
-          </div>
-        </t>
-        <t t-if="player.blood_group">
-          <div class="ch-attr-row">
-            <span class="ch-attr-key">Blood Group</span>
-            <span class="ch-attr-val" style="color:#FF1744; font-weight:700;"><t t-esc="player.blood_group"/></span>
-          </div>
-        </t>
-        <t t-if="player.contact">
-          <div class="ch-attr-row">
-            <span class="ch-attr-key">Mobile</span>
-            <span class="ch-attr-val"><t t-esc="player.contact"/></span>
-          </div>
-        </t>
-        <t t-if="player.p_category">
-          <div class="ch-attr-row">
-            <span class="ch-attr-key">Category</span>
-            <span class="ch-attr-val"><t t-esc="player.p_category"/></span>
-          </div>
-        </t>
-        <t t-if="player.address">
-          <div class="ch-attr-row">
-            <span class="ch-attr-key">Location</span>
-            <span class="ch-attr-val"><t t-esc="player.address"/></span>
-          </div>
-        </t>
-      </div>
+      <!-- ARENA — all player-specific content inside data-player-zone ─ -->
+      <div class="cr-arena" data-player-zone="">
 
-    </div><!-- /ch-stage -->
+        <!-- IDENTITY BAR -->
+        <div class="cr-id-bar">
+          <div class="cr-id-serial">
+            <span class="cr-serial-hash">#</span>
+            <span class="cr-serial-num"><t t-esc="'%02d' % (player.sl_no or 0)"/></span>
+          </div>
+          <div class="cr-id-vsep"></div>
+          <div class="cr-id-name" data-sm-name=""><t t-esc="player.name.upper() if player.name else ''"/></div>
+          <div class="cr-id-meta">
+            <t t-if="player.role">
+              <div class="cr-role-tag" data-sm-role=""><t t-esc="player.role"/></div>
+            </t>
+            <t t-if="player.tier_id">
+              <div class="cr-tier-badge"
+                   t-att-style="'background:' + (player.tier_id.color or '#DC143C') + '22; color:' + (player.tier_id.color or '#DC143C') + '; border: 1px solid ' + (player.tier_id.color or '#DC143C') + '55;'">
+                <t t-esc="player.tier_id.name"/>
+              </div>
+            </t>
+          </div>
+        </div>
 
-    <!-- ── NEXT PLAYER ─────────────────────────────────────── -->
-    <div class="ch-next-strip">
-      <button class="ch-next-btn" onclick="changeImage()">
-        Next Player
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M6 18L14.5 12 6 6V18ZM16 6V18H18V6H16Z"/>
-        </svg>
-      </button>
-    </div>
+        <!-- MAIN ROW: photo + stats -->
+        <div class="cr-main">
 
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
-      crossorigin="anonymous"
-    ></script>
+          <!-- Photo column -->
+          <div class="cr-photo-col">
+            <div class="cr-photo-wm"><t t-esc="'%02d' % (player.sl_no or 0)"/></div>
+            <img class="cr-photo-blur" t-att-src="image_data_uri(player.photo)" aria-hidden="true" alt=""/>
+            <img class="cr-photo" id="loadImage" t-att-src="image_data_uri(player.photo)" alt="Player Photo"/>
+            <div class="cr-corner cr-corner-tl"></div>
+            <div class="cr-corner cr-corner-tr"></div>
+            <div class="cr-corner cr-corner-bl"></div>
+            <div class="cr-corner cr-corner-br"></div>
+          </div>
 
-    <script>
-      async function changeImage() {
-        var toast = document.getElementById('ac-next-toast');
-        var bar   = document.getElementById('ac-next-bar');
-        if (toast) {
-          toast.style.display  = 'flex';
-          toast.style.opacity  = '1';
-          bar.style.transition = 'none';
-          bar.style.width      = '0%';
-          requestAnimationFrame(function() {
+          <!-- Stats column -->
+          <div class="cr-stats-col">
+            <div class="cr-stats-header">Player Profile</div>
+
+            <t t-if="player.batting_style">
+              <div class="cr-stat-row">
+                <span class="cr-stat-key">Batting</span>
+                <span class="cr-stat-val"><t t-esc="player.batting_style"/></span>
+              </div>
+            </t>
+            <t t-if="player.bowling_style">
+              <div class="cr-stat-row">
+                <span class="cr-stat-key">Bowling</span>
+                <span class="cr-stat-val"><t t-esc="player.bowling_style"/></span>
+              </div>
+            </t>
+            <t t-if="player.blood_group">
+              <div class="cr-stat-row">
+                <span class="cr-stat-key">Blood</span>
+                <span class="cr-stat-val cr-blood"><t t-esc="player.blood_group"/></span>
+              </div>
+            </t>
+            <t t-if="player.p_category">
+              <div class="cr-stat-row">
+                <span class="cr-stat-key">Category</span>
+                <span class="cr-stat-val"><t t-esc="player.p_category"/></span>
+              </div>
+            </t>
+            <t t-if="player.contact">
+              <div class="cr-stat-row">
+                <span class="cr-stat-key">Mobile</span>
+                <span class="cr-stat-val"><t t-esc="player.contact"/></span>
+              </div>
+            </t>
+            <t t-if="player.address">
+              <div class="cr-stat-row">
+                <span class="cr-stat-key">Location</span>
+                <span class="cr-stat-val"><t t-esc="player.address"/></span>
+              </div>
+            </t>
+
+            <!-- Base price -->
+            <t t-if="player.effective_base_price">
+              <div class="cr-base-price-box">
+                <span class="cr-base-label">Base Price</span>
+                <span class="cr-base-val"><t t-esc="'{:,}'.format(int(player.effective_base_price or 0))"/> pts</span>
+              </div>
+            </t>
+
+            <!-- Cricket watermark filler -->
+            <div class="cr-wm">
+              <div class="cr-wm-rule"></div>
+              <div style="display:flex;align-items:center;gap:16px;">
+                <!-- Bat SVG -->
+                <svg width="40" height="40" viewBox="0 0 44 44" fill="none">
+                  <ellipse cx="22" cy="17" rx="8" ry="13" fill="rgba(220,20,60,.14)" stroke="rgba(220,20,60,.9)" stroke-width="1.4"/>
+                  <line x1="15" y1="22" x2="29" y2="22" stroke="rgba(220,20,60,.45)" stroke-width="0.8"/>
+                  <line x1="15" y1="26" x2="29" y2="26" stroke="rgba(220,20,60,.45)" stroke-width="0.8"/>
+                  <rect x="19.5" y="30" width="5" height="10" rx="2.5" fill="rgba(220,20,60,.18)" stroke="rgba(220,20,60,.9)" stroke-width="1.4"/>
+                </svg>
+                <!-- Ball SVG -->
+                <svg width="40" height="40" viewBox="0 0 44 44" fill="none">
+                  <circle cx="22" cy="22" r="16" fill="rgba(220,20,60,.09)" stroke="rgba(220,20,60,.9)" stroke-width="1.4"/>
+                  <path d="M16 7 Q12 14 13 22 Q14 30 16 37" stroke="rgba(220,20,60,.70)" stroke-width="1.1" stroke-linecap="round" fill="none"/>
+                  <path d="M28 7 Q32 14 31 22 Q30 30 28 37" stroke="rgba(220,20,60,.70)" stroke-width="1.1" stroke-linecap="round" fill="none"/>
+                  <path d="M8 17 Q15 21 22 20 Q29 19 36 21" stroke="rgba(220,20,60,.48)" stroke-width="0.9" stroke-linecap="round" fill="none"/>
+                  <path d="M8 27 Q15 24 22 25 Q29 26 36 24" stroke="rgba(220,20,60,.48)" stroke-width="0.9" stroke-linecap="round" fill="none"/>
+                </svg>
+                <!-- Stumps SVG -->
+                <svg width="40" height="40" viewBox="0 0 44 44" fill="none">
+                  <line x1="6" y1="38" x2="38" y2="38" stroke="rgba(220,20,60,.45)" stroke-width="1" stroke-linecap="round"/>
+                  <line x1="14" y1="10" x2="14" y2="38" stroke="rgba(220,20,60,.9)" stroke-width="2.2" stroke-linecap="round"/>
+                  <line x1="22" y1="10" x2="22" y2="38" stroke="rgba(220,20,60,.9)" stroke-width="2.2" stroke-linecap="round"/>
+                  <line x1="30" y1="10" x2="30" y2="38" stroke="rgba(220,20,60,.9)" stroke-width="2.2" stroke-linecap="round"/>
+                  <path d="M12 10 Q14 7 18 10 Q20 11 22 10" stroke="rgba(220,20,60,.9)" stroke-width="2" stroke-linecap="round" fill="none"/>
+                  <path d="M22 10 Q24 7 28 10 Q30 11 32 10" stroke="rgba(220,20,60,.9)" stroke-width="2" stroke-linecap="round" fill="none"/>
+                </svg>
+              </div>
+              <div class="cr-wm-rule"></div>
+            </div>
+          </div><!-- /cr-stats-col -->
+
+        </div><!-- /cr-main -->
+
+        <!-- ACTIONS BAR -->
+        <div class="cr-actions">
+          <button class="cr-btn cr-btn-unsold" onclick="setPlayerUnsold()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            Set Unsold
+          </button>
+          <button class="cr-btn cr-btn-sell" onclick="openSellModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+            Sell to Team
+          </button>
+          <button class="cr-btn cr-btn-next" onclick="changeImage()">
+            Next Player
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18L14.5 12 6 6V18ZM16 6V18H18V6H16Z"/></svg>
+          </button>
+        </div>
+
+      </div><!-- /cr-arena (data-player-zone) -->
+
+      <!-- FOOTER TICKER ─────────────────────────────────────────────── -->
+      <footer class="cr-footer">
+        <div class="cr-footer-label">Teams</div>
+        <div class="cr-teams-ticker">
+          <t t-if="auction_ids">
+            <div class="cr-ticker-track" id="crTickerTrack">
+              <t t-foreach="auction_ids" t-as="a">
+                <div class="cr-team-chip">
+                  <t t-if="a.team_id and a.team_id.logo">
+                    <img t-att-src="image_data_uri(a.team_id.logo)" t-att-alt="a.team_id.name"/>
+                  </t>
+                  <span class="cr-team-chip-name"><t t-esc="a.team_id.name if a.team_id else 'Team'"/></span>
+                  <span class="cr-team-chip-pts"><t t-esc="'{:,}'.format(a.remaining_points or 0)"/> pts</span>
+                </div>
+              </t>
+              <t t-foreach="auction_ids" t-as="a">
+                <div class="cr-team-chip" aria-hidden="true">
+                  <t t-if="a.team_id and a.team_id.logo">
+                    <img t-att-src="image_data_uri(a.team_id.logo)" t-att-alt="a.team_id.name"/>
+                  </t>
+                  <span class="cr-team-chip-name"><t t-esc="a.team_id.name if a.team_id else 'Team'"/></span>
+                  <span class="cr-team-chip-pts"><t t-esc="'{:,}'.format(a.remaining_points or 0)"/> pts</span>
+                </div>
+              </t>
+            </div>
+          </t>
+        </div>
+      </footer>
+
+      <!-- Ticker speed calibration -->
+      <script>
+        (function() {
+          var track = document.getElementById('crTickerTrack');
+          if (!track) return;
+          var singleW = track.scrollWidth / 2;
+          var viewW   = track.parentElement.offsetWidth;
+          if (singleW &lt;= viewW) {
+            track.style.animation = 'none';
+            track.style.justifyContent = 'center';
+          } else {
+            var dur = Math.max(20, Math.round(singleW / 90));
+            track.style.setProperty('--cr-ticker-dur', dur + 's');
+          }
+        })();
+      </script>
+
+      <!-- Core JS -->
+      <script>
+        async function changeImage() {
+          var toast = document.getElementById('ac-next-toast');
+          var bar   = document.getElementById('ac-next-bar');
+          if (toast) {
+            toast.style.display  = 'flex';
+            toast.style.opacity  = '1';
+            bar.style.transition = 'none';
+            bar.style.width      = '0%';
             requestAnimationFrame(function() {
-              bar.style.transition = 'width 1.2s cubic-bezier(.4,0,.2,1)';
-              bar.style.width      = '80%';
+              requestAnimationFrame(function() {
+                bar.style.transition = 'width 1.2s cubic-bezier(.4,0,.2,1)';
+                bar.style.width      = '80%';
+              });
+            });
+          }
+          try {
+            var resp = await fetch(window.location.href, {cache: 'no-store'});
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            var html = await resp.text();
+            var parser = new DOMParser();
+            var newDoc = parser.parseFromString(html, 'text/html');
+            var pid = newDoc.body.getAttribute('data-player-id');
+            if (pid) document.body.setAttribute('data-player-id', pid);
+            var zone    = document.querySelector('[data-player-zone]');
+            var newZone = newDoc.querySelector('[data-player-zone]');
+            if (zone &amp;&amp; newZone) { zone.innerHTML = newZone.innerHTML; }
+            if (toast) {
+              bar.style.transition = 'width 0.15s ease';
+              bar.style.width      = '100%';
+              setTimeout(function() {
+                toast.style.opacity = '0';
+                setTimeout(function() { toast.style.display = 'none'; }, 400);
+              }, 250);
+            }
+          } catch(e) {
+            console.error('Next player load failed:', e);
+            window.location.reload();
+          }
+        }
+
+        document.addEventListener('keydown', function(event) {
+          if (event.code === 'Space') { event.preventDefault(); changeImage(); }
+        });
+
+        function setPlayerUnsold() {
+          document.getElementById('crUnsoldModal').style.display = 'flex';
+        }
+
+        (function() {
+          document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('crUnsoldCancel').addEventListener('click', function() {
+              document.getElementById('crUnsoldModal').style.display = 'none';
+            });
+            document.getElementById('crUnsoldConfirm').addEventListener('click', function() {
+              document.getElementById('crUnsoldModal').style.display = 'none';
+              var playerId = parseInt(document.body.getAttribute('data-player-id'));
+              if (!playerId) { showUnsoldToast('Error: Player ID not found', true); return; }
+              fetch('/web/dataset/call_kw', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                  jsonrpc: '2.0', method: 'call',
+                  params: { model: 'auction.team.player', method: 'action_unsold', args: [[playerId]], kwargs: {} }
+                })
+              }).then(r => r.json()).then(function(result) {
+                if (result.error) showUnsoldToast('Failed to mark player as unsold', true);
+                else {
+                  var secs = (result.result &amp;&amp; result.result.display_seconds > 0) ? result.result.display_seconds : 5;
+                  showUnsoldStamp(secs, '#DC143C', '#fff');
+                }
+              }).catch(function() { showUnsoldToast('Failed to mark player as unsold', true); });
             });
           });
+        })();
+
+        function showUnsoldToast(message, isError) {
+          var toast = document.getElementById('crToast');
+          toast.textContent = message;
+          toast.style.background = isError ? '#8B0000' : '#1b5e20';
+          toast.style.display = 'block';
+          setTimeout(function() { toast.style.display = 'none'; }, 3500);
         }
-        try {
-          var resp = await fetch(window.location.href, {cache: 'no-store'});
-          if (!resp.ok) throw new Error('HTTP ' + resp.status);
-          var html = await resp.text();
-          var parser = new DOMParser();
-          var newDoc = parser.parseFromString(html, 'text/html');
-          var pid = newDoc.body.getAttribute('data-player-id');
-          if (pid) document.body.setAttribute('data-player-id', pid);
-          var zone    = document.querySelector('[data-player-zone]');
-          var newZone = newDoc.querySelector('[data-player-zone]');
-          if (zone &amp;&amp; newZone) { zone.innerHTML = newZone.innerHTML; }
-          if (toast) {
-            bar.style.transition = 'width 0.15s ease';
-            bar.style.width      = '100%';
-            setTimeout(function() {
-              toast.style.opacity = '0';
-              setTimeout(function() { toast.style.display = 'none'; }, 400);
-            }, 250);
+
+        function showUnsoldStamp(displaySeconds, stampColor, stampText) {
+          if (!document.getElementById('_unsoldStampCSS')) {
+            var s = document.createElement('style');
+            s.id = '_unsoldStampCSS';
+            s.textContent = '@keyframes _unsoldDrop{0%{transform:rotate(-22deg) scale(2.4);opacity:0}100%{transform:rotate(-22deg) scale(1);opacity:.92}}@keyframes _unsoldFadeIn{from{opacity:0}to{opacity:1}}';
+            document.head.appendChild(s);
           }
-        } catch(e) {
-          console.error('Next player load failed:', e);
-          window.location.reload();
+          var img = document.getElementById('loadImage');
+          var r = img.getBoundingClientRect();
+          var ov = document.createElement('div');
+          ov.style.cssText = 'position:fixed;z-index:9500;top:'+r.top+'px;left:'+r.left+'px;width:'+r.width+'px;height:'+r.height+'px;background:rgba(0,0,0,0.48);display:flex;align-items:center;justify-content:center;animation:_unsoldFadeIn .35s ease;pointer-events:none;';
+          var stamp = document.createElement('div');
+          stamp.style.cssText = 'background:'+stampColor+';color:'+stampText+';font-size:clamp(1.8rem,5vw,3.2rem);font-weight:900;letter-spacing:6px;padding:8px 36px;border:5px solid rgba(255,255,255,0.85);border-radius:6px;box-shadow:0 0 0 3px '+stampColor+',0 8px 40px rgba(0,0,0,.5);opacity:0;animation:_unsoldDrop .5s cubic-bezier(.34,1.3,.64,1) .15s forwards;text-shadow:2px 3px 8px rgba(0,0,0,.4);';
+          stamp.textContent = 'UNSOLD';
+          var barWrap = document.createElement('div');
+          barWrap.style.cssText = 'position:absolute;bottom:12px;left:16px;right:16px;';
+          var barTrack = document.createElement('div');
+          barTrack.style.cssText = 'background:rgba(255,255,255,0.25);border-radius:4px;height:6px;overflow:hidden;';
+          var bar = document.createElement('div');
+          bar.style.cssText = 'height:100%;width:100%;background:'+stampColor+';border-radius:4px;transition:width '+displaySeconds+'s linear;';
+          barTrack.appendChild(bar);
+          barWrap.appendChild(barTrack);
+          ov.appendChild(stamp);
+          ov.appendChild(barWrap);
+          document.body.appendChild(ov);
+          requestAnimationFrame(function() { requestAnimationFrame(function() { bar.style.width = '0%'; }); });
+          setTimeout(function() { if (ov.parentNode) ov.parentNode.removeChild(ov); changeImage(); }, displaySeconds * 1000);
         }
-      }
 
-      document.addEventListener("keydown", function(event) {
-        if (event.code === "Space") { event.preventDefault(); changeImage(); }
-      });
-
-      function setPlayerUnsold() {
-        var modal = document.getElementById('unsoldConfirmModal');
-        modal.style.display = 'flex';
-      }
-
-      (function() {
-        document.addEventListener('DOMContentLoaded', function() {
-          document.getElementById('unsoldModalCancel').addEventListener('click', function() {
-            document.getElementById('unsoldConfirmModal').style.display = 'none';
-          });
-          document.getElementById('unsoldModalConfirm').addEventListener('click', function() {
-            document.getElementById('unsoldConfirmModal').style.display = 'none';
-            var playerId = parseInt(document.body.getAttribute('data-player-id'));
-            if (!playerId) { showUnsoldToast('Error: Player ID not found', true); return; }
-            fetch('/web/dataset/call_kw', {
-              method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({
-                jsonrpc: '2.0', method: 'call',
-                params: { model: 'auction.team.player', method: 'action_unsold', args: [[playerId]], kwargs: {} }
-              })
-            }).then(r => r.json()).then(function(result) {
-              if (result.error) showUnsoldToast('Failed to mark player as unsold', true);
-              else {
-                var secs = (result.result &amp;&amp; result.result.display_seconds > 0) ? result.result.display_seconds : 5;
-                showUnsoldStamp(secs, '#DC143C', '#fff');
-              }
-            }).catch(function() { showUnsoldToast('Failed to mark player as unsold', true); });
-          });
+        function openBidSummary() {
+          document.getElementById('crBidDrawer').style.right = '0';
+          document.getElementById('crBidArrow').innerHTML = '&#x2192;';
+          document.getElementById('crBidOverlay').style.display = 'block';
+          document.getElementById('crBidFrame').src = '/auction/show/team/balance';
+          document.body.style.overflow = 'hidden';
+        }
+        function closeBidSummary() {
+          document.getElementById('crBidDrawer').style.right = '-1150px';
+          document.getElementById('crBidArrow').innerHTML = '&#x2190;';
+          document.getElementById('crBidOverlay').style.display = 'none';
+          document.body.style.overflow = '';
+        }
+        function toggleBidSummary() {
+          var r = document.getElementById('crBidDrawer').style.right;
+          if (r === '0px' || r === '0') { closeBidSummary(); } else { openBidSummary(); }
+        }
+        function toggleFullscreen() {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(function(e) { console.warn(e); });
+          } else {
+            document.exitFullscreen();
+          }
+        }
+        document.addEventListener('fullscreenchange', function() {
+          var btn = document.getElementById('fs-btn');
+          if (!btn) return;
+          if (document.fullscreenElement) {
+            btn.title = 'Exit Fullscreen';
+            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>';
+          } else {
+            btn.title = 'Enter Fullscreen';
+            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>';
+          }
         });
-      })();
+      </script>
 
-      function showUnsoldToast(message, isError) {
-        var toast = document.getElementById('unsoldToast');
-        toast.textContent = message;
-        toast.style.background = isError ? '#8B0000' : '#1b5e20';
-        toast.style.display = 'block';
-        setTimeout(function() { toast.style.display = 'none'; }, 3500);
-      }
-
-      function showUnsoldStamp(displaySeconds, stampColor, stampText) {
-        if (!document.getElementById('_unsoldStampCSS')) {
-          var s = document.createElement('style');
-          s.id = '_unsoldStampCSS';
-          s.textContent = '@keyframes _unsoldDrop{0%{transform:rotate(-22deg) scale(2.4);opacity:0}100%{transform:rotate(-22deg) scale(1);opacity:.92}}@keyframes _unsoldFadeIn{from{opacity:0}to{opacity:1}}';
-          document.head.appendChild(s);
-        }
-        var img = document.getElementById('loadImage');
-        var r = img.getBoundingClientRect();
-        var ov = document.createElement('div');
-        ov.style.cssText = 'position:fixed;z-index:9500;top:'+r.top+'px;left:'+r.left+'px;width:'+r.width+'px;height:'+r.height+'px;background:rgba(0,0,0,0.48);display:flex;align-items:center;justify-content:center;animation:_unsoldFadeIn .35s ease;pointer-events:none;';
-        var stamp = document.createElement('div');
-        stamp.style.cssText = 'background:'+stampColor+';color:'+stampText+';font-size:clamp(1.8rem,5vw,3.2rem);font-weight:900;letter-spacing:6px;padding:8px 36px;border:5px solid rgba(255,255,255,0.85);border-radius:6px;box-shadow:0 0 0 3px '+stampColor+',0 8px 40px rgba(0,0,0,.5);opacity:0;animation:_unsoldDrop .5s cubic-bezier(.34,1.3,.64,1) .15s forwards;text-shadow:2px 3px 8px rgba(0,0,0,.4);';
-        stamp.textContent = 'UNSOLD';
-        var barWrap = document.createElement('div');
-        barWrap.style.cssText = 'position:absolute;bottom:12px;left:16px;right:16px;';
-        var barTrack = document.createElement('div');
-        barTrack.style.cssText = 'background:rgba(255,255,255,0.25);border-radius:4px;height:6px;overflow:hidden;';
-        var bar = document.createElement('div');
-        bar.style.cssText = 'height:100%;width:100%;background:'+stampColor+';border-radius:4px;transition:width '+displaySeconds+'s linear;';
-        barTrack.appendChild(bar);
-        barWrap.appendChild(barTrack);
-        ov.appendChild(stamp);
-        ov.appendChild(barWrap);
-        document.body.appendChild(ov);
-        requestAnimationFrame(function() { requestAnimationFrame(function() { bar.style.width = '0%'; }); });
-        setTimeout(function() { if (ov.parentNode) ov.parentNode.removeChild(ov); changeImage(); }, displaySeconds * 1000);
-      }
-
-      function openBidSummary() {
-        document.getElementById('bidSummaryFrame').src = '/auction/show/team/balance';
-        document.getElementById('bidSummaryDrawer').style.right = '0';
-        document.getElementById('bidSummaryTabArrow').innerHTML = '&#x2192;';
-        document.getElementById('bidSummaryOverlay').style.display = 'block';
-        document.body.style.overflow = 'hidden';
-      }
-      function closeBidSummary() {
-        document.getElementById('bidSummaryDrawer').style.right = '-1150px';
-        document.getElementById('bidSummaryTabArrow').innerHTML = '&#x2190;';
-        document.getElementById('bidSummaryOverlay').style.display = 'none';
-        document.body.style.overflow = '';
-      }
-      function toggleBidSummary() {
-        var r = document.getElementById('bidSummaryDrawer').style.right;
-        if (r === '0px' || r === '0') { closeBidSummary(); } else { openBidSummary(); }
-      }
-    </script>
-      <!-- Bid Summary Drawer — Cherry Theme -->
-      <div id="bidSummaryDrawer" style="position:fixed; top:0; right:-1150px; width:1150px; max-width:96vw; height:100vh; z-index:9800; display:flex; flex-direction:column; background:#1e1e1e; border-left:3px solid #DC143C; box-shadow:-6px 0 40px rgba(220,20,60,0.3); transition:right .35s cubic-bezier(.4,0,.2,1);">
-        <!-- Fold/unfold tab -->
-        <div onclick="toggleBidSummary()" style="position:absolute; left:-44px; top:50%; transform:translateY(-50%); width:44px; height:130px; background:linear-gradient(180deg,#5a0010,#8B0000); border-radius:8px 0 0 8px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; box-shadow:-4px 2px 14px rgba(220,20,60,0.4); z-index:1; border:1px solid rgba(220,20,60,0.3);">
-          <span id="bidSummaryTabArrow" style="color:#f5a0a0; font-size:1.2rem; line-height:1;">&#x2190;</span>
-          <span style="color:#f5a0a0; writing-mode:vertical-rl; transform:rotate(180deg); font-size:0.58rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; opacity:0.9;">Summary</span>
+      <!-- Bid Summary Drawer -->
+      <div id="crBidDrawer" style="position:fixed;top:0;right:-1150px;width:1150px;max-width:96vw;height:100vh;z-index:9800;display:flex;flex-direction:column;background:#180408;border-left:3px solid #DC143C;box-shadow:-6px 0 40px rgba(220,20,60,0.28);transition:right .35s cubic-bezier(.4,0,.2,1);">
+        <div onclick="toggleBidSummary()" style="position:absolute;left:-44px;top:50%;transform:translateY(-50%);width:44px;height:130px;background:linear-gradient(180deg,#5a0010,#8B0000);border-radius:8px 0 0 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;box-shadow:-4px 2px 14px rgba(220,20,60,0.38);border:1px solid rgba(220,20,60,0.28);">
+          <span id="crBidArrow" style="color:#f5a0a0;font-size:1.2rem;line-height:1;">&#x2190;</span>
+          <span style="color:#f5a0a0;writing-mode:vertical-rl;transform:rotate(180deg);font-size:0.58rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:0.9;">Summary</span>
         </div>
-        <div style="padding:16px 20px; background:linear-gradient(135deg,#0a0a0a,#2a0a10); color:#f5f5f5; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; border-bottom:2px solid #DC143C;">
-          <span style="font-size:1.05rem; font-weight:700; letter-spacing:.3px;">&#x1F4CA; Auction Bid Summary</span>
-          <button onclick="closeBidSummary()" style="background:rgba(220,20,60,0.15); border:1px solid rgba(220,20,60,0.4); color:#f5f5f5; width:32px; height:32px; border-radius:6px; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1;">&#x2715;</button>
+        <div style="padding:16px 20px;background:linear-gradient(135deg,#0a0305,#2a0a10);color:#f5f5f5;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:2px solid #DC143C;">
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px;">&#x1F4CA; Auction Bid Summary</span>
+          <button onclick="closeBidSummary()" style="background:rgba(220,20,60,0.14);border:1px solid rgba(220,20,60,0.38);color:#f5f5f5;width:32px;height:32px;border-radius:6px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">&#x2715;</button>
         </div>
-        <iframe id="bidSummaryFrame" style="flex:1; border:none; width:100%;" title="Bid Summary"></iframe>
+        <iframe id="crBidFrame" style="flex:1;border:none;width:100%;" title="Bid Summary"></iframe>
       </div>
-      <div id="bidSummaryOverlay" onclick="closeBidSummary()" style="display:none; position:fixed; inset:0; z-index:9700; background:rgba(0,0,0,0.65);"></div>
-      <!-- Unsold Confirmation Modal — Cherry Theme -->
-      <div id="unsoldConfirmModal" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.82); align-items:center; justify-content:center;">
-        <div style="background:#1e1e1e; border-radius:14px; padding:36px 28px 28px; max-width:400px; width:92%; box-shadow:0 12px 48px rgba(220,20,60,0.3), 0 0 0 1px rgba(220,20,60,0.4); border-top:3px solid #DC143C; text-align:center; font-family:inherit;">
-          <div style="width:56px; height:56px; border-radius:50%; background:rgba(220,20,60,0.12); border:2px solid #DC143C; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; font-size:1.6rem;">⚠️</div>
-          <h5 style="margin:0 0 10px; font-size:1.15rem; font-weight:700; color:#f5f5f5;">Set Player as Unsold?</h5>
-          <p style="color:rgba(245,245,245,0.6); margin:0 0 26px; font-size:0.9rem; line-height:1.5;">This will set the player to Unsold. You can bring them back to Auction later.</p>
-          <div style="display:flex; gap:12px; justify-content:center;">
-            <button id="unsoldModalCancel" style="padding:10px 28px; border-radius:8px; border:1px solid rgba(245,245,245,0.2); background:rgba(255,255,255,0.08); color:#f5f5f5; font-size:0.95rem; cursor:pointer; font-weight:500;">Cancel</button>
-            <button id="unsoldModalConfirm" style="padding:10px 28px; border-radius:8px; border:none; background:#DC143C; color:#fff; font-size:0.95rem; font-weight:700; cursor:pointer; box-shadow:0 0 16px rgba(220,20,60,0.5);">Confirm</button>
+      <div id="crBidOverlay" onclick="closeBidSummary()" style="display:none;position:fixed;inset:0;z-index:9700;background:rgba(0,0,0,0.65);"></div>
+
+      <!-- Unsold Confirm Modal -->
+      <div id="crUnsoldModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.82);align-items:center;justify-content:center;">
+        <div style="background:#1c0408;border-radius:14px;padding:36px 28px 28px;max-width:400px;width:92%;box-shadow:0 12px 48px rgba(220,20,60,0.28),0 0 0 1px rgba(220,20,60,0.38);border-top:3px solid #DC143C;text-align:center;font-family:'Saira',sans-serif;">
+          <div style="width:56px;height:56px;border-radius:50%;background:rgba(220,20,60,0.12);border:2px solid #DC143C;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.6rem;">⚠️</div>
+          <h5 style="margin:0 0 10px;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:#f5f5f5;">Set Player as Unsold?</h5>
+          <p style="color:rgba(248,234,236,0.60);margin:0 0 26px;font-size:0.9rem;line-height:1.55;">This will mark the player as Unsold. You can bring them back to Auction later.</p>
+          <div style="display:flex;gap:12px;justify-content:center;">
+            <button id="crUnsoldCancel" style="padding:10px 28px;border-radius:8px;border:1px solid rgba(245,245,245,0.18);background:rgba(255,255,255,0.07);color:#f5f5f5;font-size:0.9rem;cursor:pointer;font-weight:500;">Cancel</button>
+            <button id="crUnsoldConfirm" style="padding:10px 28px;border-radius:8px;border:none;background:#DC143C;color:#fff;font-size:0.9rem;font-weight:700;cursor:pointer;box-shadow:0 0 16px rgba(220,20,60,0.48);">Confirm</button>
           </div>
         </div>
       </div>
-      <!-- Toast notification -->
-      <div id="unsoldToast" style="display:none; position:fixed; bottom:28px; left:50%; transform:translateX(-50%); z-index:10001; color:#fff; padding:12px 28px; border-radius:8px; font-size:0.95rem; font-weight:600; box-shadow:0 4px 16px rgba(0,0,0,0.5);"></div>
-    <!-- Next-player progress toast -->
-    <div id="ac-next-toast" style="display:none;opacity:0;position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:10002;min-width:220px;max-width:320px;background:#1a0008;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.6);overflow:hidden;flex-direction:column;transition:opacity .4s;border:1px solid rgba(220,20,60,.25);">
-      <div style="padding:12px 20px 10px;display:flex;align-items:center;gap:10px;">
-        <span style="font-size:1.1rem;">⚡</span>
-        <span style="color:#fce4ec;font-size:0.85rem;font-weight:600;letter-spacing:.5px;">Loading Next Player…</span>
-      </div>
-      <div style="height:3px;background:rgba(255,255,255,.1);">
-        <div id="ac-next-bar" style="height:100%;width:0%;background:#DC143C;border-radius:2px;transition:width .3s;"></div>
-      </div>
-    </div>
-    <!-- Fullscreen Toggle -->
-    <button id="fs-btn" onclick="toggleFullscreen()" title="Enter Fullscreen" style="position:fixed;top:14px;right:14px;z-index:9999;width:38px;height:38px;border-radius:8px;background:rgba(13,13,13,0.75);border:1.5px solid rgba(220,20,60,0.45);color:#DC143C;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:0;transition:background .2s,box-shadow .2s;" onmouseover="this.style.boxShadow='0 0 12px rgba(220,20,60,0.45)'" onmouseout="this.style.boxShadow='none'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
-    <script>
-      function toggleFullscreen() {
-        if (!document.fullscreenElement) {
-          document.documentElement.requestFullscreen().catch(function(e) { console.warn(e); });
-        } else {
-          document.exitFullscreen();
-        }
-      }
-      document.addEventListener('fullscreenchange', function() {
-        var btn = document.getElementById('fs-btn');
-        if (!btn) return;
-        if (document.fullscreenElement) {
-          btn.title = 'Exit Fullscreen';
-          btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>';
-        } else {
-          btn.title = 'Enter Fullscreen';
-          btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>';
-        }
-      });
-    </script>
-    <t t-call="auction_module.player_sell_modal"/>
-  </body>
-</html>
-</template>
 
+      <!-- Toast -->
+      <div id="crToast" style="display:none;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:10001;color:#fff;padding:12px 28px;border-radius:8px;font-size:0.9rem;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.5);"></div>
+
+      <!-- Next-player progress toast -->
+      <div id="ac-next-toast" style="display:none;opacity:0;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:10002;min-width:220px;max-width:320px;background:#1a0008;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.6);overflow:hidden;flex-direction:column;transition:opacity .4s;border:1px solid rgba(220,20,60,.22);">
+        <div style="padding:12px 20px 10px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:1.1rem;">⚡</span>
+          <span style="color:#fce4ec;font-size:0.85rem;font-weight:600;letter-spacing:.5px;">Loading Next Player…</span>
+        </div>
+        <div style="height:3px;background:rgba(255,255,255,.10);">
+          <div id="ac-next-bar" style="height:100%;width:0%;background:#DC143C;border-radius:2px;transition:width .3s;"></div>
+        </div>
+      </div>
+
+      <!-- Fullscreen button -->
+      <button id="fs-btn" onclick="toggleFullscreen()" title="Enter Fullscreen" style="position:fixed;top:14px;right:14px;z-index:9999;width:38px;height:38px;border-radius:8px;background:rgba(8,2,6,0.75);border:1.5px solid rgba(220,20,60,0.43);color:#DC143C;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:0;transition:background .2s,box-shadow .2s;" onmouseover="this.style.boxShadow='0 0 12px rgba(220,20,60,0.43)'" onmouseout="this.style.boxShadow='none'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+      </button>
+
+      <t t-call="auction_module.player_sell_modal"/>
+    </body>
+    </html>
+  </template>
 </odoo>

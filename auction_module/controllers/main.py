@@ -548,6 +548,7 @@ class Auction(http.Controller):
             'current_player': None,
             'sold_info': None,
             'recent_history': [],
+            'top_players': [],
             'teams': [],
             'theme': 'vanilla',
             'no_auction': True,
@@ -631,6 +632,28 @@ class Auction(http.Controller):
                 'timestamp': rec.create_date.strftime('%H:%M') if rec.create_date else '',
             }
             for rec in history
+        ]
+
+        # ── Top 5 most expensive sold players (MVP board) ──
+        top_domain = [('auction_id.tournament_id', '=', tournament.id)] if tournament else []
+        top_sold = env['auction.auction.player'].sudo().search(
+            top_domain, order='points desc', limit=5
+        )
+        if not top_sold:
+            top_sold = env['auction.auction.player'].sudo().search(
+                [], order='points desc', limit=5
+            )
+        result['top_players'] = [
+            {
+                'rank': idx + 1,
+                'player_name': rec.player_id.name or '',
+                'player_photo_url': pub_img('auction.team.player', rec.player_id.id, 'photo') if rec.player_id and rec.player_id.photo else '',
+                'role': rec.player_id.role or '',
+                'team_name': rec.auction_id.team_id.name if rec.auction_id and rec.auction_id.team_id else '',
+                'team_logo_url': pub_img('auction.team', rec.auction_id.team_id.id, 'logo') if rec.auction_id and rec.auction_id.team_id and rec.auction_id.team_id.logo else '',
+                'points': rec.points,
+            }
+            for idx, rec in enumerate(top_sold)
         ]
 
         # ── Teams (from auctions in this tournament) ──

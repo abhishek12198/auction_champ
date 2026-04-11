@@ -1,4 +1,266 @@
-/* Increase the size of the wizard popup */
+/* ══════════════════════════════════════════════════════════════════
+   Set Key Player Wizard  (.skp-*)  — assign icon player dialog
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Header: player photo + name + star badge ── */
+.o_skp_wizard .skp-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, #1a2744 0%, #2253a0 100%);
+    border-radius: 12px;
+    margin-bottom: 22px;
+}
+
+/* Circular player photo in header */
+.o_skp_wizard .skp-photo-wrap {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2.5px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.1);
+    flex-shrink: 0;
+}
+.o_skp_wizard .skp-photo-wrap .o_field_image,
+.o_skp_wizard .skp-photo-wrap .o_form_image_controls {
+    width: 90px !important;
+    height: 90px !important;
+    border-radius: 50% !important;
+    min-width: unset !important;
+}
+.o_skp_wizard .skp-photo-wrap .o_field_image img {
+    width: 90px !important;
+    height: 90px !important;
+    object-fit: cover !important;
+    object-position: top center;
+    border-radius: 50% !important;
+}
+
+/* Header text */
+.o_skp_wizard .skp-header-meta { flex: 1; min-width: 0; }
+.o_skp_wizard .skp-header-label {
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .7px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 3px;
+}
+.o_skp_wizard .skp-header-name {
+    font-size: .98rem;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.o_skp_wizard .skp-header-name .o_form_uri,
+.o_skp_wizard .skp-header-name a {
+    color: #fff !important;
+    text-decoration: none !important;
+    pointer-events: none;
+}
+
+/* Star badge on the right of the header */
+.o_skp_wizard .skp-header-star {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(245,158,11,0.22);
+    border: 1.5px solid rgba(245,158,11,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.o_skp_wizard .skp-header-star i { color: #fbbf24; font-size: 1rem; }
+
+/* ── Team selector section ── */
+.o_skp_wizard .skp-section { margin-bottom: 20px; }
+.o_skp_wizard .skp-section-label {
+    font-size: .63rem;
+    font-weight: 700;
+    letter-spacing: .7px;
+    text-transform: uppercase;
+    color: #8a94a6;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.o_skp_wizard .skp-section-label i { color: #1e4080; font-size: .65rem; }
+
+/* ── Team selector: pill buttons via selection_badge on Selection field ── */
+.o_skp_wizard .o_field_selection_badge {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    padding: 4px 0 !important;
+}
+.o_skp_wizard .o_field_selection_badge .o_selection_badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    border-radius: 50px !important;
+    padding: 9px 22px !important;
+    font-size: .8rem !important;
+    font-weight: 700 !important;
+    letter-spacing: .3px !important;
+    border: 2px solid #c8d6ea !important;
+    background: #ffffff !important;
+    color: #1a2744 !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.07) !important;
+    transition: all .2s ease !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
+    user-select: none !important;
+}
+.o_skp_wizard .o_field_selection_badge .o_selection_badge::before {
+    content: "\f132";
+    font-family: FontAwesome;
+    font-size: .65rem;
+    color: #7a90b0;
+    transition: color .15s;
+}
+.o_skp_wizard .o_field_selection_badge .o_selection_badge:hover {
+    background: #f0f6ff !important;
+    border-color: #2253a0 !important;
+    color: #162050 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 7px 18px rgba(26,58,92,0.16) !important;
+}
+.o_skp_wizard .o_field_selection_badge .o_selection_badge:hover::before {
+    color: #1e4080;
+}
+.o_skp_wizard .o_field_selection_badge .o_selection_badge.active {
+    background: linear-gradient(135deg, #1a2744 0%, #1e5fa8 100%) !important;
+    color: #ffffff !important;
+    border-color: transparent !important;
+    box-shadow: 0 6px 20px rgba(26,58,92,0.38) !important;
+    transform: none !important;
+}
+.o_skp_wizard .o_field_selection_badge .o_selection_badge.active::before {
+    content: "\f005";
+    color: #fbbf24;
+}
+
+/* ── Assignment preview card ── */
+.o_skp_wizard .skp-assign-card {
+    background: linear-gradient(135deg, #fffbeb, #fefce8);
+    border: 1.5px solid #fde68a;
+    border-radius: 14px;
+    padding: 18px 16px 14px;
+    margin-bottom: 4px;
+}
+
+/* Visual row: [player] ──⭐── [team] */
+.o_skp_wizard .skp-assign-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 14px;
+}
+
+/* Player avatar in card */
+.o_skp_wizard .skp-av-player,
+.o_skp_wizard .skp-av-team {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #fff;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.13);
+    background: #f4f7fb;
+    flex-shrink: 0;
+}
+.o_skp_wizard .skp-av-player .o_field_image,
+.o_skp_wizard .skp-av-player .o_form_image_controls,
+.o_skp_wizard .skp-av-team .o_field_image,
+.o_skp_wizard .skp-av-team .o_form_image_controls {
+    width: 80px !important;
+    height: 80px !important;
+    border-radius: 50% !important;
+    min-width: unset !important;
+}
+.o_skp_wizard .skp-av-player .o_field_image img {
+    width: 80px !important;
+    height: 80px !important;
+    object-fit: cover !important;
+    object-position: top center;
+    border-radius: 50% !important;
+}
+.o_skp_wizard .skp-av-team .o_field_image img {
+    width: 80px !important;
+    height: 80px !important;
+    object-fit: contain !important;
+    border-radius: 50% !important;
+}
+
+/* Connector: line ── star ── line */
+.o_skp_wizard .skp-av-connector {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    max-width: 90px;
+    min-width: 50px;
+}
+.o_skp_wizard .skp-av-line {
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(to right, #fcd34d, #f59e0b);
+    opacity: .7;
+}
+.o_skp_wizard .skp-av-star {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #d97706, #f59e0b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 10px rgba(217,119,6,0.38);
+    flex-shrink: 0;
+    z-index: 1;
+}
+.o_skp_wizard .skp-av-star i { color: #fff; font-size: .8rem; }
+
+/* Confirmation sentence */
+.o_skp_wizard .skp-assign-info {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    font-size: .8rem;
+    color: #78350f;
+    text-align: center;
+    line-height: 1.6;
+    padding-top: 2px;
+    border-top: 1px solid #fde68a;
+}
+.o_skp_wizard .skp-assign-info .skp-info-icon {
+    color: #d97706;
+    font-size: .78rem;
+    flex-shrink: 0;
+}
+.o_skp_wizard .skp-assign-info .skp-info-label { color: #a16207; }
+.o_skp_wizard .skp-assign-info .skp-info-name .o_form_uri,
+.o_skp_wizard .skp-assign-info .skp-info-name a,
+.o_skp_wizard .skp-assign-info .skp-info-team .o_form_uri,
+.o_skp_wizard .skp-assign-info .skp-info-team a {
+    color: #92400e !important;
+    text-decoration: none !important;
+    pointer-events: none;
+    font-weight: 700;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   Increase the size of the wizard popup */
 
 .custom-image-size img {
     width: 150px !important;
@@ -193,4 +455,269 @@ body.hide-main-menu .oe_main_menu_navbar {
 }
 .text-uppercase {
     text-transform: uppercase;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   Sell Player Wizard  (.asp-*)  — auction.sell.player dialog
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Header strip ── */
+.o_asp_wizard .asp-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: linear-gradient(135deg, #1a2744 0%, #1e5fa8 100%);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    color: #fff;
+}
+.o_asp_wizard .asp-photo-wrap {
+    flex-shrink: 0;
+}
+.o_asp_wizard .asp-photo-wrap .o_field_image,
+.o_asp_wizard .asp-photo-wrap .o_form_image_controls {
+    width: 90px !important;
+    height: 90px !important;
+    min-width: unset !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    border: 2px solid rgba(255,255,255,0.35) !important;
+}
+.o_asp_wizard .asp-photo-wrap .o_field_image img {
+    width: 90px !important;
+    height: 90px !important;
+    object-fit: cover !important;
+    object-position: top center !important;
+}
+.o_asp_wizard .asp-header-meta { flex: 1; min-width: 0; }
+.o_asp_wizard .asp-header-label {
+    font-size: .68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: rgba(255,255,255,0.65);
+    margin-bottom: 3px;
+}
+.o_asp_wizard .asp-header-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.o_asp_wizard .asp-header-name .o_form_uri,
+.o_asp_wizard .asp-header-name a {
+    color: #fff !important;
+    text-decoration: none !important;
+    pointer-events: none;
+}
+.o_asp_wizard .asp-header-tag {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(52,211,153,0.18);
+    border: 1.5px solid rgba(52,211,153,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.o_asp_wizard .asp-header-tag i { color: #34d399; font-size: 1rem; }
+
+/* ── Section wrapper ── */
+.o_asp_wizard .asp-section { margin-bottom: 20px; }
+.o_asp_wizard .asp-section-label {
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    color: #475569;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.o_asp_wizard .asp-section-label i { color: #1e4080; font-size: .65rem; }
+
+/* ── Team selector: pill buttons (selection_badge on Selection field) ── */
+.o_asp_wizard .o_field_selection_badge {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    padding: 4px 0 !important;
+}
+.o_asp_wizard .o_field_selection_badge .o_selection_badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    border-radius: 50px !important;
+    padding: 9px 22px !important;
+    font-size: .8rem !important;
+    font-weight: 700 !important;
+    letter-spacing: .3px !important;
+    border: 2px solid #c8d6ea !important;
+    background: #ffffff !important;
+    color: #1a2744 !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.07) !important;
+    transition: all .2s ease !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
+    user-select: none !important;
+}
+.o_asp_wizard .o_field_selection_badge .o_selection_badge::before {
+    content: "\f132";
+    font-family: FontAwesome;
+    font-size: .65rem;
+    color: #7a90b0;
+    transition: color .15s;
+}
+.o_asp_wizard .o_field_selection_badge .o_selection_badge:hover {
+    background: #f0f6ff !important;
+    border-color: #2253a0 !important;
+    color: #162050 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 7px 18px rgba(26,58,92,0.16) !important;
+}
+.o_asp_wizard .o_field_selection_badge .o_selection_badge:hover::before {
+    color: #1e4080;
+}
+.o_asp_wizard .o_field_selection_badge .o_selection_badge.active {
+    background: linear-gradient(135deg, #1a2744 0%, #1e5fa8 100%) !important;
+    color: #ffffff !important;
+    border-color: transparent !important;
+    box-shadow: 0 6px 20px rgba(26,58,92,0.38) !important;
+    transform: none !important;
+}
+.o_asp_wizard .o_field_selection_badge .o_selection_badge.active::before {
+    content: "\f005";
+    color: #fbbf24;
+}
+
+/* ── Team info card ── */
+.o_asp_wizard .asp-info-card {
+    background: linear-gradient(135deg, #eff6ff, #f0fdf4);
+    border: 1.5px solid #bfdbfe;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+.o_asp_wizard .asp-team-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 12px;
+}
+.o_asp_wizard .asp-team-logo-wrap {
+    flex-shrink: 0;
+}
+.o_asp_wizard .asp-team-logo-wrap .o_field_image,
+.o_asp_wizard .asp-team-logo-wrap .o_form_image_controls {
+    width: 80px !important;
+    height: 80px !important;
+    min-width: unset !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    border: 2px solid #bfdbfe !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+}
+.o_asp_wizard .asp-team-logo-wrap .o_field_image img {
+    width: 80px !important;
+    height: 80px !important;
+    object-fit: contain !important;
+}
+.o_asp_wizard .asp-team-details { flex: 1; min-width: 0; }
+.o_asp_wizard .asp-team-name {
+    font-size: .95rem;
+    font-weight: 700;
+    color: #1e3a5f;
+    margin-bottom: 8px;
+}
+.o_asp_wizard .asp-team-name .o_field_widget,
+.o_asp_wizard .asp-team-name input {
+    font-size: .95rem !important;
+    font-weight: 700 !important;
+    color: #1e3a5f !important;
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+.o_asp_wizard .asp-stat-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.o_asp_wizard .asp-stat-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #fff;
+    border: 1.5px solid #bfdbfe;
+    border-radius: 50px;
+    padding: 4px 12px;
+    font-size: .75rem;
+    font-weight: 600;
+    color: #1e40af;
+}
+.o_asp_wizard .asp-stat-chip i { font-size: .65rem; color: #3b82f6; }
+.o_asp_wizard .asp-stat-chip .o_field_widget {
+    display: inline !important;
+    font-size: .75rem !important;
+    font-weight: 700 !important;
+    color: #1e40af !important;
+}
+.o_asp_wizard .asp-stat-chip .o_field_widget input,
+.o_asp_wizard .asp-stat-chip .o_field_widget span {
+    font-size: .75rem !important;
+    color: #1e40af !important;
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+.o_asp_wizard .asp-suggestion {
+    border-top: 1px dashed #bfdbfe;
+    padding-top: 10px;
+    margin-top: 4px;
+    font-size: .8rem;
+    color: #1e40af;
+}
+.o_asp_wizard .asp-suggestion .o_field_html p {
+    margin: 2px 0 !important;
+    font-size: .8rem !important;
+    color: #1e40af !important;
+    text-align: left !important;
+}
+
+/* ── Points input card ── */
+.o_asp_wizard .asp-points-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, #fffbeb, #fefce8);
+    border: 1.5px solid #fde68a;
+    border-radius: 12px;
+    padding: 12px 18px;
+}
+.o_asp_wizard .asp-points-icon {
+    font-size: 1.4rem;
+    color: #d97706;
+    flex-shrink: 0;
+}
+.o_asp_wizard .asp-points-card .o_field_widget {
+    flex: 1;
+}
+.o_asp_wizard .asp-points-card .o_field_widget input {
+    font-size: 1.6rem !important;
+    font-weight: 800 !important;
+    color: #92400e !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    width: 100% !important;
 }

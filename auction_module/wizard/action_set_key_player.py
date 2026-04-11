@@ -13,9 +13,14 @@ class SetKeyPlayer(models.TransientModel):
 
 
     team_id = fields.Many2one('auction.team', 'Team', required=True)
+    team_selection = fields.Selection(selection='_get_team_selection', string='Select Team')
     player_id = fields.Many2one('auction.team.player', 'Player')
     player_photo  = fields.Binary()
     team_logo = fields.Binary()
+
+    def _get_team_selection(self):
+        teams = self.env['auction.team'].search([], order='name asc')
+        return [(str(t.id), t.name) for t in teams]
 
     @api.model
     def default_get(self, fields):
@@ -24,6 +29,15 @@ class SetKeyPlayer(models.TransientModel):
             player = self.env['auction.team.player'].browse(self.env.context.get('active_id', False))
             defaults.update({'player_photo': player.photo,'player_id': self.env.context.get('active_id', False)})
         return defaults
+
+    @api.onchange('team_selection')
+    def onchange_team_selection(self):
+        if self.team_selection:
+            self.team_id = int(self.team_selection)
+            self.team_logo = self.team_id.logo
+        else:
+            self.team_id = False
+            self.team_logo = False
 
     @api.onchange('team_id')
     def onchange_team(self):

@@ -13,6 +13,7 @@ class SellPlayer(models.TransientModel):
 
     final_point = fields.Integer(string="Selling for (Points)", required=True)
     team_id = fields.Many2one('auction.team', 'Sold To', required=True)
+    team_selection = fields.Selection(selection='_get_team_selection', string='Select Team')
     team_name = fields.Char(related='team_id.name', string='Team Name')
     points_remaining = fields.Integer()
     players_remaining = fields.Integer()
@@ -21,6 +22,25 @@ class SellPlayer(models.TransientModel):
     player_photo = fields.Binary(related='player_id.photo')
     team_logo = fields.Binary(related='team_id.logo')
     suggestion = fields.Html()
+
+    def _get_team_selection(self):
+        auctions = self.env['auction.auction'].search([])
+        if auctions:
+            teams = auctions.mapped('team_id').sorted(key=lambda t: t.name)
+        else:
+            teams = self.env['auction.team'].search([], order='name asc')
+        return [(str(t.id), t.name) for t in teams]
+
+    @api.onchange('team_selection')
+    def onchange_team_selection(self):
+        if self.team_selection:
+            self.team_id = int(self.team_selection)
+            self.onchange_team_id()
+        else:
+            self.team_id = False
+            self.team_auction_id = False
+            self.points_remaining = 0
+            self.players_remaining = 0
 
     @api.model
     def _get_effective_base_point(self, auction, player):

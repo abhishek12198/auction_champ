@@ -430,6 +430,141 @@
 .pk2-btn-print  { background: #f1f5f9; color: #475569; }
 
 /* ══════════════════════════════════════════════════════════════════
+   Auction Team List  — compact logo avatar in tree view
+   ══════════════════════════════════════════════════════════════════ */
+.o_team_list_view .o_data_row td.o_field_cell:first-child {
+  width: 52px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+.o_team_list_view .o_field_image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.o_team_list_view .o_field_image img {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50%;
+  object-fit: contain;
+  border: 2px solid #e5ecf5;
+  background: #f4f7fb;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  display: block;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Auction Team Kanban  (.atk-*)  — franchise team cards
+   ══════════════════════════════════════════════════════════════════ */
+.o_team_kanban_view .o_kanban_record { padding: 0; border: none; box-shadow: none; background: transparent; }
+.o_team_kanban_view .o_kanban_renderer { background: #eef2f8; padding: 16px; gap: 20px; }
+
+.atk-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.09), 0 0 0 1px rgba(0,0,0,0.04);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  width: 258px;
+  transition: box-shadow .22s, transform .22s;
+}
+.atk-card:hover {
+  box-shadow: 0 10px 32px rgba(0,0,0,0.16), 0 0 0 1px rgba(26,58,92,.22);
+  transform: translateY(-4px);
+}
+
+/* Banner — prominent logo area */
+.atk-banner {
+  position: relative;
+  height: 154px;
+  background: linear-gradient(145deg, #1a2744 0%, #1e4080 60%, #2253a0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.atk-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    55deg, rgba(255,255,255,0) 0px, rgba(255,255,255,0) 14px,
+    rgba(255,255,255,0.03) 14px, rgba(255,255,255,0.03) 15px
+  );
+  pointer-events: none;
+}
+.atk-logo-wrap {
+  width: 88px; height: 88px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  border: 3px solid rgba(255,255,255,0.28);
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; z-index: 2;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.38);
+}
+.atk-logo-wrap img { width: 100%; height: 100%; object-fit: contain; }
+.atk-logo-ph { font-size: 2.2rem; opacity: .55; }
+
+/* Name strip at bottom of banner */
+.atk-banner-info {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 5px 12px 8px;
+  background: linear-gradient(to top, rgba(0,0,0,0.76) 0%, transparent 100%);
+  z-index: 3;
+}
+.atk-team-name {
+  color: #fff;
+  font-size: .88rem; font-weight: 800;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  text-transform: uppercase; letter-spacing: .7px; line-height: 1.3;
+}
+.atk-owner {
+  color: rgba(255,255,255,.72);
+  font-size: .66rem; margin-top: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.atk-owner i { margin-right: 3px; font-size: .62rem; }
+
+/* Body */
+.atk-body { padding: 11px 13px 13px; }
+
+.atk-tournament {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: .67rem; font-weight: 700; color: #1e4080;
+  background: #eef4fb; border: 1px solid #c8ddf2; border-radius: 20px;
+  padding: 3px 10px; margin-bottom: 10px;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.atk-tournament i { color: #f59e0b; font-size: .68rem; }
+.atk-tournament-empty {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: .67rem; font-weight: 500; color: #b0bec5;
+  font-style: italic; margin-bottom: 10px;
+}
+.atk-tournament-empty i { color: #dde4f0; font-size: .68rem; }
+
+.atk-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, #dde4f0, transparent);
+  margin-bottom: 9px;
+}
+.atk-section-label {
+  display: flex; align-items: center; gap: 5px;
+  font-size: .59rem; font-weight: 700; letter-spacing: .7px;
+  text-transform: uppercase; color: #8a94a6; margin-bottom: 6px;
+}
+.atk-section-label i { color: #f59e0b; font-size: .63rem; }
+.atk-count-badge {
+  background: #1e4080; color: #fff;
+  font-size: .57rem; font-weight: 800;
+  padding: 1px 6px; border-radius: 10px; letter-spacing: .3px;
+}
+.atk-no-players { font-size: .7rem; color: #b0bec5; font-style: italic; }
+.atk-card .o_field_many2many_tags .badge { font-size: .6rem; padding: 2px 8px; }
+
+/* ══════════════════════════════════════════════════════════════════
    Player Jersey Kanban  (.pjk-*)  — jersey-card style
    ══════════════════════════════════════════════════════════════════ */
 .pjk-card {
