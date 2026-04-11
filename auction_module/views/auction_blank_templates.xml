@@ -898,6 +898,17 @@ img { display: block; }
   background: rgba(15,50,15,0.88);
   border-color: #22c55e;
 }
+.lb-stamp-sold .lb-stamp-hammer {
+  font-size: 2rem; line-height: 1; margin-bottom: 4px;
+  animation: hammerSwing .5s cubic-bezier(.36,.07,.19,.97) both;
+  transform-origin: bottom right;
+}
+@keyframes hammerSwing {
+  0%   { transform: rotate(-45deg); }
+  60%  { transform: rotate(12deg); }
+  80%  { transform: rotate(-8deg); }
+  100% { transform: rotate(0deg); }
+}
 .lb-stamp-sold .lb-stamp-word {
   font-size: 2.6rem; font-weight: 900; letter-spacing: 8px;
   color: #22c55e; text-transform: uppercase;
@@ -1240,6 +1251,7 @@ img { display: block; }
       <!-- SOLD STAMP -->
       <div class="lb-stamp-overlay lb-stamp-sold" id="lb-sold-stamp" style="display:none;">
         <div class="lb-stamp-box">
+          <div class="lb-stamp-hammer">🔨</div>
           <div class="lb-stamp-word">SOLD</div>
           <div class="lb-stamp-pts" id="stamp-pts"></div>
           <div class="lb-stamp-team">
@@ -1349,7 +1361,7 @@ img { display: block; }
   window.addEventListener('beforeunload', function() { clearInterval(_clockTimer); });
 
   // ── Render Player Panel ────────────────────────────────────────
-  function renderPlayer(p) {
+  function renderPlayer(p, soldInfo) {
     if (!p) {
       document.getElementById('lb-pname').textContent = 'Waiting for next player…';
       document.getElementById('lb-psub').textContent = '';
@@ -1396,19 +1408,19 @@ img { display: block; }
     // Sold / Unsold stamp
     const soldStamp   = document.getElementById('lb-sold-stamp');
     const unsoldStamp = document.getElementById('lb-unsold-stamp');
-    if (p.state === 'sold' && p.sold_info) {
+    if (p.state === 'sold' && soldInfo) {
       soldStamp.style.display  = '';
       unsoldStamp.style.display = 'none';
       // reset animation
       soldStamp.style.animation = 'none';
       soldStamp.offsetHeight; // reflow
       soldStamp.style.animation = '';
-      document.getElementById('stamp-pts').textContent = fmtPts(p.sold_info.amount);
-      document.getElementById('stamp-team-name').textContent = p.sold_info.team_name || '';
+      document.getElementById('stamp-pts').textContent = fmtPts(soldInfo.amount);
+      document.getElementById('stamp-team-name').textContent = soldInfo.team_name || '';
       const logoImg  = document.getElementById('stamp-team-logo');
       const logoWrap = document.getElementById('stamp-team-logo-wrap');
-      if (p.sold_info.team_logo_url) {
-        logoImg.src = p.sold_info.team_logo_url;
+      if (soldInfo.team_logo_url) {
+        logoImg.src = soldInfo.team_logo_url;
         logoWrap.style.display = '';
       } else {
         logoWrap.style.display = 'none';
@@ -1605,12 +1617,12 @@ img { display: block; }
           panel.style.transition = 'opacity 0.3s';
           panel.style.opacity = '0';
           setTimeout(function() {
-            renderPlayer(p);
+            renderPlayer(p, data.sold_info);
             renderStatus(p, data.sold_info);
             panel.style.opacity = '1';
           }, 300);
         } else {
-          renderPlayer(p);
+          renderPlayer(p, data.sold_info);
           renderStatus(p, data.sold_info);
         }
 
