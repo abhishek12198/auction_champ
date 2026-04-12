@@ -64,6 +64,12 @@ class AuctionTournament(models.Model):
         default=False,
         help="Show jersey customization fields (jersey name, number, size) in the public player registration form."
     )
+    registration_open = fields.Boolean(
+        "Registration Open",
+        default=False,
+        help="When enabled, the public player self-registration form is accessible. "
+             "Disable this to close registrations at any point.",
+    )
     registration_url = fields.Char(
         string='Player Registration URL',
         compute='_compute_registration_url',
@@ -75,6 +81,11 @@ class AuctionTournament(models.Model):
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
         for rec in self:
             rec.registration_url = '{}/player/register'.format(base_url)
+
+    def action_toggle_registration(self):
+        """Toggle the registration open/closed state."""
+        for rec in self:
+            rec.registration_open = not rec.registration_open
 
     def action_open_registration_link(self):
         """Open the public player registration form in a new browser tab."""

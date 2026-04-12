@@ -30,18 +30,43 @@
                 <form string="Tournament">
                     <sheet>
                         <field name="active" invisible="1"/>
+                        <field name="registration_open" invisible="1"/>
                         <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
                                 attrs="{'invisible': [('active', '=', True)]}"/>
 
                         <!-- ── Smart buttons ── -->
                         <div class="oe_button_box" name="button_box">
+                            <!-- Toggle registration open/closed -->
+                            <button name="action_toggle_registration"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    attrs="{'invisible': [('registration_open', '=', False)]}"
+                                    icon="fa-check-circle"
+                                    help="Registration is OPEN — click to close it">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text text-success">Registration</span>
+                                    <span class="o_stat_text text-success" style="font-size:10px">OPEN &#8212; Click to Close</span>
+                                </div>
+                            </button>
+                            <button name="action_toggle_registration"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    attrs="{'invisible': [('registration_open', '=', True)]}"
+                                    icon="fa-ban"
+                                    help="Registration is CLOSED — click to open it">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text text-danger">Registration</span>
+                                    <span class="o_stat_text text-danger" style="font-size:10px">CLOSED &#8212; Click to Open</span>
+                                </div>
+                            </button>
+                            <!-- Open the public form in a new tab -->
                             <button name="action_open_registration_link"
                                     type="object"
                                     class="oe_stat_button"
                                     icon="fa-share-alt">
                                 <div class="o_stat_info">
-                                    <span class="o_stat_text">Open Registration</span>
-                                    <span class="o_stat_text text-muted" style="font-size:10px">Public Form</span>
+                                    <span class="o_stat_text">Preview Form</span>
+                                    <span class="o_stat_text text-muted" style="font-size:10px">Open in New Tab</span>
                                 </div>
                             </button>
                         </div>

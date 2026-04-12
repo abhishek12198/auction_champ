@@ -57,7 +57,7 @@
           name="Players"
           parent="menu_action_auction_root"
           sequence="2"
-          groups="auction_module.group_auction_player_setup,auction_module.group_auction_pdf_to_png"/>
+          groups="auction_module.group_auction_player_setup,auction_module.group_auction_pdf_to_png,auction_module.group_auction_group"/>
 
         <menuitem id="menu_action_auction_draft_players"
           name="Draft"
@@ -71,7 +71,7 @@
           parent="menu_action_auction_player"
           action="action_auction_team_player_auction"
           sequence="2"
-          groups="auction_module.group_auction_player_setup"/>
+          groups="auction_module.group_auction_player_setup,auction_module.group_auction_group"/>
 
         <menuitem id="menu_action_auction_team_key_player"
           name="Icon Players"
@@ -85,14 +85,14 @@
           parent="menu_action_auction_player"
           action="action_auction_team_player_sold"
           sequence="4"
-          groups="auction_module.group_auction_player_setup"/>
+          groups="auction_module.group_auction_player_setup,auction_module.group_auction_group"/>
 
         <menuitem id="menu_action_auction_unsold_players"
           name="Unsold Players"
           parent="menu_action_auction_player"
           action="action_auction_team_player_unsold"
           sequence="5"
-          groups="auction_module.group_auction_player_setup"/>
+          groups="auction_module.group_auction_player_setup,auction_module.group_auction_group"/>
 
         <menuitem id="menu_action_auction_unpaid_players"
           name="Unpaid Players"

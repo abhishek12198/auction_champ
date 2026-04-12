@@ -1,7 +1,16 @@
 # -*- coding: utf-8 -*-
 from odoo import http
 from odoo.addons.web.controllers.main import Home
+from odoo.addons.website.controllers.main import Website
 from odoo.http import request
+
+
+class AuctionRootRedirect(Website):
+    """Override website's '/' route to redirect to the Odoo backend."""
+
+    @http.route('/', type='http', auth='public', website=True, sitemap=False)
+    def index(self, **kw):
+        return request.redirect('/web', code=302)
 
 
 class AuctionLoginController(Home):

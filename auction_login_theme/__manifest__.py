@@ -9,7 +9,7 @@
         On logout the user is redirected back to this screen automatically.
     """,
     'category': 'Theme',
-    'depends': ['web'],
+    'depends': ['web', 'website'],
     'data': [
         'views/login_template.xml',
     ],

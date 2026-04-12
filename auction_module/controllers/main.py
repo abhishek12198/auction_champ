@@ -706,18 +706,29 @@ class Auction(http.Controller):
         tournament = request.env['auction.tournament'].sudo().search(
             [('active', '=', True)], limit=1
         )
-        tiers = request.env['auction.player.tier'].sudo().search([], order='name asc')
         theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
+
+        # Gate: registration must be explicitly opened by the admin
+        if not tournament or not tournament.registration_open:
+            return request.render('auction_module.player_registration_form', {
+                'tournament': tournament,
+                'tiers': request.env['auction.player.tier'].sudo().search([], order='name asc'),
+                'theme': theme,
+                'registration_closed': True,
+            })
+
+        tiers = request.env['auction.player.tier'].sudo().search([], order='name asc')
 
         if request.httprequest.method == 'POST':
             try:
                 vals = _build_player_vals_from_post(request, tournament)
-                request.env['auction.team.player'].sudo().create(vals)
+                player = request.env['auction.team.player'].sudo().create(vals)
                 return request.render('auction_module.player_registration_form', {
                     'tournament': tournament,
                     'tiers': tiers,
                     'theme': theme,
                     'success': True,
+                    'player_id': player.id,
                 })
             except Exception as e:
                 return request.render('auction_module.player_registration_form', {
@@ -732,6 +743,37 @@ class Auction(http.Controller):
             'tiers': tiers,
             'theme': theme,
         })
+
+    @http.route('/player/card/<int:player_id>', type='http', auth='public', sitemap=False)
+    def player_card_download(self, player_id, **kw):
+        """Stream the themed player-card PDF for the given player (public, read-only)."""
+        player = request.env['auction.team.player'].sudo().browse(player_id)
+        if not player.exists():
+            return request.not_found()
+
+        tournament = player.tournament_id
+        theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
+
+        report_map = {
+            'vanilla':      'auction_module.action_report_player_card',
+            'butterscotch': 'auction_module.action_report_player_card_butterscotch',
+            'strawberry':   'auction_module.action_report_player_card_strawberry',
+            'cherry':       'auction_module.action_report_player_card_cherry',
+            'pistah':       'auction_module.action_report_player_card_pistah',
+        }
+        report_ref = report_map.get(theme, 'auction_module.action_report_player_card')
+
+        report = request.env.ref(report_ref).sudo()
+        pdf_content, _mime = report._render_qweb_pdf([player_id])
+        filename = 'PlayerCard_%s.pdf' % (player.name or player_id)
+        return request.make_response(
+            pdf_content,
+            headers=[
+                ('Content-Type', 'application/pdf'),
+                ('Content-Length', len(pdf_content)),
+                ('Content-Disposition', 'attachment; filename="%s"' % filename),
+            ]
+        )
 
 
 def _build_player_vals_from_post(request, tournament):
