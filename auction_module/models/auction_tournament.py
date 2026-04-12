@@ -58,3 +58,29 @@ class AuctionTournament(models.Model):
         help='Comma-separated point values shown as quick-select buttons in the Sell Player modal. '
              'Example: 100,200,500,1000,1500'
     )
+    tournament_date = fields.Date("Tournament Date", help="The date of the tournament, displayed on the player registration form.")
+    enable_jersey_section = fields.Boolean(
+        "Enable Jersey Section in Registration",
+        default=False,
+        help="Show jersey customization fields (jersey name, number, size) in the public player registration form."
+    )
+    registration_url = fields.Char(
+        string='Player Registration URL',
+        compute='_compute_registration_url',
+        store=False,
+        help='Share this public link with players so they can self-register for the tournament.',
+    )
+
+    def _compute_registration_url(self):
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
+        for rec in self:
+            rec.registration_url = '{}/player/register'.format(base_url)
+
+    def action_open_registration_link(self):
+        """Open the public player registration form in a new browser tab."""
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '{}/player/register'.format(base_url),
+            'target': 'new',
+        }

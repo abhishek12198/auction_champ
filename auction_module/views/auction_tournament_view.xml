@@ -33,6 +33,19 @@
                         <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
                                 attrs="{'invisible': [('active', '=', True)]}"/>
 
+                        <!-- ── Smart buttons ── -->
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_open_registration_link"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    icon="fa-share-alt">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text">Open Registration</span>
+                                    <span class="o_stat_text text-muted" style="font-size:10px">Public Form</span>
+                                </div>
+                            </button>
+                        </div>
+
                         <!-- ── Header: Logo + Title ── -->
                         <div class="d-flex align-items-start mb-3">
                             <field name="logo" widget="image" class="oe_avatar mr-3"
@@ -55,6 +68,7 @@
                         <group>
                             <group string="Tournament Info">
                                 <field name="tournament_type" widget="radio" options="{'horizontal': True}"/>
+                                <field name="tournament_date"/>
                                 <field name="organizer_uid"/>
                                 <field name="organizer_uids" widget="many2many_tags"
                                        options="{'color_field': 'color'}"/>
@@ -127,9 +141,23 @@
                                         <field name="preset_points"
                                                placeholder="e.g. 100,200,500,1000,1500"
                                                help="Comma-separated point values shown as quick-select buttons in the Sell Player modal"/>
+                                        <field name="enable_jersey_section"/>
                                     </group>
                                 </group>
 
+                                <separator string="Player Self-Registration"/>
+                                <group>
+                                    <group string="Registration Link">
+                                        <field name="registration_url" widget="CopyClipboardChar"
+                                               readonly="1" string="Share URL"/>
+                                    </group>
+                                    <group>
+                                        <p class="text-muted" style="margin-top:6px;">
+                                            Share this link with players so they can fill in their own
+                                            profile. Registrations arrive as <strong>Draft</strong> players.
+                                        </p>
+                                    </group>
+                                </group>
 
                             </page>
 

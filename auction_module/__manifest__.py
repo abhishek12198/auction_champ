@@ -56,6 +56,7 @@
         'wizard/team_pool_wizard_view.xml',
         'wizard/auction_pdf_to_png_view.xml',
         'views/auction_status_template.xml',
+        'views/player_registration_form.xml',
         'views/menu.xml',
     ],
     'assets': {
@@ -83,11 +84,10 @@
             'web.assets_frontend': [
                 '/auction_module/static/src/lib/html2canvas.min.js',
                 '/auction_module/static/src/css/auction_live_queue.css',
+                '/auction_module/static/src/css/player_registration.css',
                 '/auction_module/static/src/js/auction_live_queue.js',
                 '/auction_module/static/src/js/screenshot.js',
                 '/auction_module/static/src/js/auction.js',
-
-
             ],
         },
     'demo': [

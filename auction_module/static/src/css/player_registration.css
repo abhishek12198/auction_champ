@@ -1,0 +1,750 @@
+/* ═══════════════════════════════════════════════════════════════════
+   AuctionChamp — Player Registration Form  ·  Sporty Edition
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Google font pre-loads are in the template <head> ──────────── */
+
+/* ── Vanilla defaults (overridden per-theme in <style> block) ───── */
+:root {
+    --reg-primary:        #111d2c;
+    --reg-primary-mid:    #162234;
+    --reg-accent:         #c9a227;
+    --reg-accent-rgb:     201, 162, 39;
+    --reg-accent-glow:    rgba(201, 162, 39, .38);
+    --reg-accent-light:   rgba(201, 162, 39, .10);
+    --reg-btn-text:       #111d2c;
+    --reg-bg-from:        #eee8d8;
+    --reg-bg-to:          #ddd3b6;
+    --reg-ghost-num:      rgba(0,0,0,.045);
+    --reg-input-border:   #dde1e9;
+    --reg-input-focus:    var(--reg-accent);
+    --reg-label-color:    #5a6276;
+    --reg-section-title:  #111d2c;
+    --reg-card-radius:    18px;
+    --reg-shadow:         0 12px 40px rgba(0,0,0,.12);
+}
+
+/* ──────────────────────────────────────────
+   RESET & BASE
+   ────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body.reg-page {
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
+    color: #2b3045;
+    background: linear-gradient(150deg, var(--reg-bg-from) 0%, var(--reg-bg-to) 100%);
+    background-attachment: fixed;
+    position: relative;
+}
+
+/* Diagonal stripe texture overlay */
+body.reg-page::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+        -52deg,
+        transparent 0px,
+        transparent 22px,
+        rgba(0, 0, 0, .028) 22px,
+        rgba(0, 0, 0, .028) 23px
+    );
+    pointer-events: none;
+    z-index: 0;
+}
+
+.reg-wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 740px;
+    margin: 0 auto;
+    padding: 28px 16px 56px;
+}
+
+/* ──────────────────────────────────────────
+   HEADER  — dark, angled bottom edge
+   ────────────────────────────────────────── */
+.reg-header-card {
+    background: var(--reg-primary);
+    border-radius: var(--reg-card-radius) var(--reg-card-radius) 0 0;
+    color: #fff;
+    padding: 28px 28px 52px;
+    position: relative;
+    overflow: hidden;
+    /* Angular bottom edge */
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 30px), 0 100%);
+}
+
+/* Diagonal stripe watermark on header */
+.reg-header-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+        -45deg,
+        transparent 0px,
+        transparent 16px,
+        rgba(255,255,255,.03) 16px,
+        rgba(255,255,255,.03) 17px
+    );
+    pointer-events: none;
+}
+
+/* Glowing circle accent top-right */
+.reg-header-card::after {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(var(--reg-accent-rgb),.18) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.reg-header-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+}
+
+/* App logo */
+.reg-app-logo {
+    height: 26px;
+    width: auto;
+    flex-shrink: 0;
+    filter: brightness(0) invert(1);
+    opacity: .9;
+}
+
+.reg-header-divider {
+    width: 1px;
+    height: 30px;
+    background: rgba(255,255,255,.25);
+    flex-shrink: 0;
+}
+
+.reg-header-info {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.reg-header-info h1 {
+    font-family: 'Bebas Neue', 'Teko', sans-serif;
+    font-size: 1.9rem;
+    font-weight: 400;
+    letter-spacing: .06em;
+    margin: 0;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #fff;
+}
+
+.reg-header-info p {
+    margin: 0;
+    font-size: .78rem;
+    opacity: .7;
+    font-family: 'Barlow Condensed', 'Poppins', sans-serif;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    margin-top: 1px;
+}
+
+/* Tournament logo circle */
+.reg-tournament-logo-wrap {
+    width: 72px;
+    height: 72px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.1);
+    border: 2px solid rgba(var(--reg-accent-rgb), .5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 0 18px rgba(var(--reg-accent-rgb), .25);
+}
+
+.reg-tournament-logo-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 4px;
+}
+
+.reg-tournament-logo-placeholder {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+/* Meta strip at header bottom */
+.reg-header-meta {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    margin-top: 20px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,.15);
+}
+
+.reg-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: .78rem;
+    font-family: 'Barlow Condensed', 'Poppins', sans-serif;
+    letter-spacing: .04em;
+    color: rgba(255,255,255,.75);
+}
+
+.reg-meta-item svg { flex-shrink: 0; opacity: .7; }
+.reg-meta-label { font-weight: 700; color: rgba(var(--reg-accent-rgb), .9); margin-right: 3px; }
+
+/* ──────────────────────────────────────────
+   FORM BODY  (white card, sits under header)
+   ────────────────────────────────────────── */
+.reg-form-body {
+    background: #fff;
+    border-radius: 0 0 var(--reg-card-radius) var(--reg-card-radius);
+    box-shadow: var(--reg-shadow);
+    overflow: hidden;
+    margin-top: -2px; /* tight against header */
+}
+
+/* Intro strip */
+.reg-form-intro {
+    background: var(--reg-primary);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.reg-form-intro-badge {
+    background: rgba(var(--reg-accent-rgb), .18);
+    border: 1.5px solid rgba(var(--reg-accent-rgb), .45);
+    border-radius: 8px;
+    padding: 5px 12px;
+    flex-shrink: 0;
+}
+
+.reg-form-intro-badge span {
+    font-family: 'Bebas Neue', 'Teko', sans-serif;
+    font-size: 1rem;
+    color: var(--reg-accent);
+    letter-spacing: .08em;
+}
+
+.reg-form-intro-text h2 {
+    font-family: 'Barlow Condensed', 'Poppins', sans-serif;
+    font-size: .88rem;
+    font-weight: 700;
+    color: rgba(255,255,255,.9);
+    margin: 0;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.reg-form-intro-text p {
+    font-size: .73rem;
+    color: rgba(255,255,255,.5);
+    margin: 0;
+}
+
+/* ── Alert messages ──────────────────────── */
+.reg-alert {
+    margin: 0;
+    padding: 16px 28px;
+    font-size: .85rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.reg-alert-success {
+    background: #f0fff4;
+    border-left: 4px solid #38a169;
+    color: #276749;
+}
+
+.reg-alert-error {
+    background: #fff5f5;
+    border-left: 4px solid #e53e3e;
+    color: #9b2c2c;
+}
+
+.reg-alert-icon { font-size: 1.2rem; flex-shrink: 0; }
+.reg-alert strong { display: block; margin-bottom: 2px; }
+
+/* ──────────────────────────────────────────
+   SECTION  — main building block
+   ────────────────────────────────────────── */
+.reg-section {
+    padding: 0 28px 22px;
+    border-bottom: 1px solid #f0f2f6;
+    position: relative;
+}
+.reg-section:last-of-type { border-bottom: none; }
+
+.reg-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 0 14px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Ghost section number */
+.reg-section-num {
+    position: absolute;
+    right: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Bebas Neue', 'Teko', sans-serif;
+    font-size: 4.8rem;
+    line-height: 1;
+    color: var(--reg-ghost-num);
+    pointer-events: none;
+    user-select: none;
+    letter-spacing: .04em;
+}
+
+/* Accent left strip */
+.reg-section-strip {
+    width: 5px;
+    height: 28px;
+    background: linear-gradient(180deg, var(--reg-accent) 0%, rgba(var(--reg-accent-rgb), .4) 100%);
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+/* Section title text */
+.reg-section-header h3 {
+    font-family: 'Bebas Neue', 'Teko', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 400;
+    letter-spacing: .1em;
+    color: var(--reg-section-title);
+    margin: 0;
+    text-transform: uppercase;
+}
+
+/* Right icon */
+.reg-section-icon {
+    margin-left: auto;
+    font-size: 1.2rem;
+    opacity: .4;
+    z-index: 1;
+}
+
+/* Optional badge */
+.reg-optional-badge {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    background: #f0f2f6;
+    color: #8896a8;
+    border-radius: 5px;
+    padding: 2px 8px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+/* ──────────────────────────────────────────
+   GRID LAYOUT
+   ────────────────────────────────────────── */
+.reg-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 20px;
+}
+.reg-grid .col-full { grid-column: 1 / -1; }
+
+@media (max-width: 520px) {
+    .reg-grid { grid-template-columns: 1fr; }
+    .reg-grid .col-full { grid-column: auto; }
+}
+
+/* ──────────────────────────────────────────
+   FORM CONTROLS
+   ────────────────────────────────────────── */
+.reg-label {
+    display: block;
+    font-family: 'Barlow Condensed', 'Poppins', sans-serif;
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--reg-label-color);
+    margin-bottom: 6px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+.reg-label .req { color: #e53e3e; margin-left: 2px; }
+
+.reg-input,
+.reg-select,
+.reg-textarea {
+    width: 100%;
+    border: 1.5px solid var(--reg-input-border);
+    border-radius: 10px;
+    padding: 10px 13px;
+    font-size: .875rem;
+    font-family: 'Poppins', sans-serif;
+    color: #2b3045;
+    background: #fafbfd;
+    transition: border-color .18s, box-shadow .18s, background .18s;
+    box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.reg-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='8' viewBox='0 0 11 8'%3E%3Cpath d='M5.5 8L0 0h11z' fill='%236b7280'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+    background-size: 10px;
+    padding-right: 36px;
+    cursor: pointer;
+}
+
+.reg-textarea {
+    resize: vertical;
+    min-height: 76px;
+    line-height: 1.55;
+}
+
+.reg-input:focus,
+.reg-select:focus,
+.reg-textarea:focus {
+    outline: none;
+    border-color: var(--reg-accent);
+    border-bottom-width: 2.5px;
+    box-shadow: 0 4px 16px var(--reg-accent-light);
+    background: #fff;
+}
+
+.reg-input::placeholder, .reg-textarea::placeholder { color: #b2baca; }
+
+/* ──────────────────────────────────────────
+   PHOTO UPLOAD  — sporty player frame
+   ────────────────────────────────────────── */
+.reg-photo-upload {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.reg-photo-frame {
+    position: relative;
+    width: 88px;
+    height: 88px;
+    flex-shrink: 0;
+}
+
+.reg-photo-frame::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: conic-gradient(
+        var(--reg-accent) 0deg 120deg,
+        rgba(var(--reg-accent-rgb),.18) 120deg 240deg,
+        var(--reg-accent) 240deg 360deg
+    );
+    z-index: 0;
+    animation: spin-ring 6s linear infinite;
+}
+
+@keyframes spin-ring {
+    to { transform: rotate(360deg); }
+}
+
+.reg-photo-circle {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: #f0f2f6;
+    border: 3px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.reg-photo-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: none;
+}
+
+.avatar-placeholder { font-size: 2.2rem; user-select: none; line-height: 1; }
+
+.reg-file-meta { flex: 1; min-width: 140px; }
+
+.reg-file-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border: 2px dashed rgba(var(--reg-accent-rgb), .6);
+    border-radius: 10px;
+    font-family: 'Barlow Condensed', 'Poppins', sans-serif;
+    font-size: .85rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--reg-primary);
+    cursor: pointer;
+    transition: background .18s, border-color .18s;
+    white-space: nowrap;
+}
+
+.reg-file-btn:hover {
+    background: var(--reg-accent-light);
+    border-color: var(--reg-accent);
+}
+
+.reg-file-hint {
+    font-size: .71rem;
+    color: #a0aec0;
+    margin-top: 5px;
+    font-family: 'Poppins', sans-serif;
+}
+
+input[type="file"].reg-file-input { display: none; }
+
+/* ──────────────────────────────────────────
+   ROLE SELECTOR  — sporty large cards
+   ────────────────────────────────────────── */
+.reg-role-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.reg-role-option { display: none; }
+
+.reg-role-label {
+    flex: 1 1 90px;
+    border: 2px solid #e2e6ef;
+    border-radius: 12px;
+    padding: 14px 8px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .18s, background .18s, transform .12s, box-shadow .18s;
+    background: #fafbfd;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Top corner accent triangle — hidden by default */
+.reg-role-label::after {
+    content: '✓';
+    position: absolute;
+    top: 4px; right: 6px;
+    font-size: .65rem;
+    color: var(--reg-accent);
+    opacity: 0;
+    transition: opacity .18s;
+    font-weight: 900;
+}
+
+.reg-role-label:hover {
+    border-color: rgba(var(--reg-accent-rgb), .5);
+    background: rgba(var(--reg-accent-rgb), .05);
+}
+
+.reg-role-option:checked + .reg-role-label {
+    border-color: var(--reg-accent);
+    background: rgba(var(--reg-accent-rgb), .09);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(var(--reg-accent-rgb), .25);
+}
+.reg-role-option:checked + .reg-role-label::after { opacity: 1; }
+
+.reg-role-icon {
+    font-size: 1.9rem;
+    display: block;
+    margin-bottom: 6px;
+    line-height: 1;
+}
+
+.reg-role-text {
+    font-family: 'Bebas Neue', 'Teko', sans-serif;
+    font-size: .95rem;
+    font-weight: 400;
+    letter-spacing: .1em;
+    color: var(--reg-section-title);
+    text-transform: uppercase;
+    display: block;
+}
+
+/* ──────────────────────────────────────────
+   PAYMENT FILE PREVIEW
+   ────────────────────────────────────────── */
+.reg-payment-icon {
+    width: 64px; height: 64px;
+    border-radius: 12px;
+    border: 2px solid rgba(var(--reg-accent-rgb), .45);
+    background: #fafbfd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.9rem;
+    flex-shrink: 0;
+    transition: background .2s;
+}
+
+/* ──────────────────────────────────────────
+   ACTION BUTTONS
+   ────────────────────────────────────────── */
+.reg-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding: 22px 28px 30px;
+    flex-wrap: wrap;
+    background: #fafbfd;
+    border-top: 1px solid #eef0f5;
+}
+
+.reg-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 30px;
+    border-radius: 10px;
+    font-family: 'Bebas Neue', 'Teko', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 400;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: opacity .18s, transform .12s, box-shadow .18s;
+    line-height: 1;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.reg-btn:active { transform: translateY(1px) !important; }
+
+/* Submit — gradient + glow */
+.reg-btn-submit {
+    background: linear-gradient(130deg, var(--reg-accent) 0%, color-mix(in srgb, var(--reg-accent) 75%, #fff 25%) 100%);
+    color: var(--reg-btn-text);
+    box-shadow: 0 6px 22px var(--reg-accent-glow);
+}
+
+/* Shimmer sweep on hover */
+.reg-btn-submit::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,.3), transparent);
+    transition: left .38s ease;
+    pointer-events: none;
+}
+
+.reg-btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px var(--reg-accent-glow);
+}
+.reg-btn-submit:hover::after { left: 160%; }
+
+/* Cancel — ghost style */
+.reg-btn-cancel {
+    background: transparent;
+    color: #8896a8;
+    border: 2px solid #d8dce6;
+}
+.reg-btn-cancel:hover {
+    border-color: #a0aec0;
+    color: #4a5568;
+    background: #f0f2f6;
+}
+
+/* ──────────────────────────────────────────
+   FOOTER
+   ────────────────────────────────────────── */
+.reg-footer {
+    text-align: center;
+    margin-top: 22px;
+    font-size: .72rem;
+    color: rgba(0,0,0,.38);
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.reg-footer img {
+    height: 14px;
+    opacity: .35;
+    filter: grayscale(1);
+}
+
+/* ──────────────────────────────────────────
+   SUCCESS STATE
+   ────────────────────────────────────────── */
+.reg-success-body {
+    padding: 40px 28px;
+    text-align: center;
+}
+
+.reg-success-check {
+    font-size: 4rem;
+    line-height: 1;
+    margin-bottom: 16px;
+}
+
+.reg-success-body h2 {
+    font-family: 'Bebas Neue', 'Teko', sans-serif;
+    font-size: 1.8rem;
+    letter-spacing: .08em;
+    color: var(--reg-primary);
+    margin: 0 0 8px;
+}
+
+.reg-success-body p {
+    font-size: .88rem;
+    color: #718096;
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* ──────────────────────────────────────────
+   MOBILE TWEAKS
+   ────────────────────────────────────────── */
+@media (max-width: 480px) {
+    .reg-wrapper           { padding: 12px 8px 48px; }
+    .reg-header-card       { padding: 18px 18px 46px; clip-path: polygon(0 0,100% 0,100% calc(100% - 22px),0 100%); }
+    .reg-header-info h1    { font-size: 1.5rem; }
+    .reg-section           { padding: 0 16px 18px; }
+    .reg-form-intro        { padding: 12px 16px; }
+    .reg-actions           { padding: 16px 16px 22px; flex-direction: column-reverse; }
+    .reg-btn               { width: 100%; justify-content: center; padding: 14px; }
+    .reg-alert             { padding: 14px 16px; }
+    .reg-section-num       { font-size: 3.8rem; }
+}

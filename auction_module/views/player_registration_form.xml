@@ -1,0 +1,531 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="player_registration_form" name="Player Registration Form">
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title t-esc="(tournament.name + ' — Player Registration') if tournament else 'Player Registration'"/>
+
+    <!-- Bootstrap 5 -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          crossorigin="anonymous"/>
+
+    <!-- Google Fonts: Bebas Neue (sporty display) + Barlow Condensed (sporty labels) + Poppins (body) + Teko -->
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Barlow+Condensed:wght@400;600;700&amp;family=Teko:wght@400;500;600&amp;family=Poppins:wght@400;500;600&amp;display=swap"
+          rel="stylesheet"/>
+
+    <!-- Registration form base CSS -->
+    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css"/>
+
+    <!-- ── Per-theme CSS custom properties ────────────────────── -->
+    <style>
+        <t t-if="theme == 'butterscotch'">
+            :root {
+                --reg-primary:      #3d1f00;
+                --reg-primary-mid:  #5c2e00;
+                --reg-accent:       #e8a000;
+                --reg-accent-rgb:   232, 160, 0;
+                --reg-accent-glow:  rgba(232,160,0,.42);
+                --reg-accent-light: rgba(232,160,0,.10);
+                --reg-btn-text:     #1a0d00;
+                --reg-bg-from:      #fff3dc;
+                --reg-bg-to:        #f5e0a8;
+                --reg-ghost-num:    rgba(61,31,0,.05);
+                --reg-section-title:#3d1f00;
+            }
+        </t>
+        <t t-elif="theme == 'strawberry'">
+            :root {
+                --reg-primary:      #5e0030;
+                --reg-primary-mid:  #880e4f;
+                --reg-accent:       #e91e63;
+                --reg-accent-rgb:   233, 30, 99;
+                --reg-accent-glow:  rgba(233,30,99,.40);
+                --reg-accent-light: rgba(233,30,99,.10);
+                --reg-btn-text:     #fff;
+                --reg-bg-from:      #ffe0ef;
+                --reg-bg-to:        #f9b8d2;
+                --reg-ghost-num:    rgba(94,0,48,.05);
+                --reg-section-title:#5e0030;
+            }
+        </t>
+        <t t-elif="theme == 'cherry'">
+            :root {
+                --reg-primary:      #4a0000;
+                --reg-primary-mid:  #7f0000;
+                --reg-accent:       #e53935;
+                --reg-accent-rgb:   229, 57, 53;
+                --reg-accent-glow:  rgba(229,57,53,.40);
+                --reg-accent-light: rgba(229,57,53,.10);
+                --reg-btn-text:     #fff;
+                --reg-bg-from:      #ffe8e8;
+                --reg-bg-to:        #f5baba;
+                --reg-ghost-num:    rgba(74,0,0,.05);
+                --reg-section-title:#4a0000;
+            }
+        </t>
+        <t t-elif="theme == 'pistah'">
+            :root {
+                --reg-primary:      #0a3d12;
+                --reg-primary-mid:  #1b5e20;
+                --reg-accent:       #43a047;
+                --reg-accent-rgb:   67, 160, 71;
+                --reg-accent-glow:  rgba(67,160,71,.40);
+                --reg-accent-light: rgba(67,160,71,.10);
+                --reg-btn-text:     #fff;
+                --reg-bg-from:      #dcf5e0;
+                --reg-bg-to:        #b3e0b8;
+                --reg-ghost-num:    rgba(10,61,18,.05);
+                --reg-section-title:#0a3d12;
+            }
+        </t>
+        <t t-else="">
+            /* vanilla — values set in player_registration.css */
+        </t>
+    </style>
+</head>
+<body class="reg-page">
+<div class="reg-wrapper">
+
+    <!-- ════════════════════════════════════════
+         HEADER  — dark, diagonal bottom edge
+         ════════════════════════════════════════ -->
+    <div class="reg-header-card">
+        <div class="reg-header-top">
+            <!-- App logo -->
+            <img src="/auction_module/static/src/assets/images/logo.svg"
+                 alt="AuctionChamp" class="reg-app-logo"/>
+
+            <div class="reg-header-divider"/>
+
+            <!-- Tournament name -->
+            <div class="reg-header-info">
+                <h1 t-esc="tournament.name if tournament else 'Auction Tournament'"/>
+                <p t-esc="tournament.description if tournament else 'Player Registration'"/>
+            </div>
+
+            <!-- Tournament logo -->
+            <div class="reg-tournament-logo-wrap">
+                <t t-if="tournament and tournament.logo">
+                    <img t-att-src="'data:image/png;base64,' + tournament.logo.decode('utf-8')"
+                         alt="Tournament Logo"/>
+                </t>
+                <t t-else="">
+                    <span class="reg-tournament-logo-placeholder">🏆</span>
+                </t>
+            </div>
+        </div>
+
+        <!-- Meta bar: date, venue, sport -->
+        <div class="reg-header-meta">
+            <t t-if="tournament and tournament.tournament_date">
+                <div class="reg-meta-item">
+                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <span><span class="reg-meta-label">Date</span><t t-esc="tournament.tournament_date.strftime('%d %B %Y')"/></span>
+                </div>
+            </t>
+            <t t-if="tournament and tournament.venue">
+                <div class="reg-meta-item">
+                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                        <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    <span><span class="reg-meta-label">Venue</span><t t-esc="tournament.venue"/></span>
+                </div>
+            </t>
+            <t t-if="tournament and tournament.tournament_type">
+                <div class="reg-meta-item">
+                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 8v4l3 3"/>
+                    </svg>
+                    <span><span class="reg-meta-label">Sport</span><t t-esc="(tournament.tournament_type or '').upper()"/></span>
+                </div>
+            </t>
+        </div>
+    </div><!-- /reg-header-card -->
+
+    <!-- ════════════════════════════════════════
+         FORM BODY
+         ════════════════════════════════════════ -->
+    <div class="reg-form-body">
+
+        <!-- Intro strip -->
+        <div class="reg-form-intro">
+            <div class="reg-form-intro-badge">
+                <span>Registration</span>
+            </div>
+            <div class="reg-form-intro-text">
+                <h2>Player Profile Form</h2>
+                <p>Fields marked <span style="color:#e91e63">*</span> are required · Submitted players join as Draft</p>
+            </div>
+        </div>
+
+        <!-- ── Success state ── -->
+        <t t-if="success">
+            <div class="reg-success-body">
+                <div class="reg-success-check">🎉</div>
+                <h2>You're Registered!</h2>
+                <p>Your player profile has been submitted successfully.<br/>
+                   Our team will review your details and you will be added to the tournament roster.<br/>
+                   You may safely close this page.</p>
+            </div>
+        </t>
+
+        <!-- ── Error ── -->
+        <t t-if="error">
+            <div class="reg-alert reg-alert-error">
+                <span class="reg-alert-icon">⚠️</span>
+                <div><strong>Submission Error</strong><span t-esc="error"/></div>
+            </div>
+        </t>
+
+        <!-- ── Main form (hidden after success) ── -->
+        <t t-if="not success">
+        <form action="/player/register" method="post" enctype="multipart/form-data">
+
+            <!-- ══════════════════════════════════════
+                 01 · PLAYER IDENTITY
+                 ══════════════════════════════════════ -->
+            <div class="reg-section">
+                <div class="reg-section-header">
+                    <div class="reg-section-strip"/>
+                    <h3>Player Identity</h3>
+                    <span class="reg-section-icon">👤</span>
+                    <span class="reg-section-num">01</span>
+                </div>
+
+                <!-- Photo upload with spinning ring frame -->
+                <div style="margin-bottom:18px">
+                    <label class="reg-label">Player Photo</label>
+                    <div class="reg-photo-upload">
+                        <div class="reg-photo-frame">
+                            <div class="reg-photo-circle" id="photoCircle">
+                                <img id="photoPreview" src="" alt=""/>
+                                <span class="avatar-placeholder" id="avatarPlaceholder">📷</span>
+                            </div>
+                        </div>
+                        <div class="reg-file-meta">
+                            <label for="photoInput" class="reg-file-btn">
+                                <svg width="15" height="15" fill="none" viewBox="0 0 24 24"
+                                     stroke="currentColor" stroke-width="2.5">
+                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                                Upload Photo
+                            </label>
+                            <input type="file" id="photoInput" name="photo"
+                                   accept="image/*" class="reg-file-input"/>
+                            <p class="reg-file-hint">JPG · PNG · WEBP &#160;·&#160; Max 5 MB</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Name -->
+                <div class="reg-grid">
+                    <div class="col-full">
+                        <label class="reg-label" for="playerName">Full Name <span class="req">*</span></label>
+                        <input type="text" id="playerName" name="name" class="reg-input"
+                               placeholder="e.g. Rahul Sharma"
+                               required="required" maxlength="128"/>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════
+                 02 · CRICKET PROFILE
+                 ══════════════════════════════════════ -->
+            <div class="reg-section">
+                <div class="reg-section-header">
+                    <div class="reg-section-strip"/>
+                    <h3>Cricket Profile</h3>
+                    <span class="reg-section-icon">🏏</span>
+                    <span class="reg-section-num">02</span>
+                </div>
+
+                <!-- Role — big sporty card selector -->
+                <div style="margin-bottom:16px">
+                    <label class="reg-label">Role <span class="req">*</span></label>
+                    <div class="reg-role-group">
+                        <input type="radio" class="reg-role-option" name="role"
+                               id="roleBatter" value="Batter" required="required"/>
+                        <label class="reg-role-label" for="roleBatter">
+                            <span class="reg-role-icon">🏏</span>
+                            <span class="reg-role-text">Batter</span>
+                        </label>
+
+                        <input type="radio" class="reg-role-option" name="role"
+                               id="roleBowler" value="Bowler"/>
+                        <label class="reg-role-label" for="roleBowler">
+                            <span class="reg-role-icon">⚡</span>
+                            <span class="reg-role-text">Bowler</span>
+                        </label>
+
+                        <input type="radio" class="reg-role-option" name="role"
+                               id="roleAllrounder" value="Allrounder"/>
+                        <label class="reg-role-label" for="roleAllrounder">
+                            <span class="reg-role-icon">⭐</span>
+                            <span class="reg-role-text">Allrounder</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="reg-grid">
+                    <div>
+                        <label class="reg-label" for="battingStyle">Batting Style <span class="req">*</span></label>
+                        <select id="battingStyle" name="batting_style" class="reg-select" required="required">
+                            <option value="">— Select —</option>
+                            <option value="Right Handed">Right Handed</option>
+                            <option value="Left Handed">Left Handed</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="reg-label" for="bowlingStyle">Bowling <span class="req">*</span></label>
+                        <select id="bowlingStyle" name="bowling_style" class="reg-select" required="required">
+                            <option value="">— Select —</option>
+                            <option value="Right Arm">Right Arm</option>
+                            <option value="Left Arm">Left Arm</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="reg-label" for="playerTier">Player Tier</label>
+                        <select id="playerTier" name="tier_id" class="reg-select">
+                            <option value="">— Select Tier —</option>
+                            <t t-foreach="tiers" t-as="tier">
+                                <option t-att-value="tier.id" t-esc="tier.name"/>
+                            </t>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="reg-label" for="currentTeam">Previous Club / Team</label>
+                        <input type="text" id="currentTeam" name="current_team" class="reg-input"
+                               placeholder="e.g. Chennai Warriors" maxlength="128"/>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════
+                 03 · PERSONAL &amp; CONTACT
+                 ══════════════════════════════════════ -->
+            <div class="reg-section">
+                <div class="reg-section-header">
+                    <div class="reg-section-strip"/>
+                    <h3>Personal &amp; Contact</h3>
+                    <span class="reg-section-icon">📋</span>
+                    <span class="reg-section-num">03</span>
+                </div>
+
+                <div class="reg-grid">
+                    <div>
+                        <label class="reg-label" for="contactNo">Mobile Number</label>
+                        <input type="tel" id="contactNo" name="contact" class="reg-input"
+                               placeholder="+91 98765 43210" maxlength="20"/>
+                    </div>
+
+                    <div>
+                        <label class="reg-label" for="bloodGroup">Blood Group</label>
+                        <select id="bloodGroup" name="blood_group" class="reg-select">
+                            <option value="">— Select —</option>
+                            <option value="A+">A +</option>
+                            <option value="A-">A −</option>
+                            <option value="B+">B +</option>
+                            <option value="B-">B −</option>
+                            <option value="O+">O +</option>
+                            <option value="O-">O −</option>
+                            <option value="AB+">AB +</option>
+                            <option value="AB-">AB −</option>
+                        </select>
+                    </div>
+
+                    <div class="col-full">
+                        <label class="reg-label" for="address">Location / Address</label>
+                        <textarea id="address" name="address" class="reg-textarea"
+                                  placeholder="Street, City, State…" rows="2"/>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════
+                 04 · PAYMENT
+                 ══════════════════════════════════════ -->
+            <div class="reg-section">
+                <div class="reg-section-header">
+                    <div class="reg-section-strip"/>
+                    <h3>Payment Proof</h3>
+                    <span class="reg-section-icon">💳</span>
+                    <span class="reg-section-num">04</span>
+                </div>
+
+                <div class="reg-photo-upload">
+                    <div class="reg-payment-icon" id="paymentPreviewIcon">📎</div>
+                    <div class="reg-file-meta">
+                        <label for="paymentInput" class="reg-file-btn">
+                            <svg width="15" height="15" fill="none" viewBox="0 0 24 24"
+                                 stroke="currentColor" stroke-width="2.5">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            Upload Receipt / Screenshot
+                        </label>
+                        <input type="file" id="paymentInput" name="payment_proof"
+                               accept="image/*,application/pdf" class="reg-file-input"/>
+                        <p class="reg-file-hint" id="paymentFileName">
+                            JPG · PNG · PDF &#160;·&#160; Max 5 MB
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════
+                 05 · JERSEY  (enabled per tournament)
+                 ══════════════════════════════════════ -->
+            <t t-if="tournament and tournament.enable_jersey_section">
+            <div class="reg-section">
+                <div class="reg-section-header">
+                    <div class="reg-section-strip"/>
+                    <h3>Jersey Details <span class="reg-optional-badge">Optional</span></h3>
+                    <span class="reg-section-icon">👕</span>
+                    <span class="reg-section-num">05</span>
+                </div>
+
+                <div class="reg-grid">
+                    <div>
+                        <label class="reg-label" for="jerseyName">Name on Jersey</label>
+                        <input type="text" id="jerseyName" name="jersy_name" class="reg-input"
+                               placeholder="RAHUL" maxlength="20"
+                               style="text-transform:uppercase;font-family:'Bebas Neue','Teko',sans-serif;font-size:1rem;letter-spacing:.08em;"/>
+                    </div>
+                    <div>
+                        <label class="reg-label" for="jerseyNumber">Jersey Number</label>
+                        <input type="text" id="jerseyNumber" name="jersy_number" class="reg-input"
+                               placeholder="18" maxlength="4"
+                               style="font-family:'Bebas Neue','Teko',sans-serif;font-size:1.1rem;letter-spacing:.06em;"/>
+                    </div>
+                    <div>
+                        <label class="reg-label" for="jerseySize">Jersey Size</label>
+                        <select id="jerseySize" name="jersy_size" class="reg-select">
+                            <option value="">— Select Size —</option>
+                            <option value="XS">XS — Extra Small</option>
+                            <option value="S">S — Small</option>
+                            <option value="M">M — Medium</option>
+                            <option value="L">L — Large</option>
+                            <option value="XL">XL — Extra Large</option>
+                            <option value="XXL">XXL — Double XL</option>
+                            <option value="XXXL">XXXL — Triple XL</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            </t>
+
+            <!-- ── ACTION BUTTONS ── -->
+            <div class="reg-actions">
+                <button type="reset" class="reg-btn reg-btn-cancel">
+                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                    Clear
+                </button>
+                <button type="submit" class="reg-btn reg-btn-submit">
+                    Submit Registration
+                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor" stroke-width="2.5">
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                        <polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                </button>
+            </div>
+
+        </form>
+        </t><!-- /not success -->
+    </div><!-- /reg-form-body -->
+
+    <!-- Footer -->
+    <div class="reg-footer">
+        <img src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+        Powered by AuctionChamp
+    </div>
+</div><!-- /reg-wrapper -->
+
+<!-- ── Inline JS: photo preview · payment filename · jersey uppercase ── -->
+<script>
+(function () {
+    // Photo live preview
+    var photoInput = document.getElementById('photoInput');
+    if (photoInput) {
+        photoInput.addEventListener('change', function () {
+            if (!this.files[0]) return;
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var img = document.getElementById('photoPreview');
+                var ph  = document.getElementById('avatarPlaceholder');
+                img.src = e.target.result;
+                img.style.display = 'block';
+                if (ph) ph.style.display = 'none';
+            };
+            reader.readAsDataURL(this.files[0]);
+        });
+    }
+
+    // Payment receipt filename
+    var paymentInput = document.getElementById('paymentInput');
+    if (paymentInput) {
+        paymentInput.addEventListener('change', function () {
+            var hint = document.getElementById('paymentFileName');
+            var icon = document.getElementById('paymentPreviewIcon');
+            if (this.files[0]) {
+                hint.textContent = '✓ ' + this.files[0].name;
+                hint.style.color = '#276749';
+                hint.style.fontWeight = '600';
+                if (icon) { icon.textContent = '✅'; icon.style.background = '#f0fff4'; }
+            }
+        });
+    }
+
+    // Jersey name → uppercase
+    var jName = document.getElementById('jerseyName');
+    if (jName) {
+        jName.addEventListener('input', function () {
+            var p = this.selectionStart;
+            this.value = this.value.toUpperCase();
+            this.setSelectionRange(p, p);
+        });
+    }
+
+    // Native HTML5 validation + smooth scroll to first error
+    var form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            if (!form.checkValidity()) {
+                e.preventDefault();
+                e.stopPropagation();
+                var first = form.querySelector(':invalid');
+                if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Shake the first invalid field
+                if (first) { first.classList.add('was-invalid'); }
+            }
+        });
+    }
+})();
+</script>
+
+</body>
+</html>
+</template>
+</odoo>

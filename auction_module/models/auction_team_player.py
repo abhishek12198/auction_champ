@@ -59,6 +59,7 @@ class AuctionTeamPlayer(models.Model):
     blood_group = fields.Char("Blood Group")
     p_type =   fields.Char("Type")
     p_category = fields.Char("Category")
+    payment_proof = fields.Binary("Payment Proof", help="Uploaded payment screenshot/receipt from registration form.")
 
     def _compute_effective_base_price(self):
         """Return the base price for this player from the auction setup.

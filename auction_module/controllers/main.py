@@ -524,10 +524,30 @@ class Auction(http.Controller):
 
     @http.route('/auction/live-board', type='http', auth='public', website=True)
     def auction_live_board(self, **kw):
-        tournament = request.env['auction.tournament'].sudo().search(
+        env = request.env
+        tournament = env['auction.tournament'].sudo().search(
             [('active', '=', True)], limit=1
         )
         theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
+
+        # Serve a static welcome page (no JS polling / no JSON payloads) when the
+        # auction is not yet ready: either there is no active tournament, no auction
+        # rules have been configured (auction.auction records), or no players have
+        # been added to the player pool.
+        auction_ready = False
+        if tournament:
+            has_rules = env['auction.auction'].sudo().search_count(
+                [('tournament_id', '=', tournament.id)]
+            ) > 0
+            has_players = env['auction.team.player'].sudo().search_count([]) > 0
+            auction_ready = has_rules and has_players
+
+        if not auction_ready:
+            return request.render('auction_module.welcome_message_template', {
+                'tournament': tournament,
+                'theme': theme,
+            })
+
         return request.render('auction_module.public_live_board_template', {
             'tournament': tournament,
             'theme': theme,
@@ -676,3 +696,99 @@ class Auction(http.Controller):
             json.dumps(result),
             headers=[('Content-Type', 'application/json'), ('Cache-Control', 'no-store')]
         )
+
+    # ── Player Registration Form ──────────────────────────────────────────────
+
+    @http.route('/player/register', type='http', auth='public', website=True,
+                methods=['GET', 'POST'], csrf=False)
+    def player_register(self, **kw):
+        """Public player self-registration form. Creates a draft player record."""
+        tournament = request.env['auction.tournament'].sudo().search(
+            [('active', '=', True)], limit=1
+        )
+        tiers = request.env['auction.player.tier'].sudo().search([], order='name asc')
+        theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
+
+        if request.httprequest.method == 'POST':
+            try:
+                vals = _build_player_vals_from_post(request, tournament)
+                request.env['auction.team.player'].sudo().create(vals)
+                return request.render('auction_module.player_registration_form', {
+                    'tournament': tournament,
+                    'tiers': tiers,
+                    'theme': theme,
+                    'success': True,
+                })
+            except Exception as e:
+                return request.render('auction_module.player_registration_form', {
+                    'tournament': tournament,
+                    'tiers': tiers,
+                    'theme': theme,
+                    'error': str(e),
+                })
+
+        return request.render('auction_module.player_registration_form', {
+            'tournament': tournament,
+            'tiers': tiers,
+            'theme': theme,
+        })
+
+
+def _build_player_vals_from_post(request, tournament):
+    """Extract and validate POST form data into a dict for auction.team.player.create()."""
+    post = request.httprequest.form
+    files = request.httprequest.files
+
+    name = (post.get('name') or '').strip()
+    if not name:
+        raise ValueError("Player name is required.")
+
+    # Determine next sl_no
+    last = request.env['auction.team.player'].sudo().search(
+        [], limit=1, order='sl_no desc'
+    )
+    sl_no = (last.sl_no + 1) if last else 1
+
+    tier_id = False
+    raw_tier = post.get('tier_id')
+    if raw_tier and raw_tier.isdigit():
+        tier_id = int(raw_tier)
+
+    # Photo upload
+    photo_data = False
+    photo_file = files.get('photo')
+    if photo_file and photo_file.filename:
+        photo_data = base64.b64encode(photo_file.read())
+
+    # Payment proof upload
+    payment_proof_data = False
+    proof_file = files.get('payment_proof')
+    if proof_file and proof_file.filename:
+        payment_proof_data = base64.b64encode(proof_file.read())
+
+    vals = {
+        'sl_no':         sl_no,
+        'name':          name,
+        'role':          post.get('role') or '',
+        'batting_style': post.get('batting_style') or 'Right Handed',
+        'bowling_style': post.get('bowling_style') or 'Right Arm',
+        'contact':       (post.get('contact') or '').strip(),
+        'address':       (post.get('address') or '').strip(),
+        'blood_group':   (post.get('blood_group') or '').strip(),
+        'current_team':  (post.get('current_team') or '').strip(),
+        'state':         'draft',
+        'photo':         photo_data,
+        'payment_proof': payment_proof_data,
+    }
+    if tier_id:
+        vals['tier_id'] = tier_id
+    if tournament:
+        vals['tournament_id'] = tournament.id
+
+    # Jersey section (only if enabled for this tournament)
+    if tournament and tournament.enable_jersey_section:
+        vals['jersy_name']   = (post.get('jersy_name') or '').strip()
+        vals['jersy_number'] = (post.get('jersy_number') or '').strip()
+        vals['jersy_size']   = (post.get('jersy_size') or '').strip()
+
+    return vals

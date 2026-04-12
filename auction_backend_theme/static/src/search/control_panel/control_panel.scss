@@ -146,13 +146,32 @@
     // Pager
     .o_pager {
         color: $ac-text-light;
-        font-family: 'Rajdhani', sans-serif;
         font-weight: 600;
+
+        // Apply Rajdhani only to the text counter, not the icon buttons
+        .o_pager_counter {
+            font-family: 'Rajdhani', sans-serif;
+        }
 
         .o_pager_previous,
         .o_pager_next {
-            color: $ac-text-muted;
-            &:hover { color: $ac-gold; }
+            // Override Bootstrap's light btn-secondary background so icons are
+            // readable against the dark control panel
+            background: rgba(255, 255, 255, 0.1) !important;
+            border-color: rgba(253, 206, 51, 0.25) !important;
+            color: $ac-text-light !important;
+
+            &:hover {
+                background: rgba(34, 82, 181, 0.45) !important;
+                border-color: $ac-gold !important;
+                color: $ac-gold !important;
+            }
+
+            &:disabled, &[disabled] {
+                background: rgba(255, 255, 255, 0.05) !important;
+                border-color: rgba(255, 255, 255, 0.1) !important;
+                color: $ac-text-muted !important;
+            }
         }
 
         .o_pager_value { color: $ac-text-light; }
