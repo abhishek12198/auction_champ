@@ -1,0 +1,149 @@
+// ─── Main Navbar ─────────────────────────────────────────────────────────────
+
+.o_main_navbar {
+    background: linear-gradient(135deg, $ac-navy-dark 0%, darken($ac-navy, 10%) 100%);
+    border-bottom: 1px solid rgba(253, 206, 51, 0.2);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+
+    // Text, icons in the navbar
+    color: $ac-text-light;
+
+    a, button {
+        color: $ac-text-light;
+
+        &:hover { color: white; }
+    }
+
+    // Active/current app brand name
+    .o_menu_brand {
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 700;
+        font-size: 1rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: $ac-gold;
+
+        &:hover { color: white; }
+    }
+
+    // Horizontal section menu items
+    .o_menu_sections {
+        .o_nav_entry,
+        .o_dropdown > .dropdown-toggle {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: $ac-text-light;
+            padding: 0 10px;
+            transition: color 0.2s;
+
+            &:hover { color: $ac-gold; }
+        }
+    }
+
+    // Systray area (right side)
+    .o_menu_systray {
+        gap: 4px;
+
+        > * > .dropdown-toggle {
+            color: $ac-text-light;
+            padding: 0 12px;
+
+            &:hover { color: $ac-gold; }
+        }
+
+        // Ensure systray dropdowns always render above the full-screen app drawer (z-index: 1002)
+        .dropdown-menu {
+            z-index: 1050 !important;
+        }
+    }
+
+    // Debug icon
+    .o_debug_manager > .dropdown-toggle {
+        color: rgba(253, 206, 51, 0.6);
+        &:hover { color: $ac-gold; }
+    }
+}
+
+// ── Auction Champ Logo in navbar ──────────────────────────────────────────────
+.ac-navbar-logo {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 12px;
+    text-decoration: none;
+    flex-shrink: 0;
+
+    .ac-navbar-logo-img {
+        height: 28px;
+        width: auto;
+        object-fit: contain;
+        filter: drop-shadow(0 0 6px rgba(253, 206, 51, 0.35));
+        transition: filter 0.25s, transform 0.25s;
+    }
+
+    &:hover .ac-navbar-logo-img {
+        filter: drop-shadow(0 0 12px rgba(253, 206, 51, 0.7));
+        transform: scale(1.04);
+    }
+}
+
+// ── Responsive navbar adjustments ────────────────────────────────────────────
+@include media-breakpoint-down(sm) {
+    .o_main_navbar {
+        grid-template-areas: "apps brand systray sections";
+        grid-template-columns: minmax($o-navbar-height, max-content) max-content auto minmax($o-navbar-height, max-content);
+
+        .o_menu_brand  { display: none; }
+        .ac-navbar-logo { display: none; }
+
+        .o_menu_sections {
+            width: $o-navbar-height;
+        }
+        .o_menu_sections_more .dropdown-toggle {
+            font-size: $font-size-lg;
+        }
+        .o_menu_systray {
+            margin-left: auto;
+        }
+        .o_user_menu > .dropdown-toggle {
+            white-space: nowrap;
+            &::before, &::after { content: normal; }
+            .oe_topbar_name { display: none; }
+        }
+        .show .dropdown-menu {
+            @include ac-full-screen-menu();
+            font-size: $font-size-lg;
+        }
+    }
+}
+
+// ── Dropdown menus in the navbar ──────────────────────────────────────────────
+.o_main_navbar .dropdown-menu {
+    background: darken($ac-navy-dark, 2%);
+    border: 1px solid rgba(253, 206, 51, 0.15);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+    .dropdown-item {
+        color: $ac-text-light;
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 500;
+        font-size: 1rem;
+        letter-spacing: 0.03em;
+
+        &:hover, &:focus {
+            background: rgba(34, 82, 181, 0.4);
+            color: $ac-gold;
+        }
+
+        &.active, &:active {
+            background: $ac-blue;
+            color: $ac-gold;
+        }
+    }
+
+    .dropdown-divider {
+        border-color: rgba(253, 206, 51, 0.1);
+    }
+}

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!--
+        Primary copy of web.Dropdown for the AppsMenu component.
+        CSS targets the menu div via .o_navbar_apps_menu parent selector.
+    -->
+    <t t-name="auction_backend_theme.AppsMenu" t-inherit="web.Dropdown"
+       t-inherit-mode="primary" owl="1">
+    </t>
+
+</templates>

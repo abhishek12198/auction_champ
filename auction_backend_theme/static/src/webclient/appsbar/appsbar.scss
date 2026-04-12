@@ -1,0 +1,156 @@
+// ─── Apps Sidebar ────────────────────────────────────────────────────────────
+
+.ac-apps-sidebar-panel {
+    @include ac-disable-scrollbar();
+    overflow-y: auto;
+    position: fixed;
+    top: $o-navbar-height;
+    height: calc(100% - #{$o-navbar-height});
+    background: $ac-sidebar-bg;
+    border-right: 1px solid rgba(253, 206, 51, 0.1);
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+
+    // Subtle vertical gold line on right edge
+    &::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 30%;
+        bottom: 30%;
+        width: 2px;
+        background: linear-gradient(to bottom, transparent, $ac-gold, transparent);
+        opacity: 0.3;
+    }
+}
+
+// Logo strip at top of sidebar
+.ac-sidebar-logo-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 8px;
+    border-bottom: 1px solid rgba(253, 206, 51, 0.12);
+    flex-shrink: 0;
+    text-decoration: none;
+
+    .ac-sidebar-logo-icon {
+        width: 100%;
+        height: auto;
+        max-height: 30px;
+        object-fit: contain;
+        filter: drop-shadow(0 0 6px rgba(253, 206, 51, 0.4));
+        transition: filter 0.25s;
+    }
+
+    &:hover .ac-sidebar-logo-icon {
+        filter: drop-shadow(0 0 12px rgba(253, 206, 51, 0.7));
+    }
+}
+
+// Nav menu list
+.ac-sidebar-menu {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    flex: 1;
+    overflow-y: auto;
+    @include ac-disable-scrollbar();
+}
+
+// Each sidebar link
+.ac-sidebar-link {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    cursor: pointer;
+    text-decoration: none;
+    color: $ac-sidebar-color;
+    transition: background 0.2s, color 0.2s;
+    border-left: 3px solid transparent;
+    position: relative;
+
+    &:hover {
+        background: rgba(34, 82, 181, 0.35);
+        color: white;
+        border-left-color: $ac-gold;
+    }
+
+    .ac-sidebar-icon {
+        width: 22px;
+        height: 22px;
+        object-fit: contain;
+        flex-shrink: 0;
+        transition: transform 0.2s;
+    }
+
+    .ac-sidebar-name {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin-left: 8px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    &:hover .ac-sidebar-icon {
+        transform: scale(1.1);
+    }
+}
+
+// Active app
+.ac-sidebar-active .ac-sidebar-link {
+    background: rgba(34, 82, 181, 0.45);
+    border-left-color: $ac-gold;
+    color: $ac-gold;
+
+    .ac-sidebar-icon {
+        filter: drop-shadow(0 0 4px rgba(253, 206, 51, 0.5));
+    }
+}
+
+// ── Responsive sidebar widths ─────────────────────────────────────────────────
+
+// Large screens: show icon + name
+@include media-breakpoint-up(lg) {
+    .ac-apps-sidebar-panel {
+        width: $ac-sidebar-width-large;
+    }
+    .o_action_manager {
+        padding-left: $ac-sidebar-width-large;
+    }
+}
+
+// Medium screens: icon only, collapse name
+@include media-breakpoint-only(md) {
+    .ac-apps-sidebar-panel {
+        width: $ac-sidebar-width-small;
+        .ac-sidebar-name { display: none; }
+        .ac-sidebar-link { justify-content: center; padding: 10px 0; }
+        .ac-sidebar-icon { margin-right: 0 !important; }
+        .ac-sidebar-logo-wrap { display: none; }
+    }
+    .o_action_manager {
+        padding-left: $ac-sidebar-width-small;
+    }
+}
+
+// Small screens: hide sidebar entirely
+@include media-breakpoint-down(sm) {
+    .ac-apps-sidebar-panel {
+        display: none;
+    }
+    .o_action_manager {
+        padding-left: 0;
+    }
+}
+
+// Fullscreen views (POS, etc.): hide sidebar
+.o_fullscreen {
+    .ac-apps-sidebar-panel { display: none; }
+    .o_action_manager { padding-left: 0 !important; }
+}

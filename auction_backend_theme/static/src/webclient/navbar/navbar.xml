@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!--
+        Extends web.NavBar to:
+          1. Replace the default AppsMenu (9-dot grid) with our stadium drawer
+          2. Inject the Auction Champ logo into the navbar
+          3. Append the AppsBar (fixed left sidebar)
+    -->
+    <t t-name="auction_backend_theme.NavBar"
+       t-inherit="web.NavBar"
+       t-inherit-mode="extension"
+       owl="1">
+
+        <!-- Pre-compute the full app list once -->
+        <xpath expr="//nav" position="before">
+            <t t-set="apps" t-value="menuService.getApps()" />
+        </xpath>
+
+        <!-- ── Replace default Apps Menu with our full-screen stadium drawer ── -->
+        <xpath expr="//t[@t-call='web.NavBar.AppsMenu']" position="replace">
+
+            <!-- Custom apps drawer toggler -->
+            <AppsMenu
+                hotkey="'h'"
+                title="'Home Menu'"
+                class="o_navbar_apps_menu"
+                manualOnly="true"
+            >
+                <!-- Toggler button: hamburger/grid icon -->
+                <t t-set-slot="toggler">
+                    <i class="fa fa-th" aria-hidden="true"/>
+                </t>
+
+                <!-- ── Drawer header: logo + tagline ── -->
+                <div class="ac-apps-header">
+                    <img
+                        class="ac-apps-logo"
+                        src="/auction_backend_theme/static/img/logo.svg"
+                        alt="Auction Champ"
+                    />
+                    <p class="ac-apps-tagline">Premier Sports Auction Platform</p>
+                </div>
+
+                <!-- ── Floating sports emoji (CSS-animated) ── -->
+                <div class="ac-apps-floaters" aria-hidden="true">
+                    <span>🏆</span>
+                    <span>⚽</span>
+                    <span>🏏</span>
+                    <span>🏅</span>
+                    <span>🎯</span>
+                    <span>🔨</span>
+                </div>
+
+                <!-- ── App icon grid ── -->
+                <div class="ac-apps-grid">
+                    <MenuItem
+                        t-foreach="apps"
+                        t-as="app"
+                        t-key="app.id"
+                        class="o_app"
+                        t-att-class="{ focus: menuService.getCurrentApp() === app }"
+                        payload="app"
+                    >
+                        <a t-att-href="getMenuItemHref(app)" t-on-click.prevent="">
+                            <div class="ac-app-icon-wrap">
+                                <img
+                                    t-if="app.webIconData"
+                                    class="ac-app-icon"
+                                    t-attf-src="data:image/png;base64,{{ app.webIconData }}"
+                                />
+                                <img
+                                    t-else=""
+                                    class="ac-app-icon"
+                                    src="/auction_backend_theme/static/img/default_icon.png"
+                                />
+                            </div>
+                            <span class="ac-app-name">
+                                <t t-esc="app.name"/>
+                            </span>
+                        </a>
+                    </MenuItem>
+                </div>
+
+                <!-- ── Sports ticker ── -->
+                <div class="ac-apps-ticker-wrap">
+                    <div class="ac-apps-ticker">
+                        <span>🏆 Premier League Auction</span>
+                        <span>⚽ Squad Building Live</span>
+                        <span>🏏 IPL Mega Auction</span>
+                        <span>🎯 Bidding Arena Open</span>
+                        <span>🔨 Hammer Drops Live</span>
+                        <span>🏅 Champions Drafted</span>
+                        <!-- duplicate for seamless loop -->
+                        <span>🏆 Premier League Auction</span>
+                        <span>⚽ Squad Building Live</span>
+                        <span>🏏 IPL Mega Auction</span>
+                        <span>🎯 Bidding Arena Open</span>
+                        <span>🔨 Hammer Drops Live</span>
+                        <span>🏅 Champions Drafted</span>
+                    </div>
+                </div>
+
+            </AppsMenu>
+
+            <!-- ── Auction Champ Wordmark Logo (inline in navbar) ── -->
+            <a class="ac-navbar-logo" href="/web" title="Auction Champ Home">
+                <img
+                    src="/auction_backend_theme/static/img/logo.svg"
+                    alt="Auction Champ"
+                    class="ac-navbar-logo-img"
+                />
+            </a>
+
+        </xpath>
+
+        <!-- Hide sections menu when there are no sections (like muk) -->
+        <xpath expr="//t[@t-call='web.NavBar.SectionsMenu']" position="attributes">
+            <attribute name="t-if">currentAppSections.length</attribute>
+        </xpath>
+
+        <!-- ── Append the left sidebar AppsBar inside the nav ── -->
+        <xpath expr="//nav" position="inside">
+            <AppsBar apps="apps" currentApp="menuService.getCurrentApp()"/>
+        </xpath>
+
+    </t>
+
+</templates>

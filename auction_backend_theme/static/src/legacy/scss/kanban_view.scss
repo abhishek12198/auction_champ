@@ -1,0 +1,53 @@
+// ─── Kanban View ─────────────────────────────────────────────────────────────
+
+.o_kanban_view {
+    background: #eef0f4;
+    font-family: 'Rajdhani', sans-serif;
+
+    // Column header
+    .o_kanban_header_title {
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 700;
+        font-size: 0.95rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: $ac-navy-dark;
+    }
+
+    // Column group
+    .o_kanban_group {
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 6px;
+
+        .o_kanban_header {
+            background: $ac-navy-dark;
+            border-radius: 6px 6px 0 0;
+            color: white;
+            padding: 8px 12px;
+        }
+    }
+
+    // Cards
+    .o_kanban_record {
+        border-radius: 6px;
+        border: 1px solid rgba(10, 20, 41, 0.1);
+        box-shadow: 0 1px 4px rgba(10, 20, 41, 0.08);
+        font-family: 'Rajdhani', sans-serif;
+        transition: box-shadow 0.2s, transform 0.2s;
+
+        &:hover {
+            box-shadow: 0 4px 12px rgba(10, 20, 41, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .o_field_widget {
+            font-family: 'Rajdhani', sans-serif;
+        }
+    }
+
+    // "Add" button per column
+    .o_kanban_quick_add {
+        color: $ac-blue;
+        &:hover { color: $ac-navy; }
+    }
+}

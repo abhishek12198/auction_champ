@@ -1,0 +1,96 @@
+// ─── Global field & form element overrides ───────────────────────────────────
+
+// Primary buttons everywhere
+.btn-primary {
+    background: $ac-gold;
+    border-color: $ac-gold;
+    color: $ac-navy-dark;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+
+    &:hover, &:focus, &:active {
+        background: $ac-gold-dark;
+        border-color: $ac-gold-dark;
+        color: $ac-navy-dark;
+    }
+}
+
+// Secondary buttons
+.btn-secondary {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+// Input fields
+.o_field_widget input,
+.o_field_widget select,
+.o_field_widget textarea {
+    font-family: 'Rajdhani', sans-serif;
+        font-size: 1.05rem;
+
+    &:focus {
+        border-color: $ac-blue;
+        box-shadow: 0 0 0 2px rgba(34, 82, 181, 0.2);
+    }
+}
+
+// Badges
+.badge.bg-primary   { background: $ac-blue    !important; }
+.badge.bg-secondary { background: $ac-navy    !important; }
+.badge.bg-warning   { background: $ac-gold    !important; color: $ac-navy-dark !important; }
+
+// Dialog / modal
+.modal-content {
+    border-radius: 8px;
+    border: 1px solid rgba(10, 20, 41, 0.15);
+    box-shadow: 0 20px 60px rgba(10, 20, 41, 0.3);
+
+    .modal-header {
+        background: $ac-navy-dark;
+        color: white;
+        border-radius: 8px 8px 0 0;
+        border-bottom: 2px solid $ac-gold;
+        font-family: 'Rajdhani', sans-serif;
+
+        .modal-title {
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .btn-close { filter: invert(1); }
+    }
+
+    .modal-footer {
+        border-top: 1px solid rgba(10, 20, 41, 0.1);
+    }
+}
+
+// Scrollbar (webkit)
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: rgba(10, 20, 41, 0.05);
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(34, 82, 181, 0.3);
+    border-radius: 3px;
+
+    &:hover { background: rgba(34, 82, 181, 0.5); }
+}
+
+// Toast notifications
+.o_notification {
+    border-left: 4px solid $ac-gold;
+    font-family: 'Rajdhani', sans-serif;
+
+    &.o_notification_success { border-left-color: #22c55e; }
+    &.o_notification_danger   { border-left-color: #ef4444; }
+    &.o_notification_warning  { border-left-color: $ac-gold; }
+}

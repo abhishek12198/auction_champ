@@ -1,0 +1,107 @@
+// ─── Form View ───────────────────────────────────────────────────────────────
+
+.o_form_view {
+    background: #f5f6f8;
+    font-family: 'Rajdhani', sans-serif;
+
+    // Form sheet card
+    .o_form_sheet_bg {
+        background: #f5f6f8;
+    }
+
+    .o_form_sheet {
+        border-radius: 6px;
+        box-shadow: 0 2px 12px rgba(10, 20, 41, 0.12);
+        border: 1px solid rgba(10, 20, 41, 0.08);
+    }
+
+    // Field labels
+    .o_wrap_label label,
+    .o_field_label {
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 600;
+        font-size: 0.92rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: #4a5568;
+    }
+
+    // Status bar (Draft / In Progress / Done pipeline buttons)
+    .o_form_statusbar {
+        background: linear-gradient(135deg, $ac-navy-dark 0%, darken($ac-navy, 10%) 100%) !important;
+        border-bottom: 1px solid rgba(253, 206, 51, 0.2);
+
+        > .o_statusbar_buttons .btn {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .o_statusbar_status .btn {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: $ac-text-muted;
+            border-color: rgba(253, 206, 51, 0.1);
+
+            &.btn-primary,
+            &.o_arrow_button_current {
+                color: white;
+                background: $ac-blue;
+                border-color: $ac-blue;
+            }
+
+            &:hover { color: $ac-gold; }
+        }
+    }
+
+    // Stat buttons
+    .o_stat_button {
+        border-color: rgba(10, 20, 41, 0.1);
+        transition: background 0.2s, border-color 0.2s;
+
+        &:hover {
+            background: rgba(34, 82, 181, 0.08);
+            border-color: $ac-blue;
+        }
+
+        .o_stat_text, .o_field_widget {
+            font-family: 'Rajdhani', sans-serif;
+        }
+    }
+
+    // Save/Discard bar
+    .o_form_buttons_edit {
+        .btn-primary {
+            background: $ac-gold;
+            border-color: $ac-gold;
+            color: $ac-navy-dark;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+
+            &:hover { background: $ac-gold-dark; border-color: $ac-gold-dark; }
+        }
+
+        .btn-secondary {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+    }
+}
+
+// ─── Chatter ─────────────────────────────────────────────────────────────────
+.o_mail_chatter {
+    .o_thread_message_content {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 1.05rem;
+    }
+    .o_chatter_topbar {
+        border-bottom: 1px solid rgba(10, 20, 41, 0.1);
+    }
+}

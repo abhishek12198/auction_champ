@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="auction_backend_theme.AppsBar" owl="1">
+        <div class="ac-apps-sidebar-panel">
+            <!-- Logo at top of sidebar -->
+            <a href="/web" class="ac-sidebar-logo-wrap" title="Home">
+                <img
+                    class="ac-sidebar-logo-icon"
+                    src="/auction_backend_theme/static/img/logo.svg"
+                    alt="AC"
+                />
+            </a>
+            <!-- App icon list -->
+            <ul class="ac-sidebar-menu">
+                <t t-foreach="props.apps" t-as="app" t-key="app.id">
+                    <li class="nav-item"
+                        t-att-class="{ 'ac-sidebar-active': props.currentApp === app }">
+                        <a
+                            t-attf-href="#menu_id={{ app.id }}&amp;action_id={{ app.actionID }}"
+                            t-att-data-menu-id="app.id"
+                            t-att-data-menu-xmlid="app.xmlid"
+                            t-att-data-action-id="app.actionID"
+                            class="nav-link ac-sidebar-link"
+                            role="menuitem"
+                            t-att-title="app.name"
+                        >
+                            <img
+                                t-if="app.webIconData"
+                                class="ac-sidebar-icon"
+                                t-attf-src="data:image/png;base64,{{ app.webIconData }}"
+                            />
+                            <img
+                                t-else=""
+                                class="ac-sidebar-icon"
+                                src="/auction_backend_theme/static/img/default_icon.png"
+                            />
+                            <span class="ac-sidebar-name">
+                                <t t-esc="app.name"/>
+                            </span>
+                        </a>
+                    </li>
+                </t>
+            </ul>
+        </div>
+    </t>
+
+</templates>

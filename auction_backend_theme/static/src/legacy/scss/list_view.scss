@@ -1,0 +1,52 @@
+// ─── List View ───────────────────────────────────────────────────────────────
+
+.o_list_view {
+    font-family: 'Rajdhani', sans-serif;
+
+    // Header
+    thead > tr > th {
+        background: $ac-navy-dark;
+        color: $ac-gold;
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 700;
+        font-size: 0.9rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border-color: rgba(253, 206, 51, 0.15);
+        padding: 10px 8px;
+    }
+
+    // Rows
+    tbody > tr {
+        font-size: 1rem;
+        transition: background 0.15s;
+
+        > td {
+            border-color: rgba(10, 20, 41, 0.06);
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 500;
+        }
+
+        &:hover > td {
+            background: rgba(34, 82, 181, 0.06);
+        }
+
+        &.o_data_row_selected > td {
+            background: rgba(34, 82, 181, 0.12);
+        }
+    }
+
+    // Footer / aggregates
+    tfoot > tr > td {
+        background: $ac-navy-dark;
+        color: $ac-text-light;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+    }
+
+    // Optional buttons column
+    .o_col_optional_columns_dropdown .dropdown-item {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 1rem;
+    }
+}

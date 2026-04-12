@@ -1,0 +1,21 @@
+// ─── Global font-size safety net ─────────────────────────────────────────────
+// Rajdhani is a condensed display face that reads noticeably smaller than a
+// standard sans-serif at the same point size. This rule lifts the effective
+// base for every rem-based size in the backend without touching the Bootstrap
+// variable compile path (which is handled in colors.scss).
+
+html {
+    font-size: 15px !important;
+}
+
+body {
+    font-size: 15px;
+}
+
+// Lift bare text that inherits from body but has no explicit font-size set
+// (e.g. sidebar labels, kanban card bodies, chatter, etc.)
+.o_web_client,
+.o_action_manager,
+.o_view_controller {
+    font-size: 15px;
+}

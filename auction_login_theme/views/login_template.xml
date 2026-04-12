@@ -1,0 +1,665 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     Auction Champ — Custom Sporty Login Screen
+     Palette synced to auction_module: navy #0a1429/#1a3f96/#2252b5,
+     gold #fdce33.  Logo pulled from auction_module static assets.
+═══════════════════════════════════════════════════════════════════ -->
+<template id="login" name="Auction Champ Login">
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Auction Champ — Enter the Arena</title>
+  <link rel="icon" href="/web/static/img/favicon.ico" type="image/x-icon"/>
+  <style>
+    /* ── Reset ──────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    /* ── Stadium Background — module navy palette ────────────────────── */
+    body {
+      min-height: 100vh;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background:
+        /* floodlight left  — module gold #fdce33 */
+        radial-gradient(ellipse 60% 52% at 8%  0%, rgba(253,206,51,0.16) 0%, transparent 62%),
+        /* floodlight right — module gold #fdce33 */
+        radial-gradient(ellipse 60% 52% at 92% 0%, rgba(253,206,51,0.16) 0%, transparent 62%),
+        /* centre-pitch glow — module blue #2252b5 */
+        radial-gradient(ellipse 75% 55% at 50% 35%, rgba(34,82,181,0.22) 0%, transparent 70%),
+        /* deep base — module darkest navy */
+        linear-gradient(180deg, #060e22 0%, #0a1429 40%, #0f1e3a 70%, #060e22 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── Pitch stripe at bottom — matches module style ──────────────── */
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg,
+        transparent 0%, #fdce33 20%, #f59e0b 50%, #fdce33 80%, transparent 100%);
+      opacity: 0.55;
+    }
+
+    /* ── Stadium circle arc decoration ─────────────────────────────── */
+    .ac-arc {
+      position: fixed;
+      bottom: -240px; left: 50%;
+      transform: translateX(-50%);
+      width: 720px; height: 420px;
+      border: 1px solid rgba(253,206,51,0.08);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .ac-arc::before {
+      content: '';
+      position: absolute;
+      inset: 35px;
+      border: 1px solid rgba(34,82,181,0.12);
+      border-radius: 50%;
+    }
+
+    /* ── Floating Sports Icons ──────────────────────────────────────── */
+    .ac-floaters { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+    .ac-floater {
+      position: absolute;
+      bottom: -60px;
+      font-size: 1.7rem;
+      opacity: 0;
+      animation: acFloat linear infinite;
+      filter: drop-shadow(0 0 5px rgba(253,206,51,0.28));
+    }
+    @keyframes acFloat {
+      0%   { opacity: 0;   transform: translateY(0)      rotate(0deg)   scale(0.8); }
+      8%   { opacity: 0.45; }
+      85%  { opacity: 0.25; }
+      100% { opacity: 0;   transform: translateY(-105vh) rotate(360deg) scale(1.1); }
+    }
+
+    /* ── Sparkle dots ───────────────────────────────────────────────── */
+    .ac-dot {
+      position: absolute;
+      width: 3px; height: 3px;
+      background: #fdce33;
+      border-radius: 50%;
+      animation: acTwinkle 3s ease-in-out infinite;
+    }
+    @keyframes acTwinkle {
+      0%, 100% { opacity: 0.08; transform: scale(1); }
+      50%      { opacity: 0.65; transform: scale(1.7); }
+    }
+
+    /* ── Card ───────────────────────────────────────────────────────── */
+    .ac-card {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 440px;
+      margin: 16px;
+      /* dark navy tinted glass — matches module rgba(255,255,255,0.1) pattern */
+      background: rgba(10,20,41,0.72);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(253,206,51,0.28);
+      border-radius: 22px;
+      padding: 42px 42px 38px;
+      box-shadow:
+        0 0 0 1px rgba(253,206,51,0.08),
+        0 0 40px rgba(34,82,181,0.25),
+        0 24px 64px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+      animation: acSlideIn .5s cubic-bezier(.34,1.15,.64,1) both;
+    }
+    @keyframes acSlideIn {
+      from { opacity: 0; transform: translateY(36px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0)    scale(1); }
+    }
+
+    /* ── Logo area ──────────────────────────────────────────────────── */
+    .ac-logo-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+    /* Glow ring behind logo */
+    .ac-logo-ring {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1a3f96 0%, #2252b5 60%, #2563eb 100%);
+      box-shadow:
+        0 0 0 2px rgba(253,206,51,0.35),
+        0 0 28px rgba(253,206,51,0.18),
+        0 6px 20px rgba(0,0,0,0.45);
+      margin-bottom: 18px;
+      animation: acPulseRing 3.5s ease-in-out infinite;
+    }
+    @keyframes acPulseRing {
+      0%, 100% { box-shadow: 0 0 0 2px rgba(253,206,51,0.35), 0 0 28px rgba(253,206,51,0.18), 0 6px 20px rgba(0,0,0,0.45); }
+      50%       { box-shadow: 0 0 0 4px rgba(253,206,51,0.55), 0 0 42px rgba(253,206,51,0.30), 0 6px 20px rgba(0,0,0,0.45); }
+    }
+    /* The paddle icon extracted from logo.svg */
+    .ac-logo-ring svg { width: 40px; height: auto; }
+
+    /* Full wordmark */
+    .ac-wordmark {
+      width: 210px;
+      height: auto;
+      /* white SVG on dark bg shows perfectly */
+      filter: drop-shadow(0 2px 8px rgba(253,206,51,0.20));
+    }
+
+    .ac-tagline {
+      margin-top: 10px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 3.5px;
+      text-transform: uppercase;
+      color: rgba(253,206,51,0.5);
+    }
+
+    /* sport icon strip */
+    .ac-sport-strip {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      margin-top: 12px;
+      font-size: 1rem;
+      opacity: 0.65;
+    }
+    .ac-dot-sep { font-size: 0.55rem; color: rgba(253,206,51,0.45); letter-spacing: 1px; }
+
+    /* ── Gold divider ───────────────────────────────────────────────── */
+    .ac-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(253,206,51,0.45), transparent);
+      margin: 24px 0 26px;
+    }
+
+    /* ── Sign-in label ──────────────────────────────────────────────── */
+    .ac-sign-label {
+      text-align: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      color: rgba(255,255,255,0.38);
+      text-transform: uppercase;
+      margin-bottom: 22px;
+    }
+
+    /* ── Error Alert ─────────────────────────────────────────────────── */
+    .ac-alert {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(239,68,68,0.10);
+      border: 1px solid rgba(239,68,68,0.38);
+      border-radius: 10px;
+      padding: 12px 15px;
+      margin-bottom: 18px;
+      color: #fca5a5;
+      font-size: 0.87rem;
+      font-weight: 600;
+      animation: acShake .4s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    @keyframes acShake {
+      10%, 90% { transform: translateX(-2px); }
+      20%, 80% { transform: translateX(4px);  }
+      30%, 50%, 70% { transform: translateX(-3px); }
+      40%, 60% { transform: translateX(3px);  }
+    }
+
+    /* ── Form Fields ─────────────────────────────────────────────────── */
+    .ac-field { margin-bottom: 17px; }
+    .ac-field label {
+      display: block;
+      font-size: 0.69rem;
+      font-weight: 700;
+      letter-spacing: 2.2px;
+      text-transform: uppercase;
+      /* module gold */
+      color: rgba(253,206,51,0.72);
+      margin-bottom: 7px;
+    }
+    .ac-input-wrap { position: relative; }
+    .ac-input-icon {
+      position: absolute;
+      left: 13px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      opacity: 0.55;
+      pointer-events: none;
+    }
+    .ac-input {
+      width: 100%;
+      padding: 13px 15px 13px 40px;
+      /* module pattern: rgba(255,255,255,0.1) on navy */
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(253,206,51,0.18);
+      border-radius: 11px;
+      color: #fff;
+      font-size: 0.93rem;
+      font-weight: 500;
+      outline: none;
+      transition: border-color .18s, background .18s, box-shadow .18s;
+    }
+    .ac-input::placeholder { color: rgba(255,255,255,0.22); }
+    .ac-input:focus {
+      /* module gold focus */
+      border-color: rgba(253,206,51,0.65);
+      background: rgba(255,255,255,0.09);
+      box-shadow: 0 0 0 3px rgba(253,206,51,0.12);
+    }
+    /* Keep autofill dark — avoid browser's white flash */
+    .ac-input:-webkit-autofill,
+    .ac-input:-webkit-autofill:focus {
+      -webkit-box-shadow: 0 0 0 1000px #0d1b36 inset, 0 0 0 3px rgba(253,206,51,0.12);
+      -webkit-text-fill-color: #fff;
+    }
+
+    /* ── Submit Button ───────────────────────────────────────────────── */
+    .ac-btn {
+      display: block;
+      width: 100%;
+      margin-top: 26px;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 900;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      /* navy text on module gold CTA — matches wizard primary button style */
+      color: #0a1429;
+      background: linear-gradient(135deg, #fdce33 0%, #f5b800 55%, #e09e00 100%);
+      box-shadow: 0 4px 18px rgba(253,206,51,0.40), 0 1px 3px rgba(0,0,0,0.35);
+      transition: transform .14s, box-shadow .14s, filter .14s;
+      position: relative;
+      overflow: hidden;
+    }
+    /* top-left sheen */
+    .ac-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(130deg, rgba(255,255,255,0.22) 0%, transparent 55%);
+      border-radius: inherit;
+      pointer-events: none;
+    }
+    .ac-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(253,206,51,0.52), 0 2px 6px rgba(0,0,0,0.3);
+      filter: brightness(1.05);
+    }
+    .ac-btn:active { transform: translateY(0); }
+
+    /* ── Ticker ──────────────────────────────────────────────────────── */
+    .ac-ticker-wrap {
+      position: fixed;
+      bottom: 8px;
+      left: 0; right: 0;
+      overflow: hidden;
+      z-index: 5;
+    }
+    .ac-ticker {
+      display: flex;
+      white-space: nowrap;
+      animation: acTicker 24s linear infinite;
+      font-size: 0.67rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(253,206,51,0.40);
+    }
+    .ac-ticker span { padding: 0 26px; }
+    @keyframes acTicker {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ── Responsive ──────────────────────────────────────────────────── */
+    @media (max-width: 480px) {
+      .ac-card { padding: 34px 24px 30px; }
+      .ac-wordmark { width: 170px; }
+      .ac-logo-ring { width: 68px; height: 68px; }
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       Sign-in Loader Overlay
+    ════════════════════════════════════════════════════════════════ */
+    #ac-loader {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      /* same background as the page for seamless feel */
+      background:
+        radial-gradient(ellipse 60% 52% at 8%  0%, rgba(253,206,51,0.13) 0%, transparent 62%),
+        radial-gradient(ellipse 60% 52% at 92% 0%, rgba(253,206,51,0.13) 0%, transparent 62%),
+        radial-gradient(ellipse 75% 55% at 50% 35%, rgba(34,82,181,0.20) 0%, transparent 70%),
+        linear-gradient(180deg, #060e22 0%, #0a1429 40%, #0f1e3a 70%, #060e22 100%);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      animation: acLoaderIn .18s ease both;
+    }
+    #ac-loader.ac-visible { display: flex; }
+    @keyframes acLoaderIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    /* Outer spinning ring */
+    .ac-spin-track {
+      position: relative;
+      width: 110px; height: 110px;
+      margin-bottom: 28px;
+    }
+    .ac-spin-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 3px solid rgba(253,206,51,0.12);
+      border-top-color:  #fdce33;
+      border-right-color: rgba(253,206,51,0.55);
+      animation: acSpinCW 0.9s linear infinite;
+    }
+    .ac-spin-ring-inner {
+      position: absolute;
+      inset: 12px;
+      border-radius: 50%;
+      border: 2px solid rgba(34,82,181,0.18);
+      border-bottom-color: #2252b5;
+      border-left-color:   rgba(34,82,181,0.55);
+      animation: acSpinCCW 1.4s linear infinite;
+    }
+    @keyframes acSpinCW  { to { transform: rotate(360deg); } }
+    @keyframes acSpinCCW { to { transform: rotate(-360deg); } }
+
+    /* Centre icon (paddle from logo) */
+    .ac-spin-icon {
+      position: absolute;
+      inset: 22px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1a3f96 0%, #2252b5 60%, #2563eb 100%);
+      box-shadow: 0 0 18px rgba(253,206,51,0.22);
+      display: flex; align-items: center; justify-content: center;
+      animation: acPulseIcon 2s ease-in-out infinite;
+    }
+    .ac-spin-icon svg { width: 28px; height: auto; }
+    @keyframes acPulseIcon {
+      0%, 100% { box-shadow: 0 0 16px rgba(253,206,51,0.22); }
+      50%       { box-shadow: 0 0 32px rgba(253,206,51,0.45); }
+    }
+
+    /* Wordmark in loader */
+    .ac-load-wordmark {
+      width: 180px; height: auto;
+      opacity: 0.9;
+      filter: drop-shadow(0 2px 8px rgba(253,206,51,0.18));
+      margin-bottom: 22px;
+    }
+
+    /* Cycling sports message */
+    .ac-load-msg {
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      color: #fdce33;
+      text-align: center;
+      min-height: 1.6em;
+      transition: opacity .25s;
+      margin-bottom: 12px;
+    }
+    .ac-load-msg.ac-fade { opacity: 0; }
+
+    /* Bouncing dots */
+    .ac-load-dots { display: flex; gap: 7px; margin-bottom: 14px; }
+    .ac-load-dots span {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #fdce33;
+      animation: acDotBounce 1.1s ease-in-out infinite;
+    }
+    .ac-load-dots span:nth-child(2) { animation-delay: .18s; background: rgba(253,206,51,0.7); }
+    .ac-load-dots span:nth-child(3) { animation-delay: .36s; background: rgba(253,206,51,0.45); }
+    @keyframes acDotBounce {
+      0%, 80%, 100% { transform: translateY(0)   scale(0.75); opacity: 0.5; }
+      40%           { transform: translateY(-9px) scale(1.15); opacity: 1;   }
+    }
+
+    /* Subtle sub-label */
+    .ac-load-sub {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.22);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Stadium arc -->
+  <div class="ac-arc"></div>
+
+  <!-- Sparkle dots scattered around -->
+  <div style="position:fixed;inset:0;pointer-events:none;z-index:1;">
+    <div class="ac-dot" style="top:10%;left:7%;animation-delay:0s;animation-duration:2.3s;"></div>
+    <div class="ac-dot" style="top:20%;left:17%;animation-delay:.5s;animation-duration:3.0s;"></div>
+    <div class="ac-dot" style="top:6%;left:33%;animation-delay:1.1s;animation-duration:2.7s;"></div>
+    <div class="ac-dot" style="top:15%;left:60%;animation-delay:1.4s;animation-duration:2.5s;"></div>
+    <div class="ac-dot" style="top:4%;left:77%;animation-delay:.3s;animation-duration:3.4s;"></div>
+    <div class="ac-dot" style="top:28%;left:91%;animation-delay:1.8s;animation-duration:2.1s;"></div>
+    <div class="ac-dot" style="top:42%;left:4%;animation-delay:.7s;animation-duration:2.8s;width:2px;height:2px;"></div>
+    <div class="ac-dot" style="top:58%;left:96%;animation-delay:2.2s;animation-duration:3.2s;width:2px;height:2px;"></div>
+    <div class="ac-dot" style="top:70%;left:12%;animation-delay:.9s;animation-duration:2.6s;width:2px;height:2px;"></div>
+    <div class="ac-dot" style="top:75%;left:85%;animation-delay:1.6s;animation-duration:2.9s;width:2px;height:2px;"></div>
+  </div>
+
+  <!-- Floating sports icons -->
+  <div class="ac-floaters">
+    <div class="ac-floater" style="left:4%;animation-duration:9s;animation-delay:0s;">⚽</div>
+    <div class="ac-floater" style="left:13%;animation-duration:11.5s;animation-delay:1.8s;">🏏</div>
+    <div class="ac-floater" style="left:23%;animation-duration:8.5s;animation-delay:3.2s;">🏆</div>
+    <div class="ac-floater" style="left:35%;animation-duration:13s;animation-delay:0.6s;">🥇</div>
+    <div class="ac-floater" style="left:50%;animation-duration:10s;animation-delay:4.5s;">🔨</div>
+    <div class="ac-floater" style="left:63%;animation-duration:9.5s;animation-delay:2.0s;">🏅</div>
+    <div class="ac-floater" style="left:74%;animation-duration:12s;animation-delay:1.2s;">⚽</div>
+    <div class="ac-floater" style="left:84%;animation-duration:8s;animation-delay:3.8s;">🏏</div>
+    <div class="ac-floater" style="left:93%;animation-duration:11s;animation-delay:0.4s;">🎯</div>
+  </div>
+
+  <!-- ════════════════ Login Card ════════════════ -->
+  <div class="ac-card">
+
+    <!-- Logo area -->
+    <div class="ac-logo-wrap">
+      <!--
+        Glow ring containing the paddle icon (left part of logo.svg).
+        We embed just the paddle path inline so it works without auth.
+      -->
+      <div class="ac-logo-ring">
+        <svg viewBox="0 0 37 37" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M0 2.229C0 0.998 0.998 0 2.229 0H34.771C36.002 0 37 0.998 37 2.229V16.643C36.549 16.638 36.067 16.633 35.553 16.627C34.861 16.620 34.110 16.612 33.295 16.603L23.274 16.489L23.298 13.887L23.318 11.291L23.718 11.201C24.721 10.980 25.327 9.897 25.007 8.913C24.863 8.458 24.419 7.966 24.007 7.784C23.649 7.638 12.479 7.506 12.069 7.645C11.629 7.803 11.156 8.286 10.994 8.767C10.761 9.435 10.907 10.092 11.405 10.599C11.693 10.893 12.164 11.135 12.484 11.153C12.612 11.164 12.628 12.016 12.623 18.260C12.617 25.060 12.609 25.350 12.437 25.344C12.146 25.326 11.661 25.577 11.308 25.933C10.223 27.006 10.729 28.775 12.190 29.022C12.352 29.048 14.969 29.071 17.994 29.063C21.764 29.058 23.602 29.023 23.834 28.951C24.284 28.803 24.816 28.282 24.954 27.854C25.294 26.779 24.645 25.649 23.572 25.480L23.287 25.437L23.311 22.836L23.336 20.234L33.383 20.334C34.770 20.347 35.967 20.359 37 20.368V37H29.868V35.663C29.868 34.924 29.269 34.325 28.530 34.325H8.470C7.731 34.325 7.133 34.924 7.133 35.663V37H0V2.229Z" fill="white"/>
+        </svg>
+      </div>
+
+      <!--
+        Full horizontal wordmark from auction_module static assets.
+        White SVG shows perfectly on the dark navy card.
+      -->
+      <img class="ac-wordmark"
+           src="/auction_login_theme/static/img/logo.svg"
+           alt="Auction Champ"/>
+
+      <div class="ac-tagline">Premier Sports Auction Platform</div>
+
+      <div class="ac-sport-strip">
+        🏏 <span class="ac-dot-sep">·</span>
+        ⚽ <span class="ac-dot-sep">·</span>
+        🎯 <span class="ac-dot-sep">·</span>
+        🏅 <span class="ac-dot-sep">·</span>
+        🔨
+      </div>
+    </div>
+
+    <div class="ac-divider"></div>
+    <div class="ac-sign-label">Sign in to Compete</div>
+
+    <!-- Error message -->
+    <t t-if="error">
+      <div class="ac-alert">
+        <span style="font-size:1.05rem;">⚠️</span>
+        <span t-esc="error"/>
+      </div>
+    </t>
+
+    <!-- Login Form -->
+    <form method="post" action="/web/login">
+      <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+      <t t-if="redirect">
+        <input type="hidden" name="redirect" t-att-value="redirect"/>
+      </t>
+
+      <div class="ac-field">
+        <label for="ac_login">Username / Email</label>
+        <div class="ac-input-wrap">
+          <span class="ac-input-icon">📧</span>
+          <input id="ac_login"
+                 class="ac-input"
+                 type="text"
+                 name="login"
+                 t-att-value="login"
+                 placeholder="your@email.com"
+                 autocomplete="username"
+                 autofocus="autofocus"
+                 required="required"/>
+        </div>
+      </div>
+
+      <div class="ac-field">
+        <label for="ac_password">Password</label>
+        <div class="ac-input-wrap">
+          <span class="ac-input-icon">🔒</span>
+          <input id="ac_password"
+                 class="ac-input"
+                 type="password"
+                 name="password"
+                 placeholder="••••••••"
+                 autocomplete="current-password"
+                 required="required"/>
+        </div>
+      </div>
+
+      <button type="submit" class="ac-btn">🔨&#160; Sign In</button>
+    </form>
+
+  </div><!-- /.ac-card -->
+
+  <!-- Scrolling sports ticker -->
+  <div class="ac-ticker-wrap">
+    <div class="ac-ticker">
+      <span>🏆 IPL Auction</span>
+      <span>⚽ Premier League Draft</span>
+      <span>🏏 Cricket Champion Bidding</span>
+      <span>🥇 Win the Auction</span>
+      <span>🔨 Hammer Time</span>
+      <span>🎯 Live Bidding Open</span>
+      <span>🏅 Champions Only</span>
+      <span>💰 Highest Bid Wins</span>
+      <span>🏆 IPL Auction</span>
+      <span>⚽ Premier League Draft</span>
+      <span>🏏 Cricket Champion Bidding</span>
+      <span>🥇 Win the Auction</span>
+      <span>🔨 Hammer Time</span>
+      <span>🎯 Live Bidding Open</span>
+      <span>🏅 Champions Only</span>
+      <span>💰 Highest Bid Wins</span>
+    </div>
+  </div>
+
+  <!-- ════════ Sign-in Loader Overlay ════════ -->
+  <div id="ac-loader">
+
+    <!-- Dual spinning rings + paddle icon -->
+    <div class="ac-spin-track">
+      <div class="ac-spin-ring"></div>
+      <div class="ac-spin-ring-inner"></div>
+      <div class="ac-spin-icon">
+        <svg viewBox="0 0 37 37" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M0 2.229C0 0.998 0.998 0 2.229 0H34.771C36.002 0 37 0.998 37 2.229V16.643C36.549 16.638 36.067 16.633 35.553 16.627C34.861 16.620 34.110 16.612 33.295 16.603L23.274 16.489L23.298 13.887L23.318 11.291L23.718 11.201C24.721 10.980 25.327 9.897 25.007 8.913C24.863 8.458 24.419 7.966 24.007 7.784C23.649 7.638 12.479 7.506 12.069 7.645C11.629 7.803 11.156 8.286 10.994 8.767C10.761 9.435 10.907 10.092 11.405 10.599C11.693 10.893 12.164 11.135 12.484 11.153C12.612 11.164 12.628 12.016 12.623 18.260C12.617 25.060 12.609 25.350 12.437 25.344C12.146 25.326 11.661 25.577 11.308 25.933C10.223 27.006 10.729 28.775 12.190 29.022C12.352 29.048 14.969 29.071 17.994 29.063C21.764 29.058 23.602 29.023 23.834 28.951C24.284 28.803 24.816 28.282 24.954 27.854C25.294 26.779 24.645 25.649 23.572 25.480L23.287 25.437L23.311 22.836L23.336 20.234L33.383 20.334C34.770 20.347 35.967 20.359 37 20.368V37H29.868V35.663C29.868 34.924 29.269 34.325 28.530 34.325H8.470C7.731 34.325 7.133 34.924 7.133 35.663V37H0V2.229Z" fill="white"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Logo wordmark -->
+    <img class="ac-load-wordmark"
+         src="/auction_login_theme/static/img/logo.svg"
+         alt="Auction Champ"/>
+
+    <!-- Cycling sporty message -->
+    <div class="ac-load-msg" id="ac-load-msg">🔨 Entering the Arena...</div>
+
+    <!-- Bouncing dots -->
+    <div class="ac-load-dots">
+      <span></span><span></span><span></span>
+    </div>
+
+    <div class="ac-load-sub">Please wait</div>
+
+  </div><!-- /#ac-loader -->
+
+  <script>
+    (function () {
+      var MESSAGES = [
+        '🔨 Entering the Arena...',
+        '🏆 Loading the Squad...',
+        '⚽ Taking the Field...',
+        '🏏 Toss in Progress...',
+        '🎯 Locking in your Bid...',
+        '🏅 Warming Up...',
+        '💰 Counting the Purse...',
+        '📋 Checking the Roster...',
+      ];
+      var idx  = 0;
+      var msgEl = document.getElementById('ac-load-msg');
+
+      function cycleMsg() {
+        msgEl.classList.add('ac-fade');
+        setTimeout(function () {
+          idx = (idx + 1) % MESSAGES.length;
+          msgEl.textContent = MESSAGES[idx];
+          msgEl.classList.remove('ac-fade');
+        }, 260);
+      }
+
+      document.querySelector('form').addEventListener('submit', function () {
+        document.getElementById('ac-loader').classList.add('ac-visible');
+        setInterval(cycleMsg, 1400);
+      });
+    })();
+  </script>
+
+</body>
+</html>
+</template>
+
+</odoo>

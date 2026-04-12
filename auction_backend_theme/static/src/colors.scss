@@ -1,0 +1,14 @@
+// ─── Auction Champ Brand Colours ────────────────────────────────────────────
+// These two variables are loaded into Bootstrap's variable layer and cascade
+// through all of Odoo's built-in SCSS.
+//
+// $o-brand-odoo   → navbar/sidebar backgrounds, dark surfaces
+// $o-brand-primary → primary buttons, active states, links, highlights
+
+$o-brand-odoo:    #0d1e3a;   // deep navy  (was #243742 in muk)
+$o-brand-primary: #2252b5;   // auction blue (was #5D8DA8 in muk)
+
+// ── Base font size — must be here (primary variables) so Bootstrap picks it up.
+// Odoo default is 13px; 15px gives a noticeably larger, more readable result.
+$o-font-size-base: 15px;
+$font-size-base:   0.9375rem; // 15px expressed in rem (= 15/16)
