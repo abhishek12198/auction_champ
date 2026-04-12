@@ -90,6 +90,32 @@
 }
 
 // ── Responsive navbar adjustments ────────────────────────────────────────────
+
+// Tablet (md): tighten items so they don't crowd
+@include media-breakpoint-only(md) {
+    .o_main_navbar {
+        .o_menu_brand { font-size: 0.88rem; }
+
+        .o_menu_sections {
+            .o_nav_entry,
+            .o_dropdown > .dropdown-toggle {
+                font-size: 0.88rem;
+                padding: 0 6px;
+                letter-spacing: 0.03em;
+            }
+        }
+
+        .o_menu_systray > * > .dropdown-toggle {
+            padding: 0 8px;
+        }
+
+        .ac-navbar-logo .ac-navbar-logo-img {
+            height: 22px;
+        }
+    }
+}
+
+// Mobile (sm and below): collapse menus
 @include media-breakpoint-down(sm) {
     .o_main_navbar {
         grid-template-areas: "apps brand systray sections";
@@ -102,19 +128,36 @@
             width: $o-navbar-height;
         }
         .o_menu_sections_more .dropdown-toggle {
-            font-size: $font-size-lg;
+            font-size: 1.2rem;
         }
         .o_menu_systray {
             margin-left: auto;
+
+            // Ensure systray icons have a minimum 44px tap target on mobile
+            > * > .dropdown-toggle {
+                min-width: 44px;
+                min-height: 44px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0 10px;
+            }
         }
         .o_user_menu > .dropdown-toggle {
             white-space: nowrap;
             &::before, &::after { content: normal; }
             .oe_topbar_name { display: none; }
         }
+        // Full-screen dropdown menu on mobile: large, readable items
         .show .dropdown-menu {
             @include ac-full-screen-menu();
-            font-size: $font-size-lg;
+            font-size: 1.1rem;
+
+            .dropdown-item {
+                font-size: 1.1rem;
+                padding: 14px 20px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            }
         }
     }
 }

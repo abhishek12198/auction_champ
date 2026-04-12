@@ -213,6 +213,71 @@
     }
 }
 
+// ── Responsive app drawer ─────────────────────────────────────────────────────
+
+// Tablet: slightly smaller cards, tighter grid
+@include media-breakpoint-only(md) {
+    .ac-apps-grid {
+        gap: 16px;
+        padding: 12px 24px 24px;
+    }
+
+    .ac-apps-header {
+        padding: 24px 16px 16px;
+        .ac-apps-logo { height: 30px; }
+        .ac-apps-tagline { font-size: 0.9rem; letter-spacing: 0.18em; }
+    }
+
+    .o_app {
+        width: 170px;
+
+        > a {
+            padding: 24px 14px 18px;
+
+            .ac-app-icon-wrap { width: 76px; height: 76px; border-radius: 18px; }
+            .ac-app-icon      { width: 52px; height: 52px; }
+            .ac-app-name      { font-size: 0.92rem; }
+        }
+    }
+}
+
+// Mobile: 2-column grid, compact cards, hide floaters for clarity
+@include media-breakpoint-down(sm) {
+    .ac-apps-grid {
+        gap: 10px;
+        padding: 8px 12px 20px;
+    }
+
+    .ac-apps-header {
+        padding: 14px 12px 10px;
+        .ac-apps-logo { height: 22px; }
+        .ac-apps-tagline { font-size: 0.8rem; letter-spacing: 0.12em; }
+        &::after { margin-top: 8px; width: 40px; }
+    }
+
+    // Float emojis are distracting on small screens
+    .ac-apps-floaters { display: none; }
+
+    .ac-apps-ticker-wrap { padding: 5px 0; }
+    .ac-apps-ticker span { font-size: 0.78rem; }
+
+    .o_app {
+        // 2 per row on phones
+        width: calc(50% - 5px);
+        max-width: 180px;
+
+        > a {
+            padding: 16px 10px 14px;
+            border-radius: 10px;
+
+            .ac-app-icon-wrap { width: 58px; height: 58px; border-radius: 14px; margin-bottom: 10px; }
+            .ac-app-icon      { width: 40px; height: 40px; }
+            // Keep name readable — 0.92rem = 13.8px at 15px base
+            .ac-app-name      { font-size: 0.92rem; letter-spacing: 0.03em; }
+        }
+    }
+}
+
 @keyframes acTickerScroll {
     0%   { transform: translateX(0); }
     100% { transform: translateX(-50%); }

@@ -50,3 +50,41 @@
         font-size: 1rem;
     }
 }
+
+// ── Responsive list view ──────────────────────────────────────────────────────
+
+// Tablet: tighter header padding
+@include media-breakpoint-only(md) {
+    .o_list_view {
+        thead > tr > th { padding: 8px 6px; font-size: 0.85rem; }
+        tbody > tr      { font-size: 0.95rem; }
+    }
+}
+
+// Mobile: compact cells, allow horizontal scroll so no data is hidden
+@include media-breakpoint-down(sm) {
+    // Outer wrapper gets horizontal scroll
+    .o_list_renderer,
+    .o_list_view .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .o_list_view {
+        thead > tr > th {
+            padding: 6px 4px;
+            // Keep font size readable — do NOT reduce below desktop value
+            font-size: 0.9rem;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+        }
+
+        tbody > tr {
+            font-size: 1rem;
+
+            > td { padding: 6px 4px; }
+        }
+
+        tfoot > tr > td { padding: 6px 4px; font-size: 1rem; }
+    }
+}

@@ -105,3 +105,43 @@
         border-bottom: 1px solid rgba(10, 20, 41, 0.1);
     }
 }
+
+// ── Responsive form view ──────────────────────────────────────────────────────
+
+// Tablet: tighten stat buttons
+@include media-breakpoint-only(md) {
+    .o_form_view {
+        .o_stat_button { min-width: 80px; padding: 4px 8px; }
+        .o_statusbar_status .btn { padding: 4px 8px; font-size: 0.88rem; }
+    }
+}
+
+// Mobile: edge-to-edge form sheet, compact statusbar
+@include media-breakpoint-down(sm) {
+    .o_form_view {
+        // Remove side margins so the form uses full phone width
+        .o_form_sheet {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
+        }
+
+        // Keep labels readable — do NOT reduce below desktop value
+        .o_wrap_label label,
+        .o_field_label { font-size: 0.92rem; }
+
+        // Statusbar: smaller padding so buttons fit, but keep font readable
+        .o_form_statusbar {
+            > .o_statusbar_buttons .btn { padding: 3px 8px; font-size: 0.9rem; }
+            .o_statusbar_status .btn    { padding: 3px 6px; font-size: 0.88rem; }
+        }
+
+        // Stat buttons: allow wrapping
+        .o_stat_info { min-width: 0; }
+
+        // Chatter: full width beneath the form on narrow screens
+        .o_thread_message_content { font-size: 1.05rem; }
+    }
+}

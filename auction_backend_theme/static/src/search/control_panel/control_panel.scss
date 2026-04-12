@@ -156,3 +156,52 @@
     }
 }
 
+// ── Responsive control panel ──────────────────────────────────────────────────
+
+// Tablet: shrink text so breadcrumb + search + buttons all fit on one row
+@include media-breakpoint-only(md) {
+    .o_control_panel {
+        .breadcrumb-item,
+        .breadcrumb-item .o_back_button { font-size: 0.88rem; }
+        .breadcrumb-item.active         { font-size: 0.92rem; }
+        .o_cp_buttons .btn              { padding: 4px 10px; font-size: 0.9rem; }
+    }
+}
+
+// Mobile: stack buttons below search, full-width search input
+@include media-breakpoint-down(sm) {
+    .o_control_panel {
+        padding: 6px 8px !important;
+
+        .o_control_panel_main { flex-wrap: wrap; gap: 6px; }
+
+        // Breadcrumb clips long names — keep font readable
+        .breadcrumb { flex-wrap: nowrap; overflow: hidden; }
+        .breadcrumb-item,
+        .breadcrumb-item .o_back_button { font-size: 0.95rem; }
+        .breadcrumb-item.active {
+            font-size: 1rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 55vw;
+        }
+
+        // Search spans full width on its own row
+        .o_searchview { order: 2; width: 100%; flex: 1 1 100%; }
+
+        // Action buttons wrap below the search
+        .o_cp_buttons {
+            order: 3;
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            .btn { flex: 1 1 auto; font-size: 1rem; padding: 6px 10px; }
+        }
+
+        .o_pager             { font-size: 1rem; }
+        .o_cp_switch_buttons .btn { padding: 6px 8px; }
+    }
+}
+

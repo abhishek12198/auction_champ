@@ -35,6 +35,7 @@ $ac-sidebar-color: $ac-text-light;
 $o-list-footer-bg-color: $ac-navy-dark;
 
 // ── Chatter ──────────────────────────────────────────────────────────────────
-$ac-form-min-width:    835px;
-$ac-chatter-min-width: 550px;
+// No hard min-widths — let Odoo's own chatter layout flex to the viewport.
+$ac-form-min-width:    0;
+$ac-chatter-min-width: 280px;
 $ac-chatter-max-width: 600px;

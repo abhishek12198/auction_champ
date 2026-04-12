@@ -19,3 +19,17 @@ body {
 .o_view_controller {
     font-size: 15px;
 }
+
+// ── Mobile: keep the same 15 px base on all screen sizes ─────────────────────
+// Do NOT scale the root font down on small screens — doing so compounds with
+// any per-component rem reductions and produces unreadably tiny text (~10 px).
+// Layout adjustments (stacking, wrapping, scrolling) handle narrow viewports.
+@include media-breakpoint-down(sm) {
+    html { font-size: 15px !important; }
+    body { font-size: 15px; }
+
+    // Ensure the action manager fills the full screen (no sidebar offset on mobile)
+    .o_action_manager {
+        padding-left: 0 !important;
+    }
+}

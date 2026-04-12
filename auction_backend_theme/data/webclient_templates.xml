@@ -10,6 +10,8 @@
               name="Auction Backend Theme Fonts">
         <xpath expr="//t[@t-set='head']" position="after">
             <t t-set="head_auction_fonts">
+                <!-- Viewport meta: prevents mobile browsers from zooming out to desktop width -->
+                <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover"/>
                 <link rel="preconnect" href="https://fonts.googleapis.com"/>
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
                 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&amp;family=Bebas+Neue&amp;display=swap" rel="stylesheet"/>
