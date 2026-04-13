@@ -46,3 +46,6 @@ access_auction_auction_tier_limit_admin,auction.auction.tier.limit (admin),aucti
 access_auction_start_auction_tier_limit_admin,auction.start.auction.tier.limit (admin),auction_module.model_auction_start_auction_tier_limit,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_pdf_to_png_admin,auction.pdf.to.png (admin),auction_module.model_auction_pdf_to_png,auction_module.group_auction_group_admin,1,1,1,1
 access_my_service,my_service,base.model_res_users,,1,1,1,1
+access_auction_team_player_public,auction.team.player (public read for card),auction_module.model_auction_team_player,base.group_public,1,0,0,0
+access_auction_tournament_public,auction.tournament (public read for card),auction_module.model_auction_tournament,base.group_public,1,0,0,0
+access_auction_player_tier_public,auction.player.tier (public read for card),auction_module.model_auction_player_tier,base.group_public,1,0,0,0
