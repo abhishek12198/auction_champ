@@ -2,6 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import re
+import logging
 import werkzeug
 import itertools
 import pytz
@@ -22,6 +23,7 @@ from odoo.tools import html2plaintext
 from odoo.tools.misc import get_lang
 from odoo.tools import sql
 
+_logger = logging.getLogger(__name__)
 
 
 class Auction(http.Controller):
@@ -763,8 +765,44 @@ class Auction(http.Controller):
         }
         report_ref = report_map.get(theme, 'auction_module.action_report_player_card')
 
-        report = request.env.ref(report_ref).sudo()
-        pdf_content, _mime = report._render_qweb_pdf([player_id])
+        try:
+            report = request.env.ref(report_ref).sudo()
+            pdf_content, _mime = report._render_qweb_pdf([player_id])
+        except Exception:
+            _logger.exception(
+                "Player card PDF generation failed for player_id=%s theme=%s",
+                player_id, theme
+            )
+            # Return a readable HTML error page instead of a raw 500
+            body = u"""
+                <html><head><meta charset="UTF-8"/>
+                <style>
+                    body{{font-family:sans-serif;display:flex;align-items:center;
+                          justify-content:center;min-height:100vh;margin:0;
+                          background:#f8f8f8;}}
+                    .box{{text-align:center;padding:2rem;max-width:480px;}}
+                    h2{{color:#c0392b;}} p{{color:#555;line-height:1.6;}}
+                    a{{color:#2980b9;}}
+                </style></head>
+                <body><div class="box">
+                    <h2>&#9888; Player Card Unavailable</h2>
+                    <p>We could not generate your player card right now.<br/>
+                    This is usually caused by a large or unsupported photo format
+                    uploaded from a mobile device.</p>
+                    <p>Please try again in a moment, or contact the organiser
+                    if the problem persists.</p>
+                    <p><a href="javascript:history.back()">&#8592; Go Back</a></p>
+                </div></body></html>
+            """.format()
+            return request.make_response(
+                body.encode('utf-8'),
+                headers=[
+                    ('Content-Type', 'text/html; charset=utf-8'),
+                    ('Cache-Control', 'no-store'),
+                ],
+                status=503,
+            )
+
         filename = 'PlayerCard_%s.pdf' % (player.name or player_id)
         return request.make_response(
             pdf_content,
