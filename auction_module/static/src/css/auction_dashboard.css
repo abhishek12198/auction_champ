@@ -1,0 +1,409 @@
+/* ════════════════════════════════════════════
+   Auction Dashboard – Odoo 15 Backend Widget
+   Header + body row (left 260px | right flex)
+   Left:  2×2 stat cards + pie chart (stacked)
+   Right: team table (flex:1) + bid cards strip
+   ════════════════════════════════════════════ */
+
+.o_auction_dashboard {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 14px;
+    background: linear-gradient(150deg, #0d1b3e 0%, #152a52 55%, #1c3060 100%);
+    color: #e8eaf6;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 14px;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* ── Header ── */
+.ad-hdr {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    height: 40px;
+    background: rgba(0,0,0,.25);
+    border-radius: 10px;
+    padding: 0 16px;
+    border: 1px solid rgba(255,255,255,.08);
+}
+.ad-hdr-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #fff;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ad-live-badge {
+    font-size: .72rem;
+    color: #a5d6a7;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    background: rgba(102,187,106,.15);
+    border: 1px solid rgba(102,187,106,.3);
+    padding: 3px 10px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    animation: pulse-badge 2s ease infinite;
+}
+@keyframes pulse-badge {
+    0%,100% { opacity:1; }
+    50%      { opacity:.5; }
+}
+.ad-refresh-btn {
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.2);
+    color: #fff;
+    padding: 4px 14px;
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: .85rem;
+    flex-shrink: 0;
+    transition: background .15s;
+}
+.ad-refresh-btn:hover { background: rgba(255,255,255,.22); }
+
+/* ── Body: left col + right col ── */
+.ad-body {
+    flex: 1;
+    display: flex;
+    gap: 10px;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* ── Left column: 60% of body ── */
+.ad-left {
+    flex: 3;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+}
+
+/* 2×2 stat cards */
+.ad-stat-cards {
+    flex-shrink: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 8px;
+    height: 160px;
+}
+.ad-stat {
+    border-radius: 10px;
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.ad-stat.draft   { background: rgba(100,181,246,.15); border: 1px solid rgba(100,181,246,.4); }
+.ad-stat.auction { background: rgba(255,202,40,.15);  border: 1px solid rgba(255,202,40,.4); }
+.ad-stat.sold    { background: rgba(102,187,106,.15); border: 1px solid rgba(102,187,106,.4); }
+.ad-stat.unsold  { background: rgba(239,83,80,.15);   border: 1px solid rgba(239,83,80,.4); }
+.ad-stat-num {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+.ad-stat.draft   .ad-stat-num { color: #64b5f6; }
+.ad-stat.auction .ad-stat-num { color: #ffca28; }
+.ad-stat.sold    .ad-stat-num { color: #66bb6a; }
+.ad-stat.unsold  .ad-stat-num { color: #ef5350; }
+.ad-stat-lbl {
+    font-size: .65rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: rgba(255,255,255,.6);
+    margin-top: 5px;
+}
+
+/* Pie card — fills remaining left col height */
+.ad-pie-card { flex: 1; overflow: hidden; }
+
+.ad-pie-wrap {
+    width: 220px;
+    height: 220px;
+    margin: 6px auto 8px;
+    flex-shrink: 0;
+}
+
+.ad-legend {
+    font-size: .8rem;
+    color: rgba(255,255,255,.85);
+    padding: 0 4px;
+}
+.ad-legend-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 5px;
+}
+.ad-dot {
+    width: 11px; height: 11px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+.ad-legend-total {
+    margin-top: 7px;
+    font-size: .85rem;
+    font-weight: 700;
+    color: #fff;
+    border-top: 1px solid rgba(255,255,255,.12);
+    padding-top: 6px;
+}
+
+/* ── Right column: 40% of body (table only) ── */
+.ad-right {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* ── Card base ── */
+.ad-card {
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 12px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+    box-sizing: border-box;
+}
+.ad-card-title {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: #90caf9;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+
+/* ── Team statistics table ── */
+.ad-table-card { flex: 1; }
+
+.ad-table-scroll {
+    flex: 1;
+    overflow: auto;       /* both axes scrollable */
+    min-height: 0;
+    border-radius: 6px;
+}
+.ad-table-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+.ad-table-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,.2);
+    border-radius: 3px;
+}
+
+.ad-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .88rem;    /* bigger table text */
+}
+.ad-table th {
+    padding: 7px 12px;
+    text-align: left;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #90caf9;
+    border-bottom: 1px solid rgba(255,255,255,.12);
+    background: #152343;
+    position: sticky;
+    top: 0;
+    white-space: nowrap;
+    z-index: 1;
+}
+.ad-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+    vertical-align: middle;
+    white-space: nowrap;
+}
+.ad-table tbody tr:hover td { background: rgba(255,255,255,.05); }
+
+.ad-center { text-align: center; }
+
+.ad-team-cell { display: flex; align-items: center; gap: 7px; }
+
+.ad-tbl-logo {
+    width: 26px; height: 26px;
+    border-radius: 5px;
+    object-fit: contain;
+    background: rgba(255,255,255,.08);
+    flex-shrink: 0;
+}
+.ad-tbl-logo-ph {
+    width: 26px; height: 26px;
+    border-radius: 5px;
+    background: rgba(255,255,255,.12);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .72rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.ad-prog-wrap {
+    width: 70px;
+    background: rgba(255,255,255,.08);
+    border-radius: 3px;
+    height: 5px;
+    margin-top: 4px;
+}
+.ad-prog-bar { height: 100%; border-radius: 3px; transition: width .5s; }
+
+.ad-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: .78rem;
+    font-weight: 700;
+}
+.ad-badge-g { background: rgba(102,187,106,.2); color: #a5d6a7; border: 1px solid rgba(102,187,106,.3); }
+.ad-badge-y { background: rgba(255,202,40,.2);  color: #ffe082; border: 1px solid rgba(255,202,40,.3); }
+.ad-badge-r { background: rgba(239,83,80,.2);   color: #ef9a9a; border: 1px solid rgba(239,83,80,.3); }
+
+.ad-max-call { color: #ffcc02; font-weight: 700; font-size: .9rem; }
+.ad-no-data  { color: rgba(255,255,255,.4); text-align: center; padding: 2rem; font-size: .9rem; }
+
+/* ── Bid cards strip — full width bottom row ── */
+.ad-bid-card-wrap {
+    flex-shrink: 0;
+    height: 165px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.ad-bid-scroll {
+    flex: 1;
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 2px;
+    min-height: 0;
+}
+.ad-bid-scroll::-webkit-scrollbar { height: 5px; }
+.ad-bid-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,.2);
+    border-radius: 2px;
+}
+
+.ad-bid-card {
+    flex-shrink: 0;
+    width: 210px;
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform .15s, box-shadow .15s;
+}
+.ad-bid-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,.45);
+}
+
+.ad-bid-hdr {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: rgba(0,0,0,.22);
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    flex-shrink: 0;
+}
+.ad-bid-logo {
+    width: 26px; height: 26px;
+    border-radius: 5px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+.ad-bid-logo-ph {
+    width: 26px; height: 26px;
+    border-radius: 5px;
+    background: rgba(255,255,255,.12);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .82rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.ad-bid-team-name {
+    font-weight: 700;
+    font-size: .82rem;
+    color: #fff;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ad-bid-body {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 10px;
+    flex: 1;
+}
+.ad-bid-photo {
+    width: 52px; height: 52px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid rgba(255,255,255,.15);
+    flex-shrink: 0;
+}
+.ad-bid-photo-ph {
+    width: 52px; height: 52px;
+    border-radius: 8px;
+    background: rgba(255,255,255,.1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    flex-shrink: 0;
+}
+
+.ad-bid-info { flex: 1; min-width: 0; }
+.ad-bid-name {
+    font-size: .82rem;
+    font-weight: 600;
+    color: #e3f2fd;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ad-bid-role { font-size: .72rem; color: rgba(255,255,255,.5); margin-top: 2px; }
+.ad-bid-pts {
+    display: inline-block;
+    background: linear-gradient(135deg, #f9a825, #ff6f00);
+    color: #fff;
+    font-weight: 800;
+    font-size: .78rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 4px;
+}
+.ad-bid-empty {
+    color: rgba(255,255,255,.35);
+    font-size: .82rem;
+    text-align: center;
+    padding: 12px 6px;
+}

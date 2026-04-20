@@ -30,7 +30,7 @@
                             <i class="fa fa-shield"/> Select Team
                         </div>
                         <field name="team_selection" widget="selection_badge"/>
-                        <field name="team_id" invisible="1" required="0"
+                        <field name="team_id" invisible="1" required="0" force_save="1"
                                options="{'no_open': True, 'no_create': True}"/>
                     </div>
 

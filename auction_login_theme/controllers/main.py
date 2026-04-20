@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import http
-from odoo.addons.web.controllers.main import Home
+from odoo.addons.web.controllers.main import Home, Session
 from odoo.addons.website.controllers.main import Website
 from odoo.http import request
 
@@ -24,3 +24,13 @@ class AuctionLoginController(Home):
         if hasattr(response, 'template') and response.template == 'web.login':
             response.template = 'auction_login_theme.login'
         return response
+
+
+class AuctionLogoutController(Session):
+    """Override logout to redirect with a ?logged_out=1 flag so the login page
+    can display a goodbye animation before showing the sign-in form."""
+
+    @http.route('/web/session/logout', type='http', auth='none')
+    def logout(self, redirect='/web'):
+        request.session.logout(keep_db=True)
+        return request.redirect('/web/login?logged_out=1', 303)

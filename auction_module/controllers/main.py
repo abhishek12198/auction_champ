@@ -699,6 +699,540 @@ class Auction(http.Controller):
             headers=[('Content-Type', 'application/json'), ('Cache-Control', 'no-store')]
         )
 
+    # ── Auction Dashboard ─────────────────────────────────────────────────────
+
+    @http.route('/auction/dashboard', type='http', auth='user', website=True)
+    def auction_dashboard(self, **kw):
+        tournament = request.env['auction.tournament'].sudo().search(
+            [('active', '=', True)], limit=1
+        )
+        return request.render('auction_module.auction_dashboard_template', {
+            'tournament': tournament,
+        })
+
+    @http.route('/auction/dashboard/data', type='http', auth='user', website=False, csrf=False)
+    def auction_dashboard_data(self, **kw):
+        env = request.env
+        tournament = env['auction.tournament'].sudo().search(
+            [('active', '=', True)], limit=1
+        )
+
+        # Always count ALL players by state (not filtered by tournament).
+        # This ensures the registration pie chart always shows real data,
+        # even if some players were created without a tournament link.
+        draft_count   = env['auction.team.player'].sudo().search_count([('state', '=', 'draft')])
+        auction_count = env['auction.team.player'].sudo().search_count([('state', '=', 'auction')])
+        sold_count    = env['auction.team.player'].sudo().search_count([('state', '=', 'sold')])
+        unsold_count  = env['auction.team.player'].sudo().search_count([('state', '=', 'unsold')])
+
+        def pub_img(model, record_id, field):
+            return '/auction/public/image/%s/%d/%s' % (model, record_id, field)
+
+        auc_domain = [('tournament_id', '=', tournament.id)] if tournament else []
+        auctions = env['auction.auction'].sudo().search(auc_domain)
+
+        teams_data = []
+        for auc in auctions:
+            team = auc.team_id
+            if not team:
+                continue
+
+            top_player_line = env['auction.auction.player'].sudo().search(
+                [('auction_id', '=', auc.id)],
+                order='points desc',
+                limit=1,
+            )
+
+            top_player_info = None
+            if top_player_line:
+                player = top_player_line.player_id
+                top_player_info = {
+                    'name': player.name or '',
+                    'photo_url': pub_img('auction.team.player', player.id, 'photo') if player.photo else '',
+                    'points': top_player_line.points,
+                    'role': player.role or '',
+                }
+
+            teams_data.append({
+                'id': team.id,
+                'name': team.name or '',
+                'manager': team.manager or '',
+                'logo_url': pub_img('auction.team', team.id, 'logo') if team.logo else '',
+                'total_points': auc.total_point,
+                'remaining_points': auc.remaining_points,
+                'remaining_players': auc.remaining_players_count,
+                'max_players': auc.max_players,
+                'max_call': auc.max_call,
+                'players_bought': len(auc.player_ids),
+                'top_player': top_player_info,
+            })
+
+        result = {
+            'player_counts': {
+                'draft':   draft_count,
+                'auction': auction_count,
+                'sold':    sold_count,
+                'unsold':  unsold_count,
+            },
+            'teams': teams_data,
+            'tournament': {
+                'name':        tournament.name        if tournament else '',
+                'description': tournament.description if tournament else '',
+            },
+        }
+
+        return request.make_response(
+            json.dumps(result),
+            headers=[('Content-Type', 'application/json'), ('Cache-Control', 'no-store')],
+        )
+
+    # ── Squad Poster ──────────────────────────────────────────────────────────
+
+    @http.route('/auction/squad-poster/<int:auction_id>', type='http', auth='user', website=False, csrf=False)
+    def squad_poster_page(self, auction_id, **kw):
+        """Renders a full-page IPL-style squad poster that auto-downloads as a high-res JPG."""
+        env = request.env
+        auction = env['auction.auction'].sudo().browse(auction_id)
+        if not auction.exists():
+            return request.not_found()
+
+        team       = auction.team_id
+        tournament = auction.tournament_id
+
+        def b64uri(binary):
+            if not binary:
+                return ''
+            raw = binary if isinstance(binary, str) else binary.decode('utf-8')
+            return 'data:image/png;base64,' + raw
+
+        # ── Palette ──────────────────────────────────────────────────────────
+        DARK  = '#020c1b'
+        NAVY  = '#0d1b3e'
+        NAVY2 = '#16213e'
+        NAVY3 = '#0a0f1e'   # icon-section bg
+        GOLD  = '#E8A020'
+        GOLD2 = '#F5C842'
+        WHITE = '#FFFFFF'
+        LIGHT = '#f0f4f8'   # squad section bg
+        CARD  = '#FFFFFF'
+
+        # ── Role colours ─────────────────────────────────────────────────────
+        ROLE_CLR = {
+            'batter':         '#1a7f37',
+            'batsman':        '#1a7f37',
+            'bowler':         '#1565C0',
+            'all rounder':    '#E65100',
+            'allrounder':     '#E65100',
+            'all-rounder':    '#E65100',
+            'wicket keeper':  '#6A1B9A',
+            'wicketkeeper':   '#6A1B9A',
+            'wicket-keeper':  '#6A1B9A',
+            'wk':             '#6A1B9A',
+        }
+
+        def rc(role):
+            lo = (role or '').lower().strip()
+            return next((v for k, v in ROLE_CLR.items() if k in lo), '#374151')
+
+        # ── Data ─────────────────────────────────────────────────────────────
+        team_logo_src  = b64uri(team.logo)
+        tourn_logo_src = b64uri(tournament.logo) if tournament and tournament.logo else ''
+        icon_players    = list(team.key_player_ids)
+        icon_ids        = set(team.key_player_ids.ids)
+        regular_players = [p for p in auction.player_ids if p.player_id.id not in icon_ids]
+        total_players   = len(icon_players) + len(regular_players)
+
+        # ── Photo helpers ─────────────────────────────────────────────────────
+        def tp_photo(p, size):
+            """Square photo for auction.team.player (icon player)."""
+            src = b64uri(p.photo)
+            if src:
+                return (
+                    '<div style="width:%(s)dpx;height:%(s)dpx;border-radius:8px;'
+                    'overflow:hidden;margin:0 auto;">'
+                    '<img src="%(src)s" style="width:100%%;height:100%%;object-fit:cover;">'
+                    '</div>'
+                ) % {'s': size, 'src': src}
+            initials = ''.join(w[0] for w in (p.name or 'P').split()[:2]).upper()
+            return (
+                '<div style="width:%(s)dpx;height:%(s)dpx;border-radius:8px;overflow:hidden;'
+                'margin:0 auto;background:%(n)s;display:flex;align-items:center;'
+                'justify-content:center;font-size:%(fs)dpx;color:%(g)s;font-weight:900;">%(i)s</div>'
+            ) % {'s': size, 'n': NAVY, 'fs': size // 3, 'g': GOLD2, 'i': initials}
+
+        def ap_photo(p, size):
+            """Square photo for auction.auction.player (regular squad player)."""
+            src = b64uri(p.player_id.photo)
+            color = rc(p.player_id.role or '')
+            if src:
+                return (
+                    '<div style="width:%(s)dpx;height:%(s)dpx;border-radius:8px;overflow:hidden;'
+                    'margin:0 auto;border:3px solid %(c)s;'
+                    'box-shadow:0 4px 12px %(c)s33;">'
+                    '<img src="%(src)s" style="width:100%%;height:100%%;object-fit:cover;">'
+                    '</div>'
+                ) % {'s': size, 'c': color, 'src': src}
+            initials = ''.join(w[0] for w in (p.player_id.name or 'P').split()[:2]).upper()
+            return (
+                '<div style="width:%(s)dpx;height:%(s)dpx;border-radius:8px;overflow:hidden;'
+                'margin:0 auto;background:%(bg)s;border:3px solid %(c)s;'
+                'display:flex;align-items:center;justify-content:center;'
+                'font-size:%(fs)dpx;color:%(c)s;font-weight:900;">%(i)s</div>'
+            ) % {'s': size, 'bg': LIGHT, 'c': color, 'fs': size // 3, 'i': initials}
+
+        # ══════════════════════════════════════════════════════════════════════
+        # LANDSCAPE POSTER — Left hero panel + right squad content
+        # ══════════════════════════════════════════════════════════════════════
+
+        # AuctionChamp app logo (white SVG)
+        _logo_path = os.path.join(os.path.dirname(__file__), '..', 'static', 'src', 'assets', 'images', 'logo.svg')
+        try:
+            with open(_logo_path, 'rb') as _lf:
+                app_logo_src = 'data:image/svg+xml;base64,' + base64.b64encode(_lf.read()).decode('utf-8')
+        except Exception:
+            app_logo_src = ''
+
+        tourn_name = (tournament.name or '') if tournament else ''
+        tourn_desc = (tournament.description or '') if tournament else ''
+
+        # Tournament logo HTML
+        if tourn_logo_src:
+            tlogo_html = '<img src="%(src)s" style="width:100%%;height:100%%;object-fit:contain;">' % {'src': tourn_logo_src}
+        else:
+            tlogo_html = '<span style="color:%(g)s;font-size:48px;">&#127942;</span>' % {'g': GOLD}
+
+        # ── SECTION 1: LEFT HERO PANEL (Tournament info, 480px wide) ─────────────
+        tourn_section = (
+            '<div style="flex:0 0 480px;background:%(n)s;'
+            'background-image:repeating-linear-gradient(45deg,rgba(255,255,255,0.025) 0,rgba(255,255,255,0.025) 2px,transparent 2px,transparent 24px);'
+            'padding:36px 32px;display:flex;flex-direction:column;align-items:center;justify-content:center;'
+            'position:relative;overflow:hidden;border-right:2px solid rgba(232,160,32,0.25);">'
+
+            # Decorative circles in background
+            '<div style="position:absolute;top:-80px;right:-80px;width:260px;height:260px;'
+            'border-radius:50%%;border:1px solid rgba(232,160,32,0.12);"></div>'
+            '<div style="position:absolute;bottom:-100px;left:-100px;width:300px;height:300px;'
+            'border-radius:50%%;border:1px solid rgba(232,160,32,0.10);"></div>'
+
+            # AuctionChamp logo badge (top-right corner)
+            '<div style="position:absolute;top:16px;right:16px;'
+            'display:flex;align-items:center;gap:6px;'
+            'background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);'
+            'border-radius:20px;padding:6px 12px;">'
+            '<img src="%(al)s" style="height:16px;width:auto;opacity:0.9;">'
+            '</div>'
+
+            # Tournament logo (large, centered)
+            '<div style="width:140px;height:140px;border-radius:50%%;'
+            'background:linear-gradient(135deg,%(g)s,%(g2)s);padding:4px;'
+            'margin-bottom:24px;box-shadow:0 0 40px %(g)s77;">'
+            '<div style="width:100%%;height:100%%;border-radius:50%%;overflow:hidden;'
+            'background:%(n)s;">%(tlogo)s</div>'
+            '</div>'
+
+            # Tournament name
+            '<div style="color:%(w)s;font-size:32px;font-weight:900;text-align:center;'
+            'letter-spacing:2px;text-transform:uppercase;line-height:1.1;'
+            'text-shadow:0 2px 20px rgba(0,0,0,0.4);margin-bottom:12px;">%(tn)s</div>'
+
+            # Description
+            '<div style="color:rgba(255,255,255,0.75);font-size:14px;text-align:center;'
+            'letter-spacing:1px;font-style:italic;margin-bottom:20px;line-height:1.4;">%(desc)s</div>'
+
+            # Gold divider
+            '<div style="width:100px;height:2px;background:linear-gradient(90deg,transparent,%(g)s,%(g2)s,%(g)s,transparent);'
+            'margin:0 auto 20px;border-radius:1px;"></div>'
+
+            # Subtitle
+            '<div style="color:%(g)s;font-size:10px;font-weight:bold;letter-spacing:6px;'
+            'text-transform:uppercase;opacity:0.85;">OFFICIAL SQUAD</div>'
+
+            '</div>'
+        ) % {'n': NAVY, 'g': GOLD, 'g2': GOLD2, 'w': WHITE, 'al': app_logo_src,
+             'tlogo': tlogo_html, 'tn': tourn_name, 'desc': tourn_desc}
+
+        # ── SECTION 2: TEAM INFO & SQUAD (right side, 1440px wide) ──────────────
+        right_container_start = (
+            '<div style="flex:1;display:flex;flex-direction:column;'
+            'overflow:hidden;min-width:0;">'
+        )
+
+        # ══════════════════════════════════════════════════════════════════════
+        # SECTION 2 — Team Banner
+        # ══════════════════════════════════════════════════════════════════════
+        if team_logo_src:
+            tl_el = (
+                '<div style="width:120px;height:120px;border-radius:12px;'
+                'background:linear-gradient(135deg,%(g)s,%(g2)s);padding:4px;flex-shrink:0;'
+                'box-shadow:0 0 30px %(g)s55;">'
+                '<div style="width:100%%;height:100%%;border-radius:10px;overflow:hidden;'
+                'background:%(n)s;padding:8px;">'
+                '<img src="%(src)s" style="width:100%%;height:100%%;object-fit:contain;">'
+                '</div></div>'
+            ) % {'g': GOLD, 'g2': GOLD2, 'n': NAVY2, 'src': team_logo_src}
+        else:
+            initial = (team.name or 'T')[0].upper()
+            tl_el = (
+                '<div style="width:120px;height:120px;border-radius:12px;'
+                'background:linear-gradient(135deg,%(g)s,%(g2)s);flex-shrink:0;'
+                'display:flex;align-items:center;justify-content:center;'
+                'font-size:52px;color:%(n)s;font-weight:900;'
+                'box-shadow:0 0 30px %(g)s55;">%(i)s</div>'
+            ) % {'g': GOLD, 'g2': GOLD2, 'n': NAVY2, 'i': initial}
+
+        team_name    = team.name or ''
+        team_name_fs = max(24, min(46, 46 - max(0, len(team_name) - 14)))
+
+        team_section = (
+            '<div style="flex:0 0 auto;background:linear-gradient(90deg,%(n)s 0%%,%(n2)s 100%%);'
+            'border-bottom:2px solid %(g)s;padding:28px 32px;display:flex;align-items:center;gap:28px;">'
+
+            '%(tl)s'
+
+            '<div style="flex:1;min-width:0;">'
+            '<div style="color:%(g)s;font-size:11px;font-weight:bold;letter-spacing:6px;'
+            'text-transform:uppercase;margin-bottom:6px;opacity:0.85;">SQUAD ANNOUNCEMENT</div>'
+            '<div style="color:%(w)s;font-size:28px;font-weight:900;letter-spacing:1px;'
+            'text-transform:uppercase;line-height:1.1;margin-bottom:6px;">%(nm)s</div>'
+            '<div style="color:rgba(255,255,255,0.7);font-size:13px;">Owner: %(owner)s</div>'
+            '</div>'
+
+            '<div style="text-align:center;background:rgba(232,160,32,0.12);'
+            'border:1px solid rgba(232,160,32,0.35);border-radius:14px;'
+            'padding:16px 24px;flex-shrink:0;">'
+            '<div style="color:%(g)s;font-size:36px;font-weight:900;">%(tp)d</div>'
+            '<div style="color:rgba(255,255,255,0.6);font-size:9px;letter-spacing:2px;'
+            'text-transform:uppercase;margin-top:4px;">PLAYERS</div>'
+            '</div>'
+
+            '</div>'
+        ) % {'n': NAVY, 'n2': NAVY2, 'g': GOLD, 'w': WHITE,
+             'tl': tl_el, 'nm': team.name or '', 'owner': (team.manager or 'N/A'),
+             'tp': total_players}
+
+        # ══════════════════════════════════════════════════════════════════════
+        # SECTION 3 — Icon Players (compact horizontal row)
+        # ══════════════════════════════════════════════════════════════════════
+        icon_section = ''
+        if icon_players:
+            cards = ''
+            for p in icon_players[:4]:  # Limit to 4 icon players for landscape
+                role  = p.role or ''
+                color = rc(role)
+                photo = tp_photo(p, 130)
+                cards += (
+                    '<div style="text-align:center;flex:0 0 180px;">'
+
+                    # Outer gold glow ring — square with rounded corners
+                    '<div style="width:150px;height:150px;border-radius:12px;margin:0 auto 10px;'
+                    'background:linear-gradient(135deg,%(g)s,%(g2)s);padding:3px;'
+                    'box-shadow:0 0 28px %(g)s77;">'
+                    '<div style="width:100%%;height:100%%;border-radius:10px;overflow:hidden;'
+                    'background:%(n)s;">%(photo)s</div>'
+                    '</div>'
+
+                    # Icon badge
+                    '<div style="margin-top:-8px;margin-bottom:10px;position:relative;z-index:2;">'
+                    '<span style="background:linear-gradient(135deg,%(g)s,%(g2)s);color:%(n)s;'
+                    'font-size:8px;font-weight:900;letter-spacing:1px;padding:3px 12px;'
+                    'border-radius:16px;text-transform:uppercase;'
+                    'box-shadow:0 2px 8px rgba(232,160,32,0.45);">★ ICON</span>'
+                    '</div>'
+
+                    # Name
+                    '<div style="color:%(w)s;font-size:13px;font-weight:bold;'
+                    'text-transform:uppercase;letter-spacing:0.5px;line-height:1.2;'
+                    'padding:0 4px;">%(name)s</div>'
+
+                    # Role badge
+                    '<div style="margin-top:6px;">'
+                    '<span style="background:%(c)s22;border:1px solid %(c)s99;'
+                    'color:%(c)s;font-size:8px;font-weight:bold;padding:3px 10px;'
+                    'border-radius:12px;text-transform:uppercase;letter-spacing:0.5px;">'
+                    '%(role)s</span>'
+                    '</div>'
+
+                    '</div>'
+                ) % {'g': GOLD, 'g2': GOLD2, 'n': NAVY3, 'w': WHITE,
+                     'c': color, 'photo': photo,
+                     'name': p.name or '', 'role': role or '—'}
+
+            icon_section = (
+                '<div style="flex:0 0 auto;background:%(n)s;padding:24px 32px;'
+                'border-bottom:1px solid rgba(232,160,32,0.15);'
+                'display:flex;align-items:flex-start;gap:16px;justify-content:center;'
+                'overflow-x:auto;">'
+                '%(cards)s'
+                '</div>'
+            ) % {'n': NAVY3, 'g': GOLD, 'cards': cards}
+
+        # ══════════════════════════════════════════════════════════════════════
+        # SECTION 4 — The Squad (all players, wrapping grid)
+        # ══════════════════════════════════════════════════════════════════════
+        squad_section = ''
+        if regular_players:
+            players_to_show = regular_players  # show all players
+            
+            def _render_compact_card(name, role, photo_b64, clr):
+                if photo_b64:
+                    photo_section = (
+                        '<div style="width:100%;height:160px;background:{bg};display:flex;'
+                        'align-items:center;justify-content:center;">'
+                        '<img src="{src}" style="max-width:100%;max-height:160px;'
+                        'object-fit:contain;display:block;">'
+                        '</div>'
+                    ).format(src=photo_b64, bg=LIGHT)
+                else:
+                    initials = ''.join(w[0] for w in (name or 'P').split()[:2]).upper()
+                    photo_section = (
+                        '<div style="width:100%;height:160px;background:{bg};'
+                        'display:flex;align-items:center;justify-content:center;'
+                        'font-size:36px;font-weight:900;color:{c};">{i}</div>'
+                    ).format(bg=NAVY, c=clr, i=initials)
+                return (
+                    '<div style="width:calc(20% - 10px);border-radius:10px;overflow:hidden;'
+                    'box-shadow:0 3px 10px rgba(15,36,71,0.15);border:2px solid {c}55;">'
+                    '<div style="height:3px;background:{c};"></div>'
+                    '{photo}'
+                    '<div style="background:#fff;padding:6px 6px 7px;text-align:center;">'
+                    '<div style="font-size:9px;font-weight:bold;color:#0d1b3e;'
+                    'text-transform:uppercase;letter-spacing:0.4px;'
+                    'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{nm}</div>'
+                    '<span style="display:inline-block;margin-top:3px;background:{c}18;'
+                    'border:1px solid {c}88;color:{c};font-size:7px;font-weight:bold;'
+                    'padding:2px 7px;border-radius:8px;text-transform:uppercase;">'
+                    '{role}</span>'
+                    '</div>'
+                    '</div>'
+                ).format(c=clr, photo=photo_section, nm=name, role=role or '—')
+            
+            cards_html = ''.join(
+                _render_compact_card(
+                    p.player_id.name or '',
+                    p.player_id.role or '',
+                    b64uri(p.player_id.photo),
+                    rc(p.player_id.role or '')
+                ) for p in players_to_show
+            )
+
+            squad_section = (
+                '<div style="flex:1;background:%(bg)s;padding:16px 20px;">'
+
+                '<div style="font-size:10px;font-weight:bold;letter-spacing:5px;'
+                'color:%(n)s;text-transform:uppercase;margin-bottom:12px;">'
+                '★ THE SQUAD (%(cnt)d players)</div>'
+
+                '<div style="display:flex;flex-wrap:wrap;gap:10px;">'
+                '%(cards)s'
+                '</div>'
+
+                '</div>'
+            ) % {'bg': LIGHT, 'n': NAVY, 'cnt': len(players_to_show), 'cards': cards_html}
+
+        # ══════════════════════════════════════════════════════════════════════
+        # SECTION 5 — Footer (minimal, bottom of right panel)
+        # ══════════════════════════════════════════════════════════════════════
+        footer = (
+            '<div style="flex:0 0 auto;height:40px;background:%(d)s;'
+            'border-top:2px solid %(g)s;'
+            'display:flex;align-items:center;justify-content:center;gap:10px;">'
+            '<span style="color:rgba(255,255,255,0.4);font-size:9px;font-weight:bold;'
+            'letter-spacing:3px;text-transform:uppercase;">POWERED BY</span>'
+            '<span style="color:%(g)s;font-size:14px;font-weight:900;letter-spacing:2px;">'
+            'AuctionChamp</span>'
+            '</div>'
+        ) % {'g': GOLD, 'd': DARK}
+
+        # Close the right container
+        right_container_end = '</div>'
+
+        # ── JavaScript (no f-string — curly braces conflict) ─────────────────
+        team_name_js = json.dumps(team.name or 'squad')
+        js = (
+            '<script>\n'
+            '(function() {\n'
+            '  var status = document.getElementById("poster-status");\n'
+            '  var poster = document.getElementById("poster");\n'
+            '  var name   = ' + team_name_js + ';\n'
+            '  var imgs   = Array.from(poster.querySelectorAll("img"));\n'
+            '  var loads  = imgs.map(function(img) {\n'
+            '    return new Promise(function(res) {\n'
+            '      if (img.complete && img.naturalWidth) { res(); return; }\n'
+            '      img.onload = img.onerror = res;\n'
+            '    });\n'
+            '  });\n'
+            '  status.textContent = "\\u231B Loading images\\u2026";\n'
+            '  Promise.all(loads).then(function() {\n'
+            '    status.textContent = "\\u231B Rendering poster\\u2026";\n'
+            '    return html2canvas(poster, {\n'
+            '      scale: 3, useCORS: true, allowTaint: true,\n'
+            '      backgroundColor: "' + LIGHT + '",\n'
+            '      logging: false, imageTimeout: 0,\n'
+            '      width: poster.scrollWidth,\n'
+            '      windowWidth: poster.scrollWidth + 40,\n'
+            '      windowHeight: 1080\n'
+            '    });\n'
+            '  }).then(function(canvas) {\n'
+            '    canvas.toBlob(function(blob) {\n'
+            '      var url  = URL.createObjectURL(blob);\n'
+            '      var link = document.createElement("a");\n'
+            '      link.href     = url;\n'
+            '      link.download = "squad-poster-" + name.replace(/\\s+/g,"-").toLowerCase() + ".jpg";\n'
+            '      document.body.appendChild(link);\n'
+            '      link.click();\n'
+            '      document.body.removeChild(link);\n'
+            '      setTimeout(function() { URL.revokeObjectURL(url); }, 2000);\n'
+            '      status.style.background = "#065f46";\n'
+            '      status.innerHTML = "\\u2713 Download started! You may close this tab.";\n'
+            '    }, "image/jpeg", 0.96);\n'
+            '  }).catch(function(err) {\n'
+            '    console.error("Squad poster:", err);\n'
+            '    status.style.background = "#7f1d1d";\n'
+            '    status.textContent = "\\u26A0 Error: " + err.message;\n'
+            '  });\n'
+            '})();\n'
+            '</script>'
+        )
+
+        # ── Assemble full HTML page ───────────────────────────────────────────
+        html = (
+            '<!DOCTYPE html><html lang="en"><head>'
+            '<meta charset="UTF-8">'
+            '<title>Squad Poster \u2014 ' + (team.name or 'Team') + '</title>'
+            '<style>'
+            '* { margin:0; padding:0; box-sizing:border-box; }'
+            'body { background:#b8c8e0; font-family:Arial,Helvetica,sans-serif; padding-top:54px; }'
+            '#poster-status {'
+            '  position:fixed; top:0; left:0; right:0; z-index:9999;'
+            '  background:#1e293b; color:#fff; padding:14px;'
+            '  text-align:center; font-size:14px; font-family:Arial,sans-serif;'
+            '}'
+            '#poster {'
+            '  width:1920px; min-height:1080px; height:auto; margin:20px auto 40px;'
+            '  background:' + LIGHT + ';'
+            '  box-shadow:0 16px 60px rgba(0,0,0,0.40);'
+            '  overflow:visible; border-radius:4px;'
+            '  display:flex; flex-direction:row; align-items:stretch;'
+            '}'
+            '</style>'
+            '</head><body>'
+            '<div id="poster-status">&#9203; Preparing\u2026</div>'
+            '<div id="poster">'
+            + tourn_section + right_container_start + team_section + icon_section + squad_section + footer + right_container_end +
+            '</div>'
+            '<script src="/auction_module/static/src/lib/html2canvas.min.js"></script>'
+            + js +
+            '</body></html>'
+        )
+
+        return request.make_response(
+            html,
+            headers=[
+                ('Content-Type', 'text/html; charset=utf-8'),
+                ('Cache-Control', 'no-store'),
+            ]
+        )
+
     # ── Player Registration Form ──────────────────────────────────────────────
 
     @http.route('/player/register', type='http', auth='public', website=True,
@@ -719,7 +1253,7 @@ class Auction(http.Controller):
                 'registration_closed': True,
             })
 
-        tiers = request.env['auction.player.tier'].sudo().search([], order='name asc')
+        tiers = request.env['auction.player.tier'].sudo().search([('is_an_icon_tier', '=', False)], order='name asc')
 
         if request.httprequest.method == 'POST':
             try:

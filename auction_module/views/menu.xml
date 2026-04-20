@@ -34,7 +34,16 @@
             <field name="target">new</field>
         </record>
 
-        <!-- Define the menu item -->
+        <record id="action_auction_dashboard_client" model="ir.actions.client">
+            <field name="name">Auction Dashboard</field>
+            <field name="tag">auction_dashboard</field>
+        </record>
+
+        <menuitem id="menu_action_auction_dashboard"
+          name="Dashboard"
+          action="action_auction_dashboard_client"
+          sequence="0" web_icon="auction_module,static/src/description/auctions_settings.png"
+          groups="auction_module.group_auction_group"/>
 
         <menuitem id="menu_action_auction_root"
           name="Auction Settings"

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="auction_module.AuctionDashboard" owl="1">
+<div class="o_auction_dashboard">
+
+    <!-- ── HEADER ── -->
+    <div class="ad-hdr">
+        <span class="ad-hdr-title">
+            <t t-if="state.tournament.name">
+                <t t-esc="state.tournament.name"/>
+                <t t-if="state.tournament.description"> — <t t-esc="state.tournament.description"/></t>
+            </t>
+            <t t-else="">Auction Dashboard</t>
+        </span>
+        <span class="ad-hdr-badge">Live Dashboard</span>
+        <button class="ad-refresh-btn" t-on-click="loadData">&#8635; Refresh</button>
+    </div>
+
+    <!-- ── MAIN ROW: Pie  +  Team Stats Table ── -->
+    <div class="ad-main">
+
+        <!-- Pie card -->
+        <div class="ad-card ad-pie-card">
+            <div class="ad-card-title">Player Status</div>
+            <div class="ad-pie-wrap">
+                <canvas t-ref="pieCanvas"/>
+            </div>
+            <div class="ad-legend">
+                <t t-foreach="pieItems" t-as="item" t-key="item.key">
+                    <div class="ad-legend-row">
+                        <span class="ad-dot" t-attf-style="background:#{item.color}"/>
+                        <span><t t-esc="item.label"/>: <b t-esc="state.playerCounts[item.key]"/></span>
+                    </div>
+                </t>
+                <div class="ad-legend-total">Total: <b t-esc="total"/></div>
+            </div>
+        </div>
+
+        <!-- Team stats table card -->
+        <div class="ad-card ad-table-card">
+            <div class="ad-card-title">Team Statistics</div>
+            <div class="ad-table-scroll">
+                <table class="ad-table">
+                    <thead>
+                        <tr>
+                            <th>Team</th>
+                            <th>Owner</th>
+                            <th>Bought</th>
+                            <th>Slots Left</th>
+                            <th>Total Pts</th>
+                            <th>Spent</th>
+                            <th>Pts Left</th>
+                            <th>Max Call</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="state.teams" t-as="team" t-key="team.id">
+                            <tr>
+                                <td>
+                                    <div class="ad-team-cell">
+                                        <t t-if="team.logo_url">
+                                            <img t-att-src="team.logo_url" class="ad-tbl-logo"
+                                                 t-att-onerror="'this.style.display=&quot;none&quot;'"/>
+                                        </t>
+                                        <span t-esc="team.name"/>
+                                    </div>
+                                </td>
+                                <td t-esc="team.manager || '—'"/>
+                                <td class="ad-center" t-esc="team.players_bought"/>
+                                <td class="ad-center" t-esc="team.remaining_players"/>
+                                <td t-esc="fmt(team.total_points)"/>
+                                <td>
+                                    <span t-esc="fmt(spent(team))"/>
+                                    <div class="ad-prog-wrap">
+                                        <div class="ad-prog-bar"
+                                             t-attf-style="width:#{pct(team)}%;background:#{barColor(team)}"/>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span t-att-class="badgeClass(team)"
+                                          t-esc="fmt(team.remaining_points)"/>
+                                </td>
+                                <td class="ad-max-call" t-esc="fmt(team.max_call)"/>
+                            </tr>
+                        </t>
+                        <tr t-if="!state.teams.length">
+                            <td colspan="8" class="ad-no-data">No team data yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ── BOTTOM ROW: Highest Bid Per Team ── -->
+    <div class="ad-bid-row">
+        <div class="ad-bid-label">&#127942; Highest Bid Per Team</div>
+        <div class="ad-bid-cards">
+            <t t-foreach="state.teams" t-as="team" t-key="team.id">
+                <div class="ad-bid-card">
+                    <div class="ad-bid-hdr">
+                        <t t-if="team.logo_url">
+                            <img t-att-src="team.logo_url" class="ad-bid-logo"
+                                 t-att-onerror="'this.style.display=&quot;none&quot;'"/>
+                        </t>
+                        <t t-else=""><span class="ad-bid-logo-ph">&#127951;</span></t>
+                        <span class="ad-bid-team-name" t-esc="team.name"/>
+                    </div>
+                    <t t-if="team.top_player">
+                        <div class="ad-bid-body">
+                            <t t-if="team.top_player.photo_url">
+                                <img t-att-src="team.top_player.photo_url" class="ad-bid-photo"
+                                     t-att-onerror="'this.style.display=&quot;none&quot;'"/>
+                            </t>
+                            <t t-else=""><span class="ad-bid-photo-ph">&#128100;</span></t>
+                            <div class="ad-bid-info">
+                                <div class="ad-bid-name" t-esc="team.top_player.name"/>
+                                <div class="ad-bid-role" t-esc="team.top_player.role || '—'"/>
+                                <div class="ad-bid-pts">
+                                    <t t-esc="fmt(team.top_player.points)"/> pts
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div class="ad-bid-empty">No players yet</div>
+                    </t>
+                </div>
+            </t>
+            <div t-if="!state.teams.length" class="ad-no-data" style="padding:1rem">
+                No team data yet.
+            </div>
+        </div>
+    </div>
+
+</div>
+</t>
+
+</templates>

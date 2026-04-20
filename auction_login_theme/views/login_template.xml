@@ -64,13 +64,13 @@
     .ac-arc::before {
       content: '';
       position: absolute;
-      inset: 35px;
+      top: 35px; right: 35px; bottom: 35px; left: 35px;
       border: 1px solid rgba(34,82,181,0.12);
       border-radius: 50%;
     }
 
     /* ── Floating Sports Icons ──────────────────────────────────────── */
-    .ac-floaters { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+    .ac-floaters { position: fixed; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; z-index: 1; }
     .ac-floater {
       position: absolute;
       bottom: -60px;
@@ -338,7 +338,85 @@
       .ac-card { padding: 34px 24px 30px; }
       .ac-wordmark { width: 170px; }
       .ac-logo-ring { width: 68px; height: 68px; }
+
+      /* Scale down overlay content for small screens */
+      .ac-spin-track       { width: 86px; height: 86px; margin-bottom: 20px; }
+      .ac-spin-ring-inner  { top: 10px; right: 10px; bottom: 10px; left: 10px; }
+      .ac-spin-icon        { top: 18px; right: 18px; bottom: 18px; left: 18px; }
+      .ac-spin-icon svg    { width: 22px; }
+      .ac-load-wordmark    { width: 140px; margin-bottom: 16px; }
+      .ac-load-msg         { font-size: 0.88rem; letter-spacing: 1px; }
+      .ac-logout-msg       { font-size: 0.88rem; letter-spacing: 1px; }
+      .ac-logout-badge     { font-size: 0.65rem; padding: 7px 16px; margin-bottom: 20px; letter-spacing: 2px; }
+      .ac-load-dots span   { width: 6px; height: 6px; }
+      .ac-load-sub         { font-size: 0.58rem; }
     }
+
+    /* ════════════════════════════════════════════════════════════════
+       Logout Overlay
+    ════════════════════════════════════════════════════════════════ */
+    #ac-logout-overlay {
+      display: none;
+      position: fixed;
+      top: 0; right: 0; bottom: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 99999;
+      background:
+        radial-gradient(ellipse 60% 52% at 8%  0%, rgba(253,206,51,0.13) 0%, transparent 62%),
+        radial-gradient(ellipse 60% 52% at 92% 0%, rgba(253,206,51,0.13) 0%, transparent 62%),
+        radial-gradient(ellipse 75% 55% at 50% 35%, rgba(34,82,181,0.20) 0%, transparent 70%),
+        linear-gradient(180deg, #060e22 0%, #0a1429 40%, #0f1e3a 70%, #060e22 100%);
+      -webkit-flex-direction: column;
+              flex-direction: column;
+      -webkit-align-items: center;
+              align-items: center;
+      -webkit-justify-content: center;
+              justify-content: center;
+      gap: 0;
+      opacity: 1;
+      -webkit-transition: opacity .5s ease;
+              transition: opacity .5s ease;
+    }
+    #ac-logout-overlay.ac-visible   { display: -webkit-flex; display: flex; }
+    #ac-logout-overlay.ac-fade-out  { opacity: 0; pointer-events: none; }
+
+    /* Green "Logged Out" badge */
+    .ac-logout-badge {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.38);
+      border-radius: 30px;
+      padding: 8px 22px;
+      margin-bottom: 32px;
+      color: #6ee7b7;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      animation: acSlideIn .4s cubic-bezier(.34,1.15,.64,1) both;
+    }
+    .ac-logout-badge-dot {
+      width: 8px; height: 8px;
+      background: #34d399;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #34d39988;
+      animation: acDotBounce 1.4s ease-in-out infinite;
+    }
+
+    /* Cycling goodbye message */
+    .ac-logout-msg {
+      font-size: 1.08rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      color: #fdce33;
+      text-align: center;
+      min-height: 1.6em;
+      transition: opacity .25s;
+      margin-bottom: 12px;
+    }
+    .ac-logout-msg.ac-fade { opacity: 0; }
 
     /* ════════════════════════════════════════════════════════════════
        Sign-in Loader Overlay
@@ -346,7 +424,8 @@
     #ac-loader {
       display: none;
       position: fixed;
-      inset: 0;
+      top: 0; right: 0; bottom: 0; left: 0;
+      width: 100%; height: 100%;
       z-index: 99999;
       /* same background as the page for seamless feel */
       background:
@@ -354,13 +433,17 @@
         radial-gradient(ellipse 60% 52% at 92% 0%, rgba(253,206,51,0.13) 0%, transparent 62%),
         radial-gradient(ellipse 75% 55% at 50% 35%, rgba(34,82,181,0.20) 0%, transparent 70%),
         linear-gradient(180deg, #060e22 0%, #0a1429 40%, #0f1e3a 70%, #060e22 100%);
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      -webkit-flex-direction: column;
+              flex-direction: column;
+      -webkit-align-items: center;
+              align-items: center;
+      -webkit-justify-content: center;
+              justify-content: center;
       gap: 0;
-      animation: acLoaderIn .18s ease both;
+      -webkit-animation: acLoaderIn .18s ease both;
+              animation: acLoaderIn .18s ease both;
     }
-    #ac-loader.ac-visible { display: flex; }
+    #ac-loader.ac-visible { display: -webkit-flex; display: flex; }
     @keyframes acLoaderIn {
       from { opacity: 0; }
       to   { opacity: 1; }
@@ -374,7 +457,7 @@
     }
     .ac-spin-ring {
       position: absolute;
-      inset: 0;
+      top: 0; right: 0; bottom: 0; left: 0;
       border-radius: 50%;
       border: 3px solid rgba(253,206,51,0.12);
       border-top-color:  #fdce33;
@@ -383,7 +466,7 @@
     }
     .ac-spin-ring-inner {
       position: absolute;
-      inset: 12px;
+      top: 12px; right: 12px; bottom: 12px; left: 12px;
       border-radius: 50%;
       border: 2px solid rgba(34,82,181,0.18);
       border-bottom-color: #2252b5;
@@ -396,11 +479,13 @@
     /* Centre icon (paddle from logo) */
     .ac-spin-icon {
       position: absolute;
-      inset: 22px;
+      top: 22px; right: 22px; bottom: 22px; left: 22px;
       border-radius: 50%;
       background: linear-gradient(135deg, #1a3f96 0%, #2252b5 60%, #2563eb 100%);
       box-shadow: 0 0 18px rgba(253,206,51,0.22);
-      display: flex; align-items: center; justify-content: center;
+      display: -webkit-flex; display: flex;
+      -webkit-align-items: center; align-items: center;
+      -webkit-justify-content: center; justify-content: center;
       animation: acPulseIcon 2s ease-in-out infinite;
     }
     .ac-spin-icon svg { width: 28px; height: auto; }
@@ -461,7 +546,7 @@
   <div class="ac-arc"></div>
 
   <!-- Sparkle dots scattered around -->
-  <div style="position:fixed;inset:0;pointer-events:none;z-index:1;">
+  <div style="position:fixed;top:0;right:0;bottom:0;left:0;pointer-events:none;z-index:1;">
     <div class="ac-dot" style="top:10%;left:7%;animation-delay:0s;animation-duration:2.3s;"></div>
     <div class="ac-dot" style="top:20%;left:17%;animation-delay:.5s;animation-duration:3.0s;"></div>
     <div class="ac-dot" style="top:6%;left:33%;animation-delay:1.1s;animation-duration:2.7s;"></div>
@@ -627,6 +712,43 @@
 
   </div><!-- /#ac-loader -->
 
+  <!-- ════════ Logout Overlay ════════ -->
+  <div id="ac-logout-overlay">
+
+    <!-- Goodbye badge -->
+    <div class="ac-logout-badge">
+      <div class="ac-logout-badge-dot"></div>
+      Logged Out Successfully
+    </div>
+
+    <!-- Dual spinning rings + paddle icon (reuse same CSS classes) -->
+    <div class="ac-spin-track">
+      <div class="ac-spin-ring"></div>
+      <div class="ac-spin-ring-inner"></div>
+      <div class="ac-spin-icon">
+        <svg viewBox="0 0 37 37" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M0 2.229C0 0.998 0.998 0 2.229 0H34.771C36.002 0 37 0.998 37 2.229V16.643C36.549 16.638 36.067 16.633 35.553 16.627C34.861 16.620 34.110 16.612 33.295 16.603L23.274 16.489L23.298 13.887L23.318 11.291L23.718 11.201C24.721 10.980 25.327 9.897 25.007 8.913C24.863 8.458 24.419 7.966 24.007 7.784C23.649 7.638 12.479 7.506 12.069 7.645C11.629 7.803 11.156 8.286 10.994 8.767C10.761 9.435 10.907 10.092 11.405 10.599C11.693 10.893 12.164 11.135 12.484 11.153C12.612 11.164 12.628 12.016 12.623 18.260C12.617 25.060 12.609 25.350 12.437 25.344C12.146 25.326 11.661 25.577 11.308 25.933C10.223 27.006 10.729 28.775 12.190 29.022C12.352 29.048 14.969 29.071 17.994 29.063C21.764 29.058 23.602 29.023 23.834 28.951C24.284 28.803 24.816 28.282 24.954 27.854C25.294 26.779 24.645 25.649 23.572 25.480L23.287 25.437L23.311 22.836L23.336 20.234L33.383 20.334C34.770 20.347 35.967 20.359 37 20.368V37H29.868V35.663C29.868 34.924 29.269 34.325 28.530 34.325H8.470C7.731 34.325 7.133 34.924 7.133 35.663V37H0V2.229Z" fill="white"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Logo wordmark -->
+    <img class="ac-load-wordmark"
+         src="/auction_login_theme/static/img/logo.svg"
+         alt="Auction Champ"/>
+
+    <!-- Cycling goodbye message -->
+    <div class="ac-logout-msg" id="ac-logout-msg">&#128075; See You in the Arena!</div>
+
+    <!-- Bouncing dots -->
+    <div class="ac-load-dots">
+      <span></span><span></span><span></span>
+    </div>
+
+    <div class="ac-load-sub">Returning to Sign In...</div>
+
+  </div><!-- /#ac-logout-overlay -->
+
   <script>
     (function () {
       var MESSAGES = [
@@ -655,6 +777,54 @@
         document.getElementById('ac-loader').classList.add('ac-visible');
         setInterval(cycleMsg, 1400);
       });
+    })();
+
+    /* ── Logout overlay — shown when ?logged_out=1 is in the URL ──── */
+    (function () {
+      if (window.location.search.indexOf('logged_out=1') === -1) return;
+
+      // Clean URL immediately so a browser refresh won't re-trigger the overlay
+      if (window.history &amp;&amp; window.history.replaceState) {
+        window.history.replaceState(null, '', '/web/login');
+      }
+
+      var GOODBYE = [
+        '\uD83D\uDC4B See You in the Arena!',
+        '\uD83C\uDFC6 Champions Always Return',
+        '\uD83C\uDFCF Bat Resting\u2026 For Now',
+        '\u26BD Off the Pitch, Back Soon',
+        '\uD83C\uDFAF Auction Awaits Your Return',
+        '\uD83E\uDD47 Till the Next Bid!',
+        '\uD83D\uDCB0 Your Purse Is Safe',
+        '\uD83D\uDCCB See You Next Season!',
+      ];
+
+      var idx    = 0;
+      var overlay = document.getElementById('ac-logout-overlay');
+      var msgEl   = document.getElementById('ac-logout-msg');
+
+      overlay.classList.add('ac-visible');
+
+      function cycleGoodbye() {
+        msgEl.classList.add('ac-fade');
+        setTimeout(function () {
+          idx = (idx + 1) % GOODBYE.length;
+          msgEl.textContent = GOODBYE[idx];
+          msgEl.classList.remove('ac-fade');
+        }, 260);
+      }
+
+      var timer = setInterval(cycleGoodbye, 1400);
+
+      // Fade out after ~3s and reveal the login form beneath
+      setTimeout(function () {
+        clearInterval(timer);
+        overlay.classList.add('ac-fade-out');
+        setTimeout(function () {
+          overlay.classList.remove('ac-visible');
+          overlay.classList.remove('ac-fade-out');
+        }, 520);
+      }, 3000);
     })();
   </script>
 

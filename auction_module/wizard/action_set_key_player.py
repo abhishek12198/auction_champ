@@ -12,7 +12,7 @@ class SetKeyPlayer(models.TransientModel):
     _name = 'auction.set.key.player'
 
 
-    team_id = fields.Many2one('auction.team', 'Team', required=True)
+    team_id = fields.Many2one('auction.team', 'Team')
     team_selection = fields.Selection(selection='_get_team_selection', string='Select Team')
     player_id = fields.Many2one('auction.team.player', 'Player')
     player_photo  = fields.Binary()
@@ -51,7 +51,13 @@ class SetKeyPlayer(models.TransientModel):
         if player_id:
             player = self.player_id
             team = self.team_id
+            # Fallback: if onchange value was flushed during form-save,
+            # reconstruct team from team_selection (always persisted as a simple Selection)
+            if not team and self.team_selection:
+                team = self.env['auction.team'].browse(int(self.team_selection))
 
+            if not team:
+                raise UserError('Please select a team before confirming.')
             # Find the icon tier (only one should exist due to constraint)
             icon_tier = self.env['auction.player.tier'].search([('is_an_icon_tier', '=', True)], limit=1)
             if not icon_tier:

@@ -222,3 +222,11 @@ class ViewTeamDetails(models.TransientModel):
         active_id = self.env.context.get('active_id', False)
         auction = self.env['auction.auction'].browse(active_id)
         return self.env.ref('auction_module.action_report_auction_template').report_action(auction)
+
+    def button_print_squad_poster(self):
+        active_id = self.env.context.get('active_id', False)
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/auction/squad-poster/%d' % active_id,
+            'target': 'new',
+        }

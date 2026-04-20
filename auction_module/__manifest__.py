@@ -57,10 +57,14 @@
         'wizard/auction_pdf_to_png_view.xml',
         'views/auction_status_template.xml',
         'views/player_registration_form.xml',
+        'views/auction_dashboard_template.xml',
         'views/menu.xml',
     ],
     'assets': {
             'web.assets_backend': [
+                    '/auction_module/static/src/lib/chart.umd.min.js',
+                    '/auction_module/static/src/js/auction_dashboard.js',
+                    '/auction_module/static/src/css/auction_dashboard.css',
                     '/auction_module/static/src/js/dropdown_fix.js',
                     '/auction_module/static/src/js/center_toast.js',
                     '/auction_module/static/src/css/wizard_style.css',

@@ -10,6 +10,7 @@
                     <header>
                         <button name="button_print_roster" class="oe_highlight" string="Print Roster" type="object"/>
                         <button name="button_print_team_template" string="Print Template" type="object"/>
+                        <button name="button_print_squad_poster" string="Print Squad Poster" type="object"/>
                     </header>
                     <group>
                         <field name="html_field" readonly="1" nolabel="1"/>
