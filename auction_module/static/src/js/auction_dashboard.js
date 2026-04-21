@@ -10,7 +10,8 @@ odoo.define('auction_module.AuctionDashboard', function (require) {
 
     var AuctionDashboard = AbstractAction.extend({
         events: {
-            'click .ad-refresh-btn': '_onRefresh',
+            'click .ad-refresh-btn':     '_onRefresh',
+            'click .ad-theme-toggle':    '_onToggleTheme',
         },
 
         _chart: null,
@@ -20,6 +21,11 @@ odoo.define('auction_module.AuctionDashboard', function (require) {
             this.$el.addClass('o_auction_dashboard');
             this.$el.html(this._buildLayout());
             var result = this._super.apply(this, arguments);
+            // Restore saved theme
+            if (localStorage.getItem('ad_theme') === 'light') {
+                this.$el.addClass('ad-light');
+                this.$el.find('.ad-theme-toggle').html('&#9790; Dark');
+            }
             this._loadData();
             var self = this;
             this._timer = setInterval(function () { self._loadData(); }, 30000);
@@ -35,8 +41,16 @@ odoo.define('auction_module.AuctionDashboard', function (require) {
         _buildLayout: function () {
             return [
                 '<div class="ad-hdr">',
-                    '<span class="ad-hdr-title" id="ad-title">Auction Dashboard</span>',
+                    '<div class="ad-hdr-logo-wrap">',
+                        '<img id="ad-tourn-logo" class="ad-hdr-logo" src="" alt="" style="display:none;">',
+                        '<span class="ad-hdr-logo-ph" id="ad-tourn-logo-ph" style="display:none;">&#127942;</span>',
+                    '</div>',
+                    '<div class="ad-hdr-text">',
+                        '<span class="ad-hdr-title" id="ad-title">Auction Dashboard</span>',
+                        '<span class="ad-hdr-sub" id="ad-tourn-name"></span>',
+                    '</div>',
                     '<span class="ad-live-badge">&#9679; Live</span>',
+                    '<button class="ad-theme-toggle">&#9790; Dark</button>',
                     '<button class="ad-refresh-btn">&#8635; Refresh</button>',
                 '</div>',
                 '<div class="ad-body">',
@@ -90,6 +104,18 @@ odoo.define('auction_module.AuctionDashboard', function (require) {
             this._loadData();
         },
 
+        _onToggleTheme: function () {
+            var isLight = this.$el.toggleClass('ad-light').hasClass('ad-light');
+            localStorage.setItem('ad_theme', isLight ? 'light' : 'dark');
+            this.$el.find('.ad-theme-toggle').html(isLight ? '&#9790; Dark' : '&#9728; Light');
+            // Redraw pie with updated colors
+            if (this._chart) {
+                this._chart.destroy();
+                this._chart = null;
+            }
+            this._loadData();
+        },
+
         _loadData: function () {
             var self = this;
             fetch('/auction/dashboard/data', { cache: 'no-store' })
@@ -103,10 +129,17 @@ odoo.define('auction_module.AuctionDashboard', function (require) {
             var teams  = data.teams || [];
             var tourn  = data.tournament || {};
 
+            // Header: tournament logo + name
+            this.$('#ad-title').text('Auction Dashboard');
             if (tourn.name) {
-                var title = tourn.name;
-                if (tourn.description) title += ' \u2014 ' + tourn.description;
-                this.$('#ad-title').text(title);
+                this.$('#ad-tourn-name').text(tourn.name + (tourn.description ? ' \u2014 ' + tourn.description : ''));
+            }
+            if (tourn.logo_url) {
+                this.$('#ad-tourn-logo').attr('src', tourn.logo_url).show();
+                this.$('#ad-tourn-logo-ph').hide();
+            } else if (tourn.name) {
+                this.$('#ad-tourn-logo').hide();
+                this.$('#ad-tourn-logo-ph').show();
             }
 
             // Stat number cards

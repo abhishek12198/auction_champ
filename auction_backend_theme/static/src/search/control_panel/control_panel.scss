@@ -207,7 +207,18 @@
     .o_control_panel {
         padding: 6px 8px !important;
 
-        .o_control_panel_main { flex-wrap: wrap; gap: 6px; }
+        .o_control_panel_main {
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        // Row 1: Breadcrumb — stays on top
+        .o_cp_top_left,
+        .o_control_panel_breadcrumbs {
+            order: 1;
+            flex: 1 1 100%;
+            width: 100%;
+        }
 
         // Breadcrumb clips long names — keep font readable
         .breadcrumb { flex-wrap: nowrap; overflow: hidden; }
@@ -221,12 +232,29 @@
             max-width: 55vw;
         }
 
-        // Search spans full width on its own row
-        .o_searchview { order: 2; width: 100%; flex: 1 1 100%; }
+        // Row 2: Search spans full width — above view modes
+        .o_searchview {
+            order: 2;
+            width: 100%;
+            flex: 1 1 100%;
+        }
 
-        // Action buttons wrap below the search
-        .o_cp_buttons {
+        // Row 3: View switcher + pager sit below search
+        .o_cp_switch_buttons,
+        .o_cp_top_right,
+        .o_control_panel_navigation {
             order: 3;
+            flex: 1 1 auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .o_pager { order: 3; font-size: 1rem; }
+
+        // Row 4: Action buttons at the bottom
+        .o_cp_buttons {
+            order: 4;
             width: 100%;
             display: flex;
             flex-wrap: wrap;
@@ -234,7 +262,6 @@
             .btn { flex: 1 1 auto; font-size: 1rem; padding: 6px 10px; }
         }
 
-        .o_pager             { font-size: 1rem; }
         .o_cp_switch_buttons .btn { padding: 6px 8px; }
     }
 }

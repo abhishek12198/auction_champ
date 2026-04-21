@@ -778,6 +778,7 @@ class Auction(http.Controller):
             'tournament': {
                 'name':        tournament.name        if tournament else '',
                 'description': tournament.description if tournament else '',
+                'logo_url':    pub_img('auction.tournament', tournament.id, 'logo') if tournament and tournament.logo else '',
             },
         }
 

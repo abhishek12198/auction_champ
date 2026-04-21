@@ -55,6 +55,13 @@
         <field name="implied_ids" eval="[(4, ref('auction_module.group_auction_group'))]"/>
     </record>
 
+    <!-- Dashboard Viewer — can only see the Auction Dashboard menu -->
+    <record id="group_auction_dashboard" model="res.groups">
+        <field name="name">Dashboard Viewer</field>
+        <field name="comment">Read-only access to the Auction Dashboard. Cannot access any other auction menus.</field>
+        <field name="category_id" ref="auction_module.auction_categ"/>
+    </record>
+
     <!-- Bid Board — access to Public Live Bid Board menu -->
     <record id="group_auction_bid_board" model="res.groups">
         <field name="name">Bid Board</field>
@@ -77,6 +84,7 @@
             (4, ref('auction_module.group_auction_pdf_to_png')),
             (4, ref('auction_module.group_auction_pool_generator')),
             (4, ref('auction_module.group_auction_bid_board')),
+            (4, ref('auction_module.group_auction_dashboard')),
         ]"/>
     </record>
 

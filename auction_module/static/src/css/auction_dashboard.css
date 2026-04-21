@@ -27,20 +27,62 @@
     align-items: center;
     gap: 10px;
     flex-shrink: 0;
-    height: 40px;
+    height: 48px;
     background: rgba(0,0,0,.25);
     border-radius: 10px;
     padding: 0 16px;
     border: 1px solid rgba(255,255,255,.08);
 }
+
+/* Tournament logo in header */
+.ad-hdr-logo-wrap {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.ad-hdr-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+.ad-hdr-logo-ph {
+    font-size: 1.3rem;
+    line-height: 1;
+}
+
+/* Title + subtitle stacked */
+.ad-hdr-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    overflow: hidden;
+}
 .ad-hdr-title {
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 700;
     color: #fff;
-    flex: 1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.2;
+}
+.ad-hdr-sub {
+    font-size: .72rem;
+    color: rgba(255,255,255,.6);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+    letter-spacing: .03em;
 }
 .ad-live-badge {
     font-size: .72rem;
@@ -413,35 +455,174 @@
 @media (max-width: 768px) {
     .o_auction_dashboard {
         padding: 8px;
-        gap: 6px;
+        gap: 8px;
         overflow-y: auto;
         min-height: unset;
+        height: auto;
     }
+
+    /* Body stacks all sections vertically */
     .ad-body {
         flex-direction: column;
         overflow: visible;
+        height: auto;
+        min-height: unset;
     }
-    .ad-left, .ad-right {
+
+    /* Left & right columns each become full-width blocks */
+    .ad-left,
+    .ad-right {
         flex: none;
         width: 100%;
         min-width: 0;
+        overflow: visible;
+        min-height: unset;
+        height: auto;
     }
-    .ad-stats {
+
+    /* Stat cards: 2 per row */
+    .ad-stat-cards {
+        height: auto;
         grid-template-columns: 1fr 1fr;
     }
+
+    /* Pie card: auto height */
     .ad-pie-card {
-        min-height: 260px;
+        flex: none;
+        height: auto;
+        overflow: visible;
     }
+
+    /* All cards: let height grow with content */
+    .ad-card {
+        overflow: visible;
+        min-height: unset;
+        height: auto;
+    }
+
+    /* Table card: allow scrolling horizontally for wide tables */
+    .ad-table-card {
+        flex: none;
+        height: auto;
+    }
+    .ad-table-scroll {
+        overflow-x: auto;
+        overflow-y: visible;
+        max-height: none;
+    }
+
+    /* Bid strip: stack cards vertically */
     .ad-bid-strip {
         height: auto;
-        min-height: 165px;
+        min-height: unset;
+        flex: none;
     }
     .ad-bid-scroll {
         flex-wrap: wrap;
-        overflow-x: auto;
+        overflow-x: visible;
+        height: auto;
     }
     .ad-bid-card {
-        width: 180px;
+        width: calc(50% - 6px);
         flex-shrink: 0;
     }
+}
+
+/* ── Theme toggle button ── */
+.ad-theme-toggle {
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.2);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: .85rem;
+    flex-shrink: 0;
+    transition: background .15s;
+}
+.ad-theme-toggle:hover { background: rgba(255,255,255,.22); }
+
+/* ════════════════════════════════════════════
+   LIGHT THEME overrides (.ad-light on root)
+   ════════════════════════════════════════════ */
+.o_auction_dashboard.ad-light {
+    background: linear-gradient(150deg, #f0f4ff 0%, #e8edf8 55%, #dde5f5 100%);
+    color: #0d1b3e;
+}
+
+/* Header */
+.ad-light .ad-hdr {
+    background: rgba(13,27,62,.07);
+    border: 1px solid rgba(13,27,62,.12);
+}
+.ad-light .ad-hdr-title { color: #0d1b3e; }
+.ad-light .ad-hdr-sub { color: rgba(13,27,62,.55); }
+.ad-light .ad-hdr-logo-wrap {
+    background: rgba(13,27,62,.06);
+    border-color: rgba(13,27,62,.18);
+}
+.ad-light .ad-live-badge {
+    color: #1b7a34;
+    background: rgba(27,122,52,.1);
+    border-color: rgba(27,122,52,.3);
+}
+.ad-light .ad-refresh-btn,
+.ad-light .ad-theme-toggle {
+    background: rgba(13,27,62,.08);
+    border-color: rgba(13,27,62,.2);
+    color: #0d1b3e;
+}
+.ad-light .ad-refresh-btn:hover,
+.ad-light .ad-theme-toggle:hover {
+    background: rgba(13,27,62,.16);
+}
+
+/* Cards */
+.ad-light .ad-card {
+    background: #ffffff;
+    border: 1px solid rgba(13,27,62,.12);
+    box-shadow: 0 2px 8px rgba(13,27,62,.08);
+}
+.ad-light .ad-card-title { color: #1565c0; }
+
+/* Stat cards */
+.ad-light .ad-stat.draft   { background: #e3f2fd; border-color: #90caf9; }
+.ad-light .ad-stat.auction { background: #fffde7; border-color: #ffe082; }
+.ad-light .ad-stat.sold    { background: #e8f5e9; border-color: #a5d6a7; }
+.ad-light .ad-stat.unsold  { background: #ffebee; border-color: #ef9a9a; }
+.ad-light .ad-stat-lbl { color: rgba(13,27,62,.55); }
+
+/* Table */
+.ad-light .ad-table thead th {
+    background: #1565c0;
+    color: #fff;
+}
+.ad-light .ad-table tbody tr:hover td { background: rgba(13,27,62,.04); }
+.ad-light .ad-table tbody td { color: #0d1b3e; border-color: rgba(13,27,62,.08); }
+
+/* Progress bars label */
+.ad-light .ad-prog-label { color: #0d1b3e; }
+
+/* Bid strip */
+.ad-light .ad-bid-strip {
+    background: rgba(13,27,62,.04);
+    border-top: 1px solid rgba(13,27,62,.1);
+}
+.ad-light .ad-bid-card {
+    background: #ffffff;
+    border: 1px solid rgba(13,27,62,.12);
+    box-shadow: 0 2px 8px rgba(13,27,62,.07);
+}
+.ad-light .ad-bid-hdr {
+    background: linear-gradient(90deg, #0d1b3e, #1565c0);
+}
+.ad-light .ad-bid-name { color: #0d1b3e; }
+.ad-light .ad-bid-role { color: rgba(13,27,62,.5); }
+.ad-light .ad-bid-empty { color: rgba(13,27,62,.4); }
+
+/* Legend */
+.ad-light .ad-legend { color: rgba(13,27,62,.85); }
+.ad-light .ad-legend-total {
+    color: #0d1b3e;
+    border-top-color: rgba(13,27,62,.15);
 }

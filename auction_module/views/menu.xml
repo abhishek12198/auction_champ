@@ -43,7 +43,12 @@
           name="Dashboard"
           action="action_auction_dashboard_client"
           sequence="0" web_icon="auction_module,static/src/description/auctions_settings.png"
-          groups="auction_module.group_auction_group"/>
+          groups="auction_module.group_auction_dashboard"/>
+
+        <!-- Explicitly replace groups so only Dashboard Viewer can see this menu -->
+        <record id="menu_action_auction_dashboard" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6, 0, [ref('auction_module.group_auction_dashboard')])]"/>
+        </record>
 
         <menuitem id="menu_action_auction_root"
           name="Auction Settings"
