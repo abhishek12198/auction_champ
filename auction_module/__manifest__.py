@@ -5,6 +5,7 @@
     'version' : '1.2',
     'summary': 'Sports Auction module',
     'sequence': 10,
+    'icon': '/auction_module/static/description/icon.png',
     'description': """
 
     """,
@@ -65,6 +66,8 @@
                     '/auction_module/static/src/lib/chart.umd.min.js',
                     '/auction_module/static/src/js/auction_dashboard.js',
                     '/auction_module/static/src/css/auction_dashboard.css',
+                    '/auction_module/static/src/js/player_dashboard.js',
+                    '/auction_module/static/src/css/player_dashboard.css',
                     '/auction_module/static/src/js/dropdown_fix.js',
                     '/auction_module/static/src/js/center_toast.js',
                     '/auction_module/static/src/css/wizard_style.css',

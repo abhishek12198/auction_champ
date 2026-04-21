@@ -2,6 +2,7 @@
     'name': 'Auction Sports Backend Theme',
     'version': '15.0.1.0.0',
     'summary': 'Sporty backend theme for the Auction Champ application',
+    'icon': '/auction_backend_theme/static/description/icon.png',
     'description': """
         A sports-inspired backend theme built for the Auction Champ platform.
         Features:

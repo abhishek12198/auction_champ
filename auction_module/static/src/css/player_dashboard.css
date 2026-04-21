@@ -1,0 +1,269 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Player Detail Dashboard — Dark theme (default) + .pd-light overrides
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Root ── */
+.o_player_dashboard {
+    position: relative;
+    width: 100%;
+    min-height: calc(100vh - 100px);
+    background: #0d1b3e;
+    color: #e8eaf6;
+    font-family: 'Rajdhani', 'Segoe UI', sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+/* ── Header ── */
+.pd-hdr {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    height: 48px;
+    background: rgba(0,0,0,.25);
+    border-radius: 10px;
+    padding: 0 16px;
+    border: 1px solid rgba(255,255,255,.08);
+}
+.pd-hdr-logo-wrap {
+    flex-shrink: 0;
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+}
+.pd-hdr-logo-ph { font-size: 1.3rem; line-height: 1; }
+.pd-hdr-text {
+    flex: 1; display: flex; flex-direction: column;
+    justify-content: center; min-width: 0; overflow: hidden;
+}
+.pd-hdr-title {
+    font-size: 1rem; font-weight: 700; color: #fff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;
+}
+.pd-hdr-sub {
+    font-size: .72rem; color: rgba(255,255,255,.6);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;
+}
+.pd-live-badge {
+    font-size: .72rem; color: #a5d6a7; text-transform: uppercase; letter-spacing: .07em;
+    background: rgba(102,187,106,.15); border: 1px solid rgba(102,187,106,.3);
+    padding: 3px 10px; border-radius: 10px; flex-shrink: 0;
+    animation: pd-pulse 2s ease infinite;
+}
+@keyframes pd-pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+.pd-theme-toggle, .pd-refresh-btn {
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.2);
+    color: #fff; padding: 4px 14px; border-radius: 16px;
+    cursor: pointer; font-size: .85rem; flex-shrink: 0; transition: background .15s;
+}
+.pd-theme-toggle:hover, .pd-refresh-btn:hover { background: rgba(255,255,255,.22); }
+
+/* ── Stat cards row ── */
+.pd-stat-row {
+    display: flex; flex-wrap: wrap; gap: 10px;
+}
+.pd-stat {
+    flex: 1; min-width: 90px;
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 10px; padding: 10px 14px;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    transition: background .2s, border-color .2s, transform .1s;
+    cursor: pointer; text-decoration: none;
+}
+.pd-stat:hover {
+    background: rgba(255,255,255,.12);
+    border-color: rgba(255,255,255,.25);
+    transform: translateY(-2px);
+}
+.pd-stat:active { transform: translateY(0); }
+.pd-stat-num { font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
+.pd-stat-lbl { font-size: .7rem; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+
+/* State-specific accent colours */
+.pd-stat.total .pd-stat-num   { color: #fff; }
+.pd-stat.draft .pd-stat-num   { color: #64b5f6; }
+.pd-stat.auction .pd-stat-num { color: #ffca28; }
+.pd-stat.sold .pd-stat-num    { color: #66bb6a; }
+.pd-stat.unsold .pd-stat-num  { color: #ef5350; }
+.pd-stat.icon .pd-stat-num    { color: #ce93d8; }
+.pd-stat.paid .pd-stat-num    { color: #80cbc4; }
+.pd-stat.unpaid .pd-stat-num  { color: #ffab91; }
+
+/* ── Rows ── */
+.pd-row {
+    display: flex; gap: 12px; flex-wrap: wrap;
+}
+.pd-half { flex: 1 1 calc(50% - 6px); min-width: 280px; }
+.pd-full  { flex: 1 1 100%; }
+
+/* ── Cards ── */
+.pd-card {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 12px; padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 10px;
+}
+.pd-card-title {
+    font-size: .85rem; font-weight: 600;
+    color: rgba(255,255,255,.8); text-transform: uppercase;
+    letter-spacing: .07em; border-bottom: 1px solid rgba(255,255,255,.07);
+    padding-bottom: 8px;
+}
+.pd-chart-wrap {
+    position: relative; width: 100%; max-height: 220px;
+    display: flex; align-items: center; justify-content: center;
+}
+.pd-chart-wrap canvas { max-height: 220px; }
+.pd-chart-small { max-height: 160px; }
+.pd-chart-small canvas { max-height: 160px; }
+
+/* ── Legend ── */
+.pd-legend {
+    display: flex; flex-wrap: wrap; gap: 8px 14px;
+    font-size: .75rem;
+}
+.pd-leg-item { display: flex; align-items: center; gap: 5px; }
+.pd-leg-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.pd-leg-item b { color: #fff; }
+.pd-leg-item small { color: rgba(255,255,255,.5); }
+
+/* ── Draft table ── */
+.pd-table-wrap { overflow-x: auto; }
+.pd-table {
+    width: 100%; border-collapse: collapse; font-size: .82rem;
+}
+.pd-table thead tr { background: rgba(255,255,255,.06); }
+.pd-table th {
+    padding: 8px 10px; text-align: left; font-weight: 600;
+    color: rgba(255,255,255,.7); text-transform: uppercase;
+    font-size: .72rem; letter-spacing: .05em;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.pd-table td {
+    padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,.05);
+    color: rgba(255,255,255,.85); vertical-align: middle;
+}
+.pd-table tbody tr:hover { background: rgba(255,255,255,.04); }
+.pd-tbl-photo {
+    width: 36px; height: 36px; border-radius: 6px;
+    object-fit: cover; border: 1px solid rgba(255,255,255,.15);
+    display: block;
+}
+.pd-tbl-photo-ph {
+    width: 36px; height: 36px; border-radius: 6px;
+    background: rgba(255,255,255,.08); display: flex;
+    align-items: center; justify-content: center; font-size: 1.2rem;
+}
+.pd-tbl-name { font-weight: 600; }
+.pd-role-badge {
+    background: rgba(100,181,246,.15); color: #64b5f6;
+    border: 1px solid rgba(100,181,246,.3);
+    padding: 2px 8px; border-radius: 8px; font-size: .75rem; white-space: nowrap;
+}
+.pd-team-cell { display: flex; align-items: center; gap: 7px; }
+.pd-team-logo {
+    width: 26px; height: 26px; border-radius: 4px;
+    object-fit: contain; flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,.15);
+}
+.pd-team-name { font-weight: 600; }
+.pd-pts { font-weight: 700; color: #ffca28; }
+.pd-date { color: rgba(255,255,255,.5); font-size: .78rem; white-space: nowrap; }
+.pd-empty { text-align: center; padding: 20px; color: rgba(255,255,255,.4); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Light Theme overrides — .pd-light
+   ═══════════════════════════════════════════════════════════════════════════ */
+.pd-light { background: #f0f4f8; color: #0d1b3e; }
+
+.pd-light .pd-hdr {
+    background: rgba(13,27,62,.07); border-color: rgba(13,27,62,.12);
+}
+.pd-light .pd-hdr-title { color: #0d1b3e; }
+.pd-light .pd-hdr-sub   { color: rgba(13,27,62,.55); }
+.pd-light .pd-hdr-logo-wrap { background: rgba(13,27,62,.06); border-color: rgba(13,27,62,.18); }
+.pd-light .pd-hdr-logo-ph   { color: #0d1b3e; }
+
+.pd-light .pd-live-badge {
+    color: #1b7a34; background: rgba(27,122,52,.1); border-color: rgba(27,122,52,.3);
+}
+.pd-light .pd-theme-toggle, .pd-light .pd-refresh-btn {
+    background: rgba(13,27,62,.08); border-color: rgba(13,27,62,.18); color: #0d1b3e;
+}
+.pd-light .pd-theme-toggle:hover, .pd-light .pd-refresh-btn:hover {
+    background: rgba(13,27,62,.15);
+}
+
+.pd-light .pd-stat {
+    background: #fff; border-color: rgba(13,27,62,.1);
+}
+.pd-light .pd-stat:hover { background: #eef2ff; border-color: rgba(13,27,62,.25); }
+.pd-light .pd-stat-lbl    { color: rgba(13,27,62,.55); }
+.pd-light .pd-stat.total .pd-stat-num { color: #0d1b3e; }
+.pd-light .pd-stat.icon  .pd-stat-num { color: #7b1fa2; }
+.pd-light .pd-stat.paid  .pd-stat-num { color: #00796b; }
+.pd-light .pd-stat.unpaid .pd-stat-num { color: #bf360c; }
+
+.pd-light .pd-card {
+    background: #fff; border-color: rgba(13,27,62,.1);
+}
+.pd-light .pd-card-title { color: rgba(13,27,62,.75); border-bottom-color: rgba(13,27,62,.08); }
+
+.pd-light .pd-legend .pd-leg-item b { color: #0d1b3e; }
+.pd-light .pd-legend .pd-leg-item small { color: rgba(13,27,62,.45); }
+
+.pd-light .pd-table thead tr { background: rgba(13,27,62,.04); }
+.pd-light .pd-table th { color: rgba(13,27,62,.6); border-bottom-color: rgba(13,27,62,.1); }
+.pd-light .pd-table td { color: #0d1b3e; border-bottom-color: rgba(13,27,62,.06); }
+.pd-light .pd-table tbody tr:hover { background: rgba(13,27,62,.03); }
+.pd-light .pd-tbl-photo    { border-color: rgba(13,27,62,.15); }
+.pd-light .pd-tbl-photo-ph { background: rgba(13,27,62,.06); }
+.pd-light .pd-role-badge   {
+    background: rgba(13,100,200,.08); color: #1565c0;
+    border-color: rgba(13,100,200,.2);
+}
+.pd-light .pd-team-logo { border-color: rgba(13,27,62,.15); }
+.pd-light .pd-pts  { color: #b8860b; }
+.pd-light .pd-date  { color: rgba(13,27,62,.45); }
+.pd-light .pd-empty { color: rgba(13,27,62,.35); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Mobile responsive
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .o_player_dashboard { padding: 10px; gap: 10px; }
+
+    .pd-hdr { height: auto; padding: 8px 12px; flex-wrap: wrap; gap: 6px; }
+    .pd-hdr-text { min-width: 120px; }
+
+    /* Stat cards: 2 per row on mobile */
+    .pd-stat-row { gap: 6px; }
+    .pd-stat { min-width: calc(50% - 6px); flex: 1 1 calc(50% - 6px); padding: 10px 8px; }
+    .pd-stat-num { font-size: 1.3rem; }
+
+    /* All chart rows become single column */
+    .pd-row { flex-direction: column; gap: 10px; }
+    .pd-half, .pd-full { min-width: unset; flex: 1 1 100%; width: 100%; }
+
+    .pd-chart-wrap { max-height: 200px; }
+    .pd-chart-wrap canvas { max-height: 200px; }
+    .pd-chart-small { max-height: 150px; }
+    .pd-chart-small canvas { max-height: 150px; }
+
+    /* Tables: horizontal scroll, slightly smaller text */
+    .pd-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .pd-table { min-width: 480px; }
+    .pd-table th, .pd-table td { padding: 6px 7px; font-size: .78rem; }
+    .pd-tbl-photo { width: 28px; height: 28px; }
+    .pd-team-logo { width: 22px; height: 22px; }
+}

@@ -39,6 +39,11 @@
             <field name="tag">auction_dashboard</field>
         </record>
 
+        <record id="action_player_dashboard_client" model="ir.actions.client">
+            <field name="name">Player Detail Dashboard</field>
+            <field name="tag">player_dashboard</field>
+        </record>
+
         <menuitem id="menu_action_auction_dashboard"
           name="Dashboard"
           action="action_auction_dashboard_client"
@@ -48,6 +53,17 @@
         <!-- Explicitly replace groups so only Dashboard Viewer can see this menu -->
         <record id="menu_action_auction_dashboard" model="ir.ui.menu">
             <field name="groups_id" eval="[(6, 0, [ref('auction_module.group_auction_dashboard')])]"/>
+        </record>
+
+        <menuitem id="menu_action_player_dashboard"
+          name="Player Dashboard"
+          action="action_player_dashboard_client"
+          sequence="1" web_icon="auction_module,static/src/description/auctions_settings.png"
+          groups="auction_module.group_auction_player_dashboard"/>
+
+        <!-- Explicitly replace groups so only Player Dashboard Viewer can see this menu -->
+        <record id="menu_action_player_dashboard" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6, 0, [ref('auction_module.group_auction_player_dashboard')])]"/>
         </record>
 
         <menuitem id="menu_action_auction_root"

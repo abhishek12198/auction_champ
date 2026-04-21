@@ -3,6 +3,7 @@
     'name': 'Auction Champ — Login Theme',
     'version': '1.0',
     'summary': 'Beautiful sports-themed login screen for Auction Champ',
+    'icon': '/auction_login_theme/static/description/icon.png',
     'description': """
         Replaces the default Odoo login screen with a fully custom,
         cricket/football/premier-league styled login page.

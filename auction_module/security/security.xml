@@ -62,6 +62,13 @@
         <field name="category_id" ref="auction_module.auction_categ"/>
     </record>
 
+    <!-- Player Dashboard Viewer — can only see the Player Detail Dashboard menu -->
+    <record id="group_auction_player_dashboard" model="res.groups">
+        <field name="name">Player Dashboard Viewer</field>
+        <field name="comment">Read-only access to the Player Detail Dashboard. Cannot access any other auction menus.</field>
+        <field name="category_id" ref="auction_module.auction_categ"/>
+    </record>
+
     <!-- Bid Board — access to Public Live Bid Board menu -->
     <record id="group_auction_bid_board" model="res.groups">
         <field name="name">Bid Board</field>
@@ -85,6 +92,7 @@
             (4, ref('auction_module.group_auction_pool_generator')),
             (4, ref('auction_module.group_auction_bid_board')),
             (4, ref('auction_module.group_auction_dashboard')),
+            (4, ref('auction_module.group_auction_player_dashboard')),
         ]"/>
     </record>
 
