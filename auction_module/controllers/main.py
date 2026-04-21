@@ -850,9 +850,9 @@ class Auction(http.Controller):
                 return (
                     '<div style="width:%(s)dpx;height:%(s)dpx;border-radius:8px;'
                     'overflow:hidden;margin:0 auto;">'
-                    '<img src="%(src)s" style="width:100%%;height:100%%;object-fit:cover;">'
+                    '<img src="%(src)s" style="width:100%%;height:100%%;object-fit:contain;background:%(bg)s;">'
                     '</div>'
-                ) % {'s': size, 'src': src}
+                ) % {'s': size, 'src': src, 'bg': LIGHT}
             initials = ''.join(w[0] for w in (p.name or 'P').split()[:2]).upper()
             return (
                 '<div style="width:%(s)dpx;height:%(s)dpx;border-radius:8px;overflow:hidden;'
@@ -1040,7 +1040,7 @@ class Auction(http.Controller):
                     '</div>'
 
                     # Name
-                    '<div style="color:%(w)s;font-size:13px;font-weight:bold;'
+                    '<div style="color:%(nm_c)s;font-size:13px;font-weight:bold;'
                     'text-transform:uppercase;letter-spacing:0.5px;line-height:1.2;'
                     'padding:0 4px;">%(name)s</div>'
 
@@ -1053,18 +1053,18 @@ class Auction(http.Controller):
                     '</div>'
 
                     '</div>'
-                ) % {'g': GOLD, 'g2': GOLD2, 'n': NAVY3, 'w': WHITE,
+                ) % {'g': GOLD, 'g2': GOLD2, 'n': NAVY3, 'nm_c': NAVY,
                      'c': color, 'photo': photo,
                      'name': p.name or '', 'role': role or '—'}
 
             icon_section = (
-                '<div style="flex:0 0 auto;background:%(n)s;padding:24px 32px;'
-                'border-bottom:1px solid rgba(232,160,32,0.15);'
+                '<div style="flex:0 0 auto;background:%(bg)s;padding:20px 32px;'
+                'border-bottom:1px solid rgba(14,27,62,0.12);'
                 'display:flex;align-items:flex-start;gap:16px;justify-content:center;'
                 'overflow-x:auto;">'
                 '%(cards)s'
                 '</div>'
-            ) % {'n': NAVY3, 'g': GOLD, 'cards': cards}
+            ) % {'bg': LIGHT, 'g': GOLD, 'cards': cards}
 
         # ══════════════════════════════════════════════════════════════════════
         # SECTION 4 — The Squad (all players, wrapping grid)

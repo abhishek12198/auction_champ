@@ -6,8 +6,9 @@
    ════════════════════════════════════════════ */
 
 .o_auction_dashboard {
-    position: absolute;
-    inset: 0;
+    position: relative;
+    width: 100%;
+    min-height: calc(100vh - 100px);
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -406,4 +407,41 @@
     font-size: .82rem;
     text-align: center;
     padding: 12px 6px;
+}
+
+/* ── Mobile responsive ── */
+@media (max-width: 768px) {
+    .o_auction_dashboard {
+        padding: 8px;
+        gap: 6px;
+        overflow-y: auto;
+        min-height: unset;
+    }
+    .ad-body {
+        flex-direction: column;
+        overflow: visible;
+    }
+    .ad-left, .ad-right {
+        flex: none;
+        width: 100%;
+        min-width: 0;
+    }
+    .ad-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+    .ad-pie-card {
+        min-height: 260px;
+    }
+    .ad-bid-strip {
+        height: auto;
+        min-height: 165px;
+    }
+    .ad-bid-scroll {
+        flex-wrap: wrap;
+        overflow-x: auto;
+    }
+    .ad-bid-card {
+        width: 180px;
+        flex-shrink: 0;
+    }
 }
