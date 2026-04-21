@@ -49,3 +49,9 @@ access_my_service,my_service,base.model_res_users,,1,1,1,1
 access_auction_team_player_public,auction.team.player (public read for card),auction_module.model_auction_team_player,base.group_public,1,0,0,0
 access_auction_tournament_public,auction.tournament (public read for card),auction_module.model_auction_tournament,base.group_public,1,0,0,0
 access_auction_player_tier_public,auction.player.tier (public read for card),auction_module.model_auction_player_tier,base.group_public,1,0,0,0
+
+access_auction_team_player_pd,auction.team.player (player dashboard),auction_module.model_auction_team_player,auction_module.group_auction_player_dashboard,1,0,0,0
+access_auction_team_pd,auction.team (player dashboard),auction_module.model_auction_team,auction_module.group_auction_player_dashboard,1,0,0,0
+access_auction_player_tier_pd,auction.player.tier (player dashboard),auction_module.model_auction_player_tier,auction_module.group_auction_player_dashboard,1,0,0,0
+access_auction_tournament_pd,auction.tournament (player dashboard),auction_module.model_auction_tournament,auction_module.group_auction_player_dashboard,1,0,0,0
+access_auction_auction_player_pd,auction.auction.player (player dashboard),auction_module.model_auction_auction_player,auction_module.group_auction_player_dashboard,1,0,0,0
