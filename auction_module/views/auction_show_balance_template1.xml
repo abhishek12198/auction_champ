@@ -403,6 +403,27 @@
           .bs-row { padding: 12px 20px; }
           .bs-table-header { padding: 10px 20px; }
         }
+
+        /* ── Fullscreen button ───────────────────────────────────────────── */
+        .bs-header { position: relative; }
+        #fs-btn {
+          position: absolute; top: 50%; right: 16px;
+          transform: translateY(-50%);
+          background: rgba(255,255,255,.12);
+          border: 1.5px solid rgba(255,255,255,.30);
+          color: #fff; padding: 5px 13px; border-radius: 6px;
+          cursor: pointer; font-size: 0.78rem; font-weight: 600;
+          display: inline-flex; align-items: center; gap: 7px;
+          transition: background .2s, border-color .2s;
+          font-family: 'Poppins', sans-serif;
+          backdrop-filter: blur(4px); z-index: 100;
+        }
+        #fs-btn:hover { background: rgba(255,255,255,.25); border-color: rgba(255,255,255,.55); }
+        #fs-btn .fs-enter,
+        #fs-btn .fs-exit { display: inline-flex; align-items: center; gap: 6px; }
+        @media (max-width: 480px) {
+          #fs-btn { padding: 4px 9px; font-size: 0.7rem; right: 8px; }
+        }
       </style>
     </head>
 
@@ -410,6 +431,20 @@
       <!-- ── Page header ──────────────────────────────────────────────────── -->
       <header class="bs-header">
         <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo" height="56"/>
+        <button id="fs-btn" type="button" title="Toggle Fullscreen">
+          <span class="fs-enter">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1.5 1h4a.5.5 0 0 1 0 1H2v3.5a.5.5 0 0 1-1 0v-4A.5.5 0 0 1 1.5 1zm9 0h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V2h-3.5a.5.5 0 0 1 0-1zM1 10.5a.5.5 0 0 1 1 0V14h3.5a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5zm13 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5h-4a.5.5 0 0 1 0-1H14v-3.5a.5.5 0 0 1 .5-.5z"/>
+            </svg>
+            Fullscreen
+          </span>
+          <span class="fs-exit" style="display:none">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5.5 0a.5.5 0 0 1 .5.5v4A1.5 1.5 0 0 1 4.5 6h-4a.5.5 0 0 1 0-1H4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 1 0zm5 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h3.5a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 9 4.5v-4a.5.5 0 0 1 1 0zM0 10.5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 6 11.5v4a.5.5 0 0 1-1 0V12a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zm9.5-.5a.5.5 0 0 1 .5.5v1.5a.5.5 0 0 0 .5.5h3.5a.5.5 0 0 1 0 1H11a1.5 1.5 0 0 1-1.5-1.5V10.5a.5.5 0 0 1 .5-.5z"/>
+            </svg>
+            Exit Full
+          </span>
+        </button>
       </header>
 
       <!-- ── Top bar: tournament title → Bid Summary → view toggle | logo ── -->
@@ -648,6 +683,30 @@
       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
               integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
               crossorigin="anonymous"></script>
+
+      <script>
+        (function () {
+          var btn   = document.getElementById('fs-btn');
+          if (!btn) return;
+          var enter = btn.querySelector('.fs-enter');
+          var exit  = btn.querySelector('.fs-exit');
+          function sync() {
+            var isFS = !!document.fullscreenElement;
+            if (enter) enter.style.display = isFS ? 'none' : '';
+            if (exit)  exit.style.display  = isFS ? ''     : 'none';
+          }
+          btn.addEventListener('click', function () {
+            if (!document.fullscreenElement) {
+              document.documentElement.requestFullscreen().catch(function (e) {
+                console.warn('Fullscreen error:', e);
+              });
+            } else {
+              document.exitFullscreen();
+            }
+          });
+          document.addEventListener('fullscreenchange', sync);
+        })();
+      </script>
     </body>
   </html>
 </template>

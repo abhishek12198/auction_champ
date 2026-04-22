@@ -76,7 +76,9 @@
         .cr-tourn-info   { display: flex; flex-direction: column; gap: 2px; }
         .cr-tourn-name   { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 2px; color: var(--text-main); line-height: 1; text-shadow: 0 0 12px rgba(220,20,60,.28); }
         .cr-tourn-desc   { font-size: .62rem; font-weight: 400; letter-spacing: 1.5px; color: var(--text-dim); }
-        .cr-header-right { flex: 0 0 auto; }
+        .cr-header-right { flex: 0 0 auto; display:flex; align-items:center; gap:10px; }
+        .cr-fs-btn { display:flex;align-items:center;justify-content:center;flex-shrink:0;width:34px;height:34px;border-radius:8px;background:rgba(220,20,60,0.10);border:1.5px solid rgba(220,20,60,0.35);color:var(--cherry);cursor:pointer;padding:0;transition:all 0.2s }
+        .cr-fs-btn:hover { background:rgba(220,20,60,0.22);box-shadow:0 0 8px rgba(220,20,60,0.30) }
         .cr-live-badge   { display: flex; align-items: center; gap: 7px; padding: 5px 13px; border-radius: 28px; background: rgba(220,20,60,.10); border: 1px solid rgba(220,20,60,.33); font-family: 'Bebas Neue', sans-serif; font-size: .85rem; letter-spacing: 3px; color: var(--cherry-bright); }
         .cr-live-dot     { width: 8px; height: 8px; border-radius: 50%; background: var(--cherry); box-shadow: 0 0 8px var(--cherry), 0 0 16px var(--cherry-glow); animation: crPulse 1.4s ease-in-out infinite; }
         @keyframes crPulse {
@@ -239,6 +241,16 @@
         .cr-team-chip img { width: 26px; height: 26px; border-radius: 50%; object-fit: contain; border: 1px solid rgba(220,20,60,.18); }
         .cr-team-chip-name { font-size: .7rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim); }
         .cr-team-chip-pts  { font-family: 'Bebas Neue', sans-serif; font-size: .8rem; letter-spacing: 1px; color: var(--cherry); margin-left: 3px; }
+/* ── Theme toggle ── */
+#cr-theme-btn{background:rgba(220,20,60,0.10);border:1px solid rgba(220,20,60,0.35);border-radius:20px;padding:5px 14px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:var(--cherry);letter-spacing:0.04em;transition:all 0.2s}
+#cr-theme-btn:hover{background:rgba(220,20,60,0.22);box-shadow:0 0 8px rgba(220,20,60,0.30)}
+/* Light mode overrides */
+body[data-theme="light"]{--bg:#fff5f7;--bg-surface:#ffffff;--bg-panel:#fff0f2;--text-main:#2d0810;--text-dim:rgba(45,8,16,0.55);--divider:rgba(220,20,60,0.12)}
+body[data-theme="light"] .cr-header{background:linear-gradient(135deg,#fff0f2 0%,#ffe0e6 100%);border-bottom:1px solid rgba(220,20,60,0.18)}
+body[data-theme="light"] .cr-brand-name,body[data-theme="light"] .cr-tourn-name{color:var(--cherry-dark)}
+body[data-theme="light"] .cr-brand-sub,body[data-theme="light"] .cr-tourn-desc{color:var(--cherry-mid)}
+body[data-theme="light"] .cr-live-badge{background:rgba(220,20,60,0.10);color:var(--cherry-dark);border-color:rgba(220,20,60,0.28)}
+body[data-theme="light"] #cr-theme-btn{color:var(--cherry-dark)}
       </style>
     </head>
 
@@ -271,6 +283,13 @@
             <span class="cr-live-dot"></span>
             LIVE
           </div>
+          <button id="cr-theme-btn" onclick="toggleCrTheme()">
+            <span id="cr-th-dark">&#9728; Light</span>
+            <span id="cr-th-light" style="display:none">&#9790; Dark</span>
+          </button>
+          <button id="fs-btn" onclick="toggleFullscreen()" title="Fullscreen" class="cr-fs-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          </button>
         </div>
       </header>
 
@@ -652,12 +671,29 @@
         </div>
       </div>
 
-      <!-- Fullscreen button -->
-      <button id="fs-btn" onclick="toggleFullscreen()" title="Enter Fullscreen" style="position:fixed;top:14px;right:14px;z-index:9999;width:38px;height:38px;border-radius:8px;background:rgba(8,2,6,0.75);border:1.5px solid rgba(220,20,60,0.43);color:#DC143C;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:0;transition:background .2s,box-shadow .2s;" onmouseover="this.style.boxShadow='0 0 12px rgba(220,20,60,0.43)'" onmouseout="this.style.boxShadow='none'">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-      </button>
+      <!-- Fullscreen button moved into header right section -->
 
       <t t-call="auction_module.player_sell_modal"/>
+      <script>
+(function(){
+  var t=localStorage.getItem('auction_cr_theme')||'dark';
+  document.body.setAttribute('data-theme',t);
+  var bd=document.getElementById('cr-th-dark');
+  var bl=document.getElementById('cr-th-light');
+  if(bd){bd.style.display=t==='dark'?'inline':'none';}
+  if(bl){bl.style.display=t==='light'?'inline':'none';}
+})();
+function toggleCrTheme(){
+  var cur=document.body.getAttribute('data-theme');
+  var nxt=cur==='dark'?'light':'dark';
+  document.body.setAttribute('data-theme',nxt);
+  localStorage.setItem('auction_cr_theme',nxt);
+  var bd=document.getElementById('cr-th-dark');
+  var bl=document.getElementById('cr-th-light');
+  if(bd){bd.style.display=nxt==='dark'?'inline':'none';}
+  if(bl){bl.style.display=nxt==='light'?'inline':'none';}
+}
+      </script>
     </body>
     </html>
   </template>

@@ -187,6 +187,19 @@
     .sw-btn-next { background: rgba(194,24,91,.06); border: 1.5px solid rgba(194,24,91,.28); color: var(--text-mid); }
     .sw-btn-next:hover { background: rgba(194,24,91,.13); border-color: var(--berry); box-shadow: 0 0 14px rgba(194,24,91,.14); transform: translateY(-1px); color: var(--berry); }
     .sw-btn-next:active { transform: translateY(0); }
+/* ── Theme toggle ── */
+#sw-theme-btn{background:rgba(194,24,91,0.08);border:1px solid rgba(194,24,91,0.25);border-radius:20px;padding:5px 14px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:var(--berry);letter-spacing:0.04em;transition:all 0.2s}
+#sw-theme-btn:hover{background:rgba(194,24,91,0.16);box-shadow:0 0 8px rgba(194,24,91,0.20)}
+.sw-header-right{display:flex;align-items:center;gap:10px}
+.sw-fs-btn{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:34px;height:34px;border-radius:8px;background:rgba(194,24,91,0.07);border:1.5px solid rgba(194,24,91,0.28);color:var(--berry);cursor:pointer;padding:0;transition:all 0.2s}
+.sw-fs-btn:hover{background:rgba(194,24,91,0.16);box-shadow:0 0 8px rgba(194,24,91,0.20)}
+/* Dark mode overrides */
+body[data-theme="dark"]{--bg:#1a0a12;--bg-petal:#250e1a;--bg-card:#200d16;--dark:#f0dde4;--text-mid:#d4a0b4;--text-dim:rgba(240,221,228,0.50);--divider:rgba(194,24,91,0.25)}
+body[data-theme="dark"] .sw-header{background:linear-gradient(135deg,#1a0a12 0%,#250e1a 100%);border-bottom:1px solid rgba(194,24,91,0.25)}
+body[data-theme="dark"] .sw-brand-name,body[data-theme="dark"] .sw-tourn-name{color:var(--berry-bright)}
+body[data-theme="dark"] .sw-brand-sub,body[data-theme="dark"] .sw-tourn-desc{color:var(--berry)}
+body[data-theme="dark"] .sw-live-badge{background:rgba(194,24,91,0.15);color:var(--berry-bright);border-color:rgba(194,24,91,0.35)}
+body[data-theme="dark"] #sw-theme-btn{color:var(--berry-bright);border-color:rgba(194,24,91,0.40)}
   </style>
 </head>
 
@@ -214,9 +227,18 @@
         </div>
       </t>
     </div>
-    <div class="sw-live-badge">
-      <span class="sw-live-dot"></span>
-      LIVE
+    <div class="sw-header-right">
+      <div class="sw-live-badge">
+        <span class="sw-live-dot"></span>
+        LIVE
+      </div>
+      <button id="sw-theme-btn" onclick="toggleSwTheme()">
+        <span id="sw-th-dark" style="display:none">&#9728; Light</span>
+        <span id="sw-th-light">&#9790; Dark</span>
+      </button>
+      <button id="fs-btn" onclick="toggleFullscreen()" title="Fullscreen" class="sw-fs-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+      </button>
     </div>
   </header>
 
@@ -518,12 +540,29 @@
     </div>
   </div>
 
-  <!-- Fullscreen button -->
-  <button id="fs-btn" onclick="toggleFullscreen()" title="Enter Fullscreen" style="position:fixed;top:14px;right:14px;z-index:9999;width:38px;height:38px;border-radius:8px;background:rgba(194,24,91,0.07);border:1.5px solid rgba(194,24,91,0.33);color:#C2185B;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:0;transition:background .2s,box-shadow .2s;" onmouseover="this.style.boxShadow='0 0 12px rgba(194,24,91,0.28)'" onmouseout="this.style.boxShadow='none'">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-  </button>
+  <!-- Fullscreen button moved into header right section -->
 
   <t t-call="auction_module.player_sell_modal"/>
+  <script>
+(function(){
+  var t=localStorage.getItem('auction_sw_theme')||'light';
+  document.body.setAttribute('data-theme',t);
+  var bd=document.getElementById('sw-th-dark');
+  var bl=document.getElementById('sw-th-light');
+  if(bd){bd.style.display=t==='dark'?'inline':'none';}
+  if(bl){bl.style.display=t==='light'?'inline':'none';}
+})();
+function toggleSwTheme(){
+  var cur=document.body.getAttribute('data-theme');
+  var nxt=cur==='light'?'dark':'light';
+  document.body.setAttribute('data-theme',nxt);
+  localStorage.setItem('auction_sw_theme',nxt);
+  var bd=document.getElementById('sw-th-dark');
+  var bl=document.getElementById('sw-th-light');
+  if(bd){bd.style.display=nxt==='dark'?'inline':'none';}
+  if(bl){bl.style.display=nxt==='light'?'inline':'none';}
+}
+  </script>
 </body>
 </html>
 </template>

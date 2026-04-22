@@ -130,7 +130,7 @@
 
     /* ── RIGHT: LIVE indicator only ──────────────────────── */
     .pt-header-right-wrap {
-      flex: 0 0 auto; display: flex; align-items: center;
+      flex: 0 0 auto; display: flex; align-items: center; gap: 10px;
     }
     .pt-live-badge {
       display: flex; align-items: center; gap: 8px;
@@ -619,6 +619,16 @@
       gap: 20px;
       opacity: 0.28;
     }
+/* ── Theme toggle ── */
+#pt-theme-btn{background:rgba(107,191,78,0.08);border:1px solid rgba(107,191,78,0.30);border-radius:20px;padding:5px 14px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:var(--pistah);letter-spacing:0.06em;transition:all 0.2s}
+#pt-theme-btn:hover{background:rgba(107,191,78,0.18);box-shadow:0 0 10px rgba(107,191,78,0.30)}
+/* Light mode overrides */
+body[data-theme="light"]{--bg:#f0f9ee;--bg-surface:#e8f5e4;--bg-panel:#ffffff;--bg-card:#ffffff;--text-main:#0d2010;--text-dim:rgba(13,32,16,0.55);--divider:rgba(107,191,78,0.18)}
+body[data-theme="light"] .pt-header{background:linear-gradient(90deg,#f0fced 0%,#e8f5e4 50%,#f0fced 100%);border-bottom:1px solid rgba(107,191,78,0.25)}
+body[data-theme="light"] .pt-brand-name,body[data-theme="light"] .pt-tourn-name-center{color:var(--pistah-dark)}
+body[data-theme="light"] .pt-brand-season,body[data-theme="light"] .pt-tourn-desc-center{color:var(--slate-dark)}
+body[data-theme="light"] .pt-live-badge{background:rgba(107,191,78,0.12);color:var(--pistah-dark);border-color:rgba(107,191,78,0.30)}
+body[data-theme="light"] #pt-theme-btn{color:var(--pistah-dark)}
   </style>
 </head>
 
@@ -659,6 +669,13 @@
         <span class="pt-live-dot"></span>
         LIVE
       </div>
+      <button id="pt-theme-btn" onclick="togglePtTheme()">
+        <span id="pt-th-dark">&#9728; Light</span>
+        <span id="pt-th-light" style="display:none">&#9790; Dark</span>
+      </button>
+      <button id="fs-btn" onclick="toggleFullscreen()" title="Fullscreen" style="display:flex;align-items:center;justify-content:center;flex-shrink:0;width:34px;height:34px;border-radius:8px;background:rgba(107,191,78,0.08);border:1.5px solid rgba(107,191,78,0.35);color:var(--pistah);cursor:pointer;padding:0;transition:all 0.2s">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+      </button>
     </div>
 
   </header>
@@ -1081,8 +1098,7 @@
   <!-- Toast -->
   <div id="ptToast" style="display:none;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:10001;color:#fff;padding:12px 28px;border-radius:8px;font-size:.95rem;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.5);"></div>
 
-  <!-- Fullscreen Toggle -->
-  <button id="fs-btn" onclick="toggleFullscreen()" title="Enter Fullscreen" style="position:fixed;top:14px;right:14px;z-index:9999;width:38px;height:38px;border-radius:8px;background:rgba(6,14,8,0.8);border:1.5px solid rgba(107,191,78,0.5);color:#6BBF4E;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:0;transition:background .2s,box-shadow .2s;" onmouseover="this.style.boxShadow='0 0 12px rgba(107,191,78,0.45)'" onmouseout="this.style.boxShadow='none'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
+  <!-- Fullscreen Toggle moved into header right section -->
   <script>
     function toggleFullscreen() {
       if (!document.fullscreenElement) {
@@ -1104,6 +1120,26 @@
     });
   </script>
   <t t-call="auction_module.player_sell_modal"/>
+  <script>
+(function(){
+  var t=localStorage.getItem('auction_pt_theme')||'dark';
+  document.body.setAttribute('data-theme',t);
+  var bd=document.getElementById('pt-th-dark');
+  var bl=document.getElementById('pt-th-light');
+  if(bd){bd.style.display=t==='dark'?'inline':'none';}
+  if(bl){bl.style.display=t==='light'?'inline':'none';}
+})();
+function togglePtTheme(){
+  var cur=document.body.getAttribute('data-theme');
+  var nxt=cur==='dark'?'light':'dark';
+  document.body.setAttribute('data-theme',nxt);
+  localStorage.setItem('auction_pt_theme',nxt);
+  var bd=document.getElementById('pt-th-dark');
+  var bl=document.getElementById('pt-th-light');
+  if(bd){bd.style.display=nxt==='dark'?'inline':'none';}
+  if(bl){bl.style.display=nxt==='light'?'inline':'none';}
+}
+  </script>
 </body>
 </html>
 </template>

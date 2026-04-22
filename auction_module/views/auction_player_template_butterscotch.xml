@@ -85,12 +85,15 @@
                 brightness(1.05) drop-shadow(0 0 10px rgba(245,200,66,0.5));
       }
 
-      .hud-tourn-logo { display: flex; justify-content: flex-end; align-items: center; }
+      .hud-tourn-logo { display: flex; flex-direction:column; align-items: flex-end; justify-content:center; gap:6px; }
       .hud-tourn-logo img {
-        max-height: 66px; max-width: 150px;
+        max-height: 52px; max-width: 130px;
         object-fit: contain;
         object-position: right center;
       }
+      .hud-header-controls { display:flex; align-items:center; gap:8px; }
+      .bs-ctrl-btn { display:flex;align-items:center;justify-content:center;flex-shrink:0;width:32px;height:32px;border-radius:7px;background:rgba(245,200,66,0.10);border:1.5px solid rgba(245,200,66,0.35);color:var(--gold);cursor:pointer;padding:0;transition:all 0.2s }
+      .bs-ctrl-btn:hover { background:rgba(245,200,66,0.22);box-shadow:0 0 8px rgba(245,200,66,0.30) }
 
       /* ══════════════════════════════════════════
          ARENA — two-panel full-height split
@@ -410,6 +413,47 @@
         .hud-player-name { font-size: 1.8rem; }
         .hud-header { grid-template-columns: 1fr 80px 1fr; }
       }
+/* ── Theme toggle ── */
+#bs-theme-btn{background:rgba(245,200,66,0.10);border:1px solid rgba(245,200,66,0.35);border-radius:20px;padding:5px 12px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:var(--gold);letter-spacing:0.04em;transition:all 0.2s}
+#bs-theme-btn:hover{background:rgba(245,200,66,0.22);box-shadow:0 0 8px rgba(245,200,66,0.30)}
+/* ── Light mode overrides ── */
+body[data-theme="light"]{
+  --navy:       #fdf8ef;
+  --navy-card:  #ffffff;
+  --white:      #1a1000;
+  --dim:        rgba(26,16,0,0.50);
+  --border:     rgba(180,140,20,0.22);
+  --border-hot: rgba(180,140,20,0.55);
+}
+/* Header */
+body[data-theme="light"] .hud-header{background:linear-gradient(90deg,#fdf4e0 0%,#fff8ec 50%,#fdf4e0 100%);border-bottom:1px solid rgba(180,140,20,0.28)}
+body[data-theme="light"] .hud-tourn-name{color:#4a3000}
+body[data-theme="light"] .hud-tourn-desc{color:rgba(74,48,0,0.65)}
+body[data-theme="light"] #bs-theme-btn{color:var(--gold-dark)}
+body[data-theme="light"] .bs-ctrl-btn{color:var(--gold-dark)}
+/* Logo filter for light bg */
+body[data-theme="light"] .hud-logo-center img{filter:brightness(0) sepia(1) saturate(4) hue-rotate(5deg) brightness(0.60) drop-shadow(0 0 8px rgba(180,140,20,0.35))}
+/* Info column */
+body[data-theme="light"] .hud-info-col{border-left-color:rgba(180,140,20,0.25)}
+body[data-theme="light"] .hud-stats-heading{color:var(--gold-dark);border-bottom-color:rgba(180,140,20,0.28)}
+body[data-theme="light"] .hud-stat-row{background:rgba(180,140,20,0.04)}
+body[data-theme="light"] .hud-stat-row:hover{background:rgba(180,140,20,0.10);border-color:rgba(180,140,20,0.45)}
+body[data-theme="light"] .hud-stat-key{color:var(--gold-dark);background:rgba(180,140,20,0.08);border-right-color:rgba(180,140,20,0.22)}
+body[data-theme="light"] .hud-stat-val{color:#1a1000}
+/* Unsold button — hardcoded white refs → swap to dark */
+body[data-theme="light"] .hud-btn-unsold{background:rgba(26,16,0,0.06);border:1.5px solid rgba(26,16,0,0.20);color:rgba(26,16,0,0.72)}
+body[data-theme="light"] .hud-btn-unsold:hover{background:rgba(26,16,0,0.12);border-color:rgba(26,16,0,0.36);color:rgba(26,16,0,0.92)}
+/* Next player button */
+body[data-theme="light"] .hud-next-btn{color:var(--gold-dark)}
+body[data-theme="light"] .hud-next-bar{background:var(--navy-card)}
+/* Photo column elements always sit on a dark photo — keep them bright */
+body[data-theme="light"] .hud-player-name{color:#ffffff}
+body[data-theme="light"] .hud-serial-label{color:rgba(255,255,255,0.55)}
+body[data-theme="light"] .hud-serial-number{color:var(--gold)}
+body[data-theme="light"] .hud-role-tag{color:#1a0800}
+/* Photo edge gradient — blend into light info panel cleanly */
+body[data-theme="light"] .hud-photo-col::after{background:linear-gradient(to right,transparent 65%,rgba(253,248,239,0.6) 88%,#fdf8ef 100%)}
+body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to top,rgba(7,11,20,0.96) 0%,transparent 100%)}
     </style>
   </head>
 
@@ -428,6 +472,15 @@
       </div>
       <div class="hud-tourn-logo">
         <img t-att-src="image_data_uri(player.tournament_id.logo)" alt="Tournament Logo" />
+        <div class="hud-header-controls">
+          <button id="bs-theme-btn" onclick="toggleBsTheme()">
+            <span id="bs-th-dark">&#9728; Light</span>
+            <span id="bs-th-light" style="display:none">&#9790; Dark</span>
+          </button>
+          <button id="fs-btn" onclick="toggleFullscreen()" title="Fullscreen" class="bs-ctrl-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          </button>
+        </div>
       </div>
     </header>
 
@@ -731,8 +784,7 @@
         <div id="ac-next-bar" style="height:100%;width:0%;background:#F5C842;border-radius:2px;transition:width .3s;"></div>
       </div>
     </div>
-    <!-- Fullscreen Toggle -->
-    <button id="fs-btn" onclick="toggleFullscreen()" title="Enter Fullscreen" style="position:fixed;top:14px;right:14px;z-index:9999;width:38px;height:38px;border-radius:8px;background:rgba(9,9,18,0.75);border:1.5px solid rgba(245,200,66,0.45);color:#F5C842;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:0;transition:background .2s,box-shadow .2s;" onmouseover="this.style.boxShadow='0 0 12px rgba(245,200,66,0.4)'" onmouseout="this.style.boxShadow='none'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
+    <!-- Fullscreen Toggle moved into header right section -->
     <script>
       function toggleFullscreen() {
         if (!document.fullscreenElement) {
@@ -754,6 +806,26 @@
       });
     </script>
     <t t-call="auction_module.player_sell_modal"/>
+    <script>
+(function(){
+  var t=localStorage.getItem('auction_bs_theme')||'dark';
+  document.body.setAttribute('data-theme',t);
+  var bd=document.getElementById('bs-th-dark');
+  var bl=document.getElementById('bs-th-light');
+  if(bd){bd.style.display=t==='dark'?'inline':'none';}
+  if(bl){bl.style.display=t==='light'?'inline':'none';}
+})();
+function toggleBsTheme(){
+  var cur=document.body.getAttribute('data-theme');
+  var nxt=cur==='dark'?'light':'dark';
+  document.body.setAttribute('data-theme',nxt);
+  localStorage.setItem('auction_bs_theme',nxt);
+  var bd=document.getElementById('bs-th-dark');
+  var bl=document.getElementById('bs-th-light');
+  if(bd){bd.style.display=nxt==='dark'?'inline':'none';}
+  if(bl){bl.style.display=nxt==='light'?'inline':'none';}
+}
+    </script>
   </body>
 </html>
 </template>

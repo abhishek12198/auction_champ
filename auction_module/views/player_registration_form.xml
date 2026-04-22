@@ -340,8 +340,8 @@
                     </div>
 
                     <div>
-                        <label class="reg-label" for="playerTier">Player Tier</label>
-                        <select id="playerTier" name="tier_id" class="reg-select">
+                        <label class="reg-label" for="playerTier">Player Tier <span class="req">*</span></label>
+                        <select id="playerTier" name="tier_id" class="reg-select" required="required">
                             <option value="">— Select Tier —</option>
                             <t t-foreach="tiers" t-as="tier">
                                 <option t-att-value="tier.id" t-esc="tier.name"/>
@@ -370,8 +370,8 @@
 
                 <div class="reg-grid">
                     <div>
-                        <label class="reg-label" for="contactNo">Mobile Number</label>
-                        <input type="tel" id="contactNo" name="contact" class="reg-input"
+                        <label class="reg-label" for="contactNo">Mobile Number <span class="req">*</span></label>
+                        <input type="tel" id="contactNo" name="contact" class="reg-input" required="required"
                                placeholder="+91 98765 43210" maxlength="20"/>
                     </div>
 

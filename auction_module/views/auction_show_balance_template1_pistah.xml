@@ -422,6 +422,27 @@
           .pc-cmd { padding-left: 12px; padding-right: 12px; }
           .pc-header { padding-left: 12px; padding-right: 12px; }
         }
+
+        /* ── Fullscreen button ───────────────────────────────────────────── */
+        .pc-fs-btn {
+          display: inline-flex; align-items: center; gap: 7px;
+          padding: 6px 14px;
+          background: rgba(107,191,78,.10);
+          border: 1.5px solid var(--p-border);
+          border-radius: 6px;
+          color: var(--p-br);
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(0.55rem, 1.2vw, 0.68rem);
+          font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+          cursor: pointer; transition: background .2s, border-color .2s;
+          flex-shrink: 0;
+        }
+        .pc-fs-btn:hover { background: rgba(107,191,78,.25); border-color: var(--p); }
+        .pc-fs-btn .fs-enter,
+        .pc-fs-btn .fs-exit { display: inline-flex; align-items: center; gap: 6px; }
+        @media (max-width: 480px) {
+          .pc-fs-btn { padding: 5px 9px; letter-spacing: 1px; }
+        }
       </style>
     </head>
 
@@ -434,9 +455,25 @@
         <div class="pc-header-logo">
           <img src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ Logo"/>
         </div>
-        <div class="pc-live">
-          <span class="pc-live-dot"></span>
-          LIVE
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div class="pc-live">
+            <span class="pc-live-dot"></span>
+            LIVE
+          </div>
+          <button id="fs-btn" class="pc-fs-btn" type="button" title="Toggle Fullscreen">
+            <span class="fs-enter">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1.5 1h4a.5.5 0 0 1 0 1H2v3.5a.5.5 0 0 1-1 0v-4A.5.5 0 0 1 1.5 1zm9 0h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V2h-3.5a.5.5 0 0 1 0-1zM1 10.5a.5.5 0 0 1 1 0V14h3.5a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5zm13 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5h-4a.5.5 0 0 1 0-1H14v-3.5a.5.5 0 0 1 .5-.5z"/>
+              </svg>
+              FULLSCREEN
+            </span>
+            <span class="fs-exit" style="display:none">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5.5 0a.5.5 0 0 1 .5.5v4A1.5 1.5 0 0 1 4.5 6h-4a.5.5 0 0 1 0-1H4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 1 0zm5 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h3.5a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 9 4.5v-4a.5.5 0 0 1 1 0zM0 10.5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 6 11.5v4a.5.5 0 0 1-1 0V12a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zm9.5-.5a.5.5 0 0 1 .5.5v1.5a.5.5 0 0 0 .5.5h3.5a.5.5 0 0 1 0 1H11a1.5 1.5 0 0 1-1.5-1.5V10.5a.5.5 0 0 1 .5-.5z"/>
+              </svg>
+              EXIT
+            </span>
+          </button>
         </div>
       </header>
 
@@ -699,6 +736,30 @@
       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
               integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
               crossorigin="anonymous"></script>
+
+      <script>
+        (function () {
+          var btn   = document.getElementById('fs-btn');
+          if (!btn) return;
+          var enter = btn.querySelector('.fs-enter');
+          var exit  = btn.querySelector('.fs-exit');
+          function sync() {
+            var isFS = !!document.fullscreenElement;
+            if (enter) enter.style.display = isFS ? 'none' : '';
+            if (exit)  exit.style.display  = isFS ? ''     : 'none';
+          }
+          btn.addEventListener('click', function () {
+            if (!document.fullscreenElement) {
+              document.documentElement.requestFullscreen().catch(function (e) {
+                console.warn('Fullscreen error:', e);
+              });
+            } else {
+              document.exitFullscreen();
+            }
+          });
+          document.addEventListener('fullscreenchange', sync);
+        })();
+      </script>
     </body>
   </html>
 </template>

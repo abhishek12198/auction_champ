@@ -22,7 +22,23 @@
     <link rel="stylesheet" href="/auction_module/static/src/assets/css/style.css" />
     <title>Player Showcase</title>
 
-    <!--<style></style>-->
+    <style>
+/* ── Vanilla Theme Toggle ── */
+#vn-theme-btn{position:fixed;top:14px;right:62px;z-index:9999;background:rgba(40,0,125,0.08);border:1px solid rgba(40,0,125,0.25);border-radius:20px;padding:5px 14px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:#28007d;letter-spacing:0.04em;transition:all 0.2s}
+#vn-theme-btn:hover{background:rgba(40,0,125,0.16);box-shadow:0 0 8px rgba(40,0,125,0.20)}
+/* Dark mode overrides */
+body[data-theme="dark"]{background-image:none!important;background-color:#0d1117}
+body[data-theme="dark"] header{background-image:none!important;background-color:#161b22;border-bottom:1px solid rgba(46,90,234,0.30)}
+body[data-theme="dark"] .each-club-list,body[data-theme="dark"] .player-profession-body{background-color:#1f2937}
+body[data-theme="dark"] h3{color:#e6edf3}
+body[data-theme="dark"] h2{color:#79b8ff}
+body[data-theme="dark"] .player-name{color:#e6edf3}
+body[data-theme="dark"] .player-possition{color:#79b8ff}
+body[data-theme="dark"] .league-name,body[data-theme="dark"] .league-name-logo{background-color:#1f2937}
+body[data-theme="dark"] .team-name h3,body[data-theme="dark"] .team-name p{color:#c9d1d9}
+body[data-theme="dark"] .team-name .bg-white{background-color:#1f2937!important}
+body[data-theme="dark"] #vn-theme-btn{background:rgba(121,184,255,0.10);border-color:rgba(121,184,255,0.30);color:#79b8ff}
+    </style>
   </head>
   <body style="min-height: 100vh" t-att-data-player-id="player.id">
     <header class="single-header">
@@ -62,6 +78,10 @@
           </div>
         </div>
       </div>
+      <button id="vn-theme-btn" onclick="toggleVnTheme()">
+        <span id="vn-th-dark" style="display:none">&#9728; Light</span>
+        <span id="vn-th-light">&#9790; Dark</span>
+      </button>
     </header>
 
     <div class="container" data-player-zone="">
@@ -375,6 +395,26 @@
       });
     </script>
     <t t-call="auction_module.player_sell_modal"/>
+    <script>
+(function(){
+  var t=localStorage.getItem('auction_vn_theme')||'light';
+  document.body.setAttribute('data-theme',t);
+  var bd=document.getElementById('vn-th-dark');
+  var bl=document.getElementById('vn-th-light');
+  if(bd){bd.style.display=t==='dark'?'inline':'none';}
+  if(bl){bl.style.display=t==='light'?'inline':'none';}
+})();
+function toggleVnTheme(){
+  var cur=document.body.getAttribute('data-theme');
+  var nxt=cur==='light'?'dark':'light';
+  document.body.setAttribute('data-theme',nxt);
+  localStorage.setItem('auction_vn_theme',nxt);
+  var bd=document.getElementById('vn-th-dark');
+  var bl=document.getElementById('vn-th-light');
+  if(bd){bd.style.display=nxt==='dark'?'inline':'none';}
+  if(bl){bl.style.display=nxt==='light'?'inline':'none';}
+}
+    </script>
   </body>
 </html>
 </template>
