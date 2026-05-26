@@ -77,7 +77,7 @@
                         <!-- LEFT: Player photo with tier-coloured border -->
                         <td t-att-style="'width:255px; min-width:255px; vertical-align:top; padding:0; background:#060e08; border-left:4px solid ' + (doc.tier_id.color if doc.tier_id else '#6BBF4E') + ';'">
                             <t t-if="doc.photo">
-                                <img t-att-src="image_data_uri(doc.photo)"
+                                <img t-att-src="image_data_uri(doc.photo_card or doc.photo)"
                                      alt="Player Photo"
                                      t-att-style="'width:255px; height:345px; display:block; object-fit:cover; object-position:top center; border-top:4px solid ' + (doc.tier_id.color if doc.tier_id else '#6BBF4E') + '; border-bottom:4px solid ' + (doc.tier_id.color if doc.tier_id else '#6BBF4E') + ';'"/>
                             </t>

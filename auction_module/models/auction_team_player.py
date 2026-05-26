@@ -1,15 +1,24 @@
 # -*- coding: utf-8 -*-
 import base64
+import os
 import random
 from odoo import api, models, fields, _
 from odoo.exceptions import UserError
-from odoo.tools.image import image_data_uri
+from odoo.tools.image import image_data_uri, image_process
 import requests
-import base64
 import werkzeug
 import werkzeug.exceptions
 from urllib.parse import urlparse, parse_qs
 import re
+
+
+def _get_default_player_photo(self):
+    img_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        'static', 'img', 'default_icon.png'
+    )
+    with open(img_path, 'rb') as f:
+        return base64.b64encode(f.read())
 class AuctionTeamPlayer(models.Model):
     _name = 'auction.team.player'
 
@@ -44,7 +53,12 @@ class AuctionTeamPlayer(models.Model):
     batting_style = fields.Char(string="Batting Style", required=True, default='Right Handed Batter')
     bowling_style = fields.Char(string="Bowling Style", required=True, default='Right Arm')
     role = fields.Char()
-    photo = fields.Binary("Photo")
+    photo = fields.Binary("Photo", default=_get_default_player_photo)
+    photo_card = fields.Binary(
+        string='Photo (Card Print)',
+        compute='_compute_photo_card',
+        help='Resized & compressed JPEG for PDF card printing. Reduces PDF size and generation time.',
+    )
     photo_url = fields.Char("Photo URL")
     payment_url = fields.Char("Payment URL")
     state = fields.Selection([('draft', 'Draft'), ('auction', 'In Auction'), ('sold', 'Sold'), ('unsold', 'Unsold')], default='draft')
@@ -74,6 +88,24 @@ class AuctionTeamPlayer(models.Model):
     p_type =   fields.Char("Type")
     p_category = fields.Char("Category")
     payment_proof = fields.Binary("Payment Proof", help="Uploaded payment screenshot/receipt from registration form.")
+
+    @api.depends('photo')
+    def _compute_photo_card(self):
+        """Return a resized, JPEG-compressed copy of the player photo for card PDF printing.
+        Reduces per-page image size from ~200KB to ~15-30KB, significantly cutting PDF size and wkhtmltopdf time."""
+        for player in self:
+            if player.photo:
+                try:
+                    player.photo_card = image_process(
+                        player.photo,
+                        size=(400, 500),
+                        quality=70,
+                        output_format='JPEG',
+                    )
+                except Exception:
+                    player.photo_card = player.photo
+            else:
+                player.photo_card = False
 
     def _compute_effective_base_price(self):
         """Return the base price for this player from the auction setup.

@@ -34,7 +34,7 @@
                     <!-- Body -->
                     <tr>
                         <td t-att-style="'width:260px; min-width:260px; vertical-align:top; padding:0; background:#1a2744; border-left:6px solid ' + (doc.tier_id.color if doc.tier_id else '#1a2744') + ';'">
-                            <img t-att-src="image_data_uri(doc.photo)" alt="Player Photo"
+                            <img t-att-src="image_data_uri(doc.photo_card or doc.photo)" alt="Player Photo"
                                  t-att-style="'width:254px; height:340px; object-fit:cover; object-position:top center; display:block; border-top:6px solid ' + (doc.tier_id.color if doc.tier_id else '#1a2744') + '; border-bottom:6px solid ' + (doc.tier_id.color if doc.tier_id else '#1a2744') + ';'"/>
                         </td>
                         <td style="vertical-align:top; padding:22px 26px; background:#ffffff; position:relative;">

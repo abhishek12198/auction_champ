@@ -41,7 +41,7 @@
                     <tr>
                         <!-- Photo -->
                         <td t-att-style="'width:260px; min-width:260px; vertical-align:top; padding:0; background:#FFF0F5; border-left:5px solid ' + (doc.tier_id.color if doc.tier_id else '#C2185B') + ';'">
-                            <img t-att-src="image_data_uri(doc.photo)"
+                            <img t-att-src="image_data_uri(doc.photo_card or doc.photo)"
                                  alt="Player Photo"
                                  t-att-style="'width:255px; height:340px; object-fit:cover; object-position:top center; display:block; border-top:5px solid ' + (doc.tier_id.color if doc.tier_id else '#C2185B') + '; border-bottom:5px solid ' + (doc.tier_id.color if doc.tier_id else '#C2185B') + ';'"/>
                         </td>
