@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 <template id="player_template_butterscotch" name="Player Auction – Butterscotch">
-    <html lang="en">
+    <html lang="en" t-att-data-balance-url="'/' + (tournament.slug if tournament else '') + '/auction/show/team/balance'">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -729,7 +729,7 @@ body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to to
       }
 
       function openBidSummary() {
-        document.getElementById('bidSummaryFrame').src = '/auction/show/team/balance';
+        document.getElementById('bidSummaryFrame').src = document.documentElement.dataset.balanceUrl;
         document.getElementById('bidSummaryDrawer').style.right = '0';
         document.getElementById('bidSummaryTabArrow').innerHTML = '&#x2192;';
         document.getElementById('bidSummaryOverlay').style.display = 'block';

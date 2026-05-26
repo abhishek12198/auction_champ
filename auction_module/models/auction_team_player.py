@@ -23,6 +23,20 @@ class AuctionTeamPlayer(models.Model):
             defaults.update({'sl_no': 1})
         return defaults
 
+    @api.model
+    def create(self, vals):
+        player = super().create(vals)
+        # Auto-close registration when the max limit is reached
+        tournament = player.tournament_id
+        if tournament and tournament.registration_open and tournament.max_registrations > 0:
+            draft_count = self.search_count([
+                ('tournament_id', '=', tournament.id),
+                ('state', '=', 'draft'),
+            ])
+            if draft_count >= tournament.max_registrations:
+                tournament.sudo().write({'registration_open': False})
+        return player
+
     sl_no = fields.Integer("Sl No")
     name = fields.Char(string="Name of the player", required=True)
     contact = fields.Char("Mobile Number")

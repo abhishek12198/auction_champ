@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 <template id="player_template_strawberry" name="Player Auction – Strawberry">
-<html lang="en">
+<html lang="en" t-att-data-balance-url="'/' + (tournament.slug if tournament else '') + '/auction/show/team/balance'">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -466,7 +466,7 @@ body[data-theme="dark"] #sw-theme-btn{color:var(--berry-bright);border-color:rgb
       document.getElementById('swBidDrawer').style.right = '0';
       document.getElementById('swBidArrow').innerHTML = '&#x2192;';
       document.getElementById('swBidOverlay').style.display = 'block';
-      document.getElementById('swBidFrame').src = '/auction/show/team/balance';
+      document.getElementById('swBidFrame').src = document.documentElement.dataset.balanceUrl;
       document.body.style.overflow = 'hidden';
     }
     function closeBidSummary() {

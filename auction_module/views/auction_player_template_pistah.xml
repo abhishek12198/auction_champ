@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 <template id="player_template_pistah" name="Player Auction – Pistah">
-<html lang="en">
+<html lang="en" t-att-data-balance-url="'/' + (tournament.slug if tournament else '') + '/auction/show/team/balance'">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -1039,7 +1039,7 @@ body[data-theme="light"] #pt-theme-btn{color:var(--pistah-dark)}
     }
 
     function openBidSummary() {
-      document.getElementById('ptBidFrame').src = '/auction/show/team/balance';
+      document.getElementById('ptBidFrame').src = document.documentElement.dataset.balanceUrl;
       document.getElementById('ptBidDrawer').style.right = '0';
       document.getElementById('ptBidArrow').innerHTML = '&#x2192;';
       document.getElementById('ptBidOverlay').style.display = 'block';

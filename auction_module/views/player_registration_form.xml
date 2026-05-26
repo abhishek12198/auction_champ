@@ -218,6 +218,31 @@
                         Download My Player Card
                     </a>
                 </t>
+
+                <t t-if="tournament_slug">
+                    <div style="margin-top:1.25rem;">
+                        <a t-att-href="'/' + tournament_slug + '/player/register'"
+                           style="display:inline-flex;align-items:center;gap:.55rem;
+                                  padding:.65rem 1.75rem;border-radius:10px;
+                                  border:1.5px solid rgba(var(--reg-accent-rgb),.35);
+                                  background:rgba(var(--reg-accent-rgb),.08);
+                                  color:var(--reg-accent);font-family:'Barlow Condensed',sans-serif;
+                                  font-size:.9rem;font-weight:700;letter-spacing:.07em;
+                                  text-transform:uppercase;text-decoration:none;
+                                  transition:background .2s,border-color .2s;"
+                           onmouseover="this.style.background='rgba(var(--reg-accent-rgb),.18)';this.style.borderColor='rgba(var(--reg-accent-rgb),.65)'"
+                           onmouseout="this.style.background='rgba(var(--reg-accent-rgb),.08)';this.style.borderColor='rgba(var(--reg-accent-rgb),.35)'">
+                            <!-- Plus icon -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Register Another Player
+                        </a>
+                    </div>
+                </t>
             </div>
         </t>
 
@@ -231,7 +256,156 @@
 
         <!-- ── Main form (hidden after success or when closed) ── -->
         <t t-if="not success and not registration_closed">
-        <form action="/player/register" method="post" enctype="multipart/form-data">
+
+        <!-- ── Slots capacity card ── -->
+        <t t-if="max_registrations and max_registrations > 0">
+            <t t-set="pct" t-value="(current_count * 100 // max_registrations) if max_registrations else 0"/>
+            <t t-set="urgency" t-value="'critical' if slots_left &lt;= 5 else ('warning' if slots_left &lt;= 20 else 'ok')"/>
+            <div class="reg-slots-card">
+                <style>
+                .reg-slots-card {
+                    margin: 0 0 1.4rem;
+                    padding: 1rem 1.25rem 1.1rem;
+                    background: var(--reg-primary);
+                    border-radius: 14px;
+                    border: 1.5px solid rgba(var(--reg-accent-rgb), .25);
+                    box-shadow: 0 4px 20px rgba(0,0,0,.18);
+                    overflow: hidden;
+                    position: relative;
+                }
+                .reg-slots-card::before {
+                    content: '';
+                    position: absolute;
+                    top: 0; left: 0; right: 0; height: 3px;
+                    background: linear-gradient(90deg, var(--reg-accent), rgba(var(--reg-accent-rgb),.3));
+                }
+                .reg-slots-top {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: .7rem;
+                    gap: .75rem;
+                }
+                .reg-slots-label {
+                    font-family: 'Barlow Condensed', sans-serif;
+                    font-size: .72rem;
+                    font-weight: 700;
+                    letter-spacing: .12em;
+                    text-transform: uppercase;
+                    color: rgba(var(--reg-accent-rgb), .75);
+                }
+                .reg-slots-count {
+                    font-family: 'Bebas Neue', sans-serif;
+                    font-size: 1.5rem;
+                    line-height: 1;
+                    letter-spacing: .04em;
+                    color: var(--reg-accent);
+                }
+                .reg-slots-count span {
+                    font-size: .85rem;
+                    color: rgba(var(--reg-accent-rgb), .55);
+                    font-family: 'Barlow Condensed', sans-serif;
+                    font-weight: 600;
+                }
+                .reg-slots-badge {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: .35rem;
+                    padding: .28rem .8rem;
+                    border-radius: 30px;
+                    font-family: 'Barlow Condensed', sans-serif;
+                    font-size: .78rem;
+                    font-weight: 700;
+                    letter-spacing: .06em;
+                    text-transform: uppercase;
+                    white-space: nowrap;
+                }
+                .reg-slots-badge.ok {
+                    background: rgba(67,160,71,.15);
+                    border: 1px solid rgba(67,160,71,.4);
+                    color: #81c784;
+                }
+                .reg-slots-badge.warning {
+                    background: rgba(255,167,38,.14);
+                    border: 1px solid rgba(255,167,38,.40);
+                    color: #ffb74d;
+                }
+                .reg-slots-badge.critical {
+                    background: rgba(229,57,53,.15);
+                    border: 1px solid rgba(229,57,53,.45);
+                    color: #ef9a9a;
+                    animation: reg-pulse-badge 1.4s ease-in-out infinite;
+                }
+                @keyframes reg-pulse-badge {
+                    0%,100% { box-shadow: none; }
+                    50% { box-shadow: 0 0 10px rgba(229,57,53,.45); }
+                }
+                .reg-slots-track {
+                    height: 7px;
+                    background: rgba(255,255,255,.09);
+                    border-radius: 99px;
+                    overflow: hidden;
+                    margin-top: .15rem;
+                }
+                .reg-slots-fill {
+                    height: 100%;
+                    border-radius: 99px;
+                    transition: width .4s ease;
+                }
+                .reg-slots-fill.ok {
+                    background: linear-gradient(90deg, #43a047, #81c784);
+                }
+                .reg-slots-fill.warning {
+                    background: linear-gradient(90deg, #fb8c00, #ffb74d);
+                }
+                .reg-slots-fill.critical {
+                    background: linear-gradient(90deg, #e53935, #ef9a9a);
+                    animation: reg-fill-pulse 1.4s ease-in-out infinite;
+                }
+                @keyframes reg-fill-pulse {
+                    0%,100% { opacity:1; } 50% { opacity:.65; }
+                }
+                .reg-slots-sub {
+                    margin-top: .55rem;
+                    font-size: .75rem;
+                    color: rgba(var(--reg-accent-rgb), .45);
+                    font-family: 'Poppins', sans-serif;
+                }
+                </style>
+
+                <div class="reg-slots-top">
+                    <div>
+                        <div class="reg-slots-label">Registration Capacity</div>
+                        <div class="reg-slots-count">
+                            <t t-esc="slots_left"/>
+                            <span> / <t t-esc="max_registrations"/> slots left</span>
+                        </div>
+                    </div>
+                    <t t-if="urgency == 'critical'">
+                        <div class="reg-slots-badge critical">🔥 Almost Full</div>
+                    </t>
+                    <t t-elif="urgency == 'warning'">
+                        <div class="reg-slots-badge warning">⚡ Filling Fast</div>
+                    </t>
+                    <t t-else="">
+                        <div class="reg-slots-badge ok">✅ Open</div>
+                    </t>
+                </div>
+
+                <div class="reg-slots-track">
+                    <div class="reg-slots-fill" t-att-class="'reg-slots-fill ' + urgency"
+                         t-att-style="'width:' + str(pct) + '%'"></div>
+                </div>
+
+                <div class="reg-slots-sub">
+                    <t t-esc="current_count"/> registered · <t t-esc="max_registrations - current_count"/> open
+                    <t t-if="urgency == 'critical'"> · Hurry, spots are going fast!</t>
+                    <t t-elif="urgency == 'warning'"> · Register before it fills up.</t>
+                </div>
+            </div>
+        </t>
+
+        <form t-att-action="'/' + tournament_slug + '/player/register'" method="post" enctype="multipart/form-data">
 
             <!-- ══════════════════════════════════════
                  01 · PLAYER IDENTITY
@@ -245,8 +419,8 @@
                 </div>
 
                 <!-- Photo upload with spinning ring frame -->
-                <div style="margin-bottom:18px">
-                    <label class="reg-label">Player Photo</label>
+                <div style="margin-bottom:18px" id="photoSection">
+                    <label class="reg-label">Player Photo <span class="req">*</span></label>
                     <div class="reg-photo-upload">
                         <div class="reg-photo-frame">
                             <div class="reg-photo-circle" id="photoCircle">
@@ -264,7 +438,7 @@
                                 </svg>
                                 Upload Photo
                             </label>
-                            <input type="file" id="photoInput" name="photo"
+                             <input type="file" id="photoInput" name="photo"
                                    accept="image/*" class="reg-file-input"/>
                             <p class="reg-file-hint">JPG · PNG · WEBP &#160;·&#160; Max 5 MB</p>
                         </div>
@@ -552,6 +726,37 @@
     var form = document.querySelector('form');
     if (form) {
         form.addEventListener('submit', function (e) {
+            // Photo is mandatory — check before native validation
+            var photoInput = document.getElementById('photoInput');
+            var photoSection = document.getElementById('photoSection');
+            if (photoInput &amp;&amp; (!photoInput.files || !photoInput.files[0])) {
+                e.preventDefault();
+                e.stopPropagation();
+                // Highlight the photo section
+                if (photoSection) {
+                    photoSection.style.transition = 'outline .15s';
+                    photoSection.style.outline = '2px solid #e94560';
+                    photoSection.style.borderRadius = '10px';
+                    photoSection.style.padding = '8px';
+                    setTimeout(function () { photoSection.style.outline = ''; photoSection.style.padding = ''; }, 3000);
+                }
+                // Show error message under the upload area
+                var errId = 'photoErrorMsg';
+                var existing = document.getElementById(errId);
+                if (!existing) {
+                    var msg = document.createElement('p');
+                    msg.id = errId;
+                    msg.textContent = '⚠️ Player photo is required. Please upload a photo before submitting.';
+                    msg.style.cssText = 'color:#e94560;font-size:.8rem;font-weight:600;margin-top:.4rem;';
+                    if (photoSection) photoSection.appendChild(msg);
+                }
+                if (photoSection) photoSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            // Remove photo error if previously shown
+            var errMsg = document.getElementById('photoErrorMsg');
+            if (errMsg) errMsg.remove();
+
             if (!form.checkValidity()) {
                 e.preventDefault();
                 e.stopPropagation();

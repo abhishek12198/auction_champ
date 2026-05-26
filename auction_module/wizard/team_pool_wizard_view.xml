@@ -5,6 +5,7 @@
         <field name="model">auction.team.pool.wizard</field>
         <field name="arch" type="xml">
             <form string="Team Pool Generator" class="o_form_sheet">
+
                 <group string="Select Teams">
                     <field name="team_ids" nolabel="1">
                         <kanban class="o_kanban_mobile" create="0" edit="0">
@@ -20,10 +21,8 @@
                                         <div class="o_kanban_image">
                                             <img alt="Avatar" t-att-src="kanban_image('auction.team', 'logo', record.id.raw_value)"/>
                                         </div>
-
                                         <div class="o_kanban_details">
                                             <strong t-esc="record.name.raw_value"/>
-
                                             <div t-if="record.manager">
                                                 <span> Manager: </span>
                                                 <field name="manager"/>
@@ -38,14 +37,30 @@
                             </templates>
                         </kanban>
                     </field>
-
                 </group>
+
                 <group>
-                    <field name="selected_team_count"  readonly="1" force_save="1"/>
+                    <field name="selected_team_count" readonly="1" force_save="1"/>
                     <field name="pool_count"/>
-
                 </group>
+
+                <!-- Pool names table — always visible so user can rename before or after -->
+                <separator string="Pool Names"/>
+                <p class="text-muted" style="font-size:.82rem;margin:-4px 0 8px;">
+                    Edit the <b>Pool Name</b> column to give each pool a custom name (e.g. Blue Group, Red Group).
+                    Names are preserved when you change the pool count.
+                    After generating, click <b>Apply Custom Names</b> to rename without reshuffling teams.
+                </p>
+                <field name="pool_name_ids" nolabel="1">
+                    <tree editable="bottom" create="0" delete="0">
+                        <field name="pool_index" string="#" readonly="1"/>
+                        <field name="default_label" string="Default" readonly="1"/>
+                        <field name="custom_name" string="Pool Name"/>
+                    </tree>
+                </field>
+
                 <footer>
+                    <!-- Before generation -->
                     <button
                         name="action_generate_pools"
                         type="object"
@@ -54,9 +69,17 @@
                         attrs="{'invisible': [('result_html', '!=', False)]}"
                     />
 
+                    <!-- After generation -->
+                    <button
+                        name="action_apply_names"
+                        type="object"
+                        string="🎨 Apply Custom Names"
+                        class="btn btn-info"
+                        attrs="{'invisible': [('result_html', '=', False)]}"
+                    />
                     <button
                         name="action_reset"
-                        string="Reset"
+                        string="↺ Reshuffle"
                         class="btn btn-secondary"
                         type="object"
                         attrs="{'invisible': [('result_html', '=', False)]}"
@@ -78,9 +101,11 @@
                 <div id="pool_snapshot_container">
                     <field name="result_html" nolabel="1"/>
                 </div>
+
             </form>
         </field>
     </record>
+
     <record id="action_team_pool_wizard" model="ir.actions.act_window">
         <field name="name">Team Pool Generator</field>
         <field name="res_model">auction.team.pool.wizard</field>

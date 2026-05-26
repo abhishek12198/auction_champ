@@ -59,6 +59,19 @@
                                     <span class="o_stat_text text-danger" style="font-size:10px">CLOSED &#8212; Click to Open</span>
                                 </div>
                             </button>
+                            <!-- Registered player count stat button -->
+                            <button class="oe_stat_button" type="object"
+                                    name="action_toggle_registration"
+                                    icon="fa-users"
+                                    help="Players registered (Draft state)">
+                                <field name="registered_player_count" widget="statinfo"
+                                       string="Registered"/>
+                                <div class="o_stat_info" attrs="{'invisible': [('max_registrations', '=', 0)]}">
+                                    <span class="o_stat_text text-muted" style="font-size:10px;">
+                                        of <field name="max_registrations" nolabel="1" style="display:inline"/> max
+                                    </span>
+                                </div>
+                            </button>
                             <!-- Open the public form in a new tab -->
                             <button name="action_open_registration_link"
                                     type="object"
@@ -67,6 +80,16 @@
                                 <div class="o_stat_info">
                                     <span class="o_stat_text">Preview Form</span>
                                     <span class="o_stat_text text-muted" style="font-size:10px">Open in New Tab</span>
+                                </div>
+                            </button>
+                            <!-- Remove duplicate players -->
+                            <button name="action_remove_duplicates"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    icon="fa-clone">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text text-warning">Remove</span>
+                                    <span class="o_stat_text text-warning" style="font-size:10px">Duplicates</span>
                                 </div>
                             </button>
                         </div>
@@ -180,6 +203,18 @@
                                         <p class="text-muted" style="margin-top:6px;">
                                             Share this link with players so they can fill in their own
                                             profile. Registrations arrive as <strong>Draft</strong> players.
+                                        </p>
+                                    </group>
+                                </group>
+                                <group>
+                                    <group string="Registration Limit">
+                                        <field name="max_registrations"
+                                               help="Set the maximum number of players that can register. Registration closes automatically once this limit is reached. Set to 0 for unlimited."/>
+                                    </group>
+                                    <group>
+                                        <p class="text-muted" style="margin-top:6px;">
+                                            Set to <strong>0</strong> for unlimited registrations.
+                                            Once the limit is reached, registration is automatically closed.
                                         </p>
                                     </group>
                                 </group>

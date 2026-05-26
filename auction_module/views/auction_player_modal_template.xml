@@ -351,7 +351,7 @@
       <span style="font-size:1.05rem;font-weight:700;letter-spacing:.3px;">&#x1F4CA; Auction Bid Summary</span>
       <button onclick="closeBidSummary()" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:var(--t-header-text);width:32px;height:32px;border-radius:6px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">&#x2715;</button>
     </div>
-    <iframe id="bidSummaryFrame" style="flex:1;border:none;width:100%;" title="Bid Summary"></iframe>
+    <iframe id="bidSummaryFrame" t-att-data-balance-url="'/' + (tournament.slug if tournament else '') + '/auction/show/team/balance'" style="flex:1;border:none;width:100%;" title="Bid Summary"></iframe>
   </div>
   <div id="bidSummaryOverlay" onclick="closeBidSummary()" style="display:none;position:fixed;inset:0;z-index:9700;background:rgba(0,0,0,0.4);"></div>
 
@@ -476,7 +476,7 @@
 
     /* ── Bid Summary drawer ─────────────────────────────────────────── */
     window.openBidSummary = function() {
-      document.getElementById('bidSummaryFrame').src = '/auction/show/team/balance';
+      document.getElementById('bidSummaryFrame').src = document.getElementById('bidSummaryFrame').dataset.balanceUrl;
       document.getElementById('bidSummaryDrawer').style.right = '0';
       document.getElementById('bidSummaryTabArrow').innerHTML = '&#x2192;';
       document.getElementById('bidSummaryOverlay').style.display = 'block';

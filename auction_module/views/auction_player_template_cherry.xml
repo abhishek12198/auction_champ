@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
   <template id="player_template_cherry" name="Player Auction – Cherry">
-    <html lang="en">
+    <html lang="en" t-att-data-balance-url="'/' + (tournament.slug if tournament else '') + '/auction/show/team/balance'">
     <head>
       <meta charset="UTF-8"/>
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -597,7 +597,7 @@ body[data-theme="light"] #cr-theme-btn{color:var(--cherry-dark)}
           document.getElementById('crBidDrawer').style.right = '0';
           document.getElementById('crBidArrow').innerHTML = '&#x2192;';
           document.getElementById('crBidOverlay').style.display = 'block';
-          document.getElementById('crBidFrame').src = '/auction/show/team/balance';
+          document.getElementById('crBidFrame').src = document.documentElement.dataset.balanceUrl;
           document.body.style.overflow = 'hidden';
         }
         function closeBidSummary() {

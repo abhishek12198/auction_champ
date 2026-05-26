@@ -9,7 +9,7 @@
      ═══════════════════════════════════════════════════════════════════ -->
 
 <template id="auction_details_show_pistah" name="Auction Bid Summary – Pistah">
-  <html lang="en">
+  <html lang="en" t-att-data-balance-json-url="'/' + (tournament_slug or '') + '/auction/show/team/balance/json'">
     <head>
       <meta charset="UTF-8"/>
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -691,7 +691,7 @@
 
           /* ── Live data refresh every 5 seconds ───────────────────── */
           function refreshBalance() {
-            fetch('/auction/show/team/balance/json')
+            fetch(document.documentElement.dataset.balanceJsonUrl)
               .then(function (r) { return r.json(); })
               .then(function (data) {
                 data.teams.forEach(function (team) {

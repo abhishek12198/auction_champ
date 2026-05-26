@@ -541,7 +541,7 @@
             <field name="search_view_id" ref="view_auction_team_player_search"/>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">
-                Create a Team
+                Create a Player
               </p><p>
                 This menu to create or import the players.
               </p>
@@ -577,7 +577,7 @@
             <field name="search_view_id" ref="view_auction_team_player_search"/>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">
-                Create a Team
+                Create a Player
               </p><p>
                 This menu to create or import the players.
               </p>
@@ -612,7 +612,7 @@
             <field name="search_view_id" ref="view_auction_team_player_search"/>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">
-                Create a Team
+                Create a Player
               </p><p>
                 This menu to create or import the players.
               </p>
@@ -648,7 +648,7 @@
             <field name="search_view_id" ref="view_auction_team_player_search"/>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">
-                Create a Team
+                Create a Player
               </p><p>
                 This menu to create or import the players.
               </p>
@@ -684,7 +684,7 @@
             <field name="search_view_id" ref="view_auction_team_player_search"/>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">
-                Create a Team
+                Create a Player
               </p><p>
                 This menu to create or import the players.
               </p>
@@ -719,7 +719,7 @@
             <field name="search_view_id" ref="view_auction_team_player_search"/>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">
-                Create a Team
+                Create a Player
               </p><p>
                 This menu to create or import the players.
               </p>
@@ -755,7 +755,7 @@
             <field name="search_view_id" ref="view_auction_team_player_search"/>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">
-                Create a Team
+                Create a Player
               </p><p>
                 This menu to create or import the players.
               </p>

@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <record id="view_remove_duplicates_wizard_form" model="ir.ui.view">
+        <field name="name">auction.remove.duplicates.wizard.form</field>
+        <field name="model">auction.remove.duplicates.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Remove Duplicate Players" class="custom_wizard_popup">
+
+                <!-- ═══════════════════════════════════════════════════════
+                     STEP 1 — Configure
+                ════════════════════════════════════════════════════════ -->
+                <div attrs="{'invisible': [('step', '!=', 'configure')]}">
+
+                    <div style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);
+                                border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;
+                                border-left:4px solid #e94560;">
+                        <h3 style="margin:0 0 .3rem;color:#fff;font-size:1.15rem;font-weight:700;letter-spacing:.03em;">
+                            🔍 Remove Duplicate Players
+                        </h3>
+                        <p style="margin:0;color:rgba(255,255,255,.65);font-size:.85rem;line-height:1.5;">
+                            Select how duplicates should be detected and which player states to include.
+                            The player with the lowest sequence number is kept; all later copies are removed.
+                        </p>
+                    </div>
+
+                    <group string="Tournament">
+                        <field name="tournament_id" readonly="1" force_save="1"/>
+                    </group>
+
+                    <group string="Match Criteria (select one or more)">
+                        <group>
+                            <field name="match_by_name"
+                                   widget="boolean_toggle"
+                                   string="Same Name"/>
+                            <field name="match_by_contact"
+                                   widget="boolean_toggle"
+                                   string="Same Mobile Number"/>
+                            <field name="match_by_photo"
+                                   widget="boolean_toggle"
+                                   string="Same Photo"/>
+                        </group>
+                    </group>
+
+                    <group string="Player States to Check">
+                        <group>
+                            <field name="include_draft"
+                                   widget="boolean_toggle"
+                                   string="Draft Players"/>
+                            <field name="include_auction"
+                                   widget="boolean_toggle"
+                                   string="In Auction Players"/>
+                        </group>
+                    </group>
+
+                </div>
+
+                <!-- ═══════════════════════════════════════════════════════
+                     STEP 2 — Preview duplicates
+                ════════════════════════════════════════════════════════ -->
+                <div attrs="{'invisible': [('step', '!=', 'preview')]}">
+
+                    <!-- Summary banner -->
+                    <div attrs="{'invisible': [('duplicate_count', '=', 0)]}"
+                         style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);
+                                border-radius:12px;padding:1rem 1.5rem;margin-bottom:1.1rem;
+                                border-left:4px solid #e94560;display:flex;align-items:center;gap:1rem;">
+                        <div style="font-size:2rem;line-height:1;">🗑️</div>
+                        <div>
+                            <div style="color:#fff;font-weight:700;font-size:1rem;">
+                                <field name="selected_count" nolabel="1"
+                                       style="display:inline;font-weight:700;color:#e94560;"/>
+                                &#160;of&#160;
+                                <field name="duplicate_count" nolabel="1"
+                                       style="display:inline;font-weight:700;color:#fff;"/>
+                                duplicate(s) selected for removal
+                            </div>
+                            <div style="color:rgba(255,255,255,.6);font-size:.8rem;margin-top:.2rem;">
+                                Uncheck "Remove?" on any row you want to keep.
+                                After removal, all sequence numbers will be reissued from 1.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- No duplicates found banner -->
+                    <div attrs="{'invisible': [('duplicate_count', '!=', 0)]}"
+                         style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:12px;
+                                padding:1.25rem 1.5rem;margin-bottom:1.1rem;text-align:center;">
+                        <div style="font-size:2rem;">✅</div>
+                        <div style="font-weight:700;color:#166534;margin:.25rem 0 .1rem;">No Duplicates Found</div>
+                        <div style="font-size:.85rem;color:#166534;">
+                            All players are unique based on the selected criteria.
+                        </div>
+                    </div>
+
+                    <!-- Duplicate lines -->
+                    <field name="line_ids" nolabel="1"
+                           attrs="{'invisible': [('duplicate_count', '=', 0)]}">
+                        <tree editable="bottom" decoration-danger="should_remove == True"
+                              decoration-muted="should_remove == False">
+                            <field name="player_sl_no" string="Sl No" optional="show"/>
+                            <field name="player_name" string="Duplicate Name" readonly="1"/>
+                            <field name="player_contact" string="Mobile" readonly="1" optional="show"/>
+                            <field name="player_state" string="State" readonly="1"/>
+                            <field name="match_reason" string="Reason" readonly="1"/>
+                            <field name="keep_player_id" string="Will Keep" readonly="1"/>
+                            <field name="should_remove" string="Remove?"/>
+                        </tree>
+                    </field>
+
+                </div>
+
+                <!-- Invisible fields needed for attrs -->
+                <field name="step" invisible="1"/>
+                <field name="duplicate_count" invisible="1"/>
+                <field name="selected_count" invisible="1"/>
+
+                <!-- ── Footer ── -->
+                <footer>
+                    <!-- Step 1 footer -->
+                    <button string="Find Duplicates"
+                            type="object"
+                            name="action_find_duplicates"
+                            class="btn-primary"
+                            attrs="{'invisible': [('step', '!=', 'configure')]}"/>
+
+                    <!-- Step 2 footer -->
+                    <button string="⬅ Back"
+                            type="object"
+                            name="action_back"
+                            class="btn-secondary"
+                            attrs="{'invisible': [('step', '!=', 'preview')]}"/>
+                    <button string="Remove &amp; Resequence"
+                            type="object"
+                            name="action_remove_and_resequence"
+                            class="btn-danger"
+                            attrs="{'invisible': [('step', '!=', 'preview'), ('duplicate_count', '=', 0)]}"
+                            confirm="This will permanently delete the selected duplicate players and renumber all remaining players from 1. Continue?"/>
+
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+
+            </form>
+        </field>
+    </record>
+
+    <!-- Action to open the wizard -->
+    <record id="action_remove_duplicates_wizard" model="ir.actions.act_window">
+        <field name="name">Remove Duplicate Players</field>
+        <field name="res_model">auction.remove.duplicates.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</data>
+</odoo>

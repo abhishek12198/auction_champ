@@ -55,3 +55,6 @@ access_auction_team_pd,auction.team (player dashboard),auction_module.model_auct
 access_auction_player_tier_pd,auction.player.tier (player dashboard),auction_module.model_auction_player_tier,auction_module.group_auction_player_dashboard,1,0,0,0
 access_auction_tournament_pd,auction.tournament (player dashboard),auction_module.model_auction_tournament,auction_module.group_auction_player_dashboard,1,0,0,0
 access_auction_auction_player_pd,auction.auction.player (player dashboard),auction_module.model_auction_auction_player,auction_module.group_auction_player_dashboard,1,0,0,0
+access_auction_remove_duplicates_wizard_admin,auction.remove.duplicates.wizard (admin),auction_module.model_auction_remove_duplicates_wizard,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_remove_duplicate_line_admin,auction.remove.duplicate.line (admin),auction_module.model_auction_remove_duplicate_line,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_team_pool_name_line_admin,auction.team.pool.name.line (admin),auction_module.model_auction_team_pool_name_line,auction_module.group_auction_group_admin,1,1,1,1

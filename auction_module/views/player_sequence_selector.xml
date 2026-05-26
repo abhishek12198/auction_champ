@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 <template id="player_sequence_selector">
-<html lang="en" t-att-data-theme="theme">
+<html lang="en" t-att-data-theme="theme" t-att-data-balance-url="'/' + (tournament.slug if tournament else '') + '/auction/show/team/balance'">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -1114,7 +1114,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   window.openBidSummary = function() {
     var iframe = document.getElementById('bsIframe');
     if (iframe && iframe.src === 'about:blank') {
-      iframe.src = '/auction/show/team/balance';
+      iframe.src = document.documentElement.dataset.balanceUrl;
     }
     document.getElementById('bsDrawer').classList.add('open');
     document.body.style.overflow = 'hidden';

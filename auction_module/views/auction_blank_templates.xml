@@ -653,7 +653,7 @@
      ══════════════════════════════════════════════════════════════════════ -->
 <template id="public_live_board_template" name="Public Live Auction Board">
 <t t-set="theme_val" t-value="theme or 'vanilla'"/>
-<html t-att-data-theme="theme_val">
+<html t-att-data-theme="theme_val" t-att-data-live-data-url="'/' + (tournament_slug or '') + '/auction/live-board/data'">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -1598,7 +1598,7 @@ img { display: block; }
 
   // ── Polling ────────────────────────────────────────────────────
   function poll() {
-    fetch('/auction/live-board/data', { cache: 'no-store' })
+    fetch(document.documentElement.dataset.liveDataUrl, { cache: 'no-store' })
       .then(r => r.json())
       .then(data => {
         // Apply theme
