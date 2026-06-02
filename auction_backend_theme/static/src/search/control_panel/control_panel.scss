@@ -16,6 +16,8 @@
         // Separator: gold chevron
         --bs-breadcrumb-divider-color: rgba(253, 206, 51, 0.45);
         --bs-breadcrumb-item-padding-x: 0.5rem;
+        // Override Bootstrap 5 active item colour variable
+        --bs-breadcrumb-item-active-color: #ffffff;
     }
 
     // Non-active breadcrumb items (clickable parents / back button)
@@ -53,10 +55,10 @@
     .breadcrumb-item.active {
         font-family: 'Rajdhani', sans-serif;
         font-weight: 700;
-        font-size: 1rem;
+        font-size: 1.15rem !important;
         letter-spacing: 0.04em;
         text-transform: uppercase;
-        color: white;
+        color: #ffffff !important;
         // Subtle gold underline accent
         border-bottom: 2px solid $ac-gold;
         padding-bottom: 1px;
@@ -197,7 +199,7 @@
     .o_control_panel {
         .breadcrumb-item,
         .breadcrumb-item .o_back_button { font-size: 0.88rem; }
-        .breadcrumb-item.active         { font-size: 0.92rem; }
+        .breadcrumb-item.active         { font-size: 1.05rem !important; color: #ffffff !important; }
         .o_cp_buttons .btn              { padding: 4px 10px; font-size: 0.9rem; }
     }
 }
@@ -225,7 +227,8 @@
         .breadcrumb-item,
         .breadcrumb-item .o_back_button { font-size: 0.95rem; }
         .breadcrumb-item.active {
-            font-size: 1rem;
+            font-size: 1.1rem !important;
+            color: #ffffff !important;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;

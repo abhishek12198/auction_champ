@@ -76,12 +76,26 @@
             text-transform: uppercase;
         }
 
-        .btn-close { filter: invert(1); }
+        .btn-close {
+            // invert the dark SVG icon to white; force full opacity (Bootstrap defaults to 0.5)
+            filter: invert(1) brightness(2);
+            opacity: 1 !important;
+        }
     }
 
     .modal-footer {
         border-top: 1px solid rgba(10, 20, 41, 0.1);
     }
+}
+
+// ── Dialog close button — global safety net ───────────────────────────────────
+// Catches Odoo's .o_dialog wrapper and any other dark-header context where
+// Bootstrap's default dark SVG close icon would be invisible.
+.o_dialog .modal-header .btn-close,
+.o_technical_modal .modal-header .btn-close,
+.o_act_window .modal-header .btn-close {
+    filter: invert(1) brightness(2);
+    opacity: 1 !important;
 }
 
 // Scrollbar (webkit)

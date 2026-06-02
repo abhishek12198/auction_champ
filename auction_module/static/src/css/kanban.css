@@ -722,3 +722,19 @@
 .pk2-stat-sold { border-width: 1.5px; }
 .pk2-pts-val { font-size: .9rem; font-weight: 800; }
 
+
+/* ── Player form: larger photo avatar ─────────────────── */
+.player_photo_large.oe_avatar {
+    width: 160px !important;
+    height: 160px !important;
+    overflow: hidden;
+}
+.player_photo_large.oe_avatar img {
+    width: 160px !important;
+    height: 160px !important;
+    max-width: 160px !important;
+    max-height: 160px !important;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+}

@@ -4,7 +4,7 @@
     background: #eef0f4;
     font-family: 'Rajdhani', sans-serif;
 
-    // Column header
+    // Column header title — default (outside dark header)
     .o_kanban_header_title {
         font-family: 'Rajdhani', sans-serif;
         font-weight: 700;
@@ -24,6 +24,13 @@
             border-radius: 6px 6px 0 0;
             color: white;
             padding: 8px 12px;
+
+            // Override the dark color set on .o_kanban_header_title above
+            // so column titles are readable on the dark navy background
+            .o_kanban_header_title,
+            .o_column_title {
+                color: #ffffff !important;
+            }
         }
     }
 

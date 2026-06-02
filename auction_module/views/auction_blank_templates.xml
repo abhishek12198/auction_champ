@@ -1497,14 +1497,32 @@ img { display: block; }
         </div>
       </div>`;
     } else if (currentPlayer.state === 'auction') {
+      const bid = (currentPlayer.current_bid > 0) ? currentPlayer.current_bid : 0;
+      const bidTeam = currentPlayer.current_bid_team || null;
+      let bidSection;
+      if (bid > 0) {
+        const logoHtml = bidTeam && bidTeam.logo_url
+          ? `<img src="${bidTeam.logo_url}" alt="" onerror="this.parentElement.innerHTML='🏏'" style="width:36px;height:36px;object-fit:contain;border-radius:8px;border:1.5px solid rgba(255,255,255,0.2);">`
+          : '';
+        const nameHtml = bidTeam
+          ? `<div style="min-width:0;">
+              <div style="font-size:.95rem;font-weight:700;color:rgba(255,255,255,0.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${bidTeam.name}</div>
+              <div style="font-size:.62rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,0.38);margin-top:2px;">Leading Bid</div>
+            </div>`
+          : '';
+        bidSection = `<div style="margin-top:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div style="font-size:2.2rem;font-weight:900;color:#60a5fa;font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-1px;">${fmtPts(bid)}</div>
+          ${bidTeam ? `<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">${logoHtml}${nameHtml}</div>` : ''}
+        </div>`;
+      } else {
+        bidSection = `<div style="margin-top:18px;display:flex;align-items:center;gap:12px;">
+          <div class="lb-auction-spinner" style="width:20px;height:20px;border-width:3px;"></div>
+          <div style="font-size:1.05rem;font-weight:700;color:rgba(255,255,255,0.8);">Accepting bids from teams…</div>
+        </div>`;
+      }
       card.innerHTML = `<div class="lb-status-auction">
         <div class="lb-status-label">🎯 In Auction — Bidding in Progress</div>
-        <div style="margin-top:18px; display:flex; align-items:center; gap:12px;">
-          <div class="lb-auction-spinner" style="width:20px;height:20px;border-width:3px;"></div>
-          <div style="font-size:1.05rem;font-weight:700;color:rgba(255,255,255,0.8);">
-            Accepting bids from teams…
-          </div>
-        </div>
+        ${bidSection}
         <div style="margin-top:14px;font-size:.72rem;opacity:.6;">
           Base price: <strong>${fmtPts(currentPlayer.base_price)}</strong>
         </div>
@@ -1647,6 +1665,7 @@ img { display: block; }
   window.addEventListener('beforeunload', function() { stopPolling(); clearInterval(_clockTimer); });
   poll();
   startPolling();
+  window._auctionLbPoll = poll;
 })();
 ]]></script>
 

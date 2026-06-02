@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <record id="action_auctioneer_console" model="ir.actions.act_url">
+        <field name="name">Auctioneer Console</field>
+        <field name="url">/auction/auctioneer/console</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem
+        id="menu_auctioneer_console"
+        name="Auctioneer Console"
+        action="auction_auctioneer.action_auctioneer_console"
+        sequence="22"
+        web_icon="auction_auctioneer,static/src/description/icon.png"
+        groups="auction_auctioneer.group_auctioneer"
+    />
+
+</data>
+</odoo>

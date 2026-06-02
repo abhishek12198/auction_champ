@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data noupdate="0">
+
+    <!-- Auctioneer group – can access the Auctioneer Console and place bids -->
+    <record id="group_auctioneer" model="res.groups">
+        <field name="name">Auctioneer</field>
+        <field name="comment">
+            Can open the Auctioneer Console, view team purse balances,
+            place live bids and finalize player sales.
+        </field>
+        <field name="category_id" ref="auction_module.auction_categ"/>
+        <field name="implied_ids" eval="[(4, ref('auction_module.group_auction_group'))]"/>
+    </record>
+
+    <!-- Grant administrator full auctioneer access too -->
+    <record id="auction_module.group_auction_group_admin" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('auction_auctioneer.group_auctioneer'))]"/>
+    </record>
+
+</data>
+</odoo>

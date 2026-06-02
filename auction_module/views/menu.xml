@@ -22,10 +22,16 @@
         </record>
 
 
-        <record id="action_view_auction_details" model="ir.actions.act_url">
+        <delete model="ir.actions.act_url" id="action_view_auction_details"/>
+        <record id="action_view_auction_details" model="ir.actions.server">
             <field name="name">Auction Points Table</field>
-            <field name="url">/auction/show/team/balance</field>
-            <field name="target">new</field>
+            <field name="model_id" ref="auction_module.model_auction_tournament"/>
+            <field name="state">code</field>
+            <field name="code">
+tournament = env['auction.tournament'].search([('active', '=', True)], limit=1)
+if tournament and tournament.slug:
+    action = {'type': 'ir.actions.act_url', 'url': '/' + tournament.slug + '/auction/show/team/balance', 'target': 'new'}
+            </field>
         </record>
 
          <record id="action_live_updates" model="ir.actions.act_url">
@@ -161,10 +167,16 @@
           groups="auction_module.group_auction_group"/>
 
 
-        <record id="action_public_live_board" model="ir.actions.act_url">
+        <delete model="ir.actions.act_url" id="action_public_live_board"/>
+        <record id="action_public_live_board" model="ir.actions.server">
             <field name="name">Public Live Board</field>
-            <field name="url">/auction/live-board</field>
-            <field name="target">new</field>
+            <field name="model_id" ref="auction_module.model_auction_tournament"/>
+            <field name="state">code</field>
+            <field name="code">
+tournament = env['auction.tournament'].search([('active', '=', True)], limit=1)
+if tournament and tournament.slug:
+    action = {'type': 'ir.actions.act_url', 'url': '/' + tournament.slug + '/auction/live-board', 'target': 'new'}
+            </field>
         </record>
         <menuitem id="menu_action_public_live_board"
           name="Public Live Bid Board"

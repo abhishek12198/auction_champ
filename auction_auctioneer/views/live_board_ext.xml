@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<!--
+    Extends the public live board template (auction_module.public_live_board_template)
+    to show the auctioneer's current live bid inline inside the "In Auction" status card.
+    Bid info (current_bid / current_bid_team) is injected by the auctioneer data endpoint
+    and rendered directly by the base renderStatus() function.
+    This extension simply triggers an extra poll every 2 s so bid amounts update faster
+    than the base 4 s interval.
+-->
+<template
+    id="public_live_board_bid_ext"
+    inherit_id="auction_module.public_live_board_template"
+    name="Live Board – Current Bid Display">
+
+    <!-- Poll every 2 s to keep the inline bid info in the status card fresh -->
+    <xpath expr="//body" position="inside">
+        <script type="text/javascript"><![CDATA[
+(function () {
+    'use strict';
+    // _auctionLbPoll is exposed by the base template's IIFE.
+    // Calling it every 2 s keeps current_bid / current_bid_team updated
+    // twice as fast as the base 4 s poll, without duplicating any render logic.
+    setInterval(function () {
+        if (typeof window._auctionLbPoll === 'function') {
+            window._auctionLbPoll();
+        }
+    }, 2000);
+})();
+        ]]></script>
+    </xpath>
+
+</template>
+</odoo>

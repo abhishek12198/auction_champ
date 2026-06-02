@@ -1,0 +1,907 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Auctioneer Console – Styles  v2
+   Responsive (mobile → desktop) + 5-theme support
+═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Reset / Base ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ══════════════════════  THEME VARIABLES  ══════════════════════════ */
+/* Each theme overrides these CSS custom properties on .ac-body        */
+
+/* ─ vanilla (default) ─────────────────────────────────────────────── */
+.ac-body {
+    --ac-c:          #63b3ed;
+    --ac-c10:        rgba(99,179,237,.10);
+    --ac-c15:        rgba(99,179,237,.15);
+    --ac-c20:        rgba(99,179,237,.20);
+    --ac-c30:        rgba(99,179,237,.30);
+    --ac-c50:        rgba(99,179,237,.50);
+    --ac-pbtn:       linear-gradient(135deg,#3182ce,#2b6cb0);
+    --ac-pbtn-glow:  rgba(49,130,206,.45);
+    --ac-sbtn:       linear-gradient(135deg,#f6ad55,#ed8936);
+    --ac-sbtn-fg:    #1a1a1a;
+    --ac-sbtn-glow:  rgba(237,137,54,.45);
+}
+
+/* ─ pistah ─────────────────────────────────────────────────────────── */
+.ac-body[data-theme="pistah"] {
+    --ac-c:          #a78bfa;
+    --ac-c10:        rgba(167,139,250,.10);
+    --ac-c15:        rgba(167,139,250,.15);
+    --ac-c20:        rgba(167,139,250,.20);
+    --ac-c30:        rgba(167,139,250,.30);
+    --ac-c50:        rgba(167,139,250,.50);
+    --ac-pbtn:       linear-gradient(135deg,#6d28d9,#7c3aed);
+    --ac-pbtn-glow:  rgba(109,40,217,.45);
+    --ac-sbtn:       linear-gradient(135deg,#a78bfa,#7c3aed);
+    --ac-sbtn-fg:    #fff;
+    --ac-sbtn-glow:  rgba(124,58,237,.45);
+}
+
+/* ─ strawberry ──────────────────────────────────────────────────────── */
+.ac-body[data-theme="strawberry"] {
+    --ac-c:          #f472b6;
+    --ac-c10:        rgba(244,114,182,.10);
+    --ac-c15:        rgba(244,114,182,.15);
+    --ac-c20:        rgba(244,114,182,.20);
+    --ac-c30:        rgba(244,114,182,.30);
+    --ac-c50:        rgba(244,114,182,.50);
+    --ac-pbtn:       linear-gradient(135deg,#9d174d,#be185d);
+    --ac-pbtn-glow:  rgba(157,23,77,.45);
+    --ac-sbtn:       linear-gradient(135deg,#E91E63,#f48fb1);
+    --ac-sbtn-fg:    #fff;
+    --ac-sbtn-glow:  rgba(233,30,99,.45);
+}
+
+/* ─ butterscotch ────────────────────────────────────────────────────── */
+.ac-body[data-theme="butterscotch"] {
+    --ac-c:          #fbbf24;
+    --ac-c10:        rgba(251,191,36,.10);
+    --ac-c15:        rgba(251,191,36,.15);
+    --ac-c20:        rgba(251,191,36,.20);
+    --ac-c30:        rgba(251,191,36,.30);
+    --ac-c50:        rgba(251,191,36,.50);
+    --ac-pbtn:       linear-gradient(135deg,#92400e,#b45309);
+    --ac-pbtn-glow:  rgba(180,83,9,.45);
+    --ac-sbtn:       linear-gradient(135deg,#d97706,#fbbf24);
+    --ac-sbtn-fg:    #1a1a1a;
+    --ac-sbtn-glow:  rgba(217,119,6,.45);
+}
+
+/* ─ cherry ──────────────────────────────────────────────────────────── */
+.ac-body[data-theme="cherry"] {
+    --ac-c:          #f87171;
+    --ac-c10:        rgba(248,113,113,.10);
+    --ac-c15:        rgba(248,113,113,.15);
+    --ac-c20:        rgba(248,113,113,.20);
+    --ac-c30:        rgba(248,113,113,.30);
+    --ac-c50:        rgba(248,113,113,.50);
+    --ac-pbtn:       linear-gradient(135deg,#7f1d1d,#b91c1c);
+    --ac-pbtn-glow:  rgba(127,29,29,.45);
+    --ac-sbtn:       linear-gradient(135deg,#DC143C,#f87171);
+    --ac-sbtn-fg:    #fff;
+    --ac-sbtn-glow:  rgba(220,20,60,.45);
+}
+
+/* ══════════════════════════  BASE BODY  ════════════════════════════ */
+.ac-body {
+    font-family: 'Inter', 'Rajdhani', system-ui, sans-serif;
+    background: #0a0e1a;
+    color: #e2e8f0;
+    min-height: 100dvh;
+    overflow-x: hidden;
+}
+
+/* ── Top Nav ──────────────────────────────────────────────────────── */
+.ac-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    height: 56px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-bottom: 1px solid var(--ac-c20);
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.5);
+    gap: 8px;
+}
+.ac-nav__brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.ac-nav__logo  { height: 36px; width: 36px; flex-shrink: 0; object-fit: contain; border-radius: 6px; }
+.ac-nav__title-group { display: flex; flex-direction: column; min-width: 0; }
+.ac-nav__label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--ac-c);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.ac-nav__tournament {
+    font-size: 13px;
+    font-weight: 600;
+    color: #f1f5f9;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+.ac-nav__status { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+.ac-status-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: #4a5568;
+    transition: background 0.4s;
+    flex-shrink: 0;
+}
+.ac-status-dot.live  { background: #48bb78; box-shadow: 0 0 8px #48bb78; animation: acPulse 2s infinite; }
+.ac-status-dot.error { background: #fc8181; }
+.ac-status-text { font-size: 11px; color: #94a3b8; white-space: nowrap; }
+
+@keyframes acPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(72,187,120,.5); }
+    50%       { box-shadow: 0 0 0 6px rgba(72,187,120,0); }
+}
+
+/* ── Main Layout ──────────────────────────────────────────────────── */
+/* Desktop: side-by-side  |  ≤ 860px: stacked */
+.ac-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 0;
+    height: calc(100dvh - 56px);
+    overflow: hidden;
+}
+
+/* ── Left: Player Panel ──────────────────────────────────────────── */
+.ac-player-panel {
+    background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+    border-right: 1px solid var(--ac-c15);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 20px 16px;
+    gap: 0;
+}
+
+.ac-player-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    gap: 10px;
+    color: #4a5568;
+}
+.ac-player-empty__icon { font-size: 48px; }
+.ac-player-empty p     { font-size: 14px; font-weight: 600; color: #64748b; }
+.ac-player-empty small { font-size: 11px; color: #4a5568; }
+
+/* Player Card */
+.ac-player-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    animation: acFadeIn 0.4s ease;
+}
+@keyframes acFadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+.ac-player-tier {
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid currentColor;
+    align-self: flex-start;
+}
+
+.ac-player-photo-wrap { position: relative; width: 140px; height: 140px; flex-shrink: 0; }
+.ac-player-photo {
+    width: 140px; height: 140px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 3px solid var(--ac-c30);
+    background: #1e293b;
+    display: block;
+}
+.ac-player-sl {
+    position: absolute;
+    bottom: -7px; right: -7px;
+    background: #1e40af;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 2px solid #0a0e1a;
+}
+
+.ac-player-info { text-align: center; width: 100%; }
+.ac-player-name { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: #f1f5f9; line-height: 1.1; }
+.ac-player-meta { font-size: 12px; color: #94a3b8; margin-top: 3px; }
+
+/* Bid Status */
+.ac-bid-status {
+    width: 100%;
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--ac-c15);
+    border-radius: 12px;
+    padding: 14px;
+}
+.ac-bid-status__row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.ac-bid-status__col { text-align: center; }
+.ac-bid-status__col--highlight {
+    background: var(--ac-c10);
+    border-radius: 8px;
+    padding: 6px;
+    border: 1px solid var(--ac-c20);
+}
+.ac-bid-status__label { display: block; font-size: 9px; font-weight: 700; letter-spacing: 0.12em; color: #64748b; text-transform: uppercase; margin-bottom: 2px; }
+.ac-bid-status__value { display: block; font-size: 16px; font-weight: 700; color: #e2e8f0; }
+.ac-bid-status__value--big { font-size: 22px; color: var(--ac-c); }
+
+.ac-current-bidder {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(72,187,120,.10);
+    border: 1px solid rgba(72,187,120,.30);
+    border-radius: 8px;
+    padding: 7px 10px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+}
+.ac-current-bidder__logo { width: 28px; height: 28px; object-fit: contain; border-radius: 4px; flex-shrink: 0; }
+.ac-current-bidder__name { font-size: 12px; font-weight: 600; color: #68d391; flex: 1; min-width: 0; word-break: break-word; }
+.ac-current-bidder__badge { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: #48bb78; text-transform: uppercase; background: rgba(72,187,120,.15); padding: 2px 6px; border-radius: 10px; flex-shrink: 0; }
+
+/* Player Action Buttons */
+.ac-player-actions { display: flex; gap: 8px; width: 100%; margin-top: 2px; }
+
+/* ── Buttons ──────────────────────────────────────────────────────── */
+.ac-btn {
+    border: none;
+    border-radius: 10px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    padding: 10px 16px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.ac-btn--reset {
+    flex: 1;
+    background: rgba(245,101,101,.15);
+    color: #fc8181;
+    border: 1px solid rgba(245,101,101,.3);
+}
+.ac-btn--reset:hover { background: rgba(245,101,101,.25); }
+.ac-btn--sold {
+    flex: 2;
+    background: var(--ac-sbtn);
+    color: var(--ac-sbtn-fg);
+    font-size: 16px;
+    padding: 12px 20px;
+    box-shadow: 0 4px 15px var(--ac-sbtn-glow);
+}
+.ac-btn--sold:hover  { transform: translateY(-2px); box-shadow: 0 6px 20px var(--ac-sbtn-glow); }
+.ac-btn--sold:active { transform: translateY(0); }
+.ac-btn--place-bid {
+    width: 100%;
+    background: var(--ac-pbtn);
+    color: #fff;
+    font-size: 18px;
+    padding: 15px 16px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px var(--ac-pbtn-glow);
+    margin-top: 8px;
+}
+.ac-btn--place-bid:hover  { transform: translateY(-2px); box-shadow: 0 6px 25px var(--ac-pbtn-glow); }
+.ac-btn--place-bid:active { transform: translateY(0); }
+.ac-btn--place-bid:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* ── Right: Teams Panel ──────────────────────────────────────────── */
+.ac-teams-panel {
+    background: #0d1117;
+    overflow-y: auto;
+    padding: 16px 20px;
+}
+.ac-teams-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--ac-c10);
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.ac-teams-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--ac-c);
+    text-transform: uppercase;
+}
+.ac-teams-count { font-size: 11px; color: #64748b; }
+
+.ac-teams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 12px;
+}
+
+/* ── Team Card Button ─────────────────────────────────────────────── */
+.ac-team-btn {
+    background: linear-gradient(135deg, #141c2e 0%, #1a2540 100%);
+    border: 1px solid var(--ac-c15);
+    border-radius: 14px;
+    padding: 14px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+}
+.ac-team-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--ac-c10), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.ac-team-btn:hover:not(.ac-team-btn--disabled)::before { opacity: 1; }
+.ac-team-btn:hover:not(.ac-team-btn--disabled) {
+    border-color: var(--ac-c50);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,.4), 0 0 0 1px var(--ac-c20);
+}
+.ac-team-btn:active:not(.ac-team-btn--disabled) { transform: translateY(-1px); }
+.ac-team-btn--disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(60%); }
+.ac-team-btn--active {
+    border-color: rgba(72,187,120,.6) !important;
+    background: linear-gradient(135deg, #0d2618 0%, #0f3020 100%) !important;
+    box-shadow: 0 0 0 2px rgba(72,187,120,.3), 0 8px 25px rgba(0,0,0,.4) !important;
+}
+
+.ac-team-logo {
+    width: 64px; height: 64px;
+    object-fit: contain;
+    border-radius: 10px;
+    background: rgba(255,255,255,.05);
+    padding: 3px;
+}
+.ac-team-logo-placeholder {
+    width: 64px; height: 64px;
+    border-radius: 10px;
+    background: var(--ac-c10);
+    border: 1px solid var(--ac-c20);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+.ac-team-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #e2e8f0;
+    letter-spacing: 0.02em;
+    line-height: 1.3;
+    word-break: break-word;
+}
+.ac-team-purse { width: 100%; }
+.ac-team-purse__bar-wrap { background: rgba(255,255,255,.08); border-radius: 4px; height: 5px; overflow: hidden; margin-bottom: 4px; }
+.ac-team-purse__bar { height: 100%; border-radius: 4px; transition: width .4s ease; background: linear-gradient(90deg,var(--ac-c),#93c5fd); }
+.ac-team-purse__bar--low { background: linear-gradient(90deg, #e53e3e, #fc8181); }
+.ac-team-purse__bar--mid { background: linear-gradient(90deg, #d69e2e, #f6ad55); }
+.ac-team-purse__text { font-size: 11px; color: #94a3b8; line-height: 1.2; }
+.ac-team-purse__pts  { font-size: 12px; font-weight: 700; color: var(--ac-c); }
+.ac-team-next-bid {
+    font-size: 10px;
+    font-weight: 600;
+    color: #68d391;
+    background: rgba(72,187,120,.10);
+    border: 1px solid rgba(72,187,120,.20);
+    border-radius: 6px;
+    padding: 2px 7px;
+}
+.ac-team-no-bid {
+    font-size: 10px;
+    color: #e53e3e;
+    background: rgba(229,62,62,.08);
+    border: 1px solid rgba(229,62,62,.20);
+    border-radius: 6px;
+    padding: 2px 7px;
+}
+
+/* ── Bid Modal ─────────────────────────────────────────────────────── */
+.ac-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 9000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    animation: acFadeIn 0.2s ease;
+}
+
+.ac-modal {
+    background: linear-gradient(160deg, #111827 0%, #0f172a 100%);
+    border: 1px solid var(--ac-c20);
+    border-radius: 20px;
+    padding: 24px 24px 28px;
+    width: clamp(300px, 92vw, 560px);
+    max-height: 90dvh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 25px 60px rgba(0,0,0,.7);
+    animation: acSlideUp 0.25s ease;
+}
+@keyframes acSlideUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:none; } }
+
+.ac-modal__close {
+    position: absolute;
+    top: 12px; right: 12px;
+    background: rgba(255,255,255,.07);
+    border: none;
+    color: #94a3b8;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+.ac-modal__close:hover { background: rgba(255,255,255,.15); color: #e2e8f0; }
+
+.ac-modal__header { display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
+.ac-modal__team-logo { width: 56px; height: 56px; object-fit: contain; border-radius: 10px; background: rgba(255,255,255,.05); padding: 4px; flex-shrink: 0; }
+.ac-modal__team-name { font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; color: #f1f5f9; line-height: 1.2; }
+.ac-modal__team-meta { font-size: 11px; color: #94a3b8; margin-top: 2px; line-height: 1.4; }
+
+.ac-modal__divider { height: 1px; background: var(--ac-c15); margin: 14px 0; }
+
+.ac-modal__player-row { display: flex; align-items: center; gap: 14px; }
+.ac-modal__player-photo { width: 58px; height: 58px; object-fit: cover; border-radius: 10px; border: 2px solid var(--ac-c20); flex-shrink: 0; }
+.ac-modal__player-info h3 { font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #f1f5f9; }
+.ac-modal__player-info p  { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+.ac-tier-badge { display: inline-block; margin-top: 4px; padding: 2px 9px; border-radius: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid currentColor; }
+
+/* ── Bid Control ─────────────────────────────────────────────────── */
+.ac-bid-control {
+    background: rgba(255,255,255,.03);
+    border: 1px solid var(--ac-c15);
+    border-radius: 14px;
+    padding: 18px 16px;
+    margin-bottom: 8px;
+}
+.ac-bid-control__label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--ac-c);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+.ac-bid-control__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.ac-bid-control__btn {
+    width: 48px;
+    height: 52px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    border: 1px solid var(--ac-c30);
+    background: var(--ac-c10);
+    color: var(--ac-c);
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.ac-bid-control__btn:hover  { background: var(--ac-c20); }
+.ac-bid-control__btn:active { transform: scale(0.95); }
+.ac-bid-control__input {
+    flex: 1;
+    min-width: 0;
+    background: rgba(255,255,255,.06);
+    border: 1px solid var(--ac-c30);
+    border-radius: 10px;
+    color: #f1f5f9;
+    font-size: 30px;
+    font-weight: 700;
+    text-align: center;
+    padding: 8px 6px;
+    outline: none;
+    transition: border-color 0.2s;
+    -moz-appearance: textfield;
+    width: 100%;
+}
+.ac-bid-control__input::-webkit-inner-spin-button,
+.ac-bid-control__input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.ac-bid-control__input:focus { border-color: var(--ac-c50); box-shadow: 0 0 0 3px var(--ac-c10); }
+.ac-bid-control__limits {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #94a3b8;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.ac-bid-control__limits strong { color: #e2e8f0; }
+.ac-bid-control__hint { font-size: 11px; color: #fc8181; margin-top: 8px; min-height: 16px; line-height: 1.4; }
+
+/* ── Toast ────────────────────────────────────────────────────────── */
+.ac-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1e293b;
+    border: 1px solid var(--ac-c30);
+    color: #e2e8f0;
+    padding: 11px 22px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 8px 30px rgba(0,0,0,.5);
+    transition: transform 0.3s, opacity 0.3s;
+    opacity: 0;
+    z-index: 9999;
+    white-space: nowrap;
+    max-width: min(90vw, 480px);
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+.ac-toast.ac-toast--show    { transform: translateX(-50%) translateY(0); opacity: 1; }
+.ac-toast.ac-toast--success { border-color: rgba(72,187,120,.5); color: #68d391; }
+.ac-toast.ac-toast--error   { border-color: rgba(245,101,101,.5); color: #fc8181; }
+
+/* ══════════════════════  RESPONSIVE  ═════════════════════════════ */
+
+/* ── Tablet: 600–860px ─ stack layout, compact player panel ───────── */
+@media (max-width: 860px) {
+    .ac-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        height: auto;
+        min-height: calc(100dvh - 56px);
+        overflow: visible;
+    }
+
+    .ac-player-panel {
+        border-right: none;
+        border-bottom: 1px solid var(--ac-c15);
+        padding: 14px 16px;
+        overflow: visible;
+        /* Horizontal layout on tablet */
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+
+    .ac-player-empty {
+        width: 100%;
+        height: auto;
+        padding: 20px 0;
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 12px;
+    }
+    .ac-player-empty__icon { font-size: 32px; }
+    .ac-player-empty p     { font-size: 13px; }
+    .ac-player-empty small { display: none; }
+
+    .ac-player-card {
+        flex-direction: row;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 14px;
+        width: 100%;
+    }
+
+    /* Compact photo on tablet */
+    .ac-player-photo-wrap { width: 100px; height: 100px; flex-shrink: 0; }
+    .ac-player-photo      { width: 100px; height: 100px; }
+
+    .ac-player-info { text-align: left; flex: 1; min-width: 140px; }
+    .ac-player-name { font-size: 20px; }
+
+    .ac-bid-status { width: 100%; }
+    .ac-player-actions { width: 100%; }
+
+    .ac-teams-panel  { padding: 14px 16px; height: auto; }
+    .ac-teams-grid   { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+}
+
+/* ── Mobile: < 480px ─ single column, compact everything ────────── */
+@media (max-width: 480px) {
+    .ac-nav { height: 52px; padding: 0 12px; }
+    .ac-nav__tournament { max-width: 130px; font-size: 12px; }
+    .ac-nav__label { font-size: 10px; }
+
+    .ac-player-panel { padding: 12px; gap: 10px; }
+
+    .ac-player-photo-wrap { width: 80px; height: 80px; }
+    .ac-player-photo      { width: 80px; height: 80px; border-width: 2px; }
+    .ac-player-name { font-size: 18px; }
+
+    .ac-bid-status { padding: 10px; }
+    .ac-bid-status__value      { font-size: 15px; }
+    .ac-bid-status__value--big { font-size: 18px; }
+
+    .ac-btn { font-size: 13px; padding: 9px 12px; }
+    .ac-btn--sold { font-size: 14px; padding: 10px 14px; }
+
+    .ac-teams-panel { padding: 12px; }
+    .ac-teams-grid  { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+
+    .ac-team-btn    { padding: 10px 8px; gap: 6px; }
+    .ac-team-logo,
+    .ac-team-logo-placeholder { width: 48px; height: 48px; }
+    .ac-team-name   { font-size: 11px; }
+
+    /* Full-screen modal on mobile */
+    .ac-modal-overlay { padding: 0; align-items: flex-end; }
+    .ac-modal {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 20px 20px 0 0;
+        max-height: 94dvh;
+        padding: 20px 16px 28px;
+    }
+
+    /* Larger touch targets for bid buttons */
+    .ac-bid-control__btn { width: 52px; height: 52px; font-size: 26px; }
+    .ac-bid-control__input { font-size: 26px; padding: 10px 4px; }
+
+    .ac-btn--place-bid { font-size: 16px; padding: 14px 12px; }
+}
+
+/* ── Very small: < 360px ─────────────────────────────────────────── */
+@media (max-width: 360px) {
+    .ac-teams-grid { grid-template-columns: 1fr; }
+    .ac-team-btn   { flex-direction: row; padding: 10px 12px; text-align: left; }
+    .ac-team-name  { font-size: 13px; }
+}
+
+/* ══════════════════  CONFIRM SOLD MODAL  ═══════════════════ */
+.ac-sold-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 9100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    animation: acFadeIn 0.2s ease;
+}
+
+.ac-sold-modal {
+    background: linear-gradient(160deg, #0f172a 0%, #1a1a2e 60%, #160f2e 100%);
+    border: 1px solid rgba(251,191,36,.35);
+    border-radius: 24px;
+    padding: 0;
+    width: clamp(300px, 92vw, 520px);
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,.8), 0 0 0 1px rgba(251,191,36,.15);
+    animation: acSlideUp 0.3s cubic-bezier(.34,1.56,.64,1);
+}
+
+/* Gold shimmer header band */
+.ac-sold-modal__header {
+    background: linear-gradient(135deg, #78350f 0%, #92400e 40%, #b45309 100%);
+    padding: 22px 24px 18px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+.ac-sold-modal__header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,.08) 50%, transparent 70%);
+    animation: acShimmer 2.5s infinite;
+}
+@keyframes acShimmer {
+    0%   { transform: translateX(-100%) skewX(-15deg); }
+    100% { transform: translateX(200%)  skewX(-15deg); }
+}
+
+.ac-sold-modal__gavel {
+    font-size: 40px;
+    line-height: 1;
+    margin-bottom: 6px;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,.4));
+    position: relative;
+}
+.ac-sold-modal__title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: #fef3c7;
+    text-transform: uppercase;
+    position: relative;
+}
+.ac-sold-modal__subtitle {
+    font-size: 11px;
+    color: rgba(253,230,138,.7);
+    margin-top: 3px;
+    letter-spacing: 0.06em;
+    position: relative;
+}
+
+/* Deal section */
+.ac-sold-modal__deal {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 24px 20px;
+}
+
+.ac-sold-deal__side {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+.ac-sold-deal__photo-wrap {
+    position: relative;
+    width: 90px;
+    height: 90px;
+}
+.ac-sold-deal__photo {
+    width: 90px;
+    height: 90px;
+    border-radius: 14px;
+    object-fit: cover;
+    border: 3px solid rgba(251,191,36,.4);
+    background: #1e293b;
+}
+.ac-sold-deal__photo--team {
+    object-fit: contain;
+    padding: 6px;
+    background: rgba(255,255,255,.05);
+}
+.ac-sold-deal__tier {
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    border: 1px solid currentColor;
+    border-radius: 10px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 1px 8px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: #63b3ed;
+}
+.ac-sold-deal__name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #f1f5f9;
+    text-align: center;
+    line-height: 1.2;
+    word-break: break-word;
+    margin-top: 6px;
+}
+.ac-sold-deal__meta {
+    font-size: 11px;
+    color: #94a3b8;
+    text-align: center;
+    line-height: 1.3;
+}
+
+/* Arrow + points in the middle */
+.ac-sold-deal__arrow {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 0 4px;
+}
+.ac-sold-deal__pts {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    color: #fbbf24;
+    line-height: 1;
+    text-shadow: 0 0 20px rgba(251,191,36,.5);
+    white-space: nowrap;
+}
+.ac-sold-deal__pts-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: #92400e;
+    text-transform: uppercase;
+}
+.ac-sold-deal__chevron {
+    font-size: 22px;
+    color: rgba(251,191,36,.5);
+    margin-top: 4px;
+}
+
+/* Action buttons */
+.ac-sold-modal__actions {
+    display: flex;
+    gap: 12px;
+    padding: 0 20px 24px;
+}
+.ac-sold-btn--cancel {
+    flex: 1;
+    background: rgba(255,255,255,.06);
+    color: #94a3b8;
+    border: 1px solid rgba(255,255,255,.12) !important;
+    border-radius: 12px !important;
+    font-size: 14px;
+    padding: 12px 8px;
+}
+.ac-sold-btn--cancel:hover { background: rgba(255,255,255,.12); color: #e2e8f0; }
+.ac-sold-btn--confirm {
+    flex: 2;
+    background: linear-gradient(135deg, #92400e 0%, #b45309 40%, #d97706 100%);
+    color: #fef3c7;
+    border-radius: 12px !important;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    padding: 12px 8px;
+    box-shadow: 0 4px 20px rgba(180,83,9,.5);
+    text-transform: uppercase;
+    transition: all 0.2s;
+}
+.ac-sold-btn--confirm:hover  { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(180,83,9,.65); }
+.ac-sold-btn--confirm:active { transform: translateY(0); }
+.ac-sold-btn--confirm:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+
+@media (max-width: 400px) {
+    .ac-sold-modal__deal { flex-direction: column; gap: 16px; }
+    .ac-sold-deal__arrow { flex-direction: row; gap: 8px; }
+    .ac-sold-deal__chevron { transform: rotate(90deg); }
+}

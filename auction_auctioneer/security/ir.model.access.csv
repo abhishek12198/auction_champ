@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_auction_team_player_auctioneer,auction.team.player auctioneer,auction_module.model_auction_team_player,auction_auctioneer.group_auctioneer,1,1,0,0
+access_auction_auction_auctioneer,auction.auction auctioneer,auction_module.model_auction_auction,auction_auctioneer.group_auctioneer,1,0,0,0
+access_auction_team_auctioneer,auction.team auctioneer,auction_module.model_auction_team,auction_auctioneer.group_auctioneer,1,0,0,0
+access_auction_tournament_auctioneer,auction.tournament auctioneer,auction_module.model_auction_tournament,auction_auctioneer.group_auctioneer,1,0,0,0
+access_auction_auction_player_auctioneer,auction.auction.player auctioneer,auction_module.model_auction_auction_player,auction_auctioneer.group_auctioneer,1,1,1,1
+access_auction_history_auctioneer,auction.history auctioneer,auction_module.model_auction_history,auction_auctioneer.group_auctioneer,1,1,1,0
+access_auction_bid_slab_auctioneer,auction.auction.bid.slab auctioneer,auction_module.model_auction_auction_bid_slab,auction_auctioneer.group_auctioneer,1,0,0,0
+access_auction_tier_limit_auctioneer,auction.auction.tier.limit auctioneer,auction_module.model_auction_auction_tier_limit,auction_auctioneer.group_auctioneer,1,0,0,0

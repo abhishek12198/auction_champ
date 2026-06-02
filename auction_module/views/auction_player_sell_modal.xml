@@ -826,6 +826,25 @@
   document.getElementById('sellModal').addEventListener('click', function(e) {
     if (e.target === this && document.getElementById('smFormPanel').style.display !== 'none') closeSellModal();
   });
+
+  // ── Auto-advance when auctioneer console finalises a sale ─────────────
+  // The auctioneer console sets 'auction:player_sold' in localStorage after
+  // a successful finalization. The storage event fires in all other same-
+  // origin tabs/windows, triggering changeImage() to load the next player.
+  window.addEventListener('storage', function (e) {
+    if (e.key === 'auction:player_sold' && e.newValue) {
+      try {
+        // Give the server a brief moment to commit the state change
+        setTimeout(function () {
+          if (typeof changeImage === 'function') {
+            changeImage();
+          } else {
+            window.location.reload();
+          }
+        }, 600);
+      } catch (err) { /* ignore */ }
+    }
+  });
 })();
 //]]></script>
 </template>

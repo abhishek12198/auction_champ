@@ -211,8 +211,8 @@ class Auction(http.Controller):
 
     @http.route(['''/<string:tournament_slug>/auction/show/team/balance'''], type='http', auth="public", website=True)
     def auction_team_balance(self, tournament_slug, **kwargs):
-        tournament = request.env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
-        if not tournament or tournament.slug != tournament_slug:
+        tournament = request.env['auction.tournament'].sudo().search([('slug', '=', tournament_slug)], limit=1)
+        if not tournament:
             return self._not_found()
         domain = [('tournament_id', '=', tournament.id)]
         auctions = request.env['auction.auction'].sudo().search(domain)
@@ -243,8 +243,8 @@ class Auction(http.Controller):
 
     @http.route(['''/<string:tournament_slug>/auction/show/team/balance/json'''], type='http', auth="public", website=True)
     def auction_team_balance_json(self, tournament_slug, **kwargs):
-        tournament = request.env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
-        if not tournament or tournament.slug != tournament_slug:
+        tournament = request.env['auction.tournament'].sudo().search([('slug', '=', tournament_slug)], limit=1)
+        if not tournament:
             return request.make_response(
                 json.dumps({'error': 'tournament not found'}),
                 headers=[('Content-Type', 'application/json')]
@@ -569,10 +569,10 @@ class Auction(http.Controller):
     def auction_live_board(self, tournament_slug, **kw):
         env = request.env
         tournament = env['auction.tournament'].sudo().search(
-            [('active', '=', True)], limit=1
+            [('slug', '=', tournament_slug)], limit=1
         )
 
-        if not tournament or tournament.slug != tournament_slug:
+        if not tournament:
             return self._not_found()
 
         theme = tournament.player_display_template or 'vanilla'
@@ -615,10 +615,10 @@ class Auction(http.Controller):
     def auction_live_board_data(self, tournament_slug, **kw):
         env = request.env
         tournament = env['auction.tournament'].sudo().search(
-            [('active', '=', True)], limit=1
+            [('slug', '=', tournament_slug)], limit=1
         )
 
-        if not tournament or tournament.slug != tournament_slug:
+        if not tournament:
             return request.make_response(
                 json.dumps({'error': 'tournament not found'}),
                 headers=[('Content-Type', 'application/json')]
@@ -1433,11 +1433,11 @@ class Auction(http.Controller):
     def player_register(self, tournament_slug, **kw):
         """Public player self-registration form. Creates a draft player record."""
         tournament = request.env['auction.tournament'].sudo().search(
-            [('active', '=', True)], limit=1
+            [('slug', '=', tournament_slug)], limit=1
         )
 
-        # Return 404 if no active tournament or slug doesn't match
-        if not tournament or tournament.slug != tournament_slug:
+        # Return 404 if tournament not found
+        if not tournament:
             return self._not_found()
 
         theme = tournament.player_display_template or 'vanilla'

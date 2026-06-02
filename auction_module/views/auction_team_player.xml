@@ -437,7 +437,7 @@
                     <sheet>
 
                         <!-- Photo + Name / Role / Tier ─────────────── -->
-                        <field name="photo" widget="image" class="oe_avatar"
+                        <field name="photo" widget="image" class="oe_avatar player_photo_large"
                                options="{'zoom': true, 'preview_image': 'photo'}"/>
                         <div class="oe_title">
                             <label class="o_form_label" for="name"/>

@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="auctioneer_console_template" name="Auctioneer Console">
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Auctioneer Console</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;family=Rajdhani:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+    <!-- Bundled CSS (loaded via web.assets_frontend) -->
+    <link rel="stylesheet" href="/auction_auctioneer/static/src/css/auctioneer_console.css"/>
+</head>
+<body class="ac-body" t-att-data-theme="tournament.player_display_template if tournament else 'vanilla'">
+
+<!-- ═══════════════════  TOP NAV  ═══════════════════ -->
+<nav class="ac-nav">
+    <div class="ac-nav__brand">
+        <t t-if="tournament and tournament.logo">
+            <img t-att-src="'/auction/public/image/auction.tournament/%d/logo' % tournament.id"
+                 alt="Tournament Logo" class="ac-nav__logo"/>
+        </t>
+        <div class="ac-nav__title-group">
+            <span class="ac-nav__label">AUCTIONEER CONSOLE</span>
+            <span class="ac-nav__tournament" t-esc="tournament.name if tournament else 'No Active Tournament'"/>
+        </div>
+    </div>
+    <div class="ac-nav__status">
+        <span class="ac-status-dot" id="acStatusDot"></span>
+        <span class="ac-status-text" id="acStatusText">Connecting…</span>
+    </div>
+</nav>
+
+<!-- ═══════════════════  MAIN LAYOUT  ═══════════════════ -->
+<div class="ac-layout">
+
+    <!-- ── Left column: Current Player ── -->
+    <aside class="ac-player-panel" id="acPlayerPanel">
+        <div class="ac-player-empty" id="acPlayerEmpty">
+            <div class="ac-player-empty__icon">🏏</div>
+            <p>No player on stage</p>
+            <small>Bring a player to stage from the auction screen</small>
+        </div>
+
+        <div class="ac-player-card" id="acPlayerCard" style="display:none">
+            <!-- Tier badge -->
+            <div class="ac-player-tier" id="acPlayerTier"></div>
+
+            <!-- Photo -->
+            <div class="ac-player-photo-wrap">
+                <img id="acPlayerPhoto" src="" alt="Player Photo" class="ac-player-photo"/>
+                <div class="ac-player-sl" id="acPlayerSl"></div>
+            </div>
+
+            <!-- Info -->
+            <div class="ac-player-info">
+                <h2 class="ac-player-name" id="acPlayerName"></h2>
+                <div class="ac-player-meta" id="acPlayerMeta"></div>
+            </div>
+
+            <!-- Bid Status -->
+            <div class="ac-bid-status">
+                <div class="ac-bid-status__row">
+                    <div class="ac-bid-status__col">
+                        <span class="ac-bid-status__label">BASE PRICE</span>
+                        <span class="ac-bid-status__value" id="acBasePrice">—</span>
+                    </div>
+                    <div class="ac-bid-status__col ac-bid-status__col--highlight">
+                        <span class="ac-bid-status__label">CURRENT BID</span>
+                        <span class="ac-bid-status__value ac-bid-status__value--big" id="acCurrentBid">—</span>
+                    </div>
+                </div>
+                <!-- Current bidder info -->
+                <div class="ac-current-bidder" id="acCurrentBidder" style="display:none">
+                    <img id="acBidderLogo" src="" alt="" class="ac-current-bidder__logo"/>
+                    <span id="acBidderName" class="ac-current-bidder__name"></span>
+                    <span class="ac-current-bidder__badge">HIGHEST BIDDER</span>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="ac-player-actions">
+                <button class="ac-btn ac-btn--reset" id="acResetBidBtn" onclick="acResetBid()" style="display:none">
+                    ↩ Reset Bid
+                </button>
+                <button class="ac-btn ac-btn--sold" id="acFinalizeBtn" onclick="acFinalizeBid()" style="display:none">
+                    🔨 SOLD!
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── Right column: Teams ── -->
+    <main class="ac-teams-panel">
+        <div class="ac-teams-header">
+            <h3 class="ac-teams-title">TEAMS — CLICK TO BID</h3>
+            <span class="ac-teams-count" id="acTeamsCount"></span>
+        </div>
+        <div class="ac-teams-grid" id="acTeamsGrid">
+            <!-- Populated by JS -->
+        </div>
+    </main>
+
+</div>
+
+<!-- ═══════════════════  BID MODAL  ═══════════════════ -->
+<div class="ac-modal-overlay" id="acBidModal" style="display:none" onclick="acCloseBidModal(event)">
+    <div class="ac-modal">
+        <button class="ac-modal__close" onclick="acCloseBidModal()">×</button>
+
+        <div class="ac-modal__header">
+            <img id="acModalTeamLogo" src="" alt="" class="ac-modal__team-logo"/>
+            <div>
+                <h2 class="ac-modal__team-name" id="acModalTeamName"></h2>
+                <p class="ac-modal__team-meta" id="acModalTeamMeta"></p>
+            </div>
+        </div>
+
+        <div class="ac-modal__divider"></div>
+
+        <div class="ac-modal__player-row">
+            <img id="acModalPlayerPhoto" src="" alt="" class="ac-modal__player-photo"/>
+            <div class="ac-modal__player-info">
+                <h3 id="acModalPlayerName"></h3>
+                <p id="acModalPlayerRole"></p>
+                <span class="ac-tier-badge" id="acModalTierBadge"></span>
+            </div>
+        </div>
+
+        <div class="ac-modal__divider"></div>
+
+        <!-- Bid amount control -->
+        <div class="ac-bid-control">
+            <label class="ac-bid-control__label">POINTS TO CALL</label>
+            <div class="ac-bid-control__row">
+                <button class="ac-bid-control__btn" id="acBidDecBtn" onclick="acAdjustBid(-1)">−</button>
+                <input type="number" class="ac-bid-control__input" id="acBidInput" min="0" step="1"/>
+                <button class="ac-bid-control__btn" id="acBidIncBtn" onclick="acAdjustBid(1)">+</button>
+            </div>
+            <div class="ac-bid-control__limits">
+                <span>Base: <strong id="acModalBase"></strong></span>
+                <span>Max Call: <strong id="acModalMax"></strong></span>
+            </div>
+            <p class="ac-bid-control__hint" id="acBidHint"></p>
+        </div>
+
+        <button class="ac-btn ac-btn--place-bid" id="acPlaceBidBtn" onclick="acPlaceBid()">
+            🔨 PLACE BID
+        </button>
+    </div>
+</div>
+
+<!-- ═══════════════════  TOAST  ═══════════════════ -->
+<div class="ac-toast" id="acToast"></div>
+
+<!-- ═══════════════  CONFIRM SOLD MODAL  ════════════════ -->
+<div class="ac-sold-overlay" id="acSoldConfirmModal" style="display:none">
+    <div class="ac-sold-modal">
+        <!-- Gavel icon header -->
+        <div class="ac-sold-modal__header">
+            <div class="ac-sold-modal__gavel">🔨</div>
+            <h2 class="ac-sold-modal__title">Confirm Sale</h2>
+            <p class="ac-sold-modal__subtitle">This action cannot be undone</p>
+        </div>
+
+        <!-- Player → Team row -->
+        <div class="ac-sold-modal__deal">
+            <!-- Player side -->
+            <div class="ac-sold-deal__side">
+                <div class="ac-sold-deal__photo-wrap">
+                    <img id="acSoldPlayerPhoto" src="" alt="" class="ac-sold-deal__photo"/>
+                    <span class="ac-sold-deal__tier" id="acSoldPlayerTier"></span>
+                </div>
+                <div class="ac-sold-deal__name" id="acSoldPlayerName"></div>
+                <div class="ac-sold-deal__meta" id="acSoldPlayerRole"></div>
+            </div>
+
+            <!-- Arrow / amount -->
+            <div class="ac-sold-deal__arrow">
+                <div class="ac-sold-deal__pts" id="acSoldBidPts"></div>
+                <div class="ac-sold-deal__pts-label">pts</div>
+                <div class="ac-sold-deal__chevron">→</div>
+            </div>
+
+            <!-- Team side -->
+            <div class="ac-sold-deal__side">
+                <div class="ac-sold-deal__photo-wrap">
+                    <img id="acSoldTeamLogo" src="" alt="" class="ac-sold-deal__photo ac-sold-deal__photo--team"/>
+                </div>
+                <div class="ac-sold-deal__name" id="acSoldTeamName"></div>
+                <div class="ac-sold-deal__meta" id="acSoldTeamMeta"></div>
+            </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="ac-sold-modal__actions">
+            <button class="ac-btn ac-sold-btn--cancel" onclick="acCancelSoldConfirm()">✕ Cancel</button>
+            <button class="ac-btn ac-sold-btn--confirm" id="acSoldConfirmBtn" onclick="acConfirmSold()">
+                🏆 CONFIRM SOLD!
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════  JS  ═══════════════════ -->
+<script>
+/* ────────────────────────────────────────────────────────────────────────
+   Auctioneer Console – inline bootstrap
+   (Actual logic lives in auctioneer_console.js loaded by Odoo asset pipeline)
+──────────────────────────────────────────────────────────────────────── */
+window.AC_DATA_URL      = '/auction/auctioneer/data';
+window.AC_BID_URL       = '/auction/auctioneer/place-bid';
+window.AC_RESET_URL     = '/auction/auctioneer/reset-bid';
+window.AC_FINALIZE_URL  = '/auction/auctioneer/finalize-bid';
+window.AC_CSRF_TOKEN    = '<t t-esc="request.csrf_token()"/>';
+</script>
+<script src="/auction_auctioneer/static/src/js/auctioneer_console.js"></script>
+</body>
+</html>
+</template>
+</odoo>
