@@ -28,6 +28,14 @@
             <field name="model">auction.tournament</field>
             <field name="arch" type="xml">
                 <form string="Tournament">
+                    <header>
+                        <button name="action_remove_duplicates"
+                                string="Remove Duplicate Players"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    icon="fa-clone">
+                            </button>
+                    </header>
                     <sheet>
                         <field name="active" invisible="1"/>
                         <field name="registration_open" invisible="1"/>
@@ -83,15 +91,7 @@
                                 </div>
                             </button>
                             <!-- Remove duplicate players -->
-                            <button name="action_remove_duplicates"
-                                    type="object"
-                                    class="oe_stat_button"
-                                    icon="fa-clone">
-                                <div class="o_stat_info">
-                                    <span class="o_stat_text text-warning">Remove</span>
-                                    <span class="o_stat_text text-warning" style="font-size:10px">Duplicates</span>
-                                </div>
-                            </button>
+
                         </div>
 
                         <!-- ── Header: Logo + Title ── -->
