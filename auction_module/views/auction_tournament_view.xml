@@ -30,7 +30,8 @@
                 <form string="Tournament">
                     <header>
                         <button name="action_remove_duplicates"
-                                string="Remove Duplicate Players"
+
+
                                     type="object"
                                     class="oe_stat_button"
                                     icon="fa-clone">

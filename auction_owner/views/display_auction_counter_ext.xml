@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        Inject counter CSS + JS into the sell modal (t-called by ALL 5 themes).
+        This means the script/style loads exactly once per display_auction page.
+    -->
+    <template id="player_sell_modal_counter_ext"
+              name="Sell Modal – Counter Button Script"
+              inherit_id="auction_module.player_sell_modal">
+        <xpath expr="//script" position="after">
+            <style>
+                #oc-counter-fab {
+                    position: fixed;
+                    top: 58px;
+                    right: 14px;
+                    z-index: 9999;
+                    background: rgba(0, 0, 0, 0.72);
+                    border: 1.5px solid rgba(255, 140, 0, 0.75);
+                    color: #f9d423;
+                    border-radius: 20px;
+                    padding: 5px 13px;
+                    font-size: 12px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    backdrop-filter: blur(5px);
+                    letter-spacing: 0.3px;
+                    transition: background 0.2s, border-color 0.2s, color 0.2s;
+                    white-space: nowrap;
+                }
+                #oc-counter-fab:hover {
+                    background: rgba(230, 92, 0, 0.92);
+                    border-color: #f9d423;
+                    color: #fff;
+                }
+                #oc-counter-fab:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+            </style>
+            <script>//<![CDATA[
+window.ocEnableCounter = function(btn) {
+    if (!btn || btn.disabled) return;
+    btn.disabled = true;
+    var orig = btn.textContent;
+    btn.textContent = '\u23f3 Active\u2026';
+    fetch('/auction/owner/enable-counter', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: '{}'
+    })
+    .then(function(r) { return r.json(); })
+    .then(function() {
+        setTimeout(function() {
+            btn.disabled = false;
+            btn.textContent = orig;
+        }, 4000);
+    })
+    .catch(function() {
+        btn.disabled = false;
+        btn.textContent = orig;
+    });
+};
+//]]></script>
+        </xpath>
+    </template>
+
+    <!-- ── Vanilla ───────────────────────────────────────────────────────── -->
+    <template id="player_template_new_counter_ext"
+              name="Player Template New – Counter Button"
+              inherit_id="auction_module.player_template_new">
+        <xpath expr="//body" position="inside">
+            <button id="oc-counter-fab" type="button"
+                    onclick="ocEnableCounter(this)">&#x1F528; Counter</button>
+        </xpath>
+    </template>
+
+    <!-- ── Butterscotch ──────────────────────────────────────────────────── -->
+    <template id="player_template_butterscotch_counter_ext"
+              name="Player Template Butterscotch – Counter Button"
+              inherit_id="auction_module.player_template_butterscotch">
+        <xpath expr="//body" position="inside">
+            <button id="oc-counter-fab" type="button"
+                    onclick="ocEnableCounter(this)">&#x1F528; Counter</button>
+        </xpath>
+    </template>
+
+    <!-- ── Strawberry ────────────────────────────────────────────────────── -->
+    <template id="player_template_strawberry_counter_ext"
+              name="Player Template Strawberry – Counter Button"
+              inherit_id="auction_module.player_template_strawberry">
+        <xpath expr="//body" position="inside">
+            <button id="oc-counter-fab" type="button"
+                    onclick="ocEnableCounter(this)">&#x1F528; Counter</button>
+        </xpath>
+    </template>
+
+    <!-- ── Cherry ───────────────────────────────────────────────────────── -->
+    <template id="player_template_cherry_counter_ext"
+              name="Player Template Cherry – Counter Button"
+              inherit_id="auction_module.player_template_cherry">
+        <xpath expr="//body" position="inside">
+            <button id="oc-counter-fab" type="button"
+                    onclick="ocEnableCounter(this)">&#x1F528; Counter</button>
+        </xpath>
+    </template>
+
+    <!-- ── Pistah ───────────────────────────────────────────────────────── -->
+    <template id="player_template_pistah_counter_ext"
+              name="Player Template Pistah – Counter Button"
+              inherit_id="auction_module.player_template_pistah">
+        <xpath expr="//body" position="inside">
+            <button id="oc-counter-fab" type="button"
+                    onclick="ocEnableCounter(this)">&#x1F528; Counter</button>
+        </xpath>
+    </template>
+
+</odoo>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_auction_tournament_form_counter_ext" model="ir.ui.view">
+        <field name="name">auction.tournament.form.counter.ext</field>
+        <field name="model">auction.tournament</field>
+        <field name="inherit_id" ref="auction_module.view_auction_tournament_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='sold_display_seconds']" position="after">
+                <field name="hammer_count" string="Counter Hammer Strikes"
+                       help="Number of mallet strikes shown on owner consoles when Enable Counter is clicked."/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

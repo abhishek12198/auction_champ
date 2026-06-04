@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="owner_console_template" name="Auction Owner Console">
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+    <title>Owner Console</title>
+    <link rel="stylesheet" href="/auction_owner/static/src/css/owner_console.css?v=2"/>
+</head>
+<body class="oc-body" t-att-data-theme="tournament.player_display_template if tournament else 'vanilla'">
+
+<!-- ═══════ HEADER ════════════════════════════════════════════════════ -->
+<header class="oc-header">
+    <div class="oc-header-brand">
+        <t t-if="tournament and tournament.logo">
+            <img class="oc-header-logo"
+                 t-att-src="'/auction/public/image/auction.tournament/%d/logo' % tournament.id"
+                 alt="logo"/>
+        </t>
+        <div class="oc-header-titles">
+            <span class="oc-header-label">OWNER CONSOLE</span>
+            <span class="oc-header-tourn">
+                <t t-if="tournament"><t t-esc="tournament.name"/></t>
+                <t t-else="">No Active Tournament</t>
+            </span>
+        </div>
+    </div>
+    <div class="oc-header-right">
+        <!-- User menu with logout dropdown -->
+        <div class="oc-user-menu" id="ocUserMenu">
+            <button class="oc-user-btn" id="ocUserBtn" onclick="ocToggleUserMenu(event)">
+                <span class="oc-header-owner" id="ocOwnerLabel"><t t-esc="user.name"/></span>
+                <span class="oc-user-caret">&#x25BE;</span>
+            </button>
+            <div class="oc-user-dropdown" id="ocUserDropdown">
+                <a class="oc-user-dd-item" href="/web/session/logout?redirect=/web/login">
+                    <span class="oc-user-dd-icon">&#x1F6AA;</span> Logout
+                </a>
+            </div>
+        </div>
+        <div class="oc-live-badge" id="ocLiveBadge">
+            <span class="oc-live-dot"></span>
+            <span>LIVE</span>
+        </div>
+    </div>
+</header>
+
+<!-- ═══════ TAB BAR (mobile) ═════════════════════════════════════════ -->
+<nav class="oc-tab-bar">
+    <button class="oc-tab-btn oc-tab-btn-active" id="ocBtnLive"    onclick="ocSwitchTab('live',this)">
+        <span class="oc-tab-icon">&#x26A1;</span><span class="oc-tab-lbl">Live</span>
+    </button>
+    <button class="oc-tab-btn" id="ocBtnTeams"   onclick="ocSwitchTab('teams',this)">
+        <span class="oc-tab-icon">&#x1F3C6;</span><span class="oc-tab-lbl">Teams</span>
+    </button>
+    <button class="oc-tab-btn" id="ocBtnMySquad" onclick="ocSwitchTab('mysquad',this)">
+        <span class="oc-tab-icon">&#x1F465;</span><span class="oc-tab-lbl">My Squad</span>
+    </button>
+</nav>
+
+<!-- ═══════ MAIN ══════════════════════════════════════════════════════ -->
+<main class="oc-main">
+
+    <!-- ──────── TAB: LIVE ─────────────────────────────────────────── -->
+    <section id="ocTabLive" class="oc-tab-pane oc-tab-active">
+
+        <div class="oc-panel-hdr">
+            <span class="oc-panel-hdr-icon">&#x26A1;</span>
+            <span class="oc-panel-hdr-title">Live Auction</span>
+        </div>
+
+        <!-- Player Showcase -->
+        <div class="oc-showcase-card" id="ocShowcaseCard">
+
+            <!-- Waiting state -->
+            <div class="oc-waiting" id="ocWaiting">
+                <div class="oc-waiting-anim">&#x1F3CF;</div>
+                <p class="oc-waiting-title">Waiting for next player…</p>
+                <p class="oc-waiting-sub">The auctioneer will put a player up for bid shortly.</p>
+            </div>
+
+            <!-- Active player -->
+            <div class="oc-player-wrap" id="ocPlayerWrap" style="display:none">
+                <div class="oc-player-photo-col">
+                    <div class="oc-player-photo-ring" id="ocPhotoRing">
+                        <img class="oc-player-photo" id="ocPlayerPhoto" src="" alt="Player"/>
+                        <!-- SOLD overlay — shown when player is confirmed sold -->
+                        <div class="oc-sold-overlay" id="ocSoldOverlay">
+                            <div class="oc-sold-stamp">SOLD</div>
+                            <div class="oc-sold-to" id="ocSoldTo"></div>
+                        </div>
+                    </div>
+                    <div class="oc-tier-pill" id="ocTierPill">—</div>
+                    <div class="oc-sl-no" id="ocSlNo">#—</div>
+                </div>
+                <div class="oc-player-info-col">
+                    <h2 class="oc-player-name" id="ocPlayerName">—</h2>
+                    <div class="oc-player-chips">
+                        <span class="oc-chip oc-chip-role" id="ocPlayerRole">—</span>
+                        <span class="oc-chip oc-chip-style" id="ocPlayerStyle"></span>
+                    </div>
+                    <div class="oc-bid-display">
+                        <div class="oc-bid-box oc-bid-box-base">
+                            <div class="oc-bid-box-lbl">BASE PRICE</div>
+                            <div class="oc-bid-box-val" id="ocBasePrice">—</div>
+                        </div>
+                        <div class="oc-bid-box oc-bid-box-current">
+                            <div class="oc-bid-box-lbl">CURRENT BID</div>
+                            <div class="oc-bid-box-val oc-bid-live" id="ocCurrentBid">—</div>
+                        </div>
+                    </div>
+                    <div class="oc-leading-team" id="ocLeadingTeam" style="display:none">
+                        <img class="oc-leading-logo" id="ocLeadingLogo" src="" alt=""/>
+                        <div>
+                            <div class="oc-leading-lbl">Leading Bid by</div>
+                            <div class="oc-leading-name" id="ocLeadingName">—</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Rival bid alert — slides in whenever another team outbids -->
+            <div class="oc-rival-alert" id="ocRivalAlert">
+                <span class="oc-rival-dot"></span>
+                <div class="oc-rival-text">
+                    <div class="oc-rival-headline" id="ocRivalMsg">—</div>
+                    <div class="oc-rival-sub">Tap BID NOW to reclaim the lead!</div>
+                </div>
+                <span class="oc-rival-fire">&#x1F525;</span>
+            </div>
+        </div>
+
+        <!-- ── Teams Auction Status (always visible on Live) ────────── -->
+        <div class="oc-section" id="ocTeamsSection">
+            <div class="oc-section-header">
+                <span class="oc-section-title">&#x1F4CA; Teams Auction Status</span>
+                <span class="oc-section-hint">Tap a team to view their squad</span>
+            </div>
+            <div class="oc-teams-strip" id="ocTeamsStrip">
+                <!-- rendered by JS -->
+            </div>
+        </div>
+
+        <!-- ── My Bid Panel ─────────────────────────────────────────── -->
+        <div class="oc-bid-panel" id="ocBidPanel" style="display:none">
+            <div class="oc-bid-panel-top">
+                <div class="oc-my-brand">
+                    <img class="oc-my-logo" id="ocMyTeamLogo" src="" alt=""/>
+                    <div>
+                        <div class="oc-my-name" id="ocMyTeamName">—</div>
+                        <div class="oc-my-purse-row">
+                            <div class="oc-purse-bar-track"><div class="oc-purse-bar-fill" id="ocMyPurseBar"></div></div>
+                            <span class="oc-my-purse-text" id="ocMyPurse">—</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="oc-max-call-badge" id="ocMaxCallBadge">
+                    <div class="oc-max-call-lbl">MAX CALL</div>
+                    <div class="oc-max-call-val" id="ocMaxCallVal">—</div>
+                </div>
+            </div>
+            <div class="oc-bid-row" id="ocBidRow">
+                <button class="oc-step" onclick="ocChangeBid(-1)">&#x2212;</button>
+                <input  class="oc-bid-input" id="ocBidInput" type="number" min="1" inputmode="numeric"/>
+                <button class="oc-step" onclick="ocChangeBid(1)">+</button>
+                <button class="oc-bid-cta" id="ocBidCta" onclick="ocOpenBidConfirm()">
+                    &#x1F3CF; BID NOW
+                </button>
+            </div>
+            <!-- Preset quick-select buttons (rendered by JS from tournament.preset_points) -->
+            <div class="oc-presets-wrap" id="ocPresetsWrap" style="display:none">
+                <div class="oc-presets-lbl">&#x26A1; Quick Pick</div>
+                <div class="oc-presets" id="ocPresets"></div>
+            </div>
+            <div class="oc-bid-reason" id="ocBidReason"></div>
+        </div>
+
+    </section>
+
+    <!-- ──────── TAB: TEAMS ────────────────────────────────────────── -->
+    <section id="ocTabTeams" class="oc-tab-pane">
+        <div class="oc-panel-hdr">
+            <span class="oc-panel-hdr-icon">&#x1F3C6;</span>
+            <span class="oc-panel-hdr-title">Teams</span>
+            <span class="oc-panel-hdr-hint">Tap a team to view their squad</span>
+        </div>
+        <div class="oc-teams-full" id="ocTeamsFull">
+            <div class="oc-skeleton-msg">Loading teams…</div>
+        </div>
+    </section>
+
+    <!-- ──────── TAB: MY SQUAD ────────────────────────────────────── -->
+    <section id="ocTabMySquad" class="oc-tab-pane">
+        <div class="oc-panel-hdr">
+            <span class="oc-panel-hdr-icon">&#x1F465;</span>
+            <span class="oc-panel-hdr-title">My Squad</span>
+        </div>
+        <div class="oc-my-squad-banner" id="ocMySquadBanner" style="display:none">
+            <img class="oc-squad-banner-logo" id="ocMySquadLogo" src="" alt=""/>
+            <div class="oc-squad-banner-info">
+                <h3 class="oc-squad-banner-name" id="ocMySquadTeam">—</h3>
+                <div class="oc-squad-banner-purse" id="ocMySquadPurse">—</div>
+            </div>
+            <div class="oc-squad-count" id="ocMySquadCount">0/0</div>
+        </div>
+        <div class="oc-squad-list" id="ocMySquadList">
+            <div class="oc-empty-state">No players acquired yet.</div>
+        </div>
+    </section>
+
+</main>
+
+<!-- ═══════ SQUAD SHEET ═══════════════════════════════════════════════ -->
+<div class="oc-sheet-backdrop" id="ocSheetBackdrop" onclick="ocCloseSquadSheet()"></div>
+<aside class="oc-sheet" id="ocSheet">
+    <div class="oc-sheet-drag"></div>
+    <div class="oc-sheet-inner" id="ocSheetInner"></div>
+</aside>
+
+<!-- ═══════ BID CONFIRM MODAL ════════════════════════════════════════ -->
+<div class="oc-overlay" id="ocBidOverlay" style="display:none" onclick="ocCancelBidConfirm()">
+    <div class="oc-modal" onclick="event.stopPropagation()">
+        <div class="oc-modal-glow"></div>
+        <div class="oc-modal-head">
+            <div class="oc-modal-icon">&#x1F3CF;</div>
+            <div class="oc-modal-title">Confirm Your Bid</div>
+        </div>
+        <div class="oc-modal-body">
+            <div class="oc-confirm-row">
+                <span class="oc-confirm-key">Player</span>
+                <span class="oc-confirm-val" id="ocConfirmPlayer">—</span>
+            </div>
+            <div class="oc-confirm-row">
+                <span class="oc-confirm-key">Your Team</span>
+                <span class="oc-confirm-val" id="ocConfirmTeam">—</span>
+            </div>
+            <div class="oc-confirm-pts-block">
+                <div class="oc-confirm-pts" id="ocConfirmPts">—</div>
+                <div class="oc-confirm-pts-unit">POINTS</div>
+            </div>
+        </div>
+        <div class="oc-modal-foot">
+            <button class="oc-btn-cancel" onclick="ocCancelBidConfirm()">Cancel</button>
+            <button class="oc-btn-confirm" id="ocBtnConfirm" onclick="ocSubmitBid()">
+                &#x2705; PLACE BID
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════ TOAST ═════════════════════════════════════════════════════ -->
+<div class="oc-toast" id="ocToast"></div>
+
+<script src="/auction_owner/static/src/js/owner_console.js?v=2"></script>
+
+<!-- ═══ COUNTER / MALLET – inline so it is never browser-cached ═════════ -->
+<style>
+.oc-hammer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .35s ease;pointer-events:none}
+.oc-hammer-overlay.oc-hammer-in{opacity:1}
+.oc-hammer-overlay.oc-hammer-out{opacity:0}
+.oc-hammer-inner{display:flex;flex-direction:column;align-items:center;gap:24px}
+.oc-hammer-icon{font-size:110px;line-height:1;display:block;transform:rotate(-35deg) translateY(-18px);transform-origin:bottom right;filter:drop-shadow(0 0 22px rgba(255,200,0,.85))}
+@keyframes oc-hammer-swing{0%{transform:rotate(-35deg) translateY(-18px)}45%{transform:rotate(28deg) translateY(12px)}60%{transform:rotate(18deg) translateY(6px)}80%{transform:rotate(-10deg) translateY(-8px)}100%{transform:rotate(-35deg) translateY(-18px)}}
+.oc-hammer-icon.oc-hammer-swing{animation:oc-hammer-swing .8s cubic-bezier(.36,.07,.19,.97) forwards}
+.oc-hammer-count{font-size:90px;font-weight:900;color:#fff;min-height:110px;display:flex;align-items:center;justify-content:center;text-shadow:0 0 32px #e65c00,0 4px 18px rgba(0,0,0,.6)}
+@keyframes oc-count-pulse{0%{transform:scale(.4);opacity:0}45%{transform:scale(1.35);opacity:1}100%{transform:scale(1);opacity:1}}
+.oc-hammer-count.oc-hammer-pulse{animation:oc-count-pulse .4s ease-out forwards}
+.oc-hammer-count.oc-hammer-final{font-size:38px;letter-spacing:2px;color:#f5c842;text-shadow:0 0 24px #f5c842,0 2px 12px rgba(0,0,0,.5)}
+</style>
+<script>//<![CDATA[
+(function () {
+'use strict';
+
+function playHammerAnim(n) {
+    var ex = document.querySelector('.oc-hammer-overlay');
+    if (ex) ex.remove();
+    var ov = document.createElement('div');
+    ov.className = 'oc-hammer-overlay';
+    ov.innerHTML = '<div class="oc-hammer-inner">'
+        + '<div class="oc-hammer-icon">\uD83D\uDD28</div>'
+        + '<div class="oc-hammer-count"></div></div>';
+    document.body.appendChild(ov);
+    requestAnimationFrame(function () {
+        requestAnimationFrame(function () { ov.classList.add('oc-hammer-in'); });
+    });
+    var inner   = ov.querySelector('.oc-hammer-inner');
+    var countEl = ov.querySelector('.oc-hammer-count');
+    var strike  = 0;
+    function doStrike() {
+        if (strike >= n) {
+            countEl.textContent = 'FINAL CALL!';
+            countEl.className = 'oc-hammer-count oc-hammer-final';
+            setTimeout(function () {
+                ov.classList.remove('oc-hammer-in');
+                ov.classList.add('oc-hammer-out');
+                setTimeout(function () { ov.remove(); }, 500);
+            }, 1800);
+            return;
+        }
+        strike++;
+        countEl.textContent = strike;
+        countEl.className = 'oc-hammer-count';
+        void countEl.offsetHeight;
+        countEl.className = 'oc-hammer-count oc-hammer-pulse';
+        var cur   = inner.querySelector('.oc-hammer-icon');
+        var clone = cur.cloneNode(true);
+        clone.classList.add('oc-hammer-swing');
+        inner.replaceChild(clone, cur);
+        setTimeout(doStrike, 900);
+    }
+    setTimeout(doStrike, 400);
+}
+
+var _lastTs = null, _init = false;
+setInterval(function () {
+    fetch('/auction/owner/counter-check', { cache: 'no-store' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+            if (!d) return;
+            var ts = d.started_at || null;
+            if (!_init) {
+                _init   = true;
+                _lastTs = ts;
+                /* play if counter fired in last 20 s (age computed server-side) */
+                if (ts && (d.age_seconds || 9999) < 20) {
+                    playHammerAnim(d.hammer_count || 3);
+                }
+            } else if (ts && ts !== _lastTs) {
+                _lastTs = ts;
+                playHammerAnim(d.hammer_count || 3);
+            }
+        })
+        .catch(function () {});
+}, 2000);
+
+})();
+//]]>
+</script>
+</body>
+</html>
+</template>
+</odoo>

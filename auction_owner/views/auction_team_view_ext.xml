@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- ── Extend Team Form: header button + owner login section ──────── -->
+        <record id="view_auction_team_form_owner_ext" model="ir.ui.view">
+            <field name="name">auction.team.form.owner.ext</field>
+            <field name="model">auction.team</field>
+            <field name="inherit_id" ref="auction_module.view_auction_team_form"/>
+            <field name="arch" type="xml">
+
+                <!-- Header button -->
+                <xpath expr="//sheet" position="before">
+                    <header>
+                        <button name="action_create_owner_user"
+                                string="Create Owner User"
+                                type="object"
+                                class="btn-primary"
+                                icon="fa-user-plus"
+                                groups="auction_module.group_auction_group_admin"/>
+                    </header>
+                </xpath>
+
+                <!-- Owner login info group below Team Details (select by child field, not @string) -->
+                <xpath expr="//group[field[@name='tournament_id']]" position="after">
+                    <group string="Owner Login" groups="auction_module.group_auction_group_admin">
+                        <field name="owner_user_id" readonly="1" placeholder="Not created yet"/>
+                        <field name="owner_password" readonly="1" placeholder="—"/>
+                    </group>
+                </xpath>
+
+            </field>
+        </record>
+
+        <!-- ── Server Action: list view "Action" menu (multi-select) ─────── -->
+        <record id="action_server_create_owner_users" model="ir.actions.server">
+            <field name="name">Create Owner Users</field>
+            <field name="model_id" ref="auction_module.model_auction_team"/>
+            <field name="binding_model_id" ref="auction_module.model_auction_team"/>
+            <field name="binding_view_types">list</field>
+            <field name="groups_id" eval="[(4, ref('auction_module.group_auction_group_admin'))]"/>
+            <field name="state">code</field>
+            <field name="code">
+if records:
+    action = records.action_create_owner_user()
+            </field>
+        </record>
+
+    </data>
+</odoo>

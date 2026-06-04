@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data noupdate="0">
+
+    <!-- Owner group – can access the Owner Console and place bids for their team -->
+    <record id="group_auction_owner" model="res.groups">
+        <field name="name">Owner</field>
+        <field name="comment">
+            Can open the Owner Console to watch the live auction, see team purse balances,
+            and place bids on behalf of their assigned team.
+        </field>
+        <field name="category_id" ref="auction_module.auction_categ"/>
+    </record>
+
+</data>
+</odoo>
