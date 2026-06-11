@@ -31,6 +31,7 @@
         'views/auction_player_card_print_list_strawberry.xml',
         'views/auction_player_card_print_list_cherry.xml',
         'views/auction_player_card_print_list_pistah.xml',
+        'views/auction_player_card_print_list_portrait.xml',
         'views/auction_history_view.xml',
         'views/auction_player_sell_modal.xml',
         'views/auction_player_template_new.xml',

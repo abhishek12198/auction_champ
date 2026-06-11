@@ -88,7 +88,14 @@
                         <!-- SOLD overlay — shown when player is confirmed sold -->
                         <div class="oc-sold-overlay" id="ocSoldOverlay">
                             <div class="oc-sold-stamp">SOLD</div>
-                            <div class="oc-sold-to" id="ocSoldTo"></div>
+                            <div class="oc-sold-to" id="ocSoldTo">
+                                <img class="oc-sold-logo" id="ocSoldLogo" src="" alt="" style="display:none"/>
+                                <span id="ocSoldTeamName"></span>
+                            </div>
+                        </div>
+                        <!-- UNSOLD overlay — shown when player is marked unsold -->
+                        <div class="oc-unsold-overlay" id="ocUnsoldOverlay">
+                            <div class="oc-unsold-stamp">UNSOLD</div>
                         </div>
                     </div>
                     <div class="oc-tier-pill" id="ocTierPill">—</div>
@@ -167,6 +174,13 @@
                     &#x1F3CF; BID NOW
                 </button>
             </div>
+            <!-- Revoke last bid (shown only when revoke is active and owner is leading) -->
+            <div id="ocRevokeWrap" style="display:none">
+                <button class="oc-revoke-btn" id="ocRevokeBtn" onclick="ocRevokeBid()">
+                    &#x21A9; Revoke Bid
+                </button>
+                <span class="oc-revoke-hint" id="ocRevokeHint"></span>
+            </div>
             <!-- Preset quick-select buttons (rendered by JS from tournament.preset_points) -->
             <div class="oc-presets-wrap" id="ocPresetsWrap" style="display:none">
                 <div class="oc-presets-lbl">&#x26A1; Quick Pick</div>
@@ -194,6 +208,16 @@
         <div class="oc-panel-hdr">
             <span class="oc-panel-hdr-icon">&#x1F465;</span>
             <span class="oc-panel-hdr-title">My Squad</span>
+            <div class="oc-squad-snap-wrap">
+                <button class="oc-squad-snap-btn" title="Mobile / Tablet snapshot" onclick="ocSquadSnapshot('mobile',this)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                    Mobile
+                </button>
+                <button class="oc-squad-snap-btn" title="Laptop snapshot" onclick="ocSquadSnapshot('laptop',this)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><line x1="2" y1="22" x2="22" y2="22"/></svg>
+                    Laptop
+                </button>
+            </div>
         </div>
         <div class="oc-my-squad-banner" id="ocMySquadBanner" style="display:none">
             <img class="oc-squad-banner-logo" id="ocMySquadLogo" src="" alt=""/>
@@ -251,9 +275,19 @@
 <!-- ═══════ TOAST ═════════════════════════════════════════════════════ -->
 <div class="oc-toast" id="ocToast"></div>
 
+<script src="/auction_module/static/src/lib/html2canvas.min.js"></script>
 <script src="/auction_owner/static/src/js/owner_console.js?v=2"></script>
 
-<!-- ═══ COUNTER / MALLET – inline so it is never browser-cached ═════════ -->
+<!-- Squad snapshot button styles -->
+<style>
+.oc-squad-snap-wrap{display:flex;align-items:center;gap:6px;margin-left:auto}
+.oc-squad-snap-btn{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);color:var(--txt2);border-radius:8px;padding:5px 11px;font-size:.72rem;font-weight:600;cursor:pointer;transition:background .18s,border-color .18s,color .18s;white-space:nowrap}
+.oc-squad-snap-btn:hover{background:rgba(255,255,255,0.12);border-color:var(--c40);color:var(--c-l)}
+.oc-squad-snap-btn:disabled{opacity:.45;cursor:not-allowed}
+.oc-squad-snap-btn svg{flex-shrink:0}
+</style>
+
+<!-- ═══ COUNTER / MALLET – CSS only; animation logic lives in owner_console.js ══ -->
 <style>
 .oc-hammer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .35s ease;pointer-events:none}
 .oc-hammer-overlay.oc-hammer-in{opacity:1}
@@ -267,75 +301,6 @@
 .oc-hammer-count.oc-hammer-pulse{animation:oc-count-pulse .4s ease-out forwards}
 .oc-hammer-count.oc-hammer-final{font-size:38px;letter-spacing:2px;color:#f5c842;text-shadow:0 0 24px #f5c842,0 2px 12px rgba(0,0,0,.5)}
 </style>
-<script>//<![CDATA[
-(function () {
-'use strict';
-
-function playHammerAnim(n) {
-    var ex = document.querySelector('.oc-hammer-overlay');
-    if (ex) ex.remove();
-    var ov = document.createElement('div');
-    ov.className = 'oc-hammer-overlay';
-    ov.innerHTML = '<div class="oc-hammer-inner">'
-        + '<div class="oc-hammer-icon">\uD83D\uDD28</div>'
-        + '<div class="oc-hammer-count"></div></div>';
-    document.body.appendChild(ov);
-    requestAnimationFrame(function () {
-        requestAnimationFrame(function () { ov.classList.add('oc-hammer-in'); });
-    });
-    var inner   = ov.querySelector('.oc-hammer-inner');
-    var countEl = ov.querySelector('.oc-hammer-count');
-    var strike  = 0;
-    function doStrike() {
-        if (strike >= n) {
-            countEl.textContent = 'FINAL CALL!';
-            countEl.className = 'oc-hammer-count oc-hammer-final';
-            setTimeout(function () {
-                ov.classList.remove('oc-hammer-in');
-                ov.classList.add('oc-hammer-out');
-                setTimeout(function () { ov.remove(); }, 500);
-            }, 1800);
-            return;
-        }
-        strike++;
-        countEl.textContent = strike;
-        countEl.className = 'oc-hammer-count';
-        void countEl.offsetHeight;
-        countEl.className = 'oc-hammer-count oc-hammer-pulse';
-        var cur   = inner.querySelector('.oc-hammer-icon');
-        var clone = cur.cloneNode(true);
-        clone.classList.add('oc-hammer-swing');
-        inner.replaceChild(clone, cur);
-        setTimeout(doStrike, 900);
-    }
-    setTimeout(doStrike, 400);
-}
-
-var _lastTs = null, _init = false;
-setInterval(function () {
-    fetch('/auction/owner/counter-check', { cache: 'no-store' })
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (d) {
-            if (!d) return;
-            var ts = d.started_at || null;
-            if (!_init) {
-                _init   = true;
-                _lastTs = ts;
-                /* play if counter fired in last 20 s (age computed server-side) */
-                if (ts && (d.age_seconds || 9999) < 20) {
-                    playHammerAnim(d.hammer_count || 3);
-                }
-            } else if (ts && ts !== _lastTs) {
-                _lastTs = ts;
-                playHammerAnim(d.hammer_count || 3);
-            }
-        })
-        .catch(function () {});
-}, 2000);
-
-})();
-//]]>
-</script>
 </body>
 </html>
 </template>

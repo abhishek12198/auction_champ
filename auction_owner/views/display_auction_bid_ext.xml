@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        Inject the "Leading Bid" live panel into the sell modal (shared by ALL
+        5 display themes). Panel is draggable; position saved per-theme in
+        localStorage. Default positions avoid each theme's known obstructions:
+          vanilla/strawberry : bottom-left   (no footer, name not at bottom)
+          butterscotch       : bottom-right  (player name overlay is bottom-left)
+          cherry             : above footer left (footer = 52px; name in id-bar at top)
+          pistah             : above footer right (footer = 52px; name at bottom-left)
+    -->
+    <template id="player_sell_modal_bid_ext"
+              name="Sell Modal - Live Bid Panel"
+              inherit_id="auction_module.player_sell_modal">
+        <xpath expr="//div[@id='sellModal']" position="after">
+
+            <style>
+                /* ── Theme color tokens ──────────────────────────────────── */
+                #oc-bid-panel {
+                    --bid-accent:  #fdce33;
+                    --bid-bg:      rgba(10, 20, 60, 0.92);
+                    --bid-border:  rgba(253, 206, 51, 0.65);
+                    --bid-header:  linear-gradient(135deg,#0f1f44,#1a2c5e);
+                }
+                #sellModal[data-theme="butterscotch"] ~ #oc-bid-panel {
+                    --bid-accent:  #f0ad4e;
+                    --bid-bg:      rgba(12, 6, 0, 0.93);
+                    --bid-border:  rgba(240, 173, 78, 0.65);
+                    --bid-header:  linear-gradient(135deg,#0d0800,#1a1005);
+                }
+                #sellModal[data-theme="strawberry"] ~ #oc-bid-panel {
+                    --bid-accent:  #E91E63;
+                    --bid-bg:      rgba(100, 5, 48, 0.93);
+                    --bid-border:  rgba(233, 30, 99, 0.65);
+                    --bid-header:  linear-gradient(135deg,#880E4F,#C2185B);
+                }
+                #sellModal[data-theme="cherry"] ~ #oc-bid-panel {
+                    --bid-accent:  #DC143C;
+                    --bid-bg:      rgba(6, 0, 2, 0.93);
+                    --bid-border:  rgba(220, 20, 60, 0.65);
+                    --bid-header:  linear-gradient(135deg,#060606,#1a0608);
+                }
+                #sellModal[data-theme="pistah"] ~ #oc-bid-panel {
+                    --bid-accent:  #6BBF4E;
+                    --bid-bg:      rgba(3, 10, 4, 0.93);
+                    --bid-border:  rgba(107, 191, 78, 0.65);
+                    --bid-header:  linear-gradient(135deg,#030a04,#0d1f11);
+                }
+
+                /* ── Panel shell (no position values: set by JS) ─────────── */
+                #oc-bid-panel {
+                    display:        none;
+                    position:       fixed;
+                    z-index:        9200;
+                    min-width:      270px;
+                    border-radius:  16px;
+                    overflow:       hidden;
+                    border:         2px solid var(--bid-border);
+                    box-shadow:     0 8px 32px rgba(0,0,0,0.55);
+                    font-family:    'Poppins','Rajdhani',sans-serif;
+                    user-select:    none;
+                    transition:     border-color 0.3s, box-shadow 0.3s;
+                }
+                #oc-bid-panel.oc-bp-visible { display: block; }
+
+                /* ── Drag handle (header bar) ───────────────────────────── */
+                .oc-bp-header {
+                    background: var(--bid-header);
+                    padding:    5px 14px 4px;
+                    border-bottom: 1px solid var(--bid-border);
+                    cursor:     grab;
+                    display:    flex;
+                    align-items: center;
+                    justify-content: space-between;
+                }
+                .oc-bp-header:active { cursor: grabbing; }
+                .oc-bp-label {
+                    font-size:      9px;
+                    font-weight:    700;
+                    letter-spacing: 2px;
+                    color:          var(--bid-accent);
+                    text-transform: uppercase;
+                }
+                .oc-bp-drag-hint {
+                    font-size: 10px;
+                    color: rgba(255,255,255,0.25);
+                    letter-spacing: 1px;
+                }
+
+                /* ── Body ───────────────────────────────────────────────── */
+                .oc-bp-body-wrap {
+                    background: var(--bid-bg);
+                    padding:    10px 16px 12px;
+                }
+                .oc-bp-live-row {
+                    display:     flex;
+                    align-items: center;
+                    gap:         12px;
+                }
+                #oc-bp-logo {
+                    width:         54px;
+                    height:        54px;
+                    border-radius: 50%;
+                    object-fit:    cover;
+                    border:        2px solid var(--bid-border);
+                    background:    rgba(255,255,255,0.08);
+                    flex-shrink:   0;
+                }
+                .oc-bp-text { display: flex; flex-direction: column; gap: 0; }
+                #oc-bp-team {
+                    font-size:      14px;
+                    font-weight:    700;
+                    color:          #fff;
+                    white-space:    nowrap;
+                }
+                #oc-bp-pts {
+                    font-size:      32px;
+                    font-weight:    900;
+                    color:          var(--bid-accent);
+                    line-height:    1;
+                    letter-spacing: 1px;
+                }
+                .oc-bp-open-msg {
+                    font-size:  12px;
+                    color:      rgba(255,255,255,0.38);
+                    font-style: italic;
+                    padding:    4px 0 2px;
+                }
+
+                /* ── New-bid flash ──────────────────────────────────────── */
+                #oc-bid-panel.oc-bp-flash {
+                    animation: oc-bp-pulse 0.6s ease;
+                }
+                @keyframes oc-bp-pulse {
+                    0%   { box-shadow: 0 0 0 0   rgba(255,255,255,0.6); }
+                    55%  { box-shadow: 0 0 0 18px rgba(255,255,255,0); }
+                    100% { box-shadow: 0 0 0 0   rgba(255,255,255,0); }
+                }
+
+                /* ── Edit-bid controls ───────────────────────────────────── */
+                .oc-bp-pts-row {
+                    display: flex;
+                    align-items: baseline;
+                    gap: 7px;
+                }
+                #oc-bp-edit-btn {
+                    background:  transparent;
+                    border:      none;
+                    cursor:      pointer;
+                    font-size:   14px;
+                    padding:     0;
+                    line-height: 1;
+                    opacity:     0.45;
+                    transition:  opacity 0.2s;
+                }
+                #oc-bp-edit-btn:hover { opacity: 1; }
+                .oc-bp-edit-form {
+                    display:     none;
+                    align-items: center;
+                    gap:         6px;
+                    margin-top:  6px;
+                }
+                .oc-bp-edit-form.oc-bp-edit-open { display: flex; }
+                #oc-bp-edit-input {
+                    width:         110px;
+                    padding:       4px 8px;
+                    border-radius: 6px;
+                    border:        1.5px solid var(--bid-accent);
+                    background:    rgba(255,255,255,0.08);
+                    color:         #fff;
+                    font-size:     16px;
+                    font-weight:   700;
+                    font-family:   inherit;
+                    outline:       none;
+                    -moz-appearance: textfield;
+                }
+                #oc-bp-edit-input::-webkit-outer-spin-button,
+                #oc-bp-edit-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+                .oc-bp-act-btn {
+                    border:        none;
+                    border-radius: 6px;
+                    width:         28px;
+                    height:        28px;
+                    font-size:     14px;
+                    cursor:        pointer;
+                    font-weight:   700;
+                    display:       flex;
+                    align-items:   center;
+                    justify-content: center;
+                }
+                #oc-bp-save-btn {
+                    background: var(--bid-accent);
+                    color:      #000;
+                }
+                #oc-bp-cancel-btn {
+                    background: rgba(255,255,255,0.15);
+                    color:      #fff;
+                }
+            </style>
+
+            <div id="oc-bid-panel">
+                <div class="oc-bp-header" id="oc-bp-drag-handle">
+                    <div class="oc-bp-label">&#x1F3C6; Leading Bid</div>
+                    <div class="oc-bp-drag-hint">&#8285; drag</div>
+                </div>
+                <div class="oc-bp-body-wrap">
+                    <div id="oc-bp-live" style="display:none">
+                        <div class="oc-bp-live-row">
+                            <img id="oc-bp-logo" src="" alt=""
+                                 onerror="this.style.display='none'"/>
+                            <div class="oc-bp-text">
+                                <div id="oc-bp-team"></div>
+                                <div class="oc-bp-pts-row">
+                                    <div id="oc-bp-pts"></div>
+                                    <button id="oc-bp-edit-btn" title="Correct bid value">&#x270F;&#xFE0F;</button>
+                                </div>
+                                <div class="oc-bp-edit-form" id="oc-bp-edit-form">
+                                    <input id="oc-bp-edit-input" type="number" min="1" step="1"/>
+                                    <button id="oc-bp-save-btn"   class="oc-bp-act-btn" title="Save">&#x2714;</button>
+                                    <button id="oc-bp-cancel-btn" class="oc-bp-act-btn" title="Cancel">&#x2716;</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="oc-bp-open-msg" id="oc-bp-open">Open for bids&#8230;</div>
+                </div>
+            </div>
+
+            <script>//<![CDATA[
+(function () {
+    'use strict';
+    if (!window.location.pathname.startsWith('/auction/display_auction')) return;
+
+    /* ── Default positions per theme ──────────────────────────────────── */
+    var DEFAULTS = {
+        /* vanilla / strawberry: bottom-left, no footer, name not at screen bottom */
+        'vanilla':      { bottom: '20px', left:  '20px', top: 'auto', right: 'auto' },
+        'strawberry':   { bottom: '20px', left:  '20px', top: 'auto', right: 'auto' },
+        /* butterscotch: player name overlay at bottom-LEFT of photo col (53% wide)
+           -> move to bottom-RIGHT to stay clear */
+        'butterscotch': { bottom: '20px', right: '60px', top: 'auto', left:  'auto' },
+        /* cherry: fixed footer 52 px tall at bottom, full-width; player name is
+           in the id-bar at the top -> sit just above the footer on the left */
+        'cherry':       { bottom: '60px', left:  '20px', top: 'auto', right: 'auto' },
+        /* pistah: fixed footer 52 px + player name block at bottom of photo panel
+           (left 48%) -> above footer AND on the right side */
+        'pistah':       { bottom: '60px', right: '60px', top: 'auto', left:  'auto' }
+    };
+
+    /* ── Resolve theme from #sellModal data-theme ─────────────────────── */
+    function getTheme() {
+        var sm = document.getElementById('sellModal');
+        return (sm && sm.dataset.theme) ? sm.dataset.theme : 'vanilla';
+    }
+
+    /* ── Apply a position object to the panel ────────────────────────── */
+    function applyPos(panel, pos) {
+        panel.style.top    = pos.top    || 'auto';
+        panel.style.bottom = pos.bottom || 'auto';
+        panel.style.left   = pos.left   || 'auto';
+        panel.style.right  = pos.right  || 'auto';
+    }
+
+    /* ── Drag behaviour (mouse) ───────────────────────────────────────── */
+    function initDrag(panel) {
+        var handle = document.getElementById('oc-bp-drag-handle');
+        if (!handle) return;
+        var dragging = false, ox = 0, oy = 0;
+
+        handle.addEventListener('mousedown', function (e) {
+            if (e.button !== 0) return;
+            var r = panel.getBoundingClientRect();
+            /* Switch to top/left so arithmetic is straightforward */
+            panel.style.left   = r.left + 'px';
+            panel.style.top    = r.top  + 'px';
+            panel.style.right  = 'auto';
+            panel.style.bottom = 'auto';
+            ox = e.clientX - r.left;
+            oy = e.clientY - r.top;
+            dragging = true;
+            handle.style.cursor = 'grabbing';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', function (e) {
+            if (!dragging) return;
+            var maxL = window.innerWidth  - panel.offsetWidth;
+            var maxT = window.innerHeight - panel.offsetHeight;
+            panel.style.left = Math.max(0, Math.min(e.clientX - ox, maxL)) + 'px';
+            panel.style.top  = Math.max(0, Math.min(e.clientY - oy, maxT)) + 'px';
+        });
+
+        document.addEventListener('mouseup', function () {
+            if (!dragging) return;
+            dragging = false;
+            handle.style.cursor = 'grab';
+            /* Persist position */
+            var key = 'oc-bid-pos-' + getTheme();
+            try {
+                localStorage.setItem(key, JSON.stringify({
+                    top:    panel.style.top,
+                    left:   panel.style.left,
+                    bottom: 'auto',
+                    right:  'auto'
+                }));
+            } catch (err) {}
+        });
+    }
+
+    /* ── Initialise panel position ────────────────────────────────────── */
+    function initPos(panel) {
+        var theme = getTheme();
+        var key   = 'oc-bid-pos-' + theme;
+        var saved = null;
+        try { saved = JSON.parse(localStorage.getItem(key)); } catch (err) {}
+        applyPos(panel, saved || DEFAULTS[theme] || DEFAULTS['vanilla']);
+    }
+
+    /* ── Polling & UI update ─────────────────────────────────────────── */
+    var _lastTeamId = null;
+    var _lastBidAmt = 0;
+
+    /* ── Edit-bid mode ────────────────────────────────────────────── */
+    function enterEditMode() {
+        var ptsRow = document.querySelector('.oc-bp-pts-row');
+        var form   = document.getElementById('oc-bp-edit-form');
+        var input  = document.getElementById('oc-bp-edit-input');
+        if (!form || !input) return;
+        input.value = _lastBidAmt || '';
+        if (ptsRow) ptsRow.style.display = 'none';
+        form.classList.add('oc-bp-edit-open');
+        input.focus();
+        input.select();
+    }
+
+    function exitEditMode() {
+        var ptsRow = document.querySelector('.oc-bp-pts-row');
+        var form   = document.getElementById('oc-bp-edit-form');
+        if (ptsRow) ptsRow.style.display = '';
+        if (form)  form.classList.remove('oc-bp-edit-open');
+    }
+
+    function saveCorrectBid() {
+        var input   = document.getElementById('oc-bp-edit-input');
+        var saveBtn = document.getElementById('oc-bp-save-btn');
+        if (!input) return;
+        var newVal = parseInt(input.value, 10);
+        if (!newVal || newVal <= 0) {
+            input.style.borderColor = '#ff4444';
+            setTimeout(function () { input.style.borderColor = ''; }, 1200);
+            return;
+        }
+        if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '&#x23F3;'; }
+        fetch('/auction/auctioneer/correct-bid', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ jsonrpc:'2.0', method:'call', params:{ new_bid: newVal } }),
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            var result = res.result || res;
+            if (result && result.success) {
+                _lastBidAmt = newVal;
+                var pts = document.getElementById('oc-bp-pts');
+                if (pts) pts.textContent = newVal.toLocaleString() + ' pts';
+                exitEditMode();
+            } else {
+                alert('Could not correct bid: ' + ((result && result.error) || 'Unknown error'));
+            }
+        })
+        .catch(function () { alert('Network error — bid not saved.'); })
+        .finally(function () {
+            if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '&#x2714;'; }
+        });
+    }
+
+    function initEditControls() {
+        var editBtn   = document.getElementById('oc-bp-edit-btn');
+        var saveBtn   = document.getElementById('oc-bp-save-btn');
+        var cancelBtn = document.getElementById('oc-bp-cancel-btn');
+        var input     = document.getElementById('oc-bp-edit-input');
+        if (editBtn)   editBtn.addEventListener('click',   enterEditMode);
+        if (saveBtn)   saveBtn.addEventListener('click',   saveCorrectBid);
+        if (cancelBtn) cancelBtn.addEventListener('click', exitEditMode);
+        if (input) {
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter')  { e.preventDefault(); saveCorrectBid(); }
+                if (e.key === 'Escape') { e.preventDefault(); exitEditMode(); }
+            });
+        }
+    }
+
+    function updateBidPanel(d) {
+        var panel = document.getElementById('oc-bid-panel');
+        var live  = document.getElementById('oc-bp-live');
+        var open  = document.getElementById('oc-bp-open');
+        var logo  = document.getElementById('oc-bp-logo');
+        var team  = document.getElementById('oc-bp-team');
+        var pts   = document.getElementById('oc-bp-pts');
+        if (!panel) return;
+
+        panel.classList.add('oc-bp-visible');
+
+        if (d.has_bid) {
+            var changed = d.current_bid !== _lastBidAmt || d.team_id !== _lastTeamId;
+            if (changed) {
+                _lastBidAmt = d.current_bid;
+                _lastTeamId = d.team_id;
+                panel.classList.remove('oc-bp-flash');
+                void panel.offsetWidth;
+                panel.classList.add('oc-bp-flash');
+                setTimeout(function () { panel.classList.remove('oc-bp-flash'); }, 650);
+            }
+            if (logo) {
+                logo.src           = d.team_logo_url || '';
+                logo.style.display = d.team_logo_url ? 'block' : 'none';
+            }
+            if (team) team.textContent = d.team_name || '---';
+            if (pts)  pts.textContent  = d.current_bid
+                ? d.current_bid.toLocaleString() + ' pts' : '---';
+            if (open) open.style.display = 'none';
+            if (live) live.style.display  = 'flex';
+        } else {
+            _lastBidAmt = 0;
+            _lastTeamId = null;
+            if (live) live.style.display  = 'none';
+            if (open) open.style.display  = 'block';
+        }
+    }
+
+    function poll() {
+        fetch('/auction/owner/live-bid', { cache: 'no-store' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) { if (d) updateBidPanel(d); })
+            .catch(function () {});
+    }
+
+    /* ── Boot ────────────────────────────────────────────────────────── */
+    document.addEventListener('DOMContentLoaded', function () {
+        var panel = document.getElementById('oc-bid-panel');
+        if (!panel) return;
+        initPos(panel);
+        initDrag(panel);
+        initEditControls();
+    });
+
+    poll();
+    setInterval(poll, 2000);
+})();
+//]]></script>
+
+        </xpath>
+    </template>
+
+</odoo>

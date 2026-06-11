@@ -12,8 +12,11 @@ const S = {
     tab: 'live',
     pendingBid: null,
     pollTimer: null,
+    revoke: null, // { feature_on, remaining, max, used, can_revoke }
     // Track last known bid to detect rival changes between polls
     _lastBid: { playerId: null, bid: 0, teamId: null },
+    _counterTs: null,   // last-seen counter_started_at; null = not yet initialised
+    _counterInit: false,
 };
 
 // ── Tiny helpers ───────────────────────────────────────────────────────
@@ -49,19 +52,46 @@ document.addEventListener('click', () => {
 function showSoldOverlay(soldData) {
     const overlay = $('ocSoldOverlay');
     if (!overlay) return;
-    const soldTo = $('ocSoldTo');
-    if (soldTo && soldData) {
-        soldTo.textContent = soldData.team ? soldData.team + ' · ' + (soldData.pts || '') + ' pts' : '';
+    // Populate team logo + name
+    const logoEl = $('ocSoldLogo');
+    const nameEl = $('ocSoldTeamName');
+    if (soldData) {
+        const logoUrl = soldData.logo_url || '';
+        const teamName = soldData.team || soldData.name || '';
+        if (logoEl) {
+            if (logoUrl) { logoEl.src = logoUrl; logoEl.style.display = 'block'; }
+            else         { logoEl.src = '';       logoEl.style.display = 'none'; }
+        }
+        if (nameEl) nameEl.textContent = teamName;
+    } else {
+        if (logoEl) { logoEl.src = ''; logoEl.style.display = 'none'; }
+        if (nameEl) nameEl.textContent = '';
     }
     // restart stamp animation
     overlay.classList.remove('oc-sold-show');
     void overlay.offsetWidth;
     overlay.classList.add('oc-sold-show');
+    hideUnsoldOverlay();
 }
 
 function hideSoldOverlay() {
     const overlay = $('ocSoldOverlay');
     if (overlay) overlay.classList.remove('oc-sold-show');
+}
+
+// ── UNSOLD overlay ─────────────────────────────────────────────
+function showUnsoldOverlay() {
+    const overlay = $('ocUnsoldOverlay');
+    if (!overlay) return;
+    overlay.classList.remove('oc-unsold-show');
+    void overlay.offsetWidth;
+    overlay.classList.add('oc-unsold-show');
+    hideSoldOverlay();
+}
+
+function hideUnsoldOverlay() {
+    const overlay = $('ocUnsoldOverlay');
+    if (overlay) overlay.classList.remove('oc-unsold-show');
 }
 
 // ── Tab switching ──────────────────────────────────────────────────────
@@ -128,12 +158,14 @@ function renderPlayer(p) {
     }
     show('ocWaiting', false); show('ocPlayerWrap', true);
 
-    // Show SOLD overlay when player is confirmed sold; hide it for all other states
-    // (actual auction states are 'draft', 'auction', 'sold', 'unsold' — not 'available'/'on_stage')
+    // Show SOLD/UNSOLD overlay based on player state; hide for all other states
     if (p.state === 'sold') {
-        showSoldOverlay(null);
+        showSoldOverlay(p.current_bid_team || null);
+    } else if (p.state === 'unsold') {
+        showUnsoldOverlay();
     } else {
         hideSoldOverlay();
+        hideUnsoldOverlay();
     }
 
     src('ocPlayerPhoto', p.photo_url);
@@ -214,6 +246,31 @@ function renderBidPanel(myTeam, player) {
             reasonEl.className = 'oc-bid-reason oc-reason-ok';
         }
         renderPresets(S.presets, myTeam);
+    }
+}
+
+// ── Render revoke button ────────────────────────────────────────────────
+function renderRevoke() {
+    const rv   = S.revoke;
+    const wrap = $('ocRevokeWrap');
+    const btn  = $('ocRevokeBtn');
+    const hint = $('ocRevokeHint');
+    if (!wrap) return;
+
+    if (!rv || !rv.feature_on) {
+        wrap.style.display = 'none';
+        return;
+    }
+
+    wrap.style.display = 'flex';
+    const canRevoke = rv.can_revoke && rv.remaining > 0;
+    if (btn) btn.disabled = !canRevoke;
+    if (hint) {
+        if (rv.remaining <= 0) {
+            hint.textContent = 'No revokes left';
+        } else {
+            hint.textContent = rv.remaining + '/' + rv.max + ' left';
+        }
     }
 }
 
@@ -508,6 +565,106 @@ window.ocSubmitBid = function() {
     .finally(()=>{ if(btn) btn.disabled=false; });
 };
 
+// ── Revoke last bid ────────────────────────────────────────────────────
+window.ocRevokeBid = function() {
+    const { myTeam, player, revoke } = S;
+    if (!myTeam || !player) return;
+    if (!revoke || !revoke.can_revoke || revoke.remaining <= 0) {
+        toast('Revoke not available', 'err'); return;
+    }
+    const remaining = revoke.remaining;
+    if (!confirm(
+        'Revoke your bid of ' + fmt(player.current_bid) + ' pts?\n' +
+        'The bid will revert to the previous team\'s call.\n' +
+        'Revokes remaining after this: ' + (remaining - 1) + '/' + revoke.max
+    )) return;
+
+    const btn = $('ocRevokeBtn');
+    if (btn) btn.disabled = true;
+
+    fetch('/auction/owner/revoke-bid', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ jsonrpc:'2.0', method:'call', params:{
+            player_id: player.id,
+            team_id:   myTeam.id,
+        }}),
+    })
+    .then(r => r.json())
+    .then(resp => {
+        const res = resp.result || resp;
+        if (res.success) {
+            const msg = res.prev_team_name
+                ? 'Bid revoked ✓ — ' + res.prev_team_name + ' leads with ' + fmt(res.new_bid) + ' pts'
+                : 'Bid revoked ✓ — player is now open for bids';
+            toast(msg, 'ok');
+            fetchData();
+        } else {
+            toast(res.error || 'Revoke failed', 'err');
+            if (btn) btn.disabled = false;
+        }
+    })
+    .catch(() => {
+        toast('Network error — revoke not saved', 'err');
+        if (btn) btn.disabled = false;
+    });
+};
+function playHammerAnim(n) {
+    const ex = document.querySelector('.oc-hammer-overlay');
+    if (ex) ex.remove();
+    const ov = document.createElement('div');
+    ov.className = 'oc-hammer-overlay';
+    ov.innerHTML = '<div class="oc-hammer-inner">'
+        + '<div class="oc-hammer-icon">\uD83D\uDD28</div>'
+        + '<div class="oc-hammer-count"></div></div>';
+    document.body.appendChild(ov);
+    requestAnimationFrame(() => requestAnimationFrame(() => ov.classList.add('oc-hammer-in')));
+
+    const inner   = ov.querySelector('.oc-hammer-inner');
+    const countEl = ov.querySelector('.oc-hammer-count');
+    let strike = 0;
+
+    function doStrike() {
+        if (strike >= n) {
+            countEl.textContent  = 'FINAL CALL!';
+            countEl.className    = 'oc-hammer-count oc-hammer-final';
+            setTimeout(() => {
+                ov.classList.remove('oc-hammer-in');
+                ov.classList.add('oc-hammer-out');
+                setTimeout(() => ov.remove(), 500);
+            }, 1800);
+            return;
+        }
+        strike++;
+        countEl.textContent = strike;
+        countEl.className   = 'oc-hammer-count';
+        void countEl.offsetHeight;
+        countEl.className   = 'oc-hammer-count oc-hammer-pulse';
+        const cur   = inner.querySelector('.oc-hammer-icon');
+        const clone = cur.cloneNode(true);
+        clone.classList.add('oc-hammer-swing');
+        inner.replaceChild(clone, cur);
+        setTimeout(doStrike, 900);
+    }
+    setTimeout(doStrike, 400);
+}
+
+function handleCounter(counter) {
+    if (!counter) return;
+    const ts = counter.started_at || null;
+    if (!S._counterInit) {
+        S._counterInit = true;
+        S._counterTs   = ts;
+        // Play only if the counter fired very recently (page loaded mid-auction)
+        if (ts && (counter.age_seconds || 9999) < 20) {
+            playHammerAnim(counter.hammer_count || 3);
+        }
+    } else if (ts && ts !== S._counterTs) {
+        S._counterTs = ts;
+        playHammerAnim(counter.hammer_count || 3);
+    }
+}
+
 // ── Poll ───────────────────────────────────────────────────────────────
 function fetchData() {
     fetch('/auction/owner/data', {cache:'no-store'})
@@ -542,9 +699,13 @@ function fetchData() {
         // Server sends slabs sorted descending by from_amount
         S.slabs   = data.slabs || [];
         S.presets = data.presets || [];
+        S.revoke  = data.revoke  || null;
+
+        handleCounter(data.counter || null);
 
         renderPlayer(S.player);
         renderBidPanel(S.myTeam, S.player);
+        renderRevoke();
         renderTeamsStrip(S.teams, S.myTeam && S.myTeam.id);
         renderTeamsFull();
         renderMySquad();
@@ -572,6 +733,123 @@ window.addEventListener('storage', e => {
         }, 1500);
     }
 });
+
+// ── Squad Snapshot ─────────────────────────────────────────────────────
+window.ocSquadSnapshot = function(mode, btn) {
+    const myTeam = S.myTeam;
+    if (!myTeam) { toast('No team data available', 'err'); return; }
+    const squad = myTeam.squad || [];
+    if (!squad.length) { toast('No players in squad yet', 'err'); return; }
+
+    const isLaptop = mode === 'laptop';
+    const W        = isLaptop ? 900 : 390;
+
+    // Accent colour from theme
+    const themeColors = {
+        pistah:       { c: '#7c3aed', cl: '#a78bfa' },
+        strawberry:   { c: '#e91e8c', cl: '#f472b6' },
+        butterscotch: { c: '#d97706', cl: '#fbbf24' },
+        cherry:       { c: '#dc2626', cl: '#f87171' },
+    };
+    const theme  = document.body.getAttribute('data-theme') || 'vanilla';
+    const { c: ac, cl: acl } = themeColors[theme] || { c: '#2252b5', cl: '#58a6ff' };
+
+    const tournName = (document.querySelector('.oc-header-tourn') || {}).textContent?.trim() || '';
+    const fmtN  = n  => (n || 0).toLocaleString();
+    const esc   = s  => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const imgEl = (src, w, style) =>
+        `<img src="${esc(src)}" crossorigin="anonymous" style="width:${w}px;height:${w}px;${style}object-fit:cover;background:#1d2438;" onerror="this.style.opacity='.3'"/>`;
+
+    // ── Player cards ────────────────────────────────────────────────────
+    const chipStyle = (color, bg) =>
+        `display:inline-block;border-radius:5px;padding:2px 8px;font-size:.66rem;font-weight:600;background:${bg};color:${color};`;
+
+    const playerCard = isLaptop
+        ? p => `
+<div style="background:#111520;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;">
+  ${imgEl(p.photo_url, 68, `border-radius:50%;border:2.5px solid ${ac};`)}
+  <div style="font-size:.86rem;font-weight:700;color:#e8edf8;line-height:1.25;">${esc(p.name)}</div>
+  <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center;">
+    ${p.role      ? `<span style="${chipStyle(acl, 'rgba(255,255,255,.08)')}">${esc(p.role)}</span>`       : ''}
+    ${p.tier_name ? `<span style="${chipStyle(p.tier_color || acl, 'transparent')}border:1px solid ${esc(p.tier_color || ac)};">${esc(p.tier_name)}</span>` : ''}
+  </div>
+  <div style="font-size:.95rem;font-weight:800;color:${acl};">${fmtN(p.points)} pts</div>
+</div>`
+        : p => `
+<div style="background:#111520;border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:10px 13px;display:flex;align-items:center;gap:12px;">
+  ${imgEl(p.photo_url, 44, `border-radius:50%;border:2px solid ${ac};flex-shrink:0;`)}
+  <div style="flex:1;min-width:0;">
+    <div style="font-size:.86rem;font-weight:700;color:#e8edf8;">${esc(p.name)}</div>
+    <div style="display:flex;gap:5px;margin-top:4px;flex-wrap:wrap;">
+      ${p.role      ? `<span style="${chipStyle(acl, 'rgba(255,255,255,.08)')}">${esc(p.role)}</span>`       : ''}
+      ${p.tier_name ? `<span style="${chipStyle(p.tier_color || acl, 'transparent')}border:1px solid ${esc(p.tier_color || ac)};">${esc(p.tier_name)}</span>` : ''}
+    </div>
+  </div>
+  <div style="font-size:.86rem;font-weight:800;color:${acl};flex-shrink:0;">${fmtN(p.points)} pts</div>
+</div>`;
+
+    const cardsHtml = isLaptop
+        ? `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:22px 24px;">${squad.map(playerCard).join('')}</div>`
+        : `<div style="padding:14px 15px;display:flex;flex-direction:column;gap:9px;">${squad.map(playerCard).join('')}</div>`;
+
+    // ── Full card ────────────────────────────────────────────────────────
+    const card = `
+<div style="background:#0a0d14;width:${W}px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;border-radius:16px;overflow:hidden;">
+  <div style="height:4px;background:linear-gradient(90deg,${ac},${acl},${ac});"></div>
+  <div style="background:linear-gradient(135deg,#161c2c 0%,#0d1320 100%);padding:${isLaptop ? '22px 28px' : '16px 18px'};display:flex;align-items:center;gap:${isLaptop ? '18px' : '14px'};border-bottom:1px solid rgba(255,255,255,.07);">
+    ${imgEl(myTeam.logo_url, isLaptop ? 68 : 54, `border-radius:50%;border:3px solid ${ac};flex-shrink:0;`)}
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:${isLaptop ? '1.2rem' : '1rem'};font-weight:800;color:#e8edf8;">${esc(myTeam.name)}</div>
+      ${tournName ? `<div style="font-size:.7rem;color:${acl};margin-top:2px;font-weight:600;letter-spacing:.04em;">${esc(tournName)}</div>` : ''}
+      <div style="font-size:.74rem;color:#8899bb;margin-top:4px;">${fmtN(myTeam.remaining_points)} / ${fmtN(myTeam.total_points)} pts remaining</div>
+    </div>
+    <div style="background:rgba(255,255,255,.05);border:1.5px solid ${ac};border-radius:12px;padding:${isLaptop ? '12px 20px' : '9px 14px'};text-align:center;flex-shrink:0;">
+      <div style="font-size:${isLaptop ? '1.8rem' : '1.4rem'};font-weight:900;color:${acl};line-height:1;">${squad.length}</div>
+      <div style="font-size:.6rem;color:#8899bb;letter-spacing:.1em;margin-top:2px;">PLAYERS</div>
+    </div>
+  </div>
+  ${cardsHtml}
+  <div style="padding:8px 16px 14px;text-align:center;">
+    <span style="font-size:.6rem;color:rgba(255,255,255,.2);letter-spacing:.12em;font-weight:600;">AUCTION CHAMP</span>
+  </div>
+</div>`;
+
+    // ── Render off-screen and capture ────────────────────────────────────
+    const wrap = document.createElement('div');
+    wrap.style.cssText = `position:fixed;left:-9999px;top:0;width:${W}px;z-index:-1;`;
+    wrap.innerHTML = card;
+    document.body.appendChild(wrap);
+    void wrap.offsetHeight;
+
+    const origHtml = btn ? btn.innerHTML : '';
+    if (btn) { btn.innerHTML = '&#x23F3;'; btn.disabled = true; }
+
+    html2canvas(wrap.firstElementChild, {
+        scale:           2,
+        backgroundColor: '#0a0d14',
+        useCORS:         true,
+        allowTaint:      false,
+        logging:         false,
+        imageTimeout:    8000,
+    }).then(function(canvas) {
+        document.body.removeChild(wrap);
+        if (btn) { btn.innerHTML = origHtml; btn.disabled = false; }
+        const ts   = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        const name = (myTeam.name || 'squad').replace(/\s+/g, '_');
+        const link = document.createElement('a');
+        link.href     = canvas.toDataURL('image/png');
+        link.download = `${name}_${mode}_${ts}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast('Snapshot saved! &#x1F4F8;', 'ok');
+    }).catch(function(err) {
+        document.body.removeChild(wrap);
+        if (btn) { btn.innerHTML = origHtml; btn.disabled = false; }
+        console.error('Squad snapshot error:', err);
+        toast('Snapshot failed — check console', 'err');
+    });
+};
 
 // ── Boot ───────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {

@@ -749,8 +749,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       if (actions) {
         actions.style.display = p.state === 'sold' || p.state === 'unsold' ? 'none' : 'flex';
       }
-      /* Sync live board: mark this player as on-stage */
-      callKw('auction.team.player', 'action_set_on_stage', [[playerId]]).catch(function(){});
+      /* Sync live board: mark this player as on-stage, then refresh ticker so
+         each team's max_call immediately reflects this player's tier cap. */
+      callKw('auction.team.player', 'action_set_on_stage', [[playerId]])
+        .then(function() { setTimeout(loadTicker, 200); })
+        .catch(function(){});
     }).catch(function() {
       if (body) body.innerHTML = '<div class="pc-loading">Error loading player.</div>';
     });
@@ -980,7 +983,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   function smGetInc(amount, slabs) {
     if (!slabs || !slabs.length) return 50;
     for (var i = 0; i < slabs.length; i++) {
-      if (amount >= slabs[i].from_amount && amount <= slabs[i].to_amount) return slabs[i].increment;
+      if (amount >= slabs[i].from_amount && amount < slabs[i].to_amount) return slabs[i].increment;
     }
     return slabs[slabs.length - 1].increment || 50;
   }

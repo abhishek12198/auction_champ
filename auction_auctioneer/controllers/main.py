@@ -195,9 +195,10 @@ class AuctionAuctioneerController(http.Controller):
             current_bid_val = (player.current_bid or 0) if player else 0
             next_bid_val = self._next_bid(auc, current_bid_val, effective_base)
 
-            # Recompute max_call live so we never rely on a potentially-stale
-            # stored value when the auction is in progress.
-            live_max_call = auc.get_max_bid_for_team(auc)
+            # Recompute max_call live using the current player's tier cap so we
+            # never rely on a potentially-stale stored value when the auction is
+            # in progress.
+            live_max_call = auc.get_max_bid_for_team(auc, player)
 
             # Determine can_bid with a specific reason for the UI.
             can_bid = True
@@ -277,10 +278,11 @@ class AuctionAuctioneerController(http.Controller):
         if bid_amount < effective_base:
             return {'success': False, 'error': 'Bid is below the minimum base price of %d' % effective_base}
 
-        if bid_amount > auction.max_call:
+        effective_max_call = auction.get_max_bid_for_team(auction, player)
+        if bid_amount > effective_max_call:
             return {
                 'success': False,
-                'error': 'Bid of %d exceeds max call of %d for this team' % (bid_amount, auction.max_call),
+                'error': 'Bid of %d exceeds max call of %d for this team' % (bid_amount, effective_max_call),
             }
 
         if player.tier_id and auction.tier_limit_ids:
@@ -366,3 +368,30 @@ class AuctionAuctioneerController(http.Controller):
             player.sudo().write({'current_bid': 0, 'current_bid_team_id': False})
 
         return result
+
+    # ── Correct live bid (auctioneer override) ────────────────────────────
+
+    @http.route('/auction/auctioneer/correct-bid', type='json', auth='user', website=False, csrf=False)
+    def correct_bid(self, new_bid, **kw):
+        """Override the current live bid value without changing the leading team."""
+        try:
+            new_bid = int(new_bid)
+        except (TypeError, ValueError):
+            return {'success': False, 'error': 'Invalid bid value'}
+        if new_bid <= 0:
+            return {'success': False, 'error': 'Bid must be greater than 0'}
+
+        player = request.env['auction.team.player'].sudo().search(
+            [('is_on_stage', '=', True)], limit=1
+        )
+        if not player:
+            return {'success': False, 'error': 'No player is currently on stage'}
+        if not player.current_bid_team_id:
+            return {'success': False, 'error': 'No bid has been placed yet — cannot correct'}
+
+        player.sudo().write({'current_bid': new_bid})
+        return {
+            'success': True,
+            'current_bid': new_bid,
+            'team_name': player.current_bid_team_id.name,
+        }

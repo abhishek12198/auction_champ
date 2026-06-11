@@ -10,3 +10,5 @@ access_auction_tier_limit_owner,auction.auction.tier.limit owner,auction_module.
 access_auction_tournament_point_split_owner,auction.tournament.point.split owner,auction_module.model_auction_tournament_point_split,auction_owner.group_auction_owner,1,0,0,0
 access_auction_player_tier_owner,auction.player.tier owner,auction_module.model_auction_player_tier,auction_owner.group_auction_owner,1,0,0,0
 access_res_users_auction_owner,res.users auction_owner,base.model_res_users,auction_owner.group_auction_owner,1,1,0,0
+access_auction_bid_log_owner,auction.bid.log owner,auction_owner.model_auction_bid_log,auction_owner.group_auction_owner,1,1,1,1
+access_auction_bid_log_admin,auction.bid.log admin,auction_owner.model_auction_bid_log,base.group_system,1,1,1,1

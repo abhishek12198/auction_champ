@@ -26,7 +26,7 @@ class Auction(models.Model):
     remaining_points = fields.Integer(compute='_calculate_remaining_points', string="Remaining points")
     remaining_players_count = fields.Integer(compute='_calculate_remaining_players_count', store=True, string="Remaining players required")
     tournament_id = fields.Many2one('auction.tournament', 'Tournament')
-    max_call = fields.Integer(compute='_calculate_max_call', store=True, string="Max Call")
+    max_call = fields.Integer(compute='_calculate_max_call', string="Max Call")
     auction_bid_slab_ids = fields.One2many('auction.auction.bid.slab', 'auction_id', 'Slab')
     tier_limit_ids = fields.One2many('auction.auction.tier.limit', 'auction_id', 'Tier Limits')
 
@@ -49,44 +49,70 @@ class Auction(models.Model):
 
     @api.depends(
         'player_ids',
-        'remaining_players_count',
+        'player_ids.points',
+        'total_point',
         'max_players',
-        'max_limited',
-        'remaining_points',
         'base_point',
-        'auction_bid_slab_ids'
+        'auction_bid_slab_ids',
+        'tier_limit_ids',
+        'tier_limit_ids.max_call',
+        'tier_limit_ids.base_point',
+        'tier_limit_ids.max_players',
     )
     def _calculate_max_call(self):
+        on_stage = self.env['auction.team.player'].search(
+            [('is_on_stage', '=', True)], limit=1
+        )
+        player = on_stage if on_stage else None
         for record in self:
-            record.max_call = record.get_max_bid_for_team(record)
+            record.max_call = record.get_max_bid_for_team(record, player)
 
-    # @api.depends('player_ids', 'remaining_players_count','max_players', 'max_limited')
-    # def _calculate_max_call(self):
-    #     for record in self:
-    #         max_call = record.get_max_bid_for_team(record)
-    #         record.max_call = max_call
-    #         # if record.max_players == record.remaining_players_count:
-    #         #     rem_player_count = record.remaining_players_count - 1
-    #         #     record.max_call = record.total_point - (rem_player_count * record.base_point)
-    #         # elif record.max_players != record.remaining_players_count:
-    #         #     rem_player_count = record.remaining_players_count - 1
-    #
-    #         #     record.max_call = record.remaining_points - (rem_player_count * record.base_point)
-
-    def _get_budget_safe_max(self, team):
-        remaining_points = team.remaining_points
-        remaining_players = team.remaining_players_count
-        base = team.base_point  # IMPORTANT: use team, not self
+    def _get_budget_safe_max(self, team, player=None):
+        # Compute directly from stored fields — never read non-stored computed fields
+        # inside another computed field to avoid ORM cache re-entrancy issues.
+        points_used = sum(p.points for p in team.player_ids) if team.player_ids else 0
+        remaining_points = team.total_point - points_used
+        remaining_players = team.max_players - len(team.player_ids)
 
         if remaining_players <= 0:
             return 0
 
-        safe_max = remaining_points - ((remaining_players - 1) * base)
+        if not player or not player.tier_id or not team.tier_limit_ids:
+            # Fallback: use global base_point uniformly across all remaining slots
+            base = team.base_point or 0
+            safe_max = remaining_points - ((remaining_players - 1) * base)
+            return max(safe_max, 0)
+
+        # Per-tier reserve: each tier's remaining slots × that tier's min bid
+        reserve = 0
+        tier_slots_accounted = 0
+        player_tier_id = player.tier_id.id
+
+        for tl in team.tier_limit_ids:
+            recruited = self.env['auction.auction.player'].search_count([
+                ('auction_id', '=', team.id),
+                ('player_id.tier_id', '=', tl.tier_id.id),
+            ])
+            remaining_slots = max(tl.max_players - recruited, 0)
+            if tl.tier_id.id == player_tier_id:
+                # The current slot is being filled — exclude it from the reserve
+                remaining_slots = max(remaining_slots - 1, 0)
+            tier_min_bid = tl.base_point if tl.base_point > 0 else (team.base_point or 0)
+            reserve += remaining_slots * tier_min_bid
+            tier_slots_accounted += remaining_slots
+
+        # Players not covered by any tier limit fall back to global base_point
+        uncovered = max((remaining_players - 1) - tier_slots_accounted, 0)
+        reserve += uncovered * (team.base_point or 0)
+
+        safe_max = remaining_points - reserve
         return max(safe_max, 0)
 
-    def _get_rule_cap(self, safe_max):
-        if self.max_limited == 'yes':
-            return min(self.max_points, safe_max)
+    def _get_rule_cap(self, safe_max, player=None):
+        if player and player.tier_id and self.tier_limit_ids:
+            tl = self.tier_limit_ids.filtered(lambda l: l.tier_id.id == player.tier_id.id)
+            if tl and tl[0].max_call > 0:
+                return min(tl[0].max_call, safe_max)
         return safe_max
 
     def _snap_to_slab(self, amount):
@@ -103,14 +129,14 @@ class Auction(models.Model):
 
         return amount
 
-    def get_max_bid_for_team(self, team):
+    def get_max_bid_for_team(self, team, player=None):
         self.ensure_one()
 
-        # 1️⃣ Budget safety
-        safe_max = self._get_budget_safe_max(team)
+        # 1️⃣ Per-tier budget safety (reserves each tier's remaining slots at their min bid)
+        safe_max = self._get_budget_safe_max(team, player)
 
-        # 2️⃣ Auction rule cap
-        rule_cap = self._get_rule_cap(safe_max)
+        # 2️⃣ Tier-level per-player cap (0 = unlimited)
+        rule_cap = self._get_rule_cap(safe_max, player)
 
         # 3️⃣ Slab snapping
         return self._snap_to_slab(rule_cap)
@@ -165,3 +191,5 @@ class AuctionAuctionTierLimit(models.Model):
     max_players = fields.Integer(string='Max Players', required=True, default=1)
     base_point = fields.Integer(string='Base Point', default=0,
         help="Minimum bid for a player of this tier. Leave 0 to use the global base point.")
+    max_call = fields.Integer(string='Max Call for a Player', default=0,
+        help="Maximum bid allowed for a single player of this tier. Leave 0 for no cap.")

@@ -168,11 +168,7 @@
                         <!-- Key numbers ────────────────────────────────────── -->
                         <group>
                             <group string="Budget">
-                                <field name="total_point"  string="Total Points Allocated" readonly="1"/>
-                                <field name="base_point"   string="Global Base Bid"         readonly="1"/>
-                                <field name="max_limited"  string="Max Bid Cap"              readonly="1"/>
-                                <field name="max_points"   string="Cap Amount"               readonly="1"
-                                       attrs="{'invisible': [('max_limited', '!=', 'yes')]}"/>
+                                <field name="total_point"  string="Total Purse Value"        readonly="1"/>
                             </group>
                             <group string="Squad">
                                 <field name="max_players"             string="Max Squad Size"   readonly="1"/>
@@ -268,6 +264,7 @@
                                         <field name="tier_id"     string="Tier"          required="1" domain="[('is_an_icon_tier', '=', False)]"/>
                                         <field name="max_players" string="Max per Team"  required="1"/>
                                         <field name="base_point"  string="Min Bid (0 = global base)"/>
+                                        <field name="max_call"    string="Max Call for a Player (0 = unlimited)"/>
                                     </tree>
                                 </field>
                             </page>

@@ -9,6 +9,16 @@
                 <field name="hammer_count" string="Counter Hammer Strikes"
                        help="Number of mallet strikes shown on owner consoles when Enable Counter is clicked."/>
             </xpath>
+            <xpath expr="//field[@name='hammer_count']" position="after">
+                <separator string="Bid Revoke"/>
+                <field name="revoke_enabled" string="Enable Bid Revoke"
+                       help="Allow owners to revoke (undo) their last bid. Can be toggled off mid-auction to immediately disable."/>
+                <field name="max_revokes" string="Max Revokes (Global)"
+                       attrs="{'invisible': [('revoke_enabled','=',False)]}"
+                       help="Total revokes allowed across all owners. 0 = disabled even if Enable Bid Revoke is on."/>
+                <field name="revokes_used" string="Revokes Used" readonly="1"
+                       attrs="{'invisible': [('revoke_enabled','=',False)]}"/>
+            </xpath>
         </field>
     </record>
 </odoo>

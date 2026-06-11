@@ -8,14 +8,12 @@
             <field name="arch" type="xml">
                 <form string="Auction">
                     <group col="4">
-                            <field name="max_points" string="Max Points"/>
+                            <field name="max_points" string="Total Purse Value"/>
                             <field name="max_players" string="Max no of players"/>
-                            <field name="base_point"/>
-                            <field name="max_limited" widget="radio"/>
-                            <field name="max_point_player" attrs="{'required': [('max_limited', '=', 'yes')],'invisible': [('max_limited', '!=', 'yes')]}"/>
                     </group>
                     <notebook>
-                        <page string="Teams">
+                        <page string="Auction Rule Settings">
+                            <separator string="Teams"/>
                             <field name="team_ids">
                                 <kanban class="o_kanban_mobile" create="0" edit="0">
                                     <field name="name"/>
@@ -48,29 +46,26 @@
                                     </templates>
                                 </kanban>
                             </field>
-                        </page>
-                        <page string="Slab Setup">
-                            <group>
-                                <field name="auction_bid_slab_ids" nolabel="1">
-                                    <tree editable="bottom">
-                                        <field name="from_amount" string="From"/>
-                                        <field name="to_amount" string="To"/>
-                                        <field name="increment"/>
-                                    </tree>
-                                </field>
-                            </group>
-                        </page>
-                        <page string="Tier Limits">
+                            <separator string="Slab Setup"/>
+                            <field name="auction_bid_slab_ids" nolabel="1">
+                                <tree editable="bottom">
+                                    <field name="from_amount" string="From"/>
+                                    <field name="to_amount" string="To"/>
+                                    <field name="increment"/>
+                                </tree>
+                            </field>
+                            <separator string="Tier Limits"/>
                             <p class="text-muted" style="margin-bottom: 8px;">
                                 Define the maximum number of players each team can bag from each tier.
-                                Tiers not listed here have no limit.
                                 Set Base Point to 0 to use the global base point for that tier.
+                                Set Max Call to 0 for no per-player cap on that tier.
                             </p>
                             <field name="tier_limit_ids" nolabel="1">
                                 <tree editable="bottom">
                                     <field name="tier_id"/>
                                     <field name="max_players" string="Max Players per Team"/>
                                     <field name="base_point" string="Base Point (0 = global)"/>
+                                    <field name="max_call" string="Max Call for a Player (0 = unlimited)"/>
                                 </tree>
                             </field>
                         </page>

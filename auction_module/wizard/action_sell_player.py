@@ -60,22 +60,17 @@ class SellPlayer(models.TransientModel):
             return
         player = self.env['auction.team.player'].browse(self.env.context.get('active_id'))
         effective_base = self._get_effective_base_point(self.team_auction_id, player)
-        if self.team_auction_id.max_limited == 'yes':
+        tier_aware_max_call = self.team_auction_id.get_max_bid_for_team(self.team_auction_id, player)
+        remaining_players = self.team_auction_id.remaining_players_count - 1
+        if self.team_auction_id.remaining_players_count > 1:
             suggestion_html = f"""
-                                <strong><p style="color: blue; text-align: right;">One player can go maximum points upto {self.team_auction_id.max_call}</p></strong>
-                                <strong><p style="color: blue; text-align: right;">Remaining players you can bid for base points  {effective_base}</p></strong>
-                            """
+                            <strong><p style="color: blue; text-align: right;">One player can go maximum points upto {tier_aware_max_call}</p></strong>
+                            <strong><p style="color: blue; text-align: right;">Remaining {remaining_players} player(s) can be bid for base points {effective_base}</p></strong>
+                        """
         else:
-            remaining_players = self.team_auction_id.remaining_players_count - 1
-            if self.team_auction_id.remaining_players_count > 1:
-                suggestion_html = f"""
-                                <strong><p style="color: blue; text-align: right;">One player can go maximum points upto {self.team_auction_id.max_call}</p></strong>
-                                <strong><p style="color: blue; text-align: right;">Remaining players you can bid for base points  {effective_base}</p></strong>
-                            """
-            else:
-                suggestion_html = f"""
-                                    <strong><p style="color: blue; text-align: right;">This player can go maximum points upto {self.team_auction_id.max_call}</p></strong>
-                                    """
+            suggestion_html = f"""
+                                <strong><p style="color: blue; text-align: right;">This player can go maximum points upto {tier_aware_max_call}</p></strong>
+                                """
         self.suggestion = suggestion_html
 
     @api.model
@@ -121,17 +116,16 @@ class SellPlayer(models.TransientModel):
                 }
             }
 
-        if auction_max_limited == 'yes':
-            auction_max_point = self.team_auction_id.max_points
-            if self_final_point > auction_max_point:
-                self.final_point = auction_max_point
-                message = 'The base point should not go beyond ' + str(auction_max_point) + ' points'
-                return {
-                    'warning': {
-                        'title': _('Warning'),
-                        'message': _(message)
-                    }
+        tier_aware_max_call = self.team_auction_id.get_max_bid_for_team(self.team_auction_id, player)
+        if self_final_point > tier_aware_max_call:
+            self.final_point = tier_aware_max_call
+            message = 'Bid exceeds the max call of ' + str(tier_aware_max_call) + ' pts for this player tier'
+            return {
+                'warning': {
+                    'title': _('Warning'),
+                    'message': _(message)
                 }
+            }
 
         players_remaining = self.players_remaining - 1
         points_remaining = self.points_remaining

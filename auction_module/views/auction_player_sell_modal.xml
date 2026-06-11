@@ -618,7 +618,10 @@
 
   window.smSkipToNext = function() {
     if (smCountdownTimer) { clearInterval(smCountdownTimer); smCountdownTimer = null; }
-    window.location.reload();
+    document.getElementById('sellModal').classList.remove('open');
+    document.getElementById('smSoldScreen').classList.remove('visible');
+    document.getElementById('smFormPanel').style.display = 'block';
+    if (typeof changeImage === 'function') { changeImage(); } else { window.location.reload(); }
   };
 
   /* ── Load teams ─────────────────────────────────────────────── */
@@ -730,7 +733,7 @@
     if (!slabs || !slabs.length) return 50;
     for (var i = 0; i < slabs.length; i++) {
       var s = slabs[i];
-      if (amount >= s.from_amount && amount <= s.to_amount) return s.increment;
+      if (amount >= s.from_amount && amount < s.to_amount) return s.increment;
     }
     return slabs[slabs.length - 1].increment || 50;
   }
@@ -814,7 +817,10 @@
       if (remaining <= 0) {
         clearInterval(smCountdownTimer);
         smCountdownTimer = null;
-        window.location.reload();
+        document.getElementById('sellModal').classList.remove('open');
+        document.getElementById('smSoldScreen').classList.remove('visible');
+        document.getElementById('smFormPanel').style.display = 'block';
+        if (typeof changeImage === 'function') { changeImage(); } else { window.location.reload(); }
       }
     }, 1000);
   }

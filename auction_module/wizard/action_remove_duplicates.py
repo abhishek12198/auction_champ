@@ -134,6 +134,58 @@ class AuctionRemoveDuplicatesWizard(models.TransientModel):
             'target': 'new',
         }
 
+    # ── Standalone resequence (no duplicate detection needed) ────────────
+    def action_resequence_only(self):
+        if not any([self.include_draft, self.include_auction]):
+            raise UserError('Please include at least one player state (Draft or In Auction) to resequence.')
+
+        states = []
+        if self.include_draft:
+            states.append('draft')
+        if self.include_auction:
+            states.append('auction')
+
+        players = self.env['auction.team.player'].search(
+            [('tournament_id', '=', self.tournament_id.id), ('state', 'in', states)],
+            order='sl_no asc, id asc',
+        )
+        if not players:
+            raise UserError('No players found in the selected states for this tournament.')
+
+        updated = 0
+        for i, player in enumerate(players, start=1):
+            if player.sl_no != i:
+                player.sl_no = i
+                updated += 1
+
+        self.env.user.notify_success(
+            message='%d player(s) resequenced (1 – %d). %d sequence number(s) updated.' % (
+                len(players), len(players), updated),
+            title='Resequence Complete ✓',
+        )
+        return {'type': 'ir.actions.act_window_close'}
+
+    # ── Reset base price + live bid for all In-Auction players ───────────
+    def action_reset_auction_bids(self):
+        players = self.env['auction.team.player'].search([
+            ('tournament_id', '=', self.tournament_id.id),
+            ('state', '=', 'auction'),
+        ])
+        if not players:
+            raise UserError('No players are currently In Auction for this tournament.')
+
+        players.write({
+            'base_price': 0,
+            'current_bid': 0,
+            'current_bid_team_id': False,
+        })
+
+        self.env.user.notify_success(
+            message='%d In-Auction player(s) reset: base price, live bid price and live bid team cleared.' % len(players),
+            title='Auction Bids Reset ✓',
+        )
+        return {'type': 'ir.actions.act_window_close'}
+
     # ── Step 2 → Step 1: back ─────────────────────────────────────────────
     def action_back(self):
         self.write({'step': 'configure', 'line_ids': [(5, 0, 0)]})

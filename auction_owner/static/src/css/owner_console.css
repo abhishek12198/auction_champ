@@ -182,6 +182,7 @@ input{font-family:inherit}
     overflow:hidden;
     box-shadow:var(--shadow);
     position:relative;
+    order:1;
 }
 /* top accent bar */
 .oc-showcase-card::before{
@@ -202,13 +203,20 @@ input{font-family:inherit}
 .oc-waiting-sub{font-size:.78rem;color:var(--txt3)}
 
 /* ── Active player wrap ──────────────────────────────────────── */
-.oc-player-wrap{display:flex;gap:16px;padding:20px 16px 16px;align-items:flex-start}
+/* ── Player wrap — mobile: vertical stack, tablet+: side-by-side ── */
+.oc-player-wrap{
+    display:flex;flex-direction:column;align-items:center;
+    gap:16px;padding:20px 16px 16px;
+}
 
 .oc-player-photo-col{
-    display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0;
+    display:flex;flex-direction:column;align-items:center;gap:10px;flex-shrink:0;
+    width:100%;
 }
+/* Square / portrait rectangle — no spin ring on square */
 .oc-player-photo-ring{
-    width:96px;height:96px;border-radius:50%;
+    width:180px;height:220px;
+    border-radius:12px;
     padding:3px;
     background:conic-gradient(var(--c),var(--c-l),var(--c));
     animation:spin-ring 8s linear infinite;
@@ -217,18 +225,18 @@ input{font-family:inherit}
 }
 @keyframes spin-ring{to{transform:rotate(360deg)}}
 .oc-player-photo{
-    width:100%;height:100%;border-radius:50%;object-fit:cover;
+    width:100%;height:100%;
+    border-radius:10px;
+    object-fit:cover;object-position:top center;
     background:var(--surf2);
-    /* stop inner photo from spinning */
     animation:spin-ring 8s linear infinite reverse;
 }
 
 /* ── SOLD overlay ────────────────────────────────────────────── */
 .oc-sold-overlay{
-    position:absolute;inset:3px;border-radius:50%;
+    position:absolute;inset:3px;border-radius:10px;
     background:rgba(0,0,0,.72);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-    /* counter-rotate so the stamp stays upright while the ring spins */
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
     animation:spin-ring 8s linear infinite reverse;
     opacity:0;pointer-events:none;
     transition:opacity .3s;
@@ -236,12 +244,12 @@ input{font-family:inherit}
 }
 .oc-sold-overlay.oc-sold-show{opacity:1}
 .oc-sold-stamp{
-    font-size:1rem;font-weight:900;letter-spacing:.1em;
+    font-size:1.4rem;font-weight:900;letter-spacing:.1em;
     color:#fff;text-transform:uppercase;
     background:var(--red);
     border:2px solid rgba(255,255,255,.6);
     border-radius:4px;
-    padding:1px 8px;
+    padding:2px 14px;
     transform:rotate(-12deg);
     text-shadow:0 1px 4px rgba(0,0,0,.7);
     animation:sold-stamp-in .35s cubic-bezier(.25,1.5,.5,1) forwards;
@@ -251,29 +259,70 @@ input{font-family:inherit}
     100%{transform:rotate(-12deg) scale(1);opacity:1}
 }
 .oc-sold-to{
-    font-size:.5rem;font-weight:700;color:var(--gold);letter-spacing:.06em;
-    text-align:center;padding:0 4px;line-height:1.2;max-width:80px;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    display:flex;align-items:center;gap:6px;
+    max-width:150px;padding:2px 4px;
 }
+.oc-sold-logo{
+    width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0;
+    border:1.5px solid rgba(245,197,24,.75);background:rgba(255,255,255,.1);
+}
+#ocSoldTeamName{
+    font-size:.75rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--gold);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+/* UNSOLD overlay */
+.oc-unsold-overlay{
+    position:absolute;inset:3px;border-radius:10px;
+    background:rgba(0,0,0,.72);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    opacity:0;pointer-events:none;transition:opacity .3s;z-index:5;
+}
+.oc-unsold-overlay.oc-unsold-show{opacity:1}
+.oc-unsold-stamp{
+    font-size:1.4rem;font-weight:900;letter-spacing:.1em;
+    color:#fff;text-transform:uppercase;
+    background:#e65c00;
+    border:2px solid rgba(255,255,255,.6);border-radius:4px;
+    padding:2px 14px;transform:rotate(-12deg);
+    text-shadow:0 1px 4px rgba(0,0,0,.7);
+    animation:unsold-stamp-in .35s cubic-bezier(.25,1.5,.5,1) forwards;
+}
+@keyframes unsold-stamp-in{
+    0%{transform:rotate(-12deg) scale(2.5);opacity:0}
+    100%{transform:rotate(-12deg) scale(1);opacity:1}
+}
+/* Tier pill — prominent, easy to read at a glance */
 .oc-tier-pill{
-    font-size:.65rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
-    padding:2px 12px;border-radius:20px;
+    font-size:1rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;
+    padding:5px 20px;border-radius:20px;
     background:var(--c);color:#fff;
     border:2px solid var(--bg);white-space:nowrap;
+    box-shadow:0 2px 10px var(--c20);
 }
-.oc-sl-no{font-size:.7rem;color:var(--txt3);font-weight:700}
+.oc-sl-no{font-size:.85rem;color:var(--txt3);font-weight:700}
 
-.oc-player-info-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
+/* Info column — centered on mobile */
+.oc-player-info-col{
+    flex:1;min-width:0;
+    display:flex;flex-direction:column;gap:12px;
+    width:100%;align-items:center;text-align:center;
+}
 .oc-player-name{
-    font-size:1.2rem;font-weight:900;line-height:1.15;
+    font-size:1.9rem;font-weight:900;line-height:1.1;text-transform:uppercase;
     background:linear-gradient(135deg,var(--txt),var(--c-l));
     -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
-.oc-player-chips{display:flex;flex-wrap:wrap;gap:6px}
+.oc-player-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+/* Bigger chips — role chip is highlighted solid */
 .oc-chip{
-    font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:12px;
+    font-size:.9rem;font-weight:800;padding:5px 14px;border-radius:12px;
 }
-.oc-chip-role{background:var(--c20);color:var(--c-l);border:1px solid var(--c40)}
+.oc-chip-role{
+    background:var(--c);color:#fff;
+    border:2px solid var(--c-l);
+    font-size:1rem;padding:6px 18px;
+    box-shadow:0 2px 8px var(--c20);
+}
 .oc-chip-style{background:var(--surf2);color:var(--txt2);border:1px solid var(--border2)}
 
 /* Bid display */
@@ -284,9 +333,9 @@ input{font-family:inherit}
 }
 .oc-bid-box-base{background:var(--surf2);border:1px solid var(--border2)}
 .oc-bid-box-current{background:var(--c10);border:1px solid var(--c40)}
-.oc-bid-box-lbl{font-size:.56rem;font-weight:800;letter-spacing:.08em;color:var(--txt3);text-transform:uppercase}
-.oc-bid-box-val{font-size:1rem;font-weight:900;color:var(--txt)}
-.oc-bid-live{color:var(--c-l)!important;font-size:1.1rem!important}
+.oc-bid-box-lbl{font-size:.7rem;font-weight:800;letter-spacing:.08em;color:var(--txt3);text-transform:uppercase}
+.oc-bid-box-val{font-size:1.2rem;font-weight:900;color:var(--txt)}
+.oc-bid-live{color:var(--c-l)!important;font-size:1.4rem!important}
 
 .oc-leading-team{
     display:flex;align-items:center;gap:10px;
@@ -345,6 +394,8 @@ input{font-family:inherit}
 .oc-section{
     background:var(--surf);border:1px solid var(--border2);
     border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);
+    /* Push below bid panel on mobile/tablet */
+    order:10;
 }
 .oc-section-header{
     display:flex;align-items:center;justify-content:space-between;
@@ -399,6 +450,8 @@ input{font-family:inherit}
     border-radius:var(--r);padding:16px;
     box-shadow:0 0 28px var(--c20);
     display:flex;flex-direction:column;gap:12px;
+    /* Appear before Teams Status on mobile/tablet */
+    order:5;
 }
 
 .oc-bid-panel-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
@@ -453,6 +506,21 @@ input{font-family:inherit}
 .oc-bid-reason{font-size:.78rem;font-weight:600;min-height:1rem}
 .oc-bid-reason.oc-reason-ok{color:var(--green)}
 .oc-bid-reason.oc-reason-err{color:var(--red)}
+
+/* ── Revoke bid button ────────────────────────────────────────── */
+#ocRevokeWrap{display:flex;align-items:center;gap:8px;margin-top:6px}
+.oc-revoke-btn{
+    padding:6px 14px;border-radius:20px;border:1.5px solid var(--red);
+    background:transparent;color:var(--red);
+    font-size:.78rem;font-weight:700;cursor:pointer;
+    transition:background .18s,color .18s;white-space:nowrap;
+}
+.oc-revoke-btn:hover{background:var(--red);color:#fff}
+.oc-revoke-btn:disabled{opacity:.35;cursor:not-allowed}
+.oc-revoke-hint{
+    font-size:.68rem;font-weight:600;color:var(--txt3);
+    white-space:nowrap;
+}
 
 /* ── Preset quick-select buttons ────────────────────────────── */
 .oc-presets-wrap{
@@ -715,11 +783,18 @@ input{font-family:inherit}
 
 /* ═══════ RESPONSIVE — TABLET+ (640px) ════════════════════════ */
 @media(min-width:640px){
-    .oc-player-wrap{padding:24px 20px 20px}
-    .oc-player-photo-ring{width:120px;height:120px}
-    .oc-player-name{font-size:1.4rem}
-    .oc-bid-box-val{font-size:1.1rem}
-    .oc-bid-live{font-size:1.2rem!important}
+    /* Side-by-side layout on tablet+ */
+    .oc-player-wrap{flex-direction:row;align-items:flex-start;padding:24px 20px 20px}
+    .oc-player-photo-col{width:auto}
+    .oc-player-photo-ring{width:200px;height:240px}
+    .oc-player-info-col{align-items:flex-start;text-align:left}
+    .oc-player-chips{justify-content:flex-start}
+    .oc-player-name{font-size:2.2rem}
+    .oc-tier-pill{font-size:1.1rem;padding:6px 22px}
+    .oc-chip{font-size:1rem;padding:6px 16px}
+    .oc-chip-role{font-size:1.1rem;padding:7px 20px}
+    .oc-bid-box-val{font-size:1.3rem}
+    .oc-bid-live{font-size:1.5rem!important}
     .oc-teams-strip{flex-wrap:wrap;overflow-x:visible}
     .oc-strip-card{width:calc(50% - 5px)}
 }
@@ -783,7 +858,11 @@ input{font-family:inherit}
     .oc-sheet{max-width:420px;left:auto;right:0;border-radius:20px 0 0 20px}
 
     /* Player name bigger on bigger canvas */
-    .oc-player-name{font-size:1.5rem}
+    .oc-player-name{font-size:2.6rem}
+    .oc-player-photo-ring{width:220px;height:270px}
+    .oc-tier-pill{font-size:1.2rem;padding:7px 26px}
+    .oc-chip{font-size:1.05rem;padding:7px 18px}
+    .oc-chip-role{font-size:1.2rem;padding:8px 22px}
 }
 
 

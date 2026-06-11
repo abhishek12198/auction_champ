@@ -176,16 +176,18 @@ class ViewTeamDetails(models.TransientModel):
 
         # ── Hint strip ────────────────────────────────────────────────────
         if auction.remaining_players_count > 0:
-            if auction.max_limited == 'yes':
-                hint = (f"Maximum bid for any player: "
-                        f"<strong>{auction.max_points}</strong> pts")
-            else:
-                hint = (f"Max bid for next player: "
-                        f"<strong>{auction.max_call}</strong> pts "
-                        f"&nbsp;|&nbsp; "
-                        f"Remaining {auction.remaining_players_count - 1} slot(s) "
-                        f"fillable at base: "
-                        f"<strong>{auction.base_point}</strong> pts each")
+            on_stage = self.env['auction.team.player'].search(
+                [('is_on_stage', '=', True)], limit=1
+            )
+            tier_aware_max_call = auction.get_max_bid_for_team(
+                auction, on_stage if on_stage else None
+            )
+            hint = (f"Max bid for next player: "
+                    f"<strong>{tier_aware_max_call}</strong> pts "
+                    f"&nbsp;|&nbsp; "
+                    f"Remaining {auction.remaining_players_count - 1} slot(s) "
+                    f"fillable at base: "
+                    f"<strong>{auction.base_point}</strong> pts each")
             html += f"""
   <div style="padding:8px 14px;background-color:#F0F6FF;
               border-top:2px solid {gold};font-size:11px;color:#3A4A5E;">
@@ -198,18 +200,22 @@ class ViewTeamDetails(models.TransientModel):
         return html
 
     def generate_suggestion(self, auction):
-        suggestion_html = ""
-        if auction.max_limited == 'yes':
+        on_stage = self.env['auction.team.player'].search(
+            [('is_on_stage', '=', True)], limit=1
+        )
+        tier_aware_max_call = auction.get_max_bid_for_team(
+            auction, on_stage if on_stage else None
+        )
+        remaining_players = auction.remaining_players_count - 1
+        base_point = auction.base_point
+        if auction.remaining_players_count > 1:
             suggestion_html = f"""
-                        <strong><p style="color: blue; text-align: right;">One player can go maximum points upto {auction.max_points}</p></strong>
-                    """
+                            <strong><p style="color: blue; text-align: right;">One player can go maximum points upto {tier_aware_max_call}</p></strong>
+                            <strong><p style="color: blue; text-align: right;">Remaining {remaining_players} player(s) can be bid for base points {base_point}</p></strong>
+                        """
         else:
-            remaining_players = auction.remaining_players_count - 1
-            base_point = auction.base_point
-            max_points_for_next_player = auction.remaining_points - (remaining_players * base_point)
             suggestion_html = f"""
-                            <strong><p style="color: blue; text-align: right;">One player can go maximum points upto {max_points_for_next_player}</p></strong>
-                            <strong><p style="color: blue; text-align: right;">Remaining players you can bid for base points  {base_point}</p></strong>
+                            <strong><p style="color: blue; text-align: right;">This player can go maximum points upto {tier_aware_max_call}</p></strong>
                         """
         return suggestion_html
 

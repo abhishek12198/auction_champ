@@ -10,6 +10,7 @@
         'views/auction_team_view_ext.xml',
         'views/auction_tournament_counter_ext.xml',
         'views/display_auction_counter_ext.xml',
+        'views/display_auction_bid_ext.xml',
         'views/owner_console_template.xml',
     ],
     'assets': {

@@ -266,6 +266,29 @@ class AuctionOwnerController(http.Controller):
             ),
         }
 
+        # ── Revoke settings ────────────────────────────────────────────────
+        my_team_id = user.auction_team_id.id if user.auction_team_id else -1
+        revoke_feature_on = bool(
+            tournament and tournament.revoke_enabled and tournament.max_revokes > 0
+        )
+        revokes_remaining = (
+            max(0, tournament.max_revokes - tournament.revokes_used)
+            if revoke_feature_on else 0
+        )
+        # Owner can revoke only if they are the current leading bidder
+        is_leading = bool(
+            current_player and
+            current_player.current_bid_team_id and
+            current_player.current_bid_team_id.id == my_team_id
+        )
+        result['revoke'] = {
+            'feature_on':  revoke_feature_on,
+            'remaining':   revokes_remaining,
+            'max':         tournament.max_revokes if tournament else 0,
+            'used':        tournament.revokes_used if tournament else 0,
+            'can_revoke':  revoke_feature_on and revokes_remaining > 0 and is_leading,
+        }
+
         return request.make_response(
             json.dumps(result),
             headers=[
@@ -297,19 +320,66 @@ class AuctionOwnerController(http.Controller):
             ],
         )
 
+    # ── Live Bid (public, polled by display page) ──────────────────────────
+
+    @http.route('/auction/owner/live-bid', type='http', auth='public',
+                website=False, csrf=False, methods=['GET'])
+    def live_bid(self, **kw):
+        player = request.env['auction.team.player'].sudo().search(
+            [('is_on_stage', '=', True)], limit=1
+        )
+        result = {
+            'has_bid': False,
+            'player_id': None,
+            'current_bid': 0,
+            'team_id': None,
+            'team_name': None,
+            'team_logo_url': None,
+        }
+        if player:
+            result['player_id'] = player.id
+            if player.current_bid and player.current_bid_team_id:
+                t = player.current_bid_team_id
+                result.update({
+                    'has_bid': True,
+                    'current_bid': player.current_bid,
+                    'team_id': t.id,
+                    'team_name': t.name or '',
+                    'team_logo_url': self._pub_img('auction.team', t.id, 'logo') if t.logo else '',
+                })
+        return request.make_response(
+            json.dumps(result),
+            headers=[
+                ('Content-Type', 'application/json'),
+                ('Cache-Control', 'no-store'),
+            ],
+        )
+
     # ── Enable Counter ──────────────────────────────────────────────────────
 
     @http.route('/auction/owner/enable-counter', type='http', auth='public',
-                website=True, csrf=False, methods=['POST'])
+                website=False, csrf=False, methods=['GET', 'POST'])
     def enable_counter(self, **kw):
         tournament = request.env['auction.tournament'].sudo().search(
             [('active', '=', True)], limit=1
         )
-        if tournament:
-            tournament.sudo().write({'counter_started_at': odoo_fields.Datetime.now()})
+        if not tournament:
+            _logger.warning('enable_counter: no active tournament found')
+            payload = {'ok': False, 'reason': 'no_tournament'}
+        else:
+            try:
+                tournament.sudo().write({'counter_started_at': odoo_fields.Datetime.now()})
+                payload = {'ok': True, 'ts': odoo_fields.Datetime.now().isoformat()}
+            except Exception as e:
+                _logger.error('enable_counter: write failed – %s', e)
+                payload = {'ok': False, 'reason': 'write_error', 'detail': str(e)}
         return request.make_response(
-            json.dumps({'ok': bool(tournament)}),
-            headers=[('Content-Type', 'application/json')],
+            json.dumps(payload),
+            headers=[
+                ('Content-Type', 'application/json'),
+                ('Cache-Control', 'no-store'),
+                ('Access-Control-Allow-Origin', '*'),
+            ],
         )
 
     # ── Place bid ──────────────────────────────────────────────────────────
@@ -364,8 +434,81 @@ class AuctionOwnerController(http.Controller):
             'current_bid_team_id': int(team_id),
         })
 
+        # Log this bid so it can be restored on a revoke
+        env['auction.bid.log'].sudo().create({
+            'player_id': player.id,
+            'team_id': int(team_id),
+            'bid_amount': bid_amount,
+            'tournament_id': player.tournament_id.id,
+        })
+
         return {
             'success': True,
             'current_bid': bid_amount,
             'team_name': auction.team_id.name,
+        }
+
+    # ── Revoke last bid ─────────────────────────────────────────────────────
+
+    @http.route('/auction/owner/revoke-bid', type='json', auth='user', website=False, csrf=False)
+    def revoke_bid(self, player_id, team_id, **kw):
+        """Undo the owner's most recent bid, restoring the previous bid state."""
+        user = request.env.user.sudo()
+        env = request.env
+
+        if not user.auction_team_id or user.auction_team_id.id != int(team_id):
+            return {'success': False, 'error': 'You can only revoke bids for your own team.'}
+
+        player = env['auction.team.player'].sudo().browse(int(player_id))
+        if not player.exists() or not player.is_on_stage:
+            return {'success': False, 'error': 'Player is not currently on stage.'}
+
+        if not player.current_bid_team_id or player.current_bid_team_id.id != int(team_id):
+            return {'success': False, 'error': 'You are not the current leader — can only revoke your own bid.'}
+
+        tournament = player.tournament_id
+        if not tournament.revoke_enabled:
+            return {'success': False, 'error': 'Bid revoke is not active for this tournament.'}
+        if tournament.max_revokes == 0:
+            return {'success': False, 'error': 'Bid revoke is disabled (max revokes set to 0).'}
+        if tournament.revokes_used >= tournament.max_revokes:
+            return {
+                'success': False,
+                'error': 'All %d revoke(s) for this tournament have been used.' % tournament.max_revokes,
+            }
+
+        # Find all bid log entries for this player, in placement order
+        logs = env['auction.bid.log'].sudo().search(
+            [('player_id', '=', player.id)], order='id asc'
+        )
+        if not logs:
+            return {'success': False, 'error': 'No bid history found for this player.'}
+
+        last_log = logs[-1]
+        if last_log.team_id.id != int(team_id):
+            return {'success': False, 'error': 'Your last bid is not the most recent — cannot revoke.'}
+
+        prev_log = logs[-2] if len(logs) > 1 else None
+
+        if prev_log:
+            player.sudo().write({
+                'current_bid': prev_log.bid_amount,
+                'current_bid_team_id': prev_log.team_id.id,
+            })
+            prev_team_name = prev_log.team_id.name
+            new_bid = prev_log.bid_amount
+        else:
+            player.sudo().write({'current_bid': 0, 'current_bid_team_id': False})
+            prev_team_name = None
+            new_bid = 0
+
+        last_log.sudo().unlink()
+        tournament.sudo().write({'revokes_used': tournament.revokes_used + 1})
+
+        revokes_left = tournament.max_revokes - tournament.revokes_used
+        return {
+            'success': True,
+            'new_bid': new_bid,
+            'prev_team_name': prev_team_name,
+            'revokes_remaining': revokes_left,
         }

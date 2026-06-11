@@ -251,13 +251,17 @@ class Auction(http.Controller):
             )
         domain = [('tournament_id', '=', tournament.id)]
         auctions = request.env['auction.auction'].sudo().search(domain)
+        on_stage = request.env['auction.team.player'].sudo().search(
+            [('is_on_stage', '=', True)], limit=1
+        )
+        player_on_stage = on_stage if on_stage else None
         teams_data = []
         for auction in auctions:
             teams_data.append({
                 'id': auction.id,
                 'remaining_players_count': auction.remaining_players_count,
                 'remaining_points': auction.remaining_points,
-                'max_call': auction.max_call,
+                'max_call': auction.get_max_bid_for_team(auction, player_on_stage),
             })
         data = json.dumps({'teams': teams_data})
         headers = [('Content-Type', 'application/json'), ('Cache-Control', 'no-store')]
@@ -793,6 +797,12 @@ class Auction(http.Controller):
         auc_domain = [('tournament_id', '=', tournament.id)] if tournament else []
         auctions = env['auction.auction'].sudo().search(auc_domain)
 
+        # Look up the on-stage player once so tier-based max_call caps are applied.
+        on_stage = env['auction.team.player'].sudo().search(
+            [('is_on_stage', '=', True)], limit=1
+        )
+        player_on_stage = on_stage if on_stage else None
+
         teams_data = []
         for auc in auctions:
             team = auc.team_id
@@ -824,7 +834,7 @@ class Auction(http.Controller):
                 'remaining_points': auc.remaining_points,
                 'remaining_players': auc.remaining_players_count,
                 'max_players': auc.max_players,
-                'max_call': auc.max_call,
+                'max_call': auc.get_max_bid_for_team(auc, player_on_stage),
                 'players_bought': len(auc.player_ids),
                 'top_player': top_player_info,
             })

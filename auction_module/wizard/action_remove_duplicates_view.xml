@@ -124,6 +124,18 @@
                             name="action_find_duplicates"
                             class="btn-primary"
                             attrs="{'invisible': [('step', '!=', 'configure')]}"/>
+                    <button string="🔢 Resequence Players"
+                            type="object"
+                            name="action_resequence_only"
+                            class="btn-secondary"
+                            attrs="{'invisible': [('step', '!=', 'configure')]}"
+                            confirm="This will renumber all players in the selected states from 1 based on their current order. Continue?"/>
+                    <button string="🔄 Reset Auction Bids"
+                            type="object"
+                            name="action_reset_auction_bids"
+                            class="btn-warning"
+                            attrs="{'invisible': [('step', '!=', 'configure')]}"
+                            confirm="This will reset base price, live bid price and live bid team for ALL players currently In Auction. This cannot be undone. Continue?"/>
 
                     <!-- Step 2 footer -->
                     <button string="⬅ Back"

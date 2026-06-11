@@ -11,7 +11,7 @@ import werkzeug.exceptions
 class StartAuction(models.TransientModel):
     _name = 'auction.start.auction'
 
-    max_points = fields.Integer(string='Max Points')
+    max_points = fields.Integer(string='Total Purse Value')
     max_players = fields.Integer(string='Max no of players')
     base_point = fields.Integer(string="Base point for a player", default=1000)
     team_ids = fields.Many2many('auction.team', 'start_auction_team_rel', 'auction_start_id', 'team_id', 'Teams')
@@ -26,7 +26,7 @@ class StartAuction(models.TransientModel):
         tiers = self.env['auction.player.tier'].search([('is_an_icon_tier', '!=', True)])
         if tiers and 'tier_limit_ids' in fields_list:
             res['tier_limit_ids'] = [
-                (0, 0, {'tier_id': tier.id, 'max_players': 1, 'base_point': 0})
+                (0, 0, {'tier_id': tier.id, 'max_players': 1, 'base_point': 0, 'max_call': 0})
                 for tier in tiers
             ]
         return res
@@ -53,7 +53,7 @@ class StartAuction(models.TransientModel):
             raise ValidationError("Select atleast two teams")
         tournament_id = self.env['auction.tournament'].search([('active', '=', True)], limit=1)
         bid_slab_data = [(0, 0, {'from_amount': line.from_amount, 'to_amount': line.to_amount,'increment': line.increment}) for line in self.auction_bid_slab_ids]
-        tier_limit_data = [(0, 0, {'tier_id': line.tier_id.id, 'max_players': line.max_players, 'base_point': line.base_point}) for line in self.tier_limit_ids]
+        tier_limit_data = [(0, 0, {'tier_id': line.tier_id.id, 'max_players': line.max_players, 'base_point': line.base_point, 'max_call': line.max_call}) for line in self.tier_limit_ids]
         if self.team_ids:
             existing_auctions  = auction_obj.search([('team_id', 'in', self.team_ids.ids)])
             if existing_auctions:
@@ -64,8 +64,6 @@ class StartAuction(models.TransientModel):
                     'total_point': self.max_points,
                     'max_players': self.max_players,
                     'base_point': self.base_point,
-                    'max_limited': self.max_limited,
-                    'max_points': self.max_point_player,
                     'auction_bid_slab_ids': bid_slab_data,
                     'tier_limit_ids': tier_limit_data,
                 }
@@ -105,3 +103,5 @@ class AuctionStartAuctionTierLimit(models.TransientModel):
     max_players = fields.Integer(string='Max Players per Team', required=True, default=1)
     base_point = fields.Integer(string='Base Point', default=0,
         help="Minimum bid for a player of this tier. Leave 0 to use the global base point.")
+    max_call = fields.Integer(string='Max Call for a Player', default=0,
+        help="Maximum bid allowed for a single player of this tier. Leave 0 for no cap.")

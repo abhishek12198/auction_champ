@@ -194,7 +194,16 @@ class AuctionTeamPlayer(models.Model):
                         tier_slots_ok = False
 
             # Check the team can actually afford the tier's minimum bid.
-            budget_ok = (effective_base <= auction.max_call)
+            tier_aware_max_call = auction.get_max_bid_for_team(auction, player)
+            budget_ok = (effective_base <= tier_aware_max_call)
+
+            # Prefer auction-level bid slabs (set in the wizard Slab Setup).
+            # Fall back to tournament point-split slabs if none are configured.
+            auction_slabs = [
+                {'from_amount': s.from_amount, 'to_amount': s.to_amount, 'increment': s.increment}
+                for s in auction.auction_bid_slab_ids.sorted('from_amount')
+            ]
+            effective_slabs = auction_slabs if auction_slabs else tournament_slabs
 
             teams.append({
                 'team_id': auction.team_id.id,
@@ -204,11 +213,11 @@ class AuctionTeamPlayer(models.Model):
                 'remaining_players': auction.remaining_players_count,
                 'base_point': auction.base_point,
                 'effective_base_point': effective_base,
-                'max_call': auction.max_call,
+                'max_call': tier_aware_max_call,
                 'tier_slots_ok': tier_slots_ok,
                 'budget_ok': budget_ok,
                 'preset_points': tournament_preset_points,
-                'slabs': tournament_slabs,
+                'slabs': effective_slabs,
             })
         return teams
 
@@ -305,6 +314,9 @@ class AuctionTeamPlayer(models.Model):
         }
         report_ref = report_map.get(template, 'auction_module.action_report_player_card')
         return self.env.ref(report_ref).report_action(self)
+
+    def print_player_cards_portrait(self):
+        return self.env.ref('auction_module.action_report_player_card_portrait').report_action(self)
 
     # def print_player_card(self):
     #     players = self.search([])
