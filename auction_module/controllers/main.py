@@ -287,10 +287,31 @@ class Auction(http.Controller):
             template_ref = template_map.get(chosen, 'auction_module.player_template_new')
             r = request.render(template_ref, {'player': player, 'tournament': tournament_id, 'auction_ids': auction_ids})
         else:
-            r = request.render("auction_module.welcome_message_template", {
-                'tournament': tournament_id,
-                'theme': tournament_id.player_display_template if tournament_id else 'vanilla',
-            })
+            theme = tournament_id.player_display_template if tournament_id else 'vanilla'
+            sold_count = request.env['auction.team.player'].sudo().search_count([
+                ('state', '=', 'sold'),
+                ('icon_player', '=', False),
+            ])
+            if sold_count:
+                unsold_count = request.env['auction.team.player'].sudo().search_count([
+                    ('state', '=', 'unsold'),
+                    ('icon_player', '=', False),
+                ])
+                auction_ids = request.env['auction.auction'].sudo().search(
+                    [('tournament_id', '=', tournament_id.id)] if tournament_id else []
+                )
+                r = request.render("auction_module.thank_you_template", {
+                    'tournament': tournament_id,
+                    'theme': theme,
+                    'auction_ids': auction_ids,
+                    'sold_count': sold_count,
+                    'unsold_count': unsold_count,
+                })
+            else:
+                r = request.render("auction_module.welcome_message_template", {
+                    'tournament': tournament_id,
+                    'theme': theme,
+                })
         return r
 
     @http.route('/auction/get/players/team/<int:team_id>', type='http', auth='public', website=True)

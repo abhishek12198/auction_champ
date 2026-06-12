@@ -12,7 +12,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Auction Champ — Enter the Arena</title>
-  <link rel="icon" href="/web/static/img/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" t-att-href="favicon_url" type="image/x-icon"/>
   <style>
     /* ── Reset ──────────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

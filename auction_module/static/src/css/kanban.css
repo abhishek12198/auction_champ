@@ -738,3 +738,63 @@
     border-radius: 8px;
     display: block;
 }
+
+/* ═══════════════════════════════════════════════════
+   TIER RECRUITMENT BANNER — auction.auction form
+   ═══════════════════════════════════════════════════ */
+
+.atb-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 4px 16px 4px;
+}
+
+.atb-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px 6px 10px;
+    border-radius: 999px;
+    border: 1.5px solid transparent;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.atb-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: inline-block;
+}
+
+.atb-tier-name {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.atb-count {
+    color: #555;
+    font-weight: 500;
+}
+
+.atb-full-badge {
+    display: inline-block;
+    background: #27ae60;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-left: 2px;
+}
+
+.atb-pill--full .atb-count {
+    color: #27ae60;
+    font-weight: 700;
+}

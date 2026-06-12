@@ -196,6 +196,39 @@ class SellPlayer(models.TransientModel):
             player = self.env['auction.team.player'].browse(player_id)
             auction = self.team_auction_id
 
+            # Hard check: purse must cover the tier's minimum bid
+            if player.tier_id and auction.tier_limit_ids:
+                tier_limit_base = auction.tier_limit_ids.filtered(
+                    lambda l: l.tier_id.id == player.tier_id.id
+                )
+                _tier_min = (tier_limit_base[0].base_point
+                             if tier_limit_base and tier_limit_base[0].base_point > 0
+                             else (auction.base_point or 0))
+                if _tier_min > 0 and auction.remaining_points < _tier_min:
+                    raise UserError(
+                        "Cannot sell '%s' to %s — the team's remaining purse (%d pts) is "
+                        "below the minimum required for the '%s' tier (%d pts)." % (
+                            player.name,
+                            auction.team_id.name,
+                            auction.remaining_points,
+                            player.tier_id.name,
+                            _tier_min,
+                        )
+                    )
+
+            # Hard check: final_point must not exceed the tier-aware max call
+            tier_aware_max_call = auction.get_max_bid_for_team(auction, player)
+            if self.final_point > tier_aware_max_call:
+                raise UserError(
+                    "Cannot sell '%s' to %s for %d pts — the maximum allowed call "
+                    "for this team is %d pts." % (
+                        player.name,
+                        auction.team_id.name,
+                        self.final_point,
+                        tier_aware_max_call,
+                    )
+                )
+
             # Tier limit hard check
             if player.tier_id and auction.tier_limit_ids:
                 tier_limit = auction.tier_limit_ids.filtered(

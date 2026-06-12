@@ -4,6 +4,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
+    <link rel="shortcut icon" t-att-href="favicon_url" type="image/x-icon"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
     <title>Owner Console</title>
     <link rel="stylesheet" href="/auction_owner/static/src/css/owner_console.css?v=2"/>

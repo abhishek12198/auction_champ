@@ -228,6 +228,18 @@ class AuctionTeamPlayer(models.Model):
         if not player.exists():
             return {'success': False, 'error': 'Player not found'}
 
+        # Guard: player must still be in auction state
+        if player.state == 'sold':
+            return {
+                'success': False,
+                'error': '%s has already been sold. Use "Recall" to correct the sale.' % player.name,
+            }
+        if player.state != 'auction':
+            return {
+                'success': False,
+                'error': '%s is not available for auction (current state: %s).' % (player.name, player.state),
+            }
+
         # Icon player guard
         icon_players = self.env['auction.team'].search([]).mapped('key_player_ids')
         if player.id in icon_players.ids:
@@ -263,13 +275,28 @@ class AuctionTeamPlayer(models.Model):
         if final_point < effective_base:
             return {'success': False, 'error': 'Points cannot be below the base point of %d' % effective_base}
 
-        # Budget safety check
-        remaining_players = auction.remaining_players_count
-        budget_max = auction.remaining_points - ((remaining_players - 1) * auction.base_point)
-        if final_point > budget_max:
-            return {'success': False, 'error': 'Budget exceeded! Maximum allowed for this player: %d pts' % budget_max}
+        # Purse must cover the tier's minimum bid
+        if player.tier_id and auction.tier_limit_ids:
+            _tl_min = auction.tier_limit_ids.filtered(lambda l: l.tier_id.id == player.tier_id.id)
+            _tier_min = (_tl_min[0].base_point if _tl_min and _tl_min[0].base_point > 0
+                         else (auction.base_point or 0))
+            if _tier_min > 0 and auction.remaining_points < _tier_min:
+                return {
+                    'success': False,
+                    'error': 'Insufficient purse for "%s" tier (requires %d pts, team has %d pts)' % (
+                        player.tier_id.name, _tier_min, auction.remaining_points
+                    ),
+                }
 
-        # Max points cap
+        # Tier-aware max call check (covers per-tier budget reserves + tier max_call cap + slab snapping)
+        tier_aware_max_call = auction.get_max_bid_for_team(auction, player)
+        if final_point > tier_aware_max_call:
+            return {
+                'success': False,
+                'error': 'Points exceed the max call of %d pts for this team' % tier_aware_max_call,
+            }
+
+        # Max points cap (global auction ceiling)
         if auction.max_limited == 'yes' and final_point > auction.max_points:
             return {'success': False, 'error': 'Points exceed the auction cap of %d' % auction.max_points}
 
@@ -277,17 +304,12 @@ class AuctionTeamPlayer(models.Model):
         auction_line_data = {'player_id': player.id, 'points': final_point}
         message = '%s sold to %s for %d points!' % (player.name, auction.team_id.name, final_point)
 
-        existing = self.env['auction.auction.player'].search([('player_id', '=', player.id)])
-        if not existing:
-            auction.player_ids = [(0, 0, auction_line_data)]
-            player.assigned_team_id = auction.team_id.id
-            player.state = 'sold'
-            # is_on_stage stays True so the live board can show the SOLD stamp
-            # until the next player is called via get_random_player()
-            player.create_auction_history(auction.team_id.id, message, tournament_id=player.tournament_id.id, player=player)
-        else:
-            auction_line_data['auction_id'] = auction.id
-            existing.write(auction_line_data)
+        auction.player_ids = [(0, 0, auction_line_data)]
+        player.assigned_team_id = auction.team_id.id
+        player.state = 'sold'
+        # is_on_stage stays True so the live board can show the SOLD stamp
+        # until the next player is called via get_random_player()
+        player.create_auction_history(auction.team_id.id, message, tournament_id=player.tournament_id.id, player=player)
 
         self.env.user.notify_success(message=message, title='CONGRATULATIONS!')
         return {

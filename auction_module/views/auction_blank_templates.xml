@@ -208,6 +208,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
+  <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Auction Welcome</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&amp;family=Open+Sans:wght@400;600&amp;display=swap" rel="stylesheet"/>
@@ -558,8 +559,10 @@
     .wc-footer strong { color: var(--w-accent); }
   </style>
 </head>
-<body>
-  <div class="wc-wrapper">
+<body data-page-type="pre-auction">
+  <!-- data-player-zone keeps the zone-swap mechanism consistent; changeImage()
+       detects the absence of data-player-id to trigger a full page navigate. -->
+  <div class="wc-wrapper" data-player-zone="">
 
     <!-- ── Hero ─────────────────────────────────────────────────────── -->
     <div class="wc-hero">
@@ -656,6 +659,7 @@
 <html t-att-data-theme="theme_val" t-att-data-live-data-url="'/' + (tournament_slug or '') + '/auction/live-board/data'">
 <head>
 <meta charset="UTF-8"/>
+  <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Live Auction Board</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
@@ -1669,6 +1673,531 @@ img { display: block; }
 })();
 ]]></script>
 
+</body>
+</html>
+</template>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     AUCTION COMPLETE — THANK YOU PAGE  (/auction/display_auction/)
+     Shown when no auction-state players remain AND at least one non-icon
+     player has been sold, indicating the auction has officially concluded.
+     ══════════════════════════════════════════════════════════════════════ -->
+<template id="thank_you_template" name="Auction Complete">
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Auction Complete</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&amp;family=Open+Sans:wght@400;600&amp;display=swap" rel="stylesheet"/>
+  <style>
+    /* ── Theme variables (mirrors welcome_message_template) ──────────── */
+    :root {
+      --w-primary:    #004080;
+      --w-primary-dk: #002a5c;
+      --w-primary-lt: rgba(0,64,128,0.10);
+      --w-accent:     #FFD700;
+      --w-bg:         #0a1628;
+      --w-bg2:        #0d1e38;
+      --w-surface:    rgba(255,255,255,0.05);
+      --w-surface-bd: rgba(255,255,255,0.10);
+      --w-header-bg:  linear-gradient(135deg, #002a5c 0%, #004080 100%);
+      --w-text:       #e8f0fe;
+      --w-text-muted: rgba(255,255,255,0.55);
+      --w-glow:       rgba(0,64,128,0.45);
+      --w-divider:    rgba(255,215,0,0.35);
+    }
+    <t t-if="theme == 'cherry'">
+    :root {
+      --w-primary:    #DC143C;
+      --w-primary-dk: #8B0000;
+      --w-primary-lt: rgba(220,20,60,0.12);
+      --w-accent:     #FF6B6B;
+      --w-bg:         #0a0008;
+      --w-bg2:        #1a0008;
+      --w-surface:    rgba(255,255,255,0.04);
+      --w-surface-bd: rgba(220,20,60,0.25);
+      --w-header-bg:  linear-gradient(135deg, #0a0a0a 0%, #2a0a10 100%);
+      --w-text:       #f5e8e8;
+      --w-text-muted: rgba(245,232,232,0.55);
+      --w-glow:       rgba(220,20,60,0.50);
+      --w-divider:    rgba(220,20,60,0.45);
+    }
+    </t>
+    <t t-elif="theme == 'butterscotch'">
+    :root {
+      --w-primary:    #F5C842;
+      --w-primary-dk: #C8960C;
+      --w-primary-lt: rgba(245,200,66,0.12);
+      --w-accent:     #FFE082;
+      --w-bg:         #0d0d1f;
+      --w-bg2:        #1a1400;
+      --w-surface:    rgba(255,255,255,0.04);
+      --w-surface-bd: rgba(245,200,66,0.22);
+      --w-header-bg:  linear-gradient(135deg, #0d0d1f 0%, #1a1400 100%);
+      --w-text:       #fff8e1;
+      --w-text-muted: rgba(255,248,225,0.55);
+      --w-glow:       rgba(245,200,66,0.45);
+      --w-divider:    rgba(245,200,66,0.40);
+    }
+    </t>
+    <t t-elif="theme == 'strawberry'">
+    :root {
+      --w-primary:    #C2185B;
+      --w-primary-dk: #880E4F;
+      --w-primary-lt: rgba(194,24,91,0.10);
+      --w-accent:     #F48FB1;
+      --w-bg:         #1a0010;
+      --w-bg2:        #2d0018;
+      --w-surface:    rgba(255,255,255,0.04);
+      --w-surface-bd: rgba(194,24,91,0.25);
+      --w-header-bg:  linear-gradient(135deg, #880E4F 0%, #C2185B 100%);
+      --w-text:       #fce4ec;
+      --w-text-muted: rgba(252,228,236,0.55);
+      --w-glow:       rgba(194,24,91,0.50);
+      --w-divider:    rgba(194,24,91,0.45);
+    }
+    </t>
+    <t t-elif="theme == 'pistah'">
+    :root {
+      --w-primary:    #6BBF4E;
+      --w-primary-dk: #2E7D32;
+      --w-primary-lt: rgba(107,191,78,0.10);
+      --w-accent:     #A8E063;
+      --w-bg:         #060e08;
+      --w-bg2:        #0d1f11;
+      --w-surface:    rgba(255,255,255,0.04);
+      --w-surface-bd: rgba(107,191,78,0.22);
+      --w-header-bg:  linear-gradient(135deg, #2E7D32 0%, #388e3c 100%);
+      --w-text:       #e8f5e9;
+      --w-text-muted: rgba(232,245,233,0.55);
+      --w-glow:       rgba(107,191,78,0.48);
+      --w-divider:    rgba(107,191,78,0.38);
+    }
+    </t>
+
+    /* ── Base ─────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100vh;
+      overflow: hidden;
+      background: var(--w-bg);
+      font-family: 'Open Sans', sans-serif;
+      color: var(--w-text);
+    }
+    body {
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, var(--w-primary-lt), transparent),
+        radial-gradient(ellipse 60% 40% at 90% 90%, var(--w-primary-lt), transparent);
+      background-color: var(--w-bg);
+    }
+
+    /* ── Wrapper — two-column layout that fills exactly 100vh ────────── */
+    .ty-wrapper {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Left panel: hero + stats + footer ───────────────────────────── */
+    .ty-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 20px;
+      padding: 28px 24px;
+      border-right: 1px solid var(--w-surface-bd);
+      background: rgba(0,0,0,0.12);
+      overflow-y: auto;
+    }
+
+    /* ── Right panel: teams grid ─────────────────────────────────────── */
+    .ty-right {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 20px;
+      padding: 28px 28px;
+      overflow-y: auto;
+    }
+
+    /* ── Confetti ────────────────────────────────────────────────────── */
+    .ty-confetti {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+    .ty-confetti span {
+      position: absolute;
+      top: -12px;
+      display: block;
+      width: 8px; height: 8px;
+      border-radius: 2px;
+      animation: ty-fall linear infinite;
+      opacity: 0.85;
+    }
+    @keyframes ty-fall {
+      0%   { transform: translateY(0)     rotate(0deg);   opacity: 0.9; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0;   }
+    }
+
+    /* ── Hero ────────────────────────────────────────────────────────── */
+    .ty-hero {
+      background: var(--w-header-bg);
+      border-radius: 18px;
+      padding: 28px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 8px 40px var(--w-glow), 0 2px 0 var(--w-surface-bd) inset;
+      border: 1px solid var(--w-surface-bd);
+      width: 100%;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+    }
+    .ty-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        45deg, transparent, transparent 40px,
+        rgba(255,255,255,0.015) 40px, rgba(255,255,255,0.015) 41px
+      );
+    }
+    .ty-hero-logo {
+      width: 90px; height: 90px;
+      object-fit: contain;
+      border-radius: 14px;
+      border: 2px solid var(--w-surface-bd);
+      background: rgba(0,0,0,0.25);
+      padding: 6px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+      position: relative;
+    }
+    .ty-eyebrow {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--w-text-muted);
+      position: relative;
+    }
+    /* ── Primary focal message ───────────────────────────────────────── */
+    .ty-thankyou {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(2.6rem, 5vw, 3.6rem);
+      font-weight: 900;
+      color: var(--w-accent);
+      text-shadow: 0 0 32px var(--w-glow), 0 2px 8px rgba(0,0,0,0.4);
+      line-height: 1;
+      letter-spacing: -1px;
+      position: relative;
+    }
+    .ty-managers {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
+      position: relative;
+    }
+    .ty-participation {
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.60);
+      font-style: italic;
+      position: relative;
+    }
+    .ty-hero-bottom {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 4px;
+      position: relative;
+    }
+    .ty-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0,0,0,0.30);
+      border: 1px solid var(--w-surface-bd);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 0.78rem;
+      color: var(--w-accent);
+      font-weight: 600;
+      position: relative;
+    }
+
+    /* ── Stats ───────────────────────────────────────────────────────── */
+    .ty-stats {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+    .ty-stat {
+      background: var(--w-surface);
+      border: 1px solid var(--w-surface-bd);
+      border-radius: 14px;
+      padding: 14px 18px;
+      text-align: center;
+      flex: 1;
+      min-width: 80px;
+    }
+    .ty-stat-num {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--w-accent);
+      line-height: 1;
+    }
+    .ty-stat-lbl {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--w-text-muted);
+      margin-top: 6px;
+    }
+
+    /* ── Section title ───────────────────────────────────────────────── */
+    .ty-section-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 3.5px;
+      text-transform: uppercase;
+      color: var(--w-primary);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+    .ty-section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--w-divider);
+    }
+
+    /* ── Teams grid ──────────────────────────────────────────────────── */
+    .ty-teams {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+    .ty-team-card {
+      background: var(--w-surface);
+      border: 1px solid var(--w-surface-bd);
+      border-radius: 16px;
+      padding: 24px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 160px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .ty-team-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+    }
+    .ty-team-logo {
+      width: 60px; height: 60px;
+      object-fit: contain;
+      border-radius: 10px;
+    }
+    .ty-team-logo-ph {
+      width: 60px; height: 60px;
+      border-radius: 10px;
+      background: var(--w-surface-bd);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+    }
+    .ty-team-name {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-align: center;
+      color: var(--w-text);
+    }
+    .ty-team-count {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: var(--w-accent);
+      line-height: 1;
+    }
+    .ty-team-count-lbl {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--w-text-muted);
+      margin-top: -4px;
+    }
+    .ty-team-pts {
+      font-size: 0.75rem;
+      color: var(--w-text-muted);
+    }
+
+    /* ── Footer ──────────────────────────────────────────────────────── */
+    .ty-footer {
+      text-align: center;
+      font-size: 0.80rem;
+      color: var(--w-text-muted);
+      letter-spacing: 0.5px;
+      position: relative;
+      z-index: 1;
+    }
+    .ty-footer strong { color: var(--w-accent); }
+
+    @media (max-width: 700px) {
+      html, body { height: auto; overflow: auto; }
+      .ty-wrapper { grid-template-columns: 1fr; height: auto; overflow: visible; }
+      .ty-left { border-right: none; border-bottom: 1px solid var(--w-surface-bd); justify-content: flex-start; }
+      .ty-right { justify-content: flex-start; }
+      .ty-hero { padding: 24px 20px 20px; }
+      .ty-team-card { width: 140px; }
+    }
+  </style>
+</head>
+<body data-page-type="end-of-auction">
+
+  <!-- Confetti particles (CSS-only celebration animation) -->
+  <div class="ty-confetti">
+    <span style="left:4%;animation-duration:3.2s;animation-delay:0s;background:#FFD700;"/>
+    <span style="left:12%;animation-duration:2.7s;animation-delay:0.6s;background:#FF6B6B;border-radius:50%;"/>
+    <span style="left:22%;animation-duration:3.6s;animation-delay:1.3s;background:#4CAF50;"/>
+    <span style="left:34%;animation-duration:2.4s;animation-delay:0.2s;background:#00BCD4;border-radius:50%;"/>
+    <span style="left:47%;animation-duration:3.9s;animation-delay:0.9s;background:#FF9800;"/>
+    <span style="left:58%;animation-duration:2.8s;animation-delay:1.6s;background:#E040FB;border-radius:50%;"/>
+    <span style="left:68%;animation-duration:3.3s;animation-delay:0.4s;background:#FFD700;"/>
+    <span style="left:79%;animation-duration:2.6s;animation-delay:1.1s;background:#FF5722;border-radius:50%;"/>
+    <span style="left:89%;animation-duration:3.5s;animation-delay:0.7s;background:#42A5F5;"/>
+    <span style="left:95%;animation-duration:2.9s;animation-delay:1.8s;background:#66BB6A;border-radius:50%;"/>
+  </div>
+
+  <div class="ty-wrapper" data-player-zone="">
+
+    <!-- ── Left: hero + stats + footer ──────────────────────────────── -->
+    <div class="ty-left">
+
+      <div class="ty-hero">
+        <t t-if="tournament and tournament.logo">
+          <img class="ty-hero-logo"
+               t-att-src="'data:image/png;base64,' + tournament.logo.decode('utf-8')"
+               alt="Tournament Logo"/>
+        </t>
+        <!-- Tournament name as small context label -->
+        <div class="ty-eyebrow">
+          &#127942;
+          <t t-if="tournament"><t t-esc="tournament.name"/></t>
+          <t t-else="">Official Auction</t>
+          &#127942;
+        </div>
+
+        <!-- Primary focal message -->
+        <div class="ty-thankyou">Thank You</div>
+        <div class="ty-managers">Managers!</div>
+        <div class="ty-participation">for your active participation</div>
+
+        <!-- Decorative bottom -->
+        <div class="ty-hero-bottom">
+          <span class="ty-badge">&#9989; Auction Complete</span>
+          <t t-if="tournament and tournament.venue">
+            <span class="ty-badge">
+              <svg width="12" height="12" fill="none" viewBox="0 0 24 24">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"
+                      stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                <circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <t t-esc="tournament.venue"/>
+            </span>
+          </t>
+        </div>
+      </div>
+
+      <div class="ty-stats">
+        <div class="ty-stat">
+          <div class="ty-stat-num"><t t-esc="sold_count"/></div>
+          <div class="ty-stat-lbl">Players Sold</div>
+        </div>
+        <t t-if="unsold_count">
+          <div class="ty-stat">
+            <div class="ty-stat-num"><t t-esc="unsold_count"/></div>
+            <div class="ty-stat-lbl">Players Unsold</div>
+          </div>
+        </t>
+        <div class="ty-stat">
+          <div class="ty-stat-num"><t t-esc="len(auction_ids)"/></div>
+          <div class="ty-stat-lbl">Teams</div>
+        </div>
+      </div>
+
+      <div class="ty-footer">
+        Powered by <strong>AuctionChamp</strong> &#183; All rights reserved
+      </div>
+
+    </div>
+
+    <!-- ── Right: teams grid ─────────────────────────────────────────── -->
+    <div class="ty-right">
+      <t t-if="auction_ids">
+        <div class="ty-section-title">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          Final Team Squads
+        </div>
+        <div class="ty-teams">
+          <t t-foreach="auction_ids" t-as="auction">
+            <div class="ty-team-card">
+              <t t-if="auction.team_id.logo">
+                <img class="ty-team-logo"
+                     t-att-src="'data:image/png;base64,' + auction.team_id.logo.decode('utf-8')"
+                     t-att-alt="auction.team_id.name"/>
+              </t>
+              <t t-else="">
+                <div class="ty-team-logo-ph">&#127942;</div>
+              </t>
+              <div class="ty-team-name"><t t-esc="auction.team_id.name"/></div>
+              <div class="ty-team-count"><t t-esc="len(auction.player_ids)"/></div>
+              <div class="ty-team-count-lbl">Players</div>
+              <div class="ty-team-pts">
+                <t t-esc="auction.total_point - auction.remaining_points"/> pts spent
+              </div>
+            </div>
+          </t>
+        </div>
+      </t>
+    </div>
+
+  </div>
 </body>
 </html>
 </template>

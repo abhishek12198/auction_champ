@@ -10,11 +10,12 @@
                     <field name="sl_no" filter_domain="[('sl_no','=',self)]" string="Sl No"/>
                     <field name="name" filter_domain="['|',('contact','ilike',self),('name','ilike',self)]" string="Name/Contact"/>
                     <field name="assigned_team_id" filter_domain="[('assigned_team_id','ilike',self)]" string="Team"/>
+                    <field name="tier_id" filter_domain="[('tier_id','ilike',self)]" string="Player Tier"/>
                     <filter string="Inactive Players" name="inactive" domain="[('active', '=', False)]"/>
 
                     <group expand="0" string="Group By">
                         <filter name="group_team" string="Team" domain="[]" context="{'group_by': 'assigned_team_id'}"/>
-
+                        <filter name="group_tier" string="Player Tier" domain="[]" context="{'group_by': 'tier_id'}"/>
                     </group>
                 </search>
             </field>

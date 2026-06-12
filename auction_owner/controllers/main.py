@@ -77,7 +77,20 @@ class AuctionOwnerController(http.Controller):
         effective_base = self._get_effective_base(auc, player)
         current_bid_val = (player.current_bid or 0) if player else 0
         next_bid_val = self._next_bid(auc, current_bid_val, effective_base)
-        live_max_call = auc.get_max_bid_for_team(auc)
+        # Pass player so tier max_call cap and per-tier base reserves are applied
+        live_max_call = auc.get_max_bid_for_team(auc, player)
+
+        # Resolve the minimum bid required for the current player's tier
+        _tier_base = 0
+        _tier_name = ''
+        if player and player.tier_id:
+            _tier_name = player.tier_id.name or ''
+            if auc.tier_limit_ids:
+                _tl = auc.tier_limit_ids.filtered(lambda l: l.tier_id.id == player.tier_id.id)
+                _tier_base = (_tl[0].base_point if _tl and _tl[0].base_point > 0
+                              else (auc.base_point or 0))
+            else:
+                _tier_base = auc.base_point or 0
 
         can_bid = True
         can_bid_reason = ''
@@ -91,6 +104,9 @@ class AuctionOwnerController(http.Controller):
         elif auc.remaining_points <= 0:
             can_bid = False
             can_bid_reason = 'No budget left'
+        elif _tier_base > 0 and auc.remaining_points < _tier_base:
+            can_bid = False
+            can_bid_reason = 'Purse below %s minimum (%d pts)' % (_tier_name, _tier_base)
         elif live_max_call <= 0:
             can_bid = False
             can_bid_reason = 'Budget reserved for other players'
@@ -148,7 +164,11 @@ class AuctionOwnerController(http.Controller):
         )
         return request.render(
             'auction_owner.owner_console_template',
-            {'tournament': tournament, 'user': user},
+            {
+                'tournament': tournament,
+                'user': user,
+                'favicon_url': '/web/image/res.company/%d/favicon' % request.env.company.id,
+            },
         )
 
     # ── Owner Console data endpoint ────────────────────────────────────────
@@ -412,7 +432,21 @@ class AuctionOwnerController(http.Controller):
         if bid_amount < effective_base:
             return {'success': False, 'error': 'Bid must be at least %d pts (base price).' % effective_base}
 
-        live_max_call = auction.get_max_bid_for_team(auction)
+        # Guard: purse must cover the tier's minimum before going further
+        if player.tier_id and auction.tier_limit_ids:
+            _tl_base = auction.tier_limit_ids.filtered(lambda l: l.tier_id.id == player.tier_id.id)
+            _tier_min = (_tl_base[0].base_point if _tl_base and _tl_base[0].base_point > 0
+                         else (auction.base_point or 0))
+            if _tier_min > 0 and auction.remaining_points < _tier_min:
+                return {
+                    'success': False,
+                    'error': 'Insufficient purse for "%s" tier (requires %d pts, you have %d pts).' % (
+                        player.tier_id.name, _tier_min, auction.remaining_points
+                    ),
+                }
+
+        # Pass player so tier max_call cap and per-tier budget reserves are applied
+        live_max_call = auction.get_max_bid_for_team(auction, player)
         if bid_amount > live_max_call:
             return {'success': False, 'error': 'Bid of %d exceeds your max call of %d pts.' % (bid_amount, live_max_call)}
 

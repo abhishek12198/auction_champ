@@ -178,6 +178,10 @@
                             </group>
                         </group>
 
+                        <!-- Tier recruitment banner ─────────────────────── -->
+                        <field name="tier_recruitment_html" widget="html" readonly="1" nolabel="1"
+                               attrs="{'invisible': [('tier_limit_ids', '=', [])]}"/>
+
                         <!-- Tabs ────────────────────────────────────────────── -->
                         <notebook>
                             <page string="Signed Players">

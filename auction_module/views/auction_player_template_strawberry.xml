@@ -4,6 +4,7 @@
 <html lang="en" t-att-data-balance-url="'/' + (tournament.slug if tournament else '') + '/auction/show/team/balance'">
 <head>
   <meta charset="UTF-8"/>
+  <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
@@ -371,6 +372,10 @@ body[data-theme="dark"] #sw-theme-btn{color:var(--berry-bright);border-color:rgb
         var html = await resp.text();
         var parser = new DOMParser();
         var newDoc = parser.parseFromString(html, 'text/html');
+        if (!newDoc.body || !newDoc.body.getAttribute('data-player-id')) {
+          window.location.replace(window.location.href);
+          return;
+        }
         var pid = newDoc.body.getAttribute('data-player-id');
         if (pid) document.body.setAttribute('data-player-id', pid);
         var zone    = document.querySelector('[data-player-zone]');

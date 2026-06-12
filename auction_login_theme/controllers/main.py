@@ -23,6 +23,13 @@ class AuctionLoginController(Home):
         # Only swap on GET / failed-POST — success returns a werkzeug redirect (no .template)
         if hasattr(response, 'template') and response.template == 'web.login':
             response.template = 'auction_login_theme.login'
+            company = request.env['res.company'].sudo().search(
+                [], order='id', limit=1)
+            favicon_url = (
+                '/web/image/res.company/%d/favicon' % company.id
+                if company else '/web/static/img/favicon.ico'
+            )
+            response.qcontext['favicon_url'] = favicon_url
         return response
 
 

@@ -4,6 +4,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
+  <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title t-esc="(tournament.name + ' — Player Registration') if tournament else 'Player Registration'"/>
 

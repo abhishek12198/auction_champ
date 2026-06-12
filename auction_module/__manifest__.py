@@ -58,6 +58,7 @@
         'wizard/team_pool_wizard_view.xml',
         'wizard/auction_pdf_to_png_view.xml',
         'wizard/action_remove_duplicates_view.xml',
+        'wizard/action_update_tier_limits_view.xml',
         'views/auction_status_template.xml',
         'views/page_not_found.xml',
         'views/player_registration_form.xml',

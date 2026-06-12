@@ -29,6 +29,11 @@ class Auction(models.Model):
     max_call = fields.Integer(compute='_calculate_max_call', string="Max Call")
     auction_bid_slab_ids = fields.One2many('auction.auction.bid.slab', 'auction_id', 'Slab')
     tier_limit_ids = fields.One2many('auction.auction.tier.limit', 'auction_id', 'Tier Limits')
+    tier_recruitment_html = fields.Html(
+        compute='_compute_tier_recruitment_html',
+        string='Tier Recruitment',
+        sanitize=False,
+    )
 
 
     @api.depends('player_ids', 'player_ids.points')
@@ -67,6 +72,37 @@ class Auction(models.Model):
         for record in self:
             record.max_call = record.get_max_bid_for_team(record, player)
 
+    @api.depends('player_ids', 'player_ids.tier_id', 'tier_limit_ids', 'tier_limit_ids.tier_id', 'tier_limit_ids.max_players')
+    def _compute_tier_recruitment_html(self):
+        for record in self:
+            if not record.tier_limit_ids:
+                record.tier_recruitment_html = ''
+                continue
+            pills = []
+            for tl in record.tier_limit_ids:
+                recruited = sum(
+                    1 for p in record.player_ids
+                    if p.player_id.tier_id.id == tl.tier_id.id
+                )
+                is_full = recruited >= tl.max_players
+                tier_name = tl.tier_id.name or 'Tier'
+                color = tl.tier_id.color or '#3498db'
+                full_badge = (
+                    '<span class="atb-full-badge">FULL</span>' if is_full else ''
+                )
+                pills.append(
+                    f'<div class="atb-pill{" atb-pill--full" if is_full else ""}"'
+                    f' style="border-color:{color};background:{color}1a;">'
+                    f'<span class="atb-dot" style="background:{color};box-shadow:0 0 0 3px {color}33;"></span>'
+                    f'<span class="atb-tier-name">{tier_name}</span>'
+                    f'<span class="atb-count">{recruited}&nbsp;/&nbsp;{tl.max_players}</span>'
+                    f'{full_badge}'
+                    f'</div>'
+                )
+            record.tier_recruitment_html = (
+                '<div class="atb-banner">' + ''.join(pills) + '</div>'
+            )
+
     def _get_budget_safe_max(self, team, player=None):
         # Compute directly from stored fields — never read non-stored computed fields
         # inside another computed field to avoid ORM cache re-entrancy issues.
@@ -83,27 +119,43 @@ class Auction(models.Model):
             safe_max = remaining_points - ((remaining_players - 1) * base)
             return max(safe_max, 0)
 
-        # Per-tier reserve: each tier's remaining slots × that tier's min bid
-        reserve = 0
-        tier_slots_accounted = 0
+        # Per-tier reserve: fill future slots at minimum cost (greedy, cheapest tier first).
+        # Sorting by base_point ascending ensures the cheapest available tier absorbs
+        # as many future slots as possible, giving the highest safe max_call.
+        # This also eliminates order-of-iteration dependency.
         player_tier_id = player.tier_id.id
+        slots_to_account = remaining_players - 1  # slots to fill after the current player
 
+        tier_options = []
         for tl in team.tier_limit_ids:
             recruited = self.env['auction.auction.player'].search_count([
                 ('auction_id', '=', team.id),
                 ('player_id.tier_id', '=', tl.tier_id.id),
             ])
-            remaining_slots = max(tl.max_players - recruited, 0)
+            available = max(tl.max_players - recruited, 0)
             if tl.tier_id.id == player_tier_id:
                 # The current slot is being filled — exclude it from the reserve
-                remaining_slots = max(remaining_slots - 1, 0)
+                available = max(available - 1, 0)
+            if available <= 0:
+                continue
             tier_min_bid = tl.base_point if tl.base_point > 0 else (team.base_point or 0)
-            reserve += remaining_slots * tier_min_bid
-            tier_slots_accounted += remaining_slots
+            tier_options.append((tier_min_bid, available))
 
-        # Players not covered by any tier limit fall back to global base_point
-        uncovered = max((remaining_players - 1) - tier_slots_accounted, 0)
-        reserve += uncovered * (team.base_point or 0)
+        # Sort ascending: cheapest tier fills slots first → minimum possible reserve
+        tier_options.sort(key=lambda x: x[0])
+
+        reserve = 0
+        remaining_to_account = slots_to_account
+        for bid, avail in tier_options:
+            take = min(avail, remaining_to_account)
+            reserve += take * bid
+            remaining_to_account -= take
+            if remaining_to_account <= 0:
+                break
+
+        # Slots not covered by any tier limit fall back to global base_point
+        if remaining_to_account > 0:
+            reserve += remaining_to_account * (team.base_point or 0)
 
         safe_max = remaining_points - reserve
         return max(safe_max, 0)
@@ -162,6 +214,7 @@ class AuctionPlayer(models.Model):
 
     def action_recall_to_auction(self):
         context = self.env.context.copy()
+        print(self.tier_id)
         for player in self:
             player_obj = player.player_id
             player.player_id.assigned_team_id = False

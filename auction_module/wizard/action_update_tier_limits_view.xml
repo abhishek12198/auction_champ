@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_update_tier_limits_form" model="ir.ui.view">
+            <field name="name">auction.update.tier.limits.form</field>
+            <field name="model">auction.update.tier.limits</field>
+            <field name="arch" type="xml">
+                <form string="Bulk Update Tier Limits" class="custom_wizard_popup">
+
+                    <div class="alert alert-info mb-2" role="alert" style="margin:12px 16px 0;">
+                        <i class="fa fa-info-circle"/> Tick <strong>Update?</strong> for the fields you want to change.
+                        Unticked fields are left unchanged on all selected auctions.
+                    </div>
+
+                    <!-- Selected auctions summary -->
+                    <group string="Applying to Auctions">
+                        <field name="auction_ids" nolabel="1" readonly="1">
+                            <tree>
+                                <field name="team_id" string="Team"/>
+                                <field name="manager" string="Owner"/>
+                                <field name="total_point" string="Purse"/>
+                                <field name="max_players" string="Squad Size"/>
+                            </tree>
+                        </field>
+                    </group>
+
+                    <!-- Tier limit adjustments -->
+                    <group string="Tier Limit Adjustments">
+                        <field name="line_ids" nolabel="1">
+                            <tree editable="bottom" decoration-success="apply_max_players or apply_base_point">
+                                <field name="tier_id" string="Tier" readonly="1"/>
+                                <field name="apply_max_players" string="Update Max Players?"/>
+                                <field name="new_max_players" string="New Max Players"
+                                       attrs="{'readonly': [('apply_max_players', '=', False)]}"/>
+                                <field name="apply_base_point" string="Update Base Point?"/>
+                                <field name="new_base_point" string="New Base Point"
+                                       attrs="{'readonly': [('apply_base_point', '=', False)]}"/>
+                            </tree>
+                        </field>
+                    </group>
+
+                    <footer>
+                        <button string="Apply Changes" type="object" name="button_apply"
+                                class="btn-primary"
+                                confirm="This will update tier limits on ALL selected auctions. Continue?"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+
+                </form>
+            </field>
+        </record>
+
+        <delete model="ir.actions.act_window" id="action_update_tier_limits"/>
+
+        <!-- Server action bound to the auction.auction list view -->
+        <record id="action_update_tier_limits_server" model="ir.actions.server">
+            <field name="name">Update Tier Limits</field>
+            <field name="model_id" ref="auction_module.model_auction_auction"/>
+            <field name="binding_model_id" ref="auction_module.model_auction_auction"/>
+            <field name="binding_view_types">list</field>
+            <field name="groups_id" eval="[(6, 0, [ref('auction_module.group_auction_group_admin')])]"/>
+            <field name="state">code</field>
+            <field name="code">action = env['auction.update.tier.limits'].with_context(active_ids=records.ids, active_model='auction.auction').action_open_wizard()</field>
+        </record>
+
+    </data>
+</odoo>
