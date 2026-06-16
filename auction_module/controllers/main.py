@@ -316,6 +316,43 @@ class Auction(http.Controller):
                 })
         return r
 
+    @http.route('/auction/display_auction/remaining-players', type='http', auth='public', website=True, sitemap=False)
+    def display_remaining_players(self, **kwargs):
+        """Standalone page loaded inside the Remaining Players drawer iframe."""
+        env = request.env
+        players = env['auction.team.player'].sudo().search(
+            [('state', '=', 'auction'), ('icon_player', '=', False)],
+            order='sl_no asc',
+        )
+
+        # Resolve theme: prefer explicit ?theme= param, then fall back to active tournament
+        theme = kwargs.get('theme', '')
+        if not theme:
+            tournament = env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
+            theme = tournament.player_display_template if tournament else 'vanilla'
+        theme = theme or 'vanilla'
+
+        # Group players by tier (preserving encounter order)
+        tier_map = {}
+        tier_order = []
+        for p in players:
+            key = p.tier_id.id if p.tier_id else 0
+            if key not in tier_map:
+                tier_order.append(key)
+                tier_map[key] = {
+                    'tier_name': p.tier_id.name if p.tier_id else 'General',
+                    'color':     p.tier_id.color if p.tier_id else '#7f8c8d',
+                    'players':   [],
+                }
+            tier_map[key]['players'].append(p)
+
+        tier_groups = [tier_map[k] for k in tier_order]
+        return request.render('auction_module.remaining_players_template', {
+            'tier_groups':  tier_groups,
+            'total_count':  len(players),
+            'theme':        theme,
+        })
+
     @http.route('/auction/get/players/team/<int:team_id>', type='http', auth='public', website=True)
     def get_team_players(self, team_id):
         player_data_list = []

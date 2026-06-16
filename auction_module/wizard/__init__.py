@@ -13,3 +13,4 @@ from . import action_set_to_draft
 from . import auction_pdf_to_png
 from . import action_remove_duplicates
 from . import action_update_tier_limits
+from . import action_migrate_tier

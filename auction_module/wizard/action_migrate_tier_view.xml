@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_migrate_tier_form" model="ir.ui.view">
+            <field name="name">auction.migrate.tier.form</field>
+            <field name="model">auction.migrate.tier</field>
+            <field name="arch" type="xml">
+                <form string="Migrate Tier Players" class="custom_wizard_popup">
+
+                    <div class="alert alert-info mb-2" role="alert" style="margin:12px 16px 0;">
+                        <i class="fa fa-info-circle"/>
+                        Select a <strong>Target Tier</strong> below, tick the players to migrate,
+                        then click <strong>Migrate Players</strong>.
+                    </div>
+
+                    <!-- Current tier + player count summary -->
+                    <group>
+                        <group string="Source">
+                            <field name="tier_id" readonly="1"/>
+                            <field name="player_count" readonly="1" string="Total Players in Tier"/>
+                            <field name="selected_count" readonly="1" string="Selected for Migration"/>
+                        </group>
+                        <group string="Destination">
+                            <field name="target_tier_id" widget="selection_badge" required="1"
+                                   options="{'no_create': True, 'no_open': True}"/>
+                        </group>
+                    </group>
+
+                    <!-- Player list -->
+                    <group string="Players">
+                        <field name="player_line_ids" nolabel="1">
+                            <tree editable="bottom"
+                                  decoration-success="migrate == True"
+                                  decoration-muted="migrate == False">
+                                <field name="sl_no" string="#" optional="show"/>
+                                <field name="player_id" string="Player" readonly="1"/>
+                                <field name="role" string="Role" readonly="1" optional="show"/>
+                                <field name="batting_style" string="Batting" readonly="1" optional="show"/>
+                                <field name="bowling_style" string="Bowling" readonly="1" optional="show"/>
+                                <field name="state" string="Status" readonly="1" optional="show"/>
+                                <field name="migrate" string="Migrate"/>
+                            </tree>
+                        </field>
+                    </group>
+
+                    <footer>
+                        <button string="Select All" type="object" name="button_select_all"
+                                class="btn-secondary" icon="fa-check-square-o"/>
+                        <button string="Deselect All" type="object" name="button_deselect_all"
+                                class="btn-secondary" icon="fa-square-o"/>
+                        <button string="Migrate Players" type="object" name="button_migrate"
+                                class="btn-primary" icon="fa-exchange"
+                                confirm="This will reassign all selected players to the target tier. Continue?"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+
+                </form>
+            </field>
+        </record>
+
+    </data>
+</odoo>

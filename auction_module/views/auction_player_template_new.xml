@@ -384,6 +384,23 @@ body[data-theme="dark"] #vn-theme-btn{background:rgba(121,184,255,0.10);border-c
         var r = document.getElementById('bidSummaryDrawer').style.right;
         if (r === '0px' || r === '0') { closeBidSummary(); } else { openBidSummary(); }
       }
+      function openRemainingPlayers() {
+        document.getElementById('rpFrame').src = '/auction/display_auction/remaining-players?theme=vanilla';
+        document.getElementById('rpDrawer').style.right = '0';
+        document.getElementById('rpTabArrow').innerHTML = '&#x2192;';
+        document.getElementById('rpOverlay').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+      }
+      function closeRemainingPlayers() {
+        document.getElementById('rpDrawer').style.right = '-900px';
+        document.getElementById('rpTabArrow').innerHTML = '&#x2190;';
+        document.getElementById('rpOverlay').style.display = 'none';
+        document.body.style.overflow = '';
+      }
+      function toggleRemainingPlayers() {
+        var r = document.getElementById('rpDrawer').style.right;
+        if (r === '0px' || r === '0') { closeRemainingPlayers(); } else { openRemainingPlayers(); }
+      }
     </script>
       <!-- Bid Summary Drawer -->
       <div id="bidSummaryDrawer" style="position:fixed; top:0; right:-1150px; width:1150px; max-width:96vw; height:100vh; z-index:9800; display:flex; flex-direction:column; background:#fff; border-left:3px solid #004080; box-shadow:-6px 0 32px rgba(0,0,50,0.18); transition:right .35s cubic-bezier(.4,0,.2,1);">
@@ -399,6 +416,18 @@ body[data-theme="dark"] #vn-theme-btn{background:rgba(121,184,255,0.10);border-c
         <iframe id="bidSummaryFrame" style="flex:1; border:none; width:100%;" title="Bid Summary"></iframe>
       </div>
       <div id="bidSummaryOverlay" onclick="closeBidSummary()" style="display:none; position:fixed; inset:0; z-index:9700; background:rgba(0,0,0,0.4);"></div>
+      <!-- Players Left Drawer -->
+      <div id="rpDrawer" style="position:fixed; top:0; right:-900px; width:900px; max-width:96vw; height:100vh; z-index:9750; display:flex; flex-direction:column; background:#fff; border-left:3px solid #004080; box-shadow:-6px 0 32px rgba(0,0,50,0.18); transition:right .35s cubic-bezier(.4,0,.2,1);">
+        <div onclick="toggleRemainingPlayers()" style="position:absolute; left:-44px; top:65%; transform:translateY(-50%); width:44px; height:130px; background:#004080; border-radius:8px 0 0 8px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; box-shadow:-4px 2px 14px rgba(0,0,50,0.3); z-index:1;">
+          <span id="rpTabArrow" style="color:#fff; font-size:1.2rem; line-height:1;">&#x2190;</span>
+          <span style="color:#fff; writing-mode:vertical-rl; transform:rotate(180deg); font-size:0.58rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; opacity:0.9; white-space:nowrap;">Players Left</span>
+        </div>
+        <div style="padding:14px 20px; background:#004080; color:#fff; display:flex; align-items:center; justify-content:flex-end; flex-shrink:0;">
+          <button onclick="closeRemainingPlayers()" style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:#fff; width:32px; height:32px; border-radius:6px; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1;">&#x2715;</button>
+        </div>
+        <iframe id="rpFrame" style="flex:1; border:none; width:100%;" title="Remaining Players"></iframe>
+      </div>
+      <div id="rpOverlay" onclick="closeRemainingPlayers()" style="display:none; position:fixed; inset:0; z-index:9650; background:rgba(0,0,0,0.4);"></div>
       <!-- Unsold Confirmation Modal -->
       <div id="unsoldConfirmModal" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.65); align-items:center; justify-content:center;">
         <div style="background:#fff; border-radius:14px; padding:36px 28px 28px; max-width:400px; width:92%; box-shadow:0 12px 40px rgba(0,0,0,0.35); text-align:center; font-family:inherit;">

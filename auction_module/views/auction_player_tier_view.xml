@@ -29,6 +29,10 @@
             <field name="model">auction.player.tier</field>
             <field name="arch" type="xml">
                 <form string="Player Tier">
+                    <header>
+                        <button string="Migrate Tier" type="object" name="action_migrate_tier"
+                                class="btn-primary" icon="fa-exchange"/>
+                    </header>
                     <group>
                         <group>
                             <field name="name" required="1"/>

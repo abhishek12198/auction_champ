@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="remaining_players_template" name="Remaining Players">
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <title>Remaining Players</title>
+      <style>
+        /* ── Theme tokens ────────────────────────────────────────────── */
+
+        /* vanilla (default) */
+        :root {
+          --rp-primary:      #004080;
+          --rp-primary-dk:   #002a5c;
+          --rp-glow:         rgba(0,64,128,0.22);
+          --rp-bg:           #eef2f7;
+          --rp-surface:      #fff;
+          --rp-surface2:     #f0f4f8;
+          --rp-border:       rgba(0,64,128,0.15);
+          --rp-text:         #1a1a2e;
+          --rp-text-muted:   #555;
+          --rp-header-bg:    linear-gradient(135deg,#004080,#002a5c);
+          --rp-header-text:  #fff;
+          --rp-card-bg:      rgba(0,64,128,0.04);
+          --rp-card-hover:   rgba(0,64,128,0.09);
+          --rp-tier-bg:      rgba(0,64,128,0.06);
+          --rp-sl-text:      #fff;
+          --rp-label:        rgba(0,40,90,0.4);
+          --rp-value:        rgba(30,30,60,0.75);
+          --rp-count-bg:     rgba(0,64,128,0.10);
+          --rp-count-text:   #004080;
+        }
+
+        /* butterscotch */
+        body.rp-theme-butterscotch {
+          --rp-primary:      #F5C842;
+          --rp-primary-dk:   #C8960C;
+          --rp-glow:         rgba(245,200,66,0.30);
+          --rp-bg:           #0d0d1f;
+          --rp-surface:      #181828;
+          --rp-surface2:     #12121e;
+          --rp-border:       rgba(245,200,66,0.20);
+          --rp-text:         #f5f0e0;
+          --rp-text-muted:   #b0a880;
+          --rp-header-bg:    linear-gradient(135deg,#0d0d1f,#1a1400);
+          --rp-header-text:  #F5C842;
+          --rp-card-bg:      rgba(245,200,66,0.05);
+          --rp-card-hover:   rgba(245,200,66,0.10);
+          --rp-tier-bg:      rgba(245,200,66,0.06);
+          --rp-sl-text:      #0d0d1f;
+          --rp-label:        rgba(240,210,120,0.38);
+          --rp-value:        rgba(245,240,200,0.70);
+          --rp-count-bg:     rgba(245,200,66,0.12);
+          --rp-count-text:   #F5C842;
+        }
+
+        /* strawberry */
+        body.rp-theme-strawberry {
+          --rp-primary:      #C2185B;
+          --rp-primary-dk:   #880E4F;
+          --rp-glow:         rgba(194,24,91,0.22);
+          --rp-bg:           #FFF0F5;
+          --rp-surface:      #fff;
+          --rp-surface2:     #fce4ec;
+          --rp-border:       rgba(194,24,91,0.18);
+          --rp-text:         #2d0a1e;
+          --rp-text-muted:   #7a4060;
+          --rp-header-bg:    linear-gradient(135deg,#880E4F,#C2185B);
+          --rp-header-text:  #fff;
+          --rp-card-bg:      rgba(194,24,91,0.04);
+          --rp-card-hover:   rgba(194,24,91,0.09);
+          --rp-tier-bg:      rgba(194,24,91,0.05);
+          --rp-sl-text:      #fff;
+          --rp-label:        rgba(130,20,60,0.38);
+          --rp-value:        rgba(60,10,30,0.70);
+          --rp-count-bg:     rgba(194,24,91,0.10);
+          --rp-count-text:   #C2185B;
+        }
+
+        /* cherry */
+        body.rp-theme-cherry {
+          --rp-primary:      #DC143C;
+          --rp-primary-dk:   #8B0000;
+          --rp-glow:         rgba(220,20,60,0.28);
+          --rp-bg:           #0d0d0d;
+          --rp-surface:      #1e1e1e;
+          --rp-surface2:     #181818;
+          --rp-border:       rgba(220,20,60,0.22);
+          --rp-text:         #f5f5f5;
+          --rp-text-muted:   #aaa;
+          --rp-header-bg:    linear-gradient(135deg,#0a0a0a,#2a0a10);
+          --rp-header-text:  #f5a0a0;
+          --rp-card-bg:      rgba(220,20,60,0.05);
+          --rp-card-hover:   rgba(220,20,60,0.10);
+          --rp-tier-bg:      rgba(220,20,60,0.06);
+          --rp-sl-text:      #fff;
+          --rp-label:        rgba(255,160,160,0.35);
+          --rp-value:        rgba(248,220,220,0.68);
+          --rp-count-bg:     rgba(220,20,60,0.14);
+          --rp-count-text:   #f5a0a0;
+        }
+
+        /* pistah */
+        body.rp-theme-pistah {
+          --rp-primary:      #6BBF4E;
+          --rp-primary-dk:   #2E7D32;
+          --rp-glow:         rgba(107,191,78,0.28);
+          --rp-bg:           #060e08;
+          --rp-surface:      #0b1a0e;
+          --rp-surface2:     #0d1f11;
+          --rp-border:       rgba(107,191,78,0.20);
+          --rp-text:         #e8f5e9;
+          --rp-text-muted:   rgba(232,245,233,0.52);
+          --rp-header-bg:    linear-gradient(135deg,#060e08,#0d2010);
+          --rp-header-text:  #A8E063;
+          --rp-card-bg:      rgba(107,191,78,0.05);
+          --rp-card-hover:   rgba(107,191,78,0.10);
+          --rp-tier-bg:      rgba(107,191,78,0.06);
+          --rp-sl-text:      #060e08;
+          --rp-label:        rgba(168,224,99,0.38);
+          --rp-value:        rgba(232,245,233,0.68);
+          --rp-count-bg:     rgba(107,191,78,0.12);
+          --rp-count-text:   #A8E063;
+        }
+
+        /* ── Reset &amp; base ────────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+          background: var(--rp-bg);
+          color: var(--rp-text);
+          font-family: 'Segoe UI', Arial, sans-serif;
+          font-size: 13px;
+          min-height: 100vh;
+        }
+
+        /* ── Header ──────────────────────────────────────────────────── */
+        .rp-header {
+          position: sticky;
+          top: 0;
+          z-index: 10;
+          background: var(--rp-header-bg);
+          border-bottom: 2px solid var(--rp-primary);
+          box-shadow: 0 3px 18px var(--rp-glow);
+          padding: 12px 16px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .rp-header-title {
+          font-size: 0.95rem;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          color: var(--rp-header-text);
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex: 1;
+        }
+        .rp-header-count {
+          background: var(--rp-count-bg);
+          color: var(--rp-count-text);
+          font-size: 0.72rem;
+          font-weight: 700;
+          padding: 2px 10px;
+          border-radius: 20px;
+          border: 1px solid var(--rp-primary);
+          opacity: 0.9;
+        }
+
+        /* ── Fullscreen button ───────────────────────────────────────── */
+        #rp-fs-btn {
+          background: rgba(255,255,255,0.12);
+          border: 1px solid rgba(255,255,255,0.30);
+          color: var(--rp-header-text);
+          padding: 5px 11px;
+          border-radius: 6px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          transition: background 0.2s;
+          flex-shrink: 0;
+        }
+        #rp-fs-btn:hover { background: rgba(255,255,255,0.22); }
+        #rp-fs-btn .fs-enter, #rp-fs-btn .fs-exit { display: inline-flex; align-items: center; gap: 5px; }
+
+        /* ── Refresh button ──────────────────────────────────────────── */
+        .rp-refresh-btn {
+          background: rgba(255,255,255,0.10);
+          border: 1px solid rgba(255,255,255,0.25);
+          color: var(--rp-header-text);
+          padding: 5px 11px;
+          border-radius: 6px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          cursor: pointer;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          transition: background 0.2s;
+          flex-shrink: 0;
+        }
+        .rp-refresh-btn:hover { background: rgba(255,255,255,0.20); }
+
+        /* ── Body ────────────────────────────────────────────────────── */
+        .rp-body { padding: 14px 12px 32px; }
+
+        /* ── Tier section ────────────────────────────────────────────── */
+        .rp-tier-section { margin-bottom: 20px; }
+
+        .rp-tier-header {
+          display: flex;
+          align-items: center;
+          gap: 9px;
+          padding: 7px 12px;
+          background: var(--rp-tier-bg);
+          border-left: 4px solid var(--tier-color, var(--rp-primary));
+          border-radius: 6px 6px 0 0;
+        }
+        .rp-tier-dot {
+          width: 9px;
+          height: 9px;
+          border-radius: 50%;
+          background: var(--tier-color, var(--rp-primary));
+          flex-shrink: 0;
+          box-shadow: 0 0 6px var(--tier-color, var(--rp-primary));
+        }
+        .rp-tier-name {
+          font-size: 0.75rem;
+          font-weight: 700;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          color: var(--tier-color, var(--rp-primary));
+        }
+        .rp-tier-count {
+          margin-left: auto;
+          background: var(--rp-count-bg);
+          color: var(--rp-count-text);
+          font-size: 0.68rem;
+          font-weight: 600;
+          padding: 2px 8px;
+          border-radius: 12px;
+          opacity: 0.85;
+        }
+
+        /* ── Player grid ─────────────────────────────────────────────── */
+        .rp-player-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+          gap: 10px;
+          padding: 12px;
+          background: var(--rp-surface);
+          border: 1px solid var(--rp-border);
+          border-top: none;
+          border-radius: 0 0 6px 6px;
+        }
+
+        /* ── Player card ─────────────────────────────────────────────── */
+        .rp-card {
+          display: flex;
+          gap: 12px;
+          background: var(--rp-card-bg);
+          border: 1px solid var(--rp-border);
+          border-radius: 9px;
+          padding: 12px 13px;
+          align-items: flex-start;
+          transition: background 0.2s;
+        }
+        .rp-card:hover { background: var(--rp-card-hover); }
+
+        .rp-photo-wrap { position: relative; flex-shrink: 0; }
+        .rp-photo {
+          width: 80px;
+          height: 80px;
+          border-radius: 9px;
+          object-fit: cover;
+          border: 2px solid var(--tier-color, var(--rp-primary));
+          background: var(--rp-surface2);
+          display: block;
+        }
+        .rp-sl {
+          position: absolute;
+          bottom: -5px;
+          right: -5px;
+          background: var(--tier-color, var(--rp-primary));
+          color: var(--rp-sl-text);
+          font-size: 0.65rem;
+          font-weight: 800;
+          padding: 2px 6px;
+          border-radius: 4px;
+          line-height: 1.5;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+        }
+
+        .rp-info { flex: 1; min-width: 0; }
+        .rp-name {
+          font-size: 0.95rem;
+          font-weight: 700;
+          color: var(--rp-text);
+          margin-bottom: 5px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .rp-stat {
+          display: flex;
+          align-items: baseline;
+          gap: 5px;
+          margin-bottom: 3px;
+          line-height: 1.35;
+        }
+        .rp-stat-label {
+          font-size: 0.66rem;
+          font-weight: 600;
+          color: var(--rp-label);
+          text-transform: uppercase;
+          letter-spacing: 0.4px;
+          flex-shrink: 0;
+          min-width: 20px;
+        }
+        .rp-stat-value {
+          font-size: 0.78rem;
+          color: var(--rp-value);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        /* ── Empty state ─────────────────────────────────────────────── */
+        .rp-empty {
+          text-align: center;
+          padding: 60px 20px;
+          color: var(--rp-text-muted);
+        }
+        .rp-empty-icon { font-size: 3rem; margin-bottom: 12px; }
+        .rp-empty-text { font-size: 0.88rem; }
+      </style>
+    </head>
+    <body t-att-class="'rp-theme-' + (theme or 'vanilla')">
+
+      <!-- Header -->
+      <div class="rp-header">
+        <div class="rp-header-title">
+          <span class="rp-header-count"><t t-esc="total_count"/> Players Left</span>
+        </div>
+        <!-- Refresh -->
+        <a t-attf-href="/auction/display_auction/remaining-players?theme=#{theme or 'vanilla'}"
+           target="_self" class="rp-refresh-btn" title="Refresh">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          Refresh
+        </a>
+        <!-- Fullscreen -->
+        <button id="rp-fs-btn" type="button" title="Toggle Fullscreen">
+          <span class="fs-enter">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+            Fullscreen
+          </span>
+          <span class="fs-exit" style="display:none">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>
+            Exit
+          </span>
+        </button>
+      </div>
+
+      <div class="rp-body">
+        <t t-if="not tier_groups">
+          <div class="rp-empty">
+            <div class="rp-empty-icon">🏁</div>
+            <div class="rp-empty-text">No players remaining in auction.</div>
+          </div>
+        </t>
+
+        <t t-foreach="tier_groups" t-as="group">
+          <div class="rp-tier-section" t-attf-style="--tier-color: #{group['color']};color:#{group['color']};">
+            <div class="rp-tier-header">
+              <div class="rp-tier-dot"></div>
+              <span class="rp-tier-name"><t t-esc="group['tier_name']"/></span>
+              <span class="rp-tier-count"><t t-esc="len(group['players'])"/> players</span>
+            </div>
+            <div class="rp-player-grid">
+              <t t-foreach="group['players']" t-as="player">
+                <div class="rp-card">
+                  <div class="rp-photo-wrap">
+                    <img class="rp-photo"
+                         t-attf-src="/web/image/auction.team.player/#{player.id}/photo"
+                         t-attf-alt="#{player.name}"/>
+                    <span class="rp-sl">#<t t-esc="player.sl_no"/></span>
+                  </div>
+                  <div class="rp-info">
+                    <div class="rp-name" t-att-title="player.name"><t t-esc="player.name"/></div>
+                    <div class="rp-stat">
+                      <span class="rp-stat-label">Role</span>
+                      <span class="rp-stat-value"><t t-esc="player.role or '—'"/></span>
+                    </div>
+                    <div class="rp-stat">
+                      <span class="rp-stat-label">Bat</span>
+                      <span class="rp-stat-value"><t t-esc="player.batting_style or '—'"/></span>
+                    </div>
+                    <div class="rp-stat">
+                      <span class="rp-stat-label">Bowl</span>
+                      <span class="rp-stat-value"><t t-esc="player.bowling_style or '—'"/></span>
+                    </div>
+                  </div>
+                </div>
+              </t>
+            </div>
+          </div>
+        </t>
+      </div>
+
+      <script>
+        (function () {
+          var btn   = document.getElementById('rp-fs-btn');
+          if (!btn) return;
+          var enter = btn.querySelector('.fs-enter');
+          var exit  = btn.querySelector('.fs-exit');
+          function sync() {
+            var isFS = !!document.fullscreenElement;
+            if (enter) enter.style.display = isFS ? 'none' : '';
+            if (exit)  exit.style.display  = isFS ? ''     : 'none';
+          }
+          btn.addEventListener('click', function () {
+            if (!document.fullscreenElement) {
+              document.documentElement.requestFullscreen().catch(function (e) {
+                console.warn('Fullscreen error:', e);
+              });
+            } else {
+              document.exitFullscreen();
+            }
+          });
+          document.addEventListener('fullscreenchange', sync);
+        })();
+      </script>
+    </body>
+  </html>
+</template>
+
+</odoo>

@@ -1106,6 +1106,23 @@ body[data-theme="light"] #pt-theme-btn{color:var(--pistah-dark)}
       var r = document.getElementById('ptBidDrawer').style.right;
       if (r === '0px' || r === '0') closeBidSummary(); else openBidSummary();
     }
+    function openRemainingPlayers() {
+      document.getElementById('rpFrame').src = '/auction/display_auction/remaining-players?theme=pistah';
+      document.getElementById('rpDrawer').style.right = '0';
+      document.getElementById('rpTabArrow').innerHTML = '&#x2192;';
+      document.getElementById('rpOverlay').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+    function closeRemainingPlayers() {
+      document.getElementById('rpDrawer').style.right = '-900px';
+      document.getElementById('rpTabArrow').innerHTML = '&#x2190;';
+      document.getElementById('rpOverlay').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+    function toggleRemainingPlayers() {
+      var r = document.getElementById('rpDrawer').style.right;
+      if (r === '0px' || r === '0') closeRemainingPlayers(); else openRemainingPlayers();
+    }
   </script>
 
   <!-- Bid Summary Drawer – Pistah Theme -->
@@ -1121,6 +1138,19 @@ body[data-theme="light"] #pt-theme-btn{color:var(--pistah-dark)}
     <iframe id="ptBidFrame" style="flex:1;border:none;width:100%;" title="Bid Summary"></iframe>
   </div>
   <div id="ptBidOverlay" onclick="closeBidSummary()" style="display:none;position:fixed;inset:0;z-index:9700;background:rgba(0,0,0,0.65);"></div>
+
+  <!-- Players Left Drawer – Pistah Theme -->
+  <div id="rpDrawer" style="position:fixed;top:0;right:-900px;width:900px;max-width:96vw;height:100vh;z-index:9750;display:flex;flex-direction:column;background:#0b1a0e;border-left:3px solid #6BBF4E;box-shadow:-6px 0 40px rgba(107,191,78,0.35);transition:right .35s cubic-bezier(.4,0,.2,1);">
+    <div onclick="toggleRemainingPlayers()" style="position:absolute;left:-44px;top:65%;transform:translateY(-50%);width:44px;height:130px;background:linear-gradient(180deg,#1b5e20,#2e7d32);border-radius:8px 0 0 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;box-shadow:-4px 2px 14px rgba(107,191,78,0.4);z-index:1;border:1px solid rgba(107,191,78,0.3);">
+      <span id="rpTabArrow" style="color:#A8E063;font-size:1.2rem;line-height:1;">&#x2190;</span>
+      <span style="color:#A8E063;writing-mode:vertical-rl;transform:rotate(180deg);font-size:0.58rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:0.9;white-space:nowrap;">Players Left</span>
+    </div>
+    <div style="padding:14px 20px;background:linear-gradient(135deg,#060e08,#0d1f11);color:#A8E063;display:flex;align-items:center;justify-content:flex-end;flex-shrink:0;border-bottom:2px solid #6BBF4E;">
+      <button onclick="closeRemainingPlayers()" style="background:rgba(107,191,78,0.12);border:1px solid rgba(107,191,78,0.4);color:#A8E063;width:32px;height:32px;border-radius:6px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">&#x2715;</button>
+    </div>
+    <iframe id="rpFrame" style="flex:1;border:none;width:100%;" title="Remaining Players"></iframe>
+  </div>
+  <div id="rpOverlay" onclick="closeRemainingPlayers()" style="display:none;position:fixed;inset:0;z-index:9650;background:rgba(0,0,0,0.65);"></div>
 
   <!-- Unsold Confirmation Modal – Pistah Theme -->
   <div id="ptUnsoldModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.82);align-items:center;justify-content:center;">

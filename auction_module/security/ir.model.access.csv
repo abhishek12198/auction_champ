@@ -60,3 +60,7 @@ access_auction_remove_duplicate_line_admin,auction.remove.duplicate.line (admin)
 access_auction_team_pool_name_line_admin,auction.team.pool.name.line (admin),auction_module.model_auction_team_pool_name_line,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_update_tier_limits_admin,auction.update.tier.limits (admin),auction_module.model_auction_update_tier_limits,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_update_tier_limits_line_admin,auction.update.tier.limits.line (admin),auction_module.model_auction_update_tier_limits_line,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_migrate_tier_admin,auction.migrate.tier (admin),auction_module.model_auction_migrate_tier,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_migrate_tier_user,auction.migrate.tier (user),auction_module.model_auction_migrate_tier,auction_module.group_auction_group,1,1,1,1
+access_auction_migrate_tier_line_admin,auction.migrate.tier.line (admin),auction_module.model_auction_migrate_tier_line,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_migrate_tier_line_user,auction.migrate.tier.line (user),auction_module.model_auction_migrate_tier_line,auction_module.group_auction_group,1,1,1,1

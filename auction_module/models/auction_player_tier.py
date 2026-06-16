@@ -25,6 +25,10 @@ class AuctionPlayerTier(models.Model):
     ], string='Color', default='#3498db')
     is_an_icon_tier = fields.Boolean(string='Icon Tier', default=False)
 
+    def action_migrate_tier(self):
+        self.ensure_one()
+        return self.env['auction.migrate.tier'].with_context(active_id=self.id).action_open_wizard()
+
     @api.constrains('is_an_icon_tier')
     def _check_single_icon_tier(self):
         for record in self:

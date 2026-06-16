@@ -661,6 +661,23 @@ body[data-theme="light"] #cr-theme-btn{color:var(--cherry-dark)}
           var r = document.getElementById('crBidDrawer').style.right;
           if (r === '0px' || r === '0') { closeBidSummary(); } else { openBidSummary(); }
         }
+        function openRemainingPlayers() {
+          document.getElementById('rpFrame').src = '/auction/display_auction/remaining-players?theme=cherry';
+          document.getElementById('rpDrawer').style.right = '0';
+          document.getElementById('rpTabArrow').innerHTML = '&#x2192;';
+          document.getElementById('rpOverlay').style.display = 'block';
+          document.body.style.overflow = 'hidden';
+        }
+        function closeRemainingPlayers() {
+          document.getElementById('rpDrawer').style.right = '-900px';
+          document.getElementById('rpTabArrow').innerHTML = '&#x2190;';
+          document.getElementById('rpOverlay').style.display = 'none';
+          document.body.style.overflow = '';
+        }
+        function toggleRemainingPlayers() {
+          var r = document.getElementById('rpDrawer').style.right;
+          if (r === '0px' || r === '0') { closeRemainingPlayers(); } else { openRemainingPlayers(); }
+        }
         function toggleFullscreen() {
           if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch(function(e) { console.warn(e); });
@@ -699,6 +716,19 @@ body[data-theme="light"] #cr-theme-btn{color:var(--cherry-dark)}
         <iframe id="crBidFrame" style="flex:1;border:none;width:100%;" title="Bid Summary"></iframe>
       </div>
       <div id="crBidOverlay" onclick="closeBidSummary()" style="display:none;position:fixed;inset:0;z-index:9700;background:rgba(0,0,0,0.65);"></div>
+
+      <!-- Players Left Drawer — Cherry Theme -->
+      <div id="rpDrawer" style="position:fixed;top:0;right:-900px;width:900px;max-width:96vw;height:100vh;z-index:9750;display:flex;flex-direction:column;background:#180408;border-left:3px solid #DC143C;box-shadow:-6px 0 40px rgba(220,20,60,0.28);transition:right .35s cubic-bezier(.4,0,.2,1);">
+        <div onclick="toggleRemainingPlayers()" style="position:absolute;left:-44px;top:65%;transform:translateY(-50%);width:44px;height:130px;background:linear-gradient(180deg,#5a0010,#8B0000);border-radius:8px 0 0 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;box-shadow:-4px 2px 14px rgba(220,20,60,0.38);border:1px solid rgba(220,20,60,0.28);">
+          <span id="rpTabArrow" style="color:#f5a0a0;font-size:1.2rem;line-height:1;">&#x2190;</span>
+          <span style="color:#f5a0a0;writing-mode:vertical-rl;transform:rotate(180deg);font-size:0.58rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:0.9;white-space:nowrap;">Players Left</span>
+        </div>
+        <div style="padding:14px 20px;background:linear-gradient(135deg,#0a0305,#2a0a10);color:#f5a0a0;display:flex;align-items:center;justify-content:flex-end;flex-shrink:0;border-bottom:2px solid #DC143C;">
+          <button onclick="closeRemainingPlayers()" style="background:rgba(220,20,60,0.14);border:1px solid rgba(220,20,60,0.38);color:#f5a0a0;width:32px;height:32px;border-radius:6px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">&#x2715;</button>
+        </div>
+        <iframe id="rpFrame" style="flex:1;border:none;width:100%;" title="Remaining Players"></iframe>
+      </div>
+      <div id="rpOverlay" onclick="closeRemainingPlayers()" style="display:none;position:fixed;inset:0;z-index:9650;background:rgba(0,0,0,0.65);"></div>
 
       <!-- Unsold Confirm Modal -->
       <div id="crUnsoldModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.82);align-items:center;justify-content:center;">
