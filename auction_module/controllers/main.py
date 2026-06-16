@@ -270,7 +270,9 @@ class Auction(http.Controller):
     @http.route(['''/auction/display_auction/'''], type='http', auth="public", website=True, sitemap=True)
     def display_auction(self,**kwargs):
 
-        player = request.env['auction.team.player'].sudo().get_random_player()
+        player = request.env['auction.team.player'].sudo().get_random_player(
+            exclude_id=kwargs.get('exclude', 0)
+        )
         tournament_id = request.env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
         if player:
             auction_ids = request.env['auction.auction'].sudo().search(

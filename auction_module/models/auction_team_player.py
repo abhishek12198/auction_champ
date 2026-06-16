@@ -446,18 +446,30 @@ class AuctionTeamPlayer(models.Model):
         players = self.search(players_domain, order='sl_no asc')
         return players
 
-    def get_random_player(self):
+    def get_random_player(self, exclude_id=0):
         tournament_id = self.env['auction.tournament'].search([('active', '=', True)], limit=1)
         random_player = False
 
         players = self.get_auction_players()
         if players:
             player_ids = players.ids
+
+            # Prefer the client-supplied exclude_id (avoids is_on_stage sync issues);
+            # fall back to the is_on_stage flag when no explicit hint is given.
+            current_id = int(exclude_id) if exclude_id else False
+            if not current_id:
+                current_on_stage = self.search([('is_on_stage', '=', True)], limit=1)
+                current_id = current_on_stage.id if current_on_stage else False
+            candidates = (
+                [pid for pid in player_ids if pid != current_id]
+                if current_id and len(player_ids) > 1
+                else player_ids
+            )
+
             if tournament_id.player_appearance_algorithm == 'random':
-                random_player_id = random.choice(player_ids)
-                random_player = self.browse(random_player_id)
+                random_player = self.browse(random.choice(candidates))
             else:
-                random_player = self.browse(player_ids[0])
+                random_player = self.browse(candidates[0])
 
         # ── Stage tracking: clear all, mark only the selected player ──
         on_stage = self.search([('is_on_stage', '=', True)])

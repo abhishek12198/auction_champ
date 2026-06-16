@@ -41,7 +41,7 @@ body[data-theme="dark"] .team-name .bg-white{background-color:#1f2937!important}
 body[data-theme="dark"] #vn-theme-btn{background:rgba(121,184,255,0.10);border-color:rgba(121,184,255,0.30);color:#79b8ff}
     </style>
   </head>
-  <body style="min-height: 100vh" t-att-data-player-id="player.id">
+  <body style="min-height: 100vh" t-att-data-player-id="player.id" t-att-data-next-countdown="tournament.next_player_countdown if tournament else 5">
     <header class="single-header">
       <div class="py-3 text-center">
         <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo" />
@@ -186,48 +186,94 @@ body[data-theme="dark"] #vn-theme-btn{background:rgba(121,184,255,0.10);border-c
       let image = document.getElementById("loadImage");
       let currentIndex = 0;
 
-      async function changeImage() {
-        var toast = document.getElementById('ac-next-toast');
-        var bar   = document.getElementById('ac-next-bar');
-        if (toast) {
-          toast.style.display  = 'flex';
-          toast.style.opacity  = '1';
-          bar.style.transition = 'none';
-          bar.style.width      = '0%';
-          requestAnimationFrame(function() {
-            requestAnimationFrame(function() {
-              bar.style.transition = 'width 1.2s cubic-bezier(.4,0,.2,1)';
-              bar.style.width      = '80%';
-            });
-          });
-        }
+      async function changeImage(skipOverlay) {
+        var currentPlayerId = document.body.getAttribute('data-player-id');
+        var countSecs = Math.max(1, parseInt(document.body.getAttribute('data-next-countdown') || '5'));
+        var overlay = document.getElementById('ac-next-overlay');
+        var countEl = document.getElementById('ac-next-count');
+        var mainDiv = document.getElementById('ac-next-main');
+        var lastDiv = document.getElementById('ac-next-last');
+
+        // Fetch the next player first, before showing any overlay
+        var html;
         try {
-          var resp = await fetch(window.location.href, {cache: 'no-store'});
-          if (!resp.ok) throw new Error('HTTP ' + resp.status);
-          var html = await resp.text();
-          var parser = new DOMParser();
-          var newDoc = parser.parseFromString(html, 'text/html');
-          if (!newDoc.body || !newDoc.body.getAttribute('data-player-id')) {
-            window.location.replace(window.location.href);
-            return;
-          }
-          var pid = newDoc.body.getAttribute('data-player-id');
-          if (pid) document.body.setAttribute('data-player-id', pid);
-          var zone    = document.querySelector('[data-player-zone]');
-          var newZone = newDoc.querySelector('[data-player-zone]');
-          if (zone &amp;&amp; newZone) { zone.innerHTML = newZone.innerHTML; }
-          if (toast) {
-            bar.style.transition = 'width 0.15s ease';
-            bar.style.width      = '100%';
-            setTimeout(function() {
-              toast.style.opacity = '0';
-              setTimeout(function() { toast.style.display = 'none'; }, 400);
-            }, 250);
-          }
+          var fetchUrl = window.location.href.split('?')[0] + '?exclude=' + currentPlayerId;
+          var r = await fetch(fetchUrl, {cache: 'no-store'});
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          html = await r.text();
         } catch(e) {
           console.error('Next player load failed:', e);
           window.location.reload();
+          return;
         }
+
+        var parser = new DOMParser();
+        var newDoc = parser.parseFromString(html, 'text/html');
+        if (!newDoc.body || !newDoc.body.getAttribute('data-player-id')) {
+          window.location.replace(window.location.href);
+          return;
+        }
+        var newPlayerId = newDoc.body.getAttribute('data-player-id');
+
+        // Last player — show message directly, no countdown
+        if (newPlayerId === currentPlayerId) {
+          if (mainDiv) mainDiv.style.display = 'none';
+          if (lastDiv) lastDiv.style.display = 'block';
+          if (overlay) {
+            overlay.style.display = 'flex';
+            requestAnimationFrame(function() {
+              requestAnimationFrame(function() { overlay.style.opacity = '1'; });
+            });
+          }
+          return;
+        }
+
+        var zone    = document.querySelector('[data-player-zone]');
+        var newZone = newDoc.querySelector('[data-player-zone]');
+
+        // Skip overlay when called after sold — swap player immediately
+        if (skipOverlay || !overlay) {
+          if (newPlayerId) document.body.setAttribute('data-player-id', newPlayerId);
+          if (zone &amp;&amp; newZone) { zone.innerHTML = newZone.innerHTML; }
+          return;
+        }
+
+        // Show countdown overlay, then swap
+        if (mainDiv) mainDiv.style.display = 'flex';
+        if (lastDiv) lastDiv.style.display = 'none';
+        overlay.style.display = 'flex';
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() { overlay.style.opacity = '1'; });
+        });
+        if (countEl) countEl.textContent = countSecs;
+
+        await new Promise(function(resolve) {
+          var remaining = countSecs;
+          var tick = setInterval(function() {
+            remaining--;
+            if (remaining &lt;= 0) { clearInterval(tick); resolve(); }
+            else {
+              if (countEl) {
+                countEl.textContent = remaining;
+                countEl.classList.remove('ac-count-pop');
+                void countEl.offsetWidth;
+                countEl.classList.add('ac-count-pop');
+              }
+            }
+          }, 1000);
+        });
+
+        if (newPlayerId) document.body.setAttribute('data-player-id', newPlayerId);
+        if (zone &amp;&amp; newZone) { zone.innerHTML = newZone.innerHTML; }
+        overlay.style.opacity = '0';
+        setTimeout(function() { overlay.style.display = 'none'; }, 400);
+      }
+
+      function closeNextOverlay() {
+        var ov = document.getElementById('ac-next-overlay');
+        if (!ov) return;
+        ov.style.opacity = '0';
+        setTimeout(function() { ov.style.display = 'none'; }, 400);
       }
 
       document.addEventListener("keydown", (event) => {
@@ -318,7 +364,7 @@ body[data-theme="dark"] #vn-theme-btn{background:rgba(121,184,255,0.10);border-c
         ov.appendChild(barWrap);
         document.body.appendChild(ov);
         requestAnimationFrame(function() { requestAnimationFrame(function() { bar.style.width = '0%'; }); });
-        setTimeout(function() { if (ov.parentNode) ov.parentNode.removeChild(ov); changeImage(); }, displaySeconds * 1000);
+        setTimeout(function() { if (ov.parentNode) ov.parentNode.removeChild(ov); changeImage(true); }, displaySeconds * 1000);
       }
 
       function openBidSummary() {
@@ -367,14 +413,23 @@ body[data-theme="dark"] #vn-theme-btn{background:rgba(121,184,255,0.10);border-c
       </div>
       <!-- Toast notification -->
       <div id="unsoldToast" style="display:none; position:fixed; bottom:28px; left:50%; transform:translateX(-50%); z-index:10001; color:#fff; padding:12px 28px; border-radius:8px; font-size:0.95rem; font-weight:600; box-shadow:0 4px 16px rgba(0,0,0,0.3);"></div>
-    <!-- Next-player progress toast -->
-    <div id="ac-next-toast" style="display:none;opacity:0;position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:10002;min-width:220px;max-width:320px;background:#0d1b2e;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.6);overflow:hidden;flex-direction:column;transition:opacity .4s;border:1px solid rgba(255,255,255,.1);">
-      <div style="padding:12px 20px 10px;display:flex;align-items:center;gap:10px;">
-        <span style="font-size:1.1rem;">⚡</span>
-        <span style="color:#e8eaf6;font-size:0.85rem;font-weight:600;letter-spacing:.5px;">Loading Next Player…</span>
+    <!-- Next-player countdown overlay -->
+    <style>
+      @keyframes ac-count-pop { 0%{transform:scale(1.35);opacity:.55} 100%{transform:scale(1);opacity:1} }
+      .ac-count-pop { animation: ac-count-pop 0.45s cubic-bezier(.22,1,.36,1); }
+    </style>
+    <div id="ac-next-overlay" style="display:none;opacity:0;position:fixed;inset:0;z-index:11000;background:rgba(0,5,20,0.88);backdrop-filter:blur(6px);transition:opacity .4s;align-items:center;justify-content:center;flex-direction:column;gap:18px;">
+      <div id="ac-next-main" style="display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;">
+        <p style="color:rgba(200,220,255,0.75);font-size:1.25rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;margin:0;">Next player out of the deck is</p>
+        <div id="ac-next-count" style="font-size:11rem;font-weight:900;color:#5b9bd5;line-height:1;text-shadow:0 0 80px rgba(91,155,213,0.7),0 0 20px rgba(91,155,213,0.5);font-variant-numeric:tabular-nums;">5</div>
+        <p style="color:rgba(200,220,255,0.4);font-size:0.85rem;letter-spacing:1.5px;margin:0;">Get ready…</p>
       </div>
-      <div style="height:3px;background:rgba(255,255,255,.1);">
-        <div id="ac-next-bar" style="height:100%;width:0%;background:#004080;border-radius:2px;transition:width .3s;"></div>
+      <div id="ac-next-last" style="display:none;text-align:center;padding:20px 32px;">
+        <div style="font-size:3.5rem;margin-bottom:20px;">🏁</div>
+        <p style="color:rgba(200,220,255,0.55);font-size:0.8rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 12px;">End of Deck</p>
+        <p style="color:#e8eaf6;font-size:1.6rem;font-weight:800;margin:0 0 10px;">This is the last player<br/>in the auction!</p>
+        <p style="color:rgba(200,220,255,0.4);font-size:0.88rem;margin:0 0 28px;">Sell or set this player as unsold to wrap up.</p>
+        <button onclick="closeNextOverlay()" style="padding:10px 28px;border-radius:8px;border:1px solid rgba(91,155,213,0.45);background:rgba(91,155,213,0.15);color:#5b9bd5;font-size:0.95rem;cursor:pointer;font-weight:600;">Got it</button>
       </div>
     </div>
     <!-- Fullscreen Toggle -->

@@ -73,6 +73,11 @@ class AuctionTournament(models.Model):
         default=5,
         help='How many seconds to show the SOLD celebration screen before advancing to the next player.'
     )
+    next_player_countdown = fields.Integer(
+        string='Next Player Countdown (seconds)',
+        default=5,
+        help='How many seconds to count down on the "Next player out of the deck" overlay before revealing the new player.'
+    )
     preset_points = fields.Char(
         string='Quick-Select Points',
         help='Comma-separated point values shown as quick-select buttons in the Sell Player modal. '

@@ -621,7 +621,7 @@
     document.getElementById('sellModal').classList.remove('open');
     document.getElementById('smSoldScreen').classList.remove('visible');
     document.getElementById('smFormPanel').style.display = 'block';
-    if (typeof changeImage === 'function') { changeImage(); } else { window.location.reload(); }
+    if (typeof changeImage === 'function') { changeImage(true); } else { window.location.reload(); }
   };
 
   /* ── Load teams ─────────────────────────────────────────────── */
@@ -820,7 +820,7 @@
         document.getElementById('sellModal').classList.remove('open');
         document.getElementById('smSoldScreen').classList.remove('visible');
         document.getElementById('smFormPanel').style.display = 'block';
-        if (typeof changeImage === 'function') { changeImage(); } else { window.location.reload(); }
+        if (typeof changeImage === 'function') { changeImage(true); } else { window.location.reload(); }
       }
     }, 1000);
   }
@@ -843,7 +843,7 @@
         // Give the server a brief moment to commit the state change
         setTimeout(function () {
           if (typeof changeImage === 'function') {
-            changeImage();
+            changeImage(true);
           } else {
             window.location.reload();
           }

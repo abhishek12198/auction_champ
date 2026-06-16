@@ -723,6 +723,76 @@
         });
     }
 
+    // ── Mobile Accordion (≤ 640 px) ───────────────────────────────────
+    if (window.innerWidth &lt;= 640) {
+        var sections = document.querySelectorAll('.reg-section');
+
+        sections.forEach(function (sec, idx) {
+            var header = sec.querySelector('.reg-section-header');
+            if (!header) return;
+
+            // Move all children after the header into a body wrapper
+            var body = document.createElement('div');
+            body.className = 'reg-section-body';
+            var kids = Array.from(sec.children);
+            kids.forEach(function (child) {
+                if (child !== header) body.appendChild(child);
+            });
+            sec.appendChild(body);
+
+            // Inject status dot + chevron into header
+            var dot = document.createElement('span');
+            dot.className = 'reg-mob-dot';
+
+            var ns = 'http://www.w3.org/2000/svg';
+            var svg = document.createElementNS(ns, 'svg');
+            svg.setAttribute('class', 'reg-chevron');
+            svg.setAttribute('viewBox', '0 0 24 24');
+            svg.setAttribute('fill', 'none');
+            svg.setAttribute('stroke', 'currentColor');
+            svg.setAttribute('stroke-width', '2.5');
+            svg.setAttribute('stroke-linecap', 'round');
+            svg.setAttribute('stroke-linejoin', 'round');
+            var pl = document.createElementNS(ns, 'polyline');
+            pl.setAttribute('points', '6 9 12 15 18 9');
+            svg.appendChild(pl);
+
+            header.appendChild(dot);
+            header.appendChild(svg);
+
+            // First section starts open
+            if (idx === 0) sec.classList.add('mob-open');
+
+            // Toggle on tap
+            header.addEventListener('click', function () {
+                sec.classList.toggle('mob-open');
+            });
+        });
+
+        // Filled-state indicator — lights the dot when section has input
+        function checkFilled() {
+            document.querySelectorAll('.reg-section').forEach(function (sec) {
+                var texts   = sec.querySelectorAll('input[type=text], input[type=tel], textarea');
+                var selects = sec.querySelectorAll('select');
+                var radios  = sec.querySelectorAll('input[type=radio]:checked');
+                var files   = sec.querySelectorAll('input[type=file]');
+                var filled  = false;
+                texts.forEach(function (i)   { if (i.value.trim()) filled = true; });
+                selects.forEach(function (s) { if (s.value)        filled = true; });
+                if (radios.length)                                   filled = true;
+                files.forEach(function (f)   { if (f.files &amp;&amp; f.files[0]) filled = true; });
+                sec.classList.toggle('mob-filled', filled);
+            });
+        }
+
+        var formEl = document.querySelector('form');
+        if (formEl) {
+            formEl.addEventListener('input',  checkFilled);
+            formEl.addEventListener('change', checkFilled);
+        }
+        checkFilled();
+    }
+
     // Native HTML5 validation + smooth scroll to first error
     var form = document.querySelector('form');
     if (form) {
@@ -752,6 +822,9 @@
                     if (photoSection) photoSection.appendChild(msg);
                 }
                 if (photoSection) photoSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // On mobile, ensure the containing section is open
+                var photoParentSec = photoSection &amp;&amp; photoSection.closest('.reg-section');
+                if (photoParentSec) photoParentSec.classList.add('mob-open');
                 return;
             }
             // Remove photo error if previously shown
@@ -762,7 +835,12 @@
                 e.preventDefault();
                 e.stopPropagation();
                 var first = form.querySelector(':invalid');
-                if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (first) {
+                    // On mobile, open the section containing the invalid field
+                    var parentSec = first.closest('.reg-section');
+                    if (parentSec) parentSec.classList.add('mob-open');
+                    first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
                 // Shake the first invalid field
                 if (first) { first.classList.add('was-invalid'); }
             }
