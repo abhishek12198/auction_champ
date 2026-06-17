@@ -250,18 +250,30 @@ class Auction(http.Controller):
 
 
 
-    @http.route(['''/auction/show/team/balance'''], type='http', auth="public", website=True)
+    @http.route(['''/auction/show/team/balance'''], type='http', auth="none", website=False)
     def auction_team_balance_legacy(self, **kwargs):
         """Redirect legacy /auction/show/team/balance URL to the db-slug-based URL."""
-        tournament = request.env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
-        if tournament and tournament.slug:
-            return werkzeug.utils.redirect('/{}/{}/auction/show/team/balance'.format(request.db, tournament.slug), 301)
-        return self._not_found()
+        from odoo.http import db_monodb
+        db_name = db_monodb(request.httprequest)
+        if not db_name:
+            return werkzeug.exceptions.NotFound('No database available')
+        
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return werkzeug.exceptions.NotFound('Database not found')
+            tournament = request.env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
+            if tournament and tournament.slug:
+                return werkzeug.utils.redirect('/{}/{}/auction/show/team/balance'.format(db_name, tournament.slug), 301)
+        return werkzeug.exceptions.NotFound('No active tournament found')
 
-    @http.route(['''/<string:tournament_slug>/auction/show/team/balance'''], type='http', auth="public", website=True)
+    @http.route(['''/<string:tournament_slug>/auction/show/team/balance'''], type='http', auth="none", website=False)
     def auction_team_balance_slug_legacy(self, tournament_slug, **kwargs):
         """Redirect old slug-only URL to db-prefixed URL."""
-        return werkzeug.utils.redirect('/{}/{}/auction/show/team/balance'.format(request.db, tournament_slug), 301)
+        from odoo.http import db_monodb
+        db_name = db_monodb(request.httprequest)
+        if not db_name:
+            return werkzeug.exceptions.NotFound('No database available')
+        return werkzeug.utils.redirect('/{}/{}/auction/show/team/balance'.format(db_name, tournament_slug), 301)
 
     @http.route(['''/<string:db_name>/<string:tournament_slug>/auction/show/team/balance'''], type='http', auth="none", website=False)
     def auction_team_balance(self, db_name, tournament_slug, **kwargs):
@@ -289,18 +301,30 @@ class Auction(http.Controller):
             }, lazy=False)
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
-    @http.route(['''/auction/show/team/balance/json'''], type='http', auth="public", website=True)
+    @http.route(['''/auction/show/team/balance/json'''], type='http', auth="none", website=False)
     def auction_team_balance_json_legacy(self, **kwargs):
         """Redirect legacy /auction/show/team/balance/json URL to the db-slug-based URL."""
-        tournament = request.env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
-        if tournament and tournament.slug:
-            return werkzeug.utils.redirect('/{}/{}/auction/show/team/balance/json'.format(request.db, tournament.slug), 301)
-        return self._not_found()
+        from odoo.http import db_monodb
+        db_name = db_monodb(request.httprequest)
+        if not db_name:
+            return werkzeug.exceptions.NotFound('No database available')
+        
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return werkzeug.exceptions.NotFound('Database not found')
+            tournament = request.env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
+            if tournament and tournament.slug:
+                return werkzeug.utils.redirect('/{}/{}/auction/show/team/balance/json'.format(db_name, tournament.slug), 301)
+        return werkzeug.exceptions.NotFound('No active tournament found')
 
-    @http.route(['''/<string:tournament_slug>/auction/show/team/balance/json'''], type='http', auth="public", website=True)
+    @http.route(['''/<string:tournament_slug>/auction/show/team/balance/json'''], type='http', auth="none", website=False)
     def auction_team_balance_json_slug_legacy(self, tournament_slug, **kwargs):
         """Redirect old slug-only URL to db-prefixed URL."""
-        return werkzeug.utils.redirect('/{}/{}/auction/show/team/balance/json'.format(request.db, tournament_slug), 301)
+        from odoo.http import db_monodb
+        db_name = db_monodb(request.httprequest)
+        if not db_name:
+            return werkzeug.exceptions.NotFound('No database available')
+        return werkzeug.utils.redirect('/{}/{}/auction/show/team/balance/json'.format(db_name, tournament_slug), 301)
 
     @http.route(['''/<string:db_name>/<string:tournament_slug>/auction/show/team/balance/json'''], type='http', auth="none", website=False)
     def auction_team_balance_json(self, db_name, tournament_slug, **kwargs):
@@ -334,10 +358,14 @@ class Auction(http.Controller):
         headers = [('Content-Type', 'application/json'), ('Cache-Control', 'no-store')]
         return request.make_response(data, headers)
 
-    @http.route(['''/auction/display_auction/'''], type='http', auth="public", website=True, sitemap=False)
+    @http.route(['''/auction/display_auction/'''], type='http', auth="none", website=False, sitemap=False)
     def display_auction_legacy(self, **kwargs):
         """Redirect legacy URL to db-prefixed URL."""
-        return werkzeug.utils.redirect('/{}/auction/display_auction/'.format(request.db), 301)
+        from odoo.http import db_monodb
+        db_name = db_monodb(request.httprequest)
+        if not db_name:
+            return werkzeug.exceptions.NotFound('No database available')
+        return werkzeug.utils.redirect('/{}/auction/display_auction/'.format(db_name), 301)
 
     @http.route(['''/<string:db_name>/auction/display_auction/'''], type='http', auth="none", website=False, sitemap=False)
     def display_auction(self, db_name, **kwargs):
@@ -700,20 +728,32 @@ class Auction(http.Controller):
             ('Cache-Control', 'public, max-age=300'),  # 5-min browser cache
         ])
 
-    @http.route('/auction/live-board', type='http', auth='public', website=True)
+    @http.route('/auction/live-board', type='http', auth='none', website=False)
     def auction_live_board_legacy(self, **kw):
         """Redirect legacy /auction/live-board URL to the db-slug-based URL."""
-        tournament = request.env['auction.tournament'].sudo().search(
-            [('active', '=', True)], limit=1
-        )
-        if tournament and tournament.slug:
-            return werkzeug.utils.redirect('/{}/{}/auction/live-board'.format(request.db, tournament.slug), 301)
-        return self._not_found()
+        from odoo.http import db_monodb
+        db_name = db_monodb(request.httprequest)
+        if not db_name:
+            return werkzeug.exceptions.NotFound('No database available')
+        
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return werkzeug.exceptions.NotFound('Database not found')
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('active', '=', True)], limit=1
+            )
+            if tournament and tournament.slug:
+                return werkzeug.utils.redirect('/{}/{}/auction/live-board'.format(db_name, tournament.slug), 301)
+        return werkzeug.exceptions.NotFound('No active tournament found')
 
-    @http.route('/<string:tournament_slug>/auction/live-board', type='http', auth='public', website=True)
+    @http.route('/<string:tournament_slug>/auction/live-board', type='http', auth='none', website=False)
     def auction_live_board_slug_legacy(self, tournament_slug, **kw):
         """Redirect old slug-only URL to db-prefixed URL."""
-        return werkzeug.utils.redirect('/{}/{}/auction/live-board'.format(request.db, tournament_slug), 301)
+        from odoo.http import db_monodb
+        db_name = db_monodb(request.httprequest)
+        if not db_name:
+            return werkzeug.exceptions.NotFound('No database available')
+        return werkzeug.utils.redirect('/{}/{}/auction/live-board'.format(db_name, tournament_slug), 301)
 
     @http.route('/<string:db_name>/<string:tournament_slug>/auction/live-board', type='http', auth='none', website=False)
     def auction_live_board(self, db_name, tournament_slug, **kw):
@@ -751,20 +791,32 @@ class Auction(http.Controller):
                 }, lazy=False)
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
-    @http.route('/auction/live-board/data', type='http', auth='public', website=True, csrf=False)
+    @http.route('/auction/live-board/data', type='http', auth='none', website=False, csrf=False)
     def auction_live_board_data_legacy(self, **kw):
         """Redirect legacy /auction/live-board/data URL to the db-slug-based URL."""
-        tournament = request.env['auction.tournament'].sudo().search(
-            [('active', '=', True)], limit=1
-        )
-        if tournament and tournament.slug:
-            return werkzeug.utils.redirect('/{}/{}/auction/live-board/data'.format(request.db, tournament.slug), 301)
-        return self._not_found()
+        from odoo.http import db_monodb
+        db_name = db_monodb(request.httprequest)
+        if not db_name:
+            return werkzeug.exceptions.NotFound('No database available')
+        
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return werkzeug.exceptions.NotFound('Database not found')
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('active', '=', True)], limit=1
+            )
+            if tournament and tournament.slug:
+                return werkzeug.utils.redirect('/{}/{}/auction/live-board/data'.format(db_name, tournament.slug), 301)
+        return werkzeug.exceptions.NotFound('No active tournament found')
 
-    @http.route('/<string:tournament_slug>/auction/live-board/data', type='http', auth='public', website=True, csrf=False)
+    @http.route('/<string:tournament_slug>/auction/live-board/data', type='http', auth='none', website=False, csrf=False)
     def auction_live_board_data_slug_legacy(self, tournament_slug, **kw):
         """Redirect old slug-only URL to db-prefixed URL."""
-        return werkzeug.utils.redirect('/{}/{}/auction/live-board/data'.format(request.db, tournament_slug), 301)
+        from odoo.http import db_monodb
+        db_name = db_monodb(request.httprequest)
+        if not db_name:
+            return werkzeug.exceptions.NotFound('No database available')
+        return werkzeug.utils.redirect('/{}/{}/auction/live-board/data'.format(db_name, tournament_slug), 301)
 
     @http.route('/<string:db_name>/<string:tournament_slug>/auction/live-board/data', type='http', auth='none', website=False, csrf=False)
     def auction_live_board_data(self, db_name, tournament_slug, **kw):
@@ -1584,24 +1636,36 @@ class Auction(http.Controller):
 
     # ── Player Registration Form ──────────────────────────────────────────────
 
-    @http.route('/player/register', type='http', auth='public', website=True,
+    @http.route('/player/register', type='http', auth='none', website=False,
                 methods=['GET'], csrf=False)
     def player_register_legacy(self, **kw):
         """Redirect legacy /player/register URL to the db-slug-based URL."""
-        tournament = request.env['auction.tournament'].sudo().search(
-            [('active', '=', True)], limit=1
-        )
-        if tournament and tournament.slug:
-            return werkzeug.utils.redirect('/{}/{}/player/register'.format(
-                request.db, tournament.slug), 301)
-        return self._not_found()
+        from odoo.http import db_monodb
+        db_name = db_monodb(request.httprequest)
+        if not db_name:
+            return werkzeug.exceptions.NotFound('No database available')
+        
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return werkzeug.exceptions.NotFound('Database not found')
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('active', '=', True)], limit=1
+            )
+            if tournament and tournament.slug:
+                return werkzeug.utils.redirect('/{}/{}/player/register'.format(
+                    db_name, tournament.slug), 301)
+        return werkzeug.exceptions.NotFound('No active tournament found')
 
-    @http.route('/<string:tournament_slug>/player/register', type='http', auth='public', website=True,
+    @http.route('/<string:tournament_slug>/player/register', type='http', auth='none', website=False,
                 methods=['GET'], csrf=False)
     def player_register_slug_legacy(self, tournament_slug, **kw):
         """Redirect old /<slug>/player/register to the db-prefixed URL."""
+        from odoo.http import db_monodb
+        db_name = db_monodb(request.httprequest)
+        if not db_name:
+            return werkzeug.exceptions.NotFound('No database available')
         return werkzeug.utils.redirect('/{}/{}/player/register'.format(
-            request.db, tournament_slug), 301)
+            db_name, tournament_slug), 301)
 
     @http.route('/<string:db_name>/<string:tournament_slug>/player/register', type='http', auth='none', website=False,
                 methods=['GET', 'POST'], csrf=False)
@@ -1677,11 +1741,14 @@ class Auction(http.Controller):
             html = request.render('auction_module.player_registration_form', ctx, lazy=False)
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
-    @http.route('/player/card/<int:player_id>', type='http', auth='public', sitemap=False)
+    @http.route('/player/card/<int:player_id>', type='http', auth='none', website=False, sitemap=False)
     def player_card_download_legacy(self, player_id, **kw):
         """Redirect legacy /player/card/<id> to db-prefixed URL."""
-        # Try to find the player's DB (we're in request.db already)
-        return werkzeug.utils.redirect('/{}/player/card/{}'.format(request.db, player_id), 301)
+        from odoo.http import db_monodb
+        db_name = db_monodb(request.httprequest)
+        if not db_name:
+            return werkzeug.exceptions.NotFound('No database available')
+        return werkzeug.utils.redirect('/{}/player/card/{}'.format(db_name, player_id), 301)
 
     @http.route('/<string:db_name>/player/card/<int:player_id>', type='http', auth='none', website=False, sitemap=False)
     def player_card_download(self, db_name, player_id, **kw):
