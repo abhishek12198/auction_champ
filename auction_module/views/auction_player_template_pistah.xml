@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 <template id="player_template_pistah" name="Player Auction – Pistah">
-<html lang="en" t-att-data-balance-url="'/' + (tournament.slug if tournament else '') + '/auction/show/team/balance'">
+<html lang="en" t-att-data-balance-url="'/' + (db_name or '') + '/' + (tournament.slug if tournament else '') + '/auction/show/team/balance'">
 <head>
   <meta charset="UTF-8" />
   <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>

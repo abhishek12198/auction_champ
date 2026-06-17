@@ -2,7 +2,7 @@
 <odoo>
 
 <template id="auction_details_show" name="Player Auction">
-  <html lang="en" t-att-data-balance-json-url="'/' + (tournament_slug or '') + '/auction/show/team/balance/json'">
+  <html lang="en" t-att-data-balance-json-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/show/team/balance/json'">
     <head>
       <meta charset="UTF-8"/>
   <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>

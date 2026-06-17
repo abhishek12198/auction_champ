@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 <template id="player_template_butterscotch" name="Player Auction – Butterscotch">
-    <html lang="en" t-att-data-balance-url="'/' + (tournament.slug if tournament else '') + '/auction/show/team/balance'">
+    <html lang="en" t-att-data-balance-url="'/' + (db_name or '') + '/' + (tournament.slug if tournament else '') + '/auction/show/team/balance'">
   <head>
     <meta charset="UTF-8" />
   <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
@@ -78,21 +78,31 @@
         color: var(--dim);
       }
 
-      .hud-logo-center { display: flex; justify-content: center; align-items: center; }
-      .hud-logo-center img {
+      .hud-logo-center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 14px;
+      }
+      .hud-logo-center .ac-logo {
         width: 66px; height: 66px;
         object-fit: contain;
         filter: brightness(0) invert(1) sepia(0.5) saturate(400%) hue-rotate(10deg)
                 brightness(1.05) drop-shadow(0 0 10px rgba(245,200,66,0.5));
       }
-
-      .hud-tourn-logo { display: flex; flex-direction:column; align-items: flex-end; justify-content:center; gap:6px; }
-      .hud-tourn-logo img {
-        max-height: 52px; max-width: 130px;
+      .hud-logo-center .tourn-logo {
+        max-height: 54px; max-width: 120px;
         object-fit: contain;
-        object-position: right center;
       }
-      .hud-header-controls { display:flex; align-items:center; gap:8px; }
+      .hud-header-controls {
+        position: absolute;
+        top: 8px;
+        right: 36px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 21;
+      }
       .bs-ctrl-btn { display:flex;align-items:center;justify-content:center;flex-shrink:0;width:32px;height:32px;border-radius:7px;background:rgba(245,200,66,0.10);border:1.5px solid rgba(245,200,66,0.35);color:var(--gold);cursor:pointer;padding:0;transition:all 0.2s }
       .bs-ctrl-btn:hover { background:rgba(245,200,66,0.22);box-shadow:0 0 8px rgba(245,200,66,0.30) }
 
@@ -469,10 +479,10 @@ body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to to
         <div class="hud-tourn-desc"><t t-esc="player.tournament_id.description"/></div>
       </div>
       <div class="hud-logo-center">
-        <img src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ" />
+        <img class="ac-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ" />
+        <img class="tourn-logo" t-att-src="image_data_uri(player.tournament_id.logo)" alt="Tournament Logo" />
       </div>
       <div class="hud-tourn-logo">
-        <img t-att-src="image_data_uri(player.tournament_id.logo)" alt="Tournament Logo" />
         <div class="hud-header-controls">
           <button id="bs-theme-btn" onclick="toggleBsTheme()">
             <span id="bs-th-dark">&#9728; Light</span>

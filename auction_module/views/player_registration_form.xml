@@ -222,7 +222,7 @@
 
                 <t t-if="tournament_slug">
                     <div style="margin-top:1.25rem;">
-                        <a t-att-href="'/' + tournament_slug + '/player/register'"
+                        <a t-att-href="'/' + db_name + '/' + tournament_slug + '/player/register'"
                            style="display:inline-flex;align-items:center;gap:.55rem;
                                   padding:.65rem 1.75rem;border-radius:10px;
                                   border:1.5px solid rgba(var(--reg-accent-rgb),.35);
@@ -406,7 +406,7 @@
             </div>
         </t>
 
-        <form t-att-action="'/' + tournament_slug + '/player/register'" method="post" enctype="multipart/form-data">
+        <form t-att-action="'/' + db_name + '/' + tournament_slug + '/player/register'" method="post" enctype="multipart/form-data">
 
             <!-- ══════════════════════════════════════
                  01 · PLAYER IDENTITY

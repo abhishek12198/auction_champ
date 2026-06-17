@@ -656,7 +656,7 @@
      ══════════════════════════════════════════════════════════════════════ -->
 <template id="public_live_board_template" name="Public Live Auction Board">
 <t t-set="theme_val" t-value="theme or 'vanilla'"/>
-<html t-att-data-theme="theme_val" t-att-data-live-data-url="'/' + (tournament_slug or '') + '/auction/live-board/data'">
+<html t-att-data-theme="theme_val" t-att-data-live-data-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/live-board/data'">
 <head>
 <meta charset="UTF-8"/>
   <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>

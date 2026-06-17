@@ -129,11 +129,12 @@ class AuctionTournament(models.Model):
 
     def _compute_registration_url(self):
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
+        db_name = self.env.cr.dbname
         for rec in self:
             if rec.slug:
-                rec.registration_url = '{}/{}/player/register'.format(base_url, rec.slug)
+                rec.registration_url = '{}/{}/{}/player/register'.format(base_url, db_name, rec.slug)
             else:
-                rec.registration_url = '{}/player/register'.format(base_url)
+                rec.registration_url = '{}/{}/player/register'.format(base_url, db_name)
 
     def action_toggle_registration(self):
         """Toggle the registration open/closed state."""
@@ -143,7 +144,8 @@ class AuctionTournament(models.Model):
     def action_open_registration_link(self):
         """Open the public player registration form in a new browser tab."""
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
-        url = '{}/{}/player/register'.format(base_url, self.slug) if self.slug else '{}/player/register'.format(base_url)
+        db_name = self.env.cr.dbname
+        url = '{}/{}/{}/player/register'.format(base_url, db_name, self.slug) if self.slug else '{}/{}/player/register'.format(base_url, db_name)
         return {
             'type': 'ir.actions.act_url',
             'url': url,
