@@ -205,7 +205,7 @@
                        t-esc="tournament.name"/>
                 </t>
                 <t t-if="player_id">
-                    <a t-attf-href="/player/card/#{player_id}"
+                    <a t-attf-href="/#{db_name}/player/card/#{player_id}"
                        class="reg-btn-submit"
                        style="display:inline-flex;align-items:center;gap:.6rem;margin-top:2rem;text-decoration:none;padding:.75rem 2rem;">
                         <!-- Download icon SVG -->

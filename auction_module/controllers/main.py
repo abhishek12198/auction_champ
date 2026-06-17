@@ -1678,63 +1678,73 @@ class Auction(http.Controller):
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
     @http.route('/player/card/<int:player_id>', type='http', auth='public', sitemap=False)
-    def player_card_download(self, player_id, **kw):
+    def player_card_download_legacy(self, player_id, **kw):
+        """Redirect legacy /player/card/<id> to db-prefixed URL."""
+        # Try to find the player's DB (we're in request.db already)
+        return werkzeug.utils.redirect('/{}/player/card/{}'.format(request.db, player_id), 301)
+
+    @http.route('/<string:db_name>/player/card/<int:player_id>', type='http', auth='none', website=False, sitemap=False)
+    def player_card_download(self, db_name, player_id, **kw):
         """Stream the themed player-card PDF for the given player (public, read-only)."""
-        player = request.env['auction.team.player'].sudo().browse(player_id)
-        if not player.exists():
-            return request.not_found()
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return werkzeug.exceptions.NotFound()
 
-        tournament = player.tournament_id
-        theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
+            player = request.env['auction.team.player'].sudo().browse(player_id)
+            if not player.exists():
+                return werkzeug.exceptions.NotFound()
 
-        report_map = {
-            'vanilla':      'auction_module.action_report_player_card',
-            'butterscotch': 'auction_module.action_report_player_card_butterscotch',
-            'strawberry':   'auction_module.action_report_player_card_strawberry',
-            'cherry':       'auction_module.action_report_player_card_cherry',
-            'pistah':       'auction_module.action_report_player_card_pistah',
-        }
-        report_ref = report_map.get(theme, 'auction_module.action_report_player_card')
+            tournament = player.tournament_id
+            theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
 
-        try:
-            report = request.env.ref(report_ref).sudo()
-            pdf_content, _mime = report._render_qweb_pdf([player_id])
-        except Exception:
-            _logger.exception(
-                "Player card PDF generation failed for player_id=%s theme=%s",
-                player_id, theme
-            )
-            # Return a readable HTML error page instead of a raw 500
-            body = u"""
-                <html><head><meta charset="UTF-8"/>
-                <style>
-                    body{{font-family:sans-serif;display:flex;align-items:center;
-                          justify-content:center;min-height:100vh;margin:0;
-                          background:#f8f8f8;}}
-                    .box{{text-align:center;padding:2rem;max-width:480px;}}
-                    h2{{color:#c0392b;}} p{{color:#555;line-height:1.6;}}
-                    a{{color:#2980b9;}}
-                </style></head>
-                <body><div class="box">
-                    <h2>&#9888; Player Card Unavailable</h2>
-                    <p>We could not generate your player card right now.<br/>
-                    This is usually caused by a large or unsupported photo format
-                    uploaded from a mobile device.</p>
-                    <p>Please try again in a moment, or contact the organiser
-                    if the problem persists.</p>
-                    <p><a href="javascript:history.back()">&#8592; Go Back</a></p>
-                </div></body></html>
-            """.format()
-            return request.make_response(
-                body.encode('utf-8'),
-                headers=[
-                    ('Content-Type', 'text/html; charset=utf-8'),
-                    ('Cache-Control', 'no-store'),
-                ],
-                status=503,
-            )
+            report_map = {
+                'vanilla':      'auction_module.action_report_player_card',
+                'butterscotch': 'auction_module.action_report_player_card_butterscotch',
+                'strawberry':   'auction_module.action_report_player_card_strawberry',
+                'cherry':       'auction_module.action_report_player_card_cherry',
+                'pistah':       'auction_module.action_report_player_card_pistah',
+            }
+            report_ref = report_map.get(theme, 'auction_module.action_report_player_card')
 
-        filename = 'PlayerCard_%s.pdf' % (player.name or player_id)
+            try:
+                report = request.env.ref(report_ref).sudo()
+                pdf_content, _mime = report._render_qweb_pdf([player_id])
+            except Exception:
+                _logger.exception(
+                    "Player card PDF generation failed for player_id=%s theme=%s",
+                    player_id, theme
+                )
+                # Return a readable HTML error page instead of a raw 500
+                body = u"""
+                    <html><head><meta charset="UTF-8"/>
+                    <style>
+                        body{{font-family:sans-serif;display:flex;align-items:center;
+                              justify-content:center;min-height:100vh;margin:0;
+                              background:#f8f8f8;}}
+                        .box{{text-align:center;padding:2rem;max-width:480px;}}
+                        h2{{color:#c0392b;}} p{{color:#555;line-height:1.6;}}
+                        a{{color:#2980b9;}}
+                    </style></head>
+                    <body><div class="box">
+                        <h2>&#9888; Player Card Unavailable</h2>
+                        <p>We could not generate your player card right now.<br/>
+                        This is usually caused by a large or unsupported photo format
+                        uploaded from a mobile device.</p>
+                        <p>Please try again in a moment, or contact the organiser
+                        if the problem persists.</p>
+                        <p><a href="javascript:history.back()">&#8592; Go Back</a></p>
+                    </div></body></html>
+                """.format()
+                return request.make_response(
+                    body.encode('utf-8'),
+                    headers=[
+                        ('Content-Type', 'text/html; charset=utf-8'),
+                        ('Cache-Control', 'no-store'),
+                    ],
+                    status=503,
+                )
+
+            filename = 'PlayerCard_%s.pdf' % (player.name or player_id)
         return request.make_response(
             pdf_content,
             headers=[
