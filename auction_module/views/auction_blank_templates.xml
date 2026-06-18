@@ -2203,4 +2203,330 @@ img { display: block; }
 </template>
 
 
+<!-- ══════════════════════════════════════════════════════════════════════
+     LIVE BOARD OFFLINE TEMPLATE  (/auction/live-board — board not active)
+     Shown when the tournament admin has stopped the live board.
+     ══════════════════════════════════════════════════════════════════════ -->
+<template id="live_board_offline_template" name="Live Board Offline">
+<t t-set="theme_val" t-value="theme or 'vanilla'"/>
+<html t-att-data-theme="theme_val">
+<head>
+  <meta charset="UTF-8"/>
+  <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Live Board — Offline</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&amp;family=Rajdhani:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+  <style>
+    /* ── Theme variables (mirrors the live board palette) ──────────── */
+    :root {
+      --off-bg:        #070c18;
+      --off-surface:   #0d1526;
+      --off-border:    rgba(255,255,255,0.07);
+      --off-accent:    #3b72e8;
+      --off-accent2:   #5d93ff;
+      --off-glow:      rgba(59,114,232,0.30);
+      --off-text:      #e8edf8;
+      --off-sub:       #8896b3;
+      --off-dim:       rgba(255,255,255,0.04);
+    }
+    [data-theme="cherry"] {
+      --off-bg:       #110206;
+      --off-surface:  #180306;
+      --off-border:   rgba(220,38,38,0.15);
+      --off-accent:   #e02626;
+      --off-accent2:  #f87171;
+      --off-glow:     rgba(220,38,38,0.32);
+      --off-text:     #fef0f0;
+      --off-sub:      #f0948a;
+    }
+    [data-theme="butterscotch"] {
+      --off-bg:       #0e0800;
+      --off-surface:  #150b00;
+      --off-border:   rgba(217,119,6,0.18);
+      --off-accent:   #d97706;
+      --off-accent2:  #fbbf24;
+      --off-glow:     rgba(217,119,6,0.32);
+      --off-text:     #fef3c7;
+      --off-sub:      #d4a843;
+    }
+    [data-theme="strawberry"] {
+      --off-bg:       #0d0010;
+      --off-surface:  #160018;
+      --off-border:   rgba(219,39,119,0.18);
+      --off-accent:   #db2777;
+      --off-accent2:  #f472b6;
+      --off-glow:     rgba(219,39,119,0.32);
+      --off-text:     #fdf2f8;
+      --off-sub:      #f0abca;
+    }
+    [data-theme="pistah"] {
+      --off-bg:       #050d05;
+      --off-surface:  #0b1a0b;
+      --off-border:   rgba(34,197,94,0.15);
+      --off-accent:   #16a34a;
+      --off-accent2:  #4ade80;
+      --off-glow:     rgba(34,197,94,0.30);
+      --off-text:     #f0fdf4;
+      --off-sub:      #86efac;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: var(--off-bg);
+      color: var(--off-text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* subtle animated grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* radial glow behind card */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, var(--off-glow) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .off-card {
+      position: relative;
+      z-index: 1;
+      background: var(--off-surface);
+      border: 1px solid var(--off-border);
+      border-radius: 20px;
+      padding: 56px 64px;
+      max-width: 600px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 8px 48px rgba(0,0,0,0.55);
+    }
+
+    /* tournament logo */
+    .off-logo {
+      width: 88px;
+      height: 88px;
+      object-fit: contain;
+      border-radius: 12px;
+      margin-bottom: 28px;
+      filter: drop-shadow(0 4px 16px var(--off-glow));
+    }
+    .off-logo-placeholder {
+      width: 88px;
+      height: 88px;
+      border-radius: 12px;
+      margin: 0 auto 28px;
+      background: var(--off-dim);
+      border: 1px solid var(--off-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.4rem;
+    }
+
+    /* status pill */
+    .off-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.30);
+      border-radius: 100px;
+      padding: 6px 18px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      color: #f87171;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+    }
+    .off-badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ef4444;
+    }
+
+    .off-headline {
+      font-family: 'Rajdhani', 'Montserrat', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: var(--off-text);
+    }
+
+    .off-sub {
+      font-size: 0.95rem;
+      color: var(--off-sub);
+      line-height: 1.7;
+      max-width: 420px;
+      margin: 0 auto 40px;
+    }
+
+    /* divider */
+    .off-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--off-accent), transparent);
+      opacity: 0.35;
+      margin-bottom: 36px;
+    }
+
+    /* info pills row */
+    .off-info-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+    .off-info-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      color: var(--off-sub);
+    }
+    .off-info-item i {
+      color: var(--off-accent2);
+      font-size: 0.9rem;
+    }
+
+    /* refresh hint */
+    .off-refresh {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--off-dim);
+      border: 1px solid var(--off-border);
+      border-radius: 10px;
+      padding: 12px 24px;
+      font-size: 0.82rem;
+      color: var(--off-sub);
+    }
+    .off-refresh i {
+      color: var(--off-accent2);
+      animation: spin 3s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* footer */
+    .off-footer {
+      position: fixed;
+      bottom: 24px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.18);
+      letter-spacing: 0.08em;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="off-card">
+
+    <!-- Logo -->
+    <t t-if="tournament.logo">
+      <img class="off-logo"
+           t-att-src="'/web/image/auction.tournament/%d/logo' % tournament.id"
+           t-att-alt="tournament.name"/>
+    </t>
+    <t t-else="">
+      <div class="off-logo-placeholder">&#127942;</div>
+    </t>
+
+    <!-- Status badge -->
+    <div class="off-badge">
+      <span class="off-badge-dot"/>
+      Broadcast Offline
+    </div>
+
+    <!-- Headline -->
+    <div class="off-headline">Live Updates Are Not Active</div>
+
+    <!-- Subtitle -->
+    <p class="off-sub">
+      The live auction board for <strong><t t-esc="tournament.name"/></strong> is currently
+      offline. The broadcast will resume when the auction administrator activates the live feed.
+    </p>
+
+    <div class="off-divider"/>
+
+    <!-- Info row -->
+    <div class="off-info-row">
+      <span class="off-info-item">
+        <i class="fa fa-shield-alt"/>
+        <span>Official Auction Platform</span>
+      </span>
+      <span class="off-info-item">
+        <i class="fa fa-clock"/>
+        <span>Updates stream in real-time when live</span>
+      </span>
+      <span class="off-info-item">
+        <i class="fa fa-lock"/>
+        <span>Secure &amp; Verified Feed</span>
+      </span>
+    </div>
+
+    <!-- Refresh hint -->
+    <div class="off-refresh">
+      <i class="fa fa-sync-alt"/>
+      This page will automatically refresh when the board goes live.
+    </div>
+  </div>
+
+  <div class="off-footer">
+    <t t-esc="tournament.name"/> &#160;&#183;&#160; Powered by Auction Champ
+  </div>
+
+  <script>
+    // Poll every 15 seconds; reload the page when the board goes live
+    (function () {
+      var dataUrl = window.location.href.replace('/auction/live-board', '/auction/live-board/data');
+      function check() {
+        fetch(dataUrl)
+          .then(function(r){ return r.json(); })
+          .then(function(d){
+            if (d.live_board_active !== false) {
+              window.location.reload();
+            }
+          })
+          .catch(function(){});
+      }
+      setInterval(check, 15000);
+    })();
+  </script>
+</body>
+</html>
+</template>
+
+
+
 </odoo>

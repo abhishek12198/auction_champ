@@ -822,6 +822,12 @@ class Auction(http.Controller):
                     'theme': theme,
                     'db_name': db_name,
                 }, lazy=False)
+            elif not tournament.live_board_active:
+                html = request.render('auction_module.live_board_offline_template', {
+                    'tournament': tournament,
+                    'theme': theme,
+                    'db_name': db_name,
+                }, lazy=False)
             else:
                 html = request.render('auction_module.public_live_board_template', {
                     'tournament': tournament,
@@ -884,6 +890,12 @@ class Auction(http.Controller):
             if not tournament:
                 return request.make_response(
                     json.dumps({'error': 'tournament not found'}),
+                    headers=[('Content-Type', 'application/json')]
+                )
+
+            if not tournament.live_board_active:
+                return request.make_response(
+                    json.dumps({'live_board_active': False}),
                     headers=[('Content-Type', 'application/json')]
                 )
 

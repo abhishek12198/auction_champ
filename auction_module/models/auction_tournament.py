@@ -95,6 +95,12 @@ class AuctionTournament(models.Model):
         help="When enabled, the public player self-registration form is accessible. "
              "Disable this to close registrations at any point.",
     )
+    live_board_active = fields.Boolean(
+        string='Live Board Active',
+        default=False,
+        help='When enabled, the public /auction/live-board page streams live auction data. '
+             'When disabled, visitors see an offline holding page instead.',
+    )
     max_registrations = fields.Integer(
         string='Max Registrations',
         default=0,
@@ -140,6 +146,11 @@ class AuctionTournament(models.Model):
         """Toggle the registration open/closed state."""
         for rec in self:
             rec.registration_open = not rec.registration_open
+
+    def action_toggle_live_board(self):
+        """Toggle the live board active/stopped state."""
+        for rec in self:
+            rec.live_board_active = not rec.live_board_active
 
     def action_open_registration_link(self):
         """Open the public player registration form in a new browser tab."""

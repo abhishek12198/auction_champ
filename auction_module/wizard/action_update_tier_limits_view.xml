@@ -51,7 +51,7 @@
             </field>
         </record>
 
-        <delete model="ir.actions.act_window" id="action_update_tier_limits"/>
+        <!-- action_update_tier_limits act_window was removed; delete tag omitted to avoid upgrade errors -->
 
         <!-- Server action bound to the auction.auction list view -->
         <record id="action_update_tier_limits_server" model="ir.actions.server">

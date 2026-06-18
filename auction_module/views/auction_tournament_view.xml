@@ -40,6 +40,7 @@
                     <sheet>
                         <field name="active" invisible="1"/>
                         <field name="registration_open" invisible="1"/>
+                        <field name="live_board_active" invisible="1"/>
                         <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
                                 attrs="{'invisible': [('active', '=', True)]}"/>
 
@@ -66,6 +67,29 @@
                                 <div class="o_stat_info">
                                     <span class="o_stat_text text-danger">Registration</span>
                                     <span class="o_stat_text text-danger" style="font-size:10px">CLOSED &#8212; Click to Open</span>
+                                </div>
+                            </button>
+                            <!-- Live Board toggle -->
+                            <button name="action_toggle_live_board"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    attrs="{'invisible': [('live_board_active', '=', False)]}"
+                                    icon="fa-broadcast-tower"
+                                    help="Live Board is ACTIVE — click to stop it">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text text-success">Live Board</span>
+                                    <span class="o_stat_text text-success" style="font-size:10px">LIVE &#8212; Click to Stop</span>
+                                </div>
+                            </button>
+                            <button name="action_toggle_live_board"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    attrs="{'invisible': [('live_board_active', '=', True)]}"
+                                    icon="fa-pause-circle"
+                                    help="Live Board is STOPPED — click to start it">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text text-danger">Live Board</span>
+                                    <span class="o_stat_text text-danger" style="font-size:10px">STOPPED &#8212; Click to Start</span>
                                 </div>
                             </button>
                             <!-- Registered player count stat button -->
