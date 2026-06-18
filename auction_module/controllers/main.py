@@ -235,7 +235,7 @@ class Auction(http.Controller):
         return [
             {
                 'message': rec.message,
-                'timestamp': rec.create_date.strftime('%d-%m-%Y %H:%M:%S'),
+                'timestamp': rec.create_date.replace(tzinfo=pytz.utc).astimezone(pytz.timezone('Asia/Kolkata')).strftime('%d-%m-%Y %I:%M:%S %p'),
                 'avatar_base64':rec.player_photo,
                 'avatar_team':  rec.team_id and rec.team_id.logo or False,
                 # 'author': rec.author
@@ -976,7 +976,7 @@ class Auction(http.Controller):
                     'message': rec.message or '',
                     'team_logo_url': pub_img('auction.team', rec.team_id.id, 'logo') if rec.team_id and rec.team_id.logo else '',
                     'player_photo_url': pub_img('auction.history', rec.id, 'player_photo') if rec.player_photo else '',
-                    'timestamp': rec.create_date.strftime('%H:%M') if rec.create_date else '',
+                    'timestamp': rec.create_date.replace(tzinfo=pytz.utc).astimezone(pytz.timezone('Asia/Kolkata')).strftime('%I:%M %p') if rec.create_date else '',
                 }
                 for rec in history
             ]
