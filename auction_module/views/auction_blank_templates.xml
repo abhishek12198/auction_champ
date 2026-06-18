@@ -2331,20 +2331,29 @@ img { display: block; }
       height: 88px;
       object-fit: contain;
       border-radius: 12px;
-      margin-bottom: 28px;
+      margin-bottom: 16px;
       filter: drop-shadow(0 4px 16px var(--off-glow));
     }
     .off-logo-placeholder {
       width: 88px;
       height: 88px;
       border-radius: 12px;
-      margin: 0 auto 28px;
+      margin: 0 auto 16px;
       background: var(--off-dim);
       border: 1px solid var(--off-border);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 2.4rem;
+    }
+    .off-tournament-name {
+      font-family: 'Rajdhani', 'Montserrat', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--off-accent2);
+      margin-bottom: 28px;
     }
 
     /* status pill */
@@ -2452,15 +2461,16 @@ img { display: block; }
 <body>
   <div class="off-card">
 
-    <!-- Logo -->
+    <!-- Logo + Tournament name -->
     <t t-if="tournament.logo">
       <img class="off-logo"
-           t-att-src="'/web/image/auction.tournament/%d/logo' % tournament.id"
+           t-att-src="'data:image/png;base64,' + tournament.logo.decode('utf-8')"
            t-att-alt="tournament.name"/>
     </t>
     <t t-else="">
       <div class="off-logo-placeholder">&#127942;</div>
     </t>
+    <div class="off-tournament-name"><t t-esc="tournament.name"/></div>
 
     <!-- Status badge -->
     <div class="off-badge">
