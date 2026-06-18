@@ -737,7 +737,7 @@ class Auction(http.Controller):
     }
 
     @http.route('/auction/public/image/<string:model>/<int:record_id>/<string:field>',
-                type='http', auth='public', website=True, csrf=False)
+                type='http', auth='public', website=False, csrf=False)
     def auction_public_image(self, model, record_id, field, **kw):
         """Serve binary images to unauthenticated users for the public live-board."""
         allowed_fields = self._PUBLIC_IMAGE_FIELDS.get(model)
