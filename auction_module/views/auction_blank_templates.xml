@@ -1219,7 +1219,7 @@ img { display: block; }
   <div class="lb-hdr-left">
     <t t-if="tournament and tournament.logo">
       <div class="lb-t-logo">
-        <img t-att-src="'/auction/public/image/auction.tournament/%d/logo' % tournament.id" alt="Logo"/>
+        <img t-att-src="'/%s/auction/public/image/auction.tournament/%d/logo' % (db_name, tournament.id)" alt="Logo"/>
       </div>
     </t>
     <t t-else="">

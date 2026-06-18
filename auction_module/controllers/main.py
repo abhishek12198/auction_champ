@@ -758,6 +758,36 @@ class Auction(http.Controller):
             ('Cache-Control', 'public, max-age=300'),  # 5-min browser cache
         ])
 
+    @http.route('/<string:db_name>/auction/public/image/<string:model>/<int:record_id>/<string:field>',
+                type='http', auth='none', website=False, csrf=False)
+    def auction_public_image_db(self, db_name, model, record_id, field, **kw):
+        """Same as auction_public_image but with an explicit db_name in the URL.
+
+        Used by the public live-board in multi-database setups where no session
+        exists and Odoo cannot infer the database automatically.
+        """
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return self._not_found()
+
+            allowed_fields = self._PUBLIC_IMAGE_FIELDS.get(model)
+            if not allowed_fields or field not in allowed_fields:
+                return self._not_found()
+
+            record = request.env[model].sudo().browse(record_id)
+            if not record.exists():
+                return self._not_found()
+
+            binary = getattr(record, field, None)
+            if not binary:
+                return self._not_found()
+
+            image_bytes = base64.b64decode(binary)
+        return request.make_response(image_bytes, headers=[
+            ('Content-Type', 'image/png'),
+            ('Cache-Control', 'public, max-age=300'),
+        ])
+
     @http.route('/auction/live-board', type='http', auth='none', website=False)
     def auction_live_board_legacy(self, **kw):
         """Redirect legacy /auction/live-board URL to the db-slug-based URL."""
@@ -900,7 +930,7 @@ class Auction(http.Controller):
                 )
 
             def pub_img(model, record_id, field):
-                return '/auction/public/image/%s/%d/%s' % (model, record_id, field)
+                return '/%s/auction/public/image/%s/%d/%s' % (db_name, model, record_id, field)
 
             result = {
                 'tournament': {},
