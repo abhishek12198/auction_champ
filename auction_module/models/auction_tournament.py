@@ -101,6 +101,17 @@ class AuctionTournament(models.Model):
         help='When enabled, the public /auction/live-board page streams live auction data. '
              'When disabled, visitors see an offline holding page instead.',
     )
+    break_time_active = fields.Boolean(
+        string='Break Time',
+        default=False,
+        help='When enabled, the live board shows a "Break Time" screen to viewers. '
+             'The auction can continue in the background. Disable to resume the live display.',
+    )
+    advertiser_ids = fields.One2many(
+        'auction.advertiser', 'tournament_id', string='Advertisers / Sponsors',
+        help='Upload sponsor or advertiser images. They rotate on the live board '
+             'and are displayed prominently during break time.',
+    )
     max_registrations = fields.Integer(
         string='Max Registrations',
         default=0,
@@ -151,6 +162,19 @@ class AuctionTournament(models.Model):
         """Toggle the live board active/stopped state."""
         for rec in self:
             rec.live_board_active = not rec.live_board_active
+
+    def action_toggle_break_time(self):
+        """Toggle the break time screen on the live board."""
+        for rec in self:
+            rec.break_time_active = not rec.break_time_active
+
+    def action_clear_stage(self):
+        """Clear the is_on_stage flag from all players in this tournament."""
+        for rec in self:
+            self.env['auction.team.player'].sudo().search([
+                ('tournament_id', '=', rec.id),
+                ('is_on_stage', '=', True),
+            ]).write({'is_on_stage': False})
 
     def action_open_registration_link(self):
         """Open the public player registration form in a new browser tab."""

@@ -734,6 +734,7 @@ class Auction(http.Controller):
         'auction.team':        ['logo'],
         'auction.tournament':  ['logo'],
         'auction.history':     ['player_photo'],
+        'auction.advertiser':  ['image'],
     }
 
     @http.route('/auction/public/image/<string:model>/<int:record_id>/<string:field>',
@@ -941,10 +942,20 @@ class Auction(http.Controller):
                 'teams': [],
                 'theme': 'vanilla',
                 'no_auction': True,
+                'break_time': False,
+                'advertisers': [],
             }
 
             if tournament:
                 result['theme'] = tournament.player_display_template or 'vanilla'
+                result['break_time'] = tournament.break_time_active
+                result['advertisers'] = [
+                    {
+                        'name': ad.name or '',
+                        'image_url': pub_img('auction.advertiser', ad.id, 'image'),
+                    }
+                    for ad in tournament.advertiser_ids if ad.image
+                ]
                 result['tournament'] = {
                     'name': tournament.name or '',
                     'description': tournament.description or '',
@@ -1059,6 +1070,16 @@ class Auction(http.Controller):
                         'logo_url': pub_img('auction.team', team.id, 'logo') if team.logo else '',
                         'remaining_points': auc.remaining_points,
                         'manager': team.manager or '',
+                        'players': [
+                            {
+                                'name': line.player_id.name or '',
+                                'photo_url': pub_img('auction.team.player', line.player_id.id, 'photo')
+                                             if line.player_id and line.player_id.photo else '',
+                                'role': line.player_id.role or '',
+                                'points': line.points,
+                            }
+                            for line in auc.player_ids if line.player_id
+                        ],
                     })
 
         return request.make_response(

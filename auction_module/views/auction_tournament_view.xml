@@ -41,6 +41,7 @@
                         <field name="active" invisible="1"/>
                         <field name="registration_open" invisible="1"/>
                         <field name="live_board_active" invisible="1"/>
+                        <field name="break_time_active" invisible="1"/>
                         <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
                                 attrs="{'invisible': [('active', '=', True)]}"/>
 
@@ -92,6 +93,29 @@
                                     <span class="o_stat_text text-danger" style="font-size:10px">STOPPED &#8212; Click to Start</span>
                                 </div>
                             </button>
+                            <!-- Break Time toggle -->
+                            <button name="action_toggle_break_time"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    attrs="{'invisible': [('break_time_active', '=', False)]}"
+                                    icon="fa-coffee"
+                                    help="Break Time is ACTIVE — click to resume live board">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text text-warning">Break Time</span>
+                                    <span class="o_stat_text text-warning" style="font-size:10px">ON &#8212; Click to Resume</span>
+                                </div>
+                            </button>
+                            <button name="action_toggle_break_time"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    attrs="{'invisible': [('break_time_active', '=', True)]}"
+                                    icon="fa-coffee"
+                                    help="Show a Break Time screen on the live board">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text text-muted">Break Time</span>
+                                    <span class="o_stat_text text-muted" style="font-size:10px">OFF &#8212; Click to Start</span>
+                                </div>
+                            </button>
                             <!-- Registered player count stat button -->
                             <button class="oe_stat_button" type="object"
                                     name="action_toggle_registration"
@@ -116,6 +140,18 @@
                                 </div>
                             </button>
                             <!-- Remove duplicate players -->
+                            <!-- Clear On-Stage Players -->
+                            <button name="action_clear_stage"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    icon="fa-times-circle"
+                                    confirm="This will clear all players currently on stage. Continue?"
+                                    help="Remove the on-stage flag from all players (resets the live auction display)">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text text-danger">Clear Stage</span>
+                                    <span class="o_stat_text text-danger" style="font-size:10px">Reset On-Stage</span>
+                                </div>
+                            </button>
 
                         </div>
 
@@ -258,6 +294,26 @@
                             <!-- Tab 5: Rules & Regulations -->
                             <page string="Rules &amp; Regulations" name="rules">
                                 <field name="rules_regulations" nolabel="1"/>
+                            </page>
+
+                            <!-- Tab 6: Advertisers / Sponsors -->
+                            <page string="Advertisers" name="advertisers">
+                                <p class="text-muted" style="margin-bottom:12px;">
+                                    Upload sponsor or advertiser images here. They will
+                                    <strong>rotate on the live board</strong> footer at all times, and appear
+                                    <strong>prominently during Break Time</strong> on the auction screen.
+                                    Recommended image size: <strong>800 × 300 px</strong> (landscape).
+                                </p>
+                                <field name="advertiser_ids" nolabel="1">
+                                    <tree editable="bottom">
+                                        <field name="sequence" widget="handle"/>
+                                        <field name="name" string="Advertiser / Sponsor"/>
+                                        <field name="image" widget="image"
+                                               options="{'preview_image': 'image', 'size': [120, 45]}"
+                                               string="Banner / Logo"/>
+                                        <field name="active"/>
+                                    </tree>
+                                </field>
                             </page>
 
                         </notebook>

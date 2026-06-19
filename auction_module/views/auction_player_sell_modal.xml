@@ -798,6 +798,42 @@
 
     soldScreen.classList.add('visible');
 
+    // ── Pre-fetch the next player HTML in the background while countdown runs.
+    // On cloud the fetch takes 300-800ms; doing it during the 5-second sold
+    // animation means the HTML is ready the instant the countdown hits zero.
+    var _preFetchedHtml = null;
+    var _preFetchDone   = false;
+    var _preFetchId     = document.body.getAttribute('data-player-id');
+    if (_preFetchId) {
+      var _prefetchUrl = window.location.href.split('?')[0] + '?exclude=' + _preFetchId;
+      fetch(_prefetchUrl, { cache: 'no-store' })
+        .then(function(r) { return r.ok ? r.text() : null; })
+        .then(function(html) { _preFetchedHtml = html; _preFetchDone = true; })
+        .catch(function()    { _preFetchDone = true; });
+    } else {
+      _preFetchDone = true;
+    }
+
+    // Advance to the next player using the pre-fetched HTML when available,
+    // otherwise fall back to calling changeImage() which will re-fetch.
+    function smAdvance() {
+      if (_preFetchedHtml) {
+        var parser     = new DOMParser();
+        var newDoc     = parser.parseFromString(_preFetchedHtml, 'text/html');
+        var newId      = newDoc.body ? newDoc.body.getAttribute('data-player-id') : null;
+        var zone       = document.querySelector('[data-player-zone]');
+        var newZone    = newDoc.querySelector('[data-player-zone]');
+        if (newId && newId !== _preFetchId && zone && newZone) {
+          document.body.setAttribute('data-player-id', newId);
+          zone.innerHTML = newZone.innerHTML;
+          return;
+        }
+      }
+      // Fallback: pre-fetch failed or same player — let changeImage handle it
+      if (typeof changeImage === 'function') { changeImage(true); }
+      else { window.location.reload(); }
+    }
+
     // Countdown
     var totalSecs = (result.display_seconds && result.display_seconds > 0) ? result.display_seconds : 5;
     var remaining = totalSecs;
@@ -820,7 +856,15 @@
         document.getElementById('sellModal').classList.remove('open');
         document.getElementById('smSoldScreen').classList.remove('visible');
         document.getElementById('smFormPanel').style.display = 'block';
-        if (typeof changeImage === 'function') { changeImage(true); } else { window.location.reload(); }
+        // If pre-fetch is still in-flight, wait for it (adds at most a few ms
+        // on cloud since it started seconds ago); otherwise advance immediately.
+        if (_preFetchDone) {
+          smAdvance();
+        } else {
+          var _waitId = setInterval(function() {
+            if (_preFetchDone) { clearInterval(_waitId); smAdvance(); }
+          }, 50);
+        }
       }
     }, 1000);
   }

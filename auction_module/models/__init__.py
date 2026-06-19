@@ -2,6 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 from . import auction_tournament
 from . import auction_tournament_point_split
+from . import auction_advertiser
 from . import auction_team
 from . import auction_history
 from . import res_users

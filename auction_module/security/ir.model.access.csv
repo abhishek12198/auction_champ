@@ -64,3 +64,6 @@ access_auction_migrate_tier_admin,auction.migrate.tier (admin),auction_module.mo
 access_auction_migrate_tier_user,auction.migrate.tier (user),auction_module.model_auction_migrate_tier,auction_module.group_auction_group,1,1,1,1
 access_auction_migrate_tier_line_admin,auction.migrate.tier.line (admin),auction_module.model_auction_migrate_tier_line,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_migrate_tier_line_user,auction.migrate.tier.line (user),auction_module.model_auction_migrate_tier_line,auction_module.group_auction_group,1,1,1,1
+access_auction_advertiser_user,auction.advertiser (user),auction_module.model_auction_advertiser,auction_module.group_auction_group,1,1,1,1
+access_auction_advertiser_admin,auction.advertiser (admin),auction_module.model_auction_advertiser,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_advertiser_public,auction.advertiser (public),auction_module.model_auction_advertiser,base.group_public,1,0,0,0
