@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <!--
+        Website Configurator entries under:
+        Auction Settings → Configuration → Website ...
+
+        All items are admin-only, matching the existing Configuration sub-menu access group.
+    -->
+
+    <!-- Website Configurator (singleton form) -->
+    <menuitem
+        id="menu_auction_website_config"
+        name="Website Configurator"
+        parent="auction_module.menu_action_auction_conf"
+        action="auction_champ_website.action_auction_website_config"
+        groups="auction_module.group_auction_group_admin"
+        sequence="10"/>
+
+    <!-- Website FAQ -->
+    <menuitem
+        id="menu_auction_website_faq"
+        name="Website FAQ"
+        parent="auction_module.menu_action_auction_conf"
+        action="auction_champ_website.action_auction_website_faq"
+        groups="auction_module.group_auction_group_admin"
+        sequence="11"/>
+
+    <!-- Website Pricing Plans -->
+    <menuitem
+        id="menu_auction_website_pricing"
+        name="Website Pricing Plans"
+        parent="auction_module.menu_action_auction_conf"
+        action="auction_champ_website.action_auction_website_pricing"
+        groups="auction_module.group_auction_group_admin"
+        sequence="12"/>
+
+</data>
+</odoo>

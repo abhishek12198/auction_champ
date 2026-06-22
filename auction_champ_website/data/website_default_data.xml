@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <data>
+
+        <!-- ── Default FAQ Items ─────────────────────────────────────── -->
+        <record id="faq_1" model="auction.website.faq">
+            <field name="question">How does player registration work?</field>
+            <field name="answer">Players register through a unique public registration link shared by the organizer. They fill in their profile (name, photo, playing role, batting/bowling details, jersey size) and submit. The organizer reviews and approves each registration before the auction begins.</field>
+            <field name="sequence">1</field>
+        </record>
+
+        <record id="faq_2" model="auction.website.faq">
+            <field name="question">Can I conduct auctions online?</field>
+            <field name="answer">Yes! AuctionChamp provides a fully digital live auction dashboard. Players are presented one by one and bids are placed in real time. The system automatically validates team budgets, tracks bid history, and marks players as sold or unsold.</field>
+            <field name="sequence">2</field>
+        </record>
+
+        <record id="faq_3" model="auction.website.faq">
+            <field name="question">Can team owners bid remotely?</field>
+            <field name="answer">Absolutely. Team owners and managers can participate in auctions from any device with a browser. The live auction display screen and bid board can be shared publicly, making remote participation seamless for all stakeholders.</field>
+            <field name="sequence">3</field>
+        </record>
+
+        <record id="faq_4" model="auction.website.faq">
+            <field name="question">Can fixtures be generated automatically?</field>
+            <field name="answer">Yes. AuctionChamp supports league, pool-based, knockout, round-robin, and hybrid fixture formats. With a single click, fixtures are generated automatically based on the number of teams, venues, and scheduling preferences you define.</field>
+            <field name="sequence">4</field>
+        </record>
+
+        <record id="faq_5" model="auction.website.faq">
+            <field name="question">Does AuctionChamp support multiple tournaments?</field>
+            <field name="answer">AuctionChamp is designed to manage complete tournament seasons. You can run multiple tournaments sequentially and maintain historical data, player statistics, and auction records for every season.</field>
+            <field name="sequence">5</field>
+        </record>
+
+        <record id="faq_6" model="auction.website.faq">
+            <field name="question">Can I host it on my own domain?</field>
+            <field name="answer">AuctionChamp is a cloud-hosted platform. You can access your tournament portal via the provided URL or reach out to our team to discuss custom domain and white-labelling options for enterprise clients.</field>
+            <field name="sequence">6</field>
+        </record>
+
+        <!-- ── Default Pricing Plans ──────────────────────────────────── -->
+        <record id="pricing_starter" model="auction.website.pricing">
+            <field name="name">Starter Plan</field>
+            <field name="subtitle">Perfect for small local leagues</field>
+            <field name="features">Up to 2 Tournaments
+Up to 10 Teams per Auction
+Up to 150 Players
+Live Auction Dashboard
+Player Registration Portal
+Basic Fixture Management
+PDF Player Cards
+Email Support</field>
+            <field name="contact_url">mailto:sales@auctionchamp.in?subject=Starter Plan Enquiry</field>
+            <field name="is_highlighted">False</field>
+            <field name="sequence">1</field>
+        </record>
+
+        <record id="pricing_professional" model="auction.website.pricing">
+            <field name="name">Professional Plan</field>
+            <field name="subtitle">Built for growing tournaments</field>
+            <field name="badge">Most Popular</field>
+            <field name="features">Up to 5 Tournaments
+Unlimited Teams
+Unlimited Players
+Live Auction + Live Display Screen
+Icon Player Management
+Automatic Fixture Generator
+Points Table &amp; NRR Calculator
+Sponsor &amp; Branding Management
+Statistics &amp; Analytics
+Priority Support</field>
+            <field name="contact_url">mailto:sales@auctionchamp.in?subject=Professional Plan Enquiry</field>
+            <field name="is_highlighted">True</field>
+            <field name="sequence">2</field>
+        </record>
+
+        <record id="pricing_enterprise" model="auction.website.pricing">
+            <field name="name">Enterprise Plan</field>
+            <field name="subtitle">For large-scale &amp; multi-city tournaments</field>
+            <field name="features">Unlimited Tournaments
+Unlimited Teams &amp; Players
+All Professional Features
+Custom Branding &amp; Domain
+Multi-admin Access
+Advanced Auction Analytics
+Financial Reports &amp; Excel Export
+Dedicated Account Manager
+SLA-backed Support</field>
+            <field name="contact_url">mailto:sales@auctionchamp.in?subject=Enterprise Plan Enquiry</field>
+            <field name="is_highlighted">False</field>
+            <field name="sequence">3</field>
+        </record>
+
+    </data>
+</odoo>

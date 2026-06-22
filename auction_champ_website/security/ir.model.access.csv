@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_auction_website_config_public,auction.website.config public,model_auction_website_config,base.group_public,1,0,0,0
+access_auction_website_config_user,auction.website.config user,model_auction_website_config,base.group_user,1,0,0,0
+access_auction_website_config_admin,auction.website.config admin,model_auction_website_config,base.group_system,1,1,1,1
+access_auction_website_faq_public,auction.website.faq public,model_auction_website_faq,base.group_public,1,0,0,0
+access_auction_website_faq_user,auction.website.faq user,model_auction_website_faq,base.group_user,1,0,0,0
+access_auction_website_faq_admin,auction.website.faq admin,model_auction_website_faq,base.group_system,1,1,1,1
+access_auction_website_pricing_public,auction.website.pricing public,model_auction_website_pricing,base.group_public,1,0,0,0
+access_auction_website_pricing_user,auction.website.pricing user,model_auction_website_pricing,base.group_user,1,0,0,0
+access_auction_website_pricing_admin,auction.website.pricing admin,model_auction_website_pricing,base.group_system,1,1,1,1

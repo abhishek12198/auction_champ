@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <!--
+        Override Odoo's global web layout to replace the default favicon
+        with the AuctionChamp icon across all backend and website pages.
+    -->
+    <template id="web_layout_favicon" inherit_id="web.layout" name="AuctionChamp Favicon">
+        <xpath expr="//link[@rel='shortcut icon']" position="replace">
+            <link rel="shortcut icon"
+                  href="/auction_module/static/description/icon.png"
+                  type="image/png"/>
+        </xpath>
+    </template>
+
+</data>
+</odoo>

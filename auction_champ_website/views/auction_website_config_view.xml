@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <!-- ── Form view ─────────────────────────────────────────────── -->
+    <record id="view_auction_website_config_form" model="ir.ui.view">
+        <field name="name">auction.website.config.form</field>
+        <field name="model">auction.website.config</field>
+        <field name="arch" type="xml">
+            <form string="Website Configurator">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>AuctionChamp Website Configurator</h1>
+                        <p class="text-muted">
+                            Changes here are reflected immediately on the public website at <strong>/</strong>
+                        </p>
+                    </div>
+
+                    <notebook>
+
+                        <!-- Tab 1 — Hero -->
+                        <page string="Hero Section" name="hero">
+                            <group string="Headline &amp; Sub-heading">
+                                <field name="hero_headline" placeholder="India's Complete Cricket Auction &amp; Tournament Management Platform"/>
+                                <field name="hero_subheading" placeholder="Manage Player Registrations..."/>
+                            </group>
+                            <group string="CTA Button URLs">
+                                <field name="demo_url" placeholder="#contact  or  /contact"/>
+                                <field name="watch_auction_url" placeholder="/auction/showcase"/>
+                            </group>
+                        </page>
+
+                        <!-- Tab 2 — Statistics -->
+                        <page string="Statistics" name="stats">
+                            <group string="Stat 1">
+                                <field name="stat_1_value" placeholder="100+"/>
+                                <field name="stat_1_label" placeholder="Tournaments Managed"/>
+                            </group>
+                            <group string="Stat 2">
+                                <field name="stat_2_value" placeholder="10,000+"/>
+                                <field name="stat_2_label" placeholder="Players Registered"/>
+                            </group>
+                            <group string="Stat 3">
+                                <field name="stat_3_value" placeholder="500+"/>
+                                <field name="stat_3_label" placeholder="Teams Managed"/>
+                            </group>
+                            <group string="Stat 4">
+                                <field name="stat_4_value" placeholder="Live"/>
+                                <field name="stat_4_label" placeholder="Auction Automation"/>
+                            </group>
+                        </page>
+
+                        <!-- Tab 3 — Testimonials -->
+                        <page string="Testimonials" name="testimonials">
+                            <group string="Testimonial 1">
+                                <field name="testimonial_1_text"/>
+                                <field name="testimonial_1_author" placeholder="Name"/>
+                                <field name="testimonial_1_role" placeholder="Role / Title"/>
+                            </group>
+                            <group string="Testimonial 2">
+                                <field name="testimonial_2_text"/>
+                                <field name="testimonial_2_author" placeholder="Name"/>
+                                <field name="testimonial_2_role" placeholder="Role / Title"/>
+                            </group>
+                            <group string="Testimonial 3">
+                                <field name="testimonial_3_text"/>
+                                <field name="testimonial_3_author" placeholder="Name"/>
+                                <field name="testimonial_3_role" placeholder="Role / Title"/>
+                            </group>
+                        </page>
+
+                        <!-- Tab 4 — Final CTA -->
+                        <page string="Call to Action" name="cta">
+                            <group string="Final CTA Section Buttons">
+                                <field name="book_demo_url"      placeholder="#contact"/>
+                                <field name="contact_sales_url"  placeholder="mailto:sales@auctionchamp.in"/>
+                            </group>
+                        </page>
+
+                        <!-- Tab 5 — Contact &amp; Social -->
+                        <page string="Contact &amp; Social" name="contact">
+                            <group string="Contact Information">
+                                <field name="contact_email"  placeholder="support@auctionchamp.in"/>
+                                <field name="contact_phone"  placeholder="+91 XXXXX XXXXX"/>
+                            </group>
+                            <group string="Social Media URLs">
+                                <field name="social_facebook"  placeholder="https://facebook.com/..."/>
+                                <field name="social_twitter"   placeholder="https://twitter.com/..."/>
+                                <field name="social_instagram" placeholder="https://instagram.com/..."/>
+                                <field name="social_youtube"   placeholder="https://youtube.com/..."/>
+                            </group>
+                        </page>
+
+                        <!-- Tab 6 — Footer -->
+                        <page string="Footer" name="footer">
+                            <group string="Footer Text">
+                                <field name="about_us_text"/>
+                                <field name="footer_tagline" placeholder="Powering the Future of Cricket Auctions..."/>
+                            </group>
+                        </page>
+
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Server action to open the singleton form ──────────────── -->
+    <record id="action_auction_website_config" model="ir.actions.server">
+        <field name="name">Website Configurator</field>
+        <field name="model_id" ref="auction_champ_website.model_auction_website_config"/>
+        <field name="state">code</field>
+        <field name="code">
+config = env['auction.website.config'].get_singleton()
+action = {
+    'type': 'ir.actions.act_window',
+    'name': 'Website Configurator',
+    'res_model': 'auction.website.config',
+    'res_id': config.id,
+    'view_mode': 'form',
+    'target': 'current',
+}
+        </field>
+    </record>
+
+</data>
+</odoo>

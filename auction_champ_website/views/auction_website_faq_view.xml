@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <!-- List view -->
+    <record id="view_auction_website_faq_list" model="ir.ui.view">
+        <field name="name">auction.website.faq.list</field>
+        <field name="model">auction.website.faq</field>
+        <field name="arch" type="xml">
+            <tree string="Website FAQ" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="question"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form view -->
+    <record id="view_auction_website_faq_form" model="ir.ui.view">
+        <field name="name">auction.website.faq.form</field>
+        <field name="model">auction.website.faq</field>
+        <field name="arch" type="xml">
+            <form string="FAQ Item">
+                <sheet>
+                    <group>
+                        <field name="sequence"/>
+                        <field name="active"/>
+                        <field name="question" placeholder="e.g. How does player registration work?"/>
+                        <field name="answer"   placeholder="Enter the answer..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_auction_website_faq" model="ir.actions.act_window">
+        <field name="name">Website FAQ</field>
+        <field name="res_model">auction.website.faq</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+</data>
+</odoo>

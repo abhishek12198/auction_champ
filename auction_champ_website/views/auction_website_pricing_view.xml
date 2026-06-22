@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <!-- List view -->
+    <record id="view_auction_website_pricing_list" model="ir.ui.view">
+        <field name="name">auction.website.pricing.list</field>
+        <field name="model">auction.website.pricing</field>
+        <field name="arch" type="xml">
+            <tree string="Pricing Plans" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="subtitle"/>
+                <field name="badge"/>
+                <field name="is_highlighted"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form view -->
+    <record id="view_auction_website_pricing_form" model="ir.ui.view">
+        <field name="name">auction.website.pricing.form</field>
+        <field name="model">auction.website.pricing</field>
+        <field name="arch" type="xml">
+            <form string="Pricing Plan">
+                <sheet>
+                    <group>
+                        <group string="Plan Details">
+                            <field name="sequence"/>
+                            <field name="name"           placeholder="e.g. Professional Plan"/>
+                            <field name="subtitle"       placeholder="e.g. Built for growing tournaments"/>
+                            <field name="badge"          placeholder="e.g. Most Popular"/>
+                            <field name="is_highlighted"/>
+                            <field name="active"/>
+                            <field name="contact_url"    placeholder="mailto:sales@auctionchamp.in"/>
+                        </group>
+                    </group>
+                    <group string="Features (one per line)">
+                        <field name="features"
+                               nolabel="1"
+                               placeholder="Up to 10 Teams&#10;Live Auction Dashboard&#10;Fixture Generator"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_auction_website_pricing" model="ir.actions.act_window">
+        <field name="name">Website Pricing Plans</field>
+        <field name="res_model">auction.website.pricing</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+</data>
+</odoo>
