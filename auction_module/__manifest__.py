@@ -83,6 +83,7 @@
                     '/auction_module/static/src/js/sold_toast.js',
                     '/auction_module/static/src/js/screenshot.js',
                     '/auction_module/static/src/js/pool_snapshot.js',
+                    '/auction_module/static/src/js/fixture_dnd.js',
                     # auction_live_queue.css is intentionally excluded from backend assets
                     # because it overrides html/body height and overflow which breaks
                     # Odoo's backend layout (including the Import File feature).

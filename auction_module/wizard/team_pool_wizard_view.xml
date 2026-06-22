@@ -6,6 +6,9 @@
         <field name="arch" type="xml">
             <form string="Team Pool Generator" class="o_form_sheet">
 
+                <!-- fields used in attrs must be declared in the view -->
+                <field name="pool_structure_json" invisible="1"/>
+
                 <group string="Select Teams">
                     <field name="team_ids" nolabel="1">
                         <kanban class="o_kanban_mobile" create="0" edit="0">
@@ -100,6 +103,49 @@
 
                 <div id="pool_snapshot_container">
                     <field name="result_html" nolabel="1"/>
+                </div>
+
+                <!-- ── Fixture Generator ──────────────────────────────── -->
+                <div attrs="{'invisible': [('pool_structure_json', '=', False)]}">
+                    <separator string="Fixture Generator"/>
+                    <p class="text-muted" style="font-size:.82rem;margin:-4px 0 10px;">
+                        Choose a fixture type and click <b>Generate Fixture</b>.
+                        Then <b>drag</b> match cards to reorder — numbers update live.
+                        Click <b>📸 Download Fixture Image</b> to save the final arrangement.
+                    </p>
+                    <group>
+                        <field name="fixture_type" string="Fixture Type"/>
+                        <field
+                            name="outside_pool_count"
+                            string="Teams per Team Outside Pool (N)"
+                            attrs="{'invisible': [('fixture_type', '!=', 'custom_outside')],
+                                    'required':  [('fixture_type', '=',  'custom_outside')]}"
+                        />
+                    </group>
+                    <div class="o_row">
+                        <button
+                            name="action_generate_fixture"
+                            type="object"
+                            string="📋 Generate Fixture"
+                            class="btn btn-success"
+                        />
+                    </div>
+
+                    <!-- fixture_html carries embedded JSON for JS; shown as a small status line -->
+                    <div attrs="{'invisible': [('fixture_html', '=', False)]}" class="mt-2">
+                        <field name="fixture_html" nolabel="1" readonly="1"/>
+                    </div>
+
+                    <!-- Drag-and-drop fixture board — populated by fixture_dnd.js -->
+                    <div attrs="{'invisible': [('fixture_html', '=', False)]}">
+                        <separator string="Fixture Schedule — Drag to Reorder"/>
+                        <div id="fixture_dnd_container" style="min-height:60px;"/>
+                        <div class="mt-2 text-end">
+                            <a href="#" class="btn btn-outline-success o_take_fixture_snapshot" role="button">
+                                📸 Download Fixture Image
+                            </a>
+                        </div>
+                    </div>
                 </div>
 
             </form>
