@@ -322,16 +322,113 @@
             </field>
         </record>
 
+        <record id="view_auction_tournament_kanban" model="ir.ui.view">
+            <field name="name">auction.tournament.kanban</field>
+            <field name="model">auction.tournament</field>
+            <field name="arch" type="xml">
+                <kanban class="o_auction_tournament_kanban" default_order="tournament_date desc">
+                    <field name="id"/>
+                    <field name="name"/>
+                    <field name="logo"/>
+                    <field name="description"/>
+                    <field name="tournament_type"/>
+                    <field name="tournament_date"/>
+                    <field name="venue"/>
+                    <field name="active"/>
+                    <field name="live_board_active"/>
+                    <field name="registered_player_count"/>
+                    <field name="team_max_points"/>
+                    <field name="organizer_uid"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div class="o_atk_card oe_kanban_global_click">
+
+                                <!-- Header: logo + name + type badge -->
+                                <div class="o_atk_header">
+                                    <div class="o_atk_logo_wrap">
+                                        <t t-if="record.logo.raw_value">
+                                            <img t-att-src="kanban_image('auction.tournament','logo', record.id.raw_value)"
+                                                 class="o_atk_logo" alt="Logo"/>
+                                        </t>
+                                        <t t-else="">
+                                            <div class="o_atk_logo_placeholder">
+                                                <i class="fa fa-trophy"/>
+                                            </div>
+                                        </t>
+                                    </div>
+                                    <div class="o_atk_title_block">
+                                        <div class="o_atk_name" t-esc="record.name.value"/>
+                                        <div class="o_atk_desc" t-esc="record.description.value"/>
+                                        <div class="o_atk_badges">
+                                            <span t-attf-class="o_atk_type_badge o_atk_type_#{record.tournament_type.raw_value}">
+                                                <i t-attf-class="fa fa-#{record.tournament_type.raw_value == 'cricket' ? 'dot-circle-o' : 'futbol-o'}"/>
+                                                <t t-esc="record.tournament_type.value"/>
+                                            </span>
+                                            <t t-if="record.live_board_active.raw_value">
+                                                <span class="o_atk_live_badge">
+                                                    <i class="fa fa-circle o_atk_live_dot"/> LIVE
+                                                </span>
+                                            </t>
+                                            <t t-if="!record.active.raw_value">
+                                                <span class="o_atk_archived_badge">Archived</span>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Stats row -->
+                                <div class="o_atk_stats">
+                                    <div class="o_atk_stat">
+                                        <i class="fa fa-calendar o_atk_stat_icon"/>
+                                        <span t-if="record.tournament_date.raw_value"
+                                              t-esc="record.tournament_date.value"/>
+                                        <span t-else="" class="text-muted">No date set</span>
+                                    </div>
+                                    <div class="o_atk_stat">
+                                        <i class="fa fa-users o_atk_stat_icon"/>
+                                        <t t-esc="record.registered_player_count.raw_value"/>
+                                        <span class="o_atk_stat_label"> Players</span>
+                                    </div>
+                                    <div class="o_atk_stat">
+                                        <i class="fa fa-star o_atk_stat_icon"/>
+                                        <t t-esc="record.team_max_points.raw_value || 0"/>
+                                        <span class="o_atk_stat_label"> Pts/Team</span>
+                                    </div>
+                                </div>
+
+                                <!-- Venue -->
+                                <div t-if="record.venue.raw_value" class="o_atk_venue">
+                                    <i class="fa fa-map-marker o_atk_stat_icon"/>
+                                    <span t-esc="record.venue.value"/>
+                                </div>
+
+                                <!-- Footer: organizer -->
+                                <div class="o_atk_footer">
+                                    <span t-if="record.organizer_uid.raw_value" class="o_atk_organizer">
+                                        <i class="fa fa-user-circle-o"/> <t t-esc="record.organizer_uid.value"/>
+                                    </span>
+                                    <span class="o_atk_footer_right">
+                                        <i class="fa fa-angle-right"/>
+                                    </span>
+                                </div>
+
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
         <record id="action_auction_tournament" model="ir.actions.act_window">
             <field name="name">Tournament</field>
             <field name="res_model">auction.tournament</field>
-            <field name="view_mode">tree,form</field>
+            <field name="view_mode">kanban,tree,form</field>
             <field name="search_view_id" ref="view_auction_tournament_search"/>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">
-                Create a Team
+                Create your first Tournament
               </p><p>
-                This menu to create or import the tournament.
+                Set up tournaments, manage teams and run live auctions.
               </p>
             </field>
         </record>

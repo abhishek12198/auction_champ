@@ -587,6 +587,12 @@ body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to to
               <span class="hud-stat-val"><t t-esc="player.address"/></span>
             </div>
           </t>
+          <t t-if="player.effective_base_price">
+            <div class="hud-stat-row">
+              <span class="hud-stat-key">Base Price</span>
+              <span class="hud-stat-val"><t t-esc="'{:,}'.format(int(player.effective_base_price or 0))"/> pts</span>
+            </div>
+          </t>
         </div>
 
         <!-- action buttons -->

@@ -28,6 +28,19 @@ class AuctionOwnerController(http.Controller):
     # ── Helpers ────────────────────────────────────────────────────────────
 
     @staticmethod
+    def _resolve_tournament():
+        """Return the tournament for the current user.
+        - For users with an assigned tournament_id, always use that.
+        - Admins/unassigned users fall back to the first active tournament.
+        """
+        user = request.env['res.users'].sudo().browse(request.session.uid)
+        if user.tournament_id:
+            return user.tournament_id
+        return request.env['auction.tournament'].sudo().search(
+            [('active', '=', True)], limit=1
+        )
+
+    @staticmethod
     def _pub_img(model, record_id, field):
         return '/auction/public/image/%s/%d/%s' % (model, record_id, field)
 
@@ -143,6 +156,10 @@ class AuctionOwnerController(http.Controller):
             'effective_base': effective_base,
             'can_bid': can_bid,
             'can_bid_reason': can_bid_reason,
+            'is_leading': bool(
+                player and player.current_bid_team_id and
+                player.current_bid_team_id.id == team.id
+            ),
             'player_count': len(auc.player_ids),
             'max_players': auc.max_players,
             'manager': team.manager or '',
@@ -159,9 +176,7 @@ class AuctionOwnerController(http.Controller):
         if not user.has_group('auction_owner.group_auction_owner'):
             return request.not_found()
 
-        tournament = request.env['auction.tournament'].sudo().search(
-            [('active', '=', True)], limit=1
-        )
+        tournament = self._resolve_tournament()
         return request.render(
             'auction_owner.owner_console_template',
             {
@@ -178,9 +193,7 @@ class AuctionOwnerController(http.Controller):
         user = request.env.user.sudo()
         env = request.env
 
-        tournament = env['auction.tournament'].sudo().search(
-            [('active', '=', True)], limit=1
-        )
+        tournament = self._resolve_tournament()
 
         result = {
             'tournament': {},
@@ -209,15 +222,19 @@ class AuctionOwnerController(http.Controller):
                     pass
 
         # ── Current player on stage ────────────────────────────────────────
+        on_stage_domain = [('is_on_stage', '=', True)]
+        if tournament:
+            on_stage_domain.append(('tournament_id', '=', tournament.id))
         current_player = env['auction.team.player'].sudo().search(
-            [('is_on_stage', '=', True)], limit=1
+            on_stage_domain, limit=1
         )
 
         if current_player:
             base_price = 0
             auc_domain = [('tournament_id', '=', tournament.id)] if tournament else []
-            auctions_all = env['auction.auction'].sudo().search(auc_domain) or \
-                           env['auction.auction'].sudo().search([])
+            auctions_all = env['auction.auction'].sudo().search(auc_domain)
+            if not auctions_all:
+                auctions_all = env['auction.auction'].sudo().search([])
             for auc in auctions_all:
                 base = self._get_effective_base(auc, current_player)
                 if base > base_price:
@@ -250,8 +267,7 @@ class AuctionOwnerController(http.Controller):
 
         # ── Teams ─────────────────────────────────────────────────────────
         auc_domain = [('tournament_id', '=', tournament.id)] if tournament else []
-        auctions = env['auction.auction'].sudo().search(auc_domain) or \
-                   env['auction.auction'].sudo().search([])
+        auctions = env['auction.auction'].sudo().search(auc_domain)
 
         my_team_id = user.auction_team_id.id if user.auction_team_id else False
 
@@ -416,6 +432,11 @@ class AuctionOwnerController(http.Controller):
         player = env['auction.team.player'].sudo().browse(int(player_id))
         if not player.exists() or not player.is_on_stage:
             return {'success': False, 'error': 'Player is not currently on stage.'}
+
+        # Tournament isolation: player must belong to the user's assigned tournament
+        tournament = self._resolve_tournament()
+        if tournament and player.tournament_id and player.tournament_id.id != tournament.id:
+            return {'success': False, 'error': 'Player does not belong to your tournament.'}
 
         if player.current_bid_team_id and player.current_bid_team_id.id == int(team_id):
             return {'success': False, 'error': 'You already have the highest bid. Wait for another team to bid.'}

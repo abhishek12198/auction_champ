@@ -1758,12 +1758,15 @@ img { display: block; }
     const soldStamp   = document.getElementById('lb-sold-stamp');
     const unsoldStamp = document.getElementById('lb-unsold-stamp');
     if (p.state === 'sold' && soldInfo) {
+      const wasVisible = soldStamp.style.display !== 'none';
       soldStamp.style.display  = '';
       unsoldStamp.style.display = 'none';
-      // reset animation
-      soldStamp.style.animation = 'none';
-      soldStamp.offsetHeight; // reflow
-      soldStamp.style.animation = '';
+      if (!wasVisible) {
+        // reset animation only on first show
+        soldStamp.style.animation = 'none';
+        soldStamp.offsetHeight; // reflow
+        soldStamp.style.animation = '';
+      }
       document.getElementById('stamp-pts').textContent = fmtPts(soldInfo.amount);
       document.getElementById('stamp-team-name').textContent = soldInfo.team_name || '';
       const logoImg  = document.getElementById('stamp-team-logo');
@@ -1776,12 +1779,15 @@ img { display: block; }
       }
       stEl.style.display = 'none'; // stamp replaces the badge
     } else if (p.state === 'unsold') {
+      const wasVisible = unsoldStamp.style.display !== 'none';
       unsoldStamp.style.display = '';
       soldStamp.style.display   = 'none';
-      // reset animation
-      unsoldStamp.style.animation = 'none';
-      unsoldStamp.offsetHeight;
-      unsoldStamp.style.animation = '';
+      if (!wasVisible) {
+        // reset animation only on first show
+        unsoldStamp.style.animation = 'none';
+        unsoldStamp.offsetHeight;
+        unsoldStamp.style.animation = '';
+      }
       stEl.style.display = 'none'; // stamp replaces the badge
     } else {
       soldStamp.style.display   = 'none';

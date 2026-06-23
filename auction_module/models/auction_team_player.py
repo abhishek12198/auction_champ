@@ -30,6 +30,11 @@ class AuctionTeamPlayer(models.Model):
             defaults.update({'sl_no': last_record.sl_no+1})
         else:
             defaults.update({'sl_no': 1})
+        # Auto-populate tournament_id from the logged-in user's profile
+        if not defaults.get('tournament_id'):
+            user_tournament = self.env.user.tournament_id
+            if user_tournament:
+                defaults['tournament_id'] = user_tournament.id
         return defaults
 
     @api.model
@@ -135,9 +140,8 @@ class AuctionTeamPlayer(models.Model):
         player = self.browse(int(player_id))
 
         # ── Tournament-level bid config ───────────────────────────────────
-        tournament = self.env['auction.tournament'].sudo().search(
-            [('active', '=', True)], limit=1
-        )
+        # Use the player's own tournament (not just any active tournament)
+        tournament = player.tournament_id
         tournament_preset_points = []
         tournament_slabs = []
         if tournament:
@@ -161,7 +165,9 @@ class AuctionTeamPlayer(models.Model):
                     'increment': split.no_of_calls,
                 })
 
-        auctions = self.env['auction.auction'].search([])
+        # Only show teams that belong to the same tournament as the player
+        auction_domain = [('tournament_id', '=', tournament.id)] if tournament else []
+        auctions = self.env['auction.auction'].search(auction_domain)
         teams = []
         for auction in auctions:
             if auction.remaining_players_count <= 0 or auction.remaining_points <= 0:
@@ -311,6 +317,16 @@ class AuctionTeamPlayer(models.Model):
         # until the next player is called via get_random_player()
         player.create_auction_history(auction.team_id.id, message, tournament_id=player.tournament_id.id, player=player)
 
+        # ── Stamp: record on tournament for the live board ──
+        if player.tournament_id:
+            display_secs = player.tournament_id.sold_display_seconds or 5
+            from datetime import timedelta
+            player.tournament_id.sudo().write({
+                'stamp_player_id': player.id,
+                'stamp_state': 'sold',
+                'stamp_expires_at': fields.Datetime.now() + timedelta(seconds=display_secs + 8),
+            })
+
         self.env.user.notify_success(message=message, title='CONGRATULATIONS!')
         return {
             'success': True,
@@ -441,16 +457,18 @@ class AuctionTeamPlayer(models.Model):
         players = self.search(players_domain, order='sl_no asc')
         return players
 
-    def get_auction_players(self):
-        players_domain = [('icon_player', '=', False),('state', '=', 'auction')]
+    def get_auction_players(self, tournament_id=False):
+        players_domain = [('icon_player', '=', False), ('state', '=', 'auction')]
+        if tournament_id:
+            players_domain.append(('tournament_id', '=', tournament_id.id if hasattr(tournament_id, 'id') else tournament_id))
         players = self.search(players_domain, order='sl_no asc')
         return players
 
-    def get_random_player(self, exclude_id=0):
-        tournament_id = self.env['auction.tournament'].search([('active', '=', True)], limit=1)
+    def get_random_player(self, exclude_id=0, tournament_id=False):
+        tournament = tournament_id or self.env['auction.tournament'].search([('active', '=', True)], limit=1)
         random_player = False
 
-        players = self.get_auction_players()
+        players = self.get_auction_players(tournament_id=tournament)
         if players:
             player_ids = players.ids
 
@@ -458,7 +476,10 @@ class AuctionTeamPlayer(models.Model):
             # fall back to the is_on_stage flag when no explicit hint is given.
             current_id = int(exclude_id) if exclude_id else False
             if not current_id:
-                current_on_stage = self.search([('is_on_stage', '=', True)], limit=1)
+                on_stage_domain = [('is_on_stage', '=', True)]
+                if tournament:
+                    on_stage_domain.append(('tournament_id', '=', tournament.id))
+                current_on_stage = self.search(on_stage_domain, limit=1)
                 current_id = current_on_stage.id if current_on_stage else False
             candidates = (
                 [pid for pid in player_ids if pid != current_id]
@@ -466,13 +487,16 @@ class AuctionTeamPlayer(models.Model):
                 else player_ids
             )
 
-            if tournament_id.player_appearance_algorithm == 'random':
+            if tournament and tournament.player_appearance_algorithm == 'random':
                 random_player = self.browse(random.choice(candidates))
             else:
                 random_player = self.browse(candidates[0])
 
-        # ── Stage tracking: clear all, mark only the selected player ──
-        on_stage = self.search([('is_on_stage', '=', True)])
+        # ── Stage tracking: clear previous on-stage for this tournament only ──
+        on_stage_domain = [('is_on_stage', '=', True)]
+        if tournament:
+            on_stage_domain.append(('tournament_id', '=', tournament.id))
+        on_stage = self.search(on_stage_domain)
         if on_stage:
             on_stage.sudo().write({'is_on_stage': False})
         if random_player:
@@ -499,6 +523,15 @@ class AuctionTeamPlayer(models.Model):
                 player.create_unsold_auction_history( message, tournament_id=player.tournament_id.id,
                                               player=player)
                 self.env.user.notify_success(message)
+                # ── Stamp: record on tournament for the live board ──
+                if player.tournament_id:
+                    display_secs = player.tournament_id.sold_display_seconds or 5
+                    from datetime import timedelta
+                    player.tournament_id.sudo().write({
+                        'stamp_player_id': player.id,
+                        'stamp_state': 'unsold',
+                        'stamp_expires_at': fields.Datetime.now() + timedelta(seconds=display_secs + 8),
+                    })
         display_seconds = self[0].tournament_id.sold_display_seconds if self and self[0].tournament_id else 5
         return {
             'success': True,

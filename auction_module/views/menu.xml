@@ -22,16 +22,11 @@
         </record>
 
 
-        <delete model="ir.actions.act_url" id="action_view_auction_details"/>
-        <record id="action_view_auction_details" model="ir.actions.server">
+        <delete model="ir.actions.server" id="action_view_auction_details"/>
+        <record id="action_view_auction_details" model="ir.actions.act_url">
             <field name="name">Auction Points Table</field>
-            <field name="model_id" ref="auction_module.model_auction_tournament"/>
-            <field name="state">code</field>
-            <field name="code">
-tournament = env['auction.tournament'].search([('active', '=', True)], limit=1)
-if tournament and tournament.slug:
-    action = {'type': 'ir.actions.act_url', 'url': '/' + tournament.slug + '/auction/show/team/balance', 'target': 'new'}
-            </field>
+            <field name="url">/auction/my/team-balance</field>
+            <field name="target">new</field>
         </record>
 
          <record id="action_live_updates" model="ir.actions.act_url">
@@ -82,61 +77,61 @@ if tournament and tournament.slug:
           parent="menu_action_auction_player"
           action="action_auction_team_player_draft"
           sequence="1"
-          groups="auction_module.group_auction_player_setup"/>
+          groups="auction_module.group_auction_group"/>
 
         <menuitem id="menu_action_auction_active_players"
           name="Players in Auction"
           parent="menu_action_auction_player"
           action="action_auction_team_player_auction"
           sequence="2"
-          groups="auction_module.group_auction_player_setup,auction_module.group_auction_group"/>
+          groups="auction_module.group_auction_group"/>
 
         <menuitem id="menu_action_auction_team_key_player"
           name="Icon Players"
           parent="menu_action_auction_player"
           action="action_auction_team_key_player"
           sequence="3"
-          groups="auction_module.group_auction_player_setup"/>
+          groups="auction_module.group_auction_group"/>
 
          <menuitem id="menu_action_auction_sold_players"
           name="Players Sold"
           parent="menu_action_auction_player"
           action="action_auction_team_player_sold"
           sequence="4"
-          groups="auction_module.group_auction_player_setup,auction_module.group_auction_group"/>
+          groups="auction_module.group_auction_group"/>
 
         <menuitem id="menu_action_auction_unsold_players"
           name="Unsold Players"
           parent="menu_action_auction_player"
           action="action_auction_team_player_unsold"
           sequence="5"
-          groups="auction_module.group_auction_player_setup,auction_module.group_auction_group"/>
+          groups="auction_module.group_auction_group"/>
 
         <menuitem id="menu_action_auction_unpaid_players"
           name="Unpaid Players"
           parent="menu_action_auction_player"
           action="action_auction_team_player_unpaid"
           sequence="6"
-          groups="auction_module.group_auction_player_setup"/>
+          groups="auction_module.group_auction_group"/>
 
         <menuitem id="menu_action_auction_team_player_jersy"
           name="Players-Jersy"
           parent="menu_action_auction_player"
           action="action_auction_team_player_jersy"
           sequence="7"
-          groups="auction_module.group_auction_jersey_view"/>
+          groups="auction_module.group_auction_group"/>
 
         <menuitem id="menu_action_auction_pdf_to_png"
           name="Convert PDF to PNG"
           parent="menu_action_auction_player"
           action="action_auction_pdf_to_png"
           sequence="20"
-          groups="auction_module.group_auction_pdf_to_png"/>
+          groups="auction_module.group_auction_group"/>
 
         <menuitem id="menu_action_auction_conf"
           name="Configuration"
           parent="menu_action_auction_root"
-          groups="auction_module.group_auction_group_admin"
+          groups="auction_module.group_auction_group"
           sequence="4"/>
 
         <!--<menuitem id="menu_action_launch_auction"
@@ -148,7 +143,7 @@ if tournament and tournament.slug:
         <menuitem id="menu_action_auction_start_auction"
           name="Auction Rules Setup"
           parent="menu_action_auction_auction"
-          groups="auction_module.group_auction_group_admin"
+          groups="auction_module.group_auction_group"
           action="action_auction_start_auction"
           sequence="2"/>
 
@@ -167,30 +162,26 @@ if tournament and tournament.slug:
           groups="auction_module.group_auction_group"/>
 
 
+        <delete model="ir.actions.server" id="action_public_live_board"/>
         <delete model="ir.actions.act_url" id="action_public_live_board"/>
-        <record id="action_public_live_board" model="ir.actions.server">
+        <record id="action_public_live_board" model="ir.actions.act_url">
             <field name="name">Public Live Board</field>
-            <field name="model_id" ref="auction_module.model_auction_tournament"/>
-            <field name="state">code</field>
-            <field name="code">
-tournament = env['auction.tournament'].search([('active', '=', True)], limit=1)
-if tournament and tournament.slug:
-    action = {'type': 'ir.actions.act_url', 'url': '/' + tournament.slug + '/auction/live-board', 'target': 'new'}
-            </field>
+            <field name="url">/auction/my/live-board</field>
+            <field name="target">new</field>
         </record>
         <menuitem id="menu_action_public_live_board"
           name="Public Live Bid Board"
           parent="menu_action_auction_auction"
           action="auction_module.action_public_live_board"
           sequence="5"
-          groups="auction_module.group_auction_bid_board"/>
+          groups="auction_module.group_auction_group"/>
 
         <menuitem id="menu_action_team_pool_wizard"
           name="Pool Generator"
           parent="menu_action_auction_auction"
           action="auction_module.action_team_pool_wizard"
           sequence="6"
-          groups="auction_module.group_auction_pool_generator"/>
+          groups="auction_module.group_auction_group"/>
 
 
 
@@ -208,14 +199,14 @@ if tournament and tournament.slug:
           name="Team(s)"
           parent="menu_action_auction_conf"
           action="action_auction_team"
-          groups="auction_module.group_auction_group_admin"
+          groups="auction_module.group_auction_group"
           sequence="2"/>
 
         <menuitem id="menu_action_auction_player_tier"
           name="Player Tier(s)"
           parent="menu_action_auction_conf"
           action="action_auction_player_tier"
-          groups="auction_module.group_auction_group_admin"
+          groups="auction_module.group_auction_group"
           sequence="3"/>
 
 

@@ -13,6 +13,16 @@ class Auction(models.Model):
     _name = 'auction.auction'
     _rec_name = 'team_id'
     _order = 'remaining_players_count,id'
+
+    @api.model
+    def default_get(self, fields_list):
+        defaults = super().default_get(fields_list)
+        if not defaults.get('tournament_id'):
+            user_tournament = self.env.user.tournament_id
+            if user_tournament:
+                defaults['tournament_id'] = user_tournament.id
+        return defaults
+
     team_id = fields.Many2one('auction.team', 'Team')
     team_logo = fields.Binary(related='team_id.logo')
     manager = fields.Char(related='team_id.manager', string="Owner")

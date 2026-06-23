@@ -10,8 +10,7 @@
                 <search string="Team">
                     <field name="name" filter_domain="[('name','ilike',self)]" string="Team Name"/>
                     <field name="manager" filter_domain="[('manager','ilike',self)]" string="Owner"/>
-                    <field name="tournament_id" string="League"/>
-                    <separator/>
+                    <field name="tournament_id" string="League" groups="auction_module.group_auction_group_admin"/>
                     <filter string="Has Icon Players" name="has_icon_players"
                             domain="[('key_player_ids', '!=', False)]"/>
                     <group expand="1" string="Group By">
@@ -102,8 +101,7 @@
                     <field name="logo" widget="image" string=" "/>
                     <field name="name" string="Team Name"/>
                     <field name="manager" string="Owner"/>
-                    <field name="tournament_id" string="League"/>
-                    <field name="key_player_ids" widget="many2many_tags" string="Icon Players"/>
+                    <field name="tournament_id" string="League" groups="auction_module.group_auction_group_admin"/>
                 </tree>
             </field>
         </record>
@@ -126,7 +124,7 @@
 
                         <group>
                             <group string="Team Details">
-                                <field name="tournament_id" string="League / Tournament"/>
+                                <field name="tournament_id" string="League / Tournament" groups="auction_module.group_auction_group_admin"/>
                             </group>
                         </group>
 

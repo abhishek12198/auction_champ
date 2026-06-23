@@ -24,6 +24,24 @@ class AuctionAuctioneerController(http.Controller):
     # ── Helpers ────────────────────────────────────────────────────────────
 
     @staticmethod
+    def _resolve_tournament():
+        """Return the tournament scoped to the current logged-in user.
+
+        Priority:
+        1. The user's ``tournament_id`` field on their res.users profile.
+        2. The single tournament flagged ``active = True`` (admin fallback).
+        """
+        try:
+            user = request.env['res.users'].sudo().browse(request.uid)
+            if user.tournament_id:
+                return user.tournament_id
+        except Exception:
+            pass
+        return request.env['auction.tournament'].sudo().search(
+            [('active', '=', True)], limit=1
+        )
+
+    @staticmethod
     def _pub_img(model, record_id, field):
         return '/auction/public/image/%s/%d/%s' % (model, record_id, field)
 
@@ -62,17 +80,17 @@ class AuctionAuctioneerController(http.Controller):
     # payload before returning it to the live board JS.
 
     @http.route(
-        '/<string:tournament_slug>/auction/live-board/data',
-        type='http', auth='public', website=True, csrf=False
+        '/<string:db_name>/<string:tournament_slug>/auction/live-board/data',
+        type='http', auth='none', website=False, csrf=False
     )
-    def auction_live_board_data_ext(self, tournament_slug, **kw):
+    def auction_live_board_data_ext(self, db_name, tournament_slug, **kw):
         """
-        Delegate to the base controller method, then inject live bid info
-        into the current_player payload so the extended live-board template
+        Override the base live-board data endpoint to inject live bid info
+        (current_bid / current_bid_team) so the extended live-board template
         can display the auctioneer's last call.
         """
         from odoo.addons.auction_module.controllers.main import Auction as _Base
-        base_response = _Base().auction_live_board_data(tournament_slug, **kw)
+        base_response = _Base().auction_live_board_data(db_name, tournament_slug, **kw)
 
         try:
             data = json.loads(base_response.data)
@@ -80,20 +98,28 @@ class AuctionAuctioneerController(http.Controller):
             return base_response
 
         if data.get('current_player') is not None:
-            player = request.env['auction.team.player'].sudo().search(
-                [('is_on_stage', '=', True)], limit=1
-            )
-            if player:
-                data['current_player']['current_bid'] = player.current_bid or 0
-                if player.current_bid_team_id:
-                    t = player.current_bid_team_id
-                    data['current_player']['current_bid_team'] = {
-                        'id': t.id,
-                        'name': t.name or '',
-                        'logo_url': self._pub_img('auction.team', t.id, 'logo') if t.logo else '',
-                    }
-                else:
-                    data['current_player']['current_bid_team'] = None
+            from odoo.addons.auction_module.controllers.main import Auction as _BaseCtrl
+            with _BaseCtrl()._with_db(db_name) as ok:
+                if ok:
+                    env = request.env
+                    tournament = env['auction.tournament'].sudo().search(
+                        [('slug', '=', tournament_slug)], limit=1
+                    )
+                    t_id = tournament.id if tournament else False
+                    player = env['auction.team.player'].sudo().search(
+                        [('is_on_stage', '=', True), ('tournament_id', '=', t_id)], limit=1
+                    )
+                    if player:
+                        data['current_player']['current_bid'] = player.current_bid or 0
+                        if player.current_bid_team_id:
+                            t = player.current_bid_team_id
+                            data['current_player']['current_bid_team'] = {
+                                'id': t.id,
+                                'name': t.name or '',
+                                'logo_url': self._pub_img('auction.team', t.id, 'logo') if t.logo else '',
+                            }
+                        else:
+                            data['current_player']['current_bid_team'] = None
 
         return request.make_response(
             json.dumps(data),
@@ -106,14 +132,27 @@ class AuctionAuctioneerController(http.Controller):
     # ── Auctioneer Console page ────────────────────────────────────────────
 
     @http.route('/auction/auctioneer/console', type='http', auth='user', website=False)
-    def auctioneer_console(self, **kw):
+    def auctioneer_console_redirect(self, **kw):
+        """Redirect to slug-based console URL."""
+        tournament = self._resolve_tournament()
+        if tournament and tournament.slug:
+            return request.redirect('/auction/auctioneer/console/' + tournament.slug)
+        return request.redirect('/web')
+
+    @http.route('/auction/auctioneer/console/<string:tournament_slug>', type='http', auth='user', website=False)
+    def auctioneer_console(self, tournament_slug, **kw):
         """Render the standalone Auctioneer Console page (no Odoo layout)."""
         tournament = request.env['auction.tournament'].sudo().search(
-            [('active', '=', True)], limit=1
+            [('slug', '=', tournament_slug)], limit=1
         )
+        if not tournament:
+            tournament = self._resolve_tournament()
         return request.render(
             'auction_auctioneer.auctioneer_console_template',
-            {'tournament': tournament},
+            {
+                'tournament': tournament,
+                'favicon_url': '/web/image/res.company/%d/favicon' % request.env.company.id,
+            },
         )
 
     # ── Auctioneer Console data endpoint ──────────────────────────────────
@@ -122,14 +161,13 @@ class AuctionAuctioneerController(http.Controller):
     def auctioneer_data(self, **kw):
         """Return JSON payload consumed by the Auctioneer Console JS."""
         env = request.env
-        tournament = env['auction.tournament'].sudo().search(
-            [('active', '=', True)], limit=1
-        )
+        tournament = self._resolve_tournament()
 
         result = {
             'tournament': {},
             'current_player': None,
             'teams': [],
+            'slabs': [],
         }
 
         if tournament:
@@ -138,17 +176,17 @@ class AuctionAuctioneerController(http.Controller):
                 'logo_url': self._pub_img('auction.tournament', tournament.id, 'logo') if tournament.logo else '',
             }
 
-        # ── Current player on stage ────────────────────────────────────────
+        # ── Current player on stage for THIS tournament ────────────────────
         current_player = env['auction.team.player'].sudo().search(
-            [('is_on_stage', '=', True)], limit=1
+            [('is_on_stage', '=', True), ('tournament_id', '=', tournament.id if tournament else False)],
+            limit=1
         )
 
         if current_player:
             base_price = 0
-            t_id = tournament.id if tournament else False
-            auc_domain = [('tournament_id', '=', t_id)] if t_id else []
-            auctions_all = env['auction.auction'].sudo().search(auc_domain) or \
-                           env['auction.auction'].sudo().search([])
+            auctions_all = env['auction.auction'].sudo().search(
+                [('tournament_id', '=', tournament.id)] if tournament else []
+            )
             for auc in auctions_all:
                 base = self._get_effective_base(auc, current_player)
                 if base > base_price:
@@ -179,10 +217,10 @@ class AuctionAuctioneerController(http.Controller):
                 'bowling_style': current_player.bowling_style or '',
             }
 
-        # ── Teams ─────────────────────────────────────────────────────────
-        auc_domain = [('tournament_id', '=', tournament.id)] if tournament else []
-        auctions = env['auction.auction'].sudo().search(auc_domain) or \
-                   env['auction.auction'].sudo().search([])
+        # ── Teams (strictly scoped to this tournament) ────────────────────
+        auctions = env['auction.auction'].sudo().search(
+            [('tournament_id', '=', tournament.id)] if tournament else [('id', '=', False)]
+        )
 
         player = current_player if current_player else None
 
@@ -204,6 +242,18 @@ class AuctionAuctioneerController(http.Controller):
             can_bid = True
             can_bid_reason = ''
 
+            # Resolve tier minimum bid for the current player
+            _tier_base = 0
+            _tier_name = ''
+            if player and player.tier_id:
+                _tier_name = player.tier_id.name or ''
+                if auc.tier_limit_ids:
+                    _tl_b = auc.tier_limit_ids.filtered(lambda l: l.tier_id.id == player.tier_id.id)
+                    _tier_base = (_tl_b[0].base_point if _tl_b and _tl_b[0].base_point > 0
+                                  else (auc.base_point or 0))
+                else:
+                    _tier_base = auc.base_point or 0
+
             if not player:
                 can_bid = False
                 can_bid_reason = 'No player on stage'
@@ -213,6 +263,9 @@ class AuctionAuctioneerController(http.Controller):
             elif auc.remaining_points <= 0:
                 can_bid = False
                 can_bid_reason = 'No budget left'
+            elif _tier_base > 0 and auc.remaining_points < _tier_base:
+                can_bid = False
+                can_bid_reason = 'Purse below %s minimum (%d pts)' % (_tier_name, _tier_base)
             elif live_max_call <= 0:
                 can_bid = False
                 can_bid_reason = 'Budget reserved for other players'
@@ -246,7 +299,17 @@ class AuctionAuctioneerController(http.Controller):
                 'can_bid_reason': can_bid_reason,
                 'remaining_players': auc.remaining_players_count,
                 'manager': team.manager or '',
+                'slabs': [
+                    {'from_amount': s.from_amount, 'increment': s.increment}
+                    for s in auc.auction_bid_slab_ids.sorted('from_amount', reverse=True)
+                ],
             })
+            # Top-level slabs — use first auction's slabs (same tournament, same config)
+            if not result['slabs'] and auc.auction_bid_slab_ids:
+                result['slabs'] = [
+                    {'from_amount': s.from_amount, 'increment': s.increment}
+                    for s in auc.auction_bid_slab_ids.sorted('from_amount', reverse=True)
+                ]
 
         return request.make_response(
             json.dumps(result),
@@ -263,8 +326,8 @@ class AuctionAuctioneerController(http.Controller):
         """Record a live bid for the current player."""
         env = request.env
         player = env['auction.team.player'].sudo().browse(int(player_id))
-        if not player.exists() or not player.is_on_stage:
-            return {'success': False, 'error': 'Player is not currently on stage'}
+        if not player.exists() or not player.is_on_stage or player.state == 'sold':
+            return {'success': False, 'error': 'Player is not currently available for bidding'}
 
         auction = env['auction.auction'].sudo().search(
             [('team_id', '=', int(team_id))], limit=1
@@ -277,6 +340,19 @@ class AuctionAuctioneerController(http.Controller):
 
         if bid_amount < effective_base:
             return {'success': False, 'error': 'Bid is below the minimum base price of %d' % effective_base}
+
+        # Guard: purse must cover the tier's minimum before going further
+        if player.tier_id and auction.tier_limit_ids:
+            _tl_base = auction.tier_limit_ids.filtered(lambda l: l.tier_id.id == player.tier_id.id)
+            _tier_min = (_tl_base[0].base_point if _tl_base and _tl_base[0].base_point > 0
+                         else (auction.base_point or 0))
+            if _tier_min > 0 and auction.remaining_points < _tier_min:
+                return {
+                    'success': False,
+                    'error': 'Insufficient purse for "%s" tier (requires %d pts, team has %d pts).' % (
+                        player.tier_id.name, _tier_min, auction.remaining_points
+                    ),
+                }
 
         effective_max_call = auction.get_max_bid_for_team(auction, player)
         if bid_amount > effective_max_call:
@@ -317,8 +393,10 @@ class AuctionAuctioneerController(http.Controller):
     @http.route('/auction/auctioneer/locked-bid', type='http', auth='user', website=False, csrf=False)
     def locked_bid_info(self, **kw):
         """Return current_bid + current_bid_team_id for the player currently on stage."""
+        tournament = self._resolve_tournament()
+        t_id = tournament.id if tournament else False
         player = request.env['auction.team.player'].sudo().search(
-            [('is_on_stage', '=', True)], limit=1
+            [('is_on_stage', '=', True), ('tournament_id', '=', t_id)], limit=1
         )
         if not player or not player.current_bid or not player.current_bid_team_id:
             return request.make_response(
@@ -381,8 +459,10 @@ class AuctionAuctioneerController(http.Controller):
         if new_bid <= 0:
             return {'success': False, 'error': 'Bid must be greater than 0'}
 
+        tournament = self._resolve_tournament()
+        t_id = tournament.id if tournament else False
         player = request.env['auction.team.player'].sudo().search(
-            [('is_on_stage', '=', True)], limit=1
+            [('is_on_stage', '=', True), ('tournament_id', '=', t_id)], limit=1
         )
         if not player:
             return {'success': False, 'error': 'No player is currently on stage'}

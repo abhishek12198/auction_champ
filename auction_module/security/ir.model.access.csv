@@ -1,14 +1,14 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_auction_tournament_user,auction.tournament,auction_module.model_auction_tournament,auction_module.group_auction_group,1,0,0,0
 access_auction_tournament_point_split_user,auction.tournament.point.split,auction_module.model_auction_tournament_point_split,auction_module.group_auction_group,1,0,0,0
-access_auction_team_user,auction.team,auction_module.model_auction_team,auction_module.group_auction_group,1,0,0,0
-access_auction_team_player_user,auction.team.player,auction_module.model_auction_team_player,auction_module.group_auction_group,1,1,0,0
+access_auction_team_user,auction.team,auction_module.model_auction_team,auction_module.group_auction_group,1,1,1,1
+access_auction_team_player_user,auction.team.player,auction_module.model_auction_team_player,auction_module.group_auction_group,1,1,1,1
 access_auction_auction_user,auction.auction,auction_module.model_auction_auction,auction_module.group_auction_group,1,1,1,1
-access_auction_auction_bid_slab_user,auction_auction_bid_slab,auction_module.model_auction_auction_bid_slab,auction_module.group_auction_group,1,0,0,0
+access_auction_auction_bid_slab_user,auction_auction_bid_slab,auction_module.model_auction_auction_bid_slab,auction_module.group_auction_group,1,1,1,1
 access_auction_history_user,auction.history,auction_module.model_auction_history,auction_module.group_auction_group,1,1,1,0
 access_auction_auction_player_user,auction.auction.player,auction_module.model_auction_auction_player,auction_module.group_auction_group,1,1,1,1
-access_auction_start_auction_user,auction.start.auction,auction_module.model_auction_start_auction,auction_module.group_auction_group,1,0,0,0
-access_auction_bid_slab_user,auction_bid_slab,auction_module.model_auction_bid_slab,auction_module.group_auction_group,1,0,0,0
+access_auction_start_auction_user,auction.start.auction,auction_module.model_auction_start_auction,auction_module.group_auction_group,1,1,1,1
+access_auction_bid_slab_user,auction_bid_slab,auction_module.model_auction_bid_slab,auction_module.group_auction_group,1,1,1,1
 access_auction_sell_player_user,auction.sell.player,auction_module.model_auction_sell_player,auction_module.group_auction_group,1,1,1,1
 access_auction_set_key_player_user,auction.set.key.player,auction_module.model_auction_set_key_player,auction_module.group_auction_group,1,1,1,1
 access_auction_player_auction_user,auction.player.auction,auction_module.model_auction_player_auction,auction_module.group_auction_group,1,1,1,1
@@ -16,9 +16,9 @@ access_auction_player_draft_user,auction.player.draft,auction_module.model_aucti
 access_auction_bring_unsold_players_user,auction.bring.unsold.players,auction_module.model_auction_bring_unsold_players,auction_module.group_auction_group,1,1,1,1
 access_auction_edit_player_point_user,auction.edit.player.point,auction_module.model_auction_edit_player_point,auction_module.group_auction_group,1,1,1,1
 access_auction_view_team_details_user,auction.view.team.details,auction_module.model_auction_view_team_details,auction_module.group_auction_group,1,1,1,1
-access_auction_player_tier_user,auction.player.tier,auction_module.model_auction_player_tier,auction_module.group_auction_group,1,0,0,0
-access_auction_auction_tier_limit_user,auction.auction.tier.limit,auction_module.model_auction_auction_tier_limit,auction_module.group_auction_group,1,0,0,0
-access_auction_start_auction_tier_limit_user,auction.start.auction.tier.limit,auction_module.model_auction_start_auction_tier_limit,auction_module.group_auction_group,1,0,0,0
+access_auction_player_tier_user,auction.player.tier,auction_module.model_auction_player_tier,auction_module.group_auction_group,1,1,1,1
+access_auction_auction_tier_limit_user,auction.auction.tier.limit,auction_module.model_auction_auction_tier_limit,auction_module.group_auction_group,1,1,1,1
+access_auction_start_auction_tier_limit_user,auction.start.auction.tier.limit,auction_module.model_auction_start_auction_tier_limit,auction_module.group_auction_group,1,1,1,1
 access_auction_team_player_setup,auction.team.player (setup),auction_module.model_auction_team_player,auction_module.group_auction_player_setup,1,1,1,1
 access_auction_player_draft_setup,auction.player.draft (setup),auction_module.model_auction_player_draft,auction_module.group_auction_player_setup,1,1,1,1
 access_auction_pdf_to_png_group,auction.pdf.to.png,auction_module.model_auction_pdf_to_png,auction_module.group_auction_pdf_to_png,1,1,1,1
@@ -60,6 +60,8 @@ access_auction_remove_duplicate_line_admin,auction.remove.duplicate.line (admin)
 access_auction_team_pool_name_line_admin,auction.team.pool.name.line (admin),auction_module.model_auction_team_pool_name_line,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_update_tier_limits_admin,auction.update.tier.limits (admin),auction_module.model_auction_update_tier_limits,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_update_tier_limits_line_admin,auction.update.tier.limits.line (admin),auction_module.model_auction_update_tier_limits_line,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_update_tier_limits_user,auction.update.tier.limits (user),auction_module.model_auction_update_tier_limits,auction_module.group_auction_group,1,1,1,1
+access_auction_update_tier_limits_line_user,auction.update.tier.limits.line (user),auction_module.model_auction_update_tier_limits_line,auction_module.group_auction_group,1,1,1,1
 access_auction_migrate_tier_admin,auction.migrate.tier (admin),auction_module.model_auction_migrate_tier,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_migrate_tier_user,auction.migrate.tier (user),auction_module.model_auction_migrate_tier,auction_module.group_auction_group,1,1,1,1
 access_auction_migrate_tier_line_admin,auction.migrate.tier.line (admin),auction_module.model_auction_migrate_tier_line,auction_module.group_auction_group_admin,1,1,1,1
@@ -67,3 +69,6 @@ access_auction_migrate_tier_line_user,auction.migrate.tier.line (user),auction_m
 access_auction_advertiser_user,auction.advertiser (user),auction_module.model_auction_advertiser,auction_module.group_auction_group,1,1,1,1
 access_auction_advertiser_admin,auction.advertiser (admin),auction_module.model_auction_advertiser,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_advertiser_public,auction.advertiser (public),auction_module.model_auction_advertiser,base.group_public,1,0,0,0
+access_auction_pdf_to_png_user,auction.pdf.to.png (user),auction_module.model_auction_pdf_to_png,auction_module.group_auction_group,1,1,1,1
+access_auction_team_pool_wizard_user,auction.team.pool.wizard (user),auction_module.model_auction_team_pool_wizard,auction_module.group_auction_group,1,1,1,1
+access_auction_team_pool_name_line_user,auction.team.pool.name.line (user),auction_module.model_auction_team_pool_name_line,auction_module.group_auction_group,1,1,1,1

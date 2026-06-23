@@ -13,7 +13,7 @@
                     <field name="create_date"/>
                     <field name="team_id"/>
                     <field name="message"/>
-                    <field name="tournament_id"/>
+                    <field name="tournament_id" groups="auction_module.group_auction_group_admin"/>
                 </tree>
             </field>
         </record>

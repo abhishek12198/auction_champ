@@ -26,15 +26,6 @@ def _slugify(text):
 class AuctionTournament(models.Model):
     _name = 'auction.tournament'
 
-    @api.model
-    def default_get(self, fields):
-        defaults = super(AuctionTournament, self).default_get(fields)
-        existing_tournament = self.search([])
-        if existing_tournament:
-            raise ValidationError("Current Tournament is active. Please deactivate and create a new one.")
-
-        return defaults
-
     name = fields.Char(string="Name", required=True)
     slug = fields.Char(
         string='URL Slug',
@@ -73,6 +64,10 @@ class AuctionTournament(models.Model):
         default=5,
         help='How many seconds to show the SOLD celebration screen before advancing to the next player.'
     )
+    # ── Live-board stamp tracking (set on sell/unsold, read by live-board endpoint) ──
+    stamp_player_id   = fields.Many2one('auction.team.player', string='Stamp Player', copy=False)
+    stamp_state       = fields.Char(string='Stamp State', copy=False)   # 'sold' | 'unsold'
+    stamp_expires_at  = fields.Datetime(string='Stamp Expires At', copy=False)
     next_player_countdown = fields.Integer(
         string='Next Player Countdown (seconds)',
         default=5,

@@ -332,10 +332,44 @@ input{font-family:inherit}
     display:flex;flex-direction:column;align-items:center;gap:3px;
 }
 .oc-bid-box-base{background:var(--surf2);border:1px solid var(--border2)}
-.oc-bid-box-current{background:var(--c10);border:1px solid var(--c40)}
+.oc-bid-box-current{background:var(--c10);border:1px solid var(--c40);position:relative;transition:background .2s,border-color .2s,box-shadow .2s}
 .oc-bid-box-lbl{font-size:.7rem;font-weight:800;letter-spacing:.08em;color:var(--txt3);text-transform:uppercase}
 .oc-bid-box-val{font-size:1.2rem;font-weight:900;color:var(--txt)}
 .oc-bid-live{color:var(--c-l)!important;font-size:1.4rem!important}
+
+/* Quick-bid states on the current-bid box */
+#ocCurrentBidBox.oc-qb-active{
+    cursor:pointer;
+    border-color:var(--c-l);
+    box-shadow:0 0 0 1px var(--c40), 0 4px 14px var(--c20);
+}
+#ocCurrentBidBox.oc-qb-active:hover{
+    background:var(--c20);
+    box-shadow:0 0 0 2px var(--c-l), 0 6px 20px var(--c40);
+}
+#ocCurrentBidBox.oc-qb-active:active{
+    transform:scale(.97);
+}
+#ocCurrentBidBox.oc-qb-disabled{
+    cursor:not-allowed;
+    opacity:.6;
+    border-color:var(--border2);
+}
+#ocCurrentBidBox.oc-qb-leading{
+    cursor:default;
+    border-color:var(--green);
+    box-shadow:0 0 0 1px rgba(34,197,94,.35), 0 4px 14px rgba(34,197,94,.15);
+}
+#ocCurrentBidBox.oc-qb-leading .oc-qb-hint{color:var(--green);}
+/* Hint label inside the current-bid box */
+.oc-qb-hint{
+    font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    margin-top:2px;line-height:1;
+}
+#ocCurrentBidBox.oc-qb-active   .oc-qb-hint{color:var(--c-l)}
+#ocCurrentBidBox.oc-qb-disabled .oc-qb-hint{color:var(--red);font-size:.58rem}
+#ocCurrentBidBox.oc-qb-placing{opacity:.6;pointer-events:none}
+#ocCurrentBidBox.oc-qb-placing .oc-qb-hint::before{content:'⏳ ';}
 
 .oc-leading-team{
     display:flex;align-items:center;gap:10px;

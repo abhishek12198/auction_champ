@@ -798,3 +798,206 @@
     color: #27ae60;
     font-weight: 700;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   Tournament Kanban  (.o_atk_*)
+   ══════════════════════════════════════════════════════════════ */
+.o_auction_tournament_kanban .o_kanban_record {
+    padding: 0;
+}
+
+.o_atk_card {
+    border-radius: 12px;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #e0e7f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    cursor: pointer;
+}
+.o_atk_card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(34,82,181,0.18);
+}
+
+/* ── Header ── */
+.o_atk_header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 16px 12px;
+    background: linear-gradient(135deg, #1a3a6b 0%, #2252b5 100%);
+}
+
+.o_atk_logo_wrap {
+    flex-shrink: 0;
+}
+.o_atk_logo {
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,0.5);
+    background: #fff;
+}
+.o_atk_logo_placeholder {
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.7);
+    font-size: 28px;
+}
+
+.o_atk_title_block {
+    flex: 1;
+    min-width: 0;
+}
+.o_atk_name {
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.o_atk_desc {
+    color: rgba(255,255,255,0.75);
+    font-size: 12px;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.o_atk_badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 7px;
+}
+
+/* type badge */
+.o_atk_type_badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+/* live badge */
+.o_atk_live_badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #e74c3c;
+    color: #fff;
+    animation: o_atk_pulse 1.4s infinite;
+}
+@keyframes o_atk_pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.7; }
+}
+.o_atk_live_dot {
+    font-size: 8px;
+    color: #ffb3ae;
+}
+
+/* archived badge */
+.o_atk_archived_badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.25);
+    color: rgba(255,255,255,0.7);
+}
+
+/* ── Stats row ── */
+.o_atk_stats {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 10px 14px;
+    background: #f5f8ff;
+    border-bottom: 1px solid #e0e7f0;
+}
+.o_atk_stat {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #2252b5;
+    padding: 0 4px;
+    border-right: 1px solid #d0dbee;
+}
+.o_atk_stat:last-child {
+    border-right: none;
+}
+.o_atk_stat_icon {
+    color: #2252b5;
+    font-size: 12px;
+}
+.o_atk_stat_label {
+    color: #666;
+    font-weight: 400;
+}
+
+/* ── Venue ── */
+.o_atk_venue {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: #555;
+    border-bottom: 1px solid #f0f0f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.o_atk_venue .fa {
+    color: #e74c3c;
+    flex-shrink: 0;
+}
+
+/* ── Footer ── */
+.o_atk_footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: #fafbfd;
+}
+.o_atk_organizer {
+    font-size: 12px;
+    color: #444;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.o_atk_organizer .fa {
+    color: #2252b5;
+}
+.o_atk_footer_right .fa {
+    color: #2252b5;
+    font-size: 16px;
+}

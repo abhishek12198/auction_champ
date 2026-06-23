@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Extend res.users form to add auction tournament/team assignment -->
+        <record id="view_users_auction_form_inherit" model="ir.ui.view">
+            <field name="name">res.users.auction.form</field>
+            <field name="model">res.users</field>
+            <field name="inherit_id" ref="base.view_users_form"/>
+            <field name="arch" type="xml">
+                <!-- Add AuctionChamp tab after the existing tabs -->
+                <xpath expr="//notebook" position="inside">
+                    <page string="AuctionChamp" name="auction_champ">
+                        <group>
+                            <!-- Admin sees/sets the tournament assignment for any user -->
+                            <group string="Tournament Assignment"
+                                   groups="auction_module.group_auction_group_admin">
+                                <field name="tournament_id" string="Default Tournament"
+                                       placeholder="Select tournament…"/>
+                            </group>
+                            <!-- Owner/Admin can set the team assignment -->
+                            <group string="Team Assignment">
+                                <field name="team_id" string="Team"
+                                       placeholder="Select team…"
+                                       groups="auction_module.group_auction_group_admin"/>
+                                <field name="team_id" string="My Team"
+                                       readonly="1"
+                                       groups="auction_module.group_auction_owner"/>
+                            </group>
+                        </group>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Extend the simplified user preferences popup (self-edit) for owners -->
+        <record id="view_users_simple_auction_form_inherit" model="ir.ui.view">
+            <field name="name">res.users.auction.simple.form</field>
+            <field name="model">res.users</field>
+            <field name="inherit_id" ref="base.view_users_form_simple_modif"/>
+            <field name="arch" type="xml">
+                <xpath expr="//notebook" position="inside">
+                    <page string="AuctionChamp"
+                          groups="auction_module.group_auction_owner">
+                        <group>
+                            <field name="team_id" string="My Team" readonly="1"/>
+                            <field name="tournament_id" string="Tournament" readonly="1"/>
+                        </group>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

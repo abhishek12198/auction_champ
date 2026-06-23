@@ -16,6 +16,7 @@
     'data': [
         'security/security.xml',
         'security/ir.model.access.csv',
+        'security/record_rules.xml',
         'data/report_paper_format_landscape.xml',
         'views/auction_tournament_view.xml',
         'views/auction_player_tier_view.xml',
@@ -33,6 +34,7 @@
         'views/auction_player_card_print_list_pistah.xml',
         'views/auction_player_card_print_list_portrait.xml',
         'views/auction_history_view.xml',
+        'views/res_users_auction_view.xml',
         'views/auction_player_sell_modal.xml',
         'views/auction_player_template_new.xml',
         'views/auction_player_template_butterscotch.xml',
@@ -93,8 +95,12 @@
                     '/auction_module/static/src/css/kanban.css',
                     '/auction_module/static/src/css/auction_status.css',
                     '/auction_module/static/src/js/auction_status.js',
+                    '/auction_module/static/src/js/tournament_systray.js',
 
                 ],
+            'web.assets_qweb': [
+                '/auction_module/static/src/xml/tournament_systray.xml',
+            ],
             'web.assets_frontend': [
                 '/auction_module/static/src/lib/html2canvas.min.js',
                 '/auction_module/static/src/css/auction_live_queue.css',

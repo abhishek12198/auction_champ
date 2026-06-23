@@ -230,7 +230,7 @@
             <script>//<![CDATA[
 (function () {
     'use strict';
-    if (!window.location.pathname.startsWith('/auction/display_auction')) return;
+    if (!window.location.pathname.includes('/auction/display_auction')) return;
 
     /* ── Default positions per theme ──────────────────────────────────── */
     var DEFAULTS = {

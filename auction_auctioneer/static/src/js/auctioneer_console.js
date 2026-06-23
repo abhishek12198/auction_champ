@@ -10,6 +10,7 @@
     var state = {
         currentPlayer: null,
         teams: [],
+        slabs: [],            // bid slabs sorted descending by from_amount
         selectedTeam: null,   // team data object for the open modal
         pollTimer: null,
         isLoading: false,
@@ -107,6 +108,7 @@
     function render(data) {
         state.currentPlayer = data.current_player || null;
         state.teams = data.teams || [];
+        state.slabs = data.slabs || [];
 
         renderPlayer(state.currentPlayer);
         renderTeams(state.teams, state.currentPlayer);
@@ -208,33 +210,63 @@
             var disabled = !player || !team.can_bid;
             var pct = team.total_points > 0 ? Math.max(0, Math.min(100, (team.remaining_points / team.total_points) * 100)) : 0;
             var barClass = pct > 50 ? '' : pct > 25 ? ' ac-team-purse__bar--mid' : ' ac-team-purse__bar--low';
-
-            var logoHtml = team.logo_url
-                ? '<img src="' + team.logo_url + '" alt="' + esc(team.name) + '" class="ac-team-logo" onerror="this.style.display=\'none\'">'
-                : '<div class="ac-team-logo-placeholder">🏏</div>';
-
             var disabledReason = team.can_bid_reason || (!player ? 'No player on stage' : 'Cannot bid');
-            var bidLabel = disabled
-                ? '<span class="ac-team-no-bid" title="' + esc(disabledReason) + '">🚫 ' + esc(disabledReason) + '</span>'
-                : '<span class="ac-team-next-bid">Next: ' + fmtPts(team.next_bid) + ' pts</span>';
-
             var classes = 'ac-team-btn' + (disabled ? ' ac-team-btn--disabled' : '') + (isActive ? ' ac-team-btn--active' : '');
-            var onclick = disabled ? '' : 'onclick="acOpenBidModal(' + team.id + ')"';
+            var onclick = disabled ? '' : 'onclick="acQuickBid(' + team.id + ')"';
+
+            // Leading bid badge (shown only on active card)
+            var leadingBadge = isActive && player && player.current_bid
+                ? '<div class="ac-team-leading-badge">🏆 LEADING &nbsp;<span class="ac-team-leading-pts">' + fmtPts(player.current_bid) + ' pts</span></div>'
+                : '';
 
             return '<div class="' + classes + '" ' + onclick + ' data-team-id="' + team.id + '">'
-                + logoHtml
-                + '<span class="ac-team-name">' + esc(team.name) + '</span>'
-                + '<div class="ac-team-purse">'
-                + '  <div class="ac-team-purse__bar-wrap"><div class="ac-team-purse__bar' + barClass + '" style="width:' + pct.toFixed(1) + '%"></div></div>'
-                + '  <div class="ac-team-purse__text"><span class="ac-team-purse__pts">' + fmtPts(team.remaining_points) + '</span> / ' + fmtPts(team.total_points) + ' pts</div>'
+                + '<div class="ac-team-logo-wrap">'
+                + (team.logo_url
+                    ? '<img src="' + team.logo_url + '" alt="' + esc(team.name) + '" class="ac-team-logo" onerror="this.style.display=\'none\'">'
+                    : '<div class="ac-team-logo-placeholder">🏏</div>')
                 + '</div>'
-                + bidLabel
+                + '<div class="ac-team-body">'
+                + '  <span class="ac-team-name">' + esc(team.name) + '</span>'
+                + (team.manager ? '<span class="ac-team-manager">' + esc(team.manager) + '</span>' : '')
+                + '  <div class="ac-team-purse">'
+                + '    <div class="ac-team-purse__bar-wrap"><div class="ac-team-purse__bar' + barClass + '" style="width:' + pct.toFixed(1) + '%"></div></div>'
+                + '    <div class="ac-team-purse__text"><span class="ac-team-purse__pts">' + fmtPts(team.remaining_points) + '</span><span class="ac-team-purse__sep"> / </span>' + fmtPts(team.total_points) + ' pts</div>'
+                + '  </div>'
+                + (disabled && !isActive
+                    ? '<div class="ac-team-no-bid" title="' + esc(disabledReason) + '">🚫 ' + esc(disabledReason) + '</div>'
+                    : !isActive ? '<div class="ac-team-next-bid" onclick="event.stopPropagation();acOpenBidModal(' + team.id + ')" title="Click to enter custom bid amount">✏ BID: <strong>' + fmtPts(team.next_bid) + ' pts</strong></div>' : '')
+                + leadingBadge
+                + '</div>'
                 + '</div>';
         }).join('');
 
         grid.innerHTML = html;
         grid.scrollTop = scrollTop;
     }
+
+    /* ── Quick Bid (one-tap: places next slab bid directly) ─────────────── */
+    window.acQuickBid = function (teamId) {
+        var team   = state.teams.find(function (t) { return t.id === teamId; });
+        var player = state.currentPlayer;
+        if (!team || !player || !team.can_bid) return;
+
+        var bidAmount = team.next_bid;
+
+        // Visual feedback: briefly mark card as "placing"
+        var card = document.querySelector('[data-team-id="' + teamId + '"]');
+        if (card) card.classList.add('ac-team-btn--placing');
+
+        jsonRpc(BID_URL, { player_id: player.id, team_id: team.id, bid_amount: bidAmount }, function (err, result) {
+            if (card) card.classList.remove('ac-team-btn--placing');
+
+            if (err || !result) { showToast('Network error. Please retry.', 'error'); return; }
+            if (!result.success) { showToast(result.error || 'Bid failed', 'error'); return; }
+
+            showToast('✅ ' + fmtPts(result.current_bid) + ' pts — ' + result.team_name, 'success');
+            clearTimeout(state.pollTimer);
+            poll();
+        });
+    };
 
     /* ── Modal ──────────────────────────────────────────────────────────── */
     window.acOpenBidModal = function (teamId) {
@@ -294,32 +326,56 @@
         validateBidInput(team, currentVal);
     }
 
-    /* Adjust bid amount by N increments */
+    /* ── Slab helpers (mirrors owner_console.js logic) ─────────────────── */
+
+    // Returns the increment for the slab that covers `amount`.
+    // slabs must be sorted descending by from_amount.
+    function slabStep(amount, slabs) {
+        for (var i = 0; i < slabs.length; i++) {
+            if (amount >= slabs[i].from_amount) return slabs[i].increment;
+        }
+        return 1; // fallback: increment by 1
+    }
+
+    // Snap `amount` DOWN to the nearest valid slab boundary.
+    function snapToSlab(amount, slabs) {
+        for (var i = 0; i < slabs.length; i++) {
+            if (amount >= slabs[i].from_amount) {
+                var base = slabs[i].from_amount;
+                var inc  = slabs[i].increment;
+                return base + Math.floor((amount - base) / inc) * inc;
+            }
+        }
+        return amount;
+    }
+
+    /* Adjust bid by one slab increment in direction `dir` (+1 / -1) */
     window.acAdjustBid = function (dir) {
         var team = state.selectedTeam;
         if (!team) return;
         var input = document.getElementById('acBidInput');
-        var cur   = parseInt(input.value, 10) || team.effective_base;
+        var cur   = parseInt(input.value, 10) || 0;
+        var slabs = team.slabs && team.slabs.length ? team.slabs : state.slabs;
+        var effectiveBase = team.effective_base || 1;
 
-        // Determine increment from current value using team's slabs
-        // We use a fixed step that mirrors the server logic: just show next valid
-        // from the data; for manual +/- we increment by the smallest slab step.
-        var step = computeStepForAmount(cur, team);
-        var next = dir > 0 ? cur + step : Math.max(team.effective_base, cur - step);
-        input.value = next;
-        validateBidInput(team, next);
-    };
-
-    function computeStepForAmount(amount, team) {
-        // The team.next_bid was already computed server-side; for manual adjustments
-        // we just use the difference between next_bid and current bid as the increment.
-        if (!state.currentPlayer) return 1;
-        var curBid = state.currentPlayer.current_bid || 0;
-        if (curBid > 0 && team.next_bid > curBid) {
-            return team.next_bid - curBid;
+        if (dir > 0) {
+            // If still at or below current live bid, jump to server's next_bid
+            var liveBid = state.currentPlayer ? (state.currentPlayer.current_bid || 0) : 0;
+            if (cur <= liveBid) {
+                cur = team.next_bid;
+            } else {
+                cur = cur + slabStep(cur, slabs);
+            }
+        } else {
+            // Step back one slab increment, snap to valid boundary
+            var step = slabStep(cur, slabs);
+            var decreased = cur - step;
+            cur = Math.max(effectiveBase, snapToSlab(Math.max(0, decreased), slabs));
         }
-        return 1;
-    }
+
+        input.value = cur;
+        validateBidInput(team, cur);
+    };
 
     function validateBidInput(team, value) {
         var hint = document.getElementById('acBidHint');

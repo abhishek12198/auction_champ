@@ -199,7 +199,11 @@ function renderPlayer(p) {
 
 // ── Render: bid panel ──────────────────────────────────────────────────
 function renderBidPanel(myTeam, player) {
-    if (!myTeam || !player) { show('ocBidPanel', false); return; }
+    if (!myTeam || !player) {
+        show('ocBidPanel', false);
+        renderQuickBidBox(false, 'No player on stage');
+        return;
+    }
     show('ocBidPanel', true);
 
     src('ocMyTeamLogo', myTeam.logo_url);
@@ -221,6 +225,7 @@ function renderBidPanel(myTeam, player) {
         if (bidBtn) bidBtn.disabled = true;
         if (reasonEl) { reasonEl.textContent = '🚫 '+( myTeam.can_bid_reason || 'Cannot bid'); reasonEl.className='oc-bid-reason oc-reason-err'; }
         renderPresets([], myTeam);  // hide preset wrap when can't bid
+        renderQuickBidBox(false, myTeam.can_bid_reason || 'Cannot bid', myTeam.is_leading);
     } else {
         if (input) {
             const nextBidVal   = myTeam.next_bid || myTeam.effective_base || 1;
@@ -246,8 +251,62 @@ function renderBidPanel(myTeam, player) {
             reasonEl.className = 'oc-bid-reason oc-reason-ok';
         }
         renderPresets(S.presets, myTeam);
+        renderQuickBidBox(true, myTeam.next_bid || myTeam.effective_base || 1);
     }
 }
+
+// ── Quick-bid box: update Current Bid box clickability ────────────────
+// canBid=true  → nextBid is the pts value to place
+// canBid=false, isLeading=true → owner already leads; show crown, no text
+// canBid=false, isLeading=false → nextBid is the reason string
+function renderQuickBidBox(canBid, nextBidOrReason, isLeading) {
+    const box  = $('ocCurrentBidBox');
+    const hint = $('ocQbHint');
+    if (!box) return;
+    if (canBid) {
+        box.classList.add('oc-qb-active');
+        box.classList.remove('oc-qb-disabled', 'oc-qb-leading');
+        if (hint) hint.textContent = '⚡ Tap · ' + fmt(nextBidOrReason) + ' pts';
+    } else if (isLeading) {
+        box.classList.add('oc-qb-leading');
+        box.classList.remove('oc-qb-active', 'oc-qb-disabled');
+        if (hint) hint.textContent = '🏆 You\'re leading';
+    } else {
+        box.classList.add('oc-qb-disabled');
+        box.classList.remove('oc-qb-active', 'oc-qb-leading');
+        if (hint) hint.textContent = '🚫 ' + (nextBidOrReason || 'Cannot bid');
+    }
+}
+
+// ── Quick Bid: one-tap bid at next slab value ─────────────────────────
+window.ocQuickBid = function() {
+    const { myTeam, player } = S;
+    if (!myTeam || !player || !myTeam.can_bid) return;
+
+    const bidAmount = myTeam.next_bid || myTeam.effective_base || 1;
+    const box = $('ocCurrentBidBox');
+    if (box) box.classList.add('oc-qb-placing');
+
+    fetch('/auction/owner/place-bid', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ jsonrpc:'2.0', method:'call', params:{
+            player_id: player.id, team_id: myTeam.id, bid_amount: bidAmount
+        }}),
+    })
+    .then(r => r.json())
+    .then(resp => {
+        const res = resp.result || resp;
+        if (res.success) {
+            toast('⚡ Quick Bid: ' + fmt(bidAmount) + ' pts!', 'ok');
+            fetchData();
+        } else {
+            toast(res.error || 'Bid failed', 'err');
+        }
+    })
+    .catch(() => toast('Network error. Please retry.', 'err'))
+    .finally(() => { if (box) box.classList.remove('oc-qb-placing'); });
+};
 
 // ── Render revoke button ────────────────────────────────────────────────
 function renderRevoke() {

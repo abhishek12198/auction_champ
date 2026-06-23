@@ -146,6 +146,10 @@ body[data-theme="dark"] #vn-theme-btn{background:rgba(121,184,255,0.10);border-c
                   <span class="player-attr-label">Location</span>
                   <span class="player-attr-value"><t t-esc="player.address"/></span>
                 </t>
+                <t t-if="player.effective_base_price">
+                  <span class="player-attr-label">Base Price</span>
+                  <span class="player-attr-value"><t t-esc="'{:,}'.format(int(player.effective_base_price or 0))"/> pts</span>
+                </t>
               </div>
             </div>
           </div>

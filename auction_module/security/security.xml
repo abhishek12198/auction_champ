@@ -90,6 +90,14 @@
         ]"/>
     </record>
 
+    <!-- Owner group: can see both tournament_id and team_id on their profile -->
+    <record id="group_auction_owner" model="res.groups">
+        <field name="name">Team Owner</field>
+        <field name="comment">Team owner who can bid in auctions. Sees their own tournament and team assignment.</field>
+        <field name="category_id" ref="auction_module.auction_categ"/>
+        <field name="implied_ids" eval="[(4, ref('auction_module.group_auction_bid_board'))]"/>
+    </record>
+
 </data>
 
 

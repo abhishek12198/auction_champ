@@ -626,3 +626,49 @@
     color: #0d1b3e;
     border-top-color: rgba(13,27,62,.15);
 }
+
+/* ── Tournament Systray Badge ──────────────────────────────────── */
+.o_auction_tournament_systray {
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: default;
+}
+
+.o_auction_tournament_badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #1a3a6b 0%, #2252b5 100%);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 5px 14px 5px 7px;
+    border-radius: 18px;
+    max-width: 280px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    letter-spacing: 0.2px;
+}
+
+.o_auction_tournament_logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.5);
+}
+
+.o_auction_trophy_icon {
+    font-size: 15px;
+    color: #ffd700;
+    flex-shrink: 0;
+}
+
+.o_auction_tournament_name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

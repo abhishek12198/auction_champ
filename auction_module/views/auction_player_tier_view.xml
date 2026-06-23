@@ -8,6 +8,13 @@
             <field name="arch" type="xml">
                 <search string="Player Tier">
                     <field name="name" filter_domain="[('name','ilike',self)]" string="Name"/>
+                    <field name="tournament_id" string="Tournament"
+                           groups="auction_module.group_auction_group_admin"/>
+                    <group expand="1" string="Group By"
+                           groups="auction_module.group_auction_group_admin">
+                        <filter string="Tournament" name="group_by_tournament"
+                                context="{'group_by': 'tournament_id'}"/>
+                    </group>
                 </search>
             </field>
         </record>
@@ -20,6 +27,8 @@
                     <field name="name"/>
                     <field name="description"/>
                     <field name="color"/>
+                    <field name="tournament_id"
+                           groups="auction_module.group_auction_group_admin"/>
                 </tree>
             </field>
         </record>
@@ -39,6 +48,8 @@
                             <field name="description"/>
                             <field name="is_an_icon_tier"/>
                             <field name="color" widget="selection_badge"/>
+                            <field name="tournament_id"
+                                   groups="auction_module.group_auction_group_admin"/>
                         </group>
                     </group>
                 </form>

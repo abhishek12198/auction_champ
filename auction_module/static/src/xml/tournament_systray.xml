@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+    <t t-name="auction_module.TournamentSystrayItem" owl="1">
+        <div class="o_auction_tournament_systray">
+            <span t-if="state.tournamentName" class="o_auction_tournament_badge">
+                <img t-if="state.tournamentLogo"
+                     t-att-src="state.tournamentLogo"
+                     class="o_auction_tournament_logo"
+                     alt=""/>
+                <i t-else="" class="fa fa-trophy o_auction_trophy_icon"/>
+                <span class="o_auction_tournament_name" t-esc="state.tournamentName"/>
+            </span>
+        </div>
+    </t>
+</templates>

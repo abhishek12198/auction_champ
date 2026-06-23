@@ -31,6 +31,27 @@ _logger = logging.getLogger(__name__)
 
 class Auction(http.Controller):
 
+    def _resolve_tournament(self):
+        """Return the tournament for the current request.
+
+        Priority:
+        1. The logged-in user's ``tournament_id`` field on their profile.
+        2. The single tournament flagged ``active = True`` (legacy fallback).
+
+        Routes with ``auth='none'`` that switch databases via ``_with_db``
+        must NOT call this helper — they should keep their own active-based
+        lookup because no user session is available in those contexts.
+        """
+        try:
+            user_tournament = request.env.user.sudo().tournament_id
+            if user_tournament:
+                return user_tournament
+        except Exception:
+            pass
+        return request.env['auction.tournament'].sudo().search(
+            [('active', '=', True)], limit=1
+        )
+
     @contextmanager
     def _with_db(self, db_name):
         """Open a cursor for *db_name* and inject it into the current request.
@@ -91,8 +112,7 @@ class Auction(http.Controller):
 
     @http.route('/auction/player_selector', type='http', auth='public', website=True)
     def player_selector(self, **kw):
-        tournament = request.env['auction.tournament'].sudo().search(
-            [('active', '=', True)], limit=1)
+        tournament = self._resolve_tournament()
         theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
         return request.render(
             'auction_module.player_sequence_selector',
@@ -102,9 +122,7 @@ class Auction(http.Controller):
     #sequence_template_part
     @http.route('/auction/get_players_queue', type='json', auth='public', website=True)
     def get_players_queue(self):
-        tournament = request.env['auction.tournament'].sudo().search(
-            [('active', '=', True)], limit=1
-        )
+        tournament = self._resolve_tournament()
         domain = [('icon_player', '=', False)]
         if tournament:
             domain.append(('tournament_id', '=', tournament.id))
@@ -149,8 +167,7 @@ class Auction(http.Controller):
         if not player.exists():
             return request.not_found()
 
-        tournament = request.env['auction.tournament'].sudo().search(
-            [('active', '=', True)], limit=1)
+        tournament = self._resolve_tournament()
         theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
         auction_ids = request.env['auction.auction'].sudo().search(
             [('tournament_id', '=', tournament.id)] if tournament else [])
@@ -177,8 +194,7 @@ class Auction(http.Controller):
             return request.make_response('{"error": "Player not found"}',
                                          headers=[('Content-Type', 'application/json')])
 
-        tournament = request.env['auction.tournament'].sudo().search(
-            [('active', '=', True)], limit=1)
+        tournament = self._resolve_tournament()
 
         theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
 
@@ -226,7 +242,7 @@ class Auction(http.Controller):
     #history part
     @http.route('/live_updates', type='http', auth='public', website=True)
     def live_updates_page(self):
-        tournament_id = request.env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
+        tournament_id = self._resolve_tournament()
         return request.render('auction_module.live_updates_template', {'tournament': tournament_id})
 
     @http.route('/get_live_updates', type='json', auth='public')
@@ -301,7 +317,8 @@ class Auction(http.Controller):
             domain = [('tournament_id', '=', tournament.id)]
             auctions = request.env['auction.auction'].sudo().search(domain)
             theme = tournament.player_display_template or 'vanilla'
-            access_type = 'public'
+            # Show internal actions (View Squad button) for any logged-in user
+            access_type = 'internal' if request.session.uid else 'public'
             balance_template_map = {
                 'pistah': 'auction_module.auction_details_show_pistah',
             }
@@ -385,7 +402,7 @@ class Auction(http.Controller):
 
     @http.route(['''/auction/display_auction/'''], type='http', auth="none", website=False, sitemap=False)
     def display_auction_legacy(self, **kwargs):
-        """Redirect legacy URL to db-prefixed URL."""
+        """Redirect legacy URL to db-prefixed URL, preserving ?t= tournament slug."""
         from odoo.http import db_monodb, db_list
         db_name = db_monodb(request.httprequest)
         if not db_name:
@@ -395,17 +412,31 @@ class Auction(http.Controller):
                 db_name = dbs[0]
             else:
                 return self._not_found()
-        return werkzeug.utils.redirect('/{}/auction/display_auction/'.format(db_name), 301)
+        slug = kwargs.get('t', '')
+        target = '/{}/auction/display_auction/{}'.format(db_name, slug + '/' if slug else '')
+        return werkzeug.utils.redirect(target, 301)
 
-    @http.route(['''/<string:db_name>/auction/display_auction/'''], type='http', auth="none", website=False, sitemap=False)
-    def display_auction(self, db_name, **kwargs):
+    @http.route([
+        '''/<string:db_name>/auction/display_auction/''',
+        '''/<string:db_name>/auction/display_auction/<string:tournament_slug>/''',
+    ], type='http', auth="none", website=False, sitemap=False)
+    def display_auction(self, db_name, tournament_slug=None, **kwargs):
         with self._with_db(db_name) as ok:
             if not ok:
                 return self._not_found()
+            # Resolve tournament: prefer slug in URL, fall back to active flag (legacy)
+            if tournament_slug:
+                tournament_id = request.env['auction.tournament'].sudo().search(
+                    [('slug', '=', tournament_slug)], limit=1
+                )
+            else:
+                tournament_id = request.env['auction.tournament'].sudo().search(
+                    [('active', '=', True)], limit=1
+                )
             player = request.env['auction.team.player'].sudo().get_random_player(
-                exclude_id=kwargs.get('exclude', 0)
+                exclude_id=kwargs.get('exclude', 0),
+                tournament_id=tournament_id,
             )
-            tournament_id = request.env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
             if player:
                 auction_ids = request.env['auction.auction'].sudo().search(
                     [('tournament_id', '=', tournament_id.id)] if tournament_id else []
@@ -427,15 +458,14 @@ class Auction(http.Controller):
                 }, lazy=False)
             else:
                 theme = tournament_id.player_display_template if tournament_id else 'vanilla'
-                sold_count = request.env['auction.team.player'].sudo().search_count([
-                    ('state', '=', 'sold'),
-                    ('icon_player', '=', False),
-                ])
+                t_domain = [('tournament_id', '=', tournament_id.id)] if tournament_id else []
+                sold_count = request.env['auction.team.player'].sudo().search_count(
+                    t_domain + [('state', '=', 'sold'), ('icon_player', '=', False)]
+                )
                 if sold_count:
-                    unsold_count = request.env['auction.team.player'].sudo().search_count([
-                        ('state', '=', 'unsold'),
-                        ('icon_player', '=', False),
-                    ])
+                    unsold_count = request.env['auction.team.player'].sudo().search_count(
+                        t_domain + [('state', '=', 'unsold'), ('icon_player', '=', False)]
+                    )
                     auction_ids = request.env['auction.auction'].sudo().search(
                         [('tournament_id', '=', tournament_id.id)] if tournament_id else []
                     )
@@ -459,17 +489,15 @@ class Auction(http.Controller):
     def display_remaining_players(self, **kwargs):
         """Standalone page loaded inside the Remaining Players drawer iframe."""
         env = request.env
+        tournament = self._resolve_tournament()
+        t_domain = [('tournament_id', '=', tournament.id)] if tournament else []
         players = env['auction.team.player'].sudo().search(
-            [('state', '=', 'auction'), ('icon_player', '=', False)],
+            t_domain + [('state', '=', 'auction'), ('icon_player', '=', False)],
             order='sl_no asc',
         )
 
-        # Resolve theme: prefer explicit ?theme= param, then fall back to active tournament
-        theme = kwargs.get('theme', '')
-        if not theme:
-            tournament = env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
-            theme = tournament.player_display_template if tournament else 'vanilla'
-        theme = theme or 'vanilla'
+        # Resolve theme: prefer explicit ?theme= param, then tournament setting
+        theme = kwargs.get('theme', '') or (tournament.player_display_template if tournament else '') or 'vanilla'
 
         # Group players by tier (preserving encounter order)
         tier_map = {}
@@ -498,7 +526,7 @@ class Auction(http.Controller):
         team_players = request.env['auction.auction.player'].search([('auction_id.team_id', '=', team_id)])
 
         team = request.env['auction.team'].browse(team_id)
-        tournament = request.env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
+        tournament = self._resolve_tournament()
         theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
         icon_players = request.env['auction.team.player'].get_icon_players(team_id)
         if icon_players:
@@ -602,7 +630,7 @@ class Auction(http.Controller):
     @http.route('/player_card/download', type='http', auth="public", website=True)
     def download_player_card(self,  **kwargs):
 
-        tournament = request.env['auction.tournament'].search([('active', '=', True)], limit=1)
+        tournament = self._resolve_tournament()
 
         players = request.env['auction.team.player'].sudo().search([('state', 'in', ['draft', 'auction'])], limit=3)
         html_content = ''
@@ -629,11 +657,11 @@ class Auction(http.Controller):
 
     @http.route('/player_card/download_images', type='http', auth="public", website=True)
     def download_player_cards_as_images(self, **kwargs):
-        tournament = request.env['auction.tournament'].search([('active', '=', True)] ,limit=1)
+        tournament = self._resolve_tournament()
 
 
         # Fetch all players related to the tournament
-        players = request.env['auction.team.player'].sudo().get_auction_players()
+        players = request.env['auction.team.player'].sudo().get_auction_players(tournament_id=tournament)
 
         image_paths = []
         with tempfile.TemporaryDirectory() as tmpdirname:
@@ -685,12 +713,44 @@ class Auction(http.Controller):
     def auction_live_page(self, **kw):
         return request.render('auction_module.auction_live_page')
 
+    @http.route('/auction/my/live-board', type='http', auth='user', website=False)
+    def my_live_board_redirect(self, **kw):
+        """Menu shortcut: resolve the current user's tournament and redirect to its live board."""
+        user = request.env['res.users'].sudo().browse(request.uid)
+        tournament = user.tournament_id
+        if not tournament:
+            # Admin has no specific tournament — fall back to active tournament
+            is_admin = request.env.user.has_group('auction_module.group_auction_group_admin')
+            if is_admin:
+                tournament = request.env['auction.tournament'].sudo().search(
+                    [('active', '=', True)], limit=1
+                )
+        if tournament and tournament.slug:
+            db_name = request.env.cr.dbname
+            return request.redirect('/{}/{}/auction/live-board'.format(db_name, tournament.slug))
+        return request.redirect('/web')
+
+    @http.route('/auction/my/team-balance', type='http', auth='user', website=False)
+    def my_team_balance_redirect(self, **kw):
+        """Menu shortcut: resolve the current user's tournament and redirect to its points table."""
+        tournament = request.env.user.sudo().tournament_id
+        if not tournament:
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('active', '=', True)], limit=1
+            )
+        if tournament and tournament.slug:
+            return request.redirect('/{}/auction/show/team/balance'.format(tournament.slug))
+        return request.redirect('/web')
+
     @http.route('/auction/showcase', type='http', auth='user', website=True)
     def auction_showcase(self, **kw):
         """Redirect to the correct player showcase based on tournament algorithm."""
-        tournament = request.env['auction.tournament'].sudo().search(
-            [('active', '=', True)], limit=1
-        )
+        tournament = self._resolve_tournament()
+        if tournament and tournament.slug:
+            db_name = request.env.cr.dbname
+            if tournament.player_appearance_algorithm == 'linear':
+                return request.redirect('/auction/player_selector')
+            return request.redirect('/{}/auction/display_auction/{}/'.format(db_name, tournament.slug))
         if tournament and tournament.player_appearance_algorithm == 'linear':
             return request.redirect('/auction/player_selector')
         return request.redirect('/auction/display_auction')
@@ -962,21 +1022,34 @@ class Auction(http.Controller):
                     'logo_url': pub_img('auction.tournament', tournament.id, 'logo') if tournament.logo else '',
                 }
 
-            # ── Current player: ONLY show the player explicitly flagged as on stage ──
+            # ── Stamp-first: check if tournament has an active sold/unsold stamp ──
+            stamp_player = None
+            stamp_state_val = None
+            now_dt = fields.Datetime.now()
+            if tournament.stamp_expires_at and tournament.stamp_expires_at > now_dt and tournament.stamp_player_id:
+                stamp_player = tournament.stamp_player_id
+                stamp_state_val = tournament.stamp_state
+
+            # ── Current player on stage (normal display) ──
             current_player = env['auction.team.player'].sudo().search([
                 ('is_on_stage', '=', True),
+                ('tournament_id', '=', tournament.id),
             ], limit=1)
+
+            # If stamp is active use the stamp player as the displayed player
+            # so the live board shows SOLD/UNSOLD even after is_on_stage
+            # has moved on to the next player.
+            if stamp_player:
+                current_player = stamp_player
 
             if current_player:
                 result['no_auction'] = False
 
-                # Base price: check all auctions (no tournament filter to be safe)
+                # Base price: check auctions for this tournament
                 base_price = 0
-                t_id = tournament.id if tournament else False
-                auc_domain = [('tournament_id', '=', t_id)] if t_id else []
-                auctions_all = env['auction.auction'].sudo().search(auc_domain)
-                if not auctions_all:
-                    auctions_all = env['auction.auction'].sudo().search([])
+                auctions_all = env['auction.auction'].sudo().search(
+                    [('tournament_id', '=', tournament.id)]
+                )
                 for auc in auctions_all:
                     base = auc.base_point or 0
                     if current_player.tier_id and auc.tier_limit_ids:
@@ -1016,14 +1089,9 @@ class Auction(http.Controller):
                     }
 
             # ── Recent history (last 5 transactions) ──
-            hist_domain = [('tournament_id', '=', tournament.id)] if tournament else []
             history = env['auction.history'].sudo().search(
-                hist_domain, order='create_date desc', limit=5
+                [('tournament_id', '=', tournament.id)], order='create_date desc', limit=5
             )
-            if not history:
-                history = env['auction.history'].sudo().search(
-                    [], order='create_date desc', limit=5
-                )
             result['recent_history'] = [
                 {
                     'message': rec.message or '',
@@ -1035,14 +1103,9 @@ class Auction(http.Controller):
             ]
 
             # ── Top 5 most expensive sold players (MVP board) ──
-            top_domain = [('auction_id.tournament_id', '=', tournament.id)] if tournament else []
             top_sold = env['auction.auction.player'].sudo().search(
-                top_domain, order='points desc', limit=5
+                [('auction_id.tournament_id', '=', tournament.id)], order='points desc', limit=5
             )
-            if not top_sold:
-                top_sold = env['auction.auction.player'].sudo().search(
-                    [], order='points desc', limit=5
-                )
             result['top_players'] = [
                 {
                     'rank': idx + 1,
@@ -1057,10 +1120,9 @@ class Auction(http.Controller):
             ]
 
             # ── Teams (from auctions in this tournament) ──
-            auc_domain = [('tournament_id', '=', tournament.id)] if tournament else []
-            auctions = env['auction.auction'].sudo().search(auc_domain)
-            if not auctions:
-                auctions = env['auction.auction'].sudo().search([])
+            auctions = env['auction.auction'].sudo().search(
+                [('tournament_id', '=', tournament.id)]
+            )
             for auc in auctions:
                 team = auc.team_id
                 if team:
@@ -1091,9 +1153,7 @@ class Auction(http.Controller):
 
     @http.route('/auction/dashboard', type='http', auth='user', website=True)
     def auction_dashboard(self, **kw):
-        tournament = request.env['auction.tournament'].sudo().search(
-            [('active', '=', True)], limit=1
-        )
+        tournament = self._resolve_tournament()
         return request.render('auction_module.auction_dashboard_template', {
             'tournament': tournament,
         })
@@ -1101,9 +1161,7 @@ class Auction(http.Controller):
     @http.route('/auction/dashboard/data', type='http', auth='user', website=False, csrf=False)
     def auction_dashboard_data(self, **kw):
         env = request.env
-        tournament = env['auction.tournament'].sudo().search(
-            [('active', '=', True)], limit=1
-        )
+        tournament = self._resolve_tournament()
 
         # Always count ALL players by state (not filtered by tournament).
         # This ensures the registration pie chart always shows real data,

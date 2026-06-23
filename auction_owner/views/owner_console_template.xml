@@ -113,9 +113,10 @@
                             <div class="oc-bid-box-lbl">BASE PRICE</div>
                             <div class="oc-bid-box-val" id="ocBasePrice">—</div>
                         </div>
-                        <div class="oc-bid-box oc-bid-box-current">
+                        <div class="oc-bid-box oc-bid-box-current" id="ocCurrentBidBox" onclick="ocQuickBid()">
                             <div class="oc-bid-box-lbl">CURRENT BID</div>
                             <div class="oc-bid-box-val oc-bid-live" id="ocCurrentBid">—</div>
+                            <div class="oc-qb-hint" id="ocQbHint"></div>
                         </div>
                     </div>
                     <div class="oc-leading-team" id="ocLeadingTeam" style="display:none">

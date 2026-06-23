@@ -41,11 +41,11 @@
                     <field name="photo"/>
                     <field name="tournament_id"/>
                     <field name="state"/>
-                    <field name="assigned_team_id"/>
                     <field name="tier_id"/>
                     <field name="tier_color"/>
                     <field name="p_category"/>
                     <field name="blood_group"/>
+                    <field name="assigned_team_id"/>
 
                     <templates>
                         <t t-name="kanban-box">
@@ -233,16 +233,16 @@
                     <field name="photo_url" invisible="1"/>
                     <field name="blood_group"/>
 
-                    <field name="tournament_id"/>
+                    <field name="tournament_id" groups="auction_module.group_auction_group_admin"/>
                     <field name="state"/>
                     <field name="assigned_team_id" invisible="1"/>
                     <field name="icon_player" invisible="1"/>
                     <field name="sl_no" widget="handle"/>
                     <button name="%(auction_module.action_auction_sell_player)d" string="Sell to Team" type="action" class="oe_highlight" attrs="{'invisible': [('state', '!=', 'auction')]}"></button>
-                    <button name="action_unsold" string="Set to Unsold" type="object"   attrs="{'invisible': [('state', '!=', 'auction')]}" confirm="This will set the player to Unsold and later you can bring back to Auction. Click on Ok to continue. Otherwise click on Cancel"></button>
-                    <button name="action_auction" string="Bring to Auction" type="object"  attrs="{'invisible': [('state', '!=', 'unsold')]}" confirm="This will bring the player back to Auction from Unsold mode. Click on Ok to continue. Otherwise click on Cancel"></button>
-                    <button name="action_revoke_key_player" string="Revoke Icon Player" attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '!=', True)]}"  class="btn btn-secondary oe_kanban_button" type="object"  confirm="This will revoke the player from the icon player list and bring to auction. Click on Ok to continue. Otherwise click on Cancel"/>
-                    <button name="action_recall_auction_sold" string="Recall to Auction" attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '=', True)]}"  class="btn btn-secondary oe_kanban_button" type="object"  confirm="This will recall the sold player and bring to auction. Click on Ok to continue. Otherwise click on Cancel"/>
+                    <button name="action_unsold" string="Set to Unsold" type="object" attrs="{'invisible': [('state', '!=', 'auction')]}" confirm="This will set the player to Unsold and later you can bring back to Auction. Click on Ok to continue. Otherwise click on Cancel"></button>
+                    <button name="action_auction" string="Bring to Auction" type="object" attrs="{'invisible': [('state', '!=', 'unsold')]}" confirm="This will bring the player back to Auction from Unsold mode. Click on Ok to continue. Otherwise click on Cancel"></button>
+                    <button name="action_revoke_key_player" string="Revoke Icon Player" attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '!=', True)]}" class="btn btn-secondary oe_kanban_button" type="object" confirm="This will revoke the player from the icon player list and bring to auction. Click on Ok to continue. Otherwise click on Cancel"/>
+                    <button name="action_recall_auction_sold" string="Recall to Auction" attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '=', True)]}" class="btn btn-secondary oe_kanban_button" type="object" confirm="This will recall the sold player and bring to auction. Click on Ok to continue. Otherwise click on Cancel"/>
                 </tree>
             </field>
         </record>
@@ -261,7 +261,7 @@
                     <field name="amount_paid" widget="boolean_toggle"/>
                     <field name="photo_url" invisible="1"/>
                     <field name="blood_group"/>
-                    <field name="tournament_id"/>
+                    <field name="tournament_id" groups="auction_module.group_auction_group_admin"/>
                     <field name="state"/>
                     <field name="assigned_team_id"/>
                     <field name="icon_player" invisible="1"/>
@@ -460,7 +460,7 @@
                                        widget="boolean_toggle" invisible="1"/>
                             </group>
                             <group string="Tournament &amp; Team">
-                                <field name="tournament_id"/>
+                                <field name="tournament_id" groups="auction_module.group_auction_group_admin"/>
                                 <field name="assigned_team_id" string="Assigned Team"
                                        readonly="1"/>
                                 <field name="current_team"
