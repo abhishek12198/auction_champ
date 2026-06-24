@@ -300,7 +300,7 @@
                 </t>
                 <t t-if="player.contact">
                   <span class="player-attr-label">Mobile No</span>
-                  <span class="player-attr-value"><t t-esc="player.contact"/></span>
+                  <span class="player-attr-value"><t t-esc="player.masked_contact"/></span>
                 </t>
                 <t t-if="player.p_category">
                   <span class="player-attr-label">Category</span>

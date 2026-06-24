@@ -479,7 +479,9 @@ body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to to
         <div class="hud-tourn-desc"><t t-esc="player.tournament_id.description"/></div>
       </div>
       <div class="hud-logo-center">
-        <img class="ac-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ" />
+        <a href="/web" style="display:contents;">
+          <img class="ac-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ" />
+        </a>
         <img class="tourn-logo" t-att-src="image_data_uri(player.tournament_id.logo)" alt="Tournament Logo" />
       </div>
       <div class="hud-tourn-logo">
@@ -572,7 +574,7 @@ body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to to
           <t t-if="player.contact">
             <div class="hud-stat-row">
               <span class="hud-stat-key">Mobile</span>
-              <span class="hud-stat-val"><t t-esc="player.contact"/></span>
+              <span class="hud-stat-val"><t t-esc="player.masked_contact"/></span>
             </div>
           </t>
           <t t-if="player.p_category">

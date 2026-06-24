@@ -11,7 +11,7 @@
         integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&amp;family=Rajdhani:wght@400;500;600;700&amp;family=Nunito:wght@600;700;800&amp;family=Teko:wght@600;700&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Barlow+Condensed:wght@400;500;600;700&amp;family=Orbitron:wght@600;700;900&amp;family=Rajdhani:wght@400;500;600;700&amp;family=Nunito:wght@600;700;800&amp;family=Teko:wght@600;700&amp;display=swap" rel="stylesheet"/>
   <t t-call-assets="web.assets_common" t-js="false"/>
   <t t-call-assets="web.assets_frontend" t-js="false"/>
   <style>
@@ -88,6 +88,8 @@
 }
 
 /* ═══ BASE ═══════════════════════════════════════════════════════════ */
+/* Sports display font — used for player name, serial, tier/role badges across all themes */
+:root,[data-theme]{--sf:'Bebas Neue','Teko',sans-serif;--sf-body:'Barlow Condensed','Rajdhani',sans-serif}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(--bf);overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
@@ -128,7 +130,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
 /* ═══ GRID ═══════════════════════════════════════════════════════════ */
 .mq-grid-hd{position:relative;z-index:10;display:flex;align-items:center;
-  justify-content:space-between;padding:16px 24px 10px}
+  justify-content:space-between;padding:16px 24px 10px;flex-wrap:wrap;gap:8px}
 .mq-grid-title{font-family:var(--hf);font-size:.82rem;letter-spacing:3px;text-transform:uppercase}
 .mq-grid-title span{color:var(--accent);border-bottom:2px solid var(--accent);padding-bottom:2px}
 .mq-badge{background:var(--badge);color:var(--badge-tx);font-size:.68rem;font-weight:800;padding:3px 12px;border-radius:20px}
@@ -147,15 +149,82 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .mq-lbl{font-size:0.48rem;font-weight:700;letter-spacing:1.5px;line-height:1;position:relative;z-index:1;
   text-transform:uppercase;opacity:.95}
 /* SOLD — gold */
-.mq-btn.sold{background:rgba(218,165,32,.18);border:1.5px solid #DAA520;color:#DAA520;cursor:default}
+.mq-btn.sold{background:rgba(218,165,32,.18);border:1.5px solid #DAA520;color:#DAA520;cursor:pointer}
 .mq-btn.sold::before{display:none}
-.mq-btn.sold:hover{transform:none;box-shadow:none;background:rgba(218,165,32,.18);color:#DAA520}
+.mq-btn.sold:hover{transform:translateY(-2px);box-shadow:0 0 12px rgba(218,165,32,.3);background:rgba(218,165,32,.26);color:#DAA520}
 /* UNSOLD — crimson */
-.mq-btn.unsold{background:rgba(220,20,60,.18);border:1.5px solid #DC143C;color:#DC143C;cursor:default}
+.mq-btn.unsold{background:rgba(220,20,60,.18);border:1.5px solid #DC143C;color:#DC143C;cursor:pointer}
 .mq-btn.unsold::before{display:none}
 .mq-btn.unsold:hover{transform:none;box-shadow:none;background:rgba(220,20,60,.18);color:#DC143C}
+/* Deck stamp overlay (UNSOLD red / SOLD with logo) */
+/* Sold — subtle team logo centered behind number */
+.mq-sold-logo{position:absolute;inset:0;width:100%;height:100%;
+  object-fit:contain;border-radius:8px;opacity:.22;pointer-events:none;
+  transition:opacity .2s;padding:4px}
+.mq-btn.sold:hover .mq-sold-logo{opacity:.42}
 .mq-empty{text-align:center;padding:60px 20px;color:var(--tx-d)}
 .mq-empty-icon{font-size:2.8rem;margin-bottom:10px}
+/* Legend */
+.mq-legend{display:flex;align-items:center;gap:12px;flex-wrap:nowrap}
+.mq-legend-item{display:flex;align-items:center;gap:5px;font-family:var(--hf);
+  font-size:.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx-d);white-space:nowrap}
+.mq-legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.mq-legend-dot.available{background:var(--btn-bg);border:1.5px solid var(--btn-bd)}
+.mq-legend-dot.sold{background:rgba(218,165,32,.5);border:1.5px solid #DAA520}
+.mq-legend-dot.unsold{background:rgba(220,20,60,.4);border:1.5px solid #DC143C}
+.mq-leg-short{display:none}
+.mq-grid-hd-right{display:flex;align-items:center;gap:14px}
+
+/* ═══ DICE ══════════════════════════════════════════════════════════ */
+.mq-dice-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;
+  cursor:pointer;user-select:none;-webkit-user-select:none}
+.mq-dice{width:46px;height:46px;background:var(--btn-bg);border:2px solid var(--accent);
+  border-radius:9px;padding:6px;position:relative;
+  box-shadow:0 0 12px var(--accent-glow),inset 0 0 10px rgba(0,0,0,.45);
+  transition:box-shadow .2s,transform .15s}
+.mq-dice:hover{box-shadow:0 0 22px var(--accent-glow),inset 0 0 10px rgba(0,0,0,.45);transform:scale(1.1)}
+.mq-dice.rolling{animation:mqDiceShake .1s linear infinite}
+@keyframes mqDiceShake{
+  0%  {transform:rotate(-12deg) scale(.9)}
+  25% {transform:rotate(12deg)  scale(1.05)}
+  50% {transform:rotate(-8deg)  scale(.94)}
+  75% {transform:rotate(10deg)  scale(1.04)}
+  100%{transform:rotate(0deg)   scale(1)}
+}
+.mq-die-grid{display:grid;grid-template-columns:repeat(3,1fr);
+  grid-template-rows:repeat(3,1fr);width:100%;height:100%;gap:2px}
+.mq-die-cell{display:flex;align-items:center;justify-content:center}
+.mq-die-dot{width:6px;height:6px;background:var(--accent);border-radius:50%;
+  box-shadow:0 0 5px var(--accent)}
+.mq-dice-lbl{font-family:var(--hf);font-size:.46rem;letter-spacing:2px;
+  text-transform:uppercase;color:var(--tx-d);line-height:1}
+/* Result pill — floats in centre of screen */
+#mqDiceResult{display:none;position:fixed;bottom:80px;left:50%;
+  transform:translateX(-50%);z-index:900;
+  font-family:var(--hf);font-size:1.9rem;font-weight:900;letter-spacing:5px;
+  color:var(--accent);background:var(--bg-p);
+  border:2px solid var(--accent);border-radius:50px;
+  padding:12px 44px;
+  box-shadow:0 0 40px var(--accent-glow),0 8px 32px rgba(0,0,0,.55);
+  text-align:center;pointer-events:auto;cursor:pointer;transition:transform .15s,box-shadow .15s}
+#mqDiceResult:hover{transform:translateX(-50%) scale(1.06);
+  box-shadow:0 0 60px var(--accent-glow),0 12px 40px rgba(0,0,0,.65)}
+#mqDiceResult:active{transform:translateX(-50%) scale(.97)}
+#mqDiceResult.show{display:block;animation:mqDicePop .45s cubic-bezier(.175,.885,.32,1.275)}
+#mqDiceResult.hide{animation:mqDiceFade .35s ease forwards}
+@keyframes mqDicePop{
+  0%  {transform:translateX(-50%) scale(0) rotate(-15deg);opacity:0}
+  80% {transform:translateX(-50%) scale(1.07)}
+  100%{transform:translateX(-50%) scale(1);opacity:1}
+}
+@keyframes mqDiceFade{to{opacity:0;transform:translateX(-50%) translateY(12px)}}
+/* Dice-picked player highlight */
+@keyframes mqDicePulse{
+  0%,100%{box-shadow:0 0 0 0 var(--accent-glow),0 0 12px var(--accent-glow)}
+  50%{box-shadow:0 0 0 8px transparent,0 0 28px var(--accent)}
+}
+.mq-btn.dice-pick{animation:mqDicePulse .7s ease-in-out 4;
+  border-color:var(--accent)!important;}
 
 /* ═══ PLAYER DRAWER ══════════════════════════════════════════════════ */
 .pc-overlay{position:fixed;inset:0;z-index:800;pointer-events:none}
@@ -177,6 +246,16 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   width:40px;height:40px;display:flex;align-items:center;justify-content:center;
   border-radius:6px;transition:all .2s}
 .pc-close:hover{background:rgba(220,20,60,.15);color:#e53935}
+.pc-fullscreen-btn{background:none;border:1.5px solid var(--card-bd);color:var(--tx-d);
+  font-size:1.1rem;cursor:pointer;width:36px;height:36px;display:flex;align-items:center;
+  justify-content:center;border-radius:6px;transition:all .2s;flex-shrink:0}
+.pc-fullscreen-btn:hover{border-color:var(--accent);color:var(--accent)}
+/* Fullscreen mode — hide chrome, fill screen with player card */
+#pcPanel:fullscreen,#pcPanel:-webkit-full-screen,#pcPanel:-moz-full-screen{
+  width:100vw!important;right:0!important;border:none!important;box-shadow:none!important}
+#pcPanel:fullscreen .pc-ph,#pcPanel:-webkit-full-screen .pc-ph,#pcPanel:-moz-full-screen .pc-ph{display:none}
+#pcPanel:fullscreen .pc-actions,#pcPanel:-webkit-full-screen .pc-actions,#pcPanel:-moz-full-screen .pc-actions{display:none!important}
+#pcPanel:fullscreen .pc-body,#pcPanel:-webkit-full-screen .pc-body,#pcPanel:-moz-full-screen .pc-body{height:100vh}
 .pc-body{flex:1;overflow:hidden;display:flex;flex-direction:row}
 
 /* Player photo */
@@ -187,6 +266,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .pc-photo-ph{width:160px;height:200px;border-radius:8px;background:var(--bg-c);
   display:flex;align-items:center;justify-content:center;font-size:5rem;color:var(--tx-d);
   border:2px dashed var(--div)}
+.pc-serial-watermark{
+  position:absolute;bottom:8px;right:12px;
+  font-family:var(--hf);font-size:5rem;font-weight:900;
+  line-height:1;pointer-events:none;letter-spacing:-2px;
+}
 .pc-stamp-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   pointer-events:none;background:rgba(0,0,0,.45)}
 .pc-stamp{font-family:var(--hf);font-size:clamp(2rem,6vw,3.5rem);font-weight:900;
@@ -200,21 +284,74 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
 /* Player info */
 .pc-info{padding:28px 32px;flex:1;overflow-y:auto;display:flex;flex-direction:column;justify-content:center}
-.pc-serial{font-family:var(--hf);font-size:4rem;font-weight:900;color:var(--accent);
+.pc-serial{font-family:var(--sf);font-size:4rem;font-weight:400;color:var(--accent);
   line-height:1;margin-bottom:6px;text-shadow:0 0 20px var(--accent-glow)}
-.pc-name{font-family:var(--hf);font-size:2rem;font-weight:700;text-transform:uppercase;
-  letter-spacing:3px;margin-bottom:12px}
+.pc-name{font-family:var(--sf);font-size:2.8rem;font-weight:400;text-transform:uppercase;
+  letter-spacing:4px;margin-bottom:12px}
+/* Tier + Role badges */
+.pc-badges{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:18px}
 .pc-tier-badge{display:inline-block;background:var(--badge);color:var(--badge-tx);
-  font-size:.8rem;font-weight:800;padding:5px 18px;border-radius:20px;
-  letter-spacing:1px;text-transform:uppercase;margin-bottom:18px}
+  font-family:var(--sf);font-size:.85rem;font-weight:400;padding:5px 18px;border-radius:20px;
+  letter-spacing:2px;text-transform:uppercase}
+.pc-role-badge{display:inline-flex;align-items:center;gap:5px;
+  font-family:var(--sf);font-size:.85rem;font-weight:400;padding:5px 16px;border-radius:20px;
+  letter-spacing:2px;text-transform:uppercase;
+  color:var(--accent);border:2px solid var(--accent);background:var(--accent-glow)}
 .pc-attrs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
 .pc-attr{background:var(--bg-c);border-radius:10px;padding:12px 16px;border:1px solid var(--card-bd)}
-.pc-attr-label{font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--tx-d);margin-bottom:4px}
-.pc-attr-val{font-size:1.05rem;font-weight:600;color:var(--tx)}
-.pc-state-banner{margin-top:12px;padding:8px 14px;border-radius:8px;text-align:center;
-  font-family:var(--hf);font-size:.85rem;font-weight:700;letter-spacing:2px;text-transform:uppercase}
-.pc-state-banner.sold{background:var(--sold-bg);color:var(--sold-tx)}
-.pc-state-banner.unsold{background:var(--unsold-bg);color:var(--unsold-tx)}
+.pc-attr-label{font-family:var(--sf-body);font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--tx-d);margin-bottom:4px}
+.pc-attr-val{font-family:var(--sf);font-size:1.1rem;font-weight:400;letter-spacing:1px;color:var(--tx)}
+.pc-state-banner{margin-top:12px;padding:10px 18px;border-radius:10px;text-align:center;
+  font-family:var(--hf);font-size:1rem;font-weight:900;letter-spacing:4px;text-transform:uppercase;
+  border:3px solid currentColor}
+.pc-state-banner.unsold{color:#DC143C;background:rgba(220,20,60,.12);border-color:#DC143C}
+.pc-state-banner.sold{display:flex;align-items:center;justify-content:center;gap:10px;
+  background:rgba(0,0,0,.18);border-color:var(--accent);color:var(--accent);letter-spacing:2px;
+  cursor:pointer;transition:background .2s,box-shadow .2s;position:relative}
+.pc-state-banner.sold:hover{background:rgba(0,0,0,.32);box-shadow:0 0 14px var(--accent-glow)}
+.pc-state-banner.sold .sb-edit-hint{position:absolute;top:4px;right:8px;font-size:.6rem;
+  opacity:.5;letter-spacing:1px;font-weight:600;text-transform:uppercase}
+.pc-state-banner.sold .sb-logo{width:36px;height:36px;object-fit:contain;border-radius:50%;
+  background:rgba(255,255,255,.1);padding:3px;flex-shrink:0}
+.pc-state-banner.sold .sb-text{display:flex;flex-direction:column;gap:2px;text-align:left}
+.pc-state-banner.sold .sb-label{font-size:.65rem;opacity:.65;letter-spacing:2px;font-weight:700}
+.pc-state-banner.sold .sb-team{font-size:1.05rem;font-weight:900;letter-spacing:2px;line-height:1.1}
+.pc-state-banner.sold .sb-pts{font-size:.8rem;font-weight:700;opacity:.8;letter-spacing:1px}
+/* Inline sale-edit panel */
+.pc-pts-edit{margin-top:10px;background:var(--bg-c);border:1.5px solid var(--accent);
+  border-radius:10px;padding:14px 16px;display:none;flex-direction:column;gap:12px}
+.pc-pts-edit.open{display:flex}
+.pc-pts-edit-title{font-family:var(--hf);font-size:.7rem;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--accent);margin-bottom:0}
+.pc-pts-edit-section{font-family:var(--hf);font-size:.62rem;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--tx-d);margin-bottom:4px}
+/* Team badge strip */
+.pc-edit-teams{display:flex;flex-wrap:wrap;gap:6px}
+.pc-edit-team-btn{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  border:1.5px solid var(--card-bd);background:var(--bg-p);cursor:pointer;
+  font-family:var(--hf);font-size:.78rem;font-weight:700;color:var(--tx-d);transition:all .18s}
+.pc-edit-team-btn img{width:20px;height:20px;object-fit:contain;border-radius:50%}
+.pc-edit-team-btn:hover{border-color:var(--accent);color:var(--tx)}
+.pc-edit-team-btn.selected{border-color:var(--accent);background:var(--accent);
+  color:var(--badge-tx);box-shadow:0 0 8px var(--accent-glow)}
+/* Points row */
+.pc-pts-edit-row{display:flex;gap:8px;align-items:center}
+.pc-pts-edit input[type=number]{flex:1;background:var(--bg-p);border:1.5px solid var(--card-bd);
+  border-radius:8px;padding:10px 14px;font-family:var(--hf);font-size:1.1rem;font-weight:700;
+  color:var(--tx);outline:none;min-width:0;text-align:center}
+.pc-pts-edit input[type=number]:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-glow)}
+.pc-pts-adj-btn{width:38px;height:38px;border:1.5px solid var(--card-bd);border-radius:8px;
+  background:var(--bg-p);color:var(--tx);font-size:1.2rem;font-weight:700;cursor:pointer;
+  flex-shrink:0;transition:all .15s;display:flex;align-items:center;justify-content:center}
+.pc-pts-adj-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-glow)}
+.pc-pts-edit-save{padding:10px 18px;border:none;border-radius:8px;background:var(--accent);
+  color:var(--badge-tx);font-family:var(--hf);font-size:.85rem;font-weight:800;
+  letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:opacity .2s}
+.pc-pts-edit-save:hover{opacity:.85}
+.pc-pts-edit-cancel{padding:10px 14px;border:1.5px solid var(--card-bd);border-radius:8px;
+  background:transparent;color:var(--tx-d);font-family:var(--hf);font-size:.85rem;font-weight:700;
+  cursor:pointer;transition:border-color .2s}
+.pc-pts-edit-cancel:hover{border-color:var(--tx-d)}
 .pc-loading{padding:40px;text-align:center;color:var(--tx-d)}
 
 /* Action bar */
@@ -228,6 +365,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .pc-action-btn.sell-btn{background:var(--action-sell);color:var(--action-sell-tx)}
 .pc-action-btn.sell-btn:hover{background:var(--action-sell-h);transform:translateY(-1px)}
 .pc-action-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.pc-action-btn.bring-btn{background:var(--accent);color:var(--badge-tx);border:none}
+.pc-action-btn.bring-btn:hover{background:var(--accent2);transform:translateY(-1px)}
 
 /* ═══ CONFIRM MODAL ══════════════════════════════════════════════════ */
 .cm-overlay{position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.7);
@@ -247,78 +386,294 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   color:#fff;cursor:pointer;font-size:.88rem;font-weight:700;transition:all .2s}
 .cm-confirm:hover{background:var(--action-unsold-h)}
 
-/* ═══ SELL MODAL ══════════════════════════════════════════════════════ */
-.sm-overlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.8);
-  display:none;align-items:flex-start;justify-content:center;
-  backdrop-filter:blur(4px);overflow-y:auto;padding:20px}
-.sm-overlay.open{display:flex}
-.sm-box{background:var(--card-bg);border:2px solid var(--div);border-radius:16px;
-  width:min(540px,100%);margin:auto;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6)}
-.sm-head{background:var(--bg-p);padding:16px 20px;border-bottom:2px solid var(--div);
-  display:flex;align-items:center;justify-content:space-between}
-.sm-head::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent)}
-.sm-head{position:relative}
-.sm-head-left{display:flex;flex-direction:column}
-.sm-head-title{font-family:var(--hf);font-size:.82rem;letter-spacing:3px;
-  text-transform:uppercase;color:var(--accent);margin-bottom:2px}
-.sm-head-player{font-family:var(--hf);font-size:1.1rem;font-weight:700;letter-spacing:1px;text-transform:uppercase}
-.sm-close{background:none;border:none;color:var(--tx-d);font-size:1.8rem;cursor:pointer;
-  padding:0;width:36px;height:36px;display:flex;align-items:center;justify-content:center}
-.sm-close:hover{color:#e53935}
-.sm-section{padding:16px 20px}
-.sm-section-label{font-size:.62rem;text-transform:uppercase;letter-spacing:2px;color:var(--tx-d);margin-bottom:10px}
-.sm-team-grid{display:flex;flex-wrap:wrap;gap:8px}
-.sm-team-btn{padding:8px 16px;border-radius:8px;border:1.5px solid var(--div);
-  background:var(--bg-c);color:var(--tx);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s}
-.sm-team-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
-.sm-team-btn.active{border-color:var(--accent);background:var(--accent);color:var(--badge-tx);font-weight:700}
-.sm-team-btn:disabled{opacity:.4;cursor:not-allowed}
-.sm-no-teams{color:var(--tx-d);font-size:.85rem}
-.sm-team-detail{background:var(--bg-c);border:1px solid var(--card-bd);border-radius:10px;
-  padding:10px 16px;display:none;gap:20px;flex-wrap:wrap;margin-top:8px}
-.sm-team-detail.show{display:flex}
-.sm-td-item{text-align:center}
-.sm-td-label{font-size:.58rem;text-transform:uppercase;letter-spacing:1px;color:var(--tx-d);margin-bottom:2px}
-.sm-td-val{font-family:var(--hf);font-size:1rem;font-weight:700;color:var(--accent)}
-.sm-suggestion{font-size:.8rem;color:var(--tx-d);padding:6px 12px;border-radius:6px;
-  background:var(--bg-c);border-left:3px solid var(--accent);display:none;margin-top:6px}
-.sm-suggestion.show{display:block}
-.sm-pts-row{display:flex;align-items:center;gap:10px}
-.sm-pts-btn{width:40px;height:40px;border-radius:8px;border:1.5px solid var(--div);
-  background:var(--bg-c);color:var(--tx);font-size:1.3rem;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:700;flex-shrink:0}
-.sm-pts-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
-.sm-pts-btn:disabled{opacity:.4;cursor:not-allowed}
-.sm-pts-input{flex:1;padding:10px 14px;border-radius:8px;border:1.5px solid var(--div);
-  background:var(--bg-c);color:var(--tx);font-family:var(--hf);font-size:1.2rem;font-weight:700;
-  text-align:center;outline:none}
-.sm-pts-input:focus{border-color:var(--accent)}
-.sm-presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.sm-preset{padding:5px 12px;border-radius:6px;border:1px solid var(--div);background:var(--bg-c);
-  color:var(--tx-d);font-size:.78rem;cursor:pointer;transition:all .2s}
-.sm-preset:hover{border-color:var(--accent);color:var(--accent)}
-.sm-preset.active{background:var(--accent);color:var(--badge-tx);border-color:var(--accent)}
-.sm-error{color:#e53935;font-size:.82rem;padding:6px 12px;background:rgba(220,20,60,.1);
-  border-radius:6px;border-left:3px solid #e53935;display:none;margin-top:6px}
-.sm-error.show{display:block}
-.sm-footer{padding:14px 20px;border-top:1px solid var(--div)}
-.sm-sell-btn{width:100%;padding:14px;border:none;border-radius:10px;
-  background:var(--action-sell);color:var(--action-sell-tx);
-  font-family:var(--hf);font-size:1rem;font-weight:700;letter-spacing:2px;
-  text-transform:uppercase;cursor:pointer;transition:all .2s}
-.sm-sell-btn:hover:not(:disabled){opacity:.88;transform:translateY(-1px)}
-.sm-sell-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.sm-sold-screen{display:none;flex-direction:column;align-items:center;justify-content:center;
-  padding:40px 24px;text-align:center}
-.sm-sold-screen.show{display:flex}
-.sm-sold-screen .sm-sold-label{font-family:var(--hf);font-size:2rem;font-weight:900;
-  letter-spacing:6px;color:var(--sold-bg);animation:stampDrop .5s cubic-bezier(.34,1.3,.64,1) forwards;margin-bottom:16px}
-.sm-sold-team{font-family:var(--hf);font-size:1.2rem;font-weight:700;letter-spacing:2px;margin-bottom:4px}
-.sm-sold-pts{font-size:.9rem;color:var(--tx-d);margin-bottom:20px}
-.sm-sold-bar-wrap{width:100%;max-width:280px}
-.sm-sold-bar-track{background:rgba(255,255,255,.2);border-radius:4px;height:6px;overflow:hidden}
-.sm-sold-bar-fill{height:100%;width:100%;background:var(--sold-bg);border-radius:4px;transition:width linear}
-.sm-divider{height:1px;background:var(--div);margin:0}
+/* ═══ SELL MODAL — Premium (mirrors Random mode) ═══════════════════ */
+/* Bridge --sm-* vars to existing page theme vars */
+[data-theme="vanilla"]    { --sm-header-bg:linear-gradient(135deg,#0f1f44,#1a2c5e);--sm-header-stripe:#E8A020;--sm-accent:#E8A020;--sm-accent-dim:rgba(232,160,32,.35);--sm-primary:#E8A020;--sm-primary-light:rgba(232,160,32,.12);--sm-badge-active:#E8A020;--sm-transfer-bg:#0B1529;--sm-sold-bg:#060C1A;--sm-sold-ribbon:#E8A020;--sm-detail-bg:#142954;--sm-maxcall-color:#E8A020;--sm-suggest-color:#EEF4FF;--sm-btn-bg:#E8A020;--sm-font:'Rajdhani',sans-serif;--sm-title-font:'Orbitron',sans-serif; }
+[data-theme="butterscotch"]{ --sm-header-bg:linear-gradient(135deg,#0d0800,#1a1005);--sm-header-stripe:#F5C842;--sm-accent:#F5C842;--sm-accent-dim:rgba(245,200,66,.35);--sm-primary:#F5C842;--sm-primary-light:rgba(245,200,66,.12);--sm-badge-active:#F5C842;--sm-transfer-bg:#0f0f20;--sm-sold-bg:#090912;--sm-sold-ribbon:#F5C842;--sm-detail-bg:#1d1d3a;--sm-maxcall-color:#F5C842;--sm-suggest-color:#fff;--sm-btn-bg:#F5C842;--sm-font:'Rajdhani',sans-serif;--sm-title-font:'Teko',sans-serif; }
+[data-theme="strawberry"] { --sm-header-bg:linear-gradient(135deg,#880E4F,#C2185B);--sm-header-stripe:#FFD6E8;--sm-accent:#E91E63;--sm-accent-dim:rgba(233,30,99,.25);--sm-primary:#C2185B;--sm-primary-light:rgba(194,24,91,.1);--sm-badge-active:#E91E63;--sm-transfer-bg:#FFE4EE;--sm-sold-bg:#FFF0F5;--sm-sold-ribbon:#C2185B;--sm-detail-bg:#fff;--sm-maxcall-color:#C2185B;--sm-suggest-color:#1a0a12;--sm-btn-bg:#C2185B;--sm-font:'Nunito',sans-serif;--sm-title-font:'Nunito',sans-serif; }
+[data-theme="cherry"]     { --sm-header-bg:linear-gradient(135deg,#060606,#1a0608);--sm-header-stripe:#DC143C;--sm-accent:#DC143C;--sm-accent-dim:rgba(220,20,60,.3);--sm-primary:#DC143C;--sm-primary-light:rgba(220,20,60,.12);--sm-badge-active:#DC143C;--sm-transfer-bg:#181818;--sm-sold-bg:#0d0d0d;--sm-sold-ribbon:#DC143C;--sm-detail-bg:#242424;--sm-maxcall-color:#FF1744;--sm-suggest-color:#f5f5f5;--sm-btn-bg:#DC143C;--sm-font:'Rajdhani',sans-serif;--sm-title-font:'Teko',sans-serif; }
+[data-theme="pistah"]     { --sm-header-bg:linear-gradient(135deg,#030a04,#0d1f11);--sm-header-stripe:#6BBF4E;--sm-accent:#6BBF4E;--sm-accent-dim:rgba(107,191,78,.35);--sm-primary:#6BBF4E;--sm-primary-light:rgba(107,191,78,.12);--sm-badge-active:#6BBF4E;--sm-transfer-bg:#0b1a0e;--sm-sold-bg:#060e08;--sm-sold-ribbon:#6BBF4E;--sm-detail-bg:#111f14;--sm-maxcall-color:#A8E063;--sm-suggest-color:#e8f5e9;--sm-btn-bg:#6BBF4E;--sm-font:'Rajdhani',sans-serif;--sm-title-font:'Orbitron',sans-serif; }
+
+#sellModal {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.82);
+  z-index: 9999;
+  align-items: center; justify-content: center;
+  padding: 16px;
+}
+#sellModal.open { display: flex; }
+
+.sm-card {
+  background: var(--card-bg);
+  border-radius: 18px;
+  width: 100%; max-width: 680px;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+  overflow: hidden;
+  font-family: var(--sm-font);
+  animation: smSlideIn .25s cubic-bezier(.34,1.2,.64,1);
+}
+@keyframes smSlideIn {
+  from { transform: translateY(32px) scale(.97); opacity: 0; }
+  to   { transform: translateY(0) scale(1);     opacity: 1; }
+}
+
+.sm-header {
+  background: var(--sm-header-bg);
+  padding: 0 24px 16px; position: relative;
+}
+.sm-header::before {
+  content: ''; display: block; height: 4px;
+  background: var(--sm-header-stripe);
+  margin: 0 -24px 14px;
+  box-shadow: 0 0 16px var(--sm-accent-dim);
+}
+.sm-header-row { display: flex; justify-content: space-between; align-items: center; }
+.sm-header-label {
+  color: var(--sm-accent); font-size: .62rem; font-weight: 700;
+  letter-spacing: 4px; text-transform: uppercase; margin-bottom: 2px;
+}
+.sm-header-title {
+  color: #fff; font-family: var(--sm-title-font);
+  font-size: 1.6rem; font-weight: 700; letter-spacing: 2px; line-height: 1;
+}
+.sm-close-btn {
+  background: rgba(255,255,255,.13); border: none;
+  color: #fff; width: 34px; height: 34px; border-radius: 50%;
+  font-size: 1.1rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s;
+}
+.sm-close-btn:hover { background: rgba(255,255,255,.28); }
+
+.sm-transfer-row {
+  padding: 14px 24px; background: var(--sm-transfer-bg);
+  border-bottom: 1px solid var(--div);
+  display: flex; align-items: center; gap: 12px;
+}
+.sm-avatar {
+  width: 58px; height: 58px; border-radius: 50%;
+  object-fit: cover; object-position: top center;
+  border: 2px solid var(--div); flex-shrink: 0;
+}
+.sm-player-info { flex: 1; min-width: 0; }
+.sm-player-info strong {
+  display: block; font-size: .95rem; color: var(--tx); font-weight: 800;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sm-player-info span {
+  font-size: .72rem; color: var(--tx-d);
+  letter-spacing: 1px; text-transform: uppercase; font-weight: 600;
+}
+.sm-arrow {
+  color: var(--sm-primary); font-size: 1.8rem;
+  flex-shrink: 0; font-weight: 700;
+}
+.sm-team-logo-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px; min-width: 66px; flex-shrink: 0;
+}
+.sm-team-logo {
+  width: 58px; height: 58px; border-radius: 10px;
+  object-fit: contain; border: 2px solid var(--div); display: none;
+  background: var(--bg-c);
+}
+.sm-team-logo-placeholder {
+  width: 58px; height: 58px; border-radius: 10px;
+  border: 2px dashed var(--div); background: var(--bg-c);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--tx-d); font-size: 1.5rem;
+}
+.sm-team-name-label {
+  font-size: .65rem; font-weight: 700; color: var(--tx); text-align: center;
+  max-width: 70px; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; display: none;
+}
+
+.sm-section { padding: 14px 24px 6px; }
+.sm-section-label {
+  font-size: .65rem; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--sm-primary);
+  margin-bottom: 9px; display: block;
+}
+.sm-team-badges { display: flex; flex-wrap: wrap; gap: 8px; min-height: 36px; }
+.sm-badge {
+  padding: 8px 20px; border-radius: 24px;
+  border: 2px solid var(--div); background: var(--bg-c);
+  color: var(--tx); font-weight: 700; font-size: .84rem;
+  cursor: pointer; transition: all .18s; font-family: var(--sm-font);
+}
+.sm-badge:hover { border-color: var(--sm-primary); color: var(--sm-primary); background: var(--sm-primary-light); }
+.sm-badge.active { background: var(--sm-badge-active); color: var(--badge-tx); border-color: var(--sm-badge-active); }
+.sm-badge.tier-full { opacity: .4; cursor: not-allowed; }
+.sm-no-teams { color: var(--tx-d); font-size: .85rem; padding: 4px 0; }
+
+.sm-points-wrap { display: flex; align-items: center; gap: 12px; }
+.sm-pts-btn {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 2px solid var(--div); background: var(--bg-c);
+  font-size: 1.4rem; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--sm-primary); transition: all .18s;
+}
+.sm-pts-btn:hover { border-color: var(--sm-primary); background: var(--sm-primary-light); }
+#sellPoints {
+  flex: 1; text-align: center; font-size: 1.6rem; font-weight: 800;
+  border: 2px solid var(--div); border-radius: 10px;
+  padding: 9px 12px; outline: none; color: var(--tx);
+  background: var(--bg-c); font-family: var(--sm-font); transition: border-color .18s;
+}
+#sellPoints:focus { border-color: var(--sm-primary); }
+
+.sm-presets { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.sm-preset-btn {
+  padding: 5px 14px; border-radius: 20px;
+  border: 1.5px solid var(--sm-primary); background: var(--sm-primary-light);
+  color: var(--sm-primary); font-weight: 700; font-size: .78rem;
+  cursor: pointer; transition: all .15s; font-family: var(--sm-font);
+}
+.sm-preset-btn:hover,.sm-preset-btn.sm-preset-active { background: var(--sm-primary); color: var(--badge-tx); }
+
+#teamDetailsStrip {
+  display: none; margin: 10px 24px 0;
+  background: var(--sm-detail-bg);
+  border: 1px solid var(--div);
+  border-left: 4px solid var(--sm-primary);
+  border-radius: 10px; padding: 12px 16px;
+  flex-direction: row;
+}
+.sm-detail-item { flex: 1; text-align: center; padding: 0 8px; }
+.sm-detail-item + .sm-detail-item { border-left: 1px solid var(--div); }
+.sm-detail-key { font-size: .58rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--tx-d); margin-bottom: 3px; }
+.sm-detail-val { font-size: 1.2rem; font-weight: 800; color: var(--tx); }
+.sm-detail-val.green { color: var(--sm-maxcall-color); }
+
+#sellSuggestion {
+  display: none; margin: 8px 24px 0; padding: 8px 14px;
+  background: var(--sm-primary-light); border-radius: 8px;
+  font-size: .8rem; font-weight: 600; color: var(--sm-suggest-color);
+}
+#sellError {
+  display: none; margin: 8px 24px 0; padding: 10px 14px;
+  background: rgba(239,68,68,.12); border-left: 4px solid #ef4444;
+  border-radius: 8px; color: #ef4444; font-size: .84rem; font-weight: 600;
+}
+
+.sm-footer {
+  padding: 14px 24px 20px; display: flex; gap: 12px;
+  justify-content: flex-end; border-top: 1px solid var(--div);
+  margin-top: 14px;
+}
+.sm-btn-cancel {
+  padding: 12px 28px; border: 2px solid var(--div);
+  border-radius: 8px; background: transparent; color: var(--tx-d);
+  font-weight: 700; cursor: pointer; font-size: .9rem;
+  font-family: var(--sm-font); transition: border-color .18s;
+}
+.sm-btn-cancel:hover { border-color: var(--tx-d); }
+.sm-btn-sell {
+  padding: 12px 36px; background: var(--sm-btn-bg);
+  border: none; border-radius: 8px; color: var(--badge-tx); font-weight: 700;
+  cursor: pointer; font-size: .9rem; font-family: var(--sm-font);
+  box-shadow: 0 4px 14px var(--sm-accent-dim);
+  transition: transform .18s, box-shadow .18s, opacity .18s;
+}
+.sm-btn-sell:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px var(--sm-accent-dim); }
+.sm-btn-sell:disabled { opacity: .38; cursor: not-allowed; transform: none; }
+
+#smSoldScreen {
+  display: none; flex-direction: column; align-items: center;
+  background: var(--sm-sold-bg); min-height: 460px;
+}
+#smSoldScreen.visible { display: flex; animation: smFadeIn .35s ease; }
+@keyframes smFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.sm-sold-photo-wrap {
+  position: relative; width: 100%;
+  max-height: 360px; overflow: hidden; flex-shrink: 0;
+}
+.sm-sold-photo {
+  width: 100%; max-height: 360px;
+  object-fit: cover; object-position: top center; display: block;
+}
+.sm-sold-photo-wrap::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.72) 100%);
+  pointer-events: none;
+}
+.sm-sold-ribbon {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; z-index: 3;
+}
+.sm-sold-stamp {
+  background: var(--sm-sold-ribbon); color: var(--badge-tx);
+  font-family: var(--sm-title-font);
+  font-size: 4.5rem; font-weight: 900; letter-spacing: 10px;
+  padding: 8px 48px; transform: rotate(-22deg);
+  border: 6px solid rgba(255,255,255,0.85); border-radius: 6px;
+  box-shadow: 0 0 0 3px var(--sm-sold-ribbon), 0 8px 40px rgba(0,0,0,0.5);
+  opacity: 0;
+  animation: smStampDrop .5s cubic-bezier(.34,1.3,.64,1) .15s forwards;
+  text-shadow: 2px 3px 8px rgba(0,0,0,0.4);
+}
+@keyframes smStampDrop {
+  0%   { transform: rotate(-22deg) scale(2.4); opacity: 0; }
+  100% { transform: rotate(-22deg) scale(1);   opacity: 0.92; }
+}
+.sm-sold-info {
+  width: 100%; padding: 22px 28px 10px;
+  display: flex; align-items: center; gap: 18px;
+  z-index: 5; margin-top: -8px;
+}
+.sm-sold-team-logo {
+  width: 72px; height: 72px; border-radius: 12px; object-fit: contain;
+  border: 3px solid rgba(255,255,255,0.35); background: rgba(255,255,255,0.1);
+  padding: 4px; flex-shrink: 0;
+}
+.sm-sold-text { flex: 1; }
+.sm-sold-label {
+  font-size: .65rem; font-weight: 700; letter-spacing: 4px;
+  text-transform: uppercase; color: var(--sm-accent); margin-bottom: 3px;
+}
+.sm-sold-team-name {
+  font-family: var(--sm-title-font);
+  font-size: 1.8rem; font-weight: 700; color: #fff; line-height: 1.05;
+}
+.sm-sold-points { font-size: 1rem; font-weight: 700; color: rgba(255,255,255,.75); }
+.sm-sold-points span { font-family: var(--sm-title-font); font-size: 1.4rem; font-weight: 700; color: var(--sm-accent); }
+.sm-countdown-wrap { width: calc(100% - 56px); margin: 8px 28px 24px; }
+.sm-countdown-label { font-size: .78rem; font-weight: 600; color: rgba(255,255,255,.65); margin-bottom: 8px; text-align: center; }
+.sm-countdown-label strong { color: #fff; font-size: 1rem; }
+.sm-progress-track { width: 100%; height: 6px; border-radius: 6px; background: rgba(255,255,255,.18); overflow: hidden; }
+.sm-progress-bar { height: 100%; border-radius: 6px; background: var(--sm-header-stripe); width: 100%; transition: width 1s linear; box-shadow: 0 0 8px var(--sm-accent-dim); }
+.sm-skip-btn {
+  display: block; margin: 0 auto 24px;
+  padding: 10px 32px; border-radius: 50px;
+  background: rgba(255,255,255,.12); border: 2px solid rgba(255,255,255,.3);
+  color: #fff; font-weight: 700; font-size: .88rem;
+  cursor: pointer; font-family: var(--sm-font);
+  transition: background .2s, border-color .2s;
+}
+.sm-skip-btn:hover { background: rgba(255,255,255,.22); border-color: rgba(255,255,255,.55); }
+
+/* ── Sell modal mobile ────────────────────────────────────── */
+@media(max-width:640px){
+  .sm-card{ border-radius: 18px 18px 0 0; }
+  #sellModal{ padding:0; align-items:flex-end; }
+  .sm-header{ padding: 0 16px 14px; }
+  .sm-header-title{ font-size: 1.2rem; }
+  .sm-transfer-row{ padding: 12px 16px; gap: 10px; }
+  .sm-avatar{ width:48px; height:48px; }
+  .sm-team-logo,.sm-team-logo-placeholder{ width:48px; height:48px; }
+  .sm-section{ padding: 12px 16px 6px; }
+  .sm-pts-btn{ width:40px; height:40px; }
+  #sellPoints{ font-size:1.3rem; padding:8px 10px; }
+  .sm-footer{ padding:12px 16px 20px; }
+  .sm-btn-sell{ padding:13px 24px; min-height:48px; }
+  .sm-btn-cancel{ padding:13px 18px; }
+  #teamDetailsStrip{ margin: 8px 16px 0; padding:10px 12px; }
+  #sellSuggestion,#sellError{ margin: 6px 16px 0; }
+}
 
 /* ═══ BID SUMMARY DRAWER ══════════════════════════════════════════════ */
 .bs-overlay{position:fixed;inset:0;z-index:900;pointer-events:none}
@@ -341,16 +696,121 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .bs-iframe{flex:1;width:100%;border:none}
 
 /* ═══ RESPONSIVE ═══════════════════════════════════════════════════════ */
-@media(max-width:720px){
-  .mq-header{padding:0 12px}.mq-hc{display:none}
-  .mq-grid-hd,.mq-wrap{padding-left:12px;padding-right:12px}
-  .mq-grid{grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:7px}
-  .pc-body{flex-direction:column;overflow-y:auto}
-  .pc-photo-wrap{width:auto;min-width:unset;height:220px;flex-shrink:0}
-  .pc-info{justify-content:flex-start}
-  .pc-serial{font-size:2.5rem}
-  .pc-name{font-size:1.3rem}
+
+/* ── Tablet (≤ 900px) ─────────────────────────────────────────────── */
+@media(max-width:900px){
+  .pc-panel{width:min(720px,95%)}
+  .pc-photo-wrap{width:320px;min-width:220px}
+}
+
+/* ── Mobile (≤ 640px) — primary breakpoint ───────────────────────── */
+@media(max-width:640px){
+  /* Header */
+  .mq-header{padding:0 10px;height:56px}
+  .mq-hc{display:none}
+  .mq-logo,.mq-logo-ph{width:36px;height:36px}
+  .mq-tname{font-size:.78rem}
+  .mq-tsub{display:none}
+  .mq-icon-btn{padding:4px 8px;font-size:11px}
+
+  /* Stats bar */
+  .mq-stats{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .mq-stat{padding:6px 10px;min-width:68px}
+  .mq-sl{font-size:.5rem}
+  .mq-sv{font-size:.82rem}
+
+  /* Grid */
+  .mq-grid-hd{padding:8px 12px 6px;gap:6px}
+  .mq-grid-hd-right{gap:8px}
+  .mq-legend{gap:6px}
+  .mq-legend-item{gap:3px;font-size:.55rem;letter-spacing:.5px}
+  .mq-legend-dot{width:8px;height:8px;border-radius:2px}
+  .mq-leg-full{display:none}
+  .mq-leg-short{display:inline}
+  .mq-wrap{padding:0 10px 72px}
+  .mq-grid{grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:7px}
+  .mq-btn{border-radius:8px;font-size:1.1rem}
+  .mq-lbl{font-size:.42rem}
+
+  /* Player drawer — full screen on mobile */
+  .pc-panel{
+    width:100%;height:100%;
+    top:0;right:-100%;
+    border-left:none;border-top:2px solid var(--div)
+  }
+  .pc-overlay.open .pc-panel{right:0}
+  .pc-ph{padding:10px 14px}
+  .pc-ph-title{font-size:.7rem;letter-spacing:2px}
+  .pc-logo{height:28px}
+  .pc-close{font-size:1.6rem;width:36px;height:36px}
+
+  /* Drawer body — stack vertically, photo on top */
+  .pc-body{flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .pc-photo-wrap{
+    width:100%;min-width:unset;
+    height:200px;padding:16px;
+    flex-shrink:0
+  }
+  .pc-photo{object-fit:contain;max-height:168px}
+  .pc-serial-watermark{font-size:3.5rem}
+
+  /* Info panel */
+  .pc-info{padding:16px 16px 8px;justify-content:flex-start}
+  .pc-serial{font-size:2rem;margin-bottom:4px}
+  .pc-name{font-size:1.4rem;letter-spacing:2px;margin-bottom:8px}
+  .pc-badges{gap:6px;margin-bottom:10px}
+  .pc-tier-badge,.pc-role-badge{font-size:.7rem;padding:4px 12px}
+  .pc-attrs{grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+  .pc-attr{padding:8px 10px}
+  .pc-attr-label{font-size:.58rem}
+  .pc-attr-val{font-size:.9rem}
+  .pc-state-banner{font-size:.75rem;padding:6px 10px;margin-top:8px}
+
+  /* Action buttons — tall enough for fingers */
+  .pc-actions{padding:10px 12px;gap:8px;flex-wrap:wrap}
+  .pc-action-btn{
+    flex:1 1 40%;min-height:48px;
+    padding:13px 8px;font-size:.82rem;
+    letter-spacing:1px;border-radius:10px
+  }
+  .pc-action-btn.bring-btn{flex:1 1 100%}
+
+  /* Unsold / sell confirm modal */
+  .cm-box{padding:22px 20px;border-radius:12px}
+  .cm-icon{font-size:2rem}
+  .cm-title{font-size:.95rem}
+  .cm-sub{font-size:.82rem}
+  .cm-cancel,.cm-confirm{padding:11px 18px;font-size:.85rem}
+
+  /* Stamp screen */
+  .ss-inner{
+    flex-direction:column;align-items:center;
+    text-align:center;gap:16px;padding:20px 16px
+  }
+  .ss-photo{width:150px;height:190px}
+  .ss-photo-ph{width:150px;height:190px;font-size:5rem}
+  .ss-serial{font-size:2rem}
+  .ss-name{font-size:1.2rem;letter-spacing:2px}
+  .ss-sub{font-size:.9rem;margin-bottom:16px}
+  .ss-bar-wrap{max-width:260px}
+
+  /* Bid summary drawer — full width on mobile */
+  .bs-panel{width:100%}
+
+  /* Footer ticker */
+  .mq-footer-label{padding:0 10px;font-size:.55rem;letter-spacing:1.5px}
+  .mq-ticker-item{padding:0 16px;gap:7px}
+  .mq-ticker-team{font-size:.75rem}
+  .mq-ticker-purse{font-size:.75rem}
+  .mq-ticker-max{font-size:.6rem;padding:1px 5px}
+}
+
+/* ── Very small screens (≤ 380px) ────────────────────────────────── */
+@media(max-width:380px){
+  .mq-grid{grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:5px}
+  .mq-btn{font-size:.95rem}
   .pc-attrs{grid-template-columns:1fr}
+  .pc-action-btn{font-size:.75rem;padding:12px 6px}
 }
 
 /* ── Full-screen stamp celebration overlay ─────────────── */
@@ -385,6 +845,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .ss-bar-track{background:rgba(255,255,255,.2);border-radius:4px;height:6px;overflow:hidden}
 .ss-bar-fill{height:100%;width:100%;border-radius:4px;transition:width linear}
 @media(max-width:680px){
+  /* handled by the ≤640px block above; this keeps backward compat */
   .ss-inner{flex-direction:column;align-items:center;text-align:center;gap:24px;padding:24px}
   .ss-photo{width:180px;height:230px}
   .ss-photo-ph{width:180px;height:230px}
@@ -415,14 +876,22 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   </style>
 </head>
 <body>
+<script>
+  window.AUCTION_TOURNAMENT_ID   = '<t t-esc="tournament.id if tournament else 0"/>';
+  window.AUCTION_DB_NAME         = '<t t-esc="db_name or ''"/>';
+  window.AUCTION_TOURNAMENT_SLUG = '<t t-esc="tournament_slug or (tournament.slug if tournament else '')"/>';
+  window.AUCTION_PROJECTOR_URL   = '/' + window.AUCTION_DB_NAME + '/auction/projector/' + window.AUCTION_TOURNAMENT_SLUG + '/';
+</script>
 
 <!-- ── HEADER ──────────────────────────────────────────────── -->
 <header class="mq-header">
   <div class="mq-hl">
-    <t t-if="tournament and tournament.logo">
-      <img class="mq-logo" t-att-src="'/web/image/auction.tournament/'+str(tournament.id)+'/logo'" alt="logo"/>
-    </t>
-    <t t-else=""><div class="mq-logo-ph">&#9733;</div></t>
+    <a href="/web">
+      <t t-if="tournament and tournament.logo">
+        <img class="mq-logo" t-att-src="'/web/image/auction.tournament/'+str(tournament.id)+'/logo'" alt="logo"/>
+      </t>
+      <t t-else=""><div class="mq-logo-ph">&#9733;</div></t>
+    </a>
     <div>
       <div class="mq-tname"><t t-if="tournament"><t t-esc="tournament.name"/></t><t t-else="">Auction Champ</t></div>
       <div class="mq-tsub">Manual Auction Console</div>
@@ -431,6 +900,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   <div class="mq-hc">&#9917; Player Queue</div>
   <div class="mq-hr">
     <span class="mq-live-dot"></span>
+    <button class="mq-icon-btn" onclick="window.open(window.AUCTION_PROJECTOR_URL,'_blank')" title="Open Projector View">&#127916; Projector</button>
     <button class="mq-icon-btn bid" onclick="openBidSummary()">&#9776; Bid Summary</button>
     <button class="mq-icon-btn" onclick="toggleFS()" id="fsBtn">&#x26F6;</button>
   </div>
@@ -451,7 +921,20 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 <!-- ── GRID ─────────────────────────────────────────────────── -->
 <div class="mq-grid-hd">
   <div class="mq-grid-title">Select <span>Player</span></div>
-  <span class="mq-badge" id="gBadge">0 players</span>
+  <div class="mq-grid-hd-right">
+    <div class="mq-dice-wrap" id="mqDiceWrap" onclick="rollDice()" title="Roll Dice">
+      <div class="mq-dice" id="mqDice">
+        <div class="mq-die-grid" id="mqDieGrid"></div>
+      </div>
+      <div class="mq-dice-lbl">Roll Dice</div>
+    </div>
+    <div class="mq-legend">
+      <div class="mq-legend-item"><div class="mq-legend-dot available"></div><span class="mq-leg-full">Free</span><span class="mq-leg-short">Free</span></div>
+      <div class="mq-legend-item"><div class="mq-legend-dot sold"></div><span class="mq-leg-full">Sold</span><span class="mq-leg-short">Sold</span></div>
+      <div class="mq-legend-item"><div class="mq-legend-dot unsold"></div><span class="mq-leg-full">Unsold</span><span class="mq-leg-short">Unsold</span></div>
+    </div>
+    <span class="mq-badge" id="gBadge">0 players</span>
+  </div>
 </div>
 <div class="mq-wrap">
   <div id="auction_grid" class="mq-grid"></div>
@@ -470,7 +953,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         <img class="pc-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="logo"/>
         <span class="pc-ph-title">Player Details</span>
       </div>
-      <button class="pc-close" onclick="closePlayerDrawer()">&#215;</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="pc-fullscreen-btn" id="pcFsBtn" onclick="togglePcFullscreen()" title="Fullscreen">&#x26F6;</button>
+        <button class="pc-close" onclick="closePlayerDrawer()">&#215;</button>
+      </div>
     </div>
     <div class="pc-body" id="pcBody">
       <div class="pc-loading">Loading&#8230;</div>
@@ -481,6 +967,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       </button>
       <button class="pc-action-btn sell-btn" id="btnSell" onclick="openSellModal()">
         &#10003; Sell to Team
+      </button>
+      <button class="pc-action-btn bring-btn" id="btnBringBack" onclick="openBringBackConfirm()" style="display:none">
+        ↩ Bring Back to Auction
       </button>
     </div>
   </div>
@@ -499,56 +988,106 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   </div>
 </div>
 
-<!-- ── SELL MODAL ──────────────────────────────────────────── -->
-<div id="sellModal" class="sm-overlay">
-  <div class="sm-box">
-    <!-- Form panel -->
-    <div id="smForm">
-      <div class="sm-head">
-        <div class="sm-head-left">
-          <span class="sm-head-title">Sell Player</span>
-          <span class="sm-head-player" id="smPlayerName"></span>
+<!-- ── SELL MODAL (Premium — mirrors Random mode) ──────────── -->
+<div id="sellModal" t-att-data-theme="theme">
+  <div class="sm-card">
+
+    <!-- SELL FORM -->
+    <div id="smFormPanel">
+      <div class="sm-header">
+        <div class="sm-header-row">
+          <div>
+            <div class="sm-header-label">Auction</div>
+            <div class="sm-header-title">SELL PLAYER</div>
+          </div>
+          <button class="sm-close-btn" onclick="closeSellModal()">&#x2715;</button>
         </div>
-        <button class="sm-close" onclick="closeSellModal()">&#215;</button>
       </div>
+
+      <!-- Player → Team strip -->
+      <div class="sm-transfer-row">
+        <img class="sm-avatar" id="smPlayerAvatar" src="" alt="Player"/>
+        <div class="sm-player-info">
+          <strong id="smPlayerName"></strong>
+          <span id="smPlayerRole"></span>
+        </div>
+        <div class="sm-arrow">&#10145;</div>
+        <div class="sm-team-logo-wrap">
+          <div class="sm-team-logo-placeholder" id="smTeamPlaceholder">&#127959;</div>
+          <img id="smTeamLogo" class="sm-team-logo" alt="Team Logo"/>
+          <div id="smTeamNameLabel" class="sm-team-name-label"></div>
+        </div>
+      </div>
+
+      <!-- Team selector -->
       <div class="sm-section">
-        <div class="sm-section-label">Select Team</div>
-        <div class="sm-team-grid" id="smTeams">
+        <span class="sm-section-label">Select Team</span>
+        <div id="smTeamBadges" class="sm-team-badges">
           <span class="sm-no-teams">Loading teams&#8230;</span>
         </div>
-        <div class="sm-team-detail" id="smTeamDetail">
-          <div class="sm-td-item"><div class="sm-td-label">Remaining Pts</div><div class="sm-td-val" id="smRemPts">—</div></div>
-          <div class="sm-td-item"><div class="sm-td-label">Remaining Players</div><div class="sm-td-val" id="smRemPlayers">—</div></div>
-          <div class="sm-td-item"><div class="sm-td-label">Max Call</div><div class="sm-td-val" id="smMaxCall">—</div></div>
-        </div>
-        <div class="sm-suggestion" id="smSug"></div>
       </div>
-      <div class="sm-divider"></div>
-      <div class="sm-section">
-        <div class="sm-section-label">Points</div>
-        <div class="sm-pts-row">
-          <button class="sm-pts-btn" onclick="adjPts(-1)" id="smMinus">&#8722;</button>
-          <input class="sm-pts-input" type="number" id="smPoints" value="0" min="0"/>
-          <button class="sm-pts-btn" onclick="adjPts(1)" id="smPlus">&#43;</button>
+
+      <!-- Points input -->
+      <div class="sm-section" style="padding-top:12px;">
+        <span class="sm-section-label">Selling Points</span>
+        <div class="sm-points-wrap">
+          <button class="sm-pts-btn" onclick="smAdjustPoints(-1)">&#8722;</button>
+          <input type="number" id="sellPoints" value="0" min="0"/>
+          <button class="sm-pts-btn" onclick="smAdjustPoints(1)">&#43;</button>
         </div>
         <div class="sm-presets" id="smPresets"></div>
-        <div class="sm-error" id="smError"></div>
       </div>
-      <div class="sm-footer">
-        <button class="sm-sell-btn" id="smSellBtn" onclick="doSell()" disabled="1">Sell Player</button>
-      </div>
-    </div>
-    <!-- Sold screen -->
-    <div class="sm-sold-screen" id="smSoldScreen">
-      <div class="sm-sold-label">SOLD!</div>
-      <div class="sm-sold-team" id="smSoldTeam"></div>
-      <div class="sm-sold-pts" id="smSoldPts"></div>
-      <div class="sm-sold-bar-wrap">
-        <div class="sm-sold-bar-track">
-          <div class="sm-sold-bar-fill" id="smSoldBar"></div>
+
+      <!-- Team details strip -->
+      <div id="teamDetailsStrip">
+        <div class="sm-detail-item">
+          <div class="sm-detail-key">Remaining Pts</div>
+          <div class="sm-detail-val" id="smRemainingPts">&#8212;</div>
+        </div>
+        <div class="sm-detail-item">
+          <div class="sm-detail-key">Players Left</div>
+          <div class="sm-detail-val" id="smRemainingPlayers">&#8212;</div>
+        </div>
+        <div class="sm-detail-item">
+          <div class="sm-detail-key">Max Call</div>
+          <div class="sm-detail-val green" id="smMaxCall">&#8212;</div>
         </div>
       </div>
-    </div>
+
+      <div id="sellSuggestion"></div>
+      <div id="sellError"></div>
+
+      <div class="sm-footer">
+        <button class="sm-btn-cancel" onclick="closeSellModal()">Cancel</button>
+        <button class="sm-btn-sell" id="smBtnSell" disabled="disabled" onclick="smSubmitSell()">Sell Player</button>
+      </div>
+    </div><!-- /smFormPanel -->
+
+    <!-- SOLD CELEBRATION -->
+    <div id="smSoldScreen">
+      <div class="sm-sold-photo-wrap">
+        <img id="smSoldPhoto" class="sm-sold-photo" src="" alt="Player"/>
+        <div class="sm-sold-ribbon">
+          <div class="sm-sold-stamp">SOLD</div>
+        </div>
+      </div>
+      <div class="sm-sold-info">
+        <img id="smSoldTeamLogo" class="sm-sold-team-logo" src="" alt="Team"/>
+        <div class="sm-sold-text">
+          <div class="sm-sold-label">Sold To</div>
+          <div class="sm-sold-team-name" id="smSoldTeamName"></div>
+          <div class="sm-sold-points">for <span id="smSoldPointsEl"></span> points</div>
+        </div>
+      </div>
+      <div class="sm-countdown-wrap">
+        <div class="sm-countdown-label">Closing in <strong id="smCountdownNum">5</strong> seconds</div>
+        <div class="sm-progress-track">
+          <div class="sm-progress-bar" id="smProgressBar"></div>
+        </div>
+      </div>
+      <button class="sm-skip-btn" onclick="smSkipSold()">&#9654; Close Now</button>
+    </div><!-- /smSoldScreen -->
+
   </div>
 </div>
 
@@ -571,6 +1110,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           <div id="ssBar" class="ss-bar-fill"></div>
         </div>
       </div>
+      <div id="ssNextHint" style="margin-top:16px;font-size:.78rem;color:rgba(255,255,255,.45);letter-spacing:2px;text-transform:uppercase;">Click anywhere or wait to continue</div>
     </div>
   </div>
 </div>
@@ -586,6 +1126,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <iframe class="bs-iframe" id="bsIframe" src="about:blank"></iframe>
   </div>
 </div>
+
+<!-- ── DICE RESULT PILL ──────────────────────────────────── -->
+<div id="mqDiceResult"></div>
 
 <!-- ── FOOTER TICKER ─────────────────────────────────────── -->
 <div class="mq-footer">
@@ -608,14 +1151,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   var currentPlayerId = null;
   var currentPlayerName = '';
   var currentPlayerState = '';
+  var currentPlayerRole = '';
   var currentPlayerPhoto = '';
   var currentPlayerSerial = '';
   var currentPlayerTierName = '';
   var currentPlayerTierColor = '#3498db';
-  var smSelectedTeam = null;
-  var smTeamsData = [];
-  var smSoldTimer = null;
-  var smPlayerIdForSell = null;
 
   /* ── RPC helper ────────────────────────────────────────── */
   function rpc(url, params) {
@@ -634,7 +1174,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
   /* ── Grid ──────────────────────────────────────────────── */
   function loadGrid() {
-    rpc('/auction/get_players_queue', {}).then(function(res) {
+    rpc('/auction/get_players_queue', {tournament_id: window.AUCTION_TOURNAMENT_ID || null}).then(function(res) {
       var players = res.result || [];
       var grid   = document.getElementById('auction_grid');
       var empty  = document.getElementById('mq_empty');
@@ -666,17 +1206,16 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         if (p.state === 'sold') {
           btn.classList.add('sold');
           soldCount++;
-          var lbl = document.createElement('span');
-          lbl.className = 'mq-lbl';
-          lbl.textContent = '✔ SOLD';
-          btn.appendChild(lbl);
+          if (p.team_logo) {
+            var logoOverlay = document.createElement('img');
+            logoOverlay.className = 'mq-sold-logo';
+            logoOverlay.src = 'data:image/png;base64,' + p.team_logo;
+            logoOverlay.alt = p.team_name || '';
+            btn.appendChild(logoOverlay);
+          }
         } else if (p.state === 'unsold') {
           btn.classList.add('unsold');
           unsoldCount++;
-          var lbl = document.createElement('span');
-          lbl.className = 'mq-lbl';
-          lbl.textContent = '✖ UNSOLD';
-          btn.appendChild(lbl);
         }
         btn.onclick = function() { openPlayerDrawer(p.id); };
         grid.appendChild(btn);
@@ -692,8 +1231,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
   /* ── Footer ticker ──────────────────────────────────────── */
   function loadTicker() {
+    var tid = window.AUCTION_TOURNAMENT_ID ? parseInt(window.AUCTION_TOURNAMENT_ID) : 0;
     callKw('auction.auction', 'search_read', [], {
-      domain: [],
+      domain: tid ? [['tournament_id', '=', tid]] : [],
       fields: ['team_id', 'remaining_points', 'max_call', 'remaining_players_count']
     }).then(function(res) {
       var teams = res.result || [];
@@ -736,19 +1276,54 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     document.body.style.overflow = 'hidden';
 
     callKw('auction.team.player', 'read',
-      [[playerId], ['sl_no', 'name', 'role', 'batting_style', 'bowling_style', 'photo', 'tier_id', 'tier_color', 'state', 'contact']]
+      [[playerId], ['sl_no', 'name', 'role', 'batting_style', 'bowling_style', 'photo', 'tier_id', 'tier_color', 'state', 'contact', 'masked_contact', 'assigned_team_id']]
     ).then(function(res) {
       var p = (res.result || [])[0];
       if (!p) { if (body) body.innerHTML = '<div class="pc-loading">Player not found.</div>'; return; }
       currentPlayerName      = p.name || '';
       currentPlayerState     = p.state || '';
+      currentPlayerRole      = p.role || '';
       currentPlayerPhoto     = p.photo || '';
       currentPlayerSerial    = p.sl_no || '';
       currentPlayerTierName  = p.tier_id ? p.tier_id[1] : '';
       currentPlayerTierColor = p.tier_color || '#3498db';
-      renderPlayerCard(p, body);
+
+      if (p.state === 'sold' && p.assigned_team_id) {
+        var teamId = p.assigned_team_id[0];
+        /* Fetch team logo + sold points in parallel */
+        var pLogo   = callKw('auction.team', 'read', [[teamId], ['logo']]);
+        var pPoints = callKw('auction.auction.player', 'search_read', [], {
+          domain: [['player_id', '=', playerId]], fields: ['points'], limit: 1
+        });
+        Promise.all([pLogo, pPoints]).then(function(results) {
+          var logoData = (results[0].result || [])[0];
+          var ptsData  = (results[1].result || [])[0];
+          p.team_logo   = logoData && logoData.logo ? logoData.logo : '';
+          p.team_name   = p.assigned_team_id[1] || '';
+          p.sold_points = ptsData ? ptsData.points : 0;
+          renderPlayerCard(p, body);
+        }).catch(function() { renderPlayerCard(p, body); });
+      } else {
+        renderPlayerCard(p, body);
+      }
+
       if (actions) {
-        actions.style.display = p.state === 'sold' || p.state === 'unsold' ? 'none' : 'flex';
+        var btnUnsold = document.getElementById('btnUnsold');
+        var btnSell = document.getElementById('btnSell');
+        var btnBringBack = document.getElementById('btnBringBack');
+        if (p.state === 'sold') {
+          actions.style.display = 'none';
+        } else if (p.state === 'unsold') {
+          actions.style.display = 'flex';
+          if (btnUnsold) btnUnsold.style.display = 'none';
+          if (btnSell) btnSell.style.display = 'none';
+          if (btnBringBack) btnBringBack.style.display = '';
+        } else {
+          actions.style.display = 'flex';
+          if (btnUnsold) btnUnsold.style.display = '';
+          if (btnSell) btnSell.style.display = '';
+          if (btnBringBack) btnBringBack.style.display = 'none';
+        }
       }
       /* Sync live board: mark this player as on-stage, then refresh ticker so
          each team's max_call immediately reflects this player's tier cap. */
@@ -761,17 +1336,42 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   };
 
   window.closePlayerDrawer = function(keepOnStage) {
+    /* Exit fullscreen first if active */
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(function(){});
+    }
     var overlay = document.getElementById('playerDrawer');
     overlay.classList.remove('open');
     document.body.style.overflow = '';
-    /* Clear on-stage only when dismissed without action; sold/unsold pass keepOnStage=true */
-    if (!keepOnStage && currentPlayerId) {
-      callKw('auction.team.player', 'write', [[currentPlayerId], {'is_on_stage': false}]).catch(function(){});
+    /* Always clear stage + stamp so projector returns to waiting immediately. */
+    if (currentPlayerId) {
+      callKw('auction.team.player', 'action_clear_stage', [[currentPlayerId]]).catch(function(){});
     }
     currentPlayerId = null;
     setTimeout(loadGrid,   300);
     setTimeout(loadTicker, 350);
   };
+
+  window.togglePcFullscreen = function() {
+    var panel = document.getElementById('pcPanel');
+    var btn   = document.getElementById('pcFsBtn');
+    if (!document.fullscreenElement) {
+      (panel.requestFullscreen || panel.webkitRequestFullscreen || panel.mozRequestFullScreen).call(panel)
+        .catch(function(){});
+    } else {
+      document.exitFullscreen().catch(function(){});
+    }
+  };
+
+  document.addEventListener('fullscreenchange', function() {
+    var btn = document.getElementById('pcFsBtn');
+    if (!btn) return;
+    if (document.fullscreenElement) {
+      btn.innerHTML = '&#x2715;'; btn.title = 'Exit Fullscreen';
+    } else {
+      btn.innerHTML = '&#x26F6;'; btn.title = 'Fullscreen';
+    }
+  });
 
   window.handlePCBackdropClick = function(e) {
     if (e.target.classList.contains('pc-backdrop') || e.target === document.getElementById('playerDrawer')) {
@@ -780,33 +1380,76 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   };
 
   function renderPlayerCard(p, container) {
-    var photo = '';
-    if (p.photo) {
-      photo = '<img class="pc-photo" src="data:image/png;base64,' + p.photo + '" alt="' + escHtml(p.name) + '"/>';
-    } else {
-      photo = '<div class="pc-photo-ph">&#128100;</div>';
-    }
-    var tierColor  = p.tier_color || '#3498db';
-    var tierGlow   = tierColor + '55'; /* 33% alpha glow */
+    var tierColor = p.tier_color || '#3498db';
+    var tierGlow  = tierColor + '44';
+
+    var photo = p.photo
+      ? '<img class="pc-photo" src="data:image/png;base64,' + p.photo + '" alt="' + escHtml(p.name) + '"/>'
+      : '<div class="pc-photo-ph">&#128100;</div>';
+
     var tier = p.tier_id
-      ? '<span class="pc-tier-badge" style="background:' + escHtml(tierColor) + ';color:#fff;box-shadow:0 0 12px ' + escHtml(tierGlow) + '">'
-          + escHtml(p.tier_id[1]) + '</span>'
+      ? '<span class="pc-tier-badge" style="background:' + escHtml(tierColor) + ';color:#fff;box-shadow:0 0 14px ' + escHtml(tierGlow) + '">'
+        + escHtml(p.tier_id[1]) + '</span>'
       : '';
+
+    var roleIcons = {'Batsman':'🏏','Batter':'🏏','Bowler':'🎯','All Rounder':'⭐',
+      'All-Rounder':'⭐','Allrounder':'⭐','Wicket Keeper':'🧤','WK-Keeper':'🧤','Wicketkeeper':'🧤'};
+    var roleIcon = p.role ? (roleIcons[p.role] || '⚡') : '';
+    var roleBadge = p.role
+      ? '<span class="pc-role-badge">' + roleIcon + ' ' + escHtml(p.role) + '</span>'
+      : '';
+
     var stateBanner = '';
-    if (p.state === 'sold')   stateBanner = '<div class="pc-state-banner sold">&#10003; Sold</div>';
-    if (p.state === 'unsold') stateBanner = '<div class="pc-state-banner unsold">&#10005; Unsold</div>';
+    if (p.state === 'sold') {
+      var logoHtml = p.team_logo
+        ? '<img class="sb-logo" src="data:image/png;base64,' + p.team_logo + '" alt=""/>'
+        : '';
+      var ptsHtml = p.sold_points
+        ? '<span class="sb-pts">' + p.sold_points + ' pts</span>'
+        : '';
+      stateBanner =
+        '<div class="pc-state-banner sold" id="pcSoldBanner" onclick="togglePtsEdit()">' +
+          logoHtml +
+          '<div class="sb-text">' +
+            '<div class="sb-label">SOLD TO</div>' +
+            '<div class="sb-team">' + escHtml(p.team_name || '—') + '</div>' +
+            ptsHtml +
+          '</div>' +
+          '<span class="sb-edit-hint">✎ edit pts</span>' +
+        '</div>' +
+        '<div class="pc-pts-edit" id="pcPtsEdit">' +
+          '<div class="pc-pts-edit-title">✎ Modify Sale</div>' +
+          '<div>' +
+            '<div class="pc-pts-edit-section">Team</div>' +
+            '<div class="pc-edit-teams" id="pcEditTeams"><span style="opacity:.5;font-size:.8rem">Loading teams…</span></div>' +
+          '</div>' +
+          '<div>' +
+            '<div class="pc-pts-edit-section">Points</div>' +
+            '<div class="pc-pts-edit-row">' +
+              '<button class="pc-pts-adj-btn" onclick="editAdjustPoints(-1)">&#8722;</button>' +
+              '<input type="number" id="pcPtsInput" value="' + (p.sold_points || 0) + '" min="0" step="1"/>' +
+              '<button class="pc-pts-adj-btn" onclick="editAdjustPoints(1)">&#43;</button>' +
+              '<button class="pc-pts-edit-save" onclick="saveModifiedSale()">Save</button>' +
+              '<button class="pc-pts-edit-cancel" onclick="togglePtsEdit()">✕</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+    }
+    if (p.state === 'unsold') stateBanner = '<div class="pc-state-banner unsold">UNSOLD</div>';
 
     container.innerHTML =
-      '<div class="pc-photo-wrap" id="pcPhotoWrap" style="border-left:4px solid ' + escHtml(tierColor) + ';box-shadow:inset -200px 0 120px -80px ' + escHtml(tierGlow) + '">' + photo + '</div>' +
+      '<div class="pc-photo-wrap" style="border-top:4px solid ' + escHtml(tierColor) + ';box-shadow:inset 0 -180px 100px -60px var(--bg-p),0 0 40px ' + escHtml(tierGlow) + '">' +
+        photo +
+        '<div class="pc-serial-watermark" style="color:' + escHtml(tierColor) + ';opacity:.12">#' + escHtml(String(p.sl_no)) + '</div>' +
+      '</div>' +
       '<div class="pc-info">' +
         '<div class="pc-serial" style="color:' + escHtml(tierColor) + ';text-shadow:0 0 24px ' + escHtml(tierGlow) + '">#' + escHtml(String(p.sl_no)) + '</div>' +
         '<div class="pc-name">' + escHtml(p.name) + '</div>' +
-        tier +
+        '<div class="pc-badges">' + tier + roleBadge + '</div>' +
         '<div class="pc-attrs">' +
-          attr('Role', p.role || '—') +
           attr('Batting', p.batting_style || '—') +
           attr('Bowling', p.bowling_style || '—') +
-          attr('Contact', p.contact || '—') +
+          attr('Contact', p.masked_contact || p.contact || '—') +
         '</div>' +
         stateBanner +
       '</div>';
@@ -823,9 +1466,108 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  /* ── Sold sale inline edit (team + points) ─────────────── */
+  var _editSelectedTeamId   = null;
+  var _editSelectedTeamData = null;
+
+  window.togglePtsEdit = function() {
+    var panel = document.getElementById('pcPtsEdit');
+    if (!panel) return;
+    panel.classList.toggle('open');
+    if (panel.classList.contains('open')) {
+      _editSelectedTeamId   = null;
+      _editSelectedTeamData = null;
+      var teamsEl = document.getElementById('pcEditTeams');
+      if (teamsEl) teamsEl.innerHTML = '<span style="opacity:.5;font-size:.8rem">Loading…</span>';
+      callKw('auction.team.player', 'get_all_teams_for_correction', [[currentPlayerId]])
+        .then(function(res) {
+          var teams = res.result || [];
+          if (!teamsEl) return;
+          teamsEl.innerHTML = '';
+          teams.forEach(function(t) {
+            var btn = document.createElement('button');
+            btn.className = 'pc-edit-team-btn' + (t.is_current ? ' selected' : '');
+            btn.dataset.teamId = t.team_id;
+            if (t.is_current) { _editSelectedTeamId = t.team_id; _editSelectedTeamData = t; }
+            var html = '';
+            if (t.team_logo) html += '<img src="data:image/png;base64,' + t.team_logo + '" alt=""/>';
+            html += '<span>' + escHtml(t.team_name) + '</span>';
+            btn.innerHTML = html;
+            btn.onclick = function() {
+              teamsEl.querySelectorAll('.pc-edit-team-btn').forEach(function(b) { b.classList.remove('selected'); });
+              btn.classList.add('selected');
+              _editSelectedTeamId   = t.team_id;
+              _editSelectedTeamData = t;
+            };
+            teamsEl.appendChild(btn);
+          });
+          var inp = document.getElementById('pcPtsInput');
+          if (inp) { inp.focus(); inp.select(); }
+        })
+        .catch(function() {
+          if (teamsEl) teamsEl.innerHTML = '<span style="color:#DC143C;font-size:.8rem">Failed to load teams</span>';
+        });
+    }
+  };
+
+  function editGetInc(amount) {
+    var slabs = _editSelectedTeamData && _editSelectedTeamData.slabs;
+    if (!slabs || !slabs.length) return 50;
+    for (var i = 0; i < slabs.length; i++) {
+      if (amount >= slabs[i].from_amount && amount < slabs[i].to_amount) return slabs[i].increment;
+    }
+    return slabs[slabs.length - 1].increment || 50;
+  }
+
+  window.editAdjustPoints = function(dir) {
+    var inp = document.getElementById('pcPtsInput');
+    if (!inp) return;
+    var cur = parseInt(inp.value) || 0;
+    var inc = editGetInc(cur);
+    inp.value = Math.max(0, cur + dir * inc);
+  };
+
+  window.saveModifiedSale = function() {
+    var inp = document.getElementById('pcPtsInput');
+    if (!inp || !currentPlayerId) return;
+    var newPts = parseInt(inp.value, 10);
+    if (isNaN(newPts) || newPts < 0) { inp.focus(); return; }
+    if (!_editSelectedTeamId) { alert('Please select a team'); return; }
+    var saveBtn = document.querySelector('.pc-pts-edit-save');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+    callKw('auction.team.player', 'action_update_sale', [[currentPlayerId], newPts, _editSelectedTeamId])
+      .then(function(res) {
+        var d = res.result || {};
+        if (d.success) {
+          var ptsEl   = document.querySelector('#pcSoldBanner .sb-pts');
+          var teamEl  = document.querySelector('#pcSoldBanner .sb-team');
+          var logoEl  = document.querySelector('#pcSoldBanner .sb-logo');
+          if (ptsEl)  ptsEl.textContent  = d.new_points + ' pts';
+          if (teamEl) teamEl.textContent = d.new_team_name || '';
+          if (logoEl && d.new_team_logo) logoEl.src = 'data:image/png;base64,' + d.new_team_logo;
+          var panel = document.getElementById('pcPtsEdit');
+          if (panel) panel.classList.remove('open');
+          setTimeout(loadGrid, 300);
+        } else {
+          alert(d.error || 'Failed to update sale');
+        }
+      })
+      .catch(function() { alert('Error saving sale'); })
+      .finally(function() {
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
+      });
+  };
+
   /* ── Unsold flow ───────────────────────────────────────── */
   window.openUnsoldConfirm = function() {
+    var title = document.querySelector('#unsoldModal .cm-title');
+    var confirm = document.querySelector('#unsoldModal .cm-confirm');
+    var icon = document.querySelector('#unsoldModal .cm-icon');
     var sub = document.getElementById('cmSub');
+    if (title) title.textContent = 'Mark as Unsold?';
+    if (confirm) confirm.textContent = 'Confirm Unsold';
+    if (confirm) confirm.onclick = doUnsold;
+    if (icon) icon.textContent = '⚠';
     if (sub) sub.textContent = 'Mark "' + currentPlayerName + '" as unsold?';
     document.getElementById('unsoldModal').classList.add('open');
   };
@@ -844,144 +1586,180 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     }).catch(function() { closePlayerDrawer(); });
   };
 
-  /* ── Sell flow ─────────────────────────────────────────── */
+  /* ── Bring Back to Auction ─────────────────────────── */
+  window.openBringBackConfirm = function() {
+    var sub = document.getElementById('cmSub');
+    var title = document.querySelector('#unsoldModal .cm-title');
+    var confirm = document.querySelector('#unsoldModal .cm-confirm');
+    var icon = document.querySelector('#unsoldModal .cm-icon');
+    if (sub)     sub.textContent     = 'Return "' + currentPlayerName + '" to the auction queue?';
+    if (title)   title.textContent   = 'Bring Back to Auction?';
+    if (confirm) confirm.textContent = 'Bring Back';
+    if (confirm) confirm.onclick     = doBringBack;
+    if (icon)    icon.textContent    = '↩';
+    document.getElementById('unsoldModal').classList.add('open');
+  };
+
+  window.doBringBack = function() {
+    closeUnsoldConfirm();
+    if (!currentPlayerId) return;
+    callKw('auction.team.player', 'action_auction', [[currentPlayerId]]).then(function() {
+      closePlayerDrawer(false);
+    }).catch(function() { closePlayerDrawer(); });
+  };
+
+  /* ── Sell flow (Premium — mirrors Random mode) ─────────── */
+  var smTeamsData2    = [];
+  var smSelTeam       = null;
+  var smPid           = null;
+  var smCdTimer       = null;
+
   window.openSellModal = function() {
     if (!currentPlayerId) return;
-    smPlayerIdForSell = currentPlayerId;
-    smSelectedTeam    = null;
-    smTeamsData       = [];
+    smPid        = currentPlayerId;
+    smSelTeam    = null;
+    smTeamsData2 = [];
+    if (smCdTimer) { clearInterval(smCdTimer); smCdTimer = null; }
+
+    /* Fill player info strip */
+    var av = document.getElementById('smPlayerAvatar');
+    if (av) av.src = '/web/image/auction.team.player/' + smPid + '/photo';
     var nm = document.getElementById('smPlayerName');
     if (nm) nm.textContent = currentPlayerName;
-    /* reset form */
-    document.getElementById('smTeams').innerHTML = '<span class="sm-no-teams">Loading teams\u2026</span>';
-    document.getElementById('smTeamDetail').classList.remove('show');
-    document.getElementById('smSug').classList.remove('show');
-    document.getElementById('smPoints').value = 0;
-    document.getElementById('smPresets').innerHTML = '';
-    smShowError('');
-    var sellBtn = document.getElementById('smSellBtn');
-    if (sellBtn) { sellBtn.disabled = true; sellBtn.textContent = 'Sell Player'; }
-    document.getElementById('smForm').style.display = 'block';
-    document.getElementById('smSoldScreen').classList.remove('show');
+    var rl = document.getElementById('smPlayerRole');
+    if (rl) rl.textContent = currentPlayerRole || '';
+
+    /* Reset UI */
+    document.getElementById('smFormPanel').style.display     = 'block';
+    document.getElementById('smSoldScreen').classList.remove('visible');
+    document.getElementById('smTeamBadges').innerHTML        = '<span class="sm-no-teams">Loading teams\u2026</span>';
+    document.getElementById('smTeamPlaceholder').style.display = 'flex';
+    document.getElementById('smTeamLogo').style.display      = 'none';
+    document.getElementById('smTeamNameLabel').style.display = 'none';
+    document.getElementById('teamDetailsStrip').style.display = 'none';
+    document.getElementById('sellSuggestion').style.display  = 'none';
+    document.getElementById('sellError').style.display       = 'none';
+    document.getElementById('smBtnSell').disabled            = true;
+    document.getElementById('smBtnSell').textContent         = 'Sell Player';
+    document.getElementById('sellPoints').value              = 0;
+    document.getElementById('smPresets').innerHTML           = '';
     document.getElementById('sellModal').classList.add('open');
-    smLoadTeams();
+    smLoadTeams2(smPid);
   };
 
   window.closeSellModal = function() {
-    if (smSoldTimer) { clearInterval(smSoldTimer); smSoldTimer = null; }
+    if (smCdTimer) { clearInterval(smCdTimer); smCdTimer = null; }
     document.getElementById('sellModal').classList.remove('open');
   };
 
-  function smLoadTeams() {
-    callKw('auction.team.player', 'get_sell_teams_data', [smPlayerIdForSell]).then(function(res) {
-      smTeamsData = res.result || [];
-      smRenderTeams(smTeamsData);
+  window.smSkipSold = function() {
+    if (smCdTimer) { clearInterval(smCdTimer); smCdTimer = null; }
+    document.getElementById('sellModal').classList.remove('open');
+    document.getElementById('smSoldScreen').classList.remove('visible');
+    document.getElementById('smFormPanel').style.display = 'block';
+    closePlayerDrawer(true);
+  };
+
+  function smLoadTeams2(playerId) {
+    callKw('auction.team.player', 'get_sell_teams_data', [playerId]).then(function(res) {
+      smTeamsData2 = res.result || [];
+      smRenderBadges2(smTeamsData2);
     }).catch(function() {
-      document.getElementById('smTeams').innerHTML = '<span class="sm-no-teams">Network error loading teams.</span>';
+      document.getElementById('smTeamBadges').innerHTML = '<span class="sm-no-teams">Network error loading teams.</span>';
     });
   }
 
-  function smRenderTeams(teams) {
-    var container = document.getElementById('smTeams');
-    if (!teams.length) {
-      container.innerHTML = '<span class="sm-no-teams">No teams available.</span>';
-      return;
-    }
+  function smRenderBadges2(teams) {
+    var container = document.getElementById('smTeamBadges');
+    if (!teams.length) { container.innerHTML = '<span class="sm-no-teams">No teams available.</span>'; return; }
     container.innerHTML = '';
-    teams.forEach(function(t) {
-      var disabled = !t.tier_slots_ok || !t.budget_ok;
+    teams.forEach(function(team) {
+      var disabled = !team.tier_slots_ok || !team.budget_ok;
       var btn = document.createElement('button');
-      btn.className = 'sm-team-btn' + (disabled ? ' tier-full' : '');
-      btn.textContent = t.team_name;
-      btn.dataset.teamId = t.team_id;
+      btn.className = 'sm-badge' + (disabled ? ' tier-full' : '');
+      btn.textContent = team.team_name;
+      btn.dataset.teamId = team.team_id;
       btn.disabled = disabled;
       if (disabled) {
-        btn.title = !t.tier_slots_ok ? 'Tier slot full' : 'Insufficient budget';
+        btn.title = !team.tier_slots_ok ? 'Tier slot full' : 'Insufficient budget';
       } else {
-        btn.onclick = function() { smSelectTeam(t); };
+        btn.onclick = function() { smSelectTeam2(team); };
       }
       container.appendChild(btn);
     });
   }
 
-  function smSelectTeam(team) {
-    smSelectedTeam = team;
-    document.querySelectorAll('.sm-team-btn').forEach(function(b) {
+  function smSelectTeam2(team) {
+    smSelTeam = team;
+    document.querySelectorAll('.sm-badge').forEach(function(b) {
       b.classList.toggle('active', b.dataset.teamId == team.team_id);
     });
-    /* details strip */
-    document.getElementById('smRemPts').textContent     = team.remaining_points;
-    document.getElementById('smRemPlayers').textContent  = team.remaining_players;
-    document.getElementById('smMaxCall').textContent     = team.max_call;
-    document.getElementById('smTeamDetail').classList.add('show');
-    /* suggestion */
-    var sug = document.getElementById('smSug');
+    var logo = document.getElementById('smTeamLogo');
+    logo.src = '/web/image/auction.team/' + team.team_id + '/logo';
+    logo.style.display = 'block';
+    document.getElementById('smTeamPlaceholder').style.display = 'none';
+    var lbl = document.getElementById('smTeamNameLabel');
+    lbl.textContent = team.team_name; lbl.style.display = 'block';
+
+    document.getElementById('smRemainingPts').textContent     = team.remaining_points;
+    document.getElementById('smRemainingPlayers').textContent = team.remaining_players;
+    document.getElementById('smMaxCall').textContent          = team.max_call;
+    document.getElementById('teamDetailsStrip').style.display = 'flex';
+
+    var sug = document.getElementById('sellSuggestion');
     sug.innerHTML = team.remaining_players > 1
-      ? '\u2139 Max bid <strong>' + team.max_call + ' pts</strong> | Base for remaining: <strong>' + team.effective_base_point + ' pts</strong>'
-      : '\u2139 Last slot! Max bid: <strong>' + team.max_call + ' pts</strong>';
-    sug.classList.add('show');
-    /* points */
-    var inp = document.getElementById('smPoints');
+      ? '\u2139 Max bid <strong>' + team.max_call + ' pts</strong> &#160;|&#160; Base: <strong>' + team.effective_base_point + ' pts</strong>'
+      : '\u2139 Last player slot! Max bid: <strong>' + team.max_call + ' pts</strong>';
+    sug.style.display = 'block';
+
+    var inp = document.getElementById('sellPoints');
     inp.value = team.effective_base_point;
     inp.min   = team.effective_base_point;
     inp.max   = team.max_call;
-    smRenderPresets(team);
-    smShowError('');
-    var sellBtn = document.getElementById('smSellBtn');
-    if (sellBtn) sellBtn.disabled = false;
+    smRenderPresets2(team);
+    document.getElementById('sellError').style.display = 'none';
+    document.getElementById('smBtnSell').disabled = false;
   }
 
-  function smRenderPresets(team) {
+  function smRenderPresets2(team) {
     var container = document.getElementById('smPresets');
     container.innerHTML = '';
     var presets = [];
-    var base = team.effective_base_point;
-    var max  = team.max_call;
-
-    if (team.preset_points && team.preset_points.length > 0) {
-      /* Use explicit tournament preset_points — filter to valid range, always include base & max */
+    var base = team.effective_base_point, max = team.max_call;
+    if (team.preset_points && team.preset_points.length) {
       presets = team.preset_points.filter(function(v) { return v >= base && v <= max; });
       if (!presets.length || presets[0] !== base) presets.unshift(base);
       if (presets[presets.length - 1] !== max) presets.push(max);
-    } else if (team.slabs && team.slabs.length > 0) {
-      /* Generate from tournament slabs */
-      var inc = smGetInc(base, team.slabs);
+    } else if (team.slabs && team.slabs.length) {
+      var inc = smGetInc2(base, team.slabs);
       for (var v = base; v <= max && presets.length < 8; v += inc) {
-        presets.push(v);
-        inc = smGetInc(v, team.slabs);
+        presets.push(v); inc = smGetInc2(v, team.slabs);
       }
       if (!presets.length || presets[presets.length - 1] !== max) presets.push(max);
     } else {
-      /* No config at all — just show base and max */
-      presets = [base];
-      if (base !== max) presets.push(max);
+      presets = [base]; if (base !== max) presets.push(max);
     }
-
     presets.forEach(function(val) {
       var btn = document.createElement('button');
-      btn.className = 'sm-preset';
-      btn.textContent = val;
-      btn.type = 'button';
+      btn.className = 'sm-preset-btn'; btn.textContent = val; btn.type = 'button';
       btn.onclick = function() {
-        document.getElementById('smPoints').value = val;
-        document.querySelectorAll('.sm-preset').forEach(function(b) { b.classList.remove('active'); });
-        btn.classList.add('active');
+        document.getElementById('sellPoints').value = val;
+        document.querySelectorAll('.sm-preset-btn').forEach(function(b) { b.classList.remove('sm-preset-active'); });
+        btn.classList.add('sm-preset-active');
       };
       container.appendChild(btn);
     });
   }
 
-  window.adjPts = function(dir) {
-    if (!smSelectedTeam) return;
-    var inp     = document.getElementById('smPoints');
-    var current = parseInt(inp.value) || smSelectedTeam.effective_base_point;
-    var inc     = smGetInc(current, smSelectedTeam.slabs);
-    var next    = Math.min(Math.max(current + dir * inc, smSelectedTeam.effective_base_point), smSelectedTeam.max_call);
-    inp.value   = next;
-    smShowError('');
+  window.smAdjustPoints = function(dir) {
+    if (!smSelTeam) return;
+    var inp = document.getElementById('sellPoints');
+    var cur = parseInt(inp.value) || smSelTeam.effective_base_point;
+    var inc = smGetInc2(cur, smSelTeam.slabs);
+    inp.value = Math.min(Math.max(cur + dir * inc, smSelTeam.effective_base_point), smSelTeam.max_call);
   };
 
-  function smGetInc(amount, slabs) {
+  function smGetInc2(amount, slabs) {
     if (!slabs || !slabs.length) return 50;
     for (var i = 0; i < slabs.length; i++) {
       if (amount >= slabs[i].from_amount && amount < slabs[i].to_amount) return slabs[i].increment;
@@ -989,40 +1767,69 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     return slabs[slabs.length - 1].increment || 50;
   }
 
-  function smShowError(msg) {
-    var el = document.getElementById('smError');
-    if (!el) return;
-    el.textContent = msg;
-    el.classList.toggle('show', !!msg);
-  }
-
-  window.doSell = function() {
-    if (!smSelectedTeam || !smPlayerIdForSell) return;
-    var finalPts = parseInt(document.getElementById('smPoints').value);
-    if (isNaN(finalPts) || finalPts <= 0) { smShowError('Please enter valid points.'); return; }
-    var btn = document.getElementById('smSellBtn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Selling\u2026'; }
-    smShowError('');
-    callKw('auction.team.player', 'action_sell_from_web',
-           [smPlayerIdForSell, smSelectedTeam.team_id, finalPts]).then(function(res) {
+  window.smSubmitSell = function() {
+    if (!smSelTeam || !smPid) return;
+    var finalPts = parseInt(document.getElementById('sellPoints').value);
+    if (isNaN(finalPts) || finalPts <= 0) {
+      var errEl = document.getElementById('sellError');
+      errEl.textContent = 'Please enter a valid points value.';
+      errEl.style.display = 'block'; return;
+    }
+    var btn = document.getElementById('smBtnSell');
+    btn.disabled = true; btn.textContent = 'Selling\u2026';
+    document.getElementById('sellError').style.display = 'none';
+    callKw('auction.team.player', 'action_sell_from_web', [smPid, smSelTeam.team_id, finalPts]).then(function(res) {
       var data = res.result;
       if (!data || !data.success) {
-        smShowError(data ? data.error : 'Sell failed. Please try again.');
-        if (btn) { btn.disabled = false; btn.textContent = 'Sell Player'; }
-        return;
+        var msg = data ? data.error : 'Sell failed. Please try again.';
+        var errEl = document.getElementById('sellError');
+        errEl.textContent = msg; errEl.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Sell Player'; return;
       }
-      smShowSoldScreen(data);
+      smShowSoldScreen2(data);
     }).catch(function() {
-      smShowError('Network error. Please try again.');
-      if (btn) { btn.disabled = false; btn.textContent = 'Sell Player'; }
+      var errEl = document.getElementById('sellError');
+      errEl.textContent = 'Network error. Please try again.';
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Sell Player';
     });
   };
 
-  function smShowSoldScreen(data) {
-    var secs = data.display_seconds > 0 ? data.display_seconds : 5;
-    closeSellModal();
-    var subText = 'Sold to \u00a0' + data.team_name + '\u00a0 for \u00a0' + data.final_point + ' pts';
-    showStamp('SOLD', secs, subText, function() { closePlayerDrawer(true); });
+  function smShowSoldScreen2(data) {
+    var secs = (data.display_seconds > 0) ? data.display_seconds : 5;
+    document.getElementById('smFormPanel').style.display = 'none';
+
+    /* Fill sold screen */
+    document.getElementById('smSoldPhoto').src          = '/web/image/auction.team.player/' + smPid + '/photo';
+    document.getElementById('smSoldTeamLogo').src       = '/web/image/auction.team/' + data.team_id + '/logo';
+    document.getElementById('smSoldTeamName').textContent = data.team_name;
+    document.getElementById('smSoldPointsEl').textContent = data.final_point;
+
+    /* Re-trigger stamp animation */
+    var oldStamp = document.querySelector('.sm-sold-stamp');
+    if (oldStamp) { var ns = oldStamp.cloneNode(true); oldStamp.parentNode.replaceChild(ns, oldStamp); }
+
+    document.getElementById('smSoldScreen').classList.add('visible');
+
+    /* Countdown */
+    var remaining = secs;
+    var bar = document.getElementById('smProgressBar');
+    bar.style.transition = 'none'; bar.style.width = '100%';
+    document.getElementById('smCountdownNum').textContent = remaining;
+    bar.offsetWidth;
+    bar.style.transition = 'width ' + secs + 's linear'; bar.style.width = '0%';
+
+    smCdTimer = setInterval(function() {
+      remaining -= 1;
+      document.getElementById('smCountdownNum').textContent = remaining;
+      if (remaining <= 0) {
+        clearInterval(smCdTimer); smCdTimer = null;
+        document.getElementById('sellModal').classList.remove('open');
+        document.getElementById('smSoldScreen').classList.remove('visible');
+        document.getElementById('smFormPanel').style.display = 'block';
+        closePlayerDrawer(true);
+      }
+    }, 1000);
   }
 
   /* ── Full-screen stamp overlay ─────────────────────────── */
@@ -1113,6 +1920,114 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       if (onDone) onDone();
     }, secs * 1000);
   }
+
+  /* ── Dice ──────────────────────────────────────────────── */
+  var _diceRolling = false;
+  var _FACES = {
+    1:[[0,0,0],[0,1,0],[0,0,0]],
+    2:[[0,0,1],[0,0,0],[1,0,0]],
+    3:[[0,0,1],[0,1,0],[1,0,0]],
+    4:[[1,0,1],[0,0,0],[1,0,1]],
+    5:[[1,0,1],[0,1,0],[1,0,1]],
+    6:[[1,0,1],[1,0,1],[1,0,1]]
+  };
+
+  function setMqDiceFace(n) {
+    var pattern = _FACES[n] || _FACES[1];
+    var grid = document.getElementById('mqDieGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    pattern.forEach(function(row) {
+      row.forEach(function(dot) {
+        var cell = document.createElement('div');
+        cell.className = 'mq-die-cell';
+        if (dot) { var d = document.createElement('div'); d.className = 'mq-die-dot'; cell.appendChild(d); }
+        grid.appendChild(cell);
+      });
+    });
+  }
+
+  function showDiceResultPill(num) {
+    var pill = document.getElementById('mqDiceResult');
+    if (!pill) return;
+    pill.textContent = '#' + num;
+    pill.style.display = '';
+    pill.className = 'show';
+    /* Find matching cell, capture player id via data-id, highlight */
+    var pickedId = null;
+    document.querySelectorAll('#auction_grid .mq-btn').forEach(function(btn) {
+      btn.classList.remove('dice-pick');
+    });
+    document.querySelectorAll('#auction_grid .mq-btn').forEach(function(btn) {
+      var numEl = btn.querySelector('.mq-num');
+      if (numEl && parseInt(numEl.textContent) === num) {
+        btn.classList.add('dice-pick');
+        btn.scrollIntoView({behavior: 'smooth', block: 'center'});
+        if (btn.dataset.id) pickedId = parseInt(btn.dataset.id);
+      }
+    });
+    /* Click pill → open that player drawer */
+    pill.onclick = pickedId ? function() {
+      pill.classList.add('hide');
+      setTimeout(function() { pill.style.display = 'none'; pill.className = ''; }, 350);
+      openPlayerDrawer(pickedId);
+    } : null;
+    /* Auto-fade after 5s */
+    setTimeout(function() {
+      pill.classList.add('hide');
+      setTimeout(function() {
+        pill.style.display = 'none';
+        pill.className = '';
+        document.querySelectorAll('.mq-btn.dice-pick').forEach(function(b) {
+          b.classList.remove('dice-pick');
+        });
+      }, 400);
+    }, 5000);
+  }
+
+  window.rollDice = function() {
+    if (_diceRolling) return;
+    var available = [];
+    document.querySelectorAll('#auction_grid .mq-btn:not(.sold):not(.unsold)').forEach(function(btn) {
+      var numEl = btn.querySelector('.mq-num');
+      if (numEl) available.push(parseInt(numEl.textContent));
+    });
+    if (!available.length) return;
+
+    _diceRolling = true;
+    var dice = document.getElementById('mqDice');
+    var result = available[Math.floor(Math.random() * available.length)];
+    var tid = window.AUCTION_TOURNAMENT_ID ? parseInt(window.AUCTION_TOURNAMENT_ID) : 0;
+
+    /* Broadcast: rolling */
+    if (tid) callKw('auction.tournament', 'set_dice_state', [[tid], 'rolling', 0]).catch(function(){});
+
+    if (dice) dice.classList.add('rolling');
+    setMqDiceFace(1);
+
+    var rollCount = 0;
+    var maxRolls = 22;
+    var rollInt = setInterval(function() {
+      rollCount++;
+      setMqDiceFace((rollCount % 6) + 1);
+      if (rollCount >= maxRolls) {
+        clearInterval(rollInt);
+        if (dice) dice.classList.remove('rolling');
+        setMqDiceFace(((result - 1) % 6) + 1);
+        showDiceResultPill(result);
+        _diceRolling = false;
+        /* Broadcast: result */
+        if (tid) callKw('auction.tournament', 'set_dice_state', [[tid], 'result', result]).catch(function(){});
+        /* Reset after 7s */
+        setTimeout(function() {
+          if (tid) callKw('auction.tournament', 'set_dice_state', [[tid], 'idle', 0]).catch(function(){});
+        }, 7000);
+      }
+    }, 100);
+  };
+
+  /* Init dice face on load */
+  document.addEventListener('DOMContentLoaded', function() { setMqDiceFace(1); });
 
   /* ── Bid Summary ───────────────────────────────────────── */
   window.openBidSummary = function() {

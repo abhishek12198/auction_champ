@@ -125,6 +125,18 @@ class AuctionTournament(models.Model):
         store=False,
         help='Share this public link with players so they can self-register for the tournament.',
     )
+    projector_url = fields.Char(
+        string='Projector View URL',
+        compute='_compute_projector_url',
+        store=False,
+        help='Share this URL with the projector/screen operator to display players during a Manual auction.',
+    )
+    dice_state = fields.Selection(
+        [('idle', 'Idle'), ('rolling', 'Rolling'), ('result', 'Result')],
+        string='Dice State', default='idle',
+        help='Live state of the dice roll broadcast to the projector.',
+    )
+    dice_result = fields.Integer(string='Dice Result', default=0)
 
     def _compute_registered_player_count(self):
         Player = self.env['auction.team.player']
@@ -147,6 +159,23 @@ class AuctionTournament(models.Model):
                 rec.registration_url = '{}/{}/{}/player/register'.format(base_url, db_name, rec.slug)
             else:
                 rec.registration_url = '{}/{}/player/register'.format(base_url, db_name)
+
+    def _compute_projector_url(self):
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
+        db_name = self.env.cr.dbname
+        for rec in self:
+            if rec.slug and rec.player_appearance_algorithm == 'linear':
+                rec.projector_url = '{}/{}/auction/projector/{}/'.format(base_url, db_name, rec.slug)
+            else:
+                rec.projector_url = False
+
+    def set_dice_state(self, state, number=0):
+        """Called from player_selector JS to broadcast dice state to the projector."""
+        valid = {'idle', 'rolling', 'result'}
+        if state not in valid:
+            state = 'idle'
+        self.sudo().write({'dice_state': state, 'dice_result': int(number or 0)})
+        return True
 
     def action_toggle_registration(self):
         """Toggle the registration open/closed state."""

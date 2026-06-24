@@ -43,6 +43,7 @@
         'views/auction_player_template_pistah.xml',
         'views/auction_remaining_players_template.xml',
         'views/auction_blank_templates.xml',
+        'views/auction_projector_template.xml',
         'views/auction_show_balance_template1.xml',
         'views/auction_show_balance_template1_pistah.xml',
         'report/auction_report_template.xml',

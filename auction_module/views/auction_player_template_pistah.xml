@@ -640,11 +640,13 @@ body[data-theme="light"] #pt-theme-btn{color:var(--pistah-dark)}
 
     <!-- LEFT: Auction Champ product brand (logo.svg) -->
     <div class="pt-header-brand">
-      <img src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
-      <div class="pt-header-brand-text">
-        <span class="pt-brand-name">Auction Champ</span>
-        <span class="pt-brand-season">Pistah Edition</span>
-      </div>
+      <a href="/web" style="display:flex;align-items:center;gap:inherit;text-decoration:none;color:inherit;">
+        <img src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
+        <div class="pt-header-brand-text">
+          <span class="pt-brand-name">Auction Champ</span>
+          <span class="pt-brand-season">Pistah Edition</span>
+        </div>
+      </a>
     </div>
 
     <!-- CENTER: Tournament logo (large) + name + description -->
@@ -761,7 +763,7 @@ body[data-theme="light"] #pt-theme-btn{color:var(--pistah-dark)}
         </t>
         <t t-if="player.contact">
           <div class="pt-stat-tile">
-            <div class="pt-stat-val"><t t-esc="player.contact"/></div>
+            <div class="pt-stat-val"><t t-esc="player.masked_contact"/></div>
             <div class="pt-stat-key">Mobile</div>
           </div>
         </t>

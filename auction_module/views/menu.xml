@@ -12,7 +12,7 @@
         <record id="action_launch_auction" model="ir.actions.act_url">
             <field name="name">Player Showcase</field>
             <field name="url">/auction/showcase</field>
-            <field name="target">new</field>
+            <field name="target">self</field>
         </record>
 
         <record id="action_print_players_cards" model="ir.actions.act_url">

@@ -54,6 +54,11 @@ class AuctionTeamPlayer(models.Model):
     sl_no = fields.Integer("Sl No")
     name = fields.Char(string="Name of the player", required=True)
     contact = fields.Char("Mobile Number")
+    masked_contact = fields.Char(
+        "Masked Mobile Number",
+        compute='_compute_masked_contact',
+        help='Contact number with all digits except the first and last replaced by X.',
+    )
     address = fields.Text("Address")
     batting_style = fields.Char(string="Batting Style", required=True, default='Right Handed Batter')
     bowling_style = fields.Char(string="Bowling Style", required=True, default='Right Arm')
@@ -93,6 +98,15 @@ class AuctionTeamPlayer(models.Model):
     p_type =   fields.Char("Type")
     p_category = fields.Char("Category")
     payment_proof = fields.Binary("Payment Proof", help="Uploaded payment screenshot/receipt from registration form.")
+
+    @api.depends('contact')
+    def _compute_masked_contact(self):
+        for player in self:
+            c = player.contact or ''
+            if len(c) > 2:
+                player.masked_contact = c[0] + 'X' * (len(c) - 2) + c[-1]
+            else:
+                player.masked_contact = c
 
     @api.depends('photo')
     def _compute_photo_card(self):
@@ -502,6 +516,14 @@ class AuctionTeamPlayer(models.Model):
         if random_player:
             random_player.sudo().write({'is_on_stage': True})
 
+        # ── Clear stamp so live board switches to new player immediately ──
+        if tournament and tournament.stamp_player_id:
+            tournament.sudo().write({
+                'stamp_player_id': False,
+                'stamp_state': False,
+                'stamp_expires_at': False,
+            })
+
         return random_player
 
     def action_set_on_stage(self):
@@ -511,7 +533,30 @@ class AuctionTeamPlayer(models.Model):
             all_on_stage.sudo().write({'is_on_stage': False})
         for player in self:
             player.sudo().write({'is_on_stage': True})
+            # Clear any active stamp so the live board switches to this player immediately
+            tournament = player.tournament_id
+            if tournament and tournament.stamp_player_id:
+                tournament.sudo().write({
+                    'stamp_player_id': False,
+                    'stamp_state': False,
+                    'stamp_expires_at': False,
+                })
         return {'success': True}
+
+    def action_clear_stage(self):
+        """Called when the auctioneer closes the player drawer.
+        Clears is_on_stage and the tournament stamp so the projector and
+        live board immediately return to the waiting state."""
+        for player in self:
+            player.sudo().write({'is_on_stage': False})
+            tournament = player.tournament_id
+            if tournament:
+                tournament.sudo().write({
+                    'stamp_player_id': False,
+                    'stamp_state': False,
+                    'stamp_expires_at': False,
+                })
+        return True
 
     def action_unsold(self):
         for player in self:
@@ -575,6 +620,100 @@ class AuctionTeamPlayer(models.Model):
                 team_id.key_player_ids = [(3, player.id)]
                 message = player.name + ' has been revoked from icon player list and brought back to auction successfully!'
                 self.env.user.notify_success(message)
+
+    def get_all_teams_for_correction(self):
+        """Return all teams for this player's tournament, for the sale-correction panel."""
+        player = self[0] if self else False
+        if not player:
+            return []
+        tournament = player.tournament_id
+        tournament_slabs = []
+        if tournament:
+            splits = tournament.points_split_ids.sorted('points')
+            split_list = list(splits)
+            for i, split in enumerate(split_list):
+                to_amt = (split_list[i + 1].points - 1) if i + 1 < len(split_list) else 99999999
+                tournament_slabs.append({
+                    'from_amount': split.points,
+                    'to_amount': to_amt,
+                    'increment': split.no_of_calls,
+                })
+        auction_domain = [('tournament_id', '=', tournament.id)] if tournament else []
+        auctions = self.env['auction.auction'].search(auction_domain)
+        result = []
+        for a in auctions:
+            if not a.team_id:
+                continue
+            auction_slabs = [
+                {'from_amount': s.from_amount, 'to_amount': s.to_amount, 'increment': s.increment}
+                for s in a.auction_bid_slab_ids.sorted('from_amount')
+            ]
+            result.append({
+                'team_id': a.team_id.id,
+                'team_name': a.team_id.name,
+                'team_logo': a.team_id.logo.decode('utf-8') if a.team_id.logo else '',
+                'is_current': a.team_id.id == player.assigned_team_id.id,
+                'slabs': auction_slabs if auction_slabs else tournament_slabs,
+            })
+        return result
+
+    def action_update_sale(self, new_points, new_team_id):
+        """Correct a sale: update points and/or change team. Used from the web correction panel."""
+        player = self[0] if self else False
+        if not player or player.state != 'sold':
+            return {'success': False, 'error': 'Player is not in sold state'}
+        new_team_id = int(new_team_id)
+        new_points  = int(new_points)
+        old_line = self.env['auction.auction.player'].search(
+            [('player_id', '=', player.id)], limit=1)
+        if not old_line:
+            return {'success': False, 'error': 'Sale record not found'}
+        old_team     = player.assigned_team_id
+        team_changed = (old_team.id != new_team_id)
+        if team_changed:
+            new_auction = self.env['auction.auction'].search(
+                [('team_id', '=', new_team_id),
+                 ('tournament_id', '=', player.tournament_id.id)], limit=1)
+            if not new_auction:
+                return {'success': False, 'error': 'Selected team is not part of this tournament'}
+            old_line.unlink()
+            self.env['auction.auction.player'].create({
+                'auction_id': new_auction.id,
+                'player_id': player.id,
+                'points': new_points,
+            })
+            player.assigned_team_id = new_team_id
+            new_team_name = new_auction.team_id.name
+            new_team_logo = new_auction.team_id.logo.decode('utf-8') if new_auction.team_id.logo else ''
+        else:
+            old_line.points = new_points
+            new_team_name = old_team.name
+            new_team_logo = old_team.logo.decode('utf-8') if old_team.logo else ''
+        message = '%s sale corrected: sold to %s for %d pts' % (player.name, new_team_name, new_points)
+        self.env.user.notify_success(message=message, title='Sale Updated')
+        return {
+            'success': True,
+            'message': message,
+            'new_points': new_points,
+            'new_team_id': new_team_id,
+            'new_team_name': new_team_name,
+            'new_team_logo': new_team_logo,
+        }
+
+    def action_update_sale_points(self, new_points):
+        """Update the sold points for a player (corrects typo in final bid). Points-only edit, team unchanged."""
+        player = self[0] if self else False
+        if not player or player.state != 'sold':
+            return {'success': False, 'error': 'Player is not in sold state'}
+        player_line = self.env['auction.auction.player'].search(
+            [('player_id', '=', player.id)], limit=1)
+        if not player_line:
+            return {'success': False, 'error': 'Sale record not found'}
+        old_points = player_line.points
+        player_line.points = int(new_points)
+        message = 'Points updated for %s: %d → %d pts' % (player.name, old_points, int(new_points))
+        self.env.user.notify_success(message=message, title='Points Updated')
+        return {'success': True, 'message': message, 'old_points': old_points, 'new_points': int(new_points)}
 
     def button_sell_player(self, player_id, other_data):
         team_id = self.env['auction.team'].browse(int(team_id))

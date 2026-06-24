@@ -109,7 +109,7 @@
               <div>
                 <p><span>:</span> <span t-esc="player.batting_style"/></p>
                 <p><span>:</span> <span t-esc="player.bowling_style"/></p>
-                <p><span>:</span> <span t-esc="player.contact"/></p>
+                <p><span>:</span> <span t-esc="player.masked_contact"/></p>
                 <p><span>:</span> <span t-esc="player.p_category"/></p>
                 <p><span>:</span> <span t-esc="player.p_type"/></p>
                 <!--<p>

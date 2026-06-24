@@ -110,25 +110,84 @@ class Auction(http.Controller):
             headers=[('Content-Type', 'text/html; charset=utf-8')]
         )
 
-    @http.route('/auction/player_selector', type='http', auth='public', website=True)
-    def player_selector(self, **kw):
-        tournament = self._resolve_tournament()
-        theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
-        return request.render(
-            'auction_module.player_sequence_selector',
-            {'tournament': tournament, 'theme': theme}
-        )
+    @http.route(['/auction/player_selector', '/auction/player_selector/'],
+                type='http', auth="none", website=False, sitemap=False)
+    def player_selector_legacy(self, **kw):
+        """Redirect legacy URL to db+slug prefixed URL."""
+        from odoo.http import db_monodb, db_list
+        db_name = db_monodb(request.httprequest)
+        if not db_name:
+            dbs = db_list(force=True, httprequest=request.httprequest)
+            db_name = dbs[0] if dbs else None
+        if not db_name:
+            return self._not_found()
+        # Try to resolve tournament slug for redirect
+        t_slug = ''
+        try:
+            with self._with_db(db_name) as ok:
+                if ok:
+                    tournament = request.env['auction.tournament'].sudo().search(
+                        [('active', '=', True)], limit=1)
+                    t_slug = tournament.slug if tournament else ''
+        except Exception:
+            t_slug = ''
+        target = '/{}/auction/player_selector/{}'.format(
+            db_name, t_slug + '/' if t_slug else '')
+        return werkzeug.utils.redirect(target, 302)
+
+    @http.route([
+        '/<string:db_name>/auction/player_selector/',
+        '/<string:db_name>/auction/player_selector/<string:tournament_slug>/',
+    ], type='http', auth="none", website=False, sitemap=False)
+    def player_selector(self, db_name, tournament_slug=None, **kw):
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return self._not_found()
+            if tournament_slug:
+                tournament = request.env['auction.tournament'].sudo().search(
+                    [('slug', '=', tournament_slug)], limit=1)
+            else:
+                tournament = request.env['auction.tournament'].sudo().search(
+                    [('active', '=', True)], limit=1)
+            theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
+            html = request.render('auction_module.player_sequence_selector', {
+                'tournament': tournament,
+                'theme': theme,
+                'db_name': db_name,
+                'tournament_slug': tournament_slug or (tournament.slug if tournament else ''),
+            }, lazy=False)
+        return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
     #sequence_template_part
     @http.route('/auction/get_players_queue', type='json', auth='public', website=True)
-    def get_players_queue(self):
-        tournament = self._resolve_tournament()
-        domain = [('icon_player', '=', False)]
+    def get_players_queue(self, tournament_id=None):
+        if tournament_id:
+            tournament = request.env['auction.tournament'].sudo().browse(int(tournament_id))
+        else:
+            tournament = self._resolve_tournament()
+        domain = [('icon_player', '=', False), ('state', '!=', 'draft')]
         if tournament:
             domain.append(('tournament_id', '=', tournament.id))
         players = request.env['auction.team.player'].sudo().search(domain, order='sl_no asc')
+
+        # Build a map of player_id -> sold points from auction.auction.player
+        sold_player_ids = [p.id for p in players if p.state == 'sold']
+        points_map = {}
+        if sold_player_ids:
+            lines = request.env['auction.auction.player'].sudo().search(
+                [('player_id', 'in', sold_player_ids)])
+            for line in lines:
+                points_map[line.player_id.id] = line.points
+
         return [
-            {'serial': p.sl_no, 'id': p.id, 'state': p.state}
+            {
+                'serial': p.sl_no,
+                'id': p.id,
+                'state': p.state,
+                'team_name': p.assigned_team_id.name if p.state == 'sold' and p.assigned_team_id else '',
+                'team_logo': p.assigned_team_id.logo.decode('utf-8') if p.state == 'sold' and p.assigned_team_id and p.assigned_team_id.logo else '',
+                'sold_points': points_map.get(p.id, 0) if p.state == 'sold' else 0,
+            }
             for p in players
         ]
 
@@ -433,10 +492,23 @@ class Auction(http.Controller):
                 tournament_id = request.env['auction.tournament'].sudo().search(
                     [('active', '=', True)], limit=1
                 )
-            player = request.env['auction.team.player'].sudo().get_random_player(
-                exclude_id=kwargs.get('exclude', 0),
-                tournament_id=tournament_id,
-            )
+            exclude_id = kwargs.get('exclude', 0)
+
+            # If no explicit "next player" request, resume the player already on stage
+            if not exclude_id:
+                on_stage_domain = [('is_on_stage', '=', True), ('state', '=', 'auction')]
+                if tournament_id:
+                    on_stage_domain.append(('tournament_id', '=', tournament_id.id))
+                player = request.env['auction.team.player'].sudo().search(on_stage_domain, limit=1)
+            else:
+                player = None
+
+            # No on-stage player (or caller wants next) → pick one
+            if not player:
+                player = request.env['auction.team.player'].sudo().get_random_player(
+                    exclude_id=exclude_id,
+                    tournament_id=tournament_id,
+                )
             if player:
                 auction_ids = request.env['auction.auction'].sudo().search(
                     [('tournament_id', '=', tournament_id.id)] if tournament_id else []
@@ -742,6 +814,148 @@ class Auction(http.Controller):
             return request.redirect('/{}/auction/show/team/balance'.format(tournament.slug))
         return request.redirect('/web')
 
+    @http.route(['/auction/player_selector', '/auction/player_selector/'],
+                type='http', auth="none", website=False, sitemap=False)
+    def player_selector_legacy(self, **kw):
+        """Redirect legacy URL to db+slug prefixed URL."""
+        from odoo.http import db_monodb, db_list
+        db_name = db_monodb(request.httprequest)
+        if not db_name:
+            dbs = db_list(force=True, httprequest=request.httprequest)
+            db_name = dbs[0] if dbs else None
+        if not db_name:
+            return self._not_found()
+        slug = kw.get('t', '')
+        target = '/{}/auction/player_selector/{}'.format(db_name, slug + '/' if slug else '')
+        return werkzeug.utils.redirect(target, 302)
+
+    @http.route([
+        '/<string:db_name>/auction/player_selector/',
+        '/<string:db_name>/auction/player_selector/<string:tournament_slug>/',
+    ], type='http', auth="none", website=False, sitemap=False)
+    def player_selector(self, db_name, tournament_slug=None, **kw):
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return self._not_found()
+            if tournament_slug:
+                tournament = request.env['auction.tournament'].sudo().search(
+                    [('slug', '=', tournament_slug)], limit=1)
+            else:
+                tournament = request.env['auction.tournament'].sudo().search(
+                    [('active', '=', True)], limit=1)
+            theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
+            html = request.render('auction_module.player_sequence_selector', {
+                'tournament': tournament,
+                'theme': theme,
+                'db_name': db_name,
+                'tournament_slug': tournament_slug or (tournament.slug if tournament else ''),
+            }, lazy=False)
+        return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
+
+    @http.route(['/auction/projector', '/auction/projector/'],
+                type='http', auth="none", website=False, sitemap=False)
+    def projector_legacy(self, **kw):
+        """Redirect legacy URL to db+slug prefixed URL."""
+        from odoo.http import db_monodb, db_list
+        db_name = db_monodb(request.httprequest)
+        if not db_name:
+            dbs = db_list(force=True, httprequest=request.httprequest)
+            db_name = dbs[0] if dbs else None
+        if not db_name:
+            return self._not_found()
+        slug = kw.get('t', '')
+        target = '/{}/auction/projector/{}'.format(db_name, slug + '/' if slug else '')
+        return werkzeug.utils.redirect(target, 302)
+
+    @http.route([
+        '/<string:db_name>/auction/projector/',
+        '/<string:db_name>/auction/projector/<string:tournament_slug>/',
+    ], type='http', auth="none", website=False, sitemap=False)
+    def auction_projector(self, db_name, tournament_slug=None, **kw):
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return self._not_found()
+            if tournament_slug:
+                tournament = request.env['auction.tournament'].sudo().search(
+                    [('slug', '=', tournament_slug)], limit=1)
+            else:
+                tournament = request.env['auction.tournament'].sudo().search(
+                    [('active', '=', True)], limit=1)
+            theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
+            html = request.render('auction_module.projector_template', {
+                'tournament': tournament,
+                'theme': theme,
+                'db_name': db_name,
+                'tournament_slug': tournament_slug or (tournament.slug if tournament else ''),
+            }, lazy=False)
+        return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
+
+    @http.route([
+        '/<string:db_name>/auction/projector/<string:tournament_slug>/data',
+    ], type='json', auth="none", website=False, sitemap=False, csrf=False)
+    def auction_projector_data(self, db_name, tournament_slug, **kw):
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return {'player': None}
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('slug', '=', tournament_slug)], limit=1)
+            from datetime import datetime
+            import pytz
+            now_dt = datetime.now(pytz.utc).replace(tzinfo=None)
+            player = None
+            state_override = None
+            if (tournament and tournament.stamp_expires_at
+                    and tournament.stamp_expires_at > now_dt
+                    and tournament.stamp_player_id):
+                player = tournament.stamp_player_id
+                state_override = tournament.stamp_state
+            if not player:
+                domain = [('is_on_stage', '=', True)]
+                if tournament:
+                    domain.append(('tournament_id', '=', tournament.id))
+                player = request.env['auction.team.player'].sudo().search(domain, limit=1)
+            if not player:
+                return {
+                    'player': None,
+                    'dice': {
+                        'state': tournament.dice_state if tournament else 'idle',
+                        'result': tournament.dice_result if tournament else 0,
+                    },
+                }
+            photo = ''
+            if player.photo:
+                photo = player.photo.decode('utf-8') if isinstance(player.photo, bytes) else player.photo
+            team_logo = ''
+            team_name = ''
+            if player.assigned_team_id and player.assigned_team_id.logo:
+                lg = player.assigned_team_id.logo
+                team_logo = lg.decode('utf-8') if isinstance(lg, bytes) else lg
+                team_name = player.assigned_team_id.name
+            sold_points = 0
+            if player.state == 'sold':
+                auction_line = request.env['auction.auction.player'].sudo().search(
+                    [('player_id', '=', player.id)], limit=1)
+                sold_points = auction_line.points if auction_line else 0
+            return {
+                'player': {
+                    'id': player.id,
+                    'sl_no': player.sl_no or '',
+                    'name': player.name or '',
+                    'role': player.role or '',
+                    'batting_style': player.batting_style or '',
+                    'bowling_style': player.bowling_style or '',
+                    'photo': photo,
+                    'tier_name': player.tier_id.name if player.tier_id else '',
+                    'tier_color': player.tier_color or '#3498db',
+                    'base_price': player.effective_base_price or player.base_price or 0,
+                    'sold_points': sold_points,
+                    'state': state_override or player.state,
+                    'team_name': team_name,
+                    'team_logo': team_logo,
+                },
+                'dice': {'state': 'idle', 'result': 0},
+            }
+
     @http.route('/auction/showcase', type='http', auth='user', website=True)
     def auction_showcase(self, **kw):
         """Redirect to the correct player showcase based on tournament algorithm."""
@@ -749,7 +963,7 @@ class Auction(http.Controller):
         if tournament and tournament.slug:
             db_name = request.env.cr.dbname
             if tournament.player_appearance_algorithm == 'linear':
-                return request.redirect('/auction/player_selector')
+                return request.redirect('/{}/auction/player_selector/{}/'.format(db_name, tournament.slug))
             return request.redirect('/{}/auction/display_auction/{}/'.format(db_name, tournament.slug))
         if tournament and tournament.player_appearance_algorithm == 'linear':
             return request.redirect('/auction/player_selector')

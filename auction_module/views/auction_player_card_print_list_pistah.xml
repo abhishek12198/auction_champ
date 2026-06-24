@@ -241,7 +241,7 @@
                                             font-size:0.8rem; font-weight:600; padding:6px 0;
                                             border-bottom:1px solid rgba(107,191,78,0.12);
                                             vertical-align:middle;">
-                                            : <t t-esc="doc.contact"/>
+                                            : <t t-esc="doc.masked_contact"/>
                                         </td>
                                     </tr>
                                 </t>

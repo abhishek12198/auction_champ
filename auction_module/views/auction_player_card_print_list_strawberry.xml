@@ -109,7 +109,7 @@
                                 <t t-if="doc.contact">
                                     <tr>
                                         <td style="color:#C2185B; font-size:0.78rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:7px 10px 7px 0; white-space:nowrap; width:44%; vertical-align:middle;">Mobile</td>
-                                        <td style="color:#1a0a12; font-size:0.82rem; font-weight:600; padding:7px 0; vertical-align:middle;">: <t t-esc="doc.contact"/></td>
+                                        <td style="color:#1a0a12; font-size:0.82rem; font-weight:600; padding:7px 0; vertical-align:middle;">: <t t-esc="doc.masked_contact"/></td>
                                     </tr>
                                 </t>
                             </table>

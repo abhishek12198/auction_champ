@@ -2120,7 +2120,7 @@ img { display: block; }
 
   // Initial load + periodic refresh with Page Visibility pause
   var _pollTimer = null;
-  function startPolling() { if (!_pollTimer) _pollTimer = setInterval(poll, 4000); }
+  function startPolling() { if (!_pollTimer) _pollTimer = setInterval(poll, 2000); }
   function stopPolling()  { if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; } }
   document.addEventListener('visibilitychange', function() {
     if (document.hidden) { stopPolling(); }

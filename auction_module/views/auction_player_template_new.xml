@@ -44,7 +44,9 @@ body[data-theme="dark"] #vn-theme-btn{background:rgba(121,184,255,0.10);border-c
   <body style="min-height: 100vh" t-att-data-player-id="player.id" t-att-data-next-countdown="tournament.next_player_countdown if tournament else 5">
     <header class="single-header">
       <div class="py-3 text-center">
-        <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo" />
+        <a href="/web" style="display:inline-block;cursor:pointer;">
+          <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo" />
+        </a>
       </div>
       <div class="container">
         <div class="position-relative" style="column-gap: 8px">
@@ -136,7 +138,7 @@ body[data-theme="dark"] #vn-theme-btn{background:rgba(121,184,255,0.10);border-c
                 </t>
                 <t t-if="player.contact">
                   <span class="player-attr-label">Mobile No</span>
-                  <span class="player-attr-value"><t t-esc="player.contact"/></span>
+                  <span class="player-attr-value"><t t-esc="player.masked_contact"/></span>
                 </t>
                 <t t-if="player.p_category">
                   <span class="player-attr-label">Player Category</span>
