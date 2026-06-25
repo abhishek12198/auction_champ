@@ -131,13 +131,13 @@ class AuctionTournament(models.Model):
     )
     registration_url = fields.Char(
         string='Player Registration URL',
-        compute='_compute_registration_url',
+        compute='_compute_urls',
         store=False,
         help='Share this public link with players so they can self-register for the tournament.',
     )
     projector_url = fields.Char(
         string='Projector View URL',
-        compute='_compute_projector_url',
+        compute='_compute_urls',
         store=False,
         help='Share this URL with the projector/screen operator to display players during a Manual auction.',
     )
@@ -149,19 +149,24 @@ class AuctionTournament(models.Model):
     dice_result = fields.Integer(string='Dice Result', default=0)
 
     def _compute_registered_player_count(self):
-        Player = self.env['auction.team.player']
+        # Single aggregated query instead of one search_count() per record.
+        groups = self.env['auction.team.player'].read_group(
+            [('tournament_id', 'in', self.ids), ('state', '=', 'draft')],
+            ['tournament_id'],
+            ['tournament_id'],
+        )
+        count_map = {g['tournament_id'][0]: g['tournament_id_count'] for g in groups}
         for rec in self:
-            rec.registered_player_count = Player.search_count([
-                ('tournament_id', '=', rec.id),
-                ('state', '=', 'draft'),
-            ])
+            rec.registered_player_count = count_map.get(rec.id, 0)
 
     @api.depends('name')
     def _compute_slug(self):
         for rec in self:
             rec.slug = _slugify(rec.name or '')
 
-    def _compute_registration_url(self):
+    @api.depends('slug', 'player_appearance_algorithm')
+    def _compute_urls(self):
+        # Both URL fields share one get_param() call to avoid two DB hits per form load.
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
         db_name = self.env.cr.dbname
         for rec in self:
@@ -170,10 +175,6 @@ class AuctionTournament(models.Model):
             else:
                 rec.registration_url = '{}/{}/player/register'.format(base_url, db_name)
 
-    def _compute_projector_url(self):
-        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
-        db_name = self.env.cr.dbname
-        for rec in self:
             if rec.slug and rec.player_appearance_algorithm == 'linear':
                 rec.projector_url = '{}/{}/auction/projector/{}/'.format(base_url, db_name, rec.slug)
             else:

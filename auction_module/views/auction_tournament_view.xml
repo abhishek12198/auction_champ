@@ -203,9 +203,7 @@
                                     <kanban class="o_kanban_mobile">
                                         <field name="name"/>
                                         <field name="logo"/>
-                                        <field name="tournament_id"/>
                                         <field name="manager"/>
-                                        <field name="key_player_ids"/>
                                         <field name="id"/>
                                         <templates>
                                             <t t-name="kanban-box">
@@ -218,10 +216,6 @@
                                                         <div t-if="record.manager.raw_value">
                                                             <span class="text-muted">Owner: </span>
                                                             <field name="manager"/>
-                                                        </div>
-                                                        <div t-if="record.key_player_ids.raw_value">
-                                                            <span class="text-muted">Icon Player: </span>
-                                                            <field name="key_player_ids" widget="many2many_tags"/>
                                                         </div>
                                                     </div>
                                                 </div>
