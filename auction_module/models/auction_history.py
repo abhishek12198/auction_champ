@@ -13,6 +13,7 @@ class AuctionHistory(models.Model):
     _name = 'auction.history'
     _order = 'id'
 
+    active = fields.Boolean(default=True)
     team_id = fields.Many2one('auction.team', 'Team')
     player_photo = fields.Binary()
     message = fields.Char("History Message")

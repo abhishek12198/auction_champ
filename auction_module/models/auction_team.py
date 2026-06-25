@@ -20,6 +20,7 @@ class AuctionTeam(models.Model):
                 defaults['tournament_id'] = user_tournament.id
         return defaults
 
+    active = fields.Boolean(default=True)
     name = fields.Char(string="Team Name", required=True)
     logo = fields.Binary(string="Team Logo",
                             help="Add team logo")

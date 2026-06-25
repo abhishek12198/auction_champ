@@ -584,24 +584,68 @@
                     <span class="reg-section-num">04</span>
                 </div>
 
-                <div class="reg-photo-upload">
-                    <div class="reg-payment-icon" id="paymentPreviewIcon">📎</div>
-                    <div class="reg-file-meta">
-                        <label for="paymentInput" class="reg-file-btn">
-                            <svg width="15" height="15" fill="none" viewBox="0 0 24 24"
-                                 stroke="currentColor" stroke-width="2.5">
-                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                                <polyline points="17 8 12 3 7 8"/>
-                                <line x1="12" y1="3" x2="12" y2="15"/>
-                            </svg>
-                            Upload Receipt / Screenshot
-                        </label>
-                        <input type="file" id="paymentInput" name="payment_proof"
-                               accept="image/*,application/pdf" class="reg-file-input"/>
-                        <p class="reg-file-hint" id="paymentFileName">
-                            JPG · PNG · PDF &#160;·&#160; Max 5 MB
-                        </p>
+                <!-- Two-column layout when QR is present; single column otherwise -->
+                <div t-attf-class="reg-payment-layout#{' reg-payment-has-qr' if tournament and tournament.payment_qr_image else ''}">
+
+                    <!-- LEFT: Upload + instruction -->
+                    <div class="reg-payment-left">
+                        <!-- Upload proof -->
+                        <div class="reg-photo-upload">
+                            <div class="reg-payment-icon" id="paymentPreviewIcon">📎</div>
+                            <div class="reg-file-meta">
+                                <label for="paymentInput" class="reg-file-btn">
+                                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24"
+                                         stroke="currentColor" stroke-width="2.5">
+                                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                        <polyline points="17 8 12 3 7 8"/>
+                                        <line x1="12" y1="3" x2="12" y2="15"/>
+                                    </svg>
+                                    Upload Receipt / Screenshot
+                                </label>
+                                <input type="file" id="paymentInput" name="payment_proof"
+                                       accept="image/*,application/pdf" class="reg-file-input"/>
+                                <p class="reg-file-hint" id="paymentFileName">
+                                    JPG · PNG · PDF &#160;·&#160; Max 5 MB
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Instruction below upload (if configured) -->
+                        <t t-if="tournament and tournament.payment_instruction">
+                        <div class="reg-payment-instruction">
+                            <span class="reg-payment-instruction-icon">💡</span>
+                            <span class="reg-payment-instruction-text" t-esc="tournament.payment_instruction"/>
+                        </div>
+                        </t>
                     </div>
+
+                    <!-- RIGHT: QR code (only when present) -->
+                    <t t-if="tournament and tournament.payment_qr_image">
+                    <div class="reg-payment-right">
+                        <div class="reg-payment-qr-wrap">
+                            <div class="reg-payment-qr-label">
+                                <svg width="15" height="15" fill="none" viewBox="0 0 24 24"
+                                     stroke="currentColor" stroke-width="2" style="margin-right:5px;vertical-align:-2px;">
+                                    <rect x="3" y="3" width="7" height="7" rx="1"/>
+                                    <rect x="14" y="3" width="7" height="7" rx="1"/>
+                                    <rect x="3" y="14" width="7" height="7" rx="1"/>
+                                    <path d="M14 14h2v2h-2zM18 14h3v2h-3zM16 16v2h-2v3h2v-1h2v-2h1v-2h-3zM21 18h-2v3h2z"/>
+                                </svg>
+                                Scan &amp; Pay
+                            </div>
+                            <div class="reg-payment-qr-frame">
+                                <img t-att-src="'data:image/png;base64,' + tournament.payment_qr_image.decode('utf-8')"
+                                     class="reg-payment-qr" alt="Payment QR Code"/>
+                            </div>
+                            <a t-att-href="'data:image/png;base64,' + tournament.payment_qr_image.decode('utf-8')"
+                               download="payment-qr.png" class="reg-payment-qr-download">
+                                ⬇ Download QR
+                            </a>
+                            <p class="reg-payment-qr-hint">Scan to pay, then upload receipt.</p>
+                        </div>
+                    </div>
+                    </t>
+
                 </div>
             </div>
 

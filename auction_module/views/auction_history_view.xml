@@ -18,6 +18,21 @@
             </field>
         </record>
 
+        <record id="view_auction_history_search" model="ir.ui.view">
+            <field name="name">auction.history.search</field>
+            <field name="model">auction.history</field>
+            <field name="arch" type="xml">
+                <search string="Auction History">
+                    <field name="message" string="Message"/>
+                    <field name="team_id" string="Team"/>
+                    <field name="tournament_id" string="Tournament"
+                           groups="auction_module.group_auction_group_admin"/>
+                    <filter string="Archived" name="archived"
+                            domain="[('active', '=', False)]"/>
+                </search>
+            </field>
+        </record>
+
         <record id="action_auction_history_tree" model="ir.actions.act_window">
             <field name="name">Auction History</field>
             <field name="res_model">auction.history</field>

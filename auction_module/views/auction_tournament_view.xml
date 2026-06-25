@@ -29,6 +29,12 @@
             <field name="arch" type="xml">
                 <form string="Tournament">
                     <header>
+                        <button name="action_deactivate_tournament"
+                                type="object"
+                                string="Deactivate Tournament"
+                                class="btn-danger"
+                                confirm="This will archive the tournament and ALL its related records (players, teams, auctions, history). This cannot be undone easily. Are you sure?"
+                                attrs="{'invisible': [('active', '=', False)]}"/>
                         <button name="action_remove_duplicates"
 
 
@@ -292,6 +298,31 @@
                                         <p class="text-muted" style="margin-top:6px;">
                                             Set to <strong>0</strong> for unlimited registrations.
                                             Once the limit is reached, registration is automatically closed.
+                                        </p>
+                                    </group>
+                                </group>
+
+                                <separator string="Payment Section"/>
+                                <p class="text-muted o_form_label" style="margin-bottom:12px;">
+                                    Configure what players see in the <strong>Payment Proof</strong>
+                                    section of the registration form. Add a QR code so they can scan
+                                    and pay, then attach the screenshot.
+                                </p>
+                                <group>
+                                    <group string="Payment QR / Scanner">
+                                        <field name="payment_qr_image" widget="image" nolabel="1"
+                                               options="{'preview_image': 'payment_qr_image', 'size': [200, 200]}"/>
+                                        <p class="text-muted" style="margin-top:8px; font-size:12px;">
+                                            Upload your UPI / payment QR code (PNG recommended, square format).
+                                            Players can scan it directly from the registration page.
+                                        </p>
+                                    </group>
+                                    <group string="Payment Instructions">
+                                        <field name="payment_instruction" nolabel="1"
+                                               placeholder="e.g. Pay ₹500 via UPI to 9876543210@paytm. Add your name as payment reference, then attach the screenshot below."/>
+                                        <p class="text-muted" style="margin-top:8px; font-size:12px;">
+                                            This text is shown as an instruction box above the upload
+                                            area on the registration page.
                                         </p>
                                     </group>
                                 </group>

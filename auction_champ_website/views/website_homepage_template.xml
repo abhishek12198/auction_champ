@@ -41,6 +41,9 @@
             </picture>
         </a>
         <ul class="ac-nav-links">
+            <t t-if="live_tournaments">
+                <li><a href="#live-auctions" class="ac-nav-live-link"><span class="ac-nav-live-dot"></span>Live Auctions</a></li>
+            </t>
             <li><a href="#features">Features</a></li>
             <li><a href="#how-it-works">How It Works</a></li>
             <li><a href="#pricing">Pricing</a></li>
@@ -59,6 +62,9 @@
     <!-- Mobile drawer -->
     <div class="ac-nav-mobile" id="acMobileNav">
         <ul>
+            <t t-if="live_tournaments">
+                <li><a href="#live-auctions"><span class="ac-nav-live-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ff4757;margin-right:6px;animation:ac-pulse 1.5s ease-in-out infinite;"></span>Live Auctions</a></li>
+            </t>
             <li><a href="#features">Features</a></li>
             <li><a href="#how-it-works">How It Works</a></li>
             <li><a href="#pricing">Pricing</a></li>
@@ -443,6 +449,153 @@
 </section>
 
 <!-- ================================================================
+     LIVE TOURNAMENTS
+     ================================================================ -->
+<t t-if="live_tournaments">
+<section class="ac-live-section" id="live-auctions">
+    <div class="ac-container">
+        <div class="ac-text-center">
+            <span class="ac-label-live">
+                <span class="ac-live-pulse-dot"></span>
+                Live Right Now
+            </span>
+            <h2 class="ac-section-title-inv">Active <span class="hl-inv">Live Auctions</span></h2>
+            <div class="ac-divider-inv"></div>
+            <p class="ac-section-sub-inv">
+                These tournaments are conducting live player auctions at this moment.
+                Track the current player on stage, see the latest bid, and jump straight
+                into the live board.
+            </p>
+        </div>
+
+        <div class="ac-live-grid" id="acLiveGrid">
+            <t t-foreach="live_tournaments" t-as="lt">
+                <div t-att-class="'ac-live-card' + (' ac-live-break-mode' if lt.get('is_break') else '')"
+                     t-att-data-tournament-id="lt.get('tournament_id')"
+                     t-att-data-live-url="lt.get('live_board_url')">
+
+                    <!-- ── Card header: logo + title + LIVE badge ── -->
+                    <div class="ac-live-card-header">
+                        <div class="ac-live-logo-wrap">
+                            <t t-if="lt.get('logo_url')">
+                                <img t-att-src="lt['logo_url']"
+                                     t-att-alt="lt.get('name', '')"
+                                     class="ac-live-logo"/>
+                            </t>
+                            <t t-else="">
+                                <div class="ac-live-logo-placeholder">
+                                    <i class="fas fa-trophy"></i>
+                                </div>
+                            </t>
+                        </div>
+                        <div class="ac-live-header-info">
+                            <div class="ac-live-badge">
+                                <span class="ac-live-dot"></span>
+                                LIVE
+                            </div>
+                            <h3 class="ac-live-name" t-esc="lt.get('name', '')"/>
+                            <p class="ac-live-desc" t-esc="lt.get('description', '')"/>
+                        </div>
+                    </div>
+
+                    <!-- ── Stage: current player / break / idle ── -->
+                    <div class="ac-live-stage">
+                        <t t-if="lt.get('is_break')">
+                            <div class="ac-live-break-screen">
+                                <i class="fas fa-coffee"></i>
+                                <span>Break Time</span>
+                                <small>Auction will resume shortly</small>
+                            </div>
+                        </t>
+                        <t t-elif="lt.get('current_player')">
+                            <t t-set="lp" t-value="lt['current_player']"/>
+                            <div class="ac-live-player">
+                                <div class="ac-live-player-details">
+                                    <div class="ac-live-player-top-row">
+                                        <span class="ac-live-player-sl">#<t t-esc="str(lp.get('sl_no', ''))"/></span>
+                                        <t t-if="lp.get('state') == 'sold'">
+                                            <span class="ac-live-sold-badge">SOLD</span>
+                                        </t>
+                                        <t t-elif="lp.get('state') == 'unsold'">
+                                            <span class="ac-live-unsold-badge">UNSOLD</span>
+                                        </t>
+                                        <t t-elif="lp.get('state') == 'auction'">
+                                            <span class="ac-live-stage-badge">ON STAGE</span>
+                                        </t>
+                                    </div>
+                                    <div class="ac-live-player-name" t-esc="lp.get('name', '')"/>
+                                    <div class="ac-live-player-role" t-esc="lp.get('role', '')"/>
+                                    <t t-if="lp.get('tier_name')">
+                                        <span class="ac-live-tier"
+                                              t-att-style="'background:' + (lp.get('tier_color') or '#2252b5') + '22;color:' + (lp.get('tier_color') or '#2252b5') + ';border-color:' + (lp.get('tier_color') or '#2252b5') + '55;'"
+                                              t-esc="lp['tier_name']"/>
+                                    </t>
+                                    <t t-if="lp.get('state') == 'sold' and lp.get('sold_team_name')">
+                                        <div class="ac-live-sold-info">
+                                            <span class="ac-live-sold-to">&#8594; <t t-esc="lp['sold_team_name']"/></span>
+                                            <span class="ac-live-sold-pts"><t t-esc="str(lp.get('sold_points', 0))"/> pts</span>
+                                        </div>
+                                    </t>
+                                    <t t-if="lp.get('state') == 'auction' and lp.get('base_price')">
+                                        <div class="ac-live-base">
+                                            <span class="ac-live-base-label">Base:</span>
+                                            <span class="ac-live-base-val"><t t-esc="str(lp['base_price'])"/> pts</span>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <div class="ac-live-waiting">
+                                <i class="fas fa-gavel"></i>
+                                <span>Auction in progress</span>
+                                <small>Next player coming up</small>
+                            </div>
+                        </t>
+                    </div>
+
+                    <!-- ── Latest bid / history message ── -->
+                    <t t-if="lt.get('current_bid') and lt['current_bid'].get('message')">
+                        <div class="ac-live-latest-bid">
+                            <i class="fas fa-history"></i>
+                            <span class="ac-live-bid-msg" t-esc="lt['current_bid']['message']"/>
+                        </div>
+                    </t>
+
+                    <!-- ── Stats strip ── -->
+                    <div class="ac-live-stats">
+                        <div class="ac-live-stat-item">
+                            <span class="ac-live-stat-val" t-esc="str(lt.get('teams_count', 0))"/>
+                            <span class="ac-live-stat-lbl">Teams</span>
+                        </div>
+                        <div class="ac-live-stat-sep"></div>
+                        <div class="ac-live-stat-item">
+                            <span class="ac-live-stat-val" t-esc="str(lt.get('players_sold', 0))"/>
+                            <span class="ac-live-stat-lbl">Sold</span>
+                        </div>
+                        <div class="ac-live-stat-sep"></div>
+                        <div class="ac-live-stat-item">
+                            <span class="ac-live-stat-val" t-esc="str(lt.get('players_in_auction', 0))"/>
+                            <span class="ac-live-stat-lbl">In Pool</span>
+                        </div>
+                    </div>
+
+                    <!-- ── Watch Live Board CTA ── -->
+                    <a t-att-href="lt.get('live_board_url', '/auction/live-board')"
+                       class="ac-live-cta"
+                       target="_blank" rel="noopener">
+                        <i class="fas fa-tv"></i>
+                        Watch Live Board
+                    </a>
+
+                </div>
+            </t>
+        </div>
+    </div>
+</section>
+</t>
+
+<!-- ================================================================
      HOW IT WORKS
      ================================================================ -->
 <section class="ac-section ac-section-alt" id="how-it-works">
@@ -806,6 +959,9 @@
                 <li><a href="#pricing">Pricing</a></li>
                 <li><a href="#how-it-works">How It Works</a></li>
                 <li><a href="#showcase">Live Auction</a></li>
+                <t t-if="live_tournaments">
+                    <li><a href="#live-auctions" style="color:#ff6b7a;">&#9679; Live Now</a></li>
+                </t>
             </ul>
         </div>
 

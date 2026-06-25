@@ -735,3 +735,324 @@ ul   { list-style: none; }
     .ac-step-num            { width: 56px; height: 56px; font-size: 1.1rem; }
     .ac-steps               { grid-template-columns: 1fr 1fr; gap: 12px; }
 }
+
+/* ── "Live Auctions" nav link ───────────────────────────────── */
+.ac-nav-live-link {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    color: #ff6b7a !important;
+    font-weight: 600 !important;
+}
+.ac-nav-live-link:hover { color: #ff4757 !important; }
+.ac-nav-live-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #ff4757;
+    animation: ac-pulse 1.5s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+/* ── LIVE TOURNAMENTS SECTION ────────────────────────────────── */
+
+/* ── Section wrapper ─────────────────────────────────────────── */
+.ac-live-section {
+    background: linear-gradient(160deg, #070f18 0%, #0d1b2a 55%, #1a3a6e 100%);
+    padding: 84px 24px;
+    position: relative;
+    overflow: hidden;
+}
+.ac-live-section::before {
+    content: '';
+    position: absolute; top: -220px; right: -180px;
+    width: 640px; height: 640px;
+    background: radial-gradient(circle, rgba(245,166,35,.07) 0%, transparent 65%);
+    pointer-events: none;
+}
+.ac-live-section::after {
+    content: '';
+    position: absolute; bottom: -140px; left: -120px;
+    width: 440px; height: 440px;
+    background: radial-gradient(circle, rgba(255,71,87,.06) 0%, transparent 65%);
+    pointer-events: none;
+}
+
+/* ── Section heading overrides (dark background) ────────────── */
+.ac-section-title-inv {
+    font-size: clamp(1.6rem, 3vw, 2.35rem);
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: 14px;
+}
+.ac-section-title-inv .hl-inv { color: var(--ac-gold); }
+.ac-section-sub-inv {
+    font-size: 1.05rem;
+    color: rgba(255,255,255,.65);
+    max-width: 620px;
+    margin: 0 auto 52px;
+    line-height: 1.72;
+}
+.ac-divider-inv {
+    width: 60px; height: 4px;
+    background: linear-gradient(90deg, var(--ac-gold), #ff4757);
+    border-radius: 2px;
+    margin: 0 auto 24px;
+}
+
+/* ── "Live Right Now" label ──────────────────────────────────── */
+.ac-label-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: #ff6b7a;
+    margin-bottom: 10px;
+}
+.ac-live-pulse-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #ff4757;
+    animation: ac-pulse 1.5s ease-in-out infinite;
+    flex-shrink: 0;
+}
+@keyframes ac-pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255,71,87,.55); }
+    50%       { opacity: .85; box-shadow: 0 0 0 7px rgba(255,71,87,0); }
+}
+
+/* ── Cards grid ──────────────────────────────────────────────── */
+.ac-live-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 28px;
+}
+
+/* ── Individual live card ────────────────────────────────────── */
+.ac-live-card {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.11);
+    border-radius: 14px;
+    overflow: hidden;
+    backdrop-filter: blur(14px);
+    transition: var(--ac-transition);
+    display: flex;
+    flex-direction: column;
+}
+.ac-live-card:hover {
+    border-color: rgba(245,166,35,.38);
+    background: rgba(255,255,255,.08);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 36px rgba(0,0,0,.38);
+}
+.ac-live-card.ac-live-break-mode {
+    border-color: rgba(255,165,0,.22);
+}
+
+/* ── Card header ─────────────────────────────────────────────── */
+.ac-live-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.ac-live-logo-wrap { flex-shrink: 0; }
+.ac-live-logo {
+    width: 42px; height: 42px;
+    object-fit: contain;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.06);
+    display: block;
+}
+.ac-live-logo-placeholder {
+    width: 42px; height: 42px;
+    border-radius: 8px;
+    background: rgba(245,166,35,.1);
+    border: 1px solid rgba(245,166,35,.2);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ac-gold); font-size: 1.1rem;
+}
+.ac-live-header-info { flex: 1; min-width: 0; }
+
+/* LIVE badge inside card header */
+.ac-live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,71,87,.14);
+    color: #ff6b7a;
+    border: 1px solid rgba(255,71,87,.28);
+    padding: 2px 10px;
+    border-radius: 50px;
+    font-size: 0.67rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 7px;
+}
+.ac-live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #ff4757;
+    animation: ac-pulse 1.5s ease-in-out infinite;
+    flex-shrink: 0;
+}
+.ac-live-name {
+    font-size: 1rem; font-weight: 700;
+    color: #fff; margin: 0 0 3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ac-live-desc {
+    font-size: 0.775rem; color: rgba(255,255,255,.5);
+    margin: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── Stage area ──────────────────────────────────────────────── */
+.ac-live-stage {
+    padding: 12px 16px;
+    flex: 1;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Break-time screen */
+.ac-live-break-screen {
+    text-align: center;
+    padding: 12px 0;
+    display: flex; flex-direction: row;
+    align-items: center; justify-content: center; gap: 10px;
+}
+.ac-live-break-screen i     { font-size: 1.2rem; color: rgba(255,165,0,.8); }
+.ac-live-break-screen span  { font-size: 0.88rem; font-weight: 700; color: rgba(255,165,0,.9); }
+.ac-live-break-screen small { font-size: 0.72rem; color: rgba(255,255,255,.38); }
+
+/* Player block */
+.ac-live-player { display: block; }
+.ac-live-player-details { display: block; }
+.ac-live-player-top-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 4px;
+}
+.ac-live-player-sl   { font-size: 0.68rem; color: rgba(255,255,255,.38); }
+.ac-live-player-name { font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 2px;
+                       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ac-live-player-role { font-size: 0.75rem; color: rgba(255,255,255,.5); margin-bottom: 6px; }
+.ac-live-tier {
+    display: inline-block;
+    font-size: 0.67rem; font-weight: 700;
+    padding: 1px 9px; border-radius: 50px;
+    border: 1px solid;
+    margin-bottom: 5px;
+}
+.ac-live-sold-info {
+    display: flex; align-items: center; gap: 8px;
+    flex-wrap: wrap; margin-top: 3px;
+}
+.ac-live-sold-to  { font-size: 0.78rem; color: #2ecc71; font-weight: 600; }
+.ac-live-sold-pts { font-size: 0.78rem; color: var(--ac-gold); font-weight: 700; }
+.ac-live-base { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.ac-live-base-label { font-size: 0.68rem; color: rgba(255,255,255,.42); }
+.ac-live-base-val   { font-size: 0.78rem; color: var(--ac-gold); font-weight: 700; }
+
+/* State badges — now inline (not absolute) */
+.ac-live-sold-badge,
+.ac-live-unsold-badge,
+.ac-live-stage-badge {
+    font-size: 0.57rem; font-weight: 800;
+    padding: 2px 7px; border-radius: 4px;
+    white-space: nowrap; letter-spacing: .5px;
+    display: inline-block;
+}
+.ac-live-sold-badge   { background: #27ae60; color: #fff; }
+.ac-live-unsold-badge { background: #e74c3c; color: #fff; }
+.ac-live-stage-badge  { background: var(--ac-gold); color: var(--ac-navy); }
+
+/* Waiting / idle state */
+.ac-live-waiting {
+    text-align: center;
+    padding: 10px 0;
+    display: flex; flex-direction: row;
+    align-items: center; justify-content: center; gap: 8px;
+}
+.ac-live-waiting i    { font-size: 1rem; color: rgba(255,255,255,.22); }
+.ac-live-waiting span { font-size: 0.82rem; font-weight: 600; color: rgba(255,255,255,.32); }
+.ac-live-waiting small{ display: none; }
+
+/* ── Latest bid / history message ───────────────────────────── */
+.ac-live-latest-bid {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    padding: 8px 16px;
+    background: rgba(245,166,35,.07);
+    border-top: 1px solid rgba(245,166,35,.14);
+    border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.ac-live-latest-bid i  { color: var(--ac-gold); font-size: .72rem; margin-top: 3px; flex-shrink: 0; }
+.ac-live-bid-msg { font-size: 0.74rem; color: rgba(255,255,255,.58); line-height: 1.45; }
+
+/* ── Stats strip ─────────────────────────────────────────────── */
+.ac-live-stats {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    border-top: 1px solid rgba(255,255,255,.06);
+}
+.ac-live-stat-item { flex: 1; text-align: center; }
+.ac-live-stat-val  {
+    display: block;
+    font-size: 1.1rem; font-weight: 800;
+    color: var(--ac-gold); line-height: 1;
+}
+.ac-live-stat-lbl  {
+    display: block;
+    font-size: 0.62rem; color: rgba(255,255,255,.4);
+    margin-top: 3px; text-transform: uppercase; letter-spacing: .6px;
+}
+.ac-live-stat-sep { width: 1px; height: 28px; background: rgba(255,255,255,.09); flex-shrink: 0; }
+
+/* ── Watch Live Board CTA ────────────────────────────────────── */
+.ac-live-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 16px;
+    background: linear-gradient(135deg, var(--ac-gold) 0%, var(--ac-gold-dark) 100%);
+    color: var(--ac-navy);
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: var(--ac-transition);
+    border-top: 1px solid rgba(255,255,255,.06);
+    text-decoration: none;
+}
+.ac-live-cta:hover {
+    background: linear-gradient(135deg, #ffd040 0%, var(--ac-gold) 100%);
+    color: var(--ac-navy);
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,.18);
+}
+.ac-live-cta i { font-size: 0.8rem; }
+
+/* ── Responsive overrides ────────────────────────────────────── */
+@media (max-width: 1100px) {
+    .ac-live-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 900px) {
+    .ac-live-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+    .ac-live-section { padding: 60px 16px; }
+    .ac-live-grid    { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+    .ac-live-grid { grid-template-columns: 1fr; }
+}

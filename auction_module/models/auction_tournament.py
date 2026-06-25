@@ -84,6 +84,16 @@ class AuctionTournament(models.Model):
         default=False,
         help="Show jersey customization fields (jersey name, number, size) in the public player registration form."
     )
+    payment_instruction = fields.Text(
+        string='Payment Instructions',
+        help='Instructions shown in the Payment section of the player registration form. '
+             'E.g. "Pay ₹500 via UPI to 9876543210@paytm and attach the screenshot below."',
+    )
+    payment_qr_image = fields.Binary(
+        string='Payment QR / Scanner',
+        help='Upload a UPI QR code or payment scanner image (PNG recommended). '
+             'Players can scan it directly from the registration page to complete payment.',
+    )
     registration_open = fields.Boolean(
         "Registration Open",
         default=False,
@@ -199,6 +209,57 @@ class AuctionTournament(models.Model):
                 ('tournament_id', '=', rec.id),
                 ('is_on_stage', '=', True),
             ]).write({'is_on_stage': False})
+
+    def action_deactivate_tournament(self):
+        """Archive the tournament and all its related records.
+
+        Archives in order:
+          1. Players   (auction.team.player)
+          2. Auctions  (auction.auction)
+          3. History   (auction.history)
+          4. Teams     (auction.team)
+          5. Advertisers/Sponsors (auction.advertiser)
+          6. The tournament itself
+
+        Uses sudo() throughout so the operation succeeds regardless of
+        which user triggers it (organizer vs admin).
+        """
+        for rec in self:
+            # 1. Players
+            self.env['auction.team.player'].sudo().with_context(active_test=False).search([
+                ('tournament_id', '=', rec.id),
+            ]).write({'active': False})
+
+            # 2. Auction (team auction records — also covers bid slabs / tier limits
+            #    through their parent being inactive)
+            self.env['auction.auction'].sudo().with_context(active_test=False).search([
+                ('tournament_id', '=', rec.id),
+            ]).write({'active': False})
+
+            # 3. Auction history
+            self.env['auction.history'].sudo().with_context(active_test=False).search([
+                ('tournament_id', '=', rec.id),
+            ]).write({'active': False})
+
+            # 4. Teams
+            self.env['auction.team'].sudo().with_context(active_test=False).search([
+                ('tournament_id', '=', rec.id),
+            ]).write({'active': False})
+
+            # 5. Advertisers / sponsors
+            self.env['auction.advertiser'].sudo().with_context(active_test=False).search([
+                ('tournament_id', '=', rec.id),
+            ]).write({'active': False})
+
+            # 6. Archive the tournament itself
+            rec.sudo().write({'active': False})
+
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'auction.tournament',
+            'view_mode': 'kanban,list,form',
+            'target': 'current',
+        }
 
     def action_open_registration_link(self):
         """Open the public player registration form in a new browser tab."""
