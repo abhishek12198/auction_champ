@@ -1464,13 +1464,18 @@ class Auction(http.Controller):
         def pub_img(model, rec_id, field):
             return '/auction/public/image/%s/%d/%s' % (model, rec_id, field)
 
+        # ── Tournament scope: non-admin users only see their own tournament ───
+        is_admin = request.env.user.has_group('auction_module.group_auction_group_admin')
+        user_tournament = request.env.user.tournament_id
+        t_domain = [] if (is_admin or not user_tournament) else [('tournament_id', '=', user_tournament.id)]
+
         # ── State counts ──────────────────────────────────────────────────────
         states = ['draft', 'auction', 'sold', 'unsold']
-        state_counts = {s: Player.search_count([('state', '=', s)]) for s in states}
+        state_counts = {s: Player.search_count(t_domain + [('state', '=', s)]) for s in states}
         total = sum(state_counts.values())
 
         # ── Last 10 draft players ─────────────────────────────────────────────
-        last_draft = Player.search([('state', '=', 'draft')], order='create_date desc', limit=10)
+        last_draft = Player.search(t_domain + [('state', '=', 'draft')], order='create_date desc', limit=10)
         draft_players = []
         for p in last_draft:
             draft_players.append({
@@ -1490,14 +1495,14 @@ class Auction(http.Controller):
             day = today_local - timedelta(days=i)
             day_start_utc = tz.localize(datetime(day.year, day.month, day.day, 0, 0, 0)).astimezone(pytz.utc).replace(tzinfo=None)
             day_end_utc   = tz.localize(datetime(day.year, day.month, day.day, 23, 59, 59)).astimezone(pytz.utc).replace(tzinfo=None)
-            count = Player.search_count([
+            count = Player.search_count(t_domain + [
                 ('create_date', '>=', fields.Datetime.to_string(day_start_utc)),
                 ('create_date', '<=', fields.Datetime.to_string(day_end_utc)),
             ])
             daily.append({'label': day.strftime('%d %b'), 'count': count})
 
         # ── Role distribution ─────────────────────────────────────────────────
-        all_players = Player.search([])
+        all_players = Player.search(t_domain)
         role_counts = {}
         for p in all_players:
             role = (p.role or 'Unknown').strip() or 'Unknown'
@@ -1512,11 +1517,11 @@ class Auction(http.Controller):
         tiers = [{'label': k, 'count': v} for k, v in sorted(tier_counts.items(), key=lambda x: -x[1])]
 
         # ── Icon players count ────────────────────────────────────────────────
-        icon_count = Player.search_count([('icon_player', '=', True)])
+        icon_count = Player.search_count(t_domain + [('icon_player', '=', True)])
 
         # ── Amount paid / unpaid ──────────────────────────────────────────────
-        paid_count   = Player.search_count([('amount_paid', '=', True)])
-        unpaid_count = Player.search_count([('amount_paid', '=', False)])
+        paid_count   = Player.search_count(t_domain + [('amount_paid', '=', True)])
+        unpaid_count = Player.search_count(t_domain + [('amount_paid', '=', False)])
 
         # ── Players per team (sold players grouped by team) ───────────────────
         team_counts = {}
@@ -1528,7 +1533,7 @@ class Auction(http.Controller):
                                for k, v in sorted(team_counts.items(), key=lambda x: -x[1])]
 
         # ── Icon / Key players with team assignment ───────────────────────────
-        icon_players = Player.search([('icon_player', '=', True)], order='assigned_team_id, name')
+        icon_players = Player.search(t_domain + [('icon_player', '=', True)], order='assigned_team_id, name')
         icon_list = []
         for p in icon_players:
             auc_line = AucPlayer.search([('player_id', '=', p.id)], order='points desc', limit=1)
