@@ -443,9 +443,14 @@ class AuctionTeamPlayer(models.Model):
 
     @api.model
     def create(self, vals):
-        tournament_id = self.env['auction.tournament'].search([('active', '=', True)], limit=1)
-        if tournament_id:
-            vals.update({'tournament_id': tournament_id.id})
+        # Only fall back to the active tournament when no tournament was explicitly provided.
+        # If vals already carries tournament_id (e.g. from the public registration form via
+        # the URL slug), preserve it — overwriting it caused players to be mapped to the
+        # wrong tournament when multiple tournaments exist in the database.
+        if not vals.get('tournament_id'):
+            tournament_id = self.env['auction.tournament'].search([('active', '=', True)], limit=1)
+            if tournament_id:
+                vals.update({'tournament_id': tournament_id.id})
 
         if vals.get('photo_url', False):
             image_base64 = self.get_base64_from_url(vals.get('photo_url', False))

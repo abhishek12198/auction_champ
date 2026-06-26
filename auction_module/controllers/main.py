@@ -2237,9 +2237,10 @@ def _build_player_vals_from_post(request, tournament):
     if not name:
         raise ValueError("Player name is required.")
 
-    # Determine next sl_no
+    # Determine next sl_no scoped to this tournament so numbering restarts per event
     last = request.env['auction.team.player'].sudo().search(
-        [], limit=1, order='sl_no desc'
+        [('tournament_id', '=', tournament.id)] if tournament else [],
+        limit=1, order='sl_no desc'
     )
     sl_no = (last.sl_no + 1) if last else 1
 
