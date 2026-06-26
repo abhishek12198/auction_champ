@@ -18,6 +18,9 @@ patch(Dropdown.prototype, "auction_module.dropdown_null_guard", {
         if (!this.el || !this.el.parentElement) {
             return;
         }
+        if (!payload.emitter || !payload.emitter.el) {
+            return;
+        }
         return this._super(payload);
     },
 });
