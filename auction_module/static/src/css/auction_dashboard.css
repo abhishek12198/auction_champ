@@ -672,3 +672,59 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+/* ── Mobile: show logo only; reveal name as tooltip on tap/hover ─────────── */
+@media (max-width: 767px) {
+    .o_auction_tournament_systray {
+        padding: 0 4px;
+    }
+
+    .o_auction_tournament_badge {
+        /* Icon-only pill on mobile */
+        padding: 5px 7px;
+        max-width: none;
+        overflow: visible;   /* let the tooltip overflow the badge */
+        position: relative;
+        cursor: pointer;
+    }
+
+    .o_auction_tournament_name {
+        /* Hidden by default on mobile */
+        display: none;
+    }
+
+    /* Show as a dropdown tooltip on hover (desktop-browser mobile view)
+       OR when the badge has been tapped (.o_expanded toggled via JS) */
+    .o_auction_tournament_badge:hover .o_auction_tournament_name,
+    .o_auction_tournament_badge.o_expanded .o_auction_tournament_name {
+        display: block;
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        background: linear-gradient(135deg, #1a3a6b 0%, #2252b5 100%);
+        color: #fff;
+        padding: 7px 16px;
+        border-radius: 10px;
+        white-space: nowrap;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        z-index: 9999;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+        pointer-events: none;
+        /* small triangle pointing up */
+        overflow: visible;
+    }
+
+    /* Triangle pointer */
+    .o_auction_tournament_badge:hover .o_auction_tournament_name::before,
+    .o_auction_tournament_badge.o_expanded .o_auction_tournament_name::before {
+        content: "";
+        position: absolute;
+        top: -6px;
+        right: 12px;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-bottom: 6px solid #1a3a6b;
+    }
+}

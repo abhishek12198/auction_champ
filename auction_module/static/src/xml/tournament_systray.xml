@@ -2,7 +2,9 @@
 <templates xml:space="preserve">
     <t t-name="auction_module.TournamentSystrayItem" owl="1">
         <div class="o_auction_tournament_systray">
-            <span t-if="state.tournamentName" class="o_auction_tournament_badge">
+            <span t-if="state.tournamentName"
+                  t-att-class="'o_auction_tournament_badge' + (state.expanded ? ' o_expanded' : '')"
+                  t-on-click="onBadgeClick">
                 <img t-if="state.tournamentLogo"
                      t-att-src="state.tournamentLogo"
                      class="o_auction_tournament_logo"

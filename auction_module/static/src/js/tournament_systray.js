@@ -5,12 +5,12 @@ import { registry } from "@web/core/registry";
 import { session } from "@web/session";
 
 const { Component, hooks } = owl;
-const { useState, onWillStart } = hooks;
+const { useState, onWillStart, onMounted, onWillUnmount } = hooks;
 
 class TournamentSystrayItem extends Component {
     setup() {
         this.orm = useService("orm");
-        this.state = useState({ tournamentName: "", tournamentLogo: "" });
+        this.state = useState({ tournamentName: "", tournamentLogo: "", expanded: false });
 
         onWillStart(async () => {
             try {
@@ -29,6 +29,23 @@ class TournamentSystrayItem extends Component {
                 // leave blank on any error
             }
         });
+
+        // Close the mobile tooltip when the user taps outside the badge
+        const onOutsideClick = (ev) => {
+            if (this.state.expanded && this.el && !this.el.contains(ev.target)) {
+                this.state.expanded = false;
+            }
+        };
+        onMounted(() => document.addEventListener("click", onOutsideClick, true));
+        onWillUnmount(() => document.removeEventListener("click", onOutsideClick, true));
+    }
+
+    onBadgeClick(ev) {
+        // Only toggle on mobile (≤767px); on desktop the name is always visible
+        if (window.innerWidth <= 767) {
+            ev.stopPropagation();
+            this.state.expanded = !this.state.expanded;
+        }
     }
 }
 
