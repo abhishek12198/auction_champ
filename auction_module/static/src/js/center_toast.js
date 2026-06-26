@@ -1,31 +1,35 @@
-odoo.define('auction_module.center_toast', function (require) {
-    "use strict";
+/** @odoo-module **/
 
-    const notification = require('web.notification');
+import { registry } from "@web/core/registry";
 
-    const originalNotify = notification.notify;
+function showCenterToast(message) {
+    const old = document.querySelector('.auction-center-toast');
+    if (old) old.remove();
 
-    // Monkey-patch notify (SAFE in Odoo 15)
-    notification.notify = function (params) {
-        // Intercept only our custom message
-        if (params.title === "AUCTION_SOLD") {
-            showCenterToast(params.message);
-            return; // ❌ prevent default toast
-        }
-        return originalNotify.apply(this, arguments);
-    };
+    const toast = document.createElement('div');
+    toast.className = 'auction-center-toast';
+    toast.innerHTML = message;
 
-    function showCenterToast(message) {
-        const old = document.querySelector('.auction-center-toast');
-        if (old) old.remove();
+    document.body.appendChild(toast);
 
-        const toast = document.createElement('div');
-        toast.className = 'auction-center-toast';
-        toast.innerHTML = message;
+    setTimeout(() => toast.classList.add('fade-out'), 2000);
+    setTimeout(() => toast.remove(), 2600);
+}
 
-        document.body.appendChild(toast);
+// Service that intercepts notifications with title "AUCTION_SOLD"
+// and replaces them with a full-screen center toast.
+const centerToastService = {
+    dependencies: ["notification"],
+    start(env, { notification }) {
+        const originalAdd = notification.add.bind(notification);
+        notification.add = function (message, options = {}) {
+            if (options.title === "AUCTION_SOLD") {
+                showCenterToast(message);
+                return () => {};
+            }
+            return originalAdd(message, options);
+        };
+    },
+};
 
-        setTimeout(() => toast.classList.add('fade-out'), 2000);
-        setTimeout(() => toast.remove(), 2600);
-    }
-});
+registry.category("services").add("auctionCenterToast", centerToastService);
