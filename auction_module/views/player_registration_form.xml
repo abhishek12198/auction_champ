@@ -517,9 +517,10 @@
                     <div>
                         <label class="reg-label" for="playerTier">Player Tier <span class="req">*</span></label>
                         <select id="playerTier" name="tier_id" class="reg-select" required="required">
-                            <option value="">— Select Tier —</option>
                             <t t-foreach="tiers" t-as="tier">
-                                <option t-att-value="tier.id" t-esc="tier.name"/>
+                                <option t-att-value="tier.id"
+                                        t-att-selected="'selected' if tier_index == 0 else None"
+                                        t-esc="tier.name"/>
                             </t>
                         </select>
                     </div>

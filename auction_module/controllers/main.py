@@ -2098,7 +2098,10 @@ class Auction(http.Controller):
                 # Sync the flag if the limit was hit but the flag wasn't updated yet
                 if is_full and tournament.registration_open:
                     tournament.sudo().write({'registration_open': False})
-                tiers_all = request.env['auction.player.tier'].sudo().search([], order='name asc')
+                tiers_all = request.env['auction.player.tier'].sudo().search(
+                    [('is_an_icon_tier', '=', False), ('tournament_id', '=', tournament.id)],
+                    order='name asc'
+                )
                 html = request.render('auction_module.player_registration_form', {
                     'tournament': tournament,
                     'tiers': tiers_all,
@@ -2112,7 +2115,10 @@ class Auction(http.Controller):
                 }, lazy=False)
                 return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
-            tiers = request.env['auction.player.tier'].sudo().search([('is_an_icon_tier', '=', False)], order='name asc')
+            tiers = request.env['auction.player.tier'].sudo().search(
+                [('is_an_icon_tier', '=', False), ('tournament_id', '=', tournament.id)],
+                order='name asc'
+            )
             ctx = {
                 'tournament': tournament,
                 'tiers': tiers,

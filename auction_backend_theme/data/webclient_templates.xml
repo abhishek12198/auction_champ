@@ -5,16 +5,18 @@
         Pattern mirrors muk_web_theme: override web.webclient_bootstrap and prepend
         to the existing head variable via string concatenation.
     -->
+    <!--
+        Fonts are now self-hosted in static/fonts/ via @font-face in global.scss.
+        Only the viewport meta remains here — no external CDN requests that
+        could block rendering on cloud deployments with restricted outbound access.
+    -->
     <template id="webclient_google_fonts"
               inherit_id="web.webclient_bootstrap"
               name="Auction Backend Theme Fonts">
         <xpath expr="//t[@t-set='head']" position="after">
             <t t-set="head_auction_fonts">
-                <!-- Viewport meta: prevents mobile browsers from zooming out to desktop width -->
+                <!-- Viewport meta: prevents mobile browsers zooming out to desktop width -->
                 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover"/>
-                <link rel="preconnect" href="https://fonts.googleapis.com"/>
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
-                <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&amp;family=Bebas+Neue&amp;display=swap" rel="stylesheet"/>
             </t>
             <t t-set="head" t-value="head_auction_fonts + (head or '')"/>
         </xpath>

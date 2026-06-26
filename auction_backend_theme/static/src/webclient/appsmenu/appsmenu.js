@@ -1,9 +1,7 @@
 /** @odoo-module **/
 
 import { Dropdown } from "@web/core/dropdown/dropdown";
-
-const { hooks } = owl;
-const { onMounted, onWillUnmount } = hooks;
+import { onMounted, onWillUnmount } from "@odoo/owl";
 
 export class AppsMenu extends Dropdown {
     setup() {
