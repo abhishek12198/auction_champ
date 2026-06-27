@@ -241,11 +241,15 @@
 
                             <!-- Tab 3: Presentation & Theme -->
                             <page string="Presentation &amp; Theme" name="presentation">
-                                <separator string="Auction Display Theme"/>
+
+                                <!-- ── Auction Display Settings ── -->
+                                <separator string="Auction Display Settings"/>
                                 <group>
-                                    <group>
+                                    <group string="Card Theme">
                                         <field name="player_display_template" widget="radio"
-                                               options="{'horizontal': True}"/>
+                                               options="{'horizontal': False}" nolabel="1"/>
+                                    </group>
+                                    <group string="Timing &amp; Display">
                                         <field name="sold_display_seconds"/>
                                         <field name="next_player_countdown"/>
                                         <field name="preset_points"
@@ -255,20 +259,26 @@
                                     </group>
                                 </group>
 
+                                <!-- ── Player Self-Registration ── -->
                                 <separator string="Player Self-Registration"/>
                                 <group>
                                     <group string="Registration Link">
                                         <field name="registration_url" widget="CopyClipboardChar"
                                                readonly="1" string="Share URL"/>
+                                        <field name="max_registrations"
+                                               help="Set the maximum number of players that can register. Set to 0 for unlimited."/>
                                     </group>
                                     <group>
                                         <p class="text-muted" style="margin-top:6px;">
                                             Share this link with players so they can fill in their own
-                                            profile. Registrations arrive as <strong>Draft</strong> players.
+                                            profile. Registrations arrive as <strong>Draft</strong> players.<br/><br/>
+                                            Set <strong>Max Registrations</strong> to <strong>0</strong> for
+                                            unlimited. Registration closes automatically once the limit is reached.
                                         </p>
                                     </group>
                                 </group>
 
+                                <!-- ── Projector View (Manual mode only) ── -->
                                 <group attrs="{'invisible': [('player_appearance_algorithm', '!=', 'linear')]}">
                                     <separator string="Projector View"/>
                                     <group string="Projector URL">
@@ -283,24 +293,12 @@
                                         </p>
                                     </group>
                                 </group>
-                                <group>
-                                    <group string="Registration Limit">
-                                        <field name="max_registrations"
-                                               help="Set the maximum number of players that can register. Registration closes automatically once this limit is reached. Set to 0 for unlimited."/>
-                                    </group>
-                                    <group>
-                                        <p class="text-muted" style="margin-top:6px;">
-                                            Set to <strong>0</strong> for unlimited registrations.
-                                            Once the limit is reached, registration is automatically closed.
-                                        </p>
-                                    </group>
-                                </group>
 
-                                <separator string="Payment Section"/>
+                                <!-- ── Payment Setup ── -->
+                                <separator string="Payment Setup"/>
                                 <p class="text-muted o_form_label" style="margin-bottom:12px;">
                                     Configure what players see in the <strong>Payment Proof</strong>
-                                    section of the registration form. Add a QR code so they can scan
-                                    and pay, then attach the screenshot.
+                                    section of the registration form.
                                 </p>
                                 <group>
                                     <group string="Payment QR / Scanner">
