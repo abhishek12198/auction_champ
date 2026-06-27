@@ -302,6 +302,9 @@
  * CRITICAL: Odoo's .o_kanban_record sets its own border, padding,
  * background, box-shadow, and width. We strip those so our .pk2-card
  * is the sole visual container — no double borders/shadows.
+ *
+ * 5 per row on desktop: calc(20% - 12px)
+ * (each record has margin:6px each side = 12px total per card)
  */
 .o_pk2_kanban .o_kanban_record {
   padding: 0 !important;
@@ -309,8 +312,7 @@
   background: transparent !important;
   box-shadow: none !important;
   border-radius: 0 !important;
-  /* Fixed width on desktop; overridden at each breakpoint below */
-  width: 220px !important;
+  width: calc(20% - 12px) !important;
   margin: 6px !important;
   vertical-align: top;
 }
@@ -344,16 +346,9 @@
               var(--pk2-tourn, #4f46e5);
   overflow: hidden;
 }
-.pk2-photo-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: top center;
-  display: block;
-}
-/* Fallback icon — hidden when real photo loads */
+/* Fallback icon — always in DOM, sits behind the photo via z-index.
+   When photo loads it covers the fallback. When photo errors out
+   (onerror sets display:none), fallback shows through. */
 .pk2-photo-fallback {
   position: absolute;
   inset: 0;
@@ -363,8 +358,18 @@
   font-size: 4rem;
   color: rgba(255,255,255,0.3);
   pointer-events: none;
+  z-index: 0;
 }
-.pk2-photo-zone:has(.pk2-photo-img) .pk2-photo-fallback { display: none; }
+.pk2-photo-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+  z-index: 1;
+}
 
 /* State badge — top-right overlay */
 .pk2-state-badge {
@@ -372,8 +377,7 @@
   top: 9px; right: 9px;
   font-size: .56rem; font-weight: 800; letter-spacing: .7px;
   padding: 3px 9px; border-radius: 20px; text-transform: uppercase;
-  backdrop-filter: blur(4px);
-  z-index: 2;
+  z-index: 3;
 }
 .pk2-s-draft   { background: rgba(255,255,255,.20); color: #e2e8f0; border: 1px solid rgba(255,255,255,.25); }
 .pk2-s-auction { background: #f59e0b; color: #fff; }
@@ -385,7 +389,7 @@
   position: absolute;
   top: 9px; left: 9px;
   font-size: 1rem;
-  z-index: 2;
+  z-index: 3;
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
 }
 
@@ -395,7 +399,7 @@
   bottom: 0; left: 0; right: 0;
   padding: 28px 10px 10px;
   background: linear-gradient(to top, rgba(5,10,25,0.82) 0%, transparent 100%);
-  z-index: 2;
+  z-index: 3;
 }
 .pk2-name {
   color: #fff;
@@ -493,22 +497,26 @@
 .pk2-btn-recall { background: #dbeafe; color: #2563eb; }
 .pk2-btn-print  { background: #f1f5f9; color: #475569; }
 
-/* ── Responsive: tablet (≤ 992px) ── */
+/* ── Responsive: large tablet (≤ 1200px) → 4 per row ── */
+@media (max-width: 1200px) {
+  .o_pk2_kanban .o_kanban_record {
+    width: calc(25% - 12px) !important;
+  }
+}
+
+/* ── Responsive: tablet (≤ 992px) → 3 per row ── */
 @media (max-width: 992px) {
   .o_pk2_kanban .o_kanban_record {
-    width: 190px !important;
+    width: calc(33.33% - 12px) !important;
   }
   .pk2-photo-zone { height: 175px; }
 }
 
-/* ── Responsive: mobile landscape / small tablet (≤ 768px) ── */
+/* ── Responsive: small tablet / mobile landscape (≤ 768px) → 2 per row ── */
 @media (max-width: 768px) {
   .o_pk2_kanban .o_kanban_record {
-    /* Two cards per row, accounting for margins */
-    width: calc(50vw - 22px) !important;
-    max-width: 210px !important;
-    min-width: 148px !important;
-    margin: 4px !important;
+    width: calc(50% - 12px) !important;
+    margin: 6px !important;
   }
   .pk2-photo-zone { height: 155px; }
   .pk2-name       { font-size: .82rem; }
@@ -520,13 +528,11 @@
   .pk2-btn        { font-size: .58rem; height: 27px; min-width: 28px; }
 }
 
-/* ── Responsive: small phone (≤ 480px) ── */
+/* ── Responsive: small phone (≤ 480px) → 1 per row ── */
 @media (max-width: 480px) {
   .o_pk2_kanban .o_kanban_record {
-    /* One card per row at very small screens */
-    width: calc(100vw - 24px) !important;
-    max-width: 380px !important;
-    margin: 4px auto !important;
+    width: calc(100% - 12px) !important;
+    margin: 4px 6px !important;
   }
   .pk2-photo-zone { height: 200px; }
   .pk2-name       { font-size: .9rem; }
@@ -550,7 +556,6 @@
   z-index: 5;
   color: #1a2744;
   font-size: 1.1rem;
-  backdrop-filter: blur(2px);
 }
 .pk2-photo-zone:hover .pk2-view-photo {
   opacity: 1;

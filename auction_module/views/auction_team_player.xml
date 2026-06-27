@@ -26,9 +26,12 @@
             <field name="model">auction.team.player</field>
             <field name="arch" type="xml">
 
-                <kanban default_order="tournament_id, sl_no" class="o_pk2_kanban">
+                <kanban default_order="tournament_id, sl_no" class="o_pk2_kanban" limit="40">
 
-                    <!-- Fields -->
+                    <!-- Fields — photo binary intentionally excluded: we use
+                         kanban_image() URL so the browser fetches images
+                         individually (lazy) instead of Odoo loading all blobs
+                         into memory upfront. -->
                     <field name="sl_no"/>
                     <field name="id"/>
                     <field name="name"/>
@@ -38,7 +41,6 @@
                     <field name="bowling_style"/>
                     <field name="icon_player"/>
                     <field name="amount_paid"/>
-                    <field name="photo"/>
                     <field name="tournament_id"/>
                     <field name="tournament_color"/>
                     <field name="state"/>
@@ -55,22 +57,25 @@
 
                                 <!-- ── PHOTO ZONE (hero, full-width) ── -->
                                 <div class="pk2-photo-zone">
-                                    <t t-if="record.photo.raw_value">
-                                        <img class="pk2-photo-img"
-                                             t-att-src="kanban_image('auction.team.player', 'photo', record.id.raw_value)"
-                                             alt="Player"/>
-                                        <!-- View full photo button (visible on hover) -->
-                                        <button class="pk2-view-photo"
-                                                t-att-data-src="kanban_image('auction.team.player', 'photo', record.id.raw_value)"
-                                                t-att-data-name="record.name.raw_value"
-                                                onclick="event.stopPropagation(); window._pk2ShowPhoto &amp;&amp; window._pk2ShowPhoto(this);"
-                                                title="View full photo">
-                                            <i class="fa fa-eye"/>
-                                        </button>
-                                    </t>
+                                    <!-- Always render img via URL — no binary in query.
+                                         onerror hides broken img; fallback div shows through. -->
+                                    <img class="pk2-photo-img"
+                                         t-att-src="kanban_image('auction.team.player', 'photo', record.id.raw_value)"
+                                         loading="lazy"
+                                         alt="Player"
+                                         onerror="this.style.display='none'"/>
                                     <div class="pk2-photo-fallback">
                                         <i class="fa fa-user"/>
                                     </div>
+
+                                    <!-- View full photo button (visible on hover) -->
+                                    <button class="pk2-view-photo"
+                                            t-att-data-src="kanban_image('auction.team.player', 'photo', record.id.raw_value)"
+                                            t-att-data-name="record.name.raw_value"
+                                            onclick="event.stopPropagation(); window._pk2ShowPhoto &amp;&amp; window._pk2ShowPhoto(this);"
+                                            title="View full photo">
+                                        <i class="fa fa-eye"/>
+                                    </button>
 
                                     <!-- State badge: top-right -->
                                     <span t-attf-class="pk2-state-badge pk2-s-#{record.state.raw_value}"
