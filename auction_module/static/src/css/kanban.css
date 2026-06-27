@@ -298,13 +298,33 @@
    Player Kanban v3  (.pk2-*)  — sports card with hero photo
    ══════════════════════════════════════════════════════════════════ */
 
+/*
+ * CRITICAL: Odoo's .o_kanban_record sets its own border, padding,
+ * background, box-shadow, and width. We strip those so our .pk2-card
+ * is the sole visual container — no double borders/shadows.
+ */
+.o_pk2_kanban .o_kanban_record {
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  /* Fixed width on desktop; overridden at each breakpoint below */
+  width: 220px !important;
+  margin: 6px !important;
+  vertical-align: top;
+}
+/* Remove Odoo's default ghost "Add" card styling interference */
+.o_pk2_kanban .o_kanban_quick_add { display: none; }
+
 /* ── Card shell ── */
 .pk2-card {
+  /* Fill whatever width .o_kanban_record provides */
+  width: 100%;
   background: #fff;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 3px 14px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.05);
-  width: 220px;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   transition: box-shadow .2s, transform .2s;
   border-top: 4px solid var(--pk2-tier, #2252b5);
@@ -332,7 +352,7 @@
   object-position: top center;
   display: block;
 }
-/* Fallback icon shown only when no photo */
+/* Fallback icon — hidden when real photo loads */
 .pk2-photo-fallback {
   position: absolute;
   inset: 0;
@@ -341,8 +361,8 @@
   justify-content: center;
   font-size: 4rem;
   color: rgba(255,255,255,0.3);
+  pointer-events: none;
 }
-/* Hide fallback when real image loads */
 .pk2-photo-zone:has(.pk2-photo-img) .pk2-photo-fallback { display: none; }
 
 /* State badge — top-right overlay */
@@ -458,6 +478,46 @@
 .pk2-btn-revoke { background: #ffedd5; color: #ea580c; }
 .pk2-btn-recall { background: #dbeafe; color: #2563eb; }
 .pk2-btn-print  { background: #f1f5f9; color: #475569; }
+
+/* ── Responsive: tablet (≤ 992px) ── */
+@media (max-width: 992px) {
+  .o_pk2_kanban .o_kanban_record {
+    width: 190px !important;
+  }
+  .pk2-photo-zone { height: 175px; }
+}
+
+/* ── Responsive: mobile landscape / small tablet (≤ 768px) ── */
+@media (max-width: 768px) {
+  .o_pk2_kanban .o_kanban_record {
+    /* Two cards per row, accounting for margins */
+    width: calc(50vw - 22px) !important;
+    max-width: 210px !important;
+    min-width: 148px !important;
+    margin: 4px !important;
+  }
+  .pk2-photo-zone { height: 155px; }
+  .pk2-name       { font-size: .82rem; }
+  .pk2-stats      { gap: 3px; padding: 3px 8px 6px; }
+  .pk2-stat       { padding: 4px 2px; }
+  .pk2-stat-label { font-size: .46rem; }
+  .pk2-stat-value { font-size: .64rem; }
+  .pk2-actions    { gap: 3px; padding: 5px 8px 8px; }
+  .pk2-btn        { font-size: .58rem; height: 27px; min-width: 28px; }
+}
+
+/* ── Responsive: small phone (≤ 480px) ── */
+@media (max-width: 480px) {
+  .o_pk2_kanban .o_kanban_record {
+    /* One card per row at very small screens */
+    width: calc(100vw - 24px) !important;
+    max-width: 380px !important;
+    margin: 4px auto !important;
+  }
+  .pk2-photo-zone { height: 200px; }
+  .pk2-name       { font-size: .9rem; }
+  .pk2-btn        { font-size: .62rem; height: 30px; }
+}
 
 /* ── View-photo button (appears on hover over photo zone) ── */
 .pk2-view-photo {
