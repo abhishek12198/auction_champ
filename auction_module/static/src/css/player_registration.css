@@ -591,6 +591,18 @@ input[type="file"].reg-file-input { display: none; }
     color: #4a5568;
     line-height: 1.6;
     margin: 0;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, #fff8e7, #fff3cd);
+    border-left: 4px solid var(--reg-accent, #e8a020);
+    border-radius: 0 10px 10px 0;
+    position: relative;
+}
+.reg-pi-caption::before {
+    content: '💡';
+    display: block;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+    line-height: 1;
 }
 
 /* Mobile */
