@@ -493,6 +493,14 @@
                     <attribute name="invisible">1</attribute>
                 </button>
 
+                <!-- Make name and description readonly (reg URL is derived from the name) -->
+                <field name="name" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+                <field name="description" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+
                 <!-- Make Tournament Type readonly -->
                 <field name="tournament_type" position="attributes">
                     <attribute name="readonly">1</attribute>
