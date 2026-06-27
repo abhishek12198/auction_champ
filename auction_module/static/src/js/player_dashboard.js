@@ -16,9 +16,10 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
 
     var PlayerDashboard = AbstractAction.extend({
         events: {
-            'click .pd-refresh-btn':  '_onRefresh',
-            'click .pd-theme-toggle': '_onToggleTheme',
-            'click .pd-stat':         '_onStatClick',
+            'click .pd-refresh-btn':          '_onRefresh',
+            'click .pd-theme-toggle':         '_onToggleTheme',
+            'click .pd-stat':                 '_onStatClick',
+            'click .pd-tournament-settings':  '_onTournamentSettings',
         },
 
         // Mapping from stat card class → [action name, domain]
@@ -71,6 +72,7 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
                     '<span class="pd-live-badge">&#9679; Live</span>',
                     '<button class="pd-theme-toggle">&#9790; Dark</button>',
                     '<button class="pd-refresh-btn">&#8635; Refresh</button>',
+                    '<button class="pd-tournament-settings" style="display:none">&#9881; Tournament Settings</button>',
                 '</div>',
 
                 /* ── Stat cards ── */
@@ -170,6 +172,10 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
         _render: function (d) {
             // cache resolved view IDs for stat card navigation
             this._viewIds = d.view_ids || {};
+            this._tournamentId = d.tournament_id || null;
+
+            // Show Tournament Settings button only when user has a linked tournament
+            this.$('.pd-tournament-settings').toggle(!!this._tournamentId);
 
             var sc = d.state_counts || {};
             this.$('#pd-total').text(this._fmt(d.total));
@@ -388,6 +394,10 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
         },
 
         _onRefresh: function () { this._loadData(); },
+
+        _onTournamentSettings: function () {
+            this.do_action('auction_module.action_tournament_settings_user');
+        },
 
         _fmt: function (n) {
             return (n !== null && n !== undefined) ? Number(n).toLocaleString() : '\u2014';

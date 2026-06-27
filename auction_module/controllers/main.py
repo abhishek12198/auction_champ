@@ -1567,6 +1567,7 @@ class Auction(http.Controller):
             'tiers':             tiers,
             'team_player_counts': team_player_counts,
             'icon_players':      icon_list,
+            'tournament_id':     user_tournament.id if user_tournament else None,
             'view_ids': {
                 'kanban': _ref('view_auction_team_player_kanban'),
                 'list':   _ref('view_auction_team_player_tree'),

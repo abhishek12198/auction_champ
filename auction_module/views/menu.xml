@@ -235,10 +235,9 @@
             groups="auction_module.group_auction_group_admin"
         />
 
-        <!-- Tournament Settings — root menu for Auction Users (non-admin)
-             Opens the current user's linked tournament directly in a
-             restricted form view (balance editable; type/algo/org/theme readonly;
-             Points & Bid Slabs tab and Deactivate button hidden).
+        <!-- Tournament Settings server action — used by the Player Dashboard button
+             to open the current user's tournament in a restricted form view.
+             (menu entry removed; access is via the dashboard button only)
         -->
         <record id="action_tournament_settings_user" model="ir.actions.server">
             <field name="name">Tournament Settings</field>
@@ -259,13 +258,6 @@ if tournament:
     }
             </field>
         </record>
-
-        <menuitem id="menu_action_tournament_settings"
-          name="Tournament Settings"
-          action="action_tournament_settings_user"
-          sequence="22"
-          web_icon="auction_module,static/src/description/auctions_settings.png"
-          groups="auction_module.group_auction_group"/>
 
     </data>
 </odoo>
