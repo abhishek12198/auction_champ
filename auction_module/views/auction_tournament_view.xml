@@ -246,8 +246,7 @@
                                 <separator string="Auction Display Settings"/>
                                 <group>
                                     <group string="Card Theme">
-                                        <field name="player_display_template" widget="radio"
-                                               options="{'horizontal': False}" nolabel="1"/>
+                                        <field name="player_display_template" widget="selection_badge" nolabel="1"/>
                                     </group>
                                     <group string="Timing &amp; Display">
                                         <field name="sold_display_seconds"/>

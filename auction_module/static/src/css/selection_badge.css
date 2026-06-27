@@ -1,0 +1,70 @@
+/* ── Selection Badge Widget ──────────────────────────────────────────────── */
+
+.o_field_selection_badge {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.o_field_selection_badge .o_badge_item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 16px;
+    border-radius: 20px;
+    border: 2px solid #c8cdd3;
+    background: transparent;
+    color: #6c757d;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease,
+                box-shadow 0.15s ease;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+.o_field_selection_badge .o_badge_item:hover:not(.o_badge_readonly) {
+    border-color: #875a7b;
+    color: #875a7b;
+    background: rgba(135, 90, 123, 0.07);
+}
+
+.o_field_selection_badge .o_badge_item.o_badge_selected {
+    border-color: #875a7b;
+    background: #875a7b;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(135, 90, 123, 0.35);
+}
+
+.o_field_selection_badge .o_badge_item.o_badge_readonly {
+    cursor: default;
+    opacity: 0.85;
+}
+
+.o_field_selection_badge .o_badge_item.o_badge_readonly.o_badge_selected {
+    opacity: 1;
+}
+
+/* ── Dark theme support ── */
+.o_dark .o_field_selection_badge .o_badge_item,
+[data-bs-theme="dark"] .o_field_selection_badge .o_badge_item {
+    border-color: #4a4a5a;
+    color: #b0b8c8;
+}
+
+.o_dark .o_field_selection_badge .o_badge_item:hover:not(.o_badge_readonly),
+[data-bs-theme="dark"] .o_field_selection_badge .o_badge_item:hover:not(.o_badge_readonly) {
+    border-color: #a87bc4;
+    color: #a87bc4;
+    background: rgba(168, 123, 196, 0.12);
+}
+
+.o_dark .o_field_selection_badge .o_badge_item.o_badge_selected,
+[data-bs-theme="dark"] .o_field_selection_badge .o_badge_item.o_badge_selected {
+    border-color: #a87bc4;
+    background: #a87bc4;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(168, 123, 196, 0.4);
+}

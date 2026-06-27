@@ -97,6 +97,8 @@
                     '/auction_module/static/src/css/auction_status.css',
                     '/auction_module/static/src/js/auction_status.js',
                     '/auction_module/static/src/js/tournament_systray.js',
+                    '/auction_module/static/src/js/selection_badge_widget.js',
+                    '/auction_module/static/src/css/selection_badge.css',
 
                 ],
             'web.assets_qweb': [
