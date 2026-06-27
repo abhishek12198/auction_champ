@@ -546,10 +546,10 @@
                     <attribute name="readonly">1</attribute>
                 </field>
                 <field name="payment_qr_image" position="attributes">
-                    <attribute name="readonly">1</attribute>
+                    <attribute name="readonly">0</attribute>
                 </field>
                 <field name="payment_instruction" position="attributes">
-                    <attribute name="readonly">1</attribute>
+                    <attribute name="readonly">0</attribute>
                 </field>
 
             </field>

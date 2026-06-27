@@ -191,7 +191,7 @@ class AuctionTournament(models.Model):
     def write(self, vals):
         """Restrict non-admin users to only modifying the team balance (team_max_points)."""
         if not self.env.user.has_group('auction_module.group_auction_group_admin'):
-            _ALLOWED = {'team_max_points'}
+            _ALLOWED = {'team_max_points', 'payment_qr_image', 'payment_instruction'}
             disallowed = set(vals.keys()) - _ALLOWED
             if disallowed:
                 raise UserError(
