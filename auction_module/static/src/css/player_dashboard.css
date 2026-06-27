@@ -67,6 +67,24 @@
 }
 .pd-theme-toggle:hover, .pd-refresh-btn:hover { background: rgba(255,255,255,.22); }
 
+.pd-tournament-settings {
+    background: #E8A020;
+    border: 1px solid #c8861a;
+    color: #0d1b3e;
+    padding: 4px 16px;
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: .85rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    transition: background .15s, box-shadow .15s;
+    box-shadow: 0 0 8px rgba(232,160,32,.35);
+}
+.pd-tournament-settings:hover {
+    background: #f5b733;
+    box-shadow: 0 0 14px rgba(232,160,32,.6);
+}
+
 /* ── Stat cards row ── */
 .pd-stat-row {
     display: flex; flex-wrap: wrap; gap: 10px;
@@ -203,6 +221,10 @@
 .pd-light .pd-theme-toggle:hover, .pd-light .pd-refresh-btn:hover {
     background: rgba(13,27,62,.15);
 }
+.pd-light .pd-tournament-settings {
+    background: #E8A020; border-color: #c8861a; color: #0d1b3e;
+}
+.pd-light .pd-tournament-settings:hover { background: #f5b733; }
 
 .pd-light .pd-stat {
     background: #fff; border-color: rgba(13,27,62,.1);
