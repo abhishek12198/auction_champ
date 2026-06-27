@@ -445,7 +445,7 @@
                         </div>
                     </div>
 
-                    <!-- Sample photo + instructions (below upload row) -->
+                    <!-- Sample photo + short caption -->
                     <div class="reg-photo-guide">
                         <div class="reg-photo-sample">
                             <img src="/auction_module/static/src/background/player_registration_model.png"
@@ -453,17 +453,7 @@
                             <p class="reg-photo-sample-label">📸 Sample Photo</p>
                         </div>
                         <div class="reg-photo-instructions">
-                            <p class="reg-pi-heading">📋 Photo Guidelines</p>
-                            <ul class="reg-pi-list">
-                                <li>✅ Clear, front-facing portrait — face must be fully visible</li>
-                                <li>✅ Plain or light-coloured background (white / light grey preferred)</li>
-                                <li>✅ Good lighting — no shadows on the face</li>
-                                <li>✅ Square or portrait orientation (min. 400 × 400 px)</li>
-                                <li>✅ Recent photo — taken within the last 6 months</li>
-                                <li>❌ No sunglasses, caps, or face coverings</li>
-                                <li>❌ No group photos or cropped group shots</li>
-                                <li>❌ No filters, heavy edits, or cartoons</li>
-                            </ul>
+                            <p class="reg-pi-caption">Upload a clear, front-facing portrait with a plain background — similar to the sample shown.</p>
                         </div>
                     </div>
                 </div>

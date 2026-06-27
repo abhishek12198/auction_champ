@@ -581,37 +581,23 @@ input[type="file"].reg-file-input { display: none; }
 /* Instructions column */
 .reg-photo-instructions {
     flex: 1;
-    min-width: 0;               /* allows text to shrink without overflowing */
-}
-.reg-pi-heading {
-    font-family: 'Barlow Condensed', 'Poppins', sans-serif;
-    font-size: .82rem;
-    font-weight: 700;
-    color: var(--reg-primary);
-    margin: 0 0 8px;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-}
-.reg-pi-list {
-    list-style: none;
-    padding: 0; margin: 0;
+    min-width: 0;
     display: flex;
-    flex-direction: column;
-    gap: 5px;
+    align-items: center;
 }
-.reg-pi-list li {
+.reg-pi-caption {
     font-family: 'Poppins', sans-serif;
-    font-size: .72rem;
+    font-size: .78rem;
     color: #4a5568;
-    line-height: 1.4;
+    line-height: 1.6;
+    margin: 0;
 }
 
-/* Mobile: shrink image so both columns still fit on one row */
+/* Mobile */
 @media (max-width: 480px) {
     .reg-photo-guide { gap: 10px; padding: 10px; }
     .reg-photo-sample img { height: 90px; }
-    .reg-pi-heading   { font-size: .74rem; }
-    .reg-pi-list li   { font-size: .64rem; }
+    .reg-pi-caption { font-size: .7rem; }
 }
 
 /* ──────────────────────────────────────────
