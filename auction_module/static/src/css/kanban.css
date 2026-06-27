@@ -295,133 +295,163 @@
 .auk-btn-summary:hover { opacity: .87; transform: translateY(-1px); }
 
 /* ══════════════════════════════════════════════════════════════════
-   Player Kanban v2  (.pk2-*)  — compact professional cards
+   Player Kanban v3  (.pk2-*)  — sports card with hero photo
    ══════════════════════════════════════════════════════════════════ */
+
+/* ── Card shell ── */
 .pk2-card {
   background: #fff;
-  border-radius: 14px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
-  width: 300px;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.05);
+  width: 220px;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   transition: box-shadow .2s, transform .2s;
-}
-.pk2-card:hover {
-  box-shadow: 0 8px 28px rgba(0,0,0,0.14), 0 0 0 1px rgba(34,82,181,.18);
-  transform: translateY(-2px);
-}
-
-/* Header — tier color drives the card header */
-.pk2-header {
-  /* dark overlay on top of tier color → text always readable regardless of tier hue */
-  background:
-    linear-gradient(160deg, rgba(10,15,35,0.68) 0%, rgba(10,15,35,0.44) 100%),
-    var(--pk2-tier, #2252b5);
-  padding: 13px 13px 11px;
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  position: relative;
-}
-/* Pure-white left strip so it shows on any tier color */
-.pk2-header::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 5px;
-  background: rgba(255,255,255,0.35);
-}
-/* Solid tier-color top edge for extra identification at a glance */
-.pk2-card {
   border-top: 4px solid var(--pk2-tier, #2252b5);
 }
-.pk2-photo {
-  width: 54px; height: 54px;
-  border-radius: 10px;
+.pk2-card:hover {
+  box-shadow: 0 10px 32px rgba(0,0,0,0.16), 0 0 0 1.5px rgba(34,82,181,.22);
+  transform: translateY(-3px);
+}
+
+/* ── Photo zone (hero, full-width) ── */
+.pk2-photo-zone {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(160deg, rgba(10,15,35,0.55) 0%, rgba(10,15,35,0.3) 100%),
+              var(--pk2-tier, #2252b5);
   overflow: hidden;
-  flex-shrink: 0;
-  border: 2px solid rgba(255,255,255,0.22);
-  background: rgba(255,255,255,0.1);
 }
-.pk2-photo img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
-.pk2-photo-placeholder {
-  width: 100%; height: 100%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.6rem; opacity: .6;
+.pk2-photo-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
 }
-.pk2-title { flex: 1; min-width: 0; }
-.pk2-name {
-  color: #fff; font-size: .95rem; font-weight: 700;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  line-height: 1.2;
+/* Fallback icon shown only when no photo */
+.pk2-photo-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  color: rgba(255,255,255,0.3);
 }
-.pk2-sub { color: rgba(255,255,255,.6); font-size: .7rem; margin-top: 3px; }
+/* Hide fallback when real image loads */
+.pk2-photo-zone:has(.pk2-photo-img) .pk2-photo-fallback { display: none; }
+
+/* State badge — top-right overlay */
 .pk2-state-badge {
-  font-size: .58rem; font-weight: 800; letter-spacing: .8px;
-  padding: 3px 8px; border-radius: 20px; flex-shrink: 0; text-transform: uppercase;
+  position: absolute;
+  top: 9px; right: 9px;
+  font-size: .56rem; font-weight: 800; letter-spacing: .7px;
+  padding: 3px 9px; border-radius: 20px; text-transform: uppercase;
+  backdrop-filter: blur(4px);
+  z-index: 2;
 }
-.pk2-s-draft   { background: rgba(255,255,255,.18); color: #e2e8f0; }
+.pk2-s-draft   { background: rgba(255,255,255,.20); color: #e2e8f0; border: 1px solid rgba(255,255,255,.25); }
 .pk2-s-auction { background: #f59e0b; color: #fff; }
 .pk2-s-sold    { background: #16a34a; color: #fff; }
 .pk2-s-unsold  { background: #dc2626; color: #fff; }
 
-/* Divider */
-.pk2-divider { height: 1px; background: linear-gradient(to right, transparent, #dde4f0, transparent); }
+/* Icon-player star — top-left overlay */
+.pk2-icon-star {
+  position: absolute;
+  top: 9px; left: 9px;
+  font-size: 1rem;
+  z-index: 2;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
+}
 
-/* Badge row */
+/* Name overlay — bottom of photo */
+.pk2-photo-overlay {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 28px 10px 10px;
+  background: linear-gradient(to top, rgba(5,10,25,0.82) 0%, transparent 100%);
+  z-index: 2;
+}
+.pk2-name {
+  color: #fff;
+  font-size: .92rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+}
+.pk2-sub {
+  color: rgba(255,255,255,.65);
+  font-size: .67rem;
+  margin-top: 2px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+/* ── Badge row ── */
 .pk2-badges {
   display: flex; gap: 5px; flex-wrap: wrap;
-  padding: 9px 12px 7px; align-items: center;
-  min-height: 34px;
+  padding: 8px 10px 6px; align-items: center;
+  min-height: 32px;
+  border-bottom: 1px solid #f0f4f9;
 }
 .pk2-badge {
-  font-size: .6rem; font-weight: 700; padding: 2px 9px; border-radius: 20px;
-  text-transform: uppercase; letter-spacing: .4px; color: #fff;
+  font-size: .58rem; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+  text-transform: uppercase; letter-spacing: .4px; color: #fff; white-space: nowrap;
 }
-.pk2-b-role   { background: linear-gradient(135deg, #2252b5, #3b72e8); }
-.pk2-b-icon   { background: linear-gradient(135deg, #d97706, #fbbf24); }
-.pk2-b-tier   { /* background set inline from tier_color */ font-size: .62rem; padding: 2px 10px; }
-.pk2-b-type-icon     { background: #7c3aed; }
-.pk2-b-type-domestic { background: #0891b2; }
-.pk2-b-type-foreign  { background: #059669; }
+.pk2-b-role { background: linear-gradient(135deg, #2252b5, #3b72e8); }
+.pk2-b-cat  { background: linear-gradient(135deg, #7c3aed, #a855f7); }
+.pk2-b-tier { font-size: .62rem; padding: 2px 9px; }
 
-/* Info rows */
-.pk2-info { padding: 2px 12px 8px; display: flex; flex-direction: column; gap: 5px; }
+/* ── Info rows ── */
+.pk2-info { padding: 6px 10px 4px; display: flex; flex-direction: column; gap: 4px; }
 .pk2-info-row {
-  display: flex; align-items: center; gap: 7px;
-  font-size: .74rem; color: #475569;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  display: flex; align-items: center; gap: 6px;
+  font-size: .72rem; color: #475569;
+  overflow: hidden;
 }
-.pk2-info-row i { color: #2252b5; width: 13px; text-align: center; flex-shrink: 0; font-size: .7rem; }
+.pk2-info-row span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pk2-info-row i { color: #2252b5; width: 12px; text-align: center; flex-shrink: 0; font-size: .68rem; }
 .pk2-info-row.pk2-team i { color: #16a34a; }
 
-/* Stats chips */
-.pk2-stats { display: flex; gap: 6px; padding: 4px 12px 10px; }
+/* ── Stats chips ── */
+.pk2-stats {
+  display: flex; gap: 5px; padding: 4px 10px 8px;
+}
 .pk2-stat {
   flex: 1; background: #f4f7fb; border-radius: 8px;
-  padding: 6px 4px; text-align: center; border: 1px solid #e5ecf5;
+  padding: 5px 3px; text-align: center; border: 1px solid #e5ecf5;
   min-width: 0;
 }
 .pk2-stat-label {
-  font-size: .54rem; font-weight: 700; letter-spacing: .5px;
+  font-size: .5rem; font-weight: 700; letter-spacing: .5px;
   text-transform: uppercase; color: #8a94a6; margin-bottom: 2px;
 }
-.pk2-stat-value { font-size: .72rem; font-weight: 600; color: #1a2744; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pk2-stat-value {
+  font-size: .68rem; font-weight: 600; color: #1a2744;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 
-/* Action bar */
+/* ── Action bar ── */
 .pk2-actions {
-  display: flex; gap: 5px; padding: 8px 12px 12px;
+  display: flex; gap: 4px; padding: 6px 10px 10px;
   border-top: 1px solid #f1f5f9; flex-wrap: wrap;
 }
 .pk2-btn {
-  flex: 1; min-width: 40px; height: 32px;
-  border: none; border-radius: 8px; cursor: pointer;
+  flex: 1; min-width: 36px; height: 30px;
+  border: none; border-radius: 7px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  font-size: .68rem; font-weight: 600; gap: 3px;
+  font-size: .64rem; font-weight: 600; gap: 3px;
   transition: transform .15s, opacity .2s;
+  white-space: nowrap;
 }
 .pk2-btn:hover { transform: translateY(-1px); opacity: .85; }
-.pk2-btn i { font-size: .78rem; }
+.pk2-btn i { font-size: .74rem; }
 .pk2-btn-sell   { background: #dcfce7; color: #16a34a; }
 .pk2-btn-unsold { background: #fee2e2; color: #dc2626; }
 .pk2-btn-icon   { background: #fef9c3; color: #d97706; }

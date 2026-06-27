@@ -52,18 +52,28 @@
                             <div class="oe_kanban_global_click pk2-card"
                                  t-att-style="'--pk2-tier: ' + (record.tier_color.raw_value || '#fdce33')">
 
-                                <!-- ── HEADER: photo + name + state ── -->
-                                <div class="pk2-header">
-                                    <div class="pk2-photo">
-                                        <t t-if="record.photo.raw_value">
-                                            <img t-att-src="kanban_image('auction.team.player', 'photo', record.id.raw_value)"
-                                                 alt="Player" onerror="this.parentElement.innerHTML='&lt;div class=pk2-photo-placeholder&gt;👤&lt;/div&gt;'"/>
-                                        </t>
-                                        <t t-else="">
-                                            <div class="pk2-photo-placeholder">👤</div>
-                                        </t>
+                                <!-- ── PHOTO ZONE (hero, full-width) ── -->
+                                <div class="pk2-photo-zone">
+                                    <t t-if="record.photo.raw_value">
+                                        <img class="pk2-photo-img"
+                                             t-att-src="kanban_image('auction.team.player', 'photo', record.id.raw_value)"
+                                             alt="Player"/>
+                                    </t>
+                                    <div class="pk2-photo-fallback">
+                                        <i class="fa fa-user"/>
                                     </div>
-                                    <div class="pk2-title">
+
+                                    <!-- State badge: top-right -->
+                                    <span t-attf-class="pk2-state-badge pk2-s-#{record.state.raw_value}"
+                                          t-esc="record.state.value"/>
+
+                                    <!-- Icon star: top-left -->
+                                    <t t-if="record.icon_player.raw_value">
+                                        <span class="pk2-icon-star">⭐</span>
+                                    </t>
+
+                                    <!-- Name + number overlay: bottom of photo -->
+                                    <div class="pk2-photo-overlay">
                                         <div class="pk2-name" t-esc="record.name.raw_value"/>
                                         <div class="pk2-sub">
                                             <t t-if="record.sl_no.raw_value">
@@ -72,11 +82,7 @@
                                             </t>
                                         </div>
                                     </div>
-                                    <span t-attf-class="pk2-state-badge pk2-s-#{record.state.raw_value}"
-                                          t-esc="record.state.value"/>
                                 </div>
-
-                                <div class="pk2-divider"/>
 
                                 <!-- ── BADGE ROW ── -->
                                 <div class="pk2-badges">
@@ -88,10 +94,9 @@
                                     <t t-if="record.role.raw_value">
                                         <span class="pk2-badge pk2-b-role" t-esc="record.role.raw_value"/>
                                     </t>
-                                    <t t-if="record.icon_player.raw_value">
-                                        <span class="pk2-badge pk2-b-icon">⭐ Icon</span>
+                                    <t t-if="record.p_category.raw_value">
+                                        <span class="pk2-badge pk2-b-cat" t-esc="record.p_category.value"/>
                                     </t>
-
                                 </div>
 
                                 <!-- ── INFO ROWS ── -->
@@ -101,19 +106,14 @@
                                             <i class="fa fa-shield"/>
                                             <span t-esc="record.assigned_team_id.value"/>
                                             <t t-if="record.amount_paid.raw_value">
-                                                <b style="margin-left:auto;color:#16a34a;">₹<t t-esc="record.amount_paid.raw_value"/></b>
+                                                <b style="margin-left:auto;color:#16a34a;flex-shrink:0;">₹<t t-esc="record.amount_paid.raw_value"/></b>
                                             </t>
-                                        </div>
-                                    </t>
-                                    <t t-if="record.p_category.raw_value">
-                                        <div class="pk2-info-row">
-                                            <i class="fa fa-tag"/> <span t-esc="record.p_category.value"/>
                                         </div>
                                     </t>
                                 </div>
 
-                                <!-- ── STATS: Batting / Bowling ── -->
-                                <t t-if="record.batting_style.raw_value or record.bowling_style.raw_value">
+                                <!-- ── STATS ── -->
+                                <t t-if="record.batting_style.raw_value or record.bowling_style.raw_value or record.blood_group.raw_value">
                                     <div class="pk2-stats">
                                         <t t-if="record.batting_style.raw_value">
                                             <div class="pk2-stat">
@@ -138,73 +138,44 @@
 
                                 <!-- ── ACTION BUTTONS ── -->
                                 <div class="pk2-actions">
-
-                                    <!-- Sell Player -->
                                     <button name="%(auction_module.action_auction_sell_player)d"
-                                            type="action"
-                                            class="pk2-btn pk2-btn-sell"
-                                            title="Sell Player to Team"
+                                            type="action" class="pk2-btn pk2-btn-sell" title="Sell Player to Team"
                                             attrs="{'invisible': [('state', '!=', 'auction')]}">
                                         <i class="fa fa-gavel"/> Sell
                                     </button>
-
-                                    <!-- Set Unsold -->
-                                    <button name="action_unsold"
-                                            type="object"
-                                            class="pk2-btn pk2-btn-unsold"
-                                            title="Mark as Unsold"
+                                    <button name="action_unsold" type="object"
+                                            class="pk2-btn pk2-btn-unsold" title="Mark as Unsold"
                                             attrs="{'invisible': [('state', '!=', 'auction')]}"
                                             confirm="This will set the player to Unsold. You can bring them back to Auction later.">
                                         <i class="fa fa-ban"/> Unsold
                                     </button>
-
-                                    <!-- Set Icon Player -->
                                     <button name="%(auction_module.action_auction_set_key_player)d"
-                                            type="action"
-                                            class="pk2-btn pk2-btn-icon"
-                                            title="Set as Icon Player"
+                                            type="action" class="pk2-btn pk2-btn-icon" title="Set as Icon Player"
                                             attrs="{'invisible': ['|',('state', '!=', 'auction'),('icon_player', '=', True)]}">
                                         <i class="fa fa-star"/> Icon
                                     </button>
-
-                                    <!-- Revoke Icon Player -->
-                                    <button name="action_revoke_key_player"
-                                            type="object"
-                                            class="pk2-btn pk2-btn-revoke"
-                                            title="Revoke Icon Status"
+                                    <button name="action_revoke_key_player" type="object"
+                                            class="pk2-btn pk2-btn-revoke" title="Revoke Icon Status"
                                             attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '!=', True)]}"
                                             confirm="This will revoke Icon Player status and bring the player back to Auction.">
                                         <i class="fa fa-star-o"/> Revoke
                                     </button>
-
-                                    <!-- Recall to Auction -->
-                                    <button name="action_recall_auction_sold"
-                                            type="object"
-                                            class="pk2-btn pk2-btn-recall"
-                                            title="Recall to Auction"
+                                    <button name="action_recall_auction_sold" type="object"
+                                            class="pk2-btn pk2-btn-recall" title="Recall to Auction"
                                             attrs="{'invisible': ['|',('state', '!=', 'sold'),('icon_player', '=', True)]}"
                                             confirm="This will recall the player back to Auction.">
                                         <i class="fa fa-refresh"/> Recall
                                     </button>
-
-                                    <!-- Bring to Auction (from unsold) -->
-                                    <button name="action_auction"
-                                            type="object"
-                                            class="pk2-btn pk2-btn-recall"
-                                            title="Bring to Auction"
+                                    <button name="action_auction" type="object"
+                                            class="pk2-btn pk2-btn-recall" title="Bring to Auction"
                                             attrs="{'invisible': [('state', '!=', 'unsold')]}">
                                         <i class="fa fa-arrow-up"/> Auction
                                     </button>
-
-                                    <!-- Print Player Card -->
-                                    <button name="print_player_cards"
-                                            type="object"
-                                            class="pk2-btn pk2-btn-print"
-                                            title="Print Player Card"
+                                    <button name="print_player_cards" type="object"
+                                            class="pk2-btn pk2-btn-print" title="Print Player Card"
                                             groups="auction_module.group_auction_player_card_print">
                                         <i class="fa fa-print"/> Print
                                     </button>
-
                                 </div>
 
                             </div>
