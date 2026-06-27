@@ -443,6 +443,13 @@
                                    accept="image/*" class="reg-file-input"/>
                             <p class="reg-file-hint">JPG · PNG · WEBP &#160;·&#160; Max 5 MB</p>
                         </div>
+
+                        <!-- Sample / model photo guide (right side) -->
+                        <div class="reg-photo-sample">
+                            <img src="/auction_module/static/src/background/player_registration_model.png"
+                                 alt="Photo guide"/>
+                            <p class="reg-photo-sample-label">📸 Sample Photo</p>
+                        </div>
                     </div>
                 </div>
 
