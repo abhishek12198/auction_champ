@@ -459,6 +459,104 @@
 .pk2-btn-recall { background: #dbeafe; color: #2563eb; }
 .pk2-btn-print  { background: #f1f5f9; color: #475569; }
 
+/* ── View-photo button (appears on hover over photo zone) ── */
+.pk2-view-photo {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(0.75);
+  opacity: 0;
+  transition: opacity .2s ease, transform .2s ease;
+  background: rgba(255,255,255,0.92);
+  border: none;
+  border-radius: 50%;
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.35);
+  z-index: 5;
+  color: #1a2744;
+  font-size: 1.1rem;
+  backdrop-filter: blur(2px);
+}
+.pk2-photo-zone:hover .pk2-view-photo {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+.pk2-view-photo:hover {
+  background: #fff;
+  box-shadow: 0 5px 18px rgba(0,0,0,0.45);
+  transform: translate(-50%, -50%) scale(1.08) !important;
+}
+
+/* ── Photo Lightbox ── */
+.pk2-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 8, 20, 0);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(0px);
+  transition: background .2s ease, backdrop-filter .2s ease;
+  cursor: zoom-out;
+}
+.pk2-lightbox.pk2-lightbox-open {
+  background: rgba(5, 8, 20, 0.88);
+  backdrop-filter: blur(6px);
+}
+.pk2-lightbox-inner {
+  position: relative;
+  max-width: 92vw;
+  max-height: 92vh;
+  opacity: 0;
+  transform: scale(0.88);
+  transition: opacity .22s ease, transform .22s ease;
+  cursor: default;
+}
+.pk2-lightbox.pk2-lightbox-open .pk2-lightbox-inner {
+  opacity: 1;
+  transform: scale(1);
+}
+.pk2-lightbox-img {
+  display: block;
+  max-width: 92vw;
+  max-height: 82vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 14px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.55);
+}
+.pk2-lightbox-caption {
+  text-align: center;
+  color: rgba(255,255,255,0.75);
+  font-size: .82rem;
+  font-weight: 600;
+  margin-top: 12px;
+  letter-spacing: .3px;
+}
+.pk2-lightbox-close {
+  position: absolute;
+  top: -14px; right: -14px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.5);
+  background: rgba(20,24,40,0.85);
+  color: #fff;
+  font-size: .85rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, transform .15s;
+  z-index: 10;
+}
+.pk2-lightbox-close:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+  transform: scale(1.12);
+}
+
 /* ══════════════════════════════════════════════════════════════════
    Auction Team List  — compact logo avatar in tree view
    ══════════════════════════════════════════════════════════════════ */

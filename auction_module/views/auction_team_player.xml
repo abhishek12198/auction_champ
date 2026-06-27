@@ -58,6 +58,14 @@
                                         <img class="pk2-photo-img"
                                              t-att-src="kanban_image('auction.team.player', 'photo', record.id.raw_value)"
                                              alt="Player"/>
+                                        <!-- View full photo button (visible on hover) -->
+                                        <button class="pk2-view-photo"
+                                                t-att-data-src="kanban_image('auction.team.player', 'photo', record.id.raw_value)"
+                                                t-att-data-name="record.name.raw_value"
+                                                onclick="event.stopPropagation(); window._pk2ShowPhoto &amp;&amp; window._pk2ShowPhoto(this);"
+                                                title="View full photo">
+                                            <i class="fa fa-eye"/>
+                                        </button>
                                     </t>
                                     <div class="pk2-photo-fallback">
                                         <i class="fa fa-user"/>
