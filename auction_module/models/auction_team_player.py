@@ -76,6 +76,7 @@ class AuctionTeamPlayer(models.Model):
     active = fields.Boolean(default=True)
     tournament_id = fields.Many2one('auction.tournament', 'Tournament')
     tournament_type = fields.Selection(related='tournament_id.tournament_type')
+    tournament_color = fields.Char(related='tournament_id.kanban_color', string='Tournament Color')
     assigned_team_id = fields.Many2one('auction.team', 'Team')
     icon_player = fields.Boolean("Key Player")
     is_on_stage = fields.Boolean("Currently on Stage", default=False,

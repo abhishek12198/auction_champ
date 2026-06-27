@@ -51,6 +51,11 @@ class AuctionTournament(models.Model):
     report_footer = fields.Binary('Footer')
     rules_regulations = fields.Html("Rules and Regulations")
     tournament_type = fields.Selection([('cricket', 'Cricket'), ('football', 'Football')], default='cricket')
+    kanban_color = fields.Char(
+        string='Kanban Color',
+        default='#4f46e5',
+        help='Hex color used to visually identify this tournament in kanban/list views.'
+    )
     player_display_template = fields.Selection([
         ('vanilla', 'Vanilla'),
         ('butterscotch', 'Butterscotch'),

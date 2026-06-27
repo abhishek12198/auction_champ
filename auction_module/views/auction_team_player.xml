@@ -26,7 +26,7 @@
             <field name="model">auction.team.player</field>
             <field name="arch" type="xml">
 
-                <kanban default_order="assigned_team_id, icon_player desc, sl_no" class="o_pk2_kanban">
+                <kanban default_order="tournament_id, sl_no" class="o_pk2_kanban">
 
                     <!-- Fields -->
                     <field name="sl_no"/>
@@ -40,6 +40,7 @@
                     <field name="amount_paid"/>
                     <field name="photo"/>
                     <field name="tournament_id"/>
+                    <field name="tournament_color"/>
                     <field name="state"/>
                     <field name="tier_id"/>
                     <field name="tier_color"/>
@@ -50,7 +51,7 @@
                     <templates>
                         <t t-name="kanban-box">
                             <div class="oe_kanban_global_click pk2-card"
-                                 t-att-style="'--pk2-tier: ' + (record.tier_color.raw_value || '#fdce33')">
+                                 t-att-style="'--pk2-tourn: ' + (record.tournament_color.raw_value || '#4f46e5') + '; --pk2-tier: ' + (record.tier_color.raw_value || '#fdce33')">
 
                                 <!-- ── PHOTO ZONE (hero, full-width) ── -->
                                 <div class="pk2-photo-zone">
@@ -109,6 +110,13 @@
 
                                 <!-- ── INFO ROWS ── -->
                                 <div class="pk2-info">
+                                    <t t-if="record.tournament_id.raw_value">
+                                        <div class="pk2-info-row pk2-tournament">
+                                            <span class="pk2-tourn-dot"
+                                                  t-att-style="'background:' + (record.tournament_color.raw_value || '#4f46e5')"/>
+                                            <span t-esc="record.tournament_id.value"/>
+                                        </div>
+                                    </t>
                                     <t t-if="record.assigned_team_id.raw_value">
                                         <div class="pk2-info-row pk2-team">
                                             <i class="fa fa-shield"/>

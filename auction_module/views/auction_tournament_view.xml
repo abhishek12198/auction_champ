@@ -257,6 +257,12 @@
                                         <field name="enable_jersey_section"/>
                                     </group>
                                 </group>
+                                <group>
+                                    <group string="Tournament Kanban Color"
+                                           help="Color used to identify this tournament in the player kanban view. All players belonging to this tournament will have their card tinted with this color.">
+                                        <field name="kanban_color" widget="color_picker" nolabel="1"/>
+                                    </group>
+                                </group>
 
                                 <!-- ── Player Self-Registration ── -->
                                 <separator string="Player Self-Registration"/>
