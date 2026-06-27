@@ -545,6 +545,11 @@
                 <field name="max_registrations" position="attributes">
                     <attribute name="readonly">1</attribute>
                 </field>
+                <!-- max_registrations appears twice in the base view; target the
+                     Presentation tab instance explicitly to ensure it is readonly -->
+                <xpath expr="//page[@name='presentation']//field[@name='max_registrations']" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </xpath>
                 <field name="payment_qr_image" position="attributes">
                     <attribute name="readonly">0</attribute>
                 </field>
