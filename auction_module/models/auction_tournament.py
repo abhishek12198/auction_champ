@@ -188,6 +188,18 @@ class AuctionTournament(models.Model):
         self.sudo().write({'dice_state': state, 'dice_result': int(number or 0)})
         return True
 
+    def write(self, vals):
+        """Restrict non-admin users to only modifying the team balance (team_max_points)."""
+        if not self.env.user.has_group('auction_module.group_auction_group_admin'):
+            _ALLOWED = {'team_max_points'}
+            disallowed = set(vals.keys()) - _ALLOWED
+            if disallowed:
+                raise UserError(
+                    _("You do not have permission to modify: %s")
+                    % ', '.join(sorted(disallowed))
+                )
+        return super().write(vals)
+
     def action_toggle_registration(self):
         """Toggle the registration open/closed state."""
         for rec in self:

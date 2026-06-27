@@ -473,5 +473,79 @@
             </field>
         </record>
 
+        <!-- ── Tournament Settings view for Auction Users (non-admin) ─────────────
+             mode="primary" makes this a standalone form usable by explicit view_id.
+             Inherits the base form and:
+               • Hides the Deactivate Tournament button
+               • Makes restricted fields readonly (type, algorithm, organizers, theme)
+               • Hides the Points & Bid Slabs notebook tab
+               • Keeps team_max_points (balance) editable
+        ──────────────────────────────────────────────────────────────────────── -->
+        <record id="view_auction_tournament_user_form" model="ir.ui.view">
+            <field name="name">auction.tournament.form.user</field>
+            <field name="model">auction.tournament</field>
+            <field name="inherit_id" ref="auction_module.view_auction_tournament_form"/>
+            <field name="mode">primary</field>
+            <field name="arch" type="xml">
+
+                <!-- Hide Deactivate Tournament button -->
+                <button name="action_deactivate_tournament" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </button>
+
+                <!-- Make Tournament Type readonly -->
+                <field name="tournament_type" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+
+                <!-- Make Player Appearance Algorithm readonly -->
+                <field name="player_appearance_algorithm" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+
+                <!-- Make Organizer readonly -->
+                <field name="organizer_uid" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+
+                <!-- Make Organizers (many2many) readonly -->
+                <field name="organizer_uids" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+
+                <!-- Hide Points & Bid Slabs tab entirely -->
+                <page name="points_slabs" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </page>
+
+                <!-- Make all editable fields in Presentation & Theme tab readonly -->
+                <field name="player_display_template" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+                <field name="sold_display_seconds" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+                <field name="next_player_countdown" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+                <field name="preset_points" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+                <field name="enable_jersey_section" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+                <field name="max_registrations" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+                <field name="payment_qr_image" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+                <field name="payment_instruction" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+
+            </field>
+        </record>
+
     </data>
 </odoo>

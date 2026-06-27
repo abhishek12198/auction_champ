@@ -226,8 +226,7 @@
         />-->
 
         <!-- history menu -->
-
-         <menuitem
+        <menuitem
             id="menu_action_auction_history_tree"
             name="Auction History"
             parent="mail.mail_menu_technical"
@@ -236,6 +235,37 @@
             groups="auction_module.group_auction_group_admin"
         />
 
+        <!-- Tournament Settings — root menu for Auction Users (non-admin)
+             Opens the current user's linked tournament directly in a
+             restricted form view (balance editable; type/algo/org/theme readonly;
+             Points & Bid Slabs tab and Deactivate button hidden).
+        -->
+        <record id="action_tournament_settings_user" model="ir.actions.server">
+            <field name="name">Tournament Settings</field>
+            <field name="model_id" ref="auction_module.model_auction_tournament"/>
+            <field name="state">code</field>
+            <field name="code">
+tournament = env.user.tournament_id
+if tournament:
+    view_id = env.ref('auction_module.view_auction_tournament_user_form').id
+    action = {
+        'type': 'ir.actions.act_window',
+        'res_model': 'auction.tournament',
+        'res_id': tournament.id,
+        'view_mode': 'form',
+        'views': [(view_id, 'form')],
+        'target': 'current',
+        'flags': {'mode': 'edit'},
+    }
+            </field>
+        </record>
+
+        <menuitem id="menu_action_tournament_settings"
+          name="Tournament Settings"
+          action="action_tournament_settings_user"
+          sequence="22"
+          web_icon="auction_module,static/src/description/auctions_settings.png"
+          groups="auction_module.group_auction_group"/>
 
     </data>
 </odoo>
