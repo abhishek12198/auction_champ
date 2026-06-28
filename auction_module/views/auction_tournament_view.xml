@@ -124,9 +124,9 @@
                             </button>
                             <!-- Registered player count stat button -->
                             <button class="oe_stat_button" type="object"
-                                    name="action_toggle_registration"
+                                    name="action_view_registered_players"
                                     icon="fa-users"
-                                    help="Players registered (Draft state)">
+                                    help="Click to view registered (Draft) players for this tournament">
                                 <field name="registered_player_count" widget="statinfo"
                                        string="Registered"/>
                                 <div class="o_stat_info" attrs="{'invisible': [('max_registrations', '=', 0)]}">

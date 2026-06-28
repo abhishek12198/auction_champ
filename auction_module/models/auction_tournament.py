@@ -210,6 +210,27 @@ class AuctionTournament(models.Model):
         for rec in self:
             rec.registration_open = not rec.registration_open
 
+    def action_view_registered_players(self):
+        """Open the list of Draft (registered) players for this tournament."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Registered Players — %s' % self.name,
+            'res_model': 'auction.team.player',
+            'view_mode': 'tree,form,kanban',
+            'views': [
+                (self.env.ref('auction_module.view_auction_team_player_tree').id, 'tree'),
+                (self.env.ref('auction_module.view_auction_team_player_form').id, 'form'),
+                (self.env.ref('auction_module.view_auction_team_player_kanban').id, 'kanban'),
+            ],
+            'domain': [('tournament_id', '=', self.id), ('state', '=', 'draft')],
+            'context': {
+                'default_tournament_id': self.id,
+                'default_state': 'draft',
+                'search_default_tournament_id': self.id,
+            },
+        }
+
     def action_toggle_live_board(self):
         """Toggle the live board active/stopped state."""
         for rec in self:
