@@ -197,8 +197,42 @@
                         <!-- ── Notebook ── -->
                         <notebook>
 
-                            <!-- Tab 1: Teams -->
-                            <page string="Teams" name="teams">
+                            <!-- Tab 1: Players & Teams -->
+                            <page string="Players &amp; Teams" name="teams">
+
+                                <!-- ── Player State Stat Buttons ── -->
+                                <div class="o_tourn_player_stats">
+                                    <button type="object" name="action_view_registered_players"
+                                            class="o_tps_btn o_tps_draft">
+                                        <span class="o_tps_count">
+                                            <field name="registered_player_count" nolabel="1"/>
+                                        </span>
+                                        <span class="o_tps_label">Registered</span>
+                                    </button>
+                                    <button type="object" name="action_view_auction_players"
+                                            class="o_tps_btn o_tps_auction">
+                                        <span class="o_tps_count">
+                                            <field name="auction_player_count" nolabel="1"/>
+                                        </span>
+                                        <span class="o_tps_label">In Auction</span>
+                                    </button>
+                                    <button type="object" name="action_view_sold_players"
+                                            class="o_tps_btn o_tps_sold">
+                                        <span class="o_tps_count">
+                                            <field name="sold_player_count" nolabel="1"/>
+                                        </span>
+                                        <span class="o_tps_label">Sold</span>
+                                    </button>
+                                    <button type="object" name="action_view_unsold_players"
+                                            class="o_tps_btn o_tps_unsold">
+                                        <span class="o_tps_count">
+                                            <field name="unsold_player_count" nolabel="1"/>
+                                        </span>
+                                        <span class="o_tps_label">Unsold</span>
+                                    </button>
+                                </div>
+
+                                <separator string="Teams"/>
                                 <field name="team_ids" widget="many2many">
                                     <kanban class="o_kanban_mobile">
                                         <field name="name"/>
@@ -380,6 +414,9 @@
                     <field name="active"/>
                     <field name="live_board_active"/>
                     <field name="registered_player_count"/>
+                    <field name="auction_player_count"/>
+                    <field name="sold_player_count"/>
+                    <field name="unsold_player_count"/>
                     <field name="team_max_points"/>
                     <field name="organizer_uid"/>
                     <templates>

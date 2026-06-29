@@ -130,9 +130,24 @@ class AuctionTournament(models.Model):
     )
     registered_player_count = fields.Integer(
         string='Registered Players',
-        compute='_compute_registered_player_count',
+        compute='_compute_player_state_counts',
         store=False,
         help='Current number of players in Draft state for this tournament.',
+    )
+    auction_player_count = fields.Integer(
+        string='In Auction',
+        compute='_compute_player_state_counts',
+        store=False,
+    )
+    sold_player_count = fields.Integer(
+        string='Sold',
+        compute='_compute_player_state_counts',
+        store=False,
+    )
+    unsold_player_count = fields.Integer(
+        string='Unsold',
+        compute='_compute_player_state_counts',
+        store=False,
     )
     registration_url = fields.Char(
         string='Player Registration URL',
@@ -153,16 +168,26 @@ class AuctionTournament(models.Model):
     )
     dice_result = fields.Integer(string='Dice Result', default=0)
 
-    def _compute_registered_player_count(self):
-        # Single aggregated query instead of one search_count() per record.
+    def _compute_player_state_counts(self):
+        """Compute all four player-state counts in a single read_group call."""
         groups = self.env['auction.team.player'].read_group(
-            [('tournament_id', 'in', self.ids), ('state', '=', 'draft')],
-            ['tournament_id'],
-            ['tournament_id'],
+            [('tournament_id', 'in', self.ids)],
+            ['tournament_id', 'state'],
+            ['tournament_id', 'state'],
+            lazy=False,
         )
-        count_map = {g['tournament_id'][0]: g['tournament_id_count'] for g in groups}
+        # Build nested dict: {tournament_id: {state: count}}
+        counts = {}
+        for g in groups:
+            tid = g['tournament_id'][0]
+            state = g['state']
+            counts.setdefault(tid, {})[state] = g['__count']
         for rec in self:
-            rec.registered_player_count = count_map.get(rec.id, 0)
+            c = counts.get(rec.id, {})
+            rec.registered_player_count = c.get('draft', 0)
+            rec.auction_player_count    = c.get('auction', 0)
+            rec.sold_player_count       = c.get('sold', 0)
+            rec.unsold_player_count     = c.get('unsold', 0)
 
     @api.depends('name')
     def _compute_slug(self):
@@ -194,9 +219,25 @@ class AuctionTournament(models.Model):
         return True
 
     def write(self, vals):
-        """Restrict non-admin users to only modifying the team balance (team_max_points)."""
-        if not self.env.user.has_group('auction_module.group_auction_group_admin'):
-            _ALLOWED = {'team_max_points', 'payment_qr_image', 'payment_instruction'}
+        """Restrict non-admin users to only modifying operational/balance fields.
+
+        sudo() calls (env.su=True) bypass this check entirely — internal model
+        methods that use sudo() must never be blocked here.
+        """
+        if (not self.env.su
+                and not self.env.user.has_group('auction_module.group_auction_group_admin')):
+            _ALLOWED = {
+                # team balance & payment config
+                'team_max_points', 'payment_qr_image', 'payment_instruction',
+                # live-board stamp — written during SOLD / UNSOLD / NEXT-PLAYER
+                'stamp_player_id', 'stamp_state', 'stamp_expires_at',
+                # live-board controls
+                'live_board_active', 'break_time_active',
+                # registration toggle
+                'registration_open',
+                # dice / player-selector
+                'dice_state', 'dice_result',
+            }
             disallowed = set(vals.keys()) - _ALLOWED
             if disallowed:
                 raise UserError(
@@ -210,12 +251,12 @@ class AuctionTournament(models.Model):
         for rec in self:
             rec.registration_open = not rec.registration_open
 
-    def action_view_registered_players(self):
-        """Open the list of Draft (registered) players for this tournament."""
+    def _player_state_action(self, state, label):
+        """Generic helper — returns an act_window filtered by player state."""
         self.ensure_one()
         return {
             'type': 'ir.actions.act_window',
-            'name': 'Registered Players — %s' % self.name,
+            'name': '%s — %s' % (label, self.name),
             'res_model': 'auction.team.player',
             'view_mode': 'tree,form,kanban',
             'views': [
@@ -223,13 +264,21 @@ class AuctionTournament(models.Model):
                 (self.env.ref('auction_module.view_auction_team_player_form').id, 'form'),
                 (self.env.ref('auction_module.view_auction_team_player_kanban').id, 'kanban'),
             ],
-            'domain': [('tournament_id', '=', self.id), ('state', '=', 'draft')],
-            'context': {
-                'default_tournament_id': self.id,
-                'default_state': 'draft',
-                'search_default_tournament_id': self.id,
-            },
+            'domain': [('tournament_id', '=', self.id), ('state', '=', state)],
+            'context': {'default_tournament_id': self.id},
         }
+
+    def action_view_registered_players(self):
+        return self._player_state_action('draft', 'Registered Players')
+
+    def action_view_auction_players(self):
+        return self._player_state_action('auction', 'In Auction Players')
+
+    def action_view_sold_players(self):
+        return self._player_state_action('sold', 'Sold Players')
+
+    def action_view_unsold_players(self):
+        return self._player_state_action('unsold', 'Unsold Players')
 
     def action_toggle_live_board(self):
         """Toggle the live board active/stopped state."""
