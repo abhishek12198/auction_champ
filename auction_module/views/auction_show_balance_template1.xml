@@ -405,10 +405,10 @@
           .bs-table-header { padding: 10px 20px; }
         }
 
-        /* ── Fullscreen button ───────────────────────────────────────────── */
+        /* ── Fullscreen + Back-to-Projector buttons ─────────────────────── */
         .bs-header { position: relative; }
-        #fs-btn {
-          position: absolute; top: 50%; right: 16px;
+        #fs-btn, #back-proj-btn {
+          position: absolute; top: 50%;
           transform: translateY(-50%);
           background: rgba(255,255,255,.12);
           border: 1.5px solid rgba(255,255,255,.30);
@@ -418,12 +418,16 @@
           transition: background .2s, border-color .2s;
           font-family: 'Poppins', sans-serif;
           backdrop-filter: blur(4px); z-index: 100;
+          text-decoration: none;
         }
-        #fs-btn:hover { background: rgba(255,255,255,.25); border-color: rgba(255,255,255,.55); }
+        #fs-btn { right: 16px; }
+        #back-proj-btn { left: 16px; }
+        #fs-btn:hover, #back-proj-btn:hover { background: rgba(255,255,255,.25); border-color: rgba(255,255,255,.55); }
         #fs-btn .fs-enter,
         #fs-btn .fs-exit { display: inline-flex; align-items: center; gap: 6px; }
         @media (max-width: 480px) {
           #fs-btn { padding: 4px 9px; font-size: 0.7rem; right: 8px; }
+          #back-proj-btn { padding: 4px 9px; font-size: 0.7rem; left: 8px; }
         }
       </style>
     </head>
@@ -431,6 +435,14 @@
     <body>
       <!-- ── Page header ──────────────────────────────────────────────────── -->
       <header class="bs-header">
+        <a id="back-proj-btn"
+           t-att-href="'/' + db_name + '/auction/projector/' + tournament_slug + '/'"
+           title="Back to Projector">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+          </svg>
+          Projector
+        </a>
         <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo" height="56"/>
         <button id="fs-btn" type="button" title="Toggle Fullscreen">
           <span class="fs-enter">

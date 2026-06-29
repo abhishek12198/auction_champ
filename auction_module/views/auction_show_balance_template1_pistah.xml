@@ -425,7 +425,7 @@
         }
 
         /* ── Fullscreen button ───────────────────────────────────────────── */
-        .pc-fs-btn {
+        .pc-fs-btn, .pc-back-btn {
           display: inline-flex; align-items: center; gap: 7px;
           padding: 6px 14px;
           background: rgba(107,191,78,.10);
@@ -436,13 +436,13 @@
           font-size: clamp(0.55rem, 1.2vw, 0.68rem);
           font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
           cursor: pointer; transition: background .2s, border-color .2s;
-          flex-shrink: 0;
+          flex-shrink: 0; text-decoration: none;
         }
-        .pc-fs-btn:hover { background: rgba(107,191,78,.25); border-color: var(--p); }
+        .pc-fs-btn:hover, .pc-back-btn:hover { background: rgba(107,191,78,.25); border-color: var(--p); }
         .pc-fs-btn .fs-enter,
         .pc-fs-btn .fs-exit { display: inline-flex; align-items: center; gap: 6px; }
         @media (max-width: 480px) {
-          .pc-fs-btn { padding: 5px 9px; letter-spacing: 1px; }
+          .pc-fs-btn, .pc-back-btn { padding: 5px 9px; letter-spacing: 1px; }
         }
       </style>
     </head>
@@ -453,8 +453,18 @@
            HEADER  —  Logo · Live indicator
            ══════════════════════════════════════════════════════════════ -->
       <header class="pc-header">
-        <div class="pc-header-logo">
-          <img src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ Logo"/>
+        <div style="display:flex; align-items:center; gap:14px;">
+          <a class="pc-back-btn"
+             t-att-href="'/' + db_name + '/auction/projector/' + tournament_slug + '/'"
+             title="Back to Projector">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+            </svg>
+            PROJECTOR
+          </a>
+          <div class="pc-header-logo">
+            <img src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ Logo"/>
+          </div>
         </div>
         <div style="display:flex; align-items:center; gap:14px;">
           <div class="pc-live">

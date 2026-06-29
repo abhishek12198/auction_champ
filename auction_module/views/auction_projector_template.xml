@@ -77,6 +77,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   width:34px;height:34px;border-radius:6px;cursor:pointer;font-size:1rem;
   display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
 .pj-fs-btn:hover{border-color:var(--accent);color:var(--accent)}
+.pj-bid-summary-btn{background:none;border:1.5px solid rgba(255,255,255,.2);color:var(--tx-d);
+  height:34px;padding:0 12px;border-radius:6px;cursor:pointer;font-size:.6rem;
+  font-family:var(--hf);letter-spacing:2px;text-transform:uppercase;text-decoration:none;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;gap:5px}
+.pj-bid-summary-btn:hover{border-color:var(--accent);color:var(--accent)}
 .pj-live-dot{width:8px;height:8px;border-radius:50%;background:#2ecc71;
   animation:pjPulse 1.6s ease-in-out infinite}
 @keyframes pjPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
@@ -357,6 +362,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
       <div class="pj-bar-divider"></div>
       <span class="pj-live-dot"></span>
       <span>PROJECTOR LIVE</span>
+      <a class="pj-bid-summary-btn"
+         t-att-href="'/' + db_name + '/' + tournament_slug + '/auction/show/team/balance'"
+         title="Bid Summary">&#x1F4CA; BID SUMMARY</a>
       <button class="pj-fs-btn" id="pjFsBtn" onclick="pjToggleFs()" title="Fullscreen">&#x26F6;</button>
     </div>
   </div>
