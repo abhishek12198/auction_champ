@@ -33,7 +33,7 @@ class Auction(models.Model):
     base_point = fields.Integer(string='Base Point')
     max_limited = fields.Selection([('yes', 'Yes'), ('no', 'No')], default='no')
     max_points = fields.Integer('Max Points')
-    remaining_points = fields.Integer(compute='_calculate_remaining_points', string="Remaining points")
+    remaining_points = fields.Integer(compute='_calculate_remaining_points', store=True, string="Remaining points")
     remaining_players_count = fields.Integer(compute='_calculate_remaining_players_count', store=True, string="Remaining players required")
     tournament_id = fields.Many2one('auction.tournament', 'Tournament')
     max_call = fields.Integer(compute='_calculate_max_call', string="Max Call")
@@ -46,7 +46,7 @@ class Auction(models.Model):
     )
 
 
-    @api.depends('player_ids', 'player_ids.points')
+    @api.depends('player_ids', 'player_ids.points', 'total_point')
     def _calculate_remaining_points(self):
         for record in self:
             points_from_players = 0

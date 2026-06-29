@@ -950,7 +950,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   }
 
   poll();
-  _pollTimer = setInterval(poll, 2000);
+  _pollTimer = setInterval(poll, 4000);
   setPjDiceFace(1);
 
   /* Fullscreen */

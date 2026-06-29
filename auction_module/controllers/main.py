@@ -456,7 +456,7 @@ class Auction(http.Controller):
                     'max_call': auction.get_max_bid_for_team(auction, player_on_stage),
                 })
             data = json.dumps({'teams': teams_data})
-        headers = [('Content-Type', 'application/json'), ('Cache-Control', 'no-store')]
+        headers = [('Content-Type', 'application/json'), ('Cache-Control', 'max-age=3')]
         return request.make_response(data, headers)
 
     @http.route(['''/auction/display_auction/'''], type='http', auth="none", website=False, sitemap=False)

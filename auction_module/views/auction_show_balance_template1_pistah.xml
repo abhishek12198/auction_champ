@@ -14,14 +14,13 @@
       <meta charset="UTF-8"/>
   <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
-            rel="stylesheet"
-            integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
-            crossorigin="anonymous"/>
+      <link href="/auction_module/static/src/assets/css/bootstrap.min.css" rel="stylesheet"/>
+      <!-- Non-blocking Google Fonts load -->
       <link rel="preconnect" href="https://fonts.googleapis.com"/>
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
       <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Exo+2:wght@300;400;500;600;700;800&amp;display=swap"
-            rel="stylesheet"/>
+            rel="stylesheet" media="print" onload="this.media='all'"/>
+      <noscript><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Exo+2:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/></noscript>
       <title>Bid Command – Pistah</title>
 
       <style>
@@ -700,7 +699,7 @@
             tblBtn.classList.add('active');
           });
 
-          /* ── Live data refresh every 5 seconds ───────────────────── */
+          /* ── Live data refresh every 8 seconds ───────────────────── */
           function refreshBalance() {
             fetch(document.documentElement.dataset.balanceJsonUrl)
               .then(function (r) { return r.json(); })
@@ -730,7 +729,7 @@
           var _balanceTimer = null;
           function startBalancePolling() {
             if (_balanceTimer) return;
-            _balanceTimer = setInterval(refreshBalance, 5000);
+            _balanceTimer = setInterval(refreshBalance, 8000);
           }
           function stopBalancePolling() {
             if (_balanceTimer) { clearInterval(_balanceTimer); _balanceTimer = null; }
@@ -744,9 +743,7 @@
         })();
       </script>
 
-      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-              integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
-              crossorigin="anonymous"></script>
+      <script src="/auction_module/static/src/assets/bootstrap.bundle.min.js" defer="defer"></script>
 
       <script>
         (function () {
