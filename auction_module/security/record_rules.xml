@@ -197,5 +197,22 @@
         <field name="perm_unlink" eval="True"/>
     </record>
 
+    <!-- ═══════════════════════════════════════════════════════
+         auction.team.player  (Payment Marker role)
+         Restrict to the user's assigned tournament.
+         Uses sudo() in the controller but these rules guard
+         any direct ORM access for the standalone role.
+    ═══════════════════════════════════════════════════════════ -->
+    <record id="rule_team_player_pm_own_tournament" model="ir.rule">
+        <field name="name">Player: payment marker — own tournament only</field>
+        <field name="model_id" ref="auction_module.model_auction_team_player"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_payment_marker'))]"/>
+        <field name="domain_force">[('tournament_id', '=', user.tournament_id.id)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
 </data>
 </odoo>

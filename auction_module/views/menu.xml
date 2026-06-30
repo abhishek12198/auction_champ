@@ -134,6 +134,20 @@
           groups="auction_module.group_auction_group"
           sequence="4"/>
 
+        <!-- Payment Tracker web page -->
+        <record id="action_payment_marker" model="ir.actions.act_url">
+            <field name="name">Payment Tracker</field>
+            <field name="url">/auction/my/payment-marker</field>
+            <field name="target">self</field>
+        </record>
+
+        <menuitem id="menu_action_payment_marker"
+          name="Payment Tracker"
+          parent="menu_action_auction_player"
+          action="action_payment_marker"
+          sequence="99"
+          groups="auction_module.group_auction_group,auction_module.group_auction_payment_marker"/>
+
         <!--<menuitem id="menu_action_launch_auction"
           name="Launch Auction"
           parent="menu_action_auction_auction"

@@ -98,7 +98,7 @@ class AuctionTeamPlayer(models.Model):
     blood_group = fields.Char("Blood Group")
     p_type =   fields.Char("Type")
     p_category = fields.Char("Category")
-    payment_proof = fields.Binary("Payment Proof", help="Uploaded payment screenshot/receipt from registration form.")
+    payment_proof = fields.Binary("Payment Proof", attachment=True, help="Uploaded payment screenshot/receipt from registration form.")
 
     @api.depends('contact')
     def _compute_masked_contact(self):

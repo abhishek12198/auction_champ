@@ -56,6 +56,13 @@ class TeamPoolWizard(models.TransientModel):
         default = self._pool_label(index)
         return {'pool_index': index, 'default_label': default, 'custom_name': default}
 
+    def _prefetch_teams(self, teams_recordset):
+        """Batch-fetch all fields needed for pool rendering in two queries (teams + tournaments)."""
+        teams_recordset.read(['name', 'logo', 'tournament_id'])
+        tournament_ids = teams_recordset.mapped('tournament_id')
+        if tournament_ids:
+            tournament_ids.read(['name'])
+
     # ── default_get: create REAL DB records so edits always persist ──────
 
     @api.model
@@ -212,6 +219,8 @@ class TeamPoolWizard(models.TransientModel):
                 ]
             })
 
+        # Pre-fetch all team fields in 2 queries before entering the render loop
+        self._prefetch_teams(self.team_ids)
         self.result_html = self._render_html(pools, self._get_pool_labels())
 
     def action_apply_names(self):
@@ -220,21 +229,28 @@ class TeamPoolWizard(models.TransientModel):
         if not self.pool_structure_json:
             raise UserError('Generate pools first, then you can apply custom names.')
 
-        structure = json.loads(self.pool_structure_json)
-        AuctionTeam = self.env['auction.team']
-        pools = [[AuctionTeam.browse(tid) for tid in pool_ids] for pool_ids in structure]
-
+        # _load_pools now does a single batch browse + prefetch
+        pools = self._load_pools()
         self.result_html = self._render_html(pools, self._get_pool_labels())
 
     # ── fixture generation ────────────────────────────────────────────────
 
     def _load_pools(self):
-        """Restore pool recordsets from the saved JSON structure."""
+        """Restore pool recordsets from the saved JSON structure.
+        Uses a single batch browse + prefetch so _render_html and _team_dict
+        never trigger per-team DB round-trips."""
         if not self.pool_structure_json:
             raise UserError('Generate pools first before creating a fixture.')
         structure = json.loads(self.pool_structure_json)
         AuctionTeam = self.env['auction.team']
-        return [[AuctionTeam.browse(tid) for tid in pool_ids] for pool_ids in structure]
+
+        # Single browse for all team IDs → shared prefetch context
+        all_ids = [tid for pool_ids in structure for tid in pool_ids]
+        all_teams = AuctionTeam.browse(all_ids)
+        self._prefetch_teams(all_teams)
+        team_map = {t.id: t for t in all_teams}
+
+        return [[team_map[tid] for tid in pool_ids] for pool_ids in structure]
 
     def _round_robin_rounds(self, teams):
         """Circle-method round-robin: returns list of rounds (no team plays twice per round)."""
@@ -361,12 +377,19 @@ class TeamPoolWizard(models.TransientModel):
         }
         subtitle = type_labels.get(self.fixture_type, '')
 
+        # Cache team dicts — each team can appear in many matches; avoid re-reading logos
+        _team_cache = {}
+        def _team_dict_cached(team):
+            if team.id not in _team_cache:
+                _team_cache[team.id] = self._team_dict(team)
+            return _team_cache[team.id]
+
         matches_data = [
             {
                 'group': grp,
                 'section': grp.split('  —  ')[0].strip() if '  —  ' in grp else grp,
-                'team_a': self._team_dict(ta),
-                'team_b': self._team_dict(tb),
+                'team_a': _team_dict_cached(ta),
+                'team_b': _team_dict_cached(tb),
             }
             for ta, tb, grp in matches
         ]

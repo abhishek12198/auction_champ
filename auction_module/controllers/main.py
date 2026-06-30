@@ -666,12 +666,16 @@ class Auction(http.Controller):
     @http.route('/auction/get/players/team/<int:team_id>', type='http', auth='public', website=True)
     def get_team_players(self, team_id):
         player_data_list = []
-        team_players = request.env['auction.auction.player'].search([('auction_id.team_id', '=', team_id)])
+        team_players = request.env['auction.auction.player'].sudo().search([('auction_id.team_id', '=', team_id)])
 
-        team = request.env['auction.team'].browse(team_id)
+        team = request.env['auction.team'].sudo().browse(team_id)
         tournament = self._resolve_tournament()
-        theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
-        icon_players = request.env['auction.team.player'].get_icon_players(team_id)
+        if tournament:
+            data = tournament.read(['player_display_template'])
+            theme = (data[0].get('player_display_template') or 'vanilla') if data else 'vanilla'
+        else:
+            theme = 'vanilla'
+        icon_players = request.env['auction.team.player'].sudo().get_icon_players(team_id)
         if icon_players:
             for icon in icon_players:
                 player_data = {
@@ -884,6 +888,400 @@ class Auction(http.Controller):
         if tournament and tournament.slug:
             return request.redirect('/{}/auction/show/team/balance'.format(tournament.slug))
         return request.redirect('/web')
+
+    # ─────────────────────────────────────────────────────────────────
+    #  PAYMENT MARKER  (web page + toggle JSON endpoint)
+    # ─────────────────────────────────────────────────────────────────
+
+    def _get_pm_access(self):
+        """Return (has_access: bool, is_admin: bool). Calls has_group once per group (cached in Odoo)."""
+        user = request.env.user
+        is_admin = user.has_group('auction_module.group_auction_group_admin')
+        has_access = (
+            is_admin
+            or user.has_group('auction_module.group_auction_group')
+            or user.has_group('auction_module.group_auction_payment_marker')
+        )
+        return has_access, is_admin
+
+    def _check_payment_marker_access(self):
+        """Kept for backward compat — delegates to _get_pm_access."""
+        has_access, _ = self._get_pm_access()
+        return has_access
+
+    @staticmethod
+    def _safe_json(data):
+        """JSON-encode data and escape <, >, & so it is safe inside a <script> tag in XML."""
+        s = json.dumps(data, ensure_ascii=False)
+        return s.replace('&', r'\u0026').replace('<', r'\u003c').replace('>', r'\u003e')
+
+    @http.route('/auction/my/payment-marker', type='http', auth='user', website=False)
+    def payment_marker_redirect(self, **kw):
+        """Redirect the generic menu URL to the canonical /{db}/{slug}/auction/payment-marker URL."""
+        has_access, is_admin = self._get_pm_access()
+        if not has_access:
+            return werkzeug.exceptions.Forbidden()
+
+        env = request.env
+        db_name = env.cr.dbname
+
+        user_row = env.user.sudo().read(['tournament_id'])[0]
+        tournament_id = user_row['tournament_id'][0] if user_row['tournament_id'] else None
+        tournament_slug = None
+
+        if tournament_id:
+            t = env['auction.tournament'].sudo().browse(tournament_id).read(['slug'])[0]
+            tournament_slug = t['slug'] or str(tournament_id)
+        elif is_admin:
+            t = env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
+            if t:
+                tournament_slug = t.slug or str(t.id)
+
+        if not tournament_slug:
+            return request.make_response(
+                '<html><body style="font-family:sans-serif;padding:40px">'
+                '<h2>No tournament assigned</h2>'
+                '<p>Ask an administrator to assign a tournament to your user profile.</p>'
+                '<a href="/web">&#8592; Back</a></body></html>',
+                [('Content-Type', 'text/html; charset=utf-8')]
+            )
+
+        return werkzeug.utils.redirect(
+            '/{}/{}/auction/payment-marker'.format(db_name, tournament_slug), 302
+        )
+
+    @http.route('/<string:db_name>/<string:tournament_slug>/auction/payment-marker',
+                type='http', auth='user', website=False)
+    def payment_marker_page(self, db_name, tournament_slug, **kw):
+        """Render the Payment Tracker web page. Optimised: ≤5 DB hits regardless of player count."""
+        has_access, is_admin = self._get_pm_access()
+        if not has_access:
+            return werkzeug.exceptions.Forbidden()
+
+        env = request.env
+
+        # ── 1 DB: resolve tournament by slug ────────────────────────────
+        tournament = env['auction.tournament'].sudo().search(
+            [('slug', '=', tournament_slug)], limit=1
+        )
+        if not tournament:
+            return self._not_found()
+        tournament_id = tournament.id
+
+        # Scope check: non-admins must belong to this tournament
+        if not is_admin:
+            user_row = env.user.sudo().read(['tournament_id'])[0]
+            user_tourn_id = user_row['tournament_id'][0] if user_row['tournament_id'] else None
+            if user_tourn_id != tournament_id:
+                return werkzeug.exceptions.Forbidden()
+
+        # ── 2 DB: ONE search_read for all players ───────────────────────
+        PLAYER_FIELDS = [
+            'id', 'sl_no', 'name', 'role', 'contact',
+            'state', 'amount_paid', 'payment_url',
+            'assigned_team_id', 'tier_id', 'payment_proof',
+        ]
+        rows = env['auction.team.player'].sudo().search_read(
+            [('tournament_id', '=', tournament_id)],
+            fields=PLAYER_FIELDS,
+            order='sl_no asc, name asc',
+        )
+
+        # ── Auto-mark: filter in Python, one batch write if needed (0–1 DB) ──
+        to_mark_ids = [r['id'] for r in rows if r['payment_url'] and not r['amount_paid']]
+        if to_mark_ids:
+            env['auction.team.player'].sudo().browse(to_mark_ids).write({'amount_paid': True})
+            mark_set = set(to_mark_ids)
+            for r in rows:
+                if r['id'] in mark_set:
+                    r['amount_paid'] = True
+
+        # ── 3 DB: batch-read all unique teams (name, manager, logo) ────────
+        team_ids = list({r['assigned_team_id'][0] for r in rows if r['assigned_team_id']})
+        teams_map = {}
+        if team_ids:
+            for t in env['auction.team'].sudo().browse(team_ids).read(['id', 'name', 'manager', 'logo']):
+                teams_map[t['id']] = {
+                    'name':     t['name'] or '',
+                    'manager':  t['manager'] or '',
+                    'has_logo': bool(t['logo']),
+                }
+
+        # ── 4: Build proof data URIs from payment_proof field (ORM handles attachment lookup) ──
+        def _proof_data_uri(b64_val):
+            """Resize proof image to thumbnail and return data URI. b64_val is base64 bytes from ORM."""
+            if not b64_val:
+                return ''
+            try:
+                raw = base64.b64decode(b64_val)
+                from PIL import Image as PILImage
+                import io as _io
+                img = PILImage.open(_io.BytesIO(raw))
+                img.thumbnail((900, 1200), PILImage.LANCZOS)
+                buf = _io.BytesIO()
+                img.save(buf, format='JPEG', quality=82, optimize=True)
+                return 'data:image/jpeg;base64,' + base64.b64encode(buf.getvalue()).decode('ascii')
+            except Exception:
+                return 'data:image/jpeg;base64,' + (b64_val if isinstance(b64_val, str) else b64_val.decode('ascii'))
+
+        # ── Mask contact in Python (skip ORM computed-field overhead) ────
+        def _mask(c):
+            c = str(c or '')
+            return (c[0] + 'X' * (len(c) - 2) + c[-1]) if len(c) > 2 else c
+
+        # ── Build players_data — zero DB from here ───────────────────────
+        STATE_LABELS = {'draft': 'Draft', 'auction': 'In Auction', 'sold': 'Sold', 'unsold': 'Unsold'}
+        players_data = []
+        for r in rows:
+            team_id = r['assigned_team_id'][0] if r['assigned_team_id'] else None
+            team = teams_map.get(team_id, {})
+            players_data.append({
+                'id':                r['id'],
+                'sl_no':             r['sl_no'] or 0,
+                'name':              r['name'] or '',
+                'role':              r['role'] or '',
+                'contact':           _mask(r['contact']),
+                'state':             r['state'],
+                'state_label':       STATE_LABELS.get(r['state'], r['state']),
+                'amount_paid':       bool(r['amount_paid']),
+                'has_payment_url':   bool(r['payment_url']),
+                'proof_att_id':      1 if r['payment_proof'] else 0,
+                'proof_data':        _proof_data_uri(r['payment_proof']),
+                'team':              team.get('name', ''),
+                'manager':           team.get('manager', ''),
+                'tier':              r['tier_id'][1] if r['tier_id'] else '',
+            })
+
+        # ── Stats: single pass ───────────────────────────────────────────
+        total = len(players_data)
+        paid_total = 0
+        by_state = {st: [0, 0] for st in ('draft', 'auction', 'sold', 'unsold')}
+        for p in players_data:
+            if p['amount_paid']:
+                paid_total += 1
+            bucket = by_state.get(p['state'])
+            if bucket:
+                bucket[0] += 1
+                if p['amount_paid']:
+                    bucket[1] += 1
+        stats = {
+            'total':    total,
+            'paid':     paid_total,
+            'unpaid':   total - paid_total,
+            'by_state': {st: {'total': v[0], 'paid': v[1]} for st, v in by_state.items()},
+        }
+
+        # ── Teams for filter chips — derived from teams_map (no extra DB) ─
+        teams_data = sorted(
+            [{'id': tid, 'name': t['name'], 'has_logo': t['has_logo']}
+             for tid, t in teams_map.items()],
+            key=lambda t: t['name'],
+        )
+
+        # ── 5 DB: company ────────────────────────────────────────────────
+        company = env['res.company'].sudo().search([], limit=1)
+
+        toggle_url = '/{}/{}/auction/payment-marker/toggle'.format(db_name, tournament_slug)
+        proof_base_url = '/{}/{}/auction/payment-marker/proof/'.format(db_name, tournament_slug)
+        upload_url = '/{}/{}/auction/payment-marker/upload-proof'.format(db_name, tournament_slug)
+        unlink_url = '/{}/{}/auction/payment-marker/unlink-proof'.format(db_name, tournament_slug)
+
+        html = request.render('auction_module.payment_marker_template', {
+            'tournament':     tournament,
+            'players_json':   self._safe_json(players_data),
+            'stats_json':     self._safe_json(stats),
+            'teams_json':     self._safe_json(teams_data),
+            'toggle_url':     toggle_url,
+            'proof_base_url': proof_base_url,
+            'upload_url':     upload_url,
+            'unlink_url':     unlink_url,
+            'is_admin':       is_admin,
+            'res_company':    company,
+        }, lazy=False)
+        return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
+
+    @http.route('/<string:db_name>/<string:tournament_slug>/auction/payment-marker/toggle',
+                type='json', auth='user', website=False, csrf=False)
+    def payment_marker_toggle(self, db_name, tournament_slug, player_id, paid, **kw):
+        """Toggle amount_paid on a player. ≤3 DB hits (access cached, one read, one write)."""
+        has_access, is_admin = self._get_pm_access()
+        if not has_access:
+            return {'error': 'Access denied'}
+        try:
+            pid = int(player_id)
+            env = request.env
+
+            # Resolve tournament by slug (scope anchor)
+            tourn = env['auction.tournament'].sudo().search(
+                [('slug', '=', tournament_slug)], limit=1
+            )
+            if not tourn:
+                return {'error': 'Tournament not found'}
+
+            # One read: verify player exists and belongs to this tournament
+            rows = env['auction.team.player'].sudo().search_read(
+                [('id', '=', pid), ('tournament_id', '=', tourn.id)],
+                ['id'], limit=1
+            )
+            if not rows:
+                return {'error': 'Player not found'}
+
+            # Scope check for non-admins
+            if not is_admin:
+                user_row = env.user.sudo().read(['tournament_id'])[0]
+                user_tourn_id = user_row['tournament_id'][0] if user_row['tournament_id'] else None
+                if user_tourn_id != tourn.id:
+                    return {'error': 'Access denied — wrong tournament'}
+
+            new_val = bool(paid)
+            env['auction.team.player'].sudo().browse(pid).write({'amount_paid': new_val})
+            return {'success': True, 'amount_paid': new_val}
+        except Exception:
+            _logger.exception('payment_marker_toggle error')
+            return {'error': 'Server error'}
+
+    @http.route('/<string:db_name>/<string:tournament_slug>/auction/payment-marker/proof/<int:player_id>',
+                type='http', auth='user', website=True, csrf=False)
+    def payment_marker_proof(self, db_name, tournament_slug, player_id, **kw):
+        """Serve payment proof image directly from filestore — no access check complexity."""
+        has_access, _ = self._get_pm_access()
+        if not has_access:
+            return request.not_found()
+
+        env = request.env
+        env.cr.execute(
+            "SELECT store_fname, db_datas, mimetype FROM ir_attachment "
+            "WHERE res_model='auction.team.player' AND res_field='payment_proof' "
+            "AND res_id = %s ORDER BY id DESC LIMIT 1",
+            (player_id,)
+        )
+        row = env.cr.fetchone()
+        if not row:
+            return request.not_found()
+
+        store_fname, db_datas, mimetype = row
+        content = None
+
+        if store_fname:
+            filepath = os.path.join(
+                odoo.tools.config['data_dir'], 'filestore', env.cr.dbname, store_fname
+            )
+            if os.path.exists(filepath):
+                with open(filepath, 'rb') as f:
+                    content = f.read()
+
+        if content is None and db_datas:
+            content = base64.b64decode(db_datas)
+
+        if content is None:
+            return request.not_found()
+
+        return request.make_response(content, headers=[
+            ('Content-Type', mimetype or 'image/jpeg'),
+            ('Cache-Control', 'private, max-age=3600'),
+            ('Content-Length', str(len(content))),
+        ])
+
+    @http.route('/<string:db_name>/<string:tournament_slug>/auction/payment-marker/upload-proof',
+                type='http', auth='user', website=True, csrf=False, methods=['POST'])
+    def payment_marker_upload_proof(self, db_name, tournament_slug, **kw):
+        """Upload payment proof screenshot, save to payment_proof field, mark player as paid."""
+        def _json(data):
+            return request.make_response(
+                json.dumps(data),
+                headers=[('Content-Type', 'application/json')],
+            )
+
+        has_access, _ = self._get_pm_access()
+        if not has_access:
+            return _json({'error': 'Access denied'})
+
+        try:
+            player_id = int(kw.get('player_id') or request.httprequest.form.get('player_id', 0))
+        except (ValueError, TypeError):
+            return _json({'error': 'Invalid player_id'})
+
+        upload_file = request.httprequest.files.get('file')
+        if not player_id or not upload_file:
+            return _json({'error': 'Missing player_id or file'})
+
+        env = request.env
+        tournament = env['auction.tournament'].sudo().search(
+            [('slug', '=', tournament_slug)], limit=1
+        )
+        if not tournament:
+            return _json({'error': 'Tournament not found'})
+
+        player = env['auction.team.player'].sudo().search(
+            [('id', '=', player_id), ('tournament_id', '=', tournament.id)], limit=1
+        )
+        if not player:
+            return _json({'error': 'Player not found'})
+
+        file_bytes = upload_file.read()
+        # Binary field expects base64-encoded string, not bytes
+        b64_str = base64.b64encode(file_bytes).decode('ascii')
+
+        player.write({
+            'payment_proof': b64_str,
+            'amount_paid':   True,
+        })
+
+        # Build thumbnail data URI for immediate display
+        proof_data = ''
+        try:
+            from PIL import Image as PILImage
+            import io as _io
+            img = PILImage.open(_io.BytesIO(file_bytes))
+            img.thumbnail((900, 1200), PILImage.LANCZOS)
+            buf = _io.BytesIO()
+            img.save(buf, format='JPEG', quality=82, optimize=True)
+            proof_data = 'data:image/jpeg;base64,' + base64.b64encode(buf.getvalue()).decode('ascii')
+        except Exception:
+            mime = upload_file.content_type or 'image/jpeg'
+            proof_data = 'data:{};base64,{}'.format(mime, b64_str)
+
+        return _json({'success': True, 'proof_data': proof_data})
+
+    @http.route('/<string:db_name>/<string:tournament_slug>/auction/payment-marker/unlink-proof',
+                type='http', auth='user', website=True, csrf=False, methods=['POST'])
+    def payment_marker_unlink_proof(self, db_name, tournament_slug, **kw):
+        """Remove payment proof attachment from a player record."""
+        def _json(data):
+            return request.make_response(
+                json.dumps(data),
+                headers=[('Content-Type', 'application/json')],
+            )
+
+        has_access, _ = self._get_pm_access()
+        if not has_access:
+            return _json({'error': 'Access denied'})
+
+        try:
+            player_id = int(kw.get('player_id') or request.httprequest.form.get('player_id', 0))
+        except (ValueError, TypeError):
+            return _json({'error': 'Invalid player_id'})
+
+        if not player_id:
+            return _json({'error': 'Missing player_id'})
+
+        env = request.env
+        tournament = env['auction.tournament'].sudo().search(
+            [('slug', '=', tournament_slug)], limit=1
+        )
+        if not tournament:
+            return _json({'error': 'Tournament not found'})
+
+        player = env['auction.team.player'].sudo().search(
+            [('id', '=', player_id), ('tournament_id', '=', tournament.id)], limit=1
+        )
+        if not player:
+            return _json({'error': 'Player not found'})
+
+        # Clear the binary field — Odoo will delete the ir.attachment automatically
+        player.write({'payment_proof': False})
+
+        return _json({'success': True})
 
     @http.route(['/auction/player_selector', '/auction/player_selector/'],
                 type='http', auth="none", website=False, sitemap=False)
@@ -1439,8 +1837,13 @@ class Auction(http.Controller):
     @http.route('/auction/dashboard', type='http', auth='user', website=True)
     def auction_dashboard(self, **kw):
         tournament = self._resolve_tournament()
+        payment_tracker_url = ''
+        if tournament and tournament.slug:
+            db_name = request.env.cr.dbname
+            payment_tracker_url = '/{}/{}/auction/payment-marker'.format(db_name, tournament.slug)
         return request.render('auction_module.auction_dashboard_template', {
             'tournament': tournament,
+            'payment_tracker_url': payment_tracker_url,
         })
 
     @http.route('/auction/dashboard/data', type='http', auth='user', website=False, csrf=False)

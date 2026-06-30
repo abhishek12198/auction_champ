@@ -2,312 +2,237 @@
 <odoo>
 
 <template id="auction_team_players_template" name="Players">
-  <html lang="en">
+  <html lang="en" t-att-data-theme="theme">
     <head>
       <meta charset="UTF-8"/>
-  <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
+      <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
-            rel="stylesheet"
-            integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
-            crossorigin="anonymous"/>
+      <link href="/auction_module/static/src/assets/css/bootstrap.min.css" rel="stylesheet"/>
       <link rel="preconnect" href="https://fonts.googleapis.com"/>
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
-      <link href="https://fonts.googleapis.com/css2?family=Teko:wght@600;700&amp;family=Poppins:wght@400;500;600;700&amp;display=swap"
-            rel="stylesheet"/>
-      <link rel="stylesheet" href="/auction_module/static/src/assets/css/style.css"/>
+      <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&amp;family=Barlow+Condensed:wght@400;500;600;700;800&amp;family=Teko:wght@500;600;700&amp;display=swap"
+            rel="stylesheet" media="print" onload="this.media='all'"/>
+      <noscript><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&amp;family=Barlow+Condensed:wght@400;500;600;700;800&amp;family=Teko:wght@500;600;700&amp;display=swap" rel="stylesheet"/></noscript>
       <title>Squad</title>
 
       <style>
-        /* ── Theme custom properties ───────────────────────────────────────── */
-
-        /* VANILLA */
-        :root {
-          --p-primary:      #004080;
-          --p-primary-dk:   #002a5c;
-          --p-primary-lt:   rgba(0,64,128,0.12);
-          --p-glow:         rgba(0,64,128,0.22);
-          --p-body-bg:      #eef2f7;
-          --p-surface:      #fff;
-          --p-surface2:     #f0f4f8;
-          --p-border:       rgba(0,64,128,0.15);
-          --p-text:         #1a1a2e;
-          --p-text-muted:   #556;
-          --p-header-bg:    linear-gradient(135deg,#004080,#002a5c);
-          --p-header-text:  #fff;
-          --p-card-bg:      #fff;
-          --p-card-foot:    #f0f4f8;
-          --p-icon-crown:   #f5a623;
-          --p-pts-bg:       rgba(0,64,128,0.10);
-          --p-pts-text:     #004080;
-          --p-tag-bg:       rgba(0,64,128,0.08);
-          --p-tag-text:     #004080;
-          --p-tag-border:   rgba(0,64,128,0.20);
-          --p-back-bg:      rgba(0,64,128,0.10);
-          --p-back-text:    #004080;
-          --p-snap-bg:      #004080;
-          --p-snap-text:    #fff;
-          --p-empty-icon:   #004080;
+        /* ── CSS variables — identical token set as Bid Summary ── */
+        :root,
+        [data-theme="vanilla"] {
+          --bg:#050c1a; --bg2:#0b1529; --bg3:#0d1f3c;
+          --acc:#E8A020; --acc2:#FFD166; --glow:rgba(232,160,32,.30);
+          --bdr:rgba(232,160,32,.18); --bdr2:rgba(255,255,255,.08);
+          --tx:#EEF4FF; --tx-d:rgba(238,244,255,.55); --tx-m:rgba(238,244,255,.30);
+          --hf:'Orbitron',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Teko',sans-serif;
+          --card-bg:rgba(11,21,41,.85); --card-bdr:rgba(232,160,32,.15);
+        }
+        [data-theme="butterscotch"] {
+          --bg:#06060f; --bg2:#0f0f20; --bg3:#1a1430;
+          --acc:#F5C842; --acc2:#FF9F1C; --glow:rgba(245,200,66,.30);
+          --bdr:rgba(245,200,66,.18); --bdr2:rgba(255,255,255,.08);
+          --tx:#fff; --tx-d:rgba(255,255,255,.55); --tx-m:rgba(255,255,255,.30);
+          --hf:'Teko',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Teko',sans-serif;
+          --card-bg:rgba(15,15,32,.85); --card-bdr:rgba(245,200,66,.15);
+        }
+        [data-theme="strawberry"] {
+          --bg:#0d0610; --bg2:#1a0a18; --bg3:#26102a;
+          --acc:#E91E63; --acc2:#F48FB1; --glow:rgba(233,30,99,.30);
+          --bdr:rgba(233,30,99,.20); --bdr2:rgba(255,255,255,.08);
+          --tx:#FFF0F5; --tx-d:rgba(255,240,245,.55); --tx-m:rgba(255,240,245,.30);
+          --hf:'Orbitron',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Teko',sans-serif;
+          --card-bg:rgba(26,10,24,.85); --card-bdr:rgba(233,30,99,.15);
+        }
+        [data-theme="cherry"] {
+          --bg:#0d0000; --bg2:#1a0508; --bg3:#2a080e;
+          --acc:#DC143C; --acc2:#FF6B6B; --glow:rgba(220,20,60,.30);
+          --bdr:rgba(220,20,60,.20); --bdr2:rgba(255,255,255,.08);
+          --tx:#FFF5F5; --tx-d:rgba(255,245,245,.55); --tx-m:rgba(255,245,245,.30);
+          --hf:'Orbitron',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Teko',sans-serif;
+          --card-bg:rgba(26,5,8,.85); --card-bdr:rgba(220,20,60,.15);
         }
 
-        <t t-if="theme == 'cherry'">
-        :root {
-          --p-primary:      #DC143C;
-          --p-primary-dk:   #8B0000;
-          --p-primary-lt:   rgba(220,20,60,0.15);
-          --p-glow:         rgba(220,20,60,0.32);
-          --p-body-bg:      #0d0d0d;
-          --p-surface:      #1e1e1e;
-          --p-surface2:     #181818;
-          --p-border:       rgba(220,20,60,0.22);
-          --p-text:         #f5f5f5;
-          --p-text-muted:   #aaa;
-          --p-header-bg:    linear-gradient(135deg,#0a0a0a,#2a0a10);
-          --p-header-text:  #f5f5f5;
-          --p-card-bg:      #1e1e1e;
-          --p-card-foot:    #181818;
-          --p-icon-crown:   #FFD700;
-          --p-pts-bg:       rgba(220,20,60,0.15);
-          --p-pts-text:     #ff6b6b;
-          --p-tag-bg:       rgba(220,20,60,0.12);
-          --p-tag-text:     #ff9090;
-          --p-tag-border:   rgba(220,20,60,0.28);
-          --p-back-bg:      rgba(220,20,60,0.12);
-          --p-back-text:    #ff6b6b;
-          --p-snap-bg:      #DC143C;
-          --p-snap-text:    #fff;
-          --p-empty-icon:   #DC143C;
-        }
-        </t>
-        <t t-elif="theme == 'butterscotch'">
-        :root {
-          --p-primary:      #F5C842;
-          --p-primary-dk:   #C8960C;
-          --p-primary-lt:   rgba(245,200,66,0.15);
-          --p-glow:         rgba(245,200,66,0.35);
-          --p-body-bg:      #0d0d1f;
-          --p-surface:      #181828;
-          --p-surface2:     #12121e;
-          --p-border:       rgba(245,200,66,0.20);
-          --p-text:         #f5f0e0;
-          --p-text-muted:   #b0a880;
-          --p-header-bg:    linear-gradient(135deg,#0d0d1f,#1a1400);
-          --p-header-text:  #F5C842;
-          --p-card-bg:      #181828;
-          --p-card-foot:    #12121e;
-          --p-icon-crown:   #FFD700;
-          --p-pts-bg:       rgba(245,200,66,0.12);
-          --p-pts-text:     #F5C842;
-          --p-tag-bg:       rgba(245,200,66,0.10);
-          --p-tag-text:     #F5C842;
-          --p-tag-border:   rgba(245,200,66,0.25);
-          --p-back-bg:      rgba(245,200,66,0.10);
-          --p-back-text:    #F5C842;
-          --p-snap-bg:      #F5C842;
-          --p-snap-text:    #0d0d1f;
-          --p-empty-icon:   #F5C842;
-        }
-        </t>
-        <t t-elif="theme == 'strawberry'">
-        :root {
-          --p-primary:      #C2185B;
-          --p-primary-dk:   #880E4F;
-          --p-primary-lt:   rgba(194,24,91,0.12);
-          --p-glow:         rgba(194,24,91,0.25);
-          --p-body-bg:      #FFF0F5;
-          --p-surface:      #fff;
-          --p-surface2:     #fce4ec;
-          --p-border:       rgba(194,24,91,0.18);
-          --p-text:         #2d0a1e;
-          --p-text-muted:   #7a4060;
-          --p-header-bg:    linear-gradient(135deg,#880E4F,#C2185B);
-          --p-header-text:  #fff;
-          --p-card-bg:      #fff;
-          --p-card-foot:    #fce4ec;
-          --p-icon-crown:   #f5a623;
-          --p-pts-bg:       rgba(194,24,91,0.10);
-          --p-pts-text:     #C2185B;
-          --p-tag-bg:       rgba(194,24,91,0.08);
-          --p-tag-text:     #C2185B;
-          --p-tag-border:   rgba(194,24,91,0.22);
-          --p-back-bg:      rgba(194,24,91,0.08);
-          --p-back-text:    #C2185B;
-          --p-snap-bg:      #C2185B;
-          --p-snap-text:    #fff;
-          --p-empty-icon:   #C2185B;
-        }
-        </t>
-
-        /* ── Reset &amp; base ──────────────────────────────────────────────── */
         *, *::before, *::after { box-sizing: border-box; }
+        html { min-height: 100%; background: var(--bg); }
         body {
-          background: var(--p-body-bg);
-          color: var(--p-text);
-          font-family: 'Poppins', sans-serif;
           margin: 0;
           min-height: 100vh;
+          background:
+            radial-gradient(circle at 12% 18%, var(--glow) 0, transparent 28%),
+            radial-gradient(circle at 88% 10%, rgba(255,255,255,.05) 0, transparent 22%),
+            linear-gradient(180deg, var(--bg) 0%, var(--bg2) 45%, var(--bg3) 100%);
+          color: var(--tx);
+          font-family: var(--bf);
+          font-weight: 500;
+          overflow-x: hidden;
         }
+        body::before {
+          content: '';
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          background:
+            linear-gradient(120deg, rgba(255,255,255,.03) 0%, transparent 22%, transparent 78%, rgba(255,255,255,.02) 100%),
+            repeating-linear-gradient(180deg, rgba(255,255,255,.015) 0 1px, transparent 1px 52px);
+          opacity: .55;
+        }
+        a { color: inherit; text-decoration: none; }
+        button { font: inherit; color: inherit; }
+        img { display: block; max-width: 100%; }
 
-        /* ── Page header ─────────────────────────────────────────────────── */
+        /* ── Page header ── */
         .tp-header {
-          background: var(--p-header-bg);
-          color: var(--p-header-text);
-          padding: 16px 0 12px;
-          border-bottom: 3px solid var(--p-primary);
-          box-shadow: 0 4px 20px var(--p-glow);
-          text-align: center;
-          position: relative;
-        }
-        .tp-header img.logo { filter: drop-shadow(0 2px 8px var(--p-glow)); }
-
-        /* ── Action buttons in header ────────────────────────────────────── */
-        .tp-header-actions {
-          position: absolute;
-          right: 24px;
-          top: 50%;
-          transform: translateY(-50%);
+          position: sticky;
+          top: 0;
+          z-index: 100;
           display: flex;
           align-items: center;
-          gap: 10px;
+          justify-content: space-between;
+          padding: 0 18px;
+          height: 64px;
+          background: linear-gradient(135deg, rgba(4,10,22,.94), rgba(9,18,34,.90));
+          border-bottom: 1px solid var(--bdr2);
+          backdrop-filter: blur(16px);
+          box-shadow: 0 4px 24px rgba(0,0,0,.35);
         }
+        .tp-header img.logo { height: 40px; width: auto; object-fit: contain; }
+
+        /* ── Action buttons in header ── */
+        .tp-header-actions { display: flex; align-items: center; gap: 10px; }
         .tp-back-btn {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          background: rgba(255,255,255,0.18);
-          color: var(--p-header-text);
-          border: 2px solid rgba(255,255,255,0.55);
-          border-radius: 8px;
-          padding: 8px 18px;
-          font-size: 0.85rem;
+          height: 38px;
+          padding: 0 16px;
+          font-size: .9rem;
+          text-transform: uppercase;
+          letter-spacing: .11em;
+          font-family: var(--bf);
           font-weight: 700;
+          color: var(--tx);
+          background: rgba(255,255,255,.06);
+          border: 1px solid var(--bdr);
+          border-radius: 999px;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 8px 20px rgba(0,0,0,.18);
+          transition: transform .2s, box-shadow .2s, border-color .2s;
+          white-space: nowrap;
           text-decoration: none;
-          letter-spacing: 0.3px;
-          backdrop-filter: blur(4px);
-          transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.18);
         }
         .tp-back-btn:hover {
-          background: rgba(255,255,255,0.32);
-          border-color: #fff;
-          color: #fff;
-          box-shadow: 0 4px 18px rgba(0,0,0,0.25);
-          text-decoration: none;
+          transform: translateY(-1px);
+          border-color: rgba(255,255,255,.22);
+          box-shadow: 0 10px 28px rgba(0,0,0,.22), 0 0 0 1px var(--bdr);
+          color: var(--tx);
         }
         .tp-snap-btn {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          background: var(--p-snap-bg);
-          color: var(--p-snap-text);
-          border: 2px solid transparent;
-          border-radius: 8px;
-          padding: 8px 18px;
-          font-size: 0.85rem;
+          height: 38px;
+          padding: 0 16px;
+          font-size: .9rem;
+          font-family: var(--bf);
           font-weight: 700;
+          letter-spacing: .08em;
+          text-transform: uppercase;
           cursor: pointer;
-          letter-spacing: 0.3px;
-          box-shadow: 0 3px 14px var(--p-glow), 0 0 0 2px rgba(255,255,255,0.15);
-          transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+          border: none;
+          border-radius: 999px;
+          background: linear-gradient(135deg, var(--acc), var(--acc2));
+          color: #07101f;
+          box-shadow: 0 6px 18px var(--glow);
+          transition: transform .15s, box-shadow .2s, opacity .2s;
         }
-        .tp-snap-btn:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 6px 22px var(--p-glow), 0 0 0 2px rgba(255,255,255,0.25);
-          opacity: 0.93;
-        }
+        .tp-snap-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 28px var(--glow); }
         .tp-snap-btn:active { transform: translateY(0); }
 
-        /* ── Team hero banner ────────────────────────────────────────────── */
+        /* ── Team hero banner ── */
         .tp-team-hero {
-          background: var(--p-surface);
-          border-bottom: 2px solid var(--p-border);
-          box-shadow: 0 2px 14px var(--p-glow);
-          padding: 24px 0 20px;
+          background: linear-gradient(180deg, rgba(255,255,255,.04), transparent);
+          border-bottom: 1px solid var(--bdr);
+          padding: 28px 0 22px;
+          backdrop-filter: blur(8px);
         }
         .tp-team-logo-ring {
           width: 88px; height: 88px;
           border-radius: 50%;
-          border: 3px solid var(--p-primary);
-          box-shadow: 0 0 18px var(--p-glow), 0 0 0 5px var(--p-primary-lt);
+          border: 2px solid var(--bdr);
+          box-shadow: 0 0 24px var(--glow), 0 0 0 5px rgba(255,255,255,.04);
           object-fit: cover;
-          background: var(--p-surface2);
+          background: var(--card-bg);
         }
         .tp-team-name {
-          font-family: 'Teko', sans-serif;
-          font-size: 2.4rem;
-          font-weight: 700;
-          color: var(--p-primary);
-          letter-spacing: 1px;
+          font-family: var(--hf);
+          font-size: 2rem;
+          font-weight: 900;
+          color: var(--tx);
+          letter-spacing: .08em;
+          text-transform: uppercase;
           margin: 0;
           line-height: 1.1;
         }
-        .tp-team-meta {
-          font-size: 0.82rem;
-          color: var(--p-text-muted);
-          margin: 0;
-        }
-        .tp-team-meta span {
-          font-weight: 600;
-          color: var(--p-text);
-        }
+        .tp-team-meta { font-size: .82rem; color: var(--tx-d); letter-spacing: .08em; text-transform: uppercase; margin: 0; }
+        .tp-team-meta span { color: var(--acc2); }
         .tp-player-count {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          background: var(--p-pts-bg);
-          color: var(--p-pts-text);
-          border: 1.5px solid var(--p-border);
-          border-radius: 20px;
-          padding: 4px 14px;
-          font-size: 0.82rem;
+          background: rgba(255,255,255,.06);
+          color: var(--acc);
+          border: 1px solid var(--bdr);
+          border-radius: 999px;
+          padding: 5px 16px;
+          font-family: var(--bf);
+          font-size: .82rem;
           font-weight: 700;
+          letter-spacing: .1em;
+          text-transform: uppercase;
         }
 
-        /* ── Section divider label ───────────────────────────────────────── */
+        /* ── Section divider label ── */
         .tp-section-label {
-          font-family: 'Teko', sans-serif;
-          font-size: 1.25rem;
-          letter-spacing: 1px;
-          color: var(--p-primary);
+          font-family: var(--hf);
+          font-size: .9rem;
+          letter-spacing: .18em;
+          color: var(--acc);
           text-transform: uppercase;
-          padding-bottom: 6px;
-          border-bottom: 2px solid var(--p-primary);
+          padding-bottom: 8px;
+          border-bottom: 1px solid var(--bdr);
           margin-bottom: 20px;
           display: inline-block;
         }
 
-        /* ── Player card ─────────────────────────────────────────────────── */
+        /* ── Player card ── */
         .tp-card {
-          background: var(--p-card-bg);
-          border: 1.5px solid var(--p-border);
-          border-radius: 16px;
+          background: var(--card-bg);
+          border: 1px solid var(--card-bdr);
+          border-radius: 18px;
           overflow: hidden;
-          box-shadow: 0 4px 18px var(--p-glow);
+          box-shadow: 0 8px 24px rgba(0,0,0,.3);
+          backdrop-filter: blur(18px);
           display: flex;
           flex-direction: column;
           height: 100%;
-          transition: transform 0.2s, box-shadow 0.2s;
+          transition: transform .2s, box-shadow .2s;
           position: relative;
         }
         .tp-card:hover {
           transform: translateY(-4px);
-          box-shadow: 0 10px 32px var(--p-glow);
+          box-shadow: 0 16px 40px rgba(0,0,0,.4), 0 0 0 1px var(--bdr);
         }
-
-        /* Left accent stripe */
         .tp-card::before {
           content: '';
           position: absolute;
           left: 0; top: 0; bottom: 0;
-          width: 4px;
-          background: var(--p-primary);
-          border-radius: 16px 0 0 16px;
+          width: 3px;
+          background: linear-gradient(180deg, var(--acc), var(--acc2));
+          border-radius: 18px 0 0 18px;
         }
 
-        /* ── Card photo strip ────────────────────────────────────────────── */
+        /* ── Card photo strip ── */
         .tp-card-photo-wrap {
           position: relative;
-          background: var(--p-surface2);
+          background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.12));
           height: 210px;
           overflow: hidden;
           flex-shrink: 0;
@@ -315,61 +240,54 @@
           align-items: center;
           justify-content: center;
         }
-        .tp-card-photo {
-          width: 100%; height: 100%;
-          object-fit: contain;
-          object-position: center top;
-          display: block;
-        }
+        .tp-card-photo { width: 100%; height: 100%; object-fit: contain; object-position: center top; display: block; }
         .tp-card-photo-placeholder {
           width: 100%; height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 4rem;
-          opacity: 0.35;
-          color: var(--p-primary);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 4rem; opacity: .2; color: var(--acc);
         }
-        /* Subtle gradient at bottom of photo */
         .tp-card-photo-wrap::after {
           content: '';
           position: absolute;
           bottom: 0; left: 0; right: 0;
-          height: 40px;
-          background: linear-gradient(transparent, var(--p-card-bg));
+          height: 48px;
+          background: linear-gradient(transparent, var(--card-bg));
           pointer-events: none;
         }
 
-        /* ── Tier badge (top-right of photo) ─────────────────────────────── */
+        /* ── Tier badge ── */
         .tp-tier-badge {
           position: absolute;
           top: 10px; right: 10px;
           padding: 3px 10px;
           border-radius: 12px;
-          font-size: 0.7rem;
+          font-size: .68rem;
+          font-family: var(--bf);
           font-weight: 700;
-          letter-spacing: 0.5px;
+          letter-spacing: .06em;
           text-transform: uppercase;
           z-index: 2;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+          box-shadow: 0 2px 8px rgba(0,0,0,.4);
         }
 
         /* ICON crown badge */
         .tp-icon-crown {
           position: absolute;
           top: 8px; left: 10px;
-          background: rgba(0,0,0,0.6);
-          color: var(--p-icon-crown);
+          background: rgba(0,0,0,.7);
+          color: var(--acc2);
           border-radius: 10px;
           padding: 3px 8px;
-          font-size: 0.7rem;
+          font-size: .68rem;
+          font-family: var(--bf);
           font-weight: 800;
-          letter-spacing: 0.6px;
+          letter-spacing: .08em;
+          text-transform: uppercase;
           z-index: 2;
-          border: 1px solid var(--p-icon-crown);
+          border: 1px solid rgba(255,215,0,.35);
         }
 
-        /* ── Card body ───────────────────────────────────────────────────── */
+        /* ── Card body ── */
         .tp-card-body {
           padding: 14px 16px 10px 20px;
           flex: 1;
@@ -378,66 +296,60 @@
           gap: 8px;
         }
         .tp-player-name {
-          font-family: 'Teko', sans-serif;
-          font-size: 1.35rem;
-          font-weight: 700;
-          color: var(--p-text);
+          font-family: var(--hf);
+          font-size: .92rem;
+          font-weight: 900;
+          letter-spacing: .06em;
+          color: var(--tx);
+          text-transform: uppercase;
           margin: 0;
-          line-height: 1.1;
+          line-height: 1.15;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
 
-        /* ── Tags row ────────────────────────────────────────────────────── */
-        .tp-tags {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 5px;
-        }
+        /* ── Tags row ── */
+        .tp-tags { display: flex; flex-wrap: wrap; gap: 5px; }
         .tp-tag {
           display: inline-block;
           padding: 3px 10px;
-          border-radius: 12px;
-          font-size: 0.7rem;
+          border-radius: 999px;
+          font-size: .68rem;
+          font-family: var(--bf);
           font-weight: 600;
-          background: var(--p-tag-bg);
-          color: var(--p-tag-text);
-          border: 1px solid var(--p-tag-border);
-          letter-spacing: 0.3px;
+          letter-spacing: .08em;
+          text-transform: uppercase;
+          background: rgba(255,255,255,.06);
+          color: var(--tx-d);
+          border: 1px solid var(--bdr2);
           white-space: nowrap;
         }
-        .tp-tag-orange {
-          background: rgba(255,152,0,0.12);
-          color: #e65100;
-          border-color: rgba(255,152,0,0.30);
-        }
+        .tp-tag-orange { background: rgba(255,152,0,.1); color: #ffaa44; border-color: rgba(255,152,0,.25); }
 
-        /* ── Stats row ───────────────────────────────────────────────────── */
-        .tp-stats {
-          display: flex;
-          gap: 6px;
-          flex-wrap: wrap;
-        }
+        /* ── Stats row ── */
+        .tp-stats { display: flex; gap: 6px; flex-wrap: wrap; }
         .tp-stat {
           flex: 1 0 70px;
-          background: var(--p-surface2);
-          border: 1px solid var(--p-border);
+          background: rgba(255,255,255,.04);
+          border: 1px solid var(--bdr2);
           border-radius: 8px;
           padding: 5px 8px;
           text-align: center;
         }
         .tp-stat-label {
-          font-size: 0.6rem;
-          color: var(--p-text-muted);
+          font-size: .6rem;
+          color: var(--tx-m);
           text-transform: uppercase;
-          letter-spacing: 0.4px;
+          letter-spacing: .06em;
+          font-family: var(--bf);
           margin: 0;
         }
         .tp-stat-value {
-          font-size: 0.88rem;
+          font-size: .88rem;
+          font-family: var(--nf);
           font-weight: 700;
-          color: var(--p-text);
+          color: var(--tx);
           margin: 0;
           line-height: 1.2;
           white-space: nowrap;
@@ -445,10 +357,10 @@
           text-overflow: ellipsis;
         }
 
-        /* ── Card footer ─────────────────────────────────────────────────── */
+        /* ── Card footer ── */
         .tp-card-foot {
-          background: var(--p-card-foot);
-          border-top: 1.5px solid var(--p-border);
+          background: rgba(0,0,0,.2);
+          border-top: 1px solid var(--bdr2);
           padding: 10px 20px;
           display: flex;
           align-items: center;
@@ -459,73 +371,160 @@
           display: inline-flex;
           align-items: center;
           gap: 5px;
-          background: var(--p-pts-bg);
-          color: var(--p-pts-text);
-          border: 1.5px solid var(--p-border);
-          border-radius: 16px;
+          background: rgba(255,255,255,.06);
+          color: var(--acc);
+          border: 1px solid var(--bdr);
+          border-radius: 999px;
           padding: 4px 12px;
-          font-size: 0.82rem;
+          font-family: var(--nf);
+          font-size: .95rem;
           font-weight: 700;
+          letter-spacing: .06em;
         }
-        .tp-pts-badge .pts-icon { font-size: 0.9rem; }
-        .tp-pts-label { font-size: 0.62rem; opacity: 0.7; margin-left: 2px; }
+        .tp-pts-badge .pts-icon { font-size: .9rem; }
+        .tp-pts-label { font-size: .62rem; opacity: .7; margin-left: 2px; }
         .tp-icon-label {
           display: inline-flex;
           align-items: center;
           gap: 5px;
-          background: rgba(255,215,0,0.12);
-          color: #b8860b;
-          border: 1.5px solid rgba(255,215,0,0.35);
-          border-radius: 16px;
+          background: rgba(255,215,0,.1);
+          color: var(--acc2);
+          border: 1px solid rgba(255,215,0,.3);
+          border-radius: 999px;
           padding: 4px 12px;
-          font-size: 0.78rem;
+          font-family: var(--bf);
+          font-size: .78rem;
           font-weight: 700;
+          letter-spacing: .06em;
         }
-        .tp-contact {
-          display: inline-flex;
-          align-items: center;
-          gap: 5px;
-          font-size: 0.78rem;
-          color: var(--p-text-muted);
-          text-decoration: none;
-        }
-        .tp-contact:hover { color: var(--p-primary); }
+        .tp-contact { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--tx-d); text-decoration: none; }
+        .tp-contact:hover { color: var(--acc); }
 
-        /* ── Empty state ─────────────────────────────────────────────────── */
-        .tp-empty {
-          text-align: center;
-          padding: 80px 20px;
-        }
-        .tp-empty-icon {
-          font-size: 4rem;
-          color: var(--p-empty-icon);
-          opacity: 0.3;
-          margin-bottom: 16px;
-        }
-        .tp-empty h4 {
-          color: var(--p-text-muted);
-          font-weight: 600;
-          margin-bottom: 8px;
-        }
-        .tp-empty p { color: var(--p-text-muted); font-size: 0.9rem; }
+        /* ── Empty state ── */
+        .tp-empty { text-align: center; padding: 80px 20px; }
+        .tp-empty-icon { font-size: 4rem; color: var(--acc); opacity: .25; margin-bottom: 16px; }
+        .tp-empty h4 { color: var(--tx-d); font-weight: 600; margin-bottom: 8px; }
+        .tp-empty p { color: var(--tx-m); font-size: .9rem; }
 
-        /* ── Responsive ──────────────────────────────────────────────────── */
+        /* ── Responsive ── */
         @media (max-width: 576px) {
-          .tp-header-actions { position: static; transform: none; margin-top: 10px; justify-content: center; }
-          .tp-team-name { font-size: 1.8rem; }
-          .tp-card-photo-wrap { height: 140px; }
+          .tp-header { padding: 0 12px; height: 56px; }
+          .tp-team-name { font-size: 1.5rem; }
         }
 
-        /* ── Snapshot-specific overrides (always 4-per-row, capped width) ── */
-        #screenshot_container {
-          max-width: 1280px;
-          margin: 0 auto;
+        /* ── Card grid — hidden on mobile/tablet ── */
+        @media (max-width: 768px) { .tp-card-grid { display: none !important; } }
+        @media (min-width: 769px) { .tp-squad-list { display: none !important; } }
+
+        /* ── Compact list (mobile/tablet ≤ 768px) ── */
+        .tp-squad-list { }
+        .tp-list-section-label {
+          font-family: var(--hf);
+          font-size: .78rem;
+          letter-spacing: .18em;
+          color: var(--acc);
+          text-transform: uppercase;
+          padding-bottom: 6px;
+          border-bottom: 1px solid var(--bdr);
+          margin-bottom: 10px;
+          display: block;
         }
-        #screenshot_container .tp-card-photo-wrap {
-          height: 180px;
-          position: relative;
+        .tp-list-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 9px 12px;
+          border-radius: 12px;
+          border: 1px solid var(--card-bdr);
+          background: var(--card-bg);
+          backdrop-filter: blur(18px);
+          margin-bottom: 6px;
+          transition: background .15s;
+        }
+        .tp-list-row:hover { background: rgba(255,255,255,.08); }
+        .tp-list-thumb {
+          width: 46px; height: 46px;
+          border-radius: 8px;
+          object-fit: cover;
+          object-position: top center;
+          border: 1px solid var(--bdr);
+          flex: 0 0 46px;
+        }
+        .tp-list-thumb-ph {
+          width: 46px; height: 46px;
+          border-radius: 8px;
+          border: 1px solid var(--bdr2);
+          background: rgba(255,255,255,.05);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 1.4rem; opacity: .35;
+          flex: 0 0 46px;
+          color: var(--acc);
+        }
+        .tp-list-body { flex: 1 1 0; min-width: 0; }
+        .tp-list-name {
+          font-family: var(--hf);
+          font-size: .76rem;
+          font-weight: 900;
+          color: var(--tx);
+          text-transform: uppercase;
+          letter-spacing: .05em;
+          white-space: nowrap;
           overflow: hidden;
+          text-overflow: ellipsis;
+          line-height: 1.2;
         }
+        .tp-list-meta {
+          font-size: .68rem;
+          color: var(--tx-d);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          margin-top: 2px;
+          font-family: var(--bf);
+          letter-spacing: .04em;
+          text-transform: uppercase;
+        }
+        .tp-list-pts {
+          flex: 0 0 auto;
+          font-family: var(--nf);
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: var(--acc);
+          background: rgba(255,255,255,.06);
+          border: 1px solid var(--bdr);
+          border-radius: 8px;
+          padding: 4px 10px;
+          text-align: center;
+          min-width: 54px;
+          line-height: 1.1;
+        }
+        .tp-list-pts-lbl {
+          font-size: .52rem;
+          color: var(--tx-m);
+          display: block;
+          text-align: center;
+          text-transform: uppercase;
+          letter-spacing: .06em;
+          font-family: var(--bf);
+        }
+        .tp-list-icon-badge {
+          font-size: .6rem;
+          color: var(--acc2);
+          background: rgba(255,215,0,.1);
+          border: 1px solid rgba(255,215,0,.3);
+          border-radius: 4px;
+          padding: 2px 5px;
+          margin-left: 4px;
+          vertical-align: middle;
+          font-family: var(--bf);
+          font-weight: 700;
+          letter-spacing: .06em;
+          text-transform: uppercase;
+        }
+
+        /* ── Snapshot-specific overrides ── */
+        #screenshot_container { max-width: 1280px; margin: 0 auto; }
+        #screenshot_container .tp-card-photo-wrap { height: 180px; position: relative; overflow: hidden; }
       </style>
     </head>
 
@@ -560,7 +559,7 @@
       </header>
 
       <!-- screenshot_container wraps team banner + squad so the snapshot captures everything -->
-      <div id="screenshot_container" style="background:var(--p-body-bg);">
+      <div id="screenshot_container" style="background:var(--bg);">
 
       <!-- ── Team hero ────────────────────────────────────────────────────── -->
       <section class="tp-team-hero">
@@ -597,35 +596,91 @@
         <div class="container">
 
           <t t-if="players">
-            <!-- Icon Players section (if any) -->
-            <t t-set="icon_list" t-value="[p for p in players if p.get('is_icon')]"/>
-            <t t-if="icon_list">
-              <div class="mb-4">
-                <span class="tp-section-label">&#9733; Icon Players</span>
-                <div class="row g-3">
-                  <t t-foreach="icon_list" t-as="player">
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                      <t t-call="auction_module.tp_player_card"/>
+            <!-- ── Compact list — shown on ≤ 768px ── -->
+            <div class="tp-squad-list">
+              <t t-set="icon_list" t-value="[p for p in players if p.get('is_icon')]"/>
+              <t t-if="icon_list">
+                <span class="tp-list-section-label">&#9733; Icon Players</span>
+                <t t-foreach="icon_list" t-as="player">
+                  <div class="tp-list-row">
+                    <t t-if="player.get('photo')">
+                      <img t-att-src="image_data_uri(player.get('photo'))" alt="Photo" class="tp-list-thumb"/>
+                    </t>
+                    <t t-else=""><div class="tp-list-thumb-ph">&#128100;</div></t>
+                    <div class="tp-list-body">
+                      <div class="tp-list-name">
+                        <t t-esc="player.get('name', '—')"/>
+                        <span class="tp-list-icon-badge">&#9733; ICON</span>
+                      </div>
+                      <div class="tp-list-meta">
+                        <t t-if="player.get('role')"><t t-esc="player.get('role')"/></t>
+                        <t t-if="player.get('p_type')"> · <t t-esc="player.get('p_type')"/></t>
+                        <t t-if="player.get('tier_name')"> · <t t-esc="player.get('tier_name')"/></t>
+                      </div>
                     </div>
-                  </t>
-                </div>
-              </div>
-            </t>
+                    <div class="tp-list-pts">
+                      ICON<span class="tp-list-pts-lbl">Player</span>
+                    </div>
+                  </div>
+                </t>
+              </t>
 
-            <!-- Auctioned Players section -->
-            <t t-set="auc_list" t-value="[p for p in players if not p.get('is_icon')]"/>
-            <t t-if="auc_list">
-              <div>
-                <span class="tp-section-label">&#127942; Auctioned Squad</span>
-                <div class="row g-3">
-                  <t t-foreach="auc_list" t-as="player">
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                      <t t-call="auction_module.tp_player_card"/>
+              <t t-set="auc_list" t-value="[p for p in players if not p.get('is_icon')]"/>
+              <t t-if="auc_list">
+                <span class="tp-list-section-label" t-att-style="'margin-top:14px;' if icon_list else ''">&#127942; Auctioned Squad</span>
+                <t t-foreach="auc_list" t-as="player">
+                  <div class="tp-list-row">
+                    <t t-if="player.get('photo')">
+                      <img t-att-src="image_data_uri(player.get('photo'))" alt="Photo" class="tp-list-thumb"/>
+                    </t>
+                    <t t-else=""><div class="tp-list-thumb-ph">&#128100;</div></t>
+                    <div class="tp-list-body">
+                      <div class="tp-list-name"><t t-esc="player.get('name', '—')"/></div>
+                      <div class="tp-list-meta">
+                        <t t-if="player.get('role')"><t t-esc="player.get('role')"/></t>
+                        <t t-if="player.get('p_type')"> · <t t-esc="player.get('p_type')"/></t>
+                        <t t-if="player.get('tier_name')"> · <t t-esc="player.get('tier_name')"/></t>
+                      </div>
                     </div>
-                  </t>
+                    <div class="tp-list-pts">
+                      <t t-esc="player.get('point', '—')"/>
+                      <span class="tp-list-pts-lbl">pts</span>
+                    </div>
+                  </div>
+                </t>
+              </t>
+            </div>
+
+            <!-- ── Card grid — shown on > 768px ── -->
+            <div class="tp-card-grid">
+              <t t-set="icon_list" t-value="[p for p in players if p.get('is_icon')]"/>
+              <t t-if="icon_list">
+                <div class="mb-4">
+                  <span class="tp-section-label">&#9733; Icon Players</span>
+                  <div class="row g-3">
+                    <t t-foreach="icon_list" t-as="player">
+                      <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <t t-call="auction_module.tp_player_card"/>
+                      </div>
+                    </t>
+                  </div>
                 </div>
-              </div>
-            </t>
+              </t>
+
+              <t t-set="auc_list" t-value="[p for p in players if not p.get('is_icon')]"/>
+              <t t-if="auc_list">
+                <div>
+                  <span class="tp-section-label">&#127942; Auctioned Squad</span>
+                  <div class="row g-3">
+                    <t t-foreach="auc_list" t-as="player">
+                      <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <t t-call="auction_module.tp_player_card"/>
+                      </div>
+                    </t>
+                  </div>
+                </div>
+              </t>
+            </div>
           </t>
 
           <!-- Empty state -->
@@ -689,7 +744,7 @@
             scale: 2,
             useCORS: true,
             allowTaint: true,
-            backgroundColor: getComputedStyle(document.body).getPropertyValue('--p-body-bg').trim() || '#ffffff',
+            backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg').trim() || '#050c1a',
             scrollX: 0,
             scrollY: 0,
             windowWidth: 1280,
@@ -711,9 +766,6 @@
         });
       </script>
 
-      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-              integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
-              crossorigin="anonymous"></script>
     </body>
   </html>
 </template>

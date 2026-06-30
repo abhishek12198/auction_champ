@@ -72,3 +72,7 @@ access_auction_advertiser_public,auction.advertiser (public),auction_module.mode
 access_auction_pdf_to_png_user,auction.pdf.to.png (user),auction_module.model_auction_pdf_to_png,auction_module.group_auction_group,1,1,1,1
 access_auction_team_pool_wizard_user,auction.team.pool.wizard (user),auction_module.model_auction_team_pool_wizard,auction_module.group_auction_group,1,1,1,1
 access_auction_team_pool_name_line_user,auction.team.pool.name.line (user),auction_module.model_auction_team_pool_name_line,auction_module.group_auction_group,1,1,1,1
+access_auction_team_player_pm,auction.team.player (payment marker),auction_module.model_auction_team_player,auction_module.group_auction_payment_marker,1,1,0,0
+access_auction_tournament_pm,auction.tournament (payment marker),auction_module.model_auction_tournament,auction_module.group_auction_payment_marker,1,0,0,0
+access_auction_team_pm,auction.team (payment marker),auction_module.model_auction_team,auction_module.group_auction_payment_marker,1,0,0,0
+access_auction_player_tier_pm,auction.player.tier (payment marker),auction_module.model_auction_player_tier,auction_module.group_auction_payment_marker,1,0,0,0

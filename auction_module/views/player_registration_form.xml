@@ -220,6 +220,26 @@
                     </a>
                 </t>
 
+                <t t-if="tournament and tournament.whatsapp_group_link">
+                    <a t-att-href="tournament.whatsapp_group_link"
+                       target="_blank" rel="noopener noreferrer"
+                       style="display:inline-flex;align-items:center;gap:.65rem;
+                              margin-top:1rem;padding:.75rem 2rem;border-radius:12px;
+                              background:#25D366;color:#fff;font-family:'Barlow Condensed',sans-serif;
+                              font-size:1rem;font-weight:700;letter-spacing:.06em;
+                              text-transform:uppercase;text-decoration:none;
+                              box-shadow:0 4px 18px rgba(37,211,102,.35);
+                              transition:background .2s,box-shadow .2s;"
+                       onmouseover="this.style.background='#1ebe5d';this.style.boxShadow='0 6px 24px rgba(37,211,102,.5)'"
+                       onmouseout="this.style.background='#25D366';this.style.boxShadow='0 4px 18px rgba(37,211,102,.35)'">
+                        <!-- WhatsApp SVG icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 32 32" fill="currentColor">
+                            <path d="M16 0C7.163 0 0 7.163 0 16c0 2.822.737 5.476 2.027 7.782L0 32l8.468-2.004A15.93 15.93 0 0 0 16 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm0 29.333a13.28 13.28 0 0 1-6.78-1.853l-.486-.29-5.025 1.188 1.23-4.892-.318-.503A13.293 13.293 0 0 1 2.667 16C2.667 8.636 8.636 2.667 16 2.667S29.333 8.636 29.333 16 23.364 29.333 16 29.333zm7.27-9.817c-.398-.199-2.355-1.162-2.72-1.295-.366-.133-.632-.199-.898.199-.266.398-1.03 1.295-1.263 1.561-.232.266-.465.299-.863.1-.398-.2-1.681-.619-3.202-1.974-1.184-1.055-1.983-2.358-2.216-2.756-.232-.398-.025-.613.175-.812.18-.178.398-.465.597-.698.2-.232.266-.398.398-.664.133-.266.067-.499-.033-.698-.1-.2-.898-2.164-1.23-2.963-.324-.779-.653-.673-.898-.686l-.765-.013c-.266 0-.698.1-1.063.499-.366.398-1.396 1.362-1.396 3.325s1.43 3.857 1.629 4.123c.2.266 2.814 4.298 6.82 6.027.953.411 1.697.657 2.277.841.956.304 1.827.261 2.515.158.767-.114 2.355-.963 2.688-1.893.332-.93.332-1.727.232-1.893-.1-.166-.366-.266-.764-.465z"/>
+                        </svg>
+                        Join Players WhatsApp Group
+                    </a>
+                </t>
+
                 <t t-if="tournament_slug">
                     <div style="margin-top:1.25rem;">
                         <a t-att-href="'/' + db_name + '/' + tournament_slug + '/player/register'"

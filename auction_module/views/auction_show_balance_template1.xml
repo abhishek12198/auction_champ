@@ -601,6 +601,17 @@
           .bs2-left { justify-content: center; }
           .bs2-main { padding-top: 160px; }
         }
+        @media (max-width: 768px) {
+          .bs2-hdr {
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+            padding: 10px 14px;
+          }
+          .bs2-title-wrap { display: none; }
+          .bs2-left { grid-column: 1; justify-content: flex-start; }
+          .bs2-right { grid-column: 2; justify-content: flex-end; }
+          .bs2-main { padding-top: 72px; }
+        }
         @media (max-width: 680px) {
           .bs2-main { padding-left: 10px; padding-right: 10px; }
           .bs2-grid { grid-template-columns: 1fr; }
@@ -609,6 +620,122 @@
           .bs2-toggle-btn { min-width: 76px; }
           .bs2-back-btn,
           .bs2-fs-btn { padding: 0 12px; }
+        }
+
+        /* ── Mobile / tablet compact rows (≤ 768px) ── */
+        #mobile-section { display: none; }
+        @media (max-width: 768px) {
+          #list-section, #grid-section { display: none !important; }
+          #mobile-section { display: block !important; }
+          .bs2-view-toggle, .bs2-v-divider { display: none; }
+          .bs2-main { padding-top: 10px; }
+        }
+        .bs2-mob-row {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          padding: 12px 14px;
+          border-radius: 16px;
+          border: 1px solid var(--card-bdr);
+          background: var(--card-bg);
+          backdrop-filter: blur(18px);
+          margin-bottom: 10px;
+        }
+        .bs2-mob-head {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .bs2-mob-logo {
+          width: 40px; height: 40px;
+          border-radius: 10px;
+          object-fit: cover;
+          border: 1px solid var(--bdr);
+          flex: 0 0 40px;
+        }
+        .bs2-mob-logo-fb {
+          width: 40px; height: 40px;
+          border-radius: 10px;
+          border: 1px solid var(--bdr);
+          background: rgba(255,255,255,.06);
+          display: flex; align-items: center; justify-content: center;
+          font-family: var(--hf);
+          font-size: .9rem;
+          color: var(--acc2);
+          flex: 0 0 40px;
+          text-transform: uppercase;
+        }
+        .bs2-mob-copy { flex: 1 1 0; min-width: 0; }
+        .bs2-mob-name {
+          font-family: var(--hf);
+          font-size: .78rem;
+          font-weight: 900;
+          letter-spacing: .08em;
+          text-transform: uppercase;
+          color: var(--tx);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          line-height: 1.1;
+        }
+        .bs2-mob-manager {
+          font-size: .68rem;
+          color: var(--tx-d);
+          text-transform: uppercase;
+          letter-spacing: .06em;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .bs2-mob-purse-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .bs2-mob-pts {
+          font-family: var(--nf);
+          font-size: 1.45rem;
+          font-weight: 700;
+          color: var(--tx);
+          white-space: nowrap;
+          flex: 0 0 auto;
+        }
+        .bs2-mob-pts-unit { font-size: .75rem; color: var(--tx-d); letter-spacing: .1em; text-transform: uppercase; }
+        .bs2-mob-bar-wrap { flex: 1 1 0; }
+        .bs2-mob-pct { font-size: .68rem; color: var(--tx-d); letter-spacing: .08em; margin-top: 3px; }
+        .bs2-mob-stats {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 6px;
+        }
+        .bs2-mob-stat {
+          background: rgba(255,255,255,.04);
+          border: 1px solid var(--bdr2);
+          border-radius: 8px;
+          padding: 6px 8px;
+          text-align: center;
+        }
+        .bs2-mob-stat-lbl {
+          font-size: .58rem;
+          color: var(--tx-m);
+          text-transform: uppercase;
+          letter-spacing: .06em;
+          font-family: var(--bf);
+          display: block;
+        }
+        .bs2-mob-stat-val {
+          font-family: var(--nf);
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: var(--tx);
+          display: block;
+          line-height: 1;
+        }
+        .bs2-mob-foot {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
         }
       </style>
     </head>
@@ -650,7 +777,7 @@
                   <th>Max Bid</th>
                   <th>Squad</th>
                   <th>Status</th>
-                  <t t-if="type == 'internal'"><th>Access</th></t>
+                  <th>Access</th>
                 </tr>
               </thead>
               <tbody>
@@ -708,11 +835,9 @@
                     <td>
                       <span data-role="status-badge" data-base-class="bs2-badge" t-attf-class="bs2-badge #{status_cls}"><t t-esc="status_label"/></span>
                     </td>
-                    <t t-if="type == 'internal'">
-                      <td class="bs2-access-cell">
-                        <a t-att-href="'/auction/get/players/team/%s' % team.team_id.id" class="bs2-engage">&#9654; ENGAGE</a>
-                      </td>
-                    </t>
+                    <td class="bs2-access-cell">
+                      <a t-att-href="'/auction/get/players/team/%s' % team.team_id.id" class="bs2-engage">&#9654; ENGAGE</a>
+                    </td>
                   </tr>
                 </t>
               </tbody>
@@ -775,15 +900,78 @@
 
                   <div class="bs2-card-foot">
                     <span data-role="status-badge" data-base-class="bs2-badge bs2-card-status" t-attf-class="bs2-badge bs2-card-status #{status_cls}"><t t-esc="status_label"/></span>
-                    <t t-if="type == 'internal'">
-                      <a t-att-href="'/auction/get/players/team/%s' % team.team_id.id" class="bs2-engage">&#9654; ENGAGE</a>
-                    </t>
+                    <a t-att-href="'/auction/get/players/team/%s' % team.team_id.id" class="bs2-engage">&#9654; ENGAGE</a>
                   </div>
                 </div>
               </div>
             </t>
           </div>
         </div>
+
+        <!-- ── Mobile compact rows (≤ 768px) ── -->
+        <div id="mobile-section">
+          <t t-foreach="teams" t-as="team">
+            <t t-set="purse_pct" t-value="int(team.remaining_points * 100 // team.total_point) if team.total_point else 0"/>
+            <t t-set="purse_cls" t-value="'pf-high' if purse_pct &gt;= 60 else ('pf-mid' if purse_pct &gt;= 30 else ('pf-low' if purse_pct &gt;= 10 else 'pf-crit'))"/>
+            <t t-set="status_label" t-value="'COMFORTABLE' if purse_pct &gt;= 60 else ('HEALTHY' if purse_pct &gt;= 40 else ('BALANCED' if purse_pct &gt;= 25 else ('TIGHT' if purse_pct &gt;= 10 else 'CRITICAL')))"/>
+            <t t-set="status_cls" t-value="'comfortable' if purse_pct &gt;= 60 else ('healthy' if purse_pct &gt;= 40 else ('balanced' if purse_pct &gt;= 25 else ('tight' if purse_pct &gt;= 10 else 'critical')))"/>
+            <t t-set="players_recruited" t-value="team.max_players - team.remaining_players_count"/>
+            <div class="bs2-mob-row" t-attf-data-auction-id="#{team.id}" t-attf-data-total-pts="#{team.total_point}" t-attf-data-max-players="#{team.max_players}">
+
+              <!-- Head: logo + name + status badge -->
+              <div class="bs2-mob-head">
+                <t t-if="team.team_id.logo">
+                  <img class="bs2-mob-logo" t-att-src="image_data_uri(team.team_id.logo)" t-att-alt="team.team_id.name"/>
+                </t>
+                <t t-else="">
+                  <span class="bs2-mob-logo-fb"><t t-esc="(team.team_id.name or '')[:1]"/></span>
+                </t>
+                <div class="bs2-mob-copy">
+                  <div class="bs2-mob-name"><t t-esc="team.team_id.name"/></div>
+                  <div class="bs2-mob-manager"><t t-esc="team.manager or 'Team Manager'"/></div>
+                </div>
+                <span data-role="status-badge" data-base-class="bs2-badge" t-attf-class="bs2-badge #{status_cls}"><t t-esc="status_label"/></span>
+              </div>
+
+              <!-- Purse bar -->
+              <div class="bs2-mob-purse-row">
+                <div>
+                  <span class="bs2-mob-pts" t-attf-id="mob-team-points-#{team.id}"><t t-esc="team.remaining_points"/></span>
+                  <span class="bs2-mob-pts-unit"> pts</span>
+                </div>
+                <div class="bs2-mob-bar-wrap">
+                  <div class="bs2-progress">
+                    <div data-role="purse-fill" t-attf-class="bs2-progress-fill #{purse_cls}" t-attf-style="width:#{purse_pct}%"></div>
+                  </div>
+                  <div class="bs2-mob-pct" data-role="pct-label"><t t-esc="str(purse_pct) + '% remaining'"/></div>
+                </div>
+              </div>
+
+              <!-- Stats: need · max bid · squad -->
+              <div class="bs2-mob-stats">
+                <div class="bs2-mob-stat">
+                  <span class="bs2-mob-stat-lbl">Need</span>
+                  <span class="bs2-mob-stat-val" t-attf-id="mob-team-players-#{team.id}"><t t-esc="team.remaining_players_count"/></span>
+                </div>
+                <div class="bs2-mob-stat">
+                  <span class="bs2-mob-stat-lbl">Max Bid</span>
+                  <span class="bs2-mob-stat-val" t-attf-id="mob-team-maxcall-#{team.id}"><t t-esc="team.max_call"/></span>
+                </div>
+                <div class="bs2-mob-stat">
+                  <span class="bs2-mob-stat-lbl">Squad</span>
+                  <span class="bs2-mob-stat-val" data-role="squad-value"><t t-esc="str(players_recruited) + '/' + str(team.max_players)"/></span>
+                </div>
+              </div>
+
+              <!-- Footer: engage button -->
+              <div class="bs2-mob-foot">
+                <a t-att-href="'/auction/get/players/team/%s' % team.team_id.id" class="bs2-engage" style="width:100%;justify-content:center;">&#9654; VIEW SQUAD</a>
+              </div>
+
+            </div>
+          </t>
+        </div>
+
       </main>
 
       <script><![CDATA[
@@ -976,18 +1164,21 @@
                 }
                 var row = document.querySelector('tr[data-auction-id="' + auctionId + '"]');
                 var card = document.querySelector('.bs2-card[data-auction-id="' + auctionId + '"]');
+                var mobRow = document.querySelector('.bs2-mob-row[data-auction-id="' + auctionId + '"]');
                 var totalPoints = asNumber(
                   entry.total_point !== undefined ? entry.total_point :
                   entry.total_points !== undefined ? entry.total_points :
                   entry.totalPts !== undefined ? entry.totalPts :
                   (row ? row.getAttribute('data-total-pts') : null) ||
-                  (card ? card.getAttribute('data-total-pts') : null)
+                  (card ? card.getAttribute('data-total-pts') : null) ||
+                  (mobRow ? mobRow.getAttribute('data-total-pts') : null)
                 );
                 var maxPlayers = asNumber(
                   entry.max_players !== undefined ? entry.max_players :
                   entry.maxPlayers !== undefined ? entry.maxPlayers :
                   (row ? row.getAttribute('data-max-players') : null) ||
-                  (card ? card.getAttribute('data-max-players') : null)
+                  (card ? card.getAttribute('data-max-players') : null) ||
+                  (mobRow ? mobRow.getAttribute('data-max-players') : null)
                 );
                 var remainingPoints = asNumber(
                   entry.remaining_points !== undefined ? entry.remaining_points :
@@ -1017,9 +1208,13 @@
                 updateValueById('grid-team-points-' + auctionId, remainingPoints);
                 updateValueById('grid-team-players-' + auctionId, remainingPlayers);
                 updateValueById('grid-team-maxcall-' + auctionId, maxCall);
+                updateValueById('mob-team-points-' + auctionId, remainingPoints);
+                updateValueById('mob-team-players-' + auctionId, remainingPlayers);
+                updateValueById('mob-team-maxcall-' + auctionId, maxCall);
 
                 updateContainer(row, remainingPoints, remainingPlayers, totalPoints, maxPlayers);
                 updateContainer(card, remainingPoints, remainingPlayers, totalPoints, maxPlayers);
+                updateContainer(mobRow, remainingPoints, remainingPlayers, totalPoints, maxPlayers);
               });
             }).catch(function () {
               return null;

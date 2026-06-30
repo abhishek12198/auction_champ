@@ -728,3 +728,76 @@
         border-bottom: 6px solid #1a3a6b;
     }
 }
+
+/* ─────────────────────────────────────────────────────
+   Tournament Player State Buttons  (.o_tourn_player_stats)
+   ───────────────────────────────────────────────────── */
+.o_tourn_player_stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 0 18px;
+}
+
+.o_tps_btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 96px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: 2px solid #cbd5e1;
+    background: #f4f6f9;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    font-family: inherit;
+    text-align: center;
+    line-height: 1;
+}
+
+.o_tps_btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.14);
+}
+
+.o_tps_count {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.o_tps_label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #5a6a85;
+    display: block;
+}
+
+/* Draft / Registered */
+.o_tps_draft { border-color: #7c90b1; }
+.o_tps_draft .o_tps_count { color: #3a4e6b; }
+
+/* In Auction */
+.o_tps_auction { border-color: #f7b731; background: #fff9ec; }
+.o_tps_auction .o_tps_count { color: #c8860a; }
+.o_tps_auction .o_tps_label { color: #c8860a; }
+
+/* Sold */
+.o_tps_sold { border-color: #28a745; background: #f0fff4; }
+.o_tps_sold .o_tps_count { color: #1a7d32; }
+.o_tps_sold .o_tps_label { color: #1a7d32; }
+
+/* Unsold */
+.o_tps_unsold { border-color: #dc3545; background: #fff5f5; }
+.o_tps_unsold .o_tps_count { color: #b02a37; }
+.o_tps_unsold .o_tps_label { color: #b02a37; }
+
+/* Jersey */
+.o_tps_jersey { border-color: #6f42c1; background: #f8f4ff; }
+.o_tps_jersey_icon { font-size: 1.6rem; color: #5a32a3; }
+.o_tps_jersey .o_tps_label { color: #5a32a3; }

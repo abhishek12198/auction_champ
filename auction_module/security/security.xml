@@ -72,6 +72,13 @@
         <field name="implied_ids" eval="[(4, ref('auction_module.group_auction_group'))]"/>
     </record>
 
+    <!-- Payment Tracker — standalone role; assign role + tournament to grant access -->
+    <record id="group_auction_payment_marker" model="res.groups">
+        <field name="name">Payment Tracker</field>
+        <field name="comment">Can view all players in the assigned tournament and mark/unmark payment status. Assign this role plus an Active Tournament to the user.</field>
+        <field name="category_id" ref="auction_module.auction_categ"/>
+    </record>
+
     <!-- Administrator — full access; implies all sub-groups -->
     <record id="group_auction_group_admin" model="res.groups">
         <field name="name">Administrator</field>
@@ -87,6 +94,7 @@
             (4, ref('auction_module.group_auction_pool_generator')),
             (4, ref('auction_module.group_auction_bid_board')),
             (4, ref('auction_module.group_auction_player_dashboard')),
+            (4, ref('auction_module.group_auction_payment_marker')),
         ]"/>
     </record>
 

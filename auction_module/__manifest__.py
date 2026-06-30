@@ -68,6 +68,7 @@
         'views/page_not_found.xml',
         'views/player_registration_form.xml',
         'views/auction_dashboard_template.xml',
+        'views/payment_marker_template.xml',
         'views/menu.xml',
     ],
     'assets': {

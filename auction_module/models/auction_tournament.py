@@ -105,6 +105,11 @@ class AuctionTournament(models.Model):
         help="When enabled, the public player self-registration form is accessible. "
              "Disable this to close registrations at any point.",
     )
+    whatsapp_group_link = fields.Char(
+        string="WhatsApp Group Link",
+        help="Paste the WhatsApp group invite link here. "
+             "Players will see a 'Join WhatsApp Group' button on the registration success screen.",
+    )
     live_board_active = fields.Boolean(
         string='Live Board Active',
         default=False,
@@ -161,6 +166,12 @@ class AuctionTournament(models.Model):
         store=False,
         help='Share this URL with the projector/screen operator to display players during a Manual auction.',
     )
+    payment_tracker_url = fields.Char(
+        string='Payment Tracker URL',
+        compute='_compute_urls',
+        store=False,
+        help='Direct link to the Payment Tracker page for this tournament.',
+    )
     dice_state = fields.Selection(
         [('idle', 'Idle'), ('rolling', 'Rolling'), ('result', 'Result')],
         string='Dice State', default='idle',
@@ -209,6 +220,11 @@ class AuctionTournament(models.Model):
                 rec.projector_url = '{}/{}/auction/projector/{}/'.format(base_url, db_name, rec.slug)
             else:
                 rec.projector_url = False
+
+            if rec.slug:
+                rec.payment_tracker_url = '{}/{}/{}/auction/payment-marker'.format(base_url, db_name, rec.slug)
+            else:
+                rec.payment_tracker_url = False
 
     def set_dice_state(self, state, number=0):
         """Called from player_selector JS to broadcast dice state to the projector."""
@@ -279,6 +295,23 @@ class AuctionTournament(models.Model):
 
     def action_view_unsold_players(self):
         return self._player_state_action('unsold', 'Unsold Players')
+
+    def action_view_jersey_players(self):
+        """Open the jersey view for sold/in-auction players in this tournament."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Jersey View — %s' % self.name,
+            'res_model': 'auction.team.player',
+            'view_mode': 'kanban,tree,form',
+            'views': [
+                (self.env.ref('auction_module.view_auction_team_player_jersy_kanban').id, 'kanban'),
+                (self.env.ref('auction_module.view_auction_team_player_jersy_tree').id, 'tree'),
+                (self.env.ref('auction_module.view_auction_team_player_form').id, 'form'),
+            ],
+            'domain': [('tournament_id', '=', self.id), ('state', 'not in', ['draft', 'unsold'])],
+            'context': {'default_tournament_id': self.id},
+        }
 
     def action_toggle_live_board(self):
         """Toggle the live board active/stopped state."""
@@ -354,6 +387,17 @@ class AuctionTournament(models.Model):
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
         db_name = self.env.cr.dbname
         url = '{}/{}/{}/player/register'.format(base_url, db_name, self.slug) if self.slug else '{}/{}/player/register'.format(base_url, db_name)
+        return {
+            'type': 'ir.actions.act_url',
+            'url': url,
+            'target': 'new',
+        }
+
+    def action_open_payment_tracker(self):
+        """Open the Payment Tracker page in a new browser tab."""
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
+        db_name = self.env.cr.dbname
+        url = '{}/{}/{}/auction/payment-marker'.format(base_url, db_name, self.slug) if self.slug else '/auction/my/payment-marker'
         return {
             'type': 'ir.actions.act_url',
             'url': url,

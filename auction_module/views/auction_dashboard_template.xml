@@ -23,6 +23,12 @@
                         <span class="dash-subtitle">Live Auction Dashboard</span>
                     </div>
                     <button class="dash-refresh-btn" onclick="loadDashboard()" title="Refresh">⟳ Refresh</button>
+                    <t t-if="payment_tracker_url">
+                        <a t-att-href="payment_tracker_url"
+                           class="dash-refresh-btn"
+                           style="text-decoration:none;background:#15803d;border-color:#15803d;"
+                           title="Open Payment Tracker">💰 Payment Tracker</a>
+                    </t>
                 </div>
             </header>
 

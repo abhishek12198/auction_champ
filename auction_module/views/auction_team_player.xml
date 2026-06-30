@@ -490,6 +490,22 @@
                                     </group>
                                 </group>
                             </page>
+                            <page string="Payment Proof" groups="auction_module.group_auction_jersey_view">
+                                <group>
+                                    <group string="Screenshot">
+                                        <field name="payment_proof" widget="image"
+                                               string=""
+                                               nolabel="1"
+                                               options="{'size': [480, 360]}"/>
+                                    </group>
+                                    <group string="Status">
+                                        <field name="amount_paid" string="Payment Received"
+                                               widget="boolean_toggle"/>
+                                        <field name="payment_url" string="Payment Proof URL"
+                                               widget="url"/>
+                                    </group>
+                                </group>
+                            </page>
                             <page string="Other Info">
                                 <group>
                                     <field name="blood_group"/>

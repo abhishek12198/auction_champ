@@ -45,6 +45,7 @@
                     </header>
                     <sheet>
                         <field name="active" invisible="1"/>
+                        <field name="slug" invisible="1"/>
                         <field name="registration_open" invisible="1"/>
                         <field name="live_board_active" invisible="1"/>
                         <field name="break_time_active" invisible="1"/>
@@ -145,6 +146,17 @@
                                     <span class="o_stat_text text-muted" style="font-size:10px">Open in New Tab</span>
                                 </div>
                             </button>
+                            <!-- Open Payment Tracker in a new tab -->
+                            <button name="action_open_payment_tracker"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    icon="fa-money"
+                                    attrs="{'invisible': [('slug', '=', False)]}">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text">Payment Tracker</span>
+                                    <span class="o_stat_text text-muted" style="font-size:10px">Open in New Tab</span>
+                                </div>
+                            </button>
                             <!-- Remove duplicate players -->
                             <!-- Clear On-Stage Players -->
                             <button name="action_clear_stage"
@@ -230,6 +242,14 @@
                                         </span>
                                         <span class="o_tps_label">Unsold</span>
                                     </button>
+                                    <button type="object" name="action_view_jersey_players"
+                                            class="o_tps_btn o_tps_jersey"
+                                            attrs="{'invisible': [('enable_jersey_section', '=', False)]}">
+                                        <span class="o_tps_count o_tps_jersey_icon">
+                                            <i class="fa fa-list-ul"/>
+                                        </span>
+                                        <span class="o_tps_label">Jersey</span>
+                                    </button>
                                 </div>
 
                                 <separator string="Teams"/>
@@ -304,8 +324,14 @@
                                     <group string="Registration Link">
                                         <field name="registration_url" widget="CopyClipboardChar"
                                                readonly="1" string="Share URL"/>
+                                        <field name="payment_tracker_url" widget="CopyClipboardChar"
+                                               readonly="1" string="Payment Tracker URL"
+                                               attrs="{'invisible': [('slug', '=', False)]}"/>
                                         <field name="max_registrations"
                                                help="Set the maximum number of players that can register. Set to 0 for unlimited."/>
+                                        <field name="whatsapp_group_link"
+                                               placeholder="https://chat.whatsapp.com/..."
+                                               help="Players will see a 'Join WhatsApp Group' button after registering."/>
                                     </group>
                                     <group>
                                         <p class="text-muted" style="margin-top:6px;">

@@ -1,0 +1,1254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="payment_marker_template" name="Payment Marker">
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+  <title>Players Payment Status Tracker</title>
+  <link rel="shortcut icon" t-attf-href="/web/image/res.company/#{res_company.id}/favicon" type="image/x-icon"/>
+  <style>
+/* ═══════════════════════════════════════════════════════════════════
+   Players Payment Status Tracker  —  IPL-grade, mobile-first
+   ═══════════════════════════════════════════════════════════════════ */
+:root {
+  --navy:  #1a2744; --navy2: #263556; --navy3: #344776;
+  --gold:  #f4c20d;
+  --green: #16a34a; --green2: #dcfce7; --green3: #4ade80;
+  --red:   #dc2626; --red2:  #fee2e2; --red3:  #f87171;
+  --slate: #64748b; --slate2: #94a3b8; --slate3: #e2e8f0;
+  --bg:    #f0f4f8; --white: #fff;
+  --shadow: 0 2px 12px rgba(26,39,68,.10);
+  --r: 10px;
+  /* semantic tokens (light) */
+  --tx:    #1a2744; --tx2: #64748b; --tx3: #94a3b8;
+  --surf:  #fff;    --surf2: #fafbfd; --surf3: #f0f4f8;
+  --bdr:   #e2e8f0; --bdr2: #f1f5f9;
+  --input-bg: #f8fafc;
+}
+/* ── DARK THEME ── */
+[data-theme="dark"] {
+  --navy:  #0f172a; --navy2: #1e293b; --navy3: #334155;
+  --bg:    #0f172a; --white: #1e293b;
+  --slate3: #334155; --slate2: #64748b; --slate: #94a3b8;
+  --green2: rgba(22,163,74,.2); --red2: rgba(220,38,38,.2);
+  --shadow: 0 2px 16px rgba(0,0,0,.45);
+  --tx:    #e2e8f0; --tx2: #94a3b8; --tx3: #64748b;
+  --surf:  #1e293b; --surf2: #162032; --surf3: #0f172a;
+  --bdr:   #334155; --bdr2: #263040;
+  --input-bg: #1a2744;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--tx); min-height: 100vh; transition: background .25s, color .25s; }
+a { text-decoration: none; }
+
+/* ── NAV ── */
+.pm-nav { background: var(--navy); color: #fff; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 200; box-shadow: 0 3px 12px rgba(0,0,0,.28); }
+.pm-nav-brand { display: flex; align-items: center; gap: 10px; }
+.pm-nav-logo  { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: var(--navy2); }
+.pm-nav-logo-fb { width: 40px; height: 40px; border-radius: 8px; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 900; color: var(--navy); flex-shrink: 0; }
+.pm-nav-title { font-size: .94rem; font-weight: 700; color: var(--gold); }
+.pm-nav-sub   { font-size: .76rem; color: rgba(255,255,255,.65); margin-top: 1px; }
+.pm-app-logo-img { height: 28px; width: auto; display: block; opacity: .95; }
+.pm-nav-divider  { width: 1px; height: 32px; background: rgba(255,255,255,.2); flex-shrink: 0; margin: 0 4px; }
+.pm-back-btn  { display: inline-flex; align-items: center; gap: 4px; padding: 6px 13px; border-radius: 7px; border: 1.5px solid rgba(255,255,255,.25); background: rgba(255,255,255,.1); color: #fff; font-size: .84rem; font-weight: 600; cursor: pointer; transition: background .15s; }
+.pm-back-btn:hover { background: rgba(255,255,255,.2); }
+
+/* ── STATS BANNER ── */
+.pm-banner { background: var(--navy); padding: 0 16px 14px; }
+.pm-stats-row { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; }
+.pm-stat-chip { text-align: center; min-width: 48px; }
+.pm-stat-num  { font-size: 1.5rem; font-weight: 800; color: #fff; line-height: 1; }
+.pm-stat-lbl  { font-size: .66rem; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: rgba(255,255,255,.55); margin-top: 2px; }
+.pm-stat-chip.s-paid   .pm-stat-num { color: var(--green3); }
+.pm-stat-chip.s-unpaid .pm-stat-num { color: var(--red3); }
+.pm-progress-wrap { flex: 1; height: 8px; background: rgba(255,255,255,.15); border-radius: 99px; overflow: hidden; }
+.pm-progress-bar  { height: 100%; background: linear-gradient(90deg, var(--green3), var(--green)); border-radius: 99px; transition: width .4s; }
+.pm-state-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.pm-ss { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 99px; font-size: .74rem; font-weight: 700; white-space: nowrap; }
+.pm-ss-draft   { background: rgba(100,116,139,.3); color: #94a3b8; }
+.pm-ss-auction { background: rgba(245,158,11,.25);  color: #fbbf24; }
+.pm-ss-sold    { background: rgba(22,163,74,.25);   color: var(--green3); }
+.pm-ss-unsold  { background: rgba(220,38,38,.25);   color: var(--red3); }
+
+/* ── TOOLBAR ── */
+.pm-toolbar { background: var(--surf); border-bottom: 1.5px solid var(--bdr); position: sticky; top: 61px; z-index: 100; }
+.pm-toolbar-search { padding: 10px 14px 0; }
+.pm-search-wrap { position: relative; }
+.pm-search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--tx3); font-size: .9rem; pointer-events: none; }
+.pm-search { width: 100%; padding: 8px 12px 8px 34px; border: 1.5px solid var(--bdr); border-radius: 8px; font-size: .95rem; color: var(--tx); background: var(--input-bg); outline: none; transition: border-color .2s, box-shadow .2s; }
+.pm-search:focus { border-color: var(--navy3); background: var(--surf); box-shadow: 0 0 0 3px rgba(26,39,68,.08); }
+.pm-tabs { display: flex; gap: 4px; padding: 8px 14px 0; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.pm-tabs::-webkit-scrollbar { display: none; }
+.pm-tab { padding: 4px 13px; border-radius: 99px; border: 1.5px solid var(--bdr); background: var(--surf); cursor: pointer; font-size: .84rem; font-weight: 600; color: var(--tx2); white-space: nowrap; transition: all .15s; }
+.pm-tab:hover { border-color: var(--navy3); color: var(--tx); }
+.pm-tab.active           { background: var(--navy);  color: #fff; border-color: var(--navy); }
+.pm-tab.active.t-draft   { background: #64748b; border-color: #64748b; }
+.pm-tab.active.t-auction { background: #d97706; border-color: #d97706; }
+.pm-tab.active.t-sold    { background: #16a34a; border-color: #16a34a; }
+.pm-tab.active.t-unsold  { background: #dc2626; border-color: #dc2626; }
+.pm-filters { display: flex; gap: 6px; padding: 8px 14px 10px; flex-wrap: wrap; align-items: center; }
+.pm-select { flex: 1; min-width: 130px; max-width: 200px; padding: 6px 10px; border: 1.5px solid var(--bdr); border-radius: 7px; font-size: .88rem; color: var(--tx); background: var(--input-bg); cursor: pointer; outline: none; }
+.pm-select:focus { border-color: var(--navy3); }
+.pm-dir-btn { padding: 6px 12px; border: 1.5px solid var(--bdr); border-radius: 7px; background: var(--input-bg); cursor: pointer; font-size: .95rem; color: var(--tx); transition: background .15s; }
+.pm-dir-btn:hover { background: var(--surf3); }
+.pm-count-lbl { margin-left: auto; font-size: .83rem; color: var(--tx2); white-space: nowrap; font-weight: 600; }
+
+/* ── TEAM QUICK-FILTER CHIPS ── */
+.pm-team-chips { display: flex; gap: 6px; padding: 6px 14px 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; border-top: 1px solid var(--bdr2); }
+.pm-team-chips::-webkit-scrollbar { display: none; }
+.pm-team-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px 4px 5px; border-radius: 99px; border: 1.5px solid var(--bdr); background: var(--surf); cursor: pointer; font-size: .82rem; font-weight: 600; color: var(--tx2); white-space: nowrap; transition: all .15s; flex-shrink: 0; }
+.pm-team-chip:hover { border-color: var(--navy3); color: var(--navy); background: var(--surf3); }
+.pm-team-chip.active { background: var(--gold); color: var(--navy); border-color: var(--gold); font-weight: 700; }
+.pm-team-chip-logo { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(0,0,0,.08); background: var(--surf3); flex-shrink: 0; }
+.pm-team-chip-logo-fb { width: 24px; height: 24px; border-radius: 50%; background: var(--navy2); display: flex; align-items: center; justify-content: center; font-size: .6rem; font-weight: 800; color: #fff; flex-shrink: 0; text-transform: uppercase; }
+.pm-team-chip-all { border-style: dashed; padding: 4px 13px; }
+.pm-team-chip-all.active { background: var(--navy); color: #fff; border-color: var(--navy); border-style: solid; }
+.pm-team-chips-wrap { display: none; }
+.pm-team-chips-wrap.has-teams { display: block; }
+
+/* ── TABLE (≥768px) ── */
+.pm-table-wrap { border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow); }
+.pm-table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.pm-table thead tr { background: var(--navy); }
+.pm-table th { padding: 11px 12px; text-align: left; color: #fff; font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; border-right: 1px solid rgba(255,255,255,.08); }
+.pm-table th:last-child { border-right: none; }
+.pm-table th.sortable { cursor: pointer; user-select: none; }
+.pm-table th.sortable:hover { background: var(--navy2); }
+.pm-table th.sorted { background: var(--navy3); }
+.pm-table th .si { margin-left: 4px; opacity: .45; font-size: .8rem; }
+.pm-table th.sorted .si { opacity: 1; color: var(--gold); }
+.pm-table td { padding: 9px 12px; border-bottom: 1px solid var(--bdr2); vertical-align: middle; background: var(--surf); color: var(--tx); }
+.pm-table tr:last-child td { border-bottom: none; }
+.pm-table tbody tr:nth-child(even) td { background: var(--surf2); }
+.pm-table tbody tr:hover td { background: var(--surf3) !important; }
+.pm-group-row td { background: var(--surf3) !important; padding: 6px 12px; border-top: 2px solid var(--navy); }
+.pm-group-row-label { font-weight: 700; font-size: .84rem; color: var(--tx); text-transform: uppercase; letter-spacing: .4px; }
+.pm-group-row-count { font-size: .78rem; color: var(--tx2); margin-left: 8px; }
+
+/* Player cell */
+.pm-player-cell { display: flex; align-items: center; gap: 8px; }
+.pm-thumb { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; object-position: top center; border: 2px solid var(--bdr); flex-shrink: 0; background: #e8f0fe; }
+.pm-pname { font-weight: 600; color: var(--tx); font-size: .95rem; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase; }
+.pm-prole { font-size: .73rem; color: var(--tx2); margin-top: 1px; }
+
+/* State badge */
+.pm-badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; white-space: nowrap; }
+.pm-badge-draft   { background: #f1f5f9; color: #64748b; }
+.pm-badge-auction { background: #fef3c7; color: #d97706; }
+.pm-badge-sold    { background: #dcfce7; color: #16a34a; }
+.pm-badge-unsold  { background: #fee2e2; color: #dc2626; }
+
+/* Toggle */
+.pm-pay-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 14px; border-radius: 8px; border: 2px solid; cursor: pointer; font-size: .82rem; font-weight: 700; transition: background .15s, border-color .15s, color .15s; white-space: nowrap; }
+.pm-pay-btn.is-paid   { background: #f0fdf4; border-color: #22c55e; color: #15803d; }
+.pm-pay-btn.is-paid:hover   { background: #dcfce7; border-color: #16a34a; }
+.pm-pay-btn.is-unpaid { background: #fff1f2; border-color: #f87171; color: #dc2626; }
+.pm-pay-btn.is-unpaid:hover { background: #fee2e2; border-color: #ef4444; }
+.pm-pay-btn.pm-pay-saving   { opacity: .5; pointer-events: none; }
+
+/* ── CARDS (mobile) ── */
+.pm-cards-wrap { display: flex; flex-direction: column; gap: 10px; }
+.pm-card { background: var(--surf); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; border-left: 4px solid var(--bdr); }
+.pm-card-draft   { border-left-color: #64748b; }
+.pm-card-auction { border-left-color: #f59e0b; }
+.pm-card-sold    { border-left-color: #16a34a; }
+.pm-card-unsold  { border-left-color: #dc2626; }
+.pm-card-head { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--bdr2); }
+.pm-card-photo { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; object-position: top center; border: 2px solid var(--bdr); flex-shrink: 0; background: #e8f0fe; }
+.pm-card-info { flex: 1; min-width: 0; }
+.pm-card-name { font-weight: 700; font-size: 1rem; color: var(--tx); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase; }
+.pm-card-meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; flex-wrap: wrap; }
+.pm-card-sl { font-size: .74rem; font-weight: 700; color: var(--tx3); margin-left: auto; flex-shrink: 0; }
+.pm-card-body { display: grid; grid-template-columns: 1fr 1fr; }
+.pm-card-field { padding: 7px 12px; border-bottom: 1px solid var(--bdr2); }
+.pm-card-field:nth-child(even) { border-left: 1px solid var(--bdr2); }
+.pm-fl { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--tx3); margin-bottom: 2px; }
+.pm-fv { font-size: .9rem; color: var(--tx); font-weight: 500; }
+.pm-card-pay { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--surf2); }
+.pm-card-pay-lbl { font-size: .82rem; font-weight: 600; color: var(--tx2); }
+
+/* Group header */
+.pm-gh { background: var(--navy); color: #fff; padding: 7px 14px; font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; display: flex; align-items: center; justify-content: space-between; border-radius: 8px 8px 0 0; margin-top: 6px; }
+.pm-gh-count { font-size: .76rem; opacity: .65; font-weight: 400; }
+
+/* Empty */
+.pm-empty { text-align: center; padding: 56px 24px; color: var(--slate); }
+.pm-empty-ico { font-size: 3rem; margin-bottom: 14px; opacity: .6; }
+.pm-empty-txt { font-size: 1.05rem; }
+
+/* Toast */
+.pm-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(10px); padding: 10px 22px; border-radius: 8px; font-size: .82rem; font-weight: 600; z-index: 9999; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; white-space: nowrap; }
+.pm-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.pm-toast-ok  { background: var(--green); color: #fff; }
+.pm-toast-err { background: var(--red);   color: #fff; }
+.pm-toast-inf { background: var(--navy);  color: #fff; }
+
+/* Content wrapper */
+.pm-content { max-width: 1440px; margin: 0 auto; padding: 16px; }
+
+/* ── EXPORT BUTTON + DROPDOWN ── */
+.pm-export-wrap { position: relative; display: inline-block; }
+.pm-export-btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 13px; border-radius: 7px; border: 1.5px solid rgba(255,255,255,.25); background: rgba(255,255,255,.1); color: #fff; font-size: .75rem; font-weight: 600; cursor: pointer; transition: background .15s; user-select: none; }
+.pm-export-btn:hover { background: rgba(255,255,255,.2); }
+.pm-export-menu { display: none; position: absolute; right: 0; top: calc(100% + 6px); background: var(--surf); border: 1.5px solid var(--bdr); border-radius: 9px; box-shadow: 0 8px 24px rgba(0,0,0,.18); z-index: 300; min-width: 160px; overflow: hidden; }
+.pm-export-wrap.open .pm-export-menu { display: block; }
+.pm-export-item { display: flex; align-items: center; gap: 8px; padding: 10px 16px; font-size: .8rem; font-weight: 600; color: var(--tx); cursor: pointer; transition: background .1s; white-space: nowrap; }
+.pm-export-item:hover { background: var(--surf3); }
+.pm-export-item-icon { font-size: 1rem; }
+
+/* ── THEME TOGGLE ── */
+.pm-theme-btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 7px; border: 1.5px solid rgba(255,255,255,.25); background: rgba(255,255,255,.1); color: #fff; font-size: .8rem; cursor: pointer; transition: background .15s; }
+.pm-theme-btn:hover { background: rgba(255,255,255,.2); }
+
+/* ── PAYMENT PROOF BUTTON + LIGHTBOX ── */
+.pm-proof-btn { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 7px; border: 1.5px solid var(--bdr); background: var(--surf3); color: var(--tx2); cursor: pointer; font-size: 1rem; transition: background .15s, border-color .15s; }
+.pm-proof-btn:hover { background: #eff6ff; border-color: #3b82f6; color: #2563eb; }
+.pm-upload-btn { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 7px; border: 1.5px solid #22c55e; background: #f0fdf4; color: #16a34a; cursor: pointer; font-size: 1rem; transition: background .15s, border-color .15s; }
+.pm-upload-btn:hover { background: #dcfce7; border-color: #15803d; }
+.pm-upload-btn.uploading { opacity: .6; pointer-events: none; }
+.pm-unlink-btn { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 7px; border: 1.5px solid #f87171; background: #fff1f2; color: #dc2626; cursor: pointer; font-size: .85rem; transition: background .15s, border-color .15s; }
+.pm-unlink-btn:hover { background: #fee2e2; border-color: #b91c1c; }
+/* Lightbox overlay */
+.pm-lb { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.82); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
+.pm-lb.open { display: flex; }
+.pm-lb-box { background: var(--surf); border-radius: 14px; overflow: hidden; max-width: 92vw; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 24px 64px rgba(0,0,0,.5); }
+.pm-lb-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--navy); color: #fff; flex-shrink: 0; }
+.pm-lb-title { font-size: .92rem; font-weight: 700; color: var(--gold); }
+.pm-lb-close { background: none; border: none; color: rgba(255,255,255,.7); font-size: 1.4rem; cursor: pointer; line-height: 1; padding: 0 4px; }
+.pm-lb-close:hover { color: #fff; }
+.pm-lb-img-wrap { overflow: auto; display: flex; align-items: center; justify-content: center; padding: 16px; flex: 1; min-height: 0; min-width: 320px; }
+.pm-lb-img { max-width: 100%; max-height: calc(90vh - 80px); object-fit: contain; border-radius: 6px; }
+.pm-lb-msg { text-align: center; color: var(--tx2); font-size: .9rem; padding: 24px; }
+.pm-lb-msg-ico { font-size: 2.5rem; display: block; margin-bottom: 10px; opacity: .5; }
+.pm-lb-spin { font-size: 2rem; color: var(--tx3); }
+
+/* ── PRINT SECTION (hidden on screen, visible when printing) ── */
+.pm-print-only { display: none; }
+@media print {
+  * { transition: none !important; }
+  .pm-nav, .pm-toolbar, .pm-toast, .pm-export-wrap, .pm-theme-btn, .pm-back-btn, .pm-banner { display: none !important; }
+  .pm-content { padding: 0 !important; max-width: none !important; }
+  .pm-table-wrap { display: block !important; box-shadow: none; }
+  .pm-cards-wrap { display: none !important; }
+  .pm-pay-btn { border: none !important; background: none !important; padding: 0 !important; font-weight: 700; }
+  .pm-pay-btn.is-paid   { color: #16a34a !important; }
+  .pm-pay-btn.is-unpaid { color: #dc2626 !important; }
+  .pm-print-only { display: block !important; margin-bottom: 16px; border-bottom: 2px solid #1a2744; padding-bottom: 12px; }
+  .pm-print-brand-row { display: flex !important; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .pm-print-app-brand { display: flex !important; align-items: center; gap: 8px; }
+  .pm-print-app-icon  { height: 34px; width: auto; }
+  .pm-print-app-name  { font-size: 1.1rem; font-weight: 900; color: #1a2744; letter-spacing: -.3px; }
+  .pm-print-app-tag   { font-size: .6rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+  .pm-print-header { font-size: .9rem; color: #000; }
+  .pm-print-title { font-size: 1.3rem; font-weight: 800; color: #1a2744; margin-bottom: 4px; }
+  .pm-print-meta  { font-size: .72rem; color: #555; margin-bottom: 2px; }
+  .pm-print-paid  { color: #16a34a; font-weight: 700; }
+  .pm-print-unpaid{ color: #dc2626; font-weight: 700; }
+  .pm-table th { background: #1a2744 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .pm-table tbody tr:nth-child(even) td { background: #f5f7fa !important; -webkit-print-color-adjust: exact; }
+}
+
+/* Responsive */
+@media (max-width: 767px) {
+  .pm-table-wrap { display: none !important; }
+  .pm-cards-wrap { display: flex !important; }
+  .pm-count-lbl  { display: none; }
+  .pm-select     { max-width: none; }
+}
+@media (min-width: 768px) {
+  .pm-table-wrap { display: block !important; }
+  .pm-cards-wrap { display: none !important; }
+  .pm-content { padding: 20px; }
+}
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ─────────────────────────────────────────── -->
+<nav class="pm-nav">
+  <div class="pm-nav-brand">
+    <img class="pm-app-logo-img" src="/auction_module/static/img/logo.svg" alt="AuctionChamp"/>
+    <div class="pm-nav-divider"></div>
+    <t t-if="tournament and tournament.logo">
+      <img class="pm-nav-logo" t-attf-src="/web/image/auction.tournament/#{tournament.id}/logo" alt="Logo"/>
+    </t>
+    <t t-else="">
+      <div class="pm-nav-logo-fb">&#127955;</div>
+    </t>
+    <div>
+      <div class="pm-nav-title">Players Payment Status Tracker</div>
+      <div class="pm-nav-sub"><t t-esc="tournament.name if tournament else 'No Tournament Assigned'"/></div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button class="pm-theme-btn" id="pm-theme-btn" title="Toggle dark/light mode">&#9728;&#65039;</button>
+    <button class="pm-theme-btn" id="pm-refresh-btn" title="Refresh data">&#8635;</button>
+    <div class="pm-export-wrap" id="pm-export-wrap">
+      <button class="pm-export-btn" id="pm-export-btn">&#8595; Export &#9660;</button>
+      <div class="pm-export-menu" id="pm-export-menu">
+        <div class="pm-export-item" id="pm-export-csv"><span class="pm-export-item-icon">&#128202;</span> Export Excel (.xls)</div>
+        <div class="pm-export-item" id="pm-export-pdf"><span class="pm-export-item-icon">&#128438;</span> Export PDF</div>
+      </div>
+    </div>
+    <a href="/web" class="pm-back-btn">&#8592; Back</a>
+  </div>
+</nav>
+
+<!-- ── STATS BANNER ─────────────────────────────────── -->
+<div class="pm-banner">
+  <div class="pm-stats-row">
+    <div class="pm-stat-chip">
+      <div class="pm-stat-num" id="pm-total">0</div>
+      <div class="pm-stat-lbl">Total</div>
+    </div>
+    <div class="pm-progress-wrap">
+      <div class="pm-progress-bar" id="pm-bar" style="width:0%"></div>
+    </div>
+    <div class="pm-stat-chip s-paid">
+      <div class="pm-stat-num" id="pm-paid-n">0</div>
+      <div class="pm-stat-lbl">&#10003; Paid</div>
+    </div>
+    <div class="pm-stat-chip s-unpaid">
+      <div class="pm-stat-num" id="pm-unpaid-n">0</div>
+      <div class="pm-stat-lbl">&#10007; Unpaid</div>
+    </div>
+  </div>
+  <div class="pm-state-chips">
+    <span class="pm-ss pm-ss-draft"   id="ss-draft">&#9899; Draft 0/0</span>
+    <span class="pm-ss pm-ss-auction" id="ss-auction">&#128992; Auction 0/0</span>
+    <span class="pm-ss pm-ss-sold"    id="ss-sold">&#128994; Sold 0/0</span>
+    <span class="pm-ss pm-ss-unsold"  id="ss-unsold">&#128308; Unsold 0/0</span>
+  </div>
+</div>
+
+<!-- ── TOOLBAR ──────────────────────────────────────── -->
+<div class="pm-toolbar">
+  <div class="pm-toolbar-search">
+    <div class="pm-search-wrap">
+      <span class="pm-search-icon">&#128269;</span>
+      <input id="pm-search" class="pm-search" type="text"
+             placeholder="Search by name, serial no, team, manager, contact&#8230;"
+             autocomplete="off" autocorrect="off"/>
+    </div>
+  </div>
+  <div class="pm-tabs">
+    <button class="pm-tab active"    data-state="all">All</button>
+    <button class="pm-tab t-draft"   data-state="draft">Draft</button>
+    <button class="pm-tab t-auction" data-state="auction">In Auction</button>
+    <button class="pm-tab t-sold"    data-state="sold">Sold</button>
+    <button class="pm-tab t-unsold"  data-state="unsold">Unsold</button>
+  </div>
+  <!-- Team quick-filter chips — rendered by JS from PM_TEAMS -->
+  <div class="pm-team-chips-wrap" id="pm-team-chips-wrap">
+    <div class="pm-team-chips" id="pm-team-chips"></div>
+  </div>
+  <div class="pm-filters">
+    <select id="pm-pay-filter" class="pm-select">
+      <option value="all">&#128179; All Payments</option>
+      <option value="paid">&#9989; Paid</option>
+      <option value="unpaid">&#10060; Unpaid</option>
+    </select>
+    <select id="pm-group-by" class="pm-select">
+      <option value="none">&#8862; No Grouping</option>
+      <option value="state">Group by State</option>
+      <option value="team">Group by Team</option>
+      <option value="payment">Group by Payment</option>
+      <option value="tier">Group by Tier</option>
+    </select>
+    <select id="pm-sort-by" class="pm-select">
+      <option value="sl_no">Sort: Sl No</option>
+      <option value="name">Sort: Name</option>
+      <option value="contact">Sort: Contact</option>
+      <option value="amount_paid">Sort: Payment</option>
+      <option value="team">Sort: Team</option>
+      <option value="manager">Sort: Manager</option>
+      <option value="state">Sort: State</option>
+      <option value="tier">Sort: Tier</option>
+    </select>
+    <button id="pm-dir-btn" class="pm-dir-btn" title="Toggle sort direction">&#8593;</button>
+    <span class="pm-count-lbl" id="pm-count">0 players</span>
+  </div>
+</div>
+
+<!-- ── PRINT HEADER (hidden on screen, shown when printing) ── -->
+<div class="pm-print-only" id="pm-print-header">
+  <div class="pm-print-brand-row">
+    <div class="pm-print-app-brand">
+      <img class="pm-print-app-icon" src="/auction_module/static/description/icon.png" alt="AuctionChamp"/>
+      <div>
+        <div class="pm-print-app-name">AuctionChamp</div>
+        <div class="pm-print-app-tag">Auction Management Platform</div>
+      </div>
+    </div>
+  </div>
+  <div class="pm-print-title" id="pm-print-title">Players Payment Status Tracker</div>
+  <div class="pm-print-meta" id="pm-print-tourn"></div>
+  <div class="pm-print-meta" id="pm-print-meta"></div>
+  <div class="pm-print-meta" id="pm-print-date"></div>
+</div>
+
+<!-- ── CONTENT ──────────────────────────────────────── -->
+<div class="pm-content">
+
+  <!-- Desktop table -->
+  <div class="pm-table-wrap">
+    <table class="pm-table">
+      <thead>
+        <tr>
+          <th class="sortable" data-sort="sl_no">#<span class="si">&#8597;</span></th>
+          <th>Player</th>
+          <th class="sortable" data-sort="contact">Contact<span class="si">&#8597;</span></th>
+          <th class="sortable" data-sort="amount_paid">Payment<span class="si">&#8597;</span></th>
+          <th class="sortable" data-sort="team">Team<span class="si">&#8597;</span></th>
+          <th class="sortable" data-sort="manager">Manager<span class="si">&#8597;</span></th>
+          <th class="sortable" data-sort="state">State<span class="si">&#8597;</span></th>
+          <th title="Payment Proof">&#129534;</th>
+        </tr>
+      </thead>
+      <tbody id="pm-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- Mobile cards -->
+  <div class="pm-cards-wrap" id="pm-cards"></div>
+
+  <!-- Empty state -->
+  <div id="pm-empty" class="pm-empty" style="display:none">
+    <div class="pm-empty-ico">&#128269;</div>
+    <div class="pm-empty-txt">No players match the current filter.</div>
+  </div>
+
+</div>
+
+<!-- ── TOAST ─────────────────────────────────────────── -->
+<div id="pm-toast" class="pm-toast pm-toast-ok"></div>
+<input type="file" id="pm-proof-file" accept="image/*" style="display:none"/>
+
+<!-- ── PAYMENT PROOF LIGHTBOX ─────────────────────────── -->
+<div class="pm-lb" id="pm-lb" role="dialog" aria-modal="true">
+  <div class="pm-lb-box">
+    <div class="pm-lb-head">
+      <span class="pm-lb-title" id="pm-lb-title">&#129534; Payment Proof</span>
+      <button class="pm-lb-close" id="pm-lb-close" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="pm-lb-img-wrap" id="pm-lb-img-wrap"></div>
+  </div>
+</div>
+
+<!-- ── Data injection (safe unicode-escaped JSON) ──── -->
+<script type="text/javascript">
+  var PM_PLAYERS    = <t t-raw="players_json"/>;
+  var PM_STATS      = <t t-raw="stats_json"/>;
+  var PM_TEAMS      = <t t-raw="teams_json"/>;
+  var PM_TOGGLE_URL = '<t t-esc="toggle_url"/>';
+  var PM_PROOF_BASE = '<t t-esc="proof_base_url"/>';
+  var PM_UPLOAD_URL = '<t t-esc="upload_url"/>';
+  var PM_UNLINK_URL = '<t t-esc="unlink_url"/>';
+</script>
+
+<!-- ── App logic (CDATA so JS syntax is unrestricted) ── -->
+<script type="text/javascript">
+//<![CDATA[
+(function () {
+  'use strict';
+
+  var PLAYERS = PM_PLAYERS || [];
+  var TEAMS   = PM_TEAMS   || [];
+
+  /* ── State ── */
+  var S = {
+    stateFilter: 'all',
+    payFilter:   'all',
+    teamFilter:  '',
+    groupBy:     'none',
+    sortField:   'sl_no',
+    sortDir:     'asc',
+    search:      '',
+  };
+
+  /* ── DOM refs ── */
+  var tbody    = document.getElementById('pm-tbody');
+  var cardsEl  = document.getElementById('pm-cards');
+  var emptyEl  = document.getElementById('pm-empty');
+  var countEl  = document.getElementById('pm-count');
+  var toastEl  = document.getElementById('pm-toast');
+  var totalEl  = document.getElementById('pm-total');
+  var paidNEl  = document.getElementById('pm-paid-n');
+  var unpaidNEl= document.getElementById('pm-unpaid-n');
+  var barEl    = document.getElementById('pm-bar');
+  var toastTmr = null;
+
+  /* ── HTML escape via DOM ── */
+  function esc(s) {
+    var d = document.createElement('div');
+    d.textContent = String(s || '');
+    return d.innerHTML;
+  }
+
+  function dash(v) {
+    return v ? esc(v) : '<span style="color:#94a3b8">\u2014</span>';
+  }
+
+  /* ── State badge ── */
+  function badge(st) {
+    var labels = {draft: 'Draft', auction: 'In Auction', sold: 'Sold', unsold: 'Unsold'};
+    return '<span class="pm-badge pm-badge-' + st + '">' + (labels[st] || st) + '</span>';
+  }
+
+  /* ── Toast ── */
+  function showToast(msg, cls) {
+    if (toastTmr) clearTimeout(toastTmr);
+    toastEl.textContent = msg;
+    toastEl.className = 'pm-toast ' + (cls || 'pm-toast-inf') + ' show';
+    toastTmr = setTimeout(function () { toastEl.classList.remove('show'); }, 2600);
+  }
+
+  /* ── Stats ── */
+  function renderStats() {
+    var total = PLAYERS.length;
+    var paid  = 0;
+    var byState = {
+      draft:   {t: 0, p: 0},
+      auction: {t: 0, p: 0},
+      sold:    {t: 0, p: 0},
+      unsold:  {t: 0, p: 0},
+    };
+    PLAYERS.forEach(function (p) {
+      if (p.amount_paid) paid++;
+      if (byState[p.state]) {
+        byState[p.state].t++;
+        if (p.amount_paid) byState[p.state].p++;
+      }
+    });
+    totalEl.textContent   = total;
+    paidNEl.textContent   = paid;
+    unpaidNEl.textContent = total - paid;
+    barEl.style.width     = (total > 0 ? Math.round(paid / total * 100) : 0) + '%';
+
+    var icons  = {draft: '\u26AB', auction: '\uD83D\uDFE1', sold: '\uD83D\uDFE2', unsold: '\uD83D\uDD34'};
+    var slabls = {draft: 'Draft', auction: 'Auction', sold: 'Sold', unsold: 'Unsold'};
+    Object.keys(byState).forEach(function (st) {
+      var el = document.getElementById('ss-' + st);
+      if (el) el.textContent = icons[st] + ' ' + slabls[st] + ' ' + byState[st].p + '/' + byState[st].t;
+    });
+  }
+
+  /* ── Filter + Sort ── */
+  function getFiltered() {
+    var r = PLAYERS.slice();
+    if (S.stateFilter !== 'all') {
+      r = r.filter(function (p) { return p.state === S.stateFilter; });
+    }
+    if (S.payFilter === 'paid')   r = r.filter(function (p) { return p.amount_paid; });
+    if (S.payFilter === 'unpaid') r = r.filter(function (p) { return !p.amount_paid; });
+    if (S.teamFilter) {
+      r = r.filter(function (p) { return p.team === S.teamFilter; });
+    }
+    if (S.search) {
+      var q = S.search.toLowerCase();
+      r = r.filter(function (p) {
+        return (p.name    || '').toLowerCase().indexOf(q) !== -1 ||
+               (p.contact || '').toLowerCase().indexOf(q) !== -1 ||
+               (p.team    || '').toLowerCase().indexOf(q) !== -1 ||
+               (p.manager || '').toLowerCase().indexOf(q) !== -1 ||
+               (p.tier    || '').toLowerCase().indexOf(q) !== -1 ||
+               String(p.sl_no || '').indexOf(q) !== -1;
+      });
+    }
+    var sf = S.sortField;
+    var sd = S.sortDir === 'asc' ? 1 : -1;
+    r.sort(function (a, b) {
+      var av = a[sf], bv = b[sf];
+      if (av == null) av = typeof bv === 'number' ? -Infinity : '';
+      if (bv == null) bv = typeof av === 'number' ? -Infinity : '';
+      if (typeof av === 'boolean') av = av ? 1 : 0;
+      if (typeof bv === 'boolean') bv = bv ? 1 : 0;
+      if (typeof av === 'string')  av = av.toLowerCase();
+      if (typeof bv === 'string')  bv = bv.toLowerCase();
+      if (av < bv) return -1 * sd;
+      if (av > bv) return  1 * sd;
+      return 0;
+    });
+    return r;
+  }
+
+  /* ── Row builder (table) ── */
+  function mkRow(p, idx) {
+    var chk = p.amount_paid ? ' checked' : '';
+    var paid = p.amount_paid ? '1' : '0';
+    return '<tr>' +
+      '<td>' + (p.sl_no || idx + 1) + '</td>' +
+      '<td><div class="pm-player-cell">' +
+        '<img class="pm-thumb" ' +
+             'src="/web/image/auction.team.player/' + p.id + '/photo" ' +
+             'onerror="this.onerror=null;this.src=\'/auction_module/static/img/default_icon.png\'" ' +
+             'loading="lazy" alt="">' +
+        '<div><div class="pm-pname">' + esc(p.name) + '</div>' +
+        (p.role ? '<div class="pm-prole">' + esc(p.role) + '</div>' : '') +
+        '</div></div></td>' +
+      '<td>' + dash(p.contact) + '</td>' +
+      '<td>' +
+        '<button class="pm-pay-btn ' + (p.amount_paid ? 'is-paid' : 'is-unpaid') + '" ' +
+                'data-pay-id="' + p.id + '" data-paid="' + paid + '">' +
+          (p.amount_paid ? '&#10003; Paid' : '&#10007; Unpaid') +
+        '</button>' +
+      '</td>' +
+      '<td>' + dash(p.team) + '</td>' +
+      '<td>' + dash(p.manager) + '</td>' +
+      '<td>' + badge(p.state) + '</td>' +
+      '<td style="text-align:center;white-space:nowrap">' +
+        (p.proof_att_id ? '<button class="pm-proof-btn" data-id="' + p.id + '" data-name="' + esc(p.name) + '" title="View payment proof" style="margin-right:3px">&#129534;</button>' : '') +
+        (p.proof_att_id ? '<button class="pm-unlink-btn" data-unlink-id="' + p.id + '" title="Remove payment proof" style="margin-right:3px">&#128465;</button>' : '') +
+        '<button class="pm-upload-btn" data-upload-id="' + p.id + '" title="Upload payment screenshot">&#128228;</button>' +
+      '</td>' +
+      '</tr>';
+  }
+
+  /* ── Card builder (mobile) ── */
+  function mkCard(p, idx) {
+    var chk  = p.amount_paid ? ' checked' : '';
+    var paid = p.amount_paid ? '1' : '0';
+    return '<div class="pm-card pm-card-' + p.state + '">' +
+      '<div class="pm-card-head">' +
+        '<img class="pm-card-photo" ' +
+             'src="/web/image/auction.team.player/' + p.id + '/photo" ' +
+             'onerror="this.onerror=null;this.src=\'/auction_module/static/img/default_icon.png\'" ' +
+             'loading="lazy" alt="">' +
+        '<div class="pm-card-info">' +
+          '<div class="pm-card-name">' + esc(p.name) + '</div>' +
+          '<div class="pm-card-meta">' + badge(p.state) +
+            (p.role ? '<span style="font-size:.6rem;color:#64748b">' + esc(p.role) + '</span>' : '') +
+          '</div>' +
+        '</div>' +
+        '<span class="pm-card-sl">#' + (p.sl_no || idx + 1) + '</span>' +
+      '</div>' +
+      '<div class="pm-card-body">' +
+        '<div class="pm-card-field"><div class="pm-fl">Contact</div><div class="pm-fv">' + dash(p.contact) + '</div></div>' +
+        '<div class="pm-card-field"><div class="pm-fl">Team</div><div class="pm-fv">' + dash(p.team) + '</div></div>' +
+        '<div class="pm-card-field"><div class="pm-fl">Manager</div><div class="pm-fv">' + dash(p.manager) + '</div></div>' +
+        '<div class="pm-card-field"><div class="pm-fl">Tier</div><div class="pm-fv">' + dash(p.tier) + '</div></div>' +
+      '</div>' +
+      '<div class="pm-card-pay">' +
+        '<span class="pm-card-pay-lbl">Payment Status</span>' +
+        '<div style="display:flex;align-items:center;gap:8px;">' +
+          (p.proof_att_id
+            ? '<button class="pm-proof-btn" data-id="' + p.id + '" data-name="' + esc(p.name) + '" title="View payment proof" style="margin-right:3px">&#129534;</button>'
+            : '') +
+          (p.proof_att_id
+            ? '<button class="pm-unlink-btn" data-unlink-id="' + p.id + '" title="Remove payment proof" style="margin-right:3px">&#128465;</button>'
+            : '') +
+          '<button class="pm-upload-btn" data-upload-id="' + p.id + '" title="Upload payment screenshot">&#128228;</button>' +
+          '<button class="pm-pay-btn ' + (p.amount_paid ? 'is-paid' : 'is-unpaid') + '" ' +
+                  'data-pay-id="' + p.id + '" data-paid="' + paid + '">' +
+            (p.amount_paid ? '&#10003; Paid' : '&#10007; Unpaid') +
+          '</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  /* ── Group helper ── */
+  function groupData(data) {
+    var groups = {}, order = [];
+    var stateLabels = {draft: 'Draft', auction: 'In Auction', sold: 'Sold', unsold: 'Unsold'};
+    data.forEach(function (p) {
+      var key;
+      if      (S.groupBy === 'state')   key = p.state;
+      else if (S.groupBy === 'team')    key = p.team    || '(No Team)';
+      else if (S.groupBy === 'payment') key = p.amount_paid ? 'Paid' : 'Unpaid';
+      else if (S.groupBy === 'tier')    key = p.tier    || '(No Tier)';
+      else key = '__all__';
+      if (!groups[key]) { groups[key] = []; order.push(key); }
+      groups[key].push(p);
+    });
+    return order.map(function (k) {
+      var label = S.groupBy === 'state' ? (stateLabels[k] || k) : k;
+      return {key: k, label: label, players: groups[k]};
+    });
+  }
+
+  /* ── Render ── */
+  function render() {
+    var data = getFiltered();
+    countEl.textContent = data.length + ' player' + (data.length === 1 ? '' : 's');
+    emptyEl.style.display = data.length === 0 ? '' : 'none';
+
+    var tbHtml = '', carHtml = '';
+
+    if (S.groupBy === 'none') {
+      data.forEach(function (p, i) {
+        tbHtml  += mkRow(p, i);
+        carHtml += mkCard(p, i);
+      });
+    } else {
+      groupData(data).forEach(function (g) {
+        tbHtml  += '<tr class="pm-group-row"><td colspan="8">' +
+                   '<span class="pm-group-row-label">' + esc(g.label) + '</span>' +
+                   '<span class="pm-group-row-count">' + g.players.length + ' players</span>' +
+                   '</td></tr>';
+        carHtml += '<div class="pm-gh"><span>' + esc(g.label) + '</span>' +
+                   '<span class="pm-gh-count">' + g.players.length + ' players</span></div>';
+        g.players.forEach(function (p, i) {
+          tbHtml  += mkRow(p, i);
+          carHtml += mkCard(p, i);
+        });
+      });
+    }
+
+    tbody.innerHTML  = tbHtml;
+    cardsEl.innerHTML = carHtml;
+    attachToggles();
+  }
+
+  /* ── Toggle payment (delegated, attached once) ── */
+  function attachToggles() { /* no-op — handled by delegated listener below */ }
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('button.pm-pay-btn[data-pay-id]');
+    if (!btn) return;
+    var pid  = parseInt(btn.getAttribute('data-pay-id'), 10);
+    var prev = btn.getAttribute('data-paid') === '1';
+    var next = !prev;
+
+    /* optimistic UI update */
+    btn.classList.add('pm-pay-saving');
+
+    fetch(PM_TOGGLE_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        jsonrpc: '2.0', id: 1, method: 'call',
+        params: {player_id: pid, paid: next},
+      }),
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d.result && d.result.success) {
+        /* update master array then re-render */
+        for (var i = 0; i < PLAYERS.length; i++) {
+          if (PLAYERS[i].id === pid) { PLAYERS[i].amount_paid = next; break; }
+        }
+        render();
+        showToast(next ? '\u2705 Marked as Paid' : '\u274C Marked as Unpaid',
+                  next ? 'ok' : 'err');
+      } else {
+        btn.classList.remove('pm-pay-saving');
+        showToast('\u26A0\uFE0F Could not save. Try again.', 'err');
+      }
+    })
+    .catch(function () {
+      btn.classList.remove('pm-pay-saving');
+      showToast('\u26A0\uFE0F Network error.', 'err');
+    });
+  });
+
+  /* ── Sort UI sync ── */
+  function syncSortUI() {
+    document.querySelectorAll('.pm-table th.sortable').forEach(function (th) {
+      var si = th.querySelector('.si');
+      if (th.getAttribute('data-sort') === S.sortField) {
+        th.classList.add('sorted');
+        if (si) si.textContent = S.sortDir === 'asc' ? '\u2191' : '\u2193';
+      } else {
+        th.classList.remove('sorted');
+        if (si) si.textContent = '\u2195';
+      }
+    });
+    var sd = document.getElementById('pm-sort-by');
+    if (sd) sd.value = S.sortField;
+    var db = document.getElementById('pm-dir-btn');
+    if (db) db.textContent = S.sortDir === 'asc' ? '\u2191' : '\u2193';
+  }
+
+  /* ── Upload proof ── */
+  var uploadingPid = null;
+  var proofFileInput = document.getElementById('pm-proof-file');
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('button.pm-upload-btn[data-upload-id]');
+    if (!btn) return;
+    uploadingPid = parseInt(btn.getAttribute('data-upload-id'), 10);
+    proofFileInput.value = '';
+    proofFileInput.click();
+  });
+
+  proofFileInput.addEventListener('change', function () {
+    if (!this.files || !this.files[0] || !uploadingPid) return;
+    var pid  = uploadingPid;
+    var file = this.files[0];
+
+    /* Disable all upload buttons for this player while uploading */
+    document.querySelectorAll('button.pm-upload-btn[data-upload-id="' + pid + '"]').forEach(function (b) {
+      b.classList.add('uploading');
+      b.textContent = '\u23F3';
+    });
+    showToast('Uploading screenshot\u2026', 'ok');
+
+    var fd = new FormData();
+    fd.append('file', file);
+    fd.append('player_id', pid);
+
+    fetch(PM_UPLOAD_URL, { method: 'POST', credentials: 'include', body: fd })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.success) {
+          /* Update in-memory player record */
+          for (var i = 0; i < PLAYERS.length; i++) {
+            if (PLAYERS[i].id === pid) {
+              PLAYERS[i].proof_data    = d.proof_data;
+              PLAYERS[i].proof_att_id  = 1;
+              PLAYERS[i].amount_paid   = true;
+              break;
+            }
+          }
+          render();
+          showToast('Screenshot uploaded \u2714 Player marked as Paid', 'ok');
+        } else {
+          showToast('Upload failed: ' + (d.error || 'Unknown error'), 'err');
+          document.querySelectorAll('button.pm-upload-btn[data-upload-id="' + pid + '"]').forEach(function (b) {
+            b.classList.remove('uploading'); b.textContent = '\uD83D\uDCE4';
+          });
+        }
+      })
+      .catch(function (err) {
+        showToast('Upload error: ' + err.message, 'err');
+        document.querySelectorAll('button.pm-upload-btn[data-upload-id="' + pid + '"]').forEach(function (b) {
+          b.classList.remove('uploading'); b.textContent = '\uD83D\uDCE4';
+        });
+      });
+  });
+
+  /* ── Unlink proof ── */
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('button.pm-unlink-btn[data-unlink-id]');
+    if (!btn) return;
+    var pid = parseInt(btn.getAttribute('data-unlink-id'), 10);
+    var p   = PLAYERS.find(function (x) { return x.id === pid; });
+    var name = p ? p.name : 'this player';
+    if (!confirm('Remove payment proof for ' + name + '?')) return;
+
+    var fd = new FormData();
+    fd.append('player_id', pid);
+    fetch(PM_UNLINK_URL, { method: 'POST', credentials: 'include', body: fd })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.success) {
+          for (var i = 0; i < PLAYERS.length; i++) {
+            if (PLAYERS[i].id === pid) {
+              PLAYERS[i].proof_att_id = 0;
+              PLAYERS[i].proof_data   = '';
+              break;
+            }
+          }
+          render();
+          showToast('Payment proof removed', 'ok');
+        } else {
+          showToast('Failed to remove: ' + (d.error || 'Unknown error'), 'err');
+        }
+      })
+      .catch(function (err) {
+        showToast('Error: ' + err.message, 'err');
+      });
+  });
+
+  /* ── Init ── */
+  function init() {
+    initTheme();
+    renderStats();
+    initTeamChips();
+
+    /* ── Theme toggle ── */
+    var themeBtn = document.getElementById('pm-theme-btn');
+    if (themeBtn) {
+      themeBtn.addEventListener('click', function () {
+        var cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        var next = cur === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+        localStorage.setItem('pm-theme', next);
+      });
+    }
+
+    /* ── Refresh button ── */
+    var refreshBtn = document.getElementById('pm-refresh-btn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', function () {
+        refreshBtn.style.opacity = '.4';
+        refreshBtn.style.pointerEvents = 'none';
+        location.reload();
+      });
+    }
+
+    /* ── Export dropdown toggle ── */
+    var exportWrap = document.getElementById('pm-export-wrap');
+    var exportBtn  = document.getElementById('pm-export-btn');
+    if (exportBtn && exportWrap) {
+      exportBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        exportWrap.classList.toggle('open');
+      });
+      document.addEventListener('click', function () { exportWrap.classList.remove('open'); });
+    }
+
+    var csvBtn = document.getElementById('pm-export-csv');
+    if (csvBtn) csvBtn.addEventListener('click', function () { exportExcel(); exportWrap.classList.remove('open'); });
+
+    var pdfBtn = document.getElementById('pm-export-pdf');
+    if (pdfBtn) pdfBtn.addEventListener('click', function () { exportPDF(); exportWrap.classList.remove('open'); });
+
+    /* Search */
+    document.getElementById('pm-search').addEventListener('input', function () {
+      S.search = this.value.trim();
+      render();
+    });
+
+    /* State tabs */
+    document.querySelectorAll('.pm-tab').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.pm-tab').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        S.stateFilter = btn.getAttribute('data-state');
+        render();
+      });
+    });
+
+    /* Payment filter */
+    document.getElementById('pm-pay-filter').addEventListener('change', function () {
+      S.payFilter = this.value;
+      render();
+    });
+
+    /* Group by */
+    document.getElementById('pm-group-by').addEventListener('change', function () {
+      S.groupBy = this.value;
+      render();
+    });
+
+    /* Sort by dropdown */
+    document.getElementById('pm-sort-by').addEventListener('change', function () {
+      S.sortField = this.value;
+      S.sortDir = 'asc';
+      syncSortUI();
+      render();
+    });
+
+    /* Sort direction */
+    document.getElementById('pm-dir-btn').addEventListener('click', function () {
+      S.sortDir = S.sortDir === 'asc' ? 'desc' : 'asc';
+      syncSortUI();
+      render();
+    });
+
+    /* Column header click to sort */
+    document.querySelectorAll('.pm-table th.sortable').forEach(function (th) {
+      th.addEventListener('click', function () {
+        var f = th.getAttribute('data-sort');
+        if (S.sortField === f) {
+          S.sortDir = S.sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+          S.sortField = f;
+          S.sortDir = 'asc';
+        }
+        syncSortUI();
+        render();
+      });
+    });
+
+    syncSortUI();
+    render();
+  }
+
+  /* ── Team quick-filter chips ── */
+  function initTeamChips() {
+    var wrap = document.getElementById('pm-team-chips-wrap');
+    var container = document.getElementById('pm-team-chips');
+    if (!wrap || !container || !TEAMS.length) return;
+
+    wrap.classList.add('has-teams');
+
+    /* "All Teams" chip */
+    var allChip = document.createElement('button');
+    allChip.className = 'pm-team-chip pm-team-chip-all active';
+    allChip.textContent = 'All Teams';
+    allChip.setAttribute('data-team', '');
+    container.appendChild(allChip);
+
+    /* One chip per team */
+    TEAMS.forEach(function (t) {
+      var chip = document.createElement('button');
+      chip.className = 'pm-team-chip';
+      chip.setAttribute('data-team', t.name);
+
+      /* Logo or initials fallback */
+      if (t.has_logo) {
+        var img = document.createElement('img');
+        img.className = 'pm-team-chip-logo';
+        img.src = '/web/image/auction.team/' + t.id + '/logo';
+        img.alt = '';
+        img.onerror = function () {
+          /* swap to initials on load error */
+          var fb = document.createElement('span');
+          fb.className = 'pm-team-chip-logo-fb';
+          fb.textContent = (t.name || '?').slice(0, 2);
+          chip.replaceChild(fb, img);
+        };
+        chip.appendChild(img);
+      } else {
+        var fb = document.createElement('span');
+        fb.className = 'pm-team-chip-logo-fb';
+        fb.textContent = (t.name || '?').slice(0, 2);
+        chip.appendChild(fb);
+      }
+
+      var lbl = document.createElement('span');
+      lbl.textContent = t.name;
+      chip.appendChild(lbl);
+      container.appendChild(chip);
+    });
+
+    /* Click handler */
+    container.addEventListener('click', function (e) {
+      var chip = e.target.closest('.pm-team-chip');
+      if (!chip) return;
+      container.querySelectorAll('.pm-team-chip').forEach(function (c) { c.classList.remove('active'); });
+      chip.classList.add('active');
+      S.teamFilter = chip.getAttribute('data-team');
+      render();
+    });
+  }
+
+  /* ── Theme ── */
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    var btn = document.getElementById('pm-theme-btn');
+    if (btn) btn.innerHTML = theme === 'dark' ? '&#9790;&#65039;' : '&#9728;&#65039;';
+  }
+
+  function initTheme() {
+    var saved = (typeof localStorage !== 'undefined' && localStorage.getItem('pm-theme')) || 'light';
+    applyTheme(saved);
+  }
+
+  /* ── XML escape for SpreadsheetML ── */
+  function escXml(s) {
+    return String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /* ── Filter label for exports ── */
+  function buildFilterLabel() {
+    var parts = [];
+    var stateMap = {all: 'All States', draft: 'Draft', auction: 'In Auction', sold: 'Sold', unsold: 'Unsold'};
+    parts.push('State: ' + (stateMap[S.stateFilter] || S.stateFilter));
+    if (S.teamFilter) parts.push('Team: ' + S.teamFilter);
+    if (S.payFilter !== 'all') parts.push('Payment: ' + (S.payFilter === 'paid' ? 'Paid' : 'Unpaid'));
+    if (S.search) parts.push('Search: "' + S.search + '"');
+    if (S.groupBy !== 'none') parts.push('Grouped by: ' + S.groupBy);
+    parts.push('Sort: ' + S.sortField + ' ' + (S.sortDir === 'asc' ? 'ASC' : 'DESC'));
+    return parts.join(' | ');
+  }
+
+  /* ── Excel Export (SpreadsheetML .xls with colour-coded rows) ── */
+  function exportExcel() {
+    var rows = getFiltered();
+    var ts = new Date().toISOString().slice(0, 10);
+    var navSub = document.querySelector('.pm-nav-sub');
+    var tournName = navSub ? navSub.textContent : 'Tournament';
+
+    var x = '';
+    x += '<?xml version="1.0" encoding="UTF-8"?>\r\n';
+    x += '<?mso-application progid="Excel.Sheet"?>\r\n';
+    x += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"';
+    x += ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"';
+    x += ' xmlns:x="urn:schemas-microsoft-com:office:excel">\r\n';
+    x += '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">';
+    x += '<Title>Players Payment Status Tracker</Title>';
+    x += '<Author>Auction Module</Author>';
+    x += '</DocumentProperties>\r\n';
+    x += '<Styles>\r\n';
+    x += '<Style ss:ID="hdr"><Alignment ss:Horizontal="Center"/><Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/><Interior ss:Color="#1A2744" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#F4C20D"/></Borders></Style>\r\n';
+    x += '<Style ss:ID="ttl"><Font ss:Bold="1" ss:Size="14" ss:Color="#1A2744"/></Style>\r\n';
+    x += '<Style ss:ID="meta"><Font ss:Italic="1" ss:Size="9" ss:Color="#64748B"/></Style>\r\n';
+    x += '<Style ss:ID="paid"><Interior ss:Color="#DCFCE7" ss:Pattern="Solid"/></Style>\r\n';
+    x += '<Style ss:ID="paid_c"><Interior ss:Color="#DCFCE7" ss:Pattern="Solid"/><Font ss:Bold="1" ss:Color="#15803D"/></Style>\r\n';
+    x += '<Style ss:ID="unp"><Interior ss:Color="#FEE2E2" ss:Pattern="Solid"/></Style>\r\n';
+    x += '<Style ss:ID="unp_c"><Interior ss:Color="#FEE2E2" ss:Pattern="Solid"/><Font ss:Bold="1" ss:Color="#DC2626"/></Style>\r\n';
+    x += '</Styles>\r\n';
+    x += '<Worksheet ss:Name="Payment Status">\r\n';
+    x += '<Table ss:DefaultColumnWidth="110">\r\n';
+    x += '<Column ss:Width="35"/><Column ss:Width="170"/><Column ss:Width="125"/>';
+    x += '<Column ss:Width="85"/><Column ss:Width="85"/><Column ss:Width="145"/>';
+    x += '<Column ss:Width="125"/><Column ss:Width="100"/>\r\n';
+    /* Title rows */
+    x += '<Row><Cell ss:StyleID="ttl" ss:MergeAcross="7"><Data ss:Type="String">Players Payment Status Tracker - ' + escXml(tournName) + '</Data></Cell></Row>\r\n';
+    x += '<Row><Cell ss:StyleID="meta" ss:MergeAcross="7"><Data ss:Type="String">' + escXml(buildFilterLabel()) + ' | ' + rows.length + ' players</Data></Cell></Row>\r\n';
+    x += '<Row><Cell ss:StyleID="meta" ss:MergeAcross="7"><Data ss:Type="String">Exported: ' + escXml(new Date().toLocaleString()) + '</Data></Cell></Row>\r\n';
+    x += '<Row/>\r\n';
+    /* Header row */
+    var hdrs = ['#', 'Player Name', 'Contact', 'Payment', 'State', 'Team', 'Manager', 'Tier'];
+    x += '<Row>';
+    hdrs.forEach(function (h) { x += '<Cell ss:StyleID="hdr"><Data ss:Type="String">' + escXml(h) + '</Data></Cell>'; });
+    x += '</Row>\r\n';
+    /* Data rows */
+    rows.forEach(function (p, i) {
+      var base = p.amount_paid ? 'paid' : 'unp';
+      var payCell = p.amount_paid ? 'paid_c' : 'unp_c';
+      x += '<Row>';
+      x += '<Cell ss:StyleID="' + base + '"><Data ss:Type="Number">' + (i + 1) + '</Data></Cell>';
+      x += '<Cell ss:StyleID="' + base + '"><Data ss:Type="String">' + escXml(p.name || '') + '</Data></Cell>';
+      x += '<Cell ss:StyleID="' + base + '"><Data ss:Type="String">' + escXml(p.contact || p.masked_contact || '') + '</Data></Cell>';
+      x += '<Cell ss:StyleID="' + payCell + '"><Data ss:Type="String">' + (p.amount_paid ? 'Paid' : 'Unpaid') + '</Data></Cell>';
+      x += '<Cell ss:StyleID="' + base + '"><Data ss:Type="String">' + escXml(p.state || '') + '</Data></Cell>';
+      x += '<Cell ss:StyleID="' + base + '"><Data ss:Type="String">' + escXml(p.team || '') + '</Data></Cell>';
+      x += '<Cell ss:StyleID="' + base + '"><Data ss:Type="String">' + escXml(p.manager || '') + '</Data></Cell>';
+      x += '<Cell ss:StyleID="' + base + '"><Data ss:Type="String">' + escXml(p.tier || '') + '</Data></Cell>';
+      x += '</Row>\r\n';
+    });
+    x += '</Table>\r\n</Worksheet>\r\n</Workbook>';
+
+    var blob = new Blob([x], {type: 'application/vnd.ms-excel;charset=utf-8;'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'payment_marker_' + ts + '.xls';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 600);
+    showToast('Excel exported (' + rows.length + ' rows)', 'pm-toast-ok');
+  }
+
+  /* ── PDF Export (popup window → print dialog) ── */
+  function exportPDF() {
+    var rows = getFiltered();
+    var navSub = document.querySelector('.pm-nav-sub');
+    var tournName = navSub ? navSub.textContent : '';
+    var filterLabel = buildFilterLabel();
+    var dateStr = new Date().toLocaleString();
+
+    var h = '';
+    h += '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+    h += '<title>Players Payment Status Tracker - ' + tournName + '</title>';
+    h += '<style>';
+    h += 'body{font-family:Arial,Helvetica,sans-serif;margin:24px;color:#111;font-size:12px;}';
+    h += '.hdr{border-bottom:2.5px solid #1a2744;padding-bottom:12px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}';
+    h += '.hdr-left{display:flex;align-items:center;gap:10px;}';
+    h += '.hdr-icon{height:38px;width:auto;}';
+    h += '.hdr-app-name{font-size:15px;font-weight:900;color:#1a2744;line-height:1.2;}';
+    h += '.hdr-app-tag{font-size:8px;color:#64748b;text-transform:uppercase;letter-spacing:1px;}';
+    h += '.hdr-right{text-align:right;}';
+    h += '.hdr-page-title{font-size:14px;font-weight:800;color:#1a2744;}';
+    h += '.hdr-tourn{font-size:10px;color:#64748b;margin-top:2px;}';
+    h += 'h1{font-size:17px;color:#1a2744;margin:0 0 4px;}';
+    h += '.meta{font-size:10px;color:#64748b;margin-bottom:2px;}';
+    h += 'table{width:100%;border-collapse:collapse;margin-top:14px;font-size:11px;}';
+    h += 'th{background:#1a2744;color:#fff;padding:7px 8px;text-align:left;-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
+    h += 'td{padding:5px 8px;border-bottom:1px solid #e2e8f0;vertical-align:middle;}';
+    h += 'tr.paid td{background:#dcfce7;-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
+    h += 'tr.unp td{background:#fee2e2;-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
+    h += '.p{color:#15803d;font-weight:700;}.u{color:#dc2626;font-weight:700;}';
+    h += '@media print{body{margin:10px;}@page{margin:1cm;}}';
+    h += '</style></head><body>';
+    h += '<div class="hdr">';
+    h += '  <div class="hdr-left">';
+    h += '    <img class="hdr-icon" src="/auction_module/static/description/icon.png" alt="AuctionChamp"/>';
+    h += '    <div><div class="hdr-app-name">AuctionChamp</div><div class="hdr-app-tag">Auction Management Platform</div></div>';
+    h += '  </div>';
+    h += '  <div class="hdr-right">';
+    h += '    <div class="hdr-page-title">&#128203; Players Payment Status Tracker</div>';
+    h += '    <div class="hdr-tourn">' + tournName + '</div>';
+    h += '  </div>';
+    h += '</div>';
+    h += '<div class="meta">' + filterLabel + ' &nbsp;|&nbsp; ' + rows.length + ' players</div>';
+    h += '<div class="meta">Generated: ' + dateStr + '</div>';
+    h += '<table><thead><tr>';
+    ['#','Player Name','Contact','Payment','State','Team','Manager','Tier'].forEach(function (c) {
+      h += '<th>' + c + '</th>';
+    });
+    h += '</tr></thead><tbody>';
+    rows.forEach(function (p, i) {
+      var paid = p.amount_paid;
+      var cls = paid ? 'paid' : 'unp';
+      function ex(s) {
+        return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+      h += '<tr class="' + cls + '">';
+      h += '<td>' + (i + 1) + '</td>';
+      h += '<td>' + ex(p.name || '') + '</td>';
+      h += '<td>' + ex(p.contact || p.masked_contact || '') + '</td>';
+      h += '<td><span class="' + (paid ? 'p' : 'u') + '">' + (paid ? '&#10003; Paid' : '&#10007; Unpaid') + '</span></td>';
+      h += '<td>' + ex(p.state || '') + '</td>';
+      h += '<td>' + ex(p.team || '') + '</td>';
+      h += '<td>' + ex(p.manager || '') + '</td>';
+      h += '<td>' + ex(p.tier || '') + '</td>';
+      h += '</tr>';
+    });
+    h += '</tbody></table></body></html>';
+
+    var pw = window.open('', '_blank', 'width=1100,height=750,menubar=yes,toolbar=yes');
+    if (!pw) {
+      showToast('Allow pop-ups for PDF export', 'pm-toast-err');
+      return;
+    }
+    pw.document.open();
+    pw.document.write(h);
+    pw.document.close();
+    pw.focus();
+    setTimeout(function () { pw.print(); }, 600);
+  }
+
+  /* boot */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  /* ── Payment Proof Lightbox ── */
+  var lbEl    = document.getElementById('pm-lb');
+  var lbTitle = document.getElementById('pm-lb-title');
+  var lbWrap  = document.getElementById('pm-lb-img-wrap');
+
+  function openProof(playerId, playerName) {
+    var pid = parseInt(playerId, 10);
+    var p   = null;
+    for (var i = 0; i < PLAYERS.length; i++) { if (PLAYERS[i].id === pid) { p = PLAYERS[i]; break; } }
+
+    lbTitle.textContent = '\uD83E\uDDFE ' + (playerName ? playerName + ' \u2014 ' : '') + 'Payment Proof';
+
+    if (!p || !p.proof_data) {
+      lbWrap.innerHTML = '<p style="color:var(--tx2);padding:24px;text-align:center;font-size:.95rem">No screenshot uploaded for this player.</p>';
+    } else {
+      lbWrap.innerHTML = '<img src="' + p.proof_data + '" style="max-width:100%;max-height:calc(90vh - 80px);object-fit:contain;border-radius:6px;display:block;margin:auto" alt="Payment proof"/>';
+    }
+
+    lbEl.classList.add('open');
+  }
+
+  function closeProof() {
+    lbEl.classList.remove('open');
+    lbWrap.innerHTML = '';
+  }
+
+  /* Wire lightbox close */
+  document.getElementById('pm-lb-close').addEventListener('click', closeProof);
+  lbEl.addEventListener('click', function (e) { if (e.target === lbEl) closeProof(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeProof(); });
+
+  /* Wire proof buttons (delegated — works for dynamically rendered rows/cards) */
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('button.pm-proof-btn[data-id]');
+    if (!btn) return;
+    openProof(btn.getAttribute('data-id'), btn.getAttribute('data-name'));
+  });
+
+})();
+//]]>
+</script>
+
+</body>
+</html>
+</template>
+</odoo>
