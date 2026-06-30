@@ -127,6 +127,48 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .mq-stat:last-child{border-right:none}
 .mq-sl{font-size:.56rem;text-transform:uppercase;letter-spacing:2px;color:var(--tx-d);margin-bottom:1px}
 .mq-sv{font-family:var(--hf);font-size:.95rem;font-weight:700;color:var(--accent)}
+/* Clickable stat tiles */
+.mq-stat-btn{cursor:pointer;transition:background .15s,box-shadow .15s;position:relative}
+.mq-stat-btn:hover{background:var(--bg-c)}
+.mq-stat-btn:hover .mq-sv{color:var(--accent2)}
+.mq-stat-btn::after{content:'▾';position:absolute;bottom:2px;right:4px;font-size:.45rem;color:var(--tx-d);opacity:.6}
+
+/* ═══ STATS OVERVIEW MODAL ════════════════════════════════════════════ */
+.sq-overlay{position:fixed;inset:0;z-index:1050;display:none;
+  align-items:flex-end;justify-content:center;
+  background:rgba(0,0,0,.65);backdrop-filter:blur(4px)}
+.sq-overlay.open{display:flex}
+.sq-panel{width:100%;max-width:640px;max-height:78vh;background:var(--bg-s);
+  border-radius:16px 16px 0 0;border-top:2px solid var(--div);
+  box-shadow:0 -8px 40px rgba(0,0,0,.55);display:flex;flex-direction:column;overflow:hidden;
+  animation:sqSlideUp .25s cubic-bezier(.34,1.1,.64,1)}
+@keyframes sqSlideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+.sq-header{display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;background:var(--bg-p);border-bottom:1px solid var(--div);flex-shrink:0}
+.sq-title{font-family:var(--hf);font-size:.82rem;font-weight:700;letter-spacing:3px;
+  text-transform:uppercase;color:var(--accent)}
+.sq-close{background:none;border:none;color:var(--tx);font-size:1.6rem;cursor:pointer;
+  width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  border-radius:6px;transition:all .2s}
+.sq-close:hover{background:rgba(220,20,60,.15);color:#e53935}
+.sq-body{overflow-y:auto;flex:1;padding:4px 0}
+.sq-empty{text-align:center;padding:40px;color:var(--tx-d);font-size:.88rem}
+.sq-player{display:flex;align-items:center;gap:12px;padding:9px 18px;
+  border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .12s}
+.sq-player:hover{background:var(--bg-c)}
+.sq-player:last-child{border-bottom:none}
+.sq-num{font-family:var(--hf);font-size:1rem;font-weight:700;color:var(--accent);
+  width:34px;flex-shrink:0;text-align:center}
+.sq-tier-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sq-info{flex:1;min-width:0}
+.sq-name{font-family:var(--hf);font-size:.88rem;font-weight:700;color:var(--tx);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sq-role{font-size:.62rem;color:var(--tx-d);letter-spacing:1px;text-transform:uppercase;margin-top:1px}
+.sq-badge{font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:10px;
+  flex-shrink:0;white-space:nowrap}
+.sq-badge.sold{background:rgba(218,165,32,.15);color:#DAA520;border:1px solid rgba(218,165,32,.4)}
+.sq-badge.unsold{background:rgba(220,20,60,.15);color:#DC143C;border:1px solid rgba(220,20,60,.4)}
+.sq-badge.available{background:rgba(255,255,255,.07);color:var(--tx-d);border:1px solid var(--div)}
 
 /* ═══ GRID ═══════════════════════════════════════════════════════════ */
 .mq-grid-hd{position:relative;z-index:10;display:flex;align-items:center;
@@ -922,9 +964,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
 <!-- ── STATS ────────────────────────────────────────────────── -->
 <div class="mq-stats">
-  <div class="mq-stat"><div class="mq-sl">Total</div><div class="mq-sv" id="sStat">—</div></div>
-  <div class="mq-stat"><div class="mq-sl">Remaining</div><div class="mq-sv" id="rStat">—</div></div>
-  <div class="mq-stat"><div class="mq-sl">Sold</div><div class="mq-sv" id="soldStat">—</div></div>
+  <div class="mq-stat mq-stat-btn" onclick="openStatModal('total')" title="View all players"><div class="mq-sl">Total</div><div class="mq-sv" id="sStat">—</div></div>
+  <div class="mq-stat mq-stat-btn" onclick="openStatModal('remaining')" title="View available players"><div class="mq-sl">Remaining</div><div class="mq-sv" id="rStat">—</div></div>
+  <div class="mq-stat mq-stat-btn" onclick="openStatModal('sold')" title="View sold players"><div class="mq-sl">Sold</div><div class="mq-sv" id="soldStat">—</div></div>
+  <div class="mq-stat mq-stat-btn" onclick="openStatModal('unsold')" title="View unsold players"><div class="mq-sl">Unsold</div><div class="mq-sv" id="uStat">—</div></div>
   <div class="mq-stat"><div class="mq-sl">Tournament</div>
     <div class="mq-sv" style="font-size:.72rem;letter-spacing:1px;">
       <t t-if="tournament"><t t-esc="tournament.name"/></t><t t-else="">—</t>
@@ -986,6 +1029,17 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         ↩ Bring Back to Auction
       </button>
     </div>
+  </div>
+</div>
+
+<!-- ── STATS OVERVIEW MODAL ──────────────────────────────────── -->
+<div id="sqOverlay" class="sq-overlay" onclick="sqBackdropClick(event)">
+  <div class="sq-panel">
+    <div class="sq-header">
+      <span class="sq-title" id="sqTitle">Players</span>
+      <button class="sq-close" onclick="closeStatModal()">&#215;</button>
+    </div>
+    <div class="sq-body" id="sqBody"></div>
   </div>
 </div>
 
@@ -1171,6 +1225,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   var currentPlayerTierName = '';
   var currentPlayerTierColor = '#3498db';
 
+  /* All players cache — used by stats modal (no extra API call needed) */
+  var _allPlayers = [];
+
   /* ── RPC helper ────────────────────────────────────────── */
   function rpc(url, params) {
     return fetch(url, {
@@ -1196,16 +1253,20 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       var sStat  = document.getElementById('sStat');
       var rStat  = document.getElementById('rStat');
       var sdStat = document.getElementById('soldStat');
+      var uStat  = document.getElementById('uStat');
       if (!grid) return;
       grid.innerHTML = '';
       if (!players.length) {
+        _allPlayers = [];
         if (empty) empty.style.display = 'block';
         if (badge) badge.textContent = '0 players';
         if (sStat) sStat.textContent = '0';
         if (rStat) rStat.textContent = '0';
         if (sdStat) sdStat.textContent = '0';
+        if (uStat) uStat.textContent = '0';
         return;
       }
+      _allPlayers = players;
       if (empty) empty.style.display = 'none';
       var soldCount = 0, unsoldCount = 0;
       players.forEach(function(p) {
@@ -1240,6 +1301,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       if (sStat)  sStat.textContent  = total;
       if (rStat)  rStat.textContent  = remaining;
       if (sdStat) sdStat.textContent = soldCount;
+      if (uStat)  uStat.textContent  = unsoldCount;
     }).catch(function(e) { console.error('loadGrid:', e); });
   }
 
@@ -1289,11 +1351,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
 
-    callKw('auction.team.player', 'read',
-      [[playerId], ['sl_no', 'name', 'role', 'batting_style', 'bowling_style', 'photo', 'tier_id', 'tier_color', 'state', 'contact', 'masked_contact', 'assigned_team_id']]
-    ).then(function(res) {
-      var p = (res.result || [])[0];
-      if (!p) { if (body) body.innerHTML = '<div class="pc-loading">Player not found.</div>'; return; }
+    /* Single call: read all player data + set on stage atomically.
+       Replaces 2–4 sequential/parallel callKw round-trips. */
+    rpc('/auction/player_quick_data/' + playerId, {}).then(function(res) {
+      var p = res.result;
+      if (!p || p.error) {
+        if (body) body.innerHTML = '<div class="pc-loading">Player not found.</div>';
+        return;
+      }
       currentPlayerName      = p.name || '';
       currentPlayerState     = p.state || '';
       currentPlayerRole      = p.role || '';
@@ -1302,48 +1367,28 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       currentPlayerTierName  = p.tier_id ? p.tier_id[1] : '';
       currentPlayerTierColor = p.tier_color || '#3498db';
 
-      if (p.state === 'sold' && p.assigned_team_id) {
-        var teamId = p.assigned_team_id[0];
-        /* Fetch team logo + sold points in parallel */
-        var pLogo   = callKw('auction.team', 'read', [[teamId], ['logo']]);
-        var pPoints = callKw('auction.auction.player', 'search_read', [], {
-          domain: [['player_id', '=', playerId]], fields: ['points'], limit: 1
-        });
-        Promise.all([pLogo, pPoints]).then(function(results) {
-          var logoData = (results[0].result || [])[0];
-          var ptsData  = (results[1].result || [])[0];
-          p.team_logo   = logoData && logoData.logo ? logoData.logo : '';
-          p.team_name   = p.assigned_team_id[1] || '';
-          p.sold_points = ptsData ? ptsData.points : 0;
-          renderPlayerCard(p, body);
-        }).catch(function() { renderPlayerCard(p, body); });
-      } else {
-        renderPlayerCard(p, body);
-      }
+      renderPlayerCard(p, body);
 
       if (actions) {
-        var btnUnsold = document.getElementById('btnUnsold');
-        var btnSell = document.getElementById('btnSell');
+        var btnUnsold    = document.getElementById('btnUnsold');
+        var btnSell      = document.getElementById('btnSell');
         var btnBringBack = document.getElementById('btnBringBack');
         if (p.state === 'sold') {
           actions.style.display = 'none';
         } else if (p.state === 'unsold') {
           actions.style.display = 'flex';
-          if (btnUnsold) btnUnsold.style.display = 'none';
-          if (btnSell) btnSell.style.display = 'none';
+          if (btnUnsold)    btnUnsold.style.display    = 'none';
+          if (btnSell)      btnSell.style.display      = 'none';
           if (btnBringBack) btnBringBack.style.display = '';
         } else {
           actions.style.display = 'flex';
-          if (btnUnsold) btnUnsold.style.display = '';
-          if (btnSell) btnSell.style.display = '';
+          if (btnUnsold)    btnUnsold.style.display    = '';
+          if (btnSell)      btnSell.style.display      = '';
           if (btnBringBack) btnBringBack.style.display = 'none';
         }
       }
-      /* Sync live board: mark this player as on-stage, then refresh ticker so
-         each team's max_call immediately reflects this player's tier cap. */
-      callKw('auction.team.player', 'action_set_on_stage', [[playerId]])
-        .then(function() { setTimeout(loadTicker, 200); })
-        .catch(function(){});
+      /* on_stage already set inside player_quick_data; refresh ticker. */
+      setTimeout(loadTicker, 200);
     }).catch(function() {
       if (body) body.innerHTML = '<div class="pc-loading">Error loading player.</div>';
     });
@@ -1493,7 +1538,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       _editSelectedTeamData = null;
       var teamsEl = document.getElementById('pcEditTeams');
       if (teamsEl) teamsEl.innerHTML = '<span style="opacity:.5;font-size:.8rem">Loading…</span>';
-      callKw('auction.team.player', 'get_all_teams_for_correction', [[currentPlayerId]])
+      rpc('/auction/player_correction_teams/' + currentPlayerId, {})
         .then(function(res) {
           var teams = res.result || [];
           if (!teamsEl) return;
@@ -1549,7 +1594,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     if (!_editSelectedTeamId) { alert('Please select a team'); return; }
     var saveBtn = document.querySelector('.pc-pts-edit-save');
     if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
-    callKw('auction.team.player', 'action_update_sale', [[currentPlayerId], newPts, _editSelectedTeamId])
+    rpc('/auction/player_update_sale', {player_id: currentPlayerId, new_points: newPts, new_team_id: _editSelectedTeamId})
       .then(function(res) {
         var d = res.result || {};
         if (d.success) {
@@ -2021,17 +2066,26 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
     var rollCount = 0;
     var maxRolls = 22;
+    var resultBroadcast = false;
     var rollInt = setInterval(function() {
       rollCount++;
       setMqDiceFace((rollCount % 6) + 1);
+      /* Broadcast result at frame 10 (1 second in) so the projector can
+         start settling while the selector still shows the full animation. */
+      if (rollCount === 10 && tid && !resultBroadcast) {
+        resultBroadcast = true;
+        callKw('auction.tournament', 'set_dice_state', [[tid], 'result', result]).catch(function(){});
+      }
       if (rollCount >= maxRolls) {
         clearInterval(rollInt);
         if (dice) dice.classList.remove('rolling');
         setMqDiceFace(((result - 1) % 6) + 1);
         showDiceResultPill(result);
         _diceRolling = false;
-        /* Broadcast: result */
-        if (tid) callKw('auction.tournament', 'set_dice_state', [[tid], 'result', result]).catch(function(){});
+        /* Ensure result is broadcast even if early broadcast was skipped */
+        if (!resultBroadcast && tid) {
+          callKw('auction.tournament', 'set_dice_state', [[tid], 'result', result]).catch(function(){});
+        }
         /* Reset after 7s */
         setTimeout(function() {
           if (tid) callKw('auction.tournament', 'set_dice_state', [[tid], 'idle', 0]).catch(function(){});
@@ -2080,11 +2134,60 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   /* ── Keyboard close ────────────────────────────────────── */
   document.addEventListener('keydown', function(e) {
     if (e.key !== 'Escape') return;
+    if (document.getElementById('sqOverlay').classList.contains('open')) { closeStatModal(); return; }
     if (document.getElementById('sellModal').classList.contains('open')) { closeSellModal(); return; }
     if (document.getElementById('unsoldModal').classList.contains('open')) { closeUnsoldConfirm(); return; }
     if (document.getElementById('playerDrawer').classList.contains('open')) { closePlayerDrawer(); return; }
     if (document.getElementById('bsDrawer').classList.contains('open')) { closeBidSummary(); }
   });
+
+  /* ── Stats overview modal ──────────────────────────────── */
+  window.openStatModal = function(type) {
+    var labels = {total: 'All Players', remaining: 'Available', sold: 'Sold', unsold: 'Unsold'};
+    var filtered = _allPlayers;
+    if (type === 'remaining') filtered = _allPlayers.filter(function(p) { return p.state !== 'sold' && p.state !== 'unsold'; });
+    else if (type === 'sold')   filtered = _allPlayers.filter(function(p) { return p.state === 'sold'; });
+    else if (type === 'unsold') filtered = _allPlayers.filter(function(p) { return p.state === 'unsold'; });
+
+    document.getElementById('sqTitle').textContent = (labels[type] || 'Players') + ' — ' + filtered.length;
+
+    var body = document.getElementById('sqBody');
+    if (!filtered.length) {
+      body.innerHTML = '<div class="sq-empty">No players in this category</div>';
+    } else {
+      body.innerHTML = filtered.map(function(p) {
+        var dotStyle = p.tier_color ? ' style="background:' + escHtml(p.tier_color) + '"' : '';
+        var badge = '';
+        if (p.state === 'sold') {
+          badge = '<span class="sq-badge sold">SOLD' + (p.team_name ? ' · ' + escHtml(p.team_name) : '') + (p.sold_points ? ' · ' + p.sold_points + 'pts' : '') + '</span>';
+        } else if (p.state === 'unsold') {
+          badge = '<span class="sq-badge unsold">UNSOLD</span>';
+        } else {
+          badge = '<span class="sq-badge available">AVAILABLE</span>';
+        }
+        return '<div class="sq-player" onclick="closeStatModal();openPlayerDrawer(' + p.id + ')">' +
+          '<span class="sq-num">#' + escHtml(String(p.serial)) + '</span>' +
+          '<div class="sq-tier-dot"' + dotStyle + '></div>' +
+          '<div class="sq-info">' +
+            '<div class="sq-name">' + escHtml(p.name || '') + '</div>' +
+            (p.role ? '<div class="sq-role">' + escHtml(p.role) + '</div>' : '') +
+          '</div>' +
+          badge +
+          '</div>';
+      }).join('');
+    }
+    document.getElementById('sqOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeStatModal = function() {
+    document.getElementById('sqOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  window.sqBackdropClick = function(e) {
+    if (e.target === document.getElementById('sqOverlay')) closeStatModal();
+  };
 
   /* ── Init ──────────────────────────────────────────────── */
   window._auctionReloadGrid = loadGrid;

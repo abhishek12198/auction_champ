@@ -726,9 +726,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
       var fc = 0;
       _diceTimer = setInterval(function() { fc++; setPjDiceFace((fc % 6) + 1); }, 120);
     } else {
-      /* 'result' — show a short roll then settle */
+      /* 'result' — quick settle: if already rolling skip to a short wind-down */
       dice.classList.add('rolling');
-      var rc = 0, maxRc = 16;
+      var rc = 0, maxRc = 5;
       _diceTimer = setInterval(function() {
         rc++;
         setPjDiceFace((rc % 6) + 1);
@@ -900,7 +900,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
     setTimeout(function() {
       try { renderPlayer(p); } catch(e) { console.error('[Projector] renderPlayer error:', e); }
       card.classList.add('visible');
-    }, 200);
+    }, 50);
   }
 
   function showWaiting() {
@@ -950,7 +950,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   }
 
   poll();
-  _pollTimer = setInterval(poll, 4000);
+  _pollTimer = setInterval(poll, 1500);
   setPjDiceFace(1);
 
   /* Fullscreen */

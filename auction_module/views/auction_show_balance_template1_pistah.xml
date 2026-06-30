@@ -1,775 +1,1054 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-
-<!-- ══════════════════════════════════════════════════════════════════════
-     Auction Bid Summary – Pistah Edition
-     "Tactical Command Center" UI
-     Template ID : auction_details_show_pistah
-     Route       : /auction/show/team/balance  (when theme == 'pistah')
-     ═══════════════════════════════════════════════════════════════════ -->
-
 <template id="auction_details_show_pistah" name="Auction Bid Summary – Pistah">
-  <html lang="en" t-att-data-balance-json-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/show/team/balance/json'">
+  <html lang="en" t-att-data-theme="theme"
+        t-att-data-balance-json-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/show/team/balance/json'">
     <head>
       <meta charset="UTF-8"/>
-  <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
       <link href="/auction_module/static/src/assets/css/bootstrap.min.css" rel="stylesheet"/>
-      <!-- Non-blocking Google Fonts load -->
       <link rel="preconnect" href="https://fonts.googleapis.com"/>
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
-      <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Exo+2:wght@300;400;500;600;700;800&amp;display=swap"
+      <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&amp;family=Barlow+Condensed:wght@400;500;600;700;800&amp;family=Teko:wght@500;600;700&amp;display=swap"
             rel="stylesheet" media="print" onload="this.media='all'"/>
-      <noscript><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Exo+2:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/></noscript>
-      <title>Bid Command – Pistah</title>
-
+      <noscript><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&amp;family=Barlow+Condensed:wght@400;500;600;700;800&amp;family=Teko:wght@500;600;700&amp;display=swap" rel="stylesheet"/></noscript>
+      <title>Auction Bid Summary – Pistah</title>
       <style>
-        /* ── Reset ───────────────────────────────────────────────────── */
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        /* ── Pistah design tokens ────────────────────────────────────── */
-        :root {
-          --p:          #6BBF4E;
-          --p-dk:       #2E7D32;
-          --p-br:       #A8E063;
-          --p-glow:     rgba(107,191,78,0.28);
-          --p-glow-s:   rgba(107,191,78,0.55);
-          --p-border:   rgba(107,191,78,0.38);
-          --bg:         #060e08;
-          --bg-s:       #0b1a0e;
-          --bg-p:       #0d1f11;
-          --bg-c:       #111f14;
-          --text:       #e8f5e9;
-          --text-dim:   rgba(232,245,233,0.52);
-          --divider:    rgba(107,191,78,0.18);
+        
+        :root,
+        [data-theme="pistah"] {
+          --bg:#060e08; --bg2:#0d1f11; --bg3:#112616;
+          --acc:#6BBF4E; --acc2:#9EE07A; --glow:rgba(107,191,78,.30);
+          --bdr:rgba(107,191,78,.18); --bdr2:rgba(255,255,255,.08);
+          --tx:#e8f5e9; --tx-d:rgba(232,245,233,.55); --tx-m:rgba(232,245,233,.30);
+          --hf:'Orbitron',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Teko',sans-serif;
+          --card-bg:rgba(13,31,17,.85); --card-bdr:rgba(107,191,78,.15);
         }
 
-        html, body {
-          background: var(--bg);
-          color: var(--text);
-          font-family: 'Exo 2', sans-serif;
+        * { box-sizing: border-box; }
+        html { min-height: 100%; background: var(--bg); }
+        body {
+          margin: 0;
           min-height: 100vh;
+          background:
+            radial-gradient(circle at 12% 18%, var(--glow) 0, transparent 28%),
+            radial-gradient(circle at 88% 10%, rgba(255,255,255,.05) 0, transparent 22%),
+            linear-gradient(180deg, var(--bg) 0%, var(--bg2) 45%, var(--bg3) 100%);
+          color: var(--tx);
+          font-family: var(--bf);
+          font-weight: 700;
+          letter-spacing: .02em;
+          overflow-x: hidden;
         }
-
-        /* ── Ambient radial glows ────────────────────────────────────── */
         body::before {
           content: '';
-          position: fixed; inset: 0; z-index: 0; pointer-events: none;
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
           background:
-            radial-gradient(ellipse 70% 55% at 10% 50%, rgba(107,191,78,.06) 0%, transparent 65%),
-            radial-gradient(ellipse 50% 70% at 90% 15%, rgba(46,125,50,.08) 0%, transparent 55%),
-            linear-gradient(180deg, #060e08 0%, #081208 100%);
+            linear-gradient(120deg, rgba(255,255,255,.03) 0%, transparent 22%, transparent 78%, rgba(255,255,255,.02) 100%),
+            repeating-linear-gradient(180deg, rgba(255,255,255,.015) 0 1px, transparent 1px 52px);
+          opacity: .55;
         }
-        /* Everything above the ambient layer */
-        header, section, main { position: relative; z-index: 1; }
+        a { color: inherit; text-decoration: none; }
+        button { font: inherit; color: inherit; }
+        img { display: block; max-width: 100%; }
 
-        /* ────────────────────────────────────────────────────────────── */
-        /* HEADER                                                         */
-        /* ────────────────────────────────────────────────────────────── */
-        .pc-header {
-          position: relative; z-index: 20;
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 0 clamp(16px, 5vw, 52px);
-          height: clamp(58px, 9vw, 78px);
-          background: linear-gradient(90deg, #030a04 0%, #081508 40%, #0a1c0c 70%, #030a04 100%);
-          border-bottom: 1.5px solid var(--p-border);
-          box-shadow: 0 2px 24px var(--p-glow), inset 0 -1px 0 rgba(107,191,78,.12);
-        }
-        /* Top 3-px accent stripe */
-        .pc-header::before {
-          content: '';
-          position: absolute; top: 0; left: 0; right: 0; height: 3px;
-          background: linear-gradient(90deg,
-            transparent 0%, var(--p-dk) 15%, var(--p) 40%,
-            var(--p-br) 50%, var(--p) 60%, var(--p-dk) 85%, transparent 100%);
-          box-shadow: 0 0 10px rgba(107,191,78,.6);
-        }
-        .pc-header-logo img {
-          height: clamp(30px, 5.5vw, 52px);
-          filter: drop-shadow(0 0 8px var(--p-glow-s));
-        }
-        .pc-live {
-          display: flex; align-items: center; gap: 7px;
-          font-family: 'Orbitron', sans-serif;
-          font-size: clamp(0.58rem, 1.4vw, 0.72rem);
-          font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
-          color: var(--p-br);
-        }
-        .pc-live-dot {
-          width: 8px; height: 8px; border-radius: 50%;
-          background: var(--p);
-          box-shadow: 0 0 7px var(--p-glow-s);
-          animation: blink 2s ease-in-out infinite;
-        }
-        @keyframes blink {
-          0%, 100% { opacity: 1;   box-shadow: 0 0 7px  var(--p-glow-s); }
-          50%       { opacity: 0.3; box-shadow: 0 0 14px var(--p-glow-s); }
-        }
-
-        /* ────────────────────────────────────────────────────────────── */
-        /* COMMAND STRIP (sub-header)                                     */
-        /* ────────────────────────────────────────────────────────────── */
-        .pc-cmd {
-          background: var(--bg-s);
-          border-bottom: 1px solid var(--divider);
-          padding: clamp(12px, 2.5vw, 22px) clamp(16px, 5vw, 52px);
-          display: flex; align-items: center;
-          justify-content: space-between; flex-wrap: wrap; gap: 14px;
-        }
-        .pc-cmd-left { display: flex; flex-direction: column; gap: 1px; }
-        .pc-tourn-name {
-          font-family: 'Orbitron', sans-serif;
-          font-size: clamp(0.6rem, 1.6vw, 0.82rem);
-          font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
-          color: var(--p);
-        }
-        .pc-tourn-desc {
-          font-size: clamp(0.62rem, 1.4vw, 0.74rem);
-          color: var(--text-dim);
-        }
-        .pc-title {
-          font-family: 'Orbitron', sans-serif;
-          font-size: clamp(1.05rem, 3.8vw, 2.1rem);
-          font-weight: 900; letter-spacing: 4px; text-transform: uppercase;
-          color: var(--p-br);
-          text-shadow: 0 0 22px var(--p-glow-s);
-          line-height: 1.1;
-          margin-top: 2px;
-        }
-
-        /* MODE TOGGLE  (TABLE | NODE) */
-        .pc-toggle {
-          display: flex; align-items: stretch;
-          background: var(--bg-p);
-          border: 1.5px solid var(--p-border);
-          border-radius: 6px; overflow: hidden;
-          flex-shrink: 0;
-        }
-        .pc-toggle-btn {
-          padding: clamp(7px, 1.4vw, 11px) clamp(14px, 3vw, 26px);
-          font-family: 'Orbitron', sans-serif;
-          font-size: clamp(0.58rem, 1.4vw, 0.7rem);
-          font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase;
-          color: var(--text-dim); background: transparent;
-          border: none; cursor: pointer;
-          display: flex; align-items: center; gap: 7px;
-          transition: all 0.2s; white-space: nowrap;
-        }
-        .pc-toggle-btn.active {
-          background: var(--p-dk);
-          color: var(--p-br);
-          box-shadow: inset 0 0 14px rgba(107,191,78,.22);
-          text-shadow: 0 0 8px var(--p-glow-s);
-        }
-        .pc-toggle-sep {
-          width: 1px; background: var(--p-border); align-self: stretch;
-        }
-
-        /* Tournament logo pill */
-        .pc-t-logo {
-          background: linear-gradient(135deg, #0a1a0c, #0d1f11);
-          border: 2px solid var(--p-border);
-          border-radius: 10px; padding: 6px;
-          box-shadow: 0 0 18px var(--p-glow);
-          flex-shrink: 0;
-        }
-
-        /* ────────────────────────────────────────────────────────────── */
-        /* SHARED CONTENT PADDING                                         */
-        /* ────────────────────────────────────────────────────────────── */
-        .pc-content {
-          padding: clamp(18px, 3.5vw, 36px) clamp(16px, 5vw, 52px);
-        }
-
-        /* ────────────────────────────────────────────────────────────── */
-        /* TABLE VIEW                                                     */
-        /* ────────────────────────────────────────────────────────────── */
-        .pc-table-wrap {
-          border: 1.5px solid var(--p-border);
-          border-radius: 10px; overflow: hidden;
-          box-shadow: 0 0 32px var(--p-glow), inset 0 0 0 1px rgba(107,191,78,.04);
-          overflow-x: auto;           /* horizontal scroll on tiny screens */
-        }
-
-        /* Header row */
-        .pc-th {
-          display: flex; align-items: center;
-          padding: 11px 22px;
-          background: var(--bg-p);
-          border-bottom: 1.5px solid var(--p-border);
-          font-family: 'Orbitron', sans-serif;
-          font-size: clamp(0.52rem, 1.1vw, 0.65rem);
-          font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase;
-          color: var(--p); column-gap: 12px;
-          min-width: 520px;           /* prevents columns collapsing below readable width */
-        }
-
-        /* Data rows */
-        .pc-tr {
-          display: flex; align-items: center;
-          padding: 13px 22px;
-          border-bottom: 1px solid var(--divider);
-          background: var(--bg-s);
-          position: relative; transition: background 0.18s;
-          column-gap: 12px;
-          min-width: 520px;
-        }
-        .pc-tr:last-child { border-bottom: none; }
-        /* Left edge glow on hover */
-        .pc-tr::before {
-          content: '';
-          position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-          background: linear-gradient(180deg, transparent, var(--p) 50%, transparent);
-          opacity: 0; transition: opacity 0.18s;
-        }
-        .pc-tr:hover { background: rgba(107,191,78,.045); }
-        .pc-tr:hover::before { opacity: 1; }
-
-        /* Column widths */
-        .pc-c-team   { flex: 0 0 clamp(150px, 22vw, 220px); }
-        .pc-c-mgr    { flex: 0 0 clamp(110px, 16vw, 170px); text-align: center; }
-        .pc-c-needed { flex: 0 0 clamp(80px, 11vw, 120px);  text-align: center; }
-        .pc-c-pts    { flex: 0 0 clamp(90px, 12vw, 130px);  text-align: center; }
-        .pc-c-call   { flex: 0 0 clamp(90px, 12vw, 130px);  text-align: center; }
-        .pc-c-act    { flex: 1 0 70px;                        text-align: right; }
-
-        /* Team cell contents */
-        .pc-team-cell { display: flex; align-items: center; gap: 11px; }
-        .pc-team-logo {
-          width: clamp(34px, 4.5vw, 44px); height: clamp(34px, 4.5vw, 44px);
-          border-radius: 6px;
-          border: 1.5px solid var(--p-border);
-          box-shadow: 0 0 8px var(--p-glow);
-          object-fit: cover; flex-shrink: 0;
-        }
-        .pc-team-name {
-          font-family: 'Orbitron', sans-serif;
-          font-size: clamp(0.6rem, 1.4vw, 0.76rem);
-          font-weight: 700; letter-spacing: 0.4px; color: var(--text);
-          line-height: 1.3;
-        }
-        .pc-mgr-text {
-          font-size: clamp(0.68rem, 1.4vw, 0.8rem); color: var(--text-dim);
-        }
-
-        /* Stat chip */
-        .pc-chip {
-          display: inline-flex; align-items: baseline; gap: 3px;
-          background: rgba(107,191,78,.09);
-          border: 1px solid var(--p-border);
-          border-radius: 4px;
-          padding: 4px 10px;
-          font-family: 'Orbitron', sans-serif;
-          font-size: clamp(0.66rem, 1.4vw, 0.8rem);
-          font-weight: 700; color: var(--p-br);
-          text-shadow: 0 0 6px var(--p-glow-s);
-        }
-        .pc-chip-u {
-          font-family: 'Exo 2', sans-serif;
-          font-size: 0.62em; font-weight: 400; color: var(--text-dim);
-        }
-
-        /* Engage button */
-        .pc-engage {
-          display: inline-flex; align-items: center; gap: 5px;
-          font-family: 'Orbitron', sans-serif;
-          font-size: clamp(0.52rem, 1.2vw, 0.63rem);
-          font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
-          text-decoration: none;
-          color: var(--p-br);
-          background: rgba(107,191,78,.10);
-          border: 1.5px solid var(--p-border);
-          border-radius: 5px; padding: 6px 11px;
-          transition: all 0.18s; white-space: nowrap;
-        }
-        .pc-engage:hover {
-          background: rgba(107,191,78,.24);
-          box-shadow: 0 0 12px var(--p-glow-s);
-          color: #fff;
-        }
-
-        /* ────────────────────────────────────────────────────────────── */
-        /* NODE (GRID) VIEW                                               */
-        /* ────────────────────────────────────────────────────────────── */
-        .pc-node-grid {
+        .bs2-hdr {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 100;
+          height: 68px;
+          padding: 0 18px;
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(clamp(240px, 26vw, 310px), 1fr));
-          gap: clamp(14px, 2.5vw, 24px);
+          grid-template-columns: minmax(0, 1.3fr) auto minmax(0, 1fr);
+          align-items: center;
+          gap: 14px;
+          background: linear-gradient(135deg, rgba(4,10,22,.94), rgba(9,18,34,.90));
+          border-bottom: 1px solid var(--bdr2);
+          backdrop-filter: blur(16px);
+          box-shadow: 0 16px 32px rgba(0,0,0,.35);
         }
-
-        .pc-node-card {
-          background: var(--bg-s);
-          border: 1.5px solid var(--p-border);
-          border-radius: 10px; overflow: hidden;
-          position: relative;
-          transition: transform 0.2s, box-shadow 0.2s;
+        .bs2-hdr-side {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          min-width: 0;
         }
-        .pc-node-card::after {
-          content: '';
-          position: absolute; inset: 0; pointer-events: none;
-          background: linear-gradient(135deg, rgba(107,191,78,.04) 0%, transparent 55%);
+        .bs2-left { justify-content: flex-start; }
+        .bs2-right { justify-content: flex-end; }
+        .bs2-back-btn,
+        .bs2-toggle-btn,
+        .bs2-fs-btn,
+        .bs2-engage {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          border-radius: 999px;
+          border: 1px solid var(--bdr);
+          background: rgba(255,255,255,.05);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 10px 24px rgba(0,0,0,.18);
+          transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+          white-space: nowrap;
         }
-        .pc-node-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 10px 36px var(--p-glow), 0 0 0 1px var(--p-border);
+        .bs2-back-btn,
+        .bs2-fs-btn {
+          height: 40px;
+          padding: 0 16px;
+          font-size: .92rem;
+          text-transform: uppercase;
+          letter-spacing: .11em;
         }
-
-        /* Top scan-stripe */
-        .pc-node-stripe {
-          height: 3px;
-          background: linear-gradient(90deg,
-            transparent 0%, var(--p-dk) 20%, var(--p) 50%, var(--p-dk) 80%, transparent 100%);
-          box-shadow: 0 0 8px rgba(107,191,78,.5);
+        .bs2-back-btn:hover,
+        .bs2-toggle-btn:hover,
+        .bs2-fs-btn:hover,
+        .bs2-engage:hover {
+          transform: translateY(-1px);
+          border-color: rgba(255,255,255,.22);
+          box-shadow: 0 12px 30px rgba(0,0,0,.22), 0 0 0 1px var(--bdr);
         }
-
-        .pc-node-body { padding: clamp(14px, 2vw, 20px) clamp(14px, 2vw, 20px); }
-
-        /* Team row inside card */
-        .pc-node-team-row {
-          display: flex; align-items: center; gap: 13px;
-          padding-bottom: clamp(10px, 1.8vw, 14px);
-          margin-bottom: clamp(10px, 1.8vw, 14px);
-          border-bottom: 1px solid var(--divider);
+        .bs2-back-btn {
+          color: var(--tx);
+          background: linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
         }
-        .pc-node-logo-wrap { position: relative; flex-shrink: 0; }
-        .pc-node-logo {
-          width: clamp(44px, 7vw, 58px); height: clamp(44px, 7vw, 58px);
-          border-radius: 8px;
-          border: 2px solid var(--p-border);
-          box-shadow: 0 0 12px var(--p-glow);
+        .bs2-t-logo {
+          width: 44px;
+          height: 44px;
+          border-radius: 14px;
           object-fit: cover;
+          border: 1px solid var(--bdr);
+          box-shadow: 0 0 0 3px rgba(255,255,255,.03), 0 10px 24px rgba(0,0,0,.20);
+          flex: 0 0 auto;
         }
-        /* Online pulse badge */
-        .pc-node-badge {
-          position: absolute; bottom: -4px; right: -4px;
-          width: 12px; height: 12px; border-radius: 50%;
-          background: var(--p);
-          border: 2px solid var(--bg-s);
-          box-shadow: 0 0 6px var(--p-glow-s);
-          animation: blink 2.4s ease-in-out infinite;
+        .bs2-t-meta {
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 1px;
         }
-        .pc-node-name {
-          font-family: 'Orbitron', sans-serif;
-          font-size: clamp(0.66rem, 1.7vw, 0.84rem);
-          font-weight: 700; letter-spacing: 0.5px; color: var(--text);
-          line-height: 1.25;
+        .bs2-t-name {
+          font-family: var(--hf);
+          font-size: 1.15rem;
+          font-weight: 900;
+          letter-spacing: .08em;
+          color: var(--tx);
+          text-transform: uppercase;
+          line-height: 1;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
-        .pc-node-mgr {
-          font-size: clamp(0.66rem, 1.4vw, 0.75rem);
-          color: var(--text-dim); margin-top: 3px;
+        .bs2-t-desc {
+          font-size: .78rem;
+          letter-spacing: .12em;
+          color: var(--tx-d);
+          text-transform: uppercase;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
-
-        /* 3-stat grid */
-        .pc-node-stats {
-          display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
-          margin-bottom: clamp(10px, 2vw, 14px);
-        }
-        .pc-node-stat {
-          background: var(--bg-p);
-          border: 1px solid var(--divider);
-          border-radius: 7px;
-          padding: clamp(7px, 1.5vw, 10px) 6px;
+        .bs2-title-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 2px;
           text-align: center;
         }
-        .pc-node-stat-lbl {
-          font-family: 'Orbitron', sans-serif;
-          font-size: clamp(0.48rem, 1.1vw, 0.58rem);
-          font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
-          color: var(--p); line-height: 1.25; margin-bottom: 5px;
+        .bs2-title {
+          font-family: var(--hf);
+          font-weight: 900;
+          letter-spacing: .16em;
+          font-size: 1.42rem;
+          line-height: 1;
+          text-transform: uppercase;
         }
-        .pc-node-stat-val {
-          font-family: 'Orbitron', sans-serif;
-          font-size: clamp(0.9rem, 2.2vw, 1.2rem);
-          font-weight: 900; color: var(--p-br);
-          text-shadow: 0 0 8px var(--p-glow-s);
+        .bs2-live {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-size: .8rem;
+          letter-spacing: .24em;
+          color: var(--acc2);
+          text-transform: uppercase;
+        }
+        .bs2-live-dot {
+          width: 9px;
+          height: 9px;
+          border-radius: 50%;
+          background: var(--acc2);
+          box-shadow: 0 0 0 0 var(--glow);
+          animation: livePulse 1.4s ease-in-out infinite;
+        }
+        .bs2-view-toggle {
+          display: inline-flex;
+          align-items: center;
+          padding: 4px;
+          border-radius: 999px;
+          background: rgba(255,255,255,.05);
+          border: 1px solid var(--bdr);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+        }
+        .bs2-toggle-btn {
+          min-width: 88px;
+          height: 34px;
+          padding: 0 16px;
+          border: 0;
+          background: transparent;
+          font-size: .9rem;
+          letter-spacing: .16em;
+          text-transform: uppercase;
+          color: var(--tx-d);
+          box-shadow: none;
+        }
+        .bs2-toggle-btn.active {
+          background: linear-gradient(135deg, var(--acc), var(--acc2));
+          color: #07101f;
+          border-color: transparent;
+          box-shadow: 0 8px 18px var(--glow);
+        }
+        .bs2-v-divider {
+          width: 1px;
+          height: 34px;
+          background: linear-gradient(180deg, transparent, var(--bdr2), transparent);
+        }
+        .bs2-fs-btn {
+          border: 1px solid var(--bdr);
+        }
+        .bs2-fs-ico {
+          font-size: 1rem;
           line-height: 1;
         }
-        .pc-node-stat-u {
-          font-family: 'Exo 2', sans-serif;
-          font-size: 0.62em; font-weight: 400; color: var(--text-dim);
+        .bs2-main {
+          position: relative;
+          z-index: 1;
+          padding: 76px 16px 18px;
         }
-
-        /* Card footer */
-        .pc-node-footer {
-          border-top: 1px solid var(--divider);
-          padding-top: clamp(9px, 1.8vw, 12px);
-          display: flex; justify-content: flex-end;
+        .bs2-panel {
+          width: 100%;
+          margin: 0 auto;
         }
-
-        /* ────────────────────────────────────────────────────────────── */
-        /* RESPONSIVE BREAKPOINTS                                         */
-        /* ────────────────────────────────────────────────────────────── */
-
-        /* Below 860px — hide Manager + Max Call columns in table */
-        @media (max-width: 860px) {
-          .pc-c-mgr, .pc-c-call { display: none !important; }
+        .bs2-table-wrap {
+          overflow-x: auto;
+          padding-bottom: 4px;
         }
-
-        /* Below 600px — hide Actions column; shrink node card columns */
-        @media (max-width: 600px) {
-          .pc-c-act { display: none !important; }
-          .pc-title { letter-spacing: 2px; }
-          .pc-node-grid {
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        .bs2-table {
+          width: 100%;
+          border-collapse: separate;
+          border-spacing: 0 6px;
+          min-width: 1140px;
+        }
+        .bs2-table thead th {
+          padding: 8px 12px;
+          font-family: var(--hf);
+          font-size: .78rem;
+          letter-spacing: .18em;
+          color: var(--tx-d);
+          text-transform: uppercase;
+          white-space: nowrap;
+        }
+        .bs2-row {
+          transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .bs2-row:hover {
+          transform: translateX(2px);
+          box-shadow: -3px 0 0 var(--acc), 0 16px 28px rgba(0,0,0,.18);
+        }
+        .bs2-row td {
+          padding: 12px;
+          background: var(--card-bg);
+          border-top: 1px solid var(--card-bdr);
+          border-bottom: 1px solid var(--card-bdr);
+          vertical-align: middle;
+          backdrop-filter: blur(18px);
+        }
+        .bs2-row td:first-child {
+          border-left: 1px solid var(--card-bdr);
+          border-radius: 18px 0 0 18px;
+        }
+        .bs2-row td:last-child {
+          border-right: 1px solid var(--card-bdr);
+          border-radius: 0 18px 18px 0;
+        }
+        .bs2-team-cell,
+        .bs2-card-head {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          min-width: 0;
+        }
+        .bs2-team-logo,
+        .bs2-card-logo,
+        .bs2-logo-fallback {
+          width: 52px;
+          height: 52px;
+          border-radius: 16px;
+          object-fit: cover;
+          border: 1px solid var(--bdr);
+          background: linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+          box-shadow: 0 12px 22px rgba(0,0,0,.16);
+          flex: 0 0 auto;
+        }
+        .bs2-logo-fallback {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-family: var(--hf);
+          font-size: 1.05rem;
+          color: var(--acc2);
+          text-transform: uppercase;
+        }
+        .bs2-team-copy,
+        .bs2-card-copy {
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+        .bs2-team-name,
+        .bs2-card-name {
+          font-family: var(--hf);
+          font-weight: 900;
+          letter-spacing: .08em;
+          line-height: .95;
+          text-transform: uppercase;
+        }
+        .bs2-team-name {
+          font-size: 1.22rem;
+        }
+        .bs2-card-name {
+          font-size: 0.92rem;
+        }
+        .bs2-manager,
+        .bs2-card-manager {
+          color: var(--tx-d);
+          font-size: .82rem;
+          letter-spacing: .12em;
+          text-transform: uppercase;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .bs2-purse-stack,
+        .bs2-card-purse {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .bs2-overline {
+          font-family: var(--hf);
+          font-size: .7rem;
+          letter-spacing: .18em;
+          color: var(--tx-d);
+          text-transform: uppercase;
+        }
+        .bs2-purse-line,
+        .bs2-card-purse-line,
+        .bs2-maxcall {
+          display: inline-flex;
+          align-items: flex-end;
+          gap: 8px;
+          line-height: .9;
+        }
+        .bs2-purse-value,
+        .bs2-maxcall-value,
+        .bs2-players-number,
+        .bs2-squad-value,
+        .bs2-card-purse-value,
+        .bs2-stat-figure {
+          font-family: var(--nf);
+          font-weight: 700;
+          letter-spacing: .04em;
+        }
+        .bs2-purse-value,
+        .bs2-maxcall-value {
+          font-size: 2.65rem;
+        }
+        .bs2-card-purse-value {
+          font-size: 3.28rem;
+        }
+        .bs2-unit {
+          font-size: 1rem;
+          color: var(--tx-d);
+          letter-spacing: .16em;
+          text-transform: uppercase;
+          margin-bottom: 5px;
+        }
+        .bs2-progress {
+          height: 10px;
+          border-radius: 999px;
+          overflow: hidden;
+          background: rgba(255,255,255,.08);
+          border: 1px solid rgba(255,255,255,.06);
+          box-shadow: inset 0 2px 8px rgba(0,0,0,.22);
+        }
+        .bs2-progress.bs2-progress-lg {
+          height: 8px;
+        }
+        .bs2-progress-fill {
+          height: 100%;
+          width: 0;
+          border-radius: inherit;
+          transition: width .8s cubic-bezier(.4,0,.2,1), filter .2s ease;
+          box-shadow: 0 0 16px rgba(255,255,255,.12);
+        }
+        .pf-high { background: linear-gradient(90deg,#16a34a,#4ade80); }
+        .pf-mid  { background: linear-gradient(90deg,#ca8a04,#fde047); }
+        .pf-low  { background: linear-gradient(90deg,#ea580c,#fb923c); }
+        .pf-crit { background: linear-gradient(90deg,#dc2626,#f87171); }
+        .bs2-pct-label {
+          font-size: .82rem;
+          letter-spacing: .12em;
+          color: var(--tx-d);
+          text-transform: uppercase;
+        }
+        .bs2-needed-chip {
+          min-width: 92px;
+          padding: 12px 16px;
+          border-radius: 18px;
+          display: inline-flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+          border: 1px solid var(--bdr2);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+        }
+        .bs2-players-number,
+        .bs2-squad-value,
+        .bs2-stat-figure {
+          font-size: 2.15rem;
+          line-height: .9;
+        }
+        .bs2-chip-label,
+        .bs2-stat-label {
+          margin-top: 4px;
+          font-size: .68rem;
+          letter-spacing: .18em;
+          text-transform: uppercase;
+          color: var(--tx-d);
+          white-space: nowrap;
+        }
+        .bs2-squad-wrap {
+          display: inline-flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .bs2-badge {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 132px;
+          padding: 8px 14px;
+          border-radius: 999px;
+          font-family: var(--hf);
+          font-size: .76rem;
+          font-weight: 900;
+          letter-spacing: .12em;
+          text-transform: uppercase;
+          white-space: nowrap;
+        }
+        .comfortable { background:rgba(22,163,74,.12); color:#4ade80; border:1.5px solid rgba(22,163,74,.35); }
+        .healthy     { background:rgba(20,184,166,.12); color:#2dd4bf; border:1.5px solid rgba(20,184,166,.35); }
+        .balanced    { background:rgba(202,138,4,.12); color:#fde047; border:1.5px solid rgba(202,138,4,.35); }
+        .tight       { background:rgba(234,88,12,.12); color:#fb923c; border:1.5px solid rgba(234,88,12,.35); }
+        .critical    { background:rgba(220,38,38,.12); color:#f87171; border:1.5px solid rgba(220,38,38,.4); animation: badgePulse 1.2s ease-in-out infinite; }
+        .bs2-access-cell {
+          text-align: right;
+        }
+        .bs2-engage {
+          height: 42px;
+          padding: 0 18px;
+          border-color: rgba(255,255,255,.12);
+          background: linear-gradient(135deg, var(--acc), var(--acc2));
+          color: #07101f;
+          font-size: .92rem;
+          letter-spacing: .12em;
+          text-transform: uppercase;
+          font-weight: 900;
+        }
+        .bs2-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          gap: 14px;
+        }
+        .bs2-card {
+          position: relative;
+          overflow: hidden;
+          min-height: 100%;
+          border-radius: 24px;
+          border: 1px solid var(--card-bdr);
+          background: var(--card-bg);
+          backdrop-filter: blur(22px);
+          box-shadow: 0 16px 34px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.06);
+          transition: transform .2s, box-shadow .2s;
+        }
+        .bs2-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 24px 42px rgba(0,0,0,.28), 0 0 0 1px var(--bdr);
+        }
+        .bs2-card-accent {
+          height: 3px;
+          background: var(--acc);
+          box-shadow: 0 0 24px var(--glow);
+        }
+        .bs2-card-body {
+          padding: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .bs2-card-head {
+          justify-content: flex-start;
+          align-items: center;
+          flex-wrap: nowrap;
+        }
+        .bs2-card-head .bs2-team-cell {
+          flex: 1 1 0;
+          min-width: 0;
+        }
+        .bs2-card-copy {
+          flex: 1 1 0;
+          min-width: 0;
+        }
+        .bs2-card-name {
+          white-space: normal;
+          overflow: visible;
+          text-overflow: unset;
+          word-break: break-word;
+        }
+        .bs2-card-status {
+          flex-shrink: 0;
+        }
+        .bs2-card-foot {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+        }
+        .bs2-card-stats {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 0;
+          border-top: 1px solid rgba(255,255,255,.06);
+          border-bottom: 1px solid rgba(255,255,255,.06);
+          background: rgba(255,255,255,.03);
+          border-radius: 18px;
+          overflow: hidden;
+        }
+        .bs2-stat-col {
+          padding: 14px 10px;
+          text-align: center;
+        }
+        .bs2-stat-col + .bs2-stat-col {
+          border-left: 1px solid rgba(255,255,255,.08);
+        }
+        .bs2-flash {
+          animation: flashUpdate .85s ease;
+          border-radius: 12px;
+        }
+        @keyframes livePulse {
+          0% { transform: scale(.92); opacity: .62; box-shadow: 0 0 0 0 var(--glow); }
+          70% { transform: scale(1.08); opacity: 1; box-shadow: 0 0 0 10px rgba(255,255,255,0); }
+          100% { transform: scale(.92); opacity: .62; box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+        }
+        @keyframes badgePulse {
+          0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220,38,38,.18); }
+          50% { transform: scale(1.04); box-shadow: 0 0 0 10px rgba(220,38,38,0); }
+        }
+        @keyframes flashUpdate {
+          0% { background-color: rgba(255,255,255,0); box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+          35% { background-color: rgba(255,255,255,.16); box-shadow: 0 0 0 6px rgba(255,255,255,.05); }
+          100% { background-color: rgba(255,255,255,0); box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+        }
+        @media (max-width: 1180px) {
+          .bs2-hdr {
+            height: auto;
+            padding: 12px 16px;
+            grid-template-columns: 1fr;
+            gap: 12px;
           }
+          .bs2-title-wrap { order: -1; }
+          .bs2-right,
+          .bs2-left { justify-content: center; }
+          .bs2-main { padding-top: 160px; }
         }
-
-        /* Below 480px — single-column node grid, tighter table padding */
-        @media (max-width: 480px) {
-          .pc-node-grid { grid-template-columns: 1fr; }
-          .pc-tr, .pc-th { padding-left: 14px; padding-right: 14px; }
-          .pc-content { padding-left: 12px; padding-right: 12px; }
-          .pc-cmd { padding-left: 12px; padding-right: 12px; }
-          .pc-header { padding-left: 12px; padding-right: 12px; }
-        }
-
-        /* ── Fullscreen button ───────────────────────────────────────────── */
-        .pc-fs-btn, .pc-back-btn {
-          display: inline-flex; align-items: center; gap: 7px;
-          padding: 6px 14px;
-          background: rgba(107,191,78,.10);
-          border: 1.5px solid var(--p-border);
-          border-radius: 6px;
-          color: var(--p-br);
-          font-family: 'Orbitron', sans-serif;
-          font-size: clamp(0.55rem, 1.2vw, 0.68rem);
-          font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
-          cursor: pointer; transition: background .2s, border-color .2s;
-          flex-shrink: 0; text-decoration: none;
-        }
-        .pc-fs-btn:hover, .pc-back-btn:hover { background: rgba(107,191,78,.25); border-color: var(--p); }
-        .pc-fs-btn .fs-enter,
-        .pc-fs-btn .fs-exit { display: inline-flex; align-items: center; gap: 6px; }
-        @media (max-width: 480px) {
-          .pc-fs-btn, .pc-back-btn { padding: 5px 9px; letter-spacing: 1px; }
+        @media (max-width: 680px) {
+          .bs2-main { padding-left: 10px; padding-right: 10px; }
+          .bs2-grid { grid-template-columns: 1fr; }
+          .bs2-card-head { flex-wrap: wrap; }
+          .bs2-card-status { margin-left: 0; }
+          .bs2-toggle-btn { min-width: 76px; }
+          .bs2-back-btn,
+          .bs2-fs-btn { padding: 0 12px; }
         }
       </style>
     </head>
-
     <body>
-
-      <!-- ══════════════════════════════════════════════════════════════
-           HEADER  —  Logo · Live indicator
-           ══════════════════════════════════════════════════════════════ -->
-      <header class="pc-header">
-        <div style="display:flex; align-items:center; gap:14px;">
-          <a class="pc-back-btn"
-             t-att-href="'/' + db_name + '/auction/projector/' + tournament_slug + '/'"
-             title="Back to Projector">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-              <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
-            </svg>
-            PROJECTOR
-          </a>
-          <div class="pc-header-logo">
-            <img src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ Logo"/>
+      <header class="bs2-hdr">
+        <div class="bs2-hdr-side bs2-left">
+          <a class="bs2-back-btn" t-att-href="'/' + db_name + '/auction/projector/' + tournament_slug + '/'">&#8592; PROJECTOR</a>
+          <t t-if="tournament and tournament.logo">
+            <img class="bs2-t-logo" t-att-src="image_data_uri(tournament.logo)" alt="Tournament logo"/>
+          </t>
+          <div class="bs2-t-meta">
+            <div class="bs2-t-name"><t t-esc="tournament.name if tournament and tournament.name else 'Auction Tournament'"/></div>
+            <div class="bs2-t-desc"><t t-esc="tournament.description if tournament and tournament.description else 'Live bid summary dashboard'"/></div>
           </div>
         </div>
-        <div style="display:flex; align-items:center; gap:14px;">
-          <div class="pc-live">
-            <span class="pc-live-dot"></span>
-            LIVE
+        <div class="bs2-title-wrap">
+          <div class="bs2-title">BID SUMMARY</div>
+          <div class="bs2-live"><span class="bs2-live-dot"></span><span>LIVE</span></div>
+        </div>
+        <div class="bs2-hdr-side bs2-right">
+          <div class="bs2-view-toggle" role="tablist" aria-label="View toggle">
+            <button type="button" id="btn-list" class="bs2-toggle-btn active" aria-pressed="true">LIST</button>
+            <button type="button" id="btn-grid" class="bs2-toggle-btn" aria-pressed="false">GRID</button>
           </div>
-          <button id="fs-btn" class="pc-fs-btn" type="button" title="Toggle Fullscreen">
-            <span class="fs-enter">
-              <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path d="M1.5 1h4a.5.5 0 0 1 0 1H2v3.5a.5.5 0 0 1-1 0v-4A.5.5 0 0 1 1.5 1zm9 0h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V2h-3.5a.5.5 0 0 1 0-1zM1 10.5a.5.5 0 0 1 1 0V14h3.5a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5zm13 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5h-4a.5.5 0 0 1 0-1H14v-3.5a.5.5 0 0 1 .5-.5z"/>
-              </svg>
-              FULLSCREEN
-            </span>
-            <span class="fs-exit" style="display:none">
-              <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path d="M5.5 0a.5.5 0 0 1 .5.5v4A1.5 1.5 0 0 1 4.5 6h-4a.5.5 0 0 1 0-1H4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 1 0zm5 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h3.5a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 9 4.5v-4a.5.5 0 0 1 1 0zM0 10.5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 6 11.5v4a.5.5 0 0 1-1 0V12a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zm9.5-.5a.5.5 0 0 1 .5.5v1.5a.5.5 0 0 0 .5.5h3.5a.5.5 0 0 1 0 1H11a1.5 1.5 0 0 1-1.5-1.5V10.5a.5.5 0 0 1 .5-.5z"/>
-              </svg>
-              EXIT
-            </span>
-          </button>
+          <div class="bs2-v-divider"></div>
+          <button type="button" class="bs2-fs-btn" id="fs-btn" aria-label="Toggle fullscreen"><span class="bs2-fs-ico">⛶</span><span class="bs2-fs-tx">FULL</span></button>
         </div>
       </header>
 
-      <!-- ══════════════════════════════════════════════════════════════
-           COMMAND STRIP  —  Tournament info · Title · Mode toggle · Logo
-           ══════════════════════════════════════════════════════════════ -->
-      <section class="pc-cmd">
-
-        <!-- Left: tournament name + description stacked above "BID COMMAND" -->
-        <div class="pc-cmd-left">
-          <t t-if="tournament">
-            <span class="pc-tourn-name"><t t-esc="tournament.name"/></span>
-            <span class="pc-tourn-desc"><t t-esc="tournament.description"/></span>
-          </t>
-          <span class="pc-title">Bid Command</span>
+      <main class="bs2-main">
+        <div class="bs2-panel" id="list-section">
+          <div class="bs2-table-wrap">
+            <table class="bs2-table">
+              <thead>
+                <tr>
+                  <th>Team</th>
+                  <th>Purse</th>
+                  <th>Needed</th>
+                  <th>Max Bid</th>
+                  <th>Squad</th>
+                  <th>Status</th>
+                  <t t-if="type == 'internal'"><th>Access</th></t>
+                </tr>
+              </thead>
+              <tbody>
+                <t t-foreach="teams" t-as="team">
+                  <t t-set="purse_pct" t-value="int(team.remaining_points * 100 // team.total_point) if team.total_point else 0"/>
+                  <t t-set="purse_cls" t-value="'pf-high' if purse_pct &gt;= 60 else ('pf-mid' if purse_pct &gt;= 30 else ('pf-low' if purse_pct &gt;= 10 else 'pf-crit'))"/>
+                  <t t-set="status_label" t-value="'COMFORTABLE' if purse_pct &gt;= 60 else ('HEALTHY' if purse_pct &gt;= 40 else ('BALANCED' if purse_pct &gt;= 25 else ('TIGHT' if purse_pct &gt;= 10 else 'CRITICAL')))"/>
+                  <t t-set="status_cls" t-value="'comfortable' if purse_pct &gt;= 60 else ('healthy' if purse_pct &gt;= 40 else ('balanced' if purse_pct &gt;= 25 else ('tight' if purse_pct &gt;= 10 else 'critical')))"/>
+                  <t t-set="players_recruited" t-value="team.max_players - team.remaining_players_count"/>
+                  <tr class="bs2-row" t-attf-data-auction-id="#{team.id}" t-attf-data-total-pts="#{team.total_point}" t-attf-data-max-players="#{team.max_players}">
+                    <td>
+                      <div class="bs2-team-cell">
+                        <t t-if="team.team_id.logo">
+                          <img class="bs2-team-logo" t-att-src="image_data_uri(team.team_id.logo)" t-att-alt="team.team_id.name"/>
+                        </t>
+                        <t t-else="">
+                          <span class="bs2-logo-fallback"><t t-esc="(team.team_id.name or '')[:1]"/></span>
+                        </t>
+                        <div class="bs2-team-copy">
+                          <div class="bs2-team-name"><t t-esc="team.team_id.name"/></div>
+                          <div class="bs2-manager"><t t-esc="team.manager or 'Team Manager'"/></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="bs2-purse-stack">
+                        <div class="bs2-purse-line">
+                          <span class="bs2-purse-value" t-attf-id="team-points-#{team.id}"><t t-esc="team.remaining_points"/></span>
+                          <span class="bs2-unit">pts</span>
+                        </div>
+                        <div class="bs2-progress">
+                          <div data-role="purse-fill" t-attf-class="bs2-progress-fill #{purse_cls}" t-attf-style="width:#{purse_pct}%"></div>
+                        </div>
+                        <div class="bs2-pct-label" data-role="pct-label"><t t-esc="str(purse_pct) + '% remaining'"/></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="bs2-needed-chip">
+                        <span class="bs2-players-number" t-attf-id="team-players-#{team.id}"><t t-esc="team.remaining_players_count"/></span>
+                        <span class="bs2-chip-label">players</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="bs2-maxcall">
+                        <span class="bs2-maxcall-value" t-attf-id="team-maxcall-#{team.id}"><t t-esc="team.max_call"/></span>
+                        <span class="bs2-unit">pts</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="bs2-squad-wrap">
+                        <span class="bs2-squad-value" data-role="squad-value"><t t-esc="str(players_recruited) + ' / ' + str(team.max_players)"/></span>
+                        <span class="bs2-chip-label">recruited</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span data-role="status-badge" data-base-class="bs2-badge" t-attf-class="bs2-badge #{status_cls}"><t t-esc="status_label"/></span>
+                    </td>
+                    <t t-if="type == 'internal'">
+                      <td class="bs2-access-cell">
+                        <a t-att-href="'/auction/get/players/team/%s' % team.team_id.id" class="bs2-engage">&#9654; ENGAGE</a>
+                      </td>
+                    </t>
+                  </tr>
+                </t>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <!-- Right: mode toggle + tournament logo -->
-        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-
-          <!-- TABLE / NODE toggle -->
-          <div class="pc-toggle">
-            <button class="pc-toggle-btn active" id="pc-table-btn" type="button">
-              <!-- list icon -->
-              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M1.5 3H0.5C0.224 3 0 3.224 0 3.5V4.5C0 4.776 0.224 5 0.5 5H1.5C1.776 5 2 4.776 2 4.5V3.5C2 3.224 1.776 3 1.5 3ZM5 4.5H15.5C15.776 4.5 16 4.276 16 4C16 3.724 15.776 3.5 15.5 3.5H5C4.724 3.5 4.5 3.724 4.5 4C4.5 4.276 4.724 4.5 5 4.5ZM1.5 7H0.5C0.224 7 0 7.224 0 7.5V8.5C0 8.776 0.224 9 0.5 9H1.5C1.776 9 2 8.776 2 8.5V7.5C2 7.224 1.776 7 1.5 7ZM15.5 7.5H5C4.724 7.5 4.5 7.724 4.5 8C4.5 8.276 4.724 8.5 5 8.5H15.5C15.776 8.5 16 8.276 16 8C16 7.724 15.776 7.5 15.5 7.5ZM1.5 11H0.5C0.224 11 0 11.224 0 11.5V12.5C0 12.776 0.224 13 0.5 13H1.5C1.776 13 2 12.776 2 12.5V11.5C2 11.224 1.776 11 1.5 11ZM15.5 11.5H5C4.724 11.5 4.5 11.724 4.5 12C4.5 12.276 4.724 12.5 5 12.5H15.5C15.776 12.5 16 12.276 16 12C16 11.724 15.776 11.5 15.5 11.5Z" fill="currentColor"/>
-              </svg>
-              TABLE
-            </button>
-            <div class="pc-toggle-sep"></div>
-            <button class="pc-toggle-btn" id="pc-node-btn" type="button">
-              <!-- grid icon -->
-              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3.5 2C3.10218 2 2.72064 2.15804 2.43934 2.43934C2.15804 2.72064 2 3.10218 2 3.5V5.5C2 5.89782 2.15804 6.27936 2.43934 6.56066C2.72064 6.84196 3.10218 7 3.5 7H5.5C5.89782 7 6.27936 6.84196 6.56066 6.56066C6.84196 6.27936 7 5.89782 7 5.5V3.5C7 3.10218 6.84196 2.72064 6.56066 2.43934C6.27936 2.15804 5.89782 2 5.5 2H3.5ZM10.5 2C10.1022 2 9.72064 2.15804 9.43934 2.43934C9.15804 2.72064 9 3.10218 9 3.5V5.5C9 5.89782 9.15804 6.27936 9.43934 6.56066C9.72064 6.84196 10.1022 7 10.5 7H12.5C12.8978 7 13.2794 6.84196 13.5607 6.56066C13.842 6.27936 14 5.89782 14 5.5V3.5C14 3.10218 13.842 2.72064 13.5607 2.43934C13.2794 2.15804 12.8978 2 12.5 2H10.5ZM3.5 9C3.10218 9 2.72064 9.15804 2.43934 9.43934C2.15804 9.72064 2 10.1022 2 10.5V12.5C2 12.8978 2.15804 13.2794 2.43934 13.5607C2.72064 13.842 3.10218 14 3.5 14H5.5C5.89782 14 6.27936 13.842 6.56066 13.5607C6.84196 13.2794 7 12.8978 7 12.5V10.5C7 10.1022 6.84196 9.72064 6.56066 9.43934C6.27936 9.15804 5.89782 9 5.5 9H3.5ZM10.5 9C10.1022 9 9.72064 9.15804 9.43934 9.43934C9.15804 9.72064 9 10.1022 9 10.5V12.5C9 12.8978 9.15804 13.2794 9.43934 13.5607C9.72064 13.842 10.1022 14 10.5 14H12.5C12.8978 14 13.2794 13.842 13.5607 13.5607C13.842 13.2794 14 12.8978 14 12.5V10.5C14 10.1022 13.842 9.72064 13.5607 9.43934C13.2794 9.15804 12.8978 9 12.5 9H10.5Z" fill="currentColor"/>
-              </svg>
-              NODE
-            </button>
-          </div>
-
-          <!-- Tournament logo -->
-          <div class="pc-t-logo" t-if="tournament and tournament.logo">
-            <img t-att-src="image_data_uri(tournament.logo)" alt="Tournament Logo"
-                 width="54" height="54" style="border-radius:6px; display:block;"/>
-          </div>
-        </div>
-      </section>
-
-      <!-- ══════════════════════════════════════════════════════════════
-           TABLE VIEW  —  Horizontally scrollable on narrow viewports
-           ══════════════════════════════════════════════════════════════ -->
-      <section class="pc-content" id="pc-table-section">
-        <div class="pc-table-wrap">
-
-          <!-- Header row -->
-          <div class="pc-th">
-            <div class="pc-c-team">Operator</div>
-            <div class="pc-c-mgr">Manager</div>
-            <div class="pc-c-needed">Needed</div>
-            <div class="pc-c-pts">Pts Left</div>
-            <div class="pc-c-call">Max Call</div>
-            <div class="pc-c-act" t-if="type == 'internal'">Access</div>
-          </div>
-
-          <!-- Data rows -->
-          <t t-foreach="teams" t-as="team">
-            <div class="pc-tr" t-attf-data-auction-id="#{team.id}">
-
-              <!-- Team name + logo -->
-              <div class="pc-c-team">
-                <div class="pc-team-cell">
-                  <img t-att-src="image_data_uri(team.team_id.logo)"
-                       alt="Team Logo" class="pc-team-logo"/>
-                  <span class="pc-team-name"><t t-esc="team.team_id.name"/></span>
-                </div>
-              </div>
-
-              <!-- Manager -->
-              <div class="pc-c-mgr">
-                <span class="pc-mgr-text"><t t-esc="team.manager"/></span>
-              </div>
-
-              <!-- Players needed -->
-              <div class="pc-c-needed">
-                <span class="pc-chip">
-                  <span t-attf-id="team-players-#{team.id}">
-                    <t t-esc="team.remaining_players_count"/>
-                  </span>
-                </span>
-              </div>
-
-              <!-- Points left -->
-              <div class="pc-c-pts">
-                <span class="pc-chip">
-                  <span t-attf-id="team-points-#{team.id}">
-                    <t t-esc="team.remaining_points"/>
-                  </span>
-                  <span class="pc-chip-u">pts</span>
-                </span>
-              </div>
-
-              <!-- Max call -->
-              <div class="pc-c-call">
-                <span class="pc-chip">
-                  <span t-attf-id="team-maxcall-#{team.id}">
-                    <t t-esc="team.max_call"/>
-                  </span>
-                  <span class="pc-chip-u">pts</span>
-                </span>
-              </div>
-
-              <!-- Actions (internal only) -->
-              <div class="pc-c-act" t-if="type == 'internal'">
-                <a t-att-href="'/auction/get/players/team/%s' % team.team_id.id"
-                   class="pc-engage">&#9654; ENGAGE</a>
-              </div>
-
-            </div>
-          </t>
-
-        </div>
-      </section>
-
-      <!-- ══════════════════════════════════════════════════════════════
-           NODE VIEW  —  Responsive tactical card grid
-           ══════════════════════════════════════════════════════════════ -->
-      <section class="pc-content" id="pc-node-section" style="display:none;">
-        <div class="pc-node-grid">
-          <t t-foreach="teams" t-as="team">
-            <div class="pc-node-card">
-
-              <!-- Top accent stripe -->
-              <div class="pc-node-stripe"></div>
-
-              <div class="pc-node-body">
-
-                <!-- Team logo + name + manager -->
-                <div class="pc-node-team-row">
-                  <div class="pc-node-logo-wrap">
-                    <img t-att-src="image_data_uri(team.team_id.logo)"
-                         alt="Team Logo" class="pc-node-logo"/>
-                    <span class="pc-node-badge"></span>
-                  </div>
-                  <div>
-                    <div class="pc-node-name"><t t-esc="team.team_id.name"/></div>
-                    <div class="pc-node-mgr"><t t-esc="team.manager"/></div>
-                  </div>
-                </div>
-
-                <!-- Stat grid: Players Needed | Pts Left | Max Call -->
-                <div class="pc-node-stats">
-                  <div class="pc-node-stat">
-                    <div class="pc-node-stat-lbl">Players<br/>Needed</div>
-                    <div class="pc-node-stat-val">
-                      <span t-attf-id="grid-team-players-#{team.id}">
-                        <t t-esc="team.remaining_players_count"/>
-                      </span>
+        <div class="bs2-panel" id="grid-section" style="display:none">
+          <div class="bs2-grid">
+            <t t-foreach="teams" t-as="team">
+              <t t-set="purse_pct" t-value="int(team.remaining_points * 100 // team.total_point) if team.total_point else 0"/>
+              <t t-set="purse_cls" t-value="'pf-high' if purse_pct &gt;= 60 else ('pf-mid' if purse_pct &gt;= 30 else ('pf-low' if purse_pct &gt;= 10 else 'pf-crit'))"/>
+              <t t-set="status_label" t-value="'COMFORTABLE' if purse_pct &gt;= 60 else ('HEALTHY' if purse_pct &gt;= 40 else ('BALANCED' if purse_pct &gt;= 25 else ('TIGHT' if purse_pct &gt;= 10 else 'CRITICAL')))"/>
+              <t t-set="status_cls" t-value="'comfortable' if purse_pct &gt;= 60 else ('healthy' if purse_pct &gt;= 40 else ('balanced' if purse_pct &gt;= 25 else ('tight' if purse_pct &gt;= 10 else 'critical')))"/>
+              <t t-set="players_recruited" t-value="team.max_players - team.remaining_players_count"/>
+              <div class="bs2-card" t-attf-data-auction-id="#{team.id}" t-attf-data-total-pts="#{team.total_point}" t-attf-data-max-players="#{team.max_players}">
+                <div class="bs2-card-accent"></div>
+                <div class="bs2-card-body">
+                  <div class="bs2-card-head">
+                    <div class="bs2-team-cell">
+                      <t t-if="team.team_id.logo">
+                        <img class="bs2-card-logo" t-att-src="image_data_uri(team.team_id.logo)" t-att-alt="team.team_id.name"/>
+                      </t>
+                      <t t-else="">
+                        <span class="bs2-logo-fallback"><t t-esc="(team.team_id.name or '')[:1]"/></span>
+                      </t>
+                      <div class="bs2-card-copy">
+                        <div class="bs2-card-name"><t t-esc="team.team_id.name"/></div>
+                        <div class="bs2-card-manager"><t t-esc="team.manager or 'Team Manager'"/></div>
+                      </div>
                     </div>
                   </div>
-                  <div class="pc-node-stat">
-                    <div class="pc-node-stat-lbl">Pts<br/>Left</div>
-                    <div class="pc-node-stat-val">
-                      <span t-attf-id="grid-team-points-#{team.id}">
-                        <t t-esc="team.remaining_points"/>
-                      </span>
-                      <span class="pc-node-stat-u">pts</span>
+
+                  <div class="bs2-card-purse">
+                    <div class="bs2-overline">Purse Remaining</div>
+                    <div class="bs2-card-purse-line">
+                      <span class="bs2-card-purse-value" t-attf-id="grid-team-points-#{team.id}"><t t-esc="team.remaining_points"/></span>
+                      <span class="bs2-unit">pts</span>
+                    </div>
+                    <div class="bs2-progress bs2-progress-lg">
+                      <div data-role="purse-fill" t-attf-class="bs2-progress-fill #{purse_cls}" t-attf-style="width:#{purse_pct}%"></div>
+                    </div>
+                    <div class="bs2-pct-label" data-role="pct-label"><t t-esc="str(purse_pct) + '% remaining'"/></div>
+                  </div>
+
+                  <div class="bs2-card-stats">
+                    <div class="bs2-stat-col">
+                      <div class="bs2-stat-label">Players Needed</div>
+                      <div class="bs2-stat-figure" t-attf-id="grid-team-players-#{team.id}"><t t-esc="team.remaining_players_count"/></div>
+                    </div>
+                    <div class="bs2-stat-col">
+                      <div class="bs2-stat-label">Max Bid</div>
+                      <div class="bs2-stat-figure"><span t-attf-id="grid-team-maxcall-#{team.id}"><t t-esc="team.max_call"/></span><span class="bs2-unit"> pts</span></div>
+                    </div>
+                    <div class="bs2-stat-col">
+                      <div class="bs2-stat-label">Squad</div>
+                      <div class="bs2-stat-figure" data-role="squad-value"><t t-esc="str(players_recruited) + ' / ' + str(team.max_players)"/></div>
                     </div>
                   </div>
-                  <div class="pc-node-stat">
-                    <div class="pc-node-stat-lbl">Max<br/>Call</div>
-                    <div class="pc-node-stat-val">
-                      <span t-attf-id="grid-team-maxcall-#{team.id}">
-                        <t t-esc="team.max_call"/>
-                      </span>
-                      <span class="pc-node-stat-u">pts</span>
-                    </div>
+
+                  <div class="bs2-card-foot">
+                    <span data-role="status-badge" data-base-class="bs2-badge bs2-card-status" t-attf-class="bs2-badge bs2-card-status #{status_cls}"><t t-esc="status_label"/></span>
+                    <t t-if="type == 'internal'">
+                      <a t-att-href="'/auction/get/players/team/%s' % team.team_id.id" class="bs2-engage">&#9654; ENGAGE</a>
+                    </t>
                   </div>
                 </div>
-
-                <!-- Footer: View squad (internal only) -->
-                <div t-if="type == 'internal'" class="pc-node-footer">
-                  <a t-att-href="'/auction/get/players/team/%s' % team.team_id.id"
-                     class="pc-engage">&#9654; ENGAGE</a>
-                </div>
-
               </div>
-            </div>
-          </t>
+            </t>
+          </div>
         </div>
-      </section>
+      </main>
 
-      <!-- ══════════════════════════════════════════════════════════════
-           SCRIPTS
-           ══════════════════════════════════════════════════════════════ -->
-      <script>
+      <script><![CDATA[
         (function () {
-          var tblBtn  = document.getElementById('pc-table-btn');
-          var nodeBtn = document.getElementById('pc-node-btn');
-          var tblSec  = document.getElementById('pc-table-section');
-          var nodeSec = document.getElementById('pc-node-section');
+          var htmlEl = document.documentElement;
+          var listBtn = document.getElementById('btn-list');
+          var gridBtn = document.getElementById('btn-grid');
+          var listSection = document.getElementById('list-section');
+          var gridSection = document.getElementById('grid-section');
+          var fsBtn = document.getElementById('fs-btn');
+          var fsIcon = fsBtn ? fsBtn.querySelector('.bs2-fs-ico') : null;
+          var fsText = fsBtn ? fsBtn.querySelector('.bs2-fs-tx') : null;
+          var balanceUrl = htmlEl.getAttribute('data-balance-json-url') || '';
+          var _balanceTimer = null;
 
-          /* ── Mode toggle ──────────────────────────────────────────── */
-          nodeBtn.addEventListener('click', function () {
-            tblSec.style.display  = 'none';
-            nodeSec.style.display = '';
-            tblBtn.classList.remove('active');
-            nodeBtn.classList.add('active');
-          });
-
-          tblBtn.addEventListener('click', function () {
-            nodeSec.style.display = 'none';
-            tblSec.style.display  = '';
-            nodeBtn.classList.remove('active');
-            tblBtn.classList.add('active');
-          });
-
-          /* ── Live data refresh every 8 seconds ───────────────────── */
-          function refreshBalance() {
-            fetch(document.documentElement.dataset.balanceJsonUrl)
-              .then(function (r) { return r.json(); })
-              .then(function (data) {
-                data.teams.forEach(function (team) {
-                  var el;
-                  /* table view elements */
-                  el = document.getElementById('team-players-' + team.id);
-                  if (el) el.textContent = team.remaining_players_count;
-                  el = document.getElementById('team-points-' + team.id);
-                  if (el) el.textContent = team.remaining_points;
-                  el = document.getElementById('team-maxcall-' + team.id);
-                  if (el) el.textContent = team.max_call;
-                  /* node view elements */
-                  el = document.getElementById('grid-team-players-' + team.id);
-                  if (el) el.textContent = team.remaining_players_count;
-                  el = document.getElementById('grid-team-points-' + team.id);
-                  if (el) el.textContent = team.remaining_points;
-                  el = document.getElementById('grid-team-maxcall-' + team.id);
-                  if (el) el.textContent = team.max_call;
-                });
-              })
-              .catch(function () { /* silent fail — keep current data */ });
+          function asNumber(value) {
+            var num = Number(value);
+            return isFinite(num) ? num : 0;
           }
 
-          /* Pause polling when tab is hidden, resume when visible */
-          var _balanceTimer = null;
-          function startBalancePolling() {
-            if (_balanceTimer) return;
+          function flashUpdate(element) {
+            if (!element) {
+              return;
+            }
+            element.classList.remove('bs2-flash');
+            void element.offsetWidth;
+            element.classList.add('bs2-flash');
+            window.clearTimeout(element._flashTimer);
+            element._flashTimer = window.setTimeout(function () {
+              element.classList.remove('bs2-flash');
+            }, 850);
+          }
+
+          function purseClass(pct) {
+            if (pct >= 60) { return 'pf-high'; }
+            if (pct >= 30) { return 'pf-mid'; }
+            if (pct >= 10) { return 'pf-low'; }
+            return 'pf-crit';
+          }
+
+          function statusMeta(pct) {
+            if (pct >= 60) { return { label: 'COMFORTABLE', cls: 'comfortable' }; }
+            if (pct >= 40) { return { label: 'HEALTHY', cls: 'healthy' }; }
+            if (pct >= 25) { return { label: 'BALANCED', cls: 'balanced' }; }
+            if (pct >= 10) { return { label: 'TIGHT', cls: 'tight' }; }
+            return { label: 'CRITICAL', cls: 'critical' };
+          }
+
+          function setView(mode) {
+            var isList = mode === 'list';
+            if (listSection) { listSection.style.display = isList ? '' : 'none'; }
+            if (gridSection) { gridSection.style.display = isList ? 'none' : ''; }
+            if (listBtn) {
+              listBtn.classList.toggle('active', isList);
+              listBtn.setAttribute('aria-pressed', isList ? 'true' : 'false');
+            }
+            if (gridBtn) {
+              gridBtn.classList.toggle('active', !isList);
+              gridBtn.setAttribute('aria-pressed', isList ? 'false' : 'true');
+            }
+          }
+
+          function syncFullscreenButton() {
+            var active = !!document.fullscreenElement;
+            if (fsIcon) { fsIcon.textContent = active ? '✕' : '⛶'; }
+            if (fsText) { fsText.textContent = active ? 'EXIT' : 'FULL'; }
+            if (fsBtn) { fsBtn.setAttribute('aria-label', active ? 'Exit fullscreen' : 'Enter fullscreen'); }
+          }
+
+          function updateValueById(id, value) {
+            var element = document.getElementById(id);
+            var nextText = String(value);
+            if (!element) {
+              return;
+            }
+            if (element.textContent.trim() !== nextText) {
+              element.textContent = nextText;
+              flashUpdate(element);
+            }
+          }
+
+          function updateContainer(container, remainingPoints, remainingPlayers, totalPoints, maxPlayers) {
+            if (!container) {
+              return;
+            }
+            var pct = totalPoints ? Math.max(0, Math.min(100, Math.round((remainingPoints * 100) / totalPoints))) : 0;
+            var recruited = Math.max(0, maxPlayers - remainingPlayers);
+            var status = statusMeta(pct);
+
+            Array.prototype.forEach.call(container.querySelectorAll('[data-role="purse-fill"]'), function (fill) {
+              var nextClass = 'bs2-progress-fill ' + purseClass(pct);
+              var nextWidth = pct + '%';
+              if (fill.className !== nextClass) {
+                fill.className = nextClass;
+                flashUpdate(fill);
+              }
+              if (fill.style.width !== nextWidth) {
+                fill.style.width = nextWidth;
+                flashUpdate(fill.parentElement || fill);
+              }
+            });
+
+            Array.prototype.forEach.call(container.querySelectorAll('[data-role="pct-label"]'), function (label) {
+              var nextText = pct + '% remaining';
+              if (label.textContent.trim() !== nextText) {
+                label.textContent = nextText;
+                flashUpdate(label);
+              }
+            });
+
+            Array.prototype.forEach.call(container.querySelectorAll('[data-role="status-badge"]'), function (badge) {
+              var nextClass = (badge.getAttribute('data-base-class') || 'bs2-badge') + ' ' + status.cls;
+              if (badge.className !== nextClass) {
+                badge.className = nextClass;
+                flashUpdate(badge);
+              }
+              if (badge.textContent.trim() !== status.label) {
+                badge.textContent = status.label;
+                flashUpdate(badge);
+              }
+            });
+
+            Array.prototype.forEach.call(container.querySelectorAll('[data-role="squad-value"]'), function (squad) {
+              var nextText = recruited + ' / ' + maxPlayers;
+              if (squad.textContent.trim() !== nextText) {
+                squad.textContent = nextText;
+                flashUpdate(squad);
+              }
+            });
+          }
+
+          function normalizePayload(payload) {
+            function objectMap(source) {
+              return Object.keys(source || {}).map(function (key) {
+                var item = source[key];
+                if (item === null || typeof item !== 'object' || Array.isArray(item)) {
+                  item = { remaining_points: item };
+                }
+                if (item.id === undefined && item.auction_id === undefined) {
+                  item.id = key;
+                }
+                return item;
+              });
+            }
+
+            if (!payload) { return []; }
+            if (Array.isArray(payload)) { return payload; }
+            if (Array.isArray(payload.teams)) { return payload.teams; }
+            if (Array.isArray(payload.data)) { return payload.data; }
+            if (Array.isArray(payload.results)) { return payload.results; }
+            if (payload.teams && typeof payload.teams === 'object') { return objectMap(payload.teams); }
+            if (payload.data && typeof payload.data === 'object') { return objectMap(payload.data); }
+            if (payload.results && typeof payload.results === 'object') { return objectMap(payload.results); }
+            if (typeof payload === 'object') { return objectMap(payload); }
+            return [];
+          }
+
+          function resolveAuctionId(entry) {
+            if (!entry || typeof entry !== 'object') {
+              return 0;
+            }
+            if (entry.id !== undefined) { return asNumber(entry.id); }
+            if (entry.auction_id !== undefined) { return asNumber(entry.auction_id); }
+            if (entry.auctionId !== undefined) { return asNumber(entry.auctionId); }
+            if (entry.team_id && typeof entry.team_id === 'object' && entry.team_id.id !== undefined) {
+              return asNumber(entry.team_id.id);
+            }
+            if (entry.team_id !== undefined) { return asNumber(entry.team_id); }
+            return 0;
+          }
+
+          function refreshBalance() {
+            if (!balanceUrl) {
+              return Promise.resolve();
+            }
+            return fetch(balanceUrl, {
+              method: 'GET',
+              headers: { 'Accept': 'application/json' },
+              cache: 'no-store'
+            }).then(function (response) {
+              if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+              }
+              return response.json();
+            }).then(function (payload) {
+              normalizePayload(payload).forEach(function (entry) {
+                var auctionId = resolveAuctionId(entry);
+                if (!auctionId) {
+                  return;
+                }
+                var row = document.querySelector('tr[data-auction-id="' + auctionId + '"]');
+                var card = document.querySelector('.bs2-card[data-auction-id="' + auctionId + '"]');
+                var totalPoints = asNumber(
+                  entry.total_point !== undefined ? entry.total_point :
+                  entry.total_points !== undefined ? entry.total_points :
+                  entry.totalPts !== undefined ? entry.totalPts :
+                  (row ? row.getAttribute('data-total-pts') : null) ||
+                  (card ? card.getAttribute('data-total-pts') : null)
+                );
+                var maxPlayers = asNumber(
+                  entry.max_players !== undefined ? entry.max_players :
+                  entry.maxPlayers !== undefined ? entry.maxPlayers :
+                  (row ? row.getAttribute('data-max-players') : null) ||
+                  (card ? card.getAttribute('data-max-players') : null)
+                );
+                var remainingPoints = asNumber(
+                  entry.remaining_points !== undefined ? entry.remaining_points :
+                  entry.remainingPoints !== undefined ? entry.remainingPoints :
+                  entry.points !== undefined ? entry.points :
+                  entry.purse_remaining !== undefined ? entry.purse_remaining :
+                  entry.balance !== undefined ? entry.balance : 0
+                );
+                var remainingPlayers = asNumber(
+                  entry.remaining_players_count !== undefined ? entry.remaining_players_count :
+                  entry.remainingPlayersCount !== undefined ? entry.remainingPlayersCount :
+                  entry.players_needed !== undefined ? entry.players_needed :
+                  entry.playersNeeded !== undefined ? entry.playersNeeded :
+                  entry.remaining_players !== undefined ? entry.remaining_players : 0
+                );
+                var maxCall = asNumber(
+                  entry.max_call !== undefined ? entry.max_call :
+                  entry.maxCall !== undefined ? entry.maxCall :
+                  entry.max_bid !== undefined ? entry.max_bid :
+                  entry.maxBid !== undefined ? entry.maxBid :
+                  entry.maxcall !== undefined ? entry.maxcall : 0
+                );
+
+                updateValueById('team-points-' + auctionId, remainingPoints);
+                updateValueById('team-players-' + auctionId, remainingPlayers);
+                updateValueById('team-maxcall-' + auctionId, maxCall);
+                updateValueById('grid-team-points-' + auctionId, remainingPoints);
+                updateValueById('grid-team-players-' + auctionId, remainingPlayers);
+                updateValueById('grid-team-maxcall-' + auctionId, maxCall);
+
+                updateContainer(row, remainingPoints, remainingPlayers, totalPoints, maxPlayers);
+                updateContainer(card, remainingPoints, remainingPlayers, totalPoints, maxPlayers);
+              });
+            }).catch(function () {
+              return null;
+            });
+          }
+
+          function stopPolling() {
+            if (_balanceTimer) {
+              clearInterval(_balanceTimer);
+              _balanceTimer = null;
+            }
+          }
+
+          function startPolling() {
+            stopPolling();
             _balanceTimer = setInterval(refreshBalance, 8000);
           }
-          function stopBalancePolling() {
-            if (_balanceTimer) { clearInterval(_balanceTimer); _balanceTimer = null; }
+
+          if (listBtn) {
+            listBtn.addEventListener('click', function () { setView('list'); });
           }
-          document.addEventListener('visibilitychange', function () {
-            if (document.hidden) { stopBalancePolling(); }
-            else { refreshBalance(); startBalancePolling(); }
+          if (gridBtn) {
+            gridBtn.addEventListener('click', function () { setView('grid'); });
+          }
+          if (fsBtn) {
+            fsBtn.addEventListener('click', function () {
+              if (document.fullscreenElement) {
+                if (document.exitFullscreen) {
+                  document.exitFullscreen();
+                }
+              } else if (htmlEl.requestFullscreen) {
+                htmlEl.requestFullscreen();
+              }
+            });
+          }
+
+          document.addEventListener('fullscreenchange', syncFullscreenButton);
+          document.addEventListener('visibilitychange', function() {
+            if (document.hidden) stopPolling(); else { refreshBalance(); startPolling(); }
           });
-          window.addEventListener('beforeunload', stopBalancePolling);
-          startBalancePolling();
-        })();
-      </script>
-
-      <script src="/auction_module/static/src/assets/bootstrap.bundle.min.js" defer="defer"></script>
-
-      <script>
-        (function () {
-          var btn   = document.getElementById('fs-btn');
-          if (!btn) return;
-          var enter = btn.querySelector('.fs-enter');
-          var exit  = btn.querySelector('.fs-exit');
-          function sync() {
-            var isFS = !!document.fullscreenElement;
-            if (enter) enter.style.display = isFS ? 'none' : '';
-            if (exit)  exit.style.display  = isFS ? ''     : 'none';
-          }
-          btn.addEventListener('click', function () {
-            if (!document.fullscreenElement) {
-              document.documentElement.requestFullscreen().catch(function (e) {
-                console.warn('Fullscreen error:', e);
-              });
-            } else {
-              document.exitFullscreen();
+          window.addEventListener('beforeunload', stopPolling);
+          document.addEventListener('DOMContentLoaded', function () {
+            setView('list');
+            syncFullscreenButton();
+            refreshBalance();
+            if (!document.hidden) {
+              startPolling();
             }
           });
-          document.addEventListener('fullscreenchange', sync);
-        })();
-      </script>
+        }());
+      ]]></script>
+      <script src="/auction_module/static/src/assets/bootstrap.bundle.min.js" defer="defer"></script>
     </body>
   </html>
 </template>
-
 </odoo>

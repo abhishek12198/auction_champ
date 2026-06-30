@@ -183,6 +183,9 @@ class Auction(http.Controller):
             {
                 'serial': p.sl_no,
                 'id': p.id,
+                'name': p.name or '',
+                'role': p.role or '',
+                'tier_color': p.tier_color or '',
                 'state': p.state,
                 'team_name': p.assigned_team_id.name if p.state == 'sold' and p.assigned_team_id else '',
                 'team_logo': p.assigned_team_id.logo.decode('utf-8') if p.state == 'sold' and p.assigned_team_id and p.assigned_team_id.logo else '',
@@ -285,6 +288,74 @@ class Auction(http.Controller):
 
         return request.make_response(html_content,
                                      headers=[('Content-Type', 'text/html; charset=utf-8')])
+
+    @http.route('/auction/player_quick_data/<int:player_id>', type='json', auth='public', website=True)
+    def player_quick_data(self, player_id):
+        """Single-call endpoint: return all drawer data AND set player on stage atomically.
+
+        Replaces the 2-4 separate callKw round-trips previously used by the player_selector
+        JS (read player + read team logo + read sold points + action_set_on_stage) with a
+        single HTTP call, dramatically reducing latency especially in production.
+        """
+        player = request.env['auction.team.player'].sudo().browse(player_id)
+        if not player.exists():
+            return {'error': 'not found'}
+
+        # Set on stage in the same DB transaction — projector sees the update immediately
+        try:
+            player.action_set_on_stage()
+        except Exception:
+            pass
+
+        photo = ''
+        if player.photo:
+            photo = player.photo.decode('utf-8') if isinstance(player.photo, bytes) else player.photo
+
+        result = {
+            'id': player.id,
+            'sl_no': player.sl_no,
+            'name': player.name or '',
+            'role': player.role or '',
+            'batting_style': player.batting_style or '',
+            'bowling_style': player.bowling_style or '',
+            'contact': player.contact or '',
+            'masked_contact': player.masked_contact or '',
+            'photo': photo,
+            'state': player.state or '',
+            'tier_id': [player.tier_id.id, player.tier_id.name] if player.tier_id else False,
+            'tier_color': player.tier_color or '',
+            'assigned_team_id': [player.assigned_team_id.id, player.assigned_team_id.name] if player.assigned_team_id else False,
+            'team_logo': '',
+            'team_name': '',
+            'sold_points': 0,
+        }
+
+        if player.state == 'sold' and player.assigned_team_id:
+            result['team_name'] = player.assigned_team_id.name or ''
+            if player.assigned_team_id.logo:
+                logo = player.assigned_team_id.logo
+                result['team_logo'] = logo.decode('utf-8') if isinstance(logo, bytes) else logo
+            auction_line = request.env['auction.auction.player'].sudo().search(
+                [('player_id', '=', player_id)], limit=1)
+            result['sold_points'] = auction_line.points if auction_line else 0
+
+        return result
+
+    @http.route('/auction/player_correction_teams/<int:player_id>', type='json', auth='user', website=True)
+    def player_correction_teams(self, player_id):
+        """Fast single-call replacement for get_all_teams_for_correction via callKw."""
+        player = request.env['auction.team.player'].sudo().browse(player_id)
+        if not player.exists():
+            return []
+        return player.get_all_teams_for_correction()
+
+    @http.route('/auction/player_update_sale', type='json', auth='user', website=True)
+    def player_update_sale(self, player_id, new_points, new_team_id):
+        """Fast single-call replacement for action_update_sale via callKw."""
+        player = request.env['auction.team.player'].browse(int(player_id))
+        if not player.exists():
+            return {'success': False, 'error': 'Player not found'}
+        return player.action_update_sale(int(new_points), int(new_team_id))
 
     # @http.route('/auction/get_players_queue', type='http', auth='public', website=True)
     # def get_players_queue(self):
