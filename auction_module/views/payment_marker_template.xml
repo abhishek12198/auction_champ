@@ -51,7 +51,8 @@ a { text-decoration: none; }
 .pm-nav-sub   { font-size: .76rem; color: rgba(255,255,255,.65); margin-top: 1px; }
 .pm-app-logo-img { height: 28px; width: auto; display: block; opacity: .95; }
 .pm-nav-divider  { width: 1px; height: 32px; background: rgba(255,255,255,.2); flex-shrink: 0; margin: 0 4px; }
-.pm-back-btn  { display: inline-flex; align-items: center; gap: 4px; padding: 6px 13px; border-radius: 7px; border: 1.5px solid rgba(255,255,255,.25); background: rgba(255,255,255,.1); color: #fff; font-size: .84rem; font-weight: 600; cursor: pointer; transition: background .15s; }
+.pm-nav-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.pm-back-btn  { display: inline-flex; align-items: center; gap: 4px; padding: 6px 13px; border-radius: 7px; border: 1.5px solid rgba(255,255,255,.25); background: rgba(255,255,255,.1); color: #fff; font-size: .84rem; font-weight: 600; cursor: pointer; transition: background .15s; text-decoration: none; }
 .pm-back-btn:hover { background: rgba(255,255,255,.2); }
 
 /* ── STATS BANNER ── */
@@ -72,7 +73,8 @@ a { text-decoration: none; }
 .pm-ss-unsold  { background: rgba(220,38,38,.25);   color: var(--red3); }
 
 /* ── TOOLBAR ── */
-.pm-toolbar { background: var(--surf); border-bottom: 1.5px solid var(--bdr); position: sticky; top: 61px; z-index: 100; }
+.pm-sticky-header { position: sticky; top: 61px; z-index: 100; background: var(--surf); border-bottom: 1.5px solid var(--bdr); box-shadow: 0 2px 8px rgba(0,0,0,.07); }
+.pm-toolbar { background: transparent; border-bottom: none; }
 .pm-toolbar-search { padding: 10px 14px 0; }
 .pm-search-wrap { position: relative; }
 .pm-search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--tx3); font-size: .9rem; pointer-events: none; }
@@ -227,7 +229,7 @@ a { text-decoration: none; }
 .pm-print-only { display: none; }
 @media print {
   * { transition: none !important; }
-  .pm-nav, .pm-toolbar, .pm-toast, .pm-export-wrap, .pm-theme-btn, .pm-back-btn, .pm-banner { display: none !important; }
+  .pm-nav, .pm-toolbar, .pm-sticky-header, .pm-toast, .pm-export-wrap, .pm-theme-btn, .pm-back-btn, .pm-banner { display: none !important; }
   .pm-content { padding: 0 !important; max-width: none !important; }
   .pm-table-wrap { display: block !important; box-shadow: none; }
   .pm-cards-wrap { display: none !important; }
@@ -261,6 +263,34 @@ a { text-decoration: none; }
   .pm-cards-wrap { display: none !important; }
   .pm-content { padding: 20px; }
 }
+
+/* Mobile nav — wrap to 2 rows, hide logo SVG */
+@media (max-width: 640px) {
+  .pm-nav { flex-wrap: wrap; padding: 8px 12px; row-gap: 6px; }
+  .pm-app-logo-img, .pm-nav-divider { display: none !important; }
+  .pm-nav-brand { flex: 1 1 100%; min-width: 0; }
+  .pm-nav-title { font-size: .82rem; }
+  .pm-nav-sub   { font-size: .68rem; }
+  .pm-nav-actions { gap: 5px; margin-left: auto; }
+  .pm-back-btn  { padding: 5px 8px; font-size: .75rem; }
+  .pm-theme-btn { padding: 5px 7px; font-size: .78rem; }
+  .pm-export-btn { padding: 5px 8px; font-size: .72rem; }
+}
+
+/* Pagination bar (top-right above table) */
+.pm-pagination-bar { display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 6px 4px 8px; flex-wrap: wrap; }
+.pm-count-inline { font-size: .8rem; color: var(--tx2); white-space: nowrap; }
+.pm-pagination { display: none; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pm-page-btn { padding: 4px 13px; border-radius: 6px; border: 1.5px solid var(--bdr); background: var(--surf); color: var(--tx); font-size: .8rem; font-weight: 600; cursor: pointer; transition: background .15s, border-color .15s; }
+.pm-page-btn:hover:not([disabled]) { background: var(--surf3); border-color: var(--navy); }
+.pm-page-btn[disabled] { opacity: .38; cursor: not-allowed; }
+.pm-page-info { font-size: .8rem; color: var(--tx2); white-space: nowrap; padding: 0 2px; }
+.pm-page-size-label { display: inline-flex; align-items: center; gap: 3px; border: 1.5px solid var(--bdr); border-radius: 6px; background: var(--surf); padding: 2px 6px; cursor: text; transition: border-color .15s; }
+.pm-page-size-label:focus-within { border-color: var(--navy); }
+.pm-page-size-inp { width: 3.4em; padding: 1px 2px; border: none; background: transparent; color: var(--tx); font-size: .8rem; font-weight: 700; text-align: center; outline: none; -moz-appearance: textfield; }
+.pm-page-size-inp::-webkit-outer-spin-button,
+.pm-page-size-inp::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.pm-page-size-unit { font-size: .77rem; color: var(--tx2); white-space: nowrap; }
   </style>
 </head>
 <body>
@@ -281,7 +311,7 @@ a { text-decoration: none; }
       <div class="pm-nav-sub"><t t-esc="tournament.name if tournament else 'No Tournament Assigned'"/></div>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:8px;">
+  <div class="pm-nav-actions">
     <button class="pm-theme-btn" id="pm-theme-btn" title="Toggle dark/light mode">&#9728;&#65039;</button>
     <button class="pm-theme-btn" id="pm-refresh-btn" title="Refresh data">&#8635;</button>
     <div class="pm-export-wrap" id="pm-export-wrap">
@@ -322,7 +352,8 @@ a { text-decoration: none; }
   </div>
 </div>
 
-<!-- ── TOOLBAR ──────────────────────────────────────── -->
+<!-- ── TOOLBAR + PAGINATION (sticky header) ──────────── -->
+<div class="pm-sticky-header" id="pm-sticky-header">
 <div class="pm-toolbar">
   <div class="pm-toolbar-search">
     <div class="pm-search-wrap">
@@ -367,9 +398,16 @@ a { text-decoration: none; }
       <option value="tier">Sort: Tier</option>
     </select>
     <button id="pm-dir-btn" class="pm-dir-btn" title="Toggle sort direction">&#8593;</button>
-    <span class="pm-count-lbl" id="pm-count">0 players</span>
   </div>
-</div>
+</div><!-- /.pm-toolbar -->
+
+  <!-- Pagination bar (top-right, above table) -->
+  <div class="pm-pagination-bar">
+    <span class="pm-count-lbl pm-count-inline" id="pm-count">0 players</span>
+    <div id="pm-pagination" class="pm-pagination"></div>
+  </div>
+
+</div><!-- /.pm-sticky-header -->
 
 <!-- ── PRINT HEADER (hidden on screen, shown when printing) ── -->
 <div class="pm-print-only" id="pm-print-header">
@@ -465,6 +503,8 @@ a { text-decoration: none; }
     sortField:   'sl_no',
     sortDir:     'asc',
     search:      '',
+    page:        1,
+    pageSize:    25,
   };
 
   /* ── DOM refs ── */
@@ -477,6 +517,7 @@ a { text-decoration: none; }
   var paidNEl  = document.getElementById('pm-paid-n');
   var unpaidNEl= document.getElementById('pm-unpaid-n');
   var barEl    = document.getElementById('pm-bar');
+  var pageEl   = document.getElementById('pm-pagination');
   var toastTmr = null;
 
   /* ── HTML escape via DOM ── */
@@ -532,6 +573,52 @@ a { text-decoration: none; }
       var el = document.getElementById('ss-' + st);
       if (el) el.textContent = icons[st] + ' ' + slabls[st] + ' ' + byState[st].p + '/' + byState[st].t;
     });
+  }
+
+  /* ── Pagination ── */
+  function updatePagination(total) {
+    if (!pageEl) return;
+    var usePager = S.groupBy === 'none';
+    if (!usePager || total === 0) {
+      pageEl.style.display = 'none';
+      return;
+    }
+    var pages = Math.ceil(total / S.pageSize);
+    if (pages <= 1) { pageEl.style.display = 'none'; return; }
+    var from = (S.page - 1) * S.pageSize + 1;
+    var to   = Math.min(S.page * S.pageSize, total);
+    pageEl.style.display = 'flex';
+    pageEl.innerHTML =
+      '<button class="pm-page-btn" id="pm-prev-btn"' + (S.page <= 1 ? ' disabled' : '') + '>&#8592; Prev</button>' +
+      '<span class="pm-page-info">' + from + '&#8211;' + to + ' of ' + total + '</span>' +
+      '<button class="pm-page-btn" id="pm-next-btn"' + (S.page >= pages ? ' disabled' : '') + '>Next &#8594;</button>' +
+      '<label class="pm-page-size-label" title="Click to set rows per page">' +
+        '<input class="pm-page-size-inp" id="pm-page-size-inp" type="number" ' +
+               'min="1" max="' + total + '" value="' + S.pageSize + '" ' +
+               'title="Rows per page — press Enter to apply"/>' +
+        '<span class="pm-page-size-unit">/ page</span>' +
+      '</label>';
+
+    document.getElementById('pm-prev-btn').addEventListener('click', function () {
+      if (S.page > 1) { S.page--; render(false); window.scrollTo(0, 0); }
+    });
+    document.getElementById('pm-next-btn').addEventListener('click', function () {
+      if (S.page < pages) { S.page++; render(false); window.scrollTo(0, 0); }
+    });
+
+    var inp = document.getElementById('pm-page-size-inp');
+    function applyPageSize() {
+      var v = parseInt(inp.value, 10);
+      if (!v || v < 1) { inp.value = S.pageSize; return; }
+      S.pageSize = v;
+      S.page = 1;
+      render(false);
+    }
+    inp.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); this.blur(); applyPageSize(); }
+      if (e.key === 'Escape') { inp.value = S.pageSize; this.blur(); }
+    });
+    inp.addEventListener('blur', applyPageSize);
   }
 
   /* ── Filter + Sort ── */
@@ -669,7 +756,8 @@ a { text-decoration: none; }
   }
 
   /* ── Render ── */
-  function render() {
+  function render(resetPage) {
+    if (resetPage) S.page = 1;
     var data = getFiltered();
     countEl.textContent = data.length + ' player' + (data.length === 1 ? '' : 's');
     emptyEl.style.display = data.length === 0 ? '' : 'none';
@@ -677,11 +765,18 @@ a { text-decoration: none; }
     var tbHtml = '', carHtml = '';
 
     if (S.groupBy === 'none') {
-      data.forEach(function (p, i) {
-        tbHtml  += mkRow(p, i);
-        carHtml += mkCard(p, i);
+      /* paginate only when not grouped */
+      var total = data.length;
+      var start = (S.page - 1) * S.pageSize;
+      var page  = data.slice(start, start + S.pageSize);
+      page.forEach(function (p, i) {
+        tbHtml  += mkRow(p, start + i);
+        carHtml += mkCard(p, start + i);
       });
+      updatePagination(total);
     } else {
+      /* groups: show all, hide pagination */
+      updatePagination(0);
       groupData(data).forEach(function (g) {
         tbHtml  += '<tr class="pm-group-row"><td colspan="8">' +
                    '<span class="pm-group-row-label">' + esc(g.label) + '</span>' +
@@ -725,11 +820,18 @@ a { text-decoration: none; }
     .then(function (r) { return r.json(); })
     .then(function (d) {
       if (d.result && d.result.success) {
-        /* update master array then re-render */
+        /* update master array */
         for (var i = 0; i < PLAYERS.length; i++) {
           if (PLAYERS[i].id === pid) { PLAYERS[i].amount_paid = next; break; }
         }
-        render();
+        /* targeted DOM update — no full re-render */
+        document.querySelectorAll('button.pm-pay-btn[data-pay-id="' + pid + '"]').forEach(function (b) {
+          b.classList.remove('pm-pay-saving');
+          b.className = 'pm-pay-btn ' + (next ? 'is-paid' : 'is-unpaid');
+          b.setAttribute('data-paid', next ? '1' : '0');
+          b.innerHTML = next ? '&#10003; Paid' : '&#10007; Unpaid';
+        });
+        renderStats();
         showToast(next ? '\u2705 Marked as Paid' : '\u274C Marked as Unpaid',
                   next ? 'ok' : 'err');
       } else {
@@ -802,7 +904,7 @@ a { text-decoration: none; }
               break;
             }
           }
-          render();
+          render(false);
           showToast('Screenshot uploaded \u2714 Player marked as Paid', 'ok');
         } else {
           showToast('Upload failed: ' + (d.error || 'Unknown error'), 'err');
@@ -841,7 +943,7 @@ a { text-decoration: none; }
               break;
             }
           }
-          render();
+          render(false);
           showToast('Payment proof removed', 'ok');
         } else {
           showToast('Failed to remove: ' + (d.error || 'Unknown error'), 'err');
@@ -857,6 +959,17 @@ a { text-decoration: none; }
     initTheme();
     renderStats();
     initTeamChips();
+
+    /* ── Dynamic sticky top: sticky header sits just below nav ── */
+    var navEl    = document.querySelector('.pm-nav');
+    var stickyEl = document.getElementById('pm-sticky-header');
+    function updateStickyTop() {
+      if (navEl && stickyEl) {
+        stickyEl.style.top = navEl.offsetHeight + 'px';
+      }
+    }
+    updateStickyTop();
+    window.addEventListener('resize', updateStickyTop);
 
     /* ── Theme toggle ── */
     var themeBtn = document.getElementById('pm-theme-btn');
@@ -896,10 +1009,12 @@ a { text-decoration: none; }
     var pdfBtn = document.getElementById('pm-export-pdf');
     if (pdfBtn) pdfBtn.addEventListener('click', function () { exportPDF(); exportWrap.classList.remove('open'); });
 
-    /* Search */
+    /* Search — debounced */
+    var searchTmr = null;
     document.getElementById('pm-search').addEventListener('input', function () {
       S.search = this.value.trim();
-      render();
+      if (searchTmr) clearTimeout(searchTmr);
+      searchTmr = setTimeout(function () { render(true); }, 250);
     });
 
     /* State tabs */
@@ -908,20 +1023,20 @@ a { text-decoration: none; }
         document.querySelectorAll('.pm-tab').forEach(function (b) { b.classList.remove('active'); });
         btn.classList.add('active');
         S.stateFilter = btn.getAttribute('data-state');
-        render();
+        render(true);
       });
     });
 
     /* Payment filter */
     document.getElementById('pm-pay-filter').addEventListener('change', function () {
       S.payFilter = this.value;
-      render();
+      render(true);
     });
 
     /* Group by */
     document.getElementById('pm-group-by').addEventListener('change', function () {
       S.groupBy = this.value;
-      render();
+      render(true);
     });
 
     /* Sort by dropdown */
@@ -929,14 +1044,14 @@ a { text-decoration: none; }
       S.sortField = this.value;
       S.sortDir = 'asc';
       syncSortUI();
-      render();
+      render(true);
     });
 
     /* Sort direction */
     document.getElementById('pm-dir-btn').addEventListener('click', function () {
       S.sortDir = S.sortDir === 'asc' ? 'desc' : 'asc';
       syncSortUI();
-      render();
+      render(true);
     });
 
     /* Column header click to sort */
@@ -950,7 +1065,7 @@ a { text-decoration: none; }
           S.sortDir = 'asc';
         }
         syncSortUI();
-        render();
+        render(true);
       });
     });
 
@@ -1013,7 +1128,7 @@ a { text-decoration: none; }
       container.querySelectorAll('.pm-team-chip').forEach(function (c) { c.classList.remove('active'); });
       chip.classList.add('active');
       S.teamFilter = chip.getAttribute('data-team');
-      render();
+      render(true);
     });
   }
 

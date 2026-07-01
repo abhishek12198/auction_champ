@@ -384,9 +384,8 @@ class AuctionTournament(models.Model):
 
     def action_open_registration_link(self):
         """Open the public player registration form in a new browser tab."""
-        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
         db_name = self.env.cr.dbname
-        url = '{}/{}/{}/player/register'.format(base_url, db_name, self.slug) if self.slug else '{}/{}/player/register'.format(base_url, db_name)
+        url = '/{}/{}/player/register'.format(db_name, self.slug) if self.slug else '/{}/player/register'.format(db_name)
         return {
             'type': 'ir.actions.act_url',
             'url': url,
@@ -395,9 +394,8 @@ class AuctionTournament(models.Model):
 
     def action_open_payment_tracker(self):
         """Open the Payment Tracker page in a new browser tab."""
-        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
         db_name = self.env.cr.dbname
-        url = '{}/{}/{}/auction/payment-marker'.format(base_url, db_name, self.slug) if self.slug else '/auction/my/payment-marker'
+        url = '/{}/{}/auction/payment-marker'.format(db_name, self.slug) if self.slug else '/auction/my/payment-marker'
         return {
             'type': 'ir.actions.act_url',
             'url': url,
