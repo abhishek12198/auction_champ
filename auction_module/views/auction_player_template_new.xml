@@ -52,13 +52,14 @@ body[data-theme="dark"] #vn-theme-btn{background:rgba(121,184,255,0.10);border-c
          template only (no shared style.css changes, no HTML/JS changes).
          ══════════════════════════════════════════════════════════════ -->
     <style>
+@font-face{font-family:'Varsity Team';src:url('/auction_module/static/src/assets/fonts/VarsityTeam-Bold.otf') format('opentype');font-weight:normal;font-style:normal;font-display:swap;}
 :root{
   --vn-royal:#2e6be6;
   --vn-royal-lt:#5b9bff;
   --vn-navy:#0b2a6b;
   --vn-navy-deep:#071d4d;
   --vn-silver:#cdd9ef;
-  --vn-head:'EPSOR','Rajdhani','Oswald','Bebas Neue','Montserrat',sans-serif;
+  --vn-head:'Varsity Team','EPSOR','Rajdhani','Oswald','Bebas Neue','Montserrat',sans-serif;
 }
 
 /* ── Stadium environment (layered, subtle, player stays the focus) ── */
@@ -126,6 +127,8 @@ body::after{
 .stroke-only{
   font-family:var(--vn-head) !important;
   color:transparent;
+  line-height:1 !important;
+  margin:0 0 12px !important;
   -webkit-text-stroke:2.5px rgba(255,255,255,.88);
   text-shadow:0 0 28px rgba(91,155,255,.6);
   filter:drop-shadow(0 8px 20px rgba(0,0,0,.45));

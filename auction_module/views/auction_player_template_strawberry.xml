@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;700&amp;family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
   <title>Player Showcase – Strawberry</title>
   <style>
+    @font-face{font-family:'Light Sport';src:url('/auction_module/static/src/assets/fonts/Light%20Sport%20DEMO.otf') format('opentype');font-weight:normal;font-style:normal;font-display:swap;}
     /* ── Reset ──────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -57,7 +58,7 @@
     .sw-header-center { flex: 1; display: flex; justify-content: center; align-items: center; gap: 12px; }
     .sw-tourn-logo   { height: 48px; width: auto; object-fit: contain; border-radius: 6px; border: 1.5px solid var(--border-berry); padding: 3px; box-shadow: 0 2px 10px var(--berry-glow); }
     .sw-tourn-info   { display: flex; flex-direction: column; gap: 2px; }
-    .sw-tourn-name   { font-family: 'Antonio', sans-serif; font-size: 1.05rem; letter-spacing: 2px; text-transform: uppercase; color: var(--dark); line-height: 1; }
+    .sw-tourn-name   { font-family: 'Light Sport', 'Antonio', sans-serif; font-size: 1.05rem; letter-spacing: 2px; text-transform: uppercase; color: var(--dark); line-height: 1; }
     .sw-tourn-desc   { font-size: .6rem; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); }
     .sw-live-badge   { display: flex; align-items: center; gap: 7px; padding: 5px 14px; border-radius: 28px; background: rgba(194,24,91,.07); border: 1.5px solid rgba(194,24,91,.28); font-family: 'Antonio', sans-serif; font-size: .8rem; letter-spacing: 3px; text-transform: uppercase; color: var(--berry); }
     .sw-live-dot     { width: 8px; height: 8px; border-radius: 50%; background: var(--berry-bright); box-shadow: 0 0 8px var(--berry-bright), 0 0 16px var(--berry-glow); animation: swPulse 1.4s ease-in-out infinite; }
@@ -127,11 +128,11 @@
       box-shadow: 0 2px 12px rgba(194,24,91,.07);
     }
     .sw-serial-block { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; line-height: 1; }
-    .sw-serial-hash  { font-family: 'Antonio', sans-serif; font-size: 1.1rem; color: rgba(194,24,91,.45); }
-    .sw-serial-num   { font-family: 'Antonio', sans-serif; font-size: 3.8rem; line-height: .88; color: var(--berry); filter: drop-shadow(0 2px 6px rgba(194,24,91,.22)); }
+    .sw-serial-hash  { font-family: 'Light Sport', 'Antonio', sans-serif; font-size: 1.1rem; color: rgba(194,24,91,.45); }
+    .sw-serial-num   { font-family: 'Light Sport', 'Antonio', sans-serif; font-size: 3.8rem; line-height: .88; color: var(--berry); filter: drop-shadow(0 2px 6px rgba(194,24,91,.22)); }
     .sw-id-vsep      { flex-shrink: 0; width: 2px; height: 58px; background: linear-gradient(to bottom, transparent, var(--berry), transparent); margin: 0 4px; }
     .sw-id-info      { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
-    .sw-player-name  { font-family: 'Antonio', sans-serif; font-size: 1.95rem; text-transform: uppercase; letter-spacing: 2.5px; color: var(--dark); line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sw-player-name  { font-family: 'Light Sport', 'Antonio', sans-serif; font-size: 1.95rem; text-transform: uppercase; letter-spacing: 2.5px; color: var(--dark); line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .sw-badges       { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
     .sw-role-tag     { font-size: .68rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--berry); background: rgba(194,24,91,.09); border: 1.5px solid rgba(194,24,91,.26); border-radius: 20px; padding: 3px 11px; }
     .sw-tier-badge   { font-size: .68rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; border-radius: 20px; padding: 3px 11px; }

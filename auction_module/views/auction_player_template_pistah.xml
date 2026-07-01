@@ -16,6 +16,7 @@
         rel="stylesheet"/>
   <title>Player Showcase – Pistah</title>
   <style>
+    @font-face{font-family:'Atlanta College';src:url('/auction_module/static/src/assets/fonts/Atlanta-College.ttf') format('truetype');font-weight:normal;font-style:normal;font-display:swap;}
     /* ── Reset ───────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -118,7 +119,7 @@
     }
     .pt-tourn-info-center { display: flex; flex-direction: column; gap: 2px; }
     .pt-tourn-name-center {
-      font-family: 'Orbitron', sans-serif;
+      font-family: 'Atlanta College', 'Orbitron', sans-serif;
       font-size: 1.05rem; font-weight: 700;
       letter-spacing: 2px; text-transform: uppercase;
       color: var(--text-main); line-height: 1;
@@ -216,7 +217,7 @@
       position: absolute;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      font-family: 'Orbitron', sans-serif;
+      font-family: 'Atlanta College', 'Orbitron', sans-serif;
       font-size: 22rem; font-weight: 900; line-height: 1;
       color: rgba(107,191,78,.04);
       white-space: nowrap;
@@ -244,7 +245,7 @@
         transparent 100%);
     }
     .pt-player-name {
-      font-family: 'Orbitron', sans-serif;
+      font-family: 'Atlanta College', 'Orbitron', sans-serif;
       font-size: 2.2rem; font-weight: 700;
       text-transform: uppercase; letter-spacing: 3px;
       color: #fff; line-height: 1.05;
@@ -257,7 +258,7 @@
       margin-top: 5px;
     }
     .pt-photo-serial {
-      font-family: 'Orbitron', sans-serif;
+      font-family: 'Atlanta College', 'Orbitron', sans-serif;
       font-size: .8rem; font-weight: 600;
       letter-spacing: 3px; color: var(--pistah);
       opacity: .85; margin-bottom: 6px;

@@ -33,7 +33,12 @@
             <field name="dpi">90</field>
         </record>
 
-
+        <!-- Card is laid out in px on a custom mm page, so the wkhtmltopdf dpi
+             value controls the px to mm scale: dpi=85 makes the card fill the
+             page. A higher dpi (e.g. the old 90) renders the same px card ~6%
+             smaller, leaving empty space at the bottom/right. This record lives
+             in a noupdate="1" block, so the value on already-installed DBs is
+             fixed by the migration script migrations/15.0.1.3/post-migrate.py. -->
         <record id="paperformat_card_landscape" model="report.paperformat">
             <field name="name">Card Format</field>
             <field name="default" eval="True" />
@@ -47,9 +52,8 @@
             <field name="margin_right">0</field>
             <field name="header_line" eval="False" />
             <field name="header_spacing">35</field>
-            <field name="dpi">90</field>
+            <field name="dpi">85</field>
         </record>
-
 
         <record id="paperformat_card_portrait" model="report.paperformat">
             <field name="name">Card Format Portrait</field>

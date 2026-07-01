@@ -11,6 +11,7 @@
       <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Saira:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&amp;display=swap" rel="stylesheet"/>
       <title>Player Showcase – Cherry</title>
       <style>
+        @font-face{font-family:'Tottenham';src:url('/auction_module/static/src/assets/fonts/Tottenham%20-%20Personal%202.otf') format('opentype');font-weight:normal;font-style:normal;font-display:swap;}
         /* ── Reset ──────────────────────────────────────────────────── */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
@@ -75,7 +76,7 @@
           background: rgba(220,20,60,.05);
         }
         .cr-tourn-info   { display: flex; flex-direction: column; gap: 2px; }
-        .cr-tourn-name   { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 2px; color: var(--text-main); line-height: 1; text-shadow: 0 0 12px rgba(220,20,60,.28); }
+        .cr-tourn-name   { font-family: 'Tottenham', 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 2px; color: var(--text-main); line-height: 1; text-shadow: 0 0 12px rgba(220,20,60,.28); }
         .cr-tourn-desc   { font-size: .62rem; font-weight: 400; letter-spacing: 1.5px; color: var(--text-dim); }
         .cr-header-right { flex: 0 0 auto; display:flex; align-items:center; gap:10px; }
         .cr-fs-btn { display:flex;align-items:center;justify-content:center;flex-shrink:0;width:34px;height:34px;border-radius:8px;background:rgba(220,20,60,0.10);border:1.5px solid rgba(220,20,60,0.35);color:var(--cherry);cursor:pointer;padding:0;transition:all 0.2s }
@@ -111,15 +112,15 @@
           background: linear-gradient(to bottom, var(--cherry-bright), var(--cherry-dark));
         }
         .cr-id-serial   { flex-shrink: 0; display: flex; align-items: baseline; gap: 2px; padding-right: 20px; }
-        .cr-serial-hash { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; color: var(--gold-dim); line-height: 1; }
+        .cr-serial-hash { font-family: 'Tottenham', 'Bebas Neue', sans-serif; font-size: 1.8rem; color: var(--gold-dim); line-height: 1; }
         .cr-serial-num  {
-          font-family: 'Bebas Neue', sans-serif; font-size: 3.4rem; line-height: .9;
+          font-family: 'Tottenham', 'Bebas Neue', sans-serif; font-size: 3.4rem; line-height: .9;
           background: linear-gradient(135deg, var(--gold) 30%, #fff8dc 65%, var(--gold-dim) 100%);
           -webkit-background-clip: text; -webkit-text-fill-color: transparent;
           background-clip: text; filter: drop-shadow(0 0 10px rgba(212,175,55,.45));
         }
         .cr-id-vsep { flex-shrink: 0; width: 1.5px; height: 48px; background: linear-gradient(to bottom, transparent, var(--cherry), transparent); margin: 0 20px; }
-        .cr-id-name  { flex: 1; min-width: 0; font-family: 'Bebas Neue', sans-serif; font-size: 2.8rem; color: #fff; letter-spacing: 3px; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 20px rgba(220,20,60,.28), 0 2px 8px rgba(0,0,0,.5); }
+        .cr-id-name  { flex: 1; min-width: 0; font-family: 'Tottenham', 'Bebas Neue', sans-serif; font-size: 2.8rem; color: #fff; letter-spacing: 3px; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 20px rgba(220,20,60,.28), 0 2px 8px rgba(0,0,0,.5); }
         .cr-id-meta  { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; margin-left: 16px; }
         .cr-role-tag { font-size: .7rem; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: var(--cherry-bright); background: rgba(220,20,60,.12); border: 1px solid rgba(220,20,60,.33); border-radius: 4px; padding: 3px 10px; }
         .cr-tier-badge { font-size: .68rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; border-radius: 4px; padding: 3px 10px; }

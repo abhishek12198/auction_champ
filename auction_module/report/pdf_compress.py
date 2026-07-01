@@ -44,8 +44,10 @@ class IrActionsReportCompress(models.Model):
 def _compress_pdf_ghostscript(pdf_bytes):
     """Run Ghostscript on pdf_bytes and return the compressed result.
 
-    Uses /ebook preset (≈150 DPI images) which is a good balance between
-    quality and file size for digital player cards.
+    Tuned for the auction player cards: keeps the player photo and tournament
+    logo sharp (colour images ~130 DPI, JPEG QFactor 0.8) while aggressively
+    compressing the many rasterised gradient / glassmorphism / shadow layers
+    that wkhtmltopdf emits per page, and de-duplicating repeated image objects.
     Returns None on any error so the caller can fall back to the original.
     """
     in_fd, in_path = tempfile.mkstemp(suffix='.pdf', prefix='ac_card_in_')
@@ -61,15 +63,33 @@ def _compress_pdf_ghostscript(pdf_bytes):
             [
                 'gs',
                 '-sDEVICE=pdfwrite',
-                '-dCompatibilityLevel=1.4',
+                '-dCompatibilityLevel=1.5',
+                # Merge byte-identical images (logos/backgrounds) into a single object.
+                '-dDetectDuplicateImages=true',
                 '-dPDFSETTINGS=/ebook',
-                '-dColorImageResolution=150',
-                '-dGrayImageResolution=150',
+                # Cap colour images (photos/logos) at ~130 DPI – sharp on the card,
+                # but avoids embedding oversized source photos.
+                '-dDownsampleColorImages=true',
+                '-dColorImageResolution=130',
+                '-dColorImageDownsampleThreshold=1.0',
+                # Soft-mask / shadow layers are greyscale – downsample harder.
+                '-dDownsampleGrayImages=true',
+                '-dGrayImageResolution=110',
+                '-dDownsampleMonoImages=true',
                 '-dMonoImageResolution=150',
+                # Force JPEG (DCT) on colour images with an explicit quality factor.
+                # QFactor 0.8 keeps photos/logos crisp while compressing the many
+                # smooth gradient/glassmorphism panels much smaller.
+                '-dAutoFilterColorImages=false',
+                '-dColorImageFilter=/DCTEncode',
                 '-dNOPAUSE',
                 '-dQUIET',
                 '-dBATCH',
                 '-sOutputFile=' + out_path,
+                '-c',
+                '<< /ColorImageDict << /QFactor 0.8 /Blend 1 '
+                '/HSamples [2 1 1 2] /VSamples [2 1 1 2] >> >> setdistillerparams',
+                '-f',
                 in_path,
             ],
             capture_output=True,
