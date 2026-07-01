@@ -1264,7 +1264,7 @@ a { text-decoration: none; }
       x += '<Row>';
       x += '<Cell ss:StyleID="' + base + '"><Data ss:Type="Number">' + (i + 1) + '</Data></Cell>';
       x += '<Cell ss:StyleID="' + base + '"><Data ss:Type="String">' + escXml(p.name || '') + '</Data></Cell>';
-      x += '<Cell ss:StyleID="' + base + '"><Data ss:Type="String">' + escXml(p.contact || p.masked_contact || '') + '</Data></Cell>';
+      x += '<Cell ss:StyleID="' + base + '"><Data ss:Type="String">' + escXml(p.masked_contact || p.contact || '') + '</Data></Cell>';
       x += '<Cell ss:StyleID="' + payCell + '"><Data ss:Type="String">' + (p.amount_paid ? 'Paid' : 'Unpaid') + '</Data></Cell>';
       x += '<Cell ss:StyleID="' + base + '"><Data ss:Type="String">' + escXml(p.state || '') + '</Data></Cell>';
       x += '<Cell ss:StyleID="' + base + '"><Data ss:Type="String">' + escXml(p.team || '') + '</Data></Cell>';
@@ -1342,7 +1342,7 @@ a { text-decoration: none; }
       h += '<tr class="' + cls + '">';
       h += '<td>' + (i + 1) + '</td>';
       h += '<td>' + ex(p.name || '') + '</td>';
-      h += '<td>' + ex(p.contact || p.masked_contact || '') + '</td>';
+      h += '<td>' + ex(p.masked_contact || p.contact || '') + '</td>';
       h += '<td><span class="' + (paid ? 'p' : 'u') + '">' + (paid ? '&#10003; Paid' : '&#10007; Unpaid') + '</span></td>';
       h += '<td>' + ex(p.state || '') + '</td>';
       h += '<td>' + ex(p.team || '') + '</td>';
