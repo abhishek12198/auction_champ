@@ -246,7 +246,7 @@
                                             class="o_tps_btn o_tps_jersey"
                                             attrs="{'invisible': [('enable_jersey_section', '=', False)]}">
                                         <span class="o_tps_count o_tps_jersey_icon">
-                                            <i class="fa fa-list-ul"/>
+                                            <i class="fa fa-list-ul" title="Players List"/>
                                         </span>
                                         <span class="o_tps_label">Jersey</span>
                                     </button>
@@ -458,7 +458,7 @@
                                         </t>
                                         <t t-else="">
                                             <div class="o_atk_logo_placeholder">
-                                                <i class="fa fa-trophy"/>
+                                                <i class="fa fa-trophy" title="Tournament"/>
                                             </div>
                                         </t>
                                     </div>
@@ -485,18 +485,18 @@
                                 <!-- Stats row -->
                                 <div class="o_atk_stats">
                                     <div class="o_atk_stat">
-                                        <i class="fa fa-calendar o_atk_stat_icon"/>
+                                        <i class="fa fa-calendar o_atk_stat_icon" title="Date"/>
                                         <span t-if="record.tournament_date.raw_value"
                                               t-esc="record.tournament_date.value"/>
                                         <span t-else="" class="text-muted">No date set</span>
                                     </div>
                                     <div class="o_atk_stat">
-                                        <i class="fa fa-users o_atk_stat_icon"/>
+                                        <i class="fa fa-users o_atk_stat_icon" title="Players"/>
                                         <t t-esc="record.registered_player_count.raw_value"/>
                                         <span class="o_atk_stat_label"> Players</span>
                                     </div>
                                     <div class="o_atk_stat">
-                                        <i class="fa fa-star o_atk_stat_icon"/>
+                                        <i class="fa fa-star o_atk_stat_icon" title="Points per Team"/>
                                         <t t-esc="record.team_max_points.raw_value || 0"/>
                                         <span class="o_atk_stat_label"> Pts/Team</span>
                                     </div>
@@ -504,17 +504,17 @@
 
                                 <!-- Venue -->
                                 <div t-if="record.venue.raw_value" class="o_atk_venue">
-                                    <i class="fa fa-map-marker o_atk_stat_icon"/>
+                                    <i class="fa fa-map-marker o_atk_stat_icon" title="Venue"/>
                                     <span t-esc="record.venue.value"/>
                                 </div>
 
                                 <!-- Footer: organizer -->
                                 <div class="o_atk_footer">
                                     <span t-if="record.organizer_uid.raw_value" class="o_atk_organizer">
-                                        <i class="fa fa-user-circle-o"/> <t t-esc="record.organizer_uid.value"/>
+                                        <i class="fa fa-user-circle-o" title="Organiser"/> <t t-esc="record.organizer_uid.value"/>
                                     </span>
                                     <span class="o_atk_footer_right">
-                                        <i class="fa fa-angle-right"/>
+                                        <i class="fa fa-angle-right" title="Open"/>
                                     </span>
                                 </div>
 

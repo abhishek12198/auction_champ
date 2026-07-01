@@ -15,7 +15,10 @@
     'author': 'Auction Champ',
     'category': 'Theme/Backend',
     'depends': ['base_setup', 'web_editor', 'mail', 'auction_module'],
-    'data': ['data/webclient_templates.xml'],
+    'data': [
+        'data/webclient_templates.xml',
+        'views/res_config_settings_view.xml',
+    ],
     'assets': {
         # ── 1. Primary SCSS variables (loaded earliest, before Bootstrap) ──────
         'web._assets_primary_variables': [

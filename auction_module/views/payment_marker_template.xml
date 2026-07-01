@@ -211,6 +211,14 @@ a { text-decoration: none; }
 .pm-upload-btn.uploading { opacity: .6; pointer-events: none; }
 .pm-unlink-btn { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 7px; border: 1.5px solid #f87171; background: #fff1f2; color: #dc2626; cursor: pointer; font-size: .85rem; transition: background .15s, border-color .15s; }
 .pm-unlink-btn:hover { background: #fee2e2; border-color: #b91c1c; }
+/* Contact reveal / call */
+.pm-contact { display: inline-flex; align-items: center; gap: 6px; }
+.pm-contact-num { font-variant-numeric: tabular-nums; letter-spacing: .5px; white-space: nowrap; }
+.pm-contact-eye { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; border: 1.5px solid var(--bdr); background: var(--surf); cursor: pointer; font-size: .82rem; padding: 0; line-height: 1; transition: background .15s, border-color .15s; }
+.pm-contact-eye:hover { background: var(--surf3); border-color: var(--navy); }
+.pm-contact-call { display: none; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; border: 1.5px solid #22c55e; background: #f0fdf4; color: #16a34a; cursor: pointer; font-size: .82rem; text-decoration: none; line-height: 1; transition: background .15s, border-color .15s; }
+.pm-contact-call:hover { background: #dcfce7; border-color: #15803d; }
+.pm-contact.revealed .pm-contact-call { display: inline-flex; }
 /* Lightbox overlay */
 .pm-lb { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.82); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
 .pm-lb.open { display: flex; }
@@ -249,6 +257,7 @@ a { text-decoration: none; }
   .pm-print-unpaid{ color: #dc2626; font-weight: 700; }
   .pm-table th { background: #1a2744 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .pm-table tbody tr:nth-child(even) td { background: #f5f7fa !important; -webkit-print-color-adjust: exact; }
+  .pm-contact-eye, .pm-contact-call { display: none !important; }
 }
 
 /* Responsive */
@@ -531,6 +540,28 @@ a { text-decoration: none; }
     return v ? esc(v) : '<span style="color:#94a3b8">\u2014</span>';
   }
 
+  /* ── Contact cell: masked by default, eye to reveal, call button once revealed ── */
+  function maskContact(c) {
+    var s = String(c || '');
+    var digits = s.replace(/\D/g, '');
+    if (digits.length <= 4) return s;
+    var visible = s.slice(-4);
+    var masked  = s.slice(0, -4).replace(/\d/g, '\u2022');
+    return masked + visible;
+  }
+
+  function contactCell(p) {
+    if (!p.contact) return '<span style="color:#94a3b8">\u2014</span>';
+    var full   = esc(p.contact);
+    var masked = esc(maskContact(p.contact));
+    var telHref = 'tel:' + esc(String(p.contact).replace(/[^0-9+]/g, ''));
+    return '<div class="pm-contact">' +
+      '<span class="pm-contact-num" data-full="' + full + '" data-masked="' + masked + '">' + masked + '</span>' +
+      '<button type="button" class="pm-contact-eye" title="Show number">&#128065;</button>' +
+      '<a class="pm-contact-call" href="' + telHref + '" title="Call this number">&#128222;</a>' +
+      '</div>';
+  }
+
   /* ── State badge ── */
   function badge(st) {
     var labels = {draft: 'Draft', auction: 'In Auction', sold: 'Sold', unsold: 'Unsold'};
@@ -674,7 +705,7 @@ a { text-decoration: none; }
         '<div><div class="pm-pname">' + esc(p.name) + '</div>' +
         (p.role ? '<div class="pm-prole">' + esc(p.role) + '</div>' : '') +
         '</div></div></td>' +
-      '<td>' + dash(p.contact) + '</td>' +
+      '<td>' + contactCell(p) + '</td>' +
       '<td>' +
         '<button class="pm-pay-btn ' + (p.amount_paid ? 'is-paid' : 'is-unpaid') + '" ' +
                 'data-pay-id="' + p.id + '" data-paid="' + paid + '">' +
@@ -711,7 +742,7 @@ a { text-decoration: none; }
         '<span class="pm-card-sl">#' + (p.sl_no || idx + 1) + '</span>' +
       '</div>' +
       '<div class="pm-card-body">' +
-        '<div class="pm-card-field"><div class="pm-fl">Contact</div><div class="pm-fv">' + dash(p.contact) + '</div></div>' +
+        '<div class="pm-card-field"><div class="pm-fl">Contact</div><div class="pm-fv">' + contactCell(p) + '</div></div>' +
         '<div class="pm-card-field"><div class="pm-fl">Team</div><div class="pm-fv">' + dash(p.team) + '</div></div>' +
         '<div class="pm-card-field"><div class="pm-fl">Manager</div><div class="pm-fv">' + dash(p.manager) + '</div></div>' +
         '<div class="pm-card-field"><div class="pm-fl">Tier</div><div class="pm-fv">' + dash(p.tier) + '</div></div>' +
@@ -919,6 +950,25 @@ a { text-decoration: none; }
           b.classList.remove('uploading'); b.textContent = '\uD83D\uDCE4';
         });
       });
+  });
+
+  /* ── Contact reveal / call (delegated, attached once) ── */
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('button.pm-contact-eye');
+    if (!btn) return;
+    var wrap = btn.closest('.pm-contact');
+    if (!wrap) return;
+    var numEl  = wrap.querySelector('.pm-contact-num');
+    var revealed = wrap.classList.toggle('revealed');
+    if (revealed) {
+      numEl.textContent = numEl.getAttribute('data-full');
+      btn.innerHTML = '\uD83D\uDE48';
+      btn.title = 'Hide number';
+    } else {
+      numEl.textContent = numEl.getAttribute('data-masked');
+      btn.innerHTML = '\uD83D\uDC41';
+      btn.title = 'Show number';
+    }
   });
 
   /* ── Unlink proof ── */

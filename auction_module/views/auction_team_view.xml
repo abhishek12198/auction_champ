@@ -51,7 +51,7 @@
                                     <div class="atk-banner-info">
                                         <div class="atk-team-name"><t t-esc="record.name.raw_value"/></div>
                                         <div t-if="record.manager.raw_value" class="atk-owner">
-                                            <i class="fa fa-user-o"/>
+                                            <i class="fa fa-user-o" title="Manager"/>
                                             <t t-esc="record.manager.raw_value"/>
                                         </div>
                                     </div>

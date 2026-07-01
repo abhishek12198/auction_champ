@@ -65,7 +65,7 @@
                                          alt="Player"
                                          onerror="this.style.display='none'"/>
                                     <div class="pk2-photo-fallback">
-                                        <i class="fa fa-user"/>
+                                        <i class="fa fa-user" title="Player Photo Fallback"/>
                                     </div>
 
                                     <!-- View full photo button (visible on hover) -->
@@ -124,8 +124,7 @@
                                     </t>
                                     <t t-if="record.assigned_team_id.raw_value">
                                         <div class="pk2-info-row pk2-team">
-                                            <i class="fa fa-shield"/>
-                                            <span t-esc="record.assigned_team_id.value"/>
+                                            <i class="fa fa-shield" title="Team"/>
                                             <t t-if="record.amount_paid.raw_value">
                                                 <b style="margin-left:auto;color:#16a34a;flex-shrink:0;">₹<t t-esc="record.amount_paid.raw_value"/></b>
                                             </t>
@@ -338,8 +337,7 @@
                                             <div class="pjk-player-name" t-esc="record.name.raw_value"/>
                                             <t t-if="record.assigned_team_id.raw_value">
                                                 <div class="pjk-team-name">
-                                                    <i class="fa fa-shield"/>
-                                                    <t t-esc="record.assigned_team_id.value"/>
+                                                    <i class="fa fa-shield" title="Team"/>
                                                 </div>
                                             </t>
                                         </div>

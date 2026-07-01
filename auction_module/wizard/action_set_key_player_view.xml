@@ -20,14 +20,14 @@
                             </div>
                         </div>
                         <div class="skp-header-star">
-                            <i class="fa fa-star"/>
+                            <i class="fa fa-star" title="Icon Player"/>
                         </div>
                     </div>
 
                     <!-- Team selector -->
                     <div class="skp-section">
                         <div class="skp-section-label">
-                            <i class="fa fa-shield"/> Select Team
+                            <i class="fa fa-shield" title="Team"/> Select Team
                         </div>
                         <field name="team_selection" widget="selection_badge"/>
                         <field name="team_id" invisible="1" required="0" force_save="1"
@@ -44,7 +44,7 @@
                             </div>
                             <div class="skp-av-connector">
                                 <div class="skp-av-line"/>
-                                <div class="skp-av-star"><i class="fa fa-star"/></div>
+                                <div class="skp-av-star"><i class="fa fa-star" title="Icon Player"/></div>
                                 <div class="skp-av-line"/>
                             </div>
                             <div class="skp-av-team">
@@ -54,7 +54,7 @@
 
                         <!-- Confirmation sentence -->
                         <div class="skp-assign-info">
-                            <i class="fa fa-info-circle skp-info-icon"/>
+                            <i class="fa fa-info-circle skp-info-icon" title="Assignment Info"/>
                             <span>
                                 <field name="player_id" readonly="1" class="skp-info-name"/>
                                 <span class="skp-info-label"> will be the Icon Player for </span>
