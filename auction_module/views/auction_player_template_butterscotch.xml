@@ -421,7 +421,7 @@
 
       /* ── responsive ─────────────────────────── */
       @media (max-width: 900px) {
-        html, body { height: auto; overflow: auto; }
+        html, body { height: auto; overflow: auto; overflow-x: hidden; }
         .hud-arena {
           grid-template-columns: 1fr;
           height: auto;
@@ -430,7 +430,34 @@
         .hud-photo-col::after { display: none; }
         .hud-serial-watermark { font-size: 7rem; }
         .hud-player-name { font-size: 1.8rem; }
-        .hud-header { grid-template-columns: 1fr 80px 1fr; }
+        /* Header: stack into a centered column so the long title stops
+           overflowing and overlapping the logos */
+        .hud-header {
+          grid-template-columns: 1fr;
+          height: auto;
+          padding: 12px 12px 14px;
+          justify-items: center;
+          gap: 8px;
+        }
+        .hud-logo-center { order: 1; gap: 10px; }
+        .hud-logo-center .ac-logo { width: 50px; height: 50px; }
+        .hud-logo-center .tourn-logo { max-height: 44px; }
+        .hud-tourn-info { order: 2; align-items: center; }
+        .hud-tourn-name {
+          font-size: 1.15rem;
+          letter-spacing: 1.5px;
+          line-height: 1.15;
+          white-space: normal;
+          text-align: center;
+        }
+        .hud-tourn-desc { text-align: center; }
+        .hud-tourn-logo { position: static; }
+        .hud-header-controls { top: 10px; right: 12px; }
+      }
+      @media (max-width: 430px) {
+        .hud-tourn-name { font-size: 1rem; letter-spacing: 1px; }
+        .hud-player-name { font-size: 1.5rem; }
+        .hud-logo-center .ac-logo { width: 42px; height: 42px; }
       }
 /* ── Theme toggle ── */
 #bs-theme-btn{background:rgba(245,200,66,0.10);border:1px solid rgba(245,200,66,0.35);border-radius:20px;padding:5px 12px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:var(--gold);letter-spacing:0.04em;transition:all 0.2s}

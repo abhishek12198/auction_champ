@@ -253,6 +253,55 @@ body[data-theme="light"] .cr-brand-name,body[data-theme="light"] .cr-tourn-name{
 body[data-theme="light"] .cr-brand-sub,body[data-theme="light"] .cr-tourn-desc{color:var(--cherry-mid)}
 body[data-theme="light"] .cr-live-badge{background:rgba(220,20,60,0.10);color:var(--cherry-dark);border-color:rgba(220,20,60,0.28)}
 body[data-theme="light"] #cr-theme-btn{color:var(--cherry-dark)}
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE / TABLET — reflow arena into a single column
+   ══════════════════════════════════════════════════════════ */
+@media (max-width: 820px){
+  html,body{height:auto; min-height:0; overflow-x:hidden; overflow-y:auto;}
+  /* Header wraps; tournament block on its own centered row */
+  .cr-header{flex-wrap:wrap; height:auto; padding:10px 12px; gap:8px;}
+  .cr-header-center{order:3; flex:1 0 100%; justify-content:center;}
+  .cr-tourn-name{font-size:1.02rem; white-space:normal; text-align:center; line-height:1.1;}
+  .cr-tourn-logo{height:40px;}
+  .cr-live-badge{font-size:.62rem; padding:4px 9px; letter-spacing:2px;}
+  .cr-fs-btn{width:30px; height:30px;}
+
+  /* Arena + main: natural height, single column */
+  .cr-arena{height:auto; overflow:visible;}
+  .cr-main{display:block; overflow:visible;}
+
+  /* Identity bar wraps; name drops to its own line */
+  .cr-id-bar{height:auto; flex-wrap:wrap; padding:12px 14px; gap:8px 10px;}
+  .cr-id-bar::before{display:none;}
+  .cr-serial-num{font-size:2.6rem;}
+  .cr-id-vsep{height:40px; margin:0 10px;}
+  .cr-id-name{font-size:1.5rem; white-space:normal; letter-spacing:1px; flex:1 1 100%; order:5; text-overflow:clip;}
+  .cr-id-meta{margin-left:0; align-items:flex-start; flex-direction:row; gap:8px;}
+
+  /* Photo column full width */
+  .cr-photo-col{height:56vh; min-height:320px;}
+  .cr-photo-col::after{display:none;}
+  .cr-photo-wm{font-size:9rem;}
+
+  /* Stats column full width, flowing */
+  .cr-stats-col{overflow:visible; padding:16px 16px 12px; border-left:none;}
+  .cr-stat-key{flex:0 0 92px; font-size:.62rem; padding:9px 10px;}
+  .cr-stat-val{font-size:.82rem; padding:9px 12px;}
+  .cr-base-price-box{margin-top:14px;}
+  .cr-base-val{font-size:1.3rem;}
+
+  /* Actions: stack full-width */
+  .cr-actions{height:auto; flex-wrap:wrap; padding:14px 16px; gap:10px;}
+  .cr-btn{flex:1 1 100%; height:48px;}
+}
+@media (max-width: 430px){
+  .cr-tourn-name{font-size:.9rem;}
+  .cr-id-name{font-size:1.25rem;}
+  .cr-serial-num{font-size:2.2rem;}
+  .cr-stat-key{flex:0 0 82px; font-size:.58rem;}
+  .cr-photo-col{height:52vh; min-height:280px;}
+}
       </style>
     </head>
 

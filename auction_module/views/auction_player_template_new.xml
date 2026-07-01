@@ -301,6 +301,15 @@ body[data-theme="dark"] .single-header{
   .stroke-only{font-size:14rem;}
   .player-profession{max-width:560px;}
 }
+
+/* ── Mobile: keep the brand logo clear of the top-right controls ── */
+@media (max-width:768px){
+  .single-header{height:auto !important;}
+  .single-header .py-3{padding:.5rem 104px .5rem 14px !important; text-align:left !important;}
+  .single-header .py-3 img{max-height:30px; width:auto;}
+  #vn-theme-btn{top:10px; right:50px; padding:4px 10px; font-size:10px;}
+  .team-single-logo{width:70px !important; height:70px !important;}
+}
     </style>
   </head>
   <body style="min-height: 100vh" t-att-data-player-id="player.id" t-att-data-next-countdown="tournament.next_player_countdown if tournament else 5">

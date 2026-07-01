@@ -631,6 +631,42 @@ body[data-theme="light"] .pt-brand-name,body[data-theme="light"] .pt-tourn-name-
 body[data-theme="light"] .pt-brand-season,body[data-theme="light"] .pt-tourn-desc-center{color:var(--slate-dark)}
 body[data-theme="light"] .pt-live-badge{background:rgba(107,191,78,0.12);color:var(--pistah-dark);border-color:rgba(107,191,78,0.30)}
 body[data-theme="light"] #pt-theme-btn{color:var(--pistah-dark)}
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE / TABLET — reflow split stage into a single column
+   ══════════════════════════════════════════════════════════ */
+@media (max-width: 820px){
+  html,body{height:auto; min-height:0; overflow-x:hidden; overflow-y:auto;}
+  /* Header wraps; tournament block on its own centered row */
+  .pt-header{flex-wrap:wrap; height:auto; padding:10px 12px; gap:8px;}
+  .pt-header-center{order:3; flex:1 0 100%; justify-content:center;}
+  .pt-tourn-name-center{font-size:1rem; white-space:normal; text-align:center; line-height:1.1;}
+  .pt-tourn-logo-center{height:42px;}
+  .pt-live-badge{font-size:.62rem; padding:4px 9px; letter-spacing:2px;}
+
+  /* Stage: single column, natural height; pad for the fixed footer */
+  .pt-stage{display:block; height:auto; padding-bottom:64px;}
+  .pt-right-col{overflow:visible;}
+
+  /* Photo panel full width with the name overlay */
+  .pt-photo-panel{height:56vh; min-height:330px;}
+  .pt-photo-name-block{padding:20px 18px 16px;}
+  .pt-player-name{font-size:1.7rem; letter-spacing:1px;}
+  .pt-player-role{font-size:.8rem; letter-spacing:3px;}
+
+  /* Info panel + action strips flow naturally, drop the left borders */
+  .pt-info-panel{overflow:visible; padding:18px 16px 14px; border-left:none;}
+  .pt-actions{padding:12px 16px 8px; border-left:none;}
+  .pt-next-strip{padding:8px 16px 14px; border-left:none;}
+  .pt-stat-val{font-size:.86rem;}
+}
+@media (max-width: 430px){
+  .pt-tourn-name-center{font-size:.9rem;}
+  .pt-player-name{font-size:1.45rem;}
+  .pt-stats-grid{grid-template-columns:1fr;}
+  .pt-actions{grid-template-columns:1fr;}
+  .pt-photo-panel{height:52vh; min-height:280px;}
+}
   </style>
 </head>
 
