@@ -10,27 +10,35 @@
       <link href="/auction_module/static/src/assets/css/bootstrap.min.css" rel="stylesheet"/>
       <link rel="preconnect" href="https://fonts.googleapis.com"/>
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
-      <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&amp;family=Barlow+Condensed:wght@400;500;600;700;800&amp;family=Teko:wght@500;600;700&amp;display=swap"
+      <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&amp;family=Barlow+Condensed:wght@400;500;600;700;800&amp;family=Teko:wght@500;600;700&amp;family=Rajdhani:wght@500;600;700&amp;family=Oswald:wght@500;600;700&amp;family=Bebas+Neue&amp;display=swap"
             rel="stylesheet" media="print" onload="this.media='all'"/>
-      <noscript><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&amp;family=Barlow+Condensed:wght@400;500;600;700;800&amp;family=Teko:wght@500;600;700&amp;display=swap" rel="stylesheet"/></noscript>
+      <noscript><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&amp;family=Barlow+Condensed:wght@400;500;600;700;800&amp;family=Teko:wght@500;600;700&amp;family=Rajdhani:wght@500;600;700&amp;family=Oswald:wght@500;600;700&amp;family=Bebas+Neue&amp;display=swap" rel="stylesheet"/></noscript>
       <title>Auction Bid Summary</title>
       <style>
+        /* Sports display font used by the Butterscotch theme */
+        @font-face {
+          font-family: 'Baseball Club Solid';
+          src: url('/auction_module/static/src/assets/fonts/BaseballClubSolid.otf') format('opentype');
+          font-weight: normal;
+          font-style: normal;
+          font-display: swap;
+        }
         
         :root,
         [data-theme="vanilla"] {
-          --bg:#050c1a; --bg2:#0b1529; --bg3:#0d1f3c;
-          --acc:#E8A020; --acc2:#FFD166; --glow:rgba(232,160,32,.30);
-          --bdr:rgba(232,160,32,.18); --bdr2:rgba(255,255,255,.08);
-          --tx:#EEF4FF; --tx-d:rgba(238,244,255,.55); --tx-m:rgba(238,244,255,.30);
-          --hf:'Orbitron',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Teko',sans-serif;
-          --card-bg:rgba(11,21,41,.85); --card-bdr:rgba(232,160,32,.15);
+          --bg:#071d4d; --bg2:#0a2a70; --bg3:#123f9e;
+          --acc:#3f7cf0; --acc2:#8fb8ff; --glow:rgba(46,107,230,.32);
+          --bdr:rgba(150,185,255,.22); --bdr2:rgba(255,255,255,.08);
+          --tx:#EAF1FF; --tx-d:rgba(234,241,255,.60); --tx-m:rgba(234,241,255,.32);
+          --hf:'EPSOR','Rajdhani','Oswald','Bebas Neue',sans-serif; --bf:'Rajdhani','Barlow Condensed',sans-serif; --nf:'Oswald','Teko',sans-serif;
+          --card-bg:rgba(18,52,120,.60); --card-bdr:rgba(150,185,255,.18);
         }
         [data-theme="butterscotch"] {
           --bg:#06060f; --bg2:#0f0f20; --bg3:#1a1430;
           --acc:#F5C842; --acc2:#FF9F1C; --glow:rgba(245,200,66,.30);
           --bdr:rgba(245,200,66,.18); --bdr2:rgba(255,255,255,.08);
           --tx:#fff; --tx-d:rgba(255,255,255,.55); --tx-m:rgba(255,255,255,.30);
-          --hf:'Teko',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Teko',sans-serif;
+          --hf:'Baseball Club Solid','Teko',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Teko',sans-serif;
           --card-bg:rgba(15,15,32,.85); --card-bdr:rgba(245,200,66,.15);
         }
         [data-theme="strawberry"] {
@@ -448,6 +456,18 @@
           font-size: 2.15rem;
           line-height: .9;
         }
+        /* Card grid stat figures (Players Needed · Max Bid · Squad):
+           shrink so 6-8 characters stay on a single line, no overflow. */
+        .bs2-card-stats .bs2-stat-figure {
+          font-size: 1.42rem;
+          line-height: 1;
+          white-space: nowrap;
+          letter-spacing: .01em;
+        }
+        .bs2-card-stats .bs2-stat-figure .bs2-unit {
+          font-size: .7rem;
+          margin-bottom: 3px;
+        }
         .bs2-chip-label,
         .bs2-stat-label {
           margin-top: 4px;
@@ -461,6 +481,13 @@
           display: inline-flex;
           flex-direction: column;
           gap: 4px;
+        }
+        /* List/table Squad value: shrink to keep e.g. "12 / 15" on one line */
+        .bs2-squad-wrap .bs2-squad-value {
+          font-size: 1.5rem;
+          line-height: 1;
+          white-space: nowrap;
+          letter-spacing: .01em;
         }
         .bs2-badge {
           display: inline-flex;
@@ -836,7 +863,7 @@
                       <span data-role="status-badge" data-base-class="bs2-badge" t-attf-class="bs2-badge #{status_cls}"><t t-esc="status_label"/></span>
                     </td>
                     <td class="bs2-access-cell">
-                      <a t-att-href="'/auction/get/players/team/%s' % team.team_id.id" class="bs2-engage">&#9654; ENGAGE</a>
+                      <a t-att-href="'/' + (db_name or '') + '/auction/get/players/team/' + str(team.team_id.id)" class="bs2-engage">&#9654; ENGAGE</a>
                     </td>
                   </tr>
                 </t>
@@ -900,7 +927,7 @@
 
                   <div class="bs2-card-foot">
                     <span data-role="status-badge" data-base-class="bs2-badge bs2-card-status" t-attf-class="bs2-badge bs2-card-status #{status_cls}"><t t-esc="status_label"/></span>
-                    <a t-att-href="'/auction/get/players/team/%s' % team.team_id.id" class="bs2-engage">&#9654; ENGAGE</a>
+                    <a t-att-href="'/' + (db_name or '') + '/auction/get/players/team/' + str(team.team_id.id)" class="bs2-engage">&#9654; ENGAGE</a>
                   </div>
                 </div>
               </div>
@@ -965,7 +992,7 @@
 
               <!-- Footer: engage button -->
               <div class="bs2-mob-foot">
-                <a t-att-href="'/auction/get/players/team/%s' % team.team_id.id" class="bs2-engage" style="width:100%;justify-content:center;">&#9654; VIEW SQUAD</a>
+                <a t-att-href="'/' + (db_name or '') + '/auction/get/players/team/' + str(team.team_id.id)" class="bs2-engage" style="width:100%;justify-content:center;">&#9654; VIEW SQUAD</a>
               </div>
 
             </div>

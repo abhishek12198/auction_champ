@@ -16,6 +16,14 @@
       <title>Squad</title>
 
       <style>
+        /* Sports display font used by the Butterscotch theme */
+        @font-face {
+          font-family: 'Baseball Club Solid';
+          src: url('/auction_module/static/src/assets/fonts/BaseballClubSolid.otf') format('opentype');
+          font-weight: normal;
+          font-style: normal;
+          font-display: swap;
+        }
         /* ── CSS variables — identical token set as Bid Summary ── */
         :root,
         [data-theme="vanilla"] {
@@ -31,7 +39,7 @@
           --acc:#F5C842; --acc2:#FF9F1C; --glow:rgba(245,200,66,.30);
           --bdr:rgba(245,200,66,.18); --bdr2:rgba(255,255,255,.08);
           --tx:#fff; --tx-d:rgba(255,255,255,.55); --tx-m:rgba(255,255,255,.30);
-          --hf:'Teko',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Teko',sans-serif;
+          --hf:'Baseball Club Solid','Teko',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Teko',sans-serif;
           --card-bg:rgba(15,15,32,.85); --card-bdr:rgba(245,200,66,.15);
         }
         [data-theme="strawberry"] {

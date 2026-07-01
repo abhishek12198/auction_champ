@@ -663,6 +663,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Live Auction Board</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&amp;family=Teko:wght@500;600&amp;display=swap"/>
 <style>
 /* ── THEME VARIABLES ─────────────────────────────────────────────── */
 :root {
@@ -1435,6 +1438,253 @@ img { display: block; }
   .lb-sold-amount { font-size: 2rem; }
   .lb-teams-wrap { padding: 0 14px 14px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   PREMIUM BROADCAST REVAMP — visual-only override layer.
+   Layered AFTER the base rules so it wins the cascade without editing
+   any existing selector, ID, class, markup structure or JS behaviour.
+   Uses the existing themed CSS variables (--lb-accent, --lb-glow, …).
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Stadium lighting — brighter, warmer, blended (less black) */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: -2; pointer-events: none;
+  background:
+    radial-gradient(120% 85% at 50% -10%, rgba(255,255,255,0.16) 0%, transparent 52%),
+    radial-gradient(95% 65% at 6% 2%, var(--lb-glow) 0%, transparent 50%),
+    radial-gradient(95% 65% at 94% 2%, var(--lb-glow) 0%, transparent 50%),
+    radial-gradient(150% 130% at 50% 118%, rgba(255,255,255,0.08) 0%, transparent 58%),
+    var(--lb-bg);
+}
+body::after {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(135% 125% at 50% 34%, transparent 78%, rgba(0,0,0,0.14) 100%);
+}
+/* Warmer, lighter base wash — per theme (all 5) */
+[data-theme="vanilla"] body::before {
+  background:
+    radial-gradient(120% 90% at 50% -12%, rgba(180,205,255,0.26) 0%, transparent 55%),
+    radial-gradient(95% 65% at 6% 2%, rgba(93,147,255,0.22) 0%, transparent 52%),
+    radial-gradient(95% 65% at 94% 2%, rgba(59,114,232,0.20) 0%, transparent 52%),
+    radial-gradient(150% 130% at 50% 120%, rgba(150,180,255,0.12) 0%, transparent 58%),
+    linear-gradient(160deg, #22345c 0%, #16213f 48%, #1f2e52 100%);
+}
+[data-theme="cherry"] body::before {
+  background:
+    radial-gradient(120% 90% at 50% -12%, rgba(255,170,170,0.24) 0%, transparent 55%),
+    radial-gradient(95% 65% at 6% 2%, rgba(248,113,113,0.22) 0%, transparent 52%),
+    radial-gradient(95% 65% at 94% 2%, rgba(220,38,38,0.20) 0%, transparent 52%),
+    radial-gradient(150% 130% at 50% 120%, rgba(255,150,150,0.12) 0%, transparent 58%),
+    linear-gradient(160deg, #3d1519 0%, #280d11 48%, #391317 100%);
+}
+[data-theme="butterscotch"] body::before {
+  background:
+    radial-gradient(120% 90% at 50% -12%, rgba(255,214,140,0.28) 0%, transparent 55%),
+    radial-gradient(95% 65% at 6% 2%, rgba(251,191,36,0.22) 0%, transparent 52%),
+    radial-gradient(95% 65% at 94% 2%, rgba(217,119,6,0.20) 0%, transparent 52%),
+    radial-gradient(150% 130% at 50% 120%, rgba(255,190,120,0.14) 0%, transparent 58%),
+    linear-gradient(160deg, #3d2a10 0%, #2a1c0a 48%, #382613 100%);
+}
+[data-theme="strawberry"] body::before {
+  background:
+    radial-gradient(120% 90% at 50% -12%, rgba(255,170,215,0.24) 0%, transparent 55%),
+    radial-gradient(95% 65% at 6% 2%, rgba(244,114,182,0.22) 0%, transparent 52%),
+    radial-gradient(95% 65% at 94% 2%, rgba(219,39,119,0.20) 0%, transparent 52%),
+    radial-gradient(150% 130% at 50% 120%, rgba(255,150,200,0.12) 0%, transparent 58%),
+    linear-gradient(160deg, #3d1228 0%, #280b1a 48%, #391026 100%);
+}
+[data-theme="pistah"] body::before {
+  background:
+    radial-gradient(120% 90% at 50% -12%, rgba(190,240,160,0.24) 0%, transparent 55%),
+    radial-gradient(95% 65% at 6% 2%, rgba(168,224,99,0.22) 0%, transparent 52%),
+    radial-gradient(95% 65% at 94% 2%, rgba(107,191,78,0.20) 0%, transparent 52%),
+    radial-gradient(150% 130% at 50% 120%, rgba(170,224,120,0.12) 0%, transparent 58%),
+    linear-gradient(160deg, #1d3a29 0%, #122a1c 48%, #1a3527 100%);
+}
+
+/* ── Premium sports typography ─────────────────────────────────────── */
+.lb-t-name, .lb-section-title, .lb-status-label, .lb-live-badge,
+.lb-hdr-status, .lb-state-overlay {
+  font-family: 'Oswald','Segoe UI',sans-serif;
+}
+.lb-player-name-big, .lb-sold-amount, .lb-base-val, .lb-mvp-pts,
+.lb-stamp-word, .lb-sold-team-name, .lb-clock {
+  font-family: 'Teko','Oswald','Segoe UI',sans-serif;
+}
+.lb-t-name { font-size: 1.3rem; letter-spacing: .4px; }
+.lb-player-name-big { font-weight: 600; letter-spacing: .5px; }
+
+/* ── Header — premium glass bar ────────────────────────────────────── */
+.lb-header {
+  padding: 15px 34px;
+  box-shadow: 0 6px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
+  backdrop-filter: blur(8px);
+}
+[data-theme="vanilla"] .lb-header {
+  background: linear-gradient(135deg, #101a38 0%, #24356e 55%, #2e4a8a 100%);
+  border-bottom: 1px solid rgba(93,147,255,0.28);
+}
+[data-theme="cherry"] .lb-header {
+  background: linear-gradient(135deg, #2a0a0c 0%, #6b1414 55%, #8a1f1f 100%);
+  border-bottom: 1px solid rgba(248,113,113,0.28);
+}
+[data-theme="butterscotch"] .lb-header {
+  background: linear-gradient(135deg, #2a1a06 0%, #6b3907 55%, #8a4d0a 100%);
+  border-bottom: 1px solid rgba(251,191,36,0.28);
+}
+[data-theme="strawberry"] .lb-header {
+  background: linear-gradient(135deg, #2a0818 0%, #6b1240 55%, #8a1a52 100%);
+  border-bottom: 1px solid rgba(244,114,182,0.28);
+}
+[data-theme="pistah"] .lb-header {
+  background: linear-gradient(135deg, #0c2010 0%, #1c4a22 55%, #26602e 100%);
+  border-bottom: 1px solid rgba(168,224,99,0.28);
+}
+.lb-t-logo {
+  width: 56px; height: 56px; border-radius: 14px;
+  box-shadow: 0 0 0 1px var(--lb-card-border), 0 8px 22px rgba(0,0,0,0.45);
+}
+.lb-hdr-center { flex-direction: column; align-items: center; gap: 6px; }
+.lb-live-badge {
+  align-self: center; flex: 0 0 auto;
+  background: linear-gradient(135deg, rgba(239,68,68,0.30), rgba(239,68,68,0.12));
+  box-shadow: 0 0 22px rgba(239,68,68,0.28), inset 0 0 0 1px rgba(239,68,68,0.45);
+  backdrop-filter: blur(4px);
+}
+.lb-hdr-status {
+  font-size: .58rem; font-weight: 600; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--lb-sub);
+}
+.lb-powered { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.05; }
+.lb-powered-by {
+  font-size: .48rem; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--lb-sub);
+}
+.lb-powered-logo {
+  height: 30px; width: auto; margin-top: 2px;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.45));
+}
+
+/* ── Cards — lighter glassmorphism + soft depth (all themes) ───────── */
+.lb-player-panel, .lb-history-card, .lb-mvp-card, .lb-teams-card, .lb-status-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.07));
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.14);
+  backdrop-filter: blur(10px);
+}
+.lb-player-panel {
+  align-self: start; position: sticky; top: 92px;
+  box-shadow: 0 22px 60px rgba(0,0,0,0.38), 0 0 0 1px rgba(255,255,255,0.10),
+              inset 0 1px 0 rgba(255,255,255,0.12);
+}
+
+/* ── Current Bid / Status — the hero number ────────────────────────── */
+.lb-status-card {
+  box-shadow: 0 18px 55px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.07);
+}
+.lb-status-auction {
+  position: relative; isolation: isolate;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02)),
+    linear-gradient(135deg, var(--lb-bid-from) 0%, var(--lb-bid-to) 100%);
+}
+.lb-status-sold {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02)),
+    linear-gradient(135deg, var(--lb-sold-from) 0%, var(--lb-sold-to) 100%);
+}
+.lb-status-auction::before {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(80% 100% at 50% 0%, var(--lb-glow) 0%, transparent 62%);
+  opacity: .55;
+}
+.lb-status-auction > * { position: relative; z-index: 1; }
+.lb-sold-amount {
+  font-size: 3.4rem; text-shadow: 0 0 26px var(--lb-glow); letter-spacing: 1px;
+  transition: all .3s ease;
+}
+.lb-status-label { letter-spacing: 3px; }
+
+/* Accent numbers glow */
+.lb-base-val, .lb-mvp-pts, .lb-tp-pts, .lb-tm-rpts {
+  text-shadow: 0 0 16px var(--lb-glow);
+}
+
+/* Section titles — gold accent */
+.lb-section-title { letter-spacing: 2.4px; color: var(--lb-accent2); }
+
+/* ── Team chips — subtle hover lift ────────────────────────────────── */
+.lb-team-chip {
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.lb-team-chip:hover {
+  transform: translateY(-3px);
+  border-color: var(--lb-accent);
+  box-shadow: 0 10px 26px rgba(0,0,0,0.4), 0 0 22px var(--lb-glow);
+}
+
+/* ── Sponsor ribbon — premium finish ───────────────────────────────── */
+.lb-sponsor-strip {
+  background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid var(--lb-sep);
+  border-radius: 14px; margin: 6px auto 12px;
+}
+.lb-sponsor-label { color: var(--lb-accent2); }
+.lb-sponsor-slide img { opacity: .9; filter: grayscale(0%); }
+
+/* ── Teams relocated to right column — vertical list ───────────────── */
+.lb-teams-card { margin-top: 0; }
+.lb-teams-grid { flex-direction: column; flex-wrap: nowrap; gap: 8px; }
+.lb-team-chip {
+  min-width: 0; width: 100%;
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.12);
+}
+.lb-team-chip > div:last-child { flex: 1; min-width: 0; }
+.lb-team-chip-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Sponsor SLIDER — larger, prominent bottom carousel band ────────── */
+.lb-sponsor-strip {
+  flex-direction: column; align-items: stretch; gap: 8px;
+  max-width: 1400px; padding: 14px 24px 18px;
+}
+.lb-sponsor-label {
+  font-size: .58rem; letter-spacing: 3px; text-align: center;
+}
+.lb-sponsor-track { height: 68px; }
+.lb-sponsor-slide {
+  justify-content: center; gap: 22px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--lb-sep);
+  border-radius: 14px;
+}
+.lb-sponsor-slide img {
+  height: 54px; max-width: 220px; opacity: 1;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+}
+.lb-sponsor-slide-name {
+  font-size: 1rem; font-weight: 800; letter-spacing: .5px;
+  color: var(--lb-text);
+}
+
+/* ── Responsive — TV / projector / ultra-wide / tablet scaling ─────── */
+@media (min-width: 1600px) {
+  .lb-main { max-width: 1840px; grid-template-columns: 440px 1fr; gap: 28px; padding: 28px 40px; }
+  .lb-teams-wrap, .lb-sponsor-strip { max-width: 1840px; }
+  .lb-t-name { font-size: 1.65rem; }
+  .lb-sold-amount { font-size: 4.2rem; }
+}
+@media (min-width: 2200px) {
+  body { font-size: 20px; }
+  .lb-main { max-width: 2200px; grid-template-columns: 540px 1fr; }
+  .lb-teams-wrap, .lb-sponsor-strip { max-width: 2200px; }
+  .lb-sold-amount { font-size: 5rem; }
+}
+@media (max-width: 600px) {
+  .lb-header { padding: 12px 16px; }
+  .lb-hdr-center { order: 3; width: 100%; align-items: flex-start; }
+  .lb-powered { align-items: flex-end; }
+}
 </style>
 </head>
 <body>
@@ -1462,8 +1712,13 @@ img { display: block; }
   </div>
   <div class="lb-hdr-center">
     <div class="lb-live-badge"><span class="lb-live-dot"></span> LIVE</div>
+    <div class="lb-hdr-status">Live Player Auction</div>
   </div>
   <div class="lb-hdr-right">
+    <div class="lb-powered">
+      <span class="lb-powered-by">Powered by</span>
+      <img class="lb-powered-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+    </div>
     <div class="lb-clock" id="lb-clock">--:--:--</div>
   </div>
 </header>
@@ -1548,16 +1803,14 @@ img { display: block; }
         <div class="lb-mvp-empty">No sold players yet</div>
       </div>
     </div>
+
+    <!-- Participating teams — vertical list in the right column -->
+    <div class="lb-teams-card" id="lb-teams-card" style="display:none;">
+      <div class="lb-section-title"><i class="fa fa-shield-halved"></i> Participating Teams</div>
+      <div class="lb-teams-grid" id="lb-teams-grid"></div>
+    </div>
   </section>
 </main>
-
-<!-- TEAMS STRIP -->
-<div class="lb-teams-wrap">
-  <div class="lb-teams-card" id="lb-teams-card" style="display:none;">
-    <div class="lb-section-title"><i class="fa fa-shield-halved"></i> Participating Teams</div>
-    <div class="lb-teams-grid" id="lb-teams-grid"></div>
-  </div>
-</div>
 
 <div class="lb-footer" id="lb-footer">
   <t t-if="tournament"><t t-esc="tournament.name"/> · </t>Live Auction Board · Auto-refreshes every 4 seconds

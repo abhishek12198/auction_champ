@@ -628,20 +628,13 @@ class Auction(http.Controller):
                     }, lazy=False)
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
-    @http.route('/auction/display_auction/remaining-players', type='http', auth='public', website=True, sitemap=False)
-    def display_remaining_players(self, **kwargs):
-        """Standalone page loaded inside the Remaining Players drawer iframe."""
-        env = request.env
-        tournament = self._resolve_tournament()
+    def _remaining_players_ctx(self, tournament, theme):
+        """Build the render context for the Remaining Players drawer."""
         t_domain = [('tournament_id', '=', tournament.id)] if tournament else []
-        players = env['auction.team.player'].sudo().search(
+        players = request.env['auction.team.player'].sudo().search(
             t_domain + [('state', '=', 'auction'), ('icon_player', '=', False)],
             order='sl_no asc',
         )
-
-        # Resolve theme: prefer explicit ?theme= param, then tournament setting
-        theme = kwargs.get('theme', '') or (tournament.player_display_template if tournament else '') or 'vanilla'
-
         # Group players by tier (preserving encounter order)
         tier_map = {}
         tier_order = []
@@ -655,16 +648,37 @@ class Auction(http.Controller):
                     'players':   [],
                 }
             tier_map[key]['players'].append(p)
-
         tier_groups = [tier_map[k] for k in tier_order]
-        return request.render('auction_module.remaining_players_template', {
+        return {
             'tier_groups':  tier_groups,
             'total_count':  len(players),
             'theme':        theme,
-        })
+        }
 
-    @http.route('/auction/get/players/team/<int:team_id>', type='http', auth='public', website=True)
-    def get_team_players(self, team_id):
+    @http.route('/auction/display_auction/remaining-players', type='http', auth='public', website=True, sitemap=False)
+    def display_remaining_players(self, **kwargs):
+        """Standalone page loaded inside the Remaining Players drawer iframe (legacy single-db)."""
+        tournament = self._resolve_tournament()
+        theme = kwargs.get('theme', '') or (tournament.player_display_template if tournament else '') or 'vanilla'
+        return request.render('auction_module.remaining_players_template',
+                              self._remaining_players_ctx(tournament, theme))
+
+    @http.route('/<string:db_name>/<string:tournament_slug>/auction/display_auction/remaining-players',
+                type='http', auth='none', website=False, sitemap=False)
+    def display_remaining_players_db(self, db_name, tournament_slug, **kwargs):
+        """DB-aware variant so the drawer loads on multi-database instances."""
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return self._not_found()
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('slug', '=', tournament_slug)], limit=1)
+            theme = kwargs.get('theme', '') or (tournament.player_display_template if tournament else '') or 'vanilla'
+            html = request.render('auction_module.remaining_players_template',
+                                  self._remaining_players_ctx(tournament, theme), lazy=False)
+        return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
+
+    def _team_players_render(self, team_id):
+        """Build (template_ref, ctx) for a team's squad/roster page."""
         player_data_list = []
         team_players = request.env['auction.auction.player'].sudo().search([('auction_id.team_id', '=', team_id)])
 
@@ -714,12 +728,29 @@ class Auction(http.Controller):
             'pistah': 'auction_module.auction_team_players_template_pistah',
         }
         template_ref = players_template_map.get(theme, 'auction_module.auction_team_players_template')
-        return request.render(template_ref, {
+        ctx = {
             'players': player_data_list,
             'team': team,
             'tournament': tournament,
             'theme': theme,
-        })
+        }
+        return template_ref, ctx
+
+    @http.route('/auction/get/players/team/<int:team_id>', type='http', auth='public', website=True)
+    def get_team_players(self, team_id):
+        template_ref, ctx = self._team_players_render(team_id)
+        return request.render(template_ref, ctx)
+
+    @http.route('/<string:db_name>/auction/get/players/team/<int:team_id>',
+                type='http', auth='none', website=False, sitemap=False)
+    def get_team_players_db(self, db_name, team_id, **kwargs):
+        """DB-aware variant so the roster loads on multi-database instances."""
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return self._not_found()
+            template_ref, ctx = self._team_players_render(team_id)
+            html = request.render(template_ref, ctx, lazy=False)
+        return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
     @http.route('/get_players/<int:team_id>', type='json', auth="user", methods=['POST'], csrf=False)
     def get_players(self, team_id):
@@ -951,9 +982,40 @@ class Auction(http.Controller):
         )
 
     @http.route('/<string:db_name>/<string:tournament_slug>/auction/payment-marker',
-                type='http', auth='user', website=False)
+                type='http', auth='none', website=False)
     def payment_marker_page(self, db_name, tournament_slug, **kw):
-        """Render the Payment Tracker web page. Optimised: ≤5 DB hits regardless of player count."""
+        """Render the Payment Tracker web page. Optimised: ≤5 DB hits regardless of player count.
+
+        auth='none' so the route is reachable even when no database is selected
+        (multi-db, logged-out). We then: (1) pin the URL's DB into the session so
+        the login form binds to the right DB, (2) bounce anonymous users to the
+        login screen, (3) elevate the request env to the logged-in user.
+        """
+        # ── 1: Pin the URL's DB into the session (needed in multi-db mode) ──
+        if request.session.db != db_name:
+            try:
+                valid_dbs = http.db_list(force=True)
+            except Exception:
+                valid_dbs = []
+            if valid_dbs and db_name not in valid_dbs:
+                return self._not_found()
+            request.session.db = db_name
+            return werkzeug.utils.redirect(request.httprequest.url, 302)
+
+        # ── 2: Not logged in? Send to login (now bound to db_name), then back ──
+        if not request.session.uid:
+            target = request.httprequest.path
+            qs = request.httprequest.query_string.decode()
+            if qs:
+                target += '?' + qs
+            return werkzeug.utils.redirect(
+                '/web/login?' + werkzeug.urls.url_encode({'redirect': target}), 302
+            )
+
+        # ── 3: auth='none' leaves uid unset — bind env to the logged-in user ──
+        request.uid = request.session.uid
+        request._env = None
+
         has_access, is_admin = self._get_pm_access()
         if not has_access:
             return werkzeug.exceptions.Forbidden()

@@ -7,30 +7,41 @@
       <meta charset="UTF-8"/>
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
       <title>Remaining Players</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com"/>
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
+      <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&amp;family=Oswald:wght@500;600;700&amp;family=Bebas+Neue&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
       <style>
+        /* Sports display font used by the Butterscotch theme */
+        @font-face {
+          font-family: 'Baseball Club Solid';
+          src: url('/auction_module/static/src/assets/fonts/BaseballClubSolid.otf') format('opentype');
+          font-weight: normal;
+          font-style: normal;
+          font-display: swap;
+        }
         /* ── Theme tokens ────────────────────────────────────────────── */
 
-        /* vanilla (default) */
+        /* vanilla (default) — premium royal-blue broadcast theme */
         :root {
-          --rp-primary:      #004080;
-          --rp-primary-dk:   #002a5c;
-          --rp-glow:         rgba(0,64,128,0.22);
-          --rp-bg:           #eef2f7;
-          --rp-surface:      #fff;
-          --rp-surface2:     #f0f4f8;
-          --rp-border:       rgba(0,64,128,0.15);
-          --rp-text:         #1a1a2e;
-          --rp-text-muted:   #555;
-          --rp-header-bg:    linear-gradient(135deg,#004080,#002a5c);
-          --rp-header-text:  #fff;
-          --rp-card-bg:      rgba(0,64,128,0.04);
-          --rp-card-hover:   rgba(0,64,128,0.09);
-          --rp-tier-bg:      rgba(0,64,128,0.06);
-          --rp-sl-text:      #fff;
-          --rp-label:        rgba(0,40,90,0.4);
-          --rp-value:        rgba(30,30,60,0.75);
-          --rp-count-bg:     rgba(0,64,128,0.10);
-          --rp-count-text:   #004080;
+          --rp-primary:      #2e6be6;
+          --rp-primary-dk:   #123f9e;
+          --rp-glow:         rgba(46,107,230,0.30);
+          --rp-bg:           radial-gradient(120% 90% at 50% -10%,#1f5bd6 0%,#123f9e 55%,#0a2a70 100%);
+          --rp-surface:      rgba(18,52,120,0.55);
+          --rp-surface2:     rgba(9,30,80,0.60);
+          --rp-border:       rgba(150,185,255,0.22);
+          --rp-text:         #eaf1ff;
+          --rp-text-muted:   #a9c0ee;
+          --rp-header-bg:    linear-gradient(90deg,#1f5bd6,#3f7cf0);
+          --rp-header-text:  #ffffff;
+          --rp-card-bg:      rgba(255,255,255,0.05);
+          --rp-card-hover:   rgba(91,155,255,0.15);
+          --rp-tier-bg:      rgba(255,255,255,0.05);
+          --rp-sl-text:      #08205c;
+          --rp-label:        rgba(205,217,239,0.65);
+          --rp-value:        #ffffff;
+          --rp-count-bg:     rgba(91,155,255,0.18);
+          --rp-count-text:   #eaf1ff;
         }
 
         /* butterscotch */
@@ -340,6 +351,25 @@
         }
         .rp-empty-icon { font-size: 3rem; margin-bottom: 12px; }
         .rp-empty-text { font-size: 0.88rem; }
+
+        /* ── Vanilla-only: athletic broadcast typography ─────────────── */
+        body.rp-theme-vanilla { font-family: 'Rajdhani','Segoe UI',Arial,sans-serif; }
+        body.rp-theme-vanilla .rp-header-title,
+        body.rp-theme-vanilla .rp-header-count,
+        body.rp-theme-vanilla .rp-tier-name,
+        body.rp-theme-vanilla .rp-name {
+          font-family: 'EPSOR','Rajdhani','Oswald','Bebas Neue','Montserrat',sans-serif;
+          letter-spacing: 1px;
+        }
+
+        /* ── Butterscotch-only: Baseball Club Solid sports typography ─── */
+        body.rp-theme-butterscotch .rp-header-title,
+        body.rp-theme-butterscotch .rp-header-count,
+        body.rp-theme-butterscotch .rp-tier-name,
+        body.rp-theme-butterscotch .rp-name {
+          font-family: 'Baseball Club Solid','Oswald','Bebas Neue',sans-serif;
+          letter-spacing: 1px;
+        }
       </style>
     </head>
     <body t-att-class="'rp-theme-' + (theme or 'vanilla')">

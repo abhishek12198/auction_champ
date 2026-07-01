@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 <template id="player_template_butterscotch" name="Player Auction – Butterscotch">
-    <html lang="en" t-att-data-balance-url="'/' + (db_name or '') + '/' + (tournament.slug if tournament else '') + '/auction/show/team/balance'">
+    <html lang="en" t-att-data-balance-url="'/' + (db_name or '') + '/' + (tournament.slug if tournament else '') + '/auction/show/team/balance'" t-att-data-rp-url="'/' + (db_name or '') + '/' + (tournament.slug if tournament else '') + '/auction/display_auction/remaining-players?theme=butterscotch'">
   <head>
     <meta charset="UTF-8" />
   <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
@@ -14,6 +14,14 @@
     />
     <title>Player Showcase</title>
     <style>
+      /* Sports display font for the Butterscotch theme */
+      @font-face {
+        font-family: 'Baseball Club Solid';
+        src: url('/auction_module/static/src/assets/fonts/BaseballClubSolid.otf') format('opentype');
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
+      }
       /* ── Reset ─────────────────────────────────────────────── */
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -63,7 +71,7 @@
 
       .hud-tourn-info { display: flex; flex-direction: column; justify-content: center; }
       .hud-tourn-name {
-        font-family: 'Oswald', sans-serif;
+        font-family: 'Baseball Club Solid', 'Oswald', sans-serif;
         font-size: 1.55rem; font-weight: 700;
         color: var(--gold);
         text-transform: uppercase;
@@ -160,7 +168,7 @@
         position: absolute;
         top: 50%; left: 50%;
         transform: translate(-50%, -50%);
-        font-family: 'Oswald', sans-serif;
+        font-family: 'Baseball Club Solid', 'Oswald', sans-serif;
         font-size: clamp(11rem, 22vw, 20rem);
         font-weight: 700;
         color: rgba(245,200,66,0.05);
@@ -189,7 +197,7 @@
         line-height: 1;
       }
       .hud-serial-number {
-        font-family: 'Oswald', sans-serif;
+        font-family: 'Baseball Club Solid', 'Oswald', sans-serif;
         font-size: 4.8rem; font-weight: 700;
         color: var(--gold);
         line-height: 1;
@@ -204,7 +212,7 @@
         z-index: 4;
       }
       .hud-player-name {
-        font-family: 'Oswald', sans-serif;
+        font-family: 'Baseball Club Solid', 'Oswald', sans-serif;
         font-size: clamp(2.2rem, 4vw, 3.6rem);
         font-weight: 700;
         text-transform: uppercase;
@@ -283,7 +291,7 @@
         overflow-y: auto;
       }
       .hud-stats-heading {
-        font-family: 'Oswald', sans-serif;
+        font-family: 'Baseball Club Solid', 'Oswald', sans-serif;
         font-size: 0.78rem; font-weight: 600;
         letter-spacing: 4px;
         text-transform: uppercase;
@@ -815,7 +823,7 @@ body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to to
         if (r === '0px' || r === '0') { closeBidSummary(); } else { openBidSummary(); }
       }
       function openRemainingPlayers() {
-        document.getElementById('rpFrame').src = '/auction/display_auction/remaining-players?theme=butterscotch';
+        document.getElementById('rpFrame').src = document.documentElement.dataset.rpUrl;
         document.getElementById('rpDrawer').style.right = '0';
         document.getElementById('rpTabArrow').innerHTML = '&#x2192;';
         document.getElementById('rpOverlay').style.display = 'block';
