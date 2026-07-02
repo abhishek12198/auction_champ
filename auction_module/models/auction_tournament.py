@@ -85,13 +85,13 @@ class AuctionTournament(models.Model):
     )
     tournament_date = fields.Date("Tournament Date", help="The date of the tournament, displayed on the player registration form.")
     expose_player_contact = fields.Boolean(
-        string="Show Full Player Contact",
+        string="Unmask Player Contact?",
         default=False,
         help="When enabled, players' full mobile numbers are shown on player cards and the "
              "auction display. When disabled (default), the numbers are masked (e.g. 9XXXXXXXX8).",
     )
     enable_jersey_section = fields.Boolean(
-        "Enable Jersey Section in Registration",
+        "Jersy Included?",
         default=False,
         help="Show jersey customization fields (jersey name, number, size) in the public player registration form."
     )
@@ -186,8 +186,13 @@ class AuctionTournament(models.Model):
     dice_result = fields.Integer(string='Dice Result', default=0)
 
     def _compute_player_state_counts(self):
-        """Compute all four player-state counts in a single read_group call."""
-        groups = self.env['auction.team.player'].read_group(
+        """Compute all four player-state counts in a single read_group call.
+
+        Uses active_test=False so that players belonging to a deactivated
+        (archived) tournament — which are themselves archived — are still
+        counted. This keeps the stat buttons accurate for inactive tournaments.
+        """
+        groups = self.env['auction.team.player'].with_context(active_test=False).read_group(
             [('tournament_id', 'in', self.ids)],
             ['tournament_id', 'state'],
             ['tournament_id', 'state'],
@@ -276,6 +281,11 @@ class AuctionTournament(models.Model):
     def _player_state_action(self, state, label):
         """Generic helper — returns an act_window filtered by player state."""
         self.ensure_one()
+        ctx = {'default_tournament_id': self.id}
+        # A deactivated tournament has archived players; show them so the list
+        # matches the stat-button count instead of appearing empty.
+        if not self.active:
+            ctx['active_test'] = False
         return {
             'type': 'ir.actions.act_window',
             'name': '%s — %s' % (label, self.name),
@@ -287,7 +297,7 @@ class AuctionTournament(models.Model):
                 (self.env.ref('auction_module.view_auction_team_player_kanban').id, 'kanban'),
             ],
             'domain': [('tournament_id', '=', self.id), ('state', '=', state)],
-            'context': {'default_tournament_id': self.id},
+            'context': ctx,
         }
 
     def action_view_registered_players(self):
