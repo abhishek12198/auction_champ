@@ -309,6 +309,7 @@
                                                placeholder="e.g. 100,200,500,1000,1500"
                                                help="Comma-separated point values shown as quick-select buttons in the Sell Player modal"/>
                                         <field name="enable_jersey_section"/>
+                                        <field name="expose_player_contact"/>
                                     </group>
                                 </group>
                                 <group>
@@ -606,6 +607,9 @@
                     <attribute name="readonly">1</attribute>
                 </field>
                 <field name="enable_jersey_section" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+                <field name="expose_player_contact" position="attributes">
                     <attribute name="readonly">1</attribute>
                 </field>
                 <field name="max_registrations" position="attributes">

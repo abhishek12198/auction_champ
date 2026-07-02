@@ -100,11 +100,13 @@ class AuctionTeamPlayer(models.Model):
     p_category = fields.Char("Category")
     payment_proof = fields.Binary("Payment Proof", attachment=True, help="Uploaded payment screenshot/receipt from registration form.")
 
-    @api.depends('contact')
+    @api.depends('contact', 'tournament_id.expose_player_contact')
     def _compute_masked_contact(self):
         for player in self:
             c = player.contact or ''
-            if len(c) > 2:
+            if player.tournament_id.expose_player_contact:
+                player.masked_contact = c
+            elif len(c) > 2:
                 player.masked_contact = c[0] + 'X' * (len(c) - 2) + c[-1]
             else:
                 player.masked_contact = c

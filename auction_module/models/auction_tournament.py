@@ -84,6 +84,12 @@ class AuctionTournament(models.Model):
              'Example: 100,200,500,1000,1500'
     )
     tournament_date = fields.Date("Tournament Date", help="The date of the tournament, displayed on the player registration form.")
+    expose_player_contact = fields.Boolean(
+        string="Show Full Player Contact",
+        default=False,
+        help="When enabled, players' full mobile numbers are shown on player cards and the "
+             "auction display. When disabled (default), the numbers are masked (e.g. 9XXXXXXXX8).",
+    )
     enable_jersey_section = fields.Boolean(
         "Enable Jersey Section in Registration",
         default=False,
