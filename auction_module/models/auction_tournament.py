@@ -50,7 +50,7 @@ class AuctionTournament(models.Model):
     template_image = fields.Binary('Template Image')
     report_footer = fields.Binary('Footer')
     rules_regulations = fields.Html("Rules and Regulations")
-    tournament_type = fields.Selection([('cricket', 'Cricket'), ('football', 'Football')], default='cricket')
+    tournament_type = fields.Selection([('cricket', 'Cricket'), ('football', 'Football'),('kabaddi', 'Kabaddi')], default='cricket')
     kanban_color = fields.Char(
         string='Kanban Color',
         default='#4f46e5',
