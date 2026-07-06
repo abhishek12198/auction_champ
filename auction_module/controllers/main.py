@@ -2901,6 +2901,62 @@ class Auction(http.Controller):
                 return self._not_found()
         return werkzeug.utils.redirect('/{}/player/card/{}'.format(db_name, player_id), 301)
 
+    @http.route('/<string:db_name>/player/card_preview/<int:player_id>',
+                type='http', auth='none', website=False, sitemap=False)
+    def player_card_preview(self, db_name, player_id, **kw):
+        """Render the player card as inline HTML for preview (no PDF conversion)."""
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return self._not_found()
+
+            player = request.env['auction.team.player'].sudo().browse(player_id)
+            if not player.exists():
+                return self._not_found()
+
+            tournament = player.tournament_id
+            theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
+
+            report_map = {
+                'vanilla':      'auction_module.action_report_player_card',
+                'butterscotch': 'auction_module.action_report_player_card_butterscotch',
+                'strawberry':   'auction_module.action_report_player_card_strawberry',
+                'cherry':       'auction_module.action_report_player_card_cherry',
+                'pistah':       'auction_module.action_report_player_card_pistah',
+                'football':     'auction_module.action_report_player_card_football',
+            }
+            report_ref = report_map.get(theme, 'auction_module.action_report_player_card')
+
+            try:
+                report = request.env.ref(report_ref).sudo()
+                html_content, _mime = report._render_qweb_html([player_id])
+            except Exception:
+                _logger.exception("Card preview HTML render failed player_id=%s", player_id)
+                return self._not_found()
+
+            # Inject CSS to strip all extra whitespace outside the card border
+            cleanup = (
+                b'<style>'
+                b'html,body{'
+                b'  margin:0!important;padding:0!important;'
+                b'  overflow:hidden!important;height:auto!important;'
+                b'  background:#ffffff!important;'
+                b'}'
+                b'.page{margin:0!important;padding:0!important;}'
+                b'</style>'
+            )
+            if isinstance(html_content, str):
+                html_content = html_content.encode('utf-8')
+            html_content = html_content.replace(b'</head>', cleanup + b'</head>', 1)
+
+        return request.make_response(
+            html_content,
+            headers=[
+                ('Content-Type', 'text/html; charset=utf-8'),
+                ('Cache-Control', 'no-store'),
+                ('X-Frame-Options', 'SAMEORIGIN'),
+            ]
+        )
+
     @http.route('/<string:db_name>/player/card/<int:player_id>', type='http', auth='none', website=False, sitemap=False)
     def player_card_download(self, db_name, player_id, **kw):
         """Stream the themed player-card PDF for the given player (public, read-only)."""

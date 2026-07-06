@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+import random
 import unicodedata
 import base64
 
@@ -10,6 +11,15 @@ from odoo.exceptions import UserError, ValidationError
 
 import werkzeug
 import werkzeug.exceptions
+
+
+def _generate_tournament_code(env):
+    """Generate a unique AC#XXXXXXXXXXXX code (12 random digits)."""
+    while True:
+        digits = ''.join([str(random.randint(0, 9)) for _ in range(12)])
+        code = 'AC#' + digits
+        if not env['auction.tournament'].sudo().search([('tournament_code', '=', code)], limit=1):
+            return code
 
 
 def _slugify(text):
@@ -109,6 +119,13 @@ class AuctionTournament(models.Model):
         string='Tournament Poster',
         help='Upload a tournament poster image. It will be displayed on the player registration page '
              'in the sidebar, above the "Why Register?" section.',
+    )
+    tournament_code = fields.Char(
+        string='Tournament Code',
+        readonly=True,
+        copy=False,
+        help='Unique identifier for this tournament, auto-generated on creation. '
+             'Format: AC# followed by 12 digits.',
     )
     registration_open = fields.Boolean(
         "Registration Open",
@@ -249,6 +266,12 @@ class AuctionTournament(models.Model):
             state = 'idle'
         self.sudo().write({'dice_state': state, 'dice_result': int(number or 0)})
         return True
+
+    @api.model
+    def create(self, vals):
+        if not vals.get('tournament_code'):
+            vals['tournament_code'] = _generate_tournament_code(self.env)
+        return super().create(vals)
 
     def write(self, vals):
         """Restrict non-admin users to only modifying operational/balance fields.

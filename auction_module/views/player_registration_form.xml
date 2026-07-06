@@ -259,10 +259,26 @@
                     <p style="margin-top:1.2rem;font-size:.85rem;font-weight:700;letter-spacing:1px;opacity:.6;text-transform:uppercase;"
                        t-esc="tournament.name"/>
                 </t>
+
+                <!-- ── Player Card Preview ── -->
+                <t t-if="player_id">
+                    <div class="reg-card-preview-wrap">
+                        <p class="reg-card-preview-label">Your Player Card Preview</p>
+                        <div class="reg-card-preview-scaler">
+                            <iframe t-attf-src="/#{db_name}/player/card_preview/#{player_id}"
+                                    class="reg-card-preview-frame"
+                                    scrolling="no" frameborder="0"
+                                    sandbox="allow-same-origin"
+                                    title="Player Card Preview"/>
+                        </div>
+                    </div>
+                </t>
+
                 <t t-if="player_id">
                     <a t-attf-href="/#{db_name}/player/card/#{player_id}"
                        class="reg-btn-submit"
-                       style="display:inline-flex;align-items:center;gap:.6rem;margin-top:2rem;text-decoration:none;padding:.75rem 2rem;">
+                       target="_blank" rel="noopener"
+                       style="display:inline-flex;align-items:center;gap:.6rem;margin-top:1.5rem;text-decoration:none;padding:.75rem 2rem;">
                         <!-- Download icon SVG -->
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
                              viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1310,6 +1326,30 @@
             }
         });
     }
+})();
+
+// ── Card preview: dynamic scale to fill container exactly ────────────────
+(function () {
+    var scaler = document.querySelector('.reg-card-preview-scaler');
+    var frame  = document.querySelector('.reg-card-preview-frame');
+    if (!scaler || !frame) return;
+
+    var CARD_W   = 832;
+    var CARD_H   = 421;
+    var MAX_H    = 220;   // max displayed height — keeps preview compact
+
+    function fitCard() {
+        var availW   = scaler.offsetWidth;
+        var scaleW   = availW / CARD_W;
+        var scaleH   = MAX_H  / CARD_H;
+        var scale    = Math.min(scaleW, scaleH);
+        frame.style.transform = 'translateX(-50%) scale(' + scale + ')';
+        scaler.style.height   = Math.round(CARD_H * scale) + 'px';
+    }
+
+    fitCard();
+    frame.addEventListener('load', fitCard);
+    window.addEventListener('resize', fitCard);
 })();
 
 // ── Cricket role → batting/bowling style logic ───────────────────────────
