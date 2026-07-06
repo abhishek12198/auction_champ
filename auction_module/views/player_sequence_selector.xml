@@ -357,6 +357,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .pc-attr{background:var(--bg-c);border-radius:10px;padding:12px 16px;border:1px solid var(--card-bd)}
 .pc-attr-label{font-family:var(--sf-body);font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--tx-d);margin-bottom:4px}
 .pc-attr-val{font-family:var(--sf);font-size:1.1rem;font-weight:400;letter-spacing:1px;color:var(--tx)}
+.pc-chips{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.pc-chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg-c);border:1px solid var(--card-bd);
+  border-radius:999px;padding:6px 14px;font-family:var(--sf-body);font-size:.72rem;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;color:var(--tx)}
 .pc-state-banner{margin-top:12px;padding:10px 18px;border-radius:10px;text-align:center;
   font-family:var(--hf);font-size:1rem;font-weight:900;letter-spacing:4px;text-transform:uppercase;
   border:3px solid currentColor}
@@ -946,6 +950,15 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   window.AUCTION_DB_NAME         = '<t t-esc="db_name or ''"/>';
   window.AUCTION_TOURNAMENT_SLUG = '<t t-esc="tournament_slug or (tournament.slug if tournament else '')"/>';
   window.AUCTION_PROJECTOR_URL   = '/' + window.AUCTION_DB_NAME + '/auction/projector/' + window.AUCTION_TOURNAMENT_SLUG + '/';
+  /* Build an image URL that works for tournament-assigned (non-superuser) users
+     in a multi-database setup. The db-prefixed public route serves the binary
+     via a SUPERUSER cursor, avoiding both ambiguous-db and ACL failures that
+     break the plain /web/image/... URLs. */
+  window.AUCTION_IMG_URL = function(model, id, field){
+    var db = window.AUCTION_DB_NAME;
+    if (db) return '/' + db + '/auction/public/image/' + model + '/' + id + '/' + field;
+    return '/web/image/' + model + '/' + id + '/' + field;
+  };
 </script>
 
 <!-- ── HEADER ──────────────────────────────────────────────── -->
@@ -953,7 +966,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   <div class="mq-hl">
     <a href="/web">
       <t t-if="tournament and tournament.logo">
-        <img class="mq-logo" t-att-src="'/web/image/auction.tournament/'+str(tournament.id)+'/logo'" alt="logo"/>
+        <img class="mq-logo" t-att-src="'/'+(db_name or '')+'/auction/public/image/auction.tournament/'+str(tournament.id)+'/logo'" alt="logo"/>
       </t>
       <t t-else=""><div class="mq-logo-ph">&#9733;</div></t>
     </a>
@@ -1247,6 +1260,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   }
 
   function callKw(model, method, args, kwargs) {
+    /* Route through the db-explicit console dispatcher so console actions
+       (sell / unsold / bring-back / dice / ticker) run against the same
+       database as the page and projector, even on multi-db servers. */
+    if (window.AUCTION_DB_NAME) {
+      return rpc('/' + window.AUCTION_DB_NAME + '/auction/console_call', {
+        model: model, method: method, args: args || [], kwargs: kwargs || {}
+      });
+    }
     return rpc('/web/dataset/call_kw', {
       model: model, method: method, args: args, kwargs: kwargs || {}
     });
@@ -1254,7 +1275,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
   /* ── Grid ──────────────────────────────────────────────── */
   function loadGrid() {
-    rpc('/auction/get_players_queue', {tournament_id: window.AUCTION_TOURNAMENT_ID || null}).then(function(res) {
+    var _gridUrl = window.AUCTION_DB_NAME
+      ? '/' + window.AUCTION_DB_NAME + '/auction/get_players_queue'
+      : '/auction/get_players_queue';
+    rpc(_gridUrl, {tournament_id: window.AUCTION_TOURNAMENT_ID || null}).then(function(res) {
       var players = res.result || [];
       var grid   = document.getElementById('auction_grid');
       var empty  = document.getElementById('mq_empty');
@@ -1361,8 +1385,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     document.body.style.overflow = 'hidden';
 
     /* Single call: read all player data + set on stage atomically.
-       Replaces 2–4 sequential/parallel callKw round-trips. */
-    rpc('/auction/player_quick_data/' + playerId, {}).then(function(res) {
+       Replaces 2–4 sequential/parallel callKw round-trips.
+       Uses the db-prefixed route so the on-stage write lands in the same
+       database the projector reads from (critical on multi-db servers). */
+    var _qdUrl = window.AUCTION_DB_NAME
+      ? '/' + window.AUCTION_DB_NAME + '/auction/player_quick_data/' + playerId
+      : '/auction/player_quick_data/' + playerId;
+    rpc(_qdUrl, {}).then(function(res) {
       var p = res.result;
       if (!p || p.error) {
         if (body) body.innerHTML = '<div class="pc-loading">Player not found.</div>';
@@ -1411,9 +1440,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     var overlay = document.getElementById('playerDrawer');
     overlay.classList.remove('open');
     document.body.style.overflow = '';
-    /* Always clear stage + stamp so projector returns to waiting immediately. */
+    /* Always clear stage + stamp so projector returns to waiting immediately.
+       Db-prefixed so the clear lands in the projector's database. */
     if (currentPlayerId) {
-      callKw('auction.team.player', 'action_clear_stage', [[currentPlayerId]]).catch(function(){});
+      if (window.AUCTION_DB_NAME) {
+        rpc('/' + window.AUCTION_DB_NAME + '/auction/player_clear_stage/' + currentPlayerId, {}).catch(function(){});
+      } else {
+        callKw('auction.team.player', 'action_clear_stage', [[currentPlayerId]]).catch(function(){});
+      }
     }
     currentPlayerId = null;
     setTimeout(loadGrid,   300);
@@ -1460,12 +1494,20 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         + escHtml(p.tier_id[1]) + '</span>'
       : '';
 
-    var roleIcons = {'Batsman':'🏏','Batter':'🏏','Bowler':'🎯','All Rounder':'⭐',
-      'All-Rounder':'⭐','Allrounder':'⭐','Wicket Keeper':'🧤','WK-Keeper':'🧤','Wicketkeeper':'🧤'};
-    var roleIcon = p.role ? (roleIcons[p.role] || '⚡') : '';
-    var roleBadge = p.role
-      ? '<span class="pc-role-badge">' + roleIcon + ' ' + escHtml(p.role) + '</span>'
-      : '';
+    var isFootball = (p.tournament_type === 'football');
+
+    var roleBadge = '';
+    if (isFootball) {
+      if (p.dominant_position)
+        roleBadge = '<span class="pc-role-badge">⚽ ' + escHtml(p.dominant_position) + '</span>';
+    } else {
+      var roleIcons = {'Batsman':'🏏','Batter':'🏏','Bowler':'🎯','All Rounder':'⭐',
+        'All-Rounder':'⭐','Allrounder':'⭐','Wicket Keeper':'🧤','WK-Keeper':'🧤','Wicketkeeper':'🧤'};
+      var roleIcon = p.role ? (roleIcons[p.role] || '⚡') : '';
+      roleBadge = p.role
+        ? '<span class="pc-role-badge">' + roleIcon + ' ' + escHtml(p.role) + '</span>'
+        : '';
+    }
 
     var stateBanner = '';
     if (p.state === 'sold') {
@@ -1505,6 +1547,24 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     }
     if (p.state === 'unsold') stateBanner = '<div class="pc-state-banner unsold">UNSOLD</div>';
 
+    var attrsHtml = '';
+    if (isFootball) {
+      if (p.p_category)     attrsHtml += attr('Category', p.p_category);
+      if (p.preferred_foot) attrsHtml += attr('Preferred Foot', p.preferred_foot);
+      if (p.work_rate)      attrsHtml += attr('Work Rate', p.work_rate);
+      if (p.age)            attrsHtml += attr('Age', String(p.age));
+      if (p.blood_group)    attrsHtml += attr('Blood Group', p.blood_group);
+      if (p.mobile)         attrsHtml += attr('Mobile', p.mobile);
+      if (p.secondary_positions && p.secondary_positions.length)
+        attrsHtml += attr('Secondary', p.secondary_positions.join(', '));
+      if (p.location)       attrsHtml += attr('Location', p.location);
+      attrsHtml += pcChips(p.playing_styles) + pcChips(p.strengths);
+    } else {
+      attrsHtml += attr('Batting', p.batting_style || '—');
+      attrsHtml += attr('Bowling', p.bowling_style || '—');
+      attrsHtml += attr('Contact', p.masked_contact || p.contact || '—');
+    }
+
     container.innerHTML =
       '<div class="pc-photo-wrap" style="border-top:4px solid ' + escHtml(tierColor) + ';box-shadow:inset 0 -180px 100px -60px var(--bg-p),0 0 40px ' + escHtml(tierGlow) + '">' +
         photo +
@@ -1515,9 +1575,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         '<div class="pc-name">' + escHtml(p.name) + '</div>' +
         '<div class="pc-badges">' + tier + roleBadge + '</div>' +
         '<div class="pc-attrs">' +
-          attr('Batting', p.batting_style || '—') +
-          attr('Bowling', p.bowling_style || '—') +
-          attr('Contact', p.masked_contact || p.contact || '—') +
+          attrsHtml +
         '</div>' +
         stateBanner +
       '</div>';
@@ -1528,6 +1586,17 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       '<div class="pc-attr-label">' + escHtml(label) + '</div>' +
       '<div class="pc-attr-val">' + escHtml(val) + '</div>' +
       '</div>';
+  }
+
+  function pcChips(items) {
+    if (!items || !items.length) return '';
+    var html = '<div class="pc-chips">';
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i] || {};
+      var ic = it.icon ? (escHtml(it.icon) + ' ') : '';
+      html += '<span class="pc-chip">' + ic + escHtml(it.name || '') + '</span>';
+    }
+    return html + '</div>';
   }
 
   function escHtml(s) {
@@ -1691,7 +1760,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
     /* Fill player info strip */
     var av = document.getElementById('smPlayerAvatar');
-    if (av) av.src = '/web/image/auction.team.player/' + smPid + '/photo';
+    if (av) av.src = window.AUCTION_IMG_URL('auction.team.player', smPid, 'photo');
     var nm = document.getElementById('smPlayerName');
     if (nm) nm.textContent = currentPlayerName;
     var rl = document.getElementById('smPlayerRole');
@@ -1763,7 +1832,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       b.classList.toggle('active', b.dataset.teamId == team.team_id);
     });
     var logo = document.getElementById('smTeamLogo');
-    logo.src = '/web/image/auction.team/' + team.team_id + '/logo';
+    logo.src = window.AUCTION_IMG_URL('auction.team', team.team_id, 'logo');
     logo.style.display = 'block';
     document.getElementById('smTeamPlaceholder').style.display = 'none';
     var lbl = document.getElementById('smTeamNameLabel');
@@ -1868,8 +1937,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     document.getElementById('smFormPanel').style.display = 'none';
 
     /* Fill sold screen */
-    document.getElementById('smSoldPhoto').src          = '/web/image/auction.team.player/' + smPid + '/photo';
-    document.getElementById('smSoldTeamLogo').src       = '/web/image/auction.team/' + data.team_id + '/logo';
+    document.getElementById('smSoldPhoto').src          = window.AUCTION_IMG_URL('auction.team.player', smPid, 'photo');
+    document.getElementById('smSoldTeamLogo').src       = window.AUCTION_IMG_URL('auction.team', data.team_id, 'logo');
     document.getElementById('smSoldTeamName').textContent = data.team_name;
     document.getElementById('smSoldPointsEl').textContent = data.final_point;
 

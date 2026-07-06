@@ -747,8 +747,8 @@ body[data-theme="light"] #pt-theme-btn{color:var(--pistah-dark)}
           #<t t-esc="'%02d' % (player.sl_no or 0)"/>
         </div>
         <div class="pt-player-name" data-sm-name=""><t t-esc="player.name"/></div>
-        <t t-if="player.role">
-          <div class="pt-player-role" data-sm-role=""><t t-esc="player.role"/></div>
+        <t t-if="(player.dominant_position_id.name if player.tournament_type == 'football' else player.role)">
+          <div class="pt-player-role" data-sm-role=""><t t-esc="player.dominant_position_id.name if player.tournament_type == 'football' else player.role"/></div>
         </t>
       </div>
     </div>
@@ -772,17 +772,33 @@ body[data-theme="light"] #pt-theme-btn{color:var(--pistah-dark)}
 
       <!-- Stats grid -->
       <div class="pt-stats-grid">
-        <t t-if="player.batting_style">
-          <div class="pt-stat-tile">
-            <div class="pt-stat-val"><t t-esc="player.batting_style"/></div>
-            <div class="pt-stat-key">Batting</div>
-          </div>
+        <t t-if="player.tournament_type != 'football'">
+          <t t-if="player.batting_style">
+            <div class="pt-stat-tile">
+              <div class="pt-stat-val"><t t-esc="player.batting_style"/></div>
+              <div class="pt-stat-key">Batting</div>
+            </div>
+          </t>
+          <t t-if="player.bowling_style">
+            <div class="pt-stat-tile">
+              <div class="pt-stat-val"><t t-esc="player.bowling_style"/></div>
+              <div class="pt-stat-key">Bowling</div>
+            </div>
+          </t>
         </t>
-        <t t-if="player.bowling_style">
-          <div class="pt-stat-tile">
-            <div class="pt-stat-val"><t t-esc="player.bowling_style"/></div>
-            <div class="pt-stat-key">Bowling</div>
-          </div>
+        <t t-if="player.tournament_type == 'football'">
+          <t t-if="player.dominant_position_id">
+            <div class="pt-stat-tile"><div class="pt-stat-val"><t t-esc="player.dominant_position_id.name"/></div><div class="pt-stat-key">Position</div></div>
+          </t>
+          <t t-if="player.secondary_position_ids">
+            <div class="pt-stat-tile"><div class="pt-stat-val"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></div><div class="pt-stat-key">Secondary</div></div>
+          </t>
+          <t t-if="player.preferred_foot">
+            <div class="pt-stat-tile"><div class="pt-stat-val"><t t-esc="player.preferred_foot.capitalize()"/></div><div class="pt-stat-key">Foot</div></div>
+          </t>
+          <t t-if="player.age">
+            <div class="pt-stat-tile"><div class="pt-stat-val"><t t-esc="player.age"/></div><div class="pt-stat-key">Age</div></div>
+          </t>
         </t>
         <t t-if="player.blood_group">
           <div class="pt-stat-tile">
@@ -811,6 +827,7 @@ body[data-theme="light"] #pt-theme-btn{color:var(--pistah-dark)}
           </div>
         </t>
       </div>
+      <t t-call="auction_module.football_tag_chips"/>
 
       <!-- Base price from auction tier setup -->
       <t t-if="player.effective_base_price">

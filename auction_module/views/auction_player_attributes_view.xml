@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Simple list views for the football lookup models. Used by the
+         many2many_tags widgets on the player form (quick-create / edit).
+         No menus or actions are added — managed inline at the player level. -->
+
+    <record id="view_auction_player_position_tree" model="ir.ui.view">
+        <field name="name">auction.player.position.tree</field>
+        <field name="model">auction.player.position</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="code"/>
+                <field name="name"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_auction_player_style_tree" model="ir.ui.view">
+        <field name="name">auction.player.style.tree</field>
+        <field name="model">auction.player.style</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="icon"/>
+                <field name="name"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_auction_player_strength_tree" model="ir.ui.view">
+        <field name="name">auction.player.strength.tree</field>
+        <field name="model">auction.player.strength</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="icon"/>
+                <field name="name"/>
+            </tree>
+        </field>
+    </record>
+
+</odoo>

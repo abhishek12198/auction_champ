@@ -8,18 +8,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title t-esc="(tournament.name + ' — Player Registration') if tournament else 'Player Registration'"/>
 
-    <!-- Bootstrap 5 -->
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          crossorigin="anonymous"/>
-
-    <!-- Google Fonts: Bebas Neue (sporty display) + Barlow Condensed (sporty labels) + Poppins (body) + Teko -->
+    <!-- Google Fonts: Bebas Neue · Barlow Condensed · Poppins (body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Barlow+Condensed:wght@400;600;700&amp;family=Teko:wght@400;500;600&amp;family=Poppins:wght@400;500;600&amp;display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Barlow+Condensed:wght@400;600;700&amp;family=Poppins:wght@400;600&amp;display=swap"
           rel="stylesheet"/>
 
-    <!-- Registration form base CSS -->
+    <!-- Registration form CSS -->
     <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css"/>
 
     <!-- ── Per-theme CSS custom properties ────────────────────── -->
@@ -121,26 +116,39 @@
             </div>
         </div>
 
+        <!-- ── Hero copy: big title, subtitle, trust badges ── -->
+        <div class="reg-hero-copy">
+            <h2 class="reg-hero-title">Player Registration</h2>
+            <p class="reg-hero-sub">Register today to enter the auction pool for
+                <strong t-esc="tournament.name if tournament else 'this tournament'"/> — verified profiles, transparent selection, and a broadcast-quality digital player card.</p>
+        </div>
+
         <!-- Meta bar: date, venue, sport -->
         <div class="reg-header-meta">
             <t t-if="tournament and tournament.tournament_date">
-                <div class="reg-meta-item">
-                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                <div class="reg-meta-item reg-meta-item--highlight">
+                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                         <rect x="3" y="4" width="18" height="18" rx="2"/>
                         <line x1="16" y1="2" x2="16" y2="6"/>
                         <line x1="8" y1="2" x2="8" y2="6"/>
                         <line x1="3" y1="10" x2="21" y2="10"/>
                     </svg>
-                    <span><span class="reg-meta-label">Date</span><t t-esc="tournament.tournament_date.strftime('%d %B %Y')"/></span>
+                    <span>
+                        <span class="reg-meta-label">Date</span>
+                        <span class="reg-meta-val" t-esc="tournament.tournament_date.strftime('%d %B %Y')"/>
+                    </span>
                 </div>
             </t>
             <t t-if="tournament and tournament.venue">
-                <div class="reg-meta-item">
-                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                <div class="reg-meta-item reg-meta-item--highlight">
+                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                         <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/>
                         <circle cx="12" cy="10" r="3"/>
                     </svg>
-                    <span><span class="reg-meta-label">Venue</span><t t-esc="tournament.venue"/></span>
+                    <span>
+                        <span class="reg-meta-label">Venue</span>
+                        <span class="reg-meta-val" t-esc="tournament.venue"/>
+                    </span>
                 </div>
             </t>
             <t t-if="tournament and tournament.tournament_type">
@@ -154,6 +162,53 @@
             </t>
         </div>
     </div><!-- /reg-header-card -->
+
+    <!-- ════════════════════════════════════════
+         TRUST BAR — premium reassurance strip
+         ════════════════════════════════════════ -->
+    <t t-if="not success and not registration_closed">
+    <div class="reg-trustbar">
+        <div class="reg-trust-card">
+            <span class="reg-trust-ic">🔒</span>
+            <div class="reg-trust-tx"><b>Secure Registration</b><span>SSL-encrypted submission</span></div>
+        </div>
+        <div class="reg-trust-card">
+            <span class="reg-trust-ic">🛡️</span>
+            <div class="reg-trust-tx"><b>Privacy Protected</b><span>Data never sold or shared</span></div>
+        </div>
+        <div class="reg-trust-card">
+            <span class="reg-trust-ic">🔐</span>
+            <div class="reg-trust-tx"><b>Data Encryption</b><span>Documents stored safely</span></div>
+        </div>
+        <div class="reg-trust-card">
+            <span class="reg-trust-ic">⚖️</span>
+            <div class="reg-trust-tx"><b>Fair Auction Rules</b><span>Transparent selection</span></div>
+        </div>
+        <div class="reg-trust-card">
+            <span class="reg-trust-ic">✔️</span>
+            <div class="reg-trust-tx"><b>Verified Tournament</b><span>Organiser-reviewed</span></div>
+        </div>
+        <div class="reg-trust-card">
+            <span class="reg-trust-ic">💬</span>
+            <div class="reg-trust-tx"><b>Support Available</b><span>Help before you submit</span></div>
+        </div>
+    </div>
+    </t>
+
+    <!-- ════════════════════════════════════════
+         LAYOUT — main form + sticky benefits sidebar
+         ════════════════════════════════════════ -->
+    <div t-attf-class="reg-layout{{' reg-layout--success' if success else ''}}">
+    <div class="reg-main">
+
+    <!-- ── Mobile-only poster (shown above form on small screens) ── -->
+    <t t-if="not success and not registration_closed and tournament and tournament.poster_image">
+    <div class="reg-poster-mobile">
+        <img t-att-src="'data:image/png;base64,' + tournament.poster_image.decode('utf-8')"
+             alt="Tournament Poster"
+             style="width:100%;display:block;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.35);"/>
+    </div>
+    </t>
 
     <!-- ════════════════════════════════════════
          FORM BODY
@@ -190,7 +245,7 @@
 
         <!-- ── Success state ── -->
         <t t-if="success">
-            <div class="reg-success-body" style="text-align:center;padding:3rem 1.5rem;">
+            <div class="reg-success-body">
                 <div class="reg-success-check">✅</div>
                 <h2 style="font-family:'Bebas Neue',sans-serif;letter-spacing:3px;font-size:2.4rem;margin:.5rem 0;">
                     Welcome to the Squad!
@@ -490,62 +545,168 @@
             </div>
 
             <!-- ══════════════════════════════════════
-                 02 · CRICKET PROFILE
+                 02 · SPORT PROFILE (Cricket / Football)
                  ══════════════════════════════════════ -->
+            <t t-set="is_football" t-value="tournament.tournament_type == 'football'"/>
             <div class="reg-section">
                 <div class="reg-section-header">
                     <div class="reg-section-strip"/>
-                    <h3>Cricket Profile</h3>
-                    <span class="reg-section-icon">🏏</span>
+                    <h3><t t-esc="'Football Profile' if is_football else 'Cricket Profile'"/></h3>
+                    <span class="reg-section-icon"><t t-esc="'⚽' if is_football else '🏏'"/></span>
                     <span class="reg-section-num">02</span>
                 </div>
 
-                <!-- Role — big sporty card selector -->
-                <div style="margin-bottom:16px">
-                    <label class="reg-label">Role <span class="req">*</span></label>
-                    <div class="reg-role-group">
-                        <input type="radio" class="reg-role-option" name="role"
-                               id="roleBatter" value="Batter" required="required"/>
-                        <label class="reg-role-label" for="roleBatter">
-                            <span class="reg-role-icon">🏏</span>
-                            <span class="reg-role-text">Batter</span>
-                        </label>
+                <!-- ───────── CRICKET-ONLY ───────── -->
+                <t t-if="not is_football">
+                    <!-- Role — big sporty card selector -->
+                    <div style="margin-bottom:16px">
+                        <label class="reg-label">Role <span class="req">*</span></label>
+                        <div class="reg-role-group">
+                            <input type="radio" class="reg-role-option" name="role"
+                                   id="roleBatter" value="Batter" required="required"/>
+                            <label class="reg-role-label" for="roleBatter">
+                                <span class="reg-role-icon">🏏</span>
+                                <span class="reg-role-text">Batter</span>
+                            </label>
 
-                        <input type="radio" class="reg-role-option" name="role"
-                               id="roleBowler" value="Bowler"/>
-                        <label class="reg-role-label" for="roleBowler">
-                            <span class="reg-role-icon">⚡</span>
-                            <span class="reg-role-text">Bowler</span>
-                        </label>
+                            <input type="radio" class="reg-role-option" name="role"
+                                   id="roleBowler" value="Bowler"/>
+                            <label class="reg-role-label" for="roleBowler">
+                                <span class="reg-role-icon">⚡</span>
+                                <span class="reg-role-text">Bowler</span>
+                            </label>
 
-                        <input type="radio" class="reg-role-option" name="role"
-                               id="roleAllrounder" value="Allrounder"/>
-                        <label class="reg-role-label" for="roleAllrounder">
-                            <span class="reg-role-icon">⭐</span>
-                            <span class="reg-role-text">Allrounder</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="reg-grid">
-                    <div>
-                        <label class="reg-label" for="battingStyle">Batting Style <span class="req">*</span></label>
-                        <select id="battingStyle" name="batting_style" class="reg-select" required="required">
-                            <option value="">— Select —</option>
-                            <option value="Right Handed">Right Handed</option>
-                            <option value="Left Handed">Left Handed</option>
-                        </select>
+                            <input type="radio" class="reg-role-option" name="role"
+                                   id="roleAllrounder" value="Allrounder"/>
+                            <label class="reg-role-label" for="roleAllrounder">
+                                <span class="reg-role-icon">⭐</span>
+                                <span class="reg-role-text">Allrounder</span>
+                            </label>
+                        </div>
                     </div>
 
-                    <div>
-                        <label class="reg-label" for="bowlingStyle">Bowling <span class="req">*</span></label>
-                        <select id="bowlingStyle" name="bowling_style" class="reg-select" required="required">
-                            <option value="">— Select —</option>
-                            <option value="Right Arm">Right Arm</option>
-                            <option value="Left Arm">Left Arm</option>
-                        </select>
+                    <div class="reg-grid">
+                        <div>
+                            <label class="reg-label" for="battingStyle">Batting Style <span class="req">*</span></label>
+                            <select id="battingStyle" name="batting_style" class="reg-select" required="required">
+                                <option value="">— Select —</option>
+                                <option value="Right Handed">Right Handed</option>
+                                <option value="Left Handed">Left Handed</option>
+                                <option value="NA">N/A</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="reg-label" for="bowlingStyle">Bowling <span class="req">*</span></label>
+                            <select id="bowlingStyle" name="bowling_style" class="reg-select" required="required">
+                                <option value="">— Select —</option>
+                                <option value="Right Arm">Right Arm</option>
+                                <option value="Left Arm">Left Arm</option>
+                                <option value="NA">N/A</option>
+                            </select>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- ───────── FOOTBALL-ONLY ───────── -->
+                <t t-if="is_football">
+                    <div class="reg-grid">
+                        <div>
+                            <label class="reg-label" for="dominantPosition">Playing Position <span class="req">*</span></label>
+                            <select id="dominantPosition" name="dominant_position_id" class="reg-select" required="required">
+                                <option value="">— Select —</option>
+                                <t t-foreach="positions" t-as="pos">
+                                    <option t-att-value="pos.id"><t t-esc="pos.name"/> (<t t-esc="pos.code"/>)</option>
+                                </t>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="reg-label" for="preferredFoot">Preferred Foot <span class="req">*</span></label>
+                            <select id="preferredFoot" name="preferred_foot" class="reg-select" required="required">
+                                <option value="">— Select —</option>
+                                <option value="left">Left</option>
+                                <option value="right">Right</option>
+                                <option value="both">Both</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="reg-label" for="playerAge">Age</label>
+                            <input type="number" id="playerAge" name="age" class="reg-input"
+                                   placeholder="e.g. 24" min="0" max="99"/>
+                        </div>
+
+                        <div>
+                            <label class="reg-label" for="workRate">Work Rate</label>
+                            <select id="workRate" name="work_rate" class="reg-select">
+                                <option value="">— Select —</option>
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="reg-label" for="playerHeight">Height <span class="reg-opt">(optional)</span></label>
+                            <input type="text" id="playerHeight" name="height" class="reg-input"
+                                   placeholder="e.g. 180 cm" maxlength="16"/>
+                        </div>
+
+                        <div>
+                            <label class="reg-label" for="playerWeight">Weight <span class="reg-opt">(optional)</span></label>
+                            <input type="text" id="playerWeight" name="weight" class="reg-input"
+                                   placeholder="e.g. 75 kg" maxlength="16"/>
+                        </div>
                     </div>
 
+                    <!-- Secondary positions — chips -->
+                    <div style="margin-top:16px">
+                        <label class="reg-label">Secondary Position(s)</label>
+                        <div class="reg-chip-group">
+                            <t t-foreach="positions" t-as="pos">
+                                <input type="checkbox" class="reg-chip-option" name="secondary_position_ids"
+                                       t-att-id="'secpos_%s' % pos.id" t-att-value="pos.id"/>
+                                <label class="reg-chip-label" t-att-for="'secpos_%s' % pos.id">
+                                    <span class="reg-chip-text"><t t-esc="pos.code"/></span>
+                                </label>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!-- Playing Style — chips -->
+                    <div style="margin-top:16px">
+                        <label class="reg-label">Playing Style <span class="reg-opt">(pick any that apply)</span></label>
+                        <div class="reg-chip-group">
+                            <t t-foreach="styles" t-as="sty">
+                                <input type="checkbox" class="reg-chip-option" name="playing_style_ids"
+                                       t-att-id="'style_%s' % sty.id" t-att-value="sty.id"/>
+                                <label class="reg-chip-label" t-att-for="'style_%s' % sty.id">
+                                    <span class="reg-chip-icon"><t t-esc="sty.icon"/></span>
+                                    <span class="reg-chip-text"><t t-esc="sty.name"/></span>
+                                </label>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!-- Strengths — chips -->
+                    <div style="margin-top:16px">
+                        <label class="reg-label">Strengths <span class="reg-opt">(pick any that apply)</span></label>
+                        <div class="reg-chip-group">
+                            <t t-foreach="strengths" t-as="strg">
+                                <input type="checkbox" class="reg-chip-option" name="strength_ids"
+                                       t-att-id="'strg_%s' % strg.id" t-att-value="strg.id"/>
+                                <label class="reg-chip-label" t-att-for="'strg_%s' % strg.id">
+                                    <span class="reg-chip-icon"><t t-esc="strg.icon"/></span>
+                                    <span class="reg-chip-text"><t t-esc="strg.name"/></span>
+                                </label>
+                            </t>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- ───────── COMMON: Tier + Current Club ───────── -->
+                <div class="reg-grid" style="margin-top:16px">
                     <div>
                         <label class="reg-label" for="playerTier">Player Tier <span class="req">*</span></label>
                         <select id="playerTier" name="tier_id" class="reg-select" required="required">
@@ -578,9 +739,33 @@
 
                 <div class="reg-grid">
                     <div>
-                        <label class="reg-label" for="contactNo">Mobile Number <span class="req">*</span></label>
-                        <input type="tel" id="contactNo" name="contact" class="reg-input" required="required"
-                               placeholder="+91 98765 43210" maxlength="20"/>
+                        <label class="reg-label" for="mobileNumber">Mobile Number <span class="req">*</span></label>
+                        <div class="reg-mobile-wrap">
+                            <select id="countryCode" class="reg-select reg-mobile-code">
+                                <option value="+91" selected="selected">🇮🇳 +91</option>
+                                <option value="+92">🇵🇰 +92</option>
+                                <option value="+94">🇱🇰 +94</option>
+                                <option value="+880">🇧🇩 +880</option>
+                                <option value="+971">🇦🇪 +971</option>
+                                <option value="+966">🇸🇦 +966</option>
+                                <option value="+974">🇶🇦 +974</option>
+                                <option value="+968">🇴🇲 +968</option>
+                                <option value="+965">🇰🇼 +965</option>
+                                <option value="+973">🇧🇭 +973</option>
+                                <option value="+1">🇺🇸 +1</option>
+                                <option value="+44">🇬🇧 +44</option>
+                                <option value="+61">🇦🇺 +61</option>
+                            </select>
+                            <input type="tel" id="mobileNumber" class="reg-input reg-mobile-num"
+                                   placeholder="98765 43210" maxlength="10"
+                                   pattern="[0-9]{10}" inputmode="numeric"
+                                   autocomplete="tel-national"/>
+                        </div>
+                        <!-- hidden field that holds the combined value submitted -->
+                        <input type="hidden" id="contactFull" name="contact"/>
+                        <div id="mobileWarning" class="reg-mobile-warning" style="display:none;">
+                            ⚠️ This mobile number is already registered in this tournament. You can still continue with this registration.
+                        </div>
                     </div>
 
                     <div>
@@ -699,13 +884,13 @@
                         <label class="reg-label" for="jerseyName">Name on Jersey</label>
                         <input type="text" id="jerseyName" name="jersy_name" class="reg-input"
                                placeholder="RAHUL" maxlength="20"
-                               style="text-transform:uppercase;font-family:'Bebas Neue','Teko',sans-serif;font-size:1rem;letter-spacing:.08em;"/>
+                               style="text-transform:uppercase;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.08em;"/>
                     </div>
                     <div>
                         <label class="reg-label" for="jerseyNumber">Jersey Number</label>
                         <input type="text" id="jerseyNumber" name="jersy_number" class="reg-input"
                                placeholder="18" maxlength="4"
-                               style="font-family:'Bebas Neue','Teko',sans-serif;font-size:1.1rem;letter-spacing:.06em;"/>
+                               style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.06em;"/>
                     </div>
                     <div>
                         <label class="reg-label" for="jerseySize">Jersey Size</label>
@@ -723,6 +908,12 @@
                 </div>
             </div>
             </t>
+
+            <!-- ── PRIVACY REASSURANCE STRIP ── -->
+            <div class="reg-consent-note">
+                <span class="reg-consent-ic">🔒</span>
+                <span>By submitting, your profile is stored securely and only reviewed by verified tournament organisers. Your data is encrypted and never shared with unauthorised third parties. If selected, your profile may be shown during the live auction.</span>
+            </div>
 
             <!-- ── ACTION BUTTONS ── -->
             <div class="reg-actions">
@@ -747,6 +938,60 @@
         </form>
         </t><!-- /not success -->
     </div><!-- /reg-form-body -->
+    </div><!-- /reg-main -->
+
+    <!-- ── STICKY BENEFITS SIDEBAR ── -->
+    <t t-if="not success and not registration_closed">
+    <aside class="reg-aside">
+        <div class="reg-aside-inner">
+
+            <!-- Why Register -->
+            <t t-if="tournament and tournament.poster_image">
+            <div class="reg-aside-card reg-aside-poster" style="padding:0;overflow:hidden;border-radius:12px;">
+                <img t-att-src="'data:image/png;base64,' + tournament.poster_image.decode('utf-8')"
+                     alt="Tournament Poster"
+                     style="width:100%;display:block;border-radius:12px;"/>
+            </div>
+            </t>
+
+            <!-- Why Register -->
+            <div class="reg-aside-card reg-aside-benefits">
+                <h4 class="reg-aside-title"><span>★</span> Why Register?</h4>
+                <ul class="reg-benefit-list">
+                    <li><span class="reg-bl-ic">🏟️</span> Participate in verified tournaments</li>
+                    <li><span class="reg-bl-ic">⚖️</span> Transparent auction process</li>
+                    <li><span class="reg-bl-ic">🪪</span> Professional player profile</li>
+                    <li><span class="reg-bl-ic">🎴</span> Broadcast-quality digital player card</li>
+                    <li><span class="reg-bl-ic">📺</span> Live auction visibility</li>
+                    <li><span class="reg-bl-ic">✅</span> Verified teams &amp; organisers</li>
+                    <li><span class="reg-bl-ic">🔐</span> Secure data handling</li>
+                    <li><span class="reg-bl-ic">🕑</span> Support before you submit</li>
+                </ul>
+            </div>
+
+            <!-- Privacy &amp; Security -->
+            <div class="reg-aside-card reg-aside-privacy">
+                <h4 class="reg-aside-title"><span>🛡️</span> Privacy &amp; Security</h4>
+                <p class="reg-aside-note">Your personal information is encrypted. AuctionChamp never shares player information with unauthorised third parties. Documents are stored securely, and only tournament organisers can review submitted applications.</p>
+            </div>
+
+            <!-- Fair Selection / Ethics -->
+            <div class="reg-aside-card reg-aside-ethics">
+                <h4 class="reg-aside-title"><span>⚖️</span> Fair Selection</h4>
+                <div class="reg-ethics-chips">
+                    <span>No discrimination</span>
+                    <span>No bias</span>
+                    <span>Equal opportunity</span>
+                    <span>Transparent auction</span>
+                    <span>Verified organisers</span>
+                    <span>Responsible data use</span>
+                </div>
+            </div>
+
+        </div>
+    </aside>
+    </t>
+    </div><!-- /reg-layout -->
 
     <!-- Footer -->
     <div class="reg-footer">
@@ -755,23 +1000,165 @@
     </div>
 </div><!-- /reg-wrapper -->
 
+<!-- ── Photo Cropper Modal ── -->
+<div id="cropperModal" class="reg-crop-overlay" aria-hidden="true">
+    <div class="reg-crop-dialog" role="dialog" aria-modal="true" aria-label="Adjust your photo">
+        <div class="reg-crop-head">
+            <span class="reg-crop-title">✂️ Adjust Your Photo</span>
+            <button type="button" class="reg-crop-x" id="cropCancel" aria-label="Cancel">&#215;</button>
+        </div>
+        <p class="reg-crop-hint">Drag to reposition · pinch / scroll to zoom · frame your face for a clean portrait.</p>
+        <div class="reg-crop-stage">
+            <img id="cropperImage" src="" alt="Crop preview"/>
+        </div>
+        <div class="reg-crop-tools">
+            <button type="button" class="reg-crop-tool" id="cropRotateL" aria-label="Rotate left" title="Rotate left">&#8634;</button>
+            <button type="button" class="reg-crop-tool" id="cropRotateR" aria-label="Rotate right" title="Rotate right">&#8635;</button>
+            <button type="button" class="reg-crop-tool" id="cropZoomOut" aria-label="Zoom out" title="Zoom out">&#8722;</button>
+            <button type="button" class="reg-crop-tool" id="cropZoomIn" aria-label="Zoom in" title="Zoom in">&#43;</button>
+        </div>
+        <div class="reg-crop-actions">
+            <button type="button" class="reg-btn reg-btn-cancel" id="cropCancelBtn">Cancel</button>
+            <button type="button" class="reg-btn reg-btn-submit" id="cropApply">
+                Use Photo
+                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- ── Inline JS: photo preview · payment filename · jersey uppercase ── -->
 <script>
 (function () {
-    // Photo live preview
+    // ── Lazy-load Cropper.js only when the user picks a photo ──
+    var CROPPER_CSS = 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css';
+    var CROPPER_JS  = 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js';
+    var cropperLoaded = false;
+    var cropperLoading = false;
+    var pendingFile = null;
+
+    function loadCropper(cb) {
+        if (cropperLoaded) { cb(); return; }
+        if (cropperLoading) { var t = setInterval(function(){ if(cropperLoaded){clearInterval(t);cb();} }, 50); return; }
+        cropperLoading = true;
+        var css = document.createElement('link');
+        css.rel = 'stylesheet'; css.href = CROPPER_CSS; css.crossOrigin = 'anonymous';
+        document.head.appendChild(css);
+        var js = document.createElement('script');
+        js.src = CROPPER_JS; js.crossOrigin = 'anonymous';
+        js.onload = function () { cropperLoaded = true; cb(); };
+        document.head.appendChild(js);
+    }
+
+    // ── Photo upload → cropper → replace file with cropped portrait ──
     var photoInput = document.getElementById('photoInput');
+    var cropOverlay = document.getElementById('cropperModal');
+    var cropImg = document.getElementById('cropperImage');
+    var cropper = null;
+
+    function setPhotoPreview(src) {
+        var img = document.getElementById('photoPreview');
+        var ph  = document.getElementById('avatarPlaceholder');
+        if (img) { img.src = src; img.style.display = 'block'; }
+        if (ph)  { ph.style.display = 'none'; }
+        var errMsg = document.getElementById('photoErrorMsg');
+        if (errMsg) errMsg.remove();
+    }
+
+    function closeCropper() {
+        if (cropOverlay) cropOverlay.classList.remove('open');
+        document.body.style.overflow = '';
+        if (cropper) { cropper.destroy(); cropper = null; }
+    }
+
+    function openCropper(file) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            cropImg.src = e.target.result;
+            cropOverlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            if (cropper) cropper.destroy();
+            cropper = new Cropper(cropImg, {
+                aspectRatio: 4 / 5,
+                viewMode: 1,
+                autoCropArea: 1,
+                dragMode: 'move',
+                background: false,
+                responsive: true,
+                movable: true,
+                zoomable: true,
+                rotatable: true,
+                scalable: false,
+                minContainerHeight: 300
+            });
+        };
+        reader.readAsDataURL(file);
+    }
+
     if (photoInput) {
         photoInput.addEventListener('change', function () {
-            if (!this.files[0]) return;
-            var reader = new FileReader();
-            reader.onload = function (e) {
-                var img = document.getElementById('photoPreview');
-                var ph  = document.getElementById('avatarPlaceholder');
-                img.src = e.target.result;
-                img.style.display = 'block';
-                if (ph) ph.style.display = 'none';
-            };
-            reader.readAsDataURL(this.files[0]);
+            var f = this.files &amp;&amp; this.files[0];
+            if (!f) return;
+            if (!/^image\//.test(f.type)) {
+                var reader = new FileReader();
+                reader.onload = function (e) { setPhotoPreview(e.target.result); };
+                reader.readAsDataURL(f);
+                return;
+            }
+            // Load Cropper.js on demand, then open the cropper
+            loadCropper(function () { openCropper(f); });
+        });
+    }
+
+    // Cropper toolbar
+    function bindTool(id, fn) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener('click', function () { if (cropper) fn(); });
+    }
+    bindTool('cropRotateL', function () { cropper.rotate(-90); });
+    bindTool('cropRotateR', function () { cropper.rotate(90); });
+    bindTool('cropZoomIn',  function () { cropper.zoom(0.1); });
+    bindTool('cropZoomOut', function () { cropper.zoom(-0.1); });
+
+    function cancelCrop() {
+        if (photoInput) photoInput.value = '';
+        closeCropper();
+    }
+    var cc1 = document.getElementById('cropCancel');
+    var cc2 = document.getElementById('cropCancelBtn');
+    if (cc1) cc1.addEventListener('click', cancelCrop);
+    if (cc2) cc2.addEventListener('click', cancelCrop);
+    if (cropOverlay) {
+        cropOverlay.addEventListener('click', function (e) {
+            if (e.target === cropOverlay) cancelCrop();
+        });
+    }
+
+    var cropApply = document.getElementById('cropApply');
+    if (cropApply) {
+        cropApply.addEventListener('click', function () {
+            if (!cropper) return;
+            var canvas = cropper.getCroppedCanvas({
+                width: 900, height: 1125,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high'
+            });
+            if (!canvas) { closeCropper(); return; }
+            canvas.toBlob(function (blob) {
+                if (!blob) { closeCropper(); return; }
+                var base = (photoInput.files[0] &amp;&amp; photoInput.files[0].name
+                            ? photoInput.files[0].name.replace(/\.[^.]+$/, '') : 'photo');
+                var cropped = new File([blob], base + '.jpg', { type: 'image/jpeg' });
+                try {
+                    var dt = new DataTransfer();
+                    dt.items.add(cropped);
+                    photoInput.files = dt.files;
+                } catch (err) { /* older browser — original file stays */ }
+                setPhotoPreview(canvas.toDataURL('image/jpeg', 0.92));
+                closeCropper();
+            }, 'image/jpeg', 0.92);
         });
     }
 
@@ -922,6 +1309,128 @@
                 if (first) { first.classList.add('was-invalid'); }
             }
         });
+    }
+})();
+
+// ── Cricket role → batting/bowling style logic ───────────────────────────
+(function () {
+    var battEl = document.getElementById('battingStyle');
+    var bowlEl = document.getElementById('bowlingStyle');
+    if (!battEl || !bowlEl) return;
+
+    // Track which fields were auto-set (not manually chosen by user)
+    var autoSet = { batting: false, bowling: false };
+
+    var battNaOpt = battEl.querySelector('option[value="NA"]');
+    var bowlNaOpt = bowlEl.querySelector('option[value="NA"]');
+
+    function showNaOptions(show) {
+        if (battNaOpt) battNaOpt.style.display = show ? '' : 'none';
+        if (bowlNaOpt) bowlNaOpt.style.display = show ? '' : 'none';
+    }
+
+    function applyRole(role) {
+        if (role === 'Batter') {
+            showNaOptions(true);
+            // Auto-set bowling to NA; clear if it was previously auto-set
+            if (autoSet.batting) { battEl.value = ''; autoSet.batting = false; }
+            bowlEl.value = 'NA'; autoSet.bowling = true;
+        } else if (role === 'Bowler') {
+            showNaOptions(true);
+            // Auto-set batting to NA; clear bowling if it was previously auto-set
+            battEl.value = 'NA'; autoSet.batting = true;
+            if (autoSet.bowling) { bowlEl.value = ''; autoSet.bowling = false; }
+        } else if (role === 'Allrounder') {
+            // Reset any auto-set NA fields, then hide NA option
+            if (autoSet.batting) { battEl.value = ''; autoSet.batting = false; }
+            if (autoSet.bowling) { bowlEl.value = ''; autoSet.bowling = false; }
+            showNaOptions(false);
+        }
+    }
+
+    // Clear auto-set flag when user manually picks a value
+    battEl.addEventListener('change', function () { autoSet.batting = false; });
+    bowlEl.addEventListener('change', function () { autoSet.bowling = false; });
+
+    document.querySelectorAll('input[name="role"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+            if (this.checked) applyRole(this.value);
+        });
+    });
+
+    // Apply on page load if a role is pre-checked
+    var checked = document.querySelector('input[name="role"]:checked');
+    if (checked) applyRole(checked.value);
+    else showNaOptions(false); // hide NA until a role is picked
+})();
+(function () {
+    var codeEl   = document.getElementById('countryCode');
+    var numEl    = document.getElementById('mobileNumber');
+    var fullEl   = document.getElementById('contactFull');
+    var warnEl   = document.getElementById('mobileWarning');
+    if (!codeEl || !numEl || !fullEl) return;
+
+    // Enforce digits-only input
+    numEl.addEventListener('input', function () {
+        var v = this.value.replace(/\D/g, '');
+        if (v.length > 10) v = v.slice(0, 10);
+        this.value = v;
+        syncFull();
+    });
+
+    // Sync hidden field whenever code or number changes
+    codeEl.addEventListener('change', function () { syncFull(); checkDuplicate(); });
+
+    function syncFull() {
+        var num = numEl.value.trim();
+        fullEl.value = num ? (codeEl.value + num) : '';
+    }
+
+    // Required validation on the visible input
+    numEl.setAttribute('required', 'required');
+
+    // Check duplicate on blur if 10 digits entered
+    numEl.addEventListener('blur', function () {
+        syncFull();
+        if (numEl.value.length === 10) checkDuplicate();
+    });
+
+    function checkDuplicate() {
+        var num = numEl.value.trim();
+        if (num.length !== 10) { hideDupWarn(); return; }
+        var mobile = codeEl.value + num;
+        // Read db_name and tournament_slug from the form's action URL
+        var form   = document.querySelector('form');
+        if (!form) return;
+        var parts  = (form.getAttribute('action') || window.location.pathname).split('/');
+        // URL pattern: /db_name/slug/player/register
+        var regIdx = parts.indexOf('player');
+        if (regIdx &lt; 2) return;
+        var dbName  = parts[regIdx - 2];
+        var slug    = parts[regIdx - 1];
+        var url     = '/' + dbName + '/' + slug + '/player/check_mobile';
+        fetch(url, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ jsonrpc: '2.0', method: 'call', id: 1,
+                                      params: { mobile: mobile } })
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            var result = data &amp;&amp; data.result;
+            if (result &amp;&amp; result.duplicate) showDupWarn();
+            else hideDupWarn();
+        })
+        .catch(function () { hideDupWarn(); });
+    }
+
+    function showDupWarn() { if (warnEl) warnEl.style.display = 'block'; }
+    function hideDupWarn() { if (warnEl) warnEl.style.display = 'none';  }
+
+    // On form submit — sync combined value and enforce 10-digit validation
+    var form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function () { syncFull(); }, true);
     }
 })();
 </script>

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import base64
+import logging
 import os
 import random
 from odoo import api, models, fields, _
@@ -10,6 +11,83 @@ import werkzeug
 import werkzeug.exceptions
 from urllib.parse import urlparse, parse_qs
 import re
+
+_logger = logging.getLogger(__name__)
+
+# Stylesheet for the premium portrait player-card image, rendered by
+# wkhtmltoimage (Qt WebKit). Kept Qt-WebKit-safe: -webkit- prefixed gradients,
+# no CSS custom properties, no CSS grid, no object-fit, no backdrop-filter.
+# Palette values are substituted via string.Template ($name placeholders).
+_CARD_CSS = """
+*{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact;}
+html,body{width:1080px;height:1350px;}
+.pc{position:relative;width:1080px;height:1350px;overflow:hidden;color:$txt;font-family:'Barlow',sans-serif;
+ background:
+  -webkit-radial-gradient(50% 0%, ellipse, $bg3 0%, rgba(0,0,0,0) 55%),
+  -webkit-radial-gradient(12% 24%, circle, rgba(255,255,255,0.10) 0%, rgba(0,0,0,0) 30%),
+  -webkit-radial-gradient(88% 22%, circle, rgba(255,255,255,0.12) 0%, rgba(0,0,0,0) 30%),
+  -webkit-linear-gradient(top, $bg1 0%, $bg2 62%, #02060f 100%);}
+.pc-acc{position:absolute;z-index:6;height:8px;background:-webkit-linear-gradient(left,$accentD,$accent2);}
+.pc-acc.tl{top:150px;left:-70px;width:520px;-webkit-transform:rotate(-32deg);opacity:.85;}
+.pc-acc.br{bottom:250px;right:-70px;width:520px;-webkit-transform:rotate(-32deg);opacity:.85;}
+.pc-acc.br2{bottom:212px;right:-120px;width:420px;height:5px;-webkit-transform:rotate(-32deg);opacity:.55;}
+
+.pc-head{position:relative;z-index:8;height:150px;display:table;width:100%;padding:40px 52px 0;table-layout:fixed;}
+.pc-cell{display:table-cell;vertical-align:middle;}
+.pc-badge{width:104px;height:104px;border-radius:52px;overflow:hidden;background-color:$bg2;
+ background-size:cover;background-position:center;background-repeat:no-repeat;
+ border:3px solid $accent;box-shadow:0 0 26px $glow;text-align:center;line-height:98px;color:$accent;font-size:46px;}
+.pc-mid{padding-left:22px;}
+.pc-team{font-family:'Bebas Neue',sans-serif;font-size:44px;line-height:1;color:#fff;text-transform:uppercase;
+ letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 10px rgba(0,0,0,.5);}
+.pc-tour{font-family:'Oswald',sans-serif;font-size:15px;font-weight:600;letter-spacing:4px;color:$accent2;
+ text-transform:uppercase;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pc-id{text-align:right;width:240px;}
+.pc-id small{display:block;font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;letter-spacing:4px;
+ color:$sub;text-transform:uppercase;}
+.pc-id b{display:block;font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:1;color:$accent;
+ letter-spacing:2px;text-shadow:0 2px 12px $glow;}
+
+.pc-stage{position:relative;z-index:5;height:660px;overflow:hidden;}
+.pc-photo{position:absolute;top:0;left:0;right:0;bottom:0;background-size:cover;background-position:top center;background-repeat:no-repeat;}
+.pc-photo-ph{position:absolute;top:0;left:0;right:0;bottom:0;background-color:$bg2;text-align:center;
+ color:rgba(255,255,255,.10);font-size:220px;line-height:660px;}
+.pc-fade{position:absolute;top:0;left:0;right:0;bottom:0;
+ background:-webkit-linear-gradient(top, rgba(0,0,0,0) 42%, rgba(0,0,0,.30) 66%, $bg2 99%);}
+.pc-name{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:0 40px 16px;text-align:center;}
+.pc-fn{font-family:'Bebas Neue',sans-serif;font-size:48px;line-height:.9;letter-spacing:2px;color:$accent2;
+ text-transform:uppercase;text-shadow:0 3px 12px rgba(0,0,0,.75);}
+.pc-ln{font-family:'Bebas Neue',sans-serif;font-size:110px;line-height:.86;letter-spacing:1px;color:#fff;
+ text-transform:uppercase;text-shadow:0 6px 20px rgba(0,0,0,.78);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pc-pill{display:inline-block;margin-top:12px;padding:9px 42px;border-radius:30px;font-family:'Oswald',sans-serif;
+ font-size:22px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#fff;
+ background:-webkit-linear-gradient(left,$badge1,$badge2);box-shadow:0 8px 22px rgba(0,0,0,.45);}
+
+.pc-grid{position:relative;z-index:8;padding:20px 40px 0;overflow:hidden;}
+.pc-tile{float:left;width:48%;height:104px;margin:0 0 14px 0;padding:0 16px;
+ border-radius:16px;border:1px solid $line;
+ background:-webkit-linear-gradient(top left, rgba(255,255,255,0.08), rgba(255,255,255,0.02));box-shadow:0 6px 18px rgba(0,0,0,.35);}
+.pc-tile.nomr{float:right;margin-right:0;}
+.pc-tin{display:table;width:100%;height:104px;}
+.pc-ic{display:table-cell;width:52px;vertical-align:middle;}
+.pc-ibox{width:52px;height:52px;border-radius:13px;background-color:rgba(0,0,0,.28);border:1px solid $line;
+ text-align:center;line-height:50px;overflow:hidden;color:$accent;}
+.pc-ibox svg{width:30px;height:30px;vertical-align:middle;}
+.pc-ilogo{width:52px;height:52px;background-size:contain;background-position:center;background-repeat:no-repeat;}
+.pc-txt{display:table-cell;vertical-align:middle;padding-left:14px;}
+.pc-lbl{font-family:'Oswald',sans-serif;font-size:14px;font-weight:600;letter-spacing:2px;color:$sub;
+ text-transform:uppercase;line-height:1.1;}
+.pc-val{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:$accent2;text-transform:uppercase;
+ line-height:1.1;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px;}
+
+.pc-foot{position:relative;z-index:8;height:120px;padding:22px 52px 0;}
+.pc-foot .ln{position:absolute;top:0;left:52px;right:52px;height:2px;
+ background:-webkit-linear-gradient(left, rgba(255,255,255,0) 0%, $accent 50%, rgba(255,255,255,0) 100%);}
+.pc-brand{display:inline-block;font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:#fff;text-transform:uppercase;}
+.pc-brand b{color:$accent;}
+.pc-fsub{float:right;font-family:'Oswald',sans-serif;font-size:14px;font-weight:600;letter-spacing:3px;color:$sub;
+ text-transform:uppercase;line-height:30px;max-width:520px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+"""
 
 
 def _get_default_player_photo(self):
@@ -60,9 +138,32 @@ class AuctionTeamPlayer(models.Model):
         help='Contact number with all digits except the first and last replaced by X.',
     )
     address = fields.Text("Address")
-    batting_style = fields.Char(string="Batting Style", required=True, default='Right Handed Batter')
-    bowling_style = fields.Char(string="Bowling Style", required=True, default='Right Arm')
+    batting_style = fields.Char(string="Batting Style", default='Right Handed Batter')
+    bowling_style = fields.Char(string="Bowling Style", default='Right Arm')
     role = fields.Char()
+
+    # ── Football profile (shown when tournament_type == 'football') ──────────
+    dominant_position_id = fields.Many2one(
+        'auction.player.position', string='Playing Position',
+        help='Primary / dominant playing position.')
+    secondary_position_ids = fields.Many2many(
+        'auction.player.position', 'player_secondary_position_rel',
+        'player_id', 'position_id', string='Secondary Position(s)')
+    preferred_foot = fields.Selection(
+        [('left', 'Left'), ('right', 'Right'), ('both', 'Both')],
+        string='Preferred Foot')
+    age = fields.Integer(string='Age')
+    height = fields.Char(string='Height', help='e.g. 180 cm')
+    weight = fields.Char(string='Weight', help='e.g. 75 kg')
+    playing_style_ids = fields.Many2many(
+        'auction.player.style', 'player_playing_style_rel',
+        'player_id', 'style_id', string='Playing Style')
+    strength_ids = fields.Many2many(
+        'auction.player.strength', 'player_strength_rel',
+        'player_id', 'strength_id', string='Strengths')
+    work_rate = fields.Selection(
+        [('low', 'Low'), ('medium', 'Medium'), ('high', 'High')],
+        string='Work Rate')
     photo = fields.Binary("Photo", default=_get_default_player_photo)
     photo_card = fields.Binary(
         string='Photo (Card Print)',
@@ -341,7 +442,7 @@ class AuctionTeamPlayer(models.Model):
             player.tournament_id.sudo().write({
                 'stamp_player_id': player.id,
                 'stamp_state': 'sold',
-                'stamp_expires_at': fields.Datetime.now() + timedelta(seconds=display_secs + 8),
+                'stamp_expires_at': fields.Datetime.now() + timedelta(seconds=display_secs + 3),
             })
 
         self.env.user.notify_success(message=message, title='CONGRATULATIONS!')
@@ -359,6 +460,9 @@ class AuctionTeamPlayer(models.Model):
     def print_player_cards(self):
         # Use the player's own tournament theme, not the globally "active" tournament
         tournament = self[0].tournament_id if self else None
+        # Football has its own card format/paperformat (theme-aware internally)
+        if tournament and tournament.tournament_type == 'football':
+            return self.env.ref('auction_module.action_report_player_card_football').report_action(self)
         template = tournament.player_display_template if tournament else 'vanilla'
         report_map = {
             'vanilla':       'auction_module.action_report_player_card',
@@ -370,8 +474,242 @@ class AuctionTeamPlayer(models.Model):
         report_ref = report_map.get(template, 'auction_module.action_report_player_card')
         return self.env.ref(report_ref).report_action(self)
 
-    def print_player_cards_portrait(self):
-        return self.env.ref('auction_module.action_report_player_card_portrait').report_action(self)
+    # ══════════════════════════════════════════════════════════════════
+    #  Bulk portrait player-card image export (ZIP of PNGs)
+    #  Replaces the old portrait PDF report. Renders a premium 1080x1350
+    #  IPL-style card per selected player via headless Chromium and streams
+    #  a single ZIP archive back to the browser.
+    # ══════════════════════════════════════════════════════════════════
+    _CARD_W = 1080
+    _CARD_H = 1350
+
+    _FOOT_LABELS = {'left': 'Left Foot', 'right': 'Right Foot', 'both': 'Both Feet'}
+
+    _CARD_ICONS = {
+        'bat': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 3.5l6 6"/><path d="M18 6l-9.5 9.5"/><path d="M8.5 15.5l-4.2 4.2a1.5 1.5 0 01-2.1-2.1L6.4 13.4z"/><circle cx="5" cy="19" r="0.6" fill="currentColor"/></svg>',
+        'ball': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17"/><path d="M9 4.2c1.6 4.8 1.6 10.8 0 15.6M15 4.2c-1.6 4.8-1.6 10.8 0 15.6" stroke-dasharray="2 2"/></svg>',
+        'position': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/></svg>',
+        'foot': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M8 3c1.6 0 2.5 1.4 2.7 3.2.2 1.8.5 3.3 1.4 4.6.8 1.2 1.9 2 1.9 3.9 0 2.4-1.8 4.3-4.3 4.3-2.2 0-3.7-1.4-3.7-3.6 0-1.3.3-2.2.3-3.6C6.3 12 5 9.4 5 6.8 5 4.6 6.2 3 8 3z"/></svg>',
+        'age': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>',
+        'category': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M20.5 12.5l-8 8-9-9V4h7.5z"/><circle cx="8" cy="8" r="1.4" fill="currentColor"/></svg>',
+        'location': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 21.5c4.5-4.8 7-8.3 7-11.5a7 7 0 10-14 0c0 3.2 2.5 6.7 7 11.5z"/><circle cx="12" cy="10" r="2.6"/></svg>',
+        'price': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M9 8h6M9 11h6M14 8c0 3-2 4-4.5 4L15 16.5"/></svg>',
+        'team': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3l7 2.5v5c0 4.5-3 8-7 9.5-4-1.5-7-5-7-9.5v-5z"/><path d="M9.5 12l1.8 1.8 3.5-3.6"/></svg>',
+        'blood': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3s6 6.4 6 10.5A6 6 0 016 13.5C6 9.4 12 3 12 3z"/></svg>',
+        'height': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 3v18M8 6l4-3 4 3M8 18l4 3 4-3"/></svg>',
+    }
+
+    _CARD_THEMES = {
+        'vanilla':      {'bg1': '#0b1c3c', 'bg2': '#040a17', 'bg3': '#16346a', 'accent': '#e9c15a', 'accent2': '#ffe6a0', 'accentD': '#a9781f', 'txt': '#eef3fb', 'sub': '#9fb2d4', 'badge1': '#e0349b', 'badge2': '#7d1f6b'},
+        'butterscotch': {'bg1': '#2a1c08', 'bg2': '#120b03', 'bg3': '#4a3210', 'accent': '#f5c842', 'accent2': '#ffe89a', 'accentD': '#b3801f', 'txt': '#fff7e6', 'sub': '#d8b98a', 'badge1': '#f5a623', 'badge2': '#8a4b0f'},
+        'strawberry':   {'bg1': '#3a0f22', 'bg2': '#1c0710', 'bg3': '#5f1a38', 'accent': '#ff9bbb', 'accent2': '#ffd6a8', 'accentD': '#c2185b', 'txt': '#ffeaf3', 'sub': '#e5a9c2', 'badge1': '#ff4d84', 'badge2': '#7a1030'},
+        'cherry':       {'bg1': '#2a0509', 'bg2': '#140203', 'bg3': '#4a0a13', 'accent': '#f5c842', 'accent2': '#ffdd88', 'accentD': '#9a0f22', 'txt': '#ffecec', 'sub': '#e0a0a8', 'badge1': '#e01e37', 'badge2': '#5a0810'},
+        'pistah':       {'bg1': '#0e2a15', 'bg2': '#05130a', 'bg3': '#1c4d2a', 'accent': '#d4e157', 'accent2': '#eaff9a', 'accentD': '#2f7d32', 'txt': '#ecfce8', 'sub': '#a7d1a0', 'badge1': '#7cb342', 'badge2': '#1b4a1e'},
+    }
+
+    def _card_render_binary(self):
+        import shutil
+        for cand in ('/usr/local/bin/wkhtmltoimage', '/usr/bin/wkhtmltoimage', 'wkhtmltoimage'):
+            path = cand if os.path.isabs(cand) else shutil.which(cand)
+            if path and os.path.exists(path):
+                return path
+        return None
+
+    def _card_workdir(self):
+        """A private temp working dir for the HTML/PNG intermediates."""
+        import tempfile
+        return tempfile.mkdtemp(prefix='ac_cards_')
+
+    @staticmethod
+    def _card_indian_amount(amount):
+        try:
+            n = int(amount or 0)
+        except (TypeError, ValueError):
+            return str(amount or '')
+        s = str(n)
+        if len(s) <= 3:
+            return s
+        last3, rest = s[-3:], s[:-3]
+        rest = re.sub(r'(\d)(?=(\d\d)+$)', r'\1,', rest)
+        return rest + ',' + last3
+
+    @staticmethod
+    def _card_safe_filename(name, used):
+        base = re.sub(r'[^A-Za-z0-9]+', '_', (name or 'Player').strip()).strip('_') or 'Player'
+        candidate = base
+        i = 1
+        while candidate.lower() in used:
+            i += 1
+            candidate = '%s_%d' % (base, i)
+        used.add(candidate.lower())
+        return candidate + '.png'
+
+    def _card_values(self, player):
+        tournament = player.tournament_id
+        team = player.assigned_team_id
+        is_football = bool(tournament and tournament.tournament_type == 'football')
+        theme = (tournament.player_display_template if tournament else False) or 'vanilla'
+        pal = dict(self._CARD_THEMES.get(theme, self._CARD_THEMES['vanilla']))
+
+        name = (player.name or '').strip().upper()
+        parts = name.split()
+        if len(parts) > 1:
+            name_first, name_last = ' '.join(parts[:-1]), parts[-1]
+        else:
+            name_first, name_last = '', name or 'PLAYER'
+
+        prefix = ''
+        source = (team.name if team and team.name else (tournament.name if tournament else '')) or ''
+        prefix = ''.join(w[0] for w in source.split()[:2]).upper() or 'PL'
+        card_id = '%s-%03d' % (prefix, player.sl_no or 0)
+
+        if is_football:
+            badge = (player.dominant_position_id.name if player.dominant_position_id
+                     else (player.role or player.p_category or 'PLAYER'))
+        else:
+            badge = player.role or player.p_category or 'PLAYER'
+
+        rows = []
+        if is_football:
+            if player.dominant_position_id:
+                rows.append(('position', 'Position', player.dominant_position_id.name))
+            if player.preferred_foot:
+                rows.append(('foot', 'Preferred Foot', self._FOOT_LABELS.get(player.preferred_foot, player.preferred_foot.title())))
+        else:
+            if player.batting_style:
+                rows.append(('bat', 'Batting Style', player.batting_style))
+            if player.bowling_style:
+                rows.append(('ball', 'Bowling Style', player.bowling_style))
+        if player.age:
+            rows.append(('age', 'Age', '%s Years' % player.age))
+        if player.p_category:
+            rows.append(('category', 'Category', player.p_category))
+        if len(rows) < 5 and player.address:
+            rows.append(('location', 'Location', (player.address or '').strip().splitlines()[0] if player.address else ''))
+        rows.append(('price', 'Base Price', u'\u20B9 %s' % self._card_indian_amount(player.base_price)))
+        rows.append(('team', 'Team', team.name if team else 'Unsold'))
+        # 2-column grid, keep the six most relevant tiles
+        rows = [{'icon': i, 'label': l, 'value': v, 'nomr': (idx % 2 == 1)}
+                for idx, (i, l, v) in enumerate(rows[:6])]
+
+        def uri(binary_val):
+            try:
+                return image_data_uri(binary_val) if binary_val else ''
+            except Exception:
+                return ''
+
+        pal['line'] = 'rgba(255,255,255,0.12)'
+        pal['glow'] = (pal['accent'] or '#e9c15a') + '55'
+        import string
+        css = string.Template(_CARD_CSS).safe_substitute(pal)
+
+        return {
+            'player': player,
+            'tournament': tournament,
+            'team': team,
+            'is_football': is_football,
+            'pal': pal,
+            'css': css,
+            'icons': self._CARD_ICONS,
+            'photo_uri': uri(player.photo),
+            'team_logo_uri': uri(team.logo) if team else '',
+            'tournament_logo_uri': uri(tournament.logo) if tournament else '',
+            'name_first': name_first,
+            'name_last': name_last,
+            'card_id': card_id,
+            'badge': badge,
+            'rows': rows,
+        }
+
+    def _render_card_html(self, player):
+        values = self._card_values(player)
+        html = self.env['ir.qweb']._render('auction_module.player_card_portrait_image', values)
+        if isinstance(html, bytes):
+            html = html.decode('utf-8')
+        return str(html)
+
+    def _card_html_to_png(self, html, workdir, binary):
+        import subprocess
+        import uuid as _uuid
+        base = os.path.join(workdir, _uuid.uuid4().hex)
+        hpath, opath = base + '.html', base + '.png'
+        with open(hpath, 'w', encoding='utf-8') as fh:
+            fh.write(html)
+        cmd = [
+            binary, '--format', 'png',
+            '--width', str(self._CARD_W), '--disable-smart-width',
+            '--enable-local-file-access', '--javascript-delay', '1800',
+            '--quiet', hpath, opath,
+        ]
+        try:
+            proc = subprocess.run(cmd, timeout=120, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except subprocess.TimeoutExpired:
+            _logger.warning('wkhtmltoimage timed out rendering a player card')
+            return None
+        if os.path.exists(opath) and os.path.getsize(opath) > 0:
+            with open(opath, 'rb') as fh:
+                return fh.read()
+        _logger.warning('wkhtmltoimage produced no image (rc=%s). stderr: %s',
+                        proc.returncode, (proc.stderr or b'')[-800:].decode('utf-8', 'replace'))
+        return None
+
+    def action_download_player_cards(self):
+        import io
+        import shutil
+        import zipfile
+        from datetime import datetime
+
+        players = self.exists()
+        if not players:
+            raise UserError(_('Please select at least one player to export.'))
+
+        binary = self._card_render_binary()
+        if not binary:
+            raise UserError(_(
+                'The wkhtmltoimage tool was not found on the server, which is '
+                'required to render the player cards. Please install wkhtmltox.'))
+
+        workdir = self._card_workdir()
+        failed, used_names = [], set()
+        zip_buf = io.BytesIO()
+        try:
+            with zipfile.ZipFile(zip_buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+                for player in players:
+                    try:
+                        html = self._render_card_html(player)
+                        png = self._card_html_to_png(html, workdir, binary)
+                        if not png:
+                            raise ValueError('empty render output')
+                        fname = self._card_safe_filename(player.name or ('player_%s' % player.id), used_names)
+                        zf.writestr(fname, png)
+                    except Exception:
+                        _logger.exception('Player card export failed for player %s', player.id)
+                        failed.append(player.name or ('#%s' % player.id))
+                if failed:
+                    note = (u'%d card(s) failed to generate:\n\n%s' % (len(failed), u'\n'.join(failed)))
+                    zf.writestr('_FAILED_CARDS.txt', note.encode('utf-8'))
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+
+        if len(failed) == len(players):
+            raise UserError(_('All player cards failed to generate. Please check the server logs.'))
+
+        tournament = players[0].tournament_id
+        tname = re.sub(r'[^A-Za-z0-9]+', '_',
+                       (tournament.name if tournament else 'Players')).strip('_') or 'Players'
+        zipname = 'Player_Cards_%s_%s.zip' % (tname, datetime.now().strftime('%Y%m%d_%H%M%S'))
+        attachment = self.env['ir.attachment'].create({
+            'name': zipname,
+            'type': 'binary',
+            'datas': base64.b64encode(zip_buf.getvalue()),
+            'mimetype': 'application/zip',
+            'res_model': 'auction.team.player',
+        })
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/web/content/%s?download=true' % attachment.id,
+            'target': 'self',
+        }
 
     # def print_player_card(self):
     #     players = self.search([])
@@ -524,13 +862,22 @@ class AuctionTeamPlayer(models.Model):
         if random_player:
             random_player.sudo().write({'is_on_stage': True})
 
-        # ── Clear stamp so live board switches to new player immediately ──
+        # ── Clear stamp only when it has already expired ──
+        # A still-valid SOLD/UNSOLD stamp MUST survive here: the sold screen
+        # fires a "next player" prefetch (?exclude=) within ~0.5s of a sale,
+        # which lands in this method. Wiping the stamp then makes the public
+        # live board skip the SOLD/UNSOLD animation and jump straight to the
+        # next player. The data endpoint already prioritises the stamp player
+        # over is_on_stage, so leaving a valid stamp lets the board finish the
+        # animation for its full duration; it clears itself on stamp_expires_at.
         if tournament and tournament.stamp_player_id:
-            tournament.sudo().write({
-                'stamp_player_id': False,
-                'stamp_state': False,
-                'stamp_expires_at': False,
-            })
+            now_dt = fields.Datetime.now()
+            if not tournament.stamp_expires_at or tournament.stamp_expires_at <= now_dt:
+                tournament.sudo().write({
+                    'stamp_player_id': False,
+                    'stamp_state': False,
+                    'stamp_expires_at': False,
+                })
 
         return random_player
 
@@ -583,7 +930,7 @@ class AuctionTeamPlayer(models.Model):
                     player.tournament_id.sudo().write({
                         'stamp_player_id': player.id,
                         'stamp_state': 'unsold',
-                        'stamp_expires_at': fields.Datetime.now() + timedelta(seconds=display_secs + 8),
+                        'stamp_expires_at': fields.Datetime.now() + timedelta(seconds=display_secs + 3),
                     })
         display_seconds = self[0].tournament_id.sold_display_seconds if self and self[0].tournament_id else 5
         return {

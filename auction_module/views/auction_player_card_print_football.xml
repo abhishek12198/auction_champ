@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Dedicated football PDF card page (called per-doc by dispatchers) -->
+    <template id="report_player_card_football_page">
+        <t t-set="fbc_print_themes" t-value="{
+  'vanilla':      {'baseDark':'#0a1330','panel':'#0d1834','panelLite':'#182a56','header':'#1b3f8f','headerLite':'#2252b5','circleLite':'#2a5fd0','accent':'#fdce33','accentD':'#f5b301','ink':'#0a1330','muted':'#9fb4dd','txt':'#ffffff','blood':'#ff6b6b','brandGlow':'96,140,255','accentGlow':'253,206,51'},
+  'butterscotch': {'baseDark':'#170f04','panel':'#241809','panelLite':'#4a3210','header':'#7c531a','headerLite':'#b3801f','circleLite':'#d99a2a','accent':'#f5c842','accentD':'#e0901f','ink':'#241809','muted':'#d8b98a','txt':'#fff7e6','blood':'#ff6b6b','brandGlow':'245,200,66','accentGlow':'245,200,66'},
+  'strawberry':   {'baseDark':'#200712','panel':'#2a0a18','panelLite':'#5f1a38','header':'#8e1146','headerLite':'#c2185b','circleLite':'#ff6aa0','accent':'#ffcf9e','accentD':'#ff5a8a','ink':'#2a0a18','muted':'#e5a9c2','txt':'#ffeaf3','blood':'#ff5a7a','brandGlow':'255,106,160','accentGlow':'255,207,158'},
+  'cherry':       {'baseDark':'#150304','panel':'#180405','panelLite':'#4a0a13','header':'#7a0a18','headerLite':'#9a0f22','circleLite':'#dc143c','accent':'#f5c842','accentD':'#c01530','ink':'#180405','muted':'#e0a0a8','txt':'#ffecec','blood':'#ff4d64','brandGlow':'220,20,60','accentGlow':'245,200,66'},
+  'pistah':       {'baseDark':'#061309','panel':'#0c2411','panelLite':'#1c4d2a','header':'#2f7d32','headerLite':'#38a13c','circleLite':'#6bbf4e','accent':'#d4e157','accentD':'#2f7d32','ink':'#06140a','muted':'#a7d1a0','txt':'#ecfce8','blood':'#ff7a6b','brandGlow':'107,191,78','accentGlow':'212,225,87'},
+}"/>
+        <t t-set="pal" t-value="fbc_print_themes.get(doc.tournament_id.player_display_template or 'vanilla', fbc_print_themes['vanilla'])"/>
+        <html lang="en">
+            <head>
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1" />
+                <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Oswald:wght@400;500;600;700&amp;family=Barlow:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+                <title>Football Player Card</title>
+                <style>@font-face{font-family:'Varsity Team';src:url('/auction_module/static/src/assets/fonts/VarsityTeam-Bold.otf') format('opentype');font-weight:normal;font-style:normal;} html,body{margin:0;}</style>
+            </head>
+            <body t-attf-style="margin:0; padding:0; font-family:'Barlow',sans-serif; background-color:{{ pal['baseDark'] }}; background-image:-webkit-radial-gradient(14% -10%, circle, rgba({{ pal['brandGlow'] }},0.42) 0%, rgba({{ pal['brandGlow'] }},0) 40%), -webkit-radial-gradient(86% -10%, circle, rgba({{ pal['brandGlow'] }},0.38) 0%, rgba({{ pal['brandGlow'] }},0) 40%), -webkit-radial-gradient(50% 125%, circle, rgba({{ pal['accentGlow'] }},0.15) 0%, rgba({{ pal['accentGlow'] }},0) 52%), -webkit-linear-gradient(top, {{ pal['panel'] }} 0%, {{ pal['baseDark'] }} 52%, {{ pal['baseDark'] }} 100%);">
+                <div style="display:table; width:100%; height:455px;">
+                <div style="display:table-cell; vertical-align:middle; padding:0;">
+                <div t-attf-style="max-width:660px; margin:0 auto; border-radius:14px; background-color:{{ pal['panel'] }}; background-image:-webkit-linear-gradient(top,{{ pal['panelLite'] }} 0%,{{ pal['baseDark'] }} 100%); box-shadow:0 0 0 2px rgba({{ pal['accentGlow'] }},0.6), 0 0 0 5px rgba(0,0,0,0.6), 0 16px 40px rgba(0,0,0,0.55);">
+
+                    <!-- HEADER -->
+                    <div t-attf-style="border-radius:14px 14px 0 0; border-bottom:2px solid rgba({{ pal['accentGlow'] }},0.85); background-color:{{ pal['header'] }}; background-image:-webkit-radial-gradient(92% -60%, circle, rgba({{ pal['accentGlow'] }},0.30) 0%, rgba({{ pal['accentGlow'] }},0) 60%), -webkit-linear-gradient(left, {{ pal['header'] }} 0%, {{ pal['headerLite'] }} 55%, {{ pal['header'] }} 100%);">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <tr>
+                                <td style="vertical-align:middle; padding:11px 18px; width:60px;">
+                                    <div t-attf-style="width:48px; height:48px; padding:3px; border-radius:8px; background-color:rgba(255,255,255,0.14); box-shadow:0 0 0 1px rgba({{ pal['accentGlow'] }},0.5); text-align:center;">
+                                        <img t-att-src="image_data_uri(doc.tournament_id.logo)" alt="Logo" style="height:42px; width:42px; object-fit:contain; display:inline-block; border-radius:5px; vertical-align:middle;"/>
+                                    </div>
+                                </td>
+                                <td style="vertical-align:middle; padding:11px 0;">
+                                    <div t-attf-style="color:{{ pal['txt'] }}; font-family:'Varsity Team','Bebas Neue',sans-serif; font-size:1.7rem; letter-spacing:1.4px; text-transform:uppercase; line-height:1; text-shadow:0 2px 6px rgba(0,0,0,0.45); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:34ch;" t-esc="doc.tournament_id.name"/>
+                                    <div t-attf-style="color:{{ pal['accent'] }}; font-size:0.68rem; font-weight:600; margin-top:3px; letter-spacing:2px; text-transform:uppercase;" t-esc="doc.tournament_id.description"/>
+                                </td>
+                                <td style="vertical-align:middle; text-align:right; padding:11px 20px; white-space:nowrap;">
+                                    <span t-attf-style="display:inline-block; padding:5px 14px; border-radius:20px; background-color:rgba(0,0,0,0.28); box-shadow:0 0 0 1px rgba({{ pal['accentGlow'] }},0.6); color:{{ pal['accent'] }}; font-family:'Oswald',sans-serif; font-size:0.68rem; font-weight:700; letter-spacing:3px; text-transform:uppercase;">Player Card</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- BODY -->
+                    <table style="width:100%; border-collapse:collapse;">
+                        <tr>
+                            <td t-attf-style="width:210px; min-width:210px; vertical-align:top; padding:0; background-color:{{ pal['panel'] }}; background-image:-webkit-radial-gradient(50% 4%, circle, rgba({{ pal['brandGlow'] }},0.34) 0%, rgba({{ pal['brandGlow'] }},0) 55%), -webkit-linear-gradient(top,{{ pal['panelLite'] }} 0%,{{ pal['baseDark'] }} 100%); border-right:2px solid rgba({{ pal['accentGlow'] }},0.3);">
+                                <div style="padding:14px 11px 14px 14px; height:100%;">
+                                    <div t-attf-style="height:100%; min-height:210px; border-radius:10px; border-top:5px solid {{ pal['accent'] }}; border-bottom:5px solid {{ pal['accent'] }}; box-shadow:0 0 0 2px {{ pal['accent'] }}, 0 0 0 5px rgba(0,0,0,0.5), 0 8px 22px rgba(0,0,0,0.5); background-color:{{ pal['baseDark'] }}; background-image:url('{{ image_data_uri(doc.photo_card or doc.photo) }}'); background-size:cover; background-position:top center; background-repeat:no-repeat;"></div>
+                                </div>
+                            </td>
+
+                            <td style="vertical-align:top; padding:0;">
+                                <div t-attf-style="position:relative; min-height:210px; background-color:{{ pal['panel'] }}; background-image:-webkit-radial-gradient(100% 0%, circle, rgba({{ pal['brandGlow'] }},0.20) 0%, rgba({{ pal['brandGlow'] }},0) 50%), -webkit-linear-gradient(top left, {{ pal['panelLite'] }} 0%, {{ pal['panel'] }} 100%);">
+
+                                    <div t-attf-style="position:absolute; top:15px; right:18px; width:56px; height:56px; border-radius:50%; background-color:{{ pal['header'] }}; background-image:-webkit-linear-gradient(top left,{{ pal['circleLite'] }},{{ pal['header'] }}); box-shadow:0 0 0 3px {{ pal['accent'] }}, 0 0 0 6px rgba(0,0,0,0.55), 0 6px 16px rgba(0,0,0,0.5); text-align:center; line-height:56px;">
+                                        <span t-attf-style="color:{{ pal['accent'] }}; font-family:'Varsity Team','Bebas Neue',sans-serif; font-size:1.7rem; vertical-align:middle;"><t t-esc="doc.sl_no"/></span>
+                                    </div>
+
+                                    <div style="padding:10px 74px 7px 22px;">
+                                        <div t-attf-style="color:{{ pal['txt'] }}; font-family:'Varsity Team','Bebas Neue',sans-serif; font-size:1.85rem; line-height:0.98; letter-spacing:1px; text-transform:uppercase; text-shadow:0 3px 9px rgba(0,0,0,0.5); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" t-esc="doc.name.upper()"/>
+                                        <div style="margin-top:4px;">
+                                            <t t-if="doc.dominant_position_id or doc.role">
+                                                <span t-attf-style="display:inline-block; color:{{ pal['ink'] }}; background-color:{{ pal['accent'] }}; background-image:-webkit-linear-gradient(left,{{ pal['accent'] }},{{ pal['accentD'] }}); font-family:'Oswald',sans-serif; font-size:0.72rem; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; padding:2px 12px; border-radius:4px; white-space:nowrap;"><t t-esc="doc.dominant_position_id.name if doc.dominant_position_id else doc.role"/></span>
+                                            </t>
+                                        </div>
+
+                                        <table style="width:100%; border-collapse:collapse; margin:7px 0 3px;">
+                                            <tr><td t-attf-style="height:2px; padding:0; background-color:{{ pal['accent'] }}; background-image:-webkit-linear-gradient(left,{{ pal['accent'] }} 0%,rgba({{ pal['accentGlow'] }},0) 82%);"></td></tr>
+                                        </table>
+
+                                        <t t-set="lblcss" t-value="'color:' + pal['muted'] + ';font-family:Oswald,sans-serif;font-size:0.54rem;font-weight:500;letter-spacing:0.7px;text-transform:uppercase;line-height:1.1;margin-bottom:1px;'"/>
+                                        <t t-set="valcss" t-value="'color:' + pal['txt'] + ';font-family:Barlow,sans-serif;font-size:0.8rem;font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'"/>
+                                        <t t-set="bloodcss" t-value="'color:' + pal['blood'] + ';font-family:Barlow,sans-serif;font-size:0.8rem;font-weight:700;line-height:1.2;'"/>
+                                        <t t-set="tdL" t-value="'width:50%;vertical-align:top;padding:4px 12px 4px 0;border-bottom:1px solid rgba(' + pal['accentGlow'] + ',0.14);'"/>
+                                        <t t-set="tdR" t-value="'width:50%;vertical-align:top;padding:4px 0 4px 14px;border-bottom:1px solid rgba(' + pal['accentGlow'] + ',0.14);'"/>
+                                        <t t-set="tdLchip" t-value="'width:50%;vertical-align:top;padding:6px 12px 5px 0;border-bottom:1px solid rgba(' + pal['accentGlow'] + ',0.14);'"/>
+                                        <t t-set="tdRchip" t-value="'width:50%;vertical-align:top;padding:6px 0 5px 14px;border-bottom:1px solid rgba(' + pal['accentGlow'] + ',0.14);'"/>
+                                        <t t-set="chiplbl" t-value="'color:' + pal['accent'] + ';font-family:Oswald,sans-serif;font-size:0.56rem;font-weight:500;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:3px;'"/>
+                                        <t t-set="chipcss" t-value="'display:inline-block;border:1px solid ' + pal['accent'] + ';border-radius:6px;padding:2px 7px;color:' + pal['accent'] + ';background:rgba(' + pal['accentGlow'] + ',0.08);font-family:Oswald,sans-serif;font-size:0.58rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:0 4px 4px 0;white-space:nowrap;'"/>
+
+                                        <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin-top:2px;">
+                                            <tr>
+                                                <td t-att-style="tdL">
+                                                    <div t-att-style="lblcss">Tier</div>
+                                                    <div t-att-style="valcss"><t t-esc="doc.tier_id.name or '—'"/></div>
+                                                </td>
+                                                <td t-att-style="tdR">
+                                                    <div t-att-style="lblcss">Preferred Foot</div>
+                                                    <div t-att-style="valcss"><t t-esc="doc.preferred_foot.capitalize() if doc.preferred_foot else '—'"/></div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td t-att-style="tdL">
+                                                    <div t-att-style="lblcss">Secondary</div>
+                                                    <div t-att-style="valcss"><t t-esc="', '.join(doc.secondary_position_ids.mapped('code')) or '—'"/></div>
+                                                </td>
+                                                <td t-att-style="tdR">
+                                                    <div t-att-style="lblcss">Age</div>
+                                                    <div t-att-style="valcss"><t t-esc="(str(doc.age) + ' Years') if doc.age else '—'"/></div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td t-att-style="tdLchip">
+                                                    <div t-att-style="chiplbl">Playing Style</div>
+                                                    <div>
+                                                        <t t-foreach="doc.playing_style_ids" t-as="sty">
+                                                            <span t-att-style="chipcss"><t t-esc="sty.name"/></span>
+                                                        </t>
+                                                        <t t-if="not doc.playing_style_ids"><span t-att-style="valcss">—</span></t>
+                                                    </div>
+                                                </td>
+                                                <td t-att-style="tdRchip">
+                                                    <div t-att-style="chiplbl">Strengths</div>
+                                                    <div>
+                                                        <t t-foreach="doc.strength_ids" t-as="strg">
+                                                            <span t-att-style="chipcss"><t t-esc="strg.name"/></span>
+                                                        </t>
+                                                        <t t-if="doc.work_rate">
+                                                            <span t-att-style="chipcss"><t t-esc="doc.work_rate.capitalize()"/> Work Rate</span>
+                                                        </t>
+                                                        <t t-if="not doc.strength_ids and not doc.work_rate"><span t-att-style="valcss">—</span></t>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td t-att-style="tdL">
+                                                    <div t-att-style="lblcss">Mobile</div>
+                                                    <div t-att-style="valcss"><t t-esc="doc.masked_contact or '—'"/></div>
+                                                </td>
+                                                <td t-att-style="tdR">
+                                                    <div t-att-style="lblcss">Blood Group</div>
+                                                    <div t-att-style="bloodcss"><t t-esc="doc.blood_group or '—'"/></div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    
+                    <!-- FOOTER -->
+                    <div t-attf-style="padding:5px 20px; border-radius:0 0 14px 14px; border-top:2px solid rgba({{ pal['accentGlow'] }},0.85); background-color:{{ pal['headerLite'] }}; background-image:-webkit-linear-gradient(left,{{ pal['header'] }},{{ pal['headerLite'] }},{{ pal['header'] }});">
+                        <table style="width:100%; border-collapse:collapse;"><tr><td style="vertical-align:middle; text-align:left; padding:0; width:30%;"><t t-if="doc.tournament_id.tournament_date"><span t-attf-style="font-size:0.6rem; letter-spacing:1.5px; text-transform:uppercase; font-family:'Oswald',sans-serif; font-weight:600; color:rgba({{ pal['accentGlow'] }},0.85);">&#128197; <t t-esc="doc.tournament_id.tournament_date.strftime('%d %b %Y')"/></span></t><t t-if="doc.tournament_id.tournament_date and doc.tournament_id.venue"><span style="font-size:0.55rem; color:rgba(255,255,255,0.3); margin:0 6px;">|</span></t><t t-if="doc.tournament_id.venue"><span t-attf-style="font-size:0.6rem; letter-spacing:1.2px; text-transform:uppercase; font-family:'Oswald',sans-serif; font-weight:600; color:rgba({{ pal['accentGlow'] }},0.85); max-width:30ch; display:inline-block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; vertical-align:middle;">&#128205; <t t-esc="doc.tournament_id.venue"/></span></t></td><td style="vertical-align:middle; text-align:center; white-space:nowrap; padding:0;"><span style="font-size:0.6rem; letter-spacing:3px; text-transform:uppercase;"><span t-attf-style="color:rgba({{ pal['accentGlow'] }},0.6); font-weight:400;">Powered by&#160;</span><img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQxIiBoZWlnaHQ9IjM3IiB2aWV3Qm94PSIwIDAgMjQxIDM3IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cGF0aCBkPSJNNTcuMjggMjMuMDI0SDUwLjk5Mkw0OS40NTYgMjZINDUuMTZMNTQuMjMyIDkuMTUySDU4Ljk4NEw2Mi4xMDQgMjZINTcuNzZMNTcuMjggMjMuMDI0Wk01Ni44IDE5LjkwNEw1NS44MTYgMTMuNjY0TDUyLjYgMTkuOTA0SDU2LjhaTTc5LjUzNTMgMTIuNjA4TDc3LjE4MzMgMjZINzMuMDc5M0w3My4zOTEzIDI0LjE3NkM3Mi44NjMzIDI0Ljc2OCA3Mi4yMTUzIDI1LjI0OCA3MS40NDczIDI1LjYxNkM3MC42OTUzIDI1Ljk2OCA2OS44ODczIDI2LjE0NCA2OS4wMjMzIDI2LjE0NEM2Ny42NzkzIDI2LjE0NCA2Ni42MjMzIDI1Ljc2OCA2NS44NTUzIDI1LjAxNkM2NS4wODczIDI0LjI0OCA2NC43MDMzIDIzLjE4NCA2NC43MDMzIDIxLjgyNEM2NC43MDMzIDIxLjMxMiA2NC43NDMzIDIwLjg0OCA2NC44MjMzIDIwLjQzMkw2Ni4yMTUzIDEyLjYwOEg3MC4yOTUzTDY5LjAyMzMgMTkuODhDNjguOTc1MyAyMC4xMzYgNjguOTUxMyAyMC4zODQgNjguOTUxMyAyMC42MjRDNjguOTUxMyAyMS4yOTYgNjkuMTM1MyAyMS44MTYgNjkuNTAzMyAyMi4xODRDNjkuODg3MyAyMi41MzYgNzAuNDE1MyAyMi43MTIgNzEuMDg3MyAyMi43MTJDNzEuODU1MyAyMi43MTIgNzIuNTAzMyAyMi40ODggNzMuMDMxMyAyMi4wNEM3My41NzUzIDIxLjU3NiA3My45MzUzIDIwLjkyIDc0LjExMTMgMjAuMDcyTDc1LjQzMTMgMTIuNjA4SDc5LjUzNTNaTTgwLjUxNTIgMTkuMzA0QzgwLjc1NTIgMTcuOTEyIDgxLjI1MTIgMTYuNjk2IDgyLjAwMzIgMTUuNjU2QzgyLjc1NTIgMTQuNjE2IDgzLjY4MzIgMTMuODE2IDg0Ljc4NzIgMTMuMjU2Qzg1LjkwNzIgMTIuNjk2IDg3LjEyMzIgMTIuNDE2IDg4LjQzNTIgMTIuNDE2QzkwLjExNTIgMTIuNDE2IDkxLjQ0MzIgMTIuODU2IDkyLjQxOTIgMTMuNzM2QzkzLjM5NTIgMTQuNjE2IDkzLjkxNTIgMTUuODU2IDkzLjk3OTIgMTcuNDU2SDg5LjYxMTJDODkuNDM1MiAxNi40MzIgODguODExMiAxNS45MiA4Ny43MzkyIDE1LjkyQzg2Ljk4NzIgMTUuOTIgODYuMzM5MiAxNi4yMTYgODUuNzk1MiAxNi44MDhDODUuMjUxMiAxNy4zODQgODQuODgzMiAxOC4yMTYgODQuNjkxMiAxOS4zMDRDODQuNjI3MiAxOS42NCA4NC41OTUyIDE5Ljk5MiA4NC41OTUyIDIwLjM2Qzg0LjU5NTIgMjEuMTEyIDg0Ljc3MTIgMjEuNjg4IDg1LjEyMzIgMjIuMDg4Qzg1LjQ3NTIgMjIuNDg4IDg1Ljk1NTIgMjIuNjg4IDg2LjU2MzIgMjIuNjg4Qzg3LjYxOTIgMjIuNjg4IDg4LjQxMTIgMjIuMTc2IDg4LjkzOTIgMjEuMTUySDkzLjMzMTJDOTIuNzA3MiAyMi43MiA5MS43NDcyIDIzLjk1MiA5MC40NTEyIDI0Ljg0OEM4OS4xNTUyIDI1Ljc0NCA4Ny42NzUyIDI2LjE5MiA4Ni4wMTEyIDI2LjE5MkM4NC4yODMyIDI2LjE5MiA4Mi45MDcyIDI1LjcyIDgxLjg4MzIgMjQuNzc2QzgwLjg3NTIgMjMuODE2IDgwLjM3MTIgMjIuNTEyIDgwLjM3MTIgMjAuODY0QzgwLjM3MTIgMjAuMzY4IDgwLjQxOTIgMTkuODQ4IDgwLjUxNTIgMTkuMzA0Wk0xMDAuMjMgMjEuMzkyQzEwMC4yMTQgMjEuNDcyIDEwMC4yMDYgMjEuNTc2IDEwMC4yMDYgMjEuNzA0QzEwMC4yMDYgMjEuOTkyIDEwMC4yODYgMjIuMiAxMDAuNDQ2IDIyLjMyOEMxMDAuNjIyIDIyLjQ1NiAxMDAuOTAyIDIyLjUyIDEwMS4yODYgMjIuNTJIMTAyLjc1TDEwMi4xMjYgMjZIMTAwLjAzOEM5Ny4zNTA0IDI2IDk2LjAwNjQgMjQuODcyIDk2LjAwNjQgMjIuNjE2Qzk2LjAwNjQgMjIuMjggOTYuMDQ2NCAyMS44NTYgOTYuMTI2NCAyMS4zNDRMOTcuMDg2NCAxNi4wMTZIOTUuNDU0NEw5Ni4wNTQ0IDEyLjYwOEg5Ny42ODY0TDk4LjI2MjQgOS4zNDRIMTAyLjM2NkwxMDEuNzkgMTIuNjA4SDEwNC40NzhMMTAzLjg3OCAxNi4wMTZIMTAxLjE5TDEwMC4yMyAyMS4zOTJaTTEwOS4wOTIgMTEuMjE2QzEwOC40NTIgMTEuMjE2IDEwNy45NCAxMS4wNDggMTA3LjU1NiAxMC43MTJDMTA3LjE4OCAxMC4zNiAxMDcuMDA0IDkuOTIgMTA3LjAwNCA5LjM5MkMxMDcuMDA0IDguNjcyIDEwNy4yODQgOC4wNTYgMTA3Ljg0NCA3LjU0NEMxMDguNDA0IDcuMDMyIDEwOS4wODQgNi43NzYgMTA5Ljg4NCA2Ljc3NkMxMTAuNTI0IDYuNzc2IDExMS4wMjggNi45NTIgMTExLjM5NiA3LjMwNEMxMTEuNzY0IDcuNjQgMTExLjk0OCA4LjA4IDExMS45NDggOC42MjRDMTExLjk0OCA5LjMyOCAxMTEuNjY4IDkuOTM2IDExMS4xMDggMTAuNDQ4QzExMC41NDggMTAuOTYgMTA5Ljg3NiAxMS4yMTYgMTA5LjA5MiAxMS4yMTZaTTExMC44NjggMTIuNjA4TDEwOC41MTYgMjZIMTA0LjQxMkwxMDYuNzY0IDEyLjYwOEgxMTAuODY4Wk0xMTcuNjExIDI2LjE5MkMxMTYuNDU5IDI2LjE5MiAxMTUuNDM1IDI1Ljk2IDExNC41MzkgMjUuNDk2QzExMy42NDMgMjUuMDMyIDExMi45NDcgMjQuMzc2IDExMi40NTEgMjMuNTI4QzExMS45NzEgMjIuNjggMTExLjczMSAyMS42OTYgMTExLjczMSAyMC41NzZDMTExLjczMSAxOS4wNTYgMTEyLjA5MSAxNy42NzIgMTEyLjgxMSAxNi40MjRDMTEzLjUzMSAxNS4xNzYgMTE0LjUyMyAxNC4yIDExNS43ODcgMTMuNDk2QzExNy4wNTEgMTIuNzc2IDExOC40NTkgMTIuNDE2IDEyMC4wMTEgMTIuNDE2QzEyMS4xNjMgMTIuNDE2IDEyMi4xODcgMTIuNjU2IDEyMy4wODMgMTMuMTM2QzEyMy45OTUgMTMuNiAxMjQuNjk5IDE0LjI1NiAxMjUuMTk1IDE1LjEwNEMxMjUuNjkxIDE1Ljk1MiAxMjUuOTM5IDE2LjkzNiAxMjUuOTM5IDE4LjA1NkMxMjUuOTM5IDE5LjU5MiAxMjUuNTcxIDIwLjk4NCAxMjQuODM1IDIyLjIzMkMxMjQuMTE1IDIzLjQ2NCAxMjMuMTE1IDI0LjQzMiAxMjEuODM1IDI1LjEzNkMxMjAuNTcxIDI1Ljg0IDExOS4xNjMgMjYuMTkyIDExNy42MTEgMjYuMTkyWk0xMTguMTg3IDIyLjY2NEMxMTguODU5IDIyLjY2NCAxMTkuNDU5IDIyLjQ2NCAxMTkuOTg3IDIyLjA2NEMxMjAuNTMxIDIxLjY0OCAxMjAuOTQ3IDIxLjEyIDEyMS4yMzUgMjAuNDhDMTIxLjUzOSAxOS44MjQgMTIxLjY5MSAxOS4xNDQgMTIxLjY5MSAxOC40NEMxMjEuNjkxIDE3LjY0IDEyMS40NzUgMTcuMDI0IDEyMS4wNDMgMTYuNTkyQzEyMC42MTEgMTYuMTYgMTIwLjA2NyAxNS45NDQgMTE5LjQxMSAxNS45NDRDMTE4LjcyMyAxNS45NDQgMTE4LjExNSAxNi4xNTIgMTE3LjU4NyAxNi41NjhDMTE3LjA3NSAxNi45NjggMTE2LjY3NSAxNy40OTYgMTE2LjM4NyAxOC4xNTJDMTE2LjA5OSAxOC44MDggMTE1Ljk1NSAxOS40OTYgMTE1Ljk1NSAyMC4yMTZDMTE1Ljk1NSAyMSAxMTYuMTYzIDIxLjYwOCAxMTYuNTc5IDIyLjA0QzExNi45OTUgMjIuNDU2IDExNy41MzEgMjIuNjY0IDExOC4xODcgMjIuNjY0Wk0xMzcuMzA4IDEyLjQ2NEMxMzguNjUyIDEyLjQ2NCAxMzkuNzA4IDEyLjg0IDE0MC40NzYgMTMuNTkyQzE0MS4yNDQgMTQuMzQ0IDE0MS42MjggMTUuMzkyIDE0MS42MjggMTYuNzM2QzE0MS42MjggMTcuMTg0IDE0MS41OCAxNy42NjQgMTQxLjQ4NCAxOC4xNzZMMTQwLjA5MiAyNkgxMzYuMDEyTDEzNy4zMDggMTguNzI4QzEzNy4zNTYgMTguNDU2IDEzNy4zOCAxOC4yMTYgMTM3LjM4IDE4LjAwOEMxMzcuMzggMTcuMzM2IDEzNy4xODggMTYuODE2IDEzNi44MDQgMTYuNDQ4QzEzNi40MzYgMTYuMDggMTM1LjkxNiAxNS44OTYgMTM1LjI0NCAxNS44OTZDMTM0LjQ0NCAxNS44OTYgMTMzLjc3MiAxNi4xNDQgMTMzLjIyOCAxNi42NEMxMzIuNjg0IDE3LjEzNiAxMzIuMzMyIDE3LjgzMiAxMzIuMTcyIDE4LjcyOFYxOC42MDhMMTMwLjg3NiAyNkgxMjYuNzcyTDEyOS4xMjQgMTIuNjA4SDEzMy4yMjhMMTMyLjkxNiAxNC40MDhDMTMzLjQ0NCAxMy44MTYgMTM0LjA4NCAxMy4zNDQgMTM0LjgzNiAxMi45OTJDMTM1LjYwNCAxMi42NCAxMzYuNDI4IDEyLjQ2NCAxMzcuMzA4IDEyLjQ2NFpNMTQ5LjMxNCAxNy41NTJDMTQ5LjYwMiAxNS44ODggMTUwLjIxOCAxNC40MDggMTUxLjE2MiAxMy4xMTJDMTUyLjEyMiAxMS44IDE1My4zMDYgMTAuNzg0IDE1NC43MTQgMTAuMDY0QzE1Ni4xMjIgOS4zMjggMTU3LjY0MiA4Ljk2IDE1OS4yNzQgOC45NkMxNjEuMjc0IDguOTYgMTYyLjg5IDkuNDg4IDE2NC4xMjIgMTAuNTQ0QzE2NS4zNyAxMS42IDE2Ni4wNzQgMTMuMDQgMTY2LjIzNCAxNC44NjRIMTYxLjcyMkMxNjEuNTE0IDE0LjE3NiAxNjEuMTMgMTMuNjU2IDE2MC41NyAxMy4zMDRDMTYwLjAyNiAxMi45MzYgMTU5LjM1NCAxMi43NTIgMTU4LjU1NCAxMi43NTJDMTU3LjI5IDEyLjc1MiAxNTYuMTk0IDEzLjE5MiAxNTUuMjY2IDE0LjA3MkMxNTQuMzM4IDE0LjkzNiAxNTMuNzQ2IDE2LjA5NiAxNTMuNDkgMTcuNTUyQzE1My40MSAxOCAxNTMuMzcgMTguMzkyIDE1My4zNyAxOC43MjhDMTUzLjM3IDE5Ljg0OCAxNTMuNjgyIDIwLjczNiAxNTQuMzA2IDIxLjM5MkMxNTQuOTMgMjIuMDQ4IDE1NS43ODYgMjIuMzc2IDE1Ni44NzQgMjIuMzc2QzE1Ny42NTggMjIuMzc2IDE1OC4zODYgMjIuMTkyIDE1OS4wNTggMjEuODI0QzE1OS43NDYgMjEuNDU2IDE2MC4zMjIgMjAuOTI4IDE2MC43ODYgMjAuMjRIMTY1LjI5OEMxNjQuNDk4IDIyLjA2NCAxNjMuMjkgMjMuNTA0IDE2MS42NzQgMjQuNTZDMTYwLjA1OCAyNS42IDE1OC4yNSAyNi4xMiAxNTYuMjUgMjYuMTJDMTU0LjgxIDI2LjEyIDE1My41NTQgMjUuODQgMTUyLjQ4MiAyNS4yOEMxNTEuNDEgMjQuNzIgMTUwLjU4NiAyMy45MjggMTUwLjAxIDIyLjkwNEMxNDkuNDM0IDIxLjg4IDE0OS4xNDYgMjAuNjg4IDE0OS4xNDYgMTkuMzI4QzE0OS4xNDYgMTguNzIgMTQ5LjIwMiAxOC4xMjggMTQ5LjMxNCAxNy41NTJaTTE3Ny4zODggMTIuNDY0QzE3OC43IDEyLjQ2NCAxNzkuNzMyIDEyLjg0IDE4MC40ODQgMTMuNTkyQzE4MS4yNTIgMTQuMzQ0IDE4MS42MzYgMTUuMzkyIDE4MS42MzYgMTYuNzM2QzE4MS42MzYgMTcuMTg0IDE4MS41ODggMTcuNjY0IDE4MS40OTIgMTguMTc2TDE4MC4xIDI2SDE3Ni4wMkwxNzcuMzE2IDE4LjcyOEMxNzcuMzY0IDE4LjQ1NiAxNzcuMzg4IDE4LjIxNiAxNzcuMzg4IDE4LjAwOEMxNzcuMzg4IDE3LjMzNiAxNzcuMTk2IDE2LjgxNiAxNzYuODEyIDE2LjQ0OEMxNzYuNDQ0IDE2LjA4IDE3NS45MjQgMTUuODk2IDE3NS4yNTIgMTUuODk2QzE3NC40NTIgMTUuODk2IDE3My43OCAxNi4xNDQgMTczLjIzNiAxNi42NEMxNzIuNjkyIDE3LjEzNiAxNzIuMzQgMTcuODMyIDE3Mi4xOCAxOC43MjhWMTguNjhMMTcwLjg4NCAyNkgxNjYuNzhMMTY5LjkyNCA4LjI0SDE3NC4wMjhMMTcyLjk0OCAxNC4zODRDMTczLjQ3NiAxMy43OTIgMTc0LjEyNCAxMy4zMjggMTc0Ljg5MiAxMi45OTJDMTc1LjY2IDEyLjY0IDE3Ni40OTIgMTIuNDY0IDE3Ny4zODggMTIuNDY0Wk0xODMuMzM2IDE5LjI4QzE4My41NzYgMTcuOTA0IDE4NC4wNDggMTYuNjk2IDE4NC43NTIgMTUuNjU2QzE4NS40NTYgMTQuNjE2IDE4Ni4zMDQgMTMuODE2IDE4Ny4yOTYgMTMuMjU2QzE4OC4yODggMTIuNjk2IDE4OS4zMzYgMTIuNDE2IDE5MC40NCAxMi40MTZDMTkxLjM4NCAxMi40MTYgMTkyLjE3NiAxMi42MDggMTkyLjgxNiAxMi45OTJDMTkzLjQ1NiAxMy4zNzYgMTkzLjkyIDEzLjg4IDE5NC4yMDggMTQuNTA0TDE5NC41NDQgMTIuNjA4SDE5OC42NDhMMTk2LjI3MiAyNkgxOTIuMTY4TDE5Mi41MjggMjQuMTA0QzE5Mi4wMTYgMjQuNzI4IDE5MS4zNjggMjUuMjMyIDE5MC41ODQgMjUuNjE2QzE4OS44IDI2IDE4OC45MzYgMjYuMTkyIDE4Ny45OTIgMjYuMTkyQzE4Ny4wNDggMjYuMTkyIDE4Ni4yMDggMjUuOTc2IDE4NS40NzIgMjUuNTQ0QzE4NC43NTIgMjUuMTEyIDE4NC4xOTIgMjQuNTA0IDE4My43OTIgMjMuNzJDMTgzLjM5MiAyMi45MiAxODMuMTkyIDIxLjk4NCAxODMuMTkyIDIwLjkxMkMxODMuMTkyIDIwLjQgMTgzLjI0IDE5Ljg1NiAxODMuMzM2IDE5LjI4Wk0xOTMuMzY4IDE5LjMwNEMxOTMuNDE2IDE5LjAxNiAxOTMuNDQgMTguNzUyIDE5My40NCAxOC41MTJDMTkzLjQ0IDE3LjcyOCAxOTMuMjA4IDE3LjExMiAxOTIuNzQ0IDE2LjY2NEMxOTIuMjk2IDE2LjIxNiAxOTEuNzIgMTUuOTkyIDE5MS4wMTYgMTUuOTkyQzE5MC4yIDE1Ljk5MiAxODkuNDU2IDE2LjI4OCAxODguNzg0IDE2Ljg4QzE4OC4xMTIgMTcuNDU2IDE4Ny42ODggMTguMjU2IDE4Ny41MTIgMTkuMjhDMTg3LjQ2NCAxOS41NjggMTg3LjQ0IDE5LjgzMiAxODcuNDQgMjAuMDcyQzE4Ny40NCAyMC44NTYgMTg3LjY2NCAyMS40OCAxODguMTEyIDIxLjk0NEMxODguNTc2IDIyLjM5MiAxODkuMTUyIDIyLjYxNiAxODkuODQgMjIuNjE2QzE5MC42NTYgMjIuNjE2IDE5MS40IDIyLjMyIDE5Mi4wNzIgMjEuNzI4QzE5Mi43NDQgMjEuMTM2IDE5My4xNzYgMjAuMzI4IDE5My4zNjggMTkuMzA0Wk0yMTguNzI5IDEyLjQ2NEMyMjAuMTY5IDEyLjQ2NCAyMjEuMjg5IDEyLjg0OCAyMjIuMDg5IDEzLjYxNkMyMjIuOTA1IDE0LjM2OCAyMjMuMzEzIDE1LjQyNCAyMjMuMzEzIDE2Ljc4NEMyMjMuMzEzIDE3LjIgMjIzLjI2NSAxNy42NjQgMjIzLjE2OSAxOC4xNzZMMjIxLjc3NyAyNkgyMTcuNjk3TDIxOC45OTMgMTguNzI4QzIxOS4wMjUgMTguNTY4IDIxOS4wNDEgMTguMzUyIDIxOS4wNDEgMTguMDhDMjE5LjA0MSAxNy40MDggMjE4Ljg0OSAxNi44OTYgMjE4LjQ2NSAxNi41NDRDMjE4LjA5NyAxNi4xOTIgMjE3LjU3NyAxNi4wMTYgMjE2LjkwNSAxNi4wMTZDMjE2LjEwNSAxNi4wMTYgMjE1LjQzMyAxNi4yNTYgMjE0Ljg4OSAxNi43MzZDMjE0LjM0NSAxNy4yIDIxNC4wMDEgMTcuODY0IDIxMy44NTcgMTguNzI4TDIxMi41NjEgMjZIMjA4LjQ4MUwyMDkuNzc3IDE4LjcyOEMyMDkuODA5IDE4LjU2OCAyMDkuODI1IDE4LjM1MiAyMDkuODI1IDE4LjA4QzIwOS44MjUgMTcuNDA4IDIwOS42MzMgMTYuODk2IDIwOS4yNDkgMTYuNTQ0QzIwOC44ODEgMTYuMTkyIDIwOC4zNjEgMTYuMDE2IDIwNy42ODkgMTYuMDE2QzIwNi44ODkgMTYuMDE2IDIwNi4yMTcgMTYuMjU2IDIwNS42NzMgMTYuNzM2QzIwNS4xMjkgMTcuMiAyMDQuNzg1IDE3Ljg2NCAyMDQuNjQxIDE4LjcyOFYxOC42MDhMMjAzLjM0NSAyNkgxOTkuMjQxTDIwMS41OTMgMTIuNjA4SDIwNS42OTdMMjA1LjQwOSAxNC4zMTJDMjA1LjkyMSAxMy43MzYgMjA2LjUzNyAxMy4yODggMjA3LjI1NyAxMi45NjhDMjA3Ljk5MyAxMi42MzIgMjA4Ljc4NSAxMi40NjQgMjA5LjYzMyAxMi40NjRDMjEwLjY1NyAxMi40NjQgMjExLjUyMSAxMi42OCAyMTIuMjI1IDEzLjExMkMyMTIuOTQ1IDEzLjU0NCAyMTMuNDU3IDE0LjE2OCAyMTMuNzYxIDE0Ljk4NEMyMTQuMzUzIDE0LjIzMiAyMTUuMDg5IDEzLjYyNCAyMTUuOTY5IDEzLjE2QzIxNi44NDkgMTIuNjk2IDIxNy43NjkgMTIuNDY0IDIxOC43MjkgMTIuNDY0Wk0yMzAuNzY3IDE0LjUwNEMyMzEuMjc5IDEzLjg4IDIzMS45MTkgMTMuMzc2IDIzMi42ODcgMTIuOTkyQzIzMy40NzEgMTIuNjA4IDIzNC4zMzUgMTIuNDE2IDIzNS4yNzkgMTIuNDE2QzIzNi43MTkgMTIuNDE2IDIzNy44NzkgMTIuODg4IDIzOC43NTkgMTMuODMyQzIzOS42NTUgMTQuNzc2IDI0MC4xMDMgMTYuMDU2IDI0MC4xMDMgMTcuNjcyQzI0MC4xMDMgMTguMTY4IDI0MC4wNTUgMTguNzA0IDIzOS45NTkgMTkuMjhDMjM5LjcxOSAyMC42NTYgMjM5LjI0NyAyMS44NzIgMjM4LjU0MyAyMi45MjhDMjM3LjgzOSAyMy45NjggMjM2Ljk5MSAyNC43NzYgMjM1Ljk5OSAyNS4zNTJDMjM1LjAwNyAyNS45MTIgMjMzLjk1OSAyNi4xOTIgMjMyLjg1NSAyNi4xOTJDMjMxLjkyNyAyNi4xOTIgMjMxLjE0MyAyNiAyMzAuNTAzIDI1LjYxNkMyMjkuODYzIDI1LjIzMiAyMjkuMzkxIDI0LjczNiAyMjkuMDg3IDI0LjEyOEwyMjcuNjIzIDMyLjM4NEgyMjMuNTE5TDIyNi45OTkgMTIuNjA4SDIzMS4xMDNMMjMwLjc2NyAxNC41MDRaTTIzNS44MDcgMTkuMjhDMjM1Ljg1NSAxOS4wMDggMjM1Ljg3OSAxOC43NiAyMzUuODc5IDE4LjUzNkMyMzUuODc5IDE3LjczNiAyMzUuNjQ3IDE3LjExMiAyMzUuMTgzIDE2LjY2NEMyMzQuNzM1IDE2LjIxNiAyMzQuMTU5IDE1Ljk5MiAyMzMuNDU1IDE1Ljk5MkMyMzIuNjM5IDE1Ljk5MiAyMzEuODk1IDE2LjI4OCAyMzEuMjIzIDE2Ljg4QzIzMC41NTEgMTcuNDcyIDIzMC4xMTkgMTguMjggMjI5LjkyNyAxOS4zMDRDMjI5Ljg3OSAxOS41OTIgMjI5Ljg1NSAxOS44NTYgMjI5Ljg1NSAyMC4wOTZDMjI5Ljg1NSAyMC44OCAyMzAuMDc5IDIxLjQ5NiAyMzAuNTI3IDIxLjk0NEMyMzAuOTc1IDIyLjM5MiAyMzEuNTUxIDIyLjYxNiAyMzIuMjU1IDIyLjYxNkMyMzMuMDcxIDIyLjYxNiAyMzMuODE1IDIyLjMyIDIzNC40ODcgMjEuNzI4QzIzNS4xNzUgMjEuMTIgMjM1LjYxNSAyMC4zMDQgMjM1LjgwNyAxOS4yOFoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNMCAyLjIyODkyQzAgMC45OTc5MiAwLjk5NzkyIDAgMi4yMjg5MiAwSDM0Ljc3MTFDMzYuMDAyMSAwIDM3IDAuOTk3OTIgMzcgMi4yMjg5MlYxNi42NDI1QzM2LjU0ODYgMTYuNjM3NyAzNi4wNjcgMTYuNjMyNiAzNS41NTMzIDE2LjYyNzJDMzQuODYwOCAxNi42MiAzNC4xMDk4IDE2LjYxMjEgMzMuMjk1IDE2LjYwMzJMMjMuMjczNSAxNi40ODg2TDIzLjI5ODQgMTMuODg3MUwyMy4zMTgyIDExLjI5MDVMMjMuNzE4MiAxMS4yMDFDMjQuNzIwNiAxMC45Nzk5IDI1LjMyNzIgOS44OTcyNiAyNS4wMDY1IDguOTEzMzJDMjQuODYzIDguNDU4NDggMjQuNDE5MyA3Ljk2NjAxIDI0LjAwNzEgNy43ODQzMUMyMy42NDg4IDcuNjM3NjcgMTIuNDc5MyA3LjUwNjE0IDEyLjA2OSA3LjY0NDc1QzExLjYyOSA3LjgwMjc3IDExLjE1NjIgOC4yODU2NiAxMC45OTM5IDguNzY2ODZDMTAuNzYwOSA5LjQzNDU4IDEwLjkwNzQgMTAuMDkxNSAxMS40MDUxIDEwLjU5OTNDMTEuNjkzIDEwLjg5MyAxMi4xNjM4IDExLjEzNDUgMTIuNDgzOSAxMS4xNTI2QzEyLjYxMTkgMTEuMTYzOCAxMi42Mjg0IDEyLjAxNjQgMTIuNjIyOSAxOC4yNTk2QzEyLjYxNyAyNS4wNTk3IDEyLjYwOTMgMjUuMzUwMyAxMi40MzY5IDI1LjM0MzZDMTIuMTQ2NCAyNS4zMjU4IDExLjY2MTEgMjUuNTc2OSAxMS4zMDc4IDI1LjkzMjlDMTAuMjIzNCAyNy4wMDU3IDEwLjcyODggMjguNzc1IDEyLjE4OTkgMjkuMDIxOUMxMi4zNTIyIDI5LjA0ODIgMTQuOTY4NSAyOS4wNzA3IDE3Ljk5NDEgMjkuMDYyOUMyMS43NjM4IDI5LjA1NzkgMjMuNjAyMSAyOS4wMjI5IDIzLjgzNDMgMjguOTUxNEMyNC4yODQyIDI4LjgwMzQgMjQuODE2NCAyOC4yODE3IDI0Ljk1MzUgMjcuODU0NEMyNS4yOTQgMjYuNzc4OCAyNC42NDQ1IDI1LjY0ODYgMjMuNTcxOSAyNS40Nzk3TDIzLjI4NjUgMjUuNDM3M0wyMy4zMTE0IDIyLjgzNThMMjMuMzM2MiAyMC4yMzQzTDMzLjM4MjUgMjAuMzM0M0MzNC43NyAyMC4zNDc0IDM1Ljk2NjggMjAuMzU4NiAzNyAyMC4zNjc2VjM3SDI5Ljg2NzVWMzUuNjYyN0MyOS44Njc1IDM0LjkyNDEgMjkuMjY4NyAzNC4zMjUzIDI4LjUzMDEgMzQuMzI1M0g4LjQ2OTg4QzcuNzMxMjggMzQuMzI1MyA3LjEzMjUzIDM0LjkyNDEgNy4xMzI1MyAzNS42NjI3VjM3SDBWMi4yMjg5MloiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=" alt="Auction Champ" style="height:16px; vertical-align:middle; display:inline-block; margin-left:4px;"/></span></td><td style="padding:0; width:30%;"></td></tr></table>
+                    </div>
+
+                </div>
+                </div>
+                </div>
+            </body>
+        </html>
+    </template>
+
+</odoo>

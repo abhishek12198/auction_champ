@@ -15,6 +15,7 @@ class StartAuction(models.TransientModel):
     max_players = fields.Integer(string='Max no of players')
     base_point = fields.Integer(string="Base point for a player", default=1000)
     team_ids = fields.Many2many('auction.team', 'start_auction_team_rel', 'auction_start_id', 'team_id', 'Teams')
+    tournament_id = fields.Many2one('auction.tournament', string='Tournament', readonly=True)
     max_limited = fields.Selection([('yes', 'Yes'), ('no', 'No')], default='no')
     max_point_player = fields.Integer('Max Point for a player')
     auction_bid_slab_ids = fields.One2many('auction.bid.slab', 'wizard_id', 'Slab')
@@ -23,7 +24,22 @@ class StartAuction(models.TransientModel):
     @api.model
     def default_get(self, fields_list):
         res = super(StartAuction, self).default_get(fields_list)
-        tiers = self.env['auction.player.tier'].search([('is_an_icon_tier', '!=', True)])
+        # When launched from a tournament form, pre-scope the wizard to that
+        # tournament and default the team list to that tournament's teams only.
+        tournament = self.env['auction.tournament']
+        tournament_id = self.env.context.get('default_tournament_id') or self.env.context.get('active_tournament_id')
+        if tournament_id:
+            tournament = self.env['auction.tournament'].browse(tournament_id)
+            if tournament.exists():
+                res['tournament_id'] = tournament.id
+                if 'team_ids' in fields_list:
+                    res['team_ids'] = [(6, 0, tournament.team_ids.ids)]
+        # Only offer tiers that belong to this tournament (fall back to all when
+        # the wizard is opened without a tournament context).
+        tier_domain = [('is_an_icon_tier', '!=', True)]
+        if tournament:
+            tier_domain.append(('tournament_id', '=', tournament.id))
+        tiers = self.env['auction.player.tier'].search(tier_domain)
         if tiers and 'tier_limit_ids' in fields_list:
             res['tier_limit_ids'] = [
                 (0, 0, {'tier_id': tier.id, 'max_players': 1, 'base_point': 0, 'max_call': 0})
@@ -51,7 +67,14 @@ class StartAuction(models.TransientModel):
 
         if not len(self.team_ids) >= 2:
             raise ValidationError("Select atleast two teams")
-        tournament_id = self.env['auction.tournament'].search([('active', '=', True)], limit=1)
+        # Derive the tournament from the selected teams (each team belongs to a
+        # tournament). Using the first "active" tournament is wrong when more than
+        # one tournament is active at a time, because it silently assigns the
+        # auction records to the wrong tournament.
+        team_tournaments = self.team_ids.mapped('tournament_id')
+        if len(team_tournaments) > 1:
+            raise ValidationError("All selected teams must belong to the same tournament.")
+        tournament_id = self.tournament_id or team_tournaments[:1] or self.env['auction.tournament'].search([('active', '=', True)], limit=1)
         bid_slab_data = [(0, 0, {'from_amount': line.from_amount, 'to_amount': line.to_amount,'increment': line.increment}) for line in self.auction_bid_slab_ids]
         tier_limit_data = [(0, 0, {'tier_id': line.tier_id.id, 'max_players': line.max_players, 'base_point': line.base_point, 'max_call': line.max_call}) for line in self.tier_limit_ids]
         if self.team_ids:
@@ -68,7 +91,7 @@ class StartAuction(models.TransientModel):
                     'tier_limit_ids': tier_limit_data,
                 }
 
-                auction_data.update({'tournament_id': tournament_id.id})
+                auction_data.update({'tournament_id': team.tournament_id.id or tournament_id.id})
                 auction_list.append(auction_data)
 
         if auction_list:

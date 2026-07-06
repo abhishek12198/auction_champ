@@ -47,6 +47,7 @@ access_auction_start_auction_tier_limit_admin,auction.start.auction.tier.limit (
 access_auction_pdf_to_png_admin,auction.pdf.to.png (admin),auction_module.model_auction_pdf_to_png,auction_module.group_auction_group_admin,1,1,1,1
 access_my_service,my_service,base.model_res_users,,1,1,1,1
 access_auction_team_player_public,auction.team.player (public read for card),auction_module.model_auction_team_player,base.group_public,1,0,0,0
+access_auction_team_public,auction.team (public read for logo),auction_module.model_auction_team,base.group_public,1,0,0,0
 access_auction_tournament_public,auction.tournament (public read for card),auction_module.model_auction_tournament,base.group_public,1,0,0,0
 access_auction_player_tier_public,auction.player.tier (public read for card),auction_module.model_auction_player_tier,base.group_public,1,0,0,0
 
@@ -76,3 +77,15 @@ access_auction_team_player_pm,auction.team.player (payment marker),auction_modul
 access_auction_tournament_pm,auction.tournament (payment marker),auction_module.model_auction_tournament,auction_module.group_auction_payment_marker,1,0,0,0
 access_auction_team_pm,auction.team (payment marker),auction_module.model_auction_team,auction_module.group_auction_payment_marker,1,0,0,0
 access_auction_player_tier_pm,auction.player.tier (payment marker),auction_module.model_auction_player_tier,auction_module.group_auction_payment_marker,1,0,0,0
+access_auction_player_position_user,auction.player.position (user),auction_module.model_auction_player_position,auction_module.group_auction_group,1,1,1,1
+access_auction_player_position_admin,auction.player.position (admin),auction_module.model_auction_player_position,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_player_position_public,auction.player.position (public),auction_module.model_auction_player_position,base.group_public,1,0,0,0
+access_auction_player_position_pd,auction.player.position (player dashboard),auction_module.model_auction_player_position,auction_module.group_auction_player_dashboard,1,0,0,0
+access_auction_player_style_user,auction.player.style (user),auction_module.model_auction_player_style,auction_module.group_auction_group,1,1,1,1
+access_auction_player_style_admin,auction.player.style (admin),auction_module.model_auction_player_style,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_player_style_public,auction.player.style (public),auction_module.model_auction_player_style,base.group_public,1,0,0,0
+access_auction_player_style_pd,auction.player.style (player dashboard),auction_module.model_auction_player_style,auction_module.group_auction_player_dashboard,1,0,0,0
+access_auction_player_strength_user,auction.player.strength (user),auction_module.model_auction_player_strength,auction_module.group_auction_group,1,1,1,1
+access_auction_player_strength_admin,auction.player.strength (admin),auction_module.model_auction_player_strength,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_player_strength_public,auction.player.strength (public),auction_module.model_auction_player_strength,base.group_public,1,0,0,0
+access_auction_player_strength_pd,auction.player.strength (player dashboard),auction_module.model_auction_player_strength,auction_module.group_auction_player_dashboard,1,0,0,0

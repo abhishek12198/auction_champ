@@ -261,6 +261,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .pj-stat-val{font-family:var(--sf);font-size:clamp(.95rem,2vw,1.3rem);
   font-weight:400;letter-spacing:1px;color:var(--tx)}
 
+/* Football tag chips */
+.pj-chips{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.pj-chip{display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
+  border-radius:999px;padding:6px 14px;
+  font-family:var(--sf-body);font-size:clamp(.6rem,1.3vw,.8rem);font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;color:var(--tx)}
+
 /* Base price */
 .pj-base{display:inline-flex;align-items:baseline;gap:8px;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
@@ -1203,26 +1211,53 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
       tierEl.style.display = 'none';
     }
 
-    /* Role badge */
+    /* Role / Position badge */
     var roleEl = document.getElementById('pjRole');
+    var isFootball = (p.tournament_type === 'football');
     if (roleEl) {
-      var roleIcons = {'Batsman':'🏏','Batter':'🏏','Bowler':'🎯','All Rounder':'⭐',
-        'All-Rounder':'⭐','Allrounder':'⭐','Wicket Keeper':'🧤','WK-Keeper':'🧤','Wicketkeeper':'🧤'};
-      if (p.role) {
-        var icon = roleIcons[p.role] || '⚡';
-        roleEl.textContent = icon + ' ' + p.role;
-        roleEl.style.display = 'inline-flex';
+      if (isFootball) {
+        if (p.dominant_position) {
+          roleEl.textContent = '⚽ ' + p.dominant_position;
+          roleEl.style.display = 'inline-flex';
+        } else {
+          roleEl.style.display = 'none';
+        }
       } else {
-        roleEl.style.display = 'none';
+        var roleIcons = {'Batsman':'🏏','Batter':'🏏','Bowler':'🎯','All Rounder':'⭐',
+          'All-Rounder':'⭐','Allrounder':'⭐','Wicket Keeper':'🧤','WK-Keeper':'🧤','Wicketkeeper':'🧤'};
+        if (p.role) {
+          var icon = roleIcons[p.role] || '⚡';
+          roleEl.textContent = icon + ' ' + p.role;
+          roleEl.style.display = 'inline-flex';
+        } else {
+          roleEl.style.display = 'none';
+        }
       }
     }
 
-    /* Stats — batting &amp; bowling only (role is now a badge) */
+    /* Stats — football: foot / work-rate / age / styles / strengths;
+       cricket: batting &amp; bowling (role is now a badge) */
     var statsEl = document.getElementById('pjStats');
     var statsHtml = '';
-    if (p.batting_style) statsHtml += stat('Batting', p.batting_style);
-    if (p.bowling_style) statsHtml += stat('Bowling', p.bowling_style);
-    statsEl.innerHTML = statsHtml;
+    if (isFootball) {
+      if (p.p_category)     statsHtml += stat('Category', p.p_category);
+      if (p.preferred_foot) statsHtml += stat('Preferred Foot', p.preferred_foot);
+      if (p.work_rate)      statsHtml += stat('Work Rate', p.work_rate);
+      if (p.age)            statsHtml += stat('Age', String(p.age));
+      if (p.blood_group)    statsHtml += stat('Blood Group', p.blood_group);
+      if (p.mobile)         statsHtml += stat('Mobile', p.mobile);
+      if (p.secondary_positions) {
+        if (p.secondary_positions.length)
+          statsHtml += stat('Secondary', p.secondary_positions.join(', '));
+      }
+      if (p.location)       statsHtml += stat('Location', p.location);
+      statsEl.innerHTML = statsHtml;
+      statsEl.insertAdjacentHTML('beforeend', chips(p.playing_styles) + chips(p.strengths));
+    } else {
+      if (p.batting_style) statsHtml += stat('Batting', p.batting_style);
+      if (p.bowling_style) statsHtml += stat('Bowling', p.bowling_style);
+      statsEl.innerHTML = statsHtml;
+    }
 
     /* Base price */
     var baseEl = document.getElementById('pjBase');
@@ -1289,6 +1324,17 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   function stat(label, val) {
     return '<div class="pj-stat"><div class="pj-stat-label">' + esc(label) +
            '</div><div class="pj-stat-val">' + esc(val) + '</div></div>';
+  }
+
+  function chips(items) {
+    if (!items || !items.length) return '';
+    var html = '<div class="pj-chips">';
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i] || {};
+      var ic = it.icon ? (esc(it.icon) + ' ') : '';
+      html += '<span class="pj-chip">' + ic + esc(it.name || '') + '</span>';
+    }
+    return html + '</div>';
   }
 
   function showCard(p) {

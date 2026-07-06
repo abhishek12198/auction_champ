@@ -358,8 +358,8 @@ body[data-theme="light"] #cr-theme-btn{color:var(--cherry-dark)}
           <div class="cr-id-vsep"></div>
           <div class="cr-id-name" data-sm-name=""><t t-esc="player.name.upper() if player.name else ''"/></div>
           <div class="cr-id-meta">
-            <t t-if="player.role">
-              <div class="cr-role-tag" data-sm-role=""><t t-esc="player.role"/></div>
+            <t t-if="(player.dominant_position_id.name if player.tournament_type == 'football' else player.role)">
+              <div class="cr-role-tag" data-sm-role=""><t t-esc="player.dominant_position_id.name if player.tournament_type == 'football' else player.role"/></div>
             </t>
             <t t-if="player.tier_id">
               <div class="cr-tier-badge"
@@ -388,17 +388,34 @@ body[data-theme="light"] #cr-theme-btn{color:var(--cherry-dark)}
           <div class="cr-stats-col">
             <div class="cr-stats-header">Player Profile</div>
 
-            <t t-if="player.batting_style">
-              <div class="cr-stat-row">
-                <span class="cr-stat-key">Batting</span>
-                <span class="cr-stat-val"><t t-esc="player.batting_style"/></span>
-              </div>
+            <t t-if="player.tournament_type != 'football'">
+              <t t-if="player.batting_style">
+                <div class="cr-stat-row">
+                  <span class="cr-stat-key">Batting</span>
+                  <span class="cr-stat-val"><t t-esc="player.batting_style"/></span>
+                </div>
+              </t>
+              <t t-if="player.bowling_style">
+                <div class="cr-stat-row">
+                  <span class="cr-stat-key">Bowling</span>
+                  <span class="cr-stat-val"><t t-esc="player.bowling_style"/></span>
+                </div>
+              </t>
             </t>
-            <t t-if="player.bowling_style">
-              <div class="cr-stat-row">
-                <span class="cr-stat-key">Bowling</span>
-                <span class="cr-stat-val"><t t-esc="player.bowling_style"/></span>
-              </div>
+            <t t-if="player.tournament_type == 'football'">
+              <t t-if="player.dominant_position_id">
+                <div class="cr-stat-row"><span class="cr-stat-key">Position</span><span class="cr-stat-val"><t t-esc="player.dominant_position_id.name"/></span></div>
+              </t>
+              <t t-if="player.secondary_position_ids">
+                <div class="cr-stat-row"><span class="cr-stat-key">Secondary</span><span class="cr-stat-val"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span></div>
+              </t>
+              <t t-if="player.preferred_foot">
+                <div class="cr-stat-row"><span class="cr-stat-key">Foot</span><span class="cr-stat-val"><t t-esc="player.preferred_foot.capitalize()"/></span></div>
+              </t>
+              <t t-if="player.age">
+                <div class="cr-stat-row"><span class="cr-stat-key">Age</span><span class="cr-stat-val"><t t-esc="player.age"/></span></div>
+              </t>
+              <t t-call="auction_module.football_tag_chips"/>
             </t>
             <t t-if="player.blood_group">
               <div class="cr-stat-row">

@@ -8,5 +8,7 @@ from . import auction_history
 from . import res_users
 from . import auction_auction
 from . import auction_player_tier
+from . import auction_player_attributes
 from . import auction_team_player
+from . import ir_actions_report
 

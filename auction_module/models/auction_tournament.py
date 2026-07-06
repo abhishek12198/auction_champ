@@ -105,6 +105,11 @@ class AuctionTournament(models.Model):
         help='Upload a UPI QR code or payment scanner image (PNG recommended). '
              'Players can scan it directly from the registration page to complete payment.',
     )
+    poster_image = fields.Binary(
+        string='Tournament Poster',
+        help='Upload a tournament poster image. It will be displayed on the player registration page '
+             'in the sidebar, above the "Why Register?" section.',
+    )
     registration_open = fields.Boolean(
         "Registration Open",
         default=False,
@@ -311,6 +316,34 @@ class AuctionTournament(models.Model):
 
     def action_view_unsold_players(self):
         return self._player_state_action('unsold', 'Unsold Players')
+
+    def action_set_auction_rules(self):
+        """Open the Auction Rules wizard scoped to this tournament."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Set Auction Rules — %s') % self.name,
+            'res_model': 'auction.start.auction',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_tournament_id': self.id},
+        }
+
+    def action_view_auction_rules(self):
+        """Open the auction (team rule) records belonging to this tournament."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Auction Rules — %s') % self.name,
+            'res_model': 'auction.auction',
+            'view_mode': 'tree,form',
+            'views': [
+                (self.env.ref('auction_module.view_auction_auction_tree').id, 'tree'),
+                (self.env.ref('auction_module.view_auction_auction_form').id, 'form'),
+            ],
+            'domain': [('tournament_id', '=', self.id)],
+            'context': {'default_tournament_id': self.id},
+        }
 
     def action_view_jersey_players(self):
         """Open the jersey view for sold/in-auction players in this tournament."""

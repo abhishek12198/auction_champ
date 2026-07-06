@@ -198,6 +198,7 @@
        t-att-data-unsold-text="unsold_text_color">
 
     <!-- header -->
+    <t t-if="player.tournament_type != 'football'">
     <header class="single-header">
       <div class="py-3 text-center">
         <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo"/>
@@ -217,8 +218,19 @@
         </div>
       </div>
     </header>
+    </t>
 
     <!-- player layout -->
+    <t t-if="player.tournament_type == 'football'">
+      <div class="container">
+        <t t-call="auction_module.player_template_football_card"/>
+        <div class="auction-single-buttons d-flex align-items-center justify-content-center gap-3 mt-4">
+          <button onclick="setPlayerUnsold()">Set as Unsold</button>
+          <button class="sell" onclick="openSellModal()">Sell to Team</button>
+        </div>
+      </div>
+    </t>
+    <t t-else="">
     <div class="container">
       <div class="row auction-single justify-content-center justify-content-lg-between gap-4">
 
@@ -226,7 +238,7 @@
         <div class="col-sm-3 single-player-details">
           <h3 class="stroke-only"><span t-esc="player.sl_no"/></h3>
           <h6 class="player-name"><span t-esc="player.name.upper()"/></h6>
-          <p class="player-possition"><span t-esc="player.role"/></p>
+          <p class="player-possition"><span t-esc="(player.dominant_position_id.name if player.tournament_type == 'football' else player.role) or ''"/></p>
           <t t-if="player.tier_id">
             <span class="player-tier-badge"
                   t-att-style="'background-color:' + (player.tier_id.color or '#3498db') + ';color:#fff;padding:6px 18px;border-radius:16px;font-size:1.1rem;font-weight:700;display:inline-block;margin-top:10px;letter-spacing:1px;text-transform:uppercase;'">
@@ -284,13 +296,33 @@
             <div class="player-profession-header"><p>Player Attributes</p></div>
             <div class="player-profession-body">
               <div class="player-attr-grid">
-                <t t-if="player.batting_style">
-                  <span class="player-attr-label">Batting Style</span>
-                  <span class="player-attr-value"><t t-esc="player.batting_style"/></span>
+                <t t-if="player.tournament_type != 'football'">
+                  <t t-if="player.batting_style">
+                    <span class="player-attr-label">Batting Style</span>
+                    <span class="player-attr-value"><t t-esc="player.batting_style"/></span>
+                  </t>
+                  <t t-if="player.bowling_style">
+                    <span class="player-attr-label">Bowling Style</span>
+                    <span class="player-attr-value"><t t-esc="player.bowling_style"/></span>
+                  </t>
                 </t>
-                <t t-if="player.bowling_style">
-                  <span class="player-attr-label">Bowling Style</span>
-                  <span class="player-attr-value"><t t-esc="player.bowling_style"/></span>
+                <t t-if="player.tournament_type == 'football'">
+                  <t t-if="player.dominant_position_id">
+                    <span class="player-attr-label">Position</span>
+                    <span class="player-attr-value"><t t-esc="player.dominant_position_id.name"/></span>
+                  </t>
+                  <t t-if="player.secondary_position_ids">
+                    <span class="player-attr-label">Secondary</span>
+                    <span class="player-attr-value"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span>
+                  </t>
+                  <t t-if="player.preferred_foot">
+                    <span class="player-attr-label">Preferred Foot</span>
+                    <span class="player-attr-value"><t t-esc="player.preferred_foot.capitalize()"/></span>
+                  </t>
+                  <t t-if="player.age">
+                    <span class="player-attr-label">Age</span>
+                    <span class="player-attr-value"><t t-esc="player.age"/></span>
+                  </t>
                 </t>
                 <t t-if="player.blood_group">
                   <span class="player-attr-label">Blood Group &#x1F9B8;</span>
@@ -311,6 +343,7 @@
                   <span class="player-attr-value"><t t-esc="player.address"/></span>
                 </t>
               </div>
+              <t t-call="auction_module.football_tag_chips"/>
             </div>
           </div>
 
@@ -323,6 +356,7 @@
 
       </div>
     </div>
+    </t>
 
     <!-- next-player button (closes drawer + reloads grid) -->
     <div class="next-player m-auto pb-5">

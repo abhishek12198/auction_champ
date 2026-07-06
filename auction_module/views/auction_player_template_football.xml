@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         FOOTBALL PLAYER CARD  (navy + gold, landscape)
+         Reusable fragment. Expects `player` in the render context.
+         Used for the on-screen player card, the auction modal drawer and
+         (via a print variant) the PDF. Cricket is unaffected.
+         ══════════════════════════════════════════════════════════════════ -->
+    <template id="player_template_football_card" name="Football Player Card">
+        <t t-set="t" t-value="player.tournament_id"/>
+        <t t-set="foot_map" t-value="{'left':'Left','right':'Right','both':'Both'}"/>
+        <t t-set="fbc_themes" t-value="{
+            'vanilla':      {'bg1':'#0b1c3c','bg2':'#081428','bg3':'#12315f','panel':'#0c1e3d','accent':'#d8b451','accent2':'#f2d57e','accentD':'#b8892b','ink':'#0a1832','sub':'#9fb2d4','txt':'#eef3fb','line':'rgba(216,180,81,.22)','glow':'rgba(216,180,81,.40)','chipbg':'rgba(216,180,81,.07)'},
+            'butterscotch': {'bg1':'#2a1c08','bg2':'#150e04','bg3':'#4a3210','panel':'#241809','accent':'#f5c842','accent2':'#ffe08a','accentD':'#b3801f','ink':'#241809','sub':'#d8b98a','txt':'#fff7e6','line':'rgba(245,200,66,.24)','glow':'rgba(245,200,66,.40)','chipbg':'rgba(245,200,66,.08)'},
+            'strawberry':   {'bg1':'#3a0f22','bg2':'#200712','bg3':'#5f1a38','panel':'#2a0a18','accent':'#ff8fb0','accent2':'#ffcf9e','accentD':'#c2185b','ink':'#2a0a18','sub':'#e5a9c2','txt':'#ffeaf3','line':'rgba(255,143,176,.24)','glow':'rgba(255,143,176,.40)','chipbg':'rgba(255,207,158,.08)'},
+            'cherry':       {'bg1':'#2a0509','bg2':'#150304','bg3':'#4a0a13','panel':'#180405','accent':'#f5c842','accent2':'#ffd166','accentD':'#9a0f22','ink':'#180405','sub':'#e0a0a8','txt':'#ffecec','line':'rgba(245,200,66,.22)','glow':'rgba(245,200,66,.40)','chipbg':'rgba(245,200,66,.08)'},
+            'pistah':       {'bg1':'#0e2a15','bg2':'#061309','bg3':'#1c4d2a','panel':'#0c2411','accent':'#d4e157','accent2':'#eaff8a','accentD':'#2f7d32','ink':'#06140a','sub':'#a7d1a0','txt':'#ecfce8','line':'rgba(212,225,87,.24)','glow':'rgba(212,225,87,.40)','chipbg':'rgba(212,225,87,.08)'},
+        }"/>
+        <t t-set="pal" t-value="fbc_themes.get((t.player_display_template if t else False) or 'vanilla', fbc_themes['vanilla'])"/>
+        <div class="fbc-scope" t-attf-style="--fbc-navy:{{ pal['bg1'] }};--fbc-navy2:{{ pal['bg2'] }};--fbc-bg3:{{ pal['bg3'] }};--fbc-panel:{{ pal['panel'] }};--fbc-gold:{{ pal['accent'] }};--fbc-gold2:{{ pal['accent2'] }};--fbc-goldD:{{ pal['accentD'] }};--fbc-ink:{{ pal['ink'] }};--fbc-sub:{{ pal['sub'] }};--fbc-txt:{{ pal['txt'] }};--fbc-line:{{ pal['line'] }};--fbc-glow:{{ pal['glow'] }};--fbc-chipbg:{{ pal['chipbg'] }};">
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Oswald:wght@400;500;600;700&amp;family=Barlow:wght@400;500;600;700&amp;display=swap');
+                @font-face{font-family:'Varsity Team';src:url('/auction_module/static/src/assets/fonts/VarsityTeam-Bold.otf') format('opentype');font-weight:normal;font-style:normal;font-display:swap;}
+                .fbc-scope{font-family:'Barlow',sans-serif;}
+                .fbc-wrap{width:100%;display:flex;justify-content:center;align-items:center;padding:18px;box-sizing:border-box;}
+                .fbc-card{width:100%;max-width:1120px;aspect-ratio:1.52;background:
+                    radial-gradient(120% 90% at 78% 8%,var(--fbc-bg3) 0%,rgba(0,0,0,0) 55%),
+                    radial-gradient(90% 70% at 12% 90%,var(--fbc-bg3) 0%,rgba(0,0,0,0) 60%),
+                    linear-gradient(160deg,var(--fbc-navy) 0%,var(--fbc-navy2) 100%);
+                    border-radius:18px;position:relative;overflow:hidden;color:var(--fbc-txt);
+                    box-shadow:0 24px 60px rgba(0,0,0,.55);
+                    border:3px solid transparent;background-clip:padding-box;}
+                .fbc-card::before{content:'';position:absolute;inset:0;border-radius:18px;padding:3px;
+                    background:linear-gradient(135deg,var(--fbc-goldD),var(--fbc-gold2) 30%,var(--fbc-goldD) 55%,var(--fbc-gold2) 78%,var(--fbc-goldD));
+                    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+                    -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;z-index:5;}
+
+                /* Header */
+                .fbc-head{position:relative;z-index:3;height:15%;min-height:64px;display:flex;align-items:center;
+                    gap:16px;padding:0 22px;border-bottom:2px solid var(--fbc-line);}
+                .fbc-badge-logo{width:52px;height:52px;flex:0 0 52px;border-radius:50%;
+                    background:radial-gradient(circle at 50% 35%,var(--fbc-bg3),var(--fbc-navy2));
+                    border:2px solid var(--fbc-gold);display:flex;align-items:center;justify-content:center;
+                    overflow:hidden;box-shadow:0 0 14px var(--fbc-glow);}
+                .fbc-badge-logo img{width:100%;height:100%;object-fit:cover;}
+                .fbc-badge-logo span{font-size:1.7rem;line-height:1;}
+                .fbc-head-titles{flex:1;min-width:0;}
+                .fbc-head-titles h1{margin:0;font-family:'Varsity Team','Bebas Neue',sans-serif;font-weight:400;
+                    font-size:clamp(1rem,2.6vw,1.9rem);letter-spacing:.02em;line-height:1;
+                    text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+                .fbc-head-titles p{margin:2px 0 0;font-family:'Oswald',sans-serif;font-size:clamp(.6rem,1.3vw,.85rem);letter-spacing:.35em;
+                    text-transform:uppercase;color:var(--fbc-gold2);font-weight:600;}
+                .fbc-head-tab{flex:0 0 auto;align-self:stretch;display:flex;align-items:center;
+                    padding:0 26px 0 40px;margin-right:-22px;
+                    background:linear-gradient(135deg,var(--fbc-goldD),var(--fbc-gold2));color:var(--fbc-ink);
+                    font-family:'Oswald',sans-serif;font-size:clamp(.75rem,1.6vw,1.15rem);letter-spacing:.06em;font-weight:700;
+                    text-transform:uppercase;clip-path:polygon(16% 0,100% 0,100% 100%,0 100%);}
+
+                /* Body */
+                .fbc-body{position:relative;z-index:2;height:73%;display:flex;}
+                .fbc-photo{flex:0 0 37%;position:relative;overflow:hidden;}
+                .fbc-photo img.fbc-pimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;}
+                .fbc-photo .fbc-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+                    font-size:5rem;color:rgba(255,255,255,.15);background:var(--fbc-panel);}
+                .fbc-photo::after{content:'';position:absolute;inset:0;
+                    background:linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(0,0,0,.78) 100%),
+                    linear-gradient(90deg,rgba(0,0,0,0) 80%,rgba(0,0,0,.5) 100%);}
+                .fbc-cardno{position:absolute;top:0;left:16px;z-index:3;
+                    background:linear-gradient(135deg,var(--fbc-goldD),var(--fbc-gold2));color:var(--fbc-ink);
+                    padding:9px 12px 12px;text-align:center;clip-path:polygon(0 0,100% 0,100% 84%,50% 100%,0 84%);
+                    box-shadow:0 5px 14px rgba(0,0,0,.4);}
+                .fbc-cardno small{display:block;font-family:'Oswald',sans-serif;font-size:.55rem;letter-spacing:.2em;font-weight:700;}
+                .fbc-cardno b{display:block;font-family:'Varsity Team','Bebas Neue',sans-serif;font-size:1.5rem;line-height:1;}
+                .fbc-name-band{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:10px 14px 12px;}
+                .fbc-name-band::before{content:'';position:absolute;left:-6%;right:-6%;top:8px;bottom:0;
+                    background:linear-gradient(100deg,var(--fbc-goldD),var(--fbc-gold2) 55%,var(--fbc-goldD));transform:skewY(-3deg);
+                    box-shadow:0 6px 16px rgba(0,0,0,.4);z-index:-1;}
+                .fbc-name-band h2{margin:0;font-family:'Varsity Team','Bebas Neue',sans-serif;font-weight:400;color:var(--fbc-ink);
+                    font-size:clamp(1.1rem,3vw,2.15rem);line-height:.95;text-transform:uppercase;
+                    letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+                .fbc-name-band span{display:block;font-family:'Oswald',sans-serif;font-size:clamp(.65rem,1.5vw,.95rem);letter-spacing:.28em;
+                    font-weight:700;color:var(--fbc-ink);text-transform:uppercase;margin-top:2px;}
+
+                .fbc-info{flex:1;position:relative;padding:14px 20px 8px;min-width:0;}
+                .fbc-slno{position:absolute;top:12px;right:16px;width:60px;height:60px;border-radius:50%;
+                    border:2px solid var(--fbc-gold);background:radial-gradient(circle at 50% 35%,var(--fbc-bg3),var(--fbc-navy2));
+                    display:flex;flex-direction:column;align-items:center;justify-content:center;
+                    box-shadow:0 0 16px var(--fbc-glow);z-index:4;}
+                .fbc-slno b{font-family:'Varsity Team','Bebas Neue',sans-serif;font-size:1.35rem;line-height:.9;color:var(--fbc-gold2);}
+                .fbc-slno small{font-family:'Oswald',sans-serif;font-size:.5rem;letter-spacing:.15em;color:var(--fbc-sub);font-weight:700;margin-top:1px;}
+
+                .fbc-grid{display:grid;grid-template-columns:1fr 1fr;column-gap:26px;row-gap:0;
+                    padding-right:70px;}
+                .fbc-cell{display:flex;align-items:flex-start;gap:11px;padding:9px 0;border-bottom:1px solid var(--fbc-line);}
+                .fbc-ic{flex:0 0 26px;height:26px;display:flex;align-items:center;justify-content:center;
+                    font-size:1.15rem;color:var(--fbc-gold);filter:saturate(1.1);}
+                .fbc-cell-body{min-width:0;}
+                .fbc-lbl{font-family:'Oswald',sans-serif;font-size:.6rem;letter-spacing:.16em;color:var(--fbc-sub);font-weight:600;text-transform:uppercase;line-height:1.1;}
+                .fbc-val{font-size:clamp(.8rem,1.5vw,1.02rem);font-weight:600;color:#fff;text-transform:uppercase;
+                    letter-spacing:.02em;line-height:1.15;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+                .fbc-val-sub{font-family:'Oswald',sans-serif;font-size:.6rem;letter-spacing:.08em;color:var(--fbc-sub);font-weight:500;text-transform:uppercase;margin-top:1px;}
+
+                .fbc-sec{display:flex;align-items:flex-start;gap:11px;padding:9px 0 4px;border-bottom:1px solid var(--fbc-line);}
+                .fbc-sec:last-child{border-bottom:none;}
+                .fbc-sec-main{flex:1;min-width:0;}
+                .fbc-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px;}
+                .fbc-chip{font-family:'Oswald',sans-serif;border:1.5px solid var(--fbc-gold);border-radius:7px;padding:4px 11px;
+                    font-size:clamp(.6rem,1.15vw,.78rem);font-weight:600;letter-spacing:.05em;
+                    text-transform:uppercase;color:var(--fbc-gold2);background:var(--fbc-chipbg);white-space:nowrap;}
+                .fbc-loc-val{font-size:clamp(.85rem,1.6vw,1.05rem);font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.03em;}
+
+                /* Footer */
+                .fbc-foot{position:relative;z-index:3;height:12%;min-height:34px;display:flex;align-items:center;
+                    justify-content:center;gap:9px;
+                    background:linear-gradient(135deg,var(--fbc-goldD),var(--fbc-gold2) 50%,var(--fbc-goldD));color:var(--fbc-ink);}
+                .fbc-foot span{font-family:'Oswald',sans-serif;font-size:clamp(.6rem,1.3vw,.82rem);font-weight:700;letter-spacing:.18em;text-transform:uppercase;}
+                .fbc-foot img{height:18px;vertical-align:middle;}
+
+                @media (max-width:640px){
+                    .fbc-card{aspect-ratio:auto;}
+                    .fbc-body{flex-direction:column;height:auto;}
+                    .fbc-photo{flex:none;height:280px;}
+                    .fbc-grid{padding-right:0;grid-template-columns:1fr;}
+                    .fbc-slno{top:auto;bottom:8px;}
+                }
+            </style>
+
+            <div class="fbc-wrap">
+                <div class="fbc-card">
+
+                    <!-- ── Header ── -->
+                    <div class="fbc-head">
+                        <div class="fbc-badge-logo">
+                            <t t-if="t and t.logo">
+                                <img t-att-src="image_data_uri(t.logo)" alt="logo"/>
+                            </t>
+                            <t t-else=""><span>⚽</span></t>
+                        </div>
+                        <div class="fbc-head-titles">
+                            <h1><t t-esc="(t.name if t else '') or 'Football Auction'"/></h1>
+                            <p>Player Card</p>
+                        </div>
+                        <div class="fbc-head-tab">Player Card</div>
+                    </div>
+
+                    <!-- ── Body ── -->
+                    <div class="fbc-body">
+
+                        <!-- Photo panel -->
+                        <div class="fbc-photo">
+                            <t t-if="player.photo">
+                                <img class="fbc-pimg" t-att-src="image_data_uri(player.photo)" alt="player"/>
+                            </t>
+                            <t t-else=""><div class="fbc-ph">⚽</div></t>
+
+                            <div class="fbc-cardno">
+                                <small>Card</small>
+                                <b><t t-esc="'%03d' % (player.sl_no or 0)"/></b>
+                            </div>
+
+                            <div class="fbc-name-band">
+                                <h2 data-sm-name=""><t t-esc="(player.name or '').upper()"/></h2>
+                                <span data-sm-role=""><t t-esc="(player.dominant_position_id.name if player.dominant_position_id else (player.role or ''))"/></span>
+                            </div>
+                        </div>
+
+                        <!-- Info panel -->
+                        <div class="fbc-info">
+                            <div class="fbc-slno">
+                                <b><t t-esc="player.sl_no or 0"/></b>
+                                <small>Sl No</small>
+                            </div>
+
+                            <div class="fbc-grid">
+                                <!-- Player Category -->
+                                <div class="fbc-cell">
+                                    <div class="fbc-ic">👤</div>
+                                    <div class="fbc-cell-body">
+                                        <div class="fbc-lbl">Player Category</div>
+                                        <div class="fbc-val"><t t-esc="player.p_category or '—'"/></div>
+                                    </div>
+                                </div>
+                                <!-- Position -->
+                                <div class="fbc-cell">
+                                    <div class="fbc-ic">🥅</div>
+                                    <div class="fbc-cell-body">
+                                        <div class="fbc-lbl">Position</div>
+                                        <div class="fbc-val">
+                                            <t t-if="player.dominant_position_id">
+                                                <t t-esc="player.dominant_position_id.name"/> (<t t-esc="player.dominant_position_id.code"/>)
+                                            </t>
+                                            <t t-else="">—</t>
+                                        </div>
+                                        <t t-if="player.secondary_position_ids">
+                                            <div class="fbc-val-sub">Also: <t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></div>
+                                        </t>
+                                    </div>
+                                </div>
+                                <!-- Preferred Foot -->
+                                <div class="fbc-cell">
+                                    <div class="fbc-ic">🦶</div>
+                                    <div class="fbc-cell-body">
+                                        <div class="fbc-lbl">Preferred Foot</div>
+                                        <div class="fbc-val"><t t-esc="foot_map.get(player.preferred_foot, '—')"/></div>
+                                    </div>
+                                </div>
+                                <!-- Age -->
+                                <div class="fbc-cell">
+                                    <div class="fbc-ic">📅</div>
+                                    <div class="fbc-cell-body">
+                                        <div class="fbc-lbl">Age</div>
+                                        <div class="fbc-val"><t t-esc="('%s Years' % player.age) if player.age else '—'"/></div>
+                                    </div>
+                                </div>
+                                <!-- Blood Group -->
+                                <div class="fbc-cell">
+                                    <div class="fbc-ic">🩸</div>
+                                    <div class="fbc-cell-body">
+                                        <div class="fbc-lbl">Blood Group</div>
+                                        <div class="fbc-val"><t t-esc="player.blood_group or '—'"/></div>
+                                    </div>
+                                </div>
+                                <!-- Mobile -->
+                                <div class="fbc-cell">
+                                    <div class="fbc-ic">📱</div>
+                                    <div class="fbc-cell-body">
+                                        <div class="fbc-lbl">Mobile</div>
+                                        <div class="fbc-val" style="text-transform:none;"><t t-esc="player.masked_contact or '—'"/></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Playing Style -->
+                            <t t-if="player.playing_style_ids">
+                                <div class="fbc-sec">
+                                    <div class="fbc-ic">🏃</div>
+                                    <div class="fbc-sec-main">
+                                        <div class="fbc-lbl">Playing Style</div>
+                                        <div class="fbc-chips">
+                                            <t t-foreach="player.playing_style_ids" t-as="sty">
+                                                <span class="fbc-chip"><t t-esc="sty.name"/></span>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- Strengths (+ work rate) -->
+                            <t t-if="player.strength_ids or player.work_rate">
+                                <div class="fbc-sec">
+                                    <div class="fbc-ic">💪</div>
+                                    <div class="fbc-sec-main">
+                                        <div class="fbc-lbl">Strengths</div>
+                                        <div class="fbc-chips">
+                                            <t t-foreach="player.strength_ids" t-as="strg">
+                                                <span class="fbc-chip"><t t-esc="strg.name"/></span>
+                                            </t>
+                                            <t t-if="player.work_rate">
+                                                <span class="fbc-chip"><t t-esc="player.work_rate.capitalize()"/> Work Rate</span>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- Location -->
+                            <t t-if="player.address">
+                                <div class="fbc-sec">
+                                    <div class="fbc-ic">📍</div>
+                                    <div class="fbc-sec-main">
+                                        <div class="fbc-lbl">Location</div>
+                                        <div class="fbc-loc-val"><t t-esc="player.address"/></div>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!-- ── Footer ── -->
+                    <div class="fbc-foot">
+                        <span>Powered by</span>
+                        <img src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- ── Full-page wrapper (for the /auction/player_card iframe) ── -->
+    <template id="player_template_football" name="Football Player Card Page">
+        <html lang="en">
+            <head>
+                <meta charset="UTF-8"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+                <title>Player Card</title>
+                <style>
+                    html,body{margin:0;padding:0;min-height:100%;background:#060d1c;}
+                    body{display:flex;align-items:center;justify-content:center;}
+                </style>
+            </head>
+            <body>
+                <t t-call="auction_module.player_template_football_card"/>
+            </body>
+        </html>
+    </template>
+
+</odoo>

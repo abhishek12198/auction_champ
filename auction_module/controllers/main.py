@@ -16,6 +16,7 @@ import json
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from odoo import http, fields, api, SUPERUSER_ID
+from odoo.api import call_kw
 import odoo
 from odoo.addons.http_routing.models.ir_http import slug, unslug
 from odoo.addons.website.controllers.main import QueryURL
@@ -91,6 +92,47 @@ class Auction(http.Controller):
                 request._uid = old_uid
                 request._env = old_env
 
+    def _resolve_db_for_slug(self, tournament_slug):
+        """Return the database that actually contains *tournament_slug*.
+
+        When several databases match the server's ``db_filter`` (or none can be
+        inferred from the host), ``db_monodb`` returns ``None`` and blindly
+        picking ``db_list()[0]`` sends the visitor to the wrong database, which
+        then 404/500s because the slug does not exist there. Instead we probe
+        each candidate database and return the first one whose
+        ``auction.tournament`` has this slug. Falls back to the monodb / first
+        database so single-db setups keep working unchanged.
+        """
+        from odoo.http import db_monodb, db_list
+        mono = db_monodb(request.httprequest)
+        candidates = []
+        if mono:
+            candidates.append(mono)
+        try:
+            for db in db_list(force=True, httprequest=request.httprequest):
+                if db not in candidates:
+                    candidates.append(db)
+        except Exception:
+            pass
+        for db in candidates:
+            try:
+                registry = odoo.registry(db)
+            except Exception:
+                continue
+            try:
+                with registry.cursor() as cr:
+                    env = api.Environment(cr, SUPERUSER_ID, {})
+                    if 'auction.tournament' not in env:
+                        continue
+                    match = env['auction.tournament'].sudo().search(
+                        [('slug', '=', tournament_slug)], limit=1
+                    )
+                    if match:
+                        return db
+            except Exception:
+                continue
+        return mono or (candidates[0] if candidates else None)
+
     def _not_found(self):
         """Render the branded 404 page with a proper 404 HTTP status.
         Falls back to a plain werkzeug 404 when no DB context is available
@@ -161,6 +203,19 @@ class Auction(http.Controller):
     #sequence_template_part
     @http.route('/auction/get_players_queue', type='json', auth='public', website=True)
     def get_players_queue(self, tournament_id=None):
+        return self._players_queue_payload(tournament_id)
+
+    @http.route('/<string:db_name>/auction/get_players_queue',
+                type='json', auth='none', website=False, csrf=False)
+    def get_players_queue_db(self, db_name, tournament_id=None):
+        """Database-explicit grid so the operator selects players (and IDs)
+        from the same database the projector reads from."""
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return []
+            return self._players_queue_payload(tournament_id)
+
+    def _players_queue_payload(self, tournament_id=None):
         if tournament_id:
             tournament = request.env['auction.tournament'].sudo().browse(int(tournament_id))
         else:
@@ -220,6 +275,7 @@ class Auction(http.Controller):
             'photo': photo_base64,
             'tournament_id': player.tournament_id.id if player.tournament_id else None,
             'tournament_name': player.tournament_id.name if player.tournament_id else '',
+            **_football_display_payload(player),
         }
 
     @http.route('/auction/player_card/<int:player_id>', type='http', auth='public', website=True)
@@ -242,6 +298,8 @@ class Auction(http.Controller):
             'pistah':       'auction_module.player_template_pistah',
         }
         template_ref = template_map.get(theme, 'auction_module.player_template_new')
+        if tournament and tournament.tournament_type == 'football':
+            template_ref = 'auction_module.player_template_football'
         return request.render(template_ref, {
             'player':      player,
             'tournament':  tournament,
@@ -289,6 +347,41 @@ class Auction(http.Controller):
         return request.make_response(html_content,
                                      headers=[('Content-Type', 'text/html; charset=utf-8')])
 
+    # Model/method pairs the operator console is allowed to invoke through the
+    # database-explicit dispatcher below. Keep this tight — the endpoint is
+    # auth="none", so only these whitelisted calls may run.
+    _CONSOLE_CALL_WHITELIST = {
+        'auction.team.player': {
+            'action_unsold', 'action_auction', 'action_clear_stage',
+            'action_set_on_stage', 'get_sell_teams_data', 'action_sell_from_web',
+        },
+        'auction.tournament': {'set_dice_state'},
+        'auction.auction': {'search_read'},
+    }
+
+    @http.route('/<string:db_name>/auction/console_call',
+                type='json', auth='none', website=False, csrf=False)
+    def console_call(self, db_name, model=None, method=None, args=None, kwargs=None):
+        """Database-explicit, whitelisted replacement for /web/dataset/call_kw.
+
+        The operator console (player_selector) is served from a ``/<db>/...``
+        URL via ``_with_db``, which never binds the session to that database.
+        Its mutating actions (sell / unsold / bring-back / dice) previously went
+        through ``/web/dataset/call_kw``, which uses the session database. On a
+        server whose ``db_filter`` matches several databases, that could execute
+        the sale in the wrong database and never reach the projector. Routing
+        through the db in the URL guarantees every console action runs against
+        the same database the page and projector use.
+        """
+        allowed = self._CONSOLE_CALL_WHITELIST.get(model)
+        if not allowed or method not in allowed:
+            return {'error': 'method not allowed'}
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return {'error': 'unknown database'}
+            recordset = request.env[model].sudo()
+            return call_kw(recordset, method, args or [], kwargs or {})
+
     @http.route('/auction/player_quick_data/<int:player_id>', type='json', auth='public', website=True)
     def player_quick_data(self, player_id):
         """Single-call endpoint: return all drawer data AND set player on stage atomically.
@@ -297,6 +390,27 @@ class Auction(http.Controller):
         JS (read player + read team logo + read sold points + action_set_on_stage) with a
         single HTTP call, dramatically reducing latency especially in production.
         """
+        return self._player_quick_data_payload(player_id)
+
+    @http.route('/<string:db_name>/auction/player_quick_data/<int:player_id>',
+                type='json', auth='none', website=False, csrf=False)
+    def player_quick_data_db(self, db_name, player_id):
+        """Database-explicit variant of :meth:`player_quick_data`.
+
+        The operator console is served from a ``/<db>/...`` URL via ``_with_db``,
+        which never binds the session to that database. On servers where the
+        ``db_filter`` matches several databases, the non-prefixed route above
+        resolves to the wrong (session) database, so the player is set on stage
+        somewhere the projector never polls. Routing through the db in the path
+        guarantees the on-stage write lands in the same database the projector
+        reads from.
+        """
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return {'error': 'not found'}
+            return self._player_quick_data_payload(player_id)
+
+    def _player_quick_data_payload(self, player_id):
         player = request.env['auction.team.player'].sudo().browse(player_id)
         if not player.exists():
             return {'error': 'not found'}
@@ -339,7 +453,24 @@ class Auction(http.Controller):
                 [('player_id', '=', player_id)], limit=1)
             result['sold_points'] = auction_line.points if auction_line else 0
 
+        result.update(_football_display_payload(player))
         return result
+
+    @http.route('/<string:db_name>/auction/player_clear_stage/<int:player_id>',
+                type='json', auth='none', website=False, csrf=False)
+    def player_clear_stage_db(self, db_name, player_id):
+        """Database-explicit clear-stage so the projector returns to waiting."""
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return {'error': 'not found'}
+            player = request.env['auction.team.player'].sudo().browse(player_id)
+            if not player.exists():
+                return {'error': 'not found'}
+            try:
+                player.action_clear_stage()
+            except Exception:
+                pass
+            return {'success': True}
 
     @http.route('/auction/player_correction_teams/<int:player_id>', type='json', auth='user', website=True)
     def player_correction_teams(self, player_id):
@@ -1384,18 +1515,28 @@ class Auction(http.Controller):
             }, lazy=False)
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
-    @http.route(['/auction/projector', '/auction/projector/'],
-                type='http', auth="none", website=False, sitemap=False)
-    def projector_legacy(self, **kw):
+    @http.route([
+        '/auction/projector',
+        '/auction/projector/',
+        '/auction/projector/<string:tournament_slug>',
+        '/auction/projector/<string:tournament_slug>/',
+    ], type='http', auth="none", website=False, sitemap=False)
+    def projector_legacy(self, tournament_slug=None, **kw):
         """Redirect legacy URL to db+slug prefixed URL."""
         from odoo.http import db_monodb, db_list
-        db_name = db_monodb(request.httprequest)
-        if not db_name:
-            dbs = db_list(force=True, httprequest=request.httprequest)
-            db_name = dbs[0] if dbs else None
+        slug = tournament_slug or kw.get('t', '')
+        # When a slug is known, resolve the DB that actually contains it so
+        # multi-database servers (db_filter matching several DBs) don't redirect
+        # to the wrong database, where the tournament/players don't exist.
+        if slug:
+            db_name = self._resolve_db_for_slug(slug)
+        else:
+            db_name = db_monodb(request.httprequest)
+            if not db_name:
+                dbs = db_list(force=True, httprequest=request.httprequest)
+                db_name = dbs[0] if dbs else None
         if not db_name:
             return self._not_found()
-        slug = kw.get('t', '')
         target = '/{}/auction/projector/{}'.format(db_name, slug + '/' if slug else '')
         return werkzeug.utils.redirect(target, 302)
 
@@ -1468,23 +1609,25 @@ class Auction(http.Controller):
                 auction_line = request.env['auction.auction.player'].sudo().search(
                     [('player_id', '=', player.id)], limit=1)
                 sold_points = auction_line.points if auction_line else 0
+            player_payload = {
+                'id': player.id,
+                'sl_no': player.sl_no or '',
+                'name': player.name or '',
+                'role': player.role or '',
+                'batting_style': player.batting_style or '',
+                'bowling_style': player.bowling_style or '',
+                'photo': photo,
+                'tier_name': player.tier_id.name if player.tier_id else '',
+                'tier_color': player.tier_color or '#3498db',
+                'base_price': player.effective_base_price or player.base_price or 0,
+                'sold_points': sold_points,
+                'state': state_override or player.state,
+                'team_name': team_name,
+                'team_logo': team_logo,
+            }
+            player_payload.update(_football_display_payload(player))
             return {
-                'player': {
-                    'id': player.id,
-                    'sl_no': player.sl_no or '',
-                    'name': player.name or '',
-                    'role': player.role or '',
-                    'batting_style': player.batting_style or '',
-                    'bowling_style': player.bowling_style or '',
-                    'photo': photo,
-                    'tier_name': player.tier_id.name if player.tier_id else '',
-                    'tier_color': player.tier_color or '#3498db',
-                    'base_price': player.effective_base_price or player.base_price or 0,
-                    'sold_points': sold_points,
-                    'state': state_override or player.state,
-                    'team_name': team_name,
-                    'team_logo': team_logo,
-                },
+                'player': player_payload,
                 'dice': {'state': 'idle', 'result': 0},
             }
 
@@ -1543,6 +1686,27 @@ class Auction(http.Controller):
         'auction.advertiser':  ['image'],
     }
 
+    @staticmethod
+    def _image_mimetype(image_bytes):
+        """Detect the image mimetype from its magic bytes.
+
+        The stored images are usually JPEG but were previously served as
+        image/png. A CDN/reverse-proxy in front of the production server can
+        reject or mis-cache a response whose declared Content-Type does not
+        match its actual bytes, which shows up as broken images in the browser.
+        """
+        if image_bytes[:3] == b'\xff\xd8\xff':
+            return 'image/jpeg'
+        if image_bytes[:8] == b'\x89PNG\r\n\x1a\n':
+            return 'image/png'
+        if image_bytes[:6] in (b'GIF87a', b'GIF89a'):
+            return 'image/gif'
+        if image_bytes[:4] == b'RIFF' and image_bytes[8:12] == b'WEBP':
+            return 'image/webp'
+        if image_bytes[:2] == b'BM':
+            return 'image/bmp'
+        return 'image/jpeg'
+
     @http.route('/auction/public/image/<string:model>/<int:record_id>/<string:field>',
                 type='http', auth='public', website=False, csrf=False)
     def auction_public_image(self, model, record_id, field, **kw):
@@ -1561,7 +1725,7 @@ class Auction(http.Controller):
 
         image_bytes = base64.b64decode(binary)
         return request.make_response(image_bytes, headers=[
-            ('Content-Type', 'image/png'),
+            ('Content-Type', self._image_mimetype(image_bytes)),
             ('Cache-Control', 'public, max-age=300'),  # 5-min browser cache
         ])
 
@@ -1591,7 +1755,7 @@ class Auction(http.Controller):
 
             image_bytes = base64.b64decode(binary)
         return request.make_response(image_bytes, headers=[
-            ('Content-Type', 'image/png'),
+            ('Content-Type', self._image_mimetype(image_bytes)),
             ('Cache-Control', 'public, max-age=300'),
         ])
 
@@ -1621,15 +1785,9 @@ class Auction(http.Controller):
     @http.route('/<string:tournament_slug>/auction/live-board', type='http', auth='none', website=False)
     def auction_live_board_slug_legacy(self, tournament_slug, **kw):
         """Redirect old slug-only URL to db-prefixed URL."""
-        from odoo.http import db_monodb, db_list
-        db_name = db_monodb(request.httprequest)
+        db_name = self._resolve_db_for_slug(tournament_slug)
         if not db_name:
-            # If multiple DBs exist, pick the first one
-            dbs = db_list(force=True, httprequest=request.httprequest)
-            if dbs:
-                db_name = dbs[0]
-            else:
-                return self._not_found()
+            return self._not_found()
         return werkzeug.utils.redirect('/{}/{}/auction/live-board'.format(db_name, tournament_slug), 301)
 
     @http.route('/<string:db_name>/<string:tournament_slug>/auction/live-board', type='http', auth='none', website=False)
@@ -1700,15 +1858,9 @@ class Auction(http.Controller):
     @http.route('/<string:tournament_slug>/auction/live-board/data', type='http', auth='none', website=False, csrf=False)
     def auction_live_board_data_slug_legacy(self, tournament_slug, **kw):
         """Redirect old slug-only URL to db-prefixed URL."""
-        from odoo.http import db_monodb, db_list
-        db_name = db_monodb(request.httprequest)
+        db_name = self._resolve_db_for_slug(tournament_slug)
         if not db_name:
-            # If multiple DBs exist, pick the first one
-            dbs = db_list(force=True, httprequest=request.httprequest)
-            if dbs:
-                db_name = dbs[0]
-            else:
-                return self._not_found()
+            return self._not_found()
         return werkzeug.utils.redirect('/{}/{}/auction/live-board/data'.format(db_name, tournament_slug), 301)
 
     @http.route('/<string:db_name>/<string:tournament_slug>/auction/live-board/data', type='http', auth='none', website=False, csrf=False)
@@ -1750,6 +1902,7 @@ class Auction(http.Controller):
                 'no_auction': True,
                 'break_time': False,
                 'advertisers': [],
+                'stats': {},
             }
 
             if tournament:
@@ -1821,6 +1974,7 @@ class Auction(http.Controller):
                     'batting_style': current_player.batting_style or '',
                     'bowling_style': current_player.bowling_style or '',
                 }
+                result['current_player'].update(_football_display_payload(current_player))
 
                 # ── If sold, get final points from auction line ──
                 if current_player.state == 'sold' and current_player.assigned_team_id:
@@ -1889,6 +2043,16 @@ class Auction(http.Controller):
                             for line in auc.player_ids if line.player_id
                         ],
                     })
+
+            # ── Player state counts for this tournament (stats block) ──
+            Player = env['auction.team.player'].sudo()
+            tdom = [('tournament_id', '=', tournament.id)]
+            result['stats'] = {
+                'in_auction': Player.search_count(tdom + [('state', 'in', ('draft', 'auction'))]),
+                'sold':       Player.search_count(tdom + [('state', '=', 'sold')]),
+                'unsold':     Player.search_count(tdom + [('state', '=', 'unsold')]),
+                'total':      Player.search_count(tdom),
+            }
 
         return request.make_response(
             json.dumps(result),
@@ -2623,6 +2787,18 @@ class Auction(http.Controller):
 
             theme = tournament.player_display_template or 'vanilla'
 
+            # ── Football lookups (only needed for football tournaments) ─────────
+            football_positions = request.env['auction.player.position'].sudo().browse()
+            football_styles = request.env['auction.player.style'].sudo().browse()
+            football_strengths = request.env['auction.player.strength'].sudo().browse()
+            if tournament.tournament_type == 'football':
+                football_positions = request.env['auction.player.position'].sudo().search(
+                    [('active', '=', True)], order='sequence asc, name asc')
+                football_styles = request.env['auction.player.style'].sudo().search(
+                    [('active', '=', True)], order='sequence asc, name asc')
+                football_strengths = request.env['auction.player.strength'].sudo().search(
+                    [('active', '=', True)], order='sequence asc, name asc')
+
             # ── Compute live slot availability ──────────────────────────────────
             max_reg = tournament.max_registrations
             current_count = 0
@@ -2655,6 +2831,9 @@ class Auction(http.Controller):
                     'slots_left': 0,
                     'max_registrations': max_reg,
                     'current_count': current_count,
+                    'positions': football_positions,
+                    'styles': football_styles,
+                    'strengths': football_strengths,
                 }, lazy=False)
                 return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
@@ -2671,6 +2850,9 @@ class Auction(http.Controller):
                 'slots_left': slots_left,
                 'max_registrations': max_reg,
                 'current_count': current_count,
+                'positions': football_positions,
+                'styles': football_styles,
+                'strengths': football_strengths,
             }
 
             # ── POST: create player ─────────────────────────────────────────────
@@ -2684,6 +2866,26 @@ class Auction(http.Controller):
 
             html = request.render('auction_module.player_registration_form', ctx, lazy=False)
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
+
+    @http.route('/<string:db_name>/<string:tournament_slug>/player/check_mobile',
+                type='json', auth='none', website=False, csrf=False, methods=['POST'])
+    def player_check_mobile(self, db_name, tournament_slug, mobile=None, **kw):
+        """Check if a mobile number is already registered for this tournament."""
+        with self._with_db(db_name) as ok:
+            if not ok or not mobile:
+                return {'duplicate': False}
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('slug', '=', tournament_slug)], limit=1
+            )
+            if not tournament:
+                return {'duplicate': False}
+            mobile = (mobile or '').strip()
+            count = request.env['auction.team.player'].sudo().search_count([
+                ('tournament_id', '=', tournament.id),
+                ('contact', '=', mobile),
+                ('state', '=', 'draft'),
+            ])
+            return {'duplicate': count > 0, 'count': count}
 
     @http.route('/player/card/<int:player_id>', type='http', auth='none', website=False, sitemap=False)
     def player_card_download_legacy(self, player_id, **kw):
@@ -2771,6 +2973,52 @@ class Auction(http.Controller):
         )
 
 
+def _football_display_payload(player):
+    """Return JSON-serializable football attributes for a player, for JS displays.
+
+    Always returns the keys so the projector/display JS can branch on
+    ``tournament_type`` without KeyErrors. Empty when not a football player.
+    """
+    is_football = bool(player.tournament_id and player.tournament_id.tournament_type == 'football')
+    if not is_football:
+        return {
+            'tournament_type': player.tournament_id.tournament_type if player.tournament_id else 'cricket',
+            'dominant_position': '',
+            'dominant_position_code': '',
+            'secondary_positions': [],
+            'preferred_foot': '',
+            'age': '',
+            'height': '',
+            'weight': '',
+            'work_rate': '',
+            'p_category': '',
+            'blood_group': '',
+            'mobile': '',
+            'location': '',
+            'playing_styles': [],
+            'strengths': [],
+        }
+    foot_map = {'left': 'Left', 'right': 'Right', 'both': 'Both'}
+    rate_map = {'low': 'Low', 'medium': 'Medium', 'high': 'High'}
+    return {
+        'tournament_type': 'football',
+        'dominant_position': player.dominant_position_id.name if player.dominant_position_id else '',
+        'dominant_position_code': player.dominant_position_id.code if player.dominant_position_id else '',
+        'secondary_positions': [p.code or p.name for p in player.secondary_position_ids],
+        'preferred_foot': foot_map.get(player.preferred_foot, ''),
+        'age': player.age or '',
+        'height': player.height or '',
+        'weight': player.weight or '',
+        'work_rate': rate_map.get(player.work_rate, ''),
+        'p_category': player.p_category or '',
+        'blood_group': player.blood_group or '',
+        'mobile': player.masked_contact or '',
+        'location': player.address or '',
+        'playing_styles': [{'name': s.name, 'icon': s.icon or ''} for s in player.playing_style_ids],
+        'strengths': [{'name': s.name, 'icon': s.icon or ''} for s in player.strength_ids],
+    }
+
+
 def _build_player_vals_from_post(request, tournament):
     """Extract and validate POST form data into a dict for auction.team.player.create()."""
     post = request.httprequest.form
@@ -2806,12 +3054,11 @@ def _build_player_vals_from_post(request, tournament):
     if proof_file and proof_file.filename:
         payment_proof_data = base64.b64encode(proof_file.read())
 
+    is_football = bool(tournament and tournament.tournament_type == 'football')
+
     vals = {
         'sl_no':         sl_no,
         'name':          name,
-        'role':          post.get('role') or '',
-        'batting_style': post.get('batting_style') or 'Right Handed',
-        'bowling_style': post.get('bowling_style') or 'Right Arm',
         'contact':       (post.get('contact') or '').strip(),
         'address':       (post.get('address') or '').strip(),
         'blood_group':   (post.get('blood_group') or '').strip(),
@@ -2820,6 +3067,41 @@ def _build_player_vals_from_post(request, tournament):
         'photo':         photo_data,
         'payment_proof': payment_proof_data,
     }
+
+    if is_football:
+        # ── Football profile ────────────────────────────────────────────────
+        raw_dom = post.get('dominant_position_id')
+        if raw_dom and raw_dom.isdigit():
+            vals['dominant_position_id'] = int(raw_dom)
+
+        sec_ids = [int(v) for v in post.getlist('secondary_position_ids') if v.isdigit()]
+        if sec_ids:
+            vals['secondary_position_ids'] = [(6, 0, sec_ids)]
+
+        style_ids = [int(v) for v in post.getlist('playing_style_ids') if v.isdigit()]
+        if style_ids:
+            vals['playing_style_ids'] = [(6, 0, style_ids)]
+
+        strength_ids = [int(v) for v in post.getlist('strength_ids') if v.isdigit()]
+        if strength_ids:
+            vals['strength_ids'] = [(6, 0, strength_ids)]
+
+        if post.get('preferred_foot'):
+            vals['preferred_foot'] = post.get('preferred_foot')
+        if post.get('work_rate'):
+            vals['work_rate'] = post.get('work_rate')
+
+        raw_age = post.get('age')
+        if raw_age and raw_age.isdigit():
+            vals['age'] = int(raw_age)
+        vals['height'] = (post.get('height') or '').strip()
+        vals['weight'] = (post.get('weight') or '').strip()
+    else:
+        # ── Cricket profile ─────────────────────────────────────────────────
+        vals['role'] = post.get('role') or ''
+        vals['batting_style'] = post.get('batting_style') or 'Right Handed'
+        vals['bowling_style'] = post.get('bowling_style') or 'Right Arm'
+
     if tier_id:
         vals['tier_id'] = tier_id
     if tournament:

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- ══ Football Playing Positions ══ -->
+        <record id="pos_gk"  model="auction.player.position"><field name="name">Goalkeeper</field><field name="code">GK</field><field name="sequence">10</field></record>
+        <record id="pos_cb"  model="auction.player.position"><field name="name">Centre Back</field><field name="code">CB</field><field name="sequence">20</field></record>
+        <record id="pos_lb"  model="auction.player.position"><field name="name">Left Back</field><field name="code">LB</field><field name="sequence">30</field></record>
+        <record id="pos_rb"  model="auction.player.position"><field name="name">Right Back</field><field name="code">RB</field><field name="sequence">40</field></record>
+        <record id="pos_cdm" model="auction.player.position"><field name="name">Defensive Midfielder</field><field name="code">CDM</field><field name="sequence">50</field></record>
+        <record id="pos_cm"  model="auction.player.position"><field name="name">Central Midfielder</field><field name="code">CM</field><field name="sequence">60</field></record>
+        <record id="pos_cam" model="auction.player.position"><field name="name">Attacking Midfielder</field><field name="code">CAM</field><field name="sequence">70</field></record>
+        <record id="pos_lw"  model="auction.player.position"><field name="name">Left Winger</field><field name="code">LW</field><field name="sequence">80</field></record>
+        <record id="pos_rw"  model="auction.player.position"><field name="name">Right Winger</field><field name="code">RW</field><field name="sequence">90</field></record>
+        <record id="pos_st"  model="auction.player.position"><field name="name">Striker</field><field name="code">ST</field><field name="sequence">100</field></record>
+
+        <!-- ══ Football Playing Styles ══ -->
+        <record id="style_playmaker"    model="auction.player.style"><field name="name">Playmaker</field><field name="icon">🎯</field><field name="sequence">10</field></record>
+        <record id="style_target_man"   model="auction.player.style"><field name="name">Target Man</field><field name="icon">🗼</field><field name="sequence">20</field></record>
+        <record id="style_box_to_box"   model="auction.player.style"><field name="name">Box-to-Box</field><field name="icon">🔁</field><field name="sequence">30</field></record>
+        <record id="style_ball_winner"  model="auction.player.style"><field name="name">Ball Winner</field><field name="icon">🛡️</field><field name="sequence">40</field></record>
+        <record id="style_winger"       model="auction.player.style"><field name="name">Winger</field><field name="icon">🪽</field><field name="sequence">50</field></record>
+        <record id="style_poacher"      model="auction.player.style"><field name="name">Poacher</field><field name="icon">🦊</field><field name="sequence">60</field></record>
+        <record id="style_sweeper_kpr"  model="auction.player.style"><field name="name">Sweeper Keeper</field><field name="icon">🧤</field><field name="sequence">70</field></record>
+        <record id="style_false_9"      model="auction.player.style"><field name="name">False 9</field><field name="icon">🎭</field><field name="sequence">80</field></record>
+        <record id="style_holding_mid"  model="auction.player.style"><field name="name">Holding Midfielder</field><field name="icon">⚓</field><field name="sequence">90</field></record>
+        <record id="style_def_rock"     model="auction.player.style"><field name="name">Defensive Rock</field><field name="icon">🪨</field><field name="sequence">100</field></record>
+
+        <!-- ══ Football Strengths ══ -->
+        <record id="str_leadership"   model="auction.player.strength"><field name="name">Leadership</field><field name="icon">👑</field><field name="sequence">10</field></record>
+        <record id="str_speed"        model="auction.player.strength"><field name="name">Speed</field><field name="icon">⚡</field><field name="sequence">20</field></record>
+        <record id="str_ball_control" model="auction.player.strength"><field name="name">Ball Control</field><field name="icon">⚽</field><field name="sequence">30</field></record>
+        <record id="str_passing"      model="auction.player.strength"><field name="name">Passing</field><field name="icon">🎯</field><field name="sequence">40</field></record>
+        <record id="str_crossing"     model="auction.player.strength"><field name="name">Crossing</field><field name="icon">📐</field><field name="sequence">50</field></record>
+        <record id="str_tackling"     model="auction.player.strength"><field name="name">Tackling</field><field name="icon">🦵</field><field name="sequence">60</field></record>
+        <record id="str_aerial"       model="auction.player.strength"><field name="name">Aerial Ability</field><field name="icon">🕊️</field><field name="sequence">70</field></record>
+        <record id="str_stamina"      model="auction.player.strength"><field name="name">Stamina</field><field name="icon">🔋</field><field name="sequence">80</field></record>
+        <record id="str_vision"       model="auction.player.strength"><field name="name">Vision</field><field name="icon">👁️</field><field name="sequence">90</field></record>
+        <record id="str_communication" model="auction.player.strength"><field name="name">Communication</field><field name="icon">🗣️</field><field name="sequence">100</field></record>
+        <record id="str_set_pieces"   model="auction.player.strength"><field name="name">Set Pieces</field><field name="icon">🚩</field><field name="sequence">110</field></record>
+        <record id="str_penalty"      model="auction.player.strength"><field name="name">Penalty Specialist</field><field name="icon">🥅</field><field name="sequence">120</field></record>
+        <record id="str_long_shots"   model="auction.player.strength"><field name="name">Long Shots</field><field name="icon">🚀</field><field name="sequence">130</field></record>
+
+    </data>
+</odoo>

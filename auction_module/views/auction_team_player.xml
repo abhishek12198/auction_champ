@@ -460,9 +460,20 @@
 
                         <!-- Row 2 – Playing Style &amp; Contact ──────── -->
                         <group>
-                            <group string="Playing Style">
+                            <group string="Playing Style"
+                                   attrs="{'invisible': [('tournament_type', '=', 'football')]}">
                                 <field name="batting_style"/>
                                 <field name="bowling_style"/>
+                            </group>
+                            <group string="Football Profile"
+                                   attrs="{'invisible': [('tournament_type', '!=', 'football')]}">
+                                <field name="dominant_position_id"/>
+                                <field name="secondary_position_ids" widget="many2many_tags"/>
+                                <field name="preferred_foot"/>
+                                <field name="work_rate"/>
+                                <field name="age"/>
+                                <field name="height"/>
+                                <field name="weight"/>
                             </group>
                             <group string="Contact Details">
                                 <field name="contact" string="Mobile Number"/>
@@ -474,6 +485,19 @@
 
                         <!-- Tabs ─────────────────────────────────────── -->
                         <notebook>
+                            <page string="Player Characteristics"
+                                  attrs="{'invisible': [('tournament_type', '!=', 'football')]}">
+                                <group>
+                                    <group string="Playing Style (self-declared)">
+                                        <field name="playing_style_ids" nolabel="1"
+                                               widget="many2many_tags"/>
+                                    </group>
+                                    <group string="Strengths (self-declared)">
+                                        <field name="strength_ids" nolabel="1"
+                                               widget="many2many_tags"/>
+                                    </group>
+                                </group>
+                            </page>
                             <page string="Jersey Details" groups="auction_module.group_auction_jersey_view">
                                 <group>
                                     <group string="Jersey">
@@ -514,6 +538,7 @@
                         </notebook>
 
                         <!-- Technical / invisible fields ─────────────── -->
+                        <field name="tournament_type" invisible="1"/>
                         <field name="photo_url" invisible="1"/>
                         <field name="sl_no"     invisible="1"/>
 

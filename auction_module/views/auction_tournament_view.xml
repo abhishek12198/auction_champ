@@ -29,6 +29,15 @@
             <field name="arch" type="xml">
                 <form string="Tournament">
                     <header>
+                        <button name="action_set_auction_rules"
+                                type="object"
+                                string="Set Auction Rules"
+                                class="btn-primary"
+                                attrs="{'invisible': [('active', '=', False)]}"/>
+                        <button name="action_view_auction_rules"
+                                type="object"
+                                string="Auction Rules"
+                                class="btn-secondary"/>
                         <button name="action_deactivate_tournament"
                                 type="object"
                                 string="Deactivate Tournament"
@@ -356,6 +365,22 @@
                                             Open this URL on a projector or large screen during a
                                             <strong>Manual</strong> auction. It updates in real-time
                                             as you select players from the deck.
+                                        </p>
+                                    </group>
+                                </group>
+
+                                <!-- ── Tournament Poster ── -->
+                                <separator string="Tournament Poster"/>
+                                <p class="text-muted o_form_label" style="margin-bottom:12px;">
+                                    Upload a poster that will be displayed on the <strong>player registration page</strong>
+                                    sidebar, above the "Why Register?" section.
+                                </p>
+                                <group>
+                                    <group string="Poster Image">
+                                        <field name="poster_image" widget="image" nolabel="1"
+                                               options="{'preview_image': 'poster_image', 'size': [300, 400]}"/>
+                                        <p class="text-muted" style="margin-top:8px; font-size:12px;">
+                                            Recommended: portrait/square format (e.g. 600 × 800 px). PNG or JPG.
                                         </p>
                                     </group>
                                 </group>

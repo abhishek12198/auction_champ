@@ -320,8 +320,8 @@ body[data-theme="dark"] #sw-theme-btn{color:var(--berry-bright);border-color:rgb
         <div class="sw-id-info">
           <div class="sw-player-name" data-sm-name=""><t t-esc="player.name.upper() if player.name else ''"/></div>
           <div class="sw-badges">
-            <t t-if="player.role">
-              <span class="sw-role-tag" data-sm-role=""><t t-esc="player.role"/></span>
+            <t t-if="(player.dominant_position_id.name if player.tournament_type == 'football' else player.role)">
+              <span class="sw-role-tag" data-sm-role=""><t t-esc="player.dominant_position_id.name if player.tournament_type == 'football' else player.role"/></span>
             </t>
             <t t-if="player.tier_id">
               <span class="sw-tier-badge"
@@ -336,17 +336,34 @@ body[data-theme="dark"] #sw-theme-btn{color:var(--berry-bright);border-color:rgb
       <!-- Stats section -->
       <div class="sw-stats-wrap">
         <div class="sw-stats-title">Player Profile</div>
-        <t t-if="player.batting_style">
-          <div class="sw-stat-row">
-            <span class="sw-stat-key">Batting</span>
-            <span class="sw-stat-val"><t t-esc="player.batting_style"/></span>
-          </div>
+        <t t-if="player.tournament_type != 'football'">
+          <t t-if="player.batting_style">
+            <div class="sw-stat-row">
+              <span class="sw-stat-key">Batting</span>
+              <span class="sw-stat-val"><t t-esc="player.batting_style"/></span>
+            </div>
+          </t>
+          <t t-if="player.bowling_style">
+            <div class="sw-stat-row">
+              <span class="sw-stat-key">Bowling</span>
+              <span class="sw-stat-val"><t t-esc="player.bowling_style"/></span>
+            </div>
+          </t>
         </t>
-        <t t-if="player.bowling_style">
-          <div class="sw-stat-row">
-            <span class="sw-stat-key">Bowling</span>
-            <span class="sw-stat-val"><t t-esc="player.bowling_style"/></span>
-          </div>
+        <t t-if="player.tournament_type == 'football'">
+          <t t-if="player.dominant_position_id">
+            <div class="sw-stat-row"><span class="sw-stat-key">Position</span><span class="sw-stat-val"><t t-esc="player.dominant_position_id.name"/></span></div>
+          </t>
+          <t t-if="player.secondary_position_ids">
+            <div class="sw-stat-row"><span class="sw-stat-key">Secondary</span><span class="sw-stat-val"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span></div>
+          </t>
+          <t t-if="player.preferred_foot">
+            <div class="sw-stat-row"><span class="sw-stat-key">Foot</span><span class="sw-stat-val"><t t-esc="player.preferred_foot.capitalize()"/></span></div>
+          </t>
+          <t t-if="player.age">
+            <div class="sw-stat-row"><span class="sw-stat-key">Age</span><span class="sw-stat-val"><t t-esc="player.age"/></span></div>
+          </t>
+          <t t-call="auction_module.football_tag_chips"/>
         </t>
         <t t-if="player.blood_group">
           <div class="sw-stat-row">

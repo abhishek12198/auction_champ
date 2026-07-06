@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Reusable football playing-style / strength chip strip.
+         Expects `player` in the render context. Uses inline styles with
+         color:inherit so it adapts to every card theme (light or dark). -->
+    <template id="football_tag_chips">
+        <t t-if="player.tournament_type == 'football' and (player.playing_style_ids or player.strength_ids)">
+            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;">
+                <t t-foreach="player.playing_style_ids" t-as="sty">
+                    <span style="display:inline-flex; align-items:center; gap:5px; background:rgba(120,144,180,0.18); border:1px solid rgba(120,144,180,0.45); border-radius:999px; padding:5px 12px; font-size:0.8rem; font-weight:600; letter-spacing:0.3px; color:inherit;"><t t-esc="sty.icon"/> <t t-esc="sty.name"/></span>
+                </t>
+                <t t-foreach="player.strength_ids" t-as="strg">
+                    <span style="display:inline-flex; align-items:center; gap:5px; background:rgba(230,160,90,0.18); border:1px solid rgba(230,160,90,0.45); border-radius:999px; padding:5px 12px; font-size:0.8rem; font-weight:600; letter-spacing:0.3px; color:inherit;"><t t-esc="strg.icon"/> <t t-esc="strg.name"/></span>
+                </t>
+            </div>
+        </t>
+    </template>
+</odoo>
