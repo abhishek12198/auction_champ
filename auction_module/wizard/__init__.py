@@ -14,3 +14,4 @@ from . import auction_pdf_to_png
 from . import action_remove_duplicates
 from . import action_update_tier_limits
 from . import action_migrate_tier
+from . import whatsapp_share_wizard

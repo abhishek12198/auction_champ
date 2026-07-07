@@ -155,6 +155,17 @@
                                     <span class="o_stat_text text-muted" style="font-size:10px">Open in New Tab</span>
                                 </div>
                             </button>
+                            <!-- Share tournament on WhatsApp -->
+                            <button name="action_share_whatsapp"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    icon="fa-whatsapp"
+                                    help="Compose and share tournament details on WhatsApp">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text" style="color:#25d366;">WhatsApp</span>
+                                    <span class="o_stat_text text-muted" style="font-size:10px">Share Details</span>
+                                </div>
+                            </button>
                             <!-- Open Payment Tracker in a new tab -->
                             <button name="action_open_payment_tracker"
                                     type="object"
@@ -213,6 +224,8 @@
                                 <field name="organizer_uid"/>
                                 <field name="organizer_uids" widget="many2many_tags"
                                        options="{'color_field': 'color'}"/>
+                                <field name="organizer_name"/>
+                                <field name="organizer_contact"/>
                             </group>
                             <group string="Auction Configuration">
                                 <field name="team_max_points"/>

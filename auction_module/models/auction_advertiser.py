@@ -6,6 +6,11 @@ class AuctionAdvertiser(models.Model):
     _name = 'auction.advertiser'
     _description = 'Auction Advertiser / Sponsor'
     _order = 'sequence, id'
+    _inherit = ['auction.image.compress.mixin']
+
+    _compressible_image_fields = {
+        'image': (1200, 500, 82, 'JPEG'),
+    }
 
     name = fields.Char(string='Advertiser / Sponsor Name', required=True)
     image = fields.Binary(

@@ -69,9 +69,11 @@
         'wizard/action_remove_duplicates_view.xml',
         'wizard/action_update_tier_limits_view.xml',
         'wizard/action_migrate_tier_view.xml',
+        'wizard/whatsapp_share_wizard_view.xml',
         'views/auction_status_template.xml',
         'views/page_not_found.xml',
         'views/player_registration_form.xml',
+        'views/tournament_registration_form.xml',
         'views/auction_dashboard_template.xml',
         'views/payment_marker_template.xml',
         'views/menu.xml',
@@ -107,6 +109,7 @@
                     '/auction_module/static/src/css/selection_badge.css',
                     '/auction_module/static/src/js/color_picker_widget.js',
                     '/auction_module/static/src/js/player_kanban.js',
+                    '/auction_module/static/src/js/whatsapp_share.js',
 
                 ],
             'web.assets_qweb': [
@@ -116,6 +119,7 @@
                 '/auction_module/static/src/lib/html2canvas.min.js',
                 '/auction_module/static/src/css/auction_live_queue.css',
                 '/auction_module/static/src/css/player_registration.css',
+                '/auction_module/static/src/css/tournament_registration.css',
                 '/auction_module/static/src/js/auction_live_queue.js',
                 '/auction_module/static/src/js/screenshot.js',
                 '/auction_module/static/src/js/auction.js',

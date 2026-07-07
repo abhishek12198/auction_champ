@@ -35,6 +35,17 @@ def _slugify(text):
 
 class AuctionTournament(models.Model):
     _name = 'auction.tournament'
+    _inherit = ['auction.image.compress.mixin']
+
+    # logo/poster: JPEG portrait; QR code: PNG (lossless) to keep it scannable;
+    # template/footer: slightly larger for print quality.
+    _compressible_image_fields = {
+        'logo':              (400,  400,  82, 'JPEG'),
+        'poster_image':      (900,  1200, 82, 'JPEG'),
+        'payment_qr_image':  (600,  600,  0,  'PNG'),
+        'template_image':    (1200, 900,  85, 'JPEG'),
+        'report_footer':     (1200, 300,  85, 'JPEG'),
+    }
 
     name = fields.Char(string="Name", required=True)
     slug = fields.Char(
@@ -119,6 +130,14 @@ class AuctionTournament(models.Model):
         string='Tournament Poster',
         help='Upload a tournament poster image. It will be displayed on the player registration page '
              'in the sidebar, above the "Why Register?" section.',
+    )
+    organizer_name = fields.Char(
+        string='Organizer Name',
+        help='Name of the person or organization running this tournament.',
+    )
+    organizer_contact = fields.Char(
+        string='Organizer Contact',
+        help='Mobile number or contact info for the tournament organizer.',
     )
     tournament_code = fields.Char(
         string='Tournament Code',
@@ -471,6 +490,56 @@ class AuctionTournament(models.Model):
         return {
             'type': 'ir.actions.act_url',
             'url': url,
+            'target': 'new',
+        }
+
+    def action_share_whatsapp(self):
+        """Open the WhatsApp Share wizard for this tournament.
+
+        Builds a ready-to-send message containing the tournament name, date,
+        venue, player registration URL, and WhatsApp group link (if set).
+        The wizard lets the organiser preview the poster, copy the message, or
+        open WhatsApp directly with the text pre-filled.
+        """
+        self.ensure_one()
+        import urllib.parse
+
+        # ── Compose message ──────────────────────────────────────────────────
+        lines = ['🏆 *{}*'.format(self.name)]
+
+        if self.description:
+            lines.append(self.description)
+
+        if self.tournament_date:
+            lines.append('📅 *Date:* {}'.format(
+                self.tournament_date.strftime('%d %B %Y')
+            ))
+
+        if self.venue:
+            venue_text = self.venue.strip()
+            lines.append('📍 *Venue:*\n{}'.format(venue_text))
+
+        if self.registration_url:
+            lines.append('\n📝 *Register here:*\n{}'.format(self.registration_url))
+
+        if self.whatsapp_group_link:
+            lines.append('💬 *Join our WhatsApp Group:*\n{}'.format(self.whatsapp_group_link))
+
+        message = '\n'.join(lines)
+        whatsapp_url = 'https://api.whatsapp.com/send?text={}'.format(
+            urllib.parse.quote(message, safe='')
+        )
+
+        wizard = self.env['auction.whatsapp.share.wizard'].create({
+            'tournament_id': self.id,
+            'message': message,
+            'whatsapp_url': whatsapp_url,
+        })
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'auction.whatsapp.share.wizard',
+            'res_id': wizard.id,
+            'view_mode': 'form',
             'target': 'new',
         }
 

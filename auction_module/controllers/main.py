@@ -79,7 +79,9 @@ class Auction(http.Controller):
         with registry.cursor() as cr:
             env = api.Environment(cr, SUPERUSER_ID, {})
             # Save whatever the framework set (may be None for auth="none")
-            old_cr, old_uid, old_env = request._cr, request._uid, request._env
+            old_cr, old_uid, old_env, old_context = (
+                request._cr, request._uid, request._env, request._context
+            )
             request._cr = cr
             request._uid = SUPERUSER_ID
             request._context = {}
@@ -91,6 +93,7 @@ class Auction(http.Controller):
                 request._cr = old_cr
                 request._uid = old_uid
                 request._env = old_env
+                request._context = old_context
 
     def _resolve_db_for_slug(self, tournament_slug):
         """Return the database that actually contains *tournament_slug*.
@@ -989,9 +992,9 @@ class Auction(http.Controller):
                 image_file = os.path.join(tmpdirname, f"player_{player.id}.jpg")
                 command = [
                     'wkhtmltoimage',
-                    '--quality', '100',
-                    '--width', '50',  # Set the desired width
-                    '--height', '500',  # Set the desired height
+                    '--quality', '75',
+                    '--width', '1080',
+                    '--disable-smart-width',
                     '--format', 'jpg',
                     html_file, image_file
                 ]
@@ -2816,7 +2819,10 @@ class Auction(http.Controller):
             if not tournament.registration_open or is_full:
                 # Sync the flag if the limit was hit but the flag wasn't updated yet
                 if is_full and tournament.registration_open:
-                    tournament.sudo().write({'registration_open': False})
+                    try:
+                        tournament.sudo().write({'registration_open': False})
+                    except Exception:
+                        _logger.warning('player_register: could not auto-close registration for tournament %s', tournament.id, exc_info=True)
                 tiers_all = request.env['auction.player.tier'].sudo().search(
                     [('is_an_icon_tier', '=', False), ('tournament_id', '=', tournament.id)],
                     order='name asc'
@@ -2841,6 +2847,54 @@ class Auction(http.Controller):
                 [('is_an_icon_tier', '=', False), ('tournament_id', '=', tournament.id)],
                 order='name asc'
             )
+
+            # ── POST: create player ─────────────────────────────────────────────
+            if request.httprequest.method == 'POST':
+                try:
+                    vals = _build_player_vals_from_post(request, tournament)
+                    player = request.env['auction.team.player'].sudo().create(vals)
+                    # PRG: redirect to GET so that page refreshes don't re-submit the form
+                    from urllib.parse import urlencode
+                    qs = urlencode({'success': '1', 'player_id': player.id})
+                    return werkzeug.utils.redirect(
+                        '/{}/{}/player/register?{}'.format(db_name, tournament_slug, qs), 303
+                    )
+                except Exception as e:
+                    ctx = {
+                        'tournament': tournament,
+                        'tiers': tiers,
+                        'theme': theme,
+                        'db_name': db_name,
+                        'tournament_slug': tournament_slug,
+                        'slots_left': slots_left,
+                        'max_registrations': max_reg,
+                        'current_count': current_count,
+                        'positions': football_positions,
+                        'styles': football_styles,
+                        'strengths': football_strengths,
+                        'error': str(e),
+                    }
+                    try:
+                        html = request.render('auction_module.player_registration_form', ctx, lazy=False)
+                    except Exception:
+                        _logger.exception(
+                            'player_register: template render failed for tournament %s (slug=%s)',
+                            tournament.id, tournament_slug,
+                        )
+                        return request.make_response(
+                            b'<h1>Registration page temporarily unavailable. Please try again.</h1>',
+                            [('Content-Type', 'text/html; charset=utf-8')],
+                        )
+                    return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
+
+            # ── GET: show form (or success view when redirected back after POST) ─
+            success = kw.get('success') == '1'
+            try:
+                player_id_str = kw.get('player_id', '')
+                player_id = int(player_id_str) if player_id_str else None
+            except (ValueError, TypeError):
+                player_id = None
+
             ctx = {
                 'tournament': tournament,
                 'tiers': tiers,
@@ -2853,19 +2907,22 @@ class Auction(http.Controller):
                 'positions': football_positions,
                 'styles': football_styles,
                 'strengths': football_strengths,
+                'success': success,
+                'player_id': player_id,
             }
 
-            # ── POST: create player ─────────────────────────────────────────────
-            if request.httprequest.method == 'POST':
-                try:
-                    vals = _build_player_vals_from_post(request, tournament)
-                    player = request.env['auction.team.player'].sudo().create(vals)
-                    ctx.update({'success': True, 'player_id': player.id})
-                except Exception as e:
-                    ctx.update({'error': str(e)})
-
-            html = request.render('auction_module.player_registration_form', ctx, lazy=False)
-        return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
+            try:
+                html = request.render('auction_module.player_registration_form', ctx, lazy=False)
+            except Exception:
+                _logger.exception(
+                    'player_register: template render failed for tournament %s (slug=%s)',
+                    tournament.id, tournament_slug,
+                )
+                return request.make_response(
+                    b'<h1>Registration page temporarily unavailable. Please try again.</h1>',
+                    [('Content-Type', 'text/html; charset=utf-8')],
+                )
+            return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
     @http.route('/<string:db_name>/<string:tournament_slug>/player/check_mobile',
                 type='json', auth='none', website=False, csrf=False, methods=['POST'])
@@ -3027,6 +3084,153 @@ class Auction(http.Controller):
                 ('Content-Disposition', 'attachment; filename="%s"' % filename),
             ]
         )
+
+
+    # ── Tournament Registration (public) ───────────────────────────────────────
+
+    @http.route('/tournament/register', type='http', auth='none', website=False, sitemap=False,
+                methods=['GET', 'POST'], csrf=False)
+    def tournament_register(self, **kw):
+        """Public organiser tournament registration page."""
+        from odoo.http import db_monodb, db_list
+        db_name = db_monodb(request.httprequest)
+        if not db_name:
+            dbs = db_list(force=True, httprequest=request.httprequest)
+            db_name = dbs[0] if dbs else None
+        if not db_name:
+            return self._not_found()
+
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return self._not_found()
+
+            # Find a sample player to show for card preview (any player with a photo)
+            sample_player = request.env['auction.team.player'].sudo().search(
+                [('photo', '!=', False)], limit=1
+            )
+            sample_player_id = sample_player.id if sample_player else 0
+            res_company = request.env['res.company'].sudo().search([], limit=1)
+
+            if request.httprequest.method == 'POST':
+                return self._tournament_register_post(db_name, sample_player_id, res_company, **kw)
+
+            # PRG: render success view when redirected back after a successful POST
+            success = kw.get('success') == '1'
+            return request.render(
+                'auction_module.tournament_registration_form',
+                {
+                    'db_name': db_name,
+                    'success': success,
+                    'error': None,
+                    'tournament_name': kw.get('name', '') if success else '',
+                    'tournament_code': kw.get('code', '—') if success else '—',
+                    'sample_player_id': sample_player_id,
+                    'res_company': res_company,
+                }
+            )
+
+    def _tournament_register_post(self, db_name, sample_player_id, res_company, **kw):
+        """Handle POST from the tournament registration form."""
+        import base64
+
+        post = request.httprequest.form
+        files = request.httprequest.files
+
+        def _read_file(field_name):
+            f = files.get(field_name)
+            if f and f.filename:
+                return base64.b64encode(f.read())
+            return False
+
+        def _str(key, default=''):
+            val = post.get(key, default)
+            return val.strip() if isinstance(val, str) else default
+
+        try:
+            vals = {
+                'name': _str('name') or 'New Tournament',
+                'description': _str('description') or 'Season 1',
+                'tournament_type': _str('tournament_type') or 'cricket',
+                'player_display_template': _str('player_display_template') or 'vanilla',
+                'venue': _str('venue'),
+                'organizer_name': _str('organizer_name'),
+                'organizer_contact': _str('organizer_contact'),
+                'whatsapp_group_link': _str('whatsapp_group_link'),
+                'rules_regulations': _str('rules_regulations'),
+                'payment_instruction': _str('payment_instruction'),
+                'enable_jersey_section': bool(post.get('enable_jersey_section')),
+                'expose_player_contact': bool(post.get('expose_player_contact')),
+            }
+
+            # Date
+            date_str = _str('tournament_date')
+            if date_str:
+                from odoo.fields import Date
+                try:
+                    vals['tournament_date'] = Date.to_date(date_str)
+                except Exception:
+                    pass
+
+            # Numeric
+            try:
+                vals['max_registrations'] = int(post.get('max_registrations', 0))
+            except (ValueError, TypeError):
+                vals['max_registrations'] = 0
+
+            # Images
+            logo = _read_file('logo')
+            if logo:
+                vals['logo'] = logo
+            poster = _read_file('poster_image')
+            if poster:
+                vals['poster_image'] = poster
+            qr = _read_file('payment_qr_image')
+            if qr:
+                vals['payment_qr_image'] = qr
+
+            tournament = request.env['auction.tournament'].sudo().create(vals)
+
+            # Create teams if organizer specified a team count
+            try:
+                team_count = int(post.get('team_count', 0) or 0)
+            except (ValueError, TypeError):
+                team_count = 0
+
+            for i in range(1, team_count + 1):
+                team_name = (post.get('team_name_%d' % i) or '').strip()
+                if not team_name:
+                    continue  # skip blank rows
+                team_vals = {
+                    'name': team_name,
+                    'tournament_id': tournament.id,
+                    'manager': (post.get('team_owner_%d' % i) or '').strip() or False,
+                }
+                team_logo = _read_file('team_logo_%d' % i)
+                if team_logo:
+                    team_vals['logo'] = team_logo
+                request.env['auction.team'].sudo().create(team_vals)
+
+            # PRG: redirect to GET so that page refreshes don't re-submit the form
+            from urllib.parse import urlencode
+            qs = urlencode({
+                'success': '1',
+                'name': tournament.name,
+                'code': tournament.tournament_code or '—',
+            })
+            return werkzeug.utils.redirect('/tournament/register?' + qs, 303)
+
+        except Exception as e:
+            _logger.exception("Tournament registration failed")
+            return request.render(
+                'auction_module.tournament_registration_form',
+                {
+                    'db_name': db_name,
+                    'success': False,
+                    'error': str(e),
+                    'sample_player_id': sample_player_id,
+                    'res_company': res_company,
+                }
+            )
 
 
 def _football_display_payload(player):

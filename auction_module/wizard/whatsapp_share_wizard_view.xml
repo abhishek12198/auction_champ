@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_whatsapp_share_wizard_form" model="ir.ui.view">
+            <field name="name">auction.whatsapp.share.wizard.form</field>
+            <field name="model">auction.whatsapp.share.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Share on WhatsApp">
+                    <sheet>
+                        <div class="oe_title mb-3">
+                            <h3>
+                                <i class="fa fa-whatsapp text-success"/>
+                                &#160;Share Tournament on WhatsApp
+                            </h3>
+                            <p class="text-muted" style="font-size:13px;">
+                                <strong>Step 1:</strong> Click <strong>⬇️ Download Poster</strong> — save the image to your device.<br/>
+                                <strong>Step 2:</strong> Click <strong>💬 Share on WhatsApp</strong> — the full message will be pre-filled.<br/>
+                                <strong>Step 3:</strong> In WhatsApp, attach the saved poster as a photo and send.
+                            </p>
+                        </div>
+
+                        <div class="row">
+                            <!-- ── Left: Poster ───────────────────────────────────── -->
+                            <div class="col-md-4 text-center" style="padding-right:24px;">
+                                <div class="o_form_label" style="font-weight:600; margin-bottom:6px;">Tournament Poster</div>
+
+                                <div attrs="{'invisible': [('poster_image', '=', False)]}">
+                                    <field name="poster_image" widget="image" nolabel="1"
+                                           options="{'size': [220, 300]}"
+                                           style="border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.15);"/>
+                                    <div class="mt-2">
+                                        <button name="action_download_poster"
+                                                type="object"
+                                                string="⬇️  Download Poster"
+                                                class="btn btn-sm btn-outline-success mt-1"/>
+                                    </div>
+                                    <p class="text-muted mt-1" style="font-size:11px;">
+                                        Opens the poster in a new tab.<br/>
+                                        Long-press (mobile) or right-click to save.
+                                    </p>
+                                </div>
+
+                                <div attrs="{'invisible': [('poster_image', '!=', False)]}">
+                                    <div class="alert alert-warning" style="font-size:12px;">
+                                        No poster uploaded.<br/>
+                                        Add one in the Registration tab.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ── Right: Message ─────────────────────────────────── -->
+                            <div class="col-md-8">
+                                <div class="o_form_label" style="font-weight:600; margin-bottom:6px;">Message Preview</div>
+                                <field name="message"
+                                       widget="text"
+                                       nolabel="1"
+                                       readonly="1"
+                                       style="font-family: monospace;
+                                              font-size: 13px;
+                                              background: #f0fdf4;
+                                              border: 1px solid #bbf7d0;
+                                              border-radius: 8px;
+                                              padding: 12px;
+                                              min-height: 240px;
+                                              white-space: pre-wrap;"/>
+                                <p class="text-muted mt-1" style="font-size:11px;">
+                                    This message will be pre-filled in WhatsApp when you
+                                    click <strong>Share on WhatsApp</strong> below.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Hidden fields -->
+                        <field name="tournament_id" invisible="1"/>
+                        <field name="whatsapp_url"  invisible="1"/>
+                    </sheet>
+
+                    <footer>
+                        <button name="action_share_whatsapp_text"
+                                string="💬  Share on WhatsApp"
+                                type="object"
+                                class="btn-success"/>
+                        <button name="action_copy_message"
+                                string="📋  Copy Message"
+                                type="object"
+                                class="btn-secondary"/>
+                        <button string="Close" special="cancel" class="btn-secondary"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+    </data>
+</odoo>

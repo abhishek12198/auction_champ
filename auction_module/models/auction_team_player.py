@@ -20,73 +20,246 @@ _logger = logging.getLogger(__name__)
 # Palette values are substituted via string.Template ($name placeholders).
 _CARD_CSS = """
 *{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact;}
-html,body{width:1080px;height:1350px;}
-.pc{position:relative;width:1080px;height:1350px;overflow:hidden;color:$txt;font-family:'Barlow',sans-serif;
- background:
-  -webkit-radial-gradient(50% 0%, ellipse, $bg3 0%, rgba(0,0,0,0) 55%),
-  -webkit-radial-gradient(12% 24%, circle, rgba(255,255,255,0.10) 0%, rgba(0,0,0,0) 30%),
-  -webkit-radial-gradient(88% 22%, circle, rgba(255,255,255,0.12) 0%, rgba(0,0,0,0) 30%),
-  -webkit-linear-gradient(top, $bg1 0%, $bg2 62%, #02060f 100%);}
-.pc-acc{position:absolute;z-index:6;height:8px;background:-webkit-linear-gradient(left,$accentD,$accent2);}
-.pc-acc.tl{top:150px;left:-70px;width:520px;-webkit-transform:rotate(-32deg);opacity:.85;}
-.pc-acc.br{bottom:250px;right:-70px;width:520px;-webkit-transform:rotate(-32deg);opacity:.85;}
-.pc-acc.br2{bottom:212px;right:-120px;width:420px;height:5px;-webkit-transform:rotate(-32deg);opacity:.55;}
+html,body{width:1080px;height:1620px;background:#000;}
 
-.pc-head{position:relative;z-index:8;height:150px;display:table;width:100%;padding:40px 52px 0;table-layout:fixed;}
-.pc-cell{display:table-cell;vertical-align:middle;}
-.pc-badge{width:104px;height:104px;border-radius:52px;overflow:hidden;background-color:$bg2;
- background-size:cover;background-position:center;background-repeat:no-repeat;
- border:3px solid $accent;box-shadow:0 0 26px $glow;text-align:center;line-height:98px;color:$accent;font-size:46px;}
-.pc-mid{padding-left:22px;}
-.pc-team{font-family:'Bebas Neue',sans-serif;font-size:44px;line-height:1;color:#fff;text-transform:uppercase;
- letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 10px rgba(0,0,0,.5);}
-.pc-tour{font-family:'Oswald',sans-serif;font-size:15px;font-weight:600;letter-spacing:4px;color:$accent2;
- text-transform:uppercase;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.pc-id{text-align:right;width:240px;}
-.pc-id small{display:block;font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;letter-spacing:4px;
- color:$sub;text-transform:uppercase;}
-.pc-id b{display:block;font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:1;color:$accent;
- letter-spacing:2px;text-shadow:0 2px 12px $glow;}
+/* ── Atlanta-College custom font (loaded from local file for wkhtmltoimage) ── */
+@font-face{
+  font-family:'AtlantaCollege';
+  src:url('/auction_module/static/src/assets/fonts/Atlanta-College.ttf') format('truetype');
+  font-weight:normal;font-style:normal;
+}
 
-.pc-stage{position:relative;z-index:5;height:660px;overflow:hidden;}
-.pc-photo{position:absolute;top:0;left:0;right:0;bottom:0;background-size:cover;background-position:top center;background-repeat:no-repeat;}
-.pc-photo-ph{position:absolute;top:0;left:0;right:0;bottom:0;background-color:$bg2;text-align:center;
- color:rgba(255,255,255,.10);font-size:220px;line-height:660px;}
-.pc-fade{position:absolute;top:0;left:0;right:0;bottom:0;
- background:-webkit-linear-gradient(top, rgba(0,0,0,0) 42%, rgba(0,0,0,.30) 66%, $bg2 99%);}
-.pc-name{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:0 40px 16px;text-align:center;}
-.pc-fn{font-family:'Bebas Neue',sans-serif;font-size:48px;line-height:.9;letter-spacing:2px;color:$accent2;
- text-transform:uppercase;text-shadow:0 3px 12px rgba(0,0,0,.75);}
-.pc-ln{font-family:'Bebas Neue',sans-serif;font-size:110px;line-height:.86;letter-spacing:1px;color:#fff;
- text-transform:uppercase;text-shadow:0 6px 20px rgba(0,0,0,.78);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.pc-pill{display:inline-block;margin-top:12px;padding:9px 42px;border-radius:30px;font-family:'Oswald',sans-serif;
- font-size:22px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#fff;
- background:-webkit-linear-gradient(left,$badge1,$badge2);box-shadow:0 8px 22px rgba(0,0,0,.45);}
+/* ══════════════════════════════════════════════════════
+   AUCTIONCHAMP PREMIUM PORTRAIT CARD — 1080 × 1620 px
+   IPL broadcast-quality sports trading card.
+   Qt-WebKit safe: no grid, no var(), no object-fit,
+   no backdrop-filter, no calc(). -webkit- prefixes used.
+   Heights: head(150)+stage(920)+price(120)+grid(340)+foot(90)=1620
+   ══════════════════════════════════════════════════════ */
 
-.pc-grid{position:relative;z-index:8;padding:20px 40px 0;overflow:hidden;}
-.pc-tile{float:left;width:48%;height:104px;margin:0 0 14px 0;padding:0 16px;
- border-radius:16px;border:1px solid $line;
- background:-webkit-linear-gradient(top left, rgba(255,255,255,0.08), rgba(255,255,255,0.02));box-shadow:0 6px 18px rgba(0,0,0,.35);}
+.pc{
+  position:relative;width:1080px;height:1620px;overflow:hidden;
+  color:$txt;font-family:Arial,sans-serif;
+  background:-webkit-linear-gradient(top,$bg1 0%,$bg3 38%,$bg2 72%,#010406 100%);
+}
+
+/* ── Luxury gold border frame ── */
+.pc-frame{
+  position:absolute;top:6px;left:6px;right:6px;bottom:6px;z-index:30;
+  border:2px solid $accent;border-radius:20px;pointer-events:none;
+  -webkit-box-shadow:0 0 36px $glow,inset 0 0 28px rgba(0,0,0,.18);
+}
+.pc-frame-in{
+  position:absolute;top:13px;left:13px;right:13px;bottom:13px;z-index:30;
+  border:1px solid rgba(212,175,55,.22);border-radius:15px;pointer-events:none;
+}
+
+/* ── Background ambience ── */
+.pc-amb{
+  position:absolute;top:100px;left:50%;width:960px;height:900px;
+  margin-left:-480px;z-index:1;pointer-events:none;
+  background:-webkit-radial-gradient(50% 20%,ellipse,rgba(212,175,55,.16) 0%,rgba(0,0,0,0) 60%);
+}
+.pc-amb2{
+  position:absolute;top:0;left:0;right:0;height:500px;z-index:1;pointer-events:none;
+  background:-webkit-linear-gradient(bottom,rgba(0,0,0,0),rgba(14,79,168,.08));
+}
+
+/* ── Diagonal accent streaks ── */
+.pc-dl{
+  position:absolute;z-index:6;height:6px;pointer-events:none;
+  background:-webkit-linear-gradient(left,rgba(0,0,0,0),$accentD 25%,$accent 55%,rgba(0,0,0,0));
+}
+.pc-dl.a{top:177px;left:-80px;width:580px;-webkit-transform:rotate(-15deg);opacity:.75;}
+.pc-dl.b{top:186px;left:-80px;width:400px;height:3px;-webkit-transform:rotate(-15deg);opacity:.40;}
+.pc-dl.c{bottom:183px;right:-80px;width:500px;-webkit-transform:rotate(-15deg);opacity:.60;}
+.pc-dl.d{bottom:174px;right:-80px;width:340px;height:3px;-webkit-transform:rotate(-15deg);opacity:.35;}
+
+/* ══════════════════════════════════════════════
+   HEADER  — 150 px
+   Left: AuctionChamp logo  |  Center: Tournament  |  Right: Team logo
+   ══════════════════════════════════════════════ */
+.pc-head{
+  position:relative;z-index:10;display:table;width:1080px;height:180px;
+  table-layout:fixed;padding:24px 36px 0;
+}
+.pc-hcell{display:table-cell;vertical-align:middle;}
+
+/* AuctionChamp logo — top-left */
+.pc-hlogo{width:156px;}
+.pc-hlogo svg{display:block;}
+
+/* Tournament name — center */
+.pc-tname{
+  font-family:'AtlantaCollege','Arial Black',Arial,sans-serif;font-size:40px;font-weight:900;
+  color:#fff;text-transform:uppercase;letter-spacing:1px;text-align:center;line-height:1.1;
+  text-shadow:0 2px 12px rgba(0,0,0,.85);
+}
+.pc-tsub{
+  font-size:17px;font-weight:700;letter-spacing:2.5px;color:$accent;
+  text-transform:uppercase;margin-top:8px;text-align:center;opacity:.9;
+}
+
+/* Team logo — top-right */
+.pc-hteam{width:112px;}
+.pc-tlogo{
+  float:right;width:100px;height:100px;border-radius:50px;
+  border:2px solid $accent;background-color:$bg2;
+  background-size:cover;background-position:center;background-repeat:no-repeat;
+  -webkit-box-shadow:0 4px 20px rgba(0,0,0,.6),0 0 18px $glow;
+}
+.pc-tlogo-ph{
+  float:right;width:100px;height:100px;border-radius:50px;
+  border:2px solid rgba(255,255,255,.14);background-color:$bg2;
+  text-align:center;line-height:96px;font-size:36px;color:rgba(255,255,255,.14);
+}
+
+/* ══════════════════════════════════════════════
+   PHOTO STAGE  — 920 px
+   ══════════════════════════════════════════════ */
+.pc-stage{position:relative;z-index:4;height:890px;overflow:hidden;}
+
+.pc-photo{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  background-size:contain;background-position:top center;background-repeat:no-repeat;
+}
+.pc-photo-ph{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  background-color:$bg2;text-align:center;
+  font-size:280px;line-height:890px;color:rgba(255,255,255,.04);
+}
+/* Radial glow behind player */
+.pc-pglow{
+  position:absolute;top:0;left:0;right:0;bottom:0;z-index:2;pointer-events:none;
+  background:-webkit-radial-gradient(50% 15%,ellipse,rgba(212,175,55,.10) 0%,rgba(0,0,0,0) 50%);
+}
+/* Side-edge vignette */
+.pc-pvign{
+  position:absolute;top:0;left:0;right:0;bottom:0;z-index:2;pointer-events:none;
+  background:-webkit-linear-gradient(left,rgba(0,0,0,.22) 0%,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 78%,rgba(0,0,0,.22) 100%);
+}
+/* Bottom gradient fade */
+.pc-pfade{
+  position:absolute;left:0;right:0;bottom:0;height:520px;z-index:3;pointer-events:none;
+  background:-webkit-linear-gradient(top,rgba(0,0,0,0) 0%,rgba(0,0,0,.06) 25%,$bg2 74%);
+}
+
+/* ── Player name at bottom of stage ── */
+.pc-pname{
+  position:absolute;left:0;right:0;bottom:14px;z-index:5;padding:0 44px;text-align:center;
+}
+.pc-pfn{
+  font-family:'AtlantaCollege','Arial Black',Arial,sans-serif;font-size:36px;font-weight:900;
+  line-height:1;letter-spacing:3px;color:$accent;text-transform:uppercase;
+  text-shadow:0 2px 14px rgba(0,0,0,.95);
+}
+.pc-pln{
+  font-family:'AtlantaCollege','Arial Black',Arial,sans-serif;font-size:80px;font-weight:900;
+  line-height:.96;letter-spacing:1px;color:#fff;text-transform:uppercase;
+  text-shadow:0 5px 22px rgba(0,0,0,.95);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-top:4px;
+}
+.pc-ppill{
+  display:inline-block;margin-top:12px;padding:9px 44px;border-radius:24px;
+  font-family:'AtlantaCollege','Arial Black',Arial,sans-serif;
+  font-size:20px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#fff;
+  background:-webkit-linear-gradient(left,$badge1,$badge2);
+  -webkit-box-shadow:0 5px 18px rgba(0,0,0,.55);
+}
+
+/* ── Status ribbon diagonal sash ── */
+.pc-rib-wrap{
+  position:absolute;top:0;left:0;right:0;bottom:0;z-index:9;overflow:hidden;pointer-events:none;
+}
+.pc-rib{
+  position:absolute;bottom:220px;right:-110px;
+  width:520px;padding:16px 20px;text-align:center;
+  -webkit-transform:rotate(-32deg);
+  -webkit-box-shadow:0 8px 28px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.2);
+}
+.pc-rib-main{
+  display:block;
+  font-family:'AtlantaCollege','Arial Black',Arial,sans-serif;font-size:48px;font-weight:900;
+  letter-spacing:4px;text-transform:uppercase;color:#fff;
+  text-shadow:0 2px 8px rgba(0,0,0,.7);line-height:1;
+}
+.pc-rib-sub{
+  display:block;font-family:Arial,sans-serif;font-size:17px;font-weight:700;
+  letter-spacing:2px;color:rgba(255,255,255,.9);text-transform:uppercase;margin-top:4px;
+}
+
+/* ══════════════════════════════════════════════
+   PRICE PANEL  — 120 px  (10px pad-top + 110px)
+   ══════════════════════════════════════════════ */
+.pc-price-wrap{padding:10px 28px 0;}
+.pc-price{
+  display:table;width:1024px;height:110px;border-radius:14px;
+  background:-webkit-linear-gradient(left,rgba(18,10,2,.96) 0%,$accentD 50%,rgba(18,10,2,.96) 100%);
+  border:1px solid $accent;
+  -webkit-box-shadow:0 6px 22px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.15);
+}
+.pc-price-in{display:table-cell;vertical-align:middle;text-align:center;}
+.pc-price-lbl{
+  font-size:13px;font-weight:700;letter-spacing:6px;color:$accent;
+  text-transform:uppercase;line-height:1;opacity:.9;
+}
+.pc-price-amt{
+  display:block;
+  font-family:'AtlantaCollege','Arial Black',Arial,sans-serif;font-size:50px;font-weight:900;
+  color:#fff;line-height:1.1;letter-spacing:1px;margin-top:4px;
+  text-shadow:0 2px 12px rgba(0,0,0,.7);
+}
+
+/* ══════════════════════════════════════════════
+   INFO GRID  — 340 px
+   2-col float layout. overflow:hidden acts as clearfix.
+   ══════════════════════════════════════════════ */
+.pc-grid{
+  position:relative;z-index:8;height:340px;padding:14px 28px 0;overflow:hidden;
+}
+.pc-tile{
+  float:left;width:500px;height:86px;margin-bottom:12px;padding:0 16px;
+  border-radius:12px;border:1px solid $line;
+  background:-webkit-linear-gradient(135deg,rgba(255,255,255,.09),rgba(255,255,255,.02));
+  -webkit-box-shadow:0 3px 12px rgba(0,0,0,.35);
+}
 .pc-tile.nomr{float:right;margin-right:0;}
-.pc-tin{display:table;width:100%;height:104px;}
-.pc-ic{display:table-cell;width:52px;vertical-align:middle;}
-.pc-ibox{width:52px;height:52px;border-radius:13px;background-color:rgba(0,0,0,.28);border:1px solid $line;
- text-align:center;line-height:50px;overflow:hidden;color:$accent;}
-.pc-ibox svg{width:30px;height:30px;vertical-align:middle;}
-.pc-ilogo{width:52px;height:52px;background-size:contain;background-position:center;background-repeat:no-repeat;}
-.pc-txt{display:table-cell;vertical-align:middle;padding-left:14px;}
-.pc-lbl{font-family:'Oswald',sans-serif;font-size:14px;font-weight:600;letter-spacing:2px;color:$sub;
- text-transform:uppercase;line-height:1.1;}
-.pc-val{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:$accent2;text-transform:uppercase;
- line-height:1.1;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px;}
+.pc-tin{display:table;width:468px;height:86px;}
+.pc-ic{display:table-cell;width:46px;vertical-align:middle;}
+.pc-ibox{
+  width:46px;height:46px;border-radius:10px;overflow:hidden;
+  background-color:rgba(0,0,0,.28);border:1px solid $line;
+  text-align:center;line-height:44px;color:$accent;
+}
+.pc-ibox svg{width:26px;height:26px;vertical-align:middle;}
+.pc-ilogo{width:46px;height:46px;background-size:contain;background-position:center;background-repeat:no-repeat;}
+.pc-itxt{display:table-cell;vertical-align:middle;padding-left:12px;}
+.pc-lbl{font-size:11px;font-weight:700;letter-spacing:2.5px;color:$sub;text-transform:uppercase;line-height:1;}
+.pc-val{
+  font-size:20px;font-weight:700;color:$accent2;text-transform:uppercase;
+  line-height:1.2;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:360px;
+}
 
-.pc-foot{position:relative;z-index:8;height:120px;padding:22px 52px 0;}
-.pc-foot .ln{position:absolute;top:0;left:52px;right:52px;height:2px;
- background:-webkit-linear-gradient(left, rgba(255,255,255,0) 0%, $accent 50%, rgba(255,255,255,0) 100%);}
-.pc-brand{display:inline-block;font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:#fff;text-transform:uppercase;}
-.pc-brand b{color:$accent;}
-.pc-fsub{float:right;font-family:'Oswald',sans-serif;font-size:14px;font-weight:600;letter-spacing:3px;color:$sub;
- text-transform:uppercase;line-height:30px;max-width:520px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* ══════════════════════════════════════════════
+   FOOTER  — 90 px
+   ══════════════════════════════════════════════ */
+.pc-foot{
+  position:relative;z-index:10;height:90px;display:table;
+  width:1080px;table-layout:fixed;padding:14px 44px 0;
+}
+.pc-fln{
+  position:absolute;top:0;left:44px;right:44px;height:1px;
+  background:-webkit-linear-gradient(left,rgba(255,255,255,0),$accent 50%,rgba(255,255,255,0));
+  opacity:.42;
+}
+.pc-fbrand{display:table-cell;vertical-align:middle;}
+.pc-fbrand svg{display:block;}
+.pc-fpid{display:table-cell;vertical-align:middle;text-align:right;width:200px;}
+.pc-pid-lbl{font-size:11px;font-weight:700;letter-spacing:4px;color:$sub;text-transform:uppercase;line-height:1;}
+.pc-pid-val{
+  font-family:'AtlantaCollege','Arial Black',Arial,sans-serif;font-size:44px;font-weight:900;
+  line-height:1;color:$accent;letter-spacing:2px;text-shadow:0 2px 10px $glow;
+}
 """
 
 
@@ -99,6 +272,13 @@ def _get_default_player_photo(self):
         return base64.b64encode(f.read())
 class AuctionTeamPlayer(models.Model):
     _name = 'auction.team.player'
+    _inherit = ['auction.image.compress.mixin']
+
+    # photo: portrait player photo; payment_proof: screenshot — keep legible.
+    _compressible_image_fields = {
+        'photo':         (800,  1000, 80, 'JPEG'),
+        'payment_proof': (1200, 1600, 82, 'JPEG'),
+    }
 
     @api.model
     def default_get(self, fields):
@@ -481,7 +661,7 @@ class AuctionTeamPlayer(models.Model):
     #  a single ZIP archive back to the browser.
     # ══════════════════════════════════════════════════════════════════
     _CARD_W = 1080
-    _CARD_H = 1350
+    _CARD_H = 1620
 
     _FOOT_LABELS = {'left': 'Left Foot', 'right': 'Right Foot', 'both': 'Both Feet'}
 
@@ -495,8 +675,9 @@ class AuctionTeamPlayer(models.Model):
         'location': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 21.5c4.5-4.8 7-8.3 7-11.5a7 7 0 10-14 0c0 3.2 2.5 6.7 7 11.5z"/><circle cx="12" cy="10" r="2.6"/></svg>',
         'price': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M9 8h6M9 11h6M14 8c0 3-2 4-4.5 4L15 16.5"/></svg>',
         'team': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3l7 2.5v5c0 4.5-3 8-7 9.5-4-1.5-7-5-7-9.5v-5z"/><path d="M9.5 12l1.8 1.8 3.5-3.6"/></svg>',
-        'blood': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3s6 6.4 6 10.5A6 6 0 016 13.5C6 9.4 12 3 12 3z"/></svg>',
         'height': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 3v18M8 6l4-3 4 3M8 18l4 3 4-3"/></svg>',
+        'phone': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.6 3.5H5.5A2 2 0 003.5 5.5c0 7.7 6.3 14 14 14a2 2 0 002-2v-1.1a2 2 0 00-1.3-1.9l-2.5-.8a2 2 0 00-2 .5l-.7.7a13.8 13.8 0 01-6.3-6.3l.7-.7a2 2 0 00.5-2l-.8-2.5a2 2 0 00-1.9-1.4z"/></svg>',
+        'jersey': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6.5 3H10v1.5L12 3l2 1.5V3h3.5L21 6.5l-3.5 2V21H6.5V8.5L3 6.5z"/></svg>',
     }
 
     _CARD_THEMES = {
@@ -534,6 +715,30 @@ class AuctionTeamPlayer(models.Model):
         return rest + ',' + last3
 
     @staticmethod
+    def _card_format_price(amount):
+        """Format an integer amount as Indian Rupee string.
+        ≥1 Cr  → ₹X.XX Cr
+        ≥1 Lakh → ₹X.XX Lakh
+        else   → ₹X,XX,XXX
+        """
+        try:
+            n = int(amount or 0)
+        except (TypeError, ValueError):
+            return u'\u20b9' + str(amount or '0')
+        if n == 0:
+            return u'\u20b90'
+        if n >= 10000000:
+            return u'\u20b9%.2f Cr' % (n / 10000000.0)
+        if n >= 100000:
+            return u'\u20b9%.2f Lakh' % (n / 100000.0)
+        s = str(n)
+        if len(s) <= 3:
+            return u'\u20b9' + s
+        last3, rest = s[-3:], s[:-3]
+        rest = re.sub(r'(\d)(?=(\d\d)+$)', r'\1,', rest)
+        return u'\u20b9' + rest + ',' + last3
+
+    @staticmethod
     def _card_safe_filename(name, used):
         base = re.sub(r'[^A-Za-z0-9]+', '_', (name or 'Player').strip()).strip('_') or 'Player'
         candidate = base
@@ -542,7 +747,7 @@ class AuctionTeamPlayer(models.Model):
             i += 1
             candidate = '%s_%d' % (base, i)
         used.add(candidate.lower())
-        return candidate + '.png'
+        return candidate + '.jpg'
 
     def _card_values(self, player):
         tournament = player.tournament_id
@@ -558,10 +763,27 @@ class AuctionTeamPlayer(models.Model):
         else:
             name_first, name_last = '', name or 'PLAYER'
 
-        prefix = ''
         source = (team.name if team and team.name else (tournament.name if tournament else '')) or ''
-        prefix = ''.join(w[0] for w in source.split()[:2]).upper() or 'PL'
-        card_id = '%s-%03d' % (prefix, player.sl_no or 0)
+        card_id = '#%d' % (player.sl_no or 0)
+
+        # Read AuctionChamp logo SVG for inline rendering
+        try:
+            _svg_path = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)),
+                'static', 'img', 'logo.svg'
+            )
+            with open(_svg_path, 'r') as _f:
+                logo_svg = _f.read()
+        except Exception:
+            logo_svg = '<span style="font-family:sans-serif;font-size:20px;color:#fff;letter-spacing:2px;font-weight:700;">AUCTIONCHAMP</span>'
+
+        # Resize SVG for header and footer placements
+        def _rsz(s, w, h):
+            s = re.sub(r'\bwidth="[\d.]+"', 'width="%s"' % w, s, count=1)
+            s = re.sub(r'\bheight="[\d.]+"', 'height="%s"' % h, s, count=1)
+            return s
+        logo_svg_head = _rsz(logo_svg, 144, 22)
+        logo_svg_foot = _rsz(logo_svg, 128, 20)
 
         if is_football:
             badge = (player.dominant_position_id.name if player.dominant_position_id
@@ -569,26 +791,67 @@ class AuctionTeamPlayer(models.Model):
         else:
             badge = player.role or player.p_category or 'PLAYER'
 
+        # ── Sold points — fetched for price panel ──
+        sold_points = 0
+        if player.state == 'sold':
+            auction_line = self.env['auction.auction.player'].search(
+                [('player_id', '=', player.id)], limit=1, order='id desc')
+            sold_points = auction_line.points if auction_line else 0
+
+        # ── Price panel content ──
+        if player.state == 'sold' and sold_points:
+            price_label = 'SOLD FOR'
+            price_display = self._card_format_price(sold_points)
+        elif player.effective_base_price:
+            price_label = 'BASE PRICE'
+            price_display = self._card_format_price(player.effective_base_price)
+        elif tournament:
+            price_label = 'AUCTIONCHAMP'
+            price_display = (tournament.name or '').upper()
+        else:
+            price_label = 'AUCTIONCHAMP'
+            price_display = 'PLAYER CARD'
+
+        # ── Status ribbon (shown for all states) ──
+        _ribbon_cfg = {
+            'sold':    {'text': 'SOLD',           'sub': ('TO ' + team.name.upper()) if team else '', 'color': '#C62828'},
+            'unsold':  {'text': 'UNSOLD',         'sub': '',                                          'color': '#424242'},
+            'auction': {'text': 'UP FOR AUCTION', 'sub': '',                                          'color': '#E65100'},
+            'draft':   {'text': 'REGISTERED',     'sub': '',                                          'color': '#1565C0'},
+        }
+        _rib = _ribbon_cfg.get(player.state or 'draft', _ribbon_cfg['draft'])
+
+        # ── Info grid rows (sport-adaptive, no blood/rating/strength) ──
         rows = []
         if is_football:
             if player.dominant_position_id:
                 rows.append(('position', 'Position', player.dominant_position_id.name))
             if player.preferred_foot:
                 rows.append(('foot', 'Preferred Foot', self._FOOT_LABELS.get(player.preferred_foot, player.preferred_foot.title())))
+            if player.secondary_position_ids and len(rows) < 5:
+                sec = ', '.join(p.name for p in player.secondary_position_ids[:2])
+                rows.append(('position', 'Alt Position', sec))
         else:
+            if player.role:
+                rows.append(('bat', 'Role', player.role))
             if player.batting_style:
-                rows.append(('bat', 'Batting Style', player.batting_style))
+                rows.append(('bat', 'Batting', player.batting_style))
             if player.bowling_style:
-                rows.append(('ball', 'Bowling Style', player.bowling_style))
+                rows.append(('ball', 'Bowling', player.bowling_style))
         if player.age:
-            rows.append(('age', 'Age', '%s Years' % player.age))
+            rows.append(('age', 'Age', '%d Years' % player.age))
         if player.p_category:
             rows.append(('category', 'Category', player.p_category))
+        if player.jersy_number and len(rows) < 6:
+            rows.append(('jersey', 'Jersey No.', str(player.jersy_number)))
+        if len(rows) < 6 and player.masked_contact:
+            rows.append(('phone', 'Mobile', player.masked_contact))
         if len(rows) < 5 and player.address:
-            rows.append(('location', 'Location', (player.address or '').strip().splitlines()[0] if player.address else ''))
-        rows.append(('price', 'Base Price', u'\u20B9 %s' % self._card_indian_amount(player.base_price)))
-        rows.append(('team', 'Team', team.name if team else 'Unsold'))
-        # 2-column grid, keep the six most relevant tiles
+            addr_line = (player.address or '').strip().splitlines()[0] if player.address else ''
+            rows.append(('location', 'Location', addr_line))
+        # NOTE: sold_points intentionally excluded from grid (shown in gold price panel)
+
+        # 2-column grid, up to six tiles
         rows = [{'icon': i, 'label': l, 'value': v, 'nomr': (idx % 2 == 1)}
                 for idx, (i, l, v) in enumerate(rows[:6])]
 
@@ -603,6 +866,23 @@ class AuctionTeamPlayer(models.Model):
         import string
         css = string.Template(_CARD_CSS).safe_substitute(pal)
 
+        # Embed Atlanta-College font as base64 data URI so wkhtmltoimage
+        # never has to resolve a file path (most reliable across environments).
+        try:
+            import base64 as _b64
+            _fp = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)),
+                'static', 'src', 'assets', 'fonts', 'Atlanta-College.ttf'
+            )
+            with open(_fp, 'rb') as _ff:
+                _font_b64 = _b64.b64encode(_ff.read()).decode('ascii')
+            css = css.replace(
+                "url('/auction_module/static/src/assets/fonts/Atlanta-College.ttf') format('truetype')",
+                "url('data:font/truetype;base64," + _font_b64 + "') format('truetype')"
+            )
+        except Exception:
+            pass  # Font file missing — fall back to Arial Black
+
         return {
             'player': player,
             'tournament': tournament,
@@ -611,7 +891,7 @@ class AuctionTeamPlayer(models.Model):
             'pal': pal,
             'css': css,
             'icons': self._CARD_ICONS,
-            'photo_uri': uri(player.photo),
+            'photo_uri': uri(player.photo_card or player.photo),
             'team_logo_uri': uri(team.logo) if team else '',
             'tournament_logo_uri': uri(tournament.logo) if tournament else '',
             'name_first': name_first,
@@ -619,7 +899,19 @@ class AuctionTeamPlayer(models.Model):
             'card_id': card_id,
             'badge': badge,
             'rows': rows,
+            'logo_svg': logo_svg,
+            'logo_svg_head': logo_svg_head,
+            'logo_svg_foot': logo_svg_foot,
+            'player_state': player.state or 'draft',
+            'sold_points': sold_points,
+            'price_label': price_label,
+            'price_display': price_display,
+            'ribbon_color': _rib['color'],
+            'ribbon_text': _rib['text'],
+            'ribbon_sub': _rib.get('sub', ''),
+            'show_ribbon': True,
         }
+
 
     def _render_card_html(self, player):
         values = self._card_values(player)
@@ -632,13 +924,15 @@ class AuctionTeamPlayer(models.Model):
         import subprocess
         import uuid as _uuid
         base = os.path.join(workdir, _uuid.uuid4().hex)
-        hpath, opath = base + '.html', base + '.png'
+        hpath, opath = base + '.html', base + '.jpg'
         with open(hpath, 'w', encoding='utf-8') as fh:
             fh.write(html)
         cmd = [
-            binary, '--format', 'png',
+            binary, '--format', 'jpg', '--quality', '85',
             '--width', str(self._CARD_W), '--disable-smart-width',
-            '--enable-local-file-access', '--javascript-delay', '1800',
+            '--enable-local-file-access',
+            '--load-error-handling', 'ignore',
+            '--load-media-error-handling', 'ignore',
             '--quiet', hpath, opath,
         ]
         try:
@@ -658,6 +952,7 @@ class AuctionTeamPlayer(models.Model):
         import shutil
         import zipfile
         from datetime import datetime
+        from concurrent.futures import ThreadPoolExecutor, as_completed
 
         players = self.exists()
         if not players:
@@ -672,26 +967,51 @@ class AuctionTeamPlayer(models.Model):
         workdir = self._card_workdir()
         failed, used_names = [], set()
         zip_buf = io.BytesIO()
+
+        # ── Step 1: pre-render all HTML in the main thread (ORM not thread-safe) ──
+        render_jobs = []   # [(fname, html)]
+        for player in players:
+            try:
+                html = self._render_card_html(player)
+                fname = self._card_safe_filename(
+                    player.name or ('player_%s' % player.id), used_names)
+                render_jobs.append((fname, html))
+            except Exception:
+                _logger.exception('Card HTML render failed for player %s', player.id)
+                failed.append(player.name or ('#%s' % player.id))
+
+        # ── Step 2: run wkhtmltoimage in parallel (subprocess is thread-safe) ──
+        def _render_one(job):
+            fname, html = job
+            try:
+                jpg = self._card_html_to_png(html, workdir, binary)
+                return fname, jpg
+            except Exception:
+                _logger.exception('wkhtmltoimage failed for %s', fname)
+                return fname, None
+
+        workers = min(6, max(1, len(render_jobs)))
+        results = []
         try:
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                futures = {pool.submit(_render_one, job): job for job in render_jobs}
+                for fut in as_completed(futures):
+                    results.append(fut.result())
+
             with zipfile.ZipFile(zip_buf, 'w', zipfile.ZIP_DEFLATED) as zf:
-                for player in players:
-                    try:
-                        html = self._render_card_html(player)
-                        png = self._card_html_to_png(html, workdir, binary)
-                        if not png:
-                            raise ValueError('empty render output')
-                        fname = self._card_safe_filename(player.name or ('player_%s' % player.id), used_names)
-                        zf.writestr(fname, png)
-                    except Exception:
-                        _logger.exception('Player card export failed for player %s', player.id)
-                        failed.append(player.name or ('#%s' % player.id))
+                for fname, jpg in results:
+                    if jpg:
+                        zf.writestr(fname, jpg)
+                    else:
+                        failed.append(fname)
                 if failed:
-                    note = (u'%d card(s) failed to generate:\n\n%s' % (len(failed), u'\n'.join(failed)))
+                    note = (u'%d card(s) failed to generate:\n\n%s'
+                            % (len(failed), u'\n'.join(failed)))
                     zf.writestr('_FAILED_CARDS.txt', note.encode('utf-8'))
         finally:
             shutil.rmtree(workdir, ignore_errors=True)
 
-        if len(failed) == len(players):
+        if not results or all(jpg is None for _, jpg in results):
             raise UserError(_('All player cards failed to generate. Please check the server logs.'))
 
         tournament = players[0].tournament_id

@@ -1,103 +1,198 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-<!-- ══════════════════════════════════════════════════════════════════
-     PREMIUM PORTRAIT PLAYER CARD  (1080 x 1350, IPL broadcast style)
-     Rendered to a PNG by wkhtmltoimage for the bulk ZIP export.
-     Standalone HTML document. Qt-WebKit safe (no CSS grid / var / object-fit).
-     Context is built by auction.team.player._card_values():
-       player, tournament, team, is_football, pal, css, icons,
-       photo_uri, team_logo_uri, tournament_logo_uri,
-       name_first, name_last, card_id, badge, rows
-     ══════════════════════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════════════════════════════
+     AUCTIONCHAMP PREMIUM PORTRAIT PLAYER CARD  —  1080 × 1620 px
+     IPL broadcast-quality sports trading card for ZIP / PDF / Social Media.
+     Rendered to JPG by wkhtmltoimage.  Qt-WebKit safe.
+     Context from auction.team.player._card_values():
+      player, tournament, team, is_football, css, icons,
+      photo_uri, team_logo_uri, tournament_logo_uri,
+      name_first, name_last, card_id, badge, rows (up to 6),
+      logo_svg_head, logo_svg_foot,
+      price_label, price_display,
+      ribbon_color, ribbon_text, ribbon_sub, show_ribbon,
+      player_state, sold_points
+     ══════════════════════════════════════════════════════════════════════ -->
 <template id="player_card_portrait_image" name="Player Card Portrait Image">
 <html>
 <head>
     <meta charset="utf-8"/>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Oswald:wght@400;500;600;700&amp;family=Barlow:wght@400;500;600;700&amp;family=Rajdhani:wght@600;700&amp;display=swap" rel="stylesheet"/>
+    <!-- All CSS injected from _CARD_CSS via string.Template substitution -->
     <style><t t-raw="css"/></style>
 </head>
 <body>
-    <div class="pc">
+<div class="pc">
 
-        <div class="pc-acc tl"/>
-        <div class="pc-acc br"/>
-        <div class="pc-acc br2"/>
+    <!-- ── Luxury gold border frame ── -->
+    <div class="pc-frame"/>
+    <div class="pc-frame-in"/>
 
-        <!-- Header -->
-        <div class="pc-head">
-            <div class="pc-cell" style="width:104px;">
-                <t t-if="team_logo_uri">
-                    <div class="pc-badge" t-attf-style="background-image:url({{ team_logo_uri }});"/>
-                </t>
-                <t t-elif="tournament_logo_uri">
-                    <div class="pc-badge" t-attf-style="background-image:url({{ tournament_logo_uri }});"/>
-                </t>
-                <t t-else="">
-                    <div class="pc-badge">&#9733;</div>
-                </t>
-            </div>
-            <div class="pc-cell pc-mid">
-                <div class="pc-team"><t t-out="(team.name if team else (tournament.name if tournament else 'Auction'))"/></div>
-                <div class="pc-tour"><t t-out="(tournament.name if (team and tournament) else 'Player Card')"/></div>
-            </div>
-            <div class="pc-cell pc-id">
-                <small>Player ID</small>
-                <b><t t-out="card_id"/></b>
-            </div>
-        </div>
+    <!-- ── Background ambience ── -->
+    <div class="pc-amb"/>
+    <div class="pc-amb2"/>
 
-        <!-- Photo + name -->
-        <div class="pc-stage">
-            <t t-if="photo_uri">
-                <div class="pc-photo" t-attf-style="background-image:url({{ photo_uri }});"/>
-            </t>
-            <t t-else="">
-                <div class="pc-photo-ph">&#9787;</div>
-            </t>
-            <div class="pc-fade"/>
-            <div class="pc-name">
-                <t t-if="name_first"><div class="pc-fn"><t t-out="name_first"/></div></t>
-                <div class="pc-ln"><t t-out="name_last"/></div>
-                <div class="pc-pill"><t t-out="badge"/></div>
-            </div>
-        </div>
+    <!-- ── Diagonal accent streaks ── -->
+    <div class="pc-dl a"/>
+    <div class="pc-dl b"/>
+    <div class="pc-dl c"/>
+    <div class="pc-dl d"/>
 
-        <!-- Details grid -->
-        <div class="pc-grid">
-            <t t-foreach="rows" t-as="r">
-                <div t-attf-class="pc-tile {{ 'nomr' if r['nomr'] else '' }}">
-                    <div class="pc-tin">
-                        <div class="pc-ic">
-                            <t t-if="r['icon'] == 'team' and team_logo_uri">
-                                <div class="pc-ilogo" t-attf-style="background-image:url({{ team_logo_uri }});"/>
-                            </t>
-                            <t t-else="">
-                                <div class="pc-ibox"><t t-raw="icons.get(r['icon'], '')"/></div>
-                            </t>
-                        </div>
-                        <div class="pc-txt">
-                            <div class="pc-lbl"><t t-out="r['label']"/></div>
-                            <div class="pc-val"><t t-out="r['value']"/></div>
-                        </div>
-                    </div>
-                </div>
-            </t>
-        </div>
+    <!-- ════════════════════════════════════════════
+        HEADER  —  150 px
+        AuctionChamp logo · Tournament name · Team logo
+        ════════════════════════════════════════════ -->
+    <div class="pc-head">
 
-        <!-- Footer -->
-        <div class="pc-foot">
-            <span class="ln"/>
-            <div class="pc-brand">AUCTION<b>CHAMP</b></div>
-            <div class="pc-fsub"><t t-out="(tournament.name if tournament else '')"/></div>
-            <t t-if="tournament and (tournament.tournament_date or tournament.venue)">
-            <div class="pc-fsub" style="margin-top:3px; font-size:0.65em; opacity:0.75; letter-spacing:1.5px;">
-                <t t-if="tournament.tournament_date"><t t-out="tournament.tournament_date.strftime('%d %b %Y')"/></t><t t-if="tournament.tournament_date and tournament.venue"> · </t><t t-if="tournament.venue"><t t-out="tournament.venue"/></t>
-            </div>
-            </t>
+       <!-- Tournament logo — top-left -->
+       <div class="pc-hcell pc-hlogo">
+           <t t-if="tournament_logo_uri">
+               <div class="pc-tlogo" t-attf-style="float:left;background-image:url({{ tournament_logo_uri }});"/>
+           </t>
+           <t t-else="">
+               <div class="pc-tlogo-ph" style="float:left;">&#9733;</div>
+           </t>
+       </div>
+
+       <!-- Tournament name + venue / date — center -->
+       <div class="pc-hcell">
+           <div class="pc-tname">
+               <t t-out="tournament.name if tournament else 'AuctionChamp'"/>
+           </div>
+           <div class="pc-tsub">
+               <t t-if="tournament and tournament.venue">
+                   <t t-out="tournament.venue"/>
+               </t>
+               <t t-if="tournament and tournament.venue and tournament.tournament_date"> · </t>
+               <t t-if="tournament and tournament.tournament_date">
+                   <t t-out="tournament.tournament_date.strftime('%d %b %Y')"/>
+               </t>
+           </div>
+       </div>
+
+       <!-- Team logo — top-right (fallback to tournament logo or star) -->
+       <div class="pc-hcell pc-hteam">
+           <t t-if="team_logo_uri">
+               <div class="pc-tlogo" t-attf-style="background-image:url({{ team_logo_uri }});"/>
+           </t>
+           <t t-elif="tournament_logo_uri">
+               <div class="pc-tlogo" t-attf-style="background-image:url({{ tournament_logo_uri }});"/>
+           </t>
+           <t t-else="">
+               <div class="pc-tlogo-ph">&#9733;</div>
+           </t>
+       </div>
+
+    </div>
+    <!-- END HEADER -->
+
+    <!-- ════════════════════════════════════════════
+        PHOTO STAGE  —  920 px
+        Player photo · Ribbon sash · Name overlay
+        ════════════════════════════════════════════ -->
+    <div class="pc-stage">
+
+       <!-- Player photo -->
+       <t t-if="photo_uri">
+           <div class="pc-photo" t-attf-style="background-image:url({{ photo_uri }});"/>
+       </t>
+       <t t-else="">
+           <div class="pc-photo-ph">&#9787;</div>
+       </t>
+
+       <!-- Photo ambience overlays -->
+       <div class="pc-pglow"/>
+       <div class="pc-pvign"/>
+
+       <!-- ── Status ribbon diagonal sash ──
+            SOLD (red) · UNSOLD (grey) · UP FOR AUCTION (orange) · REGISTERED (blue) -->
+       <t t-if="show_ribbon">
+           <div class="pc-rib-wrap">
+               <div class="pc-rib" t-attf-style="background:{{ ribbon_color }};">
+                   <span class="pc-rib-main"><t t-out="ribbon_text"/></span>
+                   <t t-if="ribbon_sub">
+                       <span class="pc-rib-sub"><t t-out="ribbon_sub"/></span>
+                   </t>
+               </div>
+           </div>
+       </t>
+
+       <!-- Bottom gradient fade into card body -->
+       <div class="pc-pfade"/>
+
+       <!-- Player name overlay at bottom of stage -->
+       <div class="pc-pname">
+           <t t-if="name_first">
+               <div class="pc-pfn"><t t-out="name_first"/></div>
+           </t>
+           <div class="pc-pln"><t t-out="name_last"/></div>
+           <div class="pc-ppill"><t t-out="badge"/></div>
         </div>
 
     </div>
+    <!-- END PHOTO STAGE -->
+
+    <!-- ════════════════════════════════════════════
+        PRICE PANEL  —  120 px
+        Gold gradient panel: SOLD FOR / BASE PRICE
+        ════════════════════════════════════════════ -->
+    <div class="pc-price-wrap">
+       <div class="pc-price">
+           <div class="pc-price-in">
+               <div class="pc-price-lbl"><t t-out="price_label"/></div>
+               <span class="pc-price-amt"><t t-out="price_display"/></span>
+           </div>
+       </div>
+    </div>
+    <!-- END PRICE PANEL -->
+
+    <!-- ════════════════════════════════════════════
+        INFO GRID  —  340 px
+        Up to 6 tiles · 2 columns · sport-adaptive
+        Cricket: Role · Batting · Bowling · Age · Category · Mobile/Jersey
+        Football: Position · Preferred Foot · Alt Position · Age · Category · Mobile/Jersey
+        ════════════════════════════════════════════ -->
+    <div class="pc-grid">
+       <t t-foreach="rows" t-as="r">
+           <div t-attf-class="pc-tile {{ 'nomr' if r['nomr'] else '' }}">
+               <div class="pc-tin">
+                   <div class="pc-ic">
+                       <t t-if="r['icon'] == 'team' and team_logo_uri">
+                           <div class="pc-ilogo" t-attf-style="background-image:url({{ team_logo_uri }});"/>
+                       </t>
+                       <t t-else="">
+                           <div class="pc-ibox">
+                               <t t-raw="icons.get(r['icon'], icons.get('category', ''))"/>
+                           </div>
+                       </t>
+                   </div>
+                   <div class="pc-itxt">
+                       <div class="pc-lbl"><t t-out="r['label']"/></div>
+                       <div class="pc-val"><t t-out="r['value']"/></div>
+                   </div>
+               </div>
+           </div>
+       </t>
+    </div>
+    <!-- END INFO GRID -->
+
+    <!-- ════════════════════════════════════════════
+        FOOTER  —  90 px
+        AuctionChamp logo  ·  Player ID
+        ════════════════════════════════════════════ -->
+    <div class="pc-foot">
+       <div class="pc-fln"/>
+       <div class="pc-fbrand">
+           <t t-raw="logo_svg_foot"/>
+       </div>
+       <div class="pc-fpid">
+           <div class="pc-pid-lbl">PLAYER</div>
+           <div class="pc-pid-val"><t t-out="card_id"/></div>
+       </div>
+    </div>
+    <!-- END FOOTER -->
+
+</div>
 </body>
 </html>
 </template>

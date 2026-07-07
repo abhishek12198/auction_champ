@@ -201,10 +201,10 @@
 
         <menuitem id="menu_action_auction_tournament"
           name="Tournament(s)"
-          parent="menu_action_auction_conf"
           action="action_auction_tournament"
           groups="auction_module.group_auction_group_admin"
-          sequence="1"/>
+          web_icon="auction_module,static/img/tournament_root.png"
+          sequence="19"/>
 
 
 

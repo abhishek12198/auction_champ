@@ -10,6 +10,11 @@ import werkzeug.exceptions
 
 class AuctionTeam(models.Model):
     _name = 'auction.team'
+    _inherit = ['auction.image.compress.mixin']
+
+    _compressible_image_fields = {
+        'logo': (400, 400, 82, 'JPEG'),
+    }
 
     @api.model
     def default_get(self, fields_list):
