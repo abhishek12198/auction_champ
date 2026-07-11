@@ -354,16 +354,23 @@ body[data-theme="dark"] #sw-theme-btn{color:var(--berry-bright);border-color:rgb
           <t t-if="player.dominant_position_id">
             <div class="sw-stat-row"><span class="sw-stat-key">Position</span><span class="sw-stat-val"><t t-esc="player.dominant_position_id.name"/></span></div>
           </t>
-          <t t-if="player.secondary_position_ids">
-            <div class="sw-stat-row"><span class="sw-stat-key">Secondary</span><span class="sw-stat-val"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span></div>
-          </t>
           <t t-if="player.preferred_foot">
             <div class="sw-stat-row"><span class="sw-stat-key">Foot</span><span class="sw-stat-val"><t t-esc="player.preferred_foot.capitalize()"/></span></div>
           </t>
-          <t t-if="player.age">
-            <div class="sw-stat-row"><span class="sw-stat-key">Age</span><span class="sw-stat-val"><t t-esc="player.age"/></span></div>
+          <t t-if="player.use_other_attributes">
+            <t t-foreach="player.other_attribute_ids.filtered('value')" t-as="oattr">
+              <div class="sw-stat-row"><span class="sw-stat-key"><t t-esc="oattr.label"/></span><span class="sw-stat-val"><t t-esc="oattr.value or '—'"/></span></div>
+            </t>
           </t>
-          <t t-call="auction_module.football_tag_chips"/>
+          <t t-else="">
+            <t t-if="player.secondary_position_ids">
+              <div class="sw-stat-row"><span class="sw-stat-key">Secondary</span><span class="sw-stat-val"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span></div>
+            </t>
+            <t t-if="player.age">
+              <div class="sw-stat-row"><span class="sw-stat-key">Age</span><span class="sw-stat-val"><t t-esc="player.age"/></span></div>
+            </t>
+            <t t-call="auction_module.football_tag_chips"/>
+          </t>
         </t>
         <t t-if="player.blood_group">
           <div class="sw-stat-row">
@@ -585,7 +592,20 @@ body[data-theme="dark"] #sw-theme-btn{color:var(--berry-bright);border-color:rgb
       document.getElementById('swBidDrawer').style.right = '0';
       document.getElementById('swBidArrow').innerHTML = '&#x2192;';
       document.getElementById('swBidOverlay').style.display = 'block';
-      document.getElementById('swBidFrame').src = document.documentElement.dataset.balanceUrl;
+      var frame = document.getElementById('swBidFrame');
+      var url = document.documentElement.dataset.balanceUrl;
+      if (frame &amp;&amp; url) {
+        var cur = frame.getAttribute('src') || '';
+        if (!cur || cur === 'about:blank') {
+          frame.src = url;
+        } else {
+          try {
+            if (frame.contentWindow &amp;&amp; typeof frame.contentWindow.refreshBalance === 'function') {
+              frame.contentWindow.refreshBalance();
+            }
+          } catch (e) {}
+        }
+      }
       document.body.style.overflow = 'hidden';
     }
     function closeBidSummary() {

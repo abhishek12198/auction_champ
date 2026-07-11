@@ -87,18 +87,17 @@
 
     </data>
 
-    <!-- Football card paperformat (updatable so dims/dpi can be tuned). The
-         football card is narrower & a fixed height, so it needs a page sized to
-         its own aspect ratio; using the shared landscape page left empty paper. -->
+    <!-- Legacy football-only paperformat kept for existing DBs; new prints use
+         paperformat_card_landscape so cricket and football share one page size. -->
     <data>
         <record id="paperformat_card_football" model="report.paperformat">
             <field name="name">Card Format Football</field>
             <field name="default" eval="False" />
             <field name="format">custom</field>
-            <field name="page_height">172</field>
+            <field name="page_height">211</field>
             <field name="page_width">122</field>
             <field name="orientation">Landscape</field>
-            <field name="margin_top">0</field>
+            <field name="margin_top">4</field>
             <field name="margin_bottom">0</field>
             <field name="margin_left">0</field>
             <field name="margin_right">0</field>

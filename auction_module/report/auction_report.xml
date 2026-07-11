@@ -79,16 +79,16 @@
             <field name="groups_id" eval="[(4, ref('auction_module.group_auction_player_card_print'))]"/>
         </record>
 
-        <!-- Football uses its own paperformat sized to the football card so the
-             narrower/shorter card fills the page (no empty paper). The football
-             page is theme-aware internally, so one action covers all themes. -->
+        <!-- Football reuses the cricket landscape paperformat so both sports
+             print one card per page on the same sheet size. The football QWeb
+             template is theme-aware internally, so one action covers all themes. -->
         <record id="action_report_player_card_football" model="ir.actions.report">
             <field name="name">Player Card (Football)</field>
             <field name="model">auction.team.player</field>
             <field name="report_type">qweb-pdf</field>
             <field name="report_name">auction_module.report_player_card_football_list</field>
             <field name="report_file">auction_module.report_player_card_football_list</field>
-            <field name="paperformat_id" ref="auction_module.paperformat_card_football"/>
+            <field name="paperformat_id" ref="auction_module.paperformat_card_landscape"/>
             <field name="print_report_name">"Player_Cards" if not object.tournament_id else "%s_Players" % object.tournament_id.name.replace(" ", "_")</field>
             <field name="groups_id" eval="[(4, ref('auction_module.group_auction_player_card_print'))]"/>
         </record>

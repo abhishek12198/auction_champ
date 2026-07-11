@@ -38,6 +38,11 @@
                                 type="object"
                                 string="Auction Rules"
                                 class="btn-secondary"/>
+                        <button name="action_upload_players"
+                                type="object"
+                                string="Upload Players"
+                                class="btn-secondary"
+                                attrs="{'invisible': [('active', '=', False)]}"/>
                         <button name="action_deactivate_tournament"
                                 type="object"
                                 string="Deactivate Tournament"
@@ -190,6 +195,18 @@
                                     <span class="o_stat_text text-danger" style="font-size:10px">Reset On-Stage</span>
                                 </div>
                             </button>
+                            <button name="action_clear_auction_history"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    icon="fa-trash"
+                                    confirm="This will permanently delete all Auction History records for THIS tournament only. This cannot be undone. Continue?"
+                                    help="Delete auction.history entries for this tournament only"
+                                    attrs="{'invisible': [('active', '=', False)]}">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text text-danger">Clean History</span>
+                                    <span class="o_stat_text text-danger" style="font-size:10px">This Tournament</span>
+                                </div>
+                            </button>
 
                         </div>
 
@@ -303,6 +320,25 @@
                                             </t>
                                         </templates>
                                     </kanban>
+                                </field>
+                            </page>
+
+                            <!-- Football Other Attribute Labels (Att-Labels) -->
+                            <page string="Other Attributes" name="other_attributes"
+                                  attrs="{'invisible': [('tournament_type', '!=', 'football')]}">
+                                <separator string="Att-Labels for Player Cards &amp; Excel Upload"/>
+                                <p class="text-muted">
+                                    Define the Other Attribute labels for this football tournament
+                                    (e.g. Club, Experience). They appear as Excel template columns
+                                    and as Label / Value rows on each player form. When a player has
+                                    values filled, Secondary / Age / Playing Style / Strengths are
+                                    replaced by these attributes on cards and live displays.
+                                </p>
+                                <field name="other_attribute_label_ids" nolabel="1">
+                                    <tree editable="bottom">
+                                        <field name="sequence" widget="handle"/>
+                                        <field name="label" string="Att-Label"/>
+                                    </tree>
                                 </field>
                             </page>
 

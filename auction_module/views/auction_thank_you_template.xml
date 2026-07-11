@@ -1,0 +1,888 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<!-- Professional Thank You / Auction Complete page -->
+<template id="thank_you_template" name="Auction Complete">
+<html lang="en" t-att-data-theme="theme or 'vanilla'">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
+  <title>Thank You — <t t-esc="tournament.name if tournament else 'Auction'"/> | AuctionChamp</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&amp;family=Open+Sans:wght@400;600&amp;display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --ty-primary: #3b72e8;
+      --ty-primary-dk: #1e4bb8;
+      --ty-accent: #f4c542;
+      --ty-bg: #070c18;
+      --ty-bg2: #0d1526;
+      --ty-surface: rgba(255,255,255,0.05);
+      --ty-border: rgba(255,255,255,0.10);
+      --ty-text: #e8edf8;
+      --ty-muted: rgba(232,237,248,0.55);
+      --ty-glow: rgba(59,114,232,0.35);
+      --ty-sold: #34d399;
+      --ty-unsold: #f87171;
+      --ty-radius: 16px;
+    }
+    <t t-if="theme == 'cherry'">
+    :root {
+      --ty-primary: #DC143C; --ty-primary-dk: #8B0000; --ty-accent: #FF6B6B;
+      --ty-bg: #0a0008; --ty-bg2: #1a0008; --ty-border: rgba(220,20,60,0.28);
+      --ty-text: #f5e8e8; --ty-muted: rgba(245,232,232,0.55); --ty-glow: rgba(220,20,60,0.45);
+    }
+    </t>
+    <t t-elif="theme == 'butterscotch'">
+    :root {
+      --ty-primary: #F5C842; --ty-primary-dk: #C8960C; --ty-accent: #FFE082;
+      --ty-bg: #0d0d1f; --ty-bg2: #1a1400; --ty-border: rgba(245,200,66,0.25);
+      --ty-text: #fff8e1; --ty-muted: rgba(255,248,225,0.55); --ty-glow: rgba(245,200,66,0.40);
+    }
+    </t>
+    <t t-elif="theme == 'strawberry'">
+    :root {
+      --ty-primary: #C2185B; --ty-primary-dk: #880E4F; --ty-accent: #F48FB1;
+      --ty-bg: #1a0010; --ty-bg2: #2d0018; --ty-border: rgba(194,24,91,0.28);
+      --ty-text: #fce4ec; --ty-muted: rgba(252,228,236,0.55); --ty-glow: rgba(194,24,91,0.45);
+    }
+    </t>
+    <t t-elif="theme == 'pistah'">
+    :root {
+      --ty-primary: #6BBF4E; --ty-primary-dk: #2E7D32; --ty-accent: #A8E063;
+      --ty-bg: #060e08; --ty-bg2: #0d1f11; --ty-border: rgba(107,191,78,0.25);
+      --ty-text: #e8f5e9; --ty-muted: rgba(232,245,233,0.55); --ty-glow: rgba(107,191,78,0.42);
+    }
+    </t>
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      min-height: 100%;
+      background: var(--ty-bg);
+      color: var(--ty-text);
+      font-family: 'Open Sans', system-ui, sans-serif;
+    }
+    body {
+      background-image:
+        radial-gradient(ellipse 70% 50% at 20% -10%, var(--ty-glow), transparent 55%),
+        radial-gradient(ellipse 50% 40% at 100% 100%, rgba(255,255,255,0.03), transparent 50%);
+      background-color: var(--ty-bg);
+    }
+
+    .ty-shell {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 20px 18px 24px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Confetti */
+    .ty-confetti {
+      position: fixed; inset: 0;
+      pointer-events: none; overflow: hidden; z-index: 0;
+    }
+    .ty-confetti span {
+      position: absolute; top: -12px;
+      width: 8px; height: 8px; border-radius: 2px;
+      animation: ty-fall linear infinite; opacity: 0.85;
+    }
+    @keyframes ty-fall {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 0.9; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* Header */
+    .ty-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 18px 22px;
+      border-radius: var(--ty-radius);
+      background: linear-gradient(135deg, var(--ty-bg2), rgba(255,255,255,0.03));
+      border: 1px solid var(--ty-border);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+    }
+    .ty-brand {
+      display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1;
+    }
+    .ty-logo {
+      width: 56px; height: 56px; border-radius: 12px; object-fit: contain;
+      background: rgba(0,0,0,0.25); border: 1px solid var(--ty-border); padding: 4px; flex-shrink: 0;
+    }
+    .ty-logo-ph {
+      width: 56px; height: 56px; border-radius: 12px; display: grid; place-items: center;
+      background: rgba(255,255,255,0.06); border: 1px solid var(--ty-border); font-size: 1.4rem; flex-shrink: 0;
+    }
+    .ty-eyebrow {
+      font-family: 'Montserrat', sans-serif; font-size: .68rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--ty-accent); margin-bottom: 4px;
+    }
+    .ty-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(1.2rem, 2.5vw, 1.65rem); font-weight: 800; line-height: 1.2;
+    }
+    .ty-sub { margin-top: 4px; font-size: .88rem; color: var(--ty-muted); }
+    .ty-hdr-logo {
+      height: 28px; width: auto; display: block; flex-shrink: 0;
+    }
+    .ty-hdr-logo-link {
+      display: inline-flex; align-items: center; text-decoration: none;
+      opacity: 0.95; transition: opacity .15s ease, transform .15s ease;
+    }
+    .ty-hdr-logo-link:hover { opacity: 1; transform: scale(1.04); }
+
+    /* Hero message */
+    .ty-hero {
+      text-align: center;
+      padding: 28px 20px;
+      border-radius: var(--ty-radius);
+      background: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border: 1px solid var(--ty-border);
+      position: relative;
+      overflow: hidden;
+    }
+    .ty-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 80% at 50% 0%, var(--ty-glow), transparent 70%);
+      pointer-events: none;
+    }
+    .ty-thankyou {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(2.4rem, 6vw, 3.6rem);
+      font-weight: 900; color: var(--ty-accent);
+      text-shadow: 0 0 32px var(--ty-glow); line-height: 1; letter-spacing: -1px;
+      position: relative;
+    }
+    .ty-managers {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(1.3rem, 3vw, 1.9rem); font-weight: 800; margin-top: 6px; position: relative;
+    }
+    .ty-participation {
+      margin-top: 8px; color: var(--ty-muted); font-size: .95rem; font-style: italic; position: relative;
+    }
+    .ty-badges {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; position: relative;
+    }
+    .ty-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(0,0,0,0.28); border: 1px solid var(--ty-border);
+      border-radius: 999px; padding: 6px 14px; font-size: .78rem; font-weight: 600;
+    }
+
+    /* Stats */
+    .ty-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .ty-stat {
+      border-radius: 14px; padding: 16px 12px; text-align: center;
+      background: var(--ty-surface); border: 1px solid var(--ty-border);
+    }
+    .ty-stat-num {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(1.6rem, 3vw, 2.1rem); font-weight: 800; line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .ty-stat-lbl {
+      margin-top: 6px; font-size: .68rem; font-weight: 700;
+      letter-spacing: 1.4px; text-transform: uppercase; color: var(--ty-muted);
+    }
+    .ty-stat-sold .ty-stat-num { color: var(--ty-sold); }
+    .ty-stat-unsold .ty-stat-num { color: var(--ty-unsold); }
+    .ty-stat-teams .ty-stat-num { color: var(--ty-accent); }
+
+    /* Teams */
+    .ty-section {
+      border-radius: var(--ty-radius);
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      border: 1px solid var(--ty-border);
+      padding: 18px;
+      flex: 1;
+    }
+    .ty-section-title {
+      font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: .95rem;
+      display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+    }
+    .ty-section-hint {
+      font-size: .82rem; color: var(--ty-muted); margin-bottom: 16px;
+    }
+    .ty-teams {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 14px;
+    }
+    .ty-team-card {
+      position: relative;
+      border-radius: 14px;
+      padding: 18px 14px 16px;
+      background: rgba(0,0,0,0.22);
+      border: 1px solid var(--ty-border);
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      cursor: pointer;
+      transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+      text-align: center;
+      user-select: none;
+    }
+    .ty-team-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--ty-primary);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.35), 0 0 0 1px var(--ty-glow);
+    }
+    .ty-team-card:focus-visible {
+      outline: 2px solid var(--ty-primary); outline-offset: 2px;
+    }
+    .ty-team-logo {
+      width: 64px; height: 64px; border-radius: 14px; object-fit: contain;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--ty-border); padding: 4px;
+    }
+    .ty-team-logo-ph {
+      width: 64px; height: 64px; border-radius: 14px; display: grid; place-items: center;
+      background: rgba(255,255,255,0.06); border: 1px solid var(--ty-border); font-size: 1.6rem;
+    }
+    .ty-team-name {
+      font-family: 'Montserrat', sans-serif; font-size: .88rem; font-weight: 700;
+      line-height: 1.25; max-width: 100%;
+    }
+    .ty-team-count {
+      font-family: 'Montserrat', sans-serif; font-size: 1.7rem; font-weight: 900;
+      color: var(--ty-accent); line-height: 1;
+    }
+    .ty-team-count-lbl {
+      font-size: .62rem; text-transform: uppercase; letter-spacing: 1.4px; color: var(--ty-muted); margin-top: -4px;
+    }
+    .ty-team-pts { font-size: .75rem; color: var(--ty-muted); }
+    .ty-team-cta {
+      margin-top: 4px;
+      font-size: .68rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+      color: var(--ty-primary);
+    }
+    .ty-team-card.is-checked {
+      border-color: var(--ty-primary);
+      box-shadow: 0 0 0 1px var(--ty-glow);
+      background: rgba(59,114,232,0.12);
+    }
+    .ty-team-check {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 18px;
+      height: 18px;
+      accent-color: var(--ty-primary);
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .ty-squad-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 0 0 14px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.18);
+      border: 1px solid var(--ty-border);
+    }
+    .ty-squad-toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      min-width: 0;
+    }
+    .ty-select-all {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--ty-text);
+      cursor: pointer;
+      user-select: none;
+    }
+    .ty-select-all input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--ty-primary);
+      cursor: pointer;
+    }
+    .ty-selected-count {
+      font-size: .75rem;
+      color: var(--ty-muted);
+    }
+    .ty-btn-print {
+      height: 38px;
+      padding: 0 16px;
+      border: 0;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Montserrat', sans-serif;
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .3px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--ty-primary), var(--ty-primary-dk));
+      box-shadow: 0 8px 18px var(--ty-glow);
+      transition: transform .15s ease, opacity .15s ease;
+    }
+    .ty-btn-print:hover { transform: translateY(-1px); }
+    .ty-btn-print:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    html[data-theme="butterscotch"] .ty-btn-print { color: #1a1200; }
+
+    /* Theme-aware reopen CTA */
+    .ty-reopen {
+      text-align: center;
+      margin: 8px 0 28px;
+    }
+    .ty-btn-reopen {
+      appearance: none;
+      height: 48px;
+      padding: 0 26px;
+      border: 0;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'Montserrat', sans-serif;
+      font-size: .9rem;
+      font-weight: 800;
+      letter-spacing: .4px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--ty-primary), var(--ty-primary-dk));
+      box-shadow: 0 10px 28px var(--ty-glow), inset 0 1px 0 rgba(255,255,255,.18);
+      transition: transform .14s ease, box-shadow .14s ease, filter .14s ease;
+    }
+    .ty-btn-reopen:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.06);
+      box-shadow: 0 14px 34px var(--ty-glow), inset 0 1px 0 rgba(255,255,255,.22);
+    }
+    .ty-btn-reopen:active { transform: translateY(0); filter: none; }
+    html[data-theme="butterscotch"] .ty-btn-reopen { color: #1a1200; }
+
+    .ty-print-toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(16px);
+      background: rgba(15,23,42,0.95);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 11px 16px;
+      font-size: .86rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: .22s ease;
+      z-index: 120;
+      max-width: min(90vw, 420px);
+      text-align: center;
+    }
+    .ty-print-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Brand strip */
+    .ty-brand-strip {
+      margin-top: auto;
+      display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;
+      padding: 16px 12px 4px; border-top: 1px solid var(--ty-border); text-align: center;
+    }
+    .ty-brand-strip-logo { height: 28px; width: auto; }
+    .ty-brand-strip-sep { width: 4px; height: 4px; border-radius: 50%; background: var(--ty-border); }
+    .ty-brand-strip-text { font-size: .82rem; color: var(--ty-muted); letter-spacing: 0.4px; }
+    .ty-brand-strip-text strong {
+      color: var(--ty-accent); font-family: 'Montserrat', sans-serif; font-weight: 800;
+    }
+
+    /* Squad modal */
+    .ty-modal-backdrop {
+      position: fixed; inset: 0; z-index: 100;
+      display: none; align-items: center; justify-content: center;
+      padding: 18px;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    }
+    .ty-modal-backdrop.show { display: flex; }
+    .ty-modal {
+      width: min(100%, 520px);
+      max-height: min(86vh, 720px);
+      display: flex; flex-direction: column;
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)), var(--ty-bg2);
+      border: 1px solid var(--ty-border);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+      overflow: hidden;
+      animation: tyPop .22s ease;
+    }
+    @keyframes tyPop {
+      from { opacity: 0; transform: translateY(12px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .ty-modal-head {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--ty-border);
+      background: rgba(0,0,0,0.18);
+    }
+    .ty-modal-logo {
+      width: 48px; height: 48px; border-radius: 12px; object-fit: contain;
+      background: rgba(0,0,0,0.25); border: 1px solid var(--ty-border); padding: 3px; flex-shrink: 0;
+    }
+    .ty-modal-logo-ph {
+      width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center;
+      background: rgba(255,255,255,0.06); border: 1px solid var(--ty-border); flex-shrink: 0;
+    }
+    .ty-modal-title {
+      font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 1.05rem; line-height: 1.2;
+    }
+    .ty-modal-meta { font-size: .78rem; color: var(--ty-muted); margin-top: 3px; }
+    .ty-modal-close {
+      margin-left: auto;
+      width: 36px; height: 36px; border-radius: 10px;
+      border: 1px solid var(--ty-border); background: rgba(255,255,255,0.05);
+      color: var(--ty-text); font-size: 1.2rem; cursor: pointer; line-height: 1;
+    }
+    .ty-modal-close:hover { background: rgba(255,255,255,0.1); }
+    .ty-modal-body {
+      flex: 1; overflow-y: auto; padding: 8px 10px 14px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .ty-modal-empty {
+      padding: 40px 16px; text-align: center; color: var(--ty-muted); font-size: .9rem;
+    }
+    .ty-squad-row {
+      display: grid;
+      grid-template-columns: 44px 1fr auto;
+      gap: 10px; align-items: center;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+    }
+    .ty-squad-row:hover { background: rgba(255,255,255,0.04); }
+    .ty-squad-photo {
+      width: 44px; height: 44px; border-radius: 10px; object-fit: cover;
+      background: rgba(255,255,255,0.06); border: 1px solid var(--ty-border);
+    }
+    .ty-squad-ph {
+      width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center;
+      background: rgba(255,255,255,0.06); border: 1px solid var(--ty-border);
+      color: var(--ty-muted); font-weight: 700;
+    }
+    .ty-squad-name {
+      font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: .9rem;
+    }
+    .ty-squad-role { font-size: .72rem; color: var(--ty-muted); margin-top: 2px; }
+    .ty-squad-pts {
+      font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: .95rem;
+      color: var(--ty-accent); white-space: nowrap;
+    }
+    .ty-modal-foot {
+      display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+      padding: 12px 16px; border-top: 1px solid var(--ty-border);
+      background: rgba(0,0,0,0.18); font-size: .8rem; color: var(--ty-muted);
+    }
+    .ty-modal-foot strong { color: var(--ty-text); }
+
+    @media (max-width: 700px) {
+      .ty-stats { grid-template-columns: 1fr; }
+      .ty-teams { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .ty-brand-strip { flex-direction: column; gap: 8px; }
+      .ty-brand-strip-sep { display: none; }
+    }
+    @media (max-width: 420px) {
+      .ty-teams { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ty-confetti">
+    <span style="left:4%;animation-duration:3.2s;animation-delay:0s;background:#FFD700;"/>
+    <span style="left:12%;animation-duration:2.7s;animation-delay:0.6s;background:#FF6B6B;border-radius:50%;"/>
+    <span style="left:22%;animation-duration:3.6s;animation-delay:1.3s;background:#4CAF50;"/>
+    <span style="left:34%;animation-duration:2.4s;animation-delay:0.2s;background:#00BCD4;border-radius:50%;"/>
+    <span style="left:47%;animation-duration:3.9s;animation-delay:0.9s;background:#FF9800;"/>
+    <span style="left:58%;animation-duration:2.8s;animation-delay:1.6s;background:#E040FB;border-radius:50%;"/>
+    <span style="left:68%;animation-duration:3.3s;animation-delay:0.4s;background:#FFD700;"/>
+    <span style="left:79%;animation-duration:2.6s;animation-delay:1.1s;background:#FF5722;border-radius:50%;"/>
+    <span style="left:89%;animation-duration:3.5s;animation-delay:0.7s;background:#42A5F5;"/>
+    <span style="left:95%;animation-duration:2.9s;animation-delay:1.8s;background:#66BB6A;border-radius:50%;"/>
+  </div>
+
+  <div class="ty-shell">
+    <header class="ty-header">
+      <div class="ty-brand">
+        <t t-if="tournament and tournament.logo">
+          <img class="ty-logo"
+               t-att-src="'data:image/png;base64,' + tournament.logo.decode('utf-8')"
+               t-att-alt="tournament.name"/>
+        </t>
+        <t t-else="">
+          <div class="ty-logo-ph">🏆</div>
+        </t>
+        <div>
+          <div class="ty-eyebrow">Auction Complete</div>
+          <h1 class="ty-title"><t t-esc="tournament.name if tournament else 'Auction'"/></h1>
+          <p class="ty-sub">Final results and team squads</p>
+        </div>
+      </div>
+      <a href="/web" title="Go to AuctionChamp backend" class="ty-hdr-logo-link">
+        <img class="ty-hdr-logo"
+             src="/auction_module/static/src/assets/images/logo.svg"
+             alt="AuctionChamp"/>
+      </a>
+    </header>
+
+    <section class="ty-hero">
+      <div class="ty-thankyou">Thank You</div>
+      <div class="ty-managers">Owners</div>
+      <div class="ty-participation">
+        on behalf of
+        <t t-esc="tournament.name if tournament else 'the'"/>
+        organizers
+      </div>
+      <div class="ty-badges">
+        <span class="ty-badge">✅ Auction Complete</span>
+        <t t-if="tournament and tournament.venue">
+          <span class="ty-badge">📍 <t t-esc="tournament.venue"/></span>
+        </t>
+      </div>
+    </section>
+
+    <section class="ty-stats">
+      <div class="ty-stat ty-stat-sold">
+        <div class="ty-stat-num"><t t-esc="sold_count"/></div>
+        <div class="ty-stat-lbl">Players Sold</div>
+      </div>
+      <div class="ty-stat ty-stat-unsold">
+        <div class="ty-stat-num"><t t-esc="unsold_count or 0"/></div>
+        <div class="ty-stat-lbl">Players Unsold</div>
+      </div>
+      <div class="ty-stat ty-stat-teams">
+        <div class="ty-stat-num"><t t-esc="len(teams_payload) if teams_payload else len(auction_ids)"/></div>
+        <div class="ty-stat-lbl">Teams</div>
+      </div>
+    </section>
+
+    <t t-if="can_reopen">
+      <section class="ty-reopen">
+        <form t-att-action="'/%s/auction/display_auction/%s/resume/reopen' % (db_name, tournament.slug)"
+              method="post" style="display:inline-block;">
+          <button type="submit" class="ty-btn-reopen">
+            Open remaining players
+            <t t-if="draft_count or unsold_count">
+              (<t t-esc="(draft_count or 0) + (unsold_count or 0)"/> left)
+            </t>
+          </button>
+        </form>
+      </section>
+    </t>
+
+    <section class="ty-section">
+      <div class="ty-section-title">🏆 Final Team Squads</div>
+      <div class="ty-section-hint">Click a team card to view the full squad. Select teams to print rosters.</div>
+      <div class="ty-squad-toolbar" t-if="teams_payload">
+        <div class="ty-squad-toolbar-left">
+          <label class="ty-select-all">
+            <input type="checkbox" id="ty-select-all"/>
+            <span>Select all</span>
+          </label>
+          <span class="ty-selected-count" id="ty-selected-count">0 selected</span>
+        </div>
+        <button type="button" class="ty-btn-print" id="ty-print-squad" disabled="disabled">
+          Print Squad
+        </button>
+      </div>
+      <div class="ty-teams" id="ty-teams"
+           t-att-data-print-url="'/%s/auction/display_auction/%s/print-roster' % (db_name, tournament.slug) if db_name and tournament and tournament.slug else ''">
+        <t t-foreach="teams_payload or []" t-as="team">
+          <div class="ty-team-card"
+               role="button"
+               tabindex="0"
+               t-attf-data-team-idx="#{team_index}"
+               t-att-data-team-id="team.get('id')"
+               t-att-aria-label="'View %s squad' % (team.get('name') or 'team')">
+            <input type="checkbox"
+                   class="ty-team-check"
+                   t-att-value="team.get('id')"
+                   t-att-aria-label="'Select %s' % (team.get('name') or 'team')"
+                   onclick="event.stopPropagation();"/>
+            <t t-if="team.get('logo_url')">
+              <img class="ty-team-logo" t-att-src="team.get('logo_url')" t-att-alt="team.get('name')"/>
+            </t>
+            <t t-else="">
+              <div class="ty-team-logo-ph">🛡️</div>
+            </t>
+            <div class="ty-team-name"><t t-esc="team.get('name')"/></div>
+            <div class="ty-team-count"><t t-esc="team.get('player_count')"/></div>
+            <div class="ty-team-count-lbl">Players</div>
+            <div class="ty-team-pts"><t t-esc="'{:,}'.format(team.get('spent') or 0)"/> pts spent</div>
+            <div class="ty-team-cta">View Squad →</div>
+          </div>
+        </t>
+      </div>
+    </section>
+
+    <div class="ty-print-toast" id="ty-print-toast" aria-live="polite"></div>
+
+    <div class="ty-brand-strip">
+      <a href="/web" title="Go to AuctionChamp backend" class="ty-hdr-logo-link">
+        <img class="ty-brand-strip-logo"
+             src="/auction_module/static/src/assets/images/logo.svg"
+             alt="AuctionChamp"/>
+      </a>
+      <span class="ty-brand-strip-sep"/>
+      <div class="ty-brand-strip-text">
+        Powered by <strong>AuctionChamp</strong> · All rights reserved
+      </div>
+    </div>
+  </div>
+
+  <div class="ty-modal-backdrop" id="ty-squad-modal" aria-hidden="true">
+    <div class="ty-modal" role="dialog" aria-modal="true">
+      <div class="ty-modal-head">
+        <div id="ty-modal-logo-wrap"></div>
+        <div style="min-width:0;flex:1;">
+          <div class="ty-modal-title" id="ty-modal-name">Team</div>
+          <div class="ty-modal-meta" id="ty-modal-meta"></div>
+        </div>
+        <button type="button" class="ty-modal-close" id="ty-modal-close" aria-label="Close">×</button>
+      </div>
+      <div class="ty-modal-body" id="ty-modal-body"></div>
+      <div class="ty-modal-foot">
+        <span id="ty-modal-spent"></span>
+        <span id="ty-modal-remaining"></span>
+      </div>
+    </div>
+  </div>
+
+  <script type="application/json" id="ty-teams-json"><t t-raw="teams_json or '[]'"/></script>
+  <script><![CDATA[
+(function () {
+  var teams = [];
+  try {
+    var el = document.getElementById('ty-teams-json');
+    teams = JSON.parse((el && el.textContent) || '[]');
+  } catch (e) { teams = []; }
+
+  var modal = document.getElementById('ty-squad-modal');
+  var body = document.getElementById('ty-modal-body');
+  var nameEl = document.getElementById('ty-modal-name');
+  var metaEl = document.getElementById('ty-modal-meta');
+  var logoWrap = document.getElementById('ty-modal-logo-wrap');
+  var spentEl = document.getElementById('ty-modal-spent');
+  var remEl = document.getElementById('ty-modal-remaining');
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function fmt(n) {
+    try { return Number(n || 0).toLocaleString(); } catch (e) { return String(n || 0); }
+  }
+
+  function openSquad(idx) {
+    var team = teams[idx];
+    if (!team || !modal) return;
+    nameEl.textContent = team.name || 'Team';
+    metaEl.textContent = (team.manager ? team.manager + ' · ' : '') +
+      (team.player_count || 0) + ' player' + ((team.player_count === 1) ? '' : 's');
+    if (team.logo_url) {
+      logoWrap.innerHTML = '<img class="ty-modal-logo" src="' + esc(team.logo_url) + '" alt=""/>';
+    } else {
+      logoWrap.innerHTML = '<div class="ty-modal-logo-ph">🛡️</div>';
+    }
+    spentEl.innerHTML = 'Spent <strong>' + fmt(team.spent) + '</strong> pts';
+    remEl.innerHTML = 'Remaining <strong>' + fmt(team.remaining) + '</strong> pts';
+
+    var players = team.players || [];
+    if (!players.length) {
+      body.innerHTML = '<div class="ty-modal-empty">No players in this squad yet.</div>';
+    } else {
+      body.innerHTML = players.map(function (p) {
+        var photo = p.photo_url
+          ? '<img class="ty-squad-photo" src="' + esc(p.photo_url) + '" alt=""/>'
+          : '<div class="ty-squad-ph">' + esc((p.name || '?').charAt(0).toUpperCase()) + '</div>';
+        var roleBits = [];
+        if (p.role) roleBits.push(esc(p.role));
+        if (p.tier) roleBits.push(esc(p.tier));
+        if (p.icon) roleBits.push('Icon');
+        return '<div class="ty-squad-row">' +
+          photo +
+          '<div><div class="ty-squad-name">' + esc(p.name || '—') + '</div>' +
+          (roleBits.length ? '<div class="ty-squad-role">' + roleBits.join(' · ') + '</div>' : '') +
+          '</div>' +
+          '<div class="ty-squad-pts">' + fmt(p.points) + '</div>' +
+          '</div>';
+      }).join('');
+    }
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeSquad() {
+    if (!modal) return;
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  document.querySelectorAll('.ty-team-card').forEach(function (card) {
+    function go() {
+      var idx = parseInt(card.getAttribute('data-team-idx'), 10);
+      if (!isNaN(idx)) {
+        openSquad(idx);
+        return;
+      }
+      var tid = parseInt(card.getAttribute('data-team-id'), 10);
+      if (!isNaN(tid)) {
+        for (var i = 0; i < teams.length; i++) {
+          if (teams[i] && teams[i].id === tid) { openSquad(i); return; }
+        }
+      }
+    }
+    card.addEventListener('click', function (ev) {
+      if (ev.target && ev.target.classList && ev.target.classList.contains('ty-team-check')) {
+        return;
+      }
+      go();
+    });
+    card.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); }
+    });
+  });
+
+  var closeBtn = document.getElementById('ty-modal-close');
+  if (closeBtn) closeBtn.addEventListener('click', closeSquad);
+  if (modal) {
+    modal.addEventListener('click', function (ev) {
+      if (ev.target === modal) closeSquad();
+    });
+  }
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape') closeSquad();
+  });
+
+  // ── Select / Print Squad (same report as button_print_roster) ──
+  var teamsWrap = document.getElementById('ty-teams');
+  var selectAll = document.getElementById('ty-select-all');
+  var printBtn = document.getElementById('ty-print-squad');
+  var countEl = document.getElementById('ty-selected-count');
+  var toastEl = document.getElementById('ty-print-toast');
+  var toastTimer = null;
+
+  function teamChecks() {
+    return Array.prototype.slice.call(document.querySelectorAll('.ty-team-check'));
+  }
+
+  function showToast(msg) {
+    if (!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2600);
+  }
+
+  function syncSelectionUI() {
+    var checks = teamChecks();
+    var selected = checks.filter(function (c) { return c.checked; });
+    checks.forEach(function (c) {
+      var card = c.closest('.ty-team-card');
+      if (card) card.classList.toggle('is-checked', !!c.checked);
+    });
+    if (countEl) {
+      countEl.textContent = selected.length + ' selected';
+    }
+    if (printBtn) {
+      printBtn.disabled = selected.length === 0;
+    }
+    if (selectAll) {
+      selectAll.checked = checks.length > 0 && selected.length === checks.length;
+      selectAll.indeterminate = selected.length > 0 && selected.length < checks.length;
+    }
+  }
+
+  teamChecks().forEach(function (c) {
+    c.addEventListener('change', syncSelectionUI);
+    c.addEventListener('click', function (ev) { ev.stopPropagation(); });
+  });
+
+  if (selectAll) {
+    selectAll.addEventListener('change', function () {
+      var on = !!selectAll.checked;
+      teamChecks().forEach(function (c) { c.checked = on; });
+      syncSelectionUI();
+    });
+  }
+
+  if (printBtn) {
+    printBtn.addEventListener('click', function () {
+      var ids = teamChecks()
+        .filter(function (c) { return c.checked; })
+        .map(function (c) { return c.value; })
+        .filter(Boolean);
+      if (!ids.length) {
+        showToast('Select at least one team to print.');
+        return;
+      }
+      var base = (teamsWrap && teamsWrap.getAttribute('data-print-url')) || '';
+      if (!base) {
+        showToast('Print URL is not available.');
+        return;
+      }
+
+      var url = base + (base.indexOf('?') >= 0 ? '&' : '?') + 'ids=' + encodeURIComponent(ids.join(','));
+      var label = printBtn.textContent;
+      printBtn.disabled = true;
+      printBtn.textContent = ids.length > 1 ? ('Preparing ' + ids.length + ' PDFs…') : 'Preparing PDF…';
+
+      fetch(url, { credentials: 'same-origin' })
+        .then(function (res) {
+          if (!res.ok) throw new Error('Print failed');
+          var cd = res.headers.get('Content-Disposition') || '';
+          var match = /filename=\"([^\"]+)\"/i.exec(cd);
+          var filename = (match && match[1]) || (ids.length > 1 ? 'Squad_Rosters.zip' : 'Squad_Roster.pdf');
+          return res.blob().then(function (blob) {
+            return { blob: blob, filename: filename };
+          });
+        })
+        .then(function (payload) {
+          var a = document.createElement('a');
+          a.href = URL.createObjectURL(payload.blob);
+          a.download = payload.filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+          showToast(ids.length > 1 ? 'Roster ZIP downloaded.' : 'Roster PDF downloaded.');
+        })
+        .catch(function () {
+          showToast('Could not generate roster. Please try again.');
+        })
+        .finally(function () {
+          printBtn.textContent = label;
+          syncSelectionUI();
+        });
+    });
+  }
+
+  syncSelectionUI();
+})();
+  ]]></script>
+</body>
+</html>
+</template>
+</odoo>

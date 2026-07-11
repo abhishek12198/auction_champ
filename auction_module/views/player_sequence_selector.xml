@@ -2178,8 +2178,18 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   /* ── Bid Summary ───────────────────────────────────────── */
   window.openBidSummary = function() {
     var iframe = document.getElementById('bsIframe');
-    if (iframe && iframe.src === 'about:blank') {
-      iframe.src = document.documentElement.dataset.balanceUrl;
+    var url = document.documentElement.dataset.balanceUrl;
+    if (iframe && url) {
+      var cur = iframe.getAttribute('src') || '';
+      if (!cur || cur === 'about:blank') {
+        iframe.src = url;
+      } else {
+        try {
+          if (iframe.contentWindow && typeof iframe.contentWindow.refreshBalance === 'function') {
+            iframe.contentWindow.refreshBalance();
+          }
+        } catch (e) {}
+      }
     }
     document.getElementById('bsDrawer').classList.add('open');
     document.body.style.overflow = 'hidden';

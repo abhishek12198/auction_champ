@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_auction_player_upload_wizard_form" model="ir.ui.view">
+        <field name="name">auction.player.upload.wizard.form</field>
+        <field name="model">auction.player.upload.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Upload Players">
+                <field name="state" invisible="1"/>
+                <field name="tournament_type" invisible="1"/>
+                <group attrs="{'invisible': [('state', '=', 'done')]}">
+                    <group string="Tournament">
+                        <field name="tournament_id"/>
+                    </group>
+                    <group string="1. Download Template">
+                        <div colspan="2" class="text-muted">
+                            Download the Excel format for this tournament (cricket or football columns).
+                            Football Att-Labels from the tournament Other Attributes tab are included as columns.
+                            Photos ZIP is optional: name files 1.jpg, 2.png, 3.jpeg matching Excel row order.
+                        </div>
+                        <button name="action_download_template"
+                                type="object"
+                                string="Download Excel Template"
+                                class="btn-secondary"
+                                icon="fa-download"
+                                colspan="2"/>
+                        <field name="template_file"
+                               filename="template_filename"
+                               attrs="{'invisible': [('template_file', '=', False)]}"/>
+                        <field name="template_filename" invisible="1"/>
+                    </group>
+                    <group string="2. Upload Files">
+                        <field name="excel_file" filename="excel_filename"/>
+                        <field name="excel_filename" invisible="1"/>
+                        <field name="photos_zip" filename="photos_zip_filename"/>
+                        <field name="photos_zip_filename" invisible="1"/>
+                    </group>
+                </group>
+                <group attrs="{'invisible': [('state', '!=', 'done')]}">
+                    <field name="created_count"/>
+                    <field name="photo_count"/>
+                    <field name="result_message" nolabel="1" colspan="2"/>
+                </group>
+                <footer>
+                    <button name="action_import"
+                            type="object"
+                            string="Import Players"
+                            class="btn-primary"
+                            attrs="{'invisible': [('state', '=', 'done')]}"/>
+                    <button string="Close" class="btn-primary" special="cancel"
+                            attrs="{'invisible': [('state', '!=', 'done')]}"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"
+                            attrs="{'invisible': [('state', '=', 'done')]}"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

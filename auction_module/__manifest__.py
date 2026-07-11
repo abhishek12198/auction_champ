@@ -1,8 +1,44 @@
 # -*- coding: utf-8 -*-
-# Part of Odoo. See LICENSE file for full copyright and licensing details.
+##############################################################################
+#
+#  AuctionChamp - Professional Sports Auction Management Platform
+#
+#  Copyright (c) 2026 AuctionChamp.
+#  All Rights Reserved.
+#
+#  CONFIDENTIAL & PROPRIETARY
+#
+#  This source code, including but not limited to its algorithms, business
+#  logic, database structures, models, controllers, views, reports, templates,
+#  APIs, documentation, and related materials, constitutes proprietary and
+#  confidential information owned exclusively by AuctionChamp.
+#
+#  This software is protected by applicable copyright laws and international
+#  intellectual property treaties. Unauthorized copying, reproduction,
+#  modification, distribution, publication, sublicensing, reverse engineering,
+#  decompilation, disassembly, disclosure, or use of this software, in whole
+#  or in part, is strictly prohibited without the prior written permission of
+#  AuctionChamp.
+#
+#  This software is licensed, not sold. Possession of the source code does not
+#  grant any right to copy, modify, redistribute, or create derivative works
+#  except as expressly permitted under a valid written license agreement with
+#  AuctionChamp.
+#
+#  Any unauthorized use may result in civil and criminal penalties under
+#  applicable intellectual property and copyright laws.
+#
+#  Company  : AuctionChamp
+#  Website  : www.auctionchamp.live
+#  Email    : auctionchamp.live@gmail.com
+#
+#  © 2026 AuctionChamp. All Rights Reserved.
+#
+##############################################################################
+
 {
     'name' : 'Auction Champ',
-    'version' : '1.3',
+    'version' : '1.4.2',
     'summary': 'Sports Auction module',
     'sequence': 10,
     'icon': '/auction_module/static/description/icon.png',
@@ -13,10 +49,15 @@
     'website': 'xhttps://www.odoo.com/app/invoicing',
     'images': [],
     'depends': ['bus','website', 'web_notify'],
+    'external_dependencies': {
+        'python': ['openpyxl'],
+    },
+    'post_init_hook': 'post_init_hook',
     'data': [
         'security/security.xml',
         'security/ir.model.access.csv',
         'security/record_rules.xml',
+        'data/sync_user_tournaments.xml',
         'data/report_paper_format_landscape.xml',
         'data/football_data.xml',
         'views/auction_tournament_view.xml',
@@ -48,6 +89,9 @@
         'views/auction_player_card_print_football.xml',
         'views/auction_remaining_players_template.xml',
         'views/auction_blank_templates.xml',
+        'views/auction_resume_template.xml',
+        'views/auction_thank_you_template.xml',
+        'views/auction_welcome_template.xml',
         'views/auction_projector_template.xml',
         'views/auction_show_balance_template1.xml',
         'views/auction_show_balance_template1_pistah.xml',
@@ -70,6 +114,7 @@
         'wizard/action_update_tier_limits_view.xml',
         'wizard/action_migrate_tier_view.xml',
         'wizard/whatsapp_share_wizard_view.xml',
+        'wizard/auction_player_upload_wizard_view.xml',
         'views/auction_status_template.xml',
         'views/page_not_found.xml',
         'views/player_registration_form.xml',
@@ -130,5 +175,5 @@
     'installable': True,
     'application': True,
 
-    'license': 'LGPL-3',
+    'license': 'Other proprietary',
 }

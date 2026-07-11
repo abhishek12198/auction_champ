@@ -593,7 +593,7 @@
         <div class="bs2-hdr-side bs2-left">
           <a class="bs2-back-btn" t-att-href="'/' + db_name + '/auction/projector/' + tournament_slug + '/'">&#8592; PROJECTOR</a>
           <t t-if="tournament and tournament.logo">
-            <img class="bs2-t-logo" t-att-src="image_data_uri(tournament.logo)" alt="Tournament logo"/>
+            <img class="bs2-t-logo" t-attf-src="/#{db_name}/auction/public/image/auction.tournament/#{tournament.id}/logo" alt="Tournament logo"/>
           </t>
           <div class="bs2-t-meta">
             <div class="bs2-t-name"><t t-esc="tournament.name if tournament and tournament.name else 'Auction Tournament'"/></div>
@@ -640,7 +640,7 @@
                     <td>
                       <div class="bs2-team-cell">
                         <t t-if="team.team_id.logo">
-                          <img class="bs2-team-logo" t-att-src="image_data_uri(team.team_id.logo)" t-att-alt="team.team_id.name"/>
+                          <img class="bs2-team-logo" t-attf-src="/#{db_name}/auction/public/image/auction.team/#{team.team_id.id}/logo" t-att-alt="team.team_id.name"/>
                         </t>
                         <t t-else="">
                           <span class="bs2-logo-fallback"><t t-esc="(team.team_id.name or '')[:1]"/></span>
@@ -710,7 +710,7 @@
                   <div class="bs2-card-head">
                     <div class="bs2-team-cell">
                       <t t-if="team.team_id.logo">
-                        <img class="bs2-card-logo" t-att-src="image_data_uri(team.team_id.logo)" t-att-alt="team.team_id.name"/>
+                        <img class="bs2-card-logo" t-attf-src="/#{db_name}/auction/public/image/auction.team/#{team.team_id.id}/logo" t-att-alt="team.team_id.name" loading="lazy"/>
                       </t>
                       <t t-else="">
                         <span class="bs2-logo-fallback"><t t-esc="(team.team_id.name or '')[:1]"/></span>
@@ -1001,6 +1001,8 @@
               return null;
             });
           }
+
+          window.refreshBalance = refreshBalance;
 
           function stopPolling() {
             if (_balanceTimer) {

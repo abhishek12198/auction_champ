@@ -790,14 +790,21 @@ body[data-theme="light"] #pt-theme-btn{color:var(--pistah-dark)}
           <t t-if="player.dominant_position_id">
             <div class="pt-stat-tile"><div class="pt-stat-val"><t t-esc="player.dominant_position_id.name"/></div><div class="pt-stat-key">Position</div></div>
           </t>
-          <t t-if="player.secondary_position_ids">
-            <div class="pt-stat-tile"><div class="pt-stat-val"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></div><div class="pt-stat-key">Secondary</div></div>
-          </t>
           <t t-if="player.preferred_foot">
             <div class="pt-stat-tile"><div class="pt-stat-val"><t t-esc="player.preferred_foot.capitalize()"/></div><div class="pt-stat-key">Foot</div></div>
           </t>
-          <t t-if="player.age">
-            <div class="pt-stat-tile"><div class="pt-stat-val"><t t-esc="player.age"/></div><div class="pt-stat-key">Age</div></div>
+          <t t-if="player.use_other_attributes">
+            <t t-foreach="player.other_attribute_ids.filtered('value')" t-as="oattr">
+              <div class="pt-stat-tile"><div class="pt-stat-val"><t t-esc="oattr.value or '—'"/></div><div class="pt-stat-key"><t t-esc="oattr.label"/></div></div>
+            </t>
+          </t>
+          <t t-else="">
+            <t t-if="player.secondary_position_ids">
+              <div class="pt-stat-tile"><div class="pt-stat-val"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></div><div class="pt-stat-key">Secondary</div></div>
+            </t>
+            <t t-if="player.age">
+              <div class="pt-stat-tile"><div class="pt-stat-val"><t t-esc="player.age"/></div><div class="pt-stat-key">Age</div></div>
+            </t>
           </t>
         </t>
         <t t-if="player.blood_group">
@@ -1146,7 +1153,20 @@ body[data-theme="light"] #pt-theme-btn{color:var(--pistah-dark)}
     }
 
     function openBidSummary() {
-      document.getElementById('ptBidFrame').src = document.documentElement.dataset.balanceUrl;
+      var frame = document.getElementById('ptBidFrame');
+      var url = document.documentElement.dataset.balanceUrl;
+      if (frame &amp;&amp; url) {
+        var cur = frame.getAttribute('src') || '';
+        if (!cur || cur === 'about:blank') {
+          frame.src = url;
+        } else {
+          try {
+            if (frame.contentWindow &amp;&amp; typeof frame.contentWindow.refreshBalance === 'function') {
+              frame.contentWindow.refreshBalance();
+            }
+          } catch (e) {}
+        }
+      }
       document.getElementById('ptBidDrawer').style.right = '0';
       document.getElementById('ptBidArrow').innerHTML = '&#x2192;';
       document.getElementById('ptBidOverlay').style.display = 'block';

@@ -1,4 +1,41 @@
 # -*- coding: utf-8 -*-
+##############################################################################
+#
+#  AuctionChamp - Professional Sports Auction Management Platform
+#
+#  Copyright (c) 2026 AuctionChamp.
+#  All Rights Reserved.
+#
+#  CONFIDENTIAL & PROPRIETARY
+#
+#  This source code, including but not limited to its algorithms, business
+#  logic, database structures, models, controllers, views, reports, templates,
+#  APIs, documentation, and related materials, constitutes proprietary and
+#  confidential information owned exclusively by AuctionChamp.
+#
+#  This software is protected by applicable copyright laws and international
+#  intellectual property treaties. Unauthorized copying, reproduction,
+#  modification, distribution, publication, sublicensing, reverse engineering,
+#  decompilation, disassembly, disclosure, or use of this software, in whole
+#  or in part, is strictly prohibited without the prior written permission of
+#  AuctionChamp.
+#
+#  This software is licensed, not sold. Possession of the source code does not
+#  grant any right to copy, modify, redistribute, or create derivative works
+#  except as expressly permitted under a valid written license agreement with
+#  AuctionChamp.
+#
+#  Any unauthorized use may result in civil and criminal penalties under
+#  applicable intellectual property and copyright laws.
+#
+#  Company  : AuctionChamp
+#  Website  : www.auctionchamp.live
+#  Email    : auctionchamp.live@gmail.com
+#
+#  © 2026 AuctionChamp. All Rights Reserved.
+#
+##############################################################################
+
 import re
 import random
 import unicodedata
@@ -6,7 +43,7 @@ import base64
 
 from odoo import api, models, fields, _
 from odoo.exceptions import UserError
-from odoo.tools.image import image_data_uri
+from odoo.tools.image import image_data_uri, image_process
 from odoo.exceptions import UserError, ValidationError
 
 import werkzeug
@@ -35,7 +72,7 @@ def _slugify(text):
 
 class AuctionTournament(models.Model):
     _name = 'auction.tournament'
-    _inherit = ['auction.image.compress.mixin']
+    _inherit = ['auction.image.compress.mixin', 'auction.tournament.security.mixin']
 
     # logo/poster: JPEG portrait; QR code: PNG (lossless) to keep it scannable;
     # template/footer: slightly larger for print quality.
@@ -58,6 +95,12 @@ class AuctionTournament(models.Model):
     description = fields.Char(string="Short Description", required=True)
     venue = fields.Text("Venue")
     logo = fields.Binary('Logo')
+    logo_card = fields.Binary(
+        string='Logo (Card Print)',
+        compute='_compute_logo_card',
+        store=True,
+        help='Small JPEG logo for player-card PDFs to keep bulk prints light.',
+    )
     active = fields.Boolean(default=True)
     player_appearance_algorithm = fields.Selection([('linear', 'Manual'), ('random', 'Random')], default="linear")
     team_max_points = fields.Integer(string="Max points alloted for a team")
@@ -68,6 +111,11 @@ class AuctionTournament(models.Model):
                                       'Organizers')
 
     team_ids = fields.One2many('auction.team', 'tournament_id', 'Teams')
+    other_attribute_label_ids = fields.One2many(
+        'auction.tournament.attribute.label', 'tournament_id',
+        string='Other Attribute Labels',
+        help='Football only: define Att-Labels for this tournament. They appear as '
+             'Excel template columns and as Label/Value rows on each player form.')
     template_image = fields.Binary('Template Image')
     report_footer = fields.Binary('Footer')
     rules_regulations = fields.Html("Rules and Regulations")
@@ -169,6 +217,14 @@ class AuctionTournament(models.Model):
         help='When enabled, the live board shows a "Break Time" screen to viewers. '
              'The auction can continue in the background. Disable to resume the live display.',
     )
+    auction_declared_complete = fields.Boolean(
+        string='Auction Declared Complete',
+        default=False,
+        copy=False,
+        help='When set, the display auction page shows the Thank You screen even if '
+             'Draft or Unsold players remain. Cleared automatically when players are '
+             'opened back into auction from the resume screen.',
+    )
     advertiser_ids = fields.One2many(
         'auction.advertiser', 'tournament_id', string='Advertisers / Sponsors',
         help='Upload sponsor or advertiser images. They rotate on the live board '
@@ -253,6 +309,22 @@ class AuctionTournament(models.Model):
             rec.unsold_player_count     = c.get('unsold', 0)
 
     @api.depends('name')
+    @api.depends('logo')
+    def _compute_logo_card(self):
+        for tournament in self:
+            if tournament.logo:
+                try:
+                    tournament.logo_card = image_process(
+                        tournament.logo,
+                        size=(96, 96),
+                        quality=60,
+                        output_format='JPEG',
+                    )
+                except Exception:
+                    tournament.logo_card = tournament.logo
+            else:
+                tournament.logo_card = False
+
     def _compute_slug(self):
         for rec in self:
             rec.slug = _slugify(rec.name or '')
@@ -318,7 +390,21 @@ class AuctionTournament(models.Model):
                     _("You do not have permission to modify: %s")
                     % ', '.join(sorted(disallowed))
                 )
-        return super().write(vals)
+        res = super().write(vals)
+        # When organizers are assigned, ensure each user has Active Tournament set
+        # so record rules / dashboard scoping work (rules use tournament_id + tournament_ids).
+        if 'organizer_uids' in vals:
+            for tournament in self:
+                for user in tournament.organizer_uids:
+                    updates = {}
+                    if not user.tournament_id:
+                        updates['tournament_id'] = tournament.id
+                    if tournament not in user.tournament_ids:
+                        updates.setdefault('tournament_ids', [])
+                        updates['tournament_ids'] = [(4, tournament.id)]
+                    if updates:
+                        user.with_context(skip_tournament_sync=True).sudo().write(updates)
+        return res
 
     def action_toggle_registration(self):
         """Toggle the registration open/closed state."""
@@ -421,6 +507,21 @@ class AuctionTournament(models.Model):
                 ('tournament_id', '=', rec.id),
                 ('is_on_stage', '=', True),
             ]).write({'is_on_stage': False})
+
+    def action_clear_auction_history(self):
+        """Permanently delete auction.history rows for this tournament only."""
+        History = self.env['auction.history'].sudo().with_context(active_test=False)
+        for rec in self:
+            history = History.search([('tournament_id', '=', rec.id)])
+            count = len(history)
+            if history:
+                history.unlink()
+            message = _(
+                'Cleared %(count)s auction history record(s) for "%(name)s".'
+            ) % {'count': count, 'name': rec.name}
+            if hasattr(self.env.user, 'notify_success'):
+                self.env.user.notify_success(message)
+        return True
 
     def action_deactivate_tournament(self):
         """Archive the tournament and all its related records.
@@ -549,6 +650,18 @@ class AuctionTournament(models.Model):
             'type': 'ir.actions.act_window',
             'name': 'Remove Duplicate Players',
             'res_model': 'auction.remove.duplicates.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_tournament_id': self.id},
+        }
+
+    def action_upload_players(self):
+        """Open the Excel + photo ZIP player uploader for this tournament."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Upload Players',
+            'res_model': 'auction.player.upload.wizard',
             'view_mode': 'form',
             'target': 'new',
             'context': {'default_tournament_id': self.id},

@@ -370,14 +370,27 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
             var vids   = this._viewIds || {};
             var kanban = vids.kanban || false;
             var list   = vids.list   || false;
+            // Always scope to the dashboard tournament — matches the counts
+            // and protects standalone Player Dashboard Viewer users who may
+            // not have the Auction User record rules.
+            var domain = (pair[1] || []).slice();
+            if (this._tournamentId) {
+                domain = domain.concat([['tournament_id', '=', this._tournamentId]]);
+            } else {
+                domain = domain.concat([['id', '=', false]]);
+            }
             this.do_action({
                 type:      'ir.actions.act_window',
                 name:       pair[0],
                 res_model: 'auction.team.player',
                 views:     [[kanban, 'kanban'], [list, 'list']],
-                domain:     pair[1],
+                domain:     domain,
                 target:    'current',
-                context:   { create: false, edit: false },
+                context:   {
+                    create: false,
+                    edit: false,
+                    default_tournament_id: this._tournamentId || false,
+                },
             });
         },
 

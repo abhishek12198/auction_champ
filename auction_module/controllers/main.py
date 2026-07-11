@@ -1,5 +1,41 @@
 # -*- coding: utf-8 -*-
-# Part of Odoo. See LICENSE file for full copyright and licensing details.
+##############################################################################
+#
+#  AuctionChamp - Professional Sports Auction Management Platform
+#
+#  Copyright (c) 2026 AuctionChamp.
+#  All Rights Reserved.
+#
+#  CONFIDENTIAL & PROPRIETARY
+#
+#  This source code, including but not limited to its algorithms, business
+#  logic, database structures, models, controllers, views, reports, templates,
+#  APIs, documentation, and related materials, constitutes proprietary and
+#  confidential information owned exclusively by AuctionChamp.
+#
+#  This software is protected by applicable copyright laws and international
+#  intellectual property treaties. Unauthorized copying, reproduction,
+#  modification, distribution, publication, sublicensing, reverse engineering,
+#  decompilation, disassembly, disclosure, or use of this software, in whole
+#  or in part, is strictly prohibited without the prior written permission of
+#  AuctionChamp.
+#
+#  This software is licensed, not sold. Possession of the source code does not
+#  grant any right to copy, modify, redistribute, or create derivative works
+#  except as expressly permitted under a valid written license agreement with
+#  AuctionChamp.
+#
+#  Any unauthorized use may result in civil and criminal penalties under
+#  applicable intellectual property and copyright laws.
+#
+#  Company  : AuctionChamp
+#  Website  : www.auctionchamp.live
+#  Email    : auctionchamp.live@gmail.com
+#
+#  © 2026 AuctionChamp. All Rights Reserved.
+#
+##############################################################################
+
 
 import re
 import logging
@@ -580,6 +616,12 @@ class Auction(http.Controller):
                 return self._not_found()
             domain = [('tournament_id', '=', tournament.id)]
             auctions = request.env['auction.auction'].sudo().search(domain)
+            # Prefetch relations used by the balance page / max_call compute so
+            # QWeb does not trigger per-team SQL while rendering list+grid+mobile.
+            auctions.mapped('team_id')
+            auctions.mapped('player_ids.tier_id')
+            auctions.mapped('tier_limit_ids.tier_id')
+            auctions.mapped('auction_bid_slab_ids')
             theme = tournament.player_display_template or 'vanilla'
             # Show internal actions (View Squad button) for any logged-in user
             access_type = 'internal' if request.session.uid else 'public'
@@ -595,7 +637,10 @@ class Auction(http.Controller):
                 'db_name': db_name,
                 'tournament_slug': tournament_slug,
             }, lazy=False)
-        return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
+        return request.make_response(html, [
+            ('Content-Type', 'text/html; charset=utf-8'),
+            ('Cache-Control', 'private, max-age=0, must-revalidate'),
+        ])
 
     @http.route(['''/auction/show/team/balance/json'''], type='http', auth="none", website=False)
     def auction_team_balance_json_legacy(self, **kwargs):
@@ -648,8 +693,11 @@ class Auction(http.Controller):
                 )
             domain = [('tournament_id', '=', tournament.id)]
             auctions = request.env['auction.auction'].sudo().search(domain)
+            auctions.mapped('player_ids.tier_id')
+            auctions.mapped('tier_limit_ids.tier_id')
+            auctions.mapped('auction_bid_slab_ids')
             on_stage = request.env['auction.team.player'].sudo().search(
-                [('is_on_stage', '=', True)], limit=1
+                [('tournament_id', '=', tournament.id), ('is_on_stage', '=', True)], limit=1
             )
             player_on_stage = on_stage if on_stage else None
             teams_data = []
@@ -727,6 +775,9 @@ class Auction(http.Controller):
                 }
                 chosen = tournament_id.player_display_template if tournament_id else 'vanilla'
                 template_ref = template_map.get(chosen, 'auction_module.player_template_new')
+                # Always use the themed presentation (Sold / Unsold / Next Player).
+                # Football attributes are already rendered inside those themes —
+                # do not swap to player_template_football (card-only, no controls).
                 html = request.render(template_ref, {
                     'player': player,
                     'tournament': tournament_id,
@@ -735,25 +786,95 @@ class Auction(http.Controller):
                 }, lazy=False)
             else:
                 theme = tournament_id.player_display_template if tournament_id else 'vanilla'
-                t_domain = [('tournament_id', '=', tournament_id.id)] if tournament_id else []
-                sold_count = request.env['auction.team.player'].sudo().search_count(
-                    t_domain + [('state', '=', 'sold'), ('icon_player', '=', False)]
+                t_domain = [('tournament_id', '=', tournament_id.id)] if tournament_id else [('id', '=', False)]
+                # active_test=False so archived players still count for routing decisions
+                Player = request.env['auction.team.player'].sudo().with_context(active_test=False)
+                sold_count = Player.search_count(t_domain + [('state', '=', 'sold')])
+                draft_count = Player.search_count(t_domain + [('state', '=', 'draft')])
+                unsold_count = Player.search_count(t_domain + [('state', '=', 'unsold')])
+                auction_ids = request.env['auction.auction'].sudo().search(
+                    [('tournament_id', '=', tournament_id.id)] if tournament_id else []
                 )
-                if sold_count:
-                    unsold_count = request.env['auction.team.player'].sudo().search_count(
-                        t_domain + [('state', '=', 'unsold'), ('icon_player', '=', False)]
-                    )
-                    auction_ids = request.env['auction.auction'].sudo().search(
-                        [('tournament_id', '=', tournament_id.id)] if tournament_id else []
-                    )
-                    html = request.render("auction_module.thank_you_template", {
+                declared_done = bool(tournament_id and tournament_id.auction_declared_complete)
+
+                def _thank_you_html():
+                    teams_payload = []
+                    for auc in auction_ids:
+                        team = auc.team_id
+                        logo_url = ''
+                        if team and team.logo and db_name:
+                            logo_url = '/%s/auction/public/image/auction.team/%d/logo' % (db_name, team.id)
+                        players_payload = []
+                        for line in auc.player_ids:
+                            p = line.player_id
+                            if not p:
+                                continue
+                            photo_url = ''
+                            if p.photo and db_name:
+                                photo_url = '/%s/auction/public/image/auction.team.player/%d/photo' % (db_name, p.id)
+                            role = p.role or ''
+                            if tournament_id and tournament_id.tournament_type == 'football' and p.dominant_position_id:
+                                role = p.dominant_position_id.name or role
+                            players_payload.append({
+                                'name': p.name or '',
+                                'role': role,
+                                'points': line.points or 0,
+                                'photo_url': photo_url,
+                                'tier': p.tier_id.name if p.tier_id else '',
+                                'icon': bool(p.icon_player),
+                            })
+                        teams_payload.append({
+                            'id': auc.id,
+                            'name': team.name if team else 'Team',
+                            'logo_url': logo_url,
+                            'manager': (team.manager if team else '') or '',
+                            'player_count': len(players_payload),
+                            'spent': (auc.total_point or 0) - (auc.remaining_points or 0),
+                            'remaining': auc.remaining_points or 0,
+                            'total_point': auc.total_point or 0,
+                            'players': players_payload,
+                        })
+                    return request.render("auction_module.thank_you_template", {
                         'tournament': tournament_id,
                         'theme': theme,
                         'auction_ids': auction_ids,
                         'sold_count': sold_count,
+                        'draft_count': draft_count,
                         'unsold_count': unsold_count,
                         'db_name': db_name,
+                        'teams_payload': teams_payload,
+                        'teams_json': json.dumps(teams_payload),
+                        'can_reopen': bool(draft_count or unsold_count),
                     }, lazy=False)
+
+                # Routing (In-Auction queue empty):
+                # - Declared complete → Thank You
+                # - Any Unsold left → Resume (even with 0 Sold)
+                # - Draft left after some Sold → Resume
+                # - Sold only (nothing left) → Thank You
+                # - Draft only (auction never progressed) → Welcome
+                if declared_done:
+                    html = _thank_you_html()
+                elif unsold_count > 0 or (draft_count > 0 and sold_count > 0):
+                    html = request.render('auction_module.auction_resume_template', {
+                        'tournament': tournament_id,
+                        'theme': theme,
+                        'db_name': db_name,
+                        'draft_players': Player.search(
+                            t_domain + [('state', '=', 'draft')],
+                            order='sl_no asc, name asc',
+                        ),
+                        'unsold_players': Player.search(
+                            t_domain + [('state', '=', 'unsold')],
+                            order='sl_no asc, name asc',
+                        ),
+                        'draft_count': draft_count,
+                        'unsold_count': unsold_count,
+                        'sold_count': sold_count,
+                        'auction_ids': auction_ids,
+                    }, lazy=False)
+                elif sold_count:
+                    html = _thank_you_html()
                 else:
                     html = request.render("auction_module.welcome_message_template", {
                         'tournament': tournament_id,
@@ -761,6 +882,361 @@ class Auction(http.Controller):
                         'db_name': db_name,
                     }, lazy=False)
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
+
+    def _resume_resolve_tournament(self, db_name, tournament_slug):
+        """Resolve tournament inside an already-opened db context."""
+        if not tournament_slug:
+            return request.env['auction.tournament'].sudo().browse()
+        return request.env['auction.tournament'].sudo().search(
+            [('slug', '=', tournament_slug)], limit=1
+        )
+
+    def _resume_parse_player_ids(self):
+        """Accept player ids from form field, query string, or JSON body."""
+        import json as _json
+        ids = []
+        values = request.httprequest.values
+        # Repeated fields or single comma-separated value
+        raw_list = values.getlist('player_ids') if hasattr(values, 'getlist') else []
+        if not raw_list:
+            raw = values.get('player_ids') or request.params.get('player_ids')
+            if raw not in (None, False, ''):
+                raw_list = [raw]
+        for item in raw_list:
+            ids.extend(str(item).split(','))
+        if not ids:
+            try:
+                body = request.httprequest.get_data(as_text=True) or ''
+                if body.strip().startswith('{'):
+                    data = _json.loads(body)
+                    for item in (data.get('player_ids') or []):
+                        ids.append(str(item))
+            except Exception:
+                pass
+        out = []
+        for x in ids:
+            x = str(x).strip()
+            if x.isdigit():
+                out.append(int(x))
+        return out
+
+    def _resume_open_players(self, tournament, player_ids):
+        """Move draft/unsold players to auction and stage the next presentation player."""
+        Player = request.env['auction.team.player'].sudo()
+        players = Player.browse(player_ids).exists().filtered(
+            lambda p: p.tournament_id.id == tournament.id
+            and not p.icon_player
+            and p.state in ('draft', 'unsold')
+        )
+        if not players:
+            return players
+        # Direct write — avoid notify_success (breaks on auth=none / public env)
+        players.write({'state': 'auction'})
+        tournament.sudo().write({'auction_declared_complete': False})
+        # Put a player on stage so display_auction shows the presentation immediately
+        try:
+            Player.get_random_player(tournament_id=tournament)
+        except Exception:
+            pass
+        return players
+
+    @http.route(
+        [
+            '/<string:db_name>/auction/display_auction/<string:tournament_slug>/resume/open',
+            '/<string:db_name>/auction/display_auction/<string:tournament_slug>/resume/open/',
+        ],
+        type='http', auth='none', website=False, csrf=False, methods=['POST', 'GET'],
+    )
+    def display_auction_resume_open(self, db_name, tournament_slug, **kw):
+        """Open Draft and/or Unsold players into auction, then resume presentation."""
+        import json as _json
+        result = {'ok': False, 'error': 'Unknown error', 'redirect': None, 'opened': 0}
+        with self._with_db(db_name) as ok:
+            if not ok:
+                result['error'] = 'Database not found'
+            else:
+                tournament = self._resume_resolve_tournament(db_name, tournament_slug)
+                display_url = '/%s/auction/display_auction/%s/' % (db_name, tournament_slug)
+                result['redirect'] = display_url
+                if not tournament:
+                    result['error'] = 'Tournament not found'
+                else:
+                    player_ids = self._resume_parse_player_ids()
+                    if not player_ids:
+                        result['error'] = 'No players selected'
+                    else:
+                        players = self._resume_open_players(tournament, player_ids)
+                        if not players:
+                            result['error'] = 'No eligible players found'
+                        else:
+                            result = {
+                                'ok': True,
+                                'opened': len(players),
+                                'redirect': display_url,
+                                'error': None,
+                            }
+        # Prefer browser redirect (form submit) so presentation reloads reliably
+        wants_json = 'application/json' in (request.httprequest.headers.get('Accept') or '')
+        if result.get('ok') and not wants_json:
+            return werkzeug.utils.redirect(result['redirect'], 303)
+        status = 200 if result.get('ok') else 400
+        return request.make_response(
+            _json.dumps(result),
+            headers=[('Content-Type', 'application/json')],
+            status=status,
+        )
+
+    @http.route(
+        [
+            '/<string:db_name>/auction/display_auction/<string:tournament_slug>/resume/complete',
+            '/<string:db_name>/auction/display_auction/<string:tournament_slug>/resume/complete/',
+        ],
+        type='http', auth='none', website=False, csrf=False, methods=['POST', 'GET'],
+    )
+    def display_auction_resume_complete(self, db_name, tournament_slug, **kw):
+        """Declare auction complete and go to the Thank You screen."""
+        import json as _json
+        display_url = '/%s/auction/display_auction/%s/' % (db_name, tournament_slug)
+        result = {'ok': False, 'error': 'Unknown error', 'redirect': display_url}
+        with self._with_db(db_name) as ok:
+            if not ok:
+                result['error'] = 'Database not found'
+            else:
+                tournament = self._resume_resolve_tournament(db_name, tournament_slug)
+                if not tournament:
+                    result['error'] = 'Tournament not found'
+                else:
+                    tournament.sudo().write({'auction_declared_complete': True})
+                    result = {'ok': True, 'redirect': display_url, 'error': None}
+        wants_json = 'application/json' in (request.httprequest.headers.get('Accept') or '')
+        if result.get('ok') and not wants_json:
+            return werkzeug.utils.redirect(result['redirect'], 303)
+        status = 200 if result.get('ok') else 400
+        return request.make_response(
+            _json.dumps(result),
+            headers=[('Content-Type', 'application/json')],
+            status=status,
+        )
+
+    @http.route(
+        [
+            '/<string:db_name>/auction/display_auction/<string:tournament_slug>/resume/reopen',
+            '/<string:db_name>/auction/display_auction/<string:tournament_slug>/resume/reopen/',
+        ],
+        type='http', auth='none', website=False, csrf=False, methods=['POST', 'GET'],
+    )
+    def display_auction_resume_reopen(self, db_name, tournament_slug, **kw):
+        """Clear declared-complete so Draft/Unsold can be opened again."""
+        display_url = '/%s/auction/display_auction/%s/' % (db_name, tournament_slug)
+        with self._with_db(db_name) as ok:
+            if ok:
+                tournament = self._resume_resolve_tournament(db_name, tournament_slug)
+                if tournament:
+                    tournament.sudo().write({'auction_declared_complete': False})
+        return werkzeug.utils.redirect(display_url, 303)
+
+    @http.route(
+        [
+            '/<string:db_name>/auction/display_auction/<string:tournament_slug>/print-roster',
+            '/<string:db_name>/auction/display_auction/<string:tournament_slug>/print-roster/',
+        ],
+        type='http', auth='none', website=False, csrf=False, methods=['GET', 'POST'],
+    )
+    def display_auction_print_roster(self, db_name, tournament_slug, **kw):
+        """Print squad roster PDF for one or more teams (same report as button_print_roster)."""
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return self._not_found()
+            tournament = self._resume_resolve_tournament(db_name, tournament_slug)
+            if not tournament:
+                return self._not_found()
+
+            raw = kw.get('ids') or request.params.get('ids') or ''
+            if isinstance(raw, (list, tuple)):
+                raw_parts = []
+                for item in raw:
+                    raw_parts.extend(str(item).split(','))
+            else:
+                raw_parts = str(raw).split(',')
+            auction_ids = []
+            for part in raw_parts:
+                part = str(part).strip()
+                if part.isdigit():
+                    auction_ids.append(int(part))
+            # Deduplicate while preserving order
+            seen = set()
+            auction_ids = [i for i in auction_ids if not (i in seen or seen.add(i))]
+            if not auction_ids:
+                return request.make_response(
+                    'No teams selected.',
+                    headers=[('Content-Type', 'text/plain; charset=utf-8')],
+                    status=400,
+                )
+
+            Auction = request.env['auction.auction'].sudo()
+            auctions = Auction.search([
+                ('id', 'in', auction_ids),
+                ('tournament_id', '=', tournament.id),
+            ])
+            # Keep selection order
+            by_id = {a.id: a for a in auctions}
+            ordered = Auction.browse([i for i in auction_ids if i in by_id])
+            if not ordered:
+                return request.make_response(
+                    'No matching teams found for this tournament.',
+                    headers=[('Content-Type', 'text/plain; charset=utf-8')],
+                    status=404,
+                )
+
+            try:
+                report = request.env.ref('auction_module.action_report_auction_players').sudo()
+                pdf_files = self._roster_pdfs_per_team(report, ordered, db_name)
+            except Exception:
+                _logger.exception(
+                    'Roster PDF failed for tournament=%s auctions=%s',
+                    tournament.id, ordered.ids,
+                )
+                return request.make_response(
+                    'Could not generate roster PDF.',
+                    headers=[('Content-Type', 'text/plain; charset=utf-8')],
+                    status=500,
+                )
+
+            if len(pdf_files) == 1:
+                filename, pdf_content = pdf_files[0]
+                return request.make_response(
+                    pdf_content,
+                    headers=[
+                        ('Content-Type', 'application/pdf'),
+                        ('Content-Length', str(len(pdf_content))),
+                        ('Content-Disposition', 'attachment; filename="%s"' % filename),
+                    ],
+                )
+
+            import io
+            import zipfile
+            zip_buf = io.BytesIO()
+            used_names = {}
+            with zipfile.ZipFile(zip_buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+                for name, content in pdf_files:
+                    base = name
+                    if base in used_names:
+                        used_names[base] += 1
+                        stem = base[:-4] if base.lower().endswith('.pdf') else base
+                        name = '%s_%d.pdf' % (stem, used_names[base])
+                    else:
+                        used_names[base] = 1
+                    zf.writestr(name, content)
+            zip_content = zip_buf.getvalue()
+            tourn_safe = re.sub(r'[^\w\-]+', '_', tournament.name or 'Auction').strip('_') or 'Auction'
+            zip_name = '%s_Squad_Rosters.zip' % tourn_safe
+            return request.make_response(
+                zip_content,
+                headers=[
+                    ('Content-Type', 'application/zip'),
+                    ('Content-Length', str(len(zip_content))),
+                    ('Content-Disposition', 'attachment; filename="%s"' % zip_name),
+                ],
+            )
+
+    def _roster_pdf_filename(self, auction):
+        team_name = (auction.team_id.name if auction.team_id else 'Team') or 'Team'
+        safe = re.sub(r'[^\w\-]+', '_', team_name).strip('_') or 'Team'
+        return '%s_Squad_Roster.pdf' % safe
+
+    def _roster_split_pdf_evenly(self, pdf_bytes, n_docs):
+        """Split a combined roster PDF into one PDF per team.
+
+        Handles common wkhtmltopdf layouts:
+        - exactly N pages (1 page/team)
+        - N+1 pages (trailing blank)
+        - K*N pages (same page count per team)
+        """
+        if n_docs <= 1 or not pdf_bytes:
+            return None
+        import io
+        try:
+            try:
+                from odoo.tools.pdf import PdfFileReader, PdfFileWriter
+            except ImportError:
+                try:
+                    from PyPDF2 import PdfFileReader, PdfFileWriter
+                except ImportError:
+                    from PyPDF2 import PdfReader as PdfFileReader, PdfWriter as PdfFileWriter
+
+            reader = PdfFileReader(io.BytesIO(pdf_bytes), strict=False)
+            if hasattr(reader, 'getNumPages'):
+                n_pages = reader.getNumPages()
+                pages = [reader.getPage(i) for i in range(n_pages)]
+            else:
+                pages = list(reader.pages)
+                n_pages = len(pages)
+            if n_pages < n_docs:
+                return None
+
+            # Drop a single trailing blank page when present
+            if n_pages == n_docs + 1:
+                pages = pages[:n_docs]
+                n_pages = n_docs
+
+            if n_pages % n_docs != 0:
+                return None
+            chunk = n_pages // n_docs
+            out = []
+            for i in range(n_docs):
+                writer = PdfFileWriter()
+                for page in pages[i * chunk:(i + 1) * chunk]:
+                    if hasattr(writer, 'addPage'):
+                        writer.addPage(page)
+                    else:
+                        writer.add_page(page)
+                buf = io.BytesIO()
+                writer.write(buf)
+                out.append(buf.getvalue())
+            return out
+        except Exception:
+            _logger.warning('Could not split combined roster PDF', exc_info=True)
+            return None
+
+    def _roster_pdfs_per_team(self, report, auctions, db_name):
+        """Build one PDF per auction using a single wkhtmltopdf pass when possible."""
+        auctions = auctions.exists()
+        if not auctions:
+            return []
+
+        names = [self._roster_pdf_filename(a) for a in auctions]
+        if len(auctions) == 1:
+            pdf_content, _mime = report._render_qweb_pdf(auctions.ids)
+            return [(names[0], pdf_content)]
+
+        # One render for all teams (much faster than N separate wkhtmltopdf runs)
+        combined, _mime = report._render_qweb_pdf(auctions.ids)
+        split = self._roster_split_pdf_evenly(combined, len(auctions))
+        if split:
+            return list(zip(names, split))
+
+        # Page counts uneven — render each team once in parallel (still separate PDFs)
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        auction_ids = auctions.ids
+        id_to_name = dict(zip(auction_ids, names))
+        results = {}
+
+        def _render_one(auction_id):
+            registry = odoo.registry(db_name)
+            with registry.cursor() as cr:
+                env = api.Environment(cr, SUPERUSER_ID, {})
+                rep = env.ref('auction_module.action_report_auction_players').sudo()
+                pdf_content, _mime = rep._render_qweb_pdf([auction_id])
+                return auction_id, pdf_content
+
+        workers = min(4, len(auction_ids))
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            futures = [pool.submit(_render_one, aid) for aid in auction_ids]
+            for fut in as_completed(futures):
+                aid, pdf_content = fut.result()
+                results[aid] = pdf_content
+
+        return [(id_to_name[aid], results[aid]) for aid in auction_ids]
 
     def _remaining_players_ctx(self, tournament, theme):
         """Build the render context for the Remaining Players drawer."""
@@ -2051,7 +2527,7 @@ class Auction(http.Controller):
             Player = env['auction.team.player'].sudo()
             tdom = [('tournament_id', '=', tournament.id)]
             result['stats'] = {
-                'in_auction': Player.search_count(tdom + [('state', 'in', ('draft', 'auction'))]),
+                'in_auction': Player.search_count(tdom + [('state', '=', 'auction')]),
                 'sold':       Player.search_count(tdom + [('state', '=', 'sold')]),
                 'unsold':     Player.search_count(tdom + [('state', '=', 'unsold')]),
                 'total':      Player.search_count(tdom),
@@ -2168,10 +2644,17 @@ class Auction(http.Controller):
         def pub_img(model, rec_id, field):
             return '/auction/public/image/%s/%d/%s' % (model, rec_id, field)
 
-        # ── Tournament scope: non-admin users only see their own tournament ───
+        # ── Tournament scope: only Auction Admin sees all; others → Active Tournament
         is_admin = request.env.user.has_group('auction_module.group_auction_group_admin')
-        user_tournament = request.env.user.tournament_id
-        t_domain = [] if (is_admin or not user_tournament) else [('tournament_id', '=', user_tournament.id)]
+        user = request.env.user
+        user_tournament = user.tournament_id
+        if is_admin:
+            t_domain = []
+        elif user_tournament:
+            t_domain = [('tournament_id', '=', user_tournament.id)]
+        else:
+            # No tournament assigned → show nothing (do not leak all tournaments)
+            t_domain = [('id', '=', False)]
 
         # ── State counts ──────────────────────────────────────────────────────
         states = ['draft', 'auction', 'sold', 'unsold']
@@ -2973,15 +3456,17 @@ class Auction(http.Controller):
             tournament = player.tournament_id
             theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
 
-            report_map = {
-                'vanilla':      'auction_module.action_report_player_card',
-                'butterscotch': 'auction_module.action_report_player_card_butterscotch',
-                'strawberry':   'auction_module.action_report_player_card_strawberry',
-                'cherry':       'auction_module.action_report_player_card_cherry',
-                'pistah':       'auction_module.action_report_player_card_pistah',
-                'football':     'auction_module.action_report_player_card_football',
-            }
-            report_ref = report_map.get(theme, 'auction_module.action_report_player_card')
+            if tournament and tournament.tournament_type == 'football':
+                report_ref = 'auction_module.action_report_player_card_football'
+            else:
+                report_map = {
+                    'vanilla':      'auction_module.action_report_player_card',
+                    'butterscotch': 'auction_module.action_report_player_card_butterscotch',
+                    'strawberry':   'auction_module.action_report_player_card_strawberry',
+                    'cherry':       'auction_module.action_report_player_card_cherry',
+                    'pistah':       'auction_module.action_report_player_card_pistah',
+                }
+                report_ref = report_map.get(theme, 'auction_module.action_report_player_card')
 
             try:
                 report = request.env.ref(report_ref).sudo()
@@ -3028,14 +3513,17 @@ class Auction(http.Controller):
             tournament = player.tournament_id
             theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
 
-            report_map = {
-                'vanilla':      'auction_module.action_report_player_card',
-                'butterscotch': 'auction_module.action_report_player_card_butterscotch',
-                'strawberry':   'auction_module.action_report_player_card_strawberry',
-                'cherry':       'auction_module.action_report_player_card_cherry',
-                'pistah':       'auction_module.action_report_player_card_pistah',
-            }
-            report_ref = report_map.get(theme, 'auction_module.action_report_player_card')
+            if tournament and tournament.tournament_type == 'football':
+                report_ref = 'auction_module.action_report_player_card_football'
+            else:
+                report_map = {
+                    'vanilla':      'auction_module.action_report_player_card',
+                    'butterscotch': 'auction_module.action_report_player_card_butterscotch',
+                    'strawberry':   'auction_module.action_report_player_card_strawberry',
+                    'cherry':       'auction_module.action_report_player_card_cherry',
+                    'pistah':       'auction_module.action_report_player_card_pistah',
+                }
+                report_ref = report_map.get(theme, 'auction_module.action_report_player_card')
 
             try:
                 report = request.env.ref(report_ref).sudo()
@@ -3240,6 +3728,7 @@ def _football_display_payload(player):
     ``tournament_type`` without KeyErrors. Empty when not a football player.
     """
     is_football = bool(player.tournament_id and player.tournament_id.tournament_type == 'football')
+    empty_other = []
     if not is_football:
         return {
             'tournament_type': player.tournament_id.tournament_type if player.tournament_id else 'cricket',
@@ -3257,25 +3746,35 @@ def _football_display_payload(player):
             'location': '',
             'playing_styles': [],
             'strengths': [],
+            'other_attributes': empty_other,
+            'use_other_attributes': False,
         }
     foot_map = {'left': 'Left', 'right': 'Right', 'both': 'Both'}
     rate_map = {'low': 'Low', 'medium': 'Medium', 'high': 'High'}
+    other_attributes = [
+        {'label': a.label or '', 'value': a.value or ''}
+        for a in player.other_attribute_ids
+        if a.label and (a.value or '').strip()
+    ]
+    use_other = bool(other_attributes)
     return {
         'tournament_type': 'football',
         'dominant_position': player.dominant_position_id.name if player.dominant_position_id else '',
         'dominant_position_code': player.dominant_position_id.code if player.dominant_position_id else '',
-        'secondary_positions': [p.code or p.name for p in player.secondary_position_ids],
+        'secondary_positions': [] if use_other else [p.code or p.name for p in player.secondary_position_ids],
         'preferred_foot': foot_map.get(player.preferred_foot, ''),
-        'age': player.age or '',
+        'age': '' if use_other else (player.age or ''),
         'height': player.height or '',
         'weight': player.weight or '',
-        'work_rate': rate_map.get(player.work_rate, ''),
+        'work_rate': '' if use_other else rate_map.get(player.work_rate, ''),
         'p_category': player.p_category or '',
         'blood_group': player.blood_group or '',
         'mobile': player.masked_contact or '',
         'location': player.address or '',
-        'playing_styles': [{'name': s.name, 'icon': s.icon or ''} for s in player.playing_style_ids],
-        'strengths': [{'name': s.name, 'icon': s.icon or ''} for s in player.strength_ids],
+        'playing_styles': [] if use_other else [{'name': s.name, 'icon': s.icon or ''} for s in player.playing_style_ids],
+        'strengths': [] if use_other else [{'name': s.name, 'icon': s.icon or ''} for s in player.strength_ids],
+        'other_attributes': other_attributes,
+        'use_other_attributes': use_other,
     }
 
 

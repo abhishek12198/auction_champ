@@ -1,4 +1,41 @@
 # -*- coding: utf-8 -*-
+##############################################################################
+#
+#  AuctionChamp - Professional Sports Auction Management Platform
+#
+#  Copyright (c) 2026 AuctionChamp.
+#  All Rights Reserved.
+#
+#  CONFIDENTIAL & PROPRIETARY
+#
+#  This source code, including but not limited to its algorithms, business
+#  logic, database structures, models, controllers, views, reports, templates,
+#  APIs, documentation, and related materials, constitutes proprietary and
+#  confidential information owned exclusively by AuctionChamp.
+#
+#  This software is protected by applicable copyright laws and international
+#  intellectual property treaties. Unauthorized copying, reproduction,
+#  modification, distribution, publication, sublicensing, reverse engineering,
+#  decompilation, disassembly, disclosure, or use of this software, in whole
+#  or in part, is strictly prohibited without the prior written permission of
+#  AuctionChamp.
+#
+#  This software is licensed, not sold. Possession of the source code does not
+#  grant any right to copy, modify, redistribute, or create derivative works
+#  except as expressly permitted under a valid written license agreement with
+#  AuctionChamp.
+#
+#  Any unauthorized use may result in civil and criminal penalties under
+#  applicable intellectual property and copyright laws.
+#
+#  Company  : AuctionChamp
+#  Website  : www.auctionchamp.live
+#  Email    : auctionchamp.live@gmail.com
+#
+#  © 2026 AuctionChamp. All Rights Reserved.
+#
+##############################################################################
+
 import logging
 import os
 import subprocess
@@ -15,6 +52,7 @@ _PLAYER_CARD_REPORT_NAMES = {
     'auction_module.report_player_card_list_strawberry',
     'auction_module.report_player_card_list_cherry',
     'auction_module.report_player_card_list_pistah',
+    'auction_module.report_player_card_football_list',
 }
 
 
@@ -44,10 +82,9 @@ class IrActionsReportCompress(models.Model):
 def _compress_pdf_ghostscript(pdf_bytes):
     """Run Ghostscript on pdf_bytes and return the compressed result.
 
-    Tuned for the auction player cards: keeps the player photo and tournament
-    logo sharp (colour images ~130 DPI, JPEG QFactor 0.8) while aggressively
-    compressing the many rasterised gradient / glassmorphism / shadow layers
-    that wkhtmltopdf emits per page, and de-duplicating repeated image objects.
+    Tuned for bulk player-card PDFs: keep photos readable while shrinking
+    wkhtmltopdf's heavy gradient/shadow raster layers. Target ~print-screen
+    quality (~96 DPI colour) so ~80 cards stay well under ~10MB.
     Returns None on any error so the caller can fall back to the original.
     """
     in_fd, in_path = tempfile.mkstemp(suffix='.pdf', prefix='ac_card_in_')
@@ -64,22 +101,15 @@ def _compress_pdf_ghostscript(pdf_bytes):
                 'gs',
                 '-sDEVICE=pdfwrite',
                 '-dCompatibilityLevel=1.5',
-                # Merge byte-identical images (logos/backgrounds) into a single object.
                 '-dDetectDuplicateImages=true',
-                '-dPDFSETTINGS=/ebook',
-                # Cap colour images (photos/logos) at ~130 DPI – sharp on the card,
-                # but avoids embedding oversized source photos.
+                '-dPDFSETTINGS=/screen',
                 '-dDownsampleColorImages=true',
-                '-dColorImageResolution=130',
+                '-dColorImageResolution=96',
                 '-dColorImageDownsampleThreshold=1.0',
-                # Soft-mask / shadow layers are greyscale – downsample harder.
                 '-dDownsampleGrayImages=true',
-                '-dGrayImageResolution=110',
+                '-dGrayImageResolution=96',
                 '-dDownsampleMonoImages=true',
-                '-dMonoImageResolution=150',
-                # Force JPEG (DCT) on colour images with an explicit quality factor.
-                # QFactor 0.8 keeps photos/logos crisp while compressing the many
-                # smooth gradient/glassmorphism panels much smaller.
+                '-dMonoImageResolution=120',
                 '-dAutoFilterColorImages=false',
                 '-dColorImageFilter=/DCTEncode',
                 '-dNOPAUSE',
@@ -87,7 +117,7 @@ def _compress_pdf_ghostscript(pdf_bytes):
                 '-dBATCH',
                 '-sOutputFile=' + out_path,
                 '-c',
-                '<< /ColorImageDict << /QFactor 0.8 /Blend 1 '
+                '<< /ColorImageDict << /QFactor 0.5 /Blend 1 '
                 '/HSamples [2 1 1 2] /VSamples [2 1 1 2] >> >> setdistillerparams',
                 '-f',
                 in_path,

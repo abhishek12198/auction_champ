@@ -497,6 +497,28 @@
                                                widget="many2many_tags"/>
                                     </group>
                                 </group>
+                                <group string="Other Attributes"
+                                       colspan="2">
+                                    <div class="text-muted" colspan="2">
+                                        Labels come from the tournament Other Attributes (Att-Labels).
+                                        Fill Label-Values here. When values are set, they replace
+                                        Secondary / Age / Playing Style / Strengths on cards and live displays.
+                                    </div>
+                                    <button name="action_sync_other_attributes"
+                                            type="object"
+                                            string="Sync Labels from Tournament"
+                                            class="btn-link"
+                                            colspan="2"
+                                            attrs="{'invisible': [('tournament_type', '!=', 'football')]}"/>
+                                    <field name="other_attribute_ids" nolabel="1" colspan="2">
+                                        <tree editable="bottom">
+                                            <field name="sequence" widget="handle"/>
+                                            <field name="label" string="Att-Label"/>
+                                            <field name="value" string="Label-Value"/>
+                                        </tree>
+                                    </field>
+                                    <field name="use_other_attributes" invisible="1"/>
+                                </group>
                             </page>
                             <page string="Jersey Details" groups="auction_module.group_auction_jersey_view">
                                 <group>

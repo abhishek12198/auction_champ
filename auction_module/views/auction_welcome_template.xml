@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<!-- Pre-auction waiting page — shown when no players are In Auction yet -->
+<template id="welcome_message_template" name="Welcome to Tournament">
+<html lang="en" t-att-data-theme="theme or 'vanilla'">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
+  <title>Welcome — <t t-esc="tournament.name if tournament else 'Auction'"/> | AuctionChamp</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&amp;family=Open+Sans:wght@400;600&amp;display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --w-primary: #3b72e8;
+      --w-primary-dk: #1e4bb8;
+      --w-accent: #f4c542;
+      --w-bg: #070c18;
+      --w-bg2: #0d1526;
+      --w-surface: rgba(255,255,255,0.05);
+      --w-border: rgba(255,255,255,0.10);
+      --w-text: #e8edf8;
+      --w-muted: rgba(232,237,248,0.55);
+      --w-glow: rgba(59,114,232,0.35);
+      --w-radius: 16px;
+      --w-rule-bg: rgba(59,114,232,0.12);
+      --w-rule-bd: rgba(59,114,232,0.35);
+      --w-divider: rgba(244,197,66,0.35);
+    }
+    <t t-if="theme == 'cherry'">
+    :root {
+      --w-primary: #DC143C; --w-primary-dk: #8B0000; --w-accent: #FF6B6B;
+      --w-bg: #0a0008; --w-bg2: #1a0008; --w-border: rgba(220,20,60,0.28);
+      --w-text: #f5e8e8; --w-muted: rgba(245,232,232,0.55); --w-glow: rgba(220,20,60,0.45);
+      --w-rule-bg: rgba(220,20,60,0.12); --w-rule-bd: rgba(220,20,60,0.40);
+      --w-divider: rgba(220,20,60,0.45);
+    }
+    </t>
+    <t t-elif="theme == 'butterscotch'">
+    :root {
+      --w-primary: #F5C842; --w-primary-dk: #C8960C; --w-accent: #FFE082;
+      --w-bg: #0d0d1f; --w-bg2: #1a1400; --w-border: rgba(245,200,66,0.25);
+      --w-text: #fff8e1; --w-muted: rgba(255,248,225,0.55); --w-glow: rgba(245,200,66,0.40);
+      --w-rule-bg: rgba(245,200,66,0.10); --w-rule-bd: rgba(245,200,66,0.38);
+      --w-divider: rgba(245,200,66,0.40);
+    }
+    </t>
+    <t t-elif="theme == 'strawberry'">
+    :root {
+      --w-primary: #C2185B; --w-primary-dk: #880E4F; --w-accent: #F48FB1;
+      --w-bg: #1a0010; --w-bg2: #2d0018; --w-border: rgba(194,24,91,0.28);
+      --w-text: #fce4ec; --w-muted: rgba(252,228,236,0.55); --w-glow: rgba(194,24,91,0.45);
+      --w-rule-bg: rgba(194,24,91,0.12); --w-rule-bd: rgba(194,24,91,0.40);
+      --w-divider: rgba(194,24,91,0.45);
+    }
+    </t>
+    <t t-elif="theme == 'pistah'">
+    :root {
+      --w-primary: #6BBF4E; --w-primary-dk: #2E7D32; --w-accent: #A8E063;
+      --w-bg: #060e08; --w-bg2: #0d1f11; --w-border: rgba(107,191,78,0.25);
+      --w-text: #e8f5e9; --w-muted: rgba(232,245,233,0.55); --w-glow: rgba(107,191,78,0.42);
+      --w-rule-bg: rgba(107,191,78,0.10); --w-rule-bd: rgba(107,191,78,0.38);
+      --w-divider: rgba(107,191,78,0.38);
+    }
+    </t>
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      min-height: 100%;
+      background: var(--w-bg);
+      color: var(--w-text);
+      font-family: 'Open Sans', system-ui, sans-serif;
+    }
+    body {
+      background-image:
+        radial-gradient(ellipse 70% 50% at 20% -10%, var(--w-glow), transparent 55%),
+        radial-gradient(ellipse 50% 40% at 100% 100%, rgba(255,255,255,0.03), transparent 50%);
+      background-color: var(--w-bg);
+    }
+
+    .wc-shell {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 20px 18px 24px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* Header */
+    .wc-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 18px 22px;
+      border-radius: var(--w-radius);
+      background: linear-gradient(135deg, var(--w-bg2), rgba(255,255,255,0.03));
+      border: 1px solid var(--w-border);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+    }
+    .wc-brand {
+      display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1;
+    }
+    .wc-logo {
+      width: 56px; height: 56px; border-radius: 12px; object-fit: contain;
+      background: rgba(0,0,0,0.25); border: 1px solid var(--w-border); padding: 4px; flex-shrink: 0;
+    }
+    .wc-logo-ph {
+      width: 56px; height: 56px; border-radius: 12px; display: grid; place-items: center;
+      background: rgba(255,255,255,0.06); border: 1px solid var(--w-border); font-size: 1.4rem; flex-shrink: 0;
+    }
+    .wc-eyebrow {
+      font-family: 'Montserrat', sans-serif; font-size: .68rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--w-accent); margin-bottom: 4px;
+    }
+    .wc-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(1.2rem, 2.5vw, 1.65rem); font-weight: 800; line-height: 1.2;
+    }
+    .wc-sub { margin-top: 4px; font-size: .88rem; color: var(--w-muted); }
+    .wc-hdr-logo-link {
+      display: inline-flex; align-items: center; text-decoration: none;
+      opacity: 0.95; transition: opacity .15s ease, transform .15s ease;
+    }
+    .wc-hdr-logo-link:hover { opacity: 1; transform: scale(1.04); }
+    .wc-hdr-logo { height: 28px; width: auto; display: block; }
+
+    /* Waiting hero */
+    .wc-waiting {
+      text-align: center;
+      padding: 36px 24px;
+      border-radius: var(--w-radius);
+      background: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border: 1px solid var(--w-border);
+      position: relative;
+      overflow: hidden;
+    }
+    .wc-waiting::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 80% at 50% 0%, var(--w-glow), transparent 70%);
+      pointer-events: none;
+    }
+    .wc-waiting-inner { position: relative; }
+    .wc-waiting-dots {
+      display: flex; justify-content: center; gap: 10px; margin-bottom: 16px;
+    }
+    .wc-waiting-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--w-accent);
+      animation: wcPulse 1.6s ease-in-out infinite;
+    }
+    .wc-waiting-dot:nth-child(2) { animation-delay: 0.25s; }
+    .wc-waiting-dot:nth-child(3) { animation-delay: 0.5s; }
+    @keyframes wcPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(0.7); }
+    }
+    .wc-waiting-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(1.35rem, 3vw, 1.9rem);
+      font-weight: 800;
+      color: var(--w-accent);
+      letter-spacing: 0.5px;
+    }
+    .wc-waiting-msg {
+      margin-top: 8px; color: var(--w-muted); font-size: .95rem;
+    }
+    .wc-badges {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px;
+    }
+    .wc-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(0,0,0,0.28); border: 1px solid var(--w-border);
+      border-radius: 999px; padding: 6px 14px; font-size: .78rem; font-weight: 600;
+      color: var(--w-accent);
+    }
+
+    /* Rules */
+    .wc-rules {
+      border-radius: var(--w-radius);
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      border: 1px solid var(--w-border);
+      padding: 22px 24px;
+      flex: 1;
+    }
+    .wc-section-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: .72rem; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase;
+      color: var(--w-primary); display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+    }
+    .wc-section-title::after {
+      content: ''; flex: 1; height: 1px; background: var(--w-divider);
+    }
+    .wc-rules-body {
+      color: var(--w-text); font-size: 1rem; line-height: 1.85;
+    }
+    .wc-rules-body h1, .wc-rules-body h2, .wc-rules-body h3 {
+      font-family: 'Montserrat', sans-serif; color: var(--w-accent); margin: 1.2em 0 0.5em;
+    }
+    .wc-rules-body h1 { font-size: 1.35rem; }
+    .wc-rules-body h2 { font-size: 1.15rem; }
+    .wc-rules-body h3 { font-size: 1.02rem; }
+    .wc-rules-body p { margin-bottom: 0.9em; }
+    .wc-rules-body ul, .wc-rules-body ol { padding-left: 1.5em; margin-bottom: 1em; }
+    .wc-rules-body li { margin-bottom: 0.45em; }
+    .wc-rules-body strong { color: var(--w-accent); }
+    .wc-rules-body a { color: var(--w-primary); }
+    .wc-rules-body hr {
+      border: none; border-top: 1px solid var(--w-divider); margin: 1.4em 0;
+    }
+    .wc-rules-body table {
+      width: 100%; border-collapse: collapse; margin-bottom: 1em; font-size: 0.93rem;
+    }
+    .wc-rules-body th {
+      background: var(--w-rule-bg); color: var(--w-accent); padding: 8px 12px;
+      border: 1px solid var(--w-rule-bd); font-family: 'Montserrat', sans-serif; font-weight: 700;
+    }
+    .wc-rules-body td {
+      padding: 7px 12px; border: 1px solid var(--w-border); color: var(--w-text);
+    }
+    .wc-rules-empty {
+      text-align: center; padding: 36px 16px; color: var(--w-muted);
+      font-size: .95rem; font-style: italic;
+    }
+
+    /* Brand strip */
+    .wc-brand-strip {
+      margin-top: auto;
+      display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;
+      padding: 16px 12px 4px; border-top: 1px solid var(--w-border); text-align: center;
+    }
+    .wc-brand-strip-logo { height: 28px; width: auto; }
+    .wc-brand-strip-sep { width: 4px; height: 4px; border-radius: 50%; background: var(--w-border); }
+    .wc-brand-strip-text { font-size: .82rem; color: var(--w-muted); letter-spacing: 0.4px; }
+    .wc-brand-strip-text strong {
+      color: var(--w-accent); font-family: 'Montserrat', sans-serif; font-weight: 800;
+    }
+
+    @media (max-width: 640px) {
+      .wc-shell { padding: 12px 10px 20px; }
+      .wc-header { padding: 14px; }
+      .wc-rules { padding: 16px; }
+      .wc-brand-strip { flex-direction: column; gap: 8px; }
+      .wc-brand-strip-sep { display: none; }
+    }
+  </style>
+</head>
+<body data-page-type="pre-auction">
+  <div class="wc-shell" data-player-zone="">
+
+    <header class="wc-header">
+      <div class="wc-brand">
+        <t t-if="tournament and tournament.logo">
+          <img class="wc-logo"
+               t-att-src="'data:image/png;base64,' + tournament.logo.decode('utf-8')"
+               t-att-alt="tournament.name"/>
+        </t>
+        <t t-else="">
+          <div class="wc-logo-ph">🏆</div>
+        </t>
+        <div>
+          <div class="wc-eyebrow">Official Auction</div>
+          <h1 class="wc-title">
+            <t t-if="tournament"><t t-esc="tournament.name"/></t>
+            <t t-else="">Welcome to the Auction</t>
+          </h1>
+          <t t-if="tournament and tournament.description">
+            <p class="wc-sub"><t t-esc="tournament.description"/></p>
+          </t>
+          <t t-else="">
+            <p class="wc-sub">Players will appear here once the auction begins</p>
+          </t>
+        </div>
+      </div>
+      <a href="/web" title="Go to AuctionChamp backend" class="wc-hdr-logo-link">
+        <img class="wc-hdr-logo"
+             src="/auction_module/static/src/assets/images/logo.svg"
+             alt="AuctionChamp"/>
+      </a>
+    </header>
+
+    <section class="wc-waiting">
+      <div class="wc-waiting-inner">
+        <div class="wc-waiting-dots">
+          <span class="wc-waiting-dot"/>
+          <span class="wc-waiting-dot"/>
+          <span class="wc-waiting-dot"/>
+        </div>
+        <div class="wc-waiting-title">Auction will begin shortly</div>
+        <div class="wc-waiting-msg">Please wait while players are prepared for the auction</div>
+        <div class="wc-badges">
+          <t t-if="tournament and tournament.venue">
+            <span class="wc-badge">📍 <t t-esc="tournament.venue"/></span>
+          </t>
+          <t t-if="tournament and tournament.tournament_type">
+            <span class="wc-badge">
+              ⭐
+              <t t-esc="dict(tournament._fields['tournament_type'].selection).get(tournament.tournament_type, tournament.tournament_type)"/>
+            </span>
+          </t>
+          <span class="wc-badge">⏳ Waiting to start</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="wc-rules">
+      <div class="wc-section-title">Rules &amp; Regulations</div>
+      <t t-if="tournament and tournament.rules_regulations">
+        <div class="wc-rules-body">
+          <t t-raw="tournament.rules_regulations"/>
+        </div>
+      </t>
+      <t t-else="">
+        <div class="wc-rules-empty">
+          No rules and regulations have been configured for this tournament yet.
+        </div>
+      </t>
+    </section>
+
+    <div class="wc-brand-strip">
+      <a href="/web" title="Go to AuctionChamp backend" class="wc-hdr-logo-link">
+        <img class="wc-brand-strip-logo"
+             src="/auction_module/static/src/assets/images/logo.svg"
+             alt="AuctionChamp"/>
+      </a>
+      <span class="wc-brand-strip-sep"/>
+      <div class="wc-brand-strip-text">
+        Powered by <strong>AuctionChamp</strong> · All participants must adhere to the rules above
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
+</template>
+</odoo>

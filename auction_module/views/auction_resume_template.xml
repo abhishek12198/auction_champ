@@ -1,0 +1,1079 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<!--
+  Auction Resume Screen
+  Shown when In-Auction players are exhausted but Draft / Unsold remain.
+  Theme follows tournament.player_display_template.
+-->
+<template id="auction_resume_template" name="Auction Resume — Open Players">
+<html lang="en" t-att-data-theme="theme or 'vanilla'">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
+  <title>Open Players — <t t-esc="tournament.name if tournament else 'Auction'"/> | AuctionChamp</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&amp;family=Open+Sans:wght@400;600&amp;display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --r-primary: #3b72e8;
+      --r-primary-dk: #1e4bb8;
+      --r-accent: #f4c542;
+      --r-bg: #070c18;
+      --r-bg2: #0d1526;
+      --r-surface: rgba(255,255,255,0.05);
+      --r-border: rgba(255,255,255,0.10);
+      --r-text: #e8edf8;
+      --r-muted: rgba(232,237,248,0.55);
+      --r-glow: rgba(59,114,232,0.35);
+      --r-draft: #38bdf8;
+      --r-unsold: #f87171;
+      --r-sold: #34d399;
+      --r-danger: #ef4444;
+      --r-ok: #22c55e;
+      --r-radius: 16px;
+    }
+    <t t-if="theme == 'cherry'">
+    :root {
+      --r-primary: #DC143C; --r-primary-dk: #8B0000; --r-accent: #FF6B6B;
+      --r-bg: #0a0008; --r-bg2: #1a0008; --r-border: rgba(220,20,60,0.28);
+      --r-text: #f5e8e8; --r-muted: rgba(245,232,232,0.55); --r-glow: rgba(220,20,60,0.45);
+      --r-draft: #fb7185; --r-unsold: #fca5a5; --r-sold: #86efac;
+    }
+    </t>
+    <t t-elif="theme == 'butterscotch'">
+    :root {
+      --r-primary: #F5C842; --r-primary-dk: #C8960C; --r-accent: #FFE082;
+      --r-bg: #0d0d1f; --r-bg2: #1a1400; --r-border: rgba(245,200,66,0.25);
+      --r-text: #fff8e1; --r-muted: rgba(255,248,225,0.55); --r-glow: rgba(245,200,66,0.40);
+      --r-draft: #fde68a; --r-unsold: #fca5a5; --r-sold: #86efac;
+    }
+    </t>
+    <t t-elif="theme == 'strawberry'">
+    :root {
+      --r-primary: #C2185B; --r-primary-dk: #880E4F; --r-accent: #F48FB1;
+      --r-bg: #1a0010; --r-bg2: #2d0018; --r-border: rgba(194,24,91,0.28);
+      --r-text: #fce4ec; --r-muted: rgba(252,228,236,0.55); --r-glow: rgba(194,24,91,0.45);
+      --r-draft: #f9a8d4; --r-unsold: #fca5a5; --r-sold: #86efac;
+    }
+    </t>
+    <t t-elif="theme == 'pistah'">
+    :root {
+      --r-primary: #6BBF4E; --r-primary-dk: #2E7D32; --r-accent: #A8E063;
+      --r-bg: #060e08; --r-bg2: #0d1f11; --r-border: rgba(107,191,78,0.25);
+      --r-text: #e8f5e9; --r-muted: rgba(232,245,233,0.55); --r-glow: rgba(107,191,78,0.42);
+      --r-draft: #86efac; --r-unsold: #fca5a5; --r-sold: #4ade80;
+    }
+    </t>
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      min-height: 100%;
+      background: var(--r-bg);
+      color: var(--r-text);
+      font-family: 'Open Sans', system-ui, sans-serif;
+    }
+    body {
+      background-image:
+        radial-gradient(ellipse 70% 50% at 20% -10%, var(--r-glow), transparent 55%),
+        radial-gradient(ellipse 50% 40% at 100% 100%, rgba(255,255,255,0.03), transparent 50%);
+      background-color: var(--r-bg);
+    }
+
+    .ar-shell {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 20px 18px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      min-height: 100vh;
+      position: relative;
+    }
+    .ar-shell.ar-busy::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(2px);
+      border-radius: inherit;
+      z-index: 20;
+    }
+
+    /* Header */
+    .ar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 18px 22px;
+      border-radius: var(--r-radius);
+      background: linear-gradient(135deg, var(--r-bg2), rgba(255,255,255,0.03));
+      border: 1px solid var(--r-border);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+    }
+    .ar-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+      flex: 1;
+    }
+    .ar-logo {
+      width: 56px; height: 56px;
+      border-radius: 12px;
+      object-fit: contain;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid var(--r-border);
+      padding: 4px;
+      flex-shrink: 0;
+    }
+    .ar-logo-ph {
+      width: 56px; height: 56px;
+      border-radius: 12px;
+      display: grid; place-items: center;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--r-border);
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .ar-title-wrap { min-width: 0; }
+    .ar-eyebrow {
+      font-family: 'Montserrat', sans-serif;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--r-accent);
+      margin-bottom: 4px;
+    }
+    .ar-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(1.15rem, 2.4vw, 1.55rem);
+      font-weight: 800;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ar-sub {
+      margin-top: 4px;
+      font-size: .88rem;
+      color: var(--r-muted);
+      max-width: 42rem;
+    }
+    .ar-hdr-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .ar-powered {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--r-border);
+    }
+    .ar-powered-by {
+      font-size: .62rem;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--r-muted);
+    }
+    .ar-powered-logo {
+      height: 28px;
+      width: auto;
+      display: block;
+    }
+    .ar-hdr-logo-link {
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+      opacity: 0.95;
+      transition: opacity .15s ease, transform .15s ease;
+    }
+    .ar-hdr-logo-link:hover { opacity: 1; transform: scale(1.04); }
+
+    /* Stats */
+    .ar-stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .ar-stat {
+      border-radius: 14px;
+      padding: 14px 12px;
+      text-align: center;
+      background: var(--r-surface);
+      border: 1px solid var(--r-border);
+    }
+    .ar-stat-num {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 800;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .ar-stat-lbl {
+      margin-top: 6px;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--r-muted);
+    }
+    .ar-stat-draft .ar-stat-num { color: var(--r-draft); }
+    .ar-stat-unsold .ar-stat-num { color: var(--r-unsold); }
+    .ar-stat-sold .ar-stat-num { color: var(--r-sold); }
+    .ar-stat-open .ar-stat-num { color: var(--r-accent); }
+
+    /* Panels */
+    .ar-panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      flex: 1;
+      min-height: 0;
+    }
+    .ar-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 420px;
+      max-height: min(68vh, 720px);
+      border-radius: var(--r-radius);
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      border: 1px solid var(--r-border);
+      overflow: hidden;
+    }
+    .ar-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--r-border);
+      background: rgba(0,0,0,0.18);
+    }
+    .ar-panel-title {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: .95rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ar-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      font-size: .75rem;
+      font-weight: 800;
+      background: rgba(255,255,255,0.08);
+    }
+    .ar-panel-draft .ar-badge { color: var(--r-draft); background: color-mix(in srgb, var(--r-draft) 18%, transparent); }
+    .ar-panel-unsold .ar-badge { color: var(--r-unsold); background: color-mix(in srgb, var(--r-unsold) 18%, transparent); }
+
+    .ar-toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .ar-search {
+      flex: 1;
+      min-width: 140px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--r-border);
+      background: rgba(0,0,0,0.25);
+      color: var(--r-text);
+      padding: 0 12px;
+      font-size: .85rem;
+      outline: none;
+    }
+    .ar-search:focus { border-color: var(--r-primary); box-shadow: 0 0 0 3px var(--r-glow); }
+    .ar-search::placeholder { color: var(--r-muted); }
+
+    .ar-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .ar-empty {
+      padding: 40px 16px;
+      text-align: center;
+      color: var(--r-muted);
+      font-size: .9rem;
+    }
+
+    .ar-row {
+      display: grid;
+      grid-template-columns: 28px 44px 1fr auto auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      transition: background .15s ease, border-color .15s ease;
+    }
+    .ar-row:hover { background: rgba(255,255,255,0.04); }
+    .ar-row.is-selected {
+      background: rgba(59,114,232,0.14);
+      border-color: rgba(59,114,232,0.40);
+    }
+    .ar-row input[type="checkbox"] {
+      width: 16px; height: 16px;
+      accent-color: var(--r-primary);
+      cursor: pointer;
+    }
+    .ar-btn-sm {
+      height: 32px;
+      padding: 0 10px;
+      font-size: .72rem;
+      border-radius: 8px;
+    }
+    .ar-avatar {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--r-border);
+    }
+    .ar-avatar-ph {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: grid; place-items: center;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--r-border);
+      color: var(--r-muted);
+      font-weight: 700;
+      font-size: .85rem;
+    }
+    .ar-meta { min-width: 0; }
+    .ar-name {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: .92rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ar-role {
+      margin-top: 2px;
+      font-size: .75rem;
+      color: var(--r-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ar-tier {
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--r-border);
+      background: rgba(0,0,0,0.2);
+      white-space: nowrap;
+    }
+
+    .ar-panel-foot {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 12px 14px;
+      border-top: 1px solid var(--r-border);
+      background: rgba(0,0,0,0.18);
+    }
+
+    .ar-btn {
+      appearance: none;
+      border: 0;
+      border-radius: 11px;
+      height: 40px;
+      padding: 0 14px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .4px;
+      cursor: pointer;
+      transition: transform .12s ease, opacity .12s ease, box-shadow .12s ease;
+      white-space: nowrap;
+    }
+    .ar-btn:hover { transform: translateY(-1px); }
+    .ar-btn:active { transform: translateY(0); }
+    .ar-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+    .ar-btn-primary {
+      background: linear-gradient(135deg, var(--r-primary), var(--r-primary-dk));
+      color: #fff;
+      box-shadow: 0 8px 22px var(--r-glow);
+    }
+    html[data-theme="butterscotch"] .ar-btn-primary { color: #1a1200; }
+    .ar-btn-ghost {
+      background: rgba(255,255,255,0.06);
+      color: var(--r-text);
+      border: 1px solid var(--r-border);
+    }
+    .ar-btn-danger {
+      background: linear-gradient(135deg, #ef4444, #b91c1c);
+      color: #fff;
+      box-shadow: 0 8px 22px rgba(239,68,68,0.28);
+    }
+
+    .ar-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      padding: 16px 18px;
+      border-radius: var(--r-radius);
+      border: 1px solid var(--r-border);
+      background: rgba(0,0,0,0.22);
+    }
+    .ar-footer-note {
+      color: var(--r-muted);
+      font-size: .86rem;
+      max-width: 40rem;
+      line-height: 1.45;
+    }
+    .ar-footer-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Brand strip / powered-by (matches live board and thank-you) */
+    .ar-brand-strip {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 18px 16px 8px;
+      text-align: center;
+      border-top: 1px solid var(--r-border);
+    }
+    .ar-brand-strip-logo {
+      height: 28px;
+      width: auto;
+      opacity: 0.95;
+    }
+    .ar-brand-strip-text {
+      font-size: .82rem;
+      color: var(--r-muted);
+      letter-spacing: 0.4px;
+    }
+    .ar-brand-strip-text strong {
+      color: var(--r-accent);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+    }
+    .ar-brand-strip-sep {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--r-border);
+    }
+    .ar-toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(15,23,42,0.95);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: .88rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: .25s ease;
+      z-index: 50;
+      max-width: min(90vw, 420px);
+      text-align: center;
+    }
+    .ar-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Custom confirm modal ───────────────────────────────────────── */
+    .ar-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      animation: arFadeIn .18s ease;
+    }
+    .ar-modal-backdrop.show { display: flex; }
+    @keyframes arFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes arPop {
+      from { opacity: 0; transform: translateY(12px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .ar-modal {
+      width: min(100%, 440px);
+      border-radius: 20px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
+        var(--r-bg2);
+      border: 1px solid var(--r-border);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04) inset;
+      padding: 28px 24px 20px;
+      text-align: center;
+      animation: arPop .22s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .ar-modal::before {
+      content: '';
+      position: absolute;
+      top: -40%;
+      left: 50%;
+      width: 220px;
+      height: 220px;
+      transform: translateX(-50%);
+      background: radial-gradient(circle, var(--r-glow), transparent 70%);
+      pointer-events: none;
+    }
+    .ar-modal-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      font-size: 1.7rem;
+      position: relative;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--r-border);
+      box-shadow: 0 8px 24px var(--r-glow);
+    }
+    .ar-modal.is-danger .ar-modal-icon {
+      background: rgba(239,68,68,0.14);
+      border-color: rgba(239,68,68,0.35);
+      box-shadow: 0 8px 24px rgba(239,68,68,0.28);
+    }
+    .ar-modal.is-ok .ar-modal-icon {
+      background: rgba(34,197,94,0.12);
+      border-color: rgba(34,197,94,0.32);
+      box-shadow: 0 8px 24px rgba(34,197,94,0.22);
+    }
+    .ar-modal-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      margin-bottom: 8px;
+      position: relative;
+    }
+    .ar-modal-msg {
+      color: var(--r-muted);
+      font-size: .92rem;
+      line-height: 1.55;
+      margin-bottom: 22px;
+      position: relative;
+    }
+    .ar-modal-msg strong { color: var(--r-text); font-weight: 700; }
+    .ar-modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      position: relative;
+    }
+    .ar-modal-actions .ar-btn { min-width: 120px; }
+
+    @media (max-width: 960px) {
+      .ar-panels { grid-template-columns: 1fr; }
+      .ar-panel { max-height: none; min-height: 320px; }
+      .ar-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 560px) {
+      .ar-shell { padding: 12px 10px 20px; gap: 12px; }
+      .ar-header { padding: 14px; }
+      .ar-hdr-right { width: 100%; align-items: flex-start; }
+      .ar-row { grid-template-columns: 24px 40px 1fr auto; }
+      .ar-tier { display: none; }
+      .ar-footer { flex-direction: column; align-items: stretch; }
+      .ar-footer-actions { width: 100%; }
+      .ar-btn { width: 100%; }
+      .ar-panel-foot .ar-btn { flex: 1; }
+      .ar-brand-strip { flex-direction: column; gap: 8px; }
+      .ar-brand-strip-sep { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <t t-set="db" t-value="db_name or ''"/>
+  <t t-set="slug" t-value="tournament.slug if tournament else ''"/>
+  <t t-set="open_url" t-value="'/%s/auction/display_auction/%s/resume/open' % (db, slug)"/>
+  <t t-set="complete_url" t-value="'/%s/auction/display_auction/%s/resume/complete' % (db, slug)"/>
+
+  <!-- Hidden form used by JS for bulk open / complete (server redirects to presentation) -->
+  <form id="ar-action-form" method="POST" t-att-action="open_url" style="display:none;">
+    <input type="hidden" name="player_ids" id="ar-player-ids" value=""/>
+  </form>
+
+  <div class="ar-shell"
+       t-att-data-open-url="open_url"
+       t-att-data-complete-url="complete_url">
+
+    <header class="ar-header">
+      <div class="ar-brand">
+        <t t-if="tournament and tournament.logo">
+          <img class="ar-logo"
+               t-att-src="'data:image/png;base64,' + tournament.logo.decode('utf-8')"
+               t-att-alt="tournament.name"/>
+        </t>
+        <t t-else="">
+          <div class="ar-logo-ph">🏆</div>
+        </t>
+        <div class="ar-title-wrap">
+          <div class="ar-eyebrow">Auction Queue Empty</div>
+          <h1 class="ar-title"><t t-esc="tournament.name if tournament else 'Auction'"/></h1>
+          <p class="ar-sub">
+            No players are currently In Auction. Open Draft or Unsold players to continue,
+            or declare the auction complete to show the final Thank You screen.
+          </p>
+        </div>
+      </div>
+      <div class="ar-hdr-right">
+      <a href="/web" title="Go to AuctionChamp backend" class="ar-hdr-logo-link">
+        <img class="ar-powered-logo"
+             src="/auction_module/static/src/assets/images/logo.svg"
+             alt="AuctionChamp"/>
+      </a>
+      </div>
+    </header>
+
+    <section class="ar-stats">
+      <div class="ar-stat ar-stat-draft">
+        <div class="ar-stat-num"><t t-esc="draft_count"/></div>
+        <div class="ar-stat-lbl">Draft</div>
+      </div>
+      <div class="ar-stat ar-stat-unsold">
+        <div class="ar-stat-num"><t t-esc="unsold_count"/></div>
+        <div class="ar-stat-lbl">Unsold</div>
+      </div>
+      <div class="ar-stat ar-stat-sold">
+        <div class="ar-stat-num"><t t-esc="sold_count"/></div>
+        <div class="ar-stat-lbl">Sold</div>
+      </div>
+      <div class="ar-stat ar-stat-open">
+        <div class="ar-stat-num"><t t-esc="(draft_count or 0) + (unsold_count or 0)"/></div>
+        <div class="ar-stat-lbl">Still Available</div>
+      </div>
+    </section>
+
+    <section class="ar-panels">
+      <!-- Draft -->
+      <div class="ar-panel ar-panel-draft" data-panel="draft">
+        <div class="ar-panel-head">
+          <div class="ar-panel-title">
+            Draft Players
+            <span class="ar-badge"><t t-esc="draft_count"/></span>
+          </div>
+          <div class="ar-toolbar">
+            <input class="ar-search" type="search" placeholder="Search draft…" data-search="draft"/>
+            <button type="button" class="ar-btn ar-btn-ghost" data-select-all="draft">Select All</button>
+          </div>
+        </div>
+        <div class="ar-list" id="ar-list-draft">
+          <t t-if="not draft_players">
+            <div class="ar-empty">No draft players left.</div>
+          </t>
+          <t t-foreach="draft_players" t-as="p">
+            <div class="ar-row" t-att-data-name="(p.name or '').lower()" t-att-data-id="p.id">
+              <input type="checkbox" t-att-value="p.id"/>
+              <t t-if="p.photo">
+                <img class="ar-avatar"
+                     t-att-src="'/%s/auction/public/image/auction.team.player/%d/photo' % (db, p.id)"
+                     alt=""/>
+              </t>
+              <t t-else="">
+                <div class="ar-avatar-ph"><t t-esc="(p.name or '?')[:1].upper()"/></div>
+              </t>
+              <div class="ar-meta">
+                <div class="ar-name"><t t-esc="p.name"/></div>
+                <div class="ar-role">
+                  <t t-if="p.tournament_type == 'football' and p.dominant_position_id">
+                    <t t-esc="p.dominant_position_id.name"/>
+                  </t>
+                  <t t-else="">
+                    <t t-esc="p.role or '—'"/>
+                  </t>
+                  <t t-if="p.sl_no"> · #<t t-esc="p.sl_no"/></t>
+                </div>
+              </div>
+              <t t-if="p.tier_id">
+                <span class="ar-tier" t-att-style="'border-color:%s;color:%s' % (p.tier_id.color or '#7f8c8d', p.tier_id.color or '#7f8c8d')">
+                  <t t-esc="p.tier_id.name"/>
+                </span>
+              </t>
+              <t t-else=""><span/></t>
+              <button type="button" class="ar-btn ar-btn-primary ar-btn-sm" t-att-data-open-one="p.id">Open</button>
+            </div>
+          </t>
+        </div>
+        <div class="ar-panel-foot">
+          <button type="button" class="ar-btn ar-btn-primary" data-open="draft">Open Selected</button>
+          <button type="button" class="ar-btn ar-btn-ghost" data-open-all="draft">Open All Draft</button>
+        </div>
+      </div>
+
+      <!-- Unsold -->
+      <div class="ar-panel ar-panel-unsold" data-panel="unsold">
+        <div class="ar-panel-head">
+          <div class="ar-panel-title">
+            Unsold Players
+            <span class="ar-badge"><t t-esc="unsold_count"/></span>
+          </div>
+          <div class="ar-toolbar">
+            <input class="ar-search" type="search" placeholder="Search unsold…" data-search="unsold"/>
+            <button type="button" class="ar-btn ar-btn-ghost" data-select-all="unsold">Select All</button>
+          </div>
+        </div>
+        <div class="ar-list" id="ar-list-unsold">
+          <t t-if="not unsold_players">
+            <div class="ar-empty">No unsold players left.</div>
+          </t>
+          <t t-foreach="unsold_players" t-as="p">
+            <div class="ar-row" t-att-data-name="(p.name or '').lower()" t-att-data-id="p.id">
+              <input type="checkbox" t-att-value="p.id"/>
+              <t t-if="p.photo">
+                <img class="ar-avatar"
+                     t-att-src="'/%s/auction/public/image/auction.team.player/%d/photo' % (db, p.id)"
+                     alt=""/>
+              </t>
+              <t t-else="">
+                <div class="ar-avatar-ph"><t t-esc="(p.name or '?')[:1].upper()"/></div>
+              </t>
+              <div class="ar-meta">
+                <div class="ar-name"><t t-esc="p.name"/></div>
+                <div class="ar-role">
+                  <t t-if="p.tournament_type == 'football' and p.dominant_position_id">
+                    <t t-esc="p.dominant_position_id.name"/>
+                  </t>
+                  <t t-else="">
+                    <t t-esc="p.role or '—'"/>
+                  </t>
+                  <t t-if="p.sl_no"> · #<t t-esc="p.sl_no"/></t>
+                </div>
+              </div>
+              <t t-if="p.tier_id">
+                <span class="ar-tier" t-att-style="'border-color:%s;color:%s' % (p.tier_id.color or '#7f8c8d', p.tier_id.color or '#7f8c8d')">
+                  <t t-esc="p.tier_id.name"/>
+                </span>
+              </t>
+              <t t-else=""><span/></t>
+              <button type="button" class="ar-btn ar-btn-primary ar-btn-sm" t-att-data-open-one="p.id">Open</button>
+            </div>
+          </t>
+        </div>
+        <div class="ar-panel-foot">
+          <button type="button" class="ar-btn ar-btn-primary" data-open="unsold">Open Selected</button>
+          <button type="button" class="ar-btn ar-btn-ghost" data-open-all="unsold">Open All Unsold</button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="ar-footer">
+      <p class="ar-footer-note">
+        Opening players moves them to <strong>In Auction</strong> and resumes the live presentation.
+        Only declare complete when you are finished with Draft and Unsold players.
+      </p>
+      <div class="ar-footer-actions">
+        <button type="button" class="ar-btn ar-btn-danger" id="ar-complete-btn">
+          Declare Auction Complete
+        </button>
+      </div>
+    </footer>
+
+    <div class="ar-brand-strip">
+      <a href="/web" title="Go to AuctionChamp backend" class="ar-hdr-logo-link">
+        <img class="ar-brand-strip-logo"
+             src="/auction_module/static/src/assets/images/logo.svg"
+             alt="AuctionChamp"/>
+      </a>
+      <span class="ar-brand-strip-sep"/>
+      <div class="ar-brand-strip-text">
+        Powered by <strong>AuctionChamp</strong> · All rights reserved
+      </div>
+    </div>
+  </div>
+
+  <div class="ar-toast" id="ar-toast"></div>
+
+  <div class="ar-modal-backdrop" id="ar-modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="ar-modal" id="ar-modal-card">
+      <div class="ar-modal-icon" id="ar-modal-icon">✨</div>
+      <div class="ar-modal-title" id="ar-modal-title">Confirm</div>
+      <div class="ar-modal-msg" id="ar-modal-msg"></div>
+      <div class="ar-modal-actions">
+        <button type="button" class="ar-btn ar-btn-ghost" id="ar-modal-cancel">Cancel</button>
+        <button type="button" class="ar-btn ar-btn-primary" id="ar-modal-ok">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <script><![CDATA[
+(function () {
+  var shell = document.querySelector('.ar-shell');
+  var form = document.getElementById('ar-action-form');
+  var idsInput = document.getElementById('ar-player-ids');
+  if (!shell || !form || !idsInput) return;
+
+  var openUrl = shell.getAttribute('data-open-url');
+  var completeUrl = shell.getAttribute('data-complete-url');
+  var toastEl = document.getElementById('ar-toast');
+  var modalEl = document.getElementById('ar-modal');
+  var modalCard = document.getElementById('ar-modal-card');
+  var modalIcon = document.getElementById('ar-modal-icon');
+  var modalTitle = document.getElementById('ar-modal-title');
+  var modalMsg = document.getElementById('ar-modal-msg');
+  var modalCancel = document.getElementById('ar-modal-cancel');
+  var modalOk = document.getElementById('ar-modal-ok');
+  var busy = false;
+  var modalResolver = null;
+
+  function toast(msg) {
+    if (!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastEl._t);
+    toastEl._t = setTimeout(function () { toastEl.classList.remove('show'); }, 2800);
+  }
+
+  function closeModal(result) {
+    if (!modalEl) return;
+    modalEl.classList.remove('show');
+    modalEl.setAttribute('aria-hidden', 'true');
+    var resolve = modalResolver;
+    modalResolver = null;
+    if (resolve) resolve(!!result);
+  }
+
+  function arConfirm(opts) {
+    opts = opts || {};
+    return new Promise(function (resolve) {
+      if (!modalEl) { resolve(window.confirm(opts.message || 'Continue?')); return; }
+      modalResolver = resolve;
+      modalCard.classList.remove('is-danger', 'is-ok');
+      if (opts.danger) modalCard.classList.add('is-danger');
+      else modalCard.classList.add('is-ok');
+      modalIcon.textContent = opts.icon || (opts.danger ? '🏁' : '🚀');
+      modalTitle.textContent = opts.title || 'Confirm';
+      modalMsg.innerHTML = opts.message || '';
+      modalOk.textContent = opts.confirmLabel || 'Confirm';
+      modalCancel.textContent = opts.cancelLabel || 'Cancel';
+      modalOk.className = 'ar-btn ' + (opts.danger ? 'ar-btn-danger' : 'ar-btn-primary');
+      modalEl.classList.add('show');
+      modalEl.setAttribute('aria-hidden', 'false');
+      setTimeout(function () { modalOk.focus(); }, 30);
+    });
+  }
+
+  modalCancel.addEventListener('click', function () { closeModal(false); });
+  modalOk.addEventListener('click', function () { closeModal(true); });
+  modalEl.addEventListener('click', function (ev) {
+    if (ev.target === modalEl) closeModal(false);
+  });
+  document.addEventListener('keydown', function (ev) {
+    if (!modalEl.classList.contains('show')) return;
+    if (ev.key === 'Escape') closeModal(false);
+    if (ev.key === 'Enter') closeModal(true);
+  });
+
+  function panel(name) {
+    return document.querySelector('.ar-panel[data-panel="' + name + '"]');
+  }
+
+  function selectedIds(name) {
+    var p = panel(name);
+    if (!p) return [];
+    return Array.prototype.map.call(
+      p.querySelectorAll('input[type="checkbox"]:checked'),
+      function (el) { return parseInt(el.value, 10); }
+    ).filter(Boolean);
+  }
+
+  function allVisibleIds(name) {
+    var p = panel(name);
+    if (!p) return [];
+    return Array.prototype.map.call(
+      p.querySelectorAll('.ar-row:not([hidden]) input[type="checkbox"]'),
+      function (el) { return parseInt(el.value, 10); }
+    ).filter(Boolean);
+  }
+
+  function syncSelected(row) {
+    var cb = row.querySelector('input[type="checkbox"]');
+    row.classList.toggle('is-selected', !!(cb && cb.checked));
+  }
+
+  document.querySelectorAll('.ar-row').forEach(function (row) {
+    var cb = row.querySelector('input[type="checkbox"]');
+    if (!cb) return;
+    cb.addEventListener('change', function () { syncSelected(row); });
+    row.addEventListener('click', function (ev) {
+      if (ev.target.closest('button') || ev.target.closest('input')) return;
+      cb.checked = !cb.checked;
+      syncSelected(row);
+    });
+    syncSelected(row);
+  });
+
+  document.querySelectorAll('[data-search]').forEach(function (input) {
+    input.addEventListener('input', function () {
+      var name = input.getAttribute('data-search');
+      var q = (input.value || '').trim().toLowerCase();
+      var p = panel(name);
+      if (!p) return;
+      p.querySelectorAll('.ar-row').forEach(function (row) {
+        var hay = row.getAttribute('data-name') || '';
+        row.hidden = !!(q && hay.indexOf(q) === -1);
+      });
+    });
+  });
+
+  document.querySelectorAll('[data-select-all]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var name = btn.getAttribute('data-select-all');
+      var p = panel(name);
+      if (!p) return;
+      var rows = p.querySelectorAll('.ar-row:not([hidden])');
+      var allOn = Array.prototype.every.call(rows, function (row) {
+        var cb = row.querySelector('input[type="checkbox"]');
+        return cb && cb.checked;
+      });
+      rows.forEach(function (row) {
+        var cb = row.querySelector('input[type="checkbox"]');
+        if (!cb) return;
+        cb.checked = !allOn;
+        syncSelected(row);
+      });
+    });
+  });
+
+  function doSubmitOpen(ids) {
+    busy = true;
+    shell.classList.add('ar-busy');
+    toast('Opening ' + ids.length + ' player(s)…');
+    form.setAttribute('action', openUrl);
+    form.setAttribute('method', 'POST');
+    idsInput.name = 'player_ids';
+    idsInput.value = ids.join(',');
+    form.submit();
+  }
+
+  function submitOpen(ids, opts) {
+    if (busy) return;
+    if (!ids || !ids.length) {
+      toast('Select at least one player');
+      return;
+    }
+    var count = ids.length;
+    var label = count === 1 ? 'this player' : ('<strong>' + count + '</strong> players');
+    arConfirm({
+      icon: '🎯',
+      title: opts && opts.title ? opts.title : 'Open into Auction?',
+      message: (opts && opts.message) ||
+        ('Move ' + label + ' to <strong>In Auction</strong> and resume the live presentation?'),
+      confirmLabel: count === 1 ? 'Open Player' : ('Open ' + count + ' Players'),
+      danger: false,
+    }).then(function (ok) {
+      if (ok) doSubmitOpen(ids);
+    });
+  }
+
+  function submitComplete() {
+    if (busy) return;
+    arConfirm({
+      icon: '🏁',
+      title: 'Declare Auction Complete?',
+      message: 'This will show the <strong>Thank You</strong> screen with final team squads. You can still reopen Draft or Unsold later from the backend if needed.',
+      confirmLabel: 'Yes, Complete',
+      danger: true,
+    }).then(function (ok) {
+      if (!ok) return;
+      busy = true;
+      shell.classList.add('ar-busy');
+      form.setAttribute('action', completeUrl);
+      form.setAttribute('method', 'POST');
+      idsInput.name = 'player_ids';
+      idsInput.value = '';
+      form.submit();
+    });
+  }
+
+  document.querySelectorAll('[data-open]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var name = btn.getAttribute('data-open');
+      submitOpen(selectedIds(name), {
+        title: name === 'unsold' ? 'Open Unsold Players?' : 'Open Draft Players?',
+      });
+    });
+  });
+  document.querySelectorAll('[data-open-all]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var name = btn.getAttribute('data-open-all');
+      var ids = allVisibleIds(name);
+      if (!ids.length) {
+        toast('No players to open');
+        return;
+      }
+      submitOpen(ids, {
+        title: name === 'unsold' ? 'Open All Unsold?' : 'Open All Draft?',
+        message: 'Move all <strong>' + ids.length + '</strong> visible ' + name +
+          ' players to <strong>In Auction</strong> and resume the presentation?',
+      });
+    });
+  });
+  document.querySelectorAll('[data-open-one]').forEach(function (btn) {
+    btn.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      var id = parseInt(btn.getAttribute('data-open-one'), 10);
+      if (!id) return;
+      var row = btn.closest('.ar-row');
+      var pname = row ? (row.querySelector('.ar-name') || {}).textContent : '';
+      submitOpen([id], {
+        title: 'Open Player?',
+        message: 'Move <strong>' + (pname || 'this player') +
+          '</strong> to <strong>In Auction</strong> and resume the live presentation?',
+      });
+    });
+  });
+
+  var completeBtn = document.getElementById('ar-complete-btn');
+  if (completeBtn) {
+    completeBtn.addEventListener('click', submitComplete);
+  }
+})();
+  ]]></script>
+</body>
+</html>
+</template>
+</odoo>

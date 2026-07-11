@@ -311,17 +311,25 @@
                     <span class="player-attr-label">Position</span>
                     <span class="player-attr-value"><t t-esc="player.dominant_position_id.name"/></span>
                   </t>
-                  <t t-if="player.secondary_position_ids">
-                    <span class="player-attr-label">Secondary</span>
-                    <span class="player-attr-value"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span>
-                  </t>
                   <t t-if="player.preferred_foot">
                     <span class="player-attr-label">Preferred Foot</span>
                     <span class="player-attr-value"><t t-esc="player.preferred_foot.capitalize()"/></span>
                   </t>
-                  <t t-if="player.age">
-                    <span class="player-attr-label">Age</span>
-                    <span class="player-attr-value"><t t-esc="player.age"/></span>
+                  <t t-if="player.use_other_attributes">
+                    <t t-foreach="player.other_attribute_ids.filtered('value')" t-as="oattr">
+                      <span class="player-attr-label"><t t-esc="oattr.label"/></span>
+                      <span class="player-attr-value"><t t-esc="oattr.value or '—'"/></span>
+                    </t>
+                  </t>
+                  <t t-else="">
+                    <t t-if="player.secondary_position_ids">
+                      <span class="player-attr-label">Secondary</span>
+                      <span class="player-attr-value"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span>
+                    </t>
+                    <t t-if="player.age">
+                      <span class="player-attr-label">Age</span>
+                      <span class="player-attr-value"><t t-esc="player.age"/></span>
+                    </t>
                   </t>
                 </t>
                 <t t-if="player.blood_group">
@@ -459,7 +467,7 @@
         .then(function(r) { return r.json(); })
         .then(function(result) {
           if (result.error) { showUnsoldToast('Failed to mark player as unsold', true); return; }
-          var secs = (result.result && result.result.display_seconds > 0)
+          var secs = (result.result &amp;&amp; result.result.display_seconds > 0)
                      ? result.result.display_seconds : 5;
           showUnsoldStamp(secs, UNSOLD_COLOR, UNSOLD_TEXT);
         })
@@ -510,7 +518,20 @@
 
     /* ── Bid Summary drawer ─────────────────────────────────────────── */
     window.openBidSummary = function() {
-      document.getElementById('bidSummaryFrame').src = document.getElementById('bidSummaryFrame').dataset.balanceUrl;
+      var frame = document.getElementById('bidSummaryFrame');
+      var url = (frame &amp;&amp; frame.dataset.balanceUrl) || '';
+      if (frame &amp;&amp; url) {
+        var cur = frame.getAttribute('src') || '';
+        if (!cur || cur === 'about:blank') {
+          frame.src = url;
+        } else {
+          try {
+            if (frame.contentWindow &amp;&amp; typeof frame.contentWindow.refreshBalance === 'function') {
+              frame.contentWindow.refreshBalance();
+            }
+          } catch (e) {}
+        }
+      }
       document.getElementById('bidSummaryDrawer').style.right = '0';
       document.getElementById('bidSummaryTabArrow').innerHTML = '&#x2192;';
       document.getElementById('bidSummaryOverlay').style.display = 'block';

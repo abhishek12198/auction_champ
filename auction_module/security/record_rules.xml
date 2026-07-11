@@ -5,21 +5,14 @@
     <!--
         TOURNAMENT-BASED DATA ISOLATION
         ================================
-        Two complementary rules per model:
+        Auction Administrator → all records  [(1, '=', 1)]
+        All other auction groups → only user.tournament_id
+          Domain: [('tournament_id', 'in', user.tournament_id.ids)]
+          (or ('id', '=', ...) for auction.tournament)
 
-          1. "<Model>: own tournament only"
-             Targets group_auction_group (the base group ALL non-admin Auction users
-             belong to). Domain restricts records to the user's assigned tournament.
-
-          2. "<Model>: admin sees all"
-             Targets group_auction_group_admin. Domain = (1=1), unconditionally
-             allows all records.
-
-        Because group_auction_group_admin *implies* group_auction_group, an admin
-        user matches BOTH rules. Odoo ORs same-model rules when a user belongs to
-        all their groups → admin sees everything.
-
-        A plain non-admin user only matches rule #1 → sees only their tournament.
+        When Active Tournament is empty, '=' False alone would match
+        unassigned rows — the Python _search mixin blocks that case.
+        Rules still use tournament_id so list/form access matches.
     -->
 
     <!-- ═══════════════════════════════════════════════════════
@@ -29,7 +22,7 @@
         <field name="name">Tournament: own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_tournament"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
-        <field name="domain_force">[('id', '=', user.tournament_id.id)]</field>
+        <field name="domain_force">[('id', 'in', user.tournament_id.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>
@@ -47,6 +40,28 @@
         <field name="perm_unlink" eval="True"/>
     </record>
 
+    <record id="rule_tournament_dashboard_own" model="ir.rule">
+        <field name="name">Tournament: dashboard viewer — own only</field>
+        <field name="model_id" ref="auction_module.model_auction_tournament"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_player_dashboard'))]"/>
+        <field name="domain_force">[('id', 'in', user.tournament_id.ids)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_tournament_pm_own" model="ir.rule">
+        <field name="name">Tournament: payment marker — own only</field>
+        <field name="model_id" ref="auction_module.model_auction_tournament"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_payment_marker'))]"/>
+        <field name="domain_force">[('id', 'in', user.tournament_id.ids)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
     <!-- ═══════════════════════════════════════════════════════
          auction.team.player
     ═══════════════════════════════════════════════════════════ -->
@@ -54,7 +69,7 @@
         <field name="name">Player: own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_team_player"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
-        <field name="domain_force">[('tournament_id', '=', user.tournament_id.id)]</field>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>
@@ -72,6 +87,28 @@
         <field name="perm_unlink" eval="True"/>
     </record>
 
+    <record id="rule_team_player_dashboard_own" model="ir.rule">
+        <field name="name">Player: dashboard viewer — own tournament only</field>
+        <field name="model_id" ref="auction_module.model_auction_team_player"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_player_dashboard'))]"/>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_team_player_pm_own_tournament" model="ir.rule">
+        <field name="name">Player: payment marker — own tournament only</field>
+        <field name="model_id" ref="auction_module.model_auction_team_player"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_payment_marker'))]"/>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
     <!-- ═══════════════════════════════════════════════════════
          auction.team
     ═══════════════════════════════════════════════════════════ -->
@@ -79,7 +116,7 @@
         <field name="name">Team: own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_team"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
-        <field name="domain_force">[('tournament_id', '=', user.tournament_id.id)]</field>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>
@@ -97,6 +134,28 @@
         <field name="perm_unlink" eval="True"/>
     </record>
 
+    <record id="rule_team_dashboard_own" model="ir.rule">
+        <field name="name">Team: dashboard viewer — own tournament only</field>
+        <field name="model_id" ref="auction_module.model_auction_team"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_player_dashboard'))]"/>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_team_pm_own" model="ir.rule">
+        <field name="name">Team: payment marker — own tournament only</field>
+        <field name="model_id" ref="auction_module.model_auction_team"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_payment_marker'))]"/>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
     <!-- ═══════════════════════════════════════════════════════
          auction.auction
     ═══════════════════════════════════════════════════════════ -->
@@ -104,7 +163,7 @@
         <field name="name">Auction: own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_auction"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
-        <field name="domain_force">[('tournament_id', '=', user.tournament_id.id)]</field>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>
@@ -129,7 +188,7 @@
         <field name="name">Auction History: own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_history"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
-        <field name="domain_force">[('tournament_id', '=', user.tournament_id.id)]</field>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>
@@ -148,13 +207,13 @@
     </record>
 
     <!-- ═══════════════════════════════════════════════════════
-         auction.auction.player  (bid line items inside an auction)
+         auction.auction.player
     ═══════════════════════════════════════════════════════════ -->
     <record id="rule_auction_player_own_tournament" model="ir.rule">
         <field name="name">Auction Player: own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_auction_player"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
-        <field name="domain_force">[('auction_id.tournament_id', '=', user.tournament_id.id)]</field>
+        <field name="domain_force">[('auction_id.tournament_id', 'in', user.tournament_id.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>
@@ -172,6 +231,17 @@
         <field name="perm_unlink" eval="True"/>
     </record>
 
+    <record id="rule_auction_player_dashboard_own" model="ir.rule">
+        <field name="name">Auction Player: dashboard viewer — own only</field>
+        <field name="model_id" ref="auction_module.model_auction_auction_player"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_player_dashboard'))]"/>
+        <field name="domain_force">[('auction_id.tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
     <!-- ═══════════════════════════════════════════════════════
          auction.player.tier
     ═══════════════════════════════════════════════════════════ -->
@@ -179,7 +249,7 @@
         <field name="name">Player Tier: own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_player_tier"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
-        <field name="domain_force">[('tournament_id', '=', user.tournament_id.id)]</field>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>
@@ -197,21 +267,173 @@
         <field name="perm_unlink" eval="True"/>
     </record>
 
-    <!-- ═══════════════════════════════════════════════════════
-         auction.team.player  (Payment Marker role)
-         Restrict to the user's assigned tournament.
-         Uses sudo() in the controller but these rules guard
-         any direct ORM access for the standalone role.
-    ═══════════════════════════════════════════════════════════ -->
-    <record id="rule_team_player_pm_own_tournament" model="ir.rule">
-        <field name="name">Player: payment marker — own tournament only</field>
-        <field name="model_id" ref="auction_module.model_auction_team_player"/>
-        <field name="groups" eval="[(4, ref('auction_module.group_auction_payment_marker'))]"/>
-        <field name="domain_force">[('tournament_id', '=', user.tournament_id.id)]</field>
+    <record id="rule_player_tier_dashboard_own" model="ir.rule">
+        <field name="name">Player Tier: dashboard viewer — own only</field>
+        <field name="model_id" ref="auction_module.model_auction_player_tier"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_player_dashboard'))]"/>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
         <field name="perm_read"   eval="True"/>
-        <field name="perm_write"  eval="True"/>
+        <field name="perm_write"  eval="False"/>
         <field name="perm_create" eval="False"/>
         <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_player_tier_pm_own" model="ir.rule">
+        <field name="name">Player Tier: payment marker — own only</field>
+        <field name="model_id" ref="auction_module.model_auction_player_tier"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_payment_marker'))]"/>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════
+         auction.tournament.attribute.label
+    ═══════════════════════════════════════════════════════════ -->
+    <record id="rule_tournament_attr_label_own" model="ir.rule">
+        <field name="name">Tournament Attr Label: own tournament only</field>
+        <field name="model_id" ref="auction_module.model_auction_tournament_attribute_label"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="rule_tournament_attr_label_admin_all" model="ir.rule">
+        <field name="name">Tournament Attr Label: admin sees all</field>
+        <field name="model_id" ref="auction_module.model_auction_tournament_attribute_label"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_group_admin'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════
+         auction.advertiser
+    ═══════════════════════════════════════════════════════════ -->
+    <record id="rule_advertiser_own_tournament" model="ir.rule">
+        <field name="name">Advertiser: own tournament only</field>
+        <field name="model_id" ref="auction_module.model_auction_advertiser"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="rule_advertiser_admin_all" model="ir.rule">
+        <field name="name">Advertiser: admin sees all</field>
+        <field name="model_id" ref="auction_module.model_auction_advertiser"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_group_admin'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════
+         auction.tournament.point.split
+    ═══════════════════════════════════════════════════════════ -->
+    <record id="rule_point_split_own_tournament" model="ir.rule">
+        <field name="name">Point Split: own tournament only</field>
+        <field name="model_id" ref="auction_module.model_auction_tournament_point_split"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="rule_point_split_admin_all" model="ir.rule">
+        <field name="name">Point Split: admin sees all</field>
+        <field name="model_id" ref="auction_module.model_auction_tournament_point_split"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_group_admin'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════
+         auction.auction.bid.slab / auction.auction.tier.limit
+    ═══════════════════════════════════════════════════════════ -->
+    <record id="rule_bid_slab_own_tournament" model="ir.rule">
+        <field name="name">Bid Slab: own tournament only</field>
+        <field name="model_id" ref="auction_module.model_auction_auction_bid_slab"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
+        <field name="domain_force">[('auction_id.tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="rule_bid_slab_admin_all" model="ir.rule">
+        <field name="name">Bid Slab: admin sees all</field>
+        <field name="model_id" ref="auction_module.model_auction_auction_bid_slab"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_group_admin'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="rule_tier_limit_own_tournament" model="ir.rule">
+        <field name="name">Tier Limit: own tournament only</field>
+        <field name="model_id" ref="auction_module.model_auction_auction_tier_limit"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
+        <field name="domain_force">[('auction_id.tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="rule_tier_limit_admin_all" model="ir.rule">
+        <field name="name">Tier Limit: admin sees all</field>
+        <field name="model_id" ref="auction_module.model_auction_auction_tier_limit"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_group_admin'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════
+         auction.player.other.attribute
+    ═══════════════════════════════════════════════════════════ -->
+    <record id="rule_player_other_attr_own" model="ir.rule">
+        <field name="name">Player Other Attr: own tournament only</field>
+        <field name="model_id" ref="auction_module.model_auction_player_other_attribute"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
+        <field name="domain_force">[('player_id.tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="rule_player_other_attr_admin_all" model="ir.rule">
+        <field name="name">Player Other Attr: admin sees all</field>
+        <field name="model_id" ref="auction_module.model_auction_player_other_attribute"/>
+        <field name="groups" eval="[(4, ref('auction_module.group_auction_group_admin'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
     </record>
 
 </data>

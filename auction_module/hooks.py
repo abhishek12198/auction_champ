@@ -36,5 +36,14 @@
 #
 ##############################################################################
 
-from . import auction_player_card_report
-from . import pdf_compress
+def post_init_hook(cr, registry):
+    """Ensure Active Tournament is present on Organizers M2M for record rules."""
+    from odoo import api, SUPERUSER_ID
+
+    env = api.Environment(cr, SUPERUSER_ID, {})
+    users = env['res.users'].search([('tournament_id', '!=', False)])
+    for user in users:
+        if user.tournament_id not in user.tournament_ids:
+            user.with_context(skip_tournament_sync=True).write({
+                'tournament_ids': [(4, user.tournament_id.id)],
+            })

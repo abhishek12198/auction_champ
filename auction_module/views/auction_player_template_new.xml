@@ -410,17 +410,25 @@ body[data-theme="dark"] .single-header{
                     <span class="player-attr-label">Position</span>
                     <span class="player-attr-value"><t t-esc="player.dominant_position_id.name"/></span>
                   </t>
-                  <t t-if="player.secondary_position_ids">
-                    <span class="player-attr-label">Secondary</span>
-                    <span class="player-attr-value"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span>
-                  </t>
                   <t t-if="player.preferred_foot">
                     <span class="player-attr-label">Preferred Foot</span>
                     <span class="player-attr-value"><t t-esc="player.preferred_foot.capitalize()"/></span>
                   </t>
-                  <t t-if="player.age">
-                    <span class="player-attr-label">Age</span>
-                    <span class="player-attr-value"><t t-esc="player.age"/></span>
+                  <t t-if="player.use_other_attributes">
+                    <t t-foreach="player.other_attribute_ids.filtered('value')" t-as="oattr">
+                      <span class="player-attr-label"><t t-esc="oattr.label"/></span>
+                      <span class="player-attr-value"><t t-esc="oattr.value or '—'"/></span>
+                    </t>
+                  </t>
+                  <t t-else="">
+                    <t t-if="player.secondary_position_ids">
+                      <span class="player-attr-label">Secondary</span>
+                      <span class="player-attr-value"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span>
+                    </t>
+                    <t t-if="player.age">
+                      <span class="player-attr-label">Age</span>
+                      <span class="player-attr-value"><t t-esc="player.age"/></span>
+                    </t>
                   </t>
                 </t>
                 <t t-if="player.blood_group">
@@ -444,7 +452,7 @@ body[data-theme="dark"] .single-header{
                   <span class="player-attr-value"><t t-esc="'{:,}'.format(int(player.effective_base_price or 0))"/> pts</span>
                 </t>
               </div>
-              <t t-if="player.tournament_type == 'football' and (player.playing_style_ids or player.strength_ids)">
+              <t t-if="player.tournament_type == 'football' and not player.use_other_attributes and (player.playing_style_ids or player.strength_ids)">
                 <div class="player-tag-chips">
                   <t t-foreach="player.playing_style_ids" t-as="sty">
                     <span class="player-tag-chip"><t t-esc="sty.icon"/> <t t-esc="sty.name"/></span>
@@ -675,7 +683,20 @@ body[data-theme="dark"] .single-header{
       }
 
       function openBidSummary() {
-        document.getElementById('bidSummaryFrame').src = document.documentElement.dataset.balanceUrl;
+        var frame = document.getElementById('bidSummaryFrame');
+        var url = document.documentElement.dataset.balanceUrl;
+        if (frame &amp;&amp; url) {
+          var cur = frame.getAttribute('src') || '';
+          if (!cur || cur === 'about:blank') {
+            frame.src = url;
+          } else {
+            try {
+              if (frame.contentWindow &amp;&amp; typeof frame.contentWindow.refreshBalance === 'function') {
+                frame.contentWindow.refreshBalance();
+              }
+            } catch (e) {}
+          }
+        }
         document.getElementById('bidSummaryDrawer').style.right = '0';
         document.getElementById('bidSummaryTabArrow').innerHTML = '&#x2192;';
         document.getElementById('bidSummaryOverlay').style.display = 'block';

@@ -5,9 +5,6 @@
     <template id="report_player_card_cherry_page">
         <html lang="en">
             <head>
-                <link rel="preconnect" href="https://fonts.googleapis.com" />
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1" />
-                <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Oswald:wght@400;500;600;700&amp;family=Barlow:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
                 <title>Player Card</title>
                 <style>@font-face{font-family:'Tottenham';src:url('/auction_module/static/src/assets/fonts/Tottenham%20-%20Personal%202.otf') format('opentype');font-weight:normal;font-style:normal;}</style>
             </head>
@@ -20,7 +17,7 @@
                             <tr>
                                         <td style="vertical-align:middle; padding:11px 18px; width:60px;">
                                             <div style="width:48px; height:48px; padding:3px; border-radius:8px; background-color:rgba(255,255,255,0.14); box-shadow:0 0 0 1px rgba(245,200,66,0.5); text-align:center;">
-                                                <img t-att-src="image_data_uri(doc.tournament_id.logo)" alt="Logo" style="height:42px; width:42px; object-fit:contain; display:inline-block; border-radius:5px; vertical-align:middle;"/>
+                                                <img t-att-src="image_data_uri(doc.tournament_id.logo_card or doc.tournament_id.logo)" alt="Logo" style="height:42px; width:42px; object-fit:contain; display:inline-block; border-radius:5px; vertical-align:middle;"/>
                                             </div>
                                         </td>
                                 <td style="vertical-align:middle; padding:11px 0;">
@@ -40,7 +37,7 @@
                             <td style="width:264px; min-width:264px; vertical-align:top; padding:0;">
                                 <div style="padding:14px 11px 14px 14px; background-color:#240709; background-image:-webkit-radial-gradient(50% 4%, circle, rgba(220,40,60,0.32) 0%, rgba(220,40,60,0) 55%), -webkit-linear-gradient(top,#3a0a10 0%,#180405 100%); border-right:2px solid rgba(245,200,66,0.3);">
                                     <div t-att-style="'border-radius:10px; overflow:hidden; border-top:5px solid ' + (doc.tier_id.color if doc.tier_id else '#ff4d64') + '; border-bottom:5px solid ' + (doc.tier_id.color if doc.tier_id else '#ff4d64') + '; box-shadow:0 0 0 2px #f5c842, 0 0 0 5px rgba(0,0,0,0.5), 0 8px 22px rgba(0,0,0,0.5);'">
-                                        <img t-att-src="image_data_uri(doc.photo_card or doc.photo)" alt="Player Photo" style="width:100%; height:300px; object-fit:cover; object-position:top center; display:block;"/>
+                                        <img t-att-src="image_data_uri(doc._get_card_print_photo())" alt="Player Photo" style="width:100%; height:300px; display:block;"/>
                                     </div>
                                 </div>
                             </td>
@@ -87,7 +84,7 @@
                                         <td style="color:#ffecec; font-size:0.85rem; font-weight:600; padding:7px 0; border-bottom:1px solid rgba(245,200,66,0.15); vertical-align:middle;"><t t-esc="doc.dominant_position_id.name"/></td>
                                     </tr>
                                 </t>
-                                <t t-if="doc.tournament_id.tournament_type == 'football' and doc.secondary_position_ids">
+                                <t t-if="doc.tournament_id.tournament_type == 'football' and doc.secondary_position_ids and not doc.use_other_attributes">
                                     <tr>
                                         <td style="color:#e0a0a8; font-family:'Oswald',sans-serif; font-size:0.7rem; font-weight:500; letter-spacing:0.8px; text-transform:uppercase; padding:7px 10px 7px 0; white-space:nowrap; width:42%; border-bottom:1px solid rgba(245,200,66,0.15); vertical-align:middle;">Secondary</td>
                                         <td style="color:#ffecec; font-size:0.85rem; font-weight:600; padding:7px 0; border-bottom:1px solid rgba(245,200,66,0.15); vertical-align:middle;"><t t-esc="', '.join(doc.secondary_position_ids.mapped('code'))"/></td>
@@ -99,13 +96,21 @@
                                         <td style="color:#ffecec; font-size:0.85rem; font-weight:600; padding:7px 0; border-bottom:1px solid rgba(245,200,66,0.15); vertical-align:middle;"><t t-esc="doc.preferred_foot.capitalize()"/></td>
                                     </tr>
                                 </t>
-                                <t t-if="doc.tournament_id.tournament_type == 'football' and doc.work_rate">
+                                <t t-if="doc.tournament_id.tournament_type == 'football' and doc.use_other_attributes">
+                                    <t t-foreach="doc.other_attribute_ids.filtered('value')" t-as="oattr">
+                                        <tr>
+                                            <td style="color:#e0a0a8; font-family:'Oswald',sans-serif; font-size:0.7rem; font-weight:500; letter-spacing:0.8px; text-transform:uppercase; padding:7px 10px 7px 0; white-space:nowrap; width:42%; border-bottom:1px solid rgba(245,200,66,0.15); vertical-align:middle;"><t t-esc="oattr.label"/></td>
+                                            <td style="color:#ffecec; font-size:0.85rem; font-weight:600; padding:7px 0; border-bottom:1px solid rgba(245,200,66,0.15); vertical-align:middle;"><t t-esc="oattr.value or '—'"/></td>
+                                        </tr>
+                                    </t>
+                                </t>
+                                <t t-if="doc.tournament_id.tournament_type == 'football' and doc.work_rate and not doc.use_other_attributes">
                                     <tr>
                                         <td style="color:#e0a0a8; font-family:'Oswald',sans-serif; font-size:0.7rem; font-weight:500; letter-spacing:0.8px; text-transform:uppercase; padding:7px 10px 7px 0; white-space:nowrap; width:42%; border-bottom:1px solid rgba(245,200,66,0.15); vertical-align:middle;">Work Rate</td>
                                         <td style="color:#ffecec; font-size:0.85rem; font-weight:600; padding:7px 0; border-bottom:1px solid rgba(245,200,66,0.15); vertical-align:middle;"><t t-esc="doc.work_rate.capitalize()"/></td>
                                     </tr>
                                 </t>
-                                <t t-if="doc.tournament_id.tournament_type == 'football' and doc.age">
+                                <t t-if="doc.tournament_id.tournament_type == 'football' and doc.age and not doc.use_other_attributes">
                                     <tr>
                                         <td style="color:#e0a0a8; font-family:'Oswald',sans-serif; font-size:0.7rem; font-weight:500; letter-spacing:0.8px; text-transform:uppercase; padding:7px 10px 7px 0; white-space:nowrap; width:42%; border-bottom:1px solid rgba(245,200,66,0.15); vertical-align:middle;">Age</td>
                                         <td style="color:#ffecec; font-size:0.85rem; font-weight:600; padding:7px 0; border-bottom:1px solid rgba(245,200,66,0.15); vertical-align:middle;"><t t-esc="doc.age"/></td>

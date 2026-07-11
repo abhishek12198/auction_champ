@@ -1,4 +1,41 @@
 # -*- coding: utf-8 -*-
+##############################################################################
+#
+#  AuctionChamp - Professional Sports Auction Management Platform
+#
+#  Copyright (c) 2026 AuctionChamp.
+#  All Rights Reserved.
+#
+#  CONFIDENTIAL & PROPRIETARY
+#
+#  This source code, including but not limited to its algorithms, business
+#  logic, database structures, models, controllers, views, reports, templates,
+#  APIs, documentation, and related materials, constitutes proprietary and
+#  confidential information owned exclusively by AuctionChamp.
+#
+#  This software is protected by applicable copyright laws and international
+#  intellectual property treaties. Unauthorized copying, reproduction,
+#  modification, distribution, publication, sublicensing, reverse engineering,
+#  decompilation, disassembly, disclosure, or use of this software, in whole
+#  or in part, is strictly prohibited without the prior written permission of
+#  AuctionChamp.
+#
+#  This software is licensed, not sold. Possession of the source code does not
+#  grant any right to copy, modify, redistribute, or create derivative works
+#  except as expressly permitted under a valid written license agreement with
+#  AuctionChamp.
+#
+#  Any unauthorized use may result in civil and criminal penalties under
+#  applicable intellectual property and copyright laws.
+#
+#  Company  : AuctionChamp
+#  Website  : www.auctionchamp.live
+#  Email    : auctionchamp.live@gmail.com
+#
+#  © 2026 AuctionChamp. All Rights Reserved.
+#
+##############################################################################
+
 import base64
 
 from odoo import api, models, fields, _
@@ -11,6 +48,7 @@ import werkzeug.exceptions
 class Auction(models.Model):
 
     _name = 'auction.auction'
+    _inherit = ['auction.tournament.security.mixin']
     _rec_name = 'team_id'
     _order = 'remaining_players_count,id'
 
@@ -136,12 +174,17 @@ class Auction(models.Model):
         player_tier_id = player.tier_id.id
         slots_to_account = remaining_players - 1  # slots to fill after the current player
 
+        # Count recruited per tier in-memory (avoids N×tiers search_count round-trips
+        # that make Bid Summary / balance JSON slow when a player is on stage).
+        recruited_by_tier = {}
+        for line in team.player_ids:
+            tid = line.tier_id.id if line.tier_id else False
+            if tid:
+                recruited_by_tier[tid] = recruited_by_tier.get(tid, 0) + 1
+
         tier_options = []
         for tl in team.tier_limit_ids:
-            recruited = self.env['auction.auction.player'].search_count([
-                ('auction_id', '=', team.id),
-                ('player_id.tier_id', '=', tl.tier_id.id),
-            ])
+            recruited = recruited_by_tier.get(tl.tier_id.id, 0)
             available = max(tl.max_players - recruited, 0)
             if tl.tier_id.id == player_tier_id:
                 # The current slot is being filled — exclude it from the reserve
@@ -207,6 +250,7 @@ class Auction(models.Model):
 class AuctionPlayer(models.Model):
 
     _name = 'auction.auction.player'
+    _inherit = ['auction.tournament.security.mixin']
 
     auction_id = fields.Many2one('auction.auction', 'Auction', ondelete='cascade')
     player_id = fields.Many2one('auction.team.player', 'Player')
@@ -238,6 +282,7 @@ class AuctionPlayer(models.Model):
 class AuctionBidSlab(models.Model):
 
     _name = 'auction.auction.bid.slab'
+    _inherit = ['auction.tournament.security.mixin']
 
     auction_id = fields.Many2one('auction.auction', ondelete='cascade')
     from_amount = fields.Integer(required=True)
@@ -247,6 +292,7 @@ class AuctionBidSlab(models.Model):
 
 class AuctionAuctionTierLimit(models.Model):
     _name = 'auction.auction.tier.limit'
+    _inherit = ['auction.tournament.security.mixin']
     _description = 'Auction Team Tier Limit'
 
     auction_id = fields.Many2one('auction.auction', ondelete='cascade')
