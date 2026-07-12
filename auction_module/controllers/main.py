@@ -481,6 +481,8 @@ class Auction(http.Controller):
             'team_logo': '',
             'team_name': '',
             'sold_points': 0,
+            'base_price': int(player.effective_base_price or player.base_price or 0),
+            'icon_player': bool(player.icon_player),
         }
 
         if player.state == 'sold' and player.assigned_team_id:
@@ -2034,9 +2036,11 @@ class Auction(http.Controller):
                 tournament = request.env['auction.tournament'].sudo().search(
                     [('active', '=', True)], limit=1)
             theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
+            sport = (tournament.tournament_type or 'cricket') if tournament else 'cricket'
             html = request.render('auction_module.projector_template', {
                 'tournament': tournament,
                 'theme': theme,
+                'sport': sport,
                 'db_name': db_name,
                 'tournament_slug': tournament_slug or (tournament.slug if tournament else ''),
             }, lazy=False)
@@ -2075,14 +2079,20 @@ class Auction(http.Controller):
                     },
                 }
             photo = ''
+            photo_url = ''
             if player.photo:
-                photo = player.photo.decode('utf-8') if isinstance(player.photo, bytes) else player.photo
+                photo_url = '/%s/auction/public/image/auction.team.player/%d/photo' % (
+                    db_name, player.id)
+                # Keep tiny fallback only if URL path is unavailable to older JS
+                photo = ''
             team_logo = ''
+            team_logo_url = ''
             team_name = ''
-            if player.assigned_team_id and player.assigned_team_id.logo:
-                lg = player.assigned_team_id.logo
-                team_logo = lg.decode('utf-8') if isinstance(lg, bytes) else lg
-                team_name = player.assigned_team_id.name
+            if player.assigned_team_id:
+                team_name = player.assigned_team_id.name or ''
+                if player.assigned_team_id.logo:
+                    team_logo_url = '/%s/auction/public/image/auction.team/%d/logo' % (
+                        db_name, player.assigned_team_id.id)
             sold_points = 0
             if player.state == 'sold':
                 auction_line = request.env['auction.auction.player'].sudo().search(
@@ -2096,6 +2106,7 @@ class Auction(http.Controller):
                 'batting_style': player.batting_style or '',
                 'bowling_style': player.bowling_style or '',
                 'photo': photo,
+                'photo_url': photo_url,
                 'tier_name': player.tier_id.name if player.tier_id else '',
                 'tier_color': player.tier_color or '#3498db',
                 'base_price': player.effective_base_price or player.base_price or 0,
@@ -2103,6 +2114,7 @@ class Auction(http.Controller):
                 'state': state_override or player.state,
                 'team_name': team_name,
                 'team_logo': team_logo,
+                'team_logo_url': team_logo_url,
             }
             player_payload.update(_football_display_payload(player))
             return {
@@ -2398,7 +2410,9 @@ class Auction(http.Controller):
                     'name': tournament.name or '',
                     'description': tournament.description or '',
                     'logo_url': pub_img('auction.tournament', tournament.id, 'logo') if tournament.logo else '',
+                    'tournament_type': tournament.tournament_type or 'cricket',
                 }
+                result['tournament_type'] = tournament.tournament_type or 'cricket'
 
             # ── Stamp-first: check if tournament has an active sold/unsold stamp ──
             stamp_player = None
@@ -2499,28 +2513,43 @@ class Auction(http.Controller):
             ]
 
             # ── Teams (from auctions in this tournament) ──
+            is_football = (tournament.tournament_type == 'football')
             auctions = env['auction.auction'].sudo().search(
                 [('tournament_id', '=', tournament.id)]
             )
             for auc in auctions:
                 team = auc.team_id
                 if team:
+                    players_payload = []
+                    for line in auc.player_ids:
+                        if not line.player_id:
+                            continue
+                        p = line.player_id
+                        pos_code = ''
+                        pos_name = ''
+                        if is_football and p.dominant_position_id:
+                            pos_code = (p.dominant_position_id.code or '').strip().upper()
+                            pos_name = p.dominant_position_id.name or ''
+                            if not pos_code and pos_name:
+                                # Derive abbreviation from name words when code is empty
+                                parts = [w for w in pos_name.replace('-', ' ').split() if w]
+                                pos_code = ''.join(w[0] for w in parts).upper()[:3]
+                        players_payload.append({
+                            'name': p.name or '',
+                            'photo_url': pub_img('auction.team.player', p.id, 'photo')
+                                         if p.photo else '',
+                            'role': p.role or '',
+                            'position_code': pos_code,
+                            'position_name': pos_name,
+                            'points': line.points,
+                        })
                     result['teams'].append({
                         'id': team.id,
                         'name': team.name or '',
                         'logo_url': pub_img('auction.team', team.id, 'logo') if team.logo else '',
                         'remaining_points': auc.remaining_points,
                         'manager': team.manager or '',
-                        'players': [
-                            {
-                                'name': line.player_id.name or '',
-                                'photo_url': pub_img('auction.team.player', line.player_id.id, 'photo')
-                                             if line.player_id and line.player_id.photo else '',
-                                'role': line.player_id.role or '',
-                                'points': line.points,
-                            }
-                            for line in auc.player_ids if line.player_id
-                        ],
+                        'players': players_payload,
                     })
 
             # ── Player state counts for this tournament (stats block) ──
@@ -2644,14 +2673,18 @@ class Auction(http.Controller):
         def pub_img(model, rec_id, field):
             return '/auction/public/image/%s/%d/%s' % (model, rec_id, field)
 
-        # ── Tournament scope: only Auction Admin sees all; others → Active Tournament
+        # ── Tournament scope: only Auction Admin sees all; others → assigned tournaments
         is_admin = request.env.user.has_group('auction_module.group_auction_group_admin')
         user = request.env.user
-        user_tournament = user.tournament_id
+        # Prefer Active Tournament; fall back to Organizers M2M so counts match list views
+        user_tournament = user.tournament_id or user.tournament_ids[:1]
+        allowed_tids = set(user.tournament_ids.ids)
+        if user.tournament_id:
+            allowed_tids.add(user.tournament_id.id)
         if is_admin:
             t_domain = []
-        elif user_tournament:
-            t_domain = [('tournament_id', '=', user_tournament.id)]
+        elif allowed_tids:
+            t_domain = [('tournament_id', 'in', list(allowed_tids))]
         else:
             # No tournament assigned → show nothing (do not leak all tournaments)
             t_domain = [('id', '=', False)]
@@ -3502,6 +3535,8 @@ class Auction(http.Controller):
     @http.route('/<string:db_name>/player/card/<int:player_id>', type='http', auth='none', website=False, sitemap=False)
     def player_card_download(self, db_name, player_id, **kw):
         """Stream the themed player-card PDF for the given player (public, read-only)."""
+        import time
+        t0 = time.monotonic()
         with self._with_db(db_name) as ok:
             if not ok:
                 return self._not_found()
@@ -3510,7 +3545,15 @@ class Auction(http.Controller):
             if not player.exists():
                 return self._not_found()
 
+            # Ensure print-sized photo/logo so wkhtmltopdf does not embed huge uploads.
+            if player.photo and not player.photo_card:
+                player._compute_photo_card()
+                player.flush(['photo_card'])
             tournament = player.tournament_id
+            if tournament and tournament.logo and not tournament.logo_card:
+                tournament._compute_logo_card()
+                tournament.flush(['logo_card'])
+
             theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
 
             if tournament and tournament.tournament_type == 'football':
@@ -3526,7 +3569,9 @@ class Auction(http.Controller):
                 report_ref = report_map.get(theme, 'auction_module.action_report_player_card')
 
             try:
-                report = request.env.ref(report_ref).sudo()
+                report = request.env.ref(report_ref).sudo().with_context(
+                    skip_player_card_compress=True,
+                )
                 pdf_content, _mime = report._render_qweb_pdf([player_id])
             except Exception:
                 _logger.exception(
@@ -3564,6 +3609,12 @@ class Auction(http.Controller):
                 )
 
             filename = 'PlayerCard_%s.pdf' % (player.name or player_id)
+            _logger.info(
+                'Player card PDF ready player_id=%s size=%.0fKB in %.2fs',
+                player_id,
+                len(pdf_content) / 1024.0,
+                time.monotonic() - t0,
+            )
         return request.make_response(
             pdf_content,
             headers=[
@@ -3571,6 +3622,68 @@ class Auction(http.Controller):
                 ('Content-Length', len(pdf_content)),
                 ('Content-Disposition', 'attachment; filename="%s"' % filename),
             ]
+        )
+
+    @http.route('/<string:db_name>/player/card_status/<int:player_id>',
+                type='http', auth='none', website=False, sitemap=False)
+    def player_card_status_jpg(self, db_name, player_id, **kw):
+        """Stream a vertical Instagram Status (9:16) player card as JPG.
+
+        Uses the same portrait template as *Download Player Cards (ZIP)*.
+        Public so newly registered players can download from the success page.
+        """
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return self._not_found()
+
+            player = request.env['auction.team.player'].sudo().browse(player_id)
+            if not player.exists():
+                return self._not_found()
+
+            try:
+                jpg = player.render_instagram_status_jpg()
+            except Exception:
+                _logger.exception(
+                    'Instagram status JPG failed for player_id=%s', player_id)
+                jpg = None
+
+            if not jpg:
+                body = (
+                    '<html><head><meta charset="UTF-8"/>'
+                    '<style>body{font-family:sans-serif;display:flex;align-items:center;'
+                    'justify-content:center;min-height:100vh;margin:0;background:#f8f8f8}'
+                    '.box{text-align:center;padding:2rem;max-width:480px}'
+                    'h2{color:#c0392b}p{color:#555;line-height:1.6}</style></head>'
+                    '<body><div class="box">'
+                    '<h2>&#9888; Status Card Unavailable</h2>'
+                    '<p>We could not generate your Instagram status card right now.<br/>'
+                    'Please try again in a moment, or use the PDF player card download.</p>'
+                    '<p><a href="javascript:history.back()">&#8592; Go Back</a></p>'
+                    '</div></body></html>'
+                )
+                return request.make_response(
+                    body.encode('utf-8'),
+                    headers=[
+                        ('Content-Type', 'text/html; charset=utf-8'),
+                        ('Cache-Control', 'no-store'),
+                    ],
+                    status=503,
+                )
+
+            safe = re.sub(
+                r'[^A-Za-z0-9]+', '_',
+                (player.name or ('Player_%s' % player_id)).strip()
+            ).strip('_') or 'Player'
+            filename = 'Instagram_Status_%s.jpg' % safe
+
+        return request.make_response(
+            jpg,
+            headers=[
+                ('Content-Type', 'image/jpeg'),
+                ('Content-Length', len(jpg)),
+                ('Content-Disposition', 'attachment; filename="%s"' % filename),
+                ('Cache-Control', 'private, max-age=60'),
+            ],
         )
 
 

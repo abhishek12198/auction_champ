@@ -552,7 +552,18 @@ class AuctionTeamPlayer(models.Model):
             processed = self._make_card_print_jpeg(self.photo)
             if processed and len(processed) > 32:
                 return processed
-        return self.photo or False
+            # Last resort: still downscale so wkhtmltopdf does not embed a
+            # multi-MB phone photo as a data URI (very slow for one-card PDF).
+            try:
+                return image_process(
+                    self.photo,
+                    size=(self._CARD_PHOTO_W, self._CARD_PHOTO_H),
+                    quality=62,
+                    output_format='JPEG',
+                ) or self.photo
+            except Exception:
+                return self.photo
+        return False
 
     def _compute_effective_base_price(self):
         """Return the base price for this player from the auction setup.
@@ -1251,6 +1262,31 @@ class AuctionTeamPlayer(models.Model):
             _logger.exception('Failed to downscale supersampled player card')
             with open(opath, 'rb') as fh:
                 return fh.read()
+
+    def render_instagram_status_jpg(self):
+        """Render one player's vertical Instagram Status card (1080×1920 JPG).
+
+        Same template / pipeline as *Download Player Cards (ZIP)*.
+        Returns raw JPEG bytes, or ``None`` if rendering fails.
+        """
+        self.ensure_one()
+        import shutil
+
+        binary = self._card_render_binary()
+        if not binary:
+            _logger.warning('wkhtmltoimage missing — cannot render Instagram status card')
+            return None
+
+        workdir = self._card_workdir()
+        try:
+            html = self._render_card_html(self)
+            return self._card_html_to_png(html, workdir, binary)
+        except Exception:
+            _logger.exception(
+                'Instagram status card render failed for player %s', self.id)
+            return None
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
 
     def action_download_player_cards(self):
         import io

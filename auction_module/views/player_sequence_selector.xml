@@ -236,6 +236,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   cursor:pointer;user-select:none;-webkit-user-select:none}
 .mq-dice{width:46px;height:46px;background:var(--btn-bg);border:2px solid var(--accent);
   border-radius:9px;padding:6px;position:relative;
+  display:flex;align-items:center;justify-content:center;
   box-shadow:0 0 12px var(--accent-glow),inset 0 0 10px rgba(0,0,0,.45);
   transition:box-shadow .2s,transform .15s}
 .mq-dice:hover{box-shadow:0 0 22px var(--accent-glow),inset 0 0 10px rgba(0,0,0,.45);transform:scale(1.1)}
@@ -252,9 +253,16 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .mq-die-cell{display:flex;align-items:center;justify-content:center}
 .mq-die-dot{width:6px;height:6px;background:var(--accent);border-radius:50%;
   box-shadow:0 0 5px var(--accent)}
+.mq-dice-num{display:none;align-items:center;justify-content:center;
+  font-family:var(--hf);font-weight:900;font-size:1.15rem;letter-spacing:1px;
+  color:var(--accent);line-height:1;text-shadow:0 0 12px var(--accent-glow)}
+.mq-dice.has-result .mq-die-grid{display:none}
+.mq-dice.has-result .mq-dice-num{display:flex}
 .mq-dice-lbl{font-family:var(--hf);font-size:.46rem;letter-spacing:2px;
   text-transform:uppercase;color:var(--tx-d);line-height:1}
-/* Result pill — floats in centre of screen */
+/* Mobile FAB — body-level so it is above the footer and receives taps */
+.mq-dice-fab{display:none}
+/* Result pill — desktop/tablet float (mobile uses number-on-dice) */
 #mqDiceResult{display:none;position:fixed;bottom:80px;left:50%;
   transform:translateX(-50%);z-index:900;
   font-family:var(--hf);font-size:1.9rem;font-weight:900;letter-spacing:5px;
@@ -312,51 +320,81 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 #pcPanel:fullscreen .pc-ph,#pcPanel:-webkit-full-screen .pc-ph,#pcPanel:-moz-full-screen .pc-ph{display:none}
 #pcPanel:fullscreen .pc-actions,#pcPanel:-webkit-full-screen .pc-actions,#pcPanel:-moz-full-screen .pc-actions{display:none!important}
 #pcPanel:fullscreen .pc-body,#pcPanel:-webkit-full-screen .pc-body,#pcPanel:-moz-full-screen .pc-body{height:100vh}
-.pc-body{flex:1;overflow:hidden;display:flex;flex-direction:row}
+.pc-body{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
 
-/* Player photo */
-.pc-photo-wrap{position:relative;background:var(--bg-p);display:flex;align-items:center;justify-content:center;
-  padding:32px 24px;width:420px;min-width:280px;flex-shrink:0;overflow:hidden}
-.pc-photo{max-height:100%;max-width:100%;width:100%;height:100%;object-fit:contain;border-radius:10px;
-  box-shadow:0 8px 32px rgba(0,0,0,.4)}
-.pc-photo-ph{width:160px;height:200px;border-radius:8px;background:var(--bg-c);
-  display:flex;align-items:center;justify-content:center;font-size:5rem;color:var(--tx-d);
-  border:2px dashed var(--div)}
-.pc-serial-watermark{
-  position:absolute;bottom:8px;right:12px;
-  font-family:var(--hf);font-size:5rem;font-weight:900;
-  line-height:1;pointer-events:none;letter-spacing:-2px;
-}
-.pc-stamp-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+/* ═══ BROADCAST PLAYER STAGE (deck drawer) ═══════════════════════════ */
+.pc-stage{flex:1;display:grid;grid-template-columns:minmax(280px,1.05fr) minmax(300px,1fr);
+  min-height:0;overflow:hidden;background:var(--bg)}
+.pc-hero{position:relative;overflow:hidden;background:#050505;
+  border-right:1px solid var(--div)}
+.pc-hero-blur{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  filter:blur(22px) brightness(.28) saturate(.7);transform:scale(1.12);pointer-events:none}
+.pc-hero::after{content:'';position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,transparent 28%,transparent 48%,rgba(0,0,0,.88) 100%),
+             linear-gradient(90deg,transparent 55%,rgba(0,0,0,.45) 100%)}
+.pc-photo{position:absolute;inset:0;z-index:1;width:100%;height:100%;
+  object-fit:cover;object-position:center top}
+.pc-photo-ph{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;
+  font-size:6rem;color:rgba(255,255,255,.18);background:var(--bg-p)}
+.pc-onair{position:absolute;top:16px;left:16px;z-index:5;display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.18);
+  font-family:var(--hf);font-size:.62rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:#fff}
+.pc-onair-dot{width:8px;height:8px;border-radius:50%;background:#ff2d2d;
+  box-shadow:0 0 10px rgba(255,45,45,.8);animation:pcPulse 1.2s ease-in-out infinite}
+@keyframes pcPulse{0%,100%{opacity:1}50%{opacity:.45}}
+.pc-serial-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-52%);
+  font-family:var(--sf);font-size:clamp(7rem,18vw,14rem);font-weight:400;line-height:.85;
+  color:var(--accent);opacity:.07;pointer-events:none;z-index:2;letter-spacing:-4px}
+.pc-lower{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:28px 22px 20px;
+  background:linear-gradient(180deg,transparent 0%,rgba(0,0,0,.55) 35%,rgba(0,0,0,.92) 100%)}
+.pc-lower-serial{display:inline-block;font-family:var(--sf);font-size:1rem;letter-spacing:.2em;
+  color:var(--accent);margin-bottom:4px;text-shadow:0 0 18px var(--accent-glow)}
+.pc-lower-name{font-family:var(--sf);font-size:clamp(2rem,4.2vw,3.4rem);line-height:.92;
+  text-transform:uppercase;letter-spacing:.04em;color:#fff;
+  text-shadow:0 4px 24px rgba(0,0,0,.55)}
+.pc-lower-role{margin-top:6px;font-family:var(--sf-body);font-size:.95rem;font-weight:700;
+  letter-spacing:.28em;text-transform:uppercase;color:var(--accent2,#fff)}
+.pc-lower-band{margin-top:12px;height:5px;width:100%;border-radius:999px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2,#fff) 55%,transparent);
+  box-shadow:0 0 18px var(--accent-glow)}
+.pc-stamp-wrap{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;
   pointer-events:none;background:rgba(0,0,0,.45)}
 .pc-stamp{font-family:var(--hf);font-size:clamp(2rem,6vw,3.5rem);font-weight:900;
   letter-spacing:6px;padding:10px 32px;border:5px solid rgba(255,255,255,.85);
   border-radius:6px;text-shadow:2px 3px 8px rgba(0,0,0,.4);transform:rotate(-22deg);
   animation:stampDrop .5s cubic-bezier(.34,1.3,.64,1) forwards}
 @keyframes stampDrop{from{transform:rotate(-22deg) scale(2.4);opacity:0}to{transform:rotate(-22deg) scale(1);opacity:.93}}
-.pc-bar-wrap{position:absolute;bottom:10px;left:16px;right:16px}
+.pc-bar-wrap{position:absolute;bottom:10px;left:16px;right:16px;z-index:7}
 .pc-bar-track{background:rgba(255,255,255,.25);border-radius:4px;height:5px;overflow:hidden}
 .pc-bar-fill{height:100%;width:100%;border-radius:4px;transition:width linear}
 
-/* Player info */
-.pc-info{padding:28px 32px;flex:1;overflow-y:auto;display:flex;flex-direction:column;justify-content:center}
-.pc-serial{font-family:var(--sf);font-size:4rem;font-weight:400;color:var(--accent);
-  line-height:1;margin-bottom:6px;text-shadow:0 0 20px var(--accent-glow)}
-.pc-name{font-family:var(--sf);font-size:2.8rem;font-weight:400;text-transform:uppercase;
-  letter-spacing:4px;margin-bottom:12px}
-/* Tier + Role badges */
-.pc-badges{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:18px}
+/* Side panel — broadcast stats */
+.pc-info{padding:22px 26px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;
+  background:linear-gradient(180deg,var(--bg-s) 0%,var(--bg-p) 100%)}
+.pc-side-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .pc-tier-badge{display:inline-block;background:var(--badge);color:var(--badge-tx);
-  font-family:var(--sf);font-size:.85rem;font-weight:400;padding:5px 18px;border-radius:20px;
-  letter-spacing:2px;text-transform:uppercase}
+  font-family:var(--sf);font-size:.9rem;font-weight:400;padding:6px 16px;border-radius:999px;
+  letter-spacing:2px;text-transform:uppercase;box-shadow:0 0 16px var(--accent-glow)}
 .pc-role-badge{display:inline-flex;align-items:center;gap:5px;
-  font-family:var(--sf);font-size:.85rem;font-weight:400;padding:5px 16px;border-radius:20px;
+  font-family:var(--sf);font-size:.85rem;font-weight:400;padding:5px 14px;border-radius:999px;
   letter-spacing:2px;text-transform:uppercase;
-  color:var(--accent);border:2px solid var(--accent);background:var(--accent-glow)}
-.pc-attrs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
-.pc-attr{background:var(--bg-c);border-radius:10px;padding:12px 16px;border:1px solid var(--card-bd)}
-.pc-attr-label{font-family:var(--sf-body);font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--tx-d);margin-bottom:4px}
-.pc-attr-val{font-family:var(--sf);font-size:1.1rem;font-weight:400;letter-spacing:1px;color:var(--tx)}
+  color:var(--accent);border:1.5px solid var(--accent);background:var(--accent-glow)}
+.pc-key-badge{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:999px;
+  font-family:var(--sf);font-size:.78rem;letter-spacing:2px;text-transform:uppercase;
+  background:linear-gradient(135deg,var(--accent),var(--accent2,#fff));color:var(--badge-tx,#000)}
+.pc-base{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 16px;border-radius:12px;border:1px solid var(--div);
+  background:linear-gradient(135deg,rgba(255,255,255,.04),transparent 60%),var(--bg-c);
+  box-shadow:0 10px 28px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.06)}
+.pc-base-label{font-family:var(--hf);font-size:.65rem;font-weight:800;letter-spacing:.28em;
+  text-transform:uppercase;color:var(--tx-d)}
+.pc-base-val{font-family:var(--sf);font-size:1.85rem;line-height:1;letter-spacing:.04em;
+  color:var(--accent);text-shadow:0 0 18px var(--accent-glow)}
+.pc-attrs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pc-attr{background:rgba(255,255,255,.03);border-radius:12px;padding:12px 14px;
+  border:1px solid var(--card-bd);min-height:72px;display:flex;flex-direction:column;justify-content:center}
+.pc-attr-label{font-family:var(--sf-body);font-size:.68rem;text-transform:uppercase;letter-spacing:1.8px;color:var(--tx-d);margin-bottom:4px}
+.pc-attr-val{font-family:var(--sf);font-size:1.15rem;font-weight:400;letter-spacing:1px;color:var(--tx);line-height:1.1}
 .pc-chips{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
 .pc-chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg-c);border:1px solid var(--card-bd);
   border-radius:999px;padding:6px 14px;font-family:var(--sf-body);font-size:.72rem;font-weight:700;
@@ -769,8 +807,46 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 /* ── Tablet (≤ 900px) ─────────────────────────────────────────────── */
 @media(max-width:900px){
   .pc-panel{width:min(720px,95%)}
-  .pc-photo-wrap{width:320px;min-width:220px}
+  .pc-stage{grid-template-columns:minmax(220px,.95fr) minmax(260px,1fr)}
+  .pc-lower-name{font-size:2.2rem}
+
+  /* Hide header dice — body-level FAB handles taps (above footer stacking) */
+  .mq-dice-desk{display:none !important}
+  .mq-dice-fab{
+    display:flex !important;
+    position:fixed;
+    left:50%;
+    bottom:calc(56px + env(safe-area-inset-bottom, 0px));
+    transform:translateX(-50%);
+    z-index:700;
+    gap:6px;
+    padding:12px 20px 14px;
+    border-radius:22px;
+    background:rgba(8,12,22,.94);
+    border:1.5px solid var(--accent);
+    box-shadow:0 0 0 1px rgba(0,0,0,.35),0 12px 36px rgba(0,0,0,.55),0 0 28px var(--accent-glow);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+    pointer-events:auto;
+  }
+  .mq-dice-fab:active{transform:translateX(-50%) scale(.96)}
+  .mq-dice-fab .mq-dice{
+    width:76px;height:76px;border-radius:14px;padding:10px;
+    box-shadow:0 0 18px var(--accent-glow),inset 0 0 12px rgba(0,0,0,.45);
+  }
+  .mq-dice-fab .mq-dice:hover{transform:none}
+  .mq-dice-fab .mq-die-dot{width:11px;height:11px;box-shadow:0 0 8px var(--accent)}
+  .mq-dice-fab .mq-dice-num{font-size:1.85rem;letter-spacing:1px}
+  .mq-dice-fab .mq-dice-lbl{
+    font-size:.72rem;letter-spacing:2.5px;color:var(--accent);font-weight:700;
+  }
+  .mq-wrap{padding-bottom:160px}
+  /* Number lives on the dice — hide floating pill on touch layouts */
+  #mqDiceResult{display:none !important}
 }
+
 
 /* ── Mobile (≤ 640px) — primary breakpoint ───────────────────────── */
 @media(max-width:640px){
@@ -796,10 +872,20 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   .mq-legend-dot{width:8px;height:8px;border-radius:2px}
   .mq-leg-full{display:none}
   .mq-leg-short{display:inline}
-  .mq-wrap{padding:0 10px 72px}
+  .mq-wrap{padding:0 10px 160px}
   .mq-grid{grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:7px}
   .mq-btn{border-radius:8px;font-size:1.1rem}
   .mq-lbl{font-size:.42rem}
+
+  /* Phone: slightly larger thumb target for the floating dice */
+  .mq-dice-fab{
+    bottom:calc(58px + env(safe-area-inset-bottom, 0px));
+    padding:14px 22px 16px;
+  }
+  .mq-dice-fab .mq-dice{width:84px;height:84px;border-radius:16px;padding:11px}
+  .mq-dice-fab .mq-die-dot{width:12px;height:12px}
+  .mq-dice-fab .mq-dice-num{font-size:2.1rem}
+  .mq-dice-fab .mq-dice-lbl{font-size:.78rem;letter-spacing:3px}
 
   /* Player drawer — full screen on mobile */
   .pc-panel{
@@ -813,24 +899,22 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   .pc-logo{height:28px}
   .pc-close{font-size:1.6rem;width:36px;height:36px}
 
-  /* Drawer body — stack vertically, photo on top */
-  .pc-body{flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch}
-  .pc-photo-wrap{
-    width:100%;min-width:unset;
-    height:200px;padding:16px;
-    flex-shrink:0
-  }
-  .pc-photo{object-fit:contain;max-height:168px}
-  .pc-serial-watermark{font-size:3.5rem}
+  /* Drawer body — stack vertically, hero on top */
+  .pc-body{overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .pc-stage{grid-template-columns:1fr;min-height:auto}
+  .pc-hero{min-height:220px;height:42vh;max-height:320px}
+  .pc-photo{object-fit:cover}
+  .pc-serial-watermark{font-size:6rem}
+  .pc-lower{padding:18px 14px 14px}
+  .pc-lower-name{font-size:1.7rem;letter-spacing:1px}
+  .pc-lower-role{font-size:.78rem;letter-spacing:.18em}
 
   /* Info panel */
-  .pc-info{padding:16px 16px 8px;justify-content:flex-start}
-  .pc-serial{font-size:2rem;margin-bottom:4px}
-  .pc-name{font-size:1.4rem;letter-spacing:2px;margin-bottom:8px}
-  .pc-badges{gap:6px;margin-bottom:10px}
-  .pc-tier-badge,.pc-role-badge{font-size:.7rem;padding:4px 12px}
-  .pc-attrs{grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
-  .pc-attr{padding:8px 10px}
+  .pc-info{padding:14px 14px 8px}
+  .pc-base-val{font-size:1.45rem}
+  .pc-tier-badge,.pc-role-badge,.pc-key-badge{font-size:.7rem;padding:4px 12px}
+  .pc-attrs{grid-template-columns:1fr 1fr;gap:8px}
+  .pc-attr{padding:8px 10px;min-height:62px}
   .pc-attr-label{font-size:.58rem}
   .pc-attr-val{font-size:.9rem}
   .pc-state-banner{font-size:.75rem;padding:6px 10px;margin-top:8px}
@@ -1001,9 +1085,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 <div class="mq-grid-hd">
   <div class="mq-grid-title">Select <span>Player</span></div>
   <div class="mq-grid-hd-right">
-    <div class="mq-dice-wrap" id="mqDiceWrap" onclick="rollDice()" title="Roll Dice">
+    <div class="mq-dice-wrap mq-dice-desk" id="mqDiceDesk" onclick="onDiceTap()" title="Roll Dice">
       <div class="mq-dice" id="mqDice">
         <div class="mq-die-grid" id="mqDieGrid"></div>
+        <div class="mq-dice-num" id="mqDiceNum"></div>
       </div>
       <div class="mq-dice-lbl">Roll Dice</div>
     </div>
@@ -1219,6 +1304,15 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
 <!-- ── DICE RESULT PILL ──────────────────────────────────── -->
 <div id="mqDiceResult"></div>
+
+<!-- ── MOBILE / TABLET DICE FAB (body-level so taps beat the footer) ── -->
+<div class="mq-dice-wrap mq-dice-fab" id="mqDiceFab" onclick="onDiceTap()" title="Roll Dice">
+  <div class="mq-dice" id="mqDiceFabDie">
+    <div class="mq-die-grid" id="mqDieGridFab"></div>
+    <div class="mq-dice-num" id="mqDiceNumFab"></div>
+  </div>
+  <div class="mq-dice-lbl">Roll Dice</div>
+</div>
 
 <!-- ── FOOTER TICKER ─────────────────────────────────────── -->
 <div class="mq-footer">
@@ -1483,31 +1577,25 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
   function renderPlayerCard(p, container) {
     var tierColor = p.tier_color || '#3498db';
-    var tierGlow  = tierColor + '44';
-
-    var photo = p.photo
-      ? '<img class="pc-photo" src="data:image/png;base64,' + p.photo + '" alt="' + escHtml(p.name) + '"/>'
-      : '<div class="pc-photo-ph">&#128100;</div>';
+    var tierGlow  = tierColor + '55';
+    var isFootball = (p.tournament_type === 'football');
+    var roleText = isFootball ? (p.dominant_position || p.role || '') : (p.role || '');
+    var serial = ('00' + String(p.sl_no || 0)).slice(-2);
+    var photoInner = p.photo
+      ? '<img class="pc-hero-blur" src="data:image/png;base64,' + p.photo + '" alt="" aria-hidden="true"/>' +
+        '<img class="pc-photo" src="data:image/png;base64,' + p.photo + '" alt="' + escHtml(p.name) + '"/>'
+      : '<div class="pc-photo-ph">&#9917;</div>';
 
     var tier = p.tier_id
-      ? '<span class="pc-tier-badge" style="background:' + escHtml(tierColor) + ';color:#fff;box-shadow:0 0 14px ' + escHtml(tierGlow) + '">'
+      ? '<span class="pc-tier-badge" style="background:' + escHtml(tierColor) + ';color:#fff;box-shadow:0 0 16px ' + escHtml(tierGlow) + '">'
         + escHtml(p.tier_id[1]) + '</span>'
       : '';
-
-    var isFootball = (p.tournament_type === 'football');
-
-    var roleBadge = '';
-    if (isFootball) {
-      if (p.dominant_position)
-        roleBadge = '<span class="pc-role-badge">⚽ ' + escHtml(p.dominant_position) + '</span>';
-    } else {
-      var roleIcons = {'Batsman':'🏏','Batter':'🏏','Bowler':'🎯','All Rounder':'⭐',
-        'All-Rounder':'⭐','Allrounder':'⭐','Wicket Keeper':'🧤','WK-Keeper':'🧤','Wicketkeeper':'🧤'};
-      var roleIcon = p.role ? (roleIcons[p.role] || '⚡') : '';
-      roleBadge = p.role
-        ? '<span class="pc-role-badge">' + roleIcon + ' ' + escHtml(p.role) + '</span>'
-        : '';
-    }
+    var roleBadge = roleText
+      ? '<span class="pc-role-badge">' + escHtml(roleText) + '</span>'
+      : '';
+    var keyBadge = p.icon_player
+      ? '<span class="pc-key-badge">★ KEY PLAYER</span>'
+      : '';
 
     var stateBanner = '';
     if (p.state === 'sold') {
@@ -1553,31 +1641,50 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       if (p.preferred_foot) attrsHtml += attr('Preferred Foot', p.preferred_foot);
       if (p.work_rate)      attrsHtml += attr('Work Rate', p.work_rate);
       if (p.age)            attrsHtml += attr('Age', String(p.age));
-      if (p.blood_group)    attrsHtml += attr('Blood Group', p.blood_group);
-      if (p.mobile)         attrsHtml += attr('Mobile', p.mobile);
-      if (p.secondary_positions && p.secondary_positions.length)
+      if (p.use_other_attributes && p.other_attributes && p.other_attributes.length) {
+        for (var oi = 0; oi < p.other_attributes.length; oi++) {
+          var oa = p.other_attributes[oi] || {};
+          if (oa.label) attrsHtml += attr(oa.label, oa.value || '—');
+        }
+      } else if (p.secondary_positions && p.secondary_positions.length) {
         attrsHtml += attr('Secondary', p.secondary_positions.join(', '));
-      if (p.location)       attrsHtml += attr('Location', p.location);
+      }
+      if (p.location) attrsHtml += attr('Location', p.location);
       attrsHtml += pcChips(p.playing_styles) + pcChips(p.strengths);
     } else {
-      attrsHtml += attr('Batting', p.batting_style || '—');
-      attrsHtml += attr('Bowling', p.bowling_style || '—');
-      attrsHtml += attr('Contact', p.masked_contact || p.contact || '—');
+      if (p.batting_style) attrsHtml += attr('Batting', p.batting_style);
+      if (p.bowling_style) attrsHtml += attr('Bowling', p.bowling_style);
+      if (p.p_category) attrsHtml += attr('Category', p.p_category);
+    }
+
+    var baseHtml = '';
+    if (p.base_price) {
+      baseHtml =
+        '<div class="pc-base">' +
+          '<span class="pc-base-label">Base Price</span>' +
+          '<span class="pc-base-val">' + Number(p.base_price).toLocaleString() + ' PTS</span>' +
+        '</div>';
     }
 
     container.innerHTML =
-      '<div class="pc-photo-wrap" style="border-top:4px solid ' + escHtml(tierColor) + ';box-shadow:inset 0 -180px 100px -60px var(--bg-p),0 0 40px ' + escHtml(tierGlow) + '">' +
-        photo +
-        '<div class="pc-serial-watermark" style="color:' + escHtml(tierColor) + ';opacity:.12">#' + escHtml(String(p.sl_no)) + '</div>' +
-      '</div>' +
-      '<div class="pc-info">' +
-        '<div class="pc-serial" style="color:' + escHtml(tierColor) + ';text-shadow:0 0 24px ' + escHtml(tierGlow) + '">#' + escHtml(String(p.sl_no)) + '</div>' +
-        '<div class="pc-name">' + escHtml(p.name) + '</div>' +
-        '<div class="pc-badges">' + tier + roleBadge + '</div>' +
-        '<div class="pc-attrs">' +
-          attrsHtml +
+      '<div class="pc-stage">' +
+        '<div class="pc-hero" style="--tier:' + escHtml(tierColor) + '">' +
+          '<div class="pc-onair"><span class="pc-onair-dot"></span>On Stage</div>' +
+          '<div class="pc-serial-watermark">#' + escHtml(serial) + '</div>' +
+          photoInner +
+          '<div class="pc-lower">' +
+            '<div class="pc-lower-serial">#' + escHtml(serial) + '</div>' +
+            '<div class="pc-lower-name">' + escHtml(p.name || '') + '</div>' +
+            (roleText ? '<div class="pc-lower-role">' + escHtml(roleText) + '</div>' : '') +
+            '<div class="pc-lower-band"></div>' +
+          '</div>' +
         '</div>' +
-        stateBanner +
+        '<div class="pc-info">' +
+          '<div class="pc-side-top">' + tier + roleBadge + keyBadge + '</div>' +
+          baseHtml +
+          '<div class="pc-attrs">' + attrsHtml + '</div>' +
+          stateBanner +
+        '</div>' +
       '</div>';
   }
 
@@ -2060,6 +2167,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
   /* ── Dice ──────────────────────────────────────────────── */
   var _diceRolling = false;
+  var _dicePickedId = null;
+  var _diceResultTimer = null;
   var _FACES = {
     1:[[0,0,0],[0,1,0],[0,0,0]],
     2:[[0,0,1],[0,0,0],[1,0,0]],
@@ -2069,77 +2178,138 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     6:[[1,0,1],[1,0,1],[1,0,1]]
   };
 
+  function _diceEls() {
+    return Array.prototype.slice.call(document.querySelectorAll('.mq-dice'));
+  }
+  function _diceLbls() {
+    return Array.prototype.slice.call(document.querySelectorAll('.mq-dice-wrap .mq-dice-lbl'));
+  }
+
   function setMqDiceFace(n) {
     var pattern = _FACES[n] || _FACES[1];
-    var grid = document.getElementById('mqDieGrid');
-    if (!grid) return;
-    grid.innerHTML = '';
-    pattern.forEach(function(row) {
-      row.forEach(function(dot) {
-        var cell = document.createElement('div');
-        cell.className = 'mq-die-cell';
-        if (dot) { var d = document.createElement('div'); d.className = 'mq-die-dot'; cell.appendChild(d); }
-        grid.appendChild(cell);
+    document.querySelectorAll('.mq-die-grid').forEach(function(grid) {
+      grid.innerHTML = '';
+      pattern.forEach(function(row) {
+        row.forEach(function(dot) {
+          var cell = document.createElement('div');
+          cell.className = 'mq-die-cell';
+          if (dot) {
+            var d = document.createElement('div');
+            d.className = 'mq-die-dot';
+            cell.appendChild(d);
+          }
+          grid.appendChild(cell);
+        });
       });
     });
   }
 
-  function showDiceResultPill(num) {
+  function showNumberOnDice(num) {
+    _diceEls().forEach(function(die) {
+      die.classList.add('has-result');
+      var numEl = die.querySelector('.mq-dice-num');
+      if (numEl) numEl.textContent = '#' + num;
+    });
+    _diceLbls().forEach(function(lbl) {
+      lbl.textContent = 'Tap to open';
+    });
+  }
+
+  function clearDiceResultUI() {
+    _dicePickedId = null;
+    _diceEls().forEach(function(die) {
+      die.classList.remove('has-result', 'rolling');
+      var numEl = die.querySelector('.mq-dice-num');
+      if (numEl) numEl.textContent = '';
+    });
+    _diceLbls().forEach(function(lbl) {
+      lbl.textContent = 'Roll Dice';
+    });
+    setMqDiceFace(1);
+    document.querySelectorAll('.mq-btn.dice-pick').forEach(function(b) {
+      b.classList.remove('dice-pick');
+    });
     var pill = document.getElementById('mqDiceResult');
-    if (!pill) return;
-    pill.textContent = '#' + num;
-    pill.style.display = '';
-    pill.className = 'show';
-    /* Find matching cell, capture player id via data-id, highlight */
+    if (pill) {
+      pill.style.display = 'none';
+      pill.className = '';
+      pill.onclick = null;
+    }
+  }
+
+  function showDiceResultPill(num) {
+    /* Highlight matching player cell */
     var pickedId = null;
     document.querySelectorAll('#auction_grid .mq-btn').forEach(function(btn) {
       btn.classList.remove('dice-pick');
     });
     document.querySelectorAll('#auction_grid .mq-btn').forEach(function(btn) {
       var numEl = btn.querySelector('.mq-num');
-      if (numEl && parseInt(numEl.textContent) === num) {
+      if (numEl && parseInt(numEl.textContent, 10) === num) {
         btn.classList.add('dice-pick');
-        btn.scrollIntoView({behavior: 'smooth', block: 'center'});
-        if (btn.dataset.id) pickedId = parseInt(btn.dataset.id);
+        try { btn.scrollIntoView({behavior: 'smooth', block: 'center'}); } catch (e) {}
+        if (btn.dataset.id) pickedId = parseInt(btn.dataset.id, 10);
       }
     });
-    /* Click pill → open that player drawer */
-    pill.onclick = pickedId ? function() {
-      pill.classList.add('hide');
-      setTimeout(function() { pill.style.display = 'none'; pill.className = ''; }, 350);
-      openPlayerDrawer(pickedId);
-    } : null;
-    /* Auto-fade after 5s */
-    setTimeout(function() {
-      pill.classList.add('hide');
-      setTimeout(function() {
-        pill.style.display = 'none';
-        pill.className = '';
-        document.querySelectorAll('.mq-btn.dice-pick').forEach(function(b) {
-          b.classList.remove('dice-pick');
-        });
-      }, 400);
-    }, 5000);
+    _dicePickedId = pickedId;
+
+    /* Replace dice face with the rolled player number */
+    showNumberOnDice(num);
+
+    /* Desktop also keeps the floating pill */
+    var isTouchLayout = window.matchMedia && window.matchMedia('(max-width:900px)').matches;
+    var pill = document.getElementById('mqDiceResult');
+    if (pill && !isTouchLayout) {
+      pill.textContent = '#' + num;
+      pill.style.display = '';
+      pill.className = 'show';
+      pill.onclick = pickedId ? function() {
+        var id = pickedId;
+        clearDiceResultUI();
+        openPlayerDrawer(id);
+      } : null;
+    }
+
+    if (_diceResultTimer) clearTimeout(_diceResultTimer);
+    _diceResultTimer = setTimeout(function() {
+      clearDiceResultUI();
+    }, 8000);
   }
+
+  window.onDiceTap = function() {
+    if (_diceRolling) return;
+    /* After a roll, first tap opens the picked player */
+    if (_dicePickedId) {
+      var id = _dicePickedId;
+      if (_diceResultTimer) { clearTimeout(_diceResultTimer); _diceResultTimer = null; }
+      clearDiceResultUI();
+      openPlayerDrawer(id);
+      return;
+    }
+    rollDice();
+  };
 
   window.rollDice = function() {
     if (_diceRolling) return;
     var available = [];
     document.querySelectorAll('#auction_grid .mq-btn:not(.sold):not(.unsold)').forEach(function(btn) {
       var numEl = btn.querySelector('.mq-num');
-      if (numEl) available.push(parseInt(numEl.textContent));
+      if (numEl) available.push(parseInt(numEl.textContent, 10));
     });
     if (!available.length) return;
 
-    _diceRolling = true;
-    var dice = document.getElementById('mqDice');
-    var result = available[Math.floor(Math.random() * available.length)];
-    var tid = window.AUCTION_TOURNAMENT_ID ? parseInt(window.AUCTION_TOURNAMENT_ID) : 0;
+    if (_diceResultTimer) { clearTimeout(_diceResultTimer); _diceResultTimer = null; }
+    _dicePickedId = null;
+    _diceEls().forEach(function(die) { die.classList.remove('has-result'); });
+    _diceLbls().forEach(function(lbl) { lbl.textContent = 'Rolling\u2026'; });
 
-    /* Broadcast: rolling */
+    _diceRolling = true;
+    var result = available[Math.floor(Math.random() * available.length)];
+    var tid = window.AUCTION_TOURNAMENT_ID ? parseInt(window.AUCTION_TOURNAMENT_ID, 10) : 0;
+
     if (tid) callKw('auction.tournament', 'set_dice_state', [[tid], 'rolling', 0]).catch(function(){});
 
-    if (dice) dice.classList.add('rolling');
+    _diceEls().forEach(function(die) { die.classList.add('rolling'); });
     setMqDiceFace(1);
 
     var rollCount = 0;
@@ -2148,23 +2318,18 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     var rollInt = setInterval(function() {
       rollCount++;
       setMqDiceFace((rollCount % 6) + 1);
-      /* Broadcast result at frame 10 (1 second in) so the projector can
-         start settling while the selector still shows the full animation. */
       if (rollCount === 10 && tid && !resultBroadcast) {
         resultBroadcast = true;
         callKw('auction.tournament', 'set_dice_state', [[tid], 'result', result]).catch(function(){});
       }
       if (rollCount >= maxRolls) {
         clearInterval(rollInt);
-        if (dice) dice.classList.remove('rolling');
-        setMqDiceFace(((result - 1) % 6) + 1);
+        _diceEls().forEach(function(die) { die.classList.remove('rolling'); });
         showDiceResultPill(result);
         _diceRolling = false;
-        /* Ensure result is broadcast even if early broadcast was skipped */
         if (!resultBroadcast && tid) {
           callKw('auction.tournament', 'set_dice_state', [[tid], 'result', result]).catch(function(){});
         }
-        /* Reset after 7s */
         setTimeout(function() {
           if (tid) callKw('auction.tournament', 'set_dice_state', [[tid], 'idle', 0]).catch(function(){});
         }, 7000);

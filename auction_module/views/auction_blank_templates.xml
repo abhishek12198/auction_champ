@@ -214,7 +214,9 @@
      ══════════════════════════════════════════════════════════════════════ -->
 <template id="public_live_board_template" name="Public Live Auction Board">
 <t t-set="theme_val" t-value="theme or 'vanilla'"/>
-<html t-att-data-theme="theme_val" t-att-data-live-data-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/live-board/data'">
+<html t-att-data-theme="theme_val"
+      t-att-data-sport="(tournament.tournament_type if tournament else 'cricket') or 'cricket'"
+      t-att-data-live-data-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/live-board/data'">
 <head>
 <meta charset="UTF-8"/>
   <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
@@ -985,7 +987,25 @@ img { display: block; }
 .lb-tm-rph { font-size: 1.1rem; opacity: .35; }
 .lb-tm-rinfo { flex: 1; min-width: 0; }
 .lb-tm-rname { font-size: .83rem; font-weight: 700; color: var(--lb-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lb-tm-rrole { font-size: .6rem; color: var(--lb-sub); margin-top: 1px; }
+.lb-tm-rrole { font-size: .6rem; color: var(--lb-sub); margin-top: 1px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.lb-role-tags { display: inline-flex; align-items: center; gap: 4px; vertical-align: middle; }
+.lb-role-tag {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 28px; height: 18px; padding: 0 6px;
+  border-radius: 4px; font-size: .55rem; font-weight: 800;
+  letter-spacing: .5px; color: #fff; background: var(--lb-accent);
+  line-height: 1; text-transform: uppercase;
+}
+.lb-role-tag.bowl { background: #c45c26; }
+.lb-role-tag.bat  { background: #1a7a4c; }
+.lb-role-tag.wk   { background: #6A1B9A; }
+.lb-pos-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 26px; height: 18px; padding: 0 5px;
+  border-radius: 4px; font-size: .58rem; font-weight: 800;
+  letter-spacing: .4px; color: #fff; background: var(--lb-accent);
+  line-height: 1;
+}
 .lb-tm-rpts  { font-size: .88rem; font-weight: 900; color: var(--lb-accent2); flex-shrink: 0; }
 .lb-tm-empty { text-align: center; color: var(--lb-sub); font-size: .82rem; padding: 28px 16px; }
 
@@ -1761,6 +1781,54 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
   let lastPlayerId = null;
   let lastState    = null;
   var _teamsData   = [];
+  var _sport = (document.documentElement.getAttribute('data-sport') || 'cricket').toLowerCase();
+
+  function cricketRoleTags(role) {
+    var lo = (role || '').toLowerCase().replace(/[-_\s]+/g, '');
+    if (!lo) return '';
+    var isWK = lo.indexOf('wicket') >= 0 || lo === 'wk' || lo.indexOf('keeper') >= 0;
+    var isAR = lo.indexOf('allround') >= 0;
+    var isBat = lo.indexOf('bat') >= 0;
+    var isBowl = lo.indexOf('bowl') >= 0;
+    var tags = [];
+    if (isAR || (isBat && isBowl)) {
+      tags.push('<span class="lb-role-tag bat">BAT</span>');
+      tags.push('<span class="lb-role-tag bowl">BOWL</span>');
+    } else if (isWK && isBat) {
+      tags.push('<span class="lb-role-tag wk">WK</span>');
+      tags.push('<span class="lb-role-tag bat">BAT</span>');
+    } else if (isWK) {
+      tags.push('<span class="lb-role-tag wk">WK</span>');
+    } else if (isBat) {
+      tags.push('<span class="lb-role-tag bat">BAT</span>');
+    } else if (isBowl) {
+      tags.push('<span class="lb-role-tag bowl">BOWL</span>');
+    }
+    if (!tags.length) return '';
+    return '<span class="lb-role-tags">' + tags.join('') + '</span>';
+  }
+
+  function footballPosBadge(p) {
+    var code = (p.position_code || '').trim().toUpperCase();
+    var name = (p.position_name || '').trim();
+    if (!code && name) {
+      code = name.replace(/[-_/]+/g, ' ').split(/\s+/).map(function(w) {
+        return w.charAt(0);
+      }).join('').toUpperCase().slice(0, 3);
+    }
+    if (!code) return '';
+    var title = name || code;
+    return '<span class="lb-pos-badge" title="' + lbEsc(title) + '">' + lbEsc(code) + '</span>';
+  }
+
+  function playerRoleMetaHtml(p) {
+    if (_sport === 'football') {
+      return footballPosBadge(p) || (p.role ? '<span class="lb-pos-badge">' + lbEsc(p.role) + '</span>' : '');
+    }
+    var tags = cricketRoleTags(p.role);
+    if (tags) return tags;
+    return p.role ? lbEsc(p.role) : '';
+  }
 
   // ── Break time + advertiser state ─────────────────────────────
   var _breakActive   = false;
@@ -2247,11 +2315,12 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       const photoHtml = p.photo_url
         ? `<span class="lb-tp-photo"><img src="${p.photo_url}" alt="" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=lb-tp-ph>&#128100;</span>'"/></span>`
         : '<span class="lb-tp-photo"><span class="lb-tp-ph">&#128100;</span></span>';
+      const meta = playerRoleMetaHtml(p);
       return `<tr>
         <td>${photoHtml}</td>
         <td>
-          <div style="font-weight:700;line-height:1.25;">${p.name || '&#8212;'}</div>
-          ${p.role ? `<div style="font-size:.58rem;color:var(--lb-sub);">${p.role}</div>` : ''}
+          <div style="font-weight:700;line-height:1.25;">${lbEsc(p.name) || '&#8212;'}</div>
+          ${meta ? `<div class="lb-tm-rrole" style="margin-top:2px;">${meta}</div>` : ''}
         </td>
         <td class="lb-tp-pts">${fmtPts(p.points)}</td>
       </tr>`;
@@ -2307,11 +2376,12 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
         const photoHtml = p.photo_url
           ? `<img src="${p.photo_url}" alt="" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=lb-tm-rph>&#128100;</span>'">`
           : '<span class="lb-tm-rph">&#128100;</span>';
+        const meta = playerRoleMetaHtml(p);
         return `<div class="lb-tm-row">
           <div class="lb-tm-rphoto">${photoHtml}</div>
           <div class="lb-tm-rinfo">
-            <div class="lb-tm-rname">${p.name || '&#8212;'}</div>
-            ${p.role ? `<div class="lb-tm-rrole">${p.role}</div>` : ''}
+            <div class="lb-tm-rname">${lbEsc(p.name) || '&#8212;'}</div>
+            ${meta ? `<div class="lb-tm-rrole">${meta}</div>` : ''}
           </div>
           <div class="lb-tm-rpts">${fmtPts(p.points)}</div>
         </div>`;
@@ -2350,9 +2420,13 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     fetch(document.documentElement.dataset.liveDataUrl, { cache: 'no-store' })
       .then(r => r.json())
       .then(data => {
-        // Apply theme
+        // Apply theme + sport
         if (data.theme) {
           document.documentElement.setAttribute('data-theme', data.theme);
+        }
+        if (data.tournament_type || (data.tournament && data.tournament.tournament_type)) {
+          _sport = (data.tournament_type || data.tournament.tournament_type || 'cricket').toLowerCase();
+          document.documentElement.setAttribute('data-sport', _sport);
         }
 
         const p = data.current_player;

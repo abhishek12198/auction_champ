@@ -17,6 +17,7 @@
   <title>Player Showcase – Pistah</title>
   <style>
     @font-face{font-family:'Atlanta College';src:url('/auction_module/static/src/assets/fonts/Atlanta-College.ttf') format('truetype');font-weight:normal;font-style:normal;font-display:swap;}
+    @font-face{font-family:'Varsity Team';src:url('/auction_module/static/src/assets/fonts/VarsityTeam-Bold.otf') format('opentype');font-weight:normal;font-style:normal;font-display:swap;}
     /* ── Reset ───────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -93,15 +94,11 @@
       filter: drop-shadow(0 0 8px rgba(107,191,78,.5));
     }
     .pt-header-brand-text { display: flex; flex-direction: column; }
-    .pt-header-brand-text .pt-brand-name {
-      font-family: 'Orbitron', sans-serif;
-      font-size: .9rem; font-weight: 700;
-      letter-spacing: 2px; text-transform: uppercase;
-      color: var(--text-main); line-height: 1;
-    }
     .pt-header-brand-text .pt-brand-season {
-      font-size: .6rem; font-weight: 500;
-      letter-spacing: 2px; color: var(--pistah); opacity: .85;
+      font-family: 'Orbitron', sans-serif;
+      font-size: .85rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--pistah); line-height: 1;
     }
 
     /* ── CENTER: tournament identity ─────────────────────── */
@@ -160,7 +157,7 @@
       position: relative; z-index: 5;
       display: grid;
       grid-template-columns: 48% 52%;
-      height: calc(100vh - 72px - 52px); /* subtract header + footer */
+      height: calc(100vh - 72px - 42px); /* subtract header + powered footer */
     }
 
     /* Right column wrapper — flex column so buttons sit BELOW the panel */
@@ -228,8 +225,8 @@
     .pt-photo-panel img.pt-photo {
       position: absolute; inset: 0;
       width: 100%; height: 100%;
-      object-fit: contain;
-      object-position: center bottom;
+      object-fit: cover;
+      object-position: center top;
       z-index: 2;
     }
 
@@ -245,17 +242,43 @@
         transparent 100%);
     }
     .pt-player-name {
-      font-family: 'Atlanta College', 'Orbitron', sans-serif;
-      font-size: 2.2rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 3px;
-      color: #fff; line-height: 1.05;
-      text-shadow: 0 2px 20px rgba(0,0,0,.8);
+      font-family: 'Varsity Team', 'Exo 2', sans-serif;
+      font-size: clamp(2.2rem, 3.4vw, 3.2rem); font-weight: 400;
+      text-transform: uppercase; letter-spacing: 1.5px;
+      color: #fff; line-height: 1.08;
+      text-shadow: 0 2px 16px rgba(0,0,0,.85), 0 0 24px rgba(107,191,78,.25);
     }
     .pt-player-role {
-      font-size: .95rem; font-weight: 700;
-      letter-spacing: 4px; text-transform: uppercase;
+      font-family: 'Orbitron', 'Exo 2', sans-serif;
+      font-size: clamp(1.25rem, 2.6vw, 1.95rem); font-weight: 700;
+      letter-spacing: 3px; text-transform: uppercase;
       color: var(--pistah-bright);
-      margin-top: 5px;
+      margin-top: 10px;
+      text-shadow: 0 0 18px rgba(107,191,78,.35);
+    }
+    .pt-highlight-row {
+      position: relative; z-index: 2;
+      display: flex; flex-wrap: wrap; align-items: stretch; gap: 12px;
+      margin-bottom: 12px;
+    }
+    .pt-base-badge {
+      display: inline-flex; flex-direction: column;
+      align-items: flex-start; justify-content: center; gap: 2px;
+      padding: 10px 18px 12px; border-radius: 8px;
+      background: linear-gradient(135deg, #c9a227, #e8c547 55%, #fff4c2);
+      color: #0d1a08;
+      border: 2px solid rgba(255,255,255,.28);
+      box-shadow: 0 6px 20px rgba(232,197,71,.35);
+    }
+    .pt-base-badge-lbl {
+      font-family: 'Orbitron', sans-serif;
+      font-size: .58rem; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; opacity: .8; line-height: 1;
+    }
+    .pt-base-badge-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.25rem, 2.5vw, 1.9rem); font-weight: 900;
+      letter-spacing: .5px; line-height: 1;
     }
     .pt-photo-serial {
       font-family: 'Atlanta College', 'Orbitron', sans-serif;
@@ -303,22 +326,23 @@
     /* Tier badge */
     .pt-tier-badge {
       position: relative; z-index: 2;
-      display: inline-flex; align-items: center; gap: 7px;
-      padding: 4px 14px; border-radius: 4px;
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 12px 20px 10px; border-radius: 8px;
       font-family: 'Orbitron', sans-serif;
-      font-size: .7rem; font-weight: 700;
+      font-size: clamp(1.1rem, 2.2vw, 1.65rem); font-weight: 700;
       letter-spacing: 2px; text-transform: uppercase;
       width: fit-content;
-      margin-bottom: 10px;
-      border: 1px solid rgba(107,191,78,.4);
-      background: rgba(107,191,78,.08);
+      margin-bottom: 0;
+      border: 2px solid rgba(107,191,78,.45);
+      background: rgba(107,191,78,.14);
       color: var(--pistah-bright);
+      box-shadow: 0 6px 20px rgba(107,191,78,.2);
     }
     .pt-tier-badge::before {
       content: '';
-      width: 7px; height: 7px; border-radius: 2px;
+      width: 10px; height: 10px; border-radius: 2px;
       background: var(--pistah);
-      box-shadow: 0 0 5px var(--pistah-glow);
+      box-shadow: 0 0 8px var(--pistah-glow);
     }
 
     /* Divider line */
@@ -334,35 +358,48 @@
       box-shadow: 0 0 6px rgba(107,191,78,.35);
     }
 
-    /* Stats grid – compact 2-column */
+    /* Stats grid – projector-first */
     .pt-stats-grid {
       position: relative; z-index: 2;
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 7px;
+      gap: 10px;
       margin-bottom: 14px;
     }
 
     .pt-stat-tile {
-      padding: 8px 12px;
-      background: rgba(107,191,78,.04);
-      border: 1px solid rgba(107,191,78,.13);
-      border-radius: 6px;
-      display: flex; flex-direction: column; justify-content: center;
+      padding: 14px 16px 16px;
+      background: rgba(107,191,78,.05);
+      border: 1px solid rgba(107,191,78,.18);
+      border-radius: 10px;
+      display: flex; flex-direction: column; justify-content: center; gap: 4px;
       transition: border-color .2s;
     }
-    .pt-stat-tile:hover { border-color: rgba(107,191,78,.30); }
+    .pt-stat-tile:hover { border-color: rgba(107,191,78,.40); }
 
     .pt-stat-val {
-      font-family: 'Exo 2', sans-serif;
-      font-size: .92rem; font-weight: 700;
-      color: var(--text-main); line-height: 1.2;
+      font-family: 'Orbitron', 'Exo 2', sans-serif;
+      font-size: clamp(1.15rem, 2.1vw, 1.7rem); font-weight: 700;
+      color: #fff; line-height: 1.1;
+      letter-spacing: .5px;
+      word-break: break-word;
+      text-transform: uppercase;
     }
     .pt-stat-key {
-      font-size: .6rem; font-weight: 600;
+      font-size: clamp(.58rem, .85vw, .68rem); font-weight: 700;
       letter-spacing: 2px; text-transform: uppercase;
-      color: var(--slate-light); opacity: .65;
-      margin-top: 2px;
+      color: var(--pistah-bright); opacity: .9;
+      order: -1;
+    }
+    .pt-info-panel > div[style*="flex-wrap"] > span {
+      font-family: 'Orbitron', sans-serif !important;
+      font-size: clamp(.85rem, 1.4vw, 1.1rem) !important;
+      font-weight: 700 !important;
+      letter-spacing: 1px !important;
+      padding: 10px 14px 8px !important;
+      border-radius: 10px !important;
+      border-width: 2px !important;
+      text-transform: uppercase !important;
     }
 
     /* ── ACTION BUTTONS ─────────────────────────────────────── */
@@ -425,22 +462,22 @@
     .pt-base-strip {
       position: relative; z-index: 2;
       display: flex; align-items: center; justify-content: space-between;
-      background: rgba(107,191,78,.05);
-      border: 1px solid rgba(107,191,78,.14);
-      border-radius: 6px;
-      padding: 10px 16px;
+      background: rgba(107,191,78,.08);
+      border: 2px solid rgba(107,191,78,.28);
+      border-radius: 10px;
+      padding: 14px 18px;
     }
     .pt-base-strip-label {
       font-family: 'Orbitron', sans-serif;
-      font-size: .55rem; font-weight: 700;
+      font-size: .8rem; font-weight: 700;
       letter-spacing: 2px; text-transform: uppercase;
-      color: var(--slate-light); opacity: .7;
+      color: var(--pistah-bright); opacity: .95;
     }
     .pt-base-strip-val {
       font-family: 'Orbitron', sans-serif;
-      font-size: 1.05rem; font-weight: 900;
+      font-size: clamp(1.4rem, 2.6vw, 2rem); font-weight: 900;
       color: var(--pistah-bright);
-      text-shadow: 0 0 10px rgba(107,191,78,.5);
+      text-shadow: 0 0 14px rgba(107,191,78,.5);
     }
     .pt-next-btn {
       display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -462,87 +499,25 @@
     }
     .pt-next-btn svg { flex-shrink: 0; }
 
-    /* ── FOOTER TICKER ───────────────────────────────────────── */
+    /* ── Powered-by footer ───────────────────────────────────── */
     .pt-footer {
       position: fixed;
       bottom: 0; left: 0; right: 0;
-      height: 52px; z-index: 30;
-      display: flex; align-items: center;
+      height: 42px; z-index: 30;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
       background: linear-gradient(90deg, #030a04 0%, #081508 50%, #030a04 100%);
       border-top: 1px solid rgba(107,191,78,.25);
-      overflow: hidden;
     }
-    .pt-footer-label {
-      flex-shrink: 0;
-      padding: 0 18px;
-      font-family: 'Orbitron', sans-serif;
-      font-size: .65rem; font-weight: 700;
-      letter-spacing: 2px; text-transform: uppercase;
-      color: var(--pistah);
-      border-right: 1px solid rgba(107,191,78,.2);
-      height: 100%;
-      display: flex; align-items: center;
-      background: rgba(107,191,78,.06);
+    .pt-footer-lbl {
+      font-family: 'Exo 2', sans-serif;
+      font-size: .62rem; font-weight: 700;
+      letter-spacing: 2.2px; text-transform: uppercase;
+      color: rgba(212,225,87,.55);
     }
-    /* ── Scrolling ticker ─────────────────────────────────── */
-    .pt-teams-ticker {
-      flex: 1;
-      overflow: hidden;
-      position: relative;
-      mask-image: linear-gradient(
-        to right,
-        transparent 0%,
-        black 3%,
-        black 97%,
-        transparent 100%
-      );
-      -webkit-mask-image: linear-gradient(
-        to right,
-        transparent 0%,
-        black 3%,
-        black 97%,
-        transparent 100%
-      );
-    }
-    .pt-ticker-track {
-      display: flex;
-      align-items: center;
-      gap: 24px;
-      padding: 0 24px;
-      width: max-content;               /* let it grow as wide as needed */
-      animation: pt-ticker-scroll var(--pt-ticker-dur, 60s) linear infinite;
-      will-change: transform;
-    }
-    .pt-ticker-track:hover {
-      animation-play-state: paused;    /* pause on hover for readability */
-    }
-    @keyframes pt-ticker-scroll {
-      0%   { transform: translateX(0); }
-      100% { transform: translateX(-50%); }  /* -50% = one full copy width */
-    }
-    .pt-team-chip {
-      display: flex; align-items: center; gap: 8px;
-      flex-shrink: 0;
-      padding: 4px 14px 4px 8px;
-      border-radius: 20px;
-      border: 1px solid rgba(107,191,78,.15);
-      background: rgba(107,191,78,.05);
-    }
-    .pt-team-chip img {
-      width: 26px; height: 26px; border-radius: 50%;
-      object-fit: contain;
-      border: 1px solid rgba(107,191,78,.2);
-    }
-    .pt-team-chip-name {
-      font-size: .72rem; font-weight: 600;
-      letter-spacing: 1px; text-transform: uppercase;
-      color: var(--slate-light);
-    }
-    .pt-team-chip-pts {
-      font-family: 'Orbitron', sans-serif;
-      font-size: .68rem; font-weight: 700;
-      color: var(--pistah);
-      margin-left: 4px;
+    .pt-footer-logo {
+      height: 22px; width: auto; max-width: 140px;
+      object-fit: contain; display: block;
+      filter: drop-shadow(0 0 8px rgba(107,191,78,.35));
     }
 
     /* ── Modals / overlays ───────────────────────────────────── */
@@ -627,10 +602,13 @@
 /* Light mode overrides */
 body[data-theme="light"]{--bg:#f0f9ee;--bg-surface:#e8f5e4;--bg-panel:#ffffff;--bg-card:#ffffff;--text-main:#0d2010;--text-dim:rgba(13,32,16,0.55);--divider:rgba(107,191,78,0.18)}
 body[data-theme="light"] .pt-header{background:linear-gradient(90deg,#f0fced 0%,#e8f5e4 50%,#f0fced 100%);border-bottom:1px solid rgba(107,191,78,0.25)}
-body[data-theme="light"] .pt-brand-name,body[data-theme="light"] .pt-tourn-name-center{color:var(--pistah-dark)}
+body[data-theme="light"] .pt-tourn-name-center{color:var(--pistah-dark)}
 body[data-theme="light"] .pt-brand-season,body[data-theme="light"] .pt-tourn-desc-center{color:var(--slate-dark)}
 body[data-theme="light"] .pt-live-badge{background:rgba(107,191,78,0.12);color:var(--pistah-dark);border-color:rgba(107,191,78,0.30)}
 body[data-theme="light"] #pt-theme-btn{color:var(--pistah-dark)}
+body[data-theme="light"] .pt-footer{background:#f0f9ee;border-top-color:rgba(107,191,78,0.22)}
+body[data-theme="light"] .pt-footer-lbl{color:rgba(13,32,16,0.45)}
+body[data-theme="light"] .pt-footer-logo{filter:brightness(0) sepia(1) saturate(6) hue-rotate(55deg) brightness(0.55)}
 
 /* ══════════════════════════════════════════════════════════
    MOBILE / TABLET — reflow split stage into a single column
@@ -645,20 +623,22 @@ body[data-theme="light"] #pt-theme-btn{color:var(--pistah-dark)}
   .pt-live-badge{font-size:.62rem; padding:4px 9px; letter-spacing:2px;}
 
   /* Stage: single column, natural height; pad for the fixed footer */
-  .pt-stage{display:block; height:auto; padding-bottom:64px;}
+  .pt-stage{display:block; height:auto; padding-bottom:52px;}
   .pt-right-col{overflow:visible;}
 
   /* Photo panel full width with the name overlay */
   .pt-photo-panel{height:56vh; min-height:330px;}
   .pt-photo-name-block{padding:20px 18px 16px;}
   .pt-player-name{font-size:1.7rem; letter-spacing:1px;}
-  .pt-player-role{font-size:.8rem; letter-spacing:3px;}
+  .pt-player-role{font-size:1.25rem; letter-spacing:2px;}
+  .pt-tier-badge{font-size:1.15rem; padding:10px 16px 8px;}
 
   /* Info panel + action strips flow naturally, drop the left borders */
   .pt-info-panel{overflow:visible; padding:18px 16px 14px; border-left:none;}
   .pt-actions{padding:12px 16px 8px; border-left:none;}
   .pt-next-strip{padding:8px 16px 14px; border-left:none;}
-  .pt-stat-val{font-size:.86rem;}
+  .pt-stat-val{font-size:1.15rem;}
+  .pt-stats-grid{grid-template-columns:1fr;}
 }
 @media (max-width: 430px){
   .pt-tourn-name-center{font-size:.9rem;}
@@ -667,6 +647,16 @@ body[data-theme="light"] #pt-theme-btn{color:var(--pistah-dark)}
   .pt-actions{grid-template-columns:1fr;}
   .pt-photo-panel{height:52vh; min-height:280px;}
 }
+  
+    .pt-photo-name-block { backdrop-filter: blur(2px); }
+    .pt-base-strip {
+      margin-top: 14px;
+      background: linear-gradient(135deg, rgba(107,191,78,.16), rgba(107,191,78,.04));
+      border: 1px solid rgba(168,224,99,.35);
+      box-shadow: 0 0 24px rgba(107,191,78,.18);
+    }
+    .pt-base-strip-val { font-size: clamp(1.2rem, 2vw, 1.6rem); }
+
   </style>
 </head>
 
@@ -680,7 +670,6 @@ body[data-theme="light"] #pt-theme-btn{color:var(--pistah-dark)}
       <a href="/web" style="display:flex;align-items:center;gap:inherit;text-decoration:none;color:inherit;">
         <img src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
         <div class="pt-header-brand-text">
-          <span class="pt-brand-name">Auction Champ</span>
           <span class="pt-brand-season">Pistah Edition</span>
         </div>
       </a>
@@ -758,13 +747,21 @@ body[data-theme="light"] #pt-theme-btn{color:var(--pistah-dark)}
 
     <div class="pt-info-panel">
 
-      <!-- Tier badge -->
-      <div class="pt-tier-badge"
-           t-att-style="('--tier-color:' + player.tier_id.color + '; color:' + player.tier_id.color + '; border-color:' + player.tier_id.color + '55; background:' + player.tier_id.color + '15;') if player.tier_id else ''">
-        <t t-if="player.tier_id">
-          <t t-esc="player.tier_id.name"/>
+      <!-- Tier + base price highlights -->
+      <div class="pt-highlight-row">
+        <div class="pt-tier-badge"
+             t-att-style="('--tier-color:' + player.tier_id.color + '; color:' + player.tier_id.color + '; border-color:' + player.tier_id.color + '55; background:' + player.tier_id.color + '15;') if player.tier_id else ''">
+          <t t-if="player.tier_id">
+            <t t-esc="player.tier_id.name"/>
+          </t>
+          <t t-else="">Player</t>
+        </div>
+        <t t-if="player.effective_base_price">
+          <div class="pt-base-badge">
+            <span class="pt-base-badge-lbl">Base Price</span>
+            <span class="pt-base-badge-val"><t t-esc="'{:,}'.format(int(player.effective_base_price or 0))"/> pts</span>
+          </div>
         </t>
-        <t t-else="">Player</t>
       </div>
 
       <!-- Green divider -->
@@ -807,26 +804,14 @@ body[data-theme="light"] #pt-theme-btn{color:var(--pistah-dark)}
             </t>
           </t>
         </t>
-        <t t-if="player.blood_group">
-          <div class="pt-stat-tile">
-            <div class="pt-stat-val" style="color:#A8E063; font-weight:800;">
-              <t t-esc="player.blood_group"/>
-            </div>
-            <div class="pt-stat-key">Blood Group</div>
-          </div>
-        </t>
+
         <t t-if="player.p_category">
           <div class="pt-stat-tile">
             <div class="pt-stat-val"><t t-esc="player.p_category"/></div>
             <div class="pt-stat-key">Category</div>
           </div>
         </t>
-        <t t-if="player.contact">
-          <div class="pt-stat-tile">
-            <div class="pt-stat-val"><t t-esc="player.masked_contact"/></div>
-            <div class="pt-stat-key">Mobile</div>
-          </div>
-        </t>
+
         <t t-if="player.address">
           <div class="pt-stat-tile">
             <div class="pt-stat-val"><t t-esc="player.address"/></div>
@@ -835,14 +820,6 @@ body[data-theme="light"] #pt-theme-btn{color:var(--pistah-dark)}
         </t>
       </div>
       <t t-call="auction_module.football_tag_chips"/>
-
-      <!-- Base price from auction tier setup -->
-      <t t-if="player.effective_base_price">
-        <div class="pt-base-strip">
-          <span class="pt-base-strip-label">Base Price</span>
-          <span class="pt-base-strip-val"><t t-esc="'{:,}'.format(int(player.effective_base_price or 0))"/> pts</span>
-        </div>
-      </t>
 
       <!-- Cricket Watermark Row — fills empty space between stats and buttons -->
       <div class="pt-cricket-wm">
@@ -925,67 +902,11 @@ body[data-theme="light"] #pt-theme-btn{color:var(--pistah-dark)}
     </div><!-- /pt-right-col -->
   </main>
 
-  <!-- ── FOOTER TICKER ─────────────────────────────────────── -->
+  <!-- ── Powered-by footer ─────────────────────────────────── -->
   <footer class="pt-footer">
-    <div class="pt-footer-label">Teams</div>
-    <div class="pt-teams-ticker">
-      <t t-if="auction_ids">
-        <!-- Track is rendered twice; CSS animates it by -50% for a seamless loop -->
-        <div class="pt-ticker-track" id="ptTickerTrack">
-          <!-- copy 1 -->
-          <t t-foreach="auction_ids" t-as="a">
-            <div class="pt-team-chip">
-              <t t-if="a.team_id and a.team_id.logo">
-                <img t-att-src="image_data_uri(a.team_id.logo)"
-                     t-att-alt="a.team_id.name"/>
-              </t>
-              <span class="pt-team-chip-name">
-                <t t-esc="a.team_id.name if a.team_id else 'Team'"/>
-              </span>
-              <span class="pt-team-chip-pts">
-                <t t-esc="'{:,}'.format(a.remaining_points or 0)"/> pts
-              </span>
-            </div>
-          </t>
-          <!-- copy 2 — identical, aria-hidden so screen readers skip it -->
-          <t t-foreach="auction_ids" t-as="a">
-            <div class="pt-team-chip" aria-hidden="true">
-              <t t-if="a.team_id and a.team_id.logo">
-                <img t-att-src="image_data_uri(a.team_id.logo)"
-                     t-att-alt="a.team_id.name"/>
-              </t>
-              <span class="pt-team-chip-name">
-                <t t-esc="a.team_id.name if a.team_id else 'Team'"/>
-              </span>
-              <span class="pt-team-chip-pts">
-                <t t-esc="'{:,}'.format(a.remaining_points or 0)"/> pts
-              </span>
-            </div>
-          </t>
-        </div>
-      </t>
-    </div>
+    <span class="pt-footer-lbl">Powered by</span>
+    <img class="pt-footer-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
   </footer>
-
-  <script>
-    /* Calibrate ticker speed to content width so it feels consistent
-       regardless of team count (target ~90 px/s).
-       If all teams fit on screen without scrolling, disable animation. */
-    (function () {
-      var track = document.getElementById('ptTickerTrack');
-      if (!track) return;
-      var singleW = track.scrollWidth / 2;   /* width of one copy */
-      var viewW   = track.parentElement.offsetWidth;
-      if (singleW &lt;= viewW) {
-        /* All teams fit — no scrolling needed, centre them instead */
-        track.style.animation = 'none';
-        track.style.justifyContent = 'center';
-      } else {
-        var dur = Math.max(20, Math.round(singleW / 90)); /* min 20 s */
-        track.style.setProperty('--pt-ticker-dur', dur + 's');
-      }
-    })();
-  </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
           integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"

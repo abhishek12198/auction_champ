@@ -53,7 +53,7 @@
         position: relative;
         z-index: 20;
         display: grid;
-        grid-template-columns: 1fr 100px 1fr;
+        grid-template-columns: minmax(160px, 1fr) auto minmax(160px, 1fr);
         align-items: center;
         height: 84px;
         padding: 0 36px;
@@ -69,14 +69,33 @@
         pointer-events: none;
       }
 
-      .hud-tourn-info { display: flex; flex-direction: column; justify-content: center; }
+      .hud-brand {
+        display: flex; align-items: center; gap: 12px;
+        text-decoration: none; color: inherit; min-width: 0;
+      }
+      .hud-brand .ac-logo {
+        height: 28px; width: auto; max-width: 150px;
+        object-fit: contain; display: block; flex-shrink: 0;
+        filter: drop-shadow(0 0 8px rgba(245,200,66,0.45));
+      }
+      .hud-brand-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+      .hud-brand-sub {
+        font-family: 'Oswald', sans-serif;
+        font-size: .85rem; font-weight: 700; letter-spacing: 2px;
+        text-transform: uppercase; color: var(--gold); line-height: 1;
+      }
+
+      .hud-tourn-info { display: flex; flex-direction: column; justify-content: center; align-items: center; min-width: 0; }
       .hud-tourn-name {
         font-family: 'Baseball Club Solid', 'Oswald', sans-serif;
-        font-size: 1.55rem; font-weight: 700;
+        font-size: 1.35rem; font-weight: 700;
         color: var(--gold);
         text-transform: uppercase;
-        letter-spacing: 3px;
+        letter-spacing: 2px;
         line-height: 1;
+        text-align: center;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        max-width: min(42vw, 420px);
       }
       .hud-tourn-desc {
         margin-top: 4px;
@@ -84,6 +103,7 @@
         letter-spacing: 1.8px;
         text-transform: uppercase;
         color: var(--dim);
+        text-align: center;
       }
 
       .hud-logo-center {
@@ -91,12 +111,6 @@
         justify-content: center;
         align-items: center;
         gap: 14px;
-      }
-      .hud-logo-center .ac-logo {
-        width: 66px; height: 66px;
-        object-fit: contain;
-        filter: brightness(0) invert(1) sepia(0.5) saturate(400%) hue-rotate(10deg)
-                brightness(1.05) drop-shadow(0 0 10px rgba(245,200,66,0.5));
       }
       .hud-logo-center .tourn-logo {
         max-height: 54px; max-width: 120px;
@@ -120,7 +134,7 @@
       .hud-arena {
         display: grid;
         grid-template-columns: 53% 1fr;
-        height: calc(100vh - 84px);
+        height: calc(100vh - 84px - 42px);
         overflow: hidden;
       }
 
@@ -222,17 +236,44 @@
         text-shadow: 0 2px 20px rgba(0,0,0,0.9);
       }
       /* angled badge for role — sports HUD style */
+      .hud-overlay-badges {
+        display: flex; flex-wrap: wrap; align-items: stretch; gap: 12px;
+        margin-top: 12px;
+      }
       .hud-role-tag {
-        display: inline-block;
-        margin-top: 10px;
-        padding: 5px 22px 5px 14px;
+        display: inline-flex;
+        align-items: center;
+        margin-top: 0;
+        padding: 12px 28px 10px 18px;
+        min-height: 48px;
         background: linear-gradient(135deg, var(--gold-dark), var(--amber));
         color: var(--navy);
-        font-family: 'Barlow Condensed', sans-serif;
-        font-size: 0.82rem; font-weight: 700;
+        font-family: 'Oswald', 'Barlow Condensed', sans-serif;
+        font-size: clamp(1.2rem, 2.5vw, 1.85rem); font-weight: 700;
         letter-spacing: 3px;
         text-transform: uppercase;
-        clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%);
+        clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%);
+        box-shadow: 0 6px 22px rgba(245,200,66,.35);
+      }
+      .hud-base-badge {
+        display: inline-flex; flex-direction: column;
+        align-items: flex-start; justify-content: center; gap: 2px;
+        padding: 8px 20px 10px; min-height: 48px;
+        border-radius: 4px;
+        background: linear-gradient(135deg, #fff8dc, var(--gold) 40%, var(--amber));
+        color: #1a1000;
+        border: 2px solid rgba(255,255,255,.35);
+        box-shadow: 0 6px 22px rgba(245,200,66,.4);
+      }
+      .hud-base-badge-lbl {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: .62rem; font-weight: 800; letter-spacing: 2px;
+        text-transform: uppercase; opacity: .8; line-height: 1;
+      }
+      .hud-base-badge-val {
+        font-family: 'Oswald', sans-serif;
+        font-size: clamp(1.35rem, 2.8vw, 2.05rem); font-weight: 700;
+        letter-spacing: 1px; line-height: 1;
       }
 
       /* gold vertical accent line on left edge of photo */
@@ -256,7 +297,7 @@
       /* tier strip */
       .hud-tier-strip {
         flex-shrink: 0;
-        padding: 14px 28px 13px;
+        padding: 16px 28px 15px;
         background: rgba(245,200,66,0.03);
         border-bottom: 1px solid var(--border);
         display: flex;
@@ -264,7 +305,7 @@
         gap: 14px;
       }
       .hud-tier-label-dim {
-        font-size: 0.68rem; font-weight: 600;
+        font-size: 0.75rem; font-weight: 600;
         letter-spacing: 2.5px;
         text-transform: uppercase;
         color: var(--dim);
@@ -273,68 +314,75 @@
       .hud-tier-hex {
         display: inline-flex;
         align-items: center;
-        padding: 6px 26px 6px 20px;
+        padding: 12px 30px 10px 24px;
+        min-height: 48px;
         font-family: 'Oswald', sans-serif;
-        font-size: 1rem; font-weight: 600;
+        font-size: clamp(1.15rem, 2.3vw, 1.75rem); font-weight: 600;
         letter-spacing: 3px;
         text-transform: uppercase;
         clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0% 50%);
+        color: #0a0800 !important;
+        box-shadow: 0 6px 20px rgba(0,0,0,.35);
       }
 
-      /* stats area */
+      /* stats area — projector-first */
       .hud-stats {
         flex: 1;
         padding: 18px 28px 10px;
         display: flex;
         flex-direction: column;
-        gap: 9px;
+        gap: 10px;
         overflow-y: auto;
       }
       .hud-stats-heading {
         font-family: 'Baseball Club Solid', 'Oswald', sans-serif;
-        font-size: 0.78rem; font-weight: 600;
+        font-size: 1rem; font-weight: 600;
         letter-spacing: 4px;
         text-transform: uppercase;
         color: var(--gold);
-        padding-bottom: 9px;
+        padding-bottom: 10px;
         border-bottom: 1px solid var(--border);
-        margin-bottom: 2px;
+        margin-bottom: 4px;
       }
 
       .hud-stat-row {
-        display: grid;
-        grid-template-columns: 108px 1fr;
-        align-items: stretch;
-        background: rgba(255,255,255,0.02);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 14px 18px 16px;
+        background: rgba(255,255,255,0.03);
         border: 1px solid var(--border);
-        border-radius: 3px;
-        overflow: hidden;
+        border-radius: 10px;
         transition: border-color .2s, background .2s;
       }
       .hud-stat-row:hover {
         border-color: rgba(245,200,66,0.48);
-        background: rgba(245,200,66,0.04);
+        background: rgba(245,200,66,0.05);
       }
       .hud-stat-key {
-        padding: 9px 12px;
         font-family: 'Barlow Condensed', sans-serif;
-        font-size: 0.7rem; font-weight: 700;
-        letter-spacing: 1.8px;
+        font-size: clamp(.62rem, .95vw, .74rem); font-weight: 700;
+        letter-spacing: 2px;
         text-transform: uppercase;
         color: var(--gold);
-        background: rgba(245,200,66,0.06);
-        border-right: 1px solid var(--border);
-        display: flex;
-        align-items: center;
       }
       .hud-stat-val {
-        padding: 9px 16px;
-        font-family: 'Barlow Condensed', sans-serif;
-        font-size: 1rem; font-weight: 600;
-        letter-spacing: 0.5px;
+        font-family: 'Oswald', 'Barlow Condensed', sans-serif;
+        font-size: clamp(1.4rem, 2.6vw, 2.05rem); font-weight: 600;
+        letter-spacing: 1px; line-height: 1.05;
         color: var(--white);
-        display: flex;
-        align-items: center;
+        word-break: break-word;
+        text-transform: uppercase;
+      }
+      .hud-stats > div[style*="flex-wrap"] > span {
+        font-family: 'Oswald', sans-serif !important;
+        font-size: clamp(.9rem, 1.5vw, 1.15rem) !important;
+        font-weight: 600 !important;
+        letter-spacing: 1px !important;
+        padding: 10px 16px 8px !important;
+        border-radius: 10px !important;
+        border-width: 2px !important;
+        text-transform: uppercase !important;
       }
 
       /* ── action buttons ─────────────────────── */
@@ -439,10 +487,11 @@
           justify-items: center;
           gap: 8px;
         }
-        .hud-logo-center { order: 1; gap: 10px; }
-        .hud-logo-center .ac-logo { width: 50px; height: 50px; }
+        .hud-brand { order: 1; }
+        .hud-brand .ac-logo { height: 24px; max-width: 120px; }
+        .hud-logo-center { order: 2; gap: 10px; }
         .hud-logo-center .tourn-logo { max-height: 44px; }
-        .hud-tourn-info { order: 2; align-items: center; }
+        .hud-tourn-info { align-items: center; }
         .hud-tourn-name {
           font-size: 1.15rem;
           letter-spacing: 1.5px;
@@ -451,13 +500,14 @@
           text-align: center;
         }
         .hud-tourn-desc { text-align: center; }
-        .hud-tourn-logo { position: static; }
+        .hud-tourn-logo { position: static; order: 3; justify-self: end; width: 100%; }
         .hud-header-controls { top: 10px; right: 12px; }
       }
       @media (max-width: 430px) {
         .hud-tourn-name { font-size: 1rem; letter-spacing: 1px; }
         .hud-player-name { font-size: 1.5rem; }
-        .hud-logo-center .ac-logo { width: 42px; height: 42px; }
+        .hud-brand-sub { display: none; }
+        .hud-brand .ac-logo { height: 22px; }
       }
 /* ── Theme toggle ── */
 #bs-theme-btn{background:rgba(245,200,66,0.10);border:1px solid rgba(245,200,66,0.35);border-radius:20px;padding:5px 12px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:var(--gold);letter-spacing:0.04em;transition:all 0.2s}
@@ -477,14 +527,18 @@ body[data-theme="light"] .hud-tourn-name{color:#4a3000}
 body[data-theme="light"] .hud-tourn-desc{color:rgba(74,48,0,0.65)}
 body[data-theme="light"] #bs-theme-btn{color:var(--gold-dark)}
 body[data-theme="light"] .bs-ctrl-btn{color:var(--gold-dark)}
-/* Logo filter for light bg */
-body[data-theme="light"] .hud-logo-center img{filter:brightness(0) sepia(1) saturate(4) hue-rotate(5deg) brightness(0.60) drop-shadow(0 0 8px rgba(180,140,20,0.35))}
+/* Logo filter for light bg — wordmark SVG is white; invert to dark gold */
+body[data-theme="light"] .hud-brand-sub{color:#4a3000}
+body[data-theme="light"] .hud-brand .ac-logo{
+  filter:brightness(0) sepia(1) saturate(6) hue-rotate(5deg) brightness(0.55)
+          drop-shadow(0 0 6px rgba(180,140,20,0.30));
+}
 /* Info column */
 body[data-theme="light"] .hud-info-col{border-left-color:rgba(180,140,20,0.25)}
 body[data-theme="light"] .hud-stats-heading{color:var(--gold-dark);border-bottom-color:rgba(180,140,20,0.28)}
 body[data-theme="light"] .hud-stat-row{background:rgba(180,140,20,0.04)}
 body[data-theme="light"] .hud-stat-row:hover{background:rgba(180,140,20,0.10);border-color:rgba(180,140,20,0.45)}
-body[data-theme="light"] .hud-stat-key{color:var(--gold-dark);background:rgba(180,140,20,0.08);border-right-color:rgba(180,140,20,0.22)}
+body[data-theme="light"] .hud-stat-key{color:var(--gold-dark)}
 body[data-theme="light"] .hud-stat-val{color:#1a1000}
 /* Unsold button — hardcoded white refs → swap to dark */
 body[data-theme="light"] .hud-btn-unsold{background:rgba(26,16,0,0.06);border:1.5px solid rgba(26,16,0,0.20);color:rgba(26,16,0,0.72)}
@@ -500,7 +554,40 @@ body[data-theme="light"] .hud-role-tag{color:#1a0800}
 /* Photo edge gradient — blend into light info panel cleanly */
 body[data-theme="light"] .hud-photo-col::after{background:linear-gradient(to right,transparent 65%,rgba(253,248,239,0.6) 88%,#fdf8ef 100%)}
 body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to top,rgba(7,11,20,0.96) 0%,transparent 100%)}
-    </style>
+
+    /* Powered-by footer */
+    .hud-footer {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 42px; z-index: 40;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      background: var(--navy-card);
+      border-top: 1px solid var(--border);
+    }
+    .hud-footer-lbl {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .62rem; font-weight: 700; letter-spacing: 2.2px;
+      text-transform: uppercase; color: var(--dim);
+    }
+    .hud-footer-logo {
+      height: 22px; width: auto; max-width: 140px;
+      object-fit: contain; display: block;
+      filter: drop-shadow(0 0 8px rgba(245,200,66,.4));
+    }
+    body[data-theme="light"] .hud-footer {
+      background: #fff; border-top-color: rgba(180,140,20,.22);
+    }
+    body[data-theme="light"] .hud-footer-logo {
+      filter: brightness(0) sepia(1) saturate(6) hue-rotate(5deg) brightness(0.55);
+    }
+    
+    .hud-photo img, img.hud-photo, .hud-player-img { object-fit: cover !important; object-position: center top; }
+    .hud-name-overlay, .hud-player-name {
+      text-transform: uppercase; letter-spacing: .05em;
+      text-shadow: 0 4px 24px rgba(0,0,0,.55), 0 0 18px rgba(245,200,66,.25);
+    }
+    .hud-stat-row .hud-stat:has(.hud-stat-label) { /* progressive */ }
+
+  </style>
   </head>
 
   <body t-att-data-player-id="player.id" t-att-data-next-countdown="tournament.next_player_countdown if tournament else 5">
@@ -509,15 +596,20 @@ body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to to
          HEADER
     ══════════════════════════════════════ -->
     <header class="hud-header">
-      <div class="hud-tourn-info">
-        <div class="hud-tourn-name"><t t-esc="player.tournament_id.name"/></div>
-        <div class="hud-tourn-desc"><t t-esc="player.tournament_id.description"/></div>
-      </div>
+      <a href="/web" class="hud-brand">
+        <img class="ac-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
+        <div class="hud-brand-text">
+          <div class="hud-brand-sub">Butterscotch Edition</div>
+        </div>
+      </a>
       <div class="hud-logo-center">
-        <a href="/web" style="display:contents;">
-          <img class="ac-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ" />
-        </a>
-        <img class="tourn-logo" t-att-src="image_data_uri(player.tournament_id.logo)" alt="Tournament Logo" />
+        <t t-if="player.tournament_id and player.tournament_id.logo">
+          <img class="tourn-logo" t-att-src="image_data_uri(player.tournament_id.logo)" alt="Tournament Logo"/>
+        </t>
+        <div class="hud-tourn-info">
+          <div class="hud-tourn-name"><t t-esc="player.tournament_id.name"/></div>
+          <div class="hud-tourn-desc"><t t-esc="player.tournament_id.description"/></div>
+        </div>
       </div>
       <div class="hud-tourn-logo">
         <div class="hud-header-controls">
@@ -557,12 +649,20 @@ body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to to
           <span class="hud-serial-number"><t t-esc="player.sl_no"/></span>
         </div>
 
-        <!-- player name + role overlaid at bottom -->
+        <!-- player name + role + base price overlaid at bottom -->
         <div class="hud-photo-overlay">
           <div class="hud-player-name" data-sm-name=""><t t-esc="player.name.upper()"/></div>
-          <t t-if="(player.dominant_position_id.name if player.tournament_type == 'football' else player.role)">
-            <div class="hud-role-tag" data-sm-role=""><t t-esc="player.dominant_position_id.name if player.tournament_type == 'football' else player.role"/></div>
-          </t>
+          <div class="hud-overlay-badges">
+            <t t-if="(player.dominant_position_id.name if player.tournament_type == 'football' else player.role)">
+              <div class="hud-role-tag" data-sm-role=""><t t-esc="player.dominant_position_id.name if player.tournament_type == 'football' else player.role"/></div>
+            </t>
+            <t t-if="player.effective_base_price">
+              <div class="hud-base-badge">
+                <span class="hud-base-badge-lbl">Base Price</span>
+                <span class="hud-base-badge-val"><t t-esc="'{:,}'.format(int(player.effective_base_price or 0))"/> pts</span>
+              </div>
+            </t>
+          </div>
         </div>
       </div>
 
@@ -573,7 +673,7 @@ body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to to
         <div class="hud-tier-strip">
           <t t-if="player.tier_id">
             <span class="hud-tier-hex"
-                  t-att-style="'background:' + (player.tier_id.color or '#C8960C') + '30; color:' + (player.tier_id.color or '#F5C842') + ';'">
+                  t-att-style="'background:' + (player.tier_id.color or '#F5C842') + '; color:#0a0800;'">
               <t t-esc="player.tier_id.name"/>
             </span>
           </t>
@@ -622,20 +722,7 @@ body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to to
               <t t-call="auction_module.football_tag_chips"/>
             </t>
           </t>
-          <t t-if="player.blood_group">
-            <div class="hud-stat-row">
-              <span class="hud-stat-key">Blood Group</span>
-              <span class="hud-stat-val" style="color:#f87171; font-weight:700;">
-                <t t-esc="player.blood_group"/>
-              </span>
-            </div>
-          </t>
-          <t t-if="player.contact">
-            <div class="hud-stat-row">
-              <span class="hud-stat-key">Mobile</span>
-              <span class="hud-stat-val"><t t-esc="player.masked_contact"/></span>
-            </div>
-          </t>
+
           <t t-if="player.p_category">
             <div class="hud-stat-row">
               <span class="hud-stat-key">Category</span>
@@ -646,12 +733,6 @@ body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to to
             <div class="hud-stat-row">
               <span class="hud-stat-key">Location</span>
               <span class="hud-stat-val"><t t-esc="player.address"/></span>
-            </div>
-          </t>
-          <t t-if="player.effective_base_price">
-            <div class="hud-stat-row">
-              <span class="hud-stat-key">Base Price</span>
-              <span class="hud-stat-val"><t t-esc="'{:,}'.format(int(player.effective_base_price or 0))"/> pts</span>
             </div>
           </t>
         </div>
@@ -674,6 +755,11 @@ body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to to
 
       </div><!-- /hud-info-col -->
     </div><!-- /hud-arena -->
+
+    <footer class="hud-footer">
+      <span class="hud-footer-lbl">Powered by</span>
+      <img class="hud-footer-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+    </footer>
 
     <script>
       async function changeImage(skipOverlay) {

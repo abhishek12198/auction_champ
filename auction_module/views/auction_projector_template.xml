@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 <template id="projector_template" name="Auction Projector View">
-<html lang="en" t-att-data-theme="theme">
+<html lang="en" t-att-data-theme="theme" t-att-data-sport="sport or 'cricket'">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -137,11 +137,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
    resulting "#N" number stay fully visible on small / phone-cast screens
    (otherwise the number, being the last stacked element, overflows off-screen). */
 #pj-waiting.dice-active{gap:14px;overflow:auto}
-#pj-waiting.dice-active .pj-ac-logo{width:clamp(110px,18vw,200px)}
-#pj-waiting.dice-active .pj-wait-title,
+#pj-waiting.dice-active .pj-ac-logo{width:clamp(90px,14vw,140px)}
+#pj-waiting.dice-active .pj-wait-kicker,
+#pj-waiting.dice-active .pj-wait-hero-name,
+#pj-waiting.dice-active .pj-wait-sub,
 #pj-waiting.dice-active .pj-wait-dots,
-#pj-waiting.dice-active .pj-wait-logo,
-#pj-waiting.dice-active .pj-wait-logo-ph{display:none}
+#pj-waiting.dice-active .pj-wait-hero-logo,
+#pj-waiting.dice-active .pj-wait-powered{display:none}
 @media(max-height:640px){
   #pj-waiting.dice-active .pj-ac-logo{display:none}
 }
@@ -207,24 +209,27 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   color:var(--bg);line-height:1}
 
 /* Photo side */
-.pj-photo-side{flex:0 0 45%;position:relative;overflow:hidden;background:var(--bg2)}
-/* Blurred ambient background (same photo, dark+blurred) */
-.pj-photo-bg{position:absolute;inset:0;background-size:cover;background-position:center;
-  filter:blur(22px) brightness(0.28) saturate(0.6);transform:scale(1.12);z-index:0;display:none}
+.pj-photo-side{flex:0 0 45%;position:relative;overflow:hidden;
+  background:linear-gradient(180deg,#0a1224 0%,#060b16 100%)}
+/* Soft ambient wash (no duplicated player image — that looked like a ghost smear) */
+.pj-photo-bg{position:absolute;inset:0;z-index:0;pointer-events:none;display:none;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(255,255,255,.06) 0%, transparent 55%),
+    linear-gradient(180deg, rgba(0,0,0,.15) 0%, rgba(0,0,0,.55) 100%)}
 /* Foreground photo — contain so entire player is always visible */
 .pj-photo{width:100%;height:100%;object-fit:contain;object-position:center bottom;
-  display:block;position:relative;z-index:1}
+  display:block;position:relative;z-index:2}
 .pj-photo-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
   font-size:8rem;opacity:.15;position:relative;z-index:1}
-/* Bottom gradient fade */
-.pj-photo-side::after{content:'';position:absolute;inset:0;
-  background:linear-gradient(to right,transparent 60%,var(--bg) 100%),
-             linear-gradient(to top,var(--bg) 0%,transparent 30%);
+/* Bottom / side fade into stage */
+.pj-photo-side::after{content:'';position:absolute;inset:0;z-index:3;
+  background:linear-gradient(to right,transparent 72%,rgba(0,0,0,.55) 100%),
+             linear-gradient(to top,rgba(0,0,0,.55) 0%,transparent 28%);
   pointer-events:none}
 /* Serial watermark */
 .pj-serial-wm{position:absolute;bottom:16px;left:20px;
   font-family:var(--hf);font-size:clamp(3rem,8vw,6rem);font-weight:900;
-  color:var(--accent);opacity:.09;line-height:1;pointer-events:none;z-index:2;
+  color:var(--accent);opacity:.09;line-height:1;pointer-events:none;z-index:4;
   text-shadow:0 0 40px var(--glow)}
 
 /* Info side */
@@ -428,28 +433,32 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 #pj-root .pj-bid-summary-btn:hover,#pj-root .pj-fs-btn:hover{
   background:var(--glow);border-color:var(--accent);color:var(--accent)}
 
-/* ══ HERO PHOTO SIDE — spotlight + glowing floating frame ══ */
-#pj-root .pj-photo-side{flex:0 0 47%;background:transparent;
+/* ══ HERO PHOTO SIDE — spotlight + clean stage (no ghost blur of player) ══ */
+#pj-root .pj-photo-side{flex:0 0 47%;
+  background:
+    radial-gradient(ellipse at 50% 35%, rgba(232,160,32,.14) 0%, transparent 55%),
+    linear-gradient(180deg, rgba(8,14,28,.97) 0%, rgba(4,8,16,.98) 100%);
   display:flex;align-items:flex-end;justify-content:center}
-.pj-spotlight{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);
-  width:82%;height:86%;z-index:0;pointer-events:none;
-  background:radial-gradient(ellipse at center,var(--glow) 0%,transparent 66%);
-  filter:blur(6px);opacity:.9;
+.pj-spotlight{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);
+  width:70%;height:78%;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse at center, var(--glow) 0%, transparent 68%);
+  filter:blur(8px);opacity:.55;
   animation:pjSpot 6s ease-in-out infinite}
-@keyframes pjSpot{0%,100%{opacity:.7}50%{opacity:1}}
-.pj-floor{position:absolute;left:50%;bottom:5%;transform:translateX(-50%);
-  width:66%;height:42px;z-index:0;pointer-events:none;
-  background:radial-gradient(ellipse at center,rgba(0,0,0,.55) 0%,transparent 72%);
+@keyframes pjSpot{0%,100%{opacity:.4}50%{opacity:.65}}
+.pj-floor{position:absolute;left:50%;bottom:4%;transform:translateX(-50%);
+  width:58%;height:36px;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse at center,rgba(0,0,0,.5) 0%,transparent 72%);
   filter:blur(3px)}
-#pj-root .pj-photo{filter:drop-shadow(0 18px 26px rgba(0,0,0,.7))
-  drop-shadow(0 0 26px var(--glow));animation:pjHeroIn .7s cubic-bezier(.2,.8,.25,1) both}
+#pj-root .pj-photo{position:relative;z-index:2;
+  filter:drop-shadow(0 16px 28px rgba(0,0,0,.75));
+  animation:pjHeroIn .7s cubic-bezier(.2,.8,.25,1) both}
 @keyframes pjHeroIn{from{opacity:0;transform:translateY(26px) scale(.985)}
   to{opacity:1;transform:none}}
-/* subtle premium frame lines on the hero */
+/* subtle frame — keep it light so it does not trap a smear behind the player */
 .pj-photo-side::before{content:'';position:absolute;z-index:3;pointer-events:none;
   left:16px;top:16px;bottom:16px;right:16px;border-radius:14px;
-  border:1px solid rgba(255,255,255,.05);
-  box-shadow:inset 0 0 60px rgba(0,0,0,.35)}
+  border:1px solid rgba(255,255,255,.06);
+  box-shadow:inset 0 0 40px rgba(0,0,0,.25)}
 
 /* Serial badge — premium chrome ring */
 #pj-root #pjSerialBadge{
@@ -681,12 +690,313 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   #pj-root #pj-card::before{left:8px;top:8px;right:8px;bottom:8px}
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   ★★  PASS 3 — cinematic projector (sport-aware stadium + clearer hierarchy)
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Real stadium photo — sport-specific full-bleed 16:9 backdrop */
+.pj-stadium-photo{
+  position:absolute;inset:-2%;z-index:0;pointer-events:none;
+  background-size:cover;background-position:center 42%;background-repeat:no-repeat;
+  filter:saturate(1.12) brightness(.62) contrast(1.08);
+  animation:pjKenBurns 28s ease-in-out infinite alternate;
+  will-change:transform;
+}
+@keyframes pjKenBurns{
+  0%  {transform:scale(1.02) translate3d(0,0,0)}
+  100%{transform:scale(1.10) translate3d(-1.2%,-0.8%,0)}
+}
+html[data-sport="football"] .pj-stadium-photo,
+html[data-sport="kabaddi"] .pj-stadium-photo{
+  background-image:url('/auction_module/static/img/stadium_football_wide.jpg');
+}
+html[data-sport="cricket"] .pj-stadium-photo,
+html:not([data-sport]) .pj-stadium-photo{
+  background-image:url('/auction_module/static/img/stadium_cricket_wide.jpg');
+}
+.pj-stadium-veil{
+  position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(110% 75% at 50% 18%, transparent 18%, rgba(0,0,0,.52) 78%),
+    linear-gradient(180deg, rgba(0,0,0,.42) 0%, transparent 30%, rgba(0,0,0,.78) 100%);
+}
+/* SVG stadium is a light accent only; photo is the hero backdrop */
+#pjStadium{opacity:.18;mix-blend-mode:screen}
+html[data-sport="football"] #pjStadium,
+html[data-sport="kabaddi"] #pjStadium{display:none}
+
+/* Waiting — brand-first cinematic stand-by */
+#pj-waiting{
+  background:
+    radial-gradient(70% 55% at 50% 42%, rgba(0,0,0,.18) 0%, rgba(0,0,0,.72) 72%),
+    rgba(0,0,0,.48);
+  backdrop-filter:blur(2px);gap:16px;padding:28px 24px;
+}
+.pj-wait-kicker{
+  font-family:var(--ef);font-size:clamp(.62rem,1.2vw,.85rem);font-weight:800;
+  letter-spacing:5px;text-transform:uppercase;color:var(--accent);
+  padding:7px 16px;border:1px solid rgba(255,255,255,.18);
+  border-radius:999px;background:rgba(0,0,0,.42);
+  box-shadow:0 0 28px var(--glow), inset 0 1px 0 rgba(255,255,255,.12);
+}
+.pj-wait-hero-logo{
+  width:clamp(132px,18vw,210px);height:clamp(132px,18vw,210px);
+  border-radius:30px;object-fit:contain;padding:16px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 0 0 1px rgba(0,0,0,.35),0 22px 55px rgba(0,0,0,.55),0 0 48px var(--glow);
+  animation:pjAcPulse 4s ease-in-out infinite;
+}
+.pj-wait-hero-name{
+  font-family:var(--sf);font-size:clamp(2.1rem,5.8vw,4.4rem);font-weight:400;
+  letter-spacing:3px;text-transform:uppercase;text-align:center;line-height:.95;
+  max-width:min(92vw,960px);color:#fff;
+  text-shadow:0 4px 24px rgba(0,0,0,.65),0 0 40px var(--glow);
+}
+.pj-wait-sub{
+  font-family:var(--sf-body);font-size:clamp(.85rem,1.6vw,1.15rem);font-weight:600;
+  letter-spacing:3px;text-transform:uppercase;color:var(--tx-d);text-align:center;
+}
+.pj-wait-powered{
+  margin-top:10px;display:flex;flex-direction:column;align-items:center;gap:6px;opacity:.72;
+}
+.pj-wait-powered-lbl{
+  font-family:var(--ef);font-size:clamp(.45rem,.9vw,.62rem);font-weight:700;
+  letter-spacing:3px;text-transform:uppercase;color:var(--tx-d);
+}
+#pj-waiting .pj-ac-logo{width:clamp(88px,12vw,140px);opacity:.95;margin-top:0;
+  animation:none;filter:drop-shadow(0 0 12px var(--glow))}
+#pj-waiting .pj-wait-title{display:none}
+#pj-waiting .pj-wait-logo,#pj-waiting .pj-wait-logo-ph{display:none}
+
+/* Player card — clearer on-air hierarchy */
+.pj-onair{
+  display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;
+  font-family:var(--ef);font-size:clamp(.55rem,1.1vw,.78rem);font-weight:800;
+  letter-spacing:3px;text-transform:uppercase;color:#fff;
+  background:linear-gradient(135deg,#ff2d43,#c40018);padding:5px 12px;border-radius:6px;
+  box-shadow:0 0 18px rgba(234,84,85,.45);
+}
+.pj-onair-dot{width:7px;height:7px;border-radius:50%;background:#fff;
+  animation:pjLivePulse 1.2s ease-in-out infinite}
+.pj-bid-summary-btn .pj-btn-ico{opacity:.9;margin-right:2px}
+
+/* Football: pitch-green ambient tint under stadium photo */
+html[data-sport="football"] #pj-stage{
+  background:radial-gradient(90% 70% at 50% 100%, rgba(20,90,40,.38), transparent 55%), #05070d;
+}
+html[data-sport="football"] .pj-pa-text{letter-spacing:5px}
+
+/* ════════════════════════════════════════════════════════════════════════
+   ★★  PASS 4 — PLAYER DISPLAY ONLY (standby / waiting left untouched)
+   TV-auction graphic: hero photo + bold name + key stats + base price.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Drop the boxed gold frame — reads as a form, not a broadcast graphic */
+#pj-root #pj-card::before,
+#pj-root #pj-card::after{display:none !important}
+
+/* Full-bleed stage card */
+#pj-root #pj-card{
+  background:transparent;
+}
+
+/* ── PHOTO: dominate the stage, stadium peeks through ── */
+#pj-root .pj-photo-side{
+  flex:0 0 54%;
+  background:
+    linear-gradient(90deg, transparent 55%, rgba(3,6,14,.55) 100%),
+    linear-gradient(180deg, rgba(3,6,14,.25) 0%, transparent 28%, rgba(3,6,14,.65) 100%);
+  display:flex;align-items:flex-end;justify-content:center;
+  overflow:hidden;
+}
+#pj-root .pj-photo-side::before{
+  left:0;top:0;right:0;bottom:0;border-radius:0;
+  border:none;box-shadow:none;
+  background:radial-gradient(ellipse at 50% 70%, transparent 35%, rgba(0,0,0,.35) 100%);
+}
+#pj-root .pj-photo-side::after{
+  background:
+    linear-gradient(90deg, transparent 78%, rgba(3,6,14,.7) 100%),
+    linear-gradient(180deg, transparent 70%, rgba(3,6,14,.55) 100%);
+}
+#pj-root .pj-photo-bg{display:none !important}
+#pj-root .pj-spotlight{
+  width:88%;height:90%;top:48%;opacity:.35;
+  background:radial-gradient(ellipse at center, rgba(255,215,0,.35) 0%, transparent 70%);
+}
+#pj-root .pj-floor{
+  bottom:2%;width:70%;height:48px;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,.65) 0%, transparent 70%);
+}
+#pj-root .pj-photo{
+  position:relative;z-index:2;
+  width:auto;height:100%;max-height:100%;max-width:100%;
+  margin:0;object-fit:contain;object-position:center bottom;
+  filter:drop-shadow(0 20px 36px rgba(0,0,0,.85));
+  animation:pjHeroIn .65s cubic-bezier(.2,.8,.25,1) both;
+}
+#pj-root .pj-serial-wm{display:none !important}
+
+/* Serial plate — keep, sit cleanly over photo */
+#pj-root #pjSerialBadge{
+  top:18px;left:18px;
+  width:clamp(70px,7.5vw,108px);height:clamp(86px,9.5vw,132px);
+  box-shadow:0 10px 28px rgba(0,0,0,.55);
+}
+
+/* ── INFO: solid broadcast panel, clear hierarchy ── */
+#pj-root .pj-info-side{
+  flex:1;
+  justify-content:center;
+  gap:0;
+  padding:clamp(28px,4.5vw,64px) clamp(28px,5vw,72px) clamp(28px,4.5vw,56px) clamp(20px,3vw,40px);
+  background:
+    linear-gradient(105deg, rgba(4,8,18,.92) 0%, rgba(6,12,26,.88) 55%, rgba(6,12,26,.72) 100%);
+  border-left:1px solid rgba(255,215,0,.22);
+  box-shadow:-24px 0 60px rgba(0,0,0,.35);
+  overflow:hidden;
+}
+#pj-root .pj-info-side::before{opacity:.2}
+#pj-root .pj-info-side::after{
+  left:0;top:10%;bottom:10%;width:4px;
+  background:linear-gradient(180deg, transparent, var(--pj-gold) 20%, var(--accent) 80%, transparent);
+  box-shadow:0 0 18px var(--glow);
+}
+
+#pj-root .pj-onair{
+  margin-bottom:clamp(14px,2vw,22px);
+  align-self:flex-start;
+}
+
+/* Name — solid, huge, readable from across the hall */
+#pj-root .pj-name{
+  background:none !important;
+  -webkit-background-clip:unset !important;background-clip:unset !important;
+  -webkit-text-fill-color:#fff !important;
+  color:#fff !important;
+  font-family:var(--sf);
+  font-size:clamp(2.8rem,6.8vw,5.8rem);
+  font-weight:400;
+  letter-spacing:2px;
+  line-height:.92;
+  margin:0 0 clamp(14px,2vw,22px) 0;
+  max-width:100%;
+  word-break:break-word;
+  text-shadow:0 4px 24px rgba(0,0,0,.75), 0 0 40px rgba(255,215,0,.18);
+  filter:none !important;
+  position:relative;
+  padding-bottom:14px;
+}
+#pj-root .pj-name::after{
+  content:'';position:absolute;left:0;bottom:0;
+  width:clamp(72px,10vw,140px);height:4px;border-radius:2px;
+  background:linear-gradient(90deg, var(--pj-gold), transparent);
+  box-shadow:0 0 12px var(--glow);
+}
+
+#pj-root .pj-badges{
+  gap:12px;margin-bottom:clamp(18px,2.8vw,28px);
+}
+#pj-root .pj-tier,#pj-root .pj-role{
+  border-radius:6px;
+  padding:8px 20px;
+  font-size:clamp(.78rem,1.5vw,1.05rem);
+  letter-spacing:2.5px;
+}
+#pj-root .pj-role{
+  background:rgba(255,255,255,.06);
+  border:1.5px solid rgba(255,215,0,.45);
+  color:#FFE87A;
+  box-shadow:none;
+}
+
+/* Stats — compact key/value tiles, not busy glass cards */
+#pj-root .pj-stats{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:10px 14px;
+  max-width:min(100%, 560px);
+  margin-bottom:clamp(18px,3vw,28px);
+}
+#pj-root .pj-stat{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:10px;
+  padding:12px 16px 12px 18px;
+  backdrop-filter:none;
+  box-shadow:none;
+}
+#pj-root .pj-stat::before{
+  width:3px;
+  background:var(--pj-gold);
+  opacity:1;
+}
+#pj-root .pj-stat-label{
+  color:rgba(255,215,0,.75);
+  font-size:clamp(.52rem,1.05vw,.68rem);
+  letter-spacing:2px;
+  margin-bottom:3px;
+}
+#pj-root .pj-stat-val{
+  color:#fff;
+  font-family:var(--ef);
+  font-weight:700;
+  font-size:clamp(1rem,2vw,1.35rem);
+  letter-spacing:.5px;
+  line-height:1.15;
+}
+#pj-root .pj-chips{margin-top:6px;gap:8px}
+#pj-root .pj-chip{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:6px;
+  padding:5px 12px;
+  font-size:clamp(.55rem,1.1vw,.72rem);
+}
+
+/* Base price — the money moment */
+#pj-root .pj-base{
+  margin-top:4px;
+  align-self:flex-start;
+  gap:14px;
+  padding:18px 40px 18px 28px;
+  border-radius:0;
+  clip-path:polygon(0 0,100% 0,100% 100%,24px 100%,0 calc(100% - 24px));
+  border:none;
+  background:linear-gradient(135deg, #FFE87A 0%, #FFD700 40%, #E8A020 100%);
+  box-shadow:0 12px 36px rgba(0,0,0,.45), 0 0 40px rgba(255,215,0,.35);
+  animation:pjBaseGlow 3.2s ease-in-out infinite;
+}
+#pj-root .pj-base-label{
+  max-width:5em;line-height:1.05;
+  font-size:clamp(.72rem,1.35vw,.95rem);
+  color:#3a2a00;opacity:.9;
+}
+#pj-root .pj-base-val{
+  font-size:clamp(2.4rem,5.2vw,3.8rem);
+  color:#1a1200;
+  line-height:1;
+}
+#pj-root .pj-base-unit{color:#3a2a00;font-weight:800}
+
+@media(max-width:768px){
+  #pj-root .pj-photo-side{flex:0 0 42%}
+  #pj-root .pj-name{font-size:clamp(2.2rem,6vw,3.4rem)}
+  #pj-root .pj-stats{grid-template-columns:1fr}
+}
+@media(max-width:480px){
+  #pj-root #pj-card{flex-direction:column}
+  #pj-root .pj-photo-side{flex:0 0 48vh}
+  #pj-root .pj-info-side{border-left:none;border-top:1px solid rgba(255,215,0,.22)}
+}
+
   </style>
 </head>
 <body>
 <script>
   window.PJ_DB   = '<t t-esc="db_name or ''"/>';
   window.PJ_SLUG = '<t t-esc="tournament_slug or (tournament.slug if tournament else '')"/>';
+  window.PJ_SPORT = '<t t-esc="sport or 'cricket'"/>';
   window.PJ_DATA_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/data';
 </script>
 
@@ -710,7 +1020,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
       </div>
     </div>
     <div class="pj-bar-center" aria-hidden="true">
-      <span class="pj-pa-text">Player&#160;Auction</span>
+      <t t-if="sport == 'football'">
+        <span class="pj-pa-text">Football&#160;Auction</span>
+      </t>
+      <t t-else="">
+        <span class="pj-pa-text">Player&#160;Auction</span>
+      </t>
       <span class="pj-live-pill"><span class="pj-live-pill-dot"></span>LIVE</span>
     </div>
     <div class="pj-bar-right">
@@ -718,7 +1033,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
       <div class="pj-bar-divider"></div>
       <a class="pj-bid-summary-btn"
          t-att-href="'/' + db_name + '/' + tournament_slug + '/auction/show/team/balance'"
-         title="Bid Summary">&#x1F4CA; BID SUMMARY</a>
+         title="Bid Summary"><span class="pj-btn-ico">▣</span> BID SUMMARY</a>
       <button class="pj-fs-btn" id="pjFsBtn" onclick="pjToggleFs()" title="Fullscreen">&#x26F6;</button>
     </div>
   </div>
@@ -726,7 +1041,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   <!-- Stage -->
   <div id="pj-stage">
 
-    <!-- ── CRICKET STADIUM BACKGROUND ── -->
+    <!-- Sport-aware stadium photo backdrop -->
+    <div class="pj-stadium-photo" aria-hidden="true"></div>
+    <div class="pj-stadium-veil" aria-hidden="true"></div>
+
+    <!-- ── CRICKET STADIUM BACKGROUND (decorative overlay) ── -->
     <svg id="pjStadium" xmlns="http://www.w3.org/2000/svg"
          viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
       <defs>
@@ -910,26 +1229,41 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
     </div>
 
     <!-- Broadcast side rail (decorative, non-interactive) -->
-    <div class="pj-spine" aria-hidden="true">Player&#160;Auction</div>
+    <div class="pj-spine" aria-hidden="true">
+      <t t-if="sport == 'football'">Football&#160;Auction</t>
+      <t t-else="">Player&#160;Auction</t>
+    </div>
 
-    <!-- Waiting screen -->
+    <!-- Waiting screen — cinematic stand-by -->
     <div id="pj-waiting">
-      <!-- Auction Champ brand logo — big &amp; glowing -->
-      <img class="pj-ac-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
-      <!-- Tournament logo (secondary) -->
+      <div class="pj-wait-kicker">Live Auction &#183; Stand By</div>
       <t t-if="tournament and tournament.logo">
-        <img class="pj-wait-logo" t-att-src="'/'+(db_name or '')+'/auction/public/image/auction.tournament/'+str(tournament.id)+'/logo'" alt=""/>
+        <img class="pj-wait-hero-logo"
+             t-att-src="'/'+(db_name or '')+'/auction/public/image/auction.tournament/'+str(tournament.id)+'/logo'"
+             alt="Tournament logo"/>
       </t>
-      <t t-else=""><div class="pj-wait-logo-ph">&#9917;</div></t>
-      <div class="pj-wait-title">Waiting for next player&#8230;</div>
+      <t t-else="">
+        <img class="pj-wait-hero-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
+      </t>
+      <div class="pj-wait-hero-name">
+        <t t-if="tournament"><t t-esc="tournament.name"/></t>
+        <t t-else="">Auction Champ</t>
+      </div>
+      <div class="pj-wait-sub">Waiting for next player</div>
       <div class="pj-wait-dots">
         <div class="pj-wait-dot"></div>
         <div class="pj-wait-dot"></div>
         <div class="pj-wait-dot"></div>
       </div>
+      <t t-if="tournament and tournament.logo">
+        <div class="pj-wait-powered">
+          <div class="pj-wait-powered-lbl">Powered by</div>
+          <img class="pj-ac-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
+        </div>
+      </t>
       <!-- Dice area — shown when auctioneer rolls from player_selector -->
       <div class="pj-dice-area" id="pjDiceArea">
-        <div class="pj-dice-roll-lbl">&#127922; Rolling for next player</div>
+        <div class="pj-dice-roll-lbl">Rolling for next player</div>
         <div class="pj-dice" id="pjDice">
           <div class="pj-die-grid" id="pjDieGrid"></div>
         </div>
@@ -948,10 +1282,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
         <div class="pj-spotlight" aria-hidden="true"></div>
         <div class="pj-photo-bg" id="pjPhotoBg"></div>
         <div class="pj-floor" aria-hidden="true"></div>
-        <div class="pj-photo-ph" id="pjPhotoPh">&#128100;</div>
+        <div class="pj-photo-ph" id="pjPhotoPh"></div>
         <div class="pj-serial-wm" id="pjSerialWm"></div>
       </div>
       <div class="pj-info-side">
+        <div class="pj-onair"><span class="pj-onair-dot"></span> Now Auctioning</div>
         <div class="pj-serial" id="pjSerial"></div>
         <div class="pj-name"   id="pjName"></div>
         <div class="pj-badges">
@@ -1168,15 +1503,21 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
     /* Remove old img if present */
     var oldImg = photoSide.querySelector('img.pj-photo');
     if (oldImg) oldImg.remove();
-    if (p.photo) {
-      var dataUrl = 'data:image/png;base64,' + p.photo;
+    if (p.photo_url || p.photo) {
+      var dataUrl = p.photo_url || ('data:image/jpeg;base64,' + p.photo);
       var img = document.createElement('img');
       img.className = 'pj-photo';
       img.src = dataUrl;
       img.alt = p.name;
-      photoSide.insertBefore(img, photoSide.firstChild);
+      /* Place above backdrop layers, before watermark */
+      var wm = document.getElementById('pjSerialWm');
+      if (wm) photoSide.insertBefore(img, wm);
+      else photoSide.appendChild(img);
       photoPh.style.display = 'none';
-      if (photoBg) { photoBg.style.backgroundImage = 'url(' + dataUrl + ')'; photoBg.style.display = 'block'; }
+      if (photoBg) {
+        photoBg.style.backgroundImage = 'none';
+        photoBg.style.display = 'block';
+      }
     } else {
       photoPh.style.display = 'flex';
       if (photoBg) { photoBg.style.backgroundImage = 'none'; photoBg.style.display = 'none'; }
@@ -1217,17 +1558,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
     if (roleEl) {
       if (isFootball) {
         if (p.dominant_position) {
-          roleEl.textContent = '⚽ ' + p.dominant_position;
+          roleEl.textContent = p.dominant_position;
           roleEl.style.display = 'inline-flex';
         } else {
           roleEl.style.display = 'none';
         }
       } else {
-        var roleIcons = {'Batsman':'🏏','Batter':'🏏','Bowler':'🎯','All Rounder':'⭐',
-          'All-Rounder':'⭐','Allrounder':'⭐','Wicket Keeper':'🧤','WK-Keeper':'🧤','Wicketkeeper':'🧤'};
         if (p.role) {
-          var icon = roleIcons[p.role] || '⚡';
-          roleEl.textContent = icon + ' ' + p.role;
+          roleEl.textContent = p.role;
           roleEl.style.display = 'inline-flex';
         } else {
           roleEl.style.display = 'none';
@@ -1253,9 +1591,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
         if (p.secondary_positions && p.secondary_positions.length)
           statsHtml += stat('Secondary', p.secondary_positions.join(', '));
       }
-      if (p.blood_group)    statsHtml += stat('Blood Group', p.blood_group);
-      if (p.mobile)         statsHtml += stat('Mobile', p.mobile);
-      if (p.location)       statsHtml += stat('Location', p.location);
+      /* Projector is audience-facing — skip private registration fields */
       statsEl.innerHTML = statsHtml;
       if (!(p.use_other_attributes && p.other_attributes && p.other_attributes.length)) {
         statsEl.insertAdjacentHTML('beforeend', chips(p.playing_styles) + chips(p.strengths));
@@ -1296,8 +1632,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
       if (p.team_name) {
         document.getElementById('pjSoldTeamName').textContent = p.team_name;
         var logoEl = document.getElementById('pjSoldTeamLogo');
-        if (p.team_logo) {
-          logoEl.src = 'data:image/png;base64,' + p.team_logo;
+        if (p.team_logo_url || p.team_logo) {
+          logoEl.src = p.team_logo_url || ('data:image/jpeg;base64,' + p.team_logo);
           logoEl.style.display = 'block';
         } else {
           logoEl.style.display = 'none';

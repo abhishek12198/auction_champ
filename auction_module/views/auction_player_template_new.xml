@@ -44,7 +44,18 @@ body[data-theme="dark"] .league-name,body[data-theme="dark"] .league-name-logo{b
 body[data-theme="dark"] .team-name h3,body[data-theme="dark"] .team-name p{color:#c9d1d9}
 body[data-theme="dark"] .team-name .bg-white{background-color:#1f2937!important}
 body[data-theme="dark"] #vn-theme-btn{background:rgba(121,184,255,0.10);border-color:rgba(121,184,255,0.30);color:#79b8ff}
-    </style>
+    
+    .sp-image, .sp-image img, #loadImage {
+      object-fit: cover !important; object-position: center top;
+      border-radius: 14px; box-shadow: 0 16px 40px rgba(0,0,0,.35);
+    }
+    .player-name {
+      text-transform: uppercase; letter-spacing: .06em;
+      text-shadow: 0 0 24px rgba(59,114,232,.25);
+    }
+    .player-attr-grid .player-attr-label { opacity: .7; letter-spacing: .12em; }
+
+  </style>
 
     <!-- ══════════════════════════════════════════════════════════════
          VANILLA · PREMIUM IPL-STYLE BROADCAST PRESENTATION (visual only)
@@ -107,6 +118,22 @@ body::after{
   box-shadow:0 1px 0 rgba(120,170,255,.35);
 }
 .single-header .py-3{border-bottom:1px solid rgba(255,255,255,.14) !important;}
+.vn-brand{
+  display:inline-flex;align-items:center;gap:12px;
+  text-decoration:none;color:inherit;
+}
+.vn-brand img{max-height:32px;width:auto;display:block;}
+.vn-brand-text{display:flex;flex-direction:column;gap:2px;text-align:left;}
+.vn-brand-sub{
+  font-family:var(--vn-head);
+  font-size:.9rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:#fff;line-height:1;
+}
+body[data-theme="light"] .vn-brand-sub{color:#0b2a6b}
+body[data-theme="dark"] .vn-brand-sub{color:#fff}
+@media (max-width:768px){
+  .vn-brand-sub{display:none;}
+}
 .team-name h3{
   color:#0b2a6b;
   font-family:var(--vn-head);
@@ -153,13 +180,68 @@ body::after{
   font-weight:600;
   letter-spacing:3px;
   text-transform:uppercase;
-  font-size:clamp(1rem, 1.6vw, 1.5rem) !important;
-  line-height:1.6 !important;
+  font-size:clamp(1.35rem, 2.5vw, 2rem) !important;
+  line-height:1.3 !important;
   text-shadow:0 1px 6px rgba(0,0,0,.4);
 }
 .player-tier-badge{
   box-shadow:0 6px 18px rgba(0,0,0,.35), 0 0 16px rgba(91,155,255,.4);
+  font-size:clamp(1.15rem, 2.2vw, 1.7rem) !important;
+  padding:10px 22px !important;
+  border-radius:12px !important;
+  display:inline-flex !important;
+  align-items:center;
+  font-weight:700;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  margin-top:0 !important;
 }
+.player-highlight-badges{
+  display:flex; flex-wrap:wrap; align-items:stretch; gap:12px;
+  margin-top:14px;
+}
+.player-base-badge{
+  display:inline-flex; flex-direction:column;
+  align-items:flex-start; justify-content:center; gap:3px;
+  padding:10px 18px 12px; border-radius:12px;
+  background:linear-gradient(135deg, #c9a227, #e8c547 50%, #fff4c2);
+  color:#0a1628;
+  border:2px solid rgba(255,255,255,.35);
+  box-shadow:0 6px 20px rgba(232,197,71,.4);
+}
+.player-base-badge-lbl{
+  font-family:'Rajdhani',sans-serif;
+  font-size:.65rem; font-weight:700; letter-spacing:1.5px;
+  text-transform:uppercase; opacity:.8; line-height:1;
+}
+.player-base-badge-val{
+  font-family:var(--vn-head),sans-serif;
+  font-size:clamp(1.3rem, 2.5vw, 1.95rem); font-weight:700;
+  letter-spacing:.5px; line-height:1;
+}
+/* Powered-by footer */
+.vn-footer{
+  position:fixed;bottom:0;left:0;right:0;height:42px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  background:rgba(7,18,40,.92);
+  border-top:1px solid rgba(180,205,255,.18);
+}
+.vn-footer-lbl{
+  font-family:'Rajdhani',sans-serif;font-size:.62rem;font-weight:700;
+  letter-spacing:2.2px;text-transform:uppercase;color:rgba(234,241,255,.5);
+}
+.vn-footer-logo{
+  height:22px;width:auto;max-width:140px;object-fit:contain;display:block;
+  filter:drop-shadow(0 0 8px rgba(91,155,255,.4));
+}
+body[data-theme="light"] .vn-footer{
+  background:#f4f7fc;border-top-color:rgba(46,107,230,.16);
+}
+body[data-theme="light"] .vn-footer-lbl{color:rgba(20,40,80,.45)}
+body[data-theme="light"] .vn-footer-logo{
+  filter:brightness(0) sepia(1) saturate(6) hue-rotate(190deg) brightness(.55);
+}
+body{padding-bottom:42px;}
 
 /* ── Player image: broadcast cut-out with royal+white glow frame ── */
 .single-player-image .sp-image{
@@ -206,12 +288,17 @@ body::after{
   font-weight:600;
   letter-spacing:.6px;
   text-transform:uppercase;
+  font-size:clamp(.65rem, 1vw, .78rem) !important;
 }
 .player-attr-value{
   color:#ffffff !important;
-  font-family:'Rajdhani', sans-serif;
+  font-family:var(--vn-head), 'Rajdhani', sans-serif;
   font-weight:700;
+  font-size:clamp(1.3rem, 2.3vw, 1.85rem) !important;
+  line-height:1.1 !important;
+  letter-spacing:.5px;
   text-shadow:0 1px 4px rgba(0,0,0,.35);
+  text-transform:uppercase;
 }
 
 /* ── Action buttons (same actions, premium finish) ── */
@@ -306,7 +393,8 @@ body[data-theme="dark"] .single-header{
 @media (max-width:768px){
   .single-header{height:auto !important;}
   .single-header .py-3{padding:.5rem 104px .5rem 14px !important; text-align:left !important;}
-  .single-header .py-3 img{max-height:30px; width:auto;}
+  .single-header .py-3 img{max-height:28px; width:auto;}
+  .vn-brand{justify-content:flex-start;}
   #vn-theme-btn{top:10px; right:50px; padding:4px 10px; font-size:10px;}
   .team-single-logo{width:70px !important; height:70px !important;}
 }
@@ -315,8 +403,11 @@ body[data-theme="dark"] .single-header{
   <body style="min-height: 100vh" t-att-data-player-id="player.id" t-att-data-next-countdown="tournament.next_player_countdown if tournament else 5">
     <header class="single-header">
       <div class="py-3 text-center">
-        <a href="/web" style="display:inline-block;cursor:pointer;">
-          <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo" />
+        <a href="/web" class="vn-brand">
+          <img src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
+          <div class="vn-brand-text">
+            <div class="vn-brand-sub">Vanilla Edition</div>
+          </div>
         </a>
       </div>
       <div class="container">
@@ -366,12 +457,20 @@ body[data-theme="dark"] .single-header{
           <h3 class="stroke-only"><span t-esc="player.sl_no"/></h3>
           <h6 class="player-name"><span data-sm-name="" t-esc="player.name.upper()"/></h6>
           <p class="player-possition"><span data-sm-role="" t-esc="(player.dominant_position_id.name if player.tournament_type == 'football' else player.role) or ''"/></p>
-          <t t-if="player.tier_id">
-            <span class="player-tier-badge"
-                  t-att-style="'background-color: ' + (player.tier_id.color or '#3498db') + '; color: #fff; padding: 6px 18px; border-radius: 16px; font-size: 1.1rem; font-weight: 700; display: inline-block; margin-top: 10px; letter-spacing: 1px; text-transform: uppercase;'">
-              <t t-esc="player.tier_id.name"/>
-            </span>
-          </t>
+          <div class="player-highlight-badges">
+            <t t-if="player.tier_id">
+              <span class="player-tier-badge"
+                    t-att-style="'background-color: ' + (player.tier_id.color or '#3498db') + '; color: #fff;'">
+                <t t-esc="player.tier_id.name"/>
+              </span>
+            </t>
+            <t t-if="player.effective_base_price">
+              <span class="player-base-badge">
+                <span class="player-base-badge-lbl">Base Price</span>
+                <span class="player-base-badge-val"><t t-esc="'{:,}'.format(int(player.effective_base_price or 0))"/> pts</span>
+              </span>
+            </t>
+          </div>
         </div>
 
         <div class="col-sm-3">
@@ -431,14 +530,7 @@ body[data-theme="dark"] .single-header{
                     </t>
                   </t>
                 </t>
-                <t t-if="player.blood_group">
-                  <span class="player-attr-label">Blood Group 🩸</span>
-                  <span class="player-attr-value" style="color:#e53935; font-weight:600;"><t t-esc="player.blood_group"/></span>
-                </t>
-                <t t-if="player.contact">
-                  <span class="player-attr-label">Mobile No</span>
-                  <span class="player-attr-value"><t t-esc="player.masked_contact"/></span>
-                </t>
+
                 <t t-if="player.p_category">
                   <span class="player-attr-label">Player Category</span>
                   <span class="player-attr-value"><t t-esc="player.p_category"/></span>
@@ -446,10 +538,6 @@ body[data-theme="dark"] .single-header{
                 <t t-if="player.address">
                   <span class="player-attr-label">Location</span>
                   <span class="player-attr-value"><t t-esc="player.address"/></span>
-                </t>
-                <t t-if="player.effective_base_price">
-                  <span class="player-attr-label">Base Price</span>
-                  <span class="player-attr-value"><t t-esc="'{:,}'.format(int(player.effective_base_price or 0))"/> pts</span>
                 </t>
               </div>
               <t t-if="player.tournament_type == 'football' and not player.use_other_attributes and (player.playing_style_ids or player.strength_ids)">
@@ -817,6 +905,10 @@ body[data-theme="dark"] .single-header{
       }
     </script>
     <t t-call="auction_module.player_sell_modal"/>
+    <footer class="vn-footer">
+      <span class="vn-footer-lbl">Powered by</span>
+      <img class="vn-footer-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+    </footer>
     <script>
 (function(){
   var t=localStorage.getItem('auction_vn_theme')||'light';

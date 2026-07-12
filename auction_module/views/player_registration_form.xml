@@ -168,10 +168,13 @@
          ════════════════════════════════════════ -->
     <t t-if="not success and not registration_closed">
     <div class="reg-trustbar">
-        <div class="reg-trust-card">
+        <a href="#reg-form-start"
+           class="reg-trust-card reg-trust-card--cta"
+           id="reg-secure-registration-btn"
+           aria-label="Go to player registration form">
             <span class="reg-trust-ic">🔒</span>
-            <div class="reg-trust-tx"><b>Secure Registration</b><span>SSL-encrypted submission</span></div>
-        </div>
+            <div class="reg-trust-tx"><b>Secure Registration</b><span>Tap to start the form</span></div>
+        </a>
         <div class="reg-trust-card">
             <span class="reg-trust-ic">🛡️</span>
             <div class="reg-trust-tx"><b>Privacy Protected</b><span>Data never sold or shared</span></div>
@@ -206,14 +209,14 @@
     <div class="reg-poster-mobile">
         <img t-att-src="'data:image/png;base64,' + tournament.poster_image.decode('utf-8')"
              alt="Tournament Poster"
-             style="width:100%;display:block;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.35);"/>
+             class="reg-poster-mobile-img"/>
     </div>
     </t>
 
     <!-- ════════════════════════════════════════
          FORM BODY
          ════════════════════════════════════════ -->
-    <div class="reg-form-body">
+    <div class="reg-form-body" id="reg-form-start">
 
         <!-- Intro strip — hidden after success or when closed -->
         <t t-if="not success and not registration_closed">
@@ -276,20 +279,43 @@
                 </t>
 
                 <t t-if="player_id">
-                    <a t-attf-href="/#{db_name}/player/card/#{player_id}"
-                       class="reg-btn-submit"
-                       target="_blank" rel="noopener"
-                       style="display:inline-flex;align-items:center;gap:.6rem;margin-top:1.5rem;text-decoration:none;padding:.75rem 2rem;">
-                        <!-- Download icon SVG -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="7 10 12 15 17 10"/>
-                            <line x1="12" y1="15" x2="12" y2="3"/>
-                        </svg>
-                        Download My Player Card
-                    </a>
+                    <div class="reg-success-downloads">
+                        <a t-attf-href="/#{db_name}/player/card/#{player_id}"
+                           class="reg-btn-submit reg-success-dl"
+                           target="_blank" rel="noopener"
+                           title="Download Player Card (PDF)"
+                           aria-label="Download Player Card PDF">
+                            <!-- Document + download -->
+                            <svg class="reg-success-dl-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                                 aria-hidden="true">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="12" y1="18" x2="12" y2="12"/>
+                                <polyline points="9 15 12 18 15 15"/>
+                            </svg>
+                            <span class="reg-success-dl-label">Download Player Card (PDF)</span>
+                        </a>
+                        <a t-attf-href="/#{db_name}/player/card_status/#{player_id}"
+                           class="reg-btn-submit reg-success-dl reg-success-dl--status"
+                           target="_blank" rel="noopener"
+                           title="Download Instagram Story Card (JPG)"
+                           aria-label="Download Instagram Story Card JPG">
+                            <!-- Phone / story frame -->
+                            <svg class="reg-success-dl-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                                 aria-hidden="true">
+                                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                                <line x1="12" y1="18" x2="12.01" y2="18"/>
+                            </svg>
+                            <span class="reg-success-dl-label">Download Instagram Card (JPG)</span>
+                        </a>
+                    </div>
+                    <p class="reg-success-dl-hint">
+                        JPG is a vertical 9:16 story card — ready to post on Instagram.
+                    </p>
                 </t>
 
                 <t t-if="tournament and tournament.whatsapp_group_link">
@@ -313,18 +339,8 @@
                 </t>
 
                 <t t-if="tournament_slug">
-                    <div style="margin-top:1.25rem;">
-                        <a t-att-href="'/' + db_name + '/' + tournament_slug + '/player/register'"
-                           style="display:inline-flex;align-items:center;gap:.55rem;
-                                  padding:.65rem 1.75rem;border-radius:10px;
-                                  border:1.5px solid rgba(var(--reg-accent-rgb),.35);
-                                  background:rgba(var(--reg-accent-rgb),.08);
-                                  color:var(--reg-accent);font-family:'Barlow Condensed',sans-serif;
-                                  font-size:.9rem;font-weight:700;letter-spacing:.07em;
-                                  text-transform:uppercase;text-decoration:none;
-                                  transition:background .2s,border-color .2s;"
-                           onmouseover="this.style.background='rgba(var(--reg-accent-rgb),.18)';this.style.borderColor='rgba(var(--reg-accent-rgb),.65)'"
-                           onmouseout="this.style.background='rgba(var(--reg-accent-rgb),.08)';this.style.borderColor='rgba(var(--reg-accent-rgb),.35)'">
+                    <div class="reg-success-another">
+                        <a t-att-href="'/' + db_name + '/' + tournament_slug + '/player/register'">
                             <!-- Plus icon -->
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                  viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1204,6 +1220,19 @@
         });
     }
 
+    // ── Secure Registration → scroll to form start ───────────────────
+    var secureRegBtn = document.getElementById('reg-secure-registration-btn');
+    if (secureRegBtn) {
+        secureRegBtn.addEventListener('click', function (e) {
+            var target = document.getElementById('reg-form-start');
+            if (!target) return;
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            var firstSec = target.querySelector('.reg-section');
+            if (firstSec) firstSec.classList.add('mob-open');
+        });
+    }
+
     // ── Mobile Accordion (≤ 640 px) ───────────────────────────────────
     if (window.innerWidth &lt;= 640) {
         var sections = document.querySelectorAll('.reg-section');
@@ -1329,23 +1358,26 @@
     }
 })();
 
-// ── Card preview: dynamic scale to fill container exactly ────────────────
+// ── Card preview: dynamic scale; scaler shrink-wraps so card stays centered ─
 (function () {
+    var wrap   = document.querySelector('.reg-card-preview-wrap');
     var scaler = document.querySelector('.reg-card-preview-scaler');
     var frame  = document.querySelector('.reg-card-preview-frame');
     if (!scaler || !frame) return;
 
-    var CARD_W   = 832;
-    var CARD_H   = 421;
-    var MAX_H    = 220;   // max displayed height — keeps preview compact
+    var CARD_W = 832;
+    var CARD_H = 421;
+    var MAX_H  = 220;   // max displayed height — keeps preview compact
 
     function fitCard() {
-        var availW   = scaler.offsetWidth;
-        var scaleW   = availW / CARD_W;
-        var scaleH   = MAX_H  / CARD_H;
-        var scale    = Math.min(scaleW, scaleH);
-        frame.style.transform = 'translateX(-50%) scale(' + scale + ')';
-        scaler.style.height   = Math.round(CARD_H * scale) + 'px';
+        var availW = (wrap &amp;&amp; wrap.clientWidth) ? wrap.clientWidth : scaler.parentElement.clientWidth;
+        var scale  = Math.min(availW / CARD_W, MAX_H / CARD_H);
+        var dispW  = Math.round(CARD_W * scale);
+        var dispH  = Math.round(CARD_H * scale);
+        frame.style.transformOrigin = 'top left';
+        frame.style.transform = 'scale(' + scale + ')';
+        scaler.style.width  = dispW + 'px';
+        scaler.style.height = dispH + 'px';
     }
 
     fitCard();

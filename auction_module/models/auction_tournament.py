@@ -289,7 +289,7 @@ class AuctionTournament(models.Model):
         (archived) tournament — which are themselves archived — are still
         counted. This keeps the stat buttons accurate for inactive tournaments.
         """
-        groups = self.env['auction.team.player'].with_context(active_test=False).read_group(
+        groups = self.env['auction.team.player'].sudo().with_context(active_test=False).read_group(
             [('tournament_id', 'in', self.ids)],
             ['tournament_id', 'state'],
             ['tournament_id', 'state'],

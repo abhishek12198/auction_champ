@@ -7,7 +7,7 @@
         ================================
         Auction Administrator → all records  [(1, '=', 1)]
         All other auction groups → only user.tournament_id
-          Domain: [('tournament_id', 'in', user.tournament_id.ids)]
+          Domain: [('tournament_id', 'in', user.tournament_ids.ids)]
           (or ('id', '=', ...) for auction.tournament)
 
         When Active Tournament is empty, '=' False alone would match
@@ -22,7 +22,7 @@
         <field name="name">Tournament: own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_tournament"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
-        <field name="domain_force">[('id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>
@@ -44,7 +44,7 @@
         <field name="name">Tournament: dashboard viewer — own only</field>
         <field name="model_id" ref="auction_module.model_auction_tournament"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_player_dashboard'))]"/>
-        <field name="domain_force">[('id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="False"/>
         <field name="perm_create" eval="False"/>
@@ -55,7 +55,7 @@
         <field name="name">Tournament: payment marker — own only</field>
         <field name="model_id" ref="auction_module.model_auction_tournament"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_payment_marker'))]"/>
-        <field name="domain_force">[('id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="False"/>
         <field name="perm_create" eval="False"/>
@@ -69,7 +69,7 @@
         <field name="name">Player: own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_team_player"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
-        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>
@@ -91,7 +91,7 @@
         <field name="name">Player: dashboard viewer — own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_team_player"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_player_dashboard'))]"/>
-        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="False"/>
         <field name="perm_create" eval="False"/>
@@ -102,7 +102,7 @@
         <field name="name">Player: payment marker — own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_team_player"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_payment_marker'))]"/>
-        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="False"/>
@@ -116,7 +116,7 @@
         <field name="name">Team: own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_team"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
-        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>
@@ -138,7 +138,7 @@
         <field name="name">Team: dashboard viewer — own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_team"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_player_dashboard'))]"/>
-        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="False"/>
         <field name="perm_create" eval="False"/>
@@ -149,7 +149,7 @@
         <field name="name">Team: payment marker — own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_team"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_payment_marker'))]"/>
-        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="False"/>
         <field name="perm_create" eval="False"/>
@@ -163,7 +163,7 @@
         <field name="name">Auction: own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_auction"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
-        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>
@@ -188,7 +188,7 @@
         <field name="name">Auction History: own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_history"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
-        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>
@@ -213,7 +213,7 @@
         <field name="name">Auction Player: own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_auction_player"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
-        <field name="domain_force">[('auction_id.tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('auction_id.tournament_id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>
@@ -235,7 +235,7 @@
         <field name="name">Auction Player: dashboard viewer — own only</field>
         <field name="model_id" ref="auction_module.model_auction_auction_player"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_player_dashboard'))]"/>
-        <field name="domain_force">[('auction_id.tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('auction_id.tournament_id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="False"/>
         <field name="perm_create" eval="False"/>
@@ -249,7 +249,7 @@
         <field name="name">Player Tier: own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_player_tier"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
-        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>
@@ -271,7 +271,7 @@
         <field name="name">Player Tier: dashboard viewer — own only</field>
         <field name="model_id" ref="auction_module.model_auction_player_tier"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_player_dashboard'))]"/>
-        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="False"/>
         <field name="perm_create" eval="False"/>
@@ -282,7 +282,7 @@
         <field name="name">Player Tier: payment marker — own only</field>
         <field name="model_id" ref="auction_module.model_auction_player_tier"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_payment_marker'))]"/>
-        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="False"/>
         <field name="perm_create" eval="False"/>
@@ -296,7 +296,7 @@
         <field name="name">Tournament Attr Label: own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_tournament_attribute_label"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
-        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>
@@ -321,7 +321,7 @@
         <field name="name">Advertiser: own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_advertiser"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
-        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>
@@ -346,7 +346,7 @@
         <field name="name">Point Split: own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_tournament_point_split"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
-        <field name="domain_force">[('tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('tournament_id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>
@@ -371,7 +371,7 @@
         <field name="name">Bid Slab: own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_auction_bid_slab"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
-        <field name="domain_force">[('auction_id.tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('auction_id.tournament_id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>
@@ -393,7 +393,7 @@
         <field name="name">Tier Limit: own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_auction_tier_limit"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
-        <field name="domain_force">[('auction_id.tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('auction_id.tournament_id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>
@@ -418,7 +418,7 @@
         <field name="name">Player Other Attr: own tournament only</field>
         <field name="model_id" ref="auction_module.model_auction_player_other_attribute"/>
         <field name="groups" eval="[(4, ref('auction_module.group_auction_group'))]"/>
-        <field name="domain_force">[('player_id.tournament_id', 'in', user.tournament_id.ids)]</field>
+        <field name="domain_force">[('player_id.tournament_id', 'in', user.tournament_ids.ids)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>

@@ -66,13 +66,32 @@ class ResUsers(models.Model):
 
     @api.model
     def _auction_sync_tournament_assignments(self):
-        """Keep Active Tournament on Organizers M2M (for ir.rule domains)."""
-        users = self.sudo().search([('tournament_id', '!=', False)])
-        for user in users:
+        """Keep Active Tournament ↔ Organizers M2M in sync for ir.rule domains.
+
+        Heals two common mis-assignment cases:
+        - Active set but missing from Organizers M2M
+        - Organizers M2M set (e.g. via tournament form) but Active empty
+          → list views / logos were empty while dashboards could still count
+        """
+        sync_ctx = dict(self.env.context, skip_tournament_sync=True)
+        User = self.sudo()
+        # Active → M2M
+        for user in User.search([('tournament_id', '!=', False)]):
             if user.tournament_id not in user.tournament_ids:
-                user.with_context(skip_tournament_sync=True).write({
+                user.with_context(**sync_ctx).write({
                     'tournament_ids': [(4, user.tournament_id.id)],
                 })
+        # M2M → Active (when Active is empty)
+        self.env.cr.execute("""
+            SELECT DISTINCT user_id FROM auction_tournament_user_rel
+        """)
+        m2m_uids = [row[0] for row in self.env.cr.fetchall()]
+        if m2m_uids:
+            for user in User.browse(m2m_uids).exists():
+                if not user.tournament_id and user.tournament_ids:
+                    user.with_context(**sync_ctx).write({
+                        'tournament_id': user.tournament_ids[:1].id,
+                    })
 
     def write(self, vals):
         res = super().write(vals)

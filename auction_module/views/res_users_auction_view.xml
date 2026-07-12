@@ -17,10 +17,10 @@
                                    groups="auction_module.group_auction_group_admin">
                                 <field name="tournament_id" string="Active Tournament"
                                        placeholder="Select tournament..."
-                                       help="Required for Auction User / Dashboard / Payment Tracker. Record rules and dashboards scope all data to this tournament."/>
+                                       help="Required for Auction User / Dashboard / Payment Tracker. Scopes menus and record rules. Auto-filled from Organizer Tournaments when empty."/>
                                 <field name="tournament_ids" widget="many2many_tags"
                                        string="Organizer Tournaments"
-                                       help="Also kept in sync when Active Tournament is set, or when the user is added as an Organizer on a tournament."/>
+                                       help="Tournaments this user may access. Synced when Active Tournament is set, or when the user is added as an Organizer on a tournament. Record rules use this list."/>
                             </group>
                             <!-- Owner/Admin can set the team assignment -->
                             <group string="Team Assignment">

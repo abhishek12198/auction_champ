@@ -51,10 +51,9 @@
       background: linear-gradient(90deg, transparent 0%, var(--berry-dark) 20%, var(--berry) 45%, var(--berry-bright) 55%, var(--berry) 80%, transparent 100%);
     }
     .sw-header-brand { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; }
-    .sw-brand-logo   { height: 40px; width: auto; object-fit: contain; filter: sepia(1) saturate(8) hue-rotate(300deg) brightness(0.65) drop-shadow(0 1px 4px rgba(194,24,91,.30)); }
+    .sw-brand-logo   { height: 28px; width: auto; max-width: 168px; object-fit: contain; filter: sepia(1) saturate(8) hue-rotate(300deg) brightness(0.65) drop-shadow(0 1px 4px rgba(194,24,91,.30)); }
     .sw-brand-text   { display: flex; flex-direction: column; }
-    .sw-brand-name   { font-family: 'Antonio', sans-serif; font-size: .9rem; letter-spacing: 2.5px; text-transform: uppercase; color: var(--dark); line-height: 1; }
-    .sw-brand-sub    { font-size: .58rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--berry); }
+    .sw-brand-sub    { font-family: 'Antonio', sans-serif; font-size: .85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--berry); line-height: 1; }
     .sw-header-center { flex: 1; display: flex; justify-content: center; align-items: center; gap: 12px; }
     .sw-tourn-logo   { height: 48px; width: auto; object-fit: contain; border-radius: 6px; border: 1.5px solid var(--border-berry); padding: 3px; box-shadow: 0 2px 10px var(--berry-glow); }
     .sw-tourn-info   { display: flex; flex-direction: column; gap: 2px; }
@@ -72,7 +71,7 @@
     ══════════════════════════════════════════════════════════ */
     .sw-stage {
       position: relative; z-index: 5;
-      height: calc(100vh - 64px);
+      height: calc(100vh - 64px - 42px);
       display: grid; grid-template-columns: 48% 52%;
       overflow: hidden;
     }
@@ -131,38 +130,82 @@
     .sw-serial-hash  { font-family: 'Light Sport', 'Antonio', sans-serif; font-size: 1.1rem; color: rgba(194,24,91,.45); }
     .sw-serial-num   { font-family: 'Light Sport', 'Antonio', sans-serif; font-size: 3.8rem; line-height: .88; color: var(--berry); filter: drop-shadow(0 2px 6px rgba(194,24,91,.22)); }
     .sw-id-vsep      { flex-shrink: 0; width: 2px; height: 58px; background: linear-gradient(to bottom, transparent, var(--berry), transparent); margin: 0 4px; }
-    .sw-id-info      { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
-    .sw-player-name  { font-family: 'Light Sport', 'Antonio', sans-serif; font-size: 1.95rem; text-transform: uppercase; letter-spacing: 2.5px; color: var(--dark); line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .sw-badges       { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
-    .sw-role-tag     { font-size: .68rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--berry); background: rgba(194,24,91,.09); border: 1.5px solid rgba(194,24,91,.26); border-radius: 20px; padding: 3px 11px; }
-    .sw-tier-badge   { font-size: .68rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; border-radius: 20px; padding: 3px 11px; }
+    .sw-id-info      { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+    .sw-player-name  { font-family: 'Light Sport', 'Antonio', sans-serif; font-size: clamp(1.8rem, 3.2vw, 2.6rem); text-transform: uppercase; letter-spacing: 2.5px; color: var(--dark); line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sw-badges       { display: flex; align-items: stretch; flex-wrap: wrap; gap: 10px; }
+    .sw-role-tag, .sw-tier-badge, .sw-base-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: 'Antonio', sans-serif;
+      font-size: clamp(1.25rem, 2.6vw, 1.95rem);
+      font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; border-radius: 12px;
+      padding: 10px 20px 8px; line-height: 1; min-height: 48px;
+    }
+    .sw-role-tag {
+      color: #fff;
+      background: linear-gradient(135deg, var(--berry-dark), var(--berry));
+      border: 2px solid rgba(194,24,91,.35);
+      box-shadow: 0 6px 20px rgba(194,24,91,.28);
+    }
+    .sw-tier-badge { border: 2px solid transparent; box-shadow: 0 6px 18px rgba(194,24,91,.18); color: #fff; }
+    .sw-base-badge {
+      flex-direction: column; align-items: flex-start; gap: 2px;
+      padding: 8px 18px 10px; min-height: 48px;
+      color: #fff;
+      background: linear-gradient(135deg, #6d4c0f, #c9a227 55%, #e8c547);
+      border: 2px solid rgba(255,255,255,.35);
+      box-shadow: 0 6px 22px rgba(201,162,39,.4);
+    }
+    .sw-base-badge-lbl {
+      font-size: .62rem; font-weight: 700; letter-spacing: 2px;
+      opacity: .9; line-height: 1;
+    }
+    .sw-base-badge-val {
+      font-size: clamp(1.35rem, 2.8vw, 2.05rem);
+      font-weight: 700; letter-spacing: 1px; line-height: 1;
+    }
 
-    /* ── STATS SECTION ──────────────────────────────────────── */
+    /* ── STATS SECTION — projector-first ─────────────────────── */
     .sw-stats-wrap {
       flex: 1; overflow-y: auto; padding: 18px 28px 12px;
       scrollbar-width: thin; scrollbar-color: rgba(194,24,91,.25) transparent;
     }
     .sw-stats-title {
-      font-family: 'Antonio', sans-serif; font-size: 1rem; letter-spacing: 4px;
+      font-family: 'Antonio', sans-serif; font-size: 1.2rem; letter-spacing: 4px;
       text-transform: uppercase; color: var(--berry);
-      border-bottom: 2px solid rgba(194,24,91,.14); padding-bottom: 8px; margin-bottom: 12px;
+      border-bottom: 2px solid rgba(194,24,91,.14); padding-bottom: 10px; margin-bottom: 14px;
     }
     .sw-stat-row {
-      display: flex; align-items: stretch; border-radius: 8px; overflow: hidden; margin-bottom: 8px;
-      border: 1px solid rgba(194,24,91,.13); transition: border-color .2s, box-shadow .2s;
+      display: flex; flex-direction: column; gap: 4px;
+      margin-bottom: 12px; padding: 14px 18px 16px;
+      border-radius: 12px;
+      border: 1.5px solid rgba(194,24,91,.16);
+      background: var(--bg-card);
+      transition: border-color .2s, box-shadow .2s;
     }
-    .sw-stat-row:hover { border-color: var(--berry); box-shadow: 0 2px 12px rgba(194,24,91,.09); }
-    .sw-stat-key { flex: 0 0 114px; padding: 10px 14px; font-size: .68rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #fff; background: var(--berry); display: flex; align-items: center; }
-    .sw-stat-val { flex: 1; padding: 10px 16px; font-size: .9rem; font-weight: 500; color: var(--dark); display: flex; align-items: center; background: var(--bg-card); }
-    .sw-stat-val.blood { color: #c62828; font-weight: 700; }
-    .sw-base-price {
-      display: flex; align-items: center; justify-content: space-between;
-      margin: 8px 0 0; padding: 12px 18px;
-      background: linear-gradient(135deg, rgba(194,24,91,.07) 0%, rgba(233,30,99,.10) 100%);
-      border: 1.5px solid rgba(194,24,91,.20); border-radius: 8px;
+    .sw-stat-row:hover { border-color: var(--berry); box-shadow: 0 4px 16px rgba(194,24,91,.12); }
+    .sw-stat-key {
+      font-size: clamp(.62rem, .95vw, .74rem); font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--berry);
     }
-    .sw-base-label { font-family: 'Antonio', sans-serif; font-size: .85rem; letter-spacing: 2.5px; text-transform: uppercase; color: var(--berry); }
-    .sw-base-val   { font-family: 'Antonio', sans-serif; font-size: 1.5rem; letter-spacing: 1px; color: var(--berry-dark); }
+    .sw-stat-val {
+      font-family: 'Antonio', sans-serif;
+      font-size: clamp(1.4rem, 2.6vw, 2rem);
+      font-weight: 700; letter-spacing: 1px; line-height: 1.05;
+      color: var(--dark); word-break: break-word;
+      text-transform: uppercase;
+    }
+    .sw-stat-val.blood { color: #c62828; }
+    .sw-stats-wrap > div[style*="flex-wrap"] > span {
+      font-family: 'Antonio', sans-serif !important;
+      font-size: clamp(.9rem, 1.5vw, 1.15rem) !important;
+      font-weight: 700 !important;
+      letter-spacing: 1px !important;
+      padding: 10px 16px 8px !important;
+      border-radius: 10px !important;
+      border-width: 2px !important;
+      text-transform: uppercase !important;
+    }
 
     /* ── ACTIONS BAR ────────────────────────────────────────── */
     .sw-actions {
@@ -195,10 +238,31 @@
 .sw-header-right{display:flex;align-items:center;gap:10px}
 .sw-fs-btn{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:34px;height:34px;border-radius:8px;background:rgba(194,24,91,0.07);border:1.5px solid rgba(194,24,91,0.28);color:var(--berry);cursor:pointer;padding:0;transition:all 0.2s}
 .sw-fs-btn:hover{background:rgba(194,24,91,0.16);box-shadow:0 0 8px rgba(194,24,91,0.20)}
+/* Powered-by footer */
+.sw-footer{
+  position:fixed;bottom:0;left:0;right:0;height:42px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  background:linear-gradient(90deg,#fff0f5 0%,#fce4ec 50%,#fff0f5 100%);
+  border-top:1.5px solid rgba(194,24,91,.16);
+}
+.sw-footer-lbl{
+  font-family:'Barlow',sans-serif;font-size:.62rem;font-weight:700;
+  letter-spacing:2.2px;text-transform:uppercase;color:rgba(26,10,18,.45);
+}
+.sw-footer-logo{
+  height:22px;width:auto;max-width:140px;object-fit:contain;display:block;
+  filter:sepia(1) saturate(8) hue-rotate(300deg) brightness(0.65) drop-shadow(0 1px 4px rgba(194,24,91,.25));
+}
+body[data-theme="dark"] .sw-footer{
+  background:linear-gradient(90deg,#1a0a12 0%,#250e1a 50%,#1a0a12 100%);
+  border-top-color:rgba(194,24,91,.25);
+}
+body[data-theme="dark"] .sw-footer-lbl{color:rgba(240,221,228,.5)}
+body[data-theme="dark"] .sw-footer-logo{filter:drop-shadow(0 0 8px rgba(194,24,91,.35))}
 /* Dark mode overrides */
 body[data-theme="dark"]{--bg:#1a0a12;--bg-petal:#250e1a;--bg-card:#200d16;--dark:#f0dde4;--text-mid:#d4a0b4;--text-dim:rgba(240,221,228,0.50);--divider:rgba(194,24,91,0.25)}
 body[data-theme="dark"] .sw-header{background:linear-gradient(135deg,#1a0a12 0%,#250e1a 100%);border-bottom:1px solid rgba(194,24,91,0.25)}
-body[data-theme="dark"] .sw-brand-name,body[data-theme="dark"] .sw-tourn-name{color:var(--berry-bright)}
+body[data-theme="dark"] .sw-tourn-name{color:var(--berry-bright)}
 body[data-theme="dark"] .sw-brand-sub,body[data-theme="dark"] .sw-tourn-desc{color:var(--berry)}
 body[data-theme="dark"] .sw-live-badge{background:rgba(194,24,91,0.15);color:var(--berry-bright);border-color:rgba(194,24,91,0.35)}
 body[data-theme="dark"] #sw-theme-btn{color:var(--berry-bright);border-color:rgba(194,24,91,0.40)}
@@ -211,8 +275,7 @@ body[data-theme="dark"] #sw-theme-btn{color:var(--berry-bright);border-color:rgb
   /* Header wraps; tournament block drops to its own centered row */
   .sw-header{flex-wrap:wrap; height:auto; padding:10px 12px; gap:8px;}
   .sw-header-brand{gap:8px;}
-  .sw-brand-name{font-size:.95rem;}
-  .sw-brand-sub{font-size:.6rem;}
+  .sw-brand-sub{font-size:.75rem;}
   .sw-header-center{order:3; flex:1 0 100%; justify-content:center;}
   .sw-tourn-name{font-size:1.05rem; white-space:normal; text-align:center; line-height:1.1;}
   .sw-tourn-logo{width:34px; height:34px;}
@@ -227,17 +290,17 @@ body[data-theme="dark"] #sw-theme-btn{color:var(--berry-bright);border-color:rgb
   .sw-photo-wm{font-size:11rem; bottom:-8px;}
   .sw-info-col{overflow:visible; border-left:none;}
 
-  /* Identity: smaller, wrap the name */
+  /* Identity: wrap the name, keep badges readable */
   .sw-identity{padding:14px 16px; gap:12px;}
   .sw-serial-num{font-size:2.6rem;}
   .sw-id-vsep{height:44px;}
-  .sw-player-name{font-size:1.3rem; letter-spacing:1px; white-space:normal;}
+  .sw-player-name{font-size:1.45rem; letter-spacing:1px; white-space:normal;}
+  .sw-role-tag, .sw-tier-badge, .sw-base-badge{font-size:1.2rem; min-height:42px; padding:8px 14px 6px;}
+  .sw-base-badge-val{font-size:1.25rem;}
 
-  /* Stats: let them flow, tighten the fixed key column */
+  /* Stats: keep projector-scale values */
   .sw-stats-wrap{flex:none; overflow:visible; padding:14px 16px 8px;}
-  .sw-stat-key{flex:0 0 96px; font-size:.62rem; padding:9px 10px;}
-  .sw-stat-val{font-size:.82rem; padding:9px 12px;}
-  .sw-base-val{font-size:1.25rem;}
+  .sw-stat-val{font-size:1.3rem;}
 
   /* Actions: stack full-width */
   .sw-actions{height:auto; flex-wrap:wrap; padding:14px 16px; gap:10px;}
@@ -245,11 +308,17 @@ body[data-theme="dark"] #sw-theme-btn{color:var(--berry-bright);border-color:rgb
 }
 @media (max-width: 430px){
   .sw-tourn-name{font-size:.92rem;}
-  .sw-player-name{font-size:1.12rem;}
+  .sw-player-name{font-size:1.2rem;}
   .sw-serial-num{font-size:2.2rem;}
-  .sw-stat-key{flex:0 0 84px; font-size:.58rem;}
+  .sw-role-tag, .sw-tier-badge, .sw-base-badge{font-size:1.05rem;}
+  .sw-base-badge-val{font-size:1.15rem;}
+  .sw-stat-val{font-size:1.15rem;}
   .sw-photo-col{height:52vh; min-height:290px;}
 }
+  
+    .sw-photo img, img.sw-photo { object-fit: cover !important; object-position: center top; }
+    .sw-name { text-transform: uppercase; letter-spacing: .05em; }
+
   </style>
 </head>
 
@@ -261,7 +330,6 @@ body[data-theme="dark"] #sw-theme-btn{color:var(--berry-bright);border-color:rgb
       <a href="/web" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;">
         <img src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ" class="sw-brand-logo"/>
         <div class="sw-brand-text">
-          <div class="sw-brand-name">Auction Champ</div>
           <div class="sw-brand-sub">Strawberry Edition</div>
         </div>
       </a>
@@ -325,8 +393,14 @@ body[data-theme="dark"] #sw-theme-btn{color:var(--berry-bright);border-color:rgb
             </t>
             <t t-if="player.tier_id">
               <span class="sw-tier-badge"
-                    t-att-style="'background-color: ' + (player.tier_id.color or '#C2185B') + '18; color: ' + (player.tier_id.color or '#C2185B') + '; border: 1.5px solid ' + (player.tier_id.color or '#C2185B') + '50;'">
+                    t-att-style="'background-color: ' + (player.tier_id.color or '#C2185B') + '; color: #fff; border: 2px solid rgba(255,255,255,0.35);'">
                 <t t-esc="player.tier_id.name"/>
+              </span>
+            </t>
+            <t t-if="player.effective_base_price">
+              <span class="sw-base-badge">
+                <span class="sw-base-badge-lbl">Base Price</span>
+                <span class="sw-base-badge-val"><t t-esc="'{:,}'.format(int(player.effective_base_price or 0))"/> pts</span>
               </span>
             </t>
           </div>
@@ -372,34 +446,18 @@ body[data-theme="dark"] #sw-theme-btn{color:var(--berry-bright);border-color:rgb
             <t t-call="auction_module.football_tag_chips"/>
           </t>
         </t>
-        <t t-if="player.blood_group">
-          <div class="sw-stat-row">
-            <span class="sw-stat-key">Blood</span>
-            <span class="sw-stat-val blood"><t t-esc="player.blood_group"/></span>
-          </div>
-        </t>
+
         <t t-if="player.p_category">
           <div class="sw-stat-row">
             <span class="sw-stat-key">Category</span>
             <span class="sw-stat-val"><t t-esc="player.p_category"/></span>
           </div>
         </t>
-        <t t-if="player.contact">
-          <div class="sw-stat-row">
-            <span class="sw-stat-key">Mobile</span>
-            <span class="sw-stat-val"><t t-esc="player.masked_contact"/></span>
-          </div>
-        </t>
+
         <t t-if="player.address">
           <div class="sw-stat-row">
             <span class="sw-stat-key">Location</span>
             <span class="sw-stat-val"><t t-esc="player.address"/></span>
-          </div>
-        </t>
-        <t t-if="player.effective_base_price">
-          <div class="sw-base-price">
-            <span class="sw-base-label">Base Price</span>
-            <span class="sw-base-val"><t t-esc="'{:,}'.format(int(player.effective_base_price or 0))"/> pts</span>
           </div>
         </t>
       </div><!-- /sw-stats-wrap -->
@@ -423,6 +481,11 @@ body[data-theme="dark"] #sw-theme-btn{color:var(--berry-bright);border-color:rgb
     </div><!-- /sw-info-col -->
 
   </div><!-- /sw-stage (data-player-zone) -->
+
+  <footer class="sw-footer">
+    <span class="sw-footer-lbl">Powered by</span>
+    <img class="sw-footer-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+  </footer>
 
   <!-- JS ─────────────────────────────────────────────────────── -->
   <script>

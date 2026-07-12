@@ -37,13 +37,8 @@
 ##############################################################################
 
 def post_init_hook(cr, registry):
-    """Ensure Active Tournament is present on Organizers M2M for record rules."""
+    """Keep Active Tournament ↔ Organizers M2M in sync for record rules."""
     from odoo import api, SUPERUSER_ID
 
     env = api.Environment(cr, SUPERUSER_ID, {})
-    users = env['res.users'].search([('tournament_id', '!=', False)])
-    for user in users:
-        if user.tournament_id not in user.tournament_ids:
-            user.with_context(skip_tournament_sync=True).write({
-                'tournament_ids': [(4, user.tournament_id.id)],
-            })
+    env['res.users']._auction_sync_tournament_assignments()

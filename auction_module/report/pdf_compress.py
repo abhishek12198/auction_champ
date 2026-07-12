@@ -62,20 +62,37 @@ class IrActionsReportCompress(models.Model):
 
     def _render_qweb_pdf(self, res_ids=None, data=None):
         pdf_content, content_type = super()._render_qweb_pdf(res_ids=res_ids, data=data)
-        if content_type == 'pdf' and self.report_name in _PLAYER_CARD_REPORT_NAMES:
-            try:
-                compressed = _compress_pdf_ghostscript(pdf_content)
-                if compressed and len(compressed) < len(pdf_content):
-                    reduction = (1 - len(compressed) / len(pdf_content)) * 100
-                    _logger.info(
-                        'Player card PDF compressed: %.1fMB → %.1fMB (%.0f%% smaller)',
-                        len(pdf_content) / 1048576,
-                        len(compressed) / 1048576,
-                        reduction,
-                    )
-                    pdf_content = compressed
-            except Exception:
-                _logger.warning('PDF Ghostscript compression failed, returning original.', exc_info=True)
+        if content_type != 'pdf' or self.report_name not in _PLAYER_CARD_REPORT_NAMES:
+            return pdf_content, content_type
+
+        # Ghostscript helps bulk ZIP/print exports, but for a single registration
+        # download the process startup + rewrite often costs more than it saves.
+        if self.env.context.get('skip_player_card_compress'):
+            return pdf_content, content_type
+
+        ids = res_ids
+        if ids is None:
+            ids = []
+        elif isinstance(ids, int):
+            ids = [ids]
+        else:
+            ids = list(ids)
+        if len(ids) <= 1:
+            return pdf_content, content_type
+
+        try:
+            compressed = _compress_pdf_ghostscript(pdf_content)
+            if compressed and len(compressed) < len(pdf_content):
+                reduction = (1 - len(compressed) / len(pdf_content)) * 100
+                _logger.info(
+                    'Player card PDF compressed: %.1fMB → %.1fMB (%.0f%% smaller)',
+                    len(pdf_content) / 1048576,
+                    len(compressed) / 1048576,
+                    reduction,
+                )
+                pdf_content = compressed
+        except Exception:
+            _logger.warning('PDF Ghostscript compression failed, returning original.', exc_info=True)
         return pdf_content, content_type
 
 

@@ -41,10 +41,15 @@ from odoo.osv import expression
 
 
 class AuctionTournamentSecurityMixin(models.AbstractModel):
-    """Scope auction records by the user's Active Tournament.
+    """Scope auction records by the user's assigned tournament(s).
 
     - Auction Administrator (and sudo): see all records.
-    - Every other user: only records for ``user.tournament_id``.
+    - Every other user: records for Active Tournament **and** Organizer M2M
+      (``tournament_id`` ∪ ``tournament_ids``).
+
+    Using only Active Tournament left organizers who were assigned via the
+    tournament Organizers field (M2M) but missing Active Tournament with
+    empty player/team lists while dashboards (sudo) still showed counts.
     """
     _name = 'auction.tournament.security.mixin'
     _description = 'Auction Tournament Security Mixin'
@@ -66,13 +71,21 @@ class AuctionTournamentSecurityMixin(models.AbstractModel):
         }
         return mapping.get(self._name, 'tournament_id')
 
+    def _auction_allowed_tournament_ids(self):
+        """Union of Active Tournament and Organizer M2M assignments."""
+        user = self.env.user
+        tids = set(user.tournament_ids.ids)
+        if user.tournament_id:
+            tids.add(user.tournament_id.id)
+        return list(tids)
+
     def _auction_tournament_security_domain(self):
         if self._auction_is_admin():
             return []
-        tid = self.env.user.tournament_id.id
-        if not tid:
+        tids = self._auction_allowed_tournament_ids()
+        if not tids:
             return [('id', '=', False)]
-        return [(self._auction_tournament_field(), '=', tid)]
+        return [(self._auction_tournament_field(), 'in', tids)]
 
     @api.model
     def _search(self, args, offset=0, limit=None, order=None, count=False, access_rights_uid=None):
@@ -80,4 +93,13 @@ class AuctionTournamentSecurityMixin(models.AbstractModel):
         return super()._search(
             args, offset=offset, limit=limit, order=order, count=count,
             access_rights_uid=access_rights_uid,
+        )
+
+    @api.model
+    def read_group(self, domain, fields, groupby, offset=0, limit=None, orderby=False, lazy=True):
+        # read_group does not go through _search — apply the same scope here so
+        # tournament stat buttons match list views.
+        domain = expression.AND([domain or [], self._auction_tournament_security_domain()])
+        return super().read_group(
+            domain, fields, groupby, offset=offset, limit=limit, orderby=orderby, lazy=lazy,
         )

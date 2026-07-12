@@ -234,6 +234,7 @@ body.reg-page::before {
     box-shadow: var(--reg-shadow);
     overflow: hidden;
     margin-top: -2px; /* tight against header */
+    scroll-margin-top: 18px;
 }
 
 /* Intro strip */
@@ -1066,8 +1067,122 @@ input[type="file"].reg-file-input { display: none; }
     line-height: 1.6;
 }
 
+.reg-success-downloads {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: .75rem;
+    margin: 1.5rem auto 0;
+    width: 100%;
+    max-width: 640px;
+}
+.reg-success-dl {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .6rem;
+    margin-top: 0;
+    text-decoration: none;
+    padding: .75rem 1.5rem;
+    width: auto;
+    flex: 0 1 auto;
+}
+.reg-success-dl-icon {
+    flex-shrink: 0;
+}
+.reg-success-dl-label {
+    white-space: nowrap;
+}
+.reg-success-dl--status {
+    background: linear-gradient(135deg, #e1306c 0%, #c13584 45%, #833ab4 100%);
+    box-shadow: 0 4px 18px rgba(193, 53, 132, .35);
+}
+.reg-success-dl--status:hover {
+    filter: brightness(1.06);
+    box-shadow: 0 6px 22px rgba(193, 53, 132, .45);
+}
+.reg-success-dl-hint {
+    display: block;
+    margin: .65rem auto 0 !important;
+    max-width: 420px;
+    font-size: .75rem !important;
+    color: #94a3b8 !important;
+    text-align: center;
+}
+
+/* Tablet / mobile: icon-only download actions on one row */
+@media (max-width: 900px) {
+    .reg-success-downloads {
+        flex-wrap: nowrap;
+        justify-content: center;
+        gap: 1rem;
+        max-width: none;
+    }
+    .reg-success-dl {
+        flex: 0 0 auto;
+        width: 56px;
+        height: 56px;
+        min-width: 56px;
+        padding: 0;
+        border-radius: 16px;
+        gap: 0;
+    }
+    .reg-success-dl-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+    .reg-success-dl-icon {
+        width: 24px;
+        height: 24px;
+    }
+    .reg-success-dl-hint {
+        font-size: .68rem !important;
+        max-width: 280px;
+        padding: 0 .5rem;
+    }
+}
+.reg-success-another {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 1.25rem;
+}
+.reg-success-another a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .55rem;
+    padding: .65rem 1.75rem;
+    border-radius: 10px;
+    border: 1.5px solid rgba(var(--reg-accent-rgb), .35);
+    background: rgba(var(--reg-accent-rgb), .08);
+    color: var(--reg-accent);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: .9rem;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: background .2s, border-color .2s;
+}
+.reg-success-another a:hover {
+    background: rgba(var(--reg-accent-rgb), .18);
+    border-color: rgba(var(--reg-accent-rgb), .65);
+}
+
 /* ── Player card preview on success screen ─── */
 .reg-card-preview-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     margin: 2rem auto 0;
     width: 100%;
 }
@@ -1078,25 +1193,30 @@ input[type="file"].reg-file-input { display: none; }
     text-transform: uppercase;
     color: #94a3b8;
     margin: 0 0 10px;
+    text-align: center;
+    width: 100%;
 }
 .reg-card-preview-scaler {
     position: relative;
-    width: 100%;
-    height: 220px; /* fallback; JS sets exact value */
+    /* JS sets exact width/height to the scaled card; keep centered */
+    width: 433px;  /* 832 * 0.52 fallback */
+    height: 219px; /* 421 * 0.52 fallback */
+    max-width: 100%;
+    margin: 0 auto;
     overflow: hidden;
     border-radius: 14px;
-    box-shadow: none;
-    background: #ffffff;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, .18);
+    background: transparent;
 }
 .reg-card-preview-frame {
     position: absolute;
     top: 0;
-    left: 50%;
+    left: 0;
     width: 832px;
     height: 421px;
     border: none;
-    transform-origin: top center;
-    transform: translateX(-50%) scale(0.52);
+    transform-origin: top left;
+    transform: scale(0.52);
     pointer-events: none;
 }
 
@@ -1525,6 +1645,32 @@ body.reg-page::before {
     margin-bottom: 18px;
     border-radius: 14px;
     overflow: hidden;
+    position: relative;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+.reg-poster-mobile-img {
+    width: 100%;
+    display: block;
+    border-radius: 14px;
+}
+
+/* Secure Registration trust card → scrolls to form */
+a.reg-trust-card--cta {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    border-color: rgba(var(--reg-accent-rgb), .45);
+    background: rgba(var(--reg-accent-rgb), .12);
+    box-shadow: 0 0 0 1px rgba(var(--reg-accent-rgb), .12);
+}
+a.reg-trust-card--cta:hover,
+a.reg-trust-card--cta:focus-visible {
+    outline: none;
+    border-color: rgba(var(--reg-accent-rgb), .7);
+    background: rgba(var(--reg-accent-rgb), .18);
+}
+a.reg-trust-card--cta .reg-trust-tx span {
+    color: rgba(var(--reg-accent-rgb), .95);
 }
 
 /* ── Responsive: collapse sidebar & trust bar ───────────────────── */
