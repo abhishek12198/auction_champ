@@ -1292,18 +1292,31 @@ class Auction(http.Controller):
                                   self._remaining_players_ctx(tournament, theme), lazy=False)
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
-    def _team_players_render(self, team_id):
-        """Build (template_ref, ctx) for a team's squad/roster page."""
-        player_data_list = []
-        team_players = request.env['auction.auction.player'].sudo().search([('auction_id.team_id', '=', team_id)])
+    def _team_players_render(self, team_id, tournament_slug=None, db_name=None):
+        """Build (template_ref, ctx) for a team's squad/roster page.
 
+        Tournament resolution (multi-active tournaments):
+        1. Explicit *tournament_slug* from the URL
+        2. The team's own ``tournament_id``
+        3. Legacy ``_resolve_tournament()`` fallback
+        """
+        player_data_list = []
         team = request.env['auction.team'].sudo().browse(team_id)
-        tournament = self._resolve_tournament()
+
+        tournament = request.env['auction.tournament'].sudo()
+        if tournament_slug:
+            tournament = tournament.search([('slug', '=', tournament_slug)], limit=1)
+        if not tournament and team.exists():
+            tournament = team.tournament_id
+        if not tournament:
+            tournament = self._resolve_tournament()
+
+        auction_domain = [('auction_id.team_id', '=', team_id)]
         if tournament:
-            data = tournament.read(['player_display_template'])
-            theme = (data[0].get('player_display_template') or 'vanilla') if data else 'vanilla'
-        else:
-            theme = 'vanilla'
+            auction_domain.append(('auction_id.tournament_id', '=', tournament.id))
+        team_players = request.env['auction.auction.player'].sudo().search(auction_domain)
+
+        theme = (tournament.player_display_template if tournament else None) or 'vanilla'
         icon_players = request.env['auction.team.player'].sudo().get_icon_players(team_id)
         if icon_players:
             for icon in icon_players:
@@ -1343,11 +1356,14 @@ class Auction(http.Controller):
             'pistah': 'auction_module.auction_team_players_template_pistah',
         }
         template_ref = players_template_map.get(theme, 'auction_module.auction_team_players_template')
+        resolved_slug = tournament_slug or (tournament.slug if tournament else '')
         ctx = {
             'players': player_data_list,
             'team': team,
             'tournament': tournament,
             'theme': theme,
+            'db_name': db_name or request.env.cr.dbname,
+            'tournament_slug': resolved_slug,
         }
         return template_ref, ctx
 
@@ -1363,7 +1379,19 @@ class Auction(http.Controller):
         with self._with_db(db_name) as ok:
             if not ok:
                 return self._not_found()
-            template_ref, ctx = self._team_players_render(team_id)
+            template_ref, ctx = self._team_players_render(team_id, db_name=db_name)
+            html = request.render(template_ref, ctx, lazy=False)
+        return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
+
+    @http.route('/<string:db_name>/<string:tournament_slug>/auction/get/players/team/<int:team_id>',
+                type='http', auth='none', website=False, sitemap=False)
+    def get_team_players_db_slug(self, db_name, tournament_slug, team_id, **kwargs):
+        """Canonical squad URL scoped by database + tournament slug."""
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return self._not_found()
+            template_ref, ctx = self._team_players_render(
+                team_id, tournament_slug=tournament_slug, db_name=db_name)
             html = request.render(template_ref, ctx, lazy=False)
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 

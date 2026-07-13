@@ -871,7 +871,7 @@
                       <span data-role="status-badge" data-base-class="bs2-badge" t-attf-class="bs2-badge #{status_cls}"><t t-esc="status_label"/></span>
                     </td>
                     <td class="bs2-access-cell">
-                      <a t-att-href="'/' + (db_name or '') + '/auction/get/players/team/' + str(team.team_id.id)" class="bs2-engage">&#9654; ENGAGE</a>
+                      <a t-att-href="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/get/players/team/' + str(team.team_id.id)" class="bs2-engage">&#9654; ENGAGE</a>
                     </td>
                   </tr>
                 </t>
@@ -935,7 +935,7 @@
 
                   <div class="bs2-card-foot">
                     <span data-role="status-badge" data-base-class="bs2-badge bs2-card-status" t-attf-class="bs2-badge bs2-card-status #{status_cls}"><t t-esc="status_label"/></span>
-                    <a t-att-href="'/' + (db_name or '') + '/auction/get/players/team/' + str(team.team_id.id)" class="bs2-engage">&#9654; ENGAGE</a>
+                    <a t-att-href="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/get/players/team/' + str(team.team_id.id)" class="bs2-engage">&#9654; ENGAGE</a>
                   </div>
                 </div>
               </div>
@@ -1000,7 +1000,7 @@
 
               <!-- Footer: engage button -->
               <div class="bs2-mob-foot">
-                <a t-att-href="'/' + (db_name or '') + '/auction/get/players/team/' + str(team.team_id.id)" class="bs2-engage" style="width:100%;justify-content:center;">&#9654; VIEW SQUAD</a>
+                <a t-att-href="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/get/players/team/' + str(team.team_id.id)" class="bs2-engage" style="width:100%;justify-content:center;">&#9654; VIEW SQUAD</a>
               </div>
 
             </div>

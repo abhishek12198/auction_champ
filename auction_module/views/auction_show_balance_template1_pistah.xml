@@ -686,7 +686,7 @@
                     </td>
                     <t t-if="type == 'internal'">
                       <td class="bs2-access-cell">
-                        <a t-att-href="'/auction/get/players/team/%s' % team.team_id.id" class="bs2-engage">&#9654; ENGAGE</a>
+                        <a t-att-href="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/get/players/team/' + str(team.team_id.id)" class="bs2-engage">&#9654; ENGAGE</a>
                       </td>
                     </t>
                   </tr>
@@ -752,7 +752,7 @@
                   <div class="bs2-card-foot">
                     <span data-role="status-badge" data-base-class="bs2-badge bs2-card-status" t-attf-class="bs2-badge bs2-card-status #{status_cls}"><t t-esc="status_label"/></span>
                     <t t-if="type == 'internal'">
-                      <a t-att-href="'/auction/get/players/team/%s' % team.team_id.id" class="bs2-engage">&#9654; ENGAGE</a>
+                      <a t-att-href="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/get/players/team/' + str(team.team_id.id)" class="bs2-engage">&#9654; ENGAGE</a>
                     </t>
                   </div>
                 </div>
