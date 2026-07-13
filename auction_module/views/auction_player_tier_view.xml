@@ -27,6 +27,7 @@
                     <field name="name"/>
                     <field name="description"/>
                     <field name="color"/>
+                    <field name="mystery"/>
                     <field name="tournament_id"
                            groups="auction_module.group_auction_group_admin"/>
                 </tree>
@@ -47,6 +48,7 @@
                             <field name="name" required="1"/>
                             <field name="description"/>
                             <field name="is_an_icon_tier"/>
+                            <field name="mystery"/>
                             <field name="color" widget="selection_badge"/>
                             <field name="tournament_id"
                                    groups="auction_module.group_auction_group_admin"/>

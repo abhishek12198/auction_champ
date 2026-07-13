@@ -94,6 +94,14 @@ class AuctionTournament(models.Model):
     )
     description = fields.Char(string="Short Description", required=True)
     venue = fields.Text("Venue")
+    auction_date = fields.Date(
+        string="Auction Date",
+        help="Date of the player auction. Shown on the projector screen.",
+    )
+    auction_venue = fields.Char(
+        string="Auction Venue",
+        help="Venue / arena name for the auction day. Shown on the projector screen.",
+    )
     logo = fields.Binary('Logo')
     logo_card = fields.Binary(
         string='Logo (Card Print)',
@@ -268,7 +276,8 @@ class AuctionTournament(models.Model):
         string='Projector View URL',
         compute='_compute_urls',
         store=False,
-        help='Share this URL with the projector/screen operator to display players during a Manual auction.',
+        help='Open on the audience screen. Updates live while operators run '
+             'display_auction (Random) or player_selector (Manual).',
     )
     payment_tracker_url = fields.Char(
         string='Payment Tracker URL',
@@ -342,7 +351,7 @@ class AuctionTournament(models.Model):
             else:
                 rec.registration_url = '{}/{}/player/register'.format(base_url, db_name)
 
-            if rec.slug and rec.player_appearance_algorithm == 'linear':
+            if rec.slug:
                 rec.projector_url = '{}/{}/auction/projector/{}/'.format(base_url, db_name, rec.slug)
             else:
                 rec.projector_url = False

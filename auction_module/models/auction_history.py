@@ -53,6 +53,13 @@ class AuctionHistory(models.Model):
 
     active = fields.Boolean(default=True)
     team_id = fields.Many2one('auction.team', 'Team')
+    player_id = fields.Many2one(
+        'auction.team.player',
+        string='Player',
+        ondelete='set null',
+        index=True,
+        help='Player this history row refers to. Used to redact Mystery sales until reveal.',
+    )
     player_photo = fields.Binary()
     message = fields.Char("History Message")
     tournament_id = fields.Many2one('auction.tournament', 'Tournament')

@@ -407,8 +407,8 @@
                                     </group>
                                 </group>
 
-                                <!-- ── Projector View (Manual mode only) ── -->
-                                <group attrs="{'invisible': [('player_appearance_algorithm', '!=', 'linear')]}">
+                                <!-- ── Projector View (Manual + Random) ── -->
+                                <group>
                                     <separator string="Projector View"/>
                                     <group string="Projector URL">
                                         <field name="projector_url" widget="CopyClipboardChar"
@@ -416,9 +416,10 @@
                                     </group>
                                     <group>
                                         <p class="text-muted" style="margin-top:6px;">
-                                            Open this URL on a projector or large screen during a
-                                            <strong>Manual</strong> auction. It updates in real-time
-                                            as you select players from the deck.
+                                            Open this URL on a projector or large screen for the audience.
+                                            It updates in real-time while operators run
+                                            <strong>display_auction</strong> (Random) or
+                                            <strong>player_selector</strong> (Manual).
                                         </p>
                                     </group>
                                 </group>
@@ -468,9 +469,13 @@
 
                             <!-- Tab 4: Venue -->
                             <page string="Venue" name="venue">
-                                <group>
+                                <group string="Tournament Venue">
                                     <field name="venue" nolabel="1"
                                            placeholder="Enter the venue name, address, city and any other location details..."/>
+                                </group>
+                                <group string="Auction Day" col="2">
+                                    <field name="auction_date"/>
+                                    <field name="auction_venue" placeholder="e.g. Auction Arena, City Stadium Hall"/>
                                 </group>
                             </page>
 

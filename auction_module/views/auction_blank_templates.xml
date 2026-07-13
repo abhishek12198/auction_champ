@@ -1814,6 +1814,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
 (function(){
   let lastPlayerId = null;
   let lastState    = null;
+  let lastMysteryRevealed = null;
   var _teamsData   = [];
   var _sport = (document.documentElement.getAttribute('data-sport') || 'cricket').toLowerCase();
 
@@ -2046,23 +2047,30 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     // Photo
     const img = document.getElementById('lb-player-img');
     const ph  = document.getElementById('lb-photo-ph');
+    const mysteryHidden = !!(p.is_mystery && !p.mystery_revealed);
     if (p.photo_url) {
       img.src = p.photo_url;
       img.style.display = 'block';
+      img.style.filter = mysteryHidden ? 'grayscale(1) brightness(0.72)' : '';
       ph.style.display  = 'none';
     } else {
       img.style.display = 'none';
+      img.style.filter = '';
       ph.style.display  = 'flex';
+      ph.textContent = mysteryHidden ? '?' : '👤';
     }
 
     // Name + sub
     document.getElementById('lb-pname').textContent = p.name || '—';
+    const subRole = (p.tournament_type === 'football')
+      ? (p.dominant_position || p.role || '')
+      : (p.role || '');
     document.getElementById('lb-psub').textContent  =
-      [p.role, p.tier_name].filter(Boolean).join(' · ');
+      mysteryHidden ? '???' : [subRole, p.tier_name].filter(Boolean).join(' · ');
 
-    // SL badge
+    // SL badge — hidden for unrevealed mystery players
     const slEl = document.getElementById('lb-sl-overlay');
-    if (p.sl_no) { slEl.style.display = ''; document.getElementById('lb-sl-num').textContent = p.sl_no; }
+    if (p.sl_no && !mysteryHidden) { slEl.style.display = ''; document.getElementById('lb-sl-num').textContent = p.sl_no; }
     else           { slEl.style.display = 'none'; }
 
     // State overlay
@@ -2114,24 +2122,29 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     // Badges
     const isFootball = (p.tournament_type === 'football');
     let badgesHtml = '';
-    if (p.tier_name) {
+    if (p.tier_name && !mysteryHidden) {
       badgesHtml += `<span class="lb-badge lb-b-tier" style="background:${p.tier_color || '#2252b5'}">${p.tier_name}</span>`;
     }
-    if (isFootball) {
+    if (mysteryHidden) {
+      badgesHtml += `<span class="lb-badge lb-b-role">???</span>`;
+    } else if (isFootball) {
       if (p.dominant_position) {
         badgesHtml += `<span class="lb-badge lb-b-role">${lbEsc(p.dominant_position)}</span>`;
       }
     } else if (p.role) {
       badgesHtml += `<span class="lb-badge lb-b-role">${p.role}</span>`;
     }
-    if (p.icon_player) {
+    if (p.icon_player && !mysteryHidden) {
       badgesHtml += `<span class="lb-badge lb-b-icon">⭐ Icon</span>`;
     }
     document.getElementById('lb-badges-row').innerHTML = badgesHtml;
 
-    // Stats row
+    // Stats row — hide identity attributes while mystery is locked
     const statsRow = document.getElementById('lb-stats-row');
-    if (isFootball) {
+    if (mysteryHidden) {
+      statsRow.style.display = 'none';
+      statsRow.innerHTML = '';
+    } else if (isFootball) {
       let r1 = '';
       if (p.preferred_foot) r1 += lbStat('Foot', p.preferred_foot);
       if (p.use_other_attributes && p.other_attributes && p.other_attributes.length) {
@@ -2466,9 +2479,11 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
         const p = data.current_player;
         const newId    = p ? p.id    : null;
         const newState = p ? p.state : null;
+        const newMysteryRevealed = p ? !!p.mystery_revealed : null;
 
         // If player changed or state changed (e.g. auction→sold), flash the player panel
-        const playerChanged = (newId !== lastPlayerId) || (newState !== lastState);
+        const playerChanged = (newId !== lastPlayerId) || (newState !== lastState)
+          || (newMysteryRevealed !== lastMysteryRevealed);
         if (playerChanged && (lastPlayerId !== null || newId !== null)) {
           const panel = document.getElementById('lb-player-panel');
           panel.style.transition = 'opacity 0.3s';
@@ -2485,6 +2500,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
 
         lastPlayerId = newId;
         lastState    = newState;
+        lastMysteryRevealed = newMysteryRevealed;
 
         renderHistory(data.recent_history);
         renderTopPlayers(data.top_players || []);

@@ -191,7 +191,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .mq-grid-title span{color:var(--accent);border-bottom:2px solid var(--accent);padding-bottom:2px}
 .mq-badge{background:var(--badge);color:var(--badge-tx);font-size:.68rem;font-weight:800;padding:3px 12px;border-radius:20px}
 .mq-wrap{position:relative;z-index:10;padding:0 24px 88px}
+.mq-section-hd{font-family:var(--hf);font-size:.72rem;letter-spacing:2.5px;text-transform:uppercase;
+  color:var(--muted,#8899aa);margin:18px 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mq-section-hd.mystery{color:#c9a227}
+.mq-section-hd .mq-section-hint{font-size:.65rem;letter-spacing:1px;opacity:.7;text-transform:none;font-weight:500}
 .mq-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px}
+.mq-btn.mystery{border-color:rgba(201,162,39,.55);background:rgba(201,162,39,.12);color:#e8c547}
+.mq-btn.mystery:hover{background:rgba(201,162,39,.22);color:#f5d76e;box-shadow:0 0 12px rgba(201,162,39,.25)}
+.mq-btn.mystery .mq-num{font-size:1.35em;letter-spacing:0}
 .mq-btn{width:100%;aspect-ratio:1;background:var(--btn-bg);border:1.5px solid var(--btn-bd);
   border-radius:10px;color:var(--btn-tx);font-family:var(--hf);font-size:1.3rem;font-weight:700;
   cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
@@ -754,6 +761,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 }
 .sm-sold-points { font-size: 1rem; font-weight: 700; color: rgba(255,255,255,.75); }
 .sm-sold-points span { font-family: var(--sm-title-font); font-size: 1.4rem; font-weight: 700; color: var(--sm-accent); }
+.sm-mystery-name { font-family: var(--sm-title-font); font-size: 1.6rem; font-weight: 700; letter-spacing: 4px; color: var(--sm-accent); margin-bottom: 8px; text-align: center; }
+.sm-reveal-btn {
+  margin-top: 16px; width: 100%; max-width: 320px; padding: 14px 20px; border: none; border-radius: 10px;
+  background: var(--sm-accent); color: #111; font-family: var(--sm-title-font); font-size: 1.05rem; font-weight: 700;
+  letter-spacing: 1px; cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+.sm-reveal-btn:hover { filter: brightness(1.08); }
+.sm-reveal-hint { margin-top: 8px; font-size: .8rem; opacity: .7; text-align: center; }
 .sm-countdown-wrap { width: calc(100% - 56px); margin: 8px 28px 24px; }
 .sm-countdown-label { font-size: .78rem; font-weight: 600; color: rgba(255,255,255,.65); margin-bottom: 8px; text-align: center; }
 .sm-countdown-label strong { color: #fff; font-size: 1rem; }
@@ -1116,7 +1131,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   </div>
 </div>
 <div class="mq-wrap">
-  <div id="auction_grid" class="mq-grid"></div>
+  <div id="mqRegularSection">
+    <div class="mq-section-hd" id="mqRegularHd" style="display:none">Players</div>
+    <div id="auction_grid" class="mq-grid"></div>
+  </div>
+  <div id="mqMysterySection" style="display:none">
+    <div class="mq-section-hd mystery">Mystery Players <span class="mq-section-hint">Locked until sold &amp; revealed</span></div>
+    <div id="auction_grid_mystery" class="mq-grid"></div>
+  </div>
   <div id="mq_empty" class="mq-empty" style="display:none">
     <div class="mq-empty-icon">&#9917;</div>
     <div>No players in the auction queue</div>
@@ -1262,6 +1284,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         </div>
       </div>
       <div class="sm-sold-info">
+        <div class="sm-mystery-name" id="smSoldMysteryName" style="display:none">???</div>
         <img id="smSoldTeamLogo" class="sm-sold-team-logo" src="" alt="Team"/>
         <div class="sm-sold-text">
           <div class="sm-sold-label">Sold To</div>
@@ -1269,13 +1292,17 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           <div class="sm-sold-points">for <span id="smSoldPointsEl"></span> points</div>
         </div>
       </div>
-      <div class="sm-countdown-wrap">
+      <div class="sm-countdown-wrap" id="smCountdownWrap">
         <div class="sm-countdown-label">Closing in <strong id="smCountdownNum">5</strong> seconds</div>
         <div class="sm-progress-track">
           <div class="sm-progress-bar" id="smProgressBar"></div>
         </div>
       </div>
-      <button class="sm-skip-btn" onclick="smSkipSold()">&#9654; Close Now</button>
+      <div id="smMysteryRevealWrap" style="display:none;flex-direction:column;align-items:center;width:100%;padding:0 20px 12px">
+        <button type="button" class="sm-reveal-btn" id="smRevealBtn" onclick="smRevealMysterySold()">&#128274; Reveal Player</button>
+        <div class="sm-reveal-hint">Identity stays hidden on live board &amp; projector until revealed</div>
+      </div>
+      <button class="sm-skip-btn" id="smSkipBtn" onclick="smSkipSold()">&#9654; Close Now</button>
     </div><!-- /smSoldScreen -->
 
   </div>
@@ -1355,6 +1382,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   var currentPlayerSerial = '';
   var currentPlayerTierName = '';
   var currentPlayerTierColor = '#3498db';
+  var currentPlayerIsMystery = false;
+  var currentPlayerMysteryRevealed = false;
+  var currentPlayerRealName = '';
+  var _mysteryAwaitingReveal = false;
 
   /* All players cache — used by stats modal (no extra API call needed) */
   var _allPlayers = [];
@@ -1383,6 +1414,33 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   }
 
   /* ── Grid ──────────────────────────────────────────────── */
+  function makePlayerBtn(p) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'mq-btn' + (p.is_mystery ? ' mystery' : '');
+    btn.dataset.id = p.id;
+    btn.dataset.serial = String(p.serial || 0);
+    btn.dataset.mystery = p.is_mystery ? '1' : '0';
+    var numSpan = document.createElement('span');
+    numSpan.className = 'mq-num';
+    numSpan.textContent = p.is_mystery ? '?' : p.serial;
+    btn.appendChild(numSpan);
+    if (p.state === 'sold') {
+      btn.classList.add('sold');
+      if (p.team_logo) {
+        var logoOverlay = document.createElement('img');
+        logoOverlay.className = 'mq-sold-logo';
+        logoOverlay.src = 'data:image/png;base64,' + p.team_logo;
+        logoOverlay.alt = p.team_name || '';
+        btn.appendChild(logoOverlay);
+      }
+    } else if (p.state === 'unsold') {
+      btn.classList.add('unsold');
+    }
+    btn.onclick = function() { openPlayerDrawer(p.id); };
+    return btn;
+  }
+
   function loadGrid() {
     var _gridUrl = window.AUCTION_DB_NAME
       ? '/' + window.AUCTION_DB_NAME + '/auction/get_players_queue'
@@ -1390,6 +1448,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     rpc(_gridUrl, {tournament_id: window.AUCTION_TOURNAMENT_ID || null}).then(function(res) {
       var players = res.result || [];
       var grid   = document.getElementById('auction_grid');
+      var mysteryGrid = document.getElementById('auction_grid_mystery');
+      var mysterySec = document.getElementById('mqMysterySection');
+      var regularHd = document.getElementById('mqRegularHd');
       var empty  = document.getElementById('mq_empty');
       var badge  = document.getElementById('gBadge');
       var sStat  = document.getElementById('sStat');
@@ -1398,9 +1459,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       var uStat  = document.getElementById('uStat');
       if (!grid) return;
       grid.innerHTML = '';
+      if (mysteryGrid) mysteryGrid.innerHTML = '';
       if (!players.length) {
         _allPlayers = [];
         if (empty) empty.style.display = 'block';
+        if (mysterySec) mysterySec.style.display = 'none';
+        if (regularHd) regularHd.style.display = 'none';
         if (badge) badge.textContent = '0 players';
         if (sStat) sStat.textContent = '0';
         if (rStat) rStat.textContent = '0';
@@ -1411,32 +1475,19 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       _allPlayers = players;
       if (empty) empty.style.display = 'none';
       var soldCount = 0, unsoldCount = 0;
+      var regular = [], mystery = [];
       players.forEach(function(p) {
-      var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'mq-btn';
-        btn.dataset.id = p.id;
-        var numSpan = document.createElement('span');
-        numSpan.className = 'mq-num';
-        numSpan.textContent = p.serial;
-        btn.appendChild(numSpan);
-        if (p.state === 'sold') {
-          btn.classList.add('sold');
-          soldCount++;
-          if (p.team_logo) {
-            var logoOverlay = document.createElement('img');
-            logoOverlay.className = 'mq-sold-logo';
-            logoOverlay.src = 'data:image/png;base64,' + p.team_logo;
-            logoOverlay.alt = p.team_name || '';
-            btn.appendChild(logoOverlay);
-          }
-        } else if (p.state === 'unsold') {
-          btn.classList.add('unsold');
-          unsoldCount++;
-        }
-        btn.onclick = function() { openPlayerDrawer(p.id); };
-        grid.appendChild(btn);
+        if (p.state === 'sold') soldCount++;
+        else if (p.state === 'unsold') unsoldCount++;
+        if (p.is_mystery) mystery.push(p);
+        else regular.push(p);
       });
+      regular.forEach(function(p) { grid.appendChild(makePlayerBtn(p)); });
+      if (mysteryGrid) {
+        mystery.forEach(function(p) { mysteryGrid.appendChild(makePlayerBtn(p)); });
+      }
+      if (mysterySec) mysterySec.style.display = mystery.length ? '' : 'none';
+      if (regularHd) regularHd.style.display = (mystery.length && regular.length) ? '' : 'none';
       var total     = players.length;
       var remaining = total - soldCount - unsoldCount;
       if (badge)  badge.textContent  = total + ' player' + (total !== 1 ? 's' : '');
@@ -1513,6 +1564,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       currentPlayerSerial    = p.sl_no || '';
       currentPlayerTierName  = p.tier_id ? p.tier_id[1] : '';
       currentPlayerTierColor = p.tier_color || '#3498db';
+      currentPlayerIsMystery = !!p.is_mystery;
+      currentPlayerMysteryRevealed = !!p.mystery_revealed;
+      currentPlayerRealName  = (p.is_mystery && !p.mystery_revealed) ? '' : (p.name || '');
+      _mysteryAwaitingReveal = !!(p.is_mystery && !p.mystery_revealed && p.state === 'sold');
 
       renderPlayerCard(p, body);
 
@@ -1521,16 +1576,39 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         var btnSell      = document.getElementById('btnSell');
         var btnBringBack = document.getElementById('btnBringBack');
         if (p.state === 'sold') {
-          actions.style.display = 'none';
+          if (_mysteryAwaitingReveal) {
+            actions.style.display = 'flex';
+            if (btnUnsold)    btnUnsold.style.display    = 'none';
+            if (btnSell) {
+              btnSell.style.display = '';
+              btnSell.innerHTML = '&#128274; Reveal Player';
+              btnSell.onclick = function() { smRevealMysteryFromDrawer(); };
+            }
+            if (btnBringBack) btnBringBack.style.display = 'none';
+          } else {
+            actions.style.display = 'none';
+            if (btnSell) {
+              btnSell.innerHTML = '&#10003; Sell to Team';
+              btnSell.onclick = function() { openSellModal(); };
+            }
+          }
         } else if (p.state === 'unsold') {
           actions.style.display = 'flex';
           if (btnUnsold)    btnUnsold.style.display    = 'none';
-          if (btnSell)      btnSell.style.display      = 'none';
+          if (btnSell) {
+            btnSell.style.display = 'none';
+            btnSell.innerHTML = '&#10003; Sell to Team';
+            btnSell.onclick = function() { openSellModal(); };
+          }
           if (btnBringBack) btnBringBack.style.display = '';
         } else {
           actions.style.display = 'flex';
           if (btnUnsold)    btnUnsold.style.display    = '';
-          if (btnSell)      btnSell.style.display      = '';
+          if (btnSell) {
+            btnSell.style.display = '';
+            btnSell.innerHTML = '&#10003; Sell to Team';
+            btnSell.onclick = function() { openSellModal(); };
+          }
           if (btnBringBack) btnBringBack.style.display = 'none';
         }
       }
@@ -1594,21 +1672,36 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     var tierColor = p.tier_color || '#3498db';
     var tierGlow  = tierColor + '55';
     var isFootball = (p.tournament_type === 'football');
-    var roleText = isFootball ? (p.dominant_position || p.role || '') : (p.role || '');
-    var serial = ('00' + String(p.sl_no || 0)).slice(-2);
-    var photoInner = p.photo
-      ? '<img class="pc-hero-blur" src="data:image/png;base64,' + p.photo + '" alt="" aria-hidden="true"/>' +
-        '<img class="pc-photo" src="data:image/png;base64,' + p.photo + '" alt="' + escHtml(p.name) + '"/>'
-      : '<div class="pc-photo-ph">&#9917;</div>';
+    var mysteryHidden = !!(p.is_mystery && !p.mystery_revealed);
+    var roleText = mysteryHidden
+      ? '???'
+      : (isFootball ? (p.dominant_position || p.role || '') : (p.role || ''));
+    var serial = mysteryHidden ? '??' : ('00' + String(p.sl_no || 0)).slice(-2);
+    var displayName = mysteryHidden ? '???' : (p.name || '');
+    var photoInner;
+    if (mysteryHidden) {
+      photoInner =
+        '<img class="pc-photo" src="/auction_module/static/img/default_icon.png" alt="Mystery" style="filter:grayscale(1) brightness(0.72);object-fit:cover;"/>' +
+        '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;background:rgba(0,0,0,.35);pointer-events:none;z-index:2">' +
+          '<div style="font-size:1.1rem;font-weight:800;letter-spacing:2px;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6)">&#128274; PLAYER LOCKED</div>' +
+          '<div style="font-size:.75rem;color:rgba(255,255,255,.85)">Requires Winning Bid</div>' +
+        '</div>';
+    } else if (p.photo) {
+      photoInner = '<img class="pc-hero-blur" src="data:image/png;base64,' + p.photo + '" alt="" aria-hidden="true"/>' +
+        '<img class="pc-photo" src="data:image/png;base64,' + p.photo + '" alt="' + escHtml(p.name) + '"/>';
+    } else {
+      photoInner = '<div class="pc-photo-ph">&#9917;</div>';
+    }
 
-    var tier = p.tier_id
+    var tierLabel = mysteryHidden ? 'Mystery' : (p.tier_id ? p.tier_id[1] : '');
+    var tier = tierLabel
       ? '<span class="pc-tier-badge" style="background:' + escHtml(tierColor) + ';color:#fff;box-shadow:0 0 16px ' + escHtml(tierGlow) + '">'
-        + escHtml(p.tier_id[1]) + '</span>'
+        + escHtml(tierLabel) + '</span>'
       : '';
     var roleBadge = roleText
       ? '<span class="pc-role-badge">' + escHtml(roleText) + '</span>'
       : '';
-    var keyBadge = p.icon_player
+    var keyBadge = (!mysteryHidden && p.icon_player)
       ? '<span class="pc-key-badge">★ KEY PLAYER</span>'
       : '';
 
@@ -1651,25 +1744,27 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     if (p.state === 'unsold') stateBanner = '<div class="pc-state-banner unsold">UNSOLD</div>';
 
     var attrsHtml = '';
-    if (isFootball) {
-      if (p.p_category)     attrsHtml += attr('Category', p.p_category);
-      if (p.preferred_foot) attrsHtml += attr('Preferred Foot', p.preferred_foot);
-      if (p.work_rate)      attrsHtml += attr('Work Rate', p.work_rate);
-      if (p.age)            attrsHtml += attr('Age', String(p.age));
-      if (p.use_other_attributes && p.other_attributes && p.other_attributes.length) {
-        for (var oi = 0; oi < p.other_attributes.length; oi++) {
-          var oa = p.other_attributes[oi] || {};
-          if (oa.label) attrsHtml += attr(oa.label, oa.value || '—');
+    if (!mysteryHidden) {
+      if (isFootball) {
+        if (p.p_category)     attrsHtml += attr('Category', p.p_category);
+        if (p.preferred_foot) attrsHtml += attr('Preferred Foot', p.preferred_foot);
+        if (p.work_rate)      attrsHtml += attr('Work Rate', p.work_rate);
+        if (p.age)            attrsHtml += attr('Age', String(p.age));
+        if (p.use_other_attributes && p.other_attributes && p.other_attributes.length) {
+          for (var oi = 0; oi < p.other_attributes.length; oi++) {
+            var oa = p.other_attributes[oi] || {};
+            if (oa.label) attrsHtml += attr(oa.label, oa.value || '—');
+          }
+        } else if (p.secondary_positions && p.secondary_positions.length) {
+          attrsHtml += attr('Secondary', p.secondary_positions.join(', '));
         }
-      } else if (p.secondary_positions && p.secondary_positions.length) {
-        attrsHtml += attr('Secondary', p.secondary_positions.join(', '));
+        if (p.location) attrsHtml += attr('Location', p.location);
+        attrsHtml += pcChips(p.playing_styles) + pcChips(p.strengths);
+      } else {
+        if (p.batting_style) attrsHtml += attr('Batting', p.batting_style);
+        if (p.bowling_style) attrsHtml += attr('Bowling', p.bowling_style);
+        if (p.p_category) attrsHtml += attr('Category', p.p_category);
       }
-      if (p.location) attrsHtml += attr('Location', p.location);
-      attrsHtml += pcChips(p.playing_styles) + pcChips(p.strengths);
-    } else {
-      if (p.batting_style) attrsHtml += attr('Batting', p.batting_style);
-      if (p.bowling_style) attrsHtml += attr('Bowling', p.bowling_style);
-      if (p.p_category) attrsHtml += attr('Category', p.p_category);
     }
 
     var baseHtml = '';
@@ -1683,13 +1778,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
     container.innerHTML =
       '<div class="pc-stage">' +
-        '<div class="pc-hero" style="--tier:' + escHtml(tierColor) + '">' +
+        '<div class="pc-hero" style="--tier:' + escHtml(tierColor) + ';position:relative">' +
           '<div class="pc-onair"><span class="pc-onair-dot"></span>On Stage</div>' +
-          '<div class="pc-serial-watermark">#' + escHtml(serial) + '</div>' +
+          '<div class="pc-serial-watermark">' + (mysteryHidden ? '?' : ('#' + escHtml(serial))) + '</div>' +
           photoInner +
           '<div class="pc-lower">' +
-            '<div class="pc-lower-serial">#' + escHtml(serial) + '</div>' +
-            '<div class="pc-lower-name">' + escHtml(p.name || '') + '</div>' +
+            '<div class="pc-lower-serial">' + (mysteryHidden ? '?' : ('#' + escHtml(serial))) + '</div>' +
+            '<div class="pc-lower-name">' + escHtml(displayName) + '</div>' +
             (roleText ? '<div class="pc-lower-role">' + escHtml(roleText) + '</div>' : '') +
             '<div class="pc-lower-band"></div>' +
           '</div>' +
@@ -1882,11 +1977,22 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
     /* Fill player info strip */
     var av = document.getElementById('smPlayerAvatar');
-    if (av) av.src = window.AUCTION_IMG_URL('auction.team.player', smPid, 'photo');
+    var mysteryHidden = currentPlayerIsMystery && !currentPlayerMysteryRevealed;
+    if (av) {
+      if (mysteryHidden) {
+        av.src = '/auction_module/static/img/default_icon.png';
+        av.style.filter = 'grayscale(1) brightness(0.72)';
+        av.style.visibility = 'visible';
+      } else {
+        av.src = window.AUCTION_IMG_URL('auction.team.player', smPid, 'photo');
+        av.style.filter = '';
+        av.style.visibility = 'visible';
+      }
+    }
     var nm = document.getElementById('smPlayerName');
-    if (nm) nm.textContent = currentPlayerName;
+    if (nm) nm.textContent = mysteryHidden ? '???' : currentPlayerName;
     var rl = document.getElementById('smPlayerRole');
-    if (rl) rl.textContent = currentPlayerRole || '';
+    if (rl) rl.textContent = mysteryHidden ? '???' : (currentPlayerRole || '');
 
     /* Reset UI */
     document.getElementById('smFormPanel').style.display     = 'block';
@@ -2046,6 +2152,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         btn.disabled = false; btn.textContent = 'Sell Player'; return;
       }
       smShowSoldScreen2(data);
+      if (data.player_name) currentPlayerRealName = data.player_name;
     }).catch(function() {
       var errEl = document.getElementById('sellError');
       errEl.textContent = 'Network error. Please try again.';
@@ -2056,10 +2163,22 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
   function smShowSoldScreen2(data) {
     var secs = (data.display_seconds > 0) ? data.display_seconds : 5;
+    var isMystery = currentPlayerIsMystery && !currentPlayerMysteryRevealed;
     document.getElementById('smFormPanel').style.display = 'none';
 
     /* Fill sold screen */
-    document.getElementById('smSoldPhoto').src          = window.AUCTION_IMG_URL('auction.team.player', smPid, 'photo');
+    var soldPhoto = document.getElementById('smSoldPhoto');
+    var mysteryNameEl = document.getElementById('smSoldMysteryName');
+    if (isMystery) {
+      soldPhoto.src = '/auction_module/static/img/default_icon.png';
+      soldPhoto.style.filter = 'grayscale(1) brightness(0.72)';
+      soldPhoto.alt = 'Mystery Player';
+      if (mysteryNameEl) { mysteryNameEl.style.display = ''; mysteryNameEl.textContent = '???'; }
+    } else {
+      soldPhoto.src = window.AUCTION_IMG_URL('auction.team.player', smPid, 'photo');
+      soldPhoto.style.filter = '';
+      if (mysteryNameEl) mysteryNameEl.style.display = 'none';
+    }
     document.getElementById('smSoldTeamLogo').src       = window.AUCTION_IMG_URL('auction.team', data.team_id, 'logo');
     document.getElementById('smSoldTeamName').textContent = data.team_name;
     document.getElementById('smSoldPointsEl').textContent = data.final_point;
@@ -2069,6 +2188,28 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     if (oldStamp) { var ns = oldStamp.cloneNode(true); oldStamp.parentNode.replaceChild(ns, oldStamp); }
 
     document.getElementById('smSoldScreen').classList.add('visible');
+
+    var cdWrap = document.getElementById('smCountdownWrap');
+    var revealWrap = document.getElementById('smMysteryRevealWrap');
+    var skipBtn = document.getElementById('smSkipBtn');
+
+    if (isMystery) {
+      _mysteryAwaitingReveal = true;
+      if (cdWrap) cdWrap.style.display = 'none';
+      if (revealWrap) revealWrap.style.display = 'flex';
+      if (skipBtn) skipBtn.style.display = 'none';
+      var revealBtn = document.getElementById('smRevealBtn');
+      if (revealBtn) {
+        revealBtn.disabled = false;
+        revealBtn.innerHTML = '&#128274; Reveal Player';
+      }
+      if (mysteryNameEl) { mysteryNameEl.style.display = ''; mysteryNameEl.textContent = '???'; }
+      return;
+    }
+
+    if (cdWrap) cdWrap.style.display = '';
+    if (revealWrap) revealWrap.style.display = 'none';
+    if (skipBtn) skipBtn.style.display = '';
 
     /* Countdown */
     var remaining = secs;
@@ -2091,6 +2232,127 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     }, 1000);
   }
 
+  window.smRevealMysterySold = function() {
+    if (!smPid && !currentPlayerId) return;
+    var pid = smPid || currentPlayerId;
+    var btn = document.getElementById('smRevealBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Revealing\u2026'; }
+
+    callKw('auction.team.player', 'action_reveal_mystery', [pid]).then(function(res) {
+      if (!res || res.error) {
+        var msg = (res && res.error && res.error.data && res.error.data.message)
+          || (res && res.error && res.error.message)
+          || 'Reveal request failed';
+        throw new Error(msg);
+      }
+      var data = res.result;
+      if (!data || data.success === false || data.error) {
+        throw new Error((data && data.error) || 'Reveal failed');
+      }
+
+      currentPlayerMysteryRevealed = true;
+      _mysteryAwaitingReveal = false;
+      var realName = (data && data.player_name) || currentPlayerRealName || '';
+      if (realName) {
+        currentPlayerName = realName;
+        currentPlayerRealName = realName;
+      }
+
+      var soldPhoto = document.getElementById('smSoldPhoto');
+      if (soldPhoto) {
+        soldPhoto.src = window.AUCTION_IMG_URL('auction.team.player', pid, 'photo') + '?t=' + Date.now();
+        soldPhoto.style.filter = '';
+        soldPhoto.style.visibility = 'visible';
+      }
+      var mysteryNameEl = document.getElementById('smSoldMysteryName');
+      if (mysteryNameEl) {
+        mysteryNameEl.style.display = '';
+        mysteryNameEl.textContent = realName || 'Player';
+      }
+
+      /* Refresh drawer card without another stage write if possible */
+      var body = document.getElementById('pcBody');
+      if (body) {
+        var _qdUrl = window.AUCTION_DB_NAME
+          ? '/' + window.AUCTION_DB_NAME + '/auction/player_quick_data/' + pid
+          : '/auction/player_quick_data/' + pid;
+        rpc(_qdUrl, {}).then(function(qd) {
+          var p = qd && qd.result;
+          if (p && !p.error && body) renderPlayerCard(p, body);
+        }).catch(function() {});
+      }
+
+      var revealWrap = document.getElementById('smMysteryRevealWrap');
+      var cdWrap = document.getElementById('smCountdownWrap');
+      var skipBtn = document.getElementById('smSkipBtn');
+      if (revealWrap) revealWrap.style.display = 'none';
+      if (cdWrap) cdWrap.style.display = '';
+      if (skipBtn) skipBtn.style.display = '';
+
+      /* Short close countdown after reveal */
+      var secs = 4;
+      var remaining = secs;
+      var bar = document.getElementById('smProgressBar');
+      if (bar) {
+        bar.style.transition = 'none'; bar.style.width = '100%';
+        bar.offsetWidth;
+        bar.style.transition = 'width ' + secs + 's linear'; bar.style.width = '0%';
+      }
+      var numEl = document.getElementById('smCountdownNum');
+      if (numEl) numEl.textContent = remaining;
+      if (smCdTimer) clearInterval(smCdTimer);
+      smCdTimer = setInterval(function() {
+        remaining -= 1;
+        if (numEl) numEl.textContent = remaining;
+        if (remaining <= 0) {
+          clearInterval(smCdTimer); smCdTimer = null;
+          document.getElementById('sellModal').classList.remove('open');
+          document.getElementById('smSoldScreen').classList.remove('visible');
+          document.getElementById('smFormPanel').style.display = 'block';
+          closePlayerDrawer(true);
+        }
+      }, 1000);
+    }).catch(function(err) {
+      console.error('smRevealMysterySold:', err);
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '&#128274; Reveal Player';
+      }
+      var revealWrap = document.getElementById('smMysteryRevealWrap');
+      if (revealWrap) revealWrap.style.display = 'flex';
+      var skipBtn = document.getElementById('smSkipBtn');
+      if (skipBtn) skipBtn.style.display = '';
+      alert('Could not reveal player. Please try again.');
+    });
+  };
+
+  window.smRevealMysteryFromDrawer = function() {
+    if (!currentPlayerId) return;
+    smPid = currentPlayerId;
+    /* Open sold screen in reveal mode if sell modal not open */
+    document.getElementById('smFormPanel').style.display = 'none';
+    document.getElementById('smSoldScreen').classList.add('visible');
+    document.getElementById('sellModal').classList.add('open');
+    var cdWrap = document.getElementById('smCountdownWrap');
+    var revealWrap = document.getElementById('smMysteryRevealWrap');
+    var skipBtn = document.getElementById('smSkipBtn');
+    if (cdWrap) cdWrap.style.display = 'none';
+    if (revealWrap) revealWrap.style.display = 'flex';
+    if (skipBtn) skipBtn.style.display = 'none';
+    var revealBtn = document.getElementById('smRevealBtn');
+    if (revealBtn) {
+      revealBtn.disabled = false;
+      revealBtn.innerHTML = '&#128274; Reveal Player';
+    }
+    var soldPhoto = document.getElementById('smSoldPhoto');
+    if (soldPhoto) {
+      soldPhoto.src = '/auction_module/static/img/default_icon.png';
+      soldPhoto.style.filter = 'grayscale(1) brightness(0.72)';
+    }
+    var mysteryNameEl = document.getElementById('smSoldMysteryName');
+    if (mysteryNameEl) { mysteryNameEl.style.display = ''; mysteryNameEl.textContent = '???'; }
+  };
+
   /* ── Full-screen stamp overlay ─────────────────────────── */
   function showStamp(text, secs, subText, onDone) {
     /* Support legacy 3-arg call: showStamp(text, secs, onDone) */
@@ -2107,10 +2369,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     /* Player photo */
     var photoEl = document.getElementById('ssPhotoEl');
     if (photoEl) {
-      photoEl.innerHTML = currentPlayerPhoto
-        ? '<img class="ss-photo" src="data:image/png;base64,' + currentPlayerPhoto
-            + '" alt="player" style="border:3px solid ' + currentPlayerTierColor + '"/>'
-        : '<div class="ss-photo-ph">&#128100;</div>';
+      if (currentPlayerIsMystery && !currentPlayerMysteryRevealed) {
+        photoEl.innerHTML = '<img class="ss-photo" src="/auction_module/static/img/default_icon.png" alt="Mystery" style="filter:grayscale(1) brightness(0.72);border:3px solid ' + currentPlayerTierColor + '"/>';
+      } else {
+        photoEl.innerHTML = currentPlayerPhoto
+          ? '<img class="ss-photo" src="data:image/png;base64,' + currentPlayerPhoto
+              + '" alt="player" style="border:3px solid ' + currentPlayerTierColor + '"/>'
+          : '<div class="ss-photo-ph">&#128100;</div>';
+      }
     }
 
     /* Stamp label */
@@ -2126,15 +2392,23 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     }
 
     /* Serial & name */
+    var mysteryHidden = currentPlayerIsMystery && !currentPlayerMysteryRevealed;
     var serialEl = document.getElementById('ssSerial');
-    if (serialEl) { serialEl.textContent = '#' + currentPlayerSerial; serialEl.style.color = currentPlayerTierColor; }
+    if (serialEl) {
+      serialEl.textContent = mysteryHidden ? '?' : ('#' + currentPlayerSerial);
+      serialEl.style.color = currentPlayerTierColor;
+    }
     var nameEl = document.getElementById('ssName');
-    if (nameEl) nameEl.textContent = currentPlayerName;
+    if (nameEl) nameEl.textContent = mysteryHidden ? '???' : currentPlayerName;
 
     /* Tier badge */
     var badgeEl = document.getElementById('ssTierBadge');
     if (badgeEl) {
-      if (currentPlayerTierName) {
+      if (mysteryHidden) {
+        badgeEl.textContent = 'Mystery';
+        badgeEl.style.background = currentPlayerTierColor;
+        badgeEl.style.display = 'inline-block';
+      } else if (currentPlayerTierName) {
         badgeEl.textContent = currentPlayerTierName;
         badgeEl.style.background = currentPlayerTierColor;
         badgeEl.style.display = 'inline-block';
@@ -2219,11 +2493,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     });
   }
 
-  function showNumberOnDice(num) {
+  function showNumberOnDice(num, isMystery) {
+    var label = isMystery ? '?' : ('#' + num);
     _diceEls().forEach(function(die) {
       die.classList.add('has-result');
       var numEl = die.querySelector('.mq-dice-num');
-      if (numEl) numEl.textContent = '#' + num;
+      if (numEl) numEl.textContent = label;
     });
     _diceLbls().forEach(function(lbl) {
       lbl.textContent = 'Tap to open';
@@ -2252,30 +2527,38 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     }
   }
 
-  function showDiceResultPill(num) {
-    /* Highlight matching player cell */
-    var pickedId = null;
-    document.querySelectorAll('#auction_grid .mq-btn').forEach(function(btn) {
+  function mqAllPlayerBtns() {
+    return document.querySelectorAll('#auction_grid .mq-btn, #auction_grid_mystery .mq-btn');
+  }
+
+  function showDiceResultPill(num, isMystery, playerId) {
+    /* Highlight matching player cell by id (preferred) or real serial */
+    var pickedId = playerId ? parseInt(playerId, 10) : null;
+    mqAllPlayerBtns().forEach(function(btn) {
       btn.classList.remove('dice-pick');
     });
-    document.querySelectorAll('#auction_grid .mq-btn').forEach(function(btn) {
-      var numEl = btn.querySelector('.mq-num');
-      if (numEl && parseInt(numEl.textContent, 10) === num) {
-        btn.classList.add('dice-pick');
-        try { btn.scrollIntoView({behavior: 'smooth', block: 'center'}); } catch (e) {}
-        if (btn.dataset.id) pickedId = parseInt(btn.dataset.id, 10);
+    mqAllPlayerBtns().forEach(function(btn) {
+      var btnId = parseInt(btn.dataset.id || '0', 10);
+      var serial = parseInt(btn.dataset.serial || '0', 10);
+      var match = pickedId ? (btnId === pickedId) : (serial === num);
+      if (!match) return;
+      btn.classList.add('dice-pick');
+      try { btn.scrollIntoView({behavior: 'smooth', block: 'center'}); } catch (e) {}
+      if (!pickedId && btnId) pickedId = btnId;
+      if (typeof isMystery === 'undefined') {
+        isMystery = btn.dataset.mystery === '1' || btn.classList.contains('mystery');
       }
     });
     _dicePickedId = pickedId;
 
-    /* Replace dice face with the rolled player number */
-    showNumberOnDice(num);
+    /* Replace dice face with the rolled player number (or ? for mystery) */
+    showNumberOnDice(num, !!isMystery);
 
     /* Desktop also keeps the floating pill */
     var isTouchLayout = window.matchMedia && window.matchMedia('(max-width:900px)').matches;
     var pill = document.getElementById('mqDiceResult');
     if (pill && !isTouchLayout) {
-      pill.textContent = '#' + num;
+      pill.textContent = isMystery ? '?' : ('#' + num);
       pill.style.display = '';
       pill.className = 'show';
       pill.onclick = pickedId ? function() {
@@ -2306,11 +2589,38 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
   window.rollDice = function() {
     if (_diceRolling) return;
+
+    /* Prefer the loaded player list so Mystery section players are always
+       included — DOM query alone was easy to miss #auction_grid_mystery. */
     var available = [];
-    document.querySelectorAll('#auction_grid .mq-btn:not(.sold):not(.unsold)').forEach(function(btn) {
-      var numEl = btn.querySelector('.mq-num');
-      if (numEl) available.push(parseInt(numEl.textContent, 10));
+    (_allPlayers || []).forEach(function(p) {
+      if (!p) return;
+      var st = p.state || '';
+      if (st === 'sold' || st === 'unsold' || st === 'draft') return;
+      var serial = parseInt(p.serial, 10);
+      if (isNaN(serial)) serial = 0;
+      available.push({
+        serial: serial,
+        mystery: !!p.is_mystery,
+        id: p.id
+      });
     });
+    if (!available.length) {
+      mqAllPlayerBtns().forEach(function(btn) {
+        if (btn.classList.contains('sold') || btn.classList.contains('unsold')) return;
+        var serial = parseInt(btn.dataset.serial || '', 10);
+        if (isNaN(serial)) {
+          var numEl = btn.querySelector('.mq-num');
+          serial = numEl ? parseInt(numEl.textContent, 10) : NaN;
+        }
+        if (isNaN(serial)) return;
+        available.push({
+          serial: serial,
+          mystery: btn.dataset.mystery === '1' || btn.classList.contains('mystery'),
+          id: parseInt(btn.dataset.id || '0', 10)
+        });
+      });
+    }
     if (!available.length) return;
 
     if (_diceResultTimer) { clearTimeout(_diceResultTimer); _diceResultTimer = null; }
@@ -2319,7 +2629,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     _diceLbls().forEach(function(lbl) { lbl.textContent = 'Rolling\u2026'; });
 
     _diceRolling = true;
-    var result = available[Math.floor(Math.random() * available.length)];
+    var picked = available[Math.floor(Math.random() * available.length)];
+    var result = picked.serial;
+    var resultMystery = !!picked.mystery;
     var tid = window.AUCTION_TOURNAMENT_ID ? parseInt(window.AUCTION_TOURNAMENT_ID, 10) : 0;
 
     if (tid) callKw('auction.tournament', 'set_dice_state', [[tid], 'rolling', 0]).catch(function(){});
@@ -2340,7 +2652,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       if (rollCount >= maxRolls) {
         clearInterval(rollInt);
         _diceEls().forEach(function(die) { die.classList.remove('rolling'); });
-        showDiceResultPill(result);
+        showDiceResultPill(result, resultMystery, picked.id);
         _diceRolling = false;
         if (!resultBroadcast && tid) {
           callKw('auction.tournament', 'set_dice_state', [[tid], 'result', result]).catch(function(){});

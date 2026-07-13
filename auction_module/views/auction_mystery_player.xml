@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="player_mystery_controls" name="Mystery Player Controls">
+<style>
+  /* Reveal / sold / controls — identity mask CSS lives in player_mystery_critical_css (head) */
+  .ac-mystery-action-hidden {
+    display: none !important;
+  }
+
+  .ac-mystery-sold-stamp {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%) rotate(-8deg);
+    z-index: 8;
+    pointer-events: none;
+    text-align: center;
+    min-width: min(78%, 280px);
+    padding: 10px 18px 12px;
+    border: 3px solid rgba(255, 255, 255, .9);
+    border-radius: 8px;
+    background: linear-gradient(135deg, #b71c1c, #e53935);
+    box-shadow:
+      0 0 0 3px rgba(183, 28, 28, .85),
+      0 10px 28px rgba(0, 0, 0, .45);
+    color: #fff;
+    animation: acMysterySoldIn .45s cubic-bezier(.34, 1.3, .64, 1) both;
+  }
+  .ac-mystery-sold-stamp .ac-mss-label {
+    display: block;
+    font-family: 'Orbitron', 'Teko', 'Anton', sans-serif;
+    font-size: clamp(1.1rem, 2.8vw, 1.7rem);
+    font-weight: 900;
+    letter-spacing: .22em;
+    line-height: 1;
+  }
+  .ac-mystery-sold-stamp .ac-mss-team {
+    display: block;
+    margin-top: 6px;
+    font-family: 'Rajdhani', 'Poppins', sans-serif;
+    font-size: clamp(.85rem, 1.8vw, 1.1rem);
+    font-weight: 700;
+    letter-spacing: .04em;
+    line-height: 1.15;
+    opacity: .95;
+  }
+  .ac-mystery-sold-stamp .ac-mss-pts {
+    display: block;
+    margin-top: 4px;
+    font-family: 'Rajdhani', 'Poppins', sans-serif;
+    font-size: clamp(.75rem, 1.5vw, .95rem);
+    font-weight: 600;
+    opacity: .88;
+  }
+  @keyframes acMysterySoldIn {
+    0% { opacity: 0; transform: translateX(-50%) rotate(-18deg) scale(1.35); }
+    100% { opacity: 1; transform: translateX(-50%) rotate(-8deg) scale(1); }
+  }
+
+  #acMysteryRevealBtn {
+    display: none;
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    transform: translateX(-50%);
+    z-index: 10050;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 1rem 1.8rem;
+    border: 2px solid rgba(253, 206, 51, .9);
+    border-radius: 999px;
+    background: linear-gradient(135deg, #0f1f44, #2252b5);
+    color: #fdce33;
+    font-family: 'Rajdhani', 'Poppins', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 12px 32px rgba(15, 31, 68, .45);
+  }
+  #acMysteryRevealBtn:hover { filter: brightness(1.08); }
+  #acMysteryRevealBtn.is-visible { display: inline-flex; }
+
+  .mystery-locked {
+    opacity: .45 !important;
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+  }
+</style>
+
+<button type="button" id="acMysteryRevealBtn" onclick="acRevealMysteryPlayer()">
+  Reveal Player
+</button>
+
+<script><![CDATA[
+(function () {
+  window.AUCTION_IS_MYSTERY = false;
+  window.AUCTION_MYSTERY_REVEALED = false;
+  window.AUCTION_MYSTERY_AWAITING_REVEAL = false;
+  window.AUCTION_MYSTERY_SOLD_INFO = null;
+
+  function acMysteryFlag() {
+    return document.body.getAttribute('data-is-mystery') === '1';
+  }
+
+  function acMysterySetRevealed(revealed) {
+    window.AUCTION_MYSTERY_REVEALED = !!revealed;
+    if (revealed) document.body.setAttribute('data-mystery-revealed', '1');
+    else document.body.removeAttribute('data-mystery-revealed');
+  }
+
+  function acMysteryNextButtons() {
+    return document.querySelectorAll(
+      '.next-player-btn, .lm-btn-next, .sw-btn-next, .hud-next-btn, .cr-btn-next, .pt-next-btn, button[onclick*="changeImage"]'
+    );
+  }
+
+  function acMysteryActionButtons() {
+    return document.querySelectorAll(
+      'button[onclick*="openSellModal"], button[onclick*="setPlayerUnsold"],' +
+      '.sell, .pt-btn-sell, .pt-btn-unsold, .hud-btn-sell, .hud-btn-unsold,' +
+      '.lm-btn-sell, .lm-btn-unsold, .sw-btn-sell, .sw-btn-unsold,' +
+      '.cr-btn-sell, .cr-btn-unsold'
+    );
+  }
+
+  function acMysteryHideActionButtons() {
+    var btns = acMysteryActionButtons();
+    for (var i = 0; i < btns.length; i++) btns[i].classList.add('ac-mystery-action-hidden');
+  }
+
+  function acMysteryShowActionButtons() {
+    var btns = document.querySelectorAll('.ac-mystery-action-hidden');
+    for (var i = 0; i < btns.length; i++) btns[i].classList.remove('ac-mystery-action-hidden');
+  }
+
+  function acMysteryRemoveSoldStamp() {
+    var stamps = document.querySelectorAll('.ac-mystery-sold-stamp');
+    for (var i = 0; i < stamps.length; i++) {
+      if (stamps[i].parentNode) stamps[i].parentNode.removeChild(stamps[i]);
+    }
+  }
+
+  function acMysteryPhotoWrap() {
+    var img = document.getElementById('loadImage');
+    return img ? img.parentElement : null;
+  }
+
+  var AC_MYSTERY_AVATAR_SRC = '/auction_module/static/img/default_icon.png';
+
+  function acMysteryEnsureGenericAvatar() {
+    var wrap = acMysteryPhotoWrap();
+    if (!wrap) return;
+    if (window.getComputedStyle(wrap).position === 'static') {
+      wrap.style.position = 'relative';
+    }
+    var avatar = wrap.querySelector('.ac-mystery-generic-avatar');
+    if (!avatar) {
+      avatar = document.createElement('img');
+      avatar.className = 'ac-mystery-generic-avatar';
+      avatar.alt = 'Mystery Player';
+      avatar.src = AC_MYSTERY_AVATAR_SRC;
+      wrap.insertBefore(avatar, wrap.firstChild);
+    } else if (avatar.getAttribute('src') !== AC_MYSTERY_AVATAR_SRC) {
+      avatar.src = AC_MYSTERY_AVATAR_SRC;
+    }
+  }
+
+  function acMysteryRemoveGenericAvatar() {
+    var avatars = document.querySelectorAll('.ac-mystery-generic-avatar');
+    for (var i = 0; i < avatars.length; i++) {
+      if (avatars[i].parentNode) avatars[i].parentNode.removeChild(avatars[i]);
+    }
+  }
+
+  function acMysteryShowSoldStamp(info) {
+    acMysteryRemoveSoldStamp();
+    if (!info) return;
+    var wrap = acMysteryPhotoWrap();
+    if (!wrap) return;
+    if (window.getComputedStyle(wrap).position === 'static') {
+      wrap.style.position = 'relative';
+    }
+    var stamp = document.createElement('div');
+    stamp.className = 'ac-mystery-sold-stamp';
+    var team = info.team_name || 'Team';
+    var pts = info.final_point != null ? info.final_point : '';
+    stamp.innerHTML =
+      '<span class="ac-mss-label">SOLD</span>' +
+      '<span class="ac-mss-team">to ' + String(team).replace(/</g, '&lt;') + '</span>' +
+      (pts !== '' ? '<span class="ac-mss-pts">for ' + pts + ' pts</span>' : '');
+    wrap.appendChild(stamp);
+  }
+
+  window.acMysteryUpdateControls = function () {
+    var revealBtn = document.getElementById('acMysteryRevealBtn');
+    var isMystery = !!window.AUCTION_IS_MYSTERY;
+    var revealed = !!window.AUCTION_MYSTERY_REVEALED;
+    var awaiting = !!window.AUCTION_MYSTERY_AWAITING_REVEAL;
+
+    if (revealBtn) {
+      if (revealBtn.parentNode !== document.body) document.body.appendChild(revealBtn);
+      if (isMystery && !revealed && awaiting) revealBtn.classList.add('is-visible');
+      else revealBtn.classList.remove('is-visible');
+    }
+
+    if (isMystery && (awaiting || revealed) && window.AUCTION_MYSTERY_SOLD_INFO) {
+      acMysteryHideActionButtons();
+    }
+
+    var nextBtns = acMysteryNextButtons();
+    for (var i = 0; i < nextBtns.length; i++) {
+      if (isMystery && awaiting && !revealed) {
+        nextBtns[i].classList.add('mystery-locked');
+        nextBtns[i].setAttribute('disabled', 'disabled');
+      } else {
+        nextBtns[i].classList.remove('mystery-locked');
+        nextBtns[i].removeAttribute('disabled');
+      }
+    }
+  };
+
+  window.acMysteryApplyMask = function () {
+    window.AUCTION_IS_MYSTERY = acMysteryFlag();
+    if (window.AUCTION_IS_MYSTERY && !window.AUCTION_MYSTERY_REVEALED) {
+      document.body.removeAttribute('data-mystery-revealed');
+      acMysteryEnsureGenericAvatar();
+    } else if (!window.AUCTION_IS_MYSTERY) {
+      acMysteryRemoveGenericAvatar();
+    }
+    acMysteryUpdateControls();
+  };
+
+  /** Apply mystery UI from attributes already on <body> (set by changeImage / sell modal).
+   *  Do NOT re-fetch the page here — that races with acCommitPlayerOnStage and can
+   *  briefly read the previous on-stage player, clearing data-is-mystery and revealing
+   *  a mystery player's identity on display_auction.
+   */
+  window.acMysteryApplyFromBody = function () {
+    window.AUCTION_IS_MYSTERY = acMysteryFlag();
+    window.AUCTION_MYSTERY_AWAITING_REVEAL = false;
+    window.AUCTION_MYSTERY_SOLD_INFO = null;
+    acMysterySetRevealed(false);
+    acMysteryRemoveSoldStamp();
+    acMysteryRemoveGenericAvatar();
+    acMysteryShowActionButtons();
+    if (window.AUCTION_IS_MYSTERY) acMysteryEnsureGenericAvatar();
+    acMysteryUpdateControls();
+  };
+
+  window.acRevealMysteryPlayer = function () {
+    if (!window.AUCTION_IS_MYSTERY) return;
+    var playerId = parseInt(document.body.getAttribute('data-player-id') || '0', 10);
+    if (playerId) {
+      // display_auction is auth=none — use db-explicit console_call (sudo whitelist)
+      // instead of /web/dataset/call_kw so the live board sees mystery_revealed.
+      var parts = (window.location.pathname || '').split('/').filter(Boolean);
+      var dbName = parts.length ? parts[0] : '';
+      var payload = {
+        jsonrpc: '2.0', method: 'call', id: Date.now(),
+        params: {
+          model: 'auction.team.player',
+          method: 'action_reveal_mystery',
+          args: [playerId],
+          kwargs: {}
+        }
+      };
+      var url = dbName
+        ? ('/' + dbName + '/auction/console_call')
+        : '/web/dataset/call_kw';
+      fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      }).catch(function () { /* UI reveal still proceeds locally */ });
+    }
+    acMysterySetRevealed(true);
+    window.AUCTION_MYSTERY_AWAITING_REVEAL = false;
+    acMysteryRemoveGenericAvatar();
+    acMysteryHideActionButtons();
+    acMysteryShowSoldStamp(window.AUCTION_MYSTERY_SOLD_INFO);
+    acMysteryUpdateControls();
+  };
+
+  window.acMysteryMarkSold = function (soldInfo) {
+    window.AUCTION_IS_MYSTERY = acMysteryFlag() || !!window.AUCTION_IS_MYSTERY;
+    if (!window.AUCTION_IS_MYSTERY || window.AUCTION_MYSTERY_REVEALED) return false;
+    if (soldInfo) {
+      window.AUCTION_MYSTERY_SOLD_INFO = {
+        team_id: soldInfo.team_id,
+        team_name: soldInfo.team_name,
+        final_point: soldInfo.final_point
+      };
+    }
+    window.AUCTION_MYSTERY_AWAITING_REVEAL = true;
+    acMysterySetRevealed(false);
+    acMysteryEnsureGenericAvatar();
+    acMysteryHideActionButtons();
+    acMysteryUpdateControls();
+    return true;
+  };
+
+  window.acMysterySyncFromZone = function () {
+    // Caller already copied data-is-mystery / data-player-id from the prefetch HTML.
+    window.acMysteryApplyFromBody();
+  };
+
+  async function acMysteryRefreshFlagFromServer() {
+    // Legacy helper — prefer acMysteryApplyFromBody after a zone swap.
+    // If used, still avoid trusting a stale on-stage player when possible.
+    try {
+      var url = window.location.href.split('?')[0];
+      var r = await fetch(url, { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      var html = await r.text();
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      var flag = (doc.body && doc.body.getAttribute('data-is-mystery')) || '0';
+      var newId = doc.body && doc.body.getAttribute('data-player-id');
+      var curId = document.body.getAttribute('data-player-id');
+      // Only adopt server flags when the stage player matches who we are showing.
+      if (newId && curId && String(newId) === String(curId)) {
+        document.body.setAttribute('data-is-mystery', flag);
+      }
+      window.acMysteryApplyFromBody();
+    } catch (e) {
+      window.acMysteryApplyFromBody();
+    }
+  }
+
+  function acMysteryWrapChangeImage() {
+    if (typeof window.changeImage !== 'function' || window.changeImage._mysteryWrapped) return;
+    var original = window.changeImage;
+    window.changeImage = async function (skipOverlay) {
+      if (window.AUCTION_IS_MYSTERY && window.AUCTION_MYSTERY_AWAITING_REVEAL && !window.AUCTION_MYSTERY_REVEALED) {
+        return;
+      }
+      var zone = document.querySelector('[data-player-zone]');
+      // Hide stage during swap so the next identity never flashes unmasked
+      if (zone) zone.style.visibility = 'hidden';
+      try {
+        var result = await original.apply(this, arguments);
+        // Mask from body attrs set by the theme swap — never re-fetch here
+        // (re-fetch raced with stage commit and cleared mystery masking).
+        window.acMysteryApplyFromBody();
+        return result;
+      } finally {
+        if (zone) zone.style.visibility = '';
+      }
+    };
+    window.changeImage._mysteryWrapped = true;
+  }
+
+  function acMysteryBoot() {
+    window.AUCTION_IS_MYSTERY = acMysteryFlag();
+    window.AUCTION_MYSTERY_AWAITING_REVEAL = false;
+    window.AUCTION_MYSTERY_SOLD_INFO = null;
+    acMysterySetRevealed(false);
+    var revealBtn = document.getElementById('acMysteryRevealBtn');
+    if (revealBtn && revealBtn.parentNode !== document.body) {
+      document.body.appendChild(revealBtn);
+    }
+    if (window.AUCTION_IS_MYSTERY) acMysteryEnsureGenericAvatar();
+    acMysteryUpdateControls();
+    acMysteryWrapChangeImage();
+    setTimeout(acMysteryWrapChangeImage, 0);
+    setTimeout(acMysteryWrapChangeImage, 250);
+  }
+
+  // Apply mystery flag as early as possible (script may run before body exists
+  // if included late; boot handles the normal path).
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', acMysteryBoot);
+  } else {
+    acMysteryBoot();
+  }
+})();
+//]]></script>
+</template>
+</odoo>

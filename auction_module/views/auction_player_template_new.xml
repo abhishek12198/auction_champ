@@ -399,8 +399,9 @@ body[data-theme="dark"] .single-header{
   .team-single-logo{width:70px !important; height:70px !important;}
 }
     </style>
+    <t t-call="auction_module.player_mystery_critical_css"/>
   </head>
-  <body style="min-height: 100vh" t-att-data-player-id="player.id" t-att-data-next-countdown="tournament.next_player_countdown if tournament else 5">
+  <body style="min-height: 100vh" t-att-data-player-id="player.id" t-att-data-next-countdown="tournament.next_player_countdown if tournament else 5" t-att-data-is-mystery="'1' if player.tier_id and player.tier_id.mystery else '0'">
     <header class="single-header">
       <div class="py-3 text-center">
         <a href="/web" class="vn-brand">
@@ -600,7 +601,7 @@ body[data-theme="dark"] .single-header{
         // Fetch the next player first, before showing any overlay
         var html;
         try {
-          var fetchUrl = window.location.href.split('?')[0] + '?exclude=' + currentPlayerId;
+          var fetchUrl = window.location.href.split('?')[0] + '?exclude=' + currentPlayerId + '&amp;preview=1';
           var r = await fetch(fetchUrl, {cache: 'no-store'});
           if (!r.ok) throw new Error('HTTP ' + r.status);
           html = await r.text();
@@ -637,7 +638,14 @@ body[data-theme="dark"] .single-header{
         // Skip overlay when called after sold — swap player immediately
         if (skipOverlay || !overlay) {
           if (newPlayerId) document.body.setAttribute('data-player-id', newPlayerId);
+          var _mf = (newDoc.body &amp;&amp; newDoc.body.getAttribute('data-is-mystery')) || '0';
+          document.body.setAttribute('data-is-mystery', _mf);
+          document.body.removeAttribute('data-mystery-revealed');
           if (zone &amp;&amp; newZone) { zone.innerHTML = newZone.innerHTML; }
+          if (typeof window.acMysteryApplyFromBody === 'function') { window.acMysteryApplyFromBody(); }
+          if (typeof window.acCommitPlayerOnStage === 'function') {
+            await window.acCommitPlayerOnStage(newPlayerId);
+          }
           return;
         }
 
@@ -667,7 +675,14 @@ body[data-theme="dark"] .single-header{
         });
 
         if (newPlayerId) document.body.setAttribute('data-player-id', newPlayerId);
+        var _mf = (newDoc.body &amp;&amp; newDoc.body.getAttribute('data-is-mystery')) || '0';
+        document.body.setAttribute('data-is-mystery', _mf);
+        document.body.removeAttribute('data-mystery-revealed');
         if (zone &amp;&amp; newZone) { zone.innerHTML = newZone.innerHTML; }
+        if (typeof window.acMysteryApplyFromBody === 'function') { window.acMysteryApplyFromBody(); }
+        if (typeof window.acCommitPlayerOnStage === 'function') {
+          await window.acCommitPlayerOnStage(newPlayerId);
+        }
         overlay.style.opacity = '0';
         setTimeout(function() { overlay.style.display = 'none'; }, 400);
       }
@@ -904,6 +919,7 @@ body[data-theme="dark"] .single-header{
         document.documentElement.requestFullscreen().catch(function(e) { console.warn(e); });
       }
     </script>
+    <t t-call="auction_module.player_mystery_controls"/>
     <t t-call="auction_module.player_sell_modal"/>
     <footer class="vn-footer">
       <span class="vn-footer-lbl">Powered by</span>

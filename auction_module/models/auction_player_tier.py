@@ -62,6 +62,13 @@ class AuctionPlayerTier(models.Model):
         ('#ffffff', 'White'),
     ], string='Color', default='#3498db')
     is_an_icon_tier = fields.Boolean(string='Icon Tier', default=False)
+    mystery = fields.Boolean(
+        string='Mystery',
+        default=False,
+        help='When enabled, players in this tier are shown as Mystery Players on '
+             'the live auction stage (photo, name, role/position and attributes '
+             'hidden until revealed after the sale).',
+    )
     tournament_id = fields.Many2one(
         'auction.tournament',
         string='Tournament',

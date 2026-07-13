@@ -455,11 +455,12 @@
       <!-- Player → Team strip -->
       <div class="sm-transfer-row">
         <img class="sm-avatar" id="smPlayerAvatar"
-             t-att-src="'/web/image/auction.team.player/%d/photo' % player.id"
+             t-att-src="False if (player.tier_id and player.tier_id.mystery) else ('/web/image/auction.team.player/%d/photo' % player.id)"
+             t-att-style="'visibility:hidden' if (player.tier_id and player.tier_id.mystery) else None"
              alt="Player" />
         <div class="sm-player-info">
-          <strong id="smPlayerName" t-esc="player.name"/>
-          <span id="smPlayerRole" t-esc="player.role or ''"/>
+          <strong id="smPlayerName"><t t-esc="'?' if (player.tier_id and player.tier_id.mystery) else player.name"/></strong>
+          <span id="smPlayerRole"><t t-esc="'?' if (player.tier_id and player.tier_id.mystery) else (player.dominant_position_id.name if player.tournament_type == 'football' else (player.role or ''))"/></span>
         </div>
         <div class="sm-arrow">&#10145;</div>
         <div class="sm-team-logo-wrap">
@@ -553,12 +554,12 @@
 
       <!-- Countdown -->
       <div class="sm-countdown-wrap">
-        <div class="sm-countdown-label">Next player in <strong id="smCountdownNum">5</strong> seconds</div>
+        <div class="sm-countdown-label" id="smCountdownLabel">Next player in <strong id="smCountdownNum">5</strong> seconds</div>
         <div class="sm-progress-track">
           <div class="sm-progress-bar" id="smProgressBar"></div>
         </div>
       </div>
-      <button class="sm-skip-btn" onclick="smSkipToNext()">&#9654; Next Player Now</button>
+      <button class="sm-skip-btn" id="smSkipBtn" onclick="smSkipToNext()">&#9654; Next Player Now</button>
 
     </div><!-- /smSoldScreen -->
 
@@ -572,6 +573,31 @@
   var smPlayerId      = null;
   var smCountdownTimer = null;
 
+  /* Commit on-stage player for the projector after preview prefetch / countdown. */
+  window.acCommitPlayerOnStage = function(playerId) {
+    playerId = parseInt(playerId || '0', 10);
+    if (!playerId) return Promise.resolve();
+    var parts = (window.location.pathname || '').split('/').filter(Boolean);
+    var dbName = parts.length ? parts[0] : '';
+    var payload = {
+      jsonrpc: '2.0', method: 'call', id: Date.now(),
+      params: {
+        model: 'auction.team.player',
+        method: 'action_set_on_stage',
+        args: [[playerId]],
+        kwargs: {}
+      }
+    };
+    var url = dbName
+      ? ('/' + dbName + '/auction/console_call')
+      : '/web/dataset/call_kw';
+    return fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    }).catch(function() { /* projector will catch up on next real navigation */ });
+  };
+
   /* ── Open / Close ──────────────────────────────────────────── */
   window.openSellModal = function() {
     smPlayerId     = parseInt(document.body.getAttribute('data-player-id'));
@@ -579,15 +605,30 @@
     smTeamsData    = [];
     if (smCountdownTimer) { clearInterval(smCountdownTimer); smCountdownTimer = null; }
 
+    var isMysteryHidden = ((document.body.getAttribute('data-is-mystery') === '1') || !!window.AUCTION_IS_MYSTERY)
+      && !window.AUCTION_MYSTERY_REVEALED;
+
     // Sync player photo + info to whoever is currently on screen
     var smAvatar = document.getElementById('smPlayerAvatar');
-    if (smAvatar) smAvatar.src = '/web/image/auction.team.player/' + smPlayerId + '/photo';
+    if (smAvatar) {
+      if (isMysteryHidden) {
+        smAvatar.removeAttribute('src');
+        smAvatar.alt = 'Mystery Player';
+        smAvatar.style.visibility = 'hidden';
+      } else {
+        smAvatar.style.visibility = '';
+        smAvatar.src = '/web/image/auction.team.player/' + smPlayerId + '/photo';
+      }
+    }
     var zone = document.querySelector('[data-player-zone]');
-    if (zone) {
+    var modalName = document.getElementById('smPlayerName');
+    var modalRole = document.getElementById('smPlayerRole');
+    if (isMysteryHidden) {
+      if (modalName) modalName.textContent = '?';
+      if (modalRole) modalRole.textContent = '?';
+    } else if (zone) {
       var nameEl  = zone.querySelector('[data-sm-name]');
       var roleEl  = zone.querySelector('[data-sm-role]');
-      var modalName = document.getElementById('smPlayerName');
-      var modalRole = document.getElementById('smPlayerRole');
       if (nameEl  && modalName) modalName.textContent = nameEl.textContent.trim();
       if (roleEl  && modalRole) modalRole.textContent = roleEl.textContent.trim();
     }
@@ -621,6 +662,15 @@
     document.getElementById('sellModal').classList.remove('open');
     document.getElementById('smSoldScreen').classList.remove('visible');
     document.getElementById('smFormPanel').style.display = 'block';
+    // Mystery players stay on stage until revealed — do not advance yet.
+    var isMystery = (document.body.getAttribute('data-is-mystery') === '1')
+      || !!window.AUCTION_IS_MYSTERY;
+    if (isMystery && !window.AUCTION_MYSTERY_REVEALED && typeof window.acMysteryMarkSold === 'function') {
+      window.AUCTION_IS_MYSTERY = true;
+      window.acMysteryMarkSold(window._acMysteryPendingSold || null);
+      window._acMysteryPendingSold = null;
+      return;
+    }
     if (typeof changeImage === 'function') { changeImage(true); } else { window.location.reload(); }
   };
 
@@ -784,9 +834,27 @@
     // Hide form, show sold screen
     document.getElementById('smFormPanel').style.display = 'none';
     var soldScreen = document.getElementById('smSoldScreen');
+    var isMystery = ((document.body.getAttribute('data-is-mystery') === '1') || !!window.AUCTION_IS_MYSTERY)
+      && !window.AUCTION_MYSTERY_REVEALED;
+    if (isMystery) window.AUCTION_IS_MYSTERY = true;
+
+    // Keep sold details for mystery reveal stamp
+    window._acMysteryPendingSold = {
+      team_id: result.team_id,
+      team_name: result.team_name,
+      final_point: result.final_point
+    };
 
     // Fill in data
-    document.getElementById('smSoldPhoto').src     = '/web/image/auction.team.player/' + result.player_id + '/photo';
+    var soldPhoto = document.getElementById('smSoldPhoto');
+    if (isMystery) {
+      soldPhoto.removeAttribute('src');
+      soldPhoto.alt = 'Mystery Player';
+      soldPhoto.style.visibility = 'hidden';
+    } else {
+      soldPhoto.style.visibility = '';
+      soldPhoto.src = '/web/image/auction.team.player/' + result.player_id + '/photo';
+    }
     document.getElementById('smSoldTeamLogo').src  = '/web/image/auction.team/' + result.team_id + '/logo';
     document.getElementById('smSoldTeamName').textContent = result.team_name;
     document.getElementById('smSoldPoints').textContent   = result.final_point;
@@ -798,14 +866,29 @@
 
     soldScreen.classList.add('visible');
 
+    var countdownLabel = document.getElementById('smCountdownLabel');
+    var skipBtn = document.getElementById('smSkipBtn');
+    if (isMystery) {
+      if (countdownLabel) {
+        countdownLabel.innerHTML = 'Stay on this player — reveal after celebration (<strong id="smCountdownNum">5</strong>s)';
+      }
+      if (skipBtn) skipBtn.innerHTML = '&#9654; Continue to Reveal';
+    } else {
+      if (countdownLabel) {
+        countdownLabel.innerHTML = 'Next player in <strong id="smCountdownNum">5</strong> seconds';
+      }
+      if (skipBtn) skipBtn.innerHTML = '&#9654; Next Player Now';
+    }
+
     // ── Pre-fetch the next player HTML in the background while countdown runs.
     // On cloud the fetch takes 300-800ms; doing it during the 5-second sold
     // animation means the HTML is ready the instant the countdown hits zero.
+    // Skipped for mystery — we remain on the same player until reveal.
     var _preFetchedHtml = null;
     var _preFetchDone   = false;
     var _preFetchId     = document.body.getAttribute('data-player-id');
-    if (_preFetchId) {
-      var _prefetchUrl = window.location.href.split('?')[0] + '?exclude=' + _preFetchId;
+    if (!isMystery && _preFetchId) {
+      var _prefetchUrl = window.location.href.split('?')[0] + '?exclude=' + _preFetchId + '&preview=1';
       fetch(_prefetchUrl, { cache: 'no-store' })
         .then(function(r) { return r.ok ? r.text() : null; })
         .then(function(html) { _preFetchedHtml = html; _preFetchDone = true; })
@@ -817,6 +900,18 @@
     // Advance to the next player using the pre-fetched HTML when available,
     // otherwise fall back to calling changeImage() which will re-fetch.
     function smAdvance() {
+      var stillMystery = ((document.body.getAttribute('data-is-mystery') === '1') || !!window.AUCTION_IS_MYSTERY)
+        && !window.AUCTION_MYSTERY_REVEALED;
+      if (stillMystery && typeof window.acMysteryMarkSold === 'function') {
+        window.AUCTION_IS_MYSTERY = true;
+        window.acMysteryMarkSold(window._acMysteryPendingSold || {
+          team_id: result.team_id,
+          team_name: result.team_name,
+          final_point: result.final_point
+        });
+        window._acMysteryPendingSold = null;
+        return;
+      }
       if (_preFetchedHtml) {
         var parser     = new DOMParser();
         var newDoc     = parser.parseFromString(_preFetchedHtml, 'text/html');
@@ -825,7 +920,18 @@
         var newZone    = newDoc.querySelector('[data-player-zone]');
         if (newId && newId !== _preFetchId && zone && newZone) {
           document.body.setAttribute('data-player-id', newId);
+          var mysteryFlag = newDoc.body.getAttribute('data-is-mystery') || '0';
+          document.body.setAttribute('data-is-mystery', mysteryFlag);
+          document.body.removeAttribute('data-mystery-revealed');
           zone.innerHTML = newZone.innerHTML;
+          if (typeof window.acMysteryApplyFromBody === 'function') {
+            window.acMysteryApplyFromBody();
+          } else if (typeof window.acMysterySyncFromZone === 'function') {
+            window.acMysterySyncFromZone(newZone);
+          }
+          if (typeof window.acCommitPlayerOnStage === 'function') {
+            window.acCommitPlayerOnStage(newId);
+          }
           return;
         }
       }
@@ -849,7 +955,8 @@
 
     smCountdownTimer = setInterval(function() {
       remaining -= 1;
-      document.getElementById('smCountdownNum').textContent = remaining;
+      var numEl = document.getElementById('smCountdownNum');
+      if (numEl) numEl.textContent = remaining;
       if (remaining <= 0) {
         clearInterval(smCountdownTimer);
         smCountdownTimer = null;
@@ -884,6 +991,13 @@
   window.addEventListener('storage', function (e) {
     if (e.key === 'auction:player_sold' && e.newValue) {
       try {
+        // Mystery players must stay on stage until revealed.
+        if (window.AUCTION_IS_MYSTERY && !window.AUCTION_MYSTERY_REVEALED) {
+          if (typeof window.acMysteryMarkSold === 'function') {
+            window.acMysteryMarkSold(window._acMysteryPendingSold || null);
+          }
+          return;
+        }
         // Give the server a brief moment to commit the state change
         setTimeout(function () {
           if (typeof changeImage === 'function') {

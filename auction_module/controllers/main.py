@@ -280,6 +280,9 @@ class Auction(http.Controller):
                 'name': p.name or '',
                 'role': p.role or '',
                 'tier_color': p.tier_color or '',
+                'tier_name': p.tier_id.name if p.tier_id else '',
+                'is_mystery': bool(p.tier_id and p.tier_id.mystery),
+                'mystery_revealed': bool(p.mystery_revealed),
                 'state': p.state,
                 'team_name': p.assigned_team_id.name if p.state == 'sold' and p.assigned_team_id else '',
                 'team_logo': p.assigned_team_id.logo.decode('utf-8') if p.state == 'sold' and p.assigned_team_id and p.assigned_team_id.logo else '',
@@ -395,6 +398,7 @@ class Auction(http.Controller):
         'auction.team.player': {
             'action_unsold', 'action_auction', 'action_clear_stage',
             'action_set_on_stage', 'get_sell_teams_data', 'action_sell_from_web',
+            'action_reveal_mystery',
         },
         'auction.tournament': {'set_dice_state'},
         'auction.auction': {'search_read'},
@@ -485,6 +489,8 @@ class Auction(http.Controller):
             'sold_points': 0,
             'base_price': int(player.effective_base_price or player.base_price or 0),
             'icon_player': bool(player.icon_player),
+            'is_mystery': bool(player.tier_id and player.tier_id.mystery),
+            'mystery_revealed': bool(player.mystery_revealed),
         }
 
         if player.state == 'sold' and player.assigned_team_id:
@@ -497,6 +503,32 @@ class Auction(http.Controller):
             result['sold_points'] = auction_line.points if auction_line else 0
 
         result.update(_football_display_payload(player))
+
+        # Redact identity for unrevealed mystery players (drawer / projector sync)
+        if result['is_mystery'] and not result['mystery_revealed']:
+            result.update({
+                'name': '???',
+                'role': '???',
+                'sl_no': 0,
+                'photo': '',
+                'batting_style': '',
+                'bowling_style': '',
+                'contact': '',
+                'masked_contact': '',
+                'icon_player': False,
+                'dominant_position': '???',
+                'preferred_foot': '',
+                'secondary_positions': '',
+                'age': '',
+                'work_rate': '',
+                'use_other_attributes': False,
+                'other_attributes': [],
+                'playing_styles': [],
+                'strengths': [],
+            })
+            # Keep tier name hidden while locked (base price stays)
+            if result.get('tier_id'):
+                result['tier_id'] = [result['tier_id'][0], 'Mystery']
         return result
 
     @http.route('/<string:db_name>/auction/player_clear_stage/<int:player_id>',
@@ -750,6 +782,7 @@ class Auction(http.Controller):
                     [('active', '=', True)], limit=1
                 )
             exclude_id = kwargs.get('exclude', 0)
+            preview = str(kwargs.get('preview', '') or '') in ('1', 'true', 'True')
 
             # If no explicit "next player" request, resume the player already on stage
             if not exclude_id:
@@ -760,11 +793,14 @@ class Auction(http.Controller):
             else:
                 player = None
 
-            # No on-stage player (or caller wants next) → pick one
+            # No on-stage player (or caller wants next) → pick one.
+            # preview=1 (prefetch during countdown) must not flip is_on_stage
+            # so the projector keeps showing the current player until commit.
             if not player:
                 player = request.env['auction.team.player'].sudo().get_random_player(
                     exclude_id=exclude_id,
                     tournament_id=tournament_id,
+                    commit_stage=not preview,
                 )
             if player:
                 auction_ids = request.env['auction.auction'].sudo().search(
@@ -2068,9 +2104,11 @@ class Auction(http.Controller):
                     [('active', '=', True)], limit=1)
             theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
             sport = (tournament.tournament_type or 'cricket') if tournament else 'cricket'
+            mode = 'light' if theme in ('lemon', 'strawberry') else 'dark'
             html = request.render('auction_module.projector_template', {
                 'tournament': tournament,
                 'theme': theme,
+                'mode': mode,
                 'sport': sport,
                 'db_name': db_name,
                 'tournament_slug': tournament_slug or (tournament.slug if tournament else ''),
@@ -2102,12 +2140,29 @@ class Auction(http.Controller):
                     domain.append(('tournament_id', '=', tournament.id))
                 player = request.env['auction.team.player'].sudo().search(domain, limit=1)
             if not player:
+                dice_state = tournament.dice_state if tournament else 'idle'
+                dice_result = tournament.dice_result if tournament else 0
+                dice_mystery = False
+                if tournament and dice_result:
+                    dice_player = request.env['auction.team.player'].sudo().search([
+                        ('tournament_id', '=', tournament.id),
+                        ('sl_no', '=', int(dice_result)),
+                    ], limit=1)
+                    if (dice_player and dice_player.tier_id and dice_player.tier_id.mystery
+                            and not dice_player.mystery_revealed):
+                        dice_mystery = True
                 return {
                     'player': None,
                     'dice': {
-                        'state': tournament.dice_state if tournament else 'idle',
-                        'result': tournament.dice_result if tournament else 0,
+                        'state': dice_state,
+                        'result': dice_result,
+                        'is_mystery': dice_mystery,
                     },
+                    'progress': _pj_progress(tournament),
+                    'teams': _pj_teams(tournament, db_name),
+                    'recent_bids': _pj_recent_bids(tournament, db_name),
+                    'top_purse': _pj_top_purse(tournament),
+                    'auction_meta': _pj_auction_meta(tournament),
                 }
             photo = ''
             photo_url = ''
@@ -2129,6 +2184,8 @@ class Auction(http.Controller):
                 auction_line = request.env['auction.auction.player'].sudo().search(
                     [('player_id', '=', player.id)], limit=1)
                 sold_points = auction_line.points if auction_line else 0
+            is_mystery = bool(player.tier_id and player.tier_id.mystery)
+            mystery_revealed = bool(player.mystery_revealed)
             player_payload = {
                 'id': player.id,
                 'sl_no': player.sl_no or '',
@@ -2146,11 +2203,55 @@ class Auction(http.Controller):
                 'team_name': team_name,
                 'team_logo': team_logo,
                 'team_logo_url': team_logo_url,
+                'is_mystery': is_mystery,
+                'mystery_revealed': mystery_revealed,
             }
             player_payload.update(_football_display_payload(player))
+            if is_mystery and not mystery_revealed:
+                player_payload.update({
+                    'name': '???',
+                    'role': '???',
+                    'sl_no': '?',
+                    'photo': '',
+                    'photo_url': '/auction_module/static/img/default_icon.png',
+                    'tier_name': '',
+                    'tier_color': '',
+                    'batting_style': '',
+                    'bowling_style': '',
+                    'dominant_position': '???',
+                    'preferred_foot': '',
+                    'secondary_positions': '',
+                    'age': '',
+                    'work_rate': '',
+                    'use_other_attributes': False,
+                    'other_attributes': [],
+                    'playing_styles': [],
+                    'strengths': [],
+                })
+            leading_team_id = None
+            if player.assigned_team_id and (state_override or player.state) == 'sold':
+                leading_team_id = player.assigned_team_id.id
+            # Live leading bid (auctioneer extension) when present
+            if hasattr(player, 'current_bid') and player.current_bid:
+                player_payload['current_bid'] = int(player.current_bid or 0)
+                cteam = getattr(player, 'current_bid_team_id', False)
+                if cteam:
+                    player_payload['current_bid_team'] = {
+                        'id': cteam.id,
+                        'name': cteam.name or '',
+                        'logo_url': (
+                            '/%s/auction/public/image/auction.team/%d/logo' % (db_name, cteam.id)
+                            if cteam.logo else ''
+                        ),
+                    }
             return {
                 'player': player_payload,
-                'dice': {'state': 'idle', 'result': 0},
+                'dice': {'state': 'idle', 'result': 0, 'is_mystery': False},
+                'progress': _pj_progress(tournament, current_player=player),
+                'teams': _pj_teams(tournament, db_name, leading_team_id=leading_team_id),
+                'recent_bids': _pj_recent_bids(tournament, db_name, player=player),
+                'top_purse': _pj_top_purse(tournament),
+                'auction_meta': _pj_auction_meta(tournament),
             }
 
     @http.route('/auction/showcase', type='http', auth='user', website=True)
@@ -2497,8 +2598,33 @@ class Auction(http.Controller):
                     'base_price': base_price,
                     'batting_style': current_player.batting_style or '',
                     'bowling_style': current_player.bowling_style or '',
+                    'is_mystery': bool(current_player.tier_id and current_player.tier_id.mystery),
+                    'mystery_revealed': bool(current_player.mystery_revealed),
                 }
                 result['current_player'].update(_football_display_payload(current_player))
+
+                # Mystery players stay redacted on the live board until revealed
+                # on the auction stage after the sale.
+                if (result['current_player']['is_mystery']
+                        and not result['current_player']['mystery_revealed']):
+                    result['current_player'].update({
+                        'name': '???',
+                        'photo_url': '/auction_module/static/img/default_icon.png',
+                        'role': '???',
+                        'tier_name': '',
+                        'sl_no': 0,
+                        'icon_player': False,
+                        'batting_style': '',
+                        'bowling_style': '',
+                        'dominant_position': '???',
+                        'preferred_foot': '',
+                        'secondary_positions': '',
+                        'age': '',
+                        'use_other_attributes': False,
+                        'other_attributes': [],
+                        'playing_styles': [],
+                        'strengths': [],
+                    })
 
                 # ── If sold, get final points from auction line ──
                 if current_player.state == 'sold' and current_player.assigned_team_id:
@@ -2516,32 +2642,64 @@ class Auction(http.Controller):
             history = env['auction.history'].sudo().search(
                 [('tournament_id', '=', tournament.id)], order='create_date desc', limit=5
             )
-            result['recent_history'] = [
-                {
-                    'message': rec.message or '',
+            # Names that must stay hidden until Reveal (covers older history rows
+            # that were written with the real name before this fix).
+            hidden_mystery = env['auction.team.player'].sudo().search([
+                ('tournament_id', '=', tournament.id),
+                ('tier_id.mystery', '=', True),
+                ('mystery_revealed', '=', False),
+                ('state', '=', 'sold'),
+            ])
+            hidden_names = {p.name for p in hidden_mystery if p.name}
+
+            recent_history = []
+            for rec in history:
+                msg = rec.message or ''
+                photo_url = pub_img('auction.history', rec.id, 'player_photo') if rec.player_photo else ''
+                p = rec.player_id
+                must_hide = (
+                    (p and p.tier_id and p.tier_id.mystery and not p.mystery_revealed)
+                    or any(n in msg for n in hidden_names)
+                )
+                if must_hide:
+                    for n in hidden_names:
+                        if n and n in msg:
+                            msg = msg.replace(n, '???', 1)
+                    if p and p.name and p.name in msg:
+                        msg = msg.replace(p.name, '???', 1)
+                    photo_url = '/auction_module/static/img/default_icon.png'
+                recent_history.append({
+                    'message': msg,
                     'team_logo_url': pub_img('auction.team', rec.team_id.id, 'logo') if rec.team_id and rec.team_id.logo else '',
-                    'player_photo_url': pub_img('auction.history', rec.id, 'player_photo') if rec.player_photo else '',
+                    'player_photo_url': photo_url,
                     'timestamp': rec.create_date.replace(tzinfo=pytz.utc).astimezone(pytz.timezone('Asia/Kolkata')).strftime('%I:%M %p') if rec.create_date else '',
-                }
-                for rec in history
-            ]
+                })
+            result['recent_history'] = recent_history
 
             # ── Top 5 most expensive sold players (MVP board) ──
             top_sold = env['auction.auction.player'].sudo().search(
                 [('auction_id.tournament_id', '=', tournament.id)], order='points desc', limit=5
             )
-            result['top_players'] = [
-                {
+            top_players = []
+            for idx, rec in enumerate(top_sold):
+                p = rec.player_id
+                name = p.name or '' if p else ''
+                photo = pub_img('auction.team.player', p.id, 'photo') if p and p.photo else ''
+                role = p.role or '' if p else ''
+                if p and p.tier_id and p.tier_id.mystery and not p.mystery_revealed:
+                    name = '???'
+                    photo = '/auction_module/static/img/default_icon.png'
+                    role = '???'
+                top_players.append({
                     'rank': idx + 1,
-                    'player_name': rec.player_id.name or '',
-                    'player_photo_url': pub_img('auction.team.player', rec.player_id.id, 'photo') if rec.player_id and rec.player_id.photo else '',
-                    'role': rec.player_id.role or '',
+                    'player_name': name,
+                    'player_photo_url': photo,
+                    'role': role,
                     'team_name': rec.auction_id.team_id.name if rec.auction_id and rec.auction_id.team_id else '',
                     'team_logo_url': pub_img('auction.team', rec.auction_id.team_id.id, 'logo') if rec.auction_id and rec.auction_id.team_id and rec.auction_id.team_id.logo else '',
                     'points': rec.points,
-                }
-                for idx, rec in enumerate(top_sold)
-            ]
+                })
+            result['top_players'] = top_players
 
             # ── Teams (from auctions in this tournament) ──
             is_football = (tournament.tournament_type == 'football')
@@ -2565,7 +2723,7 @@ class Auction(http.Controller):
                                 # Derive abbreviation from name words when code is empty
                                 parts = [w for w in pos_name.replace('-', ' ').split() if w]
                                 pos_code = ''.join(w[0] for w in parts).upper()[:3]
-                        players_payload.append({
+                        entry = {
                             'name': p.name or '',
                             'photo_url': pub_img('auction.team.player', p.id, 'photo')
                                          if p.photo else '',
@@ -2573,7 +2731,17 @@ class Auction(http.Controller):
                             'position_code': pos_code,
                             'position_name': pos_name,
                             'points': line.points,
-                        })
+                        }
+                        # Keep mystery buys hidden in team lists until revealed
+                        if (p.tier_id and p.tier_id.mystery and not p.mystery_revealed):
+                            entry.update({
+                                'name': '???',
+                                'photo_url': '/auction_module/static/img/default_icon.png',
+                                'role': '???',
+                                'position_code': '?',
+                                'position_name': '???',
+                            })
+                        players_payload.append(entry)
                     result['teams'].append({
                         'id': team.id,
                         'name': team.name or '',
@@ -3865,6 +4033,148 @@ class Auction(http.Controller):
                     'res_company': res_company,
                 }
             )
+
+
+def _pj_progress(tournament, current_player=None):
+    """Audience progress strip: Player X of Y (read-only, no state changes)."""
+    if not tournament:
+        return {'current': 0, 'total': 0, 'label': ''}
+    Player = request.env['auction.team.player'].sudo()
+    domain = [('tournament_id', '=', tournament.id), ('icon_player', '=', False)]
+    total = Player.search_count(domain)
+    done = Player.search_count(domain + [('state', 'in', ('sold', 'unsold'))])
+    current = done
+    if current_player:
+        if current_player.state in ('sold', 'unsold'):
+            current = max(done, 1)
+        else:
+            current = min(done + 1, total) if total else 0
+    label = ('%s of %s' % (current, total)) if total else ''
+    return {'current': current, 'total': total, 'label': label}
+
+
+def _pj_auction_meta(tournament):
+    """Auction date/venue for the projector header (live-polled)."""
+    if not tournament:
+        return {'auction_date': '', 'auction_venue': ''}
+    date_label = ''
+    if tournament.auction_date:
+        try:
+            date_label = tournament.auction_date.strftime('%d %b %Y')
+        except Exception:
+            date_label = str(tournament.auction_date)
+    return {
+        'auction_date': date_label,
+        'auction_venue': (tournament.auction_venue or '').strip(),
+    }
+
+
+def _pj_teams(tournament, db_name, leading_team_id=None):
+    """Team logo strip + purse for the projector (read-only)."""
+    if not tournament:
+        return []
+    purse_by_team = {}
+    for auc in request.env['auction.auction'].sudo().search([('tournament_id', '=', tournament.id)]):
+        if auc.team_id:
+            purse_by_team[auc.team_id.id] = int(auc.remaining_points or 0)
+    out = []
+    for team in tournament.team_ids:
+        logo_url = ''
+        if team.logo:
+            logo_url = '/%s/auction/public/image/auction.team/%d/logo' % (db_name, team.id)
+        out.append({
+            'id': team.id,
+            'name': team.name or '',
+            'logo_url': logo_url,
+            'leading': bool(leading_team_id and team.id == leading_team_id),
+            'remaining_points': purse_by_team.get(team.id, 0),
+        })
+    return out
+
+
+def _pj_top_purse(tournament):
+    """Highest remaining purse among teams (audience 'balance' readout)."""
+    if not tournament:
+        return {'amount': 0, 'team_name': '', 'team_logo_url': ''}
+    best = None
+    for auc in request.env['auction.auction'].sudo().search([('tournament_id', '=', tournament.id)]):
+        if not auc.team_id:
+            continue
+        pts = int(auc.remaining_points or 0)
+        if best is None or pts > best[0]:
+            best = (pts, auc.team_id)
+    if not best:
+        return {'amount': 0, 'team_name': '', 'team_logo_url': ''}
+    team = best[1]
+    db_name = request.env.cr.dbname
+    logo_url = ''
+    if team.logo:
+        logo_url = '/%s/auction/public/image/auction.team/%d/logo' % (db_name, team.id)
+    return {
+        'amount': best[0],
+        'team_name': team.name or '',
+        'team_logo_url': logo_url,
+    }
+
+
+def _pj_recent_bids(tournament, db_name, player=None):
+    """Last bids for the right rail: live bid.log → current bid → recent sales."""
+    import re
+    out = []
+    if not tournament:
+        return out
+
+    def _team_logo(team):
+        if team and team.logo:
+            return '/%s/auction/public/image/auction.team/%d/logo' % (db_name, team.id)
+        return ''
+
+    if player and request.env.registry.get('auction.bid.log'):
+        logs = request.env['auction.bid.log'].sudo().search([
+            ('tournament_id', '=', tournament.id),
+            ('player_id', '=', player.id),
+        ], order='id desc', limit=5)
+        for log in logs:
+            team = log.team_id
+            out.append({
+                'team_name': team.name if team else '',
+                'team_logo_url': _team_logo(team),
+                'points': int(log.bid_amount or 0),
+            })
+
+    if (not out and player and hasattr(player, 'current_bid') and player.current_bid
+            and getattr(player, 'current_bid_team_id', False)):
+        team = player.current_bid_team_id
+        out.append({
+            'team_name': team.name or '',
+            'team_logo_url': _team_logo(team),
+            'points': int(player.current_bid or 0),
+        })
+
+    if not out:
+        history = request.env['auction.history'].sudo().search(
+            [('tournament_id', '=', tournament.id)], order='create_date desc', limit=5
+        )
+        for rec in history:
+            pts = 0
+            msg = rec.message or ''
+            m = re.search(r'for\s+(\d+)\s+points?', msg, re.I)
+            if m:
+                pts = int(m.group(1))
+            team = rec.team_id
+            name = team.name if team else ''
+            if not name and msg:
+                m2 = re.search(r'sold to the\s+(.+?)\s+for\s+', msg, re.I)
+                if m2:
+                    name = m2.group(1).strip()
+            if not name and 'unsold' in msg.lower():
+                name = 'Unsold'
+            out.append({
+                'team_name': name or '—',
+                'team_logo_url': _team_logo(team),
+                'points': pts,
+            })
+    return out
 
 
 def _football_display_payload(player):

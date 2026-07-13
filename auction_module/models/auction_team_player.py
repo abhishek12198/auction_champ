@@ -408,6 +408,19 @@ class AuctionTeamPlayer(models.Model):
     tier_id = fields.Many2one('auction.player.tier', string='Tier')
     previous_tier_id = fields.Many2one('auction.player.tier', string='Previous Tier', help='Stores the tier before the player was promoted to Icon Player, used to restore on revoke.')
     tier_color = fields.Selection(related='tier_id.color', string='Tier Color')
+    is_mystery = fields.Boolean(
+        string='Mystery Player',
+        related='tier_id.mystery',
+        store=False,
+        help='True when this player belongs to a Mystery tier.',
+    )
+    mystery_revealed = fields.Boolean(
+        string='Mystery Revealed',
+        default=False,
+        copy=False,
+        help='Set when a Mystery player is revealed on the auction stage after sale. '
+             'Used by the live board to know when identity may be shown.',
+    )
     base_price = fields.Integer(string='Base Price')
     effective_base_price = fields.Integer(
         string='Effective Base Price',
@@ -761,11 +774,15 @@ class AuctionTeamPlayer(models.Model):
 
         # Execute the sell
         auction_line_data = {'player_id': player.id, 'points': final_point}
-        message = '%s sold to %s for %d points!' % (player.name, auction.team_id.name, final_point)
+        is_mystery = bool(player.tier_id and player.tier_id.mystery)
+        display_name = '???' if is_mystery else (player.name or '')
+        message = '%s sold to %s for %d points!' % (display_name, auction.team_id.name, final_point)
 
         auction.player_ids = [(0, 0, auction_line_data)]
         player.assigned_team_id = auction.team_id.id
         player.state = 'sold'
+        if is_mystery:
+            player.mystery_revealed = False
         # is_on_stage stays True so the live board can show the SOLD stamp
         # until the next player is called via get_random_player()
         player.create_auction_history(auction.team_id.id, message, tournament_id=player.tournament_id.id, player=player)
@@ -774,22 +791,72 @@ class AuctionTeamPlayer(models.Model):
         if player.tournament_id:
             display_secs = player.tournament_id.sold_display_seconds or 5
             from datetime import timedelta
+            # Mystery stays on stage until Reveal — keep stamp active long enough
+            stamp_secs = (display_secs + 3) if not is_mystery else max(display_secs + 3, 3600)
             player.tournament_id.sudo().write({
                 'stamp_player_id': player.id,
                 'stamp_state': 'sold',
-                'stamp_expires_at': fields.Datetime.now() + timedelta(seconds=display_secs + 3),
+                'stamp_expires_at': fields.Datetime.now() + timedelta(seconds=stamp_secs),
             })
 
-        self.env.user.notify_success(message=message, title='CONGRATULATIONS!')
+        # Notify operators with real name; live board uses the ??? history message
+        notify_msg = '%s sold to %s for %d points!' % (player.name, auction.team_id.name, final_point)
+        self.env.user.notify_success(message=notify_msg, title='CONGRATULATIONS!')
         return {
             'success': True,
-            'message': message,
+            'message': notify_msg,
             'player_id': player.id,
             'player_name': player.name,
             'team_id': auction.team_id.id,
             'team_name': auction.team_id.name,
             'final_point': final_point,
             'display_seconds': player.tournament_id.sold_display_seconds if player.tournament_id else 5,
+        }
+
+    @api.model
+    def action_reveal_mystery(self, player_id=None):
+        """Reveal a Mystery player's identity after sale (display_auction + live board).
+
+        Prefer calling with ``player_id`` from the web console_call endpoint.
+        Returns ``{'success': True, 'player_name': ...}`` on success.
+        """
+        if not player_id:
+            return {'success': False, 'error': 'missing player'}
+        player = self.browse(int(player_id))
+        if not player.exists():
+            return {'success': False, 'error': 'player not found'}
+        if not (player.tier_id and player.tier_id.mystery):
+            return {'success': False, 'error': 'not a mystery player'}
+        player.sudo().write({'mystery_revealed': True})
+        # Unmask live-board transaction history for this player
+        try:
+            History = self.env['auction.history'].sudo()
+            histories = History.search([('player_id', '=', player.id)])
+            for hist in histories:
+                msg = hist.message or ''
+                if '???' in msg:
+                    msg = msg.replace('???', player.name or '???', 1)
+                hist.write({
+                    'message': msg,
+                    'player_photo': player.photo,
+                })
+        except Exception:
+            # History unmask is best-effort — reveal flag is already set
+            _logger = logging.getLogger(__name__)
+            _logger.exception('Failed to unmask mystery history for player %s', player.id)
+        # Keep sold stamp alive briefly so live board can show the reveal
+        if player.tournament_id and player.state == 'sold':
+            from datetime import timedelta
+            display_secs = player.tournament_id.sold_display_seconds or 5
+            player.tournament_id.sudo().write({
+                'stamp_player_id': player.id,
+                'stamp_state': 'sold',
+                'stamp_expires_at': fields.Datetime.now() + timedelta(seconds=display_secs + 3),
+            })
+        return {
+            'success': True,
+            'player_id': player.id,
+            'player_name': player.name or '',
         }
 
     def print_player_cards(self):
@@ -1489,7 +1556,14 @@ class AuctionTeamPlayer(models.Model):
         players = self.search(players_domain, order='sl_no asc')
         return players
 
-    def get_random_player(self, exclude_id=0, tournament_id=False):
+    def get_random_player(self, exclude_id=0, tournament_id=False, commit_stage=True):
+        """Pick the next auction player.
+
+        :param commit_stage: When False (preview/prefetch), select the player for
+            HTML rendering without mutating ``is_on_stage``. The operator UI
+            commits the stage later via ``action_set_on_stage`` when the countdown
+            ends, so the projector does not jump early.
+        """
         tournament = tournament_id or self.env['auction.tournament'].search([('active', '=', True)], limit=1)
         random_player = False
 
@@ -1517,6 +1591,9 @@ class AuctionTeamPlayer(models.Model):
             else:
                 random_player = self.browse(candidates[0])
 
+        if not commit_stage:
+            return random_player
+
         # ── Stage tracking: clear previous on-stage for this tournament only ──
         on_stage_domain = [('is_on_stage', '=', True)]
         if tournament:
@@ -1525,7 +1602,7 @@ class AuctionTeamPlayer(models.Model):
         if on_stage:
             on_stage.sudo().write({'is_on_stage': False})
         if random_player:
-            random_player.sudo().write({'is_on_stage': True})
+            random_player.sudo().write({'is_on_stage': True, 'mystery_revealed': False})
 
         # ── Clear stamp only when it has already expired ──
         # A still-valid SOLD/UNSOLD stamp MUST survive here: the sold screen
@@ -1552,15 +1629,25 @@ class AuctionTeamPlayer(models.Model):
         if all_on_stage:
             all_on_stage.sudo().write({'is_on_stage': False})
         for player in self:
-            player.sudo().write({'is_on_stage': True})
-            # Clear any active stamp so the live board switches to this player immediately
+            vals = {'is_on_stage': True}
+            # Reset mystery mask only for a fresh auction appearance.
+            # Sold + already-revealed players must stay revealed.
+            if player.state != 'sold':
+                vals['mystery_revealed'] = False
+            player.sudo().write(vals)
+            # Clear stamp only when it has already expired — same rule as
+            # get_random_player. An active SOLD/UNSOLD stamp must survive so the
+            # projector/live board finish the celebration even after the next
+            # player is committed underneath.
             tournament = player.tournament_id
             if tournament and tournament.stamp_player_id:
-                tournament.sudo().write({
-                    'stamp_player_id': False,
-                    'stamp_state': False,
-                    'stamp_expires_at': False,
-                })
+                now_dt = fields.Datetime.now()
+                if not tournament.stamp_expires_at or tournament.stamp_expires_at <= now_dt:
+                    tournament.sudo().write({
+                        'stamp_player_id': False,
+                        'stamp_state': False,
+                        'stamp_expires_at': False,
+                    })
         return {'success': True}
 
     def action_clear_stage(self):
@@ -1571,6 +1658,17 @@ class AuctionTeamPlayer(models.Model):
             player.sudo().write({'is_on_stage': False})
             tournament = player.tournament_id
             if tournament:
+                # Keep SOLD stamp for unrevealed mystery so projector/live board
+                # continue showing ??? until Reveal is pressed.
+                keep_mystery_stamp = (
+                    player.tier_id and player.tier_id.mystery
+                    and not player.mystery_revealed
+                    and player.state == 'sold'
+                    and tournament.stamp_player_id
+                    and tournament.stamp_player_id.id == player.id
+                )
+                if keep_mystery_stamp:
+                    continue
                 tournament.sudo().write({
                     'stamp_player_id': False,
                     'stamp_state': False,
@@ -1754,20 +1852,26 @@ class AuctionTeamPlayer(models.Model):
         self.env.user.notify_success(message)
 
     def create_auction_history(self, team_id, message, tournament_id, player):
+        is_mystery_hidden = bool(
+            player.tier_id and player.tier_id.mystery and not player.mystery_revealed
+        )
         self.env['auction.history'].create(
             {
                 'team_id': team_id,
+                'player_id': player.id,
                 'message': message,
                 'tournament_id': tournament_id,
-                'player_photo': player.photo
+                # Hide photo on live board until mystery reveal
+                'player_photo': False if is_mystery_hidden else player.photo,
             }
         )
 
     def create_unsold_auction_history(self, message, tournament_id, player):
         self.env['auction.history'].create(
             {
+                'player_id': player.id,
                 'message': message,
                 'tournament_id': tournament_id,
-                'player_photo': player.photo
+                'player_photo': player.photo,
             }
         )
