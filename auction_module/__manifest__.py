@@ -38,7 +38,7 @@
 
 {
     'name' : 'Auction Champ',
-    'version' : '1.5.15',
+    'version' : '1.5.19',
     'summary': 'Sports Auction module',
     'sequence': 10,
     'icon': '/auction_module/static/description/icon.png',
@@ -76,6 +76,7 @@
         'views/auction_player_card_print_list_strawberry.xml',
         'views/auction_player_card_print_list_cherry.xml',
         'views/auction_player_card_print_list_pistah.xml',
+        'views/auction_player_card_print_list_lemon.xml',
         'views/auction_player_card_print_list_portrait.xml',
         'views/auction_history_view.xml',
         'views/res_users_auction_view.xml',
@@ -85,6 +86,7 @@
         'views/auction_player_template_strawberry.xml',
         'views/auction_player_template_cherry.xml',
         'views/auction_player_template_pistah.xml',
+        'views/auction_player_template_lemon.xml',
         'views/auction_player_template_football.xml',
         'views/auction_player_card_print_football.xml',
         'views/auction_remaining_players_template.xml',

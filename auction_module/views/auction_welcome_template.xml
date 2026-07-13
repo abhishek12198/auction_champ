@@ -62,6 +62,15 @@
       --w-divider: rgba(107,191,78,0.38);
     }
     </t>
+    <t t-elif="theme == 'lemon'">
+    :root {
+      --w-primary: #E8C200; --w-primary-dk: #B89600; --w-accent: #F5D84A;
+      --w-bg: #12100a; --w-bg2: #1a1608; --w-border: rgba(232,194,0,0.25);
+      --w-text: #fffdf0; --w-muted: rgba(255,253,240,0.55); --w-glow: rgba(232,194,0,0.42);
+      --w-rule-bg: rgba(232,194,0,0.10); --w-rule-bd: rgba(232,194,0,0.38);
+      --w-divider: rgba(232,194,0,0.38);
+    }
+    </t>
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {

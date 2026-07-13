@@ -335,6 +335,7 @@ class Auction(http.Controller):
             'strawberry':   'auction_module.player_template_strawberry',
             'cherry':       'auction_module.player_template_cherry',
             'pistah':       'auction_module.player_template_pistah',
+            'lemon':        'auction_module.player_template_lemon',
         }
         template_ref = template_map.get(theme, 'auction_module.player_template_new')
         if tournament and tournament.tournament_type == 'football':
@@ -362,9 +363,10 @@ class Auction(http.Controller):
             'butterscotch': '#F5C842',
             'strawberry':   '#C2185B',
             'pistah':       '#6BBF4E',
+            'lemon':        '#E8C200',
         }.get(theme, '#b71c1c')
 
-        _unsold_text = '#090912' if theme == 'butterscotch' else '#fff'
+        _unsold_text = '#090912' if theme in ('butterscotch', 'lemon') else '#fff'
 
         sold_points = 0
         if player.state == 'sold':
@@ -774,6 +776,7 @@ class Auction(http.Controller):
                     'strawberry':    'auction_module.player_template_strawberry',
                     'cherry':        'auction_module.player_template_cherry',
                     'pistah':        'auction_module.player_template_pistah',
+                    'lemon':         'auction_module.player_template_lemon',
                 }
                 chosen = tournament_id.player_display_template if tournament_id else 'vanilla'
                 template_ref = template_map.get(chosen, 'auction_module.player_template_new')
@@ -3498,6 +3501,7 @@ class Auction(http.Controller):
                     'strawberry':   'auction_module.action_report_player_card_strawberry',
                     'cherry':       'auction_module.action_report_player_card_cherry',
                     'pistah':       'auction_module.action_report_player_card_pistah',
+                    'lemon':        'auction_module.action_report_player_card_lemon',
                 }
                 report_ref = report_map.get(theme, 'auction_module.action_report_player_card')
 
@@ -3565,6 +3569,7 @@ class Auction(http.Controller):
                     'strawberry':   'auction_module.action_report_player_card_strawberry',
                     'cherry':       'auction_module.action_report_player_card_cherry',
                     'pistah':       'auction_module.action_report_player_card_pistah',
+                    'lemon':        'auction_module.action_report_player_card_lemon',
                 }
                 report_ref = report_map.get(theme, 'auction_module.action_report_player_card')
 

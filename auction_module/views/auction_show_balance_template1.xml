@@ -57,6 +57,14 @@
           --hf:'Orbitron',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Teko',sans-serif;
           --card-bg:rgba(26,5,8,.85); --card-bdr:rgba(220,20,60,.15);
         }
+        [data-theme="lemon"] {
+          --bg:#12100a; --bg2:#1a1608; --bg3:#2a2208;
+          --acc:#E8C200; --acc2:#F5D84A; --glow:rgba(232,194,0,.30);
+          --bdr:rgba(232,194,0,.20); --bdr2:rgba(255,255,255,.08);
+          --tx:#FFFDF5; --tx-d:rgba(255,253,245,.55); --tx-m:rgba(255,253,245,.30);
+          --hf:'Orbitron',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Teko',sans-serif;
+          --card-bg:rgba(26,22,8,.85); --card-bdr:rgba(232,194,0,.15);
+        }
 
         * { box-sizing: border-box; }
         html { min-height: 100%; background: var(--bg); }

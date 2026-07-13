@@ -86,6 +86,20 @@
   --action-unsold:#e53935;--action-unsold-h:#b71c1c;
   --action-sell:#6BBF4E;--action-sell-h:#4a9e30;--action-sell-tx:#060e08;
 }
+[data-theme="lemon"]{
+  --accent:#E8C200;--accent2:#F5D84A;--accent-glow:rgba(232,194,0,.25);
+  --bg:#FFFDF5;--bg-s:#FFF8DC;--bg-p:#FFF3C4;--bg-c:#fff;
+  --tx:#1a1608;--tx-d:rgba(26,22,8,.55);--div:rgba(232,194,0,.25);
+  --btn-bg:#fff;--btn-bd:#E8C200;--btn-hbg:#F5D84A;--btn-tx:#B89600;--btn-htx:#1a1608;
+  --hf:'Nunito',sans-serif;--bf:'Nunito',sans-serif;
+  --badge:#E8C200;--badge-tx:#1a1608;
+  --card-bg:#fff;--card-bd:rgba(232,194,0,.25);
+  --stamp-c:#E8C200;--stamp-tx:#1a1608;
+  --sold-bg:#E8C200;--sold-tx:#1a1608;
+  --unsold-bg:#616161;--unsold-tx:#fff;
+  --action-unsold:#616161;--action-unsold-h:#424242;
+  --action-sell:#E8C200;--action-sell-h:#B89600;--action-sell-tx:#1a1608;
+}
 
 /* ═══ BASE ═══════════════════════════════════════════════════════════ */
 /* Sports display font — used for player name, serial, tier/role badges across all themes */
@@ -491,6 +505,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 [data-theme="strawberry"] { --sm-header-bg:linear-gradient(135deg,#880E4F,#C2185B);--sm-header-stripe:#FFD6E8;--sm-accent:#E91E63;--sm-accent-dim:rgba(233,30,99,.25);--sm-primary:#C2185B;--sm-primary-light:rgba(194,24,91,.1);--sm-badge-active:#E91E63;--sm-transfer-bg:#FFE4EE;--sm-sold-bg:#FFF0F5;--sm-sold-ribbon:#C2185B;--sm-detail-bg:#fff;--sm-maxcall-color:#C2185B;--sm-suggest-color:#1a0a12;--sm-btn-bg:#C2185B;--sm-font:'Nunito',sans-serif;--sm-title-font:'Nunito',sans-serif; }
 [data-theme="cherry"]     { --sm-header-bg:linear-gradient(135deg,#060606,#1a0608);--sm-header-stripe:#DC143C;--sm-accent:#DC143C;--sm-accent-dim:rgba(220,20,60,.3);--sm-primary:#DC143C;--sm-primary-light:rgba(220,20,60,.12);--sm-badge-active:#DC143C;--sm-transfer-bg:#181818;--sm-sold-bg:#0d0d0d;--sm-sold-ribbon:#DC143C;--sm-detail-bg:#242424;--sm-maxcall-color:#FF1744;--sm-suggest-color:#f5f5f5;--sm-btn-bg:#DC143C;--sm-font:'Rajdhani',sans-serif;--sm-title-font:'Teko',sans-serif; }
 [data-theme="pistah"]     { --sm-header-bg:linear-gradient(135deg,#030a04,#0d1f11);--sm-header-stripe:#6BBF4E;--sm-accent:#6BBF4E;--sm-accent-dim:rgba(107,191,78,.35);--sm-primary:#6BBF4E;--sm-primary-light:rgba(107,191,78,.12);--sm-badge-active:#6BBF4E;--sm-transfer-bg:#0b1a0e;--sm-sold-bg:#060e08;--sm-sold-ribbon:#6BBF4E;--sm-detail-bg:#111f14;--sm-maxcall-color:#A8E063;--sm-suggest-color:#e8f5e9;--sm-btn-bg:#6BBF4E;--sm-font:'Rajdhani',sans-serif;--sm-title-font:'Orbitron',sans-serif; }
+[data-theme="lemon"]      { --sm-header-bg:linear-gradient(135deg,#B89600,#E8C200);--sm-header-stripe:#FFF8DC;--sm-accent:#E8C200;--sm-accent-dim:rgba(232,194,0,.25);--sm-primary:#E8C200;--sm-primary-light:rgba(232,194,0,.1);--sm-badge-active:#F5D84A;--sm-transfer-bg:#FFF8DC;--sm-sold-bg:#FFFDF5;--sm-sold-ribbon:#E8C200;--sm-detail-bg:#fff;--sm-maxcall-color:#B89600;--sm-suggest-color:#1a1608;--sm-btn-bg:#E8C200;--sm-font:'Nunito',sans-serif;--sm-title-font:'Nunito',sans-serif; }
 
 #sellModal {
   display: none; position: fixed; inset: 0;

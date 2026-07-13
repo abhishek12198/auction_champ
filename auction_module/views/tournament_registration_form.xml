@@ -205,6 +205,7 @@
                         ('strawberry',   'Strawberry',   'swatch-strawberry'),
                         ('cherry',       'Cherry',       'swatch-cherry'),
                         ('pistah',       'Pistah',       'swatch-pistah'),
+                        ('lemon',        'Lemon',        'swatch-lemon'),
                     ]" t-as="theme_opt">
                         <div>
                             <input type="radio" class="tr-theme-option"
@@ -585,6 +586,7 @@
         'strawberry':   '/auction_module/static/description/player_card_strawberry.jpg',
         'cherry':       '/auction_module/static/description/player_card_cherry.jpg',
         'pistah':       '/auction_module/static/description/player_card_pistah.jpg',
+        'lemon':        '/auction_module/static/description/player_card_butterscotch.jpg',
     };
 
     document.querySelectorAll('input[name="player_display_template"]').forEach(function (r) {

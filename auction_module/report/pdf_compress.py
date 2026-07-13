@@ -52,6 +52,7 @@ _PLAYER_CARD_REPORT_NAMES = {
     'auction_module.report_player_card_list_strawberry',
     'auction_module.report_player_card_list_cherry',
     'auction_module.report_player_card_list_pistah',
+    'auction_module.report_player_card_list_lemon',
     'auction_module.report_player_card_football_list',
 }
 

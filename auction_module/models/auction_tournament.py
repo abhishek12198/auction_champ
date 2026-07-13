@@ -131,6 +131,7 @@ class AuctionTournament(models.Model):
         ('strawberry', 'Strawberry'),
         ('cherry', 'Cherry'),
         ('pistah', 'Pistah'),
+        ('lemon', 'Lemon'),
     ], string='Theme'
               '', default='vanilla', required=True)
     sold_display_seconds = fields.Integer(
@@ -325,6 +326,7 @@ class AuctionTournament(models.Model):
             else:
                 tournament.logo_card = False
 
+    @api.depends('name')
     def _compute_slug(self):
         for rec in self:
             rec.slug = _slugify(rec.name or '')

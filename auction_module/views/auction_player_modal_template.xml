@@ -94,6 +94,26 @@
       --t-confirm-text:   #fff;
     }
     </t>
+    <t t-elif="theme == 'lemon'">
+    :root {
+      --t-primary:        #E8C200;
+      --t-header-bg:      #B89600;
+      --t-header-text:    #1a1608;
+      --t-drawer-bg:      #fff;
+      --t-border-w:       4px;
+      --t-shadow-c:       rgba(232,194,0,0.2);
+      --t-tab-bg:         #E8C200;
+      --t-arrow-c:        #1a1608;
+      --t-overlay:        rgba(26,22,8,0.7);
+      --t-card-bg:        #fff;
+      --t-card-text:      #1a1a1a;
+      --t-cancel-bg:      rgba(232,194,0,0.07);
+      --t-cancel-border:  rgba(232,194,0,0.3);
+      --t-cancel-text:    #B89600;
+      --t-confirm-bg:     #E8C200;
+      --t-confirm-text:   #1a1608;
+    }
+    </t>
 
     /* ── Modal content layout ─────────────────────────────── */
     .player-modal-content {

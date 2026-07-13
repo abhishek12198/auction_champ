@@ -9,6 +9,7 @@
   'strawberry':   {'baseDark':'#200712','panel':'#2a0a18','panelLite':'#5f1a38','header':'#8e1146','headerLite':'#c2185b','circleLite':'#ff6aa0','accent':'#ffcf9e','accentD':'#ff5a8a','ink':'#2a0a18','muted':'#e5a9c2','txt':'#ffeaf3','blood':'#ff5a7a','brandGlow':'255,106,160','accentGlow':'255,207,158'},
   'cherry':       {'baseDark':'#150304','panel':'#180405','panelLite':'#4a0a13','header':'#7a0a18','headerLite':'#9a0f22','circleLite':'#dc143c','accent':'#f5c842','accentD':'#c01530','ink':'#180405','muted':'#e0a0a8','txt':'#ffecec','blood':'#ff4d64','brandGlow':'220,20,60','accentGlow':'245,200,66'},
   'pistah':       {'baseDark':'#061309','panel':'#0c2411','panelLite':'#1c4d2a','header':'#2f7d32','headerLite':'#38a13c','circleLite':'#6bbf4e','accent':'#d4e157','accentD':'#2f7d32','ink':'#06140a','muted':'#a7d1a0','txt':'#ecfce8','blood':'#ff7a6b','brandGlow':'107,191,78','accentGlow':'212,225,87'},
+  'lemon':        {'baseDark':'#12100a','panel':'#1c180c','panelLite':'#4a3c08','header':'#B89600','headerLite':'#E8C200','circleLite':'#F5D84A','accent':'#FFE082','accentD':'#B89600','ink':'#1a1608','muted':'#c9b86a','txt':'#fffdf0','blood':'#ff7a6b','brandGlow':'232,194,0','accentGlow':'245,216,74'},
 }"/>
         <t t-set="pal" t-value="fbc_print_themes.get(doc.tournament_id.player_display_template or 'vanilla', fbc_print_themes['vanilla'])"/>
         <html lang="en">

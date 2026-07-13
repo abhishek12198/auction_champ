@@ -198,6 +198,11 @@
                     <t t-call="auction_module.report_player_card_pistah_page"/>
                 </page>
             </t>
+            <t t-elif="doc.tournament_id.player_display_template == 'lemon'">
+                <page t-call="web.basic_layout">
+                    <t t-call="auction_module.report_player_card_lemon_page"/>
+                </page>
+            </t>
             <t t-else="">
                 <page t-call="web.basic_layout">
                     <t t-call="auction_module.report_player_card_vanilla_page"/>

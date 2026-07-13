@@ -68,6 +68,18 @@
         </record>
 
 
+
+        <record id="action_report_player_card_lemon" model="ir.actions.report">
+            <field name="name">Player Card (Lemon)</field>
+            <field name="model">auction.team.player</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">auction_module.report_player_card_list_lemon</field>
+            <field name="report_file">auction_module.report_player_card_list_lemon</field>
+            <field name="paperformat_id" ref="auction_module.paperformat_card_landscape"/>
+            <field name="print_report_name">"Player_Cards" if not object.tournament_id else "%s_Players" % object.tournament_id.name.replace(" ", "_")</field>
+            <field name="groups_id" eval="[(4, ref('auction_module.group_auction_player_card_print'))]"/>
+        </record>
+
         <record id="action_report_player_card_pistah" model="ir.actions.report">
             <field name="name">Player Card (Pistah)</field>
             <field name="model">auction.team.player</field>

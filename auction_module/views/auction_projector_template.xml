@@ -46,6 +46,13 @@
   --hf:'Orbitron',sans-serif;--bf:'Rajdhani',sans-serif;
   --tier-glow:rgba(107,191,78,.3);
 }
+[data-theme="lemon"]{
+  --accent:#E8C200;--accent2:#B89600;--glow:rgba(232,194,0,.4);
+  --bg:#FFFDF5;--bg2:#FFF8DC;--card:#fff;
+  --tx:#1a1608;--tx-d:rgba(26,22,8,.5);
+  --hf:'Nunito',sans-serif;--bf:'Nunito',sans-serif;
+  --tier-glow:rgba(232,194,0,.25);
+}
 
 /* ══ RESET + BASE ═════════════════════════════════════════════════════ */
 /* Sports display font — all themes */
@@ -103,6 +110,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 /* Strawberry overrides: restore light text so player name/details are visible on dark projector */
 [data-theme="strawberry"] #pj-stage{--tx:#EEF4FF;--tx-d:rgba(238,244,255,.55);--bg2:#1a0a1e;--card:#120818}
 [data-theme="strawberry"] #pj-stage .pj-stat{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15)}
+[data-theme="lemon"] #pj-stage{background:#1a1608}
+[data-theme="lemon"] #pj-stage{--tx:#FFFDF5;--tx-d:rgba(255,253,245,.55);--bg2:#2a2208;--card:#1c180c}
+[data-theme="lemon"] #pj-stage .pj-stat{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15)}
 /* Info side semi-transparent dark veil so text stays readable over stadium */
 .pj-info-side{background:linear-gradient(135deg,rgba(0,0,0,.62) 0%,rgba(0,0,0,.38) 100%)}
 

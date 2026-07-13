@@ -136,6 +136,29 @@
           --rp-count-text:   #A8E063;
         }
 
+        /* lemon */
+        body.rp-theme-lemon {
+          --rp-primary:      #E8C200;
+          --rp-primary-dk:   #B89600;
+          --rp-glow:         rgba(232,194,0,0.28);
+          --rp-bg:           #FFFDF5;
+          --rp-surface:      #FFF8DC;
+          --rp-surface2:     #FFF3C4;
+          --rp-border:       rgba(232,194,0,0.22);
+          --rp-text:         #1a1608;
+          --rp-text-muted:   rgba(26,22,8,0.52);
+          --rp-header-bg:    linear-gradient(135deg,#FFF8DC,#FFE082);
+          --rp-header-text:  #B89600;
+          --rp-card-bg:      rgba(232,194,0,0.06);
+          --rp-card-hover:   rgba(232,194,0,0.12);
+          --rp-tier-bg:      rgba(232,194,0,0.08);
+          --rp-sl-text:      #1a1608;
+          --rp-label:        rgba(184,150,0,0.55);
+          --rp-value:        rgba(26,22,8,0.75);
+          --rp-count-bg:     rgba(232,194,0,0.15);
+          --rp-count-text:   #B89600;
+        }
+
         /* ── Reset &amp; base ────────────────────────────────────────────── */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 

@@ -53,6 +53,13 @@
       --ty-text: #e8f5e9; --ty-muted: rgba(232,245,233,0.55); --ty-glow: rgba(107,191,78,0.42);
     }
     </t>
+    <t t-elif="theme == 'lemon'">
+    :root {
+      --ty-primary: #E8C200; --ty-primary-dk: #B89600; --ty-accent: #F5D84A;
+      --ty-bg: #12100a; --ty-bg2: #1a1608; --ty-border: rgba(232,194,0,0.25);
+      --ty-text: #fffdf0; --ty-muted: rgba(255,253,240,0.55); --ty-glow: rgba(232,194,0,0.42);
+    }
+    </t>
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -342,6 +349,7 @@
       box-shadow: none;
     }
     html[data-theme="butterscotch"] .ty-btn-print { color: #1a1200; }
+    html[data-theme="lemon"] .ty-btn-print { color: #1a1608; }
 
     /* Theme-aware reopen CTA */
     .ty-reopen {
@@ -371,6 +379,7 @@
     }
     .ty-btn-reopen:active { transform: translateY(0); filter: none; }
     html[data-theme="butterscotch"] .ty-btn-reopen { color: #1a1200; }
+    html[data-theme="lemon"] .ty-btn-reopen { color: #1a1608; }
 
     .ty-print-toast {
       position: fixed;
