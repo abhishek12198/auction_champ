@@ -110,6 +110,9 @@
     z-index: 9999;
     align-items: center; justify-content: center;
     padding: 16px;
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+             max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    box-sizing: border-box;
   }
   #sellModal.open { display: flex; }
 
@@ -118,20 +121,42 @@
     background: #fff;
     border-radius: 18px;
     width: 100%; max-width: 680px;
+    max-height: min(96dvh, calc(100vh - 24px));
     box-shadow: 0 40px 100px rgba(0,0,0,0.6);
     overflow: hidden;
     font-family: var(--sm-font);
     animation: smSlideIn .25s cubic-bezier(.34,1.2,.64,1);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
   }
   @keyframes smSlideIn {
     from { transform: translateY(32px) scale(.97); opacity: 0; }
     to   { transform: translateY(0) scale(1);     opacity: 1; }
   }
 
+  /* Form panel fills card; header/footer stay pinned */
+  #smFormPanel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .sm-form-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
   /* ── Header ──────────────────────────────────────────────── */
   .sm-header {
     background: var(--sm-header-bg);
     padding: 0 24px 16px; position: relative;
+    flex-shrink: 0;
+    z-index: 2;
   }
   .sm-header::before {
     content: ''; display: block; height: 4px;
@@ -139,7 +164,7 @@
     margin: 0 -24px 14px;
     box-shadow: 0 0 16px var(--sm-accent-dim);
   }
-  .sm-header-row { display: flex; justify-content: space-between; align-items: center; }
+  .sm-header-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
   .sm-header-label {
     color: var(--sm-accent); font-size: .62rem; font-weight: 700;
     letter-spacing: 4px; text-transform: uppercase; margin-bottom: 2px;
@@ -150,10 +175,11 @@
   }
   .sm-close-btn {
     background: rgba(255,255,255,.13); border: none;
-    color: #fff; width: 34px; height: 34px; border-radius: 50%;
-    font-size: 1.1rem; cursor: pointer;
+    color: #fff; width: 40px; height: 40px; border-radius: 50%;
+    font-size: 1.15rem; cursor: pointer; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
     transition: background .2s;
+    -webkit-tap-highlight-color: transparent;
   }
   .sm-close-btn:hover { background: rgba(255,255,255,.28); }
 
@@ -286,15 +312,21 @@
 
   /* ── Footer ──────────────────────────────────────────────── */
   .sm-footer {
-    padding: 14px 24px 20px; display: flex; gap: 12px;
+    padding: 14px 24px max(16px, env(safe-area-inset-bottom));
+    display: flex; gap: 12px;
     justify-content: flex-end; border-top: 1px solid rgba(0,0,0,.08);
-    margin-top: 14px;
+    margin-top: 0;
+    flex-shrink: 0;
+    background: #fff;
+    box-shadow: 0 -8px 24px rgba(0,0,0,.06);
+    z-index: 2;
   }
   .sm-btn-cancel {
     padding: 12px 28px; border: 2px solid rgba(0,0,0,.14);
     border-radius: 8px; background: transparent; color: #64748b;
     font-weight: 700; cursor: pointer; font-size: .9rem;
     font-family: var(--sm-font); transition: border-color .18s;
+    min-height: 48px;
   }
   .sm-btn-cancel:hover { border-color: #94a3b8; }
   .sm-btn-sell {
@@ -303,18 +335,20 @@
     cursor: pointer; font-size: .9rem; font-family: var(--sm-font);
     box-shadow: 0 4px 14px var(--sm-accent-dim);
     transition: transform .18s, box-shadow .18s, opacity .18s;
+    min-height: 48px;
   }
   .sm-btn-sell:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px var(--sm-accent-dim); }
   .sm-btn-sell:disabled { opacity: .38; cursor: not-allowed; transform: none; }
 
-  /* ════════════════════════════════════════════════════════════
-     SOLD CELEBRATION SCREEN
-  ════════════════════════════════════════════════════════════ */
+  /* Sold screen also constrained to viewport */
   #smSoldScreen {
     display: none;
     flex-direction: column; align-items: center;
     background: var(--sm-sold-bg);
-    min-height: 460px;
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   #smSoldScreen.visible {
     display: flex;
@@ -432,6 +466,80 @@
     transition: background .2s, border-color .2s;
   }
   .sm-skip-btn:hover { background: rgba(255,255,255,.22); border-color: rgba(255,255,255,.55); }
+
+  /* ── Mobile / small screens: sheet layout, pinned header &amp; actions ── */
+  @media (max-width: 640px) {
+    #sellModal {
+      padding: 0;
+      align-items: flex-end;
+      justify-content: stretch;
+    }
+    .sm-card {
+      max-width: 100%;
+      width: 100%;
+      max-height: min(100dvh, 100vh);
+      border-radius: 18px 18px 0 0;
+      box-shadow: 0 -12px 40px rgba(0,0,0,.45);
+    }
+    .sm-header {
+      padding: max(2px, env(safe-area-inset-top)) 14px 12px;
+    }
+    .sm-header::before {
+      margin: 0 -14px 10px;
+      height: 3px;
+    }
+    .sm-header-title { font-size: 1.15rem; letter-spacing: 1.5px; }
+    .sm-header-label { font-size: .55rem; letter-spacing: 2.5px; }
+    .sm-close-btn {
+      width: 44px; height: 44px; font-size: 1.25rem;
+      background: rgba(255,255,255,.2);
+    }
+    .sm-transfer-row { padding: 10px 14px; gap: 8px; }
+    .sm-avatar,
+    .sm-team-logo,
+    .sm-team-logo-placeholder { width: 44px; height: 44px; }
+    .sm-arrow { font-size: 1.35rem; }
+    .sm-section { padding: 10px 14px 4px; }
+    .sm-team-badges {
+      max-height: min(22vh, 140px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .sm-badge { padding: 7px 14px; font-size: .78rem; }
+    .sm-pts-btn { width: 42px; height: 42px; }
+    #sellPoints { font-size: 1.25rem; padding: 8px 10px; }
+    .sm-presets { gap: 6px; margin-top: 8px; }
+    .sm-preset-btn { padding: 6px 12px; font-size: .74rem; }
+    #teamDetailsStrip { margin: 8px 14px 0; padding: 10px 10px; }
+    #sellSuggestion, #sellError { margin: 6px 14px 0; }
+    .sm-footer {
+      display: grid;
+      grid-template-columns: 1fr 1.35fr;
+      gap: 10px;
+      padding: 12px 14px max(14px, env(safe-area-inset-bottom));
+    }
+    .sm-btn-cancel,
+    .sm-btn-sell {
+      width: 100%;
+      padding: 13px 12px;
+      justify-content: center;
+      text-align: center;
+    }
+    .sm-sold-photo-wrap,
+    .sm-sold-photo { max-height: min(38vh, 260px); }
+    .sm-countdown-wrap { width: calc(100% - 28px); margin: 8px 14px 12px; }
+    .sm-skip-btn {
+      margin: 0 14px max(16px, env(safe-area-inset-bottom));
+      width: calc(100% - 28px);
+      min-height: 48px;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .sm-header-title { font-size: 1.02rem; }
+    .sm-footer { grid-template-columns: 1fr; }
+    .sm-detail-val { font-size: 1rem; }
+  }
 </style>
 
 <!-- ── Modal overlay ──────────────────────────────────────────── -->
@@ -441,16 +549,19 @@
     <!-- ── SELL FORM (default) ──────────────────────────────── -->
     <div id="smFormPanel">
 
-      <!-- Header -->
+      <!-- Header (pinned) -->
       <div class="sm-header">
         <div class="sm-header-row">
           <div>
             <div class="sm-header-label">Auction</div>
             <div class="sm-header-title">SELL PLAYER</div>
           </div>
-          <button class="sm-close-btn" onclick="closeSellModal()">&#x2715;</button>
+          <button class="sm-close-btn" onclick="closeSellModal()" aria-label="Close">&#x2715;</button>
         </div>
       </div>
+
+      <!-- Scrollable body -->
+      <div class="sm-form-scroll">
 
       <!-- Player → Team strip -->
       <div class="sm-transfer-row">
@@ -523,7 +634,9 @@
       <div id="sellSuggestion"></div>
       <div id="sellError"></div>
 
-      <!-- Footer -->
+      </div><!-- /sm-form-scroll -->
+
+      <!-- Footer (pinned) -->
       <div class="sm-footer">
         <button class="sm-btn-cancel" onclick="closeSellModal()">Cancel</button>
         <button class="sm-btn-sell" id="smBtnSell" disabled="disabled" onclick="smSubmitSell()">Sell Player</button>
@@ -634,7 +747,7 @@
     }
 
     // Show form, hide sold screen
-    document.getElementById('smFormPanel').style.display = 'block';
+    document.getElementById('smFormPanel').style.display = 'flex';
     document.getElementById('smSoldScreen').classList.remove('visible');
 
     // Reset form
@@ -661,7 +774,7 @@
     if (smCountdownTimer) { clearInterval(smCountdownTimer); smCountdownTimer = null; }
     document.getElementById('sellModal').classList.remove('open');
     document.getElementById('smSoldScreen').classList.remove('visible');
-    document.getElementById('smFormPanel').style.display = 'block';
+    document.getElementById('smFormPanel').style.display = 'flex';
     // Mystery players stay on stage until revealed — do not advance yet.
     var isMystery = (document.body.getAttribute('data-is-mystery') === '1')
       || !!window.AUCTION_IS_MYSTERY;
@@ -962,7 +1075,7 @@
         smCountdownTimer = null;
         document.getElementById('sellModal').classList.remove('open');
         document.getElementById('smSoldScreen').classList.remove('visible');
-        document.getElementById('smFormPanel').style.display = 'block';
+        document.getElementById('smFormPanel').style.display = 'flex';
         // If pre-fetch is still in-flight, wait for it (adds at most a few ms
         // on cloud since it started seconds ago); otherwise advance immediately.
         if (_preFetchDone) {

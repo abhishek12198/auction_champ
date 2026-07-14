@@ -629,7 +629,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background: rgba(0,0,0,0.82);
   z-index: 9999;
   align-items: center; justify-content: center;
-  padding: 16px;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+           max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  box-sizing: border-box;
 }
 #sellModal.open { display: flex; }
 
@@ -637,19 +639,30 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background: var(--card-bg);
   border-radius: 18px;
   width: 100%; max-width: 680px;
+  max-height: min(96dvh, calc(100vh - 24px));
   box-shadow: 0 40px 100px rgba(0,0,0,0.6);
   overflow: hidden;
   font-family: var(--sm-font);
   animation: smSlideIn .25s cubic-bezier(.34,1.2,.64,1);
+  display: flex; flex-direction: column; min-height: 0;
 }
 @keyframes smSlideIn {
   from { transform: translateY(32px) scale(.97); opacity: 0; }
   to   { transform: translateY(0) scale(1);     opacity: 1; }
 }
 
+#smFormPanel {
+  display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden;
+}
+.sm-form-scroll {
+  flex: 1; min-height: 0; overflow-y: auto;
+  -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+}
+
 .sm-header {
   background: var(--sm-header-bg);
   padding: 0 24px 16px; position: relative;
+  flex-shrink: 0; z-index: 2;
 }
 .sm-header::before {
   content: ''; display: block; height: 4px;
@@ -789,15 +802,18 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 }
 
 .sm-footer {
-  padding: 14px 24px 20px; display: flex; gap: 12px;
+  padding: 14px 24px max(16px, env(safe-area-inset-bottom));
+  display: flex; gap: 12px;
   justify-content: flex-end; border-top: 1px solid var(--div);
-  margin-top: 14px;
+  margin-top: 0; flex-shrink: 0; background: var(--card-bg);
+  box-shadow: 0 -8px 24px rgba(0,0,0,.18); z-index: 2;
 }
 .sm-btn-cancel {
   padding: 12px 28px; border: 2px solid var(--div);
   border-radius: 8px; background: transparent; color: var(--tx-d);
   font-weight: 700; cursor: pointer; font-size: .9rem;
   font-family: var(--sm-font); transition: border-color .18s;
+  min-height: 48px;
 }
 .sm-btn-cancel:hover { border-color: var(--tx-d); }
 .sm-btn-sell {
@@ -806,6 +822,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   cursor: pointer; font-size: .9rem; font-family: var(--sm-font);
   box-shadow: 0 4px 14px var(--sm-accent-dim);
   transition: transform .18s, box-shadow .18s, opacity .18s;
+  min-height: 48px;
 }
 .sm-btn-sell:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px var(--sm-accent-dim); }
 .sm-btn-sell:disabled { opacity: .38; cursor: not-allowed; transform: none; }
@@ -896,21 +913,31 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
 /* ── Sell modal mobile ────────────────────────────────────── */
 @media(max-width:640px){
-  .sm-card{ border-radius: 18px 18px 0 0; }
-  #sellModal{ padding:0; align-items:flex-end; }
-  .sm-header{ padding: 0 16px 14px; }
-  .sm-header-title{ font-size: 1.2rem; }
-  .sm-transfer-row{ padding: 12px 16px; gap: 10px; }
-  .sm-avatar{ width:48px; height:48px; }
-  .sm-team-logo,.sm-team-logo-placeholder{ width:48px; height:48px; }
-  .sm-section{ padding: 12px 16px 6px; }
-  .sm-pts-btn{ width:40px; height:40px; }
-  #sellPoints{ font-size:1.3rem; padding:8px 10px; }
-  .sm-footer{ padding:12px 16px 20px; }
-  .sm-btn-sell{ padding:13px 24px; min-height:48px; }
-  .sm-btn-cancel{ padding:13px 18px; }
-  #teamDetailsStrip{ margin: 8px 16px 0; padding:10px 12px; }
-  #sellSuggestion,#sellError{ margin: 6px 16px 0; }
+  #sellModal{ padding:0; align-items:flex-end; justify-content:stretch; }
+  .sm-card{
+    border-radius: 18px 18px 0 0; max-width:100%; width:100%;
+    max-height:min(100dvh,100vh);
+  }
+  .sm-header{ padding: max(2px, env(safe-area-inset-top)) 14px 12px; }
+  .sm-header-title{ font-size: 1.15rem; }
+  .sm-close-btn{ width:44px; height:44px; font-size:1.25rem; background:rgba(255,255,255,.2); }
+  .sm-transfer-row{ padding: 10px 14px; gap: 8px; }
+  .sm-avatar,.sm-team-logo,.sm-team-logo-placeholder{ width:44px; height:44px; }
+  .sm-section{ padding: 10px 14px 4px; }
+  .sm-team-badges{ max-height:min(22vh,140px); overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .sm-pts-btn{ width:42px; height:42px; }
+  #sellPoints{ font-size:1.25rem; padding:8px 10px; }
+  .sm-footer{
+    display:grid; grid-template-columns:1fr 1.35fr; gap:10px;
+    padding:12px 14px max(14px, env(safe-area-inset-bottom));
+  }
+  .sm-btn-sell,.sm-btn-cancel{ width:100%; padding:13px 12px; text-align:center; }
+  #teamDetailsStrip{ margin: 8px 14px 0; padding:10px 10px; }
+  #sellSuggestion,#sellError{ margin: 6px 14px 0; }
+}
+@media(max-width:380px){
+  .sm-footer{ grid-template-columns:1fr; }
+  .sm-header-title{ font-size:1.02rem; }
 }
 
 /* ═══ BID SUMMARY DRAWER ══════════════════════════════════════════════ */
@@ -1422,10 +1449,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
             <div class="sm-header-label">Auction</div>
             <div class="sm-header-title">SELL PLAYER</div>
           </div>
-          <button class="sm-close-btn" onclick="closeSellModal()">&#x2715;</button>
+          <button class="sm-close-btn" onclick="closeSellModal()" aria-label="Close">&#x2715;</button>
         </div>
       </div>
 
+      <div class="sm-form-scroll">
       <!-- Player → Team strip -->
       <div class="sm-transfer-row">
         <img class="sm-avatar" id="smPlayerAvatar" src="" alt="Player"/>
@@ -1478,6 +1506,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
       <div id="sellSuggestion"></div>
       <div id="sellError"></div>
+      </div><!-- /sm-form-scroll -->
 
       <div class="sm-footer">
         <button class="sm-btn-cancel" onclick="closeSellModal()">Cancel</button>
@@ -2361,7 +2390,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     if (rl) rl.textContent = mysteryHidden ? '???' : (currentPlayerRole || '');
 
     /* Reset UI */
-    document.getElementById('smFormPanel').style.display     = 'block';
+    document.getElementById('smFormPanel').style.display     = 'flex';
     document.getElementById('smSoldScreen').classList.remove('visible');
     document.getElementById('smTeamBadges').innerHTML        = '<span class="sm-no-teams">Loading teams\u2026</span>';
     document.getElementById('smTeamPlaceholder').style.display = 'flex';
@@ -2387,7 +2416,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     if (smCdTimer) { clearInterval(smCdTimer); smCdTimer = null; }
     document.getElementById('sellModal').classList.remove('open');
     document.getElementById('smSoldScreen').classList.remove('visible');
-    document.getElementById('smFormPanel').style.display = 'block';
+    document.getElementById('smFormPanel').style.display = 'flex';
     closePlayerDrawer(true);
   };
 
@@ -2592,7 +2621,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         clearInterval(smCdTimer); smCdTimer = null;
         document.getElementById('sellModal').classList.remove('open');
         document.getElementById('smSoldScreen').classList.remove('visible');
-        document.getElementById('smFormPanel').style.display = 'block';
+        document.getElementById('smFormPanel').style.display = 'flex';
         closePlayerDrawer(true);
       }
     }, 1000);
@@ -2674,7 +2703,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           clearInterval(smCdTimer); smCdTimer = null;
           document.getElementById('sellModal').classList.remove('open');
           document.getElementById('smSoldScreen').classList.remove('visible');
-          document.getElementById('smFormPanel').style.display = 'block';
+          document.getElementById('smFormPanel').style.display = 'flex';
           closePlayerDrawer(true);
         }
       }, 1000);
