@@ -38,8 +38,12 @@
 
 import re
 import random
+import time
+import logging
 import unicodedata
 import base64
+
+from psycopg2 import OperationalError
 
 from odoo import api, models, fields, _
 from odoo.exceptions import UserError
@@ -48,6 +52,8 @@ from odoo.exceptions import UserError, ValidationError
 
 import werkzeug
 import werkzeug.exceptions
+
+_logger = logging.getLogger(__name__)
 
 
 def _generate_tournament_code(env):
@@ -362,12 +368,49 @@ class AuctionTournament(models.Model):
                 rec.payment_tracker_url = False
 
     def set_dice_state(self, state, number=0):
-        """Called from player_selector JS to broadcast dice state to the projector."""
+        """Broadcast dice state to the projector.
+
+        Uses a narrow SQL update with short retries so concurrent tournament
+        writes (sell/unsold stamp, etc.) do not fail the dice roll with
+        ``could not serialize access due to concurrent update``.
+        """
         valid = {'idle', 'rolling', 'result'}
         if state not in valid:
             state = 'idle'
-        self.sudo().write({'dice_state': state, 'dice_result': int(number or 0)})
-        return True
+        number = int(number or 0)
+        ids = tuple(self.ids)
+        if not ids:
+            return True
+        uid = self.env.uid or 1
+        for attempt in range(6):
+            try:
+                with self.env.cr.savepoint():
+                    self.env.cr.execute(
+                        """
+                        UPDATE auction_tournament
+                           SET dice_state = %s,
+                               dice_result = %s,
+                               write_uid = %s,
+                               write_date = (now() AT TIME ZONE 'UTC')
+                         WHERE id IN %s
+                        """,
+                        (state, number, uid, ids),
+                    )
+                self.invalidate_cache(['dice_state', 'dice_result'])
+                return True
+            except OperationalError as err:
+                msg = str(err).lower()
+                if 'could not serialize' not in msg and 'deadlock' not in msg:
+                    raise
+                if attempt >= 5:
+                    _logger.warning(
+                        'set_dice_state(%s, %s) skipped after concurrent '
+                        'updates on tournament %s: %s',
+                        state, number, ids, err,
+                    )
+                    return False
+                time.sleep(0.05 * (attempt + 1))
+        return False
 
     @api.model
     def create(self, vals):

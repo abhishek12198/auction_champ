@@ -231,11 +231,16 @@ class Auction(http.Controller):
                 tournament = request.env['auction.tournament'].sudo().search(
                     [('active', '=', True)], limit=1)
             theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
+            Tier = request.env['auction.player.tier'].sudo()
+            tiers = Tier.search(
+                [('tournament_id', '=', tournament.id)], order='name asc',
+            ) if tournament else Tier.browse()
             html = request.render('auction_module.player_sequence_selector', {
                 'tournament': tournament,
                 'theme': theme,
                 'db_name': db_name,
                 'tournament_slug': tournament_slug or (tournament.slug if tournament else ''),
+                'tiers': tiers,
             }, lazy=False)
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
@@ -279,6 +284,7 @@ class Auction(http.Controller):
                 'id': p.id,
                 'name': p.name or '',
                 'role': p.role or '',
+                'tier_id': p.tier_id.id if p.tier_id else False,
                 'tier_color': p.tier_color or '',
                 'tier_name': p.tier_id.name if p.tier_id else '',
                 'is_mystery': bool(p.tier_id and p.tier_id.mystery),
@@ -290,6 +296,60 @@ class Auction(http.Controller):
             }
             for p in players
         ]
+
+    def _reopen_pool_payload(self, tournament_id=None, db_name=None):
+        """Draft + Unsold players available to reopen into the manual auction grid."""
+        if tournament_id:
+            tournament = request.env['auction.tournament'].sudo().browse(int(tournament_id))
+        else:
+            tournament = self._resolve_tournament()
+        if not tournament or not tournament.exists():
+            return {'draft': [], 'unsold': [], 'draft_count': 0, 'unsold_count': 0}
+        Player = request.env['auction.team.player'].sudo().with_context(active_test=False)
+        t_domain = [('tournament_id', '=', tournament.id), ('icon_player', '=', False)]
+        draft_players = Player.search(
+            t_domain + [('state', '=', 'draft')], order='sl_no asc, name asc')
+        unsold_players = Player.search(
+            t_domain + [('state', '=', 'unsold')], order='sl_no asc, name asc')
+        db = db_name or ''
+
+        def _row(p):
+            role = p.role or ''
+            if tournament.tournament_type == 'football' and p.dominant_position_id:
+                role = p.dominant_position_id.name or role
+            photo_url = ''
+            if p.photo and db:
+                photo_url = '/%s/auction/public/image/auction.team.player/%d/photo' % (db, p.id)
+            return {
+                'id': p.id,
+                'serial': p.sl_no or 0,
+                'name': p.name or '',
+                'role': role,
+                'tier_id': p.tier_id.id if p.tier_id else False,
+                'tier_name': p.tier_id.name if p.tier_id else '',
+                'tier_color': p.tier_id.color if p.tier_id else '',
+                'photo_url': photo_url,
+                'state': p.state,
+            }
+
+        return {
+            'draft': [_row(p) for p in draft_players],
+            'unsold': [_row(p) for p in unsold_players],
+            'draft_count': len(draft_players),
+            'unsold_count': len(unsold_players),
+        }
+
+    @http.route('/auction/get_reopen_pool', type='json', auth='public', website=True)
+    def get_reopen_pool(self, tournament_id=None):
+        return self._reopen_pool_payload(tournament_id)
+
+    @http.route('/<string:db_name>/auction/get_reopen_pool',
+                type='json', auth='none', website=False, csrf=False)
+    def get_reopen_pool_db(self, db_name, tournament_id=None):
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return {'draft': [], 'unsold': [], 'draft_count': 0, 'unsold_count': 0}
+            return self._reopen_pool_payload(tournament_id, db_name=db_name)
 
     @http.route('/auction/get_player_data', type='json', auth='public', website=True)
     def get_player_data(self, player_id):
@@ -897,22 +957,32 @@ class Auction(http.Controller):
                 if declared_done:
                     html = _thank_you_html()
                 elif unsold_count > 0 or (draft_count > 0 and sold_count > 0):
+                    draft_players = Player.search(
+                        t_domain + [('state', '=', 'draft')],
+                        order='sl_no asc, name asc',
+                    )
+                    unsold_players = Player.search(
+                        t_domain + [('state', '=', 'unsold')],
+                        order='sl_no asc, name asc',
+                    )
+                    Tier = request.env['auction.player.tier'].sudo()
+                    tiers = Tier.search(
+                        [('tournament_id', '=', tournament_id.id)],
+                        order='name asc',
+                    )
+                    if not tiers:
+                        tiers = (draft_players | unsold_players).mapped('tier_id')
                     html = request.render('auction_module.auction_resume_template', {
                         'tournament': tournament_id,
                         'theme': theme,
                         'db_name': db_name,
-                        'draft_players': Player.search(
-                            t_domain + [('state', '=', 'draft')],
-                            order='sl_no asc, name asc',
-                        ),
-                        'unsold_players': Player.search(
-                            t_domain + [('state', '=', 'unsold')],
-                            order='sl_no asc, name asc',
-                        ),
+                        'draft_players': draft_players,
+                        'unsold_players': unsold_players,
                         'draft_count': draft_count,
                         'unsold_count': unsold_count,
                         'sold_count': sold_count,
                         'auction_ids': auction_ids,
+                        'tiers': tiers,
                     }, lazy=False)
                 elif sold_count:
                     html = _thank_you_html()
@@ -2055,11 +2125,16 @@ class Auction(http.Controller):
                 tournament = request.env['auction.tournament'].sudo().search(
                     [('active', '=', True)], limit=1)
             theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
+            Tier = request.env['auction.player.tier'].sudo()
+            tiers = Tier.search(
+                [('tournament_id', '=', tournament.id)], order='name asc',
+            ) if tournament else Tier.browse()
             html = request.render('auction_module.player_sequence_selector', {
                 'tournament': tournament,
                 'theme': theme,
                 'db_name': db_name,
                 'tournament_slug': tournament_slug or (tournament.slug if tournament else ''),
+                'tiers': tiers,
             }, lazy=False)
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
@@ -4118,8 +4193,11 @@ def _pj_top_purse(tournament):
 
 
 def _pj_recent_bids(tournament, db_name, player=None):
-    """Last bids for the right rail: live bid.log → current bid → recent sales."""
-    import re
+    """Last 5 completed sales for the projector Recent Bidding rail.
+
+    Each row: player photo + name, sold-to team logo + name, points.
+    Mystery players stay masked until revealed.
+    """
     out = []
     if not tournament:
         return out
@@ -4129,51 +4207,71 @@ def _pj_recent_bids(tournament, db_name, player=None):
             return '/%s/auction/public/image/auction.team/%d/logo' % (db_name, team.id)
         return ''
 
-    if player and request.env.registry.get('auction.bid.log'):
-        logs = request.env['auction.bid.log'].sudo().search([
-            ('tournament_id', '=', tournament.id),
-            ('player_id', '=', player.id),
-        ], order='id desc', limit=5)
-        for log in logs:
-            team = log.team_id
-            out.append({
-                'team_name': team.name if team else '',
-                'team_logo_url': _team_logo(team),
-                'points': int(log.bid_amount or 0),
-            })
+    def _player_photo(p):
+        if p and p.photo:
+            return '/%s/auction/public/image/auction.team.player/%d/photo' % (db_name, p.id)
+        return ''
 
-    if (not out and player and hasattr(player, 'current_bid') and player.current_bid
-            and getattr(player, 'current_bid_team_id', False)):
-        team = player.current_bid_team_id
+    # Prefer structured sale lines (player + team + points)
+    sales = request.env['auction.auction.player'].sudo().search(
+        [('auction_id.tournament_id', '=', tournament.id)],
+        order='id desc',
+        limit=5,
+    )
+    for line in sales:
+        p = line.player_id
+        team = line.auction_id.team_id if line.auction_id else False
+        name = (p.name or '') if p else ''
+        photo = _player_photo(p)
+        if p and p.tier_id and p.tier_id.mystery and not p.mystery_revealed:
+            name = '???'
+            photo = '/auction_module/static/img/default_icon.png'
         out.append({
-            'team_name': team.name or '',
+            'player_name': name or '—',
+            'player_photo_url': photo,
+            'team_name': (team.name if team else '') or '—',
             'team_logo_url': _team_logo(team),
-            'points': int(player.current_bid or 0),
+            'points': int(line.points or 0),
+            'kind': 'sold',
         })
+    if out:
+        return out
 
-    if not out:
-        history = request.env['auction.history'].sudo().search(
-            [('tournament_id', '=', tournament.id)], order='create_date desc', limit=5
-        )
-        for rec in history:
-            pts = 0
-            msg = rec.message or ''
-            m = re.search(r'for\s+(\d+)\s+points?', msg, re.I)
-            if m:
-                pts = int(m.group(1))
-            team = rec.team_id
-            name = team.name if team else ''
-            if not name and msg:
-                m2 = re.search(r'sold to the\s+(.+?)\s+for\s+', msg, re.I)
-                if m2:
-                    name = m2.group(1).strip()
-            if not name and 'unsold' in msg.lower():
-                name = 'Unsold'
-            out.append({
-                'team_name': name or '—',
-                'team_logo_url': _team_logo(team),
-                'points': pts,
-            })
+    # Fallback: parse recent history rows that look like sales
+    import re
+    history = request.env['auction.history'].sudo().search(
+        [('tournament_id', '=', tournament.id)], order='id desc', limit=12
+    )
+    for rec in history:
+        if len(out) >= 5:
+            break
+        msg = (rec.message or '').lower()
+        if 'sold' not in msg and 'unsold' not in msg:
+            continue
+        pts = 0
+        m = re.search(r'for\s+(\d+)\s+points?', rec.message or '', re.I)
+        if m:
+            pts = int(m.group(1))
+        p = rec.player_id
+        team = rec.team_id
+        name = (p.name or '') if p else ''
+        photo = _player_photo(p)
+        if not photo and rec.player_photo:
+            photo = '/%s/auction/public/image/auction.history/%d/player_photo' % (db_name, rec.id)
+        if p and p.tier_id and p.tier_id.mystery and not p.mystery_revealed:
+            name = '???'
+            photo = '/auction_module/static/img/default_icon.png'
+        team_name = team.name if team else ''
+        if not team_name and 'unsold' in msg:
+            team_name = 'Unsold'
+        out.append({
+            'player_name': name or '—',
+            'player_photo_url': photo,
+            'team_name': team_name or '—',
+            'team_logo_url': _team_logo(team),
+            'points': pts,
+            'kind': 'unsold' if 'unsold' in msg else 'sold',
+        })
     return out
 
 

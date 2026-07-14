@@ -884,30 +884,59 @@ img { display: block; }
 .lb-brk-ad-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,193,7,.25); transition: background .3s; }
 .lb-brk-ad-dot.active { background: #FFD700; }
 
-/* ── Sponsor strip (regular live board footer) ──────────────────── */
+/* ── Sponsor strip — FIXED viewport footer ──────────────────────── */
+#lb-sponsor-strip.lb-sponsor-strip,
 .lb-sponsor-strip {
-  padding: 8px 24px 14px; max-width: 1400px; margin: 0 auto;
-  display: flex; align-items: center; gap: 14px;
+  position: fixed !important;
+  left: 0 !important; right: 0 !important; bottom: 0 !important;
+  z-index: 250 !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  flex-shrink: 0;
+  border-top: 2px solid var(--lb-accent2);
+  background: linear-gradient(180deg, var(--lb-panel) 0%, var(--lb-bg) 100%);
+  box-shadow: 0 -8px 32px rgba(0,0,0,.55), 0 -1px 0 rgba(255,255,255,.06) inset;
+  padding: .65rem 1.25rem .75rem;
+  overflow: hidden;
 }
-.lb-sponsor-label {
-  font-size: .5rem; font-weight: 800; letter-spacing: 2px;
-  text-transform: uppercase; color: var(--lb-sub); white-space: nowrap; flex-shrink: 0;
+.lb-spon-head { text-align: center; margin-bottom: .4rem; }
+.lb-spon-label {
+  font-size: .9rem; letter-spacing: .28em; text-transform: uppercase;
+  font-weight: 900; color: var(--lb-accent2);
+  text-shadow: 0 0 18px var(--lb-glow);
 }
-.lb-sponsor-track { position: relative; flex: 1; height: 34px; }
-.lb-sponsor-slide {
-  position: absolute; inset: 0; display: flex; align-items: center; gap: 14px;
-  opacity: 0; transition: opacity .6s ease;
+.lb-spon-row { display: block; width: 100%; max-width: 1400px; margin: 0 auto; }
+.lb-spon-viewport { width: 100%; overflow: hidden; }
+.lb-spon-track {
+  display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+  gap: 1.6rem 2.2rem; width: 100%; padding: .4rem 0; margin: 0;
 }
-.lb-sponsor-slide.active { opacity: 1; }
-.lb-sponsor-slide img { height: 28px; max-width: 110px; object-fit: contain; opacity: .7; filter: grayscale(15%); }
-.lb-sponsor-slide-name { font-size: .6rem; color: var(--lb-sub); font-weight: 600; white-space: nowrap; }
+.lb-spon-item { flex-shrink: 0; }
+.lb-spon-card {
+  height: clamp(52px, 7vw, 80px);
+  display: flex; align-items: center; justify-content: center; padding: 0 .5rem;
+}
+.lb-spon-logo {
+  height: 100%; width: auto; max-width: 180px; object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,.35));
+}
+.lb-spon-name { font-size: .95rem; font-weight: 700; color: var(--lb-sub); }
+.lb-spon-empty {
+  width: 100%; text-align: center; font-size: .9rem; color: var(--lb-sub); padding: .5rem 1rem;
+}
+<!-- Keep page content clear of the fixed sponsor bar (only when sponsors exist) -->
+body.lb-has-sponsors { padding-bottom: 140px; }
 
 @media (max-width: 600px) {
   .lb-brk-content { gap: 9px; padding: 16px; }
   .lb-brk-hl1 { letter-spacing: 3px; }
   .lb-brk-hl2 { letter-spacing: 2px; }
   .lb-brk-ads-track { height: 80px; }
-  .lb-sponsor-strip { padding: 6px 14px 10px; }
+  .lb-sponsor-strip { padding: .5rem .75rem .6rem; }
+  .lb-spon-track { gap: 1rem 1.4rem; }
+  .lb-spon-card { height: clamp(44px, 12vw, 64px); }
+  body.lb-has-sponsors { padding-bottom: 120px; }
 }
 
 /* ── TEAM CHIP — pointer cursor ─────────────────────────────────── */
@@ -1242,15 +1271,6 @@ body::after {
   box-shadow: 0 10px 26px rgba(0,0,0,0.4), 0 0 22px var(--lb-glow);
 }
 
-/* ── Sponsor ribbon — premium finish ───────────────────────────────── */
-.lb-sponsor-strip {
-  background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-  border: 1px solid var(--lb-sep);
-  border-radius: 14px; margin: 6px auto 12px;
-}
-.lb-sponsor-label { color: var(--lb-accent2); }
-.lb-sponsor-slide img { opacity: .9; filter: grayscale(0%); }
-
 /* ── Teams relocated to right column — vertical list ───────────────── */
 .lb-teams-card { margin-top: 0; }
 .lb-teams-grid { flex-direction: column; flex-wrap: nowrap; gap: 8px; }
@@ -1262,41 +1282,19 @@ body::after {
 .lb-team-chip > div:last-child { flex: 1; min-width: 0; }
 .lb-team-chip-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* ── Sponsor SLIDER — larger, prominent bottom carousel band ────────── */
-.lb-sponsor-strip {
-  flex-direction: column; align-items: stretch; gap: 8px;
-  max-width: 1400px; padding: 14px 24px 18px;
-}
-.lb-sponsor-label {
-  font-size: .58rem; letter-spacing: 3px; text-align: center;
-}
-.lb-sponsor-track { height: 68px; }
-.lb-sponsor-slide {
-  justify-content: center; gap: 22px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid var(--lb-sep);
-  border-radius: 14px;
-}
-.lb-sponsor-slide img {
-  height: 54px; max-width: 220px; opacity: 1;
-  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
-}
-.lb-sponsor-slide-name {
-  font-size: 1rem; font-weight: 800; letter-spacing: .5px;
-  color: var(--lb-text);
-}
-
 /* ── Responsive — TV / projector / ultra-wide / tablet scaling ─────── */
 @media (min-width: 1600px) {
   .lb-main { max-width: 1840px; grid-template-columns: 440px 1fr; gap: 28px; padding: 28px 40px; }
-  .lb-teams-wrap, .lb-sponsor-strip { max-width: 1840px; }
+  .lb-teams-wrap { max-width: 1840px; }
+  .lb-spon-row { max-width: 1840px; }
   .lb-t-name { font-size: 1.65rem; }
   .lb-sold-amount { font-size: 4.2rem; }
 }
 @media (min-width: 2200px) {
   body { font-size: 20px; }
   .lb-main { max-width: 2200px; grid-template-columns: 540px 1fr; }
-  .lb-teams-wrap, .lb-sponsor-strip { max-width: 2200px; }
+  .lb-teams-wrap { max-width: 2200px; }
+  .lb-spon-row { max-width: 2200px; }
   .lb-sold-amount { font-size: 5rem; }
 }
 @media (max-width: 600px) {
@@ -1354,6 +1352,15 @@ html[data-theme] body::before{
   opacity:.5;mix-blend-mode:overlay;
 }
 html[data-theme] body > *{position:relative;z-index:1;}
+/* Sponsor bar must stay viewport-fixed as a true footer (overrides body > * relative) */
+html[data-theme] body > #lb-sponsor-strip,
+html[data-theme] body > .lb-sponsor-strip{
+  position:fixed !important;
+  left:0 !important;right:0 !important;bottom:0 !important;
+  width:100% !important;max-width:none !important;
+  z-index:250 !important;
+  margin:0 !important;
+}
 
 /* ── Typography ─────────────────────────────────────────────────────────── */
 .lb-t-name,.lb-hdr-status,.lb-live-badge,.lb-section-title,
@@ -1607,12 +1614,21 @@ html[data-theme] .lb-footer{
 .lb-ticker-dot{width:8px;height:8px;border-radius:50%;background:var(--pr-red);box-shadow:0 0 10px var(--pr-red);}
 @keyframes lbTicker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
-/* ── Sponsor strip ──────────────────────────────────────────────────────── */
-html[data-theme] .lb-sponsor-strip{
-  background:linear-gradient(90deg,rgba(10,16,40,0.9),rgba(20,10,45,0.9));
-  border-top:1px solid rgba(0,217,255,0.20);backdrop-filter:blur(8px);
+/* ── Sponsor strip (fixed bottom highlight) ──────────────────────────── */
+html[data-theme] .lb-sponsor-strip,
+html[data-theme] body > #lb-sponsor-strip{
+  position:fixed !important;
+  left:0 !important;right:0 !important;bottom:0 !important;
+  width:100% !important;max-width:none !important;
+  z-index:250 !important;
+  background:linear-gradient(180deg,rgba(12,18,48,0.98),rgba(5,7,15,1));
+  border-top:2px solid var(--pr-gold);
+  box-shadow:0 -10px 36px rgba(0,0,0,.65),0 0 24px rgba(255,215,0,.12);
 }
-html[data-theme] .lb-sponsor-label{color:var(--pr-gold);letter-spacing:2px;}
+html[data-theme] .lb-spon-label{
+  color:var(--pr-gold);letter-spacing:.28em;
+  text-shadow:0 0 20px rgba(255,215,0,.35);
+}
 
 /* ── Entrance animation for panels ──────────────────────────────────────── */
 html[data-theme] .lb-player-panel,html[data-theme] .lb-center-col > *,
@@ -1871,7 +1887,6 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
   var _breakClockId  = null;
   var _adList        = [];
   var _adBrkTimerId  = null;
-  var _adStripTimerId = null;
 
   function startBreakClock() {
     if (_breakClockId) return;
@@ -1933,26 +1948,26 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     }
     if (brkAds) brkAds.style.display = _adList.length ? '' : 'none';
 
-    // Regular sponsor strip
+    // Regular sponsor strip — hide entirely when no advertisers configured
     var strip = document.getElementById('lb-sponsor-strip');
     var stripTrack = document.getElementById('lb-sponsor-track');
-    if (stripTrack) {
-      stripTrack.innerHTML = _adList.map(function(ad, i) {
+    var hasAds = _adList.length > 0;
+    if (stripTrack && hasAds) {
+      stripTrack.innerHTML = _adList.map(function(ad) {
         var inner = ad.image_url
-          ? '<img src="' + ad.image_url + '" alt="' + (ad.name||'') + '">'
-          : '<span class="lb-sponsor-slide-name">' + (ad.name||'') + '</span>';
-        return '<div class="lb-sponsor-slide' + (i===0?' active':'') + '">' + inner + '</div>';
+          ? '<img class="lb-spon-logo" src="' + ad.image_url + '" alt="' + (ad.name||'') + '" title="' + (ad.name||'') + '" onerror="this.style.display=\'none\'">'
+          : '<span class="lb-spon-name">' + (ad.name||'') + '</span>';
+        return '<div class="lb-spon-item"><div class="lb-spon-card">' + inner + '</div></div>';
       }).join('');
     }
-    if (strip) strip.style.display = _adList.length ? '' : 'none';
+    if (strip) strip.style.display = hasAds ? '' : 'none';
+    document.body.classList.toggle('lb-has-sponsors', hasAds);
 
-    // Restart rotation timers if ads changed
+    // Restart break-screen carousel only if ads changed
     if (changed) {
-      if (_adBrkTimerId)   { clearInterval(_adBrkTimerId);   _adBrkTimerId   = null; }
-      if (_adStripTimerId) { clearInterval(_adStripTimerId); _adStripTimerId = null; }
+      if (_adBrkTimerId) { clearInterval(_adBrkTimerId); _adBrkTimerId = null; }
       if (_adList.length > 1) {
-        _adBrkTimerId   = setInterval(function() { rotateSlide('lb-brk-ads-track', 'lb-brk-ad-slide', 'lb-brk-ad-dots'); }, 5000);
-        _adStripTimerId = setInterval(function() { rotateSlide('lb-sponsor-track', 'lb-sponsor-slide', null); }, 4000);
+        _adBrkTimerId = setInterval(function() { rotateSlide('lb-brk-ads-track', 'lb-brk-ad-slide', 'lb-brk-ad-dots'); }, 5000);
       }
     }
   }
@@ -2557,11 +2572,34 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
   </div>
 </div>
 
-<!-- SPONSOR STRIP (regular live board) -->
-<div class="lb-sponsor-strip" id="lb-sponsor-strip" style="display:none;">
-  <span class="lb-sponsor-label">Sponsors</span>
-  <div class="lb-sponsor-track" id="lb-sponsor-track"></div>
+<!-- SPONSOR STRIP — only when tournament has advertisers configured -->
+<t t-set="lb_ads" t-value="tournament.advertiser_ids if tournament else []"/>
+<t t-if="lb_ads">
+<div class="lb-sponsor-strip" id="lb-sponsor-strip">
+  <div class="lb-spon-head"><span class="lb-spon-label">Our Sponsors</span></div>
+  <div class="lb-spon-row">
+    <div class="lb-spon-viewport">
+      <div class="lb-spon-track" id="lb-sponsor-track">
+        <t t-foreach="lb_ads" t-as="ad">
+          <div class="lb-spon-item">
+            <div class="lb-spon-card">
+              <t t-if="ad.image">
+                <img class="lb-spon-logo"
+                     t-att-src="'/%s/auction/public/image/auction.advertiser/%d/image' % (db_name, ad.id)"
+                     t-att-alt="ad.name" t-att-title="ad.name"/>
+              </t>
+              <t t-else="">
+                <span class="lb-spon-name"><t t-esc="ad.name"/></span>
+              </t>
+            </div>
+          </div>
+        </t>
+      </div>
+    </div>
+  </div>
 </div>
+<script>document.body.classList.add('lb-has-sponsors');</script>
+</t>
 
 <!-- FLOATING SQUAD POPUP (desktop hover) -->
 <div id="lb-team-floating-popup">

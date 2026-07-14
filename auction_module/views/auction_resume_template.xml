@@ -296,6 +296,40 @@
       gap: 8px;
       flex-wrap: wrap;
       align-items: center;
+      width: 100%;
+    }
+    .ar-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      width: 100%;
+      margin-bottom: 2px;
+    }
+    .ar-tier-chip {
+      appearance: none;
+      border: 1px solid var(--r-border);
+      background: rgba(0,0,0,0.28);
+      color: var(--r-text);
+      border-radius: 999px;
+      padding: 5px 11px;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+    }
+    .ar-tier-chip:hover { border-color: var(--r-primary); }
+    .ar-tier-chip.is-active {
+      background: color-mix(in srgb, var(--r-primary) 28%, transparent);
+      border-color: var(--r-primary);
+      box-shadow: 0 0 0 2px var(--r-glow);
+      color: #fff;
+    }
+    .ar-tier-chip .ar-chip-count {
+      margin-left: 5px;
+      opacity: .75;
+      font-weight: 800;
     }
     .ar-search {
       flex: 1;
@@ -311,6 +345,7 @@
     }
     .ar-search:focus { border-color: var(--r-primary); box-shadow: 0 0 0 3px var(--r-glow); }
     .ar-search::placeholder { color: var(--r-muted); }
+    .ar-row[hidden] { display: none !important; }
 
     .ar-list {
       flex: 1;
@@ -705,7 +740,22 @@
             <span class="ar-badge"><t t-esc="draft_count"/></span>
           </div>
           <div class="ar-toolbar">
-            <input class="ar-search" type="search" placeholder="Search draft…" data-search="draft"/>
+            <t t-if="tiers">
+              <div class="ar-filters" data-tier-filters="draft">
+                <button type="button" class="ar-tier-chip is-active" data-tier-id="">All</button>
+                <t t-foreach="tiers" t-as="tier">
+                  <button type="button" class="ar-tier-chip"
+                          t-att-data-tier-id="tier.id"
+                          t-att-style="tier.color and ('border-color:%s;color:%s' % (tier.color, tier.color)) or None">
+                    <t t-esc="tier.name"/>
+                  </button>
+                </t>
+              </div>
+            </t>
+            <input class="ar-search" type="search"
+                   placeholder="Search serial, name or tier…"
+                   data-search="draft"
+                   autocomplete="off"/>
             <button type="button" class="ar-btn ar-btn-ghost" data-select-all="draft">Select All</button>
           </div>
         </div>
@@ -714,7 +764,13 @@
             <div class="ar-empty">No draft players left.</div>
           </t>
           <t t-foreach="draft_players" t-as="p">
-            <div class="ar-row" t-att-data-name="(p.name or '').lower()" t-att-data-id="p.id">
+            <div class="ar-row"
+                 t-att-data-id="p.id"
+                 t-att-data-name="(p.name or '').lower()"
+                 t-att-data-sl-no="str(p.sl_no or '')"
+                 t-att-data-tier-id="p.tier_id.id if p.tier_id else ''"
+                 t-att-data-tier-name="(p.tier_id.name or '').lower() if p.tier_id else ''"
+                 t-att-data-search="' '.join(filter(None, [str(p.sl_no or ''), (p.name or '').lower(), (p.tier_id.name or '').lower() if p.tier_id else '', (p.role or '').lower()]))">
               <input type="checkbox" t-att-value="p.id"/>
               <t t-if="p.photo">
                 <img class="ar-avatar"
@@ -760,7 +816,22 @@
             <span class="ar-badge"><t t-esc="unsold_count"/></span>
           </div>
           <div class="ar-toolbar">
-            <input class="ar-search" type="search" placeholder="Search unsold…" data-search="unsold"/>
+            <t t-if="tiers">
+              <div class="ar-filters" data-tier-filters="unsold">
+                <button type="button" class="ar-tier-chip is-active" data-tier-id="">All</button>
+                <t t-foreach="tiers" t-as="tier">
+                  <button type="button" class="ar-tier-chip"
+                          t-att-data-tier-id="tier.id"
+                          t-att-style="tier.color and ('border-color:%s;color:%s' % (tier.color, tier.color)) or None">
+                    <t t-esc="tier.name"/>
+                  </button>
+                </t>
+              </div>
+            </t>
+            <input class="ar-search" type="search"
+                   placeholder="Search serial, name or tier…"
+                   data-search="unsold"
+                   autocomplete="off"/>
             <button type="button" class="ar-btn ar-btn-ghost" data-select-all="unsold">Select All</button>
           </div>
         </div>
@@ -769,7 +840,13 @@
             <div class="ar-empty">No unsold players left.</div>
           </t>
           <t t-foreach="unsold_players" t-as="p">
-            <div class="ar-row" t-att-data-name="(p.name or '').lower()" t-att-data-id="p.id">
+            <div class="ar-row"
+                 t-att-data-id="p.id"
+                 t-att-data-name="(p.name or '').lower()"
+                 t-att-data-sl-no="str(p.sl_no or '')"
+                 t-att-data-tier-id="p.tier_id.id if p.tier_id else ''"
+                 t-att-data-tier-name="(p.tier_id.name or '').lower() if p.tier_id else ''"
+                 t-att-data-search="' '.join(filter(None, [str(p.sl_no or ''), (p.name or '').lower(), (p.tier_id.name or '').lower() if p.tier_id else '', (p.role or '').lower()]))">
               <input type="checkbox" t-att-value="p.id"/>
               <t t-if="p.photo">
                 <img class="ar-avatar"
@@ -919,6 +996,68 @@
     return document.querySelector('.ar-panel[data-panel="' + name + '"]');
   }
 
+  function activeTier(name) {
+    var wrap = document.querySelector('[data-tier-filters="' + name + '"]');
+    if (!wrap) return [];
+    return Array.prototype.map.call(
+      wrap.querySelectorAll('.ar-tier-chip.is-active[data-tier-id]'),
+      function (btn) { return String(btn.getAttribute('data-tier-id') || ''); }
+    ).filter(function (id) { return id !== ''; });
+  }
+
+  function applyPanelFilters(name) {
+    var p = panel(name);
+    if (!p) return;
+    var input = p.querySelector('[data-search="' + name + '"]');
+    var q = ((input && input.value) || '').trim().toLowerCase();
+    // Strip leading # from serial searches like "#12"
+    if (q.charAt(0) === '#') q = q.slice(1).trim();
+    var tierIds = activeTier(name);
+    var allMode = !tierIds.length;
+    p.querySelectorAll('.ar-row').forEach(function (row) {
+      var hay = (
+        (row.getAttribute('data-search') || '') + ' ' +
+        (row.getAttribute('data-name') || '') + ' ' +
+        (row.getAttribute('data-sl-no') || '') + ' ' +
+        (row.getAttribute('data-tier-name') || '')
+      ).toLowerCase();
+      var matchSearch = !q || hay.indexOf(q) !== -1;
+      var rowTier = String(row.getAttribute('data-tier-id') || '');
+      var matchTier = allMode || (rowTier && tierIds.indexOf(rowTier) !== -1);
+      row.hidden = !(matchSearch && matchTier);
+    });
+  }
+
+  document.querySelectorAll('[data-search]').forEach(function (input) {
+    input.addEventListener('input', function () {
+      applyPanelFilters(input.getAttribute('data-search'));
+    });
+  });
+
+  document.querySelectorAll('[data-tier-filters]').forEach(function (wrap) {
+    var name = wrap.getAttribute('data-tier-filters');
+    wrap.querySelectorAll('.ar-tier-chip').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var tid = String(btn.getAttribute('data-tier-id') || '');
+        if (!tid) {
+          // "All" — clear other chips, activate All
+          wrap.querySelectorAll('.ar-tier-chip').forEach(function (b) {
+            b.classList.toggle('is-active', !String(b.getAttribute('data-tier-id') || ''));
+          });
+        } else {
+          var allBtn = wrap.querySelector('.ar-tier-chip[data-tier-id=""]');
+          if (allBtn) allBtn.classList.remove('is-active');
+          btn.classList.toggle('is-active');
+          // If nothing selected, fall back to All
+          if (!wrap.querySelector('.ar-tier-chip.is-active[data-tier-id]:not([data-tier-id=""])')) {
+            if (allBtn) allBtn.classList.add('is-active');
+          }
+        }
+        applyPanelFilters(name);
+      });
+    });
+  });
+
   function selectedIds(name) {
     var p = panel(name);
     if (!p) return [];
@@ -952,19 +1091,6 @@
       syncSelected(row);
     });
     syncSelected(row);
-  });
-
-  document.querySelectorAll('[data-search]').forEach(function (input) {
-    input.addEventListener('input', function () {
-      var name = input.getAttribute('data-search');
-      var q = (input.value || '').trim().toLowerCase();
-      var p = panel(name);
-      if (!p) return;
-      p.querySelectorAll('.ar-row').forEach(function (row) {
-        var hay = row.getAttribute('data-name') || '';
-        row.hidden = !!(q && hay.indexOf(q) === -1);
-      });
-    });
   });
 
   document.querySelectorAll('[data-select-all]').forEach(function (btn) {

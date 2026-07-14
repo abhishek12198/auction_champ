@@ -184,6 +184,84 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .sq-badge.unsold{background:rgba(220,20,60,.15);color:#DC143C;border:1px solid rgba(220,20,60,.4)}
 .sq-badge.available{background:rgba(255,255,255,.07);color:var(--tx-d);border:1px solid var(--div)}
 
+/* ═══ SEARCH + TIER FILTERS (grid + stats modal) ═══════════════════════ */
+.mq-filters-wrap{padding:0 24px 10px;position:relative;z-index:10}
+.mq-filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.mq-tier-chip{
+  appearance:none;border:1px solid var(--div);background:rgba(0,0,0,.28);
+  color:var(--tx);border-radius:999px;padding:5px 11px;font-size:.68rem;
+  font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;
+  transition:background .15s,border-color .15s,box-shadow .15s}
+.mq-tier-chip:hover{border-color:var(--accent)}
+.mq-tier-chip.is-active{
+  background:color-mix(in srgb, var(--accent) 28%, transparent);
+  border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-glow);color:var(--accent)}
+.mq-search{
+  width:100%;height:36px;border-radius:10px;border:1px solid var(--div);
+  background:rgba(0,0,0,.25);color:var(--tx);padding:0 12px;font-size:.85rem;outline:none}
+.mq-search:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.mq-search::placeholder{color:var(--tx-d)}
+.sq-toolbar{padding:10px 18px 8px;border-bottom:1px solid var(--div);background:var(--bg-p);flex-shrink:0}
+.sq-toolbar .mq-search{margin-top:6px}
+.mq-btn[hidden],.sq-player[hidden]{display:none !important}
+
+/* ═══ REOPEN DRAFT / UNSOLD ══════════════════════════════════════════ */
+.mq-reopen-btn{background:var(--badge);color:var(--badge-tx);border:none;border-radius:20px;
+  font-size:.68rem;font-weight:800;padding:5px 14px;cursor:pointer;letter-spacing:.5px;
+  transition:opacity .15s,transform .15s}
+.mq-reopen-btn:hover{opacity:.9;transform:translateY(-1px)}
+.mq-reopen-btn[hidden]{display:none !important}
+.mq-empty-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:18px}
+.mq-empty-actions .mq-reopen-btn{font-size:.78rem;padding:10px 18px;border-radius:10px}
+.ro-overlay{position:fixed;inset:0;z-index:1100;display:none;align-items:flex-end;justify-content:center;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(4px)}
+.ro-overlay.open{display:flex}
+.ro-panel{width:100%;max-width:720px;max-height:88vh;background:var(--bg-s);
+  border-radius:16px 16px 0 0;border-top:2px solid var(--div);
+  box-shadow:0 -8px 40px rgba(0,0,0,.55);display:flex;flex-direction:column;overflow:hidden;
+  animation:sqSlideUp .25s cubic-bezier(.34,1.1,.64,1)}
+.ro-header{display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;background:var(--bg-p);border-bottom:1px solid var(--div);flex-shrink:0}
+.ro-title{font-family:var(--hf);font-size:.82rem;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--accent)}
+.ro-tabs{display:flex;gap:0;border-bottom:1px solid var(--div);flex-shrink:0;background:var(--bg-p)}
+.ro-tab{flex:1;padding:12px;border:none;background:transparent;color:var(--tx-d);cursor:pointer;
+  font-family:var(--hf);font-size:.72rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  border-bottom:2px solid transparent;transition:all .15s}
+.ro-tab.is-active{color:var(--accent);border-bottom-color:var(--accent)}
+.ro-tab .ro-count{display:inline-block;margin-left:6px;background:var(--badge);color:var(--badge-tx);
+  font-size:.62rem;padding:1px 7px;border-radius:10px}
+.ro-toolbar{padding:10px 18px 8px;border-bottom:1px solid var(--div);background:var(--bg-p);flex-shrink:0}
+.ro-toolbar .mq-search{margin-top:6px}
+.ro-body{overflow-y:auto;flex:1;padding:4px 0;min-height:140px}
+.ro-empty{text-align:center;padding:40px 20px;color:var(--tx-d);font-size:.88rem}
+.ro-row{display:flex;align-items:center;gap:10px;padding:9px 18px;
+  border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .12s}
+.ro-row:hover{background:var(--bg-c)}
+.ro-row.is-selected{background:color-mix(in srgb, var(--accent) 12%, transparent)}
+.ro-row[hidden]{display:none !important}
+.ro-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);flex-shrink:0;cursor:pointer}
+.ro-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--bg-c)}
+.ro-avatar-ph{width:36px;height:36px;border-radius:50%;flex-shrink:0;background:var(--bg-c);
+  display:flex;align-items:center;justify-content:center;font-family:var(--hf);font-weight:700;
+  color:var(--accent);font-size:.9rem}
+.ro-meta{flex:1;min-width:0}
+.ro-name{font-family:var(--hf);font-size:.88rem;font-weight:700;color:var(--tx);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ro-role{font-size:.62rem;color:var(--tx-d);letter-spacing:1px;text-transform:uppercase;margin-top:1px}
+.ro-tier{font-size:.62rem;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid var(--div);
+  flex-shrink:0;white-space:nowrap}
+.ro-open-one{appearance:none;border:1px solid var(--accent);background:transparent;color:var(--accent);
+  border-radius:8px;padding:5px 10px;font-size:.68rem;font-weight:700;cursor:pointer;flex-shrink:0}
+.ro-open-one:hover{background:var(--accent);color:var(--badge-tx)}
+.ro-foot{display:flex;flex-wrap:wrap;gap:8px;padding:12px 18px;border-top:1px solid var(--div);
+  background:var(--bg-p);flex-shrink:0}
+.ro-foot .mq-reopen-btn,.ro-foot .ro-ghost{
+  flex:1;min-width:120px;text-align:center;padding:10px 12px;border-radius:10px;font-size:.75rem}
+.ro-ghost{appearance:none;border:1px solid var(--div);background:transparent;color:var(--tx);
+  font-weight:700;cursor:pointer}
+.ro-ghost:hover{border-color:var(--accent);color:var(--accent)}
+
 /* ═══ GRID ═══════════════════════════════════════════════════════════ */
 .mq-grid-hd{position:relative;z-index:10;display:flex;align-items:center;
   justify-content:space-between;padding:16px 24px 10px;flex-wrap:wrap;gap:8px}
@@ -504,6 +582,38 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .cm-confirm{padding:10px 24px;border-radius:8px;border:none;background:var(--action-unsold);
   color:#fff;cursor:pointer;font-size:.88rem;font-weight:700;transition:all .2s}
 .cm-confirm:hover{background:var(--action-unsold-h)}
+.cm-confirm.cm-accent{background:var(--accent);color:var(--badge-tx)}
+.cm-confirm.cm-accent:hover{background:var(--accent2);filter:brightness(1.05)}
+.cm-overlay.cm-top{z-index:1200}
+.cm-box.cm-reopen{
+  width:min(420px,92%);padding:32px 28px 26px;
+  border:1.5px solid color-mix(in srgb, var(--accent) 45%, var(--div));
+  background:linear-gradient(180deg,var(--bg-p),var(--bg-s));
+  box-shadow:0 24px 70px rgba(0,0,0,.6),0 0 0 1px var(--accent-glow)}
+.cm-box.cm-reopen .cm-icon{
+  width:64px;height:64px;margin:0 auto 14px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:1.8rem;
+  background:color-mix(in srgb, var(--accent) 18%, transparent);
+  border:1.5px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  color:var(--accent);box-shadow:0 0 24px var(--accent-glow)}
+.cm-box.cm-reopen .cm-title{color:var(--accent);letter-spacing:2.5px;margin-bottom:10px}
+.cm-box.cm-reopen .cm-sub{line-height:1.45;margin-bottom:8px;color:var(--tx)}
+.cm-box.cm-reopen .cm-hint{font-size:.75rem;color:var(--tx-d);margin-bottom:22px;line-height:1.4}
+.cm-count-pill{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  margin:0 auto 16px;padding:6px 14px;border-radius:999px;
+  background:color-mix(in srgb, var(--accent) 16%, transparent);
+  border:1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  color:var(--accent);font-family:var(--hf);font-size:.78rem;font-weight:800;
+  letter-spacing:1px;text-transform:uppercase}
+.cm-toast{
+  position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
+  z-index:1300;background:var(--bg-p);color:var(--tx);border:1px solid var(--div);
+  border-radius:10px;padding:12px 18px;font-size:.85rem;font-weight:600;
+  box-shadow:0 12px 40px rgba(0,0,0,.45);opacity:0;pointer-events:none;
+  transition:opacity .2s,transform .2s;max-width:min(420px,90%);text-align:center}
+.cm-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.cm-toast.err{border-color:#DC143C;color:#ff8a9a}
 
 /* ═══ SELL MODAL — Premium (mirrors Random mode) ═══════════════════ */
 /* Bridge --sm-* vars to existing page theme vars */
@@ -1103,11 +1213,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   <div class="mq-stat mq-stat-btn" onclick="openStatModal('total')" title="View all players"><div class="mq-sl">Total</div><div class="mq-sv" id="sStat">—</div></div>
   <div class="mq-stat mq-stat-btn" onclick="openStatModal('remaining')" title="View available players"><div class="mq-sl">Remaining</div><div class="mq-sv" id="rStat">—</div></div>
   <div class="mq-stat mq-stat-btn" onclick="openStatModal('sold')" title="View sold players"><div class="mq-sl">Sold</div><div class="mq-sv" id="soldStat">—</div></div>
-  <div class="mq-stat mq-stat-btn" onclick="openStatModal('unsold')" title="View unsold players"><div class="mq-sl">Unsold</div><div class="mq-sv" id="uStat">—</div></div>
-  <div class="mq-stat"><div class="mq-sl">Tournament</div>
-    <div class="mq-sv" style="font-size:.72rem;letter-spacing:1px;">
-      <t t-if="tournament"><t t-esc="tournament.name"/></t><t t-else="">—</t>
-    </div>
+  <div class="mq-stat mq-stat-btn" onclick="openReopenModal('draft')" title="Open Draft / Registered players into auction">
+    <div class="mq-sl">Registered</div><div class="mq-sv" id="dStat">—</div>
+  </div>
+  <div class="mq-stat mq-stat-btn" onclick="openReopenModal('unsold')" title="Bring Unsold players back into auction">
+    <div class="mq-sl">Unsold</div><div class="mq-sv" id="uStat">—</div>
   </div>
 </div>
 
@@ -1130,6 +1240,24 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <span class="mq-badge" id="gBadge">0 players</span>
   </div>
 </div>
+<div class="mq-filters-wrap" id="mqGridFilters">
+  <t t-if="tiers">
+    <div class="mq-filters" data-tier-filters="grid">
+      <button type="button" class="mq-tier-chip is-active" data-tier-id="">All</button>
+      <t t-foreach="tiers" t-as="tier">
+        <button type="button" class="mq-tier-chip"
+                t-att-data-tier-id="tier.id"
+                t-att-style="tier.color and ('border-color:%s;color:%s' % (tier.color, tier.color)) or None">
+          <t t-esc="tier.name"/>
+        </button>
+      </t>
+    </div>
+  </t>
+  <input class="mq-search" type="search"
+         placeholder="Search serial, name or tier…"
+         data-search="grid"
+         autocomplete="off"/>
+</div>
 <div class="mq-wrap">
   <div id="mqRegularSection">
     <div class="mq-section-hd" id="mqRegularHd" style="display:none">Players</div>
@@ -1142,6 +1270,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   <div id="mq_empty" class="mq-empty" style="display:none">
     <div class="mq-empty-icon">&#9917;</div>
     <div>No players in the auction queue</div>
+    <div class="mq-empty-actions" id="mqEmptyActions" style="display:none">
+      <button type="button" class="mq-reopen-btn" onclick="openReopenModal('draft')">Open Registered Players</button>
+      <button type="button" class="mq-reopen-btn" onclick="openReopenModal('unsold')">Open Unsold Players</button>
+    </div>
   </div>
 </div>
 
@@ -1183,7 +1315,69 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       <span class="sq-title" id="sqTitle">Players</span>
       <button class="sq-close" onclick="closeStatModal()">&#215;</button>
     </div>
+    <div class="sq-toolbar" id="sqToolbar">
+      <t t-if="tiers">
+        <div class="mq-filters" data-tier-filters="stats">
+          <button type="button" class="mq-tier-chip is-active" data-tier-id="">All</button>
+          <t t-foreach="tiers" t-as="tier">
+            <button type="button" class="mq-tier-chip"
+                    t-att-data-tier-id="tier.id"
+                    t-att-style="tier.color and ('border-color:%s;color:%s' % (tier.color, tier.color)) or None">
+              <t t-esc="tier.name"/>
+            </button>
+          </t>
+        </div>
+      </t>
+      <input class="mq-search" type="search"
+             placeholder="Search serial, name or tier…"
+             data-search="stats"
+             autocomplete="off"/>
+    </div>
     <div class="sq-body" id="sqBody"></div>
+  </div>
+</div>
+
+<!-- ── REOPEN DRAFT / UNSOLD MODAL ──────────────────────────── -->
+<div id="roOverlay" class="ro-overlay" onclick="roBackdropClick(event)">
+  <div class="ro-panel">
+    <div class="ro-header">
+      <span class="ro-title">Add to Auction</span>
+      <button class="sq-close" onclick="closeReopenModal()">&#215;</button>
+    </div>
+    <div class="ro-tabs">
+      <button type="button" class="ro-tab is-active" data-ro-tab="draft" onclick="switchReopenTab('draft')">
+        Registered <span class="ro-count" id="roDraftCount">0</span>
+      </button>
+      <button type="button" class="ro-tab" data-ro-tab="unsold" onclick="switchReopenTab('unsold')">
+        Unsold <span class="ro-count" id="roUnsoldCount">0</span>
+      </button>
+    </div>
+    <div class="ro-toolbar" id="roToolbar">
+      <t t-if="tiers">
+        <div class="mq-filters" data-tier-filters="reopen">
+          <button type="button" class="mq-tier-chip is-active" data-tier-id="">All</button>
+          <t t-foreach="tiers" t-as="tier">
+            <button type="button" class="mq-tier-chip"
+                    t-att-data-tier-id="tier.id"
+                    t-att-style="tier.color and ('border-color:%s;color:%s' % (tier.color, tier.color)) or None">
+              <t t-esc="tier.name"/>
+            </button>
+          </t>
+        </div>
+      </t>
+      <input class="mq-search" type="search"
+             placeholder="Search serial, name or tier…"
+             data-search="reopen"
+             autocomplete="off"/>
+    </div>
+    <div class="ro-body" id="roBody">
+      <div class="ro-empty">Loading&#8230;</div>
+    </div>
+    <div class="ro-foot">
+      <button type="button" class="ro-ghost" onclick="reopenSelectAll()">Select All Visible</button>
+      <button type="button" class="mq-reopen-btn" onclick="reopenOpenSelected()">Open Selected</button>
+      <button type="button" class="ro-ghost" onclick="reopenOpenAll()">Open All Visible</button>
+    </div>
   </div>
 </div>
 
@@ -1199,6 +1393,22 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     </div>
   </div>
 </div>
+
+<!-- ── REOPEN CONFIRM MODAL ─────────────────────────────────── -->
+<div id="roConfirmModal" class="cm-overlay cm-top" onclick="roConfirmBackdrop(event)">
+  <div class="cm-box cm-reopen">
+    <div class="cm-icon" id="roCmIcon">&#127919;</div>
+    <div class="cm-title" id="roCmTitle">Add to Auction?</div>
+    <div class="cm-count-pill" id="roCmCount" style="display:none"></div>
+    <div class="cm-sub" id="roCmSub">Move selected players into the auction queue?</div>
+    <div class="cm-hint" id="roCmHint">They will appear in the Select Player grid and can be called on stage.</div>
+    <div class="cm-btns">
+      <button type="button" class="cm-cancel" onclick="closeRoConfirm()">Cancel</button>
+      <button type="button" class="cm-confirm cm-accent" id="roCmConfirm" onclick="confirmRoOpen()">Open Players</button>
+    </div>
+  </div>
+</div>
+<div id="mqToast" class="cm-toast" role="status"></div>
 
 <!-- ── SELL MODAL (Premium — mirrors Random mode) ──────────── -->
 <div id="sellModal" t-att-data-theme="theme">
@@ -1389,6 +1599,159 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
   /* All players cache — used by stats modal (no extra API call needed) */
   var _allPlayers = [];
+  var _statModalType = 'total';
+
+  function playerSearchHay(p) {
+    return (
+      String(p.serial || '') + ' ' +
+      (p.name || '') + ' ' +
+      (p.tier_name || '') + ' ' +
+      (p.role || '')
+    ).toLowerCase();
+  }
+
+  function activeTierIds(scope) {
+    var wrap = document.querySelector('[data-tier-filters="' + scope + '"]');
+    if (!wrap) return [];
+    return Array.prototype.map.call(
+      wrap.querySelectorAll('.mq-tier-chip.is-active[data-tier-id]'),
+      function (btn) { return String(btn.getAttribute('data-tier-id') || ''); }
+    ).filter(function (id) { return id !== ''; });
+  }
+
+  function searchQuery(input) {
+    var q = ((input && input.value) || '').trim().toLowerCase();
+    if (q.charAt(0) === '#') q = q.slice(1).trim();
+    return q;
+  }
+
+  function applyGridFilters() {
+    var input = document.querySelector('[data-search="grid"]');
+    var q = searchQuery(input);
+    var tierIds = activeTierIds('grid');
+    var allMode = !tierIds.length;
+    var visible = 0, total = 0;
+    document.querySelectorAll('#auction_grid .mq-btn, #auction_grid_mystery .mq-btn').forEach(function (btn) {
+      total++;
+      var hay = (btn.dataset.search || '').toLowerCase();
+      var matchSearch = !q || hay.indexOf(q) !== -1;
+      var rowTier = String(btn.dataset.tierId || '');
+      var matchTier = allMode || (rowTier && tierIds.indexOf(rowTier) !== -1);
+      var show = matchSearch && matchTier;
+      btn.hidden = !show;
+      if (show) visible++;
+    });
+    var badge = document.getElementById('gBadge');
+    if (badge && total) {
+      if (q || !allMode) {
+        badge.textContent = visible + ' of ' + total + ' player' + (total !== 1 ? 's' : '');
+      } else {
+        badge.textContent = total + ' player' + (total !== 1 ? 's' : '');
+      }
+    }
+    var grid = document.getElementById('auction_grid');
+    var mysteryGrid = document.getElementById('auction_grid_mystery');
+    var mysterySec = document.getElementById('mqMysterySection');
+    var regularHd = document.getElementById('mqRegularHd');
+    var regularTotal = grid ? grid.querySelectorAll('.mq-btn').length : 0;
+    var mysteryTotal = mysteryGrid ? mysteryGrid.querySelectorAll('.mq-btn').length : 0;
+    var regularVisible = grid ? Array.prototype.filter.call(
+      grid.querySelectorAll('.mq-btn'), function (b) { return !b.hidden; }
+    ).length : 0;
+    var mysteryVisible = mysteryGrid ? Array.prototype.filter.call(
+      mysteryGrid.querySelectorAll('.mq-btn'), function (b) { return !b.hidden; }
+    ).length : 0;
+    if (mysterySec) {
+      mysterySec.style.display = (mysteryTotal && mysteryVisible) ? '' : (mysteryTotal ? 'none' : 'none');
+    }
+    if (regularHd) {
+      regularHd.style.display = (mysteryTotal && regularTotal) ? '' : 'none';
+    }
+  }
+
+  function resetStatModalFilters() {
+    var wrap = document.querySelector('[data-tier-filters="stats"]');
+    if (wrap) {
+      wrap.querySelectorAll('.mq-tier-chip').forEach(function (b) {
+        b.classList.toggle('is-active', !String(b.getAttribute('data-tier-id') || ''));
+      });
+    }
+    var input = document.querySelector('[data-search="stats"]');
+    if (input) input.value = '';
+  }
+
+  function applyStatModalFilters() {
+    var labels = {total: 'All Players', remaining: 'Available', sold: 'Sold', unsold: 'Unsold'};
+    var body = document.getElementById('sqBody');
+    if (!body) return;
+    var input = document.querySelector('[data-search="stats"]');
+    var q = searchQuery(input);
+    var tierIds = activeTierIds('stats');
+    var allMode = !tierIds.length;
+    var visible = 0, total = 0;
+    body.querySelectorAll('.sq-player').forEach(function (row) {
+      total++;
+      var hay = (row.getAttribute('data-search') || '').toLowerCase();
+      var matchSearch = !q || hay.indexOf(q) !== -1;
+      var rowTier = String(row.getAttribute('data-tier-id') || '');
+      var matchTier = allMode || (rowTier && tierIds.indexOf(rowTier) !== -1);
+      var show = matchSearch && matchTier;
+      row.hidden = !show;
+      if (show) visible++;
+    });
+    var filterEmpty = body.querySelector('.sq-filter-empty');
+    if (total && !visible) {
+      if (!filterEmpty) {
+        filterEmpty = document.createElement('div');
+        filterEmpty.className = 'sq-empty sq-filter-empty';
+        filterEmpty.textContent = 'No players match your search';
+        body.appendChild(filterEmpty);
+      }
+      filterEmpty.style.display = '';
+    } else if (filterEmpty) {
+      filterEmpty.style.display = 'none';
+    }
+    var title = document.getElementById('sqTitle');
+    if (title) {
+      var suffix = String(visible);
+      if (q || !allMode) suffix += ' of ' + total;
+      title.textContent = (labels[_statModalType] || 'Players') + ' — ' + suffix;
+    }
+  }
+
+  function wireFilterControls() {
+    document.querySelectorAll('[data-search]').forEach(function (input) {
+      input.addEventListener('input', function () {
+        var scope = input.getAttribute('data-search');
+        if (scope === 'grid') applyGridFilters();
+        else if (scope === 'stats') applyStatModalFilters();
+        else if (scope === 'reopen') applyReopenFilters();
+      });
+    });
+    document.querySelectorAll('[data-tier-filters]').forEach(function (wrap) {
+      var scope = wrap.getAttribute('data-tier-filters');
+      wrap.querySelectorAll('.mq-tier-chip').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var tid = String(btn.getAttribute('data-tier-id') || '');
+          if (!tid) {
+            wrap.querySelectorAll('.mq-tier-chip').forEach(function (b) {
+              b.classList.toggle('is-active', !String(b.getAttribute('data-tier-id') || ''));
+            });
+          } else {
+            var allBtn = wrap.querySelector('.mq-tier-chip[data-tier-id=""]');
+            if (allBtn) allBtn.classList.remove('is-active');
+            btn.classList.toggle('is-active');
+            if (!wrap.querySelector('.mq-tier-chip.is-active[data-tier-id]:not([data-tier-id=""])')) {
+              if (allBtn) allBtn.classList.add('is-active');
+            }
+          }
+          if (scope === 'grid') applyGridFilters();
+          else if (scope === 'stats') applyStatModalFilters();
+          else if (scope === 'reopen') applyReopenFilters();
+        });
+      });
+    });
+  }
 
   /* ── RPC helper ────────────────────────────────────────── */
   function rpc(url, params) {
@@ -1421,6 +1784,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     btn.dataset.id = p.id;
     btn.dataset.serial = String(p.serial || 0);
     btn.dataset.mystery = p.is_mystery ? '1' : '0';
+    btn.dataset.tierId = String(p.tier_id || '');
+    btn.dataset.search = playerSearchHay(p);
     var numSpan = document.createElement('span');
     numSpan.className = 'mq-num';
     numSpan.textContent = p.is_mystery ? '?' : p.serial;
@@ -1456,7 +1821,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       var sStat  = document.getElementById('sStat');
       var rStat  = document.getElementById('rStat');
       var sdStat = document.getElementById('soldStat');
-      var uStat  = document.getElementById('uStat');
       if (!grid) return;
       grid.innerHTML = '';
       if (mysteryGrid) mysteryGrid.innerHTML = '';
@@ -1469,7 +1833,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         if (sStat) sStat.textContent = '0';
         if (rStat) rStat.textContent = '0';
         if (sdStat) sdStat.textContent = '0';
-        if (uStat) uStat.textContent = '0';
+        refreshReopenAvailability();
         return;
       }
       _allPlayers = players;
@@ -1494,7 +1858,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       if (sStat)  sStat.textContent  = total;
       if (rStat)  rStat.textContent  = remaining;
       if (sdStat) sdStat.textContent = soldCount;
-      if (uStat)  uStat.textContent  = unsoldCount;
+      applyGridFilters();
+      refreshReopenAvailability();
     }).catch(function(e) { console.error('loadGrid:', e); });
   }
 
@@ -1959,6 +2324,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     if (!currentPlayerId) return;
     callKw('auction.team.player', 'action_auction', [[currentPlayerId]]).then(function() {
       closePlayerDrawer(false);
+      loadGrid();
     }).catch(function() { closePlayerDrawer(); });
   };
 
@@ -2714,6 +3080,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   /* ── Keyboard close ────────────────────────────────────── */
   document.addEventListener('keydown', function(e) {
     if (e.key !== 'Escape') return;
+    if (document.getElementById('roConfirmModal') && document.getElementById('roConfirmModal').classList.contains('open')) {
+      closeRoConfirm(); return;
+    }
+    if (document.getElementById('roOverlay') && document.getElementById('roOverlay').classList.contains('open')) {
+      closeReopenModal(); return;
+    }
     if (document.getElementById('sqOverlay').classList.contains('open')) { closeStatModal(); return; }
     if (document.getElementById('sellModal').classList.contains('open')) { closeSellModal(); return; }
     if (document.getElementById('unsoldModal').classList.contains('open')) { closeUnsoldConfirm(); return; }
@@ -2721,18 +3093,328 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     if (document.getElementById('bsDrawer').classList.contains('open')) { closeBidSummary(); }
   });
 
+  /* ── Reopen Draft / Unsold ─────────────────────────────── */
+  var _reopenPool = {draft: [], unsold: [], draft_count: 0, unsold_count: 0};
+  var _reopenTab = 'draft';
+  var _reopenBusy = false;
+
+  function reopenPoolUrl() {
+    return window.AUCTION_DB_NAME
+      ? '/' + window.AUCTION_DB_NAME + '/auction/get_reopen_pool'
+      : '/auction/get_reopen_pool';
+  }
+
+  function syncReopenChrome() {
+    var hasPool = (_reopenPool.draft_count || 0) + (_reopenPool.unsold_count || 0) > 0;
+    var emptyActions = document.getElementById('mqEmptyActions');
+    if (emptyActions) emptyActions.hidden = !hasPool;
+    var dStat = document.getElementById('dStat');
+    var uStat = document.getElementById('uStat');
+    var dCount = document.getElementById('roDraftCount');
+    var uCount = document.getElementById('roUnsoldCount');
+    if (dStat) dStat.textContent = String(_reopenPool.draft_count || 0);
+    if (uStat) uStat.textContent = String(_reopenPool.unsold_count || 0);
+    if (dCount) dCount.textContent = String(_reopenPool.draft_count || 0);
+    if (uCount) uCount.textContent = String(_reopenPool.unsold_count || 0);
+  }
+
+  function refreshReopenAvailability() {
+    rpc(reopenPoolUrl(), {tournament_id: window.AUCTION_TOURNAMENT_ID || null}).then(function(res) {
+      _reopenPool = res.result || {draft: [], unsold: [], draft_count: 0, unsold_count: 0};
+      syncReopenChrome();
+    }).catch(function() {
+      _reopenPool = {draft: [], unsold: [], draft_count: 0, unsold_count: 0};
+      syncReopenChrome();
+    });
+  }
+
+  function resetReopenFilters() {
+    var wrap = document.querySelector('[data-tier-filters="reopen"]');
+    if (wrap) {
+      wrap.querySelectorAll('.mq-tier-chip').forEach(function (b) {
+        b.classList.toggle('is-active', !String(b.getAttribute('data-tier-id') || ''));
+      });
+    }
+    var input = document.querySelector('[data-search="reopen"]');
+    if (input) input.value = '';
+  }
+
+  function applyReopenFilters() {
+    var body = document.getElementById('roBody');
+    if (!body) return;
+    var input = document.querySelector('[data-search="reopen"]');
+    var q = searchQuery(input);
+    var tierIds = activeTierIds('reopen');
+    var allMode = !tierIds.length;
+    var visible = 0, total = 0;
+    body.querySelectorAll('.ro-row').forEach(function (row) {
+      total++;
+      var hay = (row.getAttribute('data-search') || '').toLowerCase();
+      var matchSearch = !q || hay.indexOf(q) !== -1;
+      var rowTier = String(row.getAttribute('data-tier-id') || '');
+      var matchTier = allMode || (rowTier && tierIds.indexOf(rowTier) !== -1);
+      var show = matchSearch && matchTier;
+      row.hidden = !show;
+      if (show) visible++;
+    });
+    var filterEmpty = body.querySelector('.ro-filter-empty');
+    if (total && !visible) {
+      if (!filterEmpty) {
+        filterEmpty = document.createElement('div');
+        filterEmpty.className = 'ro-empty ro-filter-empty';
+        filterEmpty.textContent = 'No players match your search';
+        body.appendChild(filterEmpty);
+      }
+      filterEmpty.style.display = '';
+    } else if (filterEmpty) {
+      filterEmpty.style.display = 'none';
+    }
+  }
+
+  function renderReopenList() {
+    var body = document.getElementById('roBody');
+    if (!body) return;
+    var list = _reopenTab === 'unsold' ? (_reopenPool.unsold || []) : (_reopenPool.draft || []);
+    if (!list.length) {
+      body.innerHTML = '<div class="ro-empty">No ' +
+        (_reopenTab === 'unsold' ? 'unsold' : 'registered') + ' players left.</div>';
+      return;
+    }
+    body.innerHTML = list.map(function(p) {
+      var hay = playerSearchHay(p);
+      var tierStyle = p.tier_color
+        ? ' style="border-color:' + escHtml(p.tier_color) + ';color:' + escHtml(p.tier_color) + '"'
+        : '';
+      var avatar = p.photo_url
+        ? '<img class="ro-avatar" src="' + escHtml(p.photo_url) + '" alt=""/>'
+        : '<div class="ro-avatar-ph">' + escHtml(((p.name || '?')[0] || '?').toUpperCase()) + '</div>';
+      return '<div class="ro-row" data-id="' + p.id + '" data-tier-id="' + escHtml(String(p.tier_id || '')) +
+        '" data-search="' + escHtml(hay) + '">' +
+        '<input type="checkbox" value="' + p.id + '"/>' +
+        avatar +
+        '<div class="ro-meta">' +
+          '<div class="ro-name">' + escHtml(p.name || '') + '</div>' +
+          '<div class="ro-role">' + escHtml(p.role || '—') +
+            (p.serial ? ' · #' + escHtml(String(p.serial)) : '') + '</div>' +
+        '</div>' +
+        (p.tier_name ? '<span class="ro-tier"' + tierStyle + '>' + escHtml(p.tier_name) + '</span>' : '<span></span>') +
+        '<button type="button" class="ro-open-one" data-open-one="' + p.id + '">Open</button>' +
+        '</div>';
+    }).join('');
+
+    body.querySelectorAll('.ro-row').forEach(function (row) {
+      var cb = row.querySelector('input[type="checkbox"]');
+      if (!cb) return;
+      function sync() { row.classList.toggle('is-selected', !!cb.checked); }
+      cb.addEventListener('change', sync);
+      row.addEventListener('click', function (ev) {
+        if (ev.target.closest('button') || ev.target.closest('input')) return;
+        cb.checked = !cb.checked;
+        sync();
+      });
+      sync();
+    });
+    body.querySelectorAll('[data-open-one]').forEach(function (btn) {
+      btn.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        var id = parseInt(btn.getAttribute('data-open-one'), 10);
+        if (!id) return;
+        var row = btn.closest('.ro-row');
+        var pname = row ? ((row.querySelector('.ro-name') || {}).textContent || '') : '';
+        reopenConfirmOpen([id], 'Move "' + (pname || 'this player') + '" into the auction queue?', {
+          title: 'Open Player?',
+          confirmLabel: 'Open Player',
+        });
+      });
+    });
+    applyReopenFilters();
+  }
+
+  window.switchReopenTab = function(tab) {
+    _reopenTab = tab === 'unsold' ? 'unsold' : 'draft';
+    document.querySelectorAll('[data-ro-tab]').forEach(function (el) {
+      el.classList.toggle('is-active', el.getAttribute('data-ro-tab') === _reopenTab);
+    });
+    resetReopenFilters();
+    renderReopenList();
+  };
+
+  window.openReopenModal = function(tab) {
+    resetReopenFilters();
+    var overlay = document.getElementById('roOverlay');
+    if (overlay) overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    var body = document.getElementById('roBody');
+    if (body) body.innerHTML = '<div class="ro-empty">Loading&#8230;</div>';
+    rpc(reopenPoolUrl(), {tournament_id: window.AUCTION_TOURNAMENT_ID || null}).then(function(res) {
+      _reopenPool = res.result || {draft: [], unsold: [], draft_count: 0, unsold_count: 0};
+      syncReopenChrome();
+      var preferred = tab === 'unsold' ? 'unsold' : 'draft';
+      if (preferred === 'draft' && !_reopenPool.draft_count && _reopenPool.unsold_count) preferred = 'unsold';
+      if (preferred === 'unsold' && !_reopenPool.unsold_count && _reopenPool.draft_count) preferred = 'draft';
+      switchReopenTab(preferred);
+    }).catch(function() {
+      if (body) body.innerHTML = '<div class="ro-empty">Could not load players</div>';
+    });
+  };
+
+  window.closeReopenModal = function() {
+    var overlay = document.getElementById('roOverlay');
+    if (overlay) overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  window.roBackdropClick = function(e) {
+    if (e.target === document.getElementById('roOverlay')) closeReopenModal();
+  };
+
+  function reopenVisibleIds() {
+    var body = document.getElementById('roBody');
+    if (!body) return [];
+    return Array.prototype.map.call(
+      body.querySelectorAll('.ro-row:not([hidden]) input[type="checkbox"]'),
+      function (el) { return parseInt(el.value, 10); }
+    ).filter(Boolean);
+  }
+
+  function reopenSelectedIds() {
+    var body = document.getElementById('roBody');
+    if (!body) return [];
+    return Array.prototype.map.call(
+      body.querySelectorAll('.ro-row:not([hidden]) input[type="checkbox"]:checked'),
+      function (el) { return parseInt(el.value, 10); }
+    ).filter(Boolean);
+  }
+
+  window.reopenSelectAll = function() {
+    var body = document.getElementById('roBody');
+    if (!body) return;
+    var rows = body.querySelectorAll('.ro-row:not([hidden])');
+    var allOn = Array.prototype.every.call(rows, function (row) {
+      var cb = row.querySelector('input[type="checkbox"]');
+      return cb && cb.checked;
+    });
+    rows.forEach(function (row) {
+      var cb = row.querySelector('input[type="checkbox"]');
+      if (!cb) return;
+      cb.checked = !allOn;
+      row.classList.toggle('is-selected', !!cb.checked);
+    });
+  };
+
+  var _roPendingIds = null;
+  var _roToastTimer = null;
+
+  function mqToast(msg, isErr) {
+    var el = document.getElementById('mqToast');
+    if (!el) return;
+    el.textContent = msg || '';
+    el.classList.toggle('err', !!isErr);
+    el.classList.add('show');
+    if (_roToastTimer) clearTimeout(_roToastTimer);
+    _roToastTimer = setTimeout(function() { el.classList.remove('show'); }, 2800);
+  }
+
+  window.closeRoConfirm = function() {
+    var m = document.getElementById('roConfirmModal');
+    if (m) m.classList.remove('open');
+    _roPendingIds = null;
+  };
+
+  window.roConfirmBackdrop = function(e) {
+    if (e.target === document.getElementById('roConfirmModal')) closeRoConfirm();
+  };
+
+  window.confirmRoOpen = function() {
+    var ids = _roPendingIds;
+    closeRoConfirm();
+    if (!ids || !ids.length || _reopenBusy) return;
+    _reopenBusy = true;
+    var btn = document.getElementById('roCmConfirm');
+    if (btn) { btn.disabled = true; btn.textContent = 'Opening…'; }
+    callKw('auction.team.player', 'action_auction', [ids], {context: {mass_update: true}}).then(function(res) {
+      _reopenBusy = false;
+      if (btn) { btn.disabled = false; btn.textContent = 'Open Players'; }
+      var opened = (res.result && res.result.opened) || ids.length;
+      closeReopenModal();
+      loadGrid();
+      mqToast(opened + ' player' + (opened === 1 ? '' : 's') + ' added to the auction queue');
+    }).catch(function() {
+      _reopenBusy = false;
+      if (btn) { btn.disabled = false; btn.textContent = 'Open Players'; }
+      mqToast('Could not open players. Please try again.', true);
+    });
+  };
+
+  function reopenConfirmOpen(ids, message, opts) {
+    if (_reopenBusy) return;
+    if (!ids || !ids.length) {
+      mqToast('Select at least one player', true);
+      return;
+    }
+    opts = opts || {};
+    _roPendingIds = ids.slice();
+    var count = ids.length;
+    var title = opts.title || (count === 1 ? 'Open Player?' : 'Add to Auction?');
+    var msg = message || ('Move ' + count + ' player' + (count === 1 ? '' : 's') + ' into the auction queue?');
+    var hint = opts.hint || 'They will appear in the Select Player grid and can be called on stage.';
+    var confirmLabel = opts.confirmLabel || (count === 1 ? 'Open Player' : ('Open ' + count + ' Players'));
+
+    var titleEl = document.getElementById('roCmTitle');
+    var subEl = document.getElementById('roCmSub');
+    var hintEl = document.getElementById('roCmHint');
+    var countEl = document.getElementById('roCmCount');
+    var btn = document.getElementById('roCmConfirm');
+    var icon = document.getElementById('roCmIcon');
+    if (titleEl) titleEl.textContent = title;
+    if (subEl) subEl.textContent = msg;
+    if (hintEl) hintEl.textContent = hint;
+    if (countEl) {
+      countEl.style.display = '';
+      countEl.textContent = count + ' selected';
+    }
+    if (btn) { btn.disabled = false; btn.textContent = confirmLabel; }
+    if (icon) icon.innerHTML = opts.icon || '&#127919;';
+    var modal = document.getElementById('roConfirmModal');
+    if (modal) modal.classList.add('open');
+  }
+
+  window.reopenOpenSelected = function() {
+    var ids = reopenSelectedIds();
+    reopenConfirmOpen(ids, 'Move selected players into the auction queue?', {
+      title: 'Open Selected?',
+      confirmLabel: ids.length === 1 ? 'Open Player' : ('Open ' + ids.length + ' Players'),
+    });
+  };
+
+  window.reopenOpenAll = function() {
+    var ids = reopenVisibleIds();
+    if (!ids.length) {
+      mqToast('No players to open', true);
+      return;
+    }
+    var kind = _reopenTab === 'unsold' ? 'unsold' : 'registered';
+    reopenConfirmOpen(ids,
+      'Move all ' + ids.length + ' visible ' + kind + ' players into the auction queue?', {
+        title: kind === 'unsold' ? 'Open All Unsold?' : 'Open All Registered?',
+        confirmLabel: 'Open All ' + ids.length,
+      });
+  };
+
   /* ── Stats overview modal ──────────────────────────────── */
   window.openStatModal = function(type) {
+    _statModalType = type || 'total';
+    resetStatModalFilters();
     var labels = {total: 'All Players', remaining: 'Available', sold: 'Sold', unsold: 'Unsold'};
     var filtered = _allPlayers;
     if (type === 'remaining') filtered = _allPlayers.filter(function(p) { return p.state !== 'sold' && p.state !== 'unsold'; });
     else if (type === 'sold')   filtered = _allPlayers.filter(function(p) { return p.state === 'sold'; });
     else if (type === 'unsold') filtered = _allPlayers.filter(function(p) { return p.state === 'unsold'; });
 
-    document.getElementById('sqTitle').textContent = (labels[type] || 'Players') + ' — ' + filtered.length;
-
     var body = document.getElementById('sqBody');
     if (!filtered.length) {
+      document.getElementById('sqTitle').textContent = (labels[type] || 'Players') + ' — 0';
       body.innerHTML = '<div class="sq-empty">No players in this category</div>';
     } else {
       body.innerHTML = filtered.map(function(p) {
@@ -2745,7 +3427,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         } else {
           badge = '<span class="sq-badge available">AVAILABLE</span>';
         }
-        return '<div class="sq-player" onclick="closeStatModal();openPlayerDrawer(' + p.id + ')">' +
+        return '<div class="sq-player" data-tier-id="' + escHtml(String(p.tier_id || '')) + '" data-search="' + escHtml(playerSearchHay(p)) + '" onclick="closeStatModal();openPlayerDrawer(' + p.id + ')">' +
           '<span class="sq-num">#' + escHtml(String(p.serial)) + '</span>' +
           '<div class="sq-tier-dot"' + dotStyle + '></div>' +
           '<div class="sq-info">' +
@@ -2755,6 +3437,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           badge +
           '</div>';
       }).join('');
+      applyStatModalFilters();
     }
     document.getElementById('sqOverlay').classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -2772,6 +3455,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   /* ── Init ──────────────────────────────────────────────── */
   window._auctionReloadGrid = loadGrid;
   document.addEventListener('DOMContentLoaded', function() {
+    wireFilterControls();
     setTimeout(loadGrid,   100);
     setTimeout(loadTicker, 200);
   });

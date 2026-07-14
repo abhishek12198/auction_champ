@@ -254,14 +254,22 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   letter-spacing:.04em;color:var(--gold);line-height:1}
 .pj-aside-sec{display:flex;flex-direction:column;gap:.55rem}
 .pj-aside-h{font-size:.78rem;letter-spacing:.2em;text-transform:uppercase;color:var(--tx2);font-weight:800}
-#pjBidList{display:flex;flex-direction:column;gap:.5rem}
-.pj-bid-row{display:grid;grid-template-columns:2.4rem 1fr auto;align-items:center;gap:.65rem;
+#pjBidList{display:flex;flex-direction:column;gap:.45rem}
+.pj-bid-row{display:grid;grid-template-columns:2.85rem minmax(0,1fr) auto;align-items:center;gap:.7rem;
   padding:.55rem .7rem;border-radius:.65rem;background:var(--card);border:1px solid rgba(255,255,255,.06)}
 [data-mode="light"] .pj-bid-row{border-color:rgba(0,0,0,.06)}
-.pj-bid-row img{width:2.4rem;height:2.4rem;border-radius:50%;object-fit:contain;background:rgba(0,0,0,.15)}
-.pj-bid-name{font-weight:800;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pj-bid-pts{font-weight:900;font-size:1.05rem;color:var(--gold);white-space:nowrap}
+.pj-bid-photo{width:2.85rem;height:2.85rem;border-radius:50%;object-fit:cover;object-position:top center;
+  background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.12);flex-shrink:0}
+.pj-bid-meta{min-width:0;display:flex;flex-direction:column;gap:.18rem}
+.pj-bid-name{font-weight:800;font-size:.92rem;letter-spacing:.04em;text-transform:uppercase;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--tx)}
+.pj-bid-team{display:flex;align-items:center;gap:.4rem;min-width:0}
+.pj-bid-team-logo{width:1.15rem;height:1.15rem;border-radius:50%;object-fit:contain;
+  background:rgba(255,255,255,.08);flex-shrink:0}
+.pj-bid-team-name{font-size:.72rem;font-weight:700;letter-spacing:.04em;color:var(--tx2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}
+.pj-bid-pts{font-weight:900;font-size:1.05rem;color:var(--gold);white-space:nowrap;text-align:right}
+.pj-bid-pts .pj-bid-pts-unit{font-size:.62rem;letter-spacing:.08em;opacity:.75;margin-left:2px}
 .pj-bid-empty{font-size:.9rem;color:var(--muted);padding:.4rem 0}
 #pjTeamsStrip{display:flex;flex-wrap:wrap;gap:.55rem}
 .pj-team-chip{width:2.8rem;height:2.8rem;border-radius:50%;overflow:hidden;
@@ -472,7 +480,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         <div class="pj-aside-progress" id="pjAsideProgress">— of —</div>
         <div class="pj-aside-sec">
           <div class="pj-aside-h">Recent Bidding</div>
-          <div id="pjBidList"><div class="pj-bid-empty">Waiting for bids…</div></div>
+          <div id="pjBidList"><div class="pj-bid-empty">No sales yet…</div></div>
         </div>
         <div class="pj-aside-sec">
           <div class="pj-aside-h">Teams in Auction</div>
@@ -521,32 +529,29 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     </div>
   </div>
 
+  <t t-set="pj_ads" t-value="tournament.advertiser_ids if tournament else []"/>
+  <t t-if="pj_ads">
   <div id="pj-sponsors">
-    <t t-set="pj_ads" t-value="tournament.advertiser_ids if tournament else []"/>
     <div class="pj-spon-head"><span class="pj-spon-label">Our Sponsors</span></div>
     <div class="pj-spon-row">
-      <t t-if="pj_ads">
-        <div class="pj-spon-nav" onclick="pjSponScroll(-1)" title="Previous">&#8249;</div>
-        <div class="pj-spon-viewport">
-          <div class="pj-spon-track" id="pjSponTrack">
-            <t t-foreach="pj_ads" t-as="ad">
-              <div class="pj-spon-item">
-                <div class="pj-spon-card">
-                  <img class="pj-spon-logo"
-                       t-att-src="'/'+(db_name or '')+'/auction/public/image/auction.advertiser/' + str(ad.id) + '/image'"
-                       t-att-alt="ad.name" t-att-title="ad.name"/>
-                </div>
+      <div class="pj-spon-nav" onclick="pjSponScroll(-1)" title="Previous">&#8249;</div>
+      <div class="pj-spon-viewport">
+        <div class="pj-spon-track" id="pjSponTrack">
+          <t t-foreach="pj_ads" t-as="ad">
+            <div class="pj-spon-item">
+              <div class="pj-spon-card">
+                <img class="pj-spon-logo"
+                     t-att-src="'/'+(db_name or '')+'/auction/public/image/auction.advertiser/' + str(ad.id) + '/image'"
+                     t-att-alt="ad.name" t-att-title="ad.name"/>
               </div>
-            </t>
-          </div>
+            </div>
+          </t>
         </div>
-        <div class="pj-spon-nav" onclick="pjSponScroll(1)" title="Next">&#8250;</div>
-      </t>
-      <t t-else="">
-        <div class="pj-spon-empty">Sponsor slots available — add partners under Tournament → Advertisers</div>
-      </t>
+      </div>
+      <div class="pj-spon-nav" onclick="pjSponScroll(1)" title="Next">&#8250;</div>
     </div>
   </div>
+  </t>
 </div>
 
 <script>//<![CDATA[
@@ -679,16 +684,30 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     var list = document.getElementById('pjBidList');
     if (!list) return;
     if (!bids || !bids.length) {
-      list.innerHTML = '<div class="pj-bid-empty">Waiting for bids…</div>';
+      list.innerHTML = '<div class="pj-bid-empty">No sales yet…</div>';
       return;
     }
     var html = '';
     for (var i = 0; i < bids.length; i++) {
       var b = bids[i] || {};
-      var src = b.team_logo_url || '/auction_module/static/img/default_icon.png';
-      var pts = b.points ? (Number(b.points).toLocaleString() + ' PTS') : '—';
-      html += '<div class="pj-bid-row"><img src="' + esc(src) + '" alt=""/><div class="pj-bid-name">' +
-              esc(b.team_name || '—') + '</div><div class="pj-bid-pts">' + esc(pts) + '</div></div>';
+      var photo = b.player_photo_url || '/auction_module/static/img/default_icon.png';
+      var teamLogo = b.team_logo_url || '/auction_module/static/img/default_icon.png';
+      var ptsNum = Number(b.points || 0);
+      var pts = ptsNum
+        ? (ptsNum.toLocaleString() + '<span class="pj-bid-pts-unit">PTS</span>')
+        : '<span class="pj-bid-pts-unit">—</span>';
+      html +=
+        '<div class="pj-bid-row">' +
+          '<img class="pj-bid-photo" src="' + esc(photo) + '" alt=""/>' +
+          '<div class="pj-bid-meta">' +
+            '<div class="pj-bid-name">' + esc(b.player_name || '—') + '</div>' +
+            '<div class="pj-bid-team">' +
+              '<img class="pj-bid-team-logo" src="' + esc(teamLogo) + '" alt=""/>' +
+              '<span class="pj-bid-team-name">' + esc(b.team_name || '—') + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="pj-bid-pts">' + pts + '</div>' +
+        '</div>';
     }
     list.innerHTML = html;
   }

@@ -1713,16 +1713,31 @@ class AuctionTeamPlayer(models.Model):
             self.env.user.notify_success(message)
 
     def action_auction(self):
+        """Move draft/unsold players into In Auction (manual or mass reopen)."""
         context = self.env.context.copy()
+        opened = self.env['auction.team.player']
         for player in self:
-            if player.state == 'unsold':
+            if player.icon_player:
+                continue
+            if player.state in ('draft', 'unsold'):
                 player.state = 'auction'
-                if not context.get('mass_update', False):
+                opened |= player
+                if not context.get('mass_update', False) and len(self) == 1:
                     message = player.name + ' brought to auction successfully!'
-                    self.env.user.notify_success(message)
-        if context.get('mass_update', False):
+                    try:
+                        self.env.user.notify_success(message)
+                    except Exception:
+                        pass
+        tournaments = opened.mapped('tournament_id')
+        if tournaments:
+            tournaments.sudo().write({'auction_declared_complete': False})
+        if opened and (context.get('mass_update', False) or len(opened) > 1):
             message = 'Selected players brought to auction successfully!'
-            self.env.user.notify_success(message)
+            try:
+                self.env.user.notify_success(message)
+            except Exception:
+                pass
+        return {'success': True, 'opened': len(opened)}
 
     def action_revoke_key_player(self):
         for player in self:
