@@ -392,27 +392,32 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 /* ═══ PLAYER DRAWER ══════════════════════════════════════════════════ */
 .pc-overlay{position:fixed;inset:0;z-index:800;pointer-events:none}
 .pc-overlay.open{pointer-events:all}
-.pc-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+.pc-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(6px);
   opacity:0;transition:opacity .3s}
 .pc-overlay.open .pc-backdrop{opacity:1}
 .pc-panel{position:absolute;top:0;right:-100%;width:min(1060px,90%);height:100vh;
-  background:var(--card-bg);border-left:2px solid var(--div);display:flex;flex-direction:column;
-  transition:right .38s cubic-bezier(.4,0,.2,1);box-shadow:-6px 0 40px rgba(0,0,0,.5)}
+  background:linear-gradient(180deg,var(--bg-s) 0%,var(--bg) 100%);
+  border-left:1px solid var(--div);display:flex;flex-direction:column;
+  transition:right .38s cubic-bezier(.4,0,.2,1);
+  box-shadow:-12px 0 48px rgba(0,0,0,.55),inset 1px 0 0 rgba(255,255,255,.04)}
 .pc-overlay.open .pc-panel{right:0}
 .pc-ph{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;
-  background:var(--bg-p);border-bottom:2px solid var(--div);flex-shrink:0;gap:12px}
+  background:linear-gradient(135deg,var(--bg-p),var(--bg-s));
+  border-bottom:1px solid var(--div);flex-shrink:0;gap:12px;position:relative}
+.pc-ph::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),transparent);opacity:.85}
 .pc-ph-left{display:flex;align-items:center;gap:10px}
 .pc-logo{height:36px;width:auto;object-fit:contain;opacity:.92}
 .pc-ph-title{font-family:var(--hf);font-size:.82rem;font-weight:700;letter-spacing:3px;
   text-transform:uppercase;color:var(--accent)}
-.pc-close{background:none;border:none;color:var(--tx);font-size:2rem;cursor:pointer;
-  width:40px;height:40px;display:flex;align-items:center;justify-content:center;
-  border-radius:6px;transition:all .2s}
-.pc-close:hover{background:rgba(220,20,60,.15);color:#e53935}
-.pc-fullscreen-btn{background:none;border:1.5px solid var(--card-bd);color:var(--tx-d);
-  font-size:1.1rem;cursor:pointer;width:36px;height:36px;display:flex;align-items:center;
-  justify-content:center;border-radius:6px;transition:all .2s;flex-shrink:0}
-.pc-fullscreen-btn:hover{border-color:var(--accent);color:var(--accent)}
+.pc-close{background:rgba(255,255,255,.04);border:1px solid var(--div);color:var(--tx);
+  font-size:1.5rem;cursor:pointer;width:40px;height:40px;display:flex;align-items:center;
+  justify-content:center;border-radius:10px;transition:all .2s}
+.pc-close:hover{background:rgba(220,20,60,.18);border-color:#e53935;color:#e53935}
+.pc-fullscreen-btn{background:rgba(255,255,255,.04);border:1px solid var(--div);color:var(--tx-d);
+  font-size:1.05rem;cursor:pointer;width:40px;height:40px;display:flex;align-items:center;
+  justify-content:center;border-radius:10px;transition:all .2s;flex-shrink:0}
+.pc-fullscreen-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-glow)}
 /* Fullscreen mode — hide chrome, fill screen with player card */
 #pcPanel:fullscreen,#pcPanel:-webkit-full-screen,#pcPanel:-moz-full-screen{
   width:100vw!important;right:0!important;border:none!important;box-shadow:none!important}
@@ -551,19 +556,68 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .pc-pts-edit-cancel:hover{border-color:var(--tx-d)}
 .pc-loading{padding:40px;text-align:center;color:var(--tx-d)}
 
-/* Action bar */
-.pc-actions{display:flex;gap:12px;padding:14px 18px;background:var(--bg-p);
-  border-top:1px solid var(--div);flex-shrink:0}
-.pc-action-btn{flex:1;padding:13px;border:none;border-radius:10px;font-family:var(--hf);
-  font-size:.95rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
-  cursor:pointer;transition:all .2s}
-.pc-action-btn.unsold-btn{background:var(--action-unsold);color:#fff}
-.pc-action-btn.unsold-btn:hover{background:var(--action-unsold-h);transform:translateY(-1px)}
-.pc-action-btn.sell-btn{background:var(--action-sell);color:var(--action-sell-tx)}
-.pc-action-btn.sell-btn:hover{background:var(--action-sell-h);transform:translateY(-1px)}
-.pc-action-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.pc-action-btn.bring-btn{background:var(--accent);color:var(--badge-tx);border:none}
-.pc-action-btn.bring-btn:hover{background:var(--accent2);transform:translateY(-1px)}
+/* Action bar — themed premium CTAs */
+.pc-actions{
+  display:flex;gap:12px;padding:14px 18px max(16px, env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,transparent,rgba(0,0,0,.18)),var(--bg-p);
+  border-top:1px solid var(--div);flex-shrink:0;
+  box-shadow:0 -10px 28px rgba(0,0,0,.25);
+}
+.pc-action-btn{
+  flex:1;min-height:56px;padding:12px 14px;border:none;border-radius:14px;
+  font-family:var(--hf);cursor:pointer;transition:transform .18s,box-shadow .18s,filter .18s;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;
+}
+.pc-action-btn::before{
+  content:'';position:absolute;inset:0;opacity:0;transition:opacity .2s;
+  background:linear-gradient(180deg,rgba(255,255,255,.16),transparent 55%);
+}
+.pc-action-btn:hover::before{opacity:1}
+.pc-action-btn:hover{transform:translateY(-2px)}
+.pc-action-btn:active{transform:translateY(0) scale(.98)}
+.pc-action-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.pc-btn-ico{
+  width:36px;height:36px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.05rem;font-weight:800;background:rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.22);
+}
+.pc-btn-txt{display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:0;text-align:left}
+.pc-btn-label{
+  font-size:.82rem;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;line-height:1.1;
+}
+.pc-btn-sub{
+  font-family:var(--bf);font-size:.68rem;font-weight:600;letter-spacing:.4px;
+  opacity:.78;text-transform:none;
+}
+.pc-action-btn.unsold-btn{
+  background:linear-gradient(145deg,var(--action-unsold) 0%,var(--action-unsold-h) 100%);
+  color:#fff;
+  box-shadow:0 8px 22px rgba(220,20,60,.32),inset 0 1px 0 rgba(255,255,255,.2);
+}
+.pc-action-btn.unsold-btn:hover{
+  box-shadow:0 12px 28px rgba(220,20,60,.42),inset 0 1px 0 rgba(255,255,255,.25);
+  filter:brightness(1.05);
+}
+.pc-action-btn.sell-btn{
+  background:linear-gradient(145deg,var(--action-sell) 0%,var(--action-sell-h) 100%);
+  color:var(--action-sell-tx);
+  box-shadow:0 8px 22px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,.28);
+}
+.pc-action-btn.sell-btn:hover{
+  box-shadow:0 12px 30px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,.35);
+  filter:brightness(1.04);
+}
+.pc-action-btn.bring-btn{
+  background:linear-gradient(145deg,var(--accent) 0%,var(--accent2) 100%);
+  color:var(--badge-tx);
+  box-shadow:0 8px 22px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,.28);
+}
+.pc-action-btn.bring-btn:hover{
+  box-shadow:0 12px 30px var(--accent-glow);
+  filter:brightness(1.04);
+}
 
 /* ═══ CONFIRM MODAL ══════════════════════════════════════════════════ */
 .cm-overlay{position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.7);
@@ -986,12 +1040,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     bottom:calc(56px + env(safe-area-inset-bottom, 0px));
     transform:translateX(-50%);
     z-index:700;
-    gap:6px;
-    padding:12px 20px 14px;
-    border-radius:22px;
+    gap:3px;
+    padding:6px 11px 7px;
+    border-radius:14px;
     background:rgba(8,12,22,.94);
     border:1.5px solid var(--accent);
-    box-shadow:0 0 0 1px rgba(0,0,0,.35),0 12px 36px rgba(0,0,0,.55),0 0 28px var(--accent-glow);
+    box-shadow:0 0 0 1px rgba(0,0,0,.35),0 8px 22px rgba(0,0,0,.48),0 0 14px var(--accent-glow);
     backdrop-filter:blur(10px);
     -webkit-backdrop-filter:blur(10px);
     -webkit-tap-highlight-color:transparent;
@@ -1000,16 +1054,16 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   }
   .mq-dice-fab:active{transform:translateX(-50%) scale(.96)}
   .mq-dice-fab .mq-dice{
-    width:76px;height:76px;border-radius:14px;padding:10px;
-    box-shadow:0 0 18px var(--accent-glow),inset 0 0 12px rgba(0,0,0,.45);
+    width:44px;height:44px;border-radius:10px;padding:6px;
+    box-shadow:0 0 10px var(--accent-glow),inset 0 0 8px rgba(0,0,0,.45);
   }
   .mq-dice-fab .mq-dice:hover{transform:none}
-  .mq-dice-fab .mq-die-dot{width:11px;height:11px;box-shadow:0 0 8px var(--accent)}
-  .mq-dice-fab .mq-dice-num{font-size:1.85rem;letter-spacing:1px}
+  .mq-dice-fab .mq-die-dot{width:7px;height:7px;box-shadow:0 0 5px var(--accent)}
+  .mq-dice-fab .mq-dice-num{font-size:1.05rem;letter-spacing:1px}
   .mq-dice-fab .mq-dice-lbl{
-    font-size:.72rem;letter-spacing:2.5px;color:var(--accent);font-weight:700;
+    font-size:.5rem;letter-spacing:1.5px;color:var(--accent);font-weight:700;
   }
-  .mq-wrap{padding-bottom:160px}
+  .mq-wrap{padding-bottom:118px}
   /* Number lives on the dice — hide floating pill on touch layouts */
   #mqDiceResult{display:none !important}
 }
@@ -1039,20 +1093,21 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   .mq-legend-dot{width:8px;height:8px;border-radius:2px}
   .mq-leg-full{display:none}
   .mq-leg-short{display:inline}
-  .mq-wrap{padding:0 10px 160px}
+  .mq-wrap{padding:0 10px 110px}
   .mq-grid{grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:7px}
   .mq-btn{border-radius:8px;font-size:1.1rem}
   .mq-lbl{font-size:.42rem}
 
-  /* Phone: slightly larger thumb target for the floating dice */
+  /* Phone: compact floating dice */
   .mq-dice-fab{
-    bottom:calc(58px + env(safe-area-inset-bottom, 0px));
-    padding:14px 22px 16px;
+    bottom:calc(54px + env(safe-area-inset-bottom, 0px));
+    padding:5px 10px 6px;
+    border-radius:12px;
   }
-  .mq-dice-fab .mq-dice{width:84px;height:84px;border-radius:16px;padding:11px}
-  .mq-dice-fab .mq-die-dot{width:12px;height:12px}
-  .mq-dice-fab .mq-dice-num{font-size:2.1rem}
-  .mq-dice-fab .mq-dice-lbl{font-size:.78rem;letter-spacing:3px}
+  .mq-dice-fab .mq-dice{width:40px;height:40px;border-radius:9px;padding:5px}
+  .mq-dice-fab .mq-die-dot{width:6px;height:6px}
+  .mq-dice-fab .mq-dice-num{font-size:.95rem}
+  .mq-dice-fab .mq-dice-lbl{font-size:.46rem;letter-spacing:1.2px}
 
   /* Player drawer — full screen on mobile */
   .pc-panel{
@@ -1086,13 +1141,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   .pc-attr-val{font-size:.9rem}
   .pc-state-banner{font-size:.75rem;padding:6px 10px;margin-top:8px}
 
-  /* Action buttons — tall enough for fingers */
-  .pc-actions{padding:10px 12px;gap:8px;flex-wrap:wrap}
+  /* Action buttons — premium themed CTAs */
+  .pc-actions{padding:12px 12px max(14px, env(safe-area-inset-bottom));gap:10px;flex-wrap:wrap}
   .pc-action-btn{
-    flex:1 1 40%;min-height:48px;
-    padding:13px 8px;font-size:.82rem;
-    letter-spacing:1px;border-radius:10px
+    flex:1 1 42%;min-height:54px;padding:10px 12px;border-radius:14px;gap:10px
   }
+  .pc-btn-ico{width:32px;height:32px;border-radius:9px;font-size:.95rem}
+  .pc-btn-label{font-size:.72rem;letter-spacing:1px}
+  .pc-btn-sub{font-size:.62rem}
   .pc-action-btn.bring-btn{flex:1 1 100%}
 
   /* Unsold / sell confirm modal */
@@ -1130,7 +1186,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   .mq-grid{grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:5px}
   .mq-btn{font-size:.95rem}
   .pc-attrs{grid-template-columns:1fr}
-  .pc-action-btn{font-size:.75rem;padding:12px 6px}
+  .pc-action-btn{min-height:52px}
+  .pc-btn-label{font-size:.68rem}
+  .pc-btn-sub{display:none}
 }
 
 /* ── Full-screen stamp celebration overlay ─────────────── */
@@ -1323,13 +1381,25 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     </div>
     <div class="pc-actions" id="pcActions" style="display:none">
       <button class="pc-action-btn unsold-btn" id="btnUnsold" onclick="openUnsoldConfirm()">
-        &#10007; Set Unsold
+        <span class="pc-btn-ico">&#10007;</span>
+        <span class="pc-btn-txt">
+          <span class="pc-btn-label">Set Unsold</span>
+          <span class="pc-btn-sub">Pass this player</span>
+        </span>
       </button>
       <button class="pc-action-btn sell-btn" id="btnSell" onclick="openSellModal()">
-        &#10003; Sell to Team
+        <span class="pc-btn-ico">&#10003;</span>
+        <span class="pc-btn-txt">
+          <span class="pc-btn-label">Sell to Team</span>
+          <span class="pc-btn-sub">Complete the sale</span>
+        </span>
       </button>
       <button class="pc-action-btn bring-btn" id="btnBringBack" onclick="openBringBackConfirm()" style="display:none">
-        ↩ Bring Back to Auction
+        <span class="pc-btn-ico">&#8617;</span>
+        <span class="pc-btn-txt">
+          <span class="pc-btn-label">Bring Back</span>
+          <span class="pc-btn-sub">Return to auction</span>
+        </span>
       </button>
     </div>
   </div>
@@ -1969,30 +2039,42 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         var btnUnsold    = document.getElementById('btnUnsold');
         var btnSell      = document.getElementById('btnSell');
         var btnBringBack = document.getElementById('btnBringBack');
+        function setSellBtnMode(mode) {
+          if (!btnSell) return;
+          var ico = btnSell.querySelector('.pc-btn-ico');
+          var label = btnSell.querySelector('.pc-btn-label');
+          var sub = btnSell.querySelector('.pc-btn-sub');
+          if (mode === 'reveal') {
+            if (ico) ico.innerHTML = '&#128274;';
+            if (label) label.textContent = 'Reveal Player';
+            if (sub) sub.textContent = 'Show mystery identity';
+            btnSell.onclick = function() { smRevealMysteryFromDrawer(); };
+          } else {
+            if (ico) ico.innerHTML = '&#10003;';
+            if (label) label.textContent = 'Sell to Team';
+            if (sub) sub.textContent = 'Complete the sale';
+            btnSell.onclick = function() { openSellModal(); };
+          }
+        }
         if (p.state === 'sold') {
           if (_mysteryAwaitingReveal) {
             actions.style.display = 'flex';
             if (btnUnsold)    btnUnsold.style.display    = 'none';
             if (btnSell) {
               btnSell.style.display = '';
-              btnSell.innerHTML = '&#128274; Reveal Player';
-              btnSell.onclick = function() { smRevealMysteryFromDrawer(); };
+              setSellBtnMode('reveal');
             }
             if (btnBringBack) btnBringBack.style.display = 'none';
           } else {
             actions.style.display = 'none';
-            if (btnSell) {
-              btnSell.innerHTML = '&#10003; Sell to Team';
-              btnSell.onclick = function() { openSellModal(); };
-            }
+            setSellBtnMode('sell');
           }
         } else if (p.state === 'unsold') {
           actions.style.display = 'flex';
           if (btnUnsold)    btnUnsold.style.display    = 'none';
           if (btnSell) {
             btnSell.style.display = 'none';
-            btnSell.innerHTML = '&#10003; Sell to Team';
-            btnSell.onclick = function() { openSellModal(); };
+            setSellBtnMode('sell');
           }
           if (btnBringBack) btnBringBack.style.display = '';
         } else {
@@ -2000,8 +2082,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           if (btnUnsold)    btnUnsold.style.display    = '';
           if (btnSell) {
             btnSell.style.display = '';
-            btnSell.innerHTML = '&#10003; Sell to Team';
-            btnSell.onclick = function() { openSellModal(); };
+            setSellBtnMode('sell');
           }
           if (btnBringBack) btnBringBack.style.display = 'none';
         }
