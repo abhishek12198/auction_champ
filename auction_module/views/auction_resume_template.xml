@@ -698,8 +698,11 @@
           <div class="ar-eyebrow">Auction Queue Empty</div>
           <h1 class="ar-title"><t t-esc="tournament.name if tournament else 'Auction'"/></h1>
           <p class="ar-sub">
-            No players are currently In Auction. Open Draft or Unsold players to continue,
-            or declare the auction complete to show the final Thank You screen.
+            No players are currently In Auction. Open Draft / Registered or Unsold players
+            to start or continue the live presentation.
+            <t t-if="sold_count">
+              You can also declare the auction complete to show the final Thank You screen.
+            </t>
           </p>
         </div>
       </div>
@@ -887,14 +890,18 @@
 
     <footer class="ar-footer">
       <p class="ar-footer-note">
-        Opening players moves them to <strong>In Auction</strong> and resumes the live presentation.
-        Only declare complete when you are finished with Draft and Unsold players.
+        Opening players moves them to <strong>In Auction</strong> and starts / resumes the live presentation.
+        <t t-if="sold_count">
+          Only declare complete when you are finished with Draft and Unsold players.
+        </t>
       </p>
-      <div class="ar-footer-actions">
-        <button type="button" class="ar-btn ar-btn-danger" id="ar-complete-btn">
-          Declare Auction Complete
-        </button>
-      </div>
+      <t t-if="sold_count">
+        <div class="ar-footer-actions">
+          <button type="button" class="ar-btn ar-btn-danger" id="ar-complete-btn">
+            Declare Auction Complete
+          </button>
+        </div>
+      </t>
     </footer>
 
     <div class="ar-brand-strip">

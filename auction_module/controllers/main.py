@@ -950,13 +950,12 @@ class Auction(http.Controller):
 
                 # Routing (In-Auction queue empty):
                 # - Declared complete → Thank You
-                # - Any Unsold left → Resume (even with 0 Sold)
-                # - Draft left after some Sold → Resume
-                # - Sold only (nothing left) → Thank You
-                # - Draft only (auction never progressed) → Welcome
+                # - Any Draft or Unsold left → Resume (operator can open them)
+                # - Sold only (nothing left to open) → Thank You
+                # - No players at all → Welcome
                 if declared_done:
                     html = _thank_you_html()
-                elif unsold_count > 0 or (draft_count > 0 and sold_count > 0):
+                elif draft_count > 0 or unsold_count > 0:
                     draft_players = Player.search(
                         t_domain + [('state', '=', 'draft')],
                         order='sl_no asc, name asc',
