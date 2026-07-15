@@ -149,7 +149,7 @@
                         Sold
                     </button>
                     <button class="ac-btn ac-btn--reveal" id="acRevealBtn" onclick="acRevealMystery()" style="display:none">
-                        Reveal
+                        Reveal Player
                     </button>
                 </div>
             </div>

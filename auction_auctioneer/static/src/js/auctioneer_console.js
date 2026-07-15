@@ -533,6 +533,8 @@
             if (cardRoot) cardRoot.classList.remove('is-mystery-locked', 'is-awaiting-reveal');
             var revealBtn0 = document.getElementById('acRevealBtn');
             if (revealBtn0) revealBtn0.style.display = 'none';
+            var actions0 = document.querySelector('.ac-player-actions');
+            if (actions0) actions0.classList.remove('is-reveal-only');
             return;
         }
 
@@ -545,6 +547,8 @@
             cardRoot.classList.toggle('is-mystery-locked', hidden);
             cardRoot.classList.toggle('is-awaiting-reveal', awaiting);
         }
+        var actionsEl = document.querySelector('.ac-player-actions');
+        if (actionsEl) actionsEl.classList.toggle('is-reveal-only', awaiting);
 
         // Tier
         var tierEl = document.getElementById('acPlayerTier');
@@ -619,7 +623,7 @@
         if (revealBtn) {
             revealBtn.style.display = awaiting ? '' : 'none';
             revealBtn.disabled = !!state.revealBusy;
-            if (!state.revealBusy) revealBtn.textContent = 'Reveal';
+            if (!state.revealBusy) revealBtn.textContent = 'Reveal Player';
         }
     }
 
@@ -1005,7 +1009,7 @@
             state.revealBusy = false;
             if (btn) {
                 btn.disabled = false;
-                btn.textContent = 'Reveal';
+                btn.textContent = 'Reveal Player';
             }
             if (err || !result) {
                 showToast('Network error during reveal', 'error');
