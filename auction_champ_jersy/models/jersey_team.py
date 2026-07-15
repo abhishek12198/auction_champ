@@ -17,16 +17,23 @@ def _slugify(text):
 
 
 JERSEY_SIZE_SELECTION = [
-    ('XS', 'XS'),
-    ('S', 'S'),
-    ('M', 'M'),
-    ('L', 'L'),
-    ('XL', 'XL'),
-    ('XXL', 'XXL'),
-    ('XXXL', 'XXXL'),
-    ('4XL', '4XL'),
-    ('5XL', '5XL'),
+    ('1-2 years', '1-2 years'),
+    ('3-5 years', '3-5 years'),
+    ('5-7 years', '5-7 years'),
+    ('8-10 years', '8-10 years'),
+    ('XS', 'XS(34)'),
+    ('S', 'S(36)'),
+    ('M', 'M(38)'),
+    ('L', 'L(40)'),
+    ('XL', 'XL(42)'),
+    ('XXL', 'XXL(44)'),
+    ('XXXL', 'XXXL(46)'),
+    ('4XL', '4XL(48)'),
+    ('5XL', '5XL(50)'),
 ]
+
+JERSEY_SIZE_ORDER = [code for code, _ in JERSEY_SIZE_SELECTION]
+JERSEY_SIZE_LABELS = dict(JERSEY_SIZE_SELECTION)
 
 SLEEVE_SELECTION = [
     ('F', 'Full (F)'),
@@ -186,7 +193,7 @@ class AuctionChampJerseyTeam(models.Model):
                 idx,
                 player.player_name or '',
                 player.number or '',
-                player.size or '',
+                JERSEY_SIZE_LABELS.get(player.size, player.size or ''),
                 sleeve_label.get(player.sleeve, player.sleeve or ''),
             ]
             for col, value in enumerate(values, start=1):
@@ -223,11 +230,11 @@ class AuctionChampJerseyTeam(models.Model):
             cell.border = thin
 
         r = 7
-        for sz in ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '4XL', '5XL']:
+        for sz in JERSEY_SIZE_ORDER:
             cnt = len(players.filtered(lambda p, s=sz: p.size == s))
             if not cnt:
                 continue
-            c1 = ws.cell(row=r, column=7, value=sz)
+            c1 = ws.cell(row=r, column=7, value=JERSEY_SIZE_LABELS.get(sz, sz))
             c2 = ws.cell(row=r, column=8, value=cnt)
             c1.border = thin
             c2.border = thin

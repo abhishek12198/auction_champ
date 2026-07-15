@@ -67,7 +67,7 @@
                 <div class="js-ack__row"><span>Team</span><strong t-esc="team.name"/></div>
                 <div class="js-ack__row"><span>Name on Jersey</span><strong t-esc="ack_player.player_name"/></div>
                 <div class="js-ack__row"><span>Number</span><strong t-esc="ack_player.number or '—'"/></div>
-                <div class="js-ack__row"><span>Size</span><strong t-esc="ack_player.size"/></div>
+                <div class="js-ack__row"><span>Size</span><strong t-esc="size_labels.get(ack_player.size, ack_player.size)"/></div>
                 <div class="js-ack__row"><span>Sleeve</span><strong t-esc="ack_player.sleeve == 'F' and 'Full (F)' or 'Half (H)'"/></div>
             </div>
             <a class="js-btn js-btn--ghost"
@@ -108,10 +108,10 @@
                             <span>Size</span>
                             <select name="size" required="required">
                                 <option value="">Select size</option>
-                                <t t-foreach="sizes" t-as="sz">
-                                    <option t-att-value="sz"
-                                            t-att-selected="form.get('size') == sz and 'selected' or None"
-                                            t-esc="sz"/>
+                                <t t-foreach="size_options" t-as="sz_opt">
+                                    <option t-att-value="sz_opt[0]"
+                                            t-att-selected="form.get('size') == sz_opt[0] and 'selected' or None"
+                                            t-esc="sz_opt[1]"/>
                                 </t>
                             </select>
                         </label>
@@ -173,7 +173,7 @@
                                 <td t-esc="p_index + 1"/>
                                 <td t-esc="p.player_name"/>
                                 <td t-esc="p.number or '—'"/>
-                                <td t-esc="p.size"/>
+                                <td t-esc="size_labels.get(p.size, p.size)"/>
                                 <td t-esc="p.sleeve == 'F' and 'Full' or 'Half'"/>
                             </tr>
                         </t>

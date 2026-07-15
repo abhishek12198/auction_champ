@@ -4153,8 +4153,21 @@ class Auction(http.Controller):
     # server-wide Auction controller as /player/register. Without a session
     # cookie, Odoo only matches auth='none' routes from server_wide_modules.
 
-    _JERSEY_SIZES = {'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '4XL', '5XL'}
     _JERSEY_SLEEVES = {'F', 'H'}
+
+    @staticmethod
+    def _jersey_size_selection(env):
+        if 'auction.champ.jersey.player' not in env:
+            return []
+        return env['auction.champ.jersey.player']._fields['size'].selection
+
+    @classmethod
+    def _jersey_size_codes(cls, env):
+        return {code for code, _ in cls._jersey_size_selection(env)}
+
+    @classmethod
+    def _jersey_size_list(cls, env):
+        return [code for code, _ in cls._jersey_size_selection(env)]
 
     def _resolve_db_for_jersey_slug(self, slug):
         """Return the database that has an active jersey team with *slug*."""
@@ -4199,6 +4212,7 @@ class Auction(http.Controller):
 
     def _jersey_survey_values(self, db_name, team, **extra):
         players = team.player_ids.sorted(lambda p: p.id)
+        size_selection = self._jersey_size_selection(team.env)
         return {
             'db_name': db_name,
             'team': team,
@@ -4207,7 +4221,8 @@ class Auction(http.Controller):
             'team_logo_uri': self._jersey_img_url(db_name, team, 'team_logo'),
             'sponsor_logo_uri': self._jersey_img_url(db_name, team, 'sponsor_logo'),
             'jersey_design_uri': self._jersey_img_url(db_name, team, 'jersey_design'),
-            'sizes': ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '4XL', '5XL'],
+            'size_options': size_selection,
+            'size_labels': dict(size_selection),
             'error': extra.get('error'),
             'form': extra.get('form') or {},
             'success': extra.get('success', False),
@@ -4291,7 +4306,7 @@ class Auction(http.Controller):
         error = None
         if not player_name:
             error = 'Please enter the name to print on the jersey.'
-        elif size not in self._JERSEY_SIZES:
+        elif size not in self._jersey_size_codes(request.env):
             error = 'Please select a valid size.'
         elif sleeve not in self._JERSEY_SLEEVES:
             error = 'Please select sleeve type (Full or Half).'
