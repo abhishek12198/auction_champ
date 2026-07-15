@@ -38,15 +38,18 @@
 
 {
     'name': 'Auction Auctioneer Console',
-    'version': '1.0',
+    'version': '1.4.4',
     'summary': 'Live bidding console for the Auctioneer',
     'description': """
         Provides a dedicated Auctioneer Console – a full-screen web app (no Odoo
         layout) where the auctioneer can:
+          • Drive showcase flow from the console (Manual: dice + numbers,
+            Random: Next Player) — synced to the projector via is_on_stage / dice
           • See all participating teams with their purse balance
           • See the current player on stage
           • Click a team button to open a bid modal
           • Place/increment bids that are reflected on the public live board
+            and the projector screen
           • Finalize the sale directly from the console
     """,
     'category': 'Auction/Auction',
@@ -57,6 +60,7 @@
         'security/ir.model.access.csv',
         'views/auctioneer_console_template.xml',
         'views/live_board_ext.xml',
+        'views/projector_ext.xml',
         'views/sell_modal_ext.xml',
         'views/menu.xml',
     ],

@@ -41,6 +41,7 @@ import logging
 
 from odoo import http
 from odoo.http import request
+from odoo.addons.auction_module.controllers.main import _football_display_payload
 
 _logger = logging.getLogger(__name__)
 
@@ -205,17 +206,32 @@ class AuctionAuctioneerController(http.Controller):
             'current_player': None,
             'teams': [],
             'slabs': [],
+            'players': [],
+            'remaining_count': 0,
         }
 
         if tournament:
+            algo = tournament.player_appearance_algorithm or 'linear'
             result['tournament'] = {
+                'id': tournament.id,
                 'name': tournament.name or '',
                 'logo_url': self._pub_img('auction.tournament', tournament.id, 'logo') if tournament.logo else '',
+                'tournament_type': tournament.tournament_type or 'cricket',
+                'player_appearance_algorithm': algo,
+                'showcase_mode': 'manual' if algo == 'linear' else 'random',
+                'dice_state': tournament.dice_state or 'idle',
+                'dice_result': int(tournament.dice_result or 0),
             }
 
         # ── Current player on stage for THIS tournament ────────────────────
+        # Only an active auction player is shown for bidding. Sold/unsold
+        # remain cleared so the auctioneer must explicitly call the next one.
         current_player = env['auction.team.player'].sudo().search(
-            [('is_on_stage', '=', True), ('tournament_id', '=', tournament.id if tournament else False)],
+            [
+                ('is_on_stage', '=', True),
+                ('state', '=', 'auction'),
+                ('tournament_id', '=', tournament.id if tournament else False),
+            ],
             limit=1
         )
 
@@ -238,13 +254,14 @@ class AuctionAuctioneerController(http.Controller):
                     'logo_url': self._pub_img('auction.team', t.id, 'logo') if t.logo else '',
                 }
 
+            fb = _football_display_payload(current_player)
             result['current_player'] = {
                 'id': current_player.id,
                 'name': current_player.name or '',
                 'photo_url': self._pub_img('auction.team.player', current_player.id, 'photo') if current_player.photo else '',
                 'role': current_player.role or '',
                 'tier_name': current_player.tier_id.name if current_player.tier_id else '',
-                'tier_color': current_player.tier_color or '#2252b5',
+                'tier_color': current_player.tier_color or '#e0b84a',
                 'state': current_player.state,
                 'sl_no': current_player.sl_no or 0,
                 'base_price': base_price,
@@ -252,6 +269,17 @@ class AuctionAuctioneerController(http.Controller):
                 'current_bid_team': current_bid_team,
                 'batting_style': current_player.batting_style or '',
                 'bowling_style': current_player.bowling_style or '',
+                'tournament_type': fb.get('tournament_type') or (
+                    tournament.tournament_type if tournament else 'cricket'
+                ),
+                'dominant_position': fb.get('dominant_position') or '',
+                'dominant_position_code': fb.get('dominant_position_code') or '',
+                'secondary_positions': fb.get('secondary_positions') or [],
+                'preferred_foot': fb.get('preferred_foot') or '',
+                'age': fb.get('age') or '',
+                'p_category': fb.get('p_category') or '',
+                'other_attributes': fb.get('other_attributes') or [],
+                'use_other_attributes': bool(fb.get('use_other_attributes')),
             }
 
         # ── Teams (strictly scoped to this tournament) ────────────────────
@@ -348,6 +376,28 @@ class AuctionAuctioneerController(http.Controller):
                     for s in auc.auction_bid_slab_ids.sorted('from_amount', reverse=True)
                 ]
 
+        # ── Showcase pool (manual number pad / random remaining count) ─────
+        pool = []
+        if tournament:
+            players = env['auction.team.player'].sudo().search(
+                [
+                    ('tournament_id', '=', tournament.id),
+                    ('icon_player', '=', False),
+                    ('state', 'in', ('auction', 'sold', 'unsold')),
+                ],
+                order='sl_no asc, id asc',
+            )
+            for pl in players:
+                pool.append({
+                    'id': pl.id,
+                    'sl_no': int(pl.sl_no or 0),
+                    'name': pl.name or '',
+                    'state': pl.state or 'auction',
+                    'is_mystery': bool(pl.tier_id and pl.tier_id.mystery),
+                })
+        result['players'] = pool
+        result['remaining_count'] = sum(1 for p in pool if p['state'] == 'auction')
+
         return request.make_response(
             json.dumps(result),
             headers=[
@@ -356,6 +406,103 @@ class AuctionAuctioneerController(http.Controller):
             ],
         )
 
+    # ── Showcase: dice / call player / next player ─────────────────────────
+
+    @http.route('/auction/auctioneer/dice', type='json', auth='user', website=False, csrf=False)
+    def auctioneer_dice(self, state='idle', number=0, **kw):
+        """Broadcast dice state to projector (idle / rolling / result)."""
+        tournament = self._resolve_tournament()
+        if not tournament:
+            return {'success': False, 'error': 'No tournament found'}
+        try:
+            number = int(number or 0)
+        except (TypeError, ValueError):
+            number = 0
+        state = (state or 'idle').strip().lower()
+        if state not in ('idle', 'rolling', 'result'):
+            state = 'idle'
+        tournament.sudo().set_dice_state(state, number)
+        return {
+            'success': True,
+            'dice_state': state,
+            'dice_result': number,
+        }
+
+    @http.route('/auction/auctioneer/call-player', type='json', auth='user', website=False, csrf=False)
+    def auctioneer_call_player(self, player_id, **kw):
+        """Bring a player onto stage (manual number pick). Projector follows is_on_stage."""
+        tournament = self._resolve_tournament()
+        if not tournament:
+            return {'success': False, 'error': 'No tournament found'}
+        try:
+            player_id = int(player_id)
+        except (TypeError, ValueError):
+            return {'success': False, 'error': 'Invalid player'}
+
+        player = request.env['auction.team.player'].sudo().browse(player_id)
+        if not player.exists():
+            return {'success': False, 'error': 'Player not found'}
+        if player.tournament_id.id != tournament.id:
+            return {'success': False, 'error': 'Player is not in this tournament'}
+        if player.state not in ('auction',):
+            return {
+                'success': False,
+                'error': 'Player is already %s' % (player.state or 'unavailable'),
+            }
+
+        # Clear leftover live bid on whoever was previously on stage
+        prev = request.env['auction.team.player'].sudo().search([
+            ('is_on_stage', '=', True),
+            ('tournament_id', '=', tournament.id),
+            ('id', '!=', player.id),
+        ])
+        if prev:
+            prev.write({'current_bid': 0, 'current_bid_team_id': False})
+
+        player.action_set_on_stage()
+        # Hide dice overlay on projector once a player is called
+        tournament.sudo().set_dice_state('idle', 0)
+
+        return {
+            'success': True,
+            'player_id': player.id,
+            'sl_no': int(player.sl_no or 0),
+            'name': player.name or '',
+        }
+
+    @http.route('/auction/auctioneer/next-player', type='json', auth='user', website=False, csrf=False)
+    def auctioneer_next_player(self, **kw):
+        """Random/linear next player onto stage — projector picks up via is_on_stage."""
+        tournament = self._resolve_tournament()
+        if not tournament:
+            return {'success': False, 'error': 'No tournament found'}
+
+        Player = request.env['auction.team.player'].sudo()
+        current = Player.search([
+            ('is_on_stage', '=', True),
+            ('tournament_id', '=', tournament.id),
+        ], limit=1)
+        exclude_id = current.id if current else 0
+
+        if current and current.state == 'auction':
+            current.write({'current_bid': 0, 'current_bid_team_id': False})
+
+        nxt = Player.get_random_player(
+            exclude_id=exclude_id,
+            tournament_id=tournament,
+            commit_stage=True,
+        )
+        if not nxt:
+            return {'success': False, 'error': 'No players left in the auction pool'}
+
+        tournament.sudo().set_dice_state('idle', 0)
+        return {
+            'success': True,
+            'player_id': nxt.id,
+            'sl_no': int(nxt.sl_no or 0),
+            'name': nxt.name or '',
+        }
+
     # ── Place bid ──────────────────────────────────────────────────────────
 
     @http.route('/auction/auctioneer/place-bid', type='json', auth='user', website=False, csrf=False)
@@ -363,7 +510,7 @@ class AuctionAuctioneerController(http.Controller):
         """Record a live bid for the current player."""
         env = request.env
         player = env['auction.team.player'].sudo().browse(int(player_id))
-        if not player.exists() or not player.is_on_stage or player.state == 'sold':
+        if not player.exists() or not player.is_on_stage or player.state != 'auction':
             return {'success': False, 'error': 'Player is not currently available for bidding'}
 
         auction = env['auction.auction'].sudo().search(
@@ -464,7 +611,7 @@ class AuctionAuctioneerController(http.Controller):
 
     @http.route('/auction/auctioneer/finalize-bid', type='json', auth='user', website=False, csrf=False)
     def finalize_bid(self, player_id, **kw):
-        """Sell the player to the current highest bidder and reset bid fields."""
+        """Sell the player, then clear stage so console/projector wait for next call."""
         env = request.env
         player = env['auction.team.player'].sudo().browse(int(player_id))
 
@@ -480,7 +627,15 @@ class AuctionAuctioneerController(http.Controller):
         )
 
         if result.get('success'):
-            player.sudo().write({'current_bid': 0, 'current_bid_team_id': False})
+            # Clear bidding state and take them off the live auctioneer stage.
+            # Tournament sold stamp is kept so the projector can finish the SOLD
+            # celebration, then return to waiting until the next showcase action.
+            player.sudo().write({
+                'current_bid': 0,
+                'current_bid_team_id': False,
+                'is_on_stage': False,
+            })
+            result['cleared_stage'] = True
 
         return result
 

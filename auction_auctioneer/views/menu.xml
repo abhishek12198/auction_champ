@@ -5,7 +5,7 @@
     <record id="action_auctioneer_console" model="ir.actions.act_url">
         <field name="name">Auctioneer Console</field>
         <field name="url">/auction/auctioneer/console</field>
-        <field name="target">new</field>
+        <field name="target">self</field>
     </record>
 
     <menuitem

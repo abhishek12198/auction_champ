@@ -11,9 +11,18 @@
         currentPlayer: null,
         teams: [],
         slabs: [],            // bid slabs sorted descending by from_amount
+        players: [],          // showcase pool
+        remainingCount: 0,
+        showcaseMode: window.AC_SHOWCASE_MODE || 'manual',
         selectedTeam: null,   // team data object for the open modal
+        tournamentType: window.AC_SPORT || 'cricket',
         pollTimer: null,
         isLoading: false,
+        diceRolling: false,
+        dicePicked: null,     // {id, sl_no, is_mystery}
+        diceTimer: null,
+        nextBusy: false,
+        callBusy: false,
     };
 
     /* ── Config ─────────────────────────────────────────────────────────── */
@@ -22,6 +31,9 @@
     var BID_URL      = window.AC_BID_URL      || '/auction/auctioneer/place-bid';
     var RESET_URL    = window.AC_RESET_URL    || '/auction/auctioneer/reset-bid';
     var FINALIZE_URL = window.AC_FINALIZE_URL || '/auction/auctioneer/finalize-bid';
+    var DICE_URL     = window.AC_DICE_URL     || '/auction/auctioneer/dice';
+    var CALL_URL     = window.AC_CALL_URL     || '/auction/auctioneer/call-player';
+    var NEXT_URL     = window.AC_NEXT_URL     || '/auction/auctioneer/next-player';
     var CSRF         = window.AC_CSRF_TOKEN   || '';
 
     /* ── Helpers ────────────────────────────────────────────────────────── */
@@ -43,11 +55,14 @@
     function setStatus(online) {
         var dot  = document.getElementById('acStatusDot');
         var text = document.getElementById('acStatusText');
+        var pill = document.getElementById('acLiveIndicator');
         if (online) {
-            dot.className  = 'ac-status-dot live';
+            dot.className  = 'ac-live-pill__dot is-live';
+            if (pill) pill.className = 'ac-live-pill is-live';
             text.textContent = 'Live';
         } else {
-            dot.className  = 'ac-status-dot error';
+            dot.className  = 'ac-live-pill__dot is-error';
+            if (pill) pill.className = 'ac-live-pill is-error';
             text.textContent = 'Reconnecting…';
         }
     }
@@ -104,12 +119,80 @@
         state.pollTimer = setTimeout(poll, POLL_INTERVAL);
     }
 
+    function isFootball(p) {
+        var t = (p && p.tournament_type) || state.tournamentType || 'cricket';
+        return t === 'football';
+    }
+
+    function sportIcon() {
+        return isFootball() ? '⚽' : '🏏';
+    }
+
+    function attrChip(label, value) {
+        if (!value) return '';
+        return '<div class="ac-attr-chip">'
+            + '<span class="ac-attr-chip__label">' + esc(label) + '</span>'
+            + '<span class="ac-attr-chip__value">' + esc(String(value)) + '</span>'
+            + '</div>';
+    }
+
+    function playerAttrChipsHtml(p) {
+        if (!p) return '';
+        var chips = [];
+        if (isFootball(p)) {
+            if (p.use_other_attributes && p.other_attributes && p.other_attributes.length) {
+                p.other_attributes.forEach(function (a) {
+                    chips.push(attrChip(a.label, a.value));
+                });
+            } else {
+                chips.push(attrChip('Position', p.dominant_position || p.dominant_position_code));
+                chips.push(attrChip('Foot', p.preferred_foot));
+                chips.push(attrChip('Age', p.age));
+                if (p.p_category) chips.push(attrChip('Category', p.p_category));
+                if (p.secondary_positions && p.secondary_positions.length) {
+                    chips.push(attrChip('Secondary', p.secondary_positions.join(', ')));
+                }
+            }
+        } else {
+            chips.push(attrChip('Role', p.role));
+            chips.push(attrChip('Bat', p.batting_style));
+            chips.push(attrChip('Bowl', p.bowling_style));
+        }
+        return chips.filter(Boolean).join('');
+    }
+
+    function playerMetaLine(p) {
+        if (!p) return '';
+        if (isFootball(p)) {
+            if (p.use_other_attributes && p.other_attributes && p.other_attributes.length) {
+                return p.other_attributes.map(function (a) {
+                    return a.value;
+                }).filter(Boolean).join(' · ');
+            }
+            return [p.dominant_position || p.dominant_position_code, p.preferred_foot, p.age ? ('Age ' + p.age) : '']
+                .filter(Boolean).join(' · ');
+        }
+        return [p.role, p.batting_style, p.bowling_style].filter(Boolean).join(' · ');
+    }
+
     /* ── Render ─────────────────────────────────────────────────────────── */
     function render(data) {
         state.currentPlayer = data.current_player || null;
         state.teams = data.teams || [];
         state.slabs = data.slabs || [];
+        state.players = data.players || [];
+        state.remainingCount = data.remaining_count || 0;
+        if (data.tournament && data.tournament.tournament_type) {
+            state.tournamentType = data.tournament.tournament_type;
+            document.getElementById('acBody').setAttribute('data-sport', state.tournamentType);
+            var emptyIcon = document.getElementById('acEmptyIcon');
+            if (emptyIcon) emptyIcon.textContent = sportIcon();
+        }
+        if (data.tournament && data.tournament.showcase_mode) {
+            state.showcaseMode = data.tournament.showcase_mode;
+        }
 
+        renderShowcase();
         renderPlayer(state.currentPlayer);
         renderTeams(state.teams, state.currentPlayer);
 
@@ -121,7 +204,225 @@
                 refreshModalBid(fresh);
             }
         }
+
+        // Keep number pad fresh while open
+        var pad = document.getElementById('acNumberPad');
+        if (pad && pad.style.display !== 'none') {
+            renderNumberPad();
+        }
     }
+
+    /* ── Showcase (manual / random) ─────────────────────────────────────── */
+    function renderShowcase() {
+        var mode = state.showcaseMode === 'random' ? 'random' : 'manual';
+        var modeEl = document.getElementById('acShowcaseMode');
+        var manualEl = document.getElementById('acShowcaseManual');
+        var randomEl = document.getElementById('acShowcaseRandom');
+        var emptySub = document.getElementById('acEmptySub');
+        var remainEl = document.getElementById('acRemainCount');
+
+        if (modeEl) {
+            modeEl.textContent = mode === 'random' ? 'Random' : 'Manual';
+            modeEl.className = 'ac-showcase__mode ac-showcase__mode--' + mode;
+        }
+        if (manualEl) manualEl.style.display = mode === 'manual' ? 'flex' : 'none';
+        if (randomEl) randomEl.style.display = mode === 'random' ? 'flex' : 'none';
+        if (remainEl) {
+            remainEl.textContent = state.remainingCount
+                ? (state.remainingCount + ' left')
+                : 'Pool empty';
+        }
+        if (emptySub) {
+            emptySub.textContent = mode === 'random'
+                ? 'Tap Next Player to bring someone onto stage & projector'
+                : 'Roll the dice or pick a number to call a player onto stage';
+        }
+
+        // Dice result strip visibility
+        var diceStrip = document.getElementById('acDiceResult');
+        if (diceStrip && !state.diceRolling) {
+            if (state.dicePicked && mode === 'manual') {
+                diceStrip.style.display = 'flex';
+                var numEl = document.getElementById('acDiceResultNum');
+                if (numEl) numEl.textContent = '#' + (state.dicePicked.sl_no || '—');
+            } else if (!state.dicePicked) {
+                diceStrip.style.display = 'none';
+            }
+        }
+    }
+
+    function setDiceButtonRolling(on) {
+        var btn = document.getElementById('acDiceBtn');
+        var lbl = document.getElementById('acDiceBtnLabel');
+        if (!btn) return;
+        btn.disabled = !!on;
+        btn.classList.toggle('is-rolling', !!on);
+        if (lbl) lbl.textContent = on ? 'Rolling…' : (state.dicePicked ? 'Roll Again' : 'Roll Dice');
+    }
+
+    function broadcastDice(dState, number, cb) {
+        jsonRpc(DICE_URL, { state: dState, number: number || 0 }, function (err, result) {
+            if (cb) cb(err, result);
+        });
+    }
+
+    window.acRollDice = function () {
+        if (state.showcaseMode !== 'manual' || state.diceRolling) return;
+
+        var available = (state.players || []).filter(function (p) {
+            return p && p.state === 'auction';
+        });
+        if (!available.length) {
+            showToast('No players left to roll', 'error');
+            return;
+        }
+
+        if (state.diceTimer) {
+            clearTimeout(state.diceTimer);
+            state.diceTimer = null;
+        }
+
+        var picked = available[Math.floor(Math.random() * available.length)];
+        state.dicePicked = null;
+        state.diceRolling = true;
+        setDiceButtonRolling(true);
+        document.getElementById('acDiceResult').style.display = 'none';
+
+        broadcastDice('rolling', 0);
+
+        var rollCount = 0;
+        var maxRolls = 22;
+        var resultBroadcast = false;
+        var rollInt = setInterval(function () {
+            rollCount++;
+            if (rollCount === 10 && !resultBroadcast) {
+                resultBroadcast = true;
+                broadcastDice('result', picked.sl_no || 0);
+            }
+            if (rollCount >= maxRolls) {
+                clearInterval(rollInt);
+                state.diceRolling = false;
+                state.dicePicked = {
+                    id: picked.id,
+                    sl_no: picked.sl_no,
+                    is_mystery: !!picked.is_mystery,
+                };
+                setDiceButtonRolling(false);
+                renderShowcase();
+                if (!resultBroadcast) {
+                    broadcastDice('result', picked.sl_no || 0);
+                }
+                state.diceTimer = setTimeout(function () {
+                    broadcastDice('idle', 0);
+                    state.diceTimer = null;
+                }, 7000);
+            }
+        }, 100);
+    };
+
+    window.acCallDicePlayer = function () {
+        if (!state.dicePicked || !state.dicePicked.id) return;
+        acCallPlayer(state.dicePicked.id);
+    };
+
+    window.acOpenNumberPad = function () {
+        var pad = document.getElementById('acNumberPad');
+        if (!pad) return;
+        var search = document.getElementById('acNumpadSearch');
+        if (search) search.value = '';
+        renderNumberPad();
+        pad.style.display = 'flex';
+    };
+
+    window.acCloseNumberPad = function (ev) {
+        // Overlay click only when the backdrop itself is the target
+        if (ev && ev.type === 'click' && ev.target && ev.target.id && ev.target.id !== 'acNumberPad') {
+            return;
+        }
+        var pad = document.getElementById('acNumberPad');
+        if (pad) pad.style.display = 'none';
+    };
+
+    window.acFilterNumberPad = function () {
+        renderNumberPad();
+    };
+
+    function renderNumberPad() {
+        var grid = document.getElementById('acNumpadGrid');
+        if (!grid) return;
+        var q = ((document.getElementById('acNumpadSearch') || {}).value || '').trim().toLowerCase();
+        var html = '';
+        var list = state.players || [];
+        if (!list.length) {
+            grid.innerHTML = '<div class="ac-numpad__empty">No players in this tournament</div>';
+            return;
+        }
+        list.forEach(function (p) {
+            var label = '#' + (p.sl_no || '—');
+            var hay = (label + ' ' + (p.name || '')).toLowerCase();
+            if (q && hay.indexOf(q) === -1) return;
+            var st = p.state || 'auction';
+            var disabled = st !== 'auction';
+            var cls = 'ac-numpad__btn'
+                + (disabled ? ' is-disabled is-' + st : '')
+                + (p.is_mystery ? ' is-mystery' : '')
+                + (state.dicePicked && state.dicePicked.id === p.id ? ' is-dice' : '')
+                + (state.currentPlayer && state.currentPlayer.id === p.id ? ' is-onstage' : '');
+            html += '<button type="button" class="' + cls + '"'
+                + (disabled ? ' disabled' : ' onclick="acCallPlayer(' + p.id + ')"')
+                + ' title="' + esc(p.name || '') + '">'
+                + '<span class="ac-numpad__num">' + esc(String(p.sl_no || '—')) + '</span>'
+                + '<span class="ac-numpad__name">' + esc(p.name || '') + '</span>'
+                + (disabled ? '<span class="ac-numpad__state">' + esc(st) + '</span>' : '')
+                + '</button>';
+        });
+        grid.innerHTML = html || '<div class="ac-numpad__empty">No matches</div>';
+    }
+
+    window.acCallPlayer = function (playerId) {
+        if (state.callBusy) return;
+        state.callBusy = true;
+        jsonRpc(CALL_URL, { player_id: playerId }, function (err, result) {
+            state.callBusy = false;
+            if (err || !result) {
+                showToast('Network error calling player', 'error');
+                return;
+            }
+            if (!result.success) {
+                showToast(result.error || 'Could not call player', 'error');
+                return;
+            }
+            state.dicePicked = null;
+            document.getElementById('acDiceResult').style.display = 'none';
+            setDiceButtonRolling(false);
+            acCloseNumberPad();
+            showToast('On stage: #' + (result.sl_no || '') + ' ' + (result.name || ''), 'success');
+            clearTimeout(state.pollTimer);
+            poll();
+        });
+    };
+
+    window.acNextPlayer = function () {
+        if (state.showcaseMode !== 'random' || state.nextBusy) return;
+        state.nextBusy = true;
+        var btn = document.getElementById('acNextBtn');
+        if (btn) btn.disabled = true;
+        jsonRpc(NEXT_URL, {}, function (err, result) {
+            state.nextBusy = false;
+            if (btn) btn.disabled = false;
+            if (err || !result) {
+                showToast('Network error loading next player', 'error');
+                return;
+            }
+            if (!result.success) {
+                showToast(result.error || 'No players left', 'error');
+                return;
+            }
+            showToast('Next: #' + (result.sl_no || '') + ' ' + (result.name || ''), 'success');
+            clearTimeout(state.pollTimer);
+            poll();
+        });
+    };
 
     /* Player panel */
     function renderPlayer(p) {
@@ -140,9 +441,9 @@
         // Tier
         var tierEl = document.getElementById('acPlayerTier');
         tierEl.textContent = p.tier_name || 'Player';
-        tierEl.style.color      = p.tier_color || '#63b3ed';
-        tierEl.style.borderColor = p.tier_color || '#63b3ed';
-        tierEl.style.background = hexAlpha(p.tier_color || '#63b3ed', 0.12);
+        tierEl.style.color      = p.tier_color || '#e0b84a';
+        tierEl.style.borderColor = p.tier_color || '#e0b84a';
+        tierEl.style.background = hexAlpha(p.tier_color || '#e0b84a', 0.12);
 
         // Photo
         var photo = document.getElementById('acPlayerPhoto');
@@ -154,12 +455,13 @@
         // Name
         document.getElementById('acPlayerName').textContent = p.name || '';
 
-        // Meta
-        var parts = [];
-        if (p.role) parts.push(p.role);
-        if (p.batting_style) parts.push(p.batting_style);
-        if (p.bowling_style) parts.push(p.bowling_style);
-        document.getElementById('acPlayerMeta').textContent = parts.join(' · ');
+        // Sport-aware attribute chips
+        var attrsEl = document.getElementById('acPlayerAttrs');
+        if (attrsEl) {
+            attrsEl.innerHTML = playerAttrChipsHtml(p);
+        } else {
+            document.getElementById('acPlayerMeta').textContent = playerMetaLine(p);
+        }
 
         // Base price
         document.getElementById('acBasePrice').textContent = fmtPts(p.base_price);
@@ -214,28 +516,29 @@
             var classes = 'ac-team-btn' + (disabled ? ' ac-team-btn--disabled' : '') + (isActive ? ' ac-team-btn--active' : '');
             var onclick = disabled ? '' : 'onclick="acQuickBid(' + team.id + ')"';
 
-            // Leading bid badge (shown only on active card)
-            var leadingBadge = isActive && player && player.current_bid
-                ? '<div class="ac-team-leading-badge">🏆 LEADING &nbsp;<span class="ac-team-leading-pts">' + fmtPts(player.current_bid) + ' pts</span></div>'
-                : '';
-
             return '<div class="' + classes + '" ' + onclick + ' data-team-id="' + team.id + '">'
                 + '<div class="ac-team-logo-wrap">'
                 + (team.logo_url
                     ? '<img src="' + team.logo_url + '" alt="' + esc(team.name) + '" class="ac-team-logo" onerror="this.style.display=\'none\'">'
-                    : '<div class="ac-team-logo-placeholder">🏏</div>')
+                    : '<div class="ac-team-logo-placeholder">' + sportIcon() + '</div>')
                 + '</div>'
                 + '<div class="ac-team-body">'
-                + '  <span class="ac-team-name">' + esc(team.name) + '</span>'
+                + '  <div class="ac-team-top">'
+                + '    <span class="ac-team-name">' + esc(team.name) + '</span>'
+                + (isActive ? '<span class="ac-team-leading-badge">Leading</span>' : '')
+                + '  </div>'
                 + (team.manager ? '<span class="ac-team-manager">' + esc(team.manager) + '</span>' : '')
                 + '  <div class="ac-team-purse">'
                 + '    <div class="ac-team-purse__bar-wrap"><div class="ac-team-purse__bar' + barClass + '" style="width:' + pct.toFixed(1) + '%"></div></div>'
-                + '    <div class="ac-team-purse__text"><span class="ac-team-purse__pts">' + fmtPts(team.remaining_points) + '</span><span class="ac-team-purse__sep"> / </span>' + fmtPts(team.total_points) + ' pts</div>'
+                + '    <div class="ac-team-purse__text"><span class="ac-team-purse__pts">' + fmtPts(team.remaining_points) + '</span><span class="ac-team-purse__sep">/</span>' + fmtPts(team.total_points) + '</div>'
                 + '  </div>'
                 + (disabled && !isActive
-                    ? '<div class="ac-team-no-bid" title="' + esc(disabledReason) + '">🚫 ' + esc(disabledReason) + '</div>'
-                    : !isActive ? '<div class="ac-team-next-bid" onclick="event.stopPropagation();acOpenBidModal(' + team.id + ')" title="Click to enter custom bid amount">✏ BID: <strong>' + fmtPts(team.next_bid) + ' pts</strong></div>' : '')
-                + leadingBadge
+                    ? '<div class="ac-team-no-bid" title="' + esc(disabledReason) + '">' + esc(disabledReason) + '</div>'
+                    : !isActive
+                        ? '<div class="ac-team-next-bid" onclick="event.stopPropagation();acOpenBidModal(' + team.id + ')" title="Custom bid"><strong>' + fmtPts(team.next_bid) + '</strong> <span>pts</span></div>'
+                        : (player && player.current_bid
+                            ? '<div class="ac-team-leading-pts">' + fmtPts(player.current_bid) + ' pts</div>'
+                            : ''))
                 + '</div>'
                 + '</div>';
         }).join('');
@@ -285,12 +588,12 @@
         // Player info
         document.getElementById('acModalPlayerPhoto').src  = player.photo_url || '';
         document.getElementById('acModalPlayerName').textContent  = player.name || '';
-        document.getElementById('acModalPlayerRole').textContent  = [player.role, player.batting_style, player.bowling_style].filter(Boolean).join(' · ');
+        document.getElementById('acModalPlayerRole').textContent  = playerMetaLine(player);
         var tBadge = document.getElementById('acModalTierBadge');
         tBadge.textContent   = player.tier_name || '';
-        tBadge.style.color   = player.tier_color || '#63b3ed';
-        tBadge.style.borderColor = player.tier_color || '#63b3ed';
-        tBadge.style.background  = hexAlpha(player.tier_color || '#63b3ed', 0.1);
+        tBadge.style.color   = player.tier_color || '#e0b84a';
+        tBadge.style.borderColor = player.tier_color || '#e0b84a';
+        tBadge.style.background  = hexAlpha(player.tier_color || '#e0b84a', 0.1);
 
         // Bid limits
         document.getElementById('acModalBase').textContent = fmtPts(team.effective_base);
@@ -423,7 +726,7 @@
 
         jsonRpc(BID_URL, { player_id: player.id, team_id: team.id, bid_amount: bidAmount }, function (err, result) {
             btn.disabled = false;
-            btn.textContent = '🔨 PLACE BID';
+            btn.textContent = 'Place Bid';
 
             if (err || !result) {
                 showToast('Network error. Please retry.', 'error');
@@ -473,12 +776,11 @@
         // Populate confirm-sold modal
         document.getElementById('acSoldPlayerPhoto').src  = player.photo_url || '';
         document.getElementById('acSoldPlayerName').textContent  = player.name || '';
-        document.getElementById('acSoldPlayerRole').textContent  =
-            [player.role, player.batting_style, player.bowling_style].filter(Boolean).join(' · ');
+        document.getElementById('acSoldPlayerRole').textContent  = playerMetaLine(player);
         var tierEl = document.getElementById('acSoldPlayerTier');
         tierEl.textContent   = player.tier_name || '';
-        tierEl.style.color   = player.tier_color || '#63b3ed';
-        tierEl.style.borderColor = player.tier_color || '#63b3ed';
+        tierEl.style.color   = player.tier_color || '#e0b84a';
+        tierEl.style.borderColor = player.tier_color || '#e0b84a';
 
         document.getElementById('acSoldTeamLogo').src = player.current_bid_team.logo_url || '';
         document.getElementById('acSoldTeamName').textContent = player.current_bid_team.name || '';
@@ -508,7 +810,7 @@
 
         jsonRpc(FINALIZE_URL, { player_id: player.id }, function (err, result) {
             confirmBtn.disabled = false;
-            confirmBtn.textContent = '🏆 CONFIRM SOLD!';
+            confirmBtn.textContent = 'Confirm Sold';
 
             if (err || !result) {
                 showToast('Network error during finalization', 'error');
@@ -519,20 +821,24 @@
                 return;
             }
 
-            // Close confirm modal
+            // Close confirm + bid modal; clear stage UI immediately
             document.getElementById('acSoldConfirmModal').style.display = 'none';
+            var bidModal = document.getElementById('acBidModal');
+            if (bidModal) bidModal.style.display = 'none';
+            state.selectedTeam = null;
+            state.currentPlayer = null;
+            state.dicePicked = null;
+            var diceStrip = document.getElementById('acDiceResult');
+            if (diceStrip) diceStrip.style.display = 'none';
+            renderPlayer(null);
+            renderTeams([], null);
+            renderShowcase();
 
-            showToast('🎉 ' + player.name + ' SOLD to ' + bidder + ' for ' + fmtPts(player.current_bid) + ' pts!', 'success');
-
-            // Signal the display_auction page (open in any tab) to advance to next player
-            try {
-                localStorage.setItem('auction:player_sold', JSON.stringify({
-                    ts: Date.now(),
-                    player: player.name,
-                    team: bidder,
-                    pts: player.current_bid,
-                }));
-            } catch (e) { /* storage not available — ignore */ }
+            showToast(
+                '🎉 ' + player.name + ' SOLD to ' + bidder
+                + ' — use Showcase to call the next player',
+                'success'
+            );
 
             clearTimeout(state.pollTimer);
             poll();

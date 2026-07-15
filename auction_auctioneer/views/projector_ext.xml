@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<!--
+    Extends the projector template to show the auctioneer's live leading bid
+    (current_bid / current_bid_team), aligned with the projector's navy/gold
+    broadcast design (same visual language as Base Price).
+-->
+<template
+    id="projector_live_bid_ext"
+    inherit_id="auction_module.projector_template"
+    name="Projector – Live Bid Display">
+
+    <xpath expr="//div[@id='pjBase']" position="after">
+        <div class="pj-live-bid" id="pjLiveBid" style="display:none" aria-live="polite">
+            <div class="pj-live-bid__head">
+                <span class="pj-live-bid__pulse" aria-hidden="true"></span>
+                <span class="pj-live-bid__label">Current Bid</span>
+            </div>
+            <div class="pj-live-bid__body" id="pjLiveBidRow">
+                <div class="pj-live-bid__call">
+                    <span class="pj-live-bid__amount" id="pjLiveBidVal">0</span>
+                    <span class="pj-live-bid__unit">PTS</span>
+                </div>
+                <div class="pj-live-bid__divider" id="pjLiveBidDivider" aria-hidden="true"></div>
+                <div class="pj-live-bid__team" id="pjLiveBidTeam" style="display:none">
+                    <img class="pj-live-bid__logo" id="pjLiveBidLogo" src="" alt=""/>
+                    <div class="pj-live-bid__team-meta">
+                        <div class="pj-live-bid__team-tag">Leading</div>
+                        <div class="pj-live-bid__team-name" id="pjLiveBidName"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="pj-live-bid__waiting" id="pjLiveBidWaiting" style="display:none">
+                <span class="pj-live-bid__wait-dot" aria-hidden="true"></span>
+                <span>Waiting for opening bid</span>
+            </div>
+        </div>
+    </xpath>
+
+    <xpath expr="//body" position="inside">
+        <style type="text/css"><![CDATA[
+/* Live bid — matches .pj-base tokens (gold / panel / Bebas) */
+.pj-live-bid{
+  display:none;
+  flex-direction:column;
+  align-items:stretch;
+  gap:.55rem;
+  margin-top:.75rem;
+  padding:1rem 1.35rem 1.1rem;
+  border-radius:1rem;
+  border:2px solid var(--ok);
+  background:
+    linear-gradient(145deg, rgba(46,204,113,.16), transparent 58%),
+    var(--card);
+  box-shadow:0 0 28px rgba(46,204,113,.28), inset 0 0 18px rgba(46,204,113,.1);
+  min-width:min(100%, 24rem);
+  max-width:100%;
+  animation:pjLiveBidIn .35s ease-out;
+}
+@keyframes pjLiveBidIn{
+  from{opacity:0; transform:translateY(.4rem)}
+  to{opacity:1; transform:none}
+}
+.pj-live-bid.is-updated .pj-live-bid__amount{
+  animation:pjLiveBidFlash .55s ease-out;
+}
+@keyframes pjLiveBidFlash{
+  0%{transform:scale(1); color:#7dffa8}
+  35%{transform:scale(1.08); color:#fff}
+  100%{transform:scale(1); color:#2ecc71}
+}
+.pj-live-bid__head{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:.55rem;
+}
+.pj-live-bid__pulse{
+  width:.55rem;
+  height:.55rem;
+  border-radius:50%;
+  background:var(--ok);
+  box-shadow:0 0 10px rgba(46,204,113,.55);
+  animation:pjPulse 1.2s ease-in-out infinite;
+  flex-shrink:0;
+}
+.pj-live-bid__label{
+  font-weight:800;
+  letter-spacing:.28em;
+  text-transform:uppercase;
+  font-size:clamp(.72rem,1.2vw,.95rem);
+  color:var(--ok);
+}
+.pj-live-bid__body{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:1rem;
+  flex-wrap:wrap;
+}
+.pj-live-bid__call{
+  display:inline-flex;
+  align-items:baseline;
+  gap:.55rem;
+  line-height:1;
+}
+.pj-live-bid__amount{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(2.8rem,5.4vw,4.1rem);
+  line-height:1;
+  color:#2ecc71;
+  text-shadow:0 0 22px rgba(46,204,113,.45);
+  font-variant-numeric:tabular-nums;
+  letter-spacing:.02em;
+}
+.pj-live-bid__unit{
+  font-weight:800;
+  letter-spacing:.18em;
+  font-size:clamp(.78rem,1.2vw,1rem);
+  color:var(--ok);
+  padding-bottom:.15rem;
+}
+.pj-live-bid__divider{
+  width:1px;
+  height:2.4rem;
+  background:rgba(46,204,113,.35);
+  flex-shrink:0;
+}
+.pj-live-bid__team{
+  display:flex;
+  align-items:center;
+  gap:.7rem;
+  min-width:0;
+  max-width:100%;
+  padding:.35rem .55rem .35rem .35rem;
+  border-radius:.75rem;
+  background:rgba(0,0,0,.18);
+  border:1px solid rgba(46,204,113,.22);
+}
+[data-mode="light"] .pj-live-bid{
+  border-color:var(--ok);
+  background:
+    linear-gradient(145deg, rgba(30,158,85,.12), transparent 58%),
+    var(--card);
+  box-shadow:0 8px 22px rgba(30,158,85,.14), inset 0 0 14px rgba(30,158,85,.06);
+}
+[data-mode="light"] .pj-live-bid__amount{
+  color:#1e9e55;
+  text-shadow:none;
+}
+[data-mode="light"] .pj-live-bid__team{
+  background:rgba(255,255,255,.55);
+  border-color:rgba(30,158,85,.2);
+}
+.pj-live-bid__logo{
+  width:2.55rem;
+  height:2.55rem;
+  border-radius:50%;
+  object-fit:contain;
+  background:rgba(255,255,255,.1);
+  border:1.5px solid rgba(46,204,113,.35);
+  flex-shrink:0;
+  padding:.15rem;
+}
+.pj-live-bid__team-meta{min-width:0; text-align:left}
+.pj-live-bid__team-tag{
+  font-size:.58rem;
+  font-weight:700;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--ok);
+  margin-bottom:2px;
+}
+.pj-live-bid__team-name{
+  font-weight:800;
+  font-size:clamp(.88rem,1.45vw,1.1rem);
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:12.5rem;
+  color:var(--tx);
+  line-height:1.15;
+}
+.pj-live-bid__waiting{
+  display:none;
+  align-items:center;
+  justify-content:center;
+  gap:.55rem;
+  padding:.55rem 0 .15rem;
+  font-size:clamp(.88rem,1.3vw,1.05rem);
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--tx2);
+}
+.pj-live-bid__wait-dot{
+  width:.45rem;
+  height:.45rem;
+  border-radius:50%;
+  background:var(--ok);
+  opacity:.7;
+  animation:pjPulse 1.2s ease-in-out infinite;
+  flex-shrink:0;
+}
+.pj-live-bid.is-waiting{
+  border-color:var(--line);
+  background:var(--card);
+  box-shadow:none;
+}
+.pj-live-bid.is-waiting .pj-live-bid__label{color:var(--tx2)}
+.pj-live-bid.is-waiting .pj-live-bid__body{display:none}
+.pj-live-bid.is-waiting .pj-live-bid__waiting{display:inline-flex}
+.pj-live-bid.is-waiting .pj-live-bid__pulse{background:var(--tx2); box-shadow:none}
+        ]]></style>
+
+        <script type="text/javascript"><![CDATA[
+(function () {
+    'use strict';
+
+    var _lastBid = null;
+    var _lastTeamId = null;
+
+    function fmtPts(n) {
+        try { return Number(n || 0).toLocaleString(); }
+        catch (e) { return String(n || 0); }
+    }
+
+    function hideLiveBid() {
+        var root = document.getElementById('pjLiveBid');
+        if (root) root.style.display = 'none';
+        _lastBid = null;
+        _lastTeamId = null;
+    }
+
+    function flashIfChanged(root, bid, teamId) {
+        var changed = (_lastBid !== null) && (bid !== _lastBid || teamId !== _lastTeamId);
+        _lastBid = bid;
+        _lastTeamId = teamId;
+        if (!changed || !root) return;
+        root.classList.remove('is-updated');
+        void root.offsetWidth;
+        root.classList.add('is-updated');
+    }
+
+    function updateLiveBid(p) {
+        var root = document.getElementById('pjLiveBid');
+        if (!root) return;
+
+        if (!p || p.state === 'sold' || p.state === 'unsold') {
+            hideLiveBid();
+            return;
+        }
+
+        var bid = (p.current_bid && p.current_bid > 0) ? Number(p.current_bid) : 0;
+        var team = p.current_bid_team || null;
+        var teamEl = document.getElementById('pjLiveBidTeam');
+        var divider = document.getElementById('pjLiveBidDivider');
+        var valEl = document.getElementById('pjLiveBidVal');
+        var nameEl = document.getElementById('pjLiveBidName');
+        var logoEl = document.getElementById('pjLiveBidLogo');
+
+        root.style.display = 'flex';
+
+        if (bid > 0) {
+            root.classList.remove('is-waiting');
+            if (valEl) valEl.textContent = fmtPts(bid);
+            flashIfChanged(root, bid, team && team.id ? team.id : null);
+
+            if (team && teamEl) {
+                teamEl.style.display = 'flex';
+                if (divider) divider.style.display = '';
+                if (nameEl) nameEl.textContent = team.name || '';
+                if (logoEl) {
+                    if (team.logo_url) {
+                        logoEl.src = team.logo_url;
+                        logoEl.style.display = '';
+                    } else {
+                        logoEl.removeAttribute('src');
+                        logoEl.style.display = 'none';
+                    }
+                }
+            } else {
+                if (teamEl) teamEl.style.display = 'none';
+                if (divider) divider.style.display = 'none';
+            }
+        } else {
+            root.classList.add('is-waiting');
+            root.classList.remove('is-updated');
+            _lastBid = 0;
+            _lastTeamId = null;
+        }
+    }
+
+    function pollLiveBid() {
+        var url = window.PJ_DATA_URL;
+        if (!url) return;
+        fetch(url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({jsonrpc: '2.0', method: 'call', params: {}}),
+            cache: 'no-store'
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (json) {
+            var result = (json && json.result) || {};
+            updateLiveBid(result.player || null);
+        })
+        .catch(function () {});
+    }
+
+    pollLiveBid();
+    setInterval(pollLiveBid, 1500);
+})();
+        ]]></script>
+    </xpath>
+
+</template>
+</odoo>

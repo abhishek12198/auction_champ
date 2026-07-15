@@ -9,37 +9,45 @@
     <title>Auctioneer Console</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;family=Rajdhani:wght@500;600;700&amp;family=Orbitron:wght@700;900&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Exo+2:wght@500;600;700;800;900&amp;family=Barlow+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="/auction_auctioneer/static/src/css/auctioneer_console.css"/>
 </head>
-<body class="ac-body" id="acBody">
+<body class="ac-body" id="acBody" t-att-data-sport="tournament.tournament_type if tournament else 'cricket'">
 
 <!-- ═══ TOP NAV ═══ -->
-<nav class="ac-nav">
+<header class="ac-nav">
     <div class="ac-nav__left">
         <t t-if="tournament and tournament.logo">
             <img t-att-src="'/auction/public/image/auction.tournament/%d/logo' % tournament.id"
                  alt="Logo" class="ac-nav__logo"/>
         </t>
         <t t-else="">
-            <div class="ac-nav__logo-placeholder"><span>🏏</span></div>
+            <div class="ac-nav__logo-placeholder">
+                <span t-if="tournament and tournament.tournament_type == 'football'">⚽</span>
+                <span t-else="">🏏</span>
+            </div>
         </t>
         <div class="ac-nav__info">
-            <span class="ac-nav__badge">AUCTIONEER CONSOLE</span>
             <span class="ac-nav__tournament-name" t-esc="tournament.name if tournament else 'No Tournament'"/>
+            <span class="ac-nav__badge">Auctioneer Console</span>
         </div>
     </div>
     <div class="ac-nav__center">
-        <div class="ac-live-indicator" id="acLiveIndicator">
-            <span class="ac-live-dot" id="acStatusDot"></span>
-            <span class="ac-live-text" id="acStatusText">Connecting…</span>
+        <div class="ac-live-pill" id="acLiveIndicator">
+            <span class="ac-live-pill__dot" id="acStatusDot"></span>
+            <span class="ac-live-pill__text" id="acStatusText">Connecting…</span>
         </div>
     </div>
     <div class="ac-nav__right">
-        <button class="ac-theme-toggle" id="acThemeToggle" onclick="acToggleTheme()" title="Toggle theme">
+        <a href="/web" class="ac-nav__ac-logo-link" title="Back to AuctionChamp backend">
+            <img class="ac-nav__ac-logo"
+                 src="/auction_module/static/src/assets/images/logo.svg"
+                 alt="AuctionChamp"/>
+        </a>
+        <button class="ac-icon-btn" id="acThemeToggle" onclick="acToggleTheme()" title="Toggle theme">
             <span id="acThemeIcon">☀</span>
         </button>
-        <a href="/web/session/logout" class="ac-btn-logout" title="Logout">
+        <a href="/web/session/logout" class="ac-icon-btn ac-icon-btn--logout" title="Logout">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                 <polyline points="16 17 21 12 16 7"/>
@@ -48,90 +56,124 @@
             <span>Logout</span>
         </a>
     </div>
-</nav>
+</header>
 
 <!-- ═══ MAIN LAYOUT ═══ -->
 <div class="ac-layout" id="acLayout">
 
-    <!-- ── Player Spotlight Panel ── -->
-    <aside class="ac-player-panel" id="acPlayerPanel">
+    <!-- ── Player Stage ── -->
+    <aside class="ac-stage" id="acPlayerPanel">
 
-        <div class="ac-player-empty" id="acPlayerEmpty">
-            <div class="ac-player-empty__gfx">
-                <div class="ac-empty-ring"></div>
-                <span class="ac-empty-icon">🏏</span>
+        <!-- Showcase controls: Manual = dice + numbers, Random = Next -->
+        <div class="ac-showcase" id="acShowcase">
+            <div class="ac-showcase__bar">
+                <div class="ac-showcase__meta">
+                    <span class="ac-showcase__kicker">Showcase</span>
+                    <span class="ac-showcase__mode" id="acShowcaseMode">—</span>
+                </div>
+                <div class="ac-showcase__actions" id="acShowcaseManual" style="display:none">
+                    <button type="button" class="ac-showcase-btn ac-showcase-btn--dice" id="acDiceBtn" onclick="acRollDice()">
+                        <span class="ac-showcase-btn__ico" aria-hidden="true">🎲</span>
+                        <span id="acDiceBtnLabel">Roll Dice</span>
+                    </button>
+                    <button type="button" class="ac-showcase-btn ac-showcase-btn--nums" id="acNumbersBtn" onclick="acOpenNumberPad()">
+                        <span class="ac-showcase-btn__ico" aria-hidden="true">#</span>
+                        <span>Numbers</span>
+                    </button>
+                </div>
+                <div class="ac-showcase__actions" id="acShowcaseRandom" style="display:none">
+                    <button type="button" class="ac-showcase-btn ac-showcase-btn--next" id="acNextBtn" onclick="acNextPlayer()">
+                        <span class="ac-showcase-btn__ico" aria-hidden="true">▶</span>
+                        <span>Next Player</span>
+                    </button>
+                    <span class="ac-showcase__remain" id="acRemainCount"></span>
+                </div>
             </div>
-            <h3 class="ac-player-empty__title">Awaiting Player</h3>
-            <p class="ac-player-empty__sub">Bring a player to stage from the auction screen</p>
+            <div class="ac-showcase__dice-result" id="acDiceResult" style="display:none">
+                <span class="ac-showcase__dice-label">Dice picked</span>
+                <strong class="ac-showcase__dice-num" id="acDiceResultNum">—</strong>
+                <button type="button" class="ac-showcase-btn ac-showcase-btn--call" id="acDiceCallBtn" onclick="acCallDicePlayer()">
+                    Call Player
+                </button>
+            </div>
         </div>
 
-        <div class="ac-player-card" id="acPlayerCard" style="display:none">
+        <div class="ac-stage-empty" id="acPlayerEmpty">
+            <div class="ac-stage-empty__mark" id="acEmptyIcon">
+                <t t-if="tournament and tournament.tournament_type == 'football'">⚽</t>
+                <t t-else="">🏏</t>
+            </div>
+            <h3 class="ac-stage-empty__title">Awaiting Player</h3>
+            <p class="ac-stage-empty__sub" id="acEmptySub">Use Showcase controls to bring a player on stage</p>
+        </div>
 
-            <!-- Tier ribbon -->
-            <div class="ac-tier-ribbon" id="acPlayerTier"></div>
-
-            <!-- Photo section -->
-            <div class="ac-player-photo-section">
-                <div class="ac-player-photo-frame">
-                    <img id="acPlayerPhoto" src="" alt="Player" class="ac-player-photo"/>
-                    <div class="ac-player-sl-badge" id="acPlayerSl"></div>
+        <div class="ac-stage-card" id="acPlayerCard" style="display:none">
+            <div class="ac-stage-photo">
+                <img id="acPlayerPhoto" src="" alt="Player" class="ac-stage-photo__img"/>
+                <div class="ac-stage-photo__veil"></div>
+                <div class="ac-stage-photo__sl" id="acPlayerSl"></div>
+                <div class="ac-stage-photo__identity">
+                    <div class="ac-stage-photo__tier" id="acPlayerTier"></div>
+                    <h2 class="ac-stage-photo__name" id="acPlayerName"></h2>
+                    <div class="ac-player-meta" id="acPlayerMeta">
+                        <div class="ac-player-attrs" id="acPlayerAttrs"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Player info -->
-            <div class="ac-player-info">
-                <h2 class="ac-player-name" id="acPlayerName"></h2>
-                <div class="ac-player-meta" id="acPlayerMeta"></div>
-            </div>
-
-            <!-- Bid dashboard -->
-            <div class="ac-bid-dashboard">
-                <div class="ac-bid-stat">
-                    <span class="ac-bid-stat__label">BASE</span>
-                    <span class="ac-bid-stat__value" id="acBasePrice">—</span>
+            <div class="ac-stage-ops">
+                <div class="ac-bid-strip">
+                    <div class="ac-bid-strip__cell">
+                        <span class="ac-bid-strip__label">Base</span>
+                        <span class="ac-bid-strip__value" id="acBasePrice">—</span>
+                    </div>
+                    <div class="ac-bid-strip__cell ac-bid-strip__cell--live">
+                        <span class="ac-bid-strip__label">Current Bid</span>
+                        <span class="ac-bid-strip__value ac-bid-strip__value--live" id="acCurrentBid">—</span>
+                    </div>
                 </div>
-                <div class="ac-bid-stat ac-bid-stat--live">
-                    <span class="ac-bid-stat__label">CURRENT BID</span>
-                    <span class="ac-bid-stat__value ac-bid-stat__value--big" id="acCurrentBid">—</span>
-                </div>
-            </div>
 
-            <!-- Current bidder -->
-            <div class="ac-current-bidder" id="acCurrentBidder" style="display:none">
-                <img id="acBidderLogo" src="" alt="" class="ac-bidder-logo"/>
-                <div class="ac-bidder-info">
-                    <span class="ac-bidder-label">HIGHEST BID</span>
-                    <span id="acBidderName" class="ac-bidder-name"></span>
+                <div class="ac-current-bidder" id="acCurrentBidder" style="display:none">
+                    <img id="acBidderLogo" src="" alt="" class="ac-bidder-logo"/>
+                    <div class="ac-bidder-info">
+                        <span class="ac-bidder-label">Highest Bid</span>
+                        <span id="acBidderName" class="ac-bidder-name"></span>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Action buttons -->
-            <div class="ac-player-actions">
-                <button class="ac-btn ac-btn--reset" id="acResetBidBtn" onclick="acResetBid()" style="display:none">
-                    <span class="ac-btn__icon">↩</span> RESET BID
-                </button>
-                <button class="ac-btn ac-btn--sold" id="acFinalizeBtn" onclick="acFinalizeBid()" style="display:none">
-                    <span class="ac-btn__icon">🔨</span> SOLD!
-                </button>
+                <div class="ac-player-actions">
+                    <button class="ac-btn ac-btn--reset" id="acResetBidBtn" onclick="acResetBid()" style="display:none">
+                        Reset Bid
+                    </button>
+                    <button class="ac-btn ac-btn--sold" id="acFinalizeBtn" onclick="acFinalizeBid()" style="display:none">
+                        Sold
+                    </button>
+                </div>
             </div>
         </div>
     </aside>
 
-    <!-- ── Teams Panel ── -->
-    <main class="ac-teams-panel">
-        <div class="ac-teams-header">
-            <div class="ac-teams-header__left">
-                <h3 class="ac-teams-title">TEAMS</h3>
-                <span class="ac-teams-subtitle">Tap a team to place a bid</span>
+    <!-- ── Teams Desk ── -->
+    <main class="ac-desk">
+        <div class="ac-desk__header">
+            <div>
+                <h3 class="ac-desk__title">Teams</h3>
+                <p class="ac-desk__sub">Tap to quick-bid · bid chip for custom amount</p>
             </div>
-            <span class="ac-teams-count-badge" id="acTeamsCount"></span>
+            <span class="ac-desk__count" id="acTeamsCount"></span>
         </div>
-        <div class="ac-teams-grid" id="acTeamsGrid">
-            <!-- Populated by JS -->
-        </div>
+        <div class="ac-teams-grid" id="acTeamsGrid"></div>
     </main>
 
 </div>
+
+<footer class="ac-powered" aria-label="Powered by AuctionChamp">
+    <span class="ac-powered__lbl">Powered by</span>
+    <img class="ac-powered__logo"
+         src="/auction_module/static/src/assets/images/logo.svg"
+         alt="AuctionChamp"
+         draggable="false"/>
+</footer>
 
 <!-- ═══ BID MODAL ═══ -->
 <div class="ac-overlay" id="acBidModal" style="display:none" onclick="acCloseBidModal(event)">
@@ -170,7 +212,7 @@
                     <span class="ac-bid-limit__val" id="acModalMax"></span>
                 </div>
             </div>
-            <label class="ac-bid-control__label">POINTS TO CALL</label>
+            <label class="ac-bid-control__label">Points to call</label>
             <div class="ac-bid-control__row">
                 <button class="ac-bid-adj" id="acBidDecBtn" onclick="acAdjustBid(-1)">−</button>
                 <input type="number" class="ac-bid-input" id="acBidInput" min="0" step="1"/>
@@ -180,7 +222,7 @@
         </div>
 
         <button class="ac-btn ac-btn--place-bid" id="acPlaceBidBtn" onclick="acPlaceBid()">
-            🔨 &#160;PLACE BID
+            Place Bid
         </button>
     </div>
 </div>
@@ -188,7 +230,7 @@
 <!-- ═══ CONFIRM SOLD MODAL ═══ -->
 <div class="ac-overlay ac-overlay--dark" id="acSoldConfirmModal" style="display:none">
     <div class="ac-sold-modal">
-        <div class="ac-sold-modal__icon">🔨</div>
+        <div class="ac-sold-modal__kicker">Finalise</div>
         <h2 class="ac-sold-modal__title">Confirm Sale</h2>
         <p class="ac-sold-modal__sub">This action cannot be undone</p>
 
@@ -218,26 +260,48 @@
         </div>
 
         <div class="ac-sold-modal__actions">
-            <button class="ac-btn ac-btn--cancel" onclick="acCancelSoldConfirm()">✕ Cancel</button>
+            <button class="ac-btn ac-btn--cancel" onclick="acCancelSoldConfirm()">Cancel</button>
             <button class="ac-btn ac-btn--confirm-sold" id="acSoldConfirmBtn" onclick="acConfirmSold()">
-                🏆 CONFIRM SOLD!
+                Confirm Sold
             </button>
         </div>
     </div>
 </div>
 
-<!-- ═══ TOAST ═══ -->
+<!-- ═══ NUMBER PAD (manual showcase) ═══ -->
+<div class="ac-overlay" id="acNumberPad" style="display:none" onclick="acCloseNumberPad(event)">
+    <div class="ac-numpad" onclick="event.stopPropagation()">
+        <div class="ac-numpad__header">
+            <div>
+                <h2 class="ac-numpad__title">Select Player</h2>
+                <p class="ac-numpad__sub">Tap a number to call them onto stage &amp; projector</p>
+            </div>
+            <button type="button" class="ac-modal__close" onclick="acCloseNumberPad()">✕</button>
+        </div>
+        <div class="ac-numpad__search">
+            <input type="search" id="acNumpadSearch" class="ac-numpad__input"
+                   placeholder="Search by # or name…" autocomplete="off"
+                   oninput="acFilterNumberPad()"/>
+        </div>
+        <div class="ac-numpad__grid" id="acNumpadGrid"></div>
+    </div>
+</div>
+
 <div class="ac-toast" id="acToast"></div>
 
-<!-- ═══ JS ═══ -->
 <script>
 window.AC_DATA_URL      = '/auction/auctioneer/data';
 window.AC_BID_URL       = '/auction/auctioneer/place-bid';
 window.AC_RESET_URL     = '/auction/auctioneer/reset-bid';
 window.AC_FINALIZE_URL  = '/auction/auctioneer/finalize-bid';
+window.AC_DICE_URL      = '/auction/auctioneer/dice';
+window.AC_CALL_URL      = '/auction/auctioneer/call-player';
+window.AC_NEXT_URL      = '/auction/auctioneer/next-player';
 window.AC_CSRF_TOKEN    = '<t t-esc="request.csrf_token()"/>';
+window.AC_SPORT         = '<t t-esc="tournament.tournament_type if tournament else 'cricket'"/>';
+<t t-set="ac_showcase_mode" t-value="'manual' if (not tournament or tournament.player_appearance_algorithm == 'linear') else 'random'"/>
+window.AC_SHOWCASE_MODE = '<t t-esc="ac_showcase_mode"/>';
 
-// Theme init before paint
 (function() {
     var saved = localStorage.getItem('ac_theme') || 'dark';
     document.getElementById('acBody').setAttribute('data-theme', saved);
