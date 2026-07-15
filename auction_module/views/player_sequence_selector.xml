@@ -3201,7 +3201,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       setMqDiceFace((rollCount % 6) + 1);
       if (rollCount === 10 && tid && !resultBroadcast) {
         resultBroadcast = true;
-        callKw('auction.tournament', 'set_dice_state', [[tid], 'result', result]).catch(function(){});
+        /* Negative serial = mystery — projector shows ? without leaking the number */
+        callKw('auction.tournament', 'set_dice_state', [[tid], 'result', resultMystery ? (-Math.abs(result) || -1) : result]).catch(function(){});
       }
       if (rollCount >= maxRolls) {
         clearInterval(rollInt);
@@ -3209,7 +3210,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         showDiceResultPill(result, resultMystery, picked.id);
         _diceRolling = false;
         if (!resultBroadcast && tid) {
-          callKw('auction.tournament', 'set_dice_state', [[tid], 'result', result]).catch(function(){});
+          callKw('auction.tournament', 'set_dice_state', [[tid], 'result', resultMystery ? (-Math.abs(result) || -1) : result]).catch(function(){});
         }
         setTimeout(function() {
           if (tid) callKw('auction.tournament', 'set_dice_state', [[tid], 'idle', 0]).catch(function(){});

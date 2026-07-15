@@ -72,7 +72,7 @@
                     <span class="ac-showcase__mode" id="acShowcaseMode">—</span>
                 </div>
                 <div class="ac-showcase__actions" id="acShowcaseManual" style="display:none">
-                    <button type="button" class="ac-showcase-btn ac-showcase-btn--dice" id="acDiceBtn" onclick="acRollDice()">
+                    <button type="button" class="ac-showcase-btn ac-showcase-btn--dice ac-showcase-btn--dice-desk" id="acDiceBtn" onclick="acRollDice()">
                         <span class="ac-showcase-btn__ico" aria-hidden="true">🎲</span>
                         <span id="acDiceBtnLabel">Roll Dice</span>
                     </button>
@@ -177,6 +177,15 @@
          alt="AuctionChamp"
          draggable="false"/>
 </footer>
+
+<!-- Mobile FAB dice (manual mode) — bottom-center like player selector -->
+<div class="ac-dice-fab" id="acDiceFab" onclick="acOnDiceFabTap()" title="Roll Dice" style="display:none">
+    <div class="ac-dice-fab__die" id="acDiceFabDie" aria-hidden="true">
+        <span class="ac-dice-fab__ico">🎲</span>
+        <span class="ac-dice-fab__num" id="acDiceFabNum"></span>
+    </div>
+    <div class="ac-dice-fab__lbl" id="acDiceFabLabel">Roll Dice</div>
+</div>
 
 <!-- ═══ BID MODAL ═══ -->
 <div class="ac-overlay" id="acBidModal" style="display:none" onclick="acCloseBidModal(event)">

@@ -283,19 +283,65 @@
                 diceStrip.style.display = 'none';
             }
         }
+        syncDiceFab();
     }
+
+    function syncDiceFab() {
+        var fab = document.getElementById('acDiceFab');
+        if (!fab) return;
+        var mode = state.showcaseMode === 'random' ? 'random' : 'manual';
+        var isMobile = window.matchMedia('(max-width: 900px)').matches;
+        var show = isMobile && mode === 'manual' && !isAwaitingReveal();
+        fab.style.display = show ? 'flex' : 'none';
+        fab.classList.toggle('is-rolling', !!state.diceRolling);
+        fab.classList.toggle('has-result', !!(state.dicePicked && !state.diceRolling));
+        var numEl = document.getElementById('acDiceFabNum');
+        var lbl = document.getElementById('acDiceFabLabel');
+        if (state.diceRolling) {
+            if (numEl) numEl.textContent = '';
+            if (lbl) lbl.textContent = 'Rolling…';
+        } else if (state.dicePicked) {
+            if (numEl) {
+                numEl.textContent = state.dicePicked.is_mystery
+                    ? '?'
+                    : ('#' + (state.dicePicked.sl_no || '—'));
+            }
+            if (lbl) lbl.textContent = 'Tap to Call';
+        } else {
+            if (numEl) numEl.textContent = '';
+            if (lbl) lbl.textContent = 'Roll Dice';
+        }
+    }
+
+    window.acOnDiceFabTap = function () {
+        if (state.dicePicked && !state.diceRolling) {
+            acCallDicePlayer();
+            return;
+        }
+        acRollDice();
+    };
 
     function setDiceButtonRolling(on) {
         var btn = document.getElementById('acDiceBtn');
         var lbl = document.getElementById('acDiceBtnLabel');
-        if (!btn) return;
-        btn.disabled = !!on;
-        btn.classList.toggle('is-rolling', !!on);
+        if (btn) {
+            btn.disabled = !!on || isAwaitingReveal();
+            btn.classList.toggle('is-rolling', !!on);
+        }
         if (lbl) lbl.textContent = on ? 'Rolling…' : (state.dicePicked ? 'Roll Again' : 'Roll Dice');
+        syncDiceFab();
     }
 
-    function broadcastDice(dState, number, cb) {
-        jsonRpc(DICE_URL, { state: dState, number: number || 0 }, function (err, result) {
+    function broadcastDice(dState, number, playerId, cb) {
+        if (typeof playerId === 'function') {
+            cb = playerId;
+            playerId = false;
+        }
+        jsonRpc(DICE_URL, {
+            state: dState,
+            number: number || 0,
+            player_id: playerId || false,
+        }, function (err, result) {
             if (cb) cb(err, result);
         });
     }
@@ -323,7 +369,7 @@
         setDiceButtonRolling(true);
         document.getElementById('acDiceResult').style.display = 'none';
 
-        broadcastDice('rolling', 0);
+        broadcastDice('rolling', 0, false);
 
         var rollCount = 0;
         var maxRolls = 22;
@@ -332,23 +378,24 @@
             rollCount++;
             if (rollCount === 10 && !resultBroadcast) {
                 resultBroadcast = true;
-                broadcastDice('result', picked.sl_no || 0);
+                // Server resolves serial + mystery mask from player_id
+                broadcastDice('result', 0, picked.id);
             }
             if (rollCount >= maxRolls) {
                 clearInterval(rollInt);
                 state.diceRolling = false;
                 state.dicePicked = {
                     id: picked.id,
-                    sl_no: picked.sl_no,
+                    sl_no: picked.is_mystery ? 0 : (picked.sl_no || 0),
                     is_mystery: !!picked.is_mystery,
                 };
                 setDiceButtonRolling(false);
                 renderShowcase();
                 if (!resultBroadcast) {
-                    broadcastDice('result', picked.sl_no || 0);
+                    broadcastDice('result', 0, picked.id);
                 }
                 state.diceTimer = setTimeout(function () {
-                    broadcastDice('idle', 0);
+                    broadcastDice('idle', 0, false);
                     state.diceTimer = null;
                 }, 7000);
             }
@@ -395,11 +442,12 @@
             return;
         }
         list.forEach(function (p) {
+            // Always treat mystery as locked in the selector until revealed
             var mystery = !!p.is_mystery && !p.mystery_revealed;
             var numLabel = mystery ? '?' : String(p.sl_no || '—');
             var nameLabel = mystery ? 'Mystery' : (p.name || '');
             var label = mystery ? '?' : ('#' + (p.sl_no || '—'));
-            // Mystery: searchable only by ? — never by real name (name is blank from API)
+            // Mystery: searchable only by ? — never by real name/serial
             var hay = (label + ' ' + numLabel + ' ' + nameLabel).toLowerCase();
             if (q && hay.indexOf(q) === -1) return;
             var st = p.state || 'auction';

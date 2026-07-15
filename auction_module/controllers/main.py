@@ -2248,16 +2248,20 @@ class Auction(http.Controller):
                 player = on_stage
             if not player:
                 dice_state = tournament.dice_state if tournament else 'idle'
-                dice_result = tournament.dice_result if tournament else 0
-                dice_mystery = False
-                if tournament and dice_result:
+                raw_dice = int(tournament.dice_result or 0) if tournament else 0
+                # Negative dice_result = mystery roll (serial must not be shown)
+                dice_mystery = raw_dice < 0
+                lookup_sl = abs(raw_dice) if raw_dice else 0
+                dice_result = 0 if dice_mystery else lookup_sl
+                if tournament and lookup_sl and not dice_mystery:
                     dice_player = request.env['auction.team.player'].sudo().search([
                         ('tournament_id', '=', tournament.id),
-                        ('sl_no', '=', int(dice_result)),
+                        ('sl_no', '=', lookup_sl),
                     ], limit=1)
                     if (dice_player and dice_player.tier_id and dice_player.tier_id.mystery
                             and not dice_player.mystery_revealed):
                         dice_mystery = True
+                        dice_result = 0
                 return {
                     'player': None,
                     'dice': {

@@ -450,11 +450,12 @@ class AuctionAuctioneerController(http.Controller):
             )
             for pl in players:
                 is_mys = bool(pl.tier_id and pl.tier_id.mystery)
+                # Hide identity for any unrevealed mystery (auction or sold-awaiting)
                 hidden = is_mys and not pl.mystery_revealed
                 pool.append({
                     'id': pl.id,
-                    'sl_no': int(pl.sl_no or 0),
-                    # Never leak identity for unrevealed mystery (pad / search)
+                    # Never leak serial for unrevealed mystery (pad / network)
+                    'sl_no': 0 if hidden else int(pl.sl_no or 0),
                     'name': '' if hidden else (pl.name or ''),
                     'state': pl.state or 'auction',
                     'is_mystery': is_mys,
@@ -496,8 +497,13 @@ class AuctionAuctioneerController(http.Controller):
     # ── Showcase: dice / call player / next player ─────────────────────────
 
     @http.route('/auction/auctioneer/dice', type='json', auth='user', website=False, csrf=False)
-    def auctioneer_dice(self, state='idle', number=0, **kw):
-        """Broadcast dice state to projector (idle / rolling / result)."""
+    def auctioneer_dice(self, state='idle', number=0, player_id=None, **kw):
+        """Broadcast dice state to projector (idle / rolling / result).
+
+        Mystery results are stored as a **negative** serial so the projector
+        shows ``?`` and never leaks the real number in the public dice payload.
+        Prefer ``player_id`` on result so the server resolves mystery safely.
+        """
         tournament = self._resolve_tournament()
         if not tournament:
             return {'success': False, 'error': 'No tournament found'}
@@ -511,11 +517,26 @@ class AuctionAuctioneerController(http.Controller):
         state = (state or 'idle').strip().lower()
         if state not in ('idle', 'rolling', 'result'):
             state = 'idle'
+
+        is_mystery = False
+        if state == 'result' and player_id:
+            try:
+                pl = request.env['auction.team.player'].sudo().browse(int(player_id))
+            except (TypeError, ValueError):
+                pl = None
+            if pl and pl.exists() and pl.tournament_id.id == tournament.id:
+                number = int(pl.sl_no or 0)
+                if pl.tier_id and pl.tier_id.mystery and not pl.mystery_revealed:
+                    is_mystery = True
+                    number = -number if number else -1
+
         tournament.sudo().set_dice_state(state, number)
         return {
             'success': True,
             'dice_state': state,
-            'dice_result': number,
+            # Never echo the real serial for mystery rolls
+            'dice_result': 0 if is_mystery else abs(number),
+            'is_mystery': is_mystery,
         }
 
     @http.route('/auction/auctioneer/call-player', type='json', auth='user', website=False, csrf=False)
