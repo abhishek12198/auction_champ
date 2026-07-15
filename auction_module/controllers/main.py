@@ -460,7 +460,7 @@ class Auction(http.Controller):
             'action_set_on_stage', 'get_sell_teams_data', 'action_sell_from_web',
             'action_reveal_mystery',
         },
-        'auction.tournament': {'set_dice_state'},
+        'auction.tournament': {'set_dice_state', 'action_toggle_break_time', 'action_set_break_time'},
         'auction.auction': {'search_read'},
     }
 
@@ -567,7 +567,7 @@ class Auction(http.Controller):
         # Redact identity for unrevealed mystery players (drawer / projector sync)
         if result['is_mystery'] and not result['mystery_revealed']:
             result.update({
-                'name': '???',
+                'name': 'Mystery Player',
                 'role': '???',
                 'sl_no': 0,
                 'photo': '',
@@ -2179,6 +2179,7 @@ class Auction(http.Controller):
             theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
             sport = (tournament.tournament_type or 'cricket') if tournament else 'cricket'
             mode = 'light' if theme in ('lemon', 'strawberry') else 'dark'
+            company = request.env['res.company'].sudo().search([], limit=1)
             html = request.render('auction_module.projector_template', {
                 'tournament': tournament,
                 'theme': theme,
@@ -2186,6 +2187,7 @@ class Auction(http.Controller):
                 'sport': sport,
                 'db_name': db_name,
                 'tournament_slug': tournament_slug or (tournament.slug if tournament else ''),
+                'res_company': company,
             }, lazy=False)
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
@@ -2237,6 +2239,7 @@ class Auction(http.Controller):
                     'recent_bids': _pj_recent_bids(tournament, db_name),
                     'top_purse': _pj_top_purse(tournament),
                     'auction_meta': _pj_auction_meta(tournament),
+                    'break_time': bool(tournament and tournament.break_time_active),
                 }
             photo = ''
             photo_url = ''
@@ -2283,7 +2286,7 @@ class Auction(http.Controller):
             player_payload.update(_football_display_payload(player))
             if is_mystery and not mystery_revealed:
                 player_payload.update({
-                    'name': '???',
+                    'name': 'Mystery Player',
                     'role': '???',
                     'sl_no': '?',
                     'photo': '',
@@ -2326,7 +2329,20 @@ class Auction(http.Controller):
                 'recent_bids': _pj_recent_bids(tournament, db_name, player=player),
                 'top_purse': _pj_top_purse(tournament),
                 'auction_meta': _pj_auction_meta(tournament),
+                'break_time': bool(tournament and tournament.break_time_active),
             }
+
+    @http.route([
+        '/<string:db_name>/auction/projector/<string:tournament_slug>/squad',
+    ], type='json', auth='none', website=False, sitemap=False, csrf=False)
+    def auction_projector_squad(self, db_name, tournament_slug, **kw):
+        """All-team squad board for the projector overlay (minimal roster view)."""
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return {'sport': 'cricket', 'teams': []}
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('slug', '=', tournament_slug)], limit=1)
+            return _pj_squad(tournament, db_name)
 
     @http.route('/auction/showcase', type='http', auth='user', website=True)
     def auction_showcase(self, **kw):
@@ -2381,6 +2397,7 @@ class Auction(http.Controller):
         'auction.tournament':  ['logo'],
         'auction.history':     ['player_photo'],
         'auction.advertiser':  ['image'],
+        'res.company':         ['favicon'],
     }
 
     @staticmethod
@@ -2402,6 +2419,9 @@ class Auction(http.Controller):
             return 'image/webp'
         if image_bytes[:2] == b'BM':
             return 'image/bmp'
+        # Windows ICO (common for company favicon)
+        if image_bytes[:4] == b'\x00\x00\x01\x00':
+            return 'image/x-icon'
         return 'image/jpeg'
 
     @http.route('/auction/public/image/<string:model>/<int:record_id>/<string:field>',
@@ -2682,15 +2702,15 @@ class Auction(http.Controller):
                 if (result['current_player']['is_mystery']
                         and not result['current_player']['mystery_revealed']):
                     result['current_player'].update({
-                        'name': '???',
+                        'name': 'Mystery Player?',
                         'photo_url': '/auction_module/static/img/default_icon.png',
-                        'role': '???',
+                        'role': '',
                         'tier_name': '',
                         'sl_no': 0,
                         'icon_player': False,
                         'batting_style': '',
                         'bowling_style': '',
-                        'dominant_position': '???',
+                        'dominant_position': '',
                         'preferred_foot': '',
                         'secondary_positions': '',
                         'age': '',
@@ -4164,6 +4184,66 @@ def _pj_teams(tournament, db_name, leading_team_id=None):
             'remaining_points': purse_by_team.get(team.id, 0),
         })
     return out
+
+
+def _pj_squad(tournament, db_name):
+    """Full squad board: every team + sold/icon players (projector overlay)."""
+    sport = (tournament.tournament_type or 'cricket') if tournament else 'cricket'
+    if not tournament:
+        return {'sport': sport, 'teams': []}
+
+    Player = request.env['auction.team.player'].sudo()
+    teams_out = []
+    for team in tournament.team_ids.sorted('name'):
+        logo_url = ''
+        if team.logo:
+            logo_url = '/%s/auction/public/image/auction.team/%d/logo' % (db_name, team.id)
+
+        players = Player.search([
+            ('tournament_id', '=', tournament.id),
+            ('assigned_team_id', '=', team.id),
+            '|', ('state', '=', 'sold'), ('icon_player', '=', True),
+        ], order='sl_no asc, name asc')
+
+        players_out = []
+        seen = set()
+        for p in players:
+            if p.id in seen:
+                continue
+            seen.add(p.id)
+            mystery_hidden = bool(
+                p.tier_id and p.tier_id.mystery and not p.mystery_revealed)
+            if mystery_hidden:
+                name = '???'
+                photo_url = ''
+            else:
+                name = p.name or ''
+                photo_url = (
+                    '/%s/auction/public/image/auction.team.player/%d/photo' % (db_name, p.id)
+                    if p.photo else ''
+                )
+            if sport == 'football':
+                role = (p.dominant_position_id.name if p.dominant_position_id else '') or ''
+            else:
+                role = p.role or ''
+            players_out.append({
+                'id': p.id,
+                'name': name,
+                'photo_url': photo_url,
+                'role': role,
+                'tier_name': (p.tier_id.name if p.tier_id and not mystery_hidden else '') or '',
+                'tier_color': (p.tier_id.color if p.tier_id else '') or '#888',
+                'is_icon': bool(p.icon_player),
+            })
+
+        teams_out.append({
+            'id': team.id,
+            'name': team.name or '',
+            'logo_url': logo_url,
+            'count': len(players_out),
+            'players': players_out,
+        })
+    return {'sport': sport, 'teams': teams_out}
 
 
 def _pj_top_purse(tournament):

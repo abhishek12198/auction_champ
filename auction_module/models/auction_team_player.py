@@ -386,6 +386,11 @@ class AuctionTeamPlayer(models.Model):
         string='Use Other Attributes',
         compute='_compute_use_other_attributes',
         help='True when at least one Other Attribute has a value.')
+    kanban_other_attrs_html = fields.Html(
+        string='Other Attributes (Kanban)',
+        compute='_compute_kanban_other_attrs_html',
+        sanitize=False,
+        help='Pre-rendered Other Attribute tiles for the player kanban card.')
     photo = fields.Binary("Photo", default=_get_default_player_photo)
     photo_card = fields.Binary(
         string='Photo (Card Print)',
@@ -454,6 +459,30 @@ class AuctionTeamPlayer(models.Model):
             player.use_other_attributes = any(
                 (a.label and (a.value or '').strip()) for a in player.other_attribute_ids
             )
+
+    @api.depends(
+        'tournament_type',
+        'other_attribute_ids', 'other_attribute_ids.value', 'other_attribute_ids.label',
+    )
+    def _compute_kanban_other_attrs_html(self):
+        from odoo.tools import html_escape
+        for player in self:
+            if player.tournament_type != 'football':
+                player.kanban_other_attrs_html = False
+                continue
+            parts = []
+            for attr in player.other_attribute_ids:
+                label = (attr.label or '').strip()
+                value = (attr.value or '').strip()
+                if not label or not value:
+                    continue
+                parts.append(
+                    '<div class="pk2-stat">'
+                    '<div class="pk2-stat-label">%s</div>'
+                    '<div class="pk2-stat-value">%s</div>'
+                    '</div>' % (html_escape(label), html_escape(value))
+                )
+            player.kanban_other_attrs_html = ''.join(parts) or False
 
     def _sync_other_attributes_from_tournament(self):
         """Ensure football players have Other Attribute rows for each tournament Att-Label."""
@@ -811,6 +840,7 @@ class AuctionTeamPlayer(models.Model):
             'team_name': auction.team_id.name,
             'final_point': final_point,
             'display_seconds': player.tournament_id.sold_display_seconds if player.tournament_id else 5,
+            'tournament_id': player.tournament_id.id if player.tournament_id else False,
         }
 
     @api.model

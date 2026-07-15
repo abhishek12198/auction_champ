@@ -431,6 +431,21 @@ img { display: block; }
   display: flex; align-items: center; justify-content: center;
   font-size: 6rem; opacity: .18;
 }
+/* Mystery locked — large lock above PLAYER LOCKED (same as projector) */
+.lb-mystery-lock{
+  position:absolute;inset:0;z-index:8;pointer-events:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;padding:16px;text-align:center;color:#fff;
+  background:rgba(0,0,0,.42)}
+.lb-mystery-lock-ico{
+  width:clamp(56px,8vw,100px);height:clamp(56px,8vw,100px);
+  display:flex;align-items:center;justify-content:center;margin-bottom:4px;
+  filter:drop-shadow(0 4px 14px rgba(0,0,0,.55))}
+.lb-mystery-lock-ico svg{width:100%;height:100%;display:block}
+.lb-mystery-lock-title{
+  font-size:clamp(.95rem,2.2vw,1.5rem);font-weight:800;letter-spacing:3px;
+  text-shadow:0 2px 10px rgba(0,0,0,.55)}
+.lb-mystery-lock-sub{opacity:.9;font-size:clamp(.75rem,1.3vw,.95rem);font-weight:600}
 .lb-sl-overlay {
   position: absolute; top: 12px; left: 12px;
   background: rgba(0,0,0,0.6);
@@ -1700,6 +1715,18 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     <div class="lb-photo-wrap">
       <div class="lb-photo-placeholder" id="lb-photo-ph">👤</div>
       <img id="lb-player-img" src="" alt="Player" style="display:none;position:absolute;top:0;left:0;"/>
+      <div class="lb-mystery-lock" id="lb-mystery-lock" style="display:none" aria-hidden="true">
+        <div class="lb-mystery-lock-ico">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 11V8a5 5 0 0 1 10 0v3" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+            <rect x="4.5" y="11" width="15" height="10.5" rx="2.2" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-width="2"/>
+            <circle cx="12" cy="15.2" r="1.55" fill="#fff"/>
+            <path d="M12 16.7v2.1" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="lb-mystery-lock-title">PLAYER LOCKED</div>
+        <div class="lb-mystery-lock-sub">Requires Winning Bid</div>
+      </div>
       <div class="lb-sl-overlay" id="lb-sl-overlay" style="display:none;">#<span id="lb-sl-num">--</span></div>
       <div class="lb-state-overlay lb-state-auction" id="lb-state-overlay" style="display:none;">LIVE</div>
       <!-- SOLD STAMP -->
@@ -2053,6 +2080,8 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       document.getElementById('lb-state-overlay').style.display = 'none';
       document.getElementById('lb-sold-stamp').style.display   = 'none';
       document.getElementById('lb-unsold-stamp').style.display = 'none';
+      var lockClear = document.getElementById('lb-mystery-lock');
+      if (lockClear) lockClear.style.display = 'none';
       document.getElementById('lb-badges-row').innerHTML = '';
       document.getElementById('lb-stats-row').style.display = 'none';
       document.getElementById('lb-base-row').style.display = 'none';
@@ -2062,6 +2091,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     // Photo
     const img = document.getElementById('lb-player-img');
     const ph  = document.getElementById('lb-photo-ph');
+    const mysteryLock = document.getElementById('lb-mystery-lock');
     const mysteryHidden = !!(p.is_mystery && !p.mystery_revealed);
     if (p.photo_url) {
       img.src = p.photo_url;
@@ -2074,14 +2104,17 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       ph.style.display  = 'flex';
       ph.textContent = mysteryHidden ? '?' : '👤';
     }
+    if (mysteryLock) mysteryLock.style.display = mysteryHidden ? 'flex' : 'none';
 
-    // Name + sub
-    document.getElementById('lb-pname').textContent = p.name || '—';
+    // Name + sub — Mystery Player? only; no role ??? / small ?
+    document.getElementById('lb-pname').textContent = mysteryHidden
+      ? 'Mystery Player?'
+      : (p.name || '—');
     const subRole = (p.tournament_type === 'football')
       ? (p.dominant_position || p.role || '')
       : (p.role || '');
     document.getElementById('lb-psub').textContent  =
-      mysteryHidden ? '???' : [subRole, p.tier_name].filter(Boolean).join(' · ');
+      mysteryHidden ? '' : [subRole, p.tier_name].filter(Boolean).join(' · ');
 
     // SL badge — hidden for unrevealed mystery players
     const slEl = document.getElementById('lb-sl-overlay');
@@ -2140,14 +2173,14 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     if (p.tier_name && !mysteryHidden) {
       badgesHtml += `<span class="lb-badge lb-b-tier" style="background:${p.tier_color || '#2252b5'}">${p.tier_name}</span>`;
     }
-    if (mysteryHidden) {
-      badgesHtml += `<span class="lb-badge lb-b-role">???</span>`;
-    } else if (isFootball) {
-      if (p.dominant_position) {
-        badgesHtml += `<span class="lb-badge lb-b-role">${lbEsc(p.dominant_position)}</span>`;
+    if (!mysteryHidden) {
+      if (isFootball) {
+        if (p.dominant_position) {
+          badgesHtml += `<span class="lb-badge lb-b-role">${lbEsc(p.dominant_position)}</span>`;
+        }
+      } else if (p.role) {
+        badgesHtml += `<span class="lb-badge lb-b-role">${p.role}</span>`;
       }
-    } else if (p.role) {
-      badgesHtml += `<span class="lb-badge lb-b-role">${p.role}</span>`;
     }
     if (p.icon_player && !mysteryHidden) {
       badgesHtml += `<span class="lb-badge lb-b-icon">⭐ Icon</span>`;

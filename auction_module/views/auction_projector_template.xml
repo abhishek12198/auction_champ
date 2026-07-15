@@ -9,6 +9,9 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>Projector — <t t-if="tournament"><t t-esc="tournament.name"/></t></title>
+  <link rel="shortcut icon"
+        t-att-href="('/' + db_name + '/auction/public/image/res.company/' + str(res_company.id) + '/favicon') if (db_name and res_company and res_company.favicon) else '/auction_module/static/description/icon.png'"
+        type="image/x-icon"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Exo+2:wght@500;600;700;800;900&amp;family=Barlow+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
@@ -79,14 +82,122 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:22vw}
 .pj-auction-date{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);
   font-weight:800;margin-top:2px}
-.pj-bid-summary-btn,.pj-fs-btn{
+.pj-bid-summary-btn,.pj-fs-btn,.pj-squad-btn{
   border:1px solid var(--line);background:var(--gold-soft);color:var(--tx);
   border-radius:.45rem;cursor:pointer;text-decoration:none;
   display:inline-flex;align-items:center;justify-content:center;gap:.35rem;
-  font-family:inherit;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
-.pj-bid-summary-btn{height:2.6rem;padding:0 .9rem;font-size:.7rem}
-.pj-fs-btn{width:2.6rem;height:2.6rem;font-size:1.1rem}
-.pj-bid-summary-btn:hover,.pj-fs-btn:hover{border-color:var(--gold);color:var(--gold)}
+  font-family:inherit;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  width:2.6rem;height:2.6rem;font-size:1.1rem;padding:0;flex-shrink:0}
+.pj-squad-btn svg,.pj-bid-summary-btn svg{width:1.25rem;height:1.25rem;display:block;fill:currentColor}
+.pj-bar-actions{display:inline-flex;align-items:center;gap:.4rem;flex-shrink:0}
+.pj-bid-summary-btn:hover,.pj-fs-btn:hover,.pj-squad-btn:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ══ Team Squad Overlay ═══════════════════════════════════════════════ */
+#pjSquadOverlay{position:fixed;inset:0;z-index:900;display:none;flex-direction:column;
+  background:rgba(0,0,0,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+#pjSquadOverlay.open{display:flex}
+[data-mode="light"] #pjSquadOverlay{background:rgba(255,255,255,.82)}
+.pj-sq-panel{flex:1;min-height:0;margin:1.1rem 1.4rem 1.2rem;display:flex;flex-direction:column;
+  background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);
+  border-radius:14px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.pj-sq-hd{display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  padding:.85rem 1.2rem;border-bottom:1px solid var(--line);flex-shrink:0;
+  background:linear-gradient(135deg,var(--panel2),var(--panel))}
+.pj-sq-title{font-weight:900;letter-spacing:.22em;text-transform:uppercase;
+  font-size:clamp(.95rem,1.6vw,1.25rem)}
+.pj-sq-sub{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--tx2);margin-top:3px}
+.pj-sq-close{width:2.4rem;height:2.4rem;border-radius:.45rem;border:1px solid var(--line);
+  background:var(--gold-soft);color:var(--tx);font-size:1.35rem;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;line-height:1}
+.pj-sq-close:hover{border-color:var(--gold);color:var(--gold)}
+.pj-sq-body{flex:1;min-height:0;overflow:auto;padding:1rem 1.15rem 1.25rem;
+  display:flex;flex-direction:column;gap:.85rem;align-content:start}
+.pj-sq-loading,.pj-sq-empty{width:100%;text-align:center;padding:3rem 1rem;
+  color:var(--tx2);letter-spacing:.12em;text-transform:uppercase;font-size:.85rem}
+.pj-sq-team{display:flex;align-items:flex-start;gap:1rem;width:100%;
+  border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.18);
+  padding:.7rem .9rem .75rem;min-width:0;box-sizing:border-box}
+[data-mode="light"] .pj-sq-team{background:rgba(255,255,255,.55)}
+.pj-sq-team-hd{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:.4rem;flex-shrink:0;width:7.5rem;text-align:center;padding-top:.15rem}
+.pj-sq-team-logo{width:3.2rem;height:3.2rem;border-radius:10px;object-fit:contain;
+  background:rgba(255,255,255,.06);border:1px solid var(--line);flex-shrink:0}
+.pj-sq-team-logo-ph{width:3.2rem;height:3.2rem;border-radius:10px;background:var(--gold);
+  color:#111;font-weight:900;display:flex;align-items:center;justify-content:center;
+  font-size:1rem;flex-shrink:0}
+.pj-sq-team-name{font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  font-size:.72rem;line-height:1.15;max-width:100%;overflow:hidden;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.pj-sq-team-count{font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--tx2)}
+.pj-sq-players{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:.65rem .55rem;
+  align-content:flex-start}
+.pj-sq-player{display:flex;flex-direction:column;align-items:center;text-align:center;
+  gap:.32rem;flex:0 0 calc((100% - 11 * .55rem) / 12);min-width:0;max-width:8.5rem;box-sizing:border-box}
+.pj-sq-photo{width:100%;aspect-ratio:1;max-width:7.5rem;height:auto;border-radius:10px;
+  object-fit:cover;object-position:top center;border:1.5px solid var(--line);
+  background:rgba(255,255,255,.06);display:block}
+.pj-sq-photo-ph{width:100%;aspect-ratio:1;max-width:7.5rem;border-radius:10px;border:1.5px solid var(--line);
+  background:linear-gradient(145deg,var(--panel2),var(--panel));display:flex;align-items:center;
+  justify-content:center;font-size:1.25rem;font-weight:800;color:var(--tx2)}
+.pj-sq-pname{font-size:1.05rem;font-weight:800;line-height:1.2;max-width:100%;
+  text-transform:uppercase;letter-spacing:.03em;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.pj-sq-prole{font-size:.82rem;letter-spacing:.04em;color:var(--tx2);line-height:1.15;
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pj-sq-tier{font-size:.72rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+  color:#fff;padding:.14rem .4rem;border-radius:4px;line-height:1.2;max-width:100%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pj-sq-none{font-size:.65rem;color:var(--tx2);letter-spacing:.08em;
+  text-transform:uppercase;padding:.55rem .2rem;opacity:.8;align-self:center}
+
+/* ══ Break Time Overlay ═══════════════════════════════════════════════ */
+#pjBreakOverlay{display:none;position:fixed;inset:0;z-index:950;
+  flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden;
+  background:radial-gradient(ellipse 150% 90% at 50% -5%,#0e2060 0%,#060c1e 45%,#020408 100%)}
+#pjBreakOverlay.active{display:flex;animation:pjBrkIn .65s ease}
+@keyframes pjBrkIn{from{opacity:0}to{opacity:1}}
+.pj-brk-glow{position:absolute;top:-25%;left:50%;transform:translateX(-50%);
+  width:min(1000px,140vw);height:min(600px,80vh);border-radius:50%;pointer-events:none;
+  background:radial-gradient(ellipse,rgba(255,193,7,.12) 0%,transparent 65%);
+  animation:pjBrkGlow 4s ease-in-out infinite}
+@keyframes pjBrkGlow{0%,100%{opacity:.5;transform:translateX(-50%) scale(1)}50%{opacity:1;transform:translateX(-50%) scale(1.12)}}
+.pj-brk-scan{position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,255,255,.012) 3px,rgba(255,255,255,.012) 4px)}
+.pj-brk-bar{position:absolute;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,transparent,#FFD700 20%,#FFC200 50%,#FFD700 80%,transparent);
+  box-shadow:0 0 20px rgba(255,193,7,.7)}
+.pj-brk-bar-top{top:0}.pj-brk-bar-bot{bottom:0}
+.pj-brk-content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;
+  gap:14px;padding:24px;width:100%;max-width:760px}
+.pj-brk-logo{width:88px;height:88px;object-fit:contain;border-radius:16px;
+  border:2px solid rgba(255,193,7,.35);background:rgba(255,255,255,.04);padding:8px;
+  filter:drop-shadow(0 0 14px rgba(255,193,7,.4))}
+.pj-brk-logo-ph{font-size:2.8rem;opacity:.35}
+.pj-brk-badge{display:inline-flex;align-items:center;gap:9px;
+  background:rgba(255,200,0,.1);border:1.5px solid rgba(255,200,0,.45);
+  border-radius:30px;padding:7px 20px;font-size:.78rem;font-weight:900;
+  letter-spacing:3.5px;text-transform:uppercase;color:#FFD700}
+.pj-brk-dot{width:8px;height:8px;border-radius:50%;background:#FFD700;
+  animation:pjBrkBlink 1.4s ease-in-out infinite}
+@keyframes pjBrkBlink{0%,100%{opacity:1}50%{opacity:.25}}
+.pj-brk-hl1{font-size:clamp(1.6rem,4.5vw,2.9rem);font-weight:900;letter-spacing:5px;
+  text-transform:uppercase;color:rgba(255,255,255,.65);line-height:1}
+.pj-brk-hl2{font-size:clamp(2.4rem,7vw,5rem);font-weight:900;letter-spacing:4px;
+  text-transform:uppercase;color:#FFD700;line-height:1;
+  text-shadow:0 0 30px rgba(255,200,0,.65),0 0 70px rgba(255,200,0,.25)}
+.pj-brk-divider{width:110px;height:2px;border-radius:2px;
+  background:linear-gradient(90deg,transparent,#FFD700,transparent)}
+.pj-brk-sub{font-size:clamp(.7rem,1.8vw,.9rem);color:rgba(255,255,255,.42);
+  letter-spacing:3px;text-transform:uppercase}
+.pj-brk-rings{position:relative;width:84px;height:84px;display:flex;align-items:center;justify-content:center;margin:6px 0}
+.pj-brk-ring{position:absolute;border-radius:50%;border:2px solid rgba(255,200,0,.45);
+  animation:pjBrkRing 3s ease-out infinite}
+.pj-brk-ring:nth-child(1){width:42px;height:42px;animation-delay:0s}
+.pj-brk-ring:nth-child(2){width:42px;height:42px;animation-delay:1s}
+.pj-brk-ring:nth-child(3){width:42px;height:42px;animation-delay:2s}
+@keyframes pjBrkRing{0%{transform:scale(1);opacity:.85}100%{transform:scale(3.4);opacity:0}}
+.pj-brk-icon{font-size:1.6rem;z-index:1}
+.pj-brk-timer{font-size:.68rem;color:rgba(255,255,255,.3);letter-spacing:2px;text-transform:uppercase}
 
 /* ══ Stage ════════════════════════════════════════════════════════════ */
 #pj-stage{flex:1;position:relative;min-height:0;overflow:hidden}
@@ -163,30 +274,57 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 .pj-photo-bg,.pj-spotlight,.pj-floor,.pj-serial-wm{display:none}
 .pj-serial{display:none}
 
-/* Mystery reveal — sold badge on photo only (no full-screen dim) */
-.pj-photo-sold{position:absolute;left:50%;bottom:8%;transform:translateX(-50%) rotate(-7deg);
-  z-index:12;display:none;flex-direction:column;align-items:center;gap:.55rem;
-  min-width:min(78%, 280px);padding:.85rem 1.2rem 1rem;
-  border:3px solid rgba(255,255,255,.92);border-radius:.7rem;
-  background:linear-gradient(135deg,#b71c1c,#e53935);
-  box-shadow:0 0 0 3px rgba(183,28,28,.75),0 14px 32px rgba(0,0,0,.5);
-  color:#fff;pointer-events:none;text-align:center;
-  animation:pjPhotoSoldIn .5s cubic-bezier(.34,1.3,.64,1) both}
-.pj-photo-sold.show{display:flex}
+/* Mystery locked — large lock above PLAYER LOCKED (same as display_auction) */
+.pj-mystery-lock{
+  position:absolute;inset:0;z-index:5;pointer-events:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;padding:16px;text-align:center;color:#fff;
+  background:rgba(0,0,0,.42)}
+.pj-mystery-lock-ico{
+  width:clamp(64px,9vw,110px);height:clamp(64px,9vw,110px);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:4px;
+  filter:drop-shadow(0 4px 14px rgba(0,0,0,.55))}
+.pj-mystery-lock-ico svg{width:100%;height:100%;display:block}
+.pj-mystery-lock-title{
+  font-size:clamp(1rem,2.5vw,1.65rem);font-weight:800;letter-spacing:3px;
+  text-shadow:0 2px 10px rgba(0,0,0,.55)}
+.pj-mystery-lock-sub{opacity:.9;font-size:clamp(.8rem,1.4vw,1rem);font-weight:600}
+
+/* Mystery reveal — slanting SOLD ribbon (top-right, covers face) */
+.pj-photo-sold{
+  position:absolute;top:0;right:0;left:auto;bottom:auto;
+  width:min(72%,380px);height:min(58%,360px);
+  z-index:12;display:none;overflow:hidden;
+  pointer-events:none;background:transparent;border:none;
+  box-shadow:none;padding:0;min-width:0;transform:none;border-radius:0;
+  animation:none}
+.pj-photo-sold.show{display:block}
+.pj-photo-sold-ribbon{
+  position:absolute;top:18%;right:-32%;width:140%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.3rem;
+  padding:.7rem 1.1rem .8rem;
+  transform:rotate(36deg);transform-origin:center;
+  background:linear-gradient(135deg,#7f0000 0%,#b71c1c 42%,#e53935 100%);
+  border-top:2px solid rgba(255,255,255,.55);
+  border-bottom:2px solid rgba(255,255,255,.28);
+  box-shadow:0 12px 28px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.2);
+  color:#fff;text-align:center;
+  animation:pjPhotoSoldIn .55s cubic-bezier(.34,1.25,.64,1) both}
 @keyframes pjPhotoSoldIn{
-  0%{opacity:0;transform:translateX(-50%) rotate(-18deg) scale(1.25)}
-  100%{opacity:1;transform:translateX(-50%) rotate(-7deg) scale(1)}
+  0%{opacity:0;transform:rotate(36deg) translateY(-18px) scale(1.12)}
+  100%{opacity:1;transform:rotate(36deg) translateY(0) scale(1)}
 }
-.pj-photo-sold-label{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.4rem,3vw,2.2rem);
-  letter-spacing:.28em;line-height:1}
-.pj-photo-sold-team{display:flex;align-items:center;justify-content:center;gap:.65rem;max-width:100%}
-.pj-photo-sold-logo{width:clamp(2.4rem,4vw,3.2rem);height:clamp(2.4rem,4vw,3.2rem);
-  border-radius:50%;object-fit:contain;background:rgba(0,0,0,.25);flex-shrink:0;
-  border:2px solid rgba(255,255,255,.45)}
-.pj-photo-sold-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(1rem,2.2vw,1.6rem);
+.pj-photo-sold-label{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.55rem,3.4vw,2.5rem);
+  letter-spacing:.32em;line-height:1;text-shadow:0 2px 8px rgba(0,0,0,.35)}
+.pj-photo-sold-team{display:flex;align-items:center;justify-content:center;gap:.55rem;max-width:90%}
+.pj-photo-sold-logo{width:clamp(2rem,3.4vw,2.8rem);height:clamp(2rem,3.4vw,2.8rem);
+  border-radius:50%;object-fit:contain;background:rgba(0,0,0,.28);flex-shrink:0;
+  border:2px solid rgba(255,255,255,.5)}
+.pj-photo-sold-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(.95rem,2vw,1.45rem);
   letter-spacing:.06em;line-height:1.1;text-align:left;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:14rem}
-.pj-photo-sold-pts{font-size:clamp(.75rem,1.3vw,.95rem);font-weight:700;opacity:.92;letter-spacing:.04em}
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:12rem}
+.pj-photo-sold-pts{font-size:clamp(.7rem,1.2vw,.9rem);font-weight:700;opacity:.95;letter-spacing:.06em}
 
 /* Hex serial badge */
 #pjSerialBadge{position:absolute;top:1rem;left:1rem;z-index:10;display:none;
@@ -353,6 +491,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   window.PJ_SLUG = '<t t-esc="tournament_slug or (tournament.slug if tournament else '')"/>';
   window.PJ_SPORT = '<t t-esc="sport or 'cricket'"/>';
   window.PJ_DATA_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/data';
+  window.PJ_SQUAD_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/squad';
 </script>
 
 <div id="pj-root">
@@ -394,10 +533,37 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
           <t t-if="tournament and tournament.auction_date"><t t-esc="tournament.auction_date.strftime('%d %b %Y')"/></t>
         </div>
       </div>
-      <a class="pj-bid-summary-btn"
-         t-att-href="'/' + db_name + '/' + tournament_slug + '/auction/show/team/balance'"
-         title="Bid Summary">BID SUMMARY</a>
+      <div class="pj-bar-actions">
+        <button type="button" class="pj-squad-btn" id="pjSquadBtn" onclick="openPjSquad()" title="Show Team Squad" aria-label="Show Team Squad">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+          </svg>
+        </button>
+        <a class="pj-bid-summary-btn"
+           t-att-href="'/' + db_name + '/' + tournament_slug + '/auction/show/team/balance'"
+           title="Bid Summary" aria-label="Bid Summary">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M3 3h18v18H3V3zm2 2v3h14V5H5zm14 5H5v3h14v-3zm0 5H5v5h3v-5h3v5h2v-5h3v5h3v-5z"/>
+          </svg>
+        </a>
+      </div>
       <button class="pj-fs-btn" id="pjFsBtn" onclick="pjToggleFs()" title="Fullscreen">&#x26F6;</button>
+    </div>
+  </div>
+
+  <!-- Team Squad Overlay -->
+  <div id="pjSquadOverlay" onclick="pjSquadBackdrop(event)">
+    <div class="pj-sq-panel" onclick="event.stopPropagation()">
+      <div class="pj-sq-hd">
+        <div>
+          <div class="pj-sq-title">Team Squad</div>
+          <div class="pj-sq-sub" id="pjSqSub">All teams · Sold players</div>
+        </div>
+        <button type="button" class="pj-sq-close" onclick="closePjSquad()" title="Close">&#215;</button>
+      </div>
+      <div class="pj-sq-body" id="pjSqBody">
+        <div class="pj-sq-loading">Loading squads&#8230;</div>
+      </div>
     </div>
   </div>
 
@@ -450,12 +616,14 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         <div class="pj-photo-ph" id="pjPhotoPh">&#128100;</div>
         <div class="pj-serial-wm" id="pjSerialWm"></div>
         <div class="pj-photo-sold" id="pjPhotoSold">
-          <div class="pj-photo-sold-label">SOLD</div>
-          <div class="pj-photo-sold-team">
-            <img class="pj-photo-sold-logo" id="pjPhotoSoldLogo" src="" alt=""/>
-            <div class="pj-photo-sold-name" id="pjPhotoSoldName"></div>
+          <div class="pj-photo-sold-ribbon">
+            <div class="pj-photo-sold-label">SOLD</div>
+            <div class="pj-photo-sold-team">
+              <img class="pj-photo-sold-logo" id="pjPhotoSoldLogo" src="" alt=""/>
+              <div class="pj-photo-sold-name" id="pjPhotoSoldName"></div>
+            </div>
+            <div class="pj-photo-sold-pts" id="pjPhotoSoldPts"></div>
           </div>
-          <div class="pj-photo-sold-pts" id="pjPhotoSoldPts"></div>
         </div>
       </div>
 
@@ -552,6 +720,34 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     </div>
   </div>
   </t>
+</div>
+
+<!-- Break Time Overlay -->
+<div id="pjBreakOverlay">
+  <div class="pj-brk-glow"></div>
+  <div class="pj-brk-scan"></div>
+  <div class="pj-brk-bar pj-brk-bar-top"></div>
+  <div class="pj-brk-bar pj-brk-bar-bot"></div>
+  <div class="pj-brk-content">
+    <t t-if="tournament and tournament.logo">
+      <img class="pj-brk-logo"
+           t-att-src="'/'+(db_name or '')+'/auction/public/image/auction.tournament/'+str(tournament.id)+'/logo'"
+           alt=""/>
+    </t>
+    <t t-else=""><div class="pj-brk-logo-ph">&#127942;</div></t>
+    <div class="pj-brk-badge"><span class="pj-brk-dot"></span>Break Time</div>
+    <div class="pj-brk-hl1">We&#x2019;ll Be</div>
+    <div class="pj-brk-hl2">Right Back</div>
+    <div class="pj-brk-divider"></div>
+    <div class="pj-brk-sub">The auction resumes shortly</div>
+    <div class="pj-brk-rings">
+      <div class="pj-brk-ring"></div>
+      <div class="pj-brk-ring"></div>
+      <div class="pj-brk-ring"></div>
+      <div class="pj-brk-icon">&#9208;</div>
+    </div>
+    <div class="pj-brk-timer" id="pjBrkTimer">&#9679; Break in progress</div>
+  </div>
 </div>
 
 <script>//<![CDATA[
@@ -792,13 +988,38 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       if (mysteryHidden) {
         var lock = document.createElement('div');
         lock.className = 'pj-mystery-lock';
-        lock.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;background:rgba(0,0,0,.4);z-index:5;pointer-events:none;color:#fff;text-align:center;padding:16px';
-        lock.innerHTML = '<div style="font-size:clamp(1rem,2.5vw,1.6rem);font-weight:800;letter-spacing:3px">&#128274; PLAYER LOCKED</div><div style="opacity:.85;font-size:.85rem">Requires Winning Bid</div>';
+        lock.innerHTML =
+          '<div class="pj-mystery-lock-ico" aria-hidden="true">' +
+            '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+              '<path d="M7 11V8a5 5 0 0 1 10 0v3" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>' +
+              '<rect x="4.5" y="11" width="15" height="10.5" rx="2.2" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-width="2"/>' +
+              '<circle cx="12" cy="15.2" r="1.55" fill="#fff"/>' +
+              '<path d="M12 16.7v2.1" stroke="#fff" stroke-width="2" stroke-linecap="round"/>' +
+            '</svg>' +
+          '</div>' +
+          '<div class="pj-mystery-lock-title">PLAYER LOCKED</div>' +
+          '<div class="pj-mystery-lock-sub">Requires Winning Bid</div>';
         photoSide.appendChild(lock);
       }
     } else {
       photoPh.style.display = 'flex';
       if (photoBg) photoBg.style.display = 'none';
+      if (mysteryHidden) {
+        var lockNoPhoto = document.createElement('div');
+        lockNoPhoto.className = 'pj-mystery-lock';
+        lockNoPhoto.innerHTML =
+          '<div class="pj-mystery-lock-ico" aria-hidden="true">' +
+            '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+              '<path d="M7 11V8a5 5 0 0 1 10 0v3" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>' +
+              '<rect x="4.5" y="11" width="15" height="10.5" rx="2.2" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-width="2"/>' +
+              '<circle cx="12" cy="15.2" r="1.55" fill="#fff"/>' +
+              '<path d="M12 16.7v2.1" stroke="#fff" stroke-width="2" stroke-linecap="round"/>' +
+            '</svg>' +
+          '</div>' +
+          '<div class="pj-mystery-lock-title">PLAYER LOCKED</div>' +
+          '<div class="pj-mystery-lock-sub">Requires Winning Bid</div>';
+        photoSide.appendChild(lockNoPhoto);
+      }
     }
 
     document.getElementById('pjSerialWm').textContent = mysteryHidden ? '?' : ('#' + (p.sl_no || ''));
@@ -811,7 +1032,9 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     }
 
     document.getElementById('pjSerial').textContent = mysteryHidden ? '?' : ('#' + (p.sl_no || ''));
-    document.getElementById('pjName').textContent = p.name || '';
+    document.getElementById('pjName').textContent = mysteryHidden
+      ? 'Mystery Player?'
+      : (p.name || '');
 
     var tierEl = document.getElementById('pjTier');
     /* Mystery mode (locked): hide tier name entirely */
@@ -826,9 +1049,13 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     var roleEl = document.getElementById('pjRole');
     var isFootball = (p.tournament_type === 'football') || (window.PJ_SPORT === 'football');
     if (roleEl) {
-      var roleTxt = mysteryHidden ? '???' : (isFootball ? (p.dominant_position || '') : (p.role || ''));
-      if (roleTxt) { roleEl.textContent = roleTxt; roleEl.style.display = 'inline-flex'; }
-      else roleEl.style.display = 'none';
+      if (mysteryHidden) {
+        roleEl.style.display = 'none';
+      } else {
+        var roleTxt = isFootball ? (p.dominant_position || '') : (p.role || '');
+        if (roleTxt) { roleEl.textContent = roleTxt; roleEl.style.display = 'inline-flex'; }
+        else roleEl.style.display = 'none';
+      }
     }
 
     var statsEl = document.getElementById('pjStats');
@@ -905,6 +1132,12 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       photoSold.style.animation = 'none';
       void photoSold.offsetHeight;
       photoSold.style.animation = '';
+      var ribbon = photoSold.querySelector('.pj-photo-sold-ribbon');
+      if (ribbon) {
+        ribbon.style.animation = 'none';
+        void ribbon.offsetHeight;
+        ribbon.style.animation = '';
+      }
       photoSold.classList.add('show');
     }
     /* Mystery revealed: keep the full player visible — sold badge sits on the photo only.
@@ -985,6 +1218,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       var result = json.result || {};
       var p = result.player;
       var d = result.dice || {state:'idle', result:0, is_mystery:false};
+      handlePjBreak(!!result.break_time);
       updateProgress(result.progress);
       updateTeamsStrip(result.teams);
       updateBids(result.recent_bids);
@@ -1043,6 +1277,138 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     if (!btn) return;
     btn.innerHTML = document.fullscreenElement ? '\u2715' : '&#x26F6;';
     btn.title = document.fullscreenElement ? 'Exit Fullscreen' : 'Fullscreen';
+  });
+
+  var _pjBreakActive = false;
+  var _pjBreakStart = null;
+  var _pjBreakClock = null;
+  function fmtPjBreakElapsed(ms) {
+    var s = Math.floor(ms / 1000);
+    var m = Math.floor(s / 60);
+    s = s % 60;
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  }
+  function startPjBreakClock() {
+    stopPjBreakClock();
+    _pjBreakClock = setInterval(function() {
+      var el = document.getElementById('pjBrkTimer');
+      if (!el || !_pjBreakStart) return;
+      el.textContent = 'Break · ' + fmtPjBreakElapsed(Date.now() - _pjBreakStart);
+    }, 1000);
+  }
+  function stopPjBreakClock() {
+    if (_pjBreakClock) { clearInterval(_pjBreakClock); _pjBreakClock = null; }
+  }
+  function handlePjBreak(isBreak) {
+    var overlay = document.getElementById('pjBreakOverlay');
+    if (!overlay) return;
+    if (isBreak) {
+      if (!_pjBreakActive) {
+        _pjBreakActive = true;
+        _pjBreakStart = Date.now();
+        overlay.classList.add('active');
+        startPjBreakClock();
+        try { closePjSquad(); } catch (e) {}
+      }
+    } else if (_pjBreakActive) {
+      _pjBreakActive = false;
+      _pjBreakStart = null;
+      overlay.classList.remove('active');
+      stopPjBreakClock();
+      var timerEl = document.getElementById('pjBrkTimer');
+      if (timerEl) timerEl.textContent = '\u25cf Break in progress';
+    }
+  }
+
+  var _squadLoading = false;
+  function escHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  function renderPjSquad(data) {
+    var body = document.getElementById('pjSqBody');
+    var sub = document.getElementById('pjSqSub');
+    if (!body) return;
+    var sport = (data && data.sport) || window.PJ_SPORT || 'cricket';
+    var teams = (data && data.teams) || [];
+    if (sub) {
+      sub.textContent = sport === 'football'
+        ? 'All teams · Position + Tier'
+        : 'All teams · Role + Tier';
+    }
+    if (!teams.length) {
+      body.innerHTML = '<div class="pj-sq-empty">No teams found</div>';
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < teams.length; i++) {
+      var t = teams[i];
+      var logo = t.logo_url
+        ? '<img class="pj-sq-team-logo" src="' + escHtml(t.logo_url) + '" alt=""/>'
+        : '<div class="pj-sq-team-logo-ph">' + escHtml((t.name || '?').charAt(0)) + '</div>';
+      html += '<div class="pj-sq-team">' +
+        '<div class="pj-sq-team-hd">' + logo +
+          '<div style="min-width:0">' +
+            '<div class="pj-sq-team-name">' + escHtml(t.name || 'Team') + '</div>' +
+            '<div class="pj-sq-team-count">' + (t.count || 0) + ' player' + ((t.count === 1) ? '' : 's') + '</div>' +
+          '</div>' +
+        '</div><div class="pj-sq-players">';
+      var players = t.players || [];
+      if (!players.length) {
+        html += '<div class="pj-sq-none">No players yet</div>';
+      } else {
+        for (var j = 0; j < players.length; j++) {
+          var p = players[j];
+          var photo = p.photo_url
+            ? '<img class="pj-sq-photo" src="' + escHtml(p.photo_url) + '" alt=""/>'
+            : '<div class="pj-sq-photo-ph">' + escHtml((p.name || '?').charAt(0)) + '</div>';
+          var tier = p.tier_name
+            ? '<span class="pj-sq-tier" style="background:' + escHtml(p.tier_color || '#888') + '">' + escHtml(p.tier_name) + '</span>'
+            : '';
+          html += '<div class="pj-sq-player">' + photo +
+            '<div class="pj-sq-pname">' + escHtml(p.name || '—') + '</div>' +
+            (p.role ? '<div class="pj-sq-prole">' + escHtml(p.role) + '</div>' : '') +
+            tier +
+          '</div>';
+        }
+      }
+      html += '</div></div>';
+    }
+    body.innerHTML = html;
+  }
+  window.openPjSquad = function() {
+    var overlay = document.getElementById('pjSquadOverlay');
+    var body = document.getElementById('pjSqBody');
+    if (!overlay) return;
+    overlay.classList.add('open');
+    if (body) body.innerHTML = '<div class="pj-sq-loading">Loading squads&#8230;</div>';
+    if (_squadLoading) return;
+    _squadLoading = true;
+    fetch(window.PJ_SQUAD_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({jsonrpc:'2.0', method:'call', params:{}}),
+      cache: 'no-store'
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(json) {
+      renderPjSquad(json.result || {});
+    })
+    .catch(function() {
+      if (body) body.innerHTML = '<div class="pj-sq-empty">Could not load squads</div>';
+    })
+    .then(function() { _squadLoading = false; });
+  };
+  window.closePjSquad = function() {
+    var overlay = document.getElementById('pjSquadOverlay');
+    if (overlay) overlay.classList.remove('open');
+  };
+  window.pjSquadBackdrop = function(ev) {
+    if (ev.target && ev.target.id === 'pjSquadOverlay') closePjSquad();
+  };
+  document.addEventListener('keydown', function(ev) {
+    if (ev.key === 'Escape') closePjSquad();
   });
 })();
 //]]>

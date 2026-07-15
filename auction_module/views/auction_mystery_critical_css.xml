@@ -44,72 +44,98 @@
     visibility: visible !important;
     opacity: 1 !important;
   }
-  /* Fallback gray plate before avatar img mounts */
+  /* Fallback plate + large lock icon (above the banner text) */
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .sp-image::before,
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .lm-photo-col::before,
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .sw-photo-col::before,
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .hud-photo-col::before,
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .cr-photo-col::before,
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .pt-photo-panel::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #4a5568;
-    border-radius: inherit;
-    z-index: 4;
-    pointer-events: none;
+    content: '\1F512' !important;
+    position: absolute !important;
+    inset: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding-bottom: clamp(3.2rem, 8vw, 5rem) !important;
+    font-size: clamp(3.2rem, 7.5vw, 5rem) !important;
+    line-height: 1 !important;
+    color: #fff !important;
+    text-shadow:
+      0 4px 18px rgba(0, 0, 0, .7),
+      0 0 28px rgba(253, 206, 51, .35) !important;
+    background: linear-gradient(
+      180deg,
+      rgba(30, 35, 45, .42) 0%,
+      rgba(20, 24, 32, .68) 100%
+    ) !important;
+    border-radius: inherit !important;
+    z-index: 6 !important;
+    pointer-events: none !important;
   }
+  /* Photo lock banner — text sits under the lock icon */
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .sp-image::after,
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .lm-photo-col::after,
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .sw-photo-col::after,
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .hud-photo-col::after,
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .cr-photo-col::after,
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .pt-photo-panel::after {
-    content: '🔐 PLAYER LOCKED\A Requires Winning Bid';
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    font-family: 'Rajdhani', 'Orbitron', 'Teko', sans-serif;
-    font-size: clamp(1rem, 2.4vw, 1.45rem);
-    font-weight: 800;
-    line-height: 1.55;
-    letter-spacing: 0.1em;
-    text-align: center;
-    text-transform: uppercase;
-    white-space: pre-line;
-    color: #fff;
+    content: 'PLAYER LOCKED\A Requires Winning Bid' !important;
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    inset: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-direction: column !important;
+    padding-top: clamp(3.6rem, 9vw, 5.6rem) !important;
+    font-family: 'Rajdhani', 'Orbitron', 'Teko', sans-serif !important;
+    font-size: clamp(1rem, 2.4vw, 1.45rem) !important;
+    font-weight: 800 !important;
+    line-height: 1.55 !important;
+    letter-spacing: 0.1em !important;
+    text-align: center !important;
+    text-transform: uppercase !important;
+    white-space: pre-line !important;
+    color: #fff !important;
     text-shadow:
       0 2px 10px rgba(0, 0, 0, .75),
-      0 0 18px rgba(0, 0, 0, .45);
-    background: linear-gradient(
-      180deg,
-      rgba(30, 35, 45, .28) 0%,
-      rgba(20, 24, 32, .52) 100%
-    );
-    border-radius: inherit;
-    z-index: 6;
-    pointer-events: none;
-    padding: 1.25rem;
+      0 0 18px rgba(0, 0, 0, .45) !important;
+    background: transparent !important;
+    border-radius: inherit !important;
+    box-shadow: none !important;
+    z-index: 7 !important;
+    pointer-events: none !important;
   }
-  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .hud-photo-overlay,
-  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .cr-photo-overlay,
-  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .pt-photo-name-block {
-    /* Keep overlay in layout so Base Price can remain visible; identity stays masked below */
-    visibility: visible !important;
-  }
+  /* Hide identity chips on the photo — lock banner owns that space */
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .hud-photo-overlay .hud-player-name,
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .hud-photo-overlay .hud-role-tag,
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .cr-photo-overlay .cr-id-name,
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .cr-photo-overlay .cr-role-tag,
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .pt-photo-name-block .pt-player-name,
-  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .pt-photo-name-block .pt-player-role {
+  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .pt-photo-name-block .pt-player-role,
+  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .lm-player-name,
+  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .lm-role-tag,
+  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .sw-player-name,
+  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .sw-role-tag,
+  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .player-name,
+  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .player-possition {
     visibility: hidden !important;
     opacity: 0 !important;
+  }
+  /* Keep photo overlays in layout so Base Price can remain visible */
+  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .hud-photo-overlay,
+  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .cr-photo-overlay,
+  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .pt-photo-name-block {
+    visibility: visible !important;
+    z-index: 8 !important;
   }
   /* Base price must stay visible for mystery bidding */
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .player-base-badge,
@@ -121,34 +147,39 @@
     visibility: visible !important;
     opacity: 1 !important;
     position: relative;
-    z-index: 8;
+    z-index: 9;
   }
-  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) [data-sm-name],
+  /* Hide role entirely — only one "?" allowed, after Mystery Player */
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) [data-sm-role] {
+    display: none !important;
+  }
+  /* Name label (when shown outside photo lock) */
+  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) [data-sm-name] {
     position: relative !important;
     color: transparent !important;
     text-shadow: none !important;
   }
-  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) [data-sm-name] *,
-  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) [data-sm-role] * {
+  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) [data-sm-name] * {
     color: transparent !important;
     text-shadow: none !important;
   }
-  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) [data-sm-name]::after,
-  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) [data-sm-role]::after {
-    content: '?';
+  body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) [data-sm-name]::after {
+    content: 'Mystery Player?';
     position: absolute;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
     font-family: 'Orbitron', 'Teko', 'Anton', sans-serif;
     font-weight: 800;
-    font-size: 1.15em;
-    line-height: 1;
+    font-size: clamp(.85rem, 2.4vw, 1.35rem);
+    letter-spacing: .08em;
+    line-height: 1.1;
+    white-space: nowrap;
     color: #fdce33;
     text-shadow: 0 0 18px rgba(253,206,51,.45), 0 4px 14px rgba(0,0,0,.35);
     pointer-events: none;
   }
+  /* Attributes / profile table → single Mystery Player? label */
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .player-profession-body,
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .lm-stats-wrap,
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .sw-stats-wrap,
@@ -172,21 +203,24 @@
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .hud-stats::after,
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .cr-stats-col::after,
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .pt-stats-grid::after {
-    content: '?';
+    content: 'Mystery Player?';
     position: absolute;
     inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'Orbitron', 'Teko', 'Anton', sans-serif;
-    font-size: clamp(2.4rem, 5vw, 3.6rem);
+    font-size: clamp(1.35rem, 3.2vw, 2.2rem);
     font-weight: 800;
+    letter-spacing: .1em;
     color: #fdce33;
     text-shadow: 0 0 22px rgba(253,206,51,.35), 0 6px 18px rgba(0,0,0,.4);
     background: rgba(15,23,42,.28);
     border-radius: 12px;
     z-index: 2;
     pointer-events: none;
+    text-align: center;
+    padding: 1rem;
   }
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .stroke-only,
   body[data-is-mystery="1"]:not([data-mystery-revealed="1"]) .lm-serial-block,

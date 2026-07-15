@@ -466,6 +466,34 @@
     transition: background .2s, border-color .2s;
   }
   .sm-skip-btn:hover { background: rgba(255,255,255,.22); border-color: rgba(255,255,255,.55); }
+  .sm-sold-actions {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    width: calc(100% - 56px); margin: 0 auto 24px;
+  }
+  .sm-pause-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 28px; border-radius: 50px;
+    background: rgba(255,193,7,.16); border: 2px solid rgba(255,193,7,.55);
+    color: #FFD700; font-weight: 800; font-size: .88rem;
+    cursor: pointer; font-family: var(--sm-font); letter-spacing: .5px;
+    transition: background .2s, border-color .2s, box-shadow .2s;
+  }
+  .sm-pause-btn:hover {
+    background: rgba(255,193,7,.28); border-color: #FFD700;
+    box-shadow: 0 0 16px rgba(255,193,7,.35);
+  }
+  .sm-pause-btn:disabled { opacity: .55; cursor: wait; }
+  #smSoldScreen.sm-break-on .sm-countdown-wrap { opacity: .55; }
+  #smSoldScreen.sm-break-on .sm-progress-bar { transition: none !important; }
+  .sm-break-banner {
+    display: none; width: calc(100% - 56px); margin: 0 auto 12px;
+    padding: 10px 14px; border-radius: 12px; text-align: center;
+    background: rgba(255,193,7,.12); border: 1px solid rgba(255,193,7,.45);
+    color: #FFD700; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+    font-size: .72rem;
+  }
+  #smSoldScreen.sm-break-on .sm-break-banner { display: block; }
+  #smSoldScreen.sm-break-on #smSkipBtn { display: none; }
 
   /* ── Mobile / small screens: sheet layout, pinned header &amp; actions ── */
   @media (max-width: 640px) {
@@ -570,7 +598,7 @@
              t-att-style="'visibility:hidden' if (player.tier_id and player.tier_id.mystery) else None"
              alt="Player" />
         <div class="sm-player-info">
-          <strong id="smPlayerName"><t t-esc="'?' if (player.tier_id and player.tier_id.mystery) else player.name"/></strong>
+          <strong id="smPlayerName"><t t-esc="'Mystery Player' if (player.tier_id and player.tier_id.mystery) else player.name"/></strong>
           <span id="smPlayerRole"><t t-esc="'?' if (player.tier_id and player.tier_id.mystery) else (player.dominant_position_id.name if player.tournament_type == 'football' else (player.role or ''))"/></span>
         </div>
         <div class="sm-arrow">&#10145;</div>
@@ -672,7 +700,11 @@
           <div class="sm-progress-bar" id="smProgressBar"></div>
         </div>
       </div>
-      <button class="sm-skip-btn" id="smSkipBtn" onclick="smSkipToNext()">&#9654; Next Player Now</button>
+      <div class="sm-break-banner" id="smBreakBanner">&#9208; Break Time — Auction paused</div>
+      <div class="sm-sold-actions">
+        <button type="button" class="sm-pause-btn" id="smPauseBtn" onclick="smToggleBreakPause()" title="Pause auction — show Break Time on projector &amp; live board">&#9208; Pause</button>
+        <button type="button" class="sm-skip-btn" id="smSkipBtn" onclick="smSkipToNext()">&#9654; Next Player Now</button>
+      </div>
 
     </div><!-- /smSoldScreen -->
 
@@ -685,20 +717,25 @@
   var smSelectedTeam  = null;
   var smPlayerId      = null;
   var smCountdownTimer = null;
+  var smTournamentId  = 0;
+  var smBreakPaused   = false;
+  var smBreakBusy     = false;
+  var smAdvanceFn     = null;  // set while sold screen is active
+  var smPausedRemaining = 0;
+  var smIsMysterySold = false;
 
-  /* Commit on-stage player for the projector after preview prefetch / countdown. */
-  window.acCommitPlayerOnStage = function(playerId) {
-    playerId = parseInt(playerId || '0', 10);
-    if (!playerId) return Promise.resolve();
+  function smDbName() {
     var parts = (window.location.pathname || '').split('/').filter(Boolean);
-    var dbName = parts.length ? parts[0] : '';
+    return parts.length ? parts[0] : '';
+  }
+
+  function smConsoleCall(model, method, args, kwargs) {
+    var dbName = smDbName();
     var payload = {
       jsonrpc: '2.0', method: 'call', id: Date.now(),
       params: {
-        model: 'auction.team.player',
-        method: 'action_set_on_stage',
-        args: [[playerId]],
-        kwargs: {}
+        model: model, method: method,
+        args: args || [], kwargs: kwargs || {}
       }
     };
     var url = dbName
@@ -708,7 +745,96 @@
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(payload)
-    }).catch(function() { /* projector will catch up on next real navigation */ });
+    }).then(function(r) { return r.json(); });
+  }
+
+  function smSyncPauseUi() {
+    var sold = document.getElementById('smSoldScreen');
+    var pauseBtn = document.getElementById('smPauseBtn');
+    var label = document.getElementById('smCountdownLabel');
+    if (sold) sold.classList.toggle('sm-break-on', smBreakPaused);
+    if (pauseBtn) {
+      if (smBreakPaused) {
+        pauseBtn.innerHTML = '&#9654; Resume';
+        pauseBtn.title = 'Resume auction — hide Break Time on projector &amp; live board';
+      } else {
+        pauseBtn.innerHTML = '&#9208; Pause';
+        pauseBtn.title = 'Pause auction — show Break Time on projector &amp; live board';
+      }
+    }
+    if (label && smBreakPaused) {
+      label.innerHTML = 'Paused on Break Time — resume when ready';
+    }
+  }
+
+  function smStopCountdown(freezeBar) {
+    if (smCountdownTimer) { clearInterval(smCountdownTimer); smCountdownTimer = null; }
+    var bar = document.getElementById('smProgressBar');
+    if (freezeBar && bar) {
+      var computed = window.getComputedStyle(bar).width;
+      bar.style.transition = 'none';
+      bar.style.width = computed;
+    }
+  }
+
+  window.smToggleBreakPause = function() {
+    if (!smTournamentId || smBreakBusy) return;
+    var wantBreak = !smBreakPaused;
+    smBreakBusy = true;
+    var pauseBtn = document.getElementById('smPauseBtn');
+    if (pauseBtn) pauseBtn.disabled = true;
+
+    if (wantBreak) {
+      // Capture remaining seconds from the label if still counting
+      var numEl = document.getElementById('smCountdownNum');
+      if (numEl) {
+        var n = parseInt(numEl.textContent, 10);
+        if (!isNaN(n) && n >= 0) smPausedRemaining = n;
+      }
+      smStopCountdown(true);
+    }
+
+    smConsoleCall('auction.tournament', 'action_set_break_time', [[smTournamentId], wantBreak])
+      .then(function(res) {
+        var err = res && (res.error || (res.result && res.result.error));
+        if (err) {
+          console.error('[Break Time]', err);
+          return;
+        }
+        smBreakPaused = wantBreak;
+        smSyncPauseUi();
+        if (!wantBreak) {
+          // After resume: keep sold overlay; let operator click Next Player
+          if (smIsMysterySold) {
+            var countdownLabel = document.getElementById('smCountdownLabel');
+            if (countdownLabel) {
+              countdownLabel.innerHTML = 'Ready to continue — reveal after celebration';
+            }
+            var skipBtn = document.getElementById('smSkipBtn');
+            if (skipBtn) skipBtn.innerHTML = '&#9654; Continue to Reveal';
+          } else {
+            var countdownLabel2 = document.getElementById('smCountdownLabel');
+            if (countdownLabel2) {
+              countdownLabel2.innerHTML = 'Break ended — click <strong>Next Player Now</strong> when ready';
+            }
+            var bar = document.getElementById('smProgressBar');
+            if (bar) { bar.style.transition = 'none'; bar.style.width = '0%'; }
+          }
+        }
+      })
+      .catch(function(e) { console.error('[Break Time]', e); })
+      .then(function() {
+        smBreakBusy = false;
+        if (pauseBtn) pauseBtn.disabled = false;
+      });
+  };
+
+  /* Commit on-stage player for the projector after preview prefetch / countdown. */
+  window.acCommitPlayerOnStage = function(playerId) {
+    playerId = parseInt(playerId || '0', 10);
+    if (!playerId) return Promise.resolve();
+    return smConsoleCall('auction.team.player', 'action_set_on_stage', [[playerId]])
+      .catch(function() { /* projector will catch up on next real navigation */ });
   };
 
   /* ── Open / Close ──────────────────────────────────────────── */
@@ -717,6 +843,11 @@
     smSelectedTeam = null;
     smTeamsData    = [];
     if (smCountdownTimer) { clearInterval(smCountdownTimer); smCountdownTimer = null; }
+    smBreakPaused = false;
+    smAdvanceFn = null;
+    var soldScreen = document.getElementById('smSoldScreen');
+    if (soldScreen) soldScreen.classList.remove('sm-break-on');
+    smSyncPauseUi();
 
     var isMysteryHidden = ((document.body.getAttribute('data-is-mystery') === '1') || !!window.AUCTION_IS_MYSTERY)
       && !window.AUCTION_MYSTERY_REVEALED;
@@ -737,7 +868,7 @@
     var modalName = document.getElementById('smPlayerName');
     var modalRole = document.getElementById('smPlayerRole');
     if (isMysteryHidden) {
-      if (modalName) modalName.textContent = '?';
+      if (modalName) modalName.textContent = 'Mystery Player';
       if (modalRole) modalRole.textContent = '?';
     } else if (zone) {
       var nameEl  = zone.querySelector('[data-sm-name]');
@@ -771,9 +902,12 @@
   };
 
   window.smSkipToNext = function() {
+    if (smBreakPaused) return;
     if (smCountdownTimer) { clearInterval(smCountdownTimer); smCountdownTimer = null; }
+    smAdvanceFn = null;
     document.getElementById('sellModal').classList.remove('open');
     document.getElementById('smSoldScreen').classList.remove('visible');
+    document.getElementById('smSoldScreen').classList.remove('sm-break-on');
     document.getElementById('smFormPanel').style.display = 'flex';
     // Mystery players stay on stage until revealed — do not advance yet.
     var isMystery = (document.body.getAttribute('data-is-mystery') === '1')
@@ -950,6 +1084,12 @@
     var isMystery = ((document.body.getAttribute('data-is-mystery') === '1') || !!window.AUCTION_IS_MYSTERY)
       && !window.AUCTION_MYSTERY_REVEALED;
     if (isMystery) window.AUCTION_IS_MYSTERY = true;
+    smIsMysterySold = !!isMystery;
+    smBreakPaused = false;
+    smPausedRemaining = 0;
+    smTournamentId = parseInt(result.tournament_id || 0, 10) || 0;
+    soldScreen.classList.remove('sm-break-on');
+    smSyncPauseUi();
 
     // Keep sold details for mystery reveal stamp
     window._acMysteryPendingSold = {
@@ -1013,6 +1153,8 @@
     // Advance to the next player using the pre-fetched HTML when available,
     // otherwise fall back to calling changeImage() which will re-fetch.
     function smAdvance() {
+      if (smBreakPaused) return;
+      smAdvanceFn = null;
       var stillMystery = ((document.body.getAttribute('data-is-mystery') === '1') || !!window.AUCTION_IS_MYSTERY)
         && !window.AUCTION_MYSTERY_REVEALED;
       if (stillMystery && typeof window.acMysteryMarkSold === 'function') {
@@ -1052,6 +1194,7 @@
       if (typeof changeImage === 'function') { changeImage(true); }
       else { window.location.reload(); }
     }
+    smAdvanceFn = smAdvance;
 
     // Countdown
     var totalSecs = (result.display_seconds && result.display_seconds > 0) ? result.display_seconds : 5;
@@ -1066,13 +1209,16 @@
     bar.style.transition = 'width ' + totalSecs + 's linear';
     bar.style.width = '0%';
 
+    if (smCountdownTimer) { clearInterval(smCountdownTimer); smCountdownTimer = null; }
     smCountdownTimer = setInterval(function() {
+      if (smBreakPaused) return;
       remaining -= 1;
       var numEl = document.getElementById('smCountdownNum');
       if (numEl) numEl.textContent = remaining;
       if (remaining <= 0) {
         clearInterval(smCountdownTimer);
         smCountdownTimer = null;
+        if (smBreakPaused) return;
         document.getElementById('sellModal').classList.remove('open');
         document.getElementById('smSoldScreen').classList.remove('visible');
         document.getElementById('smFormPanel').style.display = 'flex';
@@ -1082,6 +1228,7 @@
           smAdvance();
         } else {
           var _waitId = setInterval(function() {
+            if (smBreakPaused) { clearInterval(_waitId); return; }
             if (_preFetchDone) { clearInterval(_waitId); smAdvance(); }
           }, 50);
         }

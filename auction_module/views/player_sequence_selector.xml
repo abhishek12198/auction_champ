@@ -134,6 +134,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .mq-icon-btn:hover{border-color:var(--accent);color:var(--accent)}
 .mq-icon-btn.bid{border-color:var(--accent);color:var(--accent);font-weight:600}
 .mq-icon-btn.bid:hover{background:var(--accent);color:var(--badge-tx)}
+.mq-icon-btn.break-on{
+  border-color:#ffc107;color:#ffc107;background:rgba(255,193,7,.14);
+  box-shadow:0 0 12px rgba(255,193,7,.25);font-weight:700
+}
+.mq-icon-btn.break-on:hover{border-color:#ffda6a;color:#ffda6a;background:rgba(255,193,7,.22)}
 
 /* ═══ STATS ══════════════════════════════════════════════════════════ */
 .mq-stats{position:relative;z-index:10;display:flex;background:var(--bg-s);border-bottom:1px solid var(--div)}
@@ -418,12 +423,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   font-size:1.05rem;cursor:pointer;width:40px;height:40px;display:flex;align-items:center;
   justify-content:center;border-radius:10px;transition:all .2s;flex-shrink:0}
 .pc-fullscreen-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-glow)}
-/* Fullscreen mode — hide chrome, fill screen with player card */
+/* Fullscreen mode — fill screen with player card; keep sell/unsold actions usable */
 #pcPanel:fullscreen,#pcPanel:-webkit-full-screen,#pcPanel:-moz-full-screen{
-  width:100vw!important;right:0!important;border:none!important;box-shadow:none!important}
+  width:100vw!important;right:0!important;border:none!important;box-shadow:none!important;
+  display:flex;flex-direction:column;background:var(--bg)}
 #pcPanel:fullscreen .pc-ph,#pcPanel:-webkit-full-screen .pc-ph,#pcPanel:-moz-full-screen .pc-ph{display:none}
-#pcPanel:fullscreen .pc-actions,#pcPanel:-webkit-full-screen .pc-actions,#pcPanel:-moz-full-screen .pc-actions{display:none!important}
-#pcPanel:fullscreen .pc-body,#pcPanel:-webkit-full-screen .pc-body,#pcPanel:-moz-full-screen .pc-body{height:100vh}
+#pcPanel:fullscreen .pc-body,#pcPanel:-webkit-full-screen .pc-body,#pcPanel:-moz-full-screen .pc-body{flex:1;min-height:0;height:auto}
+#pcPanel:fullscreen .pc-actions,#pcPanel:-webkit-full-screen .pc-actions,#pcPanel:-moz-full-screen .pc-actions{
+  display:flex!important;flex-shrink:0;position:relative;z-index:20}
 .pc-body{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
 
 /* ═══ BROADCAST PLAYER STAGE (deck drawer) ═══════════════════════════ */
@@ -440,6 +447,21 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   object-fit:cover;object-position:center top}
 .pc-photo-ph{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;
   font-size:6rem;color:rgba(255,255,255,.18);background:var(--bg-p)}
+/* Mystery locked — large lock above PLAYER LOCKED (same as projector / display_auction) */
+.pc-mystery-lock{
+  position:absolute;inset:0;z-index:6;pointer-events:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;padding:16px;text-align:center;color:#fff;
+  background:rgba(0,0,0,.42)}
+.pc-mystery-lock-ico{
+  width:clamp(64px,9vw,110px);height:clamp(64px,9vw,110px);
+  display:flex;align-items:center;justify-content:center;margin-bottom:4px;
+  filter:drop-shadow(0 4px 14px rgba(0,0,0,.55))}
+.pc-mystery-lock-ico svg{width:100%;height:100%;display:block}
+.pc-mystery-lock-title{
+  font-size:clamp(1rem,2.5vw,1.65rem);font-weight:800;letter-spacing:3px;
+  text-shadow:0 2px 10px rgba(0,0,0,.55)}
+.pc-mystery-lock-sub{opacity:.9;font-size:clamp(.8rem,1.4vw,1rem);font-weight:600}
 .pc-onair{position:absolute;top:16px;left:16px;z-index:5;display:inline-flex;align-items:center;gap:8px;
   padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.18);
   font-family:var(--hf);font-size:.62rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:#fff}
@@ -1259,6 +1281,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   window.AUCTION_DB_NAME         = '<t t-esc="db_name or ''"/>';
   window.AUCTION_TOURNAMENT_SLUG = '<t t-esc="tournament_slug or (tournament.slug if tournament else '')"/>';
   window.AUCTION_PROJECTOR_URL   = '/' + window.AUCTION_DB_NAME + '/auction/projector/' + window.AUCTION_TOURNAMENT_SLUG + '/';
+  window.AUCTION_BREAK_TIME      = <t t-esc="'true' if tournament and tournament.break_time_active else 'false'"/>;
   /* Build an image URL that works for tournament-assigned (non-superuser) users
      in a multi-database setup. The db-prefixed public route serves the binary
      via a SUPERUSER cursor, avoiding both ambiguous-db and ACL failures that
@@ -1287,6 +1310,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   <div class="mq-hc">&#9917; Player Queue</div>
   <div class="mq-hr">
     <span class="mq-live-dot"></span>
+    <button type="button" class="mq-icon-btn" id="breakBtn" onclick="toggleBreakTime()" title="Break Time">&#9208; Pause</button>
     <button class="mq-icon-btn" onclick="window.open(window.AUCTION_PROJECTOR_URL,'_blank')" title="Open Projector View">&#127916; Projector</button>
     <button class="mq-icon-btn bid" onclick="openBidSummary()">&#9776; Bid Summary</button>
     <button class="mq-icon-btn" onclick="toggleFS()" id="fsBtn">&#x26F6;</button>
@@ -1593,7 +1617,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         </div>
       </div>
       <div class="sm-sold-info">
-        <div class="sm-mystery-name" id="smSoldMysteryName" style="display:none">???</div>
+        <div class="sm-mystery-name" id="smSoldMysteryName" style="display:none">Mystery Player?</div>
         <img id="smSoldTeamLogo" class="sm-sold-team-logo" src="" alt="Team"/>
         <div class="sm-sold-text">
           <div class="sm-sold-label">Sold To</div>
@@ -2129,11 +2153,16 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
   document.addEventListener('fullscreenchange', function() {
     var btn = document.getElementById('pcFsBtn');
-    if (!btn) return;
-    if (document.fullscreenElement) {
-      btn.innerHTML = '&#x2715;'; btn.title = 'Exit Fullscreen';
-    } else {
-      btn.innerHTML = '&#x26F6;'; btn.title = 'Fullscreen';
+    if (btn) {
+      if (document.fullscreenElement) {
+        btn.innerHTML = '&#x2715;'; btn.title = 'Exit Fullscreen';
+      } else {
+        btn.innerHTML = '&#x26F6;'; btn.title = 'Fullscreen';
+        /* Leaving fullscreen — put modals back in their home place in the DOM */
+        restoreModalFromFullscreen(document.getElementById('sellModal'));
+        restoreModalFromFullscreen(document.getElementById('unsoldModal'));
+        restoreModalFromFullscreen(document.getElementById('stampScreen'));
+      }
     }
   });
 
@@ -2149,17 +2178,25 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     var isFootball = (p.tournament_type === 'football');
     var mysteryHidden = !!(p.is_mystery && !p.mystery_revealed);
     var roleText = mysteryHidden
-      ? '???'
+      ? ''
       : (isFootball ? (p.dominant_position || p.role || '') : (p.role || ''));
     var serial = mysteryHidden ? '??' : ('00' + String(p.sl_no || 0)).slice(-2);
-    var displayName = mysteryHidden ? '???' : (p.name || '');
+    var displayName = mysteryHidden ? 'Mystery Player?' : (p.name || '');
     var photoInner;
     if (mysteryHidden) {
       photoInner =
         '<img class="pc-photo" src="/auction_module/static/img/default_icon.png" alt="Mystery" style="filter:grayscale(1) brightness(0.72);object-fit:cover;"/>' +
-        '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;background:rgba(0,0,0,.35);pointer-events:none;z-index:2">' +
-          '<div style="font-size:1.1rem;font-weight:800;letter-spacing:2px;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6)">&#128274; PLAYER LOCKED</div>' +
-          '<div style="font-size:.75rem;color:rgba(255,255,255,.85)">Requires Winning Bid</div>' +
+        '<div class="pc-mystery-lock">' +
+          '<div class="pc-mystery-lock-ico" aria-hidden="true">' +
+            '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+              '<path d="M7 11V8a5 5 0 0 1 10 0v3" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>' +
+              '<rect x="4.5" y="11" width="15" height="10.5" rx="2.2" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-width="2"/>' +
+              '<circle cx="12" cy="15.2" r="1.55" fill="#fff"/>' +
+              '<path d="M12 16.7v2.1" stroke="#fff" stroke-width="2" stroke-linecap="round"/>' +
+            '</svg>' +
+          '</div>' +
+          '<div class="pc-mystery-lock-title">PLAYER LOCKED</div>' +
+          '<div class="pc-mystery-lock-sub">Requires Winning Bid</div>' +
         '</div>';
     } else if (p.photo) {
       photoInner = '<img class="pc-hero-blur" src="data:image/png;base64,' + p.photo + '" alt="" aria-hidden="true"/>' +
@@ -2168,7 +2205,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       photoInner = '<div class="pc-photo-ph">&#9917;</div>';
     }
 
-    var tierLabel = mysteryHidden ? 'Mystery' : (p.tier_id ? p.tier_id[1] : '');
+    var tierLabel = mysteryHidden ? '' : (p.tier_id ? p.tier_id[1] : '');
     var tier = tierLabel
       ? '<span class="pc-tier-badge" style="background:' + escHtml(tierColor) + ';color:#fff;box-shadow:0 0 16px ' + escHtml(tierGlow) + '">'
         + escHtml(tierLabel) + '</span>'
@@ -2255,10 +2292,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       '<div class="pc-stage">' +
         '<div class="pc-hero" style="--tier:' + escHtml(tierColor) + ';position:relative">' +
           '<div class="pc-onair"><span class="pc-onair-dot"></span>On Stage</div>' +
-          '<div class="pc-serial-watermark">' + (mysteryHidden ? '?' : ('#' + escHtml(serial))) + '</div>' +
+          '<div class="pc-serial-watermark">' + (mysteryHidden ? '' : ('#' + escHtml(serial))) + '</div>' +
           photoInner +
           '<div class="pc-lower">' +
-            '<div class="pc-lower-serial">' + (mysteryHidden ? '?' : ('#' + escHtml(serial))) + '</div>' +
+            (mysteryHidden ? '' : '<div class="pc-lower-serial">#' + escHtml(serial) + '</div>') +
             '<div class="pc-lower-name">' + escHtml(displayName) + '</div>' +
             (roleText ? '<div class="pc-lower-role">' + escHtml(roleText) + '</div>' : '') +
             '<div class="pc-lower-band"></div>' +
@@ -2387,6 +2424,29 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       });
   };
 
+  /* Modals live outside #pcPanel; while the drawer is fullscreen they must be
+     reparented into the fullscreen element or the browser will not paint them. */
+  function parkModalInFullscreen(el) {
+    if (!el) return;
+    var fs = document.fullscreenElement || document.webkitFullscreenElement;
+    if (fs && el.parentElement !== fs) {
+      if (!el._fsHomeParent) {
+        el._fsHomeParent = el.parentElement;
+        el._fsHomeNext = el.nextSibling;
+      }
+      fs.appendChild(el);
+    }
+  }
+  function restoreModalFromFullscreen(el) {
+    if (!el || !el._fsHomeParent) return;
+    var home = el._fsHomeParent;
+    var next = el._fsHomeNext;
+    if (next && next.parentNode === home) home.insertBefore(el, next);
+    else home.appendChild(el);
+    el._fsHomeParent = null;
+    el._fsHomeNext = null;
+  }
+
   /* ── Unsold flow ───────────────────────────────────────── */
   window.openUnsoldConfirm = function() {
     var title = document.querySelector('#unsoldModal .cm-title');
@@ -2398,11 +2458,15 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     if (confirm) confirm.onclick = doUnsold;
     if (icon) icon.textContent = '⚠';
     if (sub) sub.textContent = 'Mark "' + currentPlayerName + '" as unsold?';
-    document.getElementById('unsoldModal').classList.add('open');
+    var modal = document.getElementById('unsoldModal');
+    parkModalInFullscreen(modal);
+    modal.classList.add('open');
   };
 
   window.closeUnsoldConfirm = function() {
-    document.getElementById('unsoldModal').classList.remove('open');
+    var modal = document.getElementById('unsoldModal');
+    modal.classList.remove('open');
+    restoreModalFromFullscreen(modal);
   };
 
   window.doUnsold = function() {
@@ -2426,7 +2490,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     if (confirm) confirm.textContent = 'Bring Back';
     if (confirm) confirm.onclick     = doBringBack;
     if (icon)    icon.textContent    = '↩';
-    document.getElementById('unsoldModal').classList.add('open');
+    var modal = document.getElementById('unsoldModal');
+    parkModalInFullscreen(modal);
+    modal.classList.add('open');
   };
 
   window.doBringBack = function() {
@@ -2466,9 +2532,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       }
     }
     var nm = document.getElementById('smPlayerName');
-    if (nm) nm.textContent = mysteryHidden ? '???' : currentPlayerName;
+    if (nm) nm.textContent = mysteryHidden ? 'Mystery Player?' : currentPlayerName;
     var rl = document.getElementById('smPlayerRole');
-    if (rl) rl.textContent = mysteryHidden ? '???' : (currentPlayerRole || '');
+    if (rl) {
+      if (mysteryHidden) { rl.textContent = ''; rl.style.display = 'none'; }
+      else { rl.textContent = currentPlayerRole || ''; rl.style.display = ''; }
+    }
 
     /* Reset UI */
     document.getElementById('smFormPanel').style.display     = 'flex';
@@ -2484,18 +2553,24 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     document.getElementById('smBtnSell').textContent         = 'Sell Player';
     document.getElementById('sellPoints').value              = 0;
     document.getElementById('smPresets').innerHTML           = '';
-    document.getElementById('sellModal').classList.add('open');
+    var sellModal = document.getElementById('sellModal');
+    parkModalInFullscreen(sellModal);
+    sellModal.classList.add('open');
     smLoadTeams2(smPid);
   };
 
   window.closeSellModal = function() {
     if (smCdTimer) { clearInterval(smCdTimer); smCdTimer = null; }
-    document.getElementById('sellModal').classList.remove('open');
+    var sellModal = document.getElementById('sellModal');
+    sellModal.classList.remove('open');
+    restoreModalFromFullscreen(sellModal);
   };
 
   window.smSkipSold = function() {
     if (smCdTimer) { clearInterval(smCdTimer); smCdTimer = null; }
-    document.getElementById('sellModal').classList.remove('open');
+    var sellModal = document.getElementById('sellModal');
+    sellModal.classList.remove('open');
+    restoreModalFromFullscreen(sellModal);
     document.getElementById('smSoldScreen').classList.remove('visible');
     document.getElementById('smFormPanel').style.display = 'flex';
     closePlayerDrawer(true);
@@ -2648,8 +2723,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     if (isMystery) {
       soldPhoto.src = '/auction_module/static/img/default_icon.png';
       soldPhoto.style.filter = 'grayscale(1) brightness(0.72)';
-      soldPhoto.alt = 'Mystery Player';
-      if (mysteryNameEl) { mysteryNameEl.style.display = ''; mysteryNameEl.textContent = '???'; }
+      soldPhoto.alt = 'Mystery Player?';
+      if (mysteryNameEl) { mysteryNameEl.style.display = ''; mysteryNameEl.textContent = 'Mystery Player?'; }
     } else {
       soldPhoto.src = window.AUCTION_IMG_URL('auction.team.player', smPid, 'photo');
       soldPhoto.style.filter = '';
@@ -2679,7 +2754,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         revealBtn.disabled = false;
         revealBtn.innerHTML = '&#128274; Reveal Player';
       }
-      if (mysteryNameEl) { mysteryNameEl.style.display = ''; mysteryNameEl.textContent = '???'; }
+      if (mysteryNameEl) { mysteryNameEl.style.display = ''; mysteryNameEl.textContent = 'Mystery Player?'; }
       return;
     }
 
@@ -2700,7 +2775,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       document.getElementById('smCountdownNum').textContent = remaining;
       if (remaining <= 0) {
         clearInterval(smCdTimer); smCdTimer = null;
-        document.getElementById('sellModal').classList.remove('open');
+        closeSellModal();
         document.getElementById('smSoldScreen').classList.remove('visible');
         document.getElementById('smFormPanel').style.display = 'flex';
         closePlayerDrawer(true);
@@ -2782,7 +2857,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         if (numEl) numEl.textContent = remaining;
         if (remaining <= 0) {
           clearInterval(smCdTimer); smCdTimer = null;
-          document.getElementById('sellModal').classList.remove('open');
+          closeSellModal();
           document.getElementById('smSoldScreen').classList.remove('visible');
           document.getElementById('smFormPanel').style.display = 'flex';
           closePlayerDrawer(true);
@@ -2808,7 +2883,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     /* Open sold screen in reveal mode if sell modal not open */
     document.getElementById('smFormPanel').style.display = 'none';
     document.getElementById('smSoldScreen').classList.add('visible');
-    document.getElementById('sellModal').classList.add('open');
+    var sellModal = document.getElementById('sellModal');
+    parkModalInFullscreen(sellModal);
+    sellModal.classList.add('open');
     var cdWrap = document.getElementById('smCountdownWrap');
     var revealWrap = document.getElementById('smMysteryRevealWrap');
     var skipBtn = document.getElementById('smSkipBtn');
@@ -2826,7 +2903,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       soldPhoto.style.filter = 'grayscale(1) brightness(0.72)';
     }
     var mysteryNameEl = document.getElementById('smSoldMysteryName');
-    if (mysteryNameEl) { mysteryNameEl.style.display = ''; mysteryNameEl.textContent = '???'; }
+    if (mysteryNameEl) { mysteryNameEl.style.display = ''; mysteryNameEl.textContent = 'Mystery Player?'; }
   };
 
   /* ── Full-screen stamp overlay ─────────────────────────── */
@@ -2875,15 +2952,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       serialEl.style.color = currentPlayerTierColor;
     }
     var nameEl = document.getElementById('ssName');
-    if (nameEl) nameEl.textContent = mysteryHidden ? '???' : currentPlayerName;
+    if (nameEl) nameEl.textContent = mysteryHidden ? 'Mystery Player?' : currentPlayerName;
 
     /* Tier badge */
     var badgeEl = document.getElementById('ssTierBadge');
     if (badgeEl) {
       if (mysteryHidden) {
-        badgeEl.textContent = 'Mystery';
-        badgeEl.style.background = currentPlayerTierColor;
-        badgeEl.style.display = 'inline-block';
+        badgeEl.style.display = 'none';
       } else if (currentPlayerTierName) {
         badgeEl.textContent = currentPlayerTierName;
         badgeEl.style.background = currentPlayerTierColor;
@@ -2907,10 +2982,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
     /* Show overlay (dismiss on click) */
     var screen = document.getElementById('stampScreen');
+    parkModalInFullscreen(screen);
     screen.classList.add('show');
     screen.onclick = function() {
       screen.classList.remove('show');
       screen.onclick = null;
+      restoreModalFromFullscreen(screen);
       if (onDone) onDone();
     };
 
@@ -2926,6 +3003,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     setTimeout(function() {
       screen.classList.remove('show');
       screen.onclick = null;
+      restoreModalFromFullscreen(screen);
       if (onDone) onDone();
     }, secs * 1000);
   }
@@ -3141,7 +3219,48 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   };
 
   /* Init dice face on load */
-  document.addEventListener('DOMContentLoaded', function() { setMqDiceFace(1); });
+  document.addEventListener('DOMContentLoaded', function() {
+    setMqDiceFace(1);
+    syncBreakBtn();
+  });
+
+  /* ── Break Time (live board pause) ──────────────────────── */
+  var _breakBusy = false;
+  function syncBreakBtn() {
+    var btn = document.getElementById('breakBtn');
+    if (!btn) return;
+    var on = !!window.AUCTION_BREAK_TIME;
+    btn.classList.toggle('break-on', on);
+    if (on) {
+      btn.innerHTML = '&#9654; Resume';
+      btn.title = 'Break Time is ON — click to resume the live board';
+    } else {
+      btn.innerHTML = '&#9208; Pause';
+      btn.title = 'Break Time — show break screen on the live board';
+    }
+  }
+  window.toggleBreakTime = function() {
+    var tid = window.AUCTION_TOURNAMENT_ID ? parseInt(window.AUCTION_TOURNAMENT_ID, 10) : 0;
+    if (!tid || _breakBusy) return;
+    _breakBusy = true;
+    var btn = document.getElementById('breakBtn');
+    if (btn) btn.disabled = true;
+    callKw('auction.tournament', 'action_toggle_break_time', [[tid]])
+      .then(function(res) {
+        var err = res && (res.error || (res.result && res.result.error));
+        if (err) {
+          console.error('[Break Time]', err);
+          return;
+        }
+        window.AUCTION_BREAK_TIME = !window.AUCTION_BREAK_TIME;
+        syncBreakBtn();
+      })
+      .catch(function(e) { console.error('[Break Time]', e); })
+      .then(function() {
+        _breakBusy = false;
+        if (btn) btn.disabled = false;
+      });
+  };
 
   /* ── Bid Summary ───────────────────────────────────────── */
   window.openBidSummary = function() {

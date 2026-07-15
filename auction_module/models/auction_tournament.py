@@ -554,6 +554,13 @@ class AuctionTournament(models.Model):
         for rec in self:
             rec.break_time_active = not rec.break_time_active
 
+    def action_set_break_time(self, active=True):
+        """Explicitly enable/disable break time (projector + live board)."""
+        active = bool(active)
+        for rec in self:
+            rec.break_time_active = active
+        return active
+
     def action_clear_stage(self):
         """Clear the is_on_stage flag from all players in this tournament."""
         for rec in self:

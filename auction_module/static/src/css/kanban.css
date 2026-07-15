@@ -459,10 +459,10 @@
 
 /* ── Stats chips ── */
 .pk2-stats {
-  display: flex; gap: 5px; padding: 4px 10px 8px;
+  display: flex; flex-wrap: wrap; gap: 5px; padding: 4px 10px 8px;
 }
 .pk2-stat {
-  flex: 1; background: #f4f7fb; border-radius: 8px;
+  flex: 1 1 calc(33.333% - 5px); background: #f4f7fb; border-radius: 8px;
   padding: 5px 3px; text-align: center; border: 1px solid #e5ecf5;
   min-width: 0;
 }

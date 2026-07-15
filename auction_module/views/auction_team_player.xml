@@ -39,6 +39,12 @@
                     <field name="role"/>
                     <field name="batting_style"/>
                     <field name="bowling_style"/>
+                    <field name="tournament_type"/>
+                    <field name="dominant_position_id"/>
+                    <field name="preferred_foot"/>
+                    <field name="age"/>
+                    <field name="use_other_attributes"/>
+                    <field name="kanban_other_attrs_html"/>
                     <field name="icon_player"/>
                     <field name="amount_paid"/>
                     <field name="tournament_id"/>
@@ -105,8 +111,16 @@
                                               t-att-style="'background:' + (record.tier_color.raw_value || '#2252b5')"
                                               t-esc="record.tier_id.value"/>
                                     </t>
-                                    <t t-if="record.role.raw_value">
-                                        <span class="pk2-badge pk2-b-role" t-esc="record.role.raw_value"/>
+                                    <!-- Cricket: role · Football: playing position -->
+                                    <t t-if="record.tournament_type.raw_value == 'football'">
+                                        <t t-if="record.dominant_position_id.raw_value">
+                                            <span class="pk2-badge pk2-b-role" t-esc="record.dominant_position_id.value"/>
+                                        </t>
+                                    </t>
+                                    <t t-else="">
+                                        <t t-if="record.role.raw_value">
+                                            <span class="pk2-badge pk2-b-role" t-esc="record.role.raw_value"/>
+                                        </t>
                                     </t>
                                     <t t-if="record.p_category.raw_value">
                                         <span class="pk2-badge pk2-b-cat" t-esc="record.p_category.value"/>
@@ -132,28 +146,64 @@
                                     </t>
                                 </div>
 
-                                <!-- ── STATS ── -->
-                                <t t-if="record.batting_style.raw_value or record.bowling_style.raw_value or record.blood_group.raw_value">
-                                    <div class="pk2-stats">
-                                        <t t-if="record.batting_style.raw_value">
-                                            <div class="pk2-stat">
-                                                <div class="pk2-stat-label">Bat</div>
-                                                <div class="pk2-stat-value" t-esc="record.batting_style.raw_value"/>
-                                            </div>
-                                        </t>
-                                        <t t-if="record.bowling_style.raw_value">
-                                            <div class="pk2-stat">
-                                                <div class="pk2-stat-label">Bowl</div>
-                                                <div class="pk2-stat-value" t-esc="record.bowling_style.raw_value"/>
-                                            </div>
-                                        </t>
-                                        <t t-if="record.blood_group.raw_value">
-                                            <div class="pk2-stat">
-                                                <div class="pk2-stat-label">Blood</div>
-                                                <div class="pk2-stat-value" t-esc="record.blood_group.raw_value"/>
-                                            </div>
-                                        </t>
-                                    </div>
+                                <!-- ── STATS (sport-specific) ── -->
+                                <t t-if="record.tournament_type.raw_value == 'football'">
+                                    <t t-if="record.dominant_position_id.raw_value or record.preferred_foot.raw_value or (!record.use_other_attributes.raw_value and record.age.raw_value) or record.blood_group.raw_value or record.kanban_other_attrs_html.raw_value">
+                                        <div class="pk2-stats">
+                                            <t t-if="record.dominant_position_id.raw_value">
+                                                <div class="pk2-stat">
+                                                    <div class="pk2-stat-label">Pos</div>
+                                                    <div class="pk2-stat-value" t-esc="record.dominant_position_id.value"/>
+                                                </div>
+                                            </t>
+                                            <t t-if="record.preferred_foot.raw_value">
+                                                <div class="pk2-stat">
+                                                    <div class="pk2-stat-label">Foot</div>
+                                                    <div class="pk2-stat-value" t-esc="record.preferred_foot.value"/>
+                                                </div>
+                                            </t>
+                                            <!-- Age hidden when Other Attributes are in use (same as cards/live) -->
+                                            <t t-if="!record.use_other_attributes.raw_value and record.age.raw_value">
+                                                <div class="pk2-stat">
+                                                    <div class="pk2-stat-label">Age</div>
+                                                    <div class="pk2-stat-value" t-esc="record.age.raw_value"/>
+                                                </div>
+                                            </t>
+                                            <t t-if="record.use_other_attributes.raw_value and record.kanban_other_attrs_html.raw_value">
+                                                <t t-raw="record.kanban_other_attrs_html.raw_value"/>
+                                            </t>
+                                            <t t-if="record.blood_group.raw_value">
+                                                <div class="pk2-stat">
+                                                    <div class="pk2-stat-label">Blood</div>
+                                                    <div class="pk2-stat-value" t-esc="record.blood_group.raw_value"/>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </t>
+                                </t>
+                                <t t-else="">
+                                    <t t-if="record.batting_style.raw_value or record.bowling_style.raw_value or record.blood_group.raw_value">
+                                        <div class="pk2-stats">
+                                            <t t-if="record.batting_style.raw_value">
+                                                <div class="pk2-stat">
+                                                    <div class="pk2-stat-label">Bat</div>
+                                                    <div class="pk2-stat-value" t-esc="record.batting_style.raw_value"/>
+                                                </div>
+                                            </t>
+                                            <t t-if="record.bowling_style.raw_value">
+                                                <div class="pk2-stat">
+                                                    <div class="pk2-stat-label">Bowl</div>
+                                                    <div class="pk2-stat-value" t-esc="record.bowling_style.raw_value"/>
+                                                </div>
+                                            </t>
+                                            <t t-if="record.blood_group.raw_value">
+                                                <div class="pk2-stat">
+                                                    <div class="pk2-stat-label">Blood</div>
+                                                    <div class="pk2-stat-value" t-esc="record.blood_group.raw_value"/>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </t>
                                 </t>
 
                                 <!-- ── ACTION BUTTONS ── -->
