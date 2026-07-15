@@ -2,7 +2,9 @@
 <odoo>
 
 <template id="auction_team_players_template" name="Players">
-  <html lang="en" t-att-data-theme="theme">
+  <html lang="en" t-att-data-theme="theme"
+        t-att-data-skin="'projector' if from_projector else None"
+        t-att-data-mode="mode or 'dark'">
     <head>
       <meta charset="UTF-8"/>
       <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
@@ -57,6 +59,24 @@
           --tx:#FFF5F5; --tx-d:rgba(255,245,245,.55); --tx-m:rgba(255,245,245,.30);
           --hf:'Orbitron',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Teko',sans-serif;
           --card-bg:rgba(26,5,8,.85); --card-bdr:rgba(220,20,60,.15);
+        }
+
+        /* Projector skin — match projector navy/gold when opened from projector */
+        html[data-skin="projector"][data-mode="dark"] {
+          --bg:#07111f; --bg2:#0c1a30; --bg3:#07111f;
+          --acc:#e0b84a; --acc2:#f5d76e; --glow:rgba(224,184,74,.45);
+          --bdr:rgba(224,184,74,.42); --bdr2:rgba(244,247,255,.08);
+          --tx:#f4f7ff; --tx-d:rgba(244,247,255,.62); --tx-m:rgba(244,247,255,.38);
+          --hf:'Exo 2','Barlow Condensed',sans-serif; --bf:'Exo 2','Barlow Condensed',sans-serif; --nf:'Bebas Neue','Teko',sans-serif;
+          --card-bg:rgba(10,20,40,.75); --card-bdr:rgba(224,184,74,.42);
+        }
+        html[data-skin="projector"][data-mode="light"] {
+          --bg:#f6f3ea; --bg2:#fffdf8; --bg3:#f6f3ea;
+          --acc:#c49a2a; --acc2:#d4af37; --glow:rgba(196,154,42,.28);
+          --bdr:rgba(196,154,42,.45); --bdr2:rgba(22,22,22,.08);
+          --tx:#161616; --tx-d:rgba(22,22,22,.62); --tx-m:rgba(22,22,22,.4);
+          --hf:'Exo 2','Barlow Condensed',sans-serif; --bf:'Exo 2','Barlow Condensed',sans-serif; --nf:'Bebas Neue','Teko',sans-serif;
+          --card-bg:#ffffff; --card-bdr:rgba(196,154,42,.45);
         }
 
         *, *::before, *::after { box-sizing: border-box; }
@@ -541,7 +561,7 @@
       <header class="tp-header">
         <img src="/auction_module/static/src/assets/images/logo.svg" alt="Logo" height="52" class="logo"/>
         <div class="tp-header-actions">
-          <a t-att-href="'/' + (db_name or '') + '/' + (tournament_slug or (tournament.slug if tournament else '')) + '/auction/show/team/balance'" class="tp-back-btn">
+          <a t-att-href="'/' + (db_name or '') + '/' + (tournament_slug or (tournament.slug if tournament else '')) + '/auction/show/team/balance' + ('?from=projector&amp;mode=' + (mode or 'dark') if from_projector else '')" class="tp-back-btn">
             <!-- Chart/summary icon -->
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>

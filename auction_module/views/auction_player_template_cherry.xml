@@ -536,7 +536,7 @@
       <t t-call="auction_module.player_mystery_critical_css"/>
     </head>
 
-    <body t-att-data-player-id="player.id" t-att-data-next-countdown="tournament.next_player_countdown if tournament else 5" t-att-data-is-mystery="'1' if player.tier_id and player.tier_id.mystery else '0'">
+    <body t-att-data-player-id="player.id" t-att-data-next-countdown="tournament.next_player_countdown if tournament else 5" t-att-data-is-mystery="'1' if player.tier_id and player.tier_id.mystery else '0'" t-att-data-tournament-id="tournament.id if tournament else ''" t-att-data-break-time="'1' if tournament and tournament.break_time_active else '0'">
 
       <header class="cr-header">
         <div class="cr-header-brand">
@@ -569,6 +569,7 @@
             <span id="cr-th-dark">&#9728; Light</span>
             <span id="cr-th-light" style="display:none">&#9790; Dark</span>
           </button>
+          <button type="button" id="ac-break-btn" class="ac-break-btn" onclick="acToggleBreakTime()" title="Break Time">&#9208; Pause</button>
           <button id="fs-btn" onclick="toggleFullscreen()" title="Fullscreen" class="cr-fs-btn">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
           </button>
@@ -997,6 +998,7 @@
         </div>
       </div>
 
+      <t t-call="auction_module.player_break_pause_assets"/>
       <t t-call="auction_module.player_mystery_controls"/>
       <t t-call="auction_module.player_sell_modal"/>
       <script>

@@ -10,7 +10,9 @@
      ═══════════════════════════════════════════════════════════════════ -->
 
 <template id="auction_team_players_template_pistah" name="Team Players – Pistah">
-  <html lang="en">
+  <html lang="en" t-att-data-theme="theme"
+        t-att-data-skin="'projector' if from_projector else None"
+        t-att-data-mode="mode or 'dark'">
     <head>
       <meta charset="UTF-8"/>
   <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
@@ -47,6 +49,62 @@
           --gold:       #FFD700;
           --gold-bg:    rgba(255,215,0,0.12);
           --gold-brd:   rgba(255,215,0,0.35);
+        }
+
+        /* Projector skin — remap pistah tokens to projector navy/gold */
+        html[data-skin="projector"][data-mode="dark"] {
+          --p:          #e0b84a;
+          --p-dk:       #c49a2a;
+          --p-br:       #f5d76e;
+          --p-glow:     rgba(224,184,74,.45);
+          --p-glow-s:   rgba(224,184,74,.55);
+          --p-border:   rgba(224,184,74,.42);
+          --bg:         #07111f;
+          --bg-s:       #0c1a30;
+          --bg-p:       #0c1a30;
+          --bg-c:       rgba(10,20,40,.75);
+          --text:       #f4f7ff;
+          --text-dim:   rgba(244,247,255,.62);
+          --divider:    rgba(224,184,74,.42);
+          --gold:       #e0b84a;
+          --gold-bg:    rgba(224,184,74,.18);
+          --gold-brd:   rgba(224,184,74,.42);
+        }
+        html[data-skin="projector"][data-mode="light"] {
+          --p:          #c49a2a;
+          --p-dk:       #a67c1a;
+          --p-br:       #d4af37;
+          --p-glow:     rgba(196,154,42,.28);
+          --p-glow-s:   rgba(196,154,42,.4);
+          --p-border:   rgba(196,154,42,.45);
+          --bg:         #f6f3ea;
+          --bg-s:       #fffdf8;
+          --bg-p:       #fffdf8;
+          --bg-c:       #ffffff;
+          --text:       #161616;
+          --text-dim:   rgba(22,22,22,.62);
+          --divider:    rgba(196,154,42,.45);
+          --gold:       #c49a2a;
+          --gold-bg:    rgba(196,154,42,.12);
+          --gold-brd:   rgba(196,154,42,.45);
+        }
+        html[data-skin="projector"][data-mode="dark"] body::before {
+          background:
+            radial-gradient(ellipse 70% 55% at 10% 40%, rgba(224,184,74,.08) 0%, transparent 65%),
+            radial-gradient(ellipse 50% 70% at 90% 15%, rgba(224,184,74,.06) 0%, transparent 55%),
+            linear-gradient(180deg, #07111f 0%, #0c1a30 100%);
+        }
+        html[data-skin="projector"][data-mode="light"] body::before {
+          background:
+            radial-gradient(ellipse 70% 55% at 10% 40%, rgba(196,154,42,.1) 0%, transparent 65%),
+            radial-gradient(ellipse 50% 70% at 90% 15%, rgba(196,154,42,.08) 0%, transparent 55%),
+            linear-gradient(180deg, #f6f3ea 0%, #fffdf8 100%);
+        }
+        html[data-skin="projector"][data-mode="dark"] .or-header {
+          background: linear-gradient(90deg, #07111f 0%, #0c1a30 40%, #0c1a30 70%, #07111f 100%);
+        }
+        html[data-skin="projector"][data-mode="light"] .or-header {
+          background: linear-gradient(90deg, #f6f3ea 0%, #fffdf8 40%, #fffdf8 70%, #f6f3ea 100%);
         }
 
         html, body {
@@ -501,7 +559,7 @@
         </div>
         <div class="or-header-actions">
           <!-- Back to Bid Command -->
-          <a t-att-href="'/' + (db_name or '') + '/' + (tournament_slug or (tournament.slug if tournament else '')) + '/auction/show/team/balance'" class="or-cmd-btn or-cmd-btn-ghost">
+          <a t-att-href="'/' + (db_name or '') + '/' + (tournament_slug or (tournament.slug if tournament else '')) + '/auction/show/team/balance' + ('?from=projector&amp;mode=' + (mode or 'dark') if from_projector else '')" class="or-cmd-btn or-cmd-btn-ghost">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round"/>

@@ -168,7 +168,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   box-shadow:0 0 20px rgba(255,193,7,.7)}
 .pj-brk-bar-top{top:0}.pj-brk-bar-bot{bottom:0}
 .pj-brk-content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;
-  gap:14px;padding:24px;width:100%;max-width:760px}
+  gap:12px;padding:20px 24px;width:100%;max-width:min(980px,96vw)}
 .pj-brk-logo{width:88px;height:88px;object-fit:contain;border-radius:16px;
   border:2px solid rgba(255,193,7,.35);background:rgba(255,255,255,.04);padding:8px;
   filter:drop-shadow(0 0 14px rgba(255,193,7,.4))}
@@ -198,6 +198,27 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 @keyframes pjBrkRing{0%{transform:scale(1);opacity:.85}100%{transform:scale(3.4);opacity:0}}
 .pj-brk-icon{font-size:1.6rem;z-index:1}
 .pj-brk-timer{font-size:.68rem;color:rgba(255,255,255,.3);letter-spacing:2px;text-transform:uppercase}
+
+/* Break advertisers — 2 at a time, slide every 2s (match live-board) */
+.pj-brk-ads{width:100%;max-width:min(960px,94vw);margin-top:6px}
+.pj-brk-ads-label{font-size:.55rem;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;
+  color:rgba(255,193,7,.45);margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.pj-brk-ads-label::before,.pj-brk-ads-label::after{content:'';flex:1;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,193,7,.22),transparent)}
+.pj-brk-ads-viewport{width:100%;overflow:hidden;background:transparent;border:none}
+.pj-brk-ads-track{display:flex;align-items:stretch;transition:transform .55s cubic-bezier(.22,.9,.28,1);will-change:transform}
+.pj-brk-ad-pair{flex:0 0 100%;width:100%;min-width:100%;display:grid;grid-template-columns:1fr 1fr;
+  gap:clamp(16px,3vw,36px);align-items:center;justify-items:center;padding:8px 4px;box-sizing:border-box;min-height:150px}
+.pj-brk-ad-pair-solo{grid-template-columns:1fr}
+.pj-brk-ad-pair-solo .pj-brk-ad-cell{max-width:480px}
+.pj-brk-ad-cell{width:100%;max-width:420px;height:clamp(110px,16vh,160px);
+  display:flex;align-items:center;justify-content:center;padding:0;border:none;background:transparent}
+.pj-brk-ad-cell img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;
+  filter:drop-shadow(0 6px 18px rgba(0,0,0,.45))}
+.pj-brk-ad-name{font-size:1.05rem;font-weight:700;color:rgba(255,255,255,.7);text-align:center}
+.pj-brk-ad-dots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.pj-brk-ad-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,193,7,.25);transition:background .3s,transform .3s}
+.pj-brk-ad-dot.active{background:#FFD700;transform:scale(1.25)}
 
 /* ══ Stage ════════════════════════════════════════════════════════════ */
 #pj-stage{flex:1;position:relative;min-height:0;overflow:hidden}
@@ -540,7 +561,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
           </svg>
         </button>
         <a class="pj-bid-summary-btn"
-           t-att-href="'/' + db_name + '/' + tournament_slug + '/auction/show/team/balance'"
+           t-att-href="'/' + db_name + '/' + tournament_slug + '/auction/show/team/balance?from=projector&amp;mode=' + (mode or 'dark')"
            title="Bid Summary" aria-label="Bid Summary">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M3 3h18v18H3V3zm2 2v3h14V5H5zm14 5H5v3h14v-3zm0 5H5v5h3v-5h3v5h2v-5h3v5h3v-5z"/>
@@ -747,6 +768,13 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       <div class="pj-brk-icon">&#9208;</div>
     </div>
     <div class="pj-brk-timer" id="pjBrkTimer">&#9679; Break in progress</div>
+    <div class="pj-brk-ads" id="pjBrkAds" style="display:none">
+      <div class="pj-brk-ads-label">Our Sponsors</div>
+      <div class="pj-brk-ads-viewport" id="pjBrkAdsViewport">
+        <div class="pj-brk-ads-track" id="pjBrkAdsTrack"></div>
+      </div>
+      <div class="pj-brk-ad-dots" id="pjBrkAdsDots"></div>
+    </div>
   </div>
 </div>
 
@@ -1219,6 +1247,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       var p = result.player;
       var d = result.dice || {state:'idle', result:0, is_mystery:false};
       handlePjBreak(!!result.break_time);
+      updatePjBreakAds(result.advertisers || []);
       updateProgress(result.progress);
       updateTeamsStrip(result.teams);
       updateBids(result.recent_bids);
@@ -1282,6 +1311,12 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   var _pjBreakActive = false;
   var _pjBreakStart = null;
   var _pjBreakClock = null;
+  var _pjAdList = [];
+  var _pjAdSig = '';
+  var _pjAdTimer = null;
+  var _pjAdPairIndex = 0;
+  var _pjAdPairCount = 0;
+
   function fmtPjBreakElapsed(ms) {
     var s = Math.floor(ms / 1000);
     var m = Math.floor(s / 60);
@@ -1299,6 +1334,86 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   function stopPjBreakClock() {
     if (_pjBreakClock) { clearInterval(_pjBreakClock); _pjBreakClock = null; }
   }
+
+  function pjAdsSignature(ads) {
+    return (ads || []).map(function(a) {
+      return String(a.id || '') + '|' + String(a.image_url || '') + '|' + String(a.name || '');
+    }).join('||');
+  }
+  function pjAdCellHtml(ad) {
+    if (!ad) return '<div class="pj-brk-ad-cell" aria-hidden="true"></div>';
+    var inner = ad.image_url
+      ? '<img src="' + ad.image_url + '" alt="' + (ad.name || '') + '" onerror="this.style.display=\'none\'">'
+      : '<span class="pj-brk-ad-name">' + (ad.name || '') + '</span>';
+    return '<div class="pj-brk-ad-cell">' + inner + '</div>';
+  }
+  function goToPjAdPair(idx) {
+    if (_pjAdPairCount < 1) return;
+    _pjAdPairIndex = ((idx % _pjAdPairCount) + _pjAdPairCount) % _pjAdPairCount;
+    var track = document.getElementById('pjBrkAdsTrack');
+    var vp = document.getElementById('pjBrkAdsViewport');
+    var w = vp ? vp.clientWidth : 0;
+    if (track && w) track.style.transform = 'translateX(-' + (_pjAdPairIndex * w) + 'px)';
+    var dots = document.querySelectorAll('#pjBrkAdsDots .pj-brk-ad-dot');
+    for (var i = 0; i < dots.length; i++) dots[i].classList.toggle('active', i === _pjAdPairIndex);
+  }
+  function advancePjAdPair() {
+    if (_pjAdPairCount < 2) return;
+    goToPjAdPair(_pjAdPairIndex + 1);
+  }
+  function startPjAdPairTimer() {
+    if (_pjAdTimer) { clearInterval(_pjAdTimer); _pjAdTimer = null; }
+    if (_pjAdPairCount > 1) _pjAdTimer = setInterval(advancePjAdPair, 2000);
+  }
+  function buildPjAdPairs(list) {
+    var n = (list || []).length;
+    if (!n) return [];
+    if (n === 1) return [{ a: list[0], b: null, solo: true }];
+    var pairs = [];
+    for (var i = 0; i < n; i += 2) {
+      if (i + 1 < n) {
+        pairs.push({ a: list[i], b: list[i + 1], solo: false });
+      } else {
+        /* Odd leftover: pair last with first (round-robin), never show a lone slot */
+        pairs.push({ a: list[i], b: list[0], solo: false });
+      }
+    }
+    return pairs;
+  }
+  function updatePjBreakAds(ads) {
+    var next = ads || [];
+    var sig = pjAdsSignature(next);
+    if (sig === _pjAdSig) return;
+    _pjAdList = next;
+    _pjAdSig = sig;
+    var wrap = document.getElementById('pjBrkAds');
+    var track = document.getElementById('pjBrkAdsTrack');
+    var dotsEl = document.getElementById('pjBrkAdsDots');
+    if (!track) return;
+    var pairs = buildPjAdPairs(_pjAdList);
+    _pjAdPairCount = pairs.length;
+    track.innerHTML = pairs.map(function(pair) {
+      if (pair.solo) {
+        return '<div class="pj-brk-ad-pair pj-brk-ad-pair-solo">' + pjAdCellHtml(pair.a) + '</div>';
+      }
+      return '<div class="pj-brk-ad-pair">' + pjAdCellHtml(pair.a) + pjAdCellHtml(pair.b) + '</div>';
+    }).join('');
+    _pjAdPairIndex = 0;
+    if (dotsEl) {
+      dotsEl.innerHTML = '';
+      for (var d = 0; d < _pjAdPairCount; d++) {
+        dotsEl.innerHTML += '<div class="pj-brk-ad-dot' + (d === 0 ? ' active' : '') + '"></div>';
+      }
+      dotsEl.style.display = _pjAdPairCount > 1 ? '' : 'none';
+    }
+    if (wrap) wrap.style.display = _pjAdList.length ? '' : 'none';
+    requestAnimationFrame(function() { goToPjAdPair(0); });
+    startPjAdPairTimer();
+  }
+  window.addEventListener('resize', function() {
+    if (_pjAdPairCount) goToPjAdPair(_pjAdPairIndex);
+  });
+
   function handlePjBreak(isBreak) {
     var overlay = document.getElementById('pjBreakOverlay');
     if (!overlay) return;
@@ -1309,12 +1424,18 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         overlay.classList.add('active');
         startPjBreakClock();
         try { closePjSquad(); } catch (e) {}
+        // Ensure slider width is correct once overlay is visible
+        requestAnimationFrame(function() {
+          if (_pjAdPairCount) goToPjAdPair(_pjAdPairIndex);
+          startPjAdPairTimer();
+        });
       }
     } else if (_pjBreakActive) {
       _pjBreakActive = false;
       _pjBreakStart = null;
       overlay.classList.remove('active');
       stopPjBreakClock();
+      if (_pjAdTimer) { clearInterval(_pjAdTimer); _pjAdTimer = null; }
       var timerEl = document.getElementById('pjBrkTimer');
       if (timerEl) timerEl.textContent = '\u25cf Break in progress';
     }

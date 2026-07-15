@@ -725,6 +725,12 @@ class Auction(http.Controller):
                 'pistah': 'auction_module.auction_details_show_pistah',
             }
             template_ref = balance_template_map.get(theme, 'auction_module.auction_details_show')
+            q = request.httprequest.args
+            from_projector = (kwargs.get('from') or q.get('from') or '') == 'projector'
+            mode = kwargs.get('mode') or q.get('mode') or (
+                'light' if theme in ('lemon', 'strawberry') else 'dark')
+            if mode not in ('dark', 'light'):
+                mode = 'dark'
             html = request.render(template_ref, {
                 'teams': auctions,
                 'tournament': tournament,
@@ -732,6 +738,8 @@ class Auction(http.Controller):
                 'theme': theme,
                 'db_name': db_name,
                 'tournament_slug': tournament_slug,
+                'from_projector': from_projector,
+                'mode': mode,
             }, lazy=False)
         return request.make_response(html, [
             ('Content-Type', 'text/html; charset=utf-8'),
@@ -1397,7 +1405,7 @@ class Auction(http.Controller):
                                   self._remaining_players_ctx(tournament, theme), lazy=False)
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
-    def _team_players_render(self, team_id, tournament_slug=None, db_name=None):
+    def _team_players_render(self, team_id, tournament_slug=None, db_name=None, **kwargs):
         """Build (template_ref, ctx) for a team's squad/roster page.
 
         Tournament resolution (multi-active tournaments):
@@ -1462,6 +1470,12 @@ class Auction(http.Controller):
         }
         template_ref = players_template_map.get(theme, 'auction_module.auction_team_players_template')
         resolved_slug = tournament_slug or (tournament.slug if tournament else '')
+        q = request.httprequest.args
+        from_projector = (kwargs.get('from') or q.get('from') or '') == 'projector'
+        mode = kwargs.get('mode') or q.get('mode') or (
+            'light' if theme in ('lemon', 'strawberry') else 'dark')
+        if mode not in ('dark', 'light'):
+            mode = 'dark'
         ctx = {
             'players': player_data_list,
             'team': team,
@@ -1469,12 +1483,14 @@ class Auction(http.Controller):
             'theme': theme,
             'db_name': db_name or request.env.cr.dbname,
             'tournament_slug': resolved_slug,
+            'from_projector': from_projector,
+            'mode': mode,
         }
         return template_ref, ctx
 
     @http.route('/auction/get/players/team/<int:team_id>', type='http', auth='public', website=True)
-    def get_team_players(self, team_id):
-        template_ref, ctx = self._team_players_render(team_id)
+    def get_team_players(self, team_id, **kwargs):
+        template_ref, ctx = self._team_players_render(team_id, **kwargs)
         return request.render(template_ref, ctx)
 
     @http.route('/<string:db_name>/auction/get/players/team/<int:team_id>',
@@ -1484,7 +1500,7 @@ class Auction(http.Controller):
         with self._with_db(db_name) as ok:
             if not ok:
                 return self._not_found()
-            template_ref, ctx = self._team_players_render(team_id, db_name=db_name)
+            template_ref, ctx = self._team_players_render(team_id, db_name=db_name, **kwargs)
             html = request.render(template_ref, ctx, lazy=False)
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
@@ -1496,7 +1512,7 @@ class Auction(http.Controller):
             if not ok:
                 return self._not_found()
             template_ref, ctx = self._team_players_render(
-                team_id, tournament_slug=tournament_slug, db_name=db_name)
+                team_id, tournament_slug=tournament_slug, db_name=db_name, **kwargs)
             html = request.render(template_ref, ctx, lazy=False)
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
@@ -2240,6 +2256,7 @@ class Auction(http.Controller):
                     'top_purse': _pj_top_purse(tournament),
                     'auction_meta': _pj_auction_meta(tournament),
                     'break_time': bool(tournament and tournament.break_time_active),
+                    'advertisers': _pj_advertisers(tournament, db_name),
                 }
             photo = ''
             photo_url = ''
@@ -2330,6 +2347,7 @@ class Auction(http.Controller):
                 'top_purse': _pj_top_purse(tournament),
                 'auction_meta': _pj_auction_meta(tournament),
                 'break_time': bool(tournament and tournament.break_time_active),
+                'advertisers': _pj_advertisers(tournament, db_name),
             }
 
     @http.route([
@@ -2627,6 +2645,7 @@ class Auction(http.Controller):
                 result['break_time'] = tournament.break_time_active
                 result['advertisers'] = [
                     {
+                        'id': ad.id,
                         'name': ad.name or '',
                         'image_url': pub_img('auction.advertiser', ad.id, 'image'),
                     }
@@ -4244,6 +4263,22 @@ def _pj_squad(tournament, db_name):
             'players': players_out,
         })
     return {'sport': sport, 'teams': teams_out}
+
+
+def _pj_advertisers(tournament, db_name):
+    """Sponsor logos for projector break-time slider."""
+    if not tournament:
+        return []
+    out = []
+    for ad in tournament.advertiser_ids:
+        if not ad.image:
+            continue
+        out.append({
+            'id': ad.id,
+            'name': ad.name or '',
+            'image_url': '/%s/auction/public/image/auction.advertiser/%d/image' % (db_name, ad.id),
+        })
+    return out
 
 
 def _pj_top_purse(tournament):

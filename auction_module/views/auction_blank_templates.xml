@@ -834,14 +834,15 @@ img { display: block; }
 .lb-brk-content {
   position: relative; z-index: 1;
   display: flex; flex-direction: column; align-items: center;
-  gap: 12px; padding: 20px 24px; width: 100%; max-width: 720px;
+  gap: 10px; padding: 16px 20px; width: 100%; max-width: min(1100px, 96vw);
+  max-height: calc(100vh - 24px); overflow-y: auto; box-sizing: border-box;
 }
 #lb-brk-logo img {
-  width: 72px; height: 72px; object-fit: contain; border-radius: 14px;
+  width: 64px; height: 64px; object-fit: contain; border-radius: 12px;
   border: 2px solid rgba(255,193,7,.3); background: rgba(255,255,255,.04);
   padding: 6px; filter: drop-shadow(0 0 14px rgba(255,193,7,.4));
 }
-.lb-brk-logo-ph { font-size: 2.5rem; opacity: .3; }
+.lb-brk-logo-ph { font-size: 2.2rem; opacity: .3; }
 
 .lb-brk-badge {
   display: inline-flex; align-items: center; gap: 9px;
@@ -869,8 +870,8 @@ img { display: block; }
 
 .lb-brk-timer { font-size: .6rem; color: rgba(255,255,255,.28); letter-spacing: 2px; text-transform: uppercase; }
 
-/* ── Advertiser carousel (break screen) ────────────────────────── */
-.lb-brk-ads { width: 100%; max-width: 640px; }
+/* ── Advertiser pair slider (break screen) — 2 at a time, every 2s ── */
+.lb-brk-ads { width: 100%; max-width: min(960px, 94vw); }
 .lb-brk-ads-label {
   font-size: .52rem; font-weight: 800; letter-spacing: 2.5px;
   text-transform: uppercase; color: rgba(255,193,7,.45);
@@ -880,24 +881,37 @@ img { display: block; }
   content: ''; flex: 1; height: 1px;
   background: linear-gradient(90deg,transparent,rgba(255,193,7,.22),transparent);
 }
+.lb-brk-ads-viewport {
+  width: 100%; overflow: hidden;
+  background: transparent; border: none; border-radius: 0;
+}
 .lb-brk-ads-track {
-  position: relative; height: 100px;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06);
-  border-radius: 12px; overflow: hidden;
+  display: flex; align-items: stretch;
+  transition: transform .55s cubic-bezier(.22,.9,.28,1);
+  will-change: transform;
 }
-.lb-brk-ad-slide {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  gap: 10px; padding: 10px 16px;
-  opacity: 0; transition: opacity .9s ease;
+.lb-brk-ad-pair {
+  flex: 0 0 100%; width: 100%; min-width: 100%;
+  display: grid; grid-template-columns: 1fr 1fr; gap: clamp(16px,3vw,36px);
+  align-items: center; justify-items: center;
+  padding: 8px 4px; box-sizing: border-box; min-height: 150px;
 }
-.lb-brk-ad-slide.active { opacity: 1; }
-.lb-brk-ad-slide img { max-width: 100%; max-height: 80px; object-fit: contain; border-radius: 6px; }
-.lb-brk-ad-name { font-size: .8rem; font-weight: 700; color: rgba(255,255,255,.55); }
-.lb-brk-ad-dots { display: flex; gap: 6px; justify-content: center; margin-top: 8px; }
-.lb-brk-ad-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,193,7,.25); transition: background .3s; }
-.lb-brk-ad-dot.active { background: #FFD700; }
+.lb-brk-ad-pair-solo { grid-template-columns: 1fr; }
+.lb-brk-ad-pair-solo .lb-brk-ad-cell { max-width: 480px; }
+.lb-brk-ad-cell {
+  width: 100%; max-width: 420px; height: clamp(110px,16vh,160px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 0; border: none; border-radius: 0; background: transparent;
+}
+.lb-brk-ad-cell img {
+  max-width: 100%; max-height: 100%; width: auto; height: auto;
+  object-fit: contain; border-radius: 0;
+  filter: drop-shadow(0 6px 18px rgba(0,0,0,.45));
+}
+.lb-brk-ad-name { font-size: 1.05rem; font-weight: 700; color: rgba(255,255,255,.7); text-align: center; }
+.lb-brk-ad-dots { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+.lb-brk-ad-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,193,7,.25); transition: background .3s, transform .3s; }
+.lb-brk-ad-dot.active { background: #FFD700; transform: scale(1.25); }
 
 /* ── Sponsor strip — FIXED viewport footer ──────────────────────── */
 #lb-sponsor-strip.lb-sponsor-strip,
@@ -947,7 +961,9 @@ body.lb-has-sponsors { padding-bottom: 140px; }
   .lb-brk-content { gap: 9px; padding: 16px; }
   .lb-brk-hl1 { letter-spacing: 3px; }
   .lb-brk-hl2 { letter-spacing: 2px; }
-  .lb-brk-ads-track { height: 80px; }
+  .lb-brk-ad-pair { min-height: 120px; padding: 6px 2px; gap: 12px; }
+  .lb-brk-ad-cell { height: clamp(90px,18vh,130px); max-width: none; }
+  .lb-brk-ad-cell img { max-height: 100%; }
   .lb-sponsor-strip { padding: .5rem .75rem .6rem; }
   .lb-spon-track { gap: 1rem 1.4rem; }
   .lb-spon-card { height: clamp(44px, 12vw, 64px); }
@@ -1913,7 +1929,10 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
   var _breakStartTs  = null;
   var _breakClockId  = null;
   var _adList        = [];
+  var _adSig         = '';
   var _adBrkTimerId  = null;
+  var _adPairIndex   = 0;
+  var _adPairCount   = 0;
 
   function startBreakClock() {
     if (_breakClockId) return;
@@ -1929,57 +1948,103 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     if (_breakClockId) { clearInterval(_breakClockId); _breakClockId = null; }
   }
 
-  function rotateSlide(trackId, slideClass, dotsId) {
-    var slides = document.querySelectorAll('#' + trackId + ' .' + slideClass);
-    if (slides.length < 2) return;
-    var cur = 0;
-    for (var i = 0; i < slides.length; i++) { if (slides[i].classList.contains('active')) { cur = i; break; } }
-    slides[cur].classList.remove('active');
-    var next = (cur + 1) % slides.length;
-    slides[next].classList.add('active');
-    if (dotsId) {
-      var dots = document.querySelectorAll('#' + dotsId + ' .lb-brk-ad-dot');
-      dots.forEach(function(d,i){ d.classList.toggle('active', i===next); });
+  function adsSignature(ads) {
+    return (ads || []).map(function(a) {
+      return String(a.id || '') + '|' + String(a.image_url || '') + '|' + String(a.name || '');
+    }).join('||');
+  }
+
+  function adCellHtml(ad) {
+    if (!ad) return '<div class="lb-brk-ad-cell" aria-hidden="true"></div>';
+    var inner = ad.image_url
+      ? '<img src="' + ad.image_url + '" alt="' + (ad.name || '') + '" onerror="this.style.display=\'none\'">'
+      : '<span class="lb-brk-ad-name">' + (ad.name || '') + '</span>';
+    return '<div class="lb-brk-ad-cell">' + inner + '</div>';
+  }
+
+  function goToAdPair(idx) {
+    if (_adPairCount < 1) return;
+    _adPairIndex = ((idx % _adPairCount) + _adPairCount) % _adPairCount;
+    var track = document.getElementById('lb-brk-ads-track');
+    var vp = document.getElementById('lb-brk-ads-viewport');
+    var w = vp ? vp.clientWidth : 0;
+    if (track && w) {
+      track.style.transform = 'translateX(-' + (_adPairIndex * w) + 'px)';
+    }
+    var dots = document.querySelectorAll('#lb-brk-ad-dots .lb-brk-ad-dot');
+    for (var i = 0; i < dots.length; i++) {
+      dots[i].classList.toggle('active', i === _adPairIndex);
     }
   }
 
-  function buildAdSlides(ads) {
-    return ads.map(function(ad, i) {
-      var inner = ad.image_url
-        ? '<img src="' + ad.image_url + '" alt="' + (ad.name||'') + '" onerror="this.style.display=\'none\'">'
-        : '<span class="lb-brk-ad-name">' + (ad.name||'') + '</span>';
-      return '<div class="' + (i===0?'active ':'') + '">' + inner + '</div>';
-    }).join('');
+  function advanceAdPair() {
+    if (_adPairCount < 2) return;
+    goToAdPair(_adPairIndex + 1);
+  }
+
+  function startAdPairTimer() {
+    if (_adBrkTimerId) { clearInterval(_adBrkTimerId); _adBrkTimerId = null; }
+    if (_adPairCount > 1) {
+      _adBrkTimerId = setInterval(advanceAdPair, 2000);
+    }
+  }
+
+  function buildAdPairs(list) {
+    var n = (list || []).length;
+    if (!n) return [];
+    if (n === 1) return [{ a: list[0], b: null, solo: true }];
+    var pairs = [];
+    for (var i = 0; i < n; i += 2) {
+      if (i + 1 < n) {
+        pairs.push({ a: list[i], b: list[i + 1], solo: false });
+      } else {
+        /* Odd leftover: pair last with first (round-robin), never show a lone slot */
+        pairs.push({ a: list[i], b: list[0], solo: false });
+      }
+    }
+    return pairs;
   }
 
   function updateAds(ads) {
-    var changed = JSON.stringify(ads) !== JSON.stringify(_adList);
-    _adList = ads || [];
+    var next = ads || [];
+    var sig = adsSignature(next);
+    var changed = sig !== _adSig;
+    _adList = next;
+    _adSig = sig;
 
-    // Break-screen carousel
-    var brkAds  = document.getElementById('lb-brk-ads');
-    var brkTrack = document.getElementById('lb-brk-ads-track');
-    var brkDots  = document.getElementById('lb-brk-ad-dots');
-    if (brkTrack) {
-      brkTrack.innerHTML = _adList.map(function(ad, i) {
-        var inner = ad.image_url
-          ? '<img src="' + ad.image_url + '" alt="' + (ad.name||'') + '" onerror="this.style.display=\'none\'">'
-          : '<span class="lb-brk-ad-name">' + (ad.name||'') + '</span>';
-        return '<div class="lb-brk-ad-slide' + (i===0?' active':'') + '">' + inner + '</div>';
-      }).join('');
+    if (changed) {
+      var brkAds  = document.getElementById('lb-brk-ads');
+      var brkTrack = document.getElementById('lb-brk-ads-track');
+      var brkDots  = document.getElementById('lb-brk-ad-dots');
+      if (brkTrack) {
+        var pairs = buildAdPairs(_adList);
+        _adPairCount = pairs.length;
+        brkTrack.innerHTML = pairs.map(function(pair) {
+          if (pair.solo) {
+            return '<div class="lb-brk-ad-pair lb-brk-ad-pair-solo">' + adCellHtml(pair.a) + '</div>';
+          }
+          return '<div class="lb-brk-ad-pair">' + adCellHtml(pair.a) + adCellHtml(pair.b) + '</div>';
+        }).join('');
+        _adPairIndex = 0;
+        // Apply after layout so viewport width is correct
+        requestAnimationFrame(function() { goToAdPair(0); });
+      }
+      if (brkDots) {
+        brkDots.innerHTML = '';
+        for (var d = 0; d < _adPairCount; d++) {
+          brkDots.innerHTML += '<div class="lb-brk-ad-dot' + (d === 0 ? ' active' : '') + '"></div>';
+        }
+        brkDots.style.display = _adPairCount > 1 ? '' : 'none';
+      }
+      if (brkAds) brkAds.style.display = _adList.length ? '' : 'none';
+      startAdPairTimer();
     }
-    if (brkDots) {
-      brkDots.innerHTML = _adList.map(function(_,i) {
-        return '<div class="lb-brk-ad-dot' + (i===0?' active':'') + '"></div>';
-      }).join('');
-    }
-    if (brkAds) brkAds.style.display = _adList.length ? '' : 'none';
 
     // Regular sponsor strip — hide entirely when no advertisers configured
     var strip = document.getElementById('lb-sponsor-strip');
     var stripTrack = document.getElementById('lb-sponsor-track');
     var hasAds = _adList.length > 0;
-    if (stripTrack && hasAds) {
+    if (changed && stripTrack && hasAds) {
       stripTrack.innerHTML = _adList.map(function(ad) {
         var inner = ad.image_url
           ? '<img class="lb-spon-logo" src="' + ad.image_url + '" alt="' + (ad.name||'') + '" title="' + (ad.name||'') + '" onerror="this.style.display=\'none\'">'
@@ -1989,15 +2054,11 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     }
     if (strip) strip.style.display = hasAds ? '' : 'none';
     document.body.classList.toggle('lb-has-sponsors', hasAds);
-
-    // Restart break-screen carousel only if ads changed
-    if (changed) {
-      if (_adBrkTimerId) { clearInterval(_adBrkTimerId); _adBrkTimerId = null; }
-      if (_adList.length > 1) {
-        _adBrkTimerId = setInterval(function() { rotateSlide('lb-brk-ads-track', 'lb-brk-ad-slide', 'lb-brk-ad-dots'); }, 5000);
-      }
-    }
   }
+
+  window.addEventListener('resize', function() {
+    if (_adPairCount) goToAdPair(_adPairIndex);
+  });
 
   function handleBreakTime(isBreak, tournamentData) {
     var overlay = document.getElementById('lb-break-overlay');
@@ -2013,6 +2074,10 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
         }
         overlay.classList.add('active');
         startBreakClock();
+        requestAnimationFrame(function() {
+          if (_adPairCount) goToAdPair(_adPairIndex);
+          startAdPairTimer();
+        });
       }
     } else {
       if (_breakActive) {
@@ -2020,6 +2085,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
         _breakStartTs = null;
         overlay.classList.remove('active');
         stopBreakClock();
+        if (_adBrkTimerId) { clearInterval(_adBrkTimerId); _adBrkTimerId = null; }
         var timerEl = document.getElementById('lb-brk-timer');
         if (timerEl) timerEl.textContent = '\u25cf Break in progress';
       }
@@ -2599,7 +2665,9 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     <div class="lb-brk-timer" id="lb-brk-timer">&#9679; Break in progress</div>
     <div class="lb-brk-ads" id="lb-brk-ads" style="display:none;">
       <div class="lb-brk-ads-label">Our Sponsors</div>
-      <div class="lb-brk-ads-track" id="lb-brk-ads-track"></div>
+      <div class="lb-brk-ads-viewport">
+        <div class="lb-brk-ads-track" id="lb-brk-ads-track"></div>
+      </div>
       <div class="lb-brk-ad-dots" id="lb-brk-ad-dots"></div>
     </div>
   </div>

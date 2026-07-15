@@ -2,6 +2,8 @@
 <odoo>
 <template id="auction_details_show" name="Player Auction">
   <html lang="en" t-att-data-theme="theme"
+        t-att-data-skin="'projector' if from_projector else None"
+        t-att-data-mode="mode or 'dark'"
         t-att-data-balance-json-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/show/team/balance/json'">
     <head>
       <meta charset="UTF-8"/>
@@ -64,6 +66,24 @@
           --tx:#FFFDF5; --tx-d:rgba(255,253,245,.55); --tx-m:rgba(255,253,245,.30);
           --hf:'Orbitron',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Teko',sans-serif;
           --card-bg:rgba(26,22,8,.85); --card-bdr:rgba(232,194,0,.15);
+        }
+
+        /* Projector skin — match projector navy/gold when opened from projector */
+        html[data-skin="projector"][data-mode="dark"] {
+          --bg:#07111f; --bg2:#0c1a30; --bg3:#07111f;
+          --acc:#e0b84a; --acc2:#f5d76e; --glow:rgba(224,184,74,.45);
+          --bdr:rgba(224,184,74,.42); --bdr2:rgba(244,247,255,.08);
+          --tx:#f4f7ff; --tx-d:rgba(244,247,255,.62); --tx-m:rgba(244,247,255,.38);
+          --hf:'Exo 2','Barlow Condensed',sans-serif; --bf:'Exo 2','Barlow Condensed',sans-serif; --nf:'Bebas Neue','Teko',sans-serif;
+          --card-bg:rgba(10,20,40,.75); --card-bdr:rgba(224,184,74,.42);
+        }
+        html[data-skin="projector"][data-mode="light"] {
+          --bg:#f6f3ea; --bg2:#fffdf8; --bg3:#f6f3ea;
+          --acc:#c49a2a; --acc2:#d4af37; --glow:rgba(196,154,42,.28);
+          --bdr:rgba(196,154,42,.45); --bdr2:rgba(22,22,22,.08);
+          --tx:#161616; --tx-d:rgba(22,22,22,.62); --tx-m:rgba(22,22,22,.4);
+          --hf:'Exo 2','Barlow Condensed',sans-serif; --bf:'Exo 2','Barlow Condensed',sans-serif; --nf:'Bebas Neue','Teko',sans-serif;
+          --card-bg:#ffffff; --card-bdr:rgba(196,154,42,.45);
         }
 
         * { box-sizing: border-box; }
@@ -871,7 +891,7 @@
                       <span data-role="status-badge" data-base-class="bs2-badge" t-attf-class="bs2-badge #{status_cls}"><t t-esc="status_label"/></span>
                     </td>
                     <td class="bs2-access-cell">
-                      <a t-att-href="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/get/players/team/' + str(team.team_id.id)" class="bs2-engage">&#9654; ENGAGE</a>
+                      <a t-att-href="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/get/players/team/' + str(team.team_id.id) + ('?from=projector&amp;mode=' + (mode or 'dark') if from_projector else '')" class="bs2-engage">&#9654; ENGAGE</a>
                     </td>
                   </tr>
                 </t>
@@ -935,7 +955,7 @@
 
                   <div class="bs2-card-foot">
                     <span data-role="status-badge" data-base-class="bs2-badge bs2-card-status" t-attf-class="bs2-badge bs2-card-status #{status_cls}"><t t-esc="status_label"/></span>
-                    <a t-att-href="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/get/players/team/' + str(team.team_id.id)" class="bs2-engage">&#9654; ENGAGE</a>
+                    <a t-att-href="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/get/players/team/' + str(team.team_id.id) + ('?from=projector&amp;mode=' + (mode or 'dark') if from_projector else '')" class="bs2-engage">&#9654; ENGAGE</a>
                   </div>
                 </div>
               </div>
@@ -1000,7 +1020,7 @@
 
               <!-- Footer: engage button -->
               <div class="bs2-mob-foot">
-                <a t-att-href="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/get/players/team/' + str(team.team_id.id)" class="bs2-engage" style="width:100%;justify-content:center;">&#9654; VIEW SQUAD</a>
+                <a t-att-href="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/get/players/team/' + str(team.team_id.id) + ('?from=projector&amp;mode=' + (mode or 'dark') if from_projector else '')" class="bs2-engage" style="width:100%;justify-content:center;">&#9654; VIEW SQUAD</a>
               </div>
 
             </div>

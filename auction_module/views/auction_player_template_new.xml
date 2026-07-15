@@ -401,7 +401,7 @@ body[data-theme="dark"] .single-header{
     </style>
     <t t-call="auction_module.player_mystery_critical_css"/>
   </head>
-  <body style="min-height: 100vh" t-att-data-player-id="player.id" t-att-data-next-countdown="tournament.next_player_countdown if tournament else 5" t-att-data-is-mystery="'1' if player.tier_id and player.tier_id.mystery else '0'">
+  <body style="min-height: 100vh" t-att-data-player-id="player.id" t-att-data-next-countdown="tournament.next_player_countdown if tournament else 5" t-att-data-is-mystery="'1' if player.tier_id and player.tier_id.mystery else '0'" t-att-data-tournament-id="tournament.id if tournament else ''" t-att-data-break-time="'1' if tournament and tournament.break_time_active else '0'">
     <header class="single-header">
       <div class="py-3 text-center">
         <a href="/web" class="vn-brand">
@@ -892,8 +892,11 @@ body[data-theme="dark"] .single-header{
         <button onclick="closeNextOverlay()" style="padding:10px 28px;border-radius:8px;border:1px solid rgba(91,155,213,0.45);background:rgba(91,155,213,0.15);color:#5b9bd5;font-size:0.95rem;cursor:pointer;font-weight:600;">Got it</button>
       </div>
     </div>
-    <!-- Fullscreen Toggle -->
-    <button id="fs-btn" onclick="toggleFullscreen()" title="Enter Fullscreen" style="position:fixed;top:14px;right:14px;z-index:9999;width:38px;height:38px;border-radius:8px;background:rgba(0,20,50,0.75);border:1.5px solid rgba(0,64,128,0.55);color:#5b9bd5;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:0;transition:background .2s,box-shadow .2s;" onmouseover="this.style.boxShadow='0 0 12px rgba(0,64,128,0.5)'" onmouseout="this.style.boxShadow='none'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
+    <!-- Pause (Break) + Fullscreen -->
+    <div style="position:fixed;top:14px;right:14px;z-index:9999;display:flex;align-items:center;gap:8px;">
+      <button type="button" id="ac-break-btn" class="ac-break-btn ac-break-btn-fixed" onclick="acToggleBreakTime()" title="Break Time">&#9208; Pause</button>
+      <button id="fs-btn" onclick="toggleFullscreen()" title="Enter Fullscreen" style="width:38px;height:38px;border-radius:8px;background:rgba(0,20,50,0.75);border:1.5px solid rgba(0,64,128,0.55);color:#5b9bd5;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:0;transition:background .2s,box-shadow .2s;" onmouseover="this.style.boxShadow='0 0 12px rgba(0,64,128,0.5)'" onmouseout="this.style.boxShadow='none'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
+    </div>
     <script>
       function toggleFullscreen() {
         if (!document.fullscreenElement) {
@@ -919,6 +922,7 @@ body[data-theme="dark"] .single-header{
         document.documentElement.requestFullscreen().catch(function(e) { console.warn(e); });
       }
     </script>
+    <t t-call="auction_module.player_break_pause_assets"/>
     <t t-call="auction_module.player_mystery_controls"/>
     <t t-call="auction_module.player_sell_modal"/>
     <footer class="vn-footer">

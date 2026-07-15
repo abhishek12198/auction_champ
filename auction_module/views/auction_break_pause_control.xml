@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<!-- Shared Pause / Break control for display_auction themes (near fullscreen). -->
+<template id="player_break_pause_assets" name="Display Auction Break Pause Assets">
+  <style>
+    .ac-break-btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:5px;
+      height:34px;padding:0 12px;border-radius:8px;cursor:pointer;
+      font:inherit;font-size:.72rem;font-weight:800;letter-spacing:.06em;
+      text-transform:uppercase;line-height:1;white-space:nowrap;
+      background:rgba(0,0,0,.35);border:1.5px solid rgba(255,215,0,.45);
+      color:#FFD700;backdrop-filter:blur(4px);
+      transition:background .2s,border-color .2s,color .2s,box-shadow .2s;
+    }
+    .ac-break-btn:hover{box-shadow:0 0 12px rgba(255,215,0,.35)}
+    .ac-break-btn:disabled{opacity:.55;cursor:wait}
+    .ac-break-btn.break-on{
+      border-color:rgba(46,204,113,.55);color:#2ecc71;
+      background:rgba(46,204,113,.12);
+    }
+    .ac-break-btn.break-on:hover{box-shadow:0 0 12px rgba(46,204,113,.35)}
+    .ac-break-btn-fixed{
+      height:38px;padding:0 14px;font-size:.7rem;
+      background:rgba(0,20,50,.75);border-color:rgba(255,215,0,.5);
+    }
+  </style>
+  <script>//<![CDATA[
+(function () {
+  var _busy = false;
+
+  function acDbName() {
+    var parts = (window.location.pathname || '').split('/').filter(Boolean);
+    return parts.length ? parts[0] : '';
+  }
+  function acTournamentId() {
+    return parseInt(document.body.getAttribute('data-tournament-id') || '0', 10) || 0;
+  }
+  function acBreakOn() {
+    return document.body.getAttribute('data-break-time') === '1';
+  }
+  function acConsoleCall(model, method, args) {
+    var db = acDbName();
+    var url = db ? ('/' + db + '/auction/console_call') : '/web/dataset/call_kw';
+    return fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        jsonrpc: '2.0', method: 'call', id: Date.now(),
+        params: { model: model, method: method, args: args || [], kwargs: {} }
+      })
+    }).then(function (r) { return r.json(); });
+  }
+  function acSyncBreakBtn() {
+    var btn = document.getElementById('ac-break-btn');
+    if (!btn) return;
+    var on = acBreakOn();
+    btn.classList.toggle('break-on', on);
+    if (on) {
+      btn.innerHTML = '&#9654; Resume';
+      btn.title = 'Break Time is ON — click to resume live board and projector';
+    } else {
+      btn.innerHTML = '&#9208; Pause';
+      btn.title = 'Break Time — show break screen on live board and projector';
+    }
+  }
+  window.acToggleBreakTime = function () {
+    var tid = acTournamentId();
+    if (!tid || _busy) return;
+    _busy = true;
+    var btn = document.getElementById('ac-break-btn');
+    if (btn) btn.disabled = true;
+    acConsoleCall('auction.tournament', 'action_toggle_break_time', [[tid]])
+      .then(function (res) {
+        var err = res && (res.error || (res.result && res.result.error));
+        if (err) {
+          console.error('[Break Time]', err);
+          return;
+        }
+        document.body.setAttribute('data-break-time', acBreakOn() ? '0' : '1');
+        acSyncBreakBtn();
+      })
+      .catch(function (e) { console.error('[Break Time]', e); })
+      .then(function () {
+        _busy = false;
+        if (btn) btn.disabled = false;
+      });
+  };
+  document.addEventListener('DOMContentLoaded', acSyncBreakBtn);
+})();
+  //]]></script>
+</template>
+</odoo>
