@@ -2416,6 +2416,7 @@ class Auction(http.Controller):
         'auction.history':     ['player_photo'],
         'auction.advertiser':  ['image'],
         'res.company':         ['favicon'],
+        'auction.champ.jersey.team': ['team_logo', 'sponsor_logo', 'jersey_design'],
     }
 
     @staticmethod
@@ -4146,6 +4147,170 @@ class Auction(http.Controller):
                     'res_company': res_company,
                 }
             )
+
+    # ── Jersey Collection Survey (auction_champ_jersy) ───────────────────────
+    # Routes live here (not in auction_champ_jersy) so they are on the same
+    # server-wide Auction controller as /player/register. Without a session
+    # cookie, Odoo only matches auth='none' routes from server_wide_modules.
+
+    _JERSEY_SIZES = {'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '4XL', '5XL'}
+    _JERSEY_SLEEVES = {'F', 'H'}
+
+    def _resolve_db_for_jersey_slug(self, slug):
+        """Return the database that has an active jersey team with *slug*."""
+        from odoo.http import db_monodb, db_list
+        mono = db_monodb(request.httprequest)
+        candidates = []
+        if mono:
+            candidates.append(mono)
+        try:
+            for db in db_list(force=True, httprequest=request.httprequest):
+                if db not in candidates:
+                    candidates.append(db)
+        except Exception:
+            pass
+        for db in candidates:
+            try:
+                registry = odoo.registry(db)
+            except Exception:
+                continue
+            try:
+                with registry.cursor() as cr:
+                    env = api.Environment(cr, SUPERUSER_ID, {})
+                    if 'auction.champ.jersey.team' not in env:
+                        continue
+                    match = env['auction.champ.jersey.team'].sudo().search([
+                        ('slug', '=', slug),
+                        ('active', '=', True),
+                    ], limit=1)
+                    if match:
+                        return db
+            except Exception:
+                continue
+        return mono or (candidates[0] if candidates else None)
+
+    def _jersey_img_url(self, db_name, team, field):
+        rec = team.with_context(bin_size=False).sudo()
+        if not rec[field]:
+            return ''
+        return '/%s/auction/public/image/auction.champ.jersey.team/%d/%s' % (
+            db_name, team.id, field,
+        )
+
+    def _jersey_survey_values(self, db_name, team, **extra):
+        players = team.player_ids.sorted(lambda p: p.id)
+        return {
+            'db_name': db_name,
+            'team': team,
+            'players': players,
+            'player_count': len(players),
+            'team_logo_uri': self._jersey_img_url(db_name, team, 'team_logo'),
+            'sponsor_logo_uri': self._jersey_img_url(db_name, team, 'sponsor_logo'),
+            'jersey_design_uri': self._jersey_img_url(db_name, team, 'jersey_design'),
+            'sizes': ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '4XL', '5XL'],
+            'error': extra.get('error'),
+            'form': extra.get('form') or {},
+            'success': extra.get('success', False),
+            'ack_player': extra.get('ack_player'),
+        }
+
+    def _render_jersey_survey(self, db_name, team, **extra):
+        html = request.render(
+            'auction_champ_jersy.jersey_survey_template',
+            self._jersey_survey_values(db_name, team, **extra),
+            lazy=False,
+        )
+        return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
+
+    @http.route('/auction/jersey/<string:slug>', type='http', auth='none',
+                website=False, methods=['GET', 'POST'], csrf=False)
+    def jersey_survey_legacy(self, slug, **kw):
+        """Redirect /auction/jersey/<slug> → /<db>/auction/jersey/<slug>."""
+        db_name = self._resolve_db_for_jersey_slug(slug)
+        if not db_name:
+            return self._not_found()
+        target = '/%s/auction/jersey/%s' % (db_name, slug)
+        qs = request.httprequest.query_string
+        if qs:
+            target = '%s?%s' % (
+                target, qs.decode('utf-8') if isinstance(qs, bytes) else qs,
+            )
+        return werkzeug.utils.redirect(target, 301)
+
+    @http.route(
+        '/<string:db_name>/auction/jersey/<string:slug>',
+        type='http', auth='none', website=False,
+        methods=['GET', 'POST'], csrf=False,
+    )
+    def jersey_survey(self, db_name, slug, **kw):
+        """Public jersey collection form — same multi-db pattern as player register."""
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return self._not_found()
+            if 'auction.champ.jersey.team' not in request.env:
+                return self._not_found()
+
+            team = request.env['auction.champ.jersey.team'].sudo().search([
+                ('slug', '=', slug),
+                ('active', '=', True),
+            ], limit=1)
+            if not team:
+                return self._not_found()
+
+            if request.httprequest.method == 'POST':
+                return self._jersey_handle_submit(db_name, team, **kw)
+
+            ack_player = None
+            success = False
+            if kw.get('submitted') == '1' and kw.get('entry'):
+                try:
+                    entry_id = int(kw.get('entry'))
+                except (TypeError, ValueError):
+                    entry_id = 0
+                if entry_id:
+                    player = request.env['auction.champ.jersey.player'].sudo().browse(entry_id)
+                    if player.exists() and player.team_id.id == team.id:
+                        ack_player = player
+                        success = True
+
+            return self._render_jersey_survey(
+                db_name, team, success=success, ack_player=ack_player,
+            )
+
+    def _jersey_handle_submit(self, db_name, team, **kw):
+        player_name = (kw.get('player_name') or '').strip()
+        number = (kw.get('number') or '').strip()
+        size = (kw.get('size') or '').strip().upper()
+        sleeve = (kw.get('sleeve') or '').strip().upper()
+        form = {
+            'player_name': player_name,
+            'number': number,
+            'size': size,
+            'sleeve': sleeve,
+        }
+        error = None
+        if not player_name:
+            error = 'Please enter the name to print on the jersey.'
+        elif size not in self._JERSEY_SIZES:
+            error = 'Please select a valid size.'
+        elif sleeve not in self._JERSEY_SLEEVES:
+            error = 'Please select sleeve type (Full or Half).'
+        if error:
+            return self._render_jersey_survey(db_name, team, error=error, form=form)
+
+        player = request.env['auction.champ.jersey.player'].sudo().create({
+            'team_id': team.id,
+            'player_name': player_name,
+            'number': number or False,
+            'size': size,
+            'sleeve': sleeve,
+        })
+        return werkzeug.utils.redirect(
+            '/%s/auction/jersey/%s?submitted=1&entry=%d' % (
+                db_name, team.slug, player.id,
+            ),
+            303,
+        )
 
 
 def _pj_progress(tournament, current_player=None):
