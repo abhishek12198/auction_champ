@@ -23,6 +23,7 @@
         diceTimer: null,
         nextBusy: false,
         callBusy: false,
+        revealBusy: false,
     };
 
     /* ── Config ─────────────────────────────────────────────────────────── */
@@ -34,7 +35,24 @@
     var DICE_URL     = window.AC_DICE_URL     || '/auction/auctioneer/dice';
     var CALL_URL     = window.AC_CALL_URL     || '/auction/auctioneer/call-player';
     var NEXT_URL     = window.AC_NEXT_URL     || '/auction/auctioneer/next-player';
+    var REVEAL_URL   = window.AC_REVEAL_URL   || '/auction/auctioneer/reveal-mystery';
     var CSRF         = window.AC_CSRF_TOKEN   || '';
+    var DEFAULT_PHOTO = '/auction_module/static/img/default_icon.png';
+
+    function isMysteryHidden(p) {
+        return !!(p && p.is_mystery && !p.mystery_revealed);
+    }
+
+    function isAwaitingReveal(p) {
+        p = p || state.currentPlayer;
+        return !!(p && (p.awaiting_reveal || (p.is_mystery && !p.mystery_revealed && p.state === 'sold')));
+    }
+
+    function gateShowcase(actionLabel) {
+        if (!isAwaitingReveal()) return false;
+        showToast('Reveal the mystery player before ' + (actionLabel || 'continuing'), 'error');
+        return true;
+    }
 
     /* ── Helpers ────────────────────────────────────────────────────────── */
     function fmtPts(n) {
@@ -233,19 +251,35 @@
                 : 'Pool empty';
         }
         if (emptySub) {
-            emptySub.textContent = mode === 'random'
-                ? 'Tap Next Player to bring someone onto stage & projector'
-                : 'Roll the dice or pick a number to call a player onto stage';
+            if (isAwaitingReveal()) {
+                emptySub.textContent = 'Reveal the mystery player before calling the next one';
+            } else {
+                emptySub.textContent = mode === 'random'
+                    ? 'Tap Next Player to bring someone onto stage & projector'
+                    : 'Roll the dice or pick a number to call a player onto stage';
+            }
         }
+
+        var locked = isAwaitingReveal();
+        var diceBtn = document.getElementById('acDiceBtn');
+        var numsBtn = document.getElementById('acNumbersBtn');
+        var nextBtn = document.getElementById('acNextBtn');
+        if (diceBtn && !state.diceRolling) diceBtn.disabled = locked;
+        if (numsBtn) numsBtn.disabled = locked;
+        if (nextBtn && !state.nextBusy) nextBtn.disabled = locked;
 
         // Dice result strip visibility
         var diceStrip = document.getElementById('acDiceResult');
         if (diceStrip && !state.diceRolling) {
-            if (state.dicePicked && mode === 'manual') {
+            if (state.dicePicked && mode === 'manual' && !locked) {
                 diceStrip.style.display = 'flex';
                 var numEl = document.getElementById('acDiceResultNum');
-                if (numEl) numEl.textContent = '#' + (state.dicePicked.sl_no || '—');
-            } else if (!state.dicePicked) {
+                if (numEl) {
+                    numEl.textContent = state.dicePicked.is_mystery
+                        ? '?'
+                        : ('#' + (state.dicePicked.sl_no || '—'));
+                }
+            } else if (!state.dicePicked || locked) {
                 diceStrip.style.display = 'none';
             }
         }
@@ -268,6 +302,7 @@
 
     window.acRollDice = function () {
         if (state.showcaseMode !== 'manual' || state.diceRolling) return;
+        if (gateShowcase('rolling the dice')) return;
 
         var available = (state.players || []).filter(function (p) {
             return p && p.state === 'auction';
@@ -321,11 +356,13 @@
     };
 
     window.acCallDicePlayer = function () {
+        if (gateShowcase('calling a player')) return;
         if (!state.dicePicked || !state.dicePicked.id) return;
         acCallPlayer(state.dicePicked.id);
     };
 
     window.acOpenNumberPad = function () {
+        if (gateShowcase('selecting a player')) return;
         var pad = document.getElementById('acNumberPad');
         if (!pad) return;
         var search = document.getElementById('acNumpadSearch');
@@ -358,21 +395,25 @@
             return;
         }
         list.forEach(function (p) {
-            var label = '#' + (p.sl_no || '—');
-            var hay = (label + ' ' + (p.name || '')).toLowerCase();
+            var mystery = !!p.is_mystery && !p.mystery_revealed;
+            var numLabel = mystery ? '?' : String(p.sl_no || '—');
+            var nameLabel = mystery ? 'Mystery' : (p.name || '');
+            var label = mystery ? '?' : ('#' + (p.sl_no || '—'));
+            // Mystery: searchable only by ? — never by real name (name is blank from API)
+            var hay = (label + ' ' + numLabel + ' ' + nameLabel).toLowerCase();
             if (q && hay.indexOf(q) === -1) return;
             var st = p.state || 'auction';
             var disabled = st !== 'auction';
             var cls = 'ac-numpad__btn'
                 + (disabled ? ' is-disabled is-' + st : '')
-                + (p.is_mystery ? ' is-mystery' : '')
+                + (mystery ? ' is-mystery' : '')
                 + (state.dicePicked && state.dicePicked.id === p.id ? ' is-dice' : '')
                 + (state.currentPlayer && state.currentPlayer.id === p.id ? ' is-onstage' : '');
             html += '<button type="button" class="' + cls + '"'
                 + (disabled ? ' disabled' : ' onclick="acCallPlayer(' + p.id + ')"')
-                + ' title="' + esc(p.name || '') + '">'
-                + '<span class="ac-numpad__num">' + esc(String(p.sl_no || '—')) + '</span>'
-                + '<span class="ac-numpad__name">' + esc(p.name || '') + '</span>'
+                + ' title="' + esc(mystery ? 'Mystery Player' : (p.name || '')) + '">'
+                + '<span class="ac-numpad__num">' + esc(numLabel) + '</span>'
+                + '<span class="ac-numpad__name">' + esc(nameLabel) + '</span>'
                 + (disabled ? '<span class="ac-numpad__state">' + esc(st) + '</span>' : '')
                 + '</button>';
         });
@@ -380,6 +421,7 @@
     }
 
     window.acCallPlayer = function (playerId) {
+        if (gateShowcase('calling a player')) return;
         if (state.callBusy) return;
         state.callBusy = true;
         jsonRpc(CALL_URL, { player_id: playerId }, function (err, result) {
@@ -396,7 +438,10 @@
             document.getElementById('acDiceResult').style.display = 'none';
             setDiceButtonRolling(false);
             acCloseNumberPad();
-            showToast('On stage: #' + (result.sl_no || '') + ' ' + (result.name || ''), 'success');
+            var label = result.is_mystery
+                ? 'Mystery Player'
+                : ('#' + (result.sl_no || '') + ' ' + (result.name || ''));
+            showToast('On stage: ' + label, 'success');
             clearTimeout(state.pollTimer);
             poll();
         });
@@ -404,12 +449,13 @@
 
     window.acNextPlayer = function () {
         if (state.showcaseMode !== 'random' || state.nextBusy) return;
+        if (gateShowcase('calling the next player')) return;
         state.nextBusy = true;
         var btn = document.getElementById('acNextBtn');
         if (btn) btn.disabled = true;
         jsonRpc(NEXT_URL, {}, function (err, result) {
             state.nextBusy = false;
-            if (btn) btn.disabled = false;
+            if (btn) btn.disabled = isAwaitingReveal();
             if (err || !result) {
                 showToast('Network error loading next player', 'error');
                 return;
@@ -418,7 +464,10 @@
                 showToast(result.error || 'No players left', 'error');
                 return;
             }
-            showToast('Next: #' + (result.sl_no || '') + ' ' + (result.name || ''), 'success');
+            var label = result.is_mystery
+                ? 'Mystery Player'
+                : ('#' + (result.sl_no || '') + ' ' + (result.name || ''));
+            showToast('Next: ' + label, 'success');
             clearTimeout(state.pollTimer);
             poll();
         });
@@ -428,53 +477,79 @@
     function renderPlayer(p) {
         var empty = document.getElementById('acPlayerEmpty');
         var card  = document.getElementById('acPlayerCard');
+        var cardRoot = card;
 
         if (!p) {
             empty.style.display = '';
             card.style.display  = 'none';
+            if (cardRoot) cardRoot.classList.remove('is-mystery-locked', 'is-awaiting-reveal');
+            var revealBtn0 = document.getElementById('acRevealBtn');
+            if (revealBtn0) revealBtn0.style.display = 'none';
             return;
         }
 
         empty.style.display = 'none';
         card.style.display  = 'flex';
 
+        var hidden = isMysteryHidden(p);
+        var awaiting = isAwaitingReveal(p);
+        if (cardRoot) {
+            cardRoot.classList.toggle('is-mystery-locked', hidden);
+            cardRoot.classList.toggle('is-awaiting-reveal', awaiting);
+        }
+
         // Tier
         var tierEl = document.getElementById('acPlayerTier');
-        tierEl.textContent = p.tier_name || 'Player';
-        tierEl.style.color      = p.tier_color || '#e0b84a';
-        tierEl.style.borderColor = p.tier_color || '#e0b84a';
-        tierEl.style.background = hexAlpha(p.tier_color || '#e0b84a', 0.12);
+        if (hidden) {
+            tierEl.textContent = 'Mystery';
+            tierEl.style.color = '#c084fc';
+            tierEl.style.borderColor = '#c084fc';
+            tierEl.style.background = hexAlpha('#c084fc', 0.12);
+        } else {
+            tierEl.textContent = p.tier_name || 'Player';
+            tierEl.style.color      = p.tier_color || '#e0b84a';
+            tierEl.style.borderColor = p.tier_color || '#e0b84a';
+            tierEl.style.background = hexAlpha(p.tier_color || '#e0b84a', 0.12);
+        }
 
         // Photo
         var photo = document.getElementById('acPlayerPhoto');
-        photo.src = p.photo_url || '';
+        photo.src = hidden ? DEFAULT_PHOTO : (p.photo_url || DEFAULT_PHOTO);
+        photo.style.filter = hidden ? 'grayscale(1) brightness(0.72)' : '';
 
         // Sl
-        document.getElementById('acPlayerSl').textContent = '#' + (p.sl_no || 0);
+        document.getElementById('acPlayerSl').textContent = hidden
+            ? '?'
+            : ('#' + (p.sl_no || 0));
 
         // Name
-        document.getElementById('acPlayerName').textContent = p.name || '';
+        document.getElementById('acPlayerName').textContent = hidden
+            ? 'Mystery Player'
+            : (p.name || '');
 
         // Sport-aware attribute chips
         var attrsEl = document.getElementById('acPlayerAttrs');
         if (attrsEl) {
-            attrsEl.innerHTML = playerAttrChipsHtml(p);
+            attrsEl.innerHTML = hidden ? '' : playerAttrChipsHtml(p);
         } else {
-            document.getElementById('acPlayerMeta').textContent = playerMetaLine(p);
+            document.getElementById('acPlayerMeta').textContent = hidden ? '' : playerMetaLine(p);
         }
 
-        // Base price
-        document.getElementById('acBasePrice').textContent = fmtPts(p.base_price);
-
-        // Current bid
-        var bidEl = document.getElementById('acCurrentBid');
-        if (p.current_bid && p.current_bid > 0) {
-            bidEl.textContent = fmtPts(p.current_bid) + ' pts';
+        // Base / sold price
+        if (awaiting && p.sold_points) {
+            document.getElementById('acBasePrice').textContent = fmtPts(p.sold_points);
+            document.getElementById('acCurrentBid').textContent = 'SOLD';
         } else {
-            bidEl.textContent = '—';
+            document.getElementById('acBasePrice').textContent = fmtPts(p.base_price);
+            var bidEl = document.getElementById('acCurrentBid');
+            if (p.current_bid && p.current_bid > 0) {
+                bidEl.textContent = fmtPts(p.current_bid) + ' pts';
+            } else {
+                bidEl.textContent = '—';
+            }
         }
 
-        // Current bidder
+        // Current bidder / winning team
         var bidderEl = document.getElementById('acCurrentBidder');
         if (p.current_bid_team) {
             bidderEl.style.display = 'flex';
@@ -482,14 +557,22 @@
             var bdName = document.getElementById('acBidderName');
             bdLogo.src = p.current_bid_team.logo_url || '';
             bdName.textContent = p.current_bid_team.name || '';
+            var bdLabel = bidderEl.querySelector('.ac-bidder-label');
+            if (bdLabel) bdLabel.textContent = awaiting ? 'Sold To' : 'Highest Bid';
         } else {
             bidderEl.style.display = 'none';
         }
 
         // Action buttons
-        var hasBid = p.current_bid && p.current_bid > 0;
+        var hasBid = !awaiting && p.state === 'auction' && p.current_bid && p.current_bid > 0;
         document.getElementById('acResetBidBtn').style.display  = hasBid ? '' : 'none';
         document.getElementById('acFinalizeBtn').style.display  = hasBid ? '' : 'none';
+        var revealBtn = document.getElementById('acRevealBtn');
+        if (revealBtn) {
+            revealBtn.style.display = awaiting ? '' : 'none';
+            revealBtn.disabled = !!state.revealBusy;
+            if (!state.revealBusy) revealBtn.textContent = 'Reveal';
+        }
     }
 
     /* Teams grid */
@@ -552,6 +635,7 @@
         var team   = state.teams.find(function (t) { return t.id === teamId; });
         var player = state.currentPlayer;
         if (!team || !player || !team.can_bid) return;
+        if (isAwaitingReveal(player) || player.state !== 'auction') return;
 
         var bidAmount = team.next_bid;
 
@@ -576,7 +660,7 @@
         var team   = state.teams.find(function (t) { return t.id === teamId; });
         var player = state.currentPlayer;
 
-        if (!team || !player) return;
+        if (!team || !player || player.state !== 'auction' || isAwaitingReveal(player)) return;
         state.selectedTeam = team;
 
         // Team header
@@ -585,15 +669,20 @@
         document.getElementById('acModalTeamMeta').textContent =
             'Remaining: ' + fmtPts(team.remaining_points) + ' pts  |  Max call: ' + fmtPts(team.max_call) + ' pts';
 
-        // Player info
-        document.getElementById('acModalPlayerPhoto').src  = player.photo_url || '';
-        document.getElementById('acModalPlayerName').textContent  = player.name || '';
-        document.getElementById('acModalPlayerRole').textContent  = playerMetaLine(player);
+        // Player info (masked for mystery)
+        var hidden = isMysteryHidden(player);
+        document.getElementById('acModalPlayerPhoto').src  = hidden
+            ? DEFAULT_PHOTO
+            : (player.photo_url || '');
+        document.getElementById('acModalPlayerName').textContent  = hidden
+            ? 'Mystery Player'
+            : (player.name || '');
+        document.getElementById('acModalPlayerRole').textContent  = hidden ? '' : playerMetaLine(player);
         var tBadge = document.getElementById('acModalTierBadge');
-        tBadge.textContent   = player.tier_name || '';
-        tBadge.style.color   = player.tier_color || '#e0b84a';
-        tBadge.style.borderColor = player.tier_color || '#e0b84a';
-        tBadge.style.background  = hexAlpha(player.tier_color || '#e0b84a', 0.1);
+        tBadge.textContent   = hidden ? 'Mystery' : (player.tier_name || '');
+        tBadge.style.color   = hidden ? '#c084fc' : (player.tier_color || '#e0b84a');
+        tBadge.style.borderColor = hidden ? '#c084fc' : (player.tier_color || '#e0b84a');
+        tBadge.style.background  = hexAlpha(hidden ? '#c084fc' : (player.tier_color || '#e0b84a'), 0.1);
 
         // Bid limits
         document.getElementById('acModalBase').textContent = fmtPts(team.effective_base);
@@ -749,8 +838,9 @@
     /* ── Reset Bid ──────────────────────────────────────────────────────── */
     window.acResetBid = function () {
         var player = state.currentPlayer;
-        if (!player) return;
-        if (!confirm('Reset the current bid for ' + player.name + '?')) return;
+        if (!player || isAwaitingReveal(player)) return;
+        var label = isMysteryHidden(player) ? 'Mystery Player' : (player.name || 'this player');
+        if (!confirm('Reset the current bid for ' + label + '?')) return;
 
         jsonRpc(RESET_URL, { player_id: player.id }, function (err, result) {
             if (err || !result || !result.success) {
@@ -772,15 +862,20 @@
         }
 
         var team = state.teams.find(function (t) { return t.id === player.current_bid_team.id; });
+        var hidden = isMysteryHidden(player);
 
-        // Populate confirm-sold modal
-        document.getElementById('acSoldPlayerPhoto').src  = player.photo_url || '';
-        document.getElementById('acSoldPlayerName').textContent  = player.name || '';
-        document.getElementById('acSoldPlayerRole').textContent  = playerMetaLine(player);
+        // Populate confirm-sold modal (masked for mystery)
+        document.getElementById('acSoldPlayerPhoto').src  = hidden
+            ? DEFAULT_PHOTO
+            : (player.photo_url || '');
+        document.getElementById('acSoldPlayerName').textContent  = hidden
+            ? 'Mystery Player'
+            : (player.name || '');
+        document.getElementById('acSoldPlayerRole').textContent  = hidden ? '' : playerMetaLine(player);
         var tierEl = document.getElementById('acSoldPlayerTier');
-        tierEl.textContent   = player.tier_name || '';
-        tierEl.style.color   = player.tier_color || '#e0b84a';
-        tierEl.style.borderColor = player.tier_color || '#e0b84a';
+        tierEl.textContent   = hidden ? 'Mystery' : (player.tier_name || '');
+        tierEl.style.color   = hidden ? '#c084fc' : (player.tier_color || '#e0b84a');
+        tierEl.style.borderColor = hidden ? '#c084fc' : (player.tier_color || '#e0b84a');
 
         document.getElementById('acSoldTeamLogo').src = player.current_bid_team.logo_url || '';
         document.getElementById('acSoldTeamName').textContent = player.current_bid_team.name || '';
@@ -803,7 +898,6 @@
 
         var bidder = player.current_bid_team ? player.current_bid_team.name : '?';
         var confirmBtn = document.getElementById('acSoldConfirmBtn');
-        var soldBtn    = document.getElementById('acFinalizeBtn');
 
         confirmBtn.disabled = true;
         confirmBtn.textContent = '⏳ Processing…';
@@ -821,25 +915,70 @@
                 return;
             }
 
-            // Close confirm + bid modal; clear stage UI immediately
             document.getElementById('acSoldConfirmModal').style.display = 'none';
             var bidModal = document.getElementById('acBidModal');
             if (bidModal) bidModal.style.display = 'none';
             state.selectedTeam = null;
-            state.currentPlayer = null;
             state.dicePicked = null;
             var diceStrip = document.getElementById('acDiceResult');
             if (diceStrip) diceStrip.style.display = 'none';
-            renderPlayer(null);
-            renderTeams([], null);
+
+            if (result.awaiting_reveal || result.is_mystery) {
+                showToast('Sold to ' + bidder + ' — tap Reveal to unlock identity', 'success');
+            } else {
+                state.currentPlayer = null;
+                renderPlayer(null);
+                renderTeams([], null);
+                showToast(
+                    '🎉 ' + (player.name || 'Player') + ' SOLD to ' + bidder
+                    + ' — use Showcase to call the next player',
+                    'success'
+                );
+            }
             renderShowcase();
 
-            showToast(
-                '🎉 ' + player.name + ' SOLD to ' + bidder
-                + ' — use Showcase to call the next player',
-                'success'
-            );
+            clearTimeout(state.pollTimer);
+            poll();
+        });
+    };
 
+    window.acRevealMystery = function () {
+        var player = state.currentPlayer;
+        if (!player || !isAwaitingReveal(player) || state.revealBusy) return;
+
+        state.revealBusy = true;
+        var btn = document.getElementById('acRevealBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Revealing…';
+        }
+
+        jsonRpc(REVEAL_URL, { player_id: player.id }, function (err, result) {
+            state.revealBusy = false;
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Reveal';
+            }
+            if (err || !result) {
+                showToast('Network error during reveal', 'error');
+                return;
+            }
+            if (!result.success) {
+                showToast(result.error || 'Reveal failed', 'error');
+                return;
+            }
+
+            // Optimistically unlock console UI; poll refreshes full payload
+            if (state.currentPlayer) {
+                state.currentPlayer.mystery_revealed = true;
+                state.currentPlayer.awaiting_reveal = false;
+                state.currentPlayer.name = result.player_name || state.currentPlayer.name;
+                if (result.photo_url) state.currentPlayer.photo_url = result.photo_url;
+                if (result.sl_no != null) state.currentPlayer.sl_no = result.sl_no;
+                renderPlayer(state.currentPlayer);
+            }
+            renderShowcase();
+            showToast('🔓 Revealed: ' + (result.player_name || 'Player'), 'success');
             clearTimeout(state.pollTimer);
             poll();
         });

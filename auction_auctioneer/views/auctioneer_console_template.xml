@@ -148,6 +148,9 @@
                     <button class="ac-btn ac-btn--sold" id="acFinalizeBtn" onclick="acFinalizeBid()" style="display:none">
                         Sold
                     </button>
+                    <button class="ac-btn ac-btn--reveal" id="acRevealBtn" onclick="acRevealMystery()" style="display:none">
+                        Reveal
+                    </button>
                 </div>
             </div>
         </div>
@@ -297,6 +300,7 @@ window.AC_FINALIZE_URL  = '/auction/auctioneer/finalize-bid';
 window.AC_DICE_URL      = '/auction/auctioneer/dice';
 window.AC_CALL_URL      = '/auction/auctioneer/call-player';
 window.AC_NEXT_URL      = '/auction/auctioneer/next-player';
+window.AC_REVEAL_URL    = '/auction/auctioneer/reveal-mystery';
 window.AC_CSRF_TOKEN    = '<t t-esc="request.csrf_token()"/>';
 window.AC_SPORT         = '<t t-esc="tournament.tournament_type if tournament else 'cricket'"/>';
 <t t-set="ac_showcase_mode" t-value="'manual' if (not tournament or tournament.player_appearance_algorithm == 'linear') else 'random'"/>

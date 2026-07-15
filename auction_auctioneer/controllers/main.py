@@ -224,18 +224,43 @@ class AuctionAuctioneerController(http.Controller):
             }
 
         # ── Current player on stage for THIS tournament ────────────────────
-        # Only an active auction player is shown for bidding. Sold/unsold
-        # remain cleared so the auctioneer must explicitly call the next one.
+        # Active auction player for bidding, OR sold mystery awaiting Reveal
+        # (must stay on stage so dice/next stay locked until reveal).
+        t_id = tournament.id if tournament else False
         current_player = env['auction.team.player'].sudo().search(
             [
                 ('is_on_stage', '=', True),
+                ('tournament_id', '=', t_id),
+                '|',
                 ('state', '=', 'auction'),
-                ('tournament_id', '=', tournament.id if tournament else False),
+                '&', '&',
+                ('state', '=', 'sold'),
+                ('tier_id.mystery', '=', True),
+                ('mystery_revealed', '=', False),
             ],
-            limit=1
+            limit=1,
         )
+        # Also keep a just-revealed mystery on stage until the next showcase call
+        if not current_player:
+            current_player = env['auction.team.player'].sudo().search(
+                [
+                    ('is_on_stage', '=', True),
+                    ('tournament_id', '=', t_id),
+                    ('state', '=', 'sold'),
+                    ('tier_id.mystery', '=', True),
+                    ('mystery_revealed', '=', True),
+                ],
+                limit=1,
+            )
 
         if current_player:
+            is_mystery = bool(current_player.tier_id and current_player.tier_id.mystery)
+            mystery_revealed = bool(current_player.mystery_revealed)
+            mystery_hidden = is_mystery and not mystery_revealed
+            awaiting_reveal = (
+                current_player.state == 'sold' and is_mystery and not mystery_revealed
+            )
+
             base_price = 0
             auctions_all = env['auction.auction'].sudo().search(
                 [('tournament_id', '=', tournament.id)] if tournament else []
@@ -246,40 +271,69 @@ class AuctionAuctioneerController(http.Controller):
                     base_price = base
 
             current_bid_team = None
-            if current_player.current_bid_team_id:
+            if current_player.current_bid_team_id and not awaiting_reveal:
                 t = current_player.current_bid_team_id
                 current_bid_team = {
                     'id': t.id,
                     'name': t.name or '',
                     'logo_url': self._pub_img('auction.team', t.id, 'logo') if t.logo else '',
                 }
+            # After sold (awaiting reveal), still show winning team
+            if awaiting_reveal and current_player.assigned_team_id:
+                t = current_player.assigned_team_id
+                current_bid_team = {
+                    'id': t.id,
+                    'name': t.name or '',
+                    'logo_url': self._pub_img('auction.team', t.id, 'logo') if t.logo else '',
+                }
+
+            sold_points = 0
+            if current_player.state == 'sold':
+                auction_line = env['auction.auction.player'].sudo().search(
+                    [('player_id', '=', current_player.id)], limit=1)
+                sold_points = auction_line.points if auction_line else 0
 
             fb = _football_display_payload(current_player)
+            default_photo = '/auction_module/static/img/default_icon.png'
             result['current_player'] = {
                 'id': current_player.id,
-                'name': current_player.name or '',
-                'photo_url': self._pub_img('auction.team.player', current_player.id, 'photo') if current_player.photo else '',
-                'role': current_player.role or '',
-                'tier_name': current_player.tier_id.name if current_player.tier_id else '',
+                'name': 'Mystery Player' if mystery_hidden else (current_player.name or ''),
+                'photo_url': (
+                    default_photo if mystery_hidden
+                    else (self._pub_img('auction.team.player', current_player.id, 'photo')
+                          if current_player.photo else '')
+                ),
+                'role': '' if mystery_hidden else (current_player.role or ''),
+                'tier_name': '' if mystery_hidden else (
+                    current_player.tier_id.name if current_player.tier_id else ''
+                ),
                 'tier_color': current_player.tier_color or '#e0b84a',
                 'state': current_player.state,
-                'sl_no': current_player.sl_no or 0,
+                'sl_no': '?' if mystery_hidden else (current_player.sl_no or 0),
                 'base_price': base_price,
-                'current_bid': current_player.current_bid or 0,
+                'current_bid': 0 if awaiting_reveal else (current_player.current_bid or 0),
+                'sold_points': sold_points,
                 'current_bid_team': current_bid_team,
-                'batting_style': current_player.batting_style or '',
-                'bowling_style': current_player.bowling_style or '',
+                'batting_style': '' if mystery_hidden else (current_player.batting_style or ''),
+                'bowling_style': '' if mystery_hidden else (current_player.bowling_style or ''),
                 'tournament_type': fb.get('tournament_type') or (
                     tournament.tournament_type if tournament else 'cricket'
                 ),
-                'dominant_position': fb.get('dominant_position') or '',
-                'dominant_position_code': fb.get('dominant_position_code') or '',
-                'secondary_positions': fb.get('secondary_positions') or [],
-                'preferred_foot': fb.get('preferred_foot') or '',
-                'age': fb.get('age') or '',
-                'p_category': fb.get('p_category') or '',
-                'other_attributes': fb.get('other_attributes') or [],
-                'use_other_attributes': bool(fb.get('use_other_attributes')),
+                'dominant_position': '' if mystery_hidden else (fb.get('dominant_position') or ''),
+                'dominant_position_code': '' if mystery_hidden else (
+                    fb.get('dominant_position_code') or ''
+                ),
+                'secondary_positions': [] if mystery_hidden else (fb.get('secondary_positions') or []),
+                'preferred_foot': '' if mystery_hidden else (fb.get('preferred_foot') or ''),
+                'age': '' if mystery_hidden else (fb.get('age') or ''),
+                'p_category': '' if mystery_hidden else (fb.get('p_category') or ''),
+                'other_attributes': [] if mystery_hidden else (fb.get('other_attributes') or []),
+                'use_other_attributes': (
+                    False if mystery_hidden else bool(fb.get('use_other_attributes'))
+                ),
+                'is_mystery': is_mystery,
+                'mystery_revealed': mystery_revealed,
+                'awaiting_reveal': awaiting_reveal,
             }
 
         # ── Teams (strictly scoped to this tournament) ────────────────────
@@ -322,6 +376,13 @@ class AuctionAuctioneerController(http.Controller):
             if not player:
                 can_bid = False
                 can_bid_reason = 'No player on stage'
+            elif player.state != 'auction':
+                can_bid = False
+                can_bid_reason = (
+                    'Reveal mystery player first'
+                    if (player.tier_id and player.tier_id.mystery and not player.mystery_revealed)
+                    else 'Player already sold'
+                )
             elif auc.remaining_players_count <= 0:
                 can_bid = False
                 can_bid_reason = 'Squad full'
@@ -388,15 +449,21 @@ class AuctionAuctioneerController(http.Controller):
                 order='sl_no asc, id asc',
             )
             for pl in players:
+                is_mys = bool(pl.tier_id and pl.tier_id.mystery)
+                hidden = is_mys and not pl.mystery_revealed
                 pool.append({
                     'id': pl.id,
                     'sl_no': int(pl.sl_no or 0),
-                    'name': pl.name or '',
+                    # Never leak identity for unrevealed mystery (pad / search)
+                    'name': '' if hidden else (pl.name or ''),
                     'state': pl.state or 'auction',
-                    'is_mystery': bool(pl.tier_id and pl.tier_id.mystery),
+                    'is_mystery': is_mys,
+                    'mystery_revealed': bool(pl.mystery_revealed),
                 })
         result['players'] = pool
         result['remaining_count'] = sum(1 for p in pool if p['state'] == 'auction')
+        cp = result.get('current_player') or {}
+        result['awaiting_reveal'] = bool(cp.get('awaiting_reveal'))
 
         return request.make_response(
             json.dumps(result),
@@ -406,6 +473,26 @@ class AuctionAuctioneerController(http.Controller):
             ],
         )
 
+    def _block_if_awaiting_mystery_reveal(self, tournament):
+        """Block dice / next / call while a sold mystery player awaits Reveal."""
+        if not tournament:
+            return None
+        pending = request.env['auction.team.player'].sudo().search([
+            ('is_on_stage', '=', True),
+            ('tournament_id', '=', tournament.id),
+            ('state', '=', 'sold'),
+            ('tier_id.mystery', '=', True),
+            ('mystery_revealed', '=', False),
+        ], limit=1)
+        if pending:
+            return {
+                'success': False,
+                'error': 'Reveal the mystery player before calling the next one',
+                'awaiting_reveal': True,
+                'player_id': pending.id,
+            }
+        return None
+
     # ── Showcase: dice / call player / next player ─────────────────────────
 
     @http.route('/auction/auctioneer/dice', type='json', auth='user', website=False, csrf=False)
@@ -414,6 +501,9 @@ class AuctionAuctioneerController(http.Controller):
         tournament = self._resolve_tournament()
         if not tournament:
             return {'success': False, 'error': 'No tournament found'}
+        blocked = self._block_if_awaiting_mystery_reveal(tournament)
+        if blocked and (state or '').strip().lower() in ('rolling', 'result'):
+            return blocked
         try:
             number = int(number or 0)
         except (TypeError, ValueError):
@@ -434,6 +524,9 @@ class AuctionAuctioneerController(http.Controller):
         tournament = self._resolve_tournament()
         if not tournament:
             return {'success': False, 'error': 'No tournament found'}
+        blocked = self._block_if_awaiting_mystery_reveal(tournament)
+        if blocked:
+            return blocked
         try:
             player_id = int(player_id)
         except (TypeError, ValueError):
@@ -457,17 +550,23 @@ class AuctionAuctioneerController(http.Controller):
             ('id', '!=', player.id),
         ])
         if prev:
-            prev.write({'current_bid': 0, 'current_bid_team_id': False})
+            prev.write({
+                'current_bid': 0,
+                'current_bid_team_id': False,
+                'is_on_stage': False,
+            })
 
         player.action_set_on_stage()
         # Hide dice overlay on projector once a player is called
         tournament.sudo().set_dice_state('idle', 0)
 
+        is_mystery = bool(player.tier_id and player.tier_id.mystery)
         return {
             'success': True,
             'player_id': player.id,
-            'sl_no': int(player.sl_no or 0),
-            'name': player.name or '',
+            'sl_no': '?' if is_mystery else int(player.sl_no or 0),
+            'name': 'Mystery Player' if is_mystery else (player.name or ''),
+            'is_mystery': is_mystery,
         }
 
     @http.route('/auction/auctioneer/next-player', type='json', auth='user', website=False, csrf=False)
@@ -476,6 +575,9 @@ class AuctionAuctioneerController(http.Controller):
         tournament = self._resolve_tournament()
         if not tournament:
             return {'success': False, 'error': 'No tournament found'}
+        blocked = self._block_if_awaiting_mystery_reveal(tournament)
+        if blocked:
+            return blocked
 
         Player = request.env['auction.team.player'].sudo()
         current = Player.search([
@@ -484,8 +586,12 @@ class AuctionAuctioneerController(http.Controller):
         ], limit=1)
         exclude_id = current.id if current else 0
 
-        if current and current.state == 'auction':
-            current.write({'current_bid': 0, 'current_bid_team_id': False})
+        if current:
+            current.write({
+                'current_bid': 0,
+                'current_bid_team_id': False,
+                'is_on_stage': False,
+            })
 
         nxt = Player.get_random_player(
             exclude_id=exclude_id,
@@ -496,12 +602,51 @@ class AuctionAuctioneerController(http.Controller):
             return {'success': False, 'error': 'No players left in the auction pool'}
 
         tournament.sudo().set_dice_state('idle', 0)
+        is_mystery = bool(nxt.tier_id and nxt.tier_id.mystery)
         return {
             'success': True,
             'player_id': nxt.id,
-            'sl_no': int(nxt.sl_no or 0),
-            'name': nxt.name or '',
+            'sl_no': '?' if is_mystery else int(nxt.sl_no or 0),
+            'name': 'Mystery Player' if is_mystery else (nxt.name or ''),
+            'is_mystery': is_mystery,
         }
+
+    @http.route('/auction/auctioneer/reveal-mystery', type='json', auth='user', website=False, csrf=False)
+    def auctioneer_reveal_mystery(self, player_id=None, **kw):
+        """Reveal a sold mystery player's identity on console + projector."""
+        tournament = self._resolve_tournament()
+        if not tournament:
+            return {'success': False, 'error': 'No tournament found'}
+
+        Player = request.env['auction.team.player'].sudo()
+        player = None
+        if player_id:
+            try:
+                player = Player.browse(int(player_id))
+            except (TypeError, ValueError):
+                player = None
+        if not player or not player.exists():
+            player = Player.search([
+                ('is_on_stage', '=', True),
+                ('tournament_id', '=', tournament.id),
+                ('state', '=', 'sold'),
+                ('tier_id.mystery', '=', True),
+                ('mystery_revealed', '=', False),
+            ], limit=1)
+        if not player or not player.exists():
+            return {'success': False, 'error': 'No mystery player awaiting reveal'}
+        if player.tournament_id.id != tournament.id:
+            return {'success': False, 'error': 'Player is not in this tournament'}
+
+        result = Player.action_reveal_mystery(player.id)
+        if result.get('success'):
+            result['photo_url'] = (
+                self._pub_img('auction.team.player', player.id, 'photo')
+                if player.photo else ''
+            )
+            result['sl_no'] = int(player.sl_no or 0)
+            result['awaiting_reveal'] = False
+        return result
 
     # ── Place bid ──────────────────────────────────────────────────────────
 
@@ -627,15 +772,23 @@ class AuctionAuctioneerController(http.Controller):
         )
 
         if result.get('success'):
-            # Clear bidding state and take them off the live auctioneer stage.
-            # Tournament sold stamp is kept so the projector can finish the SOLD
-            # celebration, then return to waiting until the next showcase action.
-            player.sudo().write({
+            is_mystery = bool(player.tier_id and player.tier_id.mystery)
+            # Clear live bid always. Keep mystery sold on stage until Reveal so
+            # dice / next / numbers stay locked and the Reveal button can show.
+            vals = {
                 'current_bid': 0,
                 'current_bid_team_id': False,
-                'is_on_stage': False,
-            })
-            result['cleared_stage'] = True
+            }
+            if is_mystery and not player.mystery_revealed:
+                vals['is_on_stage'] = True
+                result['awaiting_reveal'] = True
+                result['is_mystery'] = True
+                result['player_name'] = 'Mystery Player'
+            else:
+                vals['is_on_stage'] = False
+                result['awaiting_reveal'] = False
+            player.sudo().write(vals)
+            result['cleared_stage'] = not vals.get('is_on_stage', False)
 
         return result
 
