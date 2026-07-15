@@ -293,25 +293,10 @@
         }
     }
 
-    function pollLiveBid() {
-        var url = window.PJ_DATA_URL;
-        if (!url) return;
-        fetch(url, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({jsonrpc: '2.0', method: 'call', params: {}}),
-            cache: 'no-store'
-        })
-        .then(function (r) { return r.json(); })
-        .then(function (json) {
-            var result = (json && json.result) || {};
-            updateLiveBid(result.player || null);
-        })
-        .catch(function () {});
-    }
-
-    pollLiveBid();
-    setInterval(pollLiveBid, 1500);
+    // Piggyback on the main projector poll — avoid a second /data request in production.
+    window._pjOnPollResult = function (result) {
+        updateLiveBid((result && result.player) || null);
+    };
 })();
         ]]></script>
     </xpath>

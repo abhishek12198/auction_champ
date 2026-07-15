@@ -62,6 +62,7 @@ from odoo.osv import expression
 from odoo.tools import html2plaintext
 from odoo.tools.misc import get_lang
 from odoo.tools import sql
+from odoo.tools.image import image_process
 
 _logger = logging.getLogger(__name__)
 
@@ -2221,16 +2222,30 @@ class Auction(http.Controller):
             now_dt = datetime.now(pytz.utc).replace(tzinfo=None)
             player = None
             state_override = None
+            stamp_player = None
             if (tournament and tournament.stamp_expires_at
                     and tournament.stamp_expires_at > now_dt
                     and tournament.stamp_player_id):
-                player = tournament.stamp_player_id
+                stamp_player = tournament.stamp_player_id
+
+            on_stage = request.env['auction.team.player'].browse()
+            domain = [('is_on_stage', '=', True)]
+            if tournament:
+                domain.append(('tournament_id', '=', tournament.id))
+            on_stage = request.env['auction.team.player'].sudo().search(domain, limit=1)
+
+            # Prefer a freshly called auction player over a leftover SOLD/UNSOLD
+            # stamp so projector / auctioneer / player-selector updates feel instant
+            # in production (stamp otherwise blocks the next card for several seconds).
+            if (on_stage and on_stage.state == 'auction'
+                    and (not stamp_player or stamp_player.id != on_stage.id)):
+                player = on_stage
+                state_override = None
+            elif stamp_player:
+                player = stamp_player
                 state_override = tournament.stamp_state
-            if not player:
-                domain = [('is_on_stage', '=', True)]
-                if tournament:
-                    domain.append(('tournament_id', '=', tournament.id))
-                player = request.env['auction.team.player'].sudo().search(domain, limit=1)
+            elif on_stage:
+                player = on_stage
             if not player:
                 dice_state = tournament.dice_state if tournament else 'idle'
                 dice_result = tournament.dice_result if tournament else 0
@@ -2261,8 +2276,7 @@ class Auction(http.Controller):
             photo = ''
             photo_url = ''
             if player.photo:
-                photo_url = '/%s/auction/public/image/auction.team.player/%d/photo' % (
-                    db_name, player.id)
+                photo_url = _pj_player_photo_url(db_name, player)
                 # Keep tiny fallback only if URL path is unavailable to older JS
                 photo = ''
             team_logo = ''
@@ -2362,6 +2376,18 @@ class Auction(http.Controller):
                 [('slug', '=', tournament_slug)], limit=1)
             return _pj_squad(tournament, db_name)
 
+    @http.route([
+        '/<string:db_name>/auction/projector/<string:tournament_slug>/remaining',
+    ], type='json', auth='none', website=False, sitemap=False, csrf=False)
+    def auction_projector_remaining(self, db_name, tournament_slug, **kw):
+        """Remaining auction-pool players for the projector overlay (kanban-style)."""
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return {'sport': 'cricket', 'count': 0, 'players': []}
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('slug', '=', tournament_slug)], limit=1)
+            return _pj_remaining_players(tournament, db_name)
+
     @http.route('/auction/showcase', type='http', auth='user', website=True)
     def auction_showcase(self, **kw):
         """Redirect to the correct player showcase based on tournament algorithm."""
@@ -2443,6 +2469,29 @@ class Auction(http.Controller):
             return 'image/x-icon'
         return 'image/jpeg'
 
+    def _public_image_bytes(self, binary, model, field, **kw):
+        """Decode binary image; optionally downscale player photos for projector (sz=pj)."""
+        if (
+            model == 'auction.team.player'
+            and field == 'photo'
+            and (kw.get('sz') or '').lower() == 'pj'
+            and binary
+        ):
+            try:
+                binary = image_process(
+                    binary, size=(720, 1000), quality=82, output_format='JPEG',
+                ) or binary
+            except Exception:
+                _logger.debug('public image sz=pj resize failed', exc_info=True)
+        return base64.b64decode(binary)
+
+    def _public_image_response(self, image_bytes):
+        return request.make_response(image_bytes, headers=[
+            ('Content-Type', self._image_mimetype(image_bytes)),
+            # Long browser/CDN cache — projector URLs include ?v=write_date for busting
+            ('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800'),
+        ])
+
     @http.route('/auction/public/image/<string:model>/<int:record_id>/<string:field>',
                 type='http', auth='public', website=False, csrf=False)
     def auction_public_image(self, model, record_id, field, **kw):
@@ -2459,11 +2508,8 @@ class Auction(http.Controller):
         if not binary:
             return request.not_found()
 
-        image_bytes = base64.b64decode(binary)
-        return request.make_response(image_bytes, headers=[
-            ('Content-Type', self._image_mimetype(image_bytes)),
-            ('Cache-Control', 'public, max-age=300'),  # 5-min browser cache
-        ])
+        return self._public_image_response(
+            self._public_image_bytes(binary, model, field, **kw))
 
     @http.route('/<string:db_name>/auction/public/image/<string:model>/<int:record_id>/<string:field>',
                 type='http', auth='none', website=False, csrf=False)
@@ -2489,11 +2535,8 @@ class Auction(http.Controller):
             if not binary:
                 return self._not_found()
 
-            image_bytes = base64.b64decode(binary)
-        return request.make_response(image_bytes, headers=[
-            ('Content-Type', self._image_mimetype(image_bytes)),
-            ('Cache-Control', 'public, max-age=300'),
-        ])
+            image_bytes = self._public_image_bytes(binary, model, field, **kw)
+        return self._public_image_response(image_bytes)
 
     @http.route('/auction/live-board', type='http', auth='none', website=False)
     def auction_live_board_legacy(self, **kw):
@@ -4328,6 +4371,24 @@ class Auction(http.Controller):
         )
 
 
+def _pj_player_photo_url(db_name, player):
+    """Public photo URL with write_date cache-buster + projector-sized variant."""
+    if not player or not player.photo:
+        return ''
+    ver = ''
+    if player.write_date:
+        try:
+            ver = str(int(fields.Datetime.from_string(player.write_date).timestamp()))
+        except Exception:
+            ver = str(player.write_date).replace(' ', 'T')
+    else:
+        ver = str(player.id)
+    # sz=pj → smaller JPEG from the public image route (faster stage display)
+    return '/%s/auction/public/image/auction.team.player/%d/photo?v=%s&sz=pj' % (
+        db_name, player.id, ver,
+    )
+
+
 def _pj_progress(tournament, current_player=None):
     """Audience progress strip: Player X of Y (read-only, no state changes)."""
     if not tournament:
@@ -4417,10 +4478,7 @@ def _pj_squad(tournament, db_name):
                 photo_url = ''
             else:
                 name = p.name or ''
-                photo_url = (
-                    '/%s/auction/public/image/auction.team.player/%d/photo' % (db_name, p.id)
-                    if p.photo else ''
-                )
+                photo_url = _pj_player_photo_url(db_name, p)
             if sport == 'football':
                 role = (p.dominant_position_id.name if p.dominant_position_id else '') or ''
             else:
@@ -4443,6 +4501,80 @@ def _pj_squad(tournament, db_name):
             'players': players_out,
         })
     return {'sport': sport, 'teams': teams_out}
+
+
+def _pj_remaining_players(tournament, db_name):
+    """Remaining ``auction``-state players for the projector (kanban-style cards).
+
+    Mirrors ``auction.team.player`` kanban fields/logic:
+    photo, name, #, tier, role/position, category, and sport-specific stats.
+    """
+    sport = (tournament.tournament_type or 'cricket') if tournament else 'cricket'
+    if not tournament:
+        return {'sport': sport, 'count': 0, 'players': []}
+
+    players = request.env['auction.team.player'].sudo().search([
+        ('tournament_id', '=', tournament.id),
+        ('icon_player', '=', False),
+        ('state', '=', 'auction'),
+    ], order='sl_no asc, name asc')
+
+    out = []
+    for p in players:
+        mystery_hidden = bool(p.tier_id and p.tier_id.mystery and not p.mystery_revealed)
+        fb = _football_display_payload(p)
+        if mystery_hidden:
+            photo_url = ''
+            name = 'Mystery Player'
+            sl_no = 0
+            tier_name = 'Mystery'
+            role = '???'
+            batting = ''
+            bowling = ''
+            dominant_position = '???'
+            preferred_foot = ''
+            age = ''
+            p_category = ''
+            blood_group = ''
+            other_attributes = []
+            use_other_attributes = False
+        else:
+            photo_url = _pj_player_photo_url(db_name, p)
+            name = p.name or ''
+            sl_no = int(p.sl_no or 0)
+            tier_name = (p.tier_id.name if p.tier_id else '') or ''
+            role = p.role or ''
+            batting = p.batting_style or ''
+            bowling = p.bowling_style or ''
+            dominant_position = fb.get('dominant_position') or ''
+            preferred_foot = fb.get('preferred_foot') or ''
+            age = fb.get('age') or ''
+            p_category = p.p_category or fb.get('p_category') or ''
+            blood_group = p.blood_group or fb.get('blood_group') or ''
+            other_attributes = fb.get('other_attributes') or []
+            use_other_attributes = bool(fb.get('use_other_attributes'))
+
+        out.append({
+            'id': p.id,
+            'name': name,
+            'sl_no': sl_no,
+            'photo_url': photo_url,
+            'tier_name': tier_name,
+            'tier_color': (p.tier_id.color if p.tier_id else '') or '#888',
+            'role': role,
+            'batting_style': batting,
+            'bowling_style': bowling,
+            'dominant_position': dominant_position,
+            'preferred_foot': preferred_foot,
+            'age': age,
+            'p_category': p_category,
+            'blood_group': blood_group,
+            'other_attributes': other_attributes,
+            'use_other_attributes': use_other_attributes,
+            'is_mystery': mystery_hidden,
+        })
+
+    return {'sport': sport, 'count': len(out), 'players': out}
 
 
 def _pj_advertisers(tournament, db_name):
