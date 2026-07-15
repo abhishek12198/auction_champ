@@ -70,7 +70,8 @@
                 <div class="js-ack__row"><span>Size</span><strong t-esc="ack_player.size"/></div>
                 <div class="js-ack__row"><span>Sleeve</span><strong t-esc="ack_player.sleeve == 'F' and 'Full (F)' or 'Half (H)'"/></div>
             </div>
-            <a class="js-btn js-btn--ghost" t-att-href="'/auction/jersey/%s' % team.slug">Submit another entry</a>
+            <a class="js-btn js-btn--ghost"
+               t-att-href="'/%s/auction/jersey/%s' % (db_name, team.slug)">Submit another entry</a>
         </section>
     </t>
 
@@ -86,7 +87,7 @@
                     <p>Name to print, size and sleeve. Number is optional.</p>
                 </div>
                 <form class="js-form" id="jsJerseyForm" method="post"
-                      t-att-action="'/auction/jersey/%s' % team.slug"
+                      t-att-action="'/%s/auction/jersey/%s' % (db_name, team.slug)"
                       autocomplete="on">
                     <label class="js-field">
                         <span>Name on Jersey</span>

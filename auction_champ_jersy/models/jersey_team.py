@@ -74,10 +74,13 @@ class AuctionChampJerseyTeam(models.Model):
 
     @api.depends('slug')
     def _compute_public_url(self):
+        # Same pattern as player register: /<db_name>/… so multi-db prod
+        # can select the correct database without a session cookie.
         base = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '').rstrip('/')
+        db_name = self.env.cr.dbname
         for rec in self:
             if rec.slug:
-                rec.public_url = '%s/auction/jersey/%s' % (base, rec.slug)
+                rec.public_url = '%s/%s/auction/jersey/%s' % (base, db_name, rec.slug)
             else:
                 rec.public_url = False
 

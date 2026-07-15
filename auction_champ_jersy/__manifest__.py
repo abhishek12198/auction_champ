@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'AuctionChamp Jersey Collection',
-    'version': '1.3.3',
+    'version': '1.3.4',
     'summary': 'Team jersey survey collection (admin + public form)',
     'description': """
         Admin-managed jersey collection per team.
