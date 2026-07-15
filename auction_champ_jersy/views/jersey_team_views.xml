@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="action_jersey_team" model="ir.actions.act_window">
+        <field name="name">Jersey Collection</field>
+        <field name="res_model">auction.champ.jersey.team</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a team jersey collection
+            </p>
+            <p>
+                Add team logos and jersey design, then share the public survey URL
+                so players can submit name, number, size and sleeve details.
+            </p>
+        </field>
+    </record>
+
+    <record id="view_jersey_team_tree" model="ir.ui.view">
+        <field name="name">auction.champ.jersey.team.tree</field>
+        <field name="model">auction.champ.jersey.team</field>
+        <field name="arch" type="xml">
+            <tree string="Jersey Collection">
+                <field name="name"/>
+                <field name="slug"/>
+                <field name="player_count"/>
+                <field name="public_url" widget="url"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_jersey_team_form" model="ir.ui.view">
+        <field name="name">auction.champ.jersey.team.form</field>
+        <field name="model">auction.champ.jersey.team</field>
+        <field name="arch" type="xml">
+            <form string="Jersey Collection Team">
+                <header>
+                    <button name="%(auction_champ_jersy.action_report_jersey_team)d"
+                            type="action"
+                            string="Print PDF"
+                            class="oe_highlight"
+                            icon="fa-print"/>
+                    <button name="action_export_excel"
+                            type="object"
+                            string="Export Excel"
+                            icon="fa-file-excel-o"/>
+                    <button name="action_open_public_url" type="object"
+                            string="Open Survey Form"
+                            attrs="{'invisible': [('slug', '=', False)]}"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object" name="action_open_public_url" icon="fa-external-link">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">Public Form</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" disabled="1" icon="fa-users">
+                            <field name="player_count" widget="statinfo" string="Entries"/>
+                        </button>
+                    </div>
+                    <field name="team_logo" widget="image" class="oe_avatar" options="{'preview_image': 'team_logo'}"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Golden Tigers"/></h1>
+                    </div>
+                    <group>
+                        <group string="Survey Link">
+                            <field name="slug"/>
+                            <field name="public_url" widget="url" readonly="1"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Branding">
+                            <field name="sponsor_logo" widget="image" class="oe_avatar"/>
+                            <field name="jersey_design" widget="image" class="oe_avatar"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Player Entries" name="players">
+                            <field name="player_ids">
+                                <tree editable="bottom">
+                                    <field name="player_name"/>
+                                    <field name="number"/>
+                                    <field name="size"/>
+                                    <field name="sleeve"/>
+                                    <field name="submitted_on"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="notes" placeholder="Internal notes…"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

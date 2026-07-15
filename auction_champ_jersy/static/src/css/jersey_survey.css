@@ -1,0 +1,620 @@
+/* Jersey survey — mobile-first, dark/light (projector tokens) */
+
+html[data-theme="dark"],
+:root {
+    --js-bg: #07111f;
+    --js-bg2: #0c1a30;
+    --js-panel: rgba(12, 24, 48, 0.96);
+    --js-tx: #f4f7ff;
+    --js-tx2: rgba(244, 247, 255, 0.62);
+    --js-gold: #e0b84a;
+    --js-gold2: #f5d76e;
+    --js-line: rgba(224, 184, 74, 0.4);
+    --js-ok: #2ecc71;
+    --js-danger: #e5394a;
+    --js-input-bg: rgba(0, 0, 0, 0.28);
+    --js-frame-bg: rgba(0, 0, 0, 0.25);
+    --js-ray: rgba(224, 184, 74, 0.14);
+    --js-table-bg: rgba(0, 0, 0, 0.2);
+    --js-table-row: rgba(255, 255, 255, 0.03);
+    --js-table-border: rgba(255, 255, 255, 0.08);
+    --js-font: 'Exo 2', sans-serif;
+    --js-condensed: 'Barlow Condensed', 'Exo 2', sans-serif;
+    --js-pad: max(0.85rem, env(safe-area-inset-left));
+    --js-pad-r: max(0.85rem, env(safe-area-inset-right));
+}
+
+html[data-theme="light"] {
+    --js-bg: #e4dfd4;
+    --js-bg2: #ebe6db;
+    --js-panel: #f0ebe1;
+    --js-tx: #1a1f2b;
+    --js-tx2: #4a5568;
+    --js-gold: #a88420;
+    --js-gold2: #c49a2a;
+    --js-line: rgba(120, 100, 50, 0.35);
+    --js-ok: #1a7a45;
+    --js-danger: #b42318;
+    --js-input-bg: #f7f3ea;
+    --js-frame-bg: #e8e2d6;
+    --js-ray: rgba(168, 132, 32, 0.1);
+    --js-table-bg: #f3eee4;
+    --js-table-row: #ebe5d8;
+    --js-table-border: rgba(40, 45, 55, 0.14);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+.js-body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    font-family: var(--js-font);
+    color: var(--js-tx);
+    background:
+        radial-gradient(80% 60% at 15% 20%, var(--js-ray), transparent 55%),
+        linear-gradient(165deg, var(--js-bg2), var(--js-bg));
+}
+
+/* ── Header ── */
+.js-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.85rem var(--js-pad-r) 0.85rem var(--js-pad);
+    padding-top: max(0.85rem, env(safe-area-inset-top));
+    border-bottom: 1px solid var(--js-line);
+    background: var(--js-panel);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.js-header__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.js-header__logo {
+    width: 3.75rem;
+    height: 3.75rem;
+    object-fit: contain;
+    border-radius: 50%;
+    border: 2px solid var(--js-line);
+    background: rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+}
+
+html[data-theme="light"] .js-header__logo {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.js-header__logo--ph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--js-condensed);
+    font-size: 1.4rem;
+    font-weight: 700;
+    background: var(--js-gold);
+    color: #111;
+    border-color: var(--js-gold);
+}
+
+.js-header__text { min-width: 0; }
+
+.js-header__kicker {
+    font-size: 0.65rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--js-tx2);
+}
+
+.js-header__title {
+    font-family: var(--js-condensed);
+    font-size: clamp(1.25rem, 5vw, 1.85rem);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1.05;
+    word-break: break-word;
+}
+
+.js-header__right {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-shrink: 0;
+}
+
+.js-header__sponsor-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.2rem;
+}
+
+.js-header__sponsor-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--js-tx2);
+}
+
+.js-header__sponsor {
+    height: 2.2rem;
+    width: auto;
+    max-width: 6.5rem;
+    object-fit: contain;
+}
+
+.js-header__ac-logo {
+    height: 2rem;
+    width: auto;
+    max-width: 7.5rem;
+    object-fit: contain;
+    opacity: 0.95;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.js-theme-btn {
+    width: 2.4rem;
+    height: 2.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--js-line);
+    background: rgba(224, 184, 74, 0.12);
+    color: var(--js-tx);
+    font-size: 1rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.js-theme-btn:hover {
+    border-color: var(--js-gold);
+    color: var(--js-gold);
+}
+
+.js-main {
+    width: min(960px, 100%);
+    margin: 0 auto;
+    padding: 1rem var(--js-pad) 2rem var(--js-pad-r);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.js-alert {
+    padding: 0.75rem 0.9rem;
+    border: 1px solid rgba(229, 57, 74, 0.45);
+    background: rgba(229, 57, 74, 0.12);
+    color: #ffd0d4;
+    font-weight: 600;
+    font-size: 0.92rem;
+}
+
+html[data-theme="light"] .js-alert {
+    color: var(--js-danger);
+    background: rgba(211, 47, 58, 0.08);
+}
+
+/* ── Survey layout ── */
+.js-survey {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    border: 1px solid var(--js-line);
+    background: var(--js-panel);
+    padding: 1rem;
+}
+
+.js-survey__intro { margin-bottom: 0.85rem; }
+
+.js-survey__intro h2 {
+    font-family: var(--js-condensed);
+    font-size: 1.35rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+}
+
+.js-survey__intro p {
+    color: var(--js-tx2);
+    font-size: 0.9rem;
+}
+
+.js-survey__design-col { order: -1; }
+
+.js-survey__design-label {
+    font-family: var(--js-condensed);
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--js-tx2);
+    margin-bottom: 0.45rem;
+    text-align: center;
+}
+
+.js-survey__design-frame {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 10rem;
+    max-height: 14rem;
+    padding: 0.75rem;
+    border: 1px solid var(--js-line);
+    background: var(--js-frame-bg);
+}
+
+.js-survey__design-frame--empty {
+    color: var(--js-tx2);
+    font-size: 0.85rem;
+}
+
+.js-survey__design {
+    max-width: 100%;
+    max-height: 12rem;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+.js-form { display: grid; gap: 0.8rem; }
+
+.js-field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+}
+
+.js-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.js-field > span,
+.js-field > legend {
+    font-family: var(--js-condensed);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--js-tx2);
+}
+
+.js-optional {
+    font-style: normal;
+    font-size: 0.72em;
+    letter-spacing: 0.06em;
+    text-transform: lowercase;
+    color: var(--js-tx2);
+    font-weight: 500;
+}
+
+.js-field input[type="text"],
+.js-field select {
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--js-line);
+    background: var(--js-input-bg);
+    color: var(--js-tx);
+    font: inherit;
+    font-size: 1.05rem;
+    outline: none;
+    border-radius: 0;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.js-field select {
+    background-image: linear-gradient(45deg, transparent 50%, var(--js-gold) 50%),
+                      linear-gradient(135deg, var(--js-gold) 50%, transparent 50%);
+    background-position: calc(100% - 1.1rem) 50%, calc(100% - 0.75rem) 50%;
+    background-size: 0.35rem 0.35rem, 0.35rem 0.35rem;
+    background-repeat: no-repeat;
+    padding-right: 2rem;
+}
+
+.js-field input:focus,
+.js-field select:focus {
+    border-color: var(--js-gold);
+    box-shadow: 0 0 0 2px rgba(224, 184, 74, 0.18);
+}
+
+.js-field--sleeve {
+    border: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem;
+}
+
+.js-field--sleeve legend {
+    grid-column: 1 / -1;
+    margin-bottom: 0.1rem;
+}
+
+.js-radio {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    min-height: 3rem;
+    padding: 0 0.65rem;
+    border: 1px solid var(--js-line);
+    background: var(--js-input-bg);
+    cursor: pointer;
+    font-weight: 600;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.js-radio:has(input:checked) {
+    border-color: var(--js-gold);
+    background: rgba(224, 184, 74, 0.14);
+}
+
+.js-radio input { accent-color: var(--js-gold); width: 1.1rem; height: 1.1rem; }
+
+.js-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 3.15rem;
+    padding: 0.75rem 1rem;
+    border: 0;
+    background: linear-gradient(135deg, var(--js-gold2), var(--js-gold));
+    color: #1a1200;
+    font-family: var(--js-condensed);
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.js-btn--ghost {
+    background: transparent;
+    border: 1px solid var(--js-line);
+    color: var(--js-tx);
+    width: auto;
+    min-width: 12rem;
+}
+
+/* Ack */
+.js-ack {
+    border: 1px solid rgba(46, 204, 113, 0.45);
+    background: rgba(46, 204, 113, 0.08);
+    padding: 1.25rem 1rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.js-ack__badge {
+    display: inline-flex;
+    padding: 0.3rem 0.7rem;
+    background: var(--js-ok);
+    color: #062814;
+    font-family: var(--js-condensed);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+}
+
+.js-ack__title {
+    font-family: var(--js-condensed);
+    font-size: clamp(1.45rem, 5vw, 1.85rem);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.js-ack__sub { color: var(--js-tx2); max-width: 28rem; font-size: 0.92rem; }
+
+.js-ack__card {
+    width: 100%;
+    max-width: 420px;
+    margin: 0.35rem 0;
+    border: 1px solid var(--js-line);
+    background: var(--js-frame-bg);
+    text-align: left;
+}
+
+.js-ack__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.7rem 0.85rem;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+}
+
+.js-ack__row:last-child { border-bottom: 0; }
+.js-ack__row span { color: var(--js-tx2); font-size: 0.85rem; }
+.js-ack__row strong { font-size: 1rem; }
+
+/* Table */
+.js-table-wrap {
+    border: 1px solid var(--js-line);
+    background: var(--js-table-bg);
+    padding: 0.85rem;
+    color: var(--js-tx);
+}
+
+.js-table-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.65rem;
+}
+
+.js-table-head h3 {
+    font-family: var(--js-condensed);
+    font-size: 1.05rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--js-tx);
+}
+
+.js-table-count {
+    min-width: 1.8rem;
+    height: 1.8rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--js-line);
+    background: rgba(224, 184, 74, 0.18);
+    color: var(--js-tx);
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.js-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.js-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    min-width: 320px;
+    color: var(--js-tx);
+}
+
+.js-table th,
+.js-table td {
+    text-align: left;
+    padding: 0.6rem 0.45rem;
+    border-bottom: 1px solid var(--js-table-border);
+    color: var(--js-tx);
+}
+
+.js-table th {
+    font-family: var(--js-condensed);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    color: var(--js-tx2);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.js-table tbody tr:nth-child(even) {
+    background: var(--js-table-row);
+}
+
+.js-table tbody tr:hover {
+    background: rgba(168, 132, 32, 0.1);
+}
+
+.js-table-empty {
+    color: var(--js-tx2);
+    font-size: 0.9rem;
+    padding: 0.35rem 0;
+}
+
+html[data-theme="light"] .js-table,
+html[data-theme="light"] .js-table td,
+html[data-theme="light"] .js-table-wrap {
+    color: #1a1f2b;
+}
+
+html[data-theme="light"] .js-table th {
+    color: #3d4656;
+}
+
+html[data-theme="light"] .js-table-head h3 {
+    color: #1a1f2b;
+}
+
+/* Footer — Powered by AuctionChamp (same mark as projector) */
+.js-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    text-align: center;
+    padding: 1.25rem var(--js-pad) max(1.25rem, env(safe-area-inset-bottom));
+}
+
+.js-footer__lbl {
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--js-tx2);
+    opacity: 0.85;
+}
+
+.js-footer__logo {
+    width: clamp(90px, 28vw, 140px);
+    height: auto;
+    object-fit: contain;
+    opacity: 0.9;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+@media (min-width: 720px) {
+    .js-header { padding: 1rem 1.35rem; }
+
+    .js-header__logo {
+        width: 4.5rem;
+        height: 4.5rem;
+    }
+
+    .js-header__ac-logo { height: 2.2rem; max-width: 9rem; }
+
+    .js-survey {
+        grid-template-columns: minmax(0, 1.15fr) minmax(220px, 0.85fr);
+        align-items: start;
+        gap: 1.25rem;
+        padding: 1.25rem;
+    }
+
+    .js-survey__design-col {
+        order: 0;
+        position: sticky;
+        top: 5.5rem;
+    }
+
+    .js-survey__design-frame {
+        min-height: 18rem;
+        max-height: none;
+        aspect-ratio: 3 / 4;
+    }
+
+    .js-survey__design {
+        max-height: 100%;
+        max-width: 100%;
+    }
+
+    .js-btn { width: auto; justify-self: start; min-width: 14rem; }
+}
+
+@media (min-width: 900px) {
+    .js-main { padding: 1.35rem 1.25rem 2.5rem; }
+    .js-survey { grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr); }
+}
+
+@media (max-width: 480px) {
+    .js-header__sponsor-wrap { display: none; }
+    .js-header__logo { width: 3.25rem; height: 3.25rem; }
+    .js-header__ac-logo { height: 1.65rem; max-width: 5.5rem; }
+    .js-field-row { grid-template-columns: 1fr; }
+}

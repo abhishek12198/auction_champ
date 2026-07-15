@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="report_jersey_team_document">
+    <t t-call="web.html_container">
+        <t t-foreach="docs" t-as="doc">
+            <div class="page" style="font-family: Arial, Helvetica, sans-serif; color: #1a1f2b; font-size: 11px;">
+
+                <!-- Masthead -->
+                <table style="width:100%; border-collapse:collapse; background-color:#0F2447; margin-bottom:0;">
+                    <tr>
+                        <td style="width:90px; padding:14px; vertical-align:middle;">
+                            <t t-if="doc.team_logo">
+                                <img t-att-src="image_data_uri(doc.team_logo)"
+                                     alt="Team Logo"
+                                     style="height:72px; width:72px; object-fit:contain; display:block; background:#fff; border-radius:50%;"/>
+                            </t>
+                        </td>
+                        <td style="padding:14px 8px; vertical-align:middle; text-align:center;">
+                            <div style="color:#A8C0E0; font-size:9px; letter-spacing:2px; text-transform:uppercase;">
+                                Jersey Collection
+                            </div>
+                            <div style="color:#FFFFFF; font-size:22px; font-weight:bold; letter-spacing:1px; text-transform:uppercase; margin-top:4px;">
+                                <t t-esc="doc.name"/>
+                            </div>
+                            <div style="color:#E8A020; font-size:10px; margin-top:6px; letter-spacing:1px;">
+                                Total entries: <t t-esc="len(doc.player_ids)"/>
+                            </div>
+                        </td>
+                        <td style="width:90px; padding:14px; vertical-align:middle; text-align:right;">
+                            <t t-if="doc.sponsor_logo">
+                                <img t-att-src="image_data_uri(doc.sponsor_logo)"
+                                     alt="Sponsor Logo"
+                                     style="height:56px; max-width:80px; object-fit:contain; display:block; margin-left:auto;"/>
+                            </t>
+                        </td>
+                    </tr>
+                </table>
+                <div style="height:4px; background-color:#E8A020; margin-bottom:16px;"></div>
+
+                <!-- Branding row: logos + jersey design -->
+                <table style="width:100%; border-collapse:collapse; margin-bottom:18px;">
+                    <tr>
+                        <td style="width:33%; vertical-align:top; padding-right:8px;">
+                            <div style="border:1px solid #D0D8E8; padding:10px; text-align:center; min-height:160px;">
+                                <div style="font-size:8px; letter-spacing:1.5px; text-transform:uppercase; color:#6B7A90; margin-bottom:8px;">
+                                    Team Logo
+                                </div>
+                                <t t-if="doc.team_logo">
+                                    <img t-att-src="image_data_uri(doc.team_logo)"
+                                         style="max-height:130px; max-width:100%; object-fit:contain;"/>
+                                </t>
+                                <t t-else="">
+                                    <div style="color:#9AA6B8; padding:40px 0;">—</div>
+                                </t>
+                            </div>
+                        </td>
+                        <td style="width:34%; vertical-align:top; padding:0 4px;">
+                            <div style="border:1px solid #D0D8E8; padding:10px; text-align:center; min-height:160px;">
+                                <div style="font-size:8px; letter-spacing:1.5px; text-transform:uppercase; color:#6B7A90; margin-bottom:8px;">
+                                    Jersey Design
+                                </div>
+                                <t t-if="doc.jersey_design">
+                                    <img t-att-src="image_data_uri(doc.jersey_design)"
+                                         style="max-height:130px; max-width:100%; object-fit:contain;"/>
+                                </t>
+                                <t t-else="">
+                                    <div style="color:#9AA6B8; padding:40px 0;">—</div>
+                                </t>
+                            </div>
+                        </td>
+                        <td style="width:33%; vertical-align:top; padding-left:8px;">
+                            <div style="border:1px solid #D0D8E8; padding:10px; text-align:center; min-height:160px;">
+                                <div style="font-size:8px; letter-spacing:1.5px; text-transform:uppercase; color:#6B7A90; margin-bottom:8px;">
+                                    Sponsor Logo
+                                </div>
+                                <t t-if="doc.sponsor_logo">
+                                    <img t-att-src="image_data_uri(doc.sponsor_logo)"
+                                         style="max-height:130px; max-width:100%; object-fit:contain;"/>
+                                </t>
+                                <t t-else="">
+                                    <div style="color:#9AA6B8; padding:40px 0;">—</div>
+                                </t>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Entries table -->
+                <div style="font-size:12px; font-weight:bold; letter-spacing:1px; text-transform:uppercase; color:#0F2447; margin-bottom:8px;">
+                    Player Jersey Entries
+                </div>
+
+                <t t-set="players" t-value="doc.player_ids.sorted(key=lambda p: (p.player_name or '').lower())"/>
+
+                <t t-if="players">
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr style="background-color:#0F2447; color:#FFFFFF;">
+                                <th style="padding:8px 6px; text-align:left; font-size:9px; letter-spacing:1px; width:36px;">#</th>
+                                <th style="padding:8px 6px; text-align:left; font-size:9px; letter-spacing:1px;">Name on Jersey</th>
+                                <th style="padding:8px 6px; text-align:center; font-size:9px; letter-spacing:1px; width:70px;">Number</th>
+                                <th style="padding:8px 6px; text-align:center; font-size:9px; letter-spacing:1px; width:60px;">Size</th>
+                                <th style="padding:8px 6px; text-align:center; font-size:9px; letter-spacing:1px; width:80px;">Sleeve</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="players" t-as="p">
+                                <tr t-att-style="(p_index % 2 == 1) and 'background-color:#F3F6FB;' or ''">
+                                    <td style="padding:7px 6px; border-bottom:1px solid #D8E0EC;"><t t-esc="p_index + 1"/></td>
+                                    <td style="padding:7px 6px; border-bottom:1px solid #D8E0EC; font-weight:bold;">
+                                        <t t-esc="p.player_name"/>
+                                    </td>
+                                    <td style="padding:7px 6px; border-bottom:1px solid #D8E0EC; text-align:center;">
+                                        <t t-esc="p.number or '—'"/>
+                                    </td>
+                                    <td style="padding:7px 6px; border-bottom:1px solid #D8E0EC; text-align:center;">
+                                        <t t-esc="p.size"/>
+                                    </td>
+                                    <td style="padding:7px 6px; border-bottom:1px solid #D8E0EC; text-align:center;">
+                                        <t t-esc="(p.sleeve == 'F' and 'Full (F)') or (p.sleeve == 'H' and 'Half (H)') or (p.sleeve or '—')"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </t>
+                <t t-else="">
+                    <div style="padding:20px; border:1px dashed #C8D0DC; text-align:center; color:#7A8DA8;">
+                        No jersey entries submitted yet.
+                    </div>
+                </t>
+
+                <!-- Size / sleeve summary -->
+                <t t-if="players">
+                    <table style="width:100%; border-collapse:collapse; margin-top:18px;">
+                        <tr>
+                            <td style="width:50%; vertical-align:top; padding-right:8px;">
+                                <div style="font-size:10px; font-weight:bold; letter-spacing:1px; text-transform:uppercase; color:#0F2447; margin-bottom:6px;">
+                                    Size Summary
+                                </div>
+                                <table style="width:100%; border-collapse:collapse; font-size:10px;">
+                                    <t t-foreach="['XS','S','M','L','XL','XXL','XXXL','4XL','5XL']" t-as="sz">
+                                        <t t-set="cnt" t-value="len(players.filtered(lambda x: x.size == sz))"/>
+                                        <t t-if="cnt">
+                                            <tr>
+                                                <td style="padding:4px 6px; border:1px solid #D8E0EC; width:40%;"><t t-esc="sz"/></td>
+                                                <td style="padding:4px 6px; border:1px solid #D8E0EC;"><t t-esc="cnt"/></td>
+                                            </tr>
+                                        </t>
+                                    </t>
+                                </table>
+                            </td>
+                            <td style="width:50%; vertical-align:top; padding-left:8px;">
+                                <div style="font-size:10px; font-weight:bold; letter-spacing:1px; text-transform:uppercase; color:#0F2447; margin-bottom:6px;">
+                                    Sleeve Summary
+                                </div>
+                                <table style="width:100%; border-collapse:collapse; font-size:10px;">
+                                    <tr>
+                                        <td style="padding:4px 6px; border:1px solid #D8E0EC; width:60%;">Full (F)</td>
+                                        <td style="padding:4px 6px; border:1px solid #D8E0EC;">
+                                            <t t-esc="len(players.filtered(lambda x: x.sleeve == 'F'))"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:4px 6px; border:1px solid #D8E0EC;">Half (H)</td>
+                                        <td style="padding:4px 6px; border:1px solid #D8E0EC;">
+                                            <t t-esc="len(players.filtered(lambda x: x.sleeve == 'H'))"/>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </t>
+
+                <div style="margin-top:28px; text-align:center; color:#8A96A8; font-size:8px; letter-spacing:1.5px; text-transform:uppercase;">
+                    AuctionChamp · Jersey Collection
+                </div>
+            </div>
+        </t>
+    </t>
+</template>
+
+</odoo>

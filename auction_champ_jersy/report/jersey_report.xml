@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <record id="paperformat_jersey_a4" model="report.paperformat">
+        <field name="name">Jersey Collection A4</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">12</field>
+        <field name="margin_bottom">12</field>
+        <field name="margin_left">10</field>
+        <field name="margin_right">10</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <record id="action_report_jersey_team" model="ir.actions.report">
+        <field name="name">Jersey Collection PDF</field>
+        <field name="model">auction.champ.jersey.team</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">auction_champ_jersy.report_jersey_team_document</field>
+        <field name="report_file">auction_champ_jersy.report_jersey_team_document</field>
+        <field name="print_report_name">'Jersey_%s' % (object.name or 'Team').replace(' ', '_')</field>
+        <field name="paperformat_id" ref="paperformat_jersey_a4"/>
+        <field name="binding_model_id" ref="model_auction_champ_jersey_team"/>
+        <field name="binding_type">report</field>
+        <field name="groups_id" eval="[(4, ref('group_jersey_admin'))]"/>
+    </record>
+
+</data>
+</odoo>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data noupdate="0">
+
+    <!-- Admin-only access to jersey collection -->
+    <record id="group_jersey_admin" model="res.groups">
+        <field name="name">Jersey Collection Admin</field>
+        <field name="comment">
+            Can manage jersey collection teams and review submitted player entries.
+            Public survey form does not require this group.
+        </field>
+        <field name="category_id" ref="auction_module.auction_categ"/>
+        <field name="implied_ids" eval="[(4, ref('auction_module.group_auction_group'))]"/>
+    </record>
+
+    <record id="auction_module.group_auction_group_admin" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('auction_champ_jersy.group_jersey_admin'))]"/>
+    </record>
+
+</data>
+</odoo>

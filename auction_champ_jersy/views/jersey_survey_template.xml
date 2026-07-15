@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="jersey_survey_template" name="Jersey Survey Form">
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+    <title>Jersey Details — <t t-esc="team.name"/></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@500;600;700;800&amp;family=Barlow+Condensed:wght@600;700&amp;display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/auction_champ_jersy/static/src/css/jersey_survey.css"/>
+    <script>
+    (function () {
+        try {
+            var t = localStorage.getItem('js_jersey_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    })();
+    </script>
+</head>
+<body class="js-body">
+
+<header class="js-header">
+    <div class="js-header__brand">
+        <t t-if="team_logo_uri">
+            <img t-att-src="team_logo_uri" alt="Team logo" class="js-header__logo"/>
+        </t>
+        <t t-else="">
+            <div class="js-header__logo js-header__logo--ph" aria-hidden="true">J</div>
+        </t>
+        <div class="js-header__text">
+            <p class="js-header__kicker">Jersey Collection</p>
+            <h1 class="js-header__title" t-esc="team.name"/>
+        </div>
+    </div>
+
+    <div class="js-header__right">
+        <t t-if="sponsor_logo_uri">
+            <div class="js-header__sponsor-wrap">
+                <span class="js-header__sponsor-label">Sponsor</span>
+                <img t-att-src="sponsor_logo_uri" alt="Sponsor" class="js-header__sponsor"/>
+            </div>
+        </t>
+        <div class="js-theme-btn" id="jsThemeToggle" role="button" tabindex="0"
+             title="Toggle theme" aria-label="Toggle dark and light mode">
+            <span id="jsThemeIcon">☀</span>
+        </div>
+        <!-- Non-clickable AuctionChamp brand mark -->
+        <img class="js-header__ac-logo"
+             src="/auction_module/static/src/assets/images/logo.svg"
+             alt="AuctionChamp"
+             draggable="false"/>
+    </div>
+</header>
+
+<main class="js-main">
+
+    <t t-if="success and ack_player">
+        <section class="js-ack" id="jsAck">
+            <div class="js-ack__badge">Submitted</div>
+            <h2 class="js-ack__title">Thank you — entry received</h2>
+            <p class="js-ack__sub">Please take a screenshot of this confirmation for your records.</p>
+            <div class="js-ack__card">
+                <div class="js-ack__row"><span>Team</span><strong t-esc="team.name"/></div>
+                <div class="js-ack__row"><span>Name on Jersey</span><strong t-esc="ack_player.player_name"/></div>
+                <div class="js-ack__row"><span>Number</span><strong t-esc="ack_player.number or '—'"/></div>
+                <div class="js-ack__row"><span>Size</span><strong t-esc="ack_player.size"/></div>
+                <div class="js-ack__row"><span>Sleeve</span><strong t-esc="ack_player.sleeve == 'F' and 'Full (F)' or 'Half (H)'"/></div>
+            </div>
+            <a class="js-btn js-btn--ghost" t-att-href="'/auction/jersey/%s' % team.slug">Submit another entry</a>
+        </section>
+    </t>
+
+    <t t-else="">
+        <t t-if="error">
+            <div class="js-alert" t-esc="error"/>
+        </t>
+
+        <section class="js-survey">
+            <div class="js-survey__form-col">
+                <div class="js-survey__intro">
+                    <h2>Submit your jersey details</h2>
+                    <p>Name to print, size and sleeve. Number is optional.</p>
+                </div>
+                <form class="js-form" id="jsJerseyForm" method="post"
+                      t-att-action="'/auction/jersey/%s' % team.slug"
+                      autocomplete="on">
+                    <label class="js-field">
+                        <span>Name on Jersey</span>
+                        <input type="text" name="player_name" required="required" maxlength="80"
+                               autocomplete="name"
+                               placeholder="As it should appear on the jersey"
+                               t-att-value="form.get('player_name') or ''"/>
+                    </label>
+                    <div class="js-field-row">
+                        <label class="js-field">
+                            <span>Number <em class="js-optional">(optional)</em></span>
+                            <input type="text" name="number" maxlength="5"
+                                   inputmode="numeric"
+                                   placeholder="Leave blank if none"
+                                   t-att-value="form.get('number') or ''"/>
+                        </label>
+                        <label class="js-field">
+                            <span>Size</span>
+                            <select name="size" required="required">
+                                <option value="">Select size</option>
+                                <t t-foreach="sizes" t-as="sz">
+                                    <option t-att-value="sz"
+                                            t-att-selected="form.get('size') == sz and 'selected' or None"
+                                            t-esc="sz"/>
+                                </t>
+                            </select>
+                        </label>
+                    </div>
+                    <fieldset class="js-field js-field--sleeve">
+                        <legend>Sleeve</legend>
+                        <label class="js-radio">
+                            <input type="radio" name="sleeve" value="F" required="required"
+                                   t-att-checked="form.get('sleeve') == 'F' and 'checked' or None"/>
+                            <span>Full (F)</span>
+                        </label>
+                        <label class="js-radio">
+                            <input type="radio" name="sleeve" value="H" required="required"
+                                   t-att-checked="(form.get('sleeve') == 'H' or not form.get('sleeve')) and 'checked' or None"/>
+                            <span>Half (H)</span>
+                        </label>
+                    </fieldset>
+                    <button type="submit" name="jersey_submit" value="1" class="js-btn">Submit Jersey Details</button>
+                </form>
+            </div>
+
+            <aside class="js-survey__design-col">
+                <t t-if="jersey_design_uri">
+                    <p class="js-survey__design-label">Jersey Design</p>
+                    <div class="js-survey__design-frame">
+                        <img t-att-src="jersey_design_uri" alt="Jersey design" class="js-survey__design"/>
+                    </div>
+                </t>
+                <t t-else="">
+                    <p class="js-survey__design-label">Jersey Design</p>
+                    <div class="js-survey__design-frame js-survey__design-frame--empty">
+                        <span>Design preview</span>
+                    </div>
+                </t>
+            </aside>
+        </section>
+    </t>
+
+    <section class="js-table-wrap">
+        <div class="js-table-head">
+            <h3>Entries so far</h3>
+            <span class="js-table-count" t-esc="player_count"/>
+        </div>
+        <t t-if="players">
+            <div class="js-table-scroll">
+                <table class="js-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name on Jersey</th>
+                            <th>No.</th>
+                            <th>Size</th>
+                            <th>Sleeve</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="players" t-as="p">
+                            <tr>
+                                <td t-esc="p_index + 1"/>
+                                <td t-esc="p.player_name"/>
+                                <td t-esc="p.number or '—'"/>
+                                <td t-esc="p.size"/>
+                                <td t-esc="p.sleeve == 'F' and 'Full' or 'Half'"/>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+        <t t-else="">
+            <p class="js-table-empty">No entries yet — be the first to submit.</p>
+        </t>
+    </section>
+
+</main>
+
+<footer class="js-footer">
+    <span class="js-footer__lbl">Powered by</span>
+    <img class="js-footer__logo"
+         src="/auction_module/static/src/assets/images/logo.svg"
+         alt="AuctionChamp"
+         draggable="false"/>
+</footer>
+
+<script>
+(function () {
+    var root = document.documentElement;
+    var btn = document.getElementById('jsThemeToggle');
+    var icon = document.getElementById('jsThemeIcon');
+
+    function syncIcon() {
+        var theme = root.getAttribute('data-theme') || 'dark';
+        if (icon) icon.textContent = theme === 'dark' ? '☀' : '🌙';
+    }
+
+    function toggleTheme(ev) {
+        if (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+        }
+        var cur = root.getAttribute('data-theme') || 'dark';
+        var next = cur === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', next);
+        document.body.setAttribute('data-theme', next);
+        try { localStorage.setItem('js_jersey_theme', next); } catch (e) {}
+        syncIcon();
+        return false;
+    }
+
+    syncIcon();
+    document.body.setAttribute('data-theme', root.getAttribute('data-theme') || 'dark');
+
+    if (btn) {
+        btn.addEventListener('click', toggleTheme);
+        btn.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Enter' || ev.key === ' ') {
+                toggleTheme(ev);
+            }
+        });
+    }
+})();
+</script>
+
+</body>
+</html>
+</template>
+</odoo>

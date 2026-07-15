@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_jersey_root"
+              name="Jersey Collection"
+              parent="auction_module.menu_action_auction_root"
+              sequence="90"
+              groups="auction_champ_jersy.group_jersey_admin"/>
+
+    <menuitem id="menu_jersey_teams"
+              name="Teams"
+              parent="menu_jersey_root"
+              action="action_jersey_team"
+              sequence="10"
+              groups="auction_champ_jersy.group_jersey_admin"/>
+</odoo>

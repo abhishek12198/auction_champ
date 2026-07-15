@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_jersey_team_admin,auction.champ.jersey.team admin,model_auction_champ_jersey_team,group_jersey_admin,1,1,1,1
+access_jersey_player_admin,auction.champ.jersey.player admin,model_auction_champ_jersey_player,group_jersey_admin,1,1,1,1
