@@ -1373,6 +1373,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       if (typeof window._pjOnPollResult === 'function') {
         try { window._pjOnPollResult(result); } catch (e) {}
       }
+      maybeRefreshPjSquad(p);
 
       if (!p) {
         if (_currentId !== null) {
@@ -1611,6 +1612,64 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   }
 
   var _squadLoading = false;
+  var _pjSquadLastFetch = 0;
+  var _pjLastSquadSoldPlayerId = null;
+  var _pjLastSquadSoldState = null;
+  var _pjLastSquadRevealedId = null;
+
+  function isPjSquadOpen() {
+    var ov = document.getElementById('pjSquadOverlay');
+    return !!(ov && ov.classList.contains('open'));
+  }
+
+  function loadPjSquad(showLoading) {
+    if (!window.PJ_SQUAD_URL || _squadLoading) return;
+    var body = document.getElementById('pjSqBody');
+    if (showLoading && body) {
+      body.innerHTML = '<div class="pj-sq-loading">Loading squads&#8230;</div>';
+    }
+    var scrollTop = body ? body.scrollTop : 0;
+    _squadLoading = true;
+    fetch(window.PJ_SQUAD_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({jsonrpc:'2.0', method:'call', params:{}}),
+      cache: 'no-store'
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(json) {
+      renderPjSquad(json.result || {});
+      if (body) body.scrollTop = scrollTop;
+      _pjSquadLastFetch = Date.now();
+    })
+    .catch(function() {
+      if (body && showLoading) {
+        body.innerHTML = '<div class="pj-sq-empty">Could not load squads</div>';
+      }
+    })
+    .then(function() { _squadLoading = false; });
+  }
+
+  function maybeRefreshPjSquad(p) {
+    if (!isPjSquadOpen()) return;
+    var need = false;
+    if (p) {
+      if (p.state === 'sold' || p.state === 'unsold') {
+        if (p.id !== _pjLastSquadSoldPlayerId || p.state !== _pjLastSquadSoldState) {
+          _pjLastSquadSoldPlayerId = p.id;
+          _pjLastSquadSoldState = p.state;
+          need = true;
+        }
+      }
+      if (p.mystery_revealed && p.id !== _pjLastSquadRevealedId) {
+        _pjLastSquadRevealedId = p.id;
+        need = true;
+      }
+    }
+    var now = Date.now();
+    if (!need && now - _pjSquadLastFetch > 3000) need = true;
+    if (need) loadPjSquad(false);
+  }
   var _remainLoading = false;
   function escHtml(s) {
     return String(s == null ? '' : s)
@@ -1778,27 +1837,10 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   }
   window.openPjSquad = function() {
     var overlay = document.getElementById('pjSquadOverlay');
-    var body = document.getElementById('pjSqBody');
     if (!overlay) return;
     closePjRemain();
     overlay.classList.add('open');
-    if (body) body.innerHTML = '<div class="pj-sq-loading">Loading squads&#8230;</div>';
-    if (_squadLoading) return;
-    _squadLoading = true;
-    fetch(window.PJ_SQUAD_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({jsonrpc:'2.0', method:'call', params:{}}),
-      cache: 'no-store'
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(json) {
-      renderPjSquad(json.result || {});
-    })
-    .catch(function() {
-      if (body) body.innerHTML = '<div class="pj-sq-empty">Could not load squads</div>';
-    })
-    .then(function() { _squadLoading = false; });
+    loadPjSquad(true);
   };
   window.closePjSquad = function() {
     var overlay = document.getElementById('pjSquadOverlay');
