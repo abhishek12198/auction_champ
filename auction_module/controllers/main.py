@@ -4457,6 +4457,15 @@ def _pj_squad(tournament, db_name):
         return {'sport': sport, 'teams': []}
 
     Player = request.env['auction.team.player'].sudo()
+    AuctionPlayer = request.env['auction.auction.player'].sudo()
+    sold_lines = AuctionPlayer.search(
+        [('auction_id.tournament_id', '=', tournament.id)],
+        order='create_date desc, id desc',
+    )
+    sold_rank = {}
+    for idx, line in enumerate(sold_lines):
+        if line.player_id and line.player_id.id not in sold_rank:
+            sold_rank[line.player_id.id] = idx
     teams_out = []
     for team in tournament.team_ids.sorted('name'):
         logo_url = ''
@@ -4468,6 +4477,13 @@ def _pj_squad(tournament, db_name):
             ('assigned_team_id', '=', team.id),
             '|', ('state', '=', 'sold'), ('icon_player', '=', True),
         ], order='sl_no asc, name asc')
+        players = players.sorted(
+            key=lambda p: (
+                0 if p.state == 'sold' else 1,
+                sold_rank.get(p.id, 10 ** 9) if p.state == 'sold' else int(p.sl_no or 10 ** 9),
+                (p.name or '').lower(),
+            )
+        )
 
         players_out = []
         seen = set()

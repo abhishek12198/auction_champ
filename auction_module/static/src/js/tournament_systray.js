@@ -10,7 +10,7 @@ const { useState, onWillStart, onMounted, onWillUnmount } = hooks;
 class TournamentSystrayItem extends Component {
     setup() {
         this.orm = useService("orm");
-        this.state = useState({ tournamentName: "", tournamentLogo: "", expanded: false });
+        this.state = useState({ tournamentName: "", tournamentLogo: "", projectorUrl: "", expanded: false });
 
         onWillStart(async () => {
             try {
@@ -24,6 +24,25 @@ class TournamentSystrayItem extends Component {
                     const tName = result[0].tournament_id[1];
                     this.state.tournamentName = tName;
                     this.state.tournamentLogo = "/web/image/auction.tournament/" + tId + "/logo";
+
+                    // Projector URL (opens in new tab). Not shown on mobile via CSS.
+                    try {
+                        const tRes = await this.orm.read(
+                            "auction.tournament",
+                            [tId],
+                            ["projector_url", "slug"]
+                        );
+                        const tRow = tRes && tRes[0];
+                        if (tRow) {
+                            this.state.projectorUrl = tRow.projector_url || "";
+                            if (!this.state.projectorUrl && tRow.slug && session.db) {
+                                this.state.projectorUrl =
+                                    "/" + session.db + "/auction/projector/" + tRow.slug + "/";
+                            }
+                        }
+                    } catch (_e2) {
+                        this.state.projectorUrl = "";
+                    }
                 }
             } catch (_e) {
                 // leave blank on any error
@@ -46,6 +65,11 @@ class TournamentSystrayItem extends Component {
             ev.stopPropagation();
             this.state.expanded = !this.state.expanded;
         }
+    }
+
+    onProjectorClick(ev) {
+        // Don't trigger the badge expanded/collapse logic
+        ev.stopPropagation();
     }
 }
 

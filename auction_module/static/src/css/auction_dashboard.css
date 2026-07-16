@@ -635,6 +635,61 @@
     cursor: default;
 }
 
+.o_auction_projector_systray_icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 46px;
+    min-width: 46px;
+    padding: 0 12px;
+    margin-right: 4px;
+    color: rgba(255, 255, 255, 0.92);
+    cursor: pointer;
+    flex-shrink: 0;
+    text-decoration: none;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    border-radius: 0;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.o_auction_projector_systray_icon:hover,
+.o_auction_projector_systray_icon:focus {
+    color: #fdce33;
+    background-color: rgba(255, 255, 255, 0.1);
+    text-decoration: none;
+    opacity: 1;
+}
+
+.o_auction_projector_systray_svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+    color: inherit;
+    fill: currentColor;
+    transition: color 0.15s ease, fill 0.15s ease;
+}
+
+/* Match Odoo systray / theme hover (same feel as chat/activity icons) */
+.o_main_navbar .o_menu_systray .o_auction_projector_systray_icon {
+    color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.o_main_navbar .o_menu_systray .o_auction_projector_systray_icon:hover,
+.o_main_navbar .o_menu_systray .o_auction_projector_systray_icon:focus {
+    color: #fdce33 !important;
+    background-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.o_main_navbar .o_menu_systray .o_auction_projector_systray_icon:hover .o_auction_projector_systray_svg,
+.o_main_navbar .o_menu_systray .o_auction_projector_systray_icon:hover .o_auction_projector_systray_svg path,
+.o_main_navbar .o_menu_systray .o_auction_projector_systray_icon:focus .o_auction_projector_systray_svg,
+.o_main_navbar .o_menu_systray .o_auction_projector_systray_icon:focus .o_auction_projector_systray_svg path {
+    color: #fdce33 !important;
+    fill: currentColor !important;
+}
+
 .o_auction_tournament_badge {
     display: inline-flex;
     align-items: center;
@@ -677,6 +732,11 @@
 @media (max-width: 767px) {
     .o_auction_tournament_systray {
         padding: 0 4px;
+    }
+
+    .o_auction_projector_systray_icon {
+        /* Projector shortcut is not needed on mobile */
+        display: none !important;
     }
 
     .o_auction_tournament_badge {
