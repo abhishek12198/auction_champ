@@ -4453,7 +4453,7 @@ def _pj_wait_phase(tournament):
         return {
             'phase': 'about_to_begin',
             'tournament_name': name,
-            'message': 'AUCTION IS ABOUT TO BEGIN..',
+            'message': 'THE BATTLE FOR TALENT BEGINS SOON',
         }
     Player = request.env['auction.team.player'].sudo()
     domain = [('tournament_id', '=', tournament.id), ('icon_player', '=', False)]
@@ -4469,20 +4469,20 @@ def _pj_wait_phase(tournament):
             'phase': 'completed',
             'tournament_name': name,
             'message': (
-                'Thank you Owners on the behalf of %s organizers, '
-                'the Auction is Completed.'
-            ) % name,
+                'THE AUCTION FLOOR CLOSES, AND THE ROAD TO GLORY BEGINS. '
+                'THANK YOU EVERYONE.'
+            ),
         }
     if auction == 0 and sold == 0 and unsold == 0:
         return {
             'phase': 'about_to_begin',
             'tournament_name': name,
-            'message': 'AUCTION IS ABOUT TO BEGIN..',
+            'message': 'THE BATTLE FOR TALENT BEGINS SOON',
         }
     return {
         'phase': 'waiting',
         'tournament_name': name,
-        'message': 'Waiting for Next Player',
+        'message': 'THE SPOTLIGHT MOVES TO THE NEXT PLAYER',
     }
 
 

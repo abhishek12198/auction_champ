@@ -299,12 +299,13 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 .pj-wait-hero-logo{width:min(140px,22vw);height:auto;border-radius:12px}
 .pj-wait-hero-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,5vw,3.6rem);
   letter-spacing:.12em;text-align:center}
-.pj-wait-sub{color:var(--tx2);letter-spacing:.2em;text-transform:uppercase;font-size:.75rem;
-  text-align:center;max-width:min(92vw,52rem);line-height:1.45;padding:0 1rem}
+.pj-wait-sub{color:var(--tx2);letter-spacing:.16em;text-transform:uppercase;font-size:clamp(.72rem,1.35vw,.95rem);
+  text-align:center;max-width:min(96vw,58rem);line-height:1.35;padding:0 1rem;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pj-wait-sub.is-begin{color:var(--gold);font-weight:800;font-size:clamp(.85rem,1.6vw,1.15rem);
-  letter-spacing:.28em}
-.pj-wait-sub.is-complete{color:var(--gold);font-weight:700;font-size:clamp(.78rem,1.4vw,1.05rem);
-  letter-spacing:.12em;text-transform:none}
+  letter-spacing:.22em;white-space:nowrap}
+.pj-wait-sub.is-complete{color:var(--gold);font-weight:700;font-size:clamp(.7rem,1.25vw,.92rem);
+  letter-spacing:.1em;text-transform:uppercase;white-space:normal;line-height:1.4}
 .pj-wait-dots{display:flex;gap:.5rem}
 #pj-waiting.is-complete .pj-wait-dots{display:none}
 .pj-wait-dot{width:.55rem;height:.55rem;border-radius:50%;background:var(--gold);
@@ -935,7 +936,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         <t t-if="tournament"><t t-esc="tournament.name"/></t>
         <t t-else="">Auction Champ</t>
       </div>
-      <div class="pj-wait-sub" id="pjWaitSub">Waiting for Next Player</div>
+      <div class="pj-wait-sub" id="pjWaitSub">THE SPOTLIGHT MOVES TO THE NEXT PLAYER</div>
       <div class="pj-wait-dots"><div class="pj-wait-dot"></div><div class="pj-wait-dot"></div><div class="pj-wait-dot"></div></div>
       <t t-if="tournament and tournament.logo">
         <div class="pj-wait-powered">
@@ -1754,7 +1755,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   function updateWaitPhase(wp) {
     wp = wp || {};
     var phase = wp.phase || 'waiting';
-    var msg = wp.message || 'Waiting for Next Player';
+    var msg = wp.message || 'THE SPOTLIGHT MOVES TO THE NEXT PLAYER';
     var sub = document.getElementById('pjWaitSub');
     var wait = document.getElementById('pj-waiting');
     var kicker = wait ? wait.querySelector('.pj-wait-kicker') : null;
