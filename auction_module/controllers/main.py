@@ -817,6 +817,62 @@ class Auction(http.Controller):
         headers = [('Content-Type', 'application/json'), ('Cache-Control', 'max-age=3')]
         return request.make_response(data, headers)
 
+    def _tournament_all_squads_full(self, tournament):
+        """True when every team in the tournament has a full squad (no slots left)."""
+        if not tournament:
+            return False
+        auctions = request.env['auction.auction'].sudo().search([
+            ('tournament_id', '=', tournament.id),
+        ])
+        if not auctions:
+            return False
+        return all((auc.remaining_players_count or 0) <= 0 for auc in auctions)
+
+    def _render_auction_resume(self, tournament, db_name, theme, auction_ids,
+                               draft_players, unsold_players, auction_players,
+                               draft_count, unsold_count, sold_count, auction_count,
+                               tiers, squads_full=False):
+        return request.render('auction_module.auction_resume_template', {
+            'tournament': tournament,
+            'theme': theme,
+            'db_name': db_name,
+            'draft_players': draft_players,
+            'unsold_players': unsold_players,
+            'auction_players': auction_players,
+            'draft_count': draft_count,
+            'unsold_count': unsold_count,
+            'sold_count': sold_count,
+            'auction_count': auction_count,
+            'auction_ids': auction_ids,
+            'tiers': tiers,
+            'squads_full': bool(squads_full),
+        }, lazy=False)
+
+    def _resume_mark_auction_unsold(self, tournament):
+        """Mark all remaining In-Auction players as unsold (squads-full exit path)."""
+        Player = request.env['auction.team.player'].sudo()
+        players = Player.search([
+            ('tournament_id', '=', tournament.id),
+            ('state', '=', 'auction'),
+            ('icon_player', '=', False),
+        ])
+        if not players:
+            return players
+        for player in players:
+            player.write({'state': 'unsold', 'is_on_stage': False})
+            message = (player.name or 'Player') + ' is Unsold!'
+            player.create_unsold_auction_history(
+                message,
+                tournament_id=tournament.id,
+                player=player,
+            )
+        tournament.sudo().write({
+            'stamp_player_id': False,
+            'stamp_state': False,
+            'stamp_expires_at': False,
+        })
+        return players
+
     @http.route(['''/auction/display_auction/'''], type='http', auth="none", website=False, sitemap=False)
     def display_auction_legacy(self, **kwargs):
         """Redirect legacy URL to db-prefixed URL, preserving ?t= tournament slug."""
@@ -853,6 +909,56 @@ class Auction(http.Controller):
             exclude_id = kwargs.get('exclude', 0)
             preview = str(kwargs.get('preview', '') or '') in ('1', 'true', 'True')
 
+            auction_ids = request.env['auction.auction'].sudo().search(
+                [('tournament_id', '=', tournament_id.id)] if tournament_id else []
+            )
+            all_squads_full = self._tournament_all_squads_full(tournament_id)
+            PlayerActive = request.env['auction.team.player'].sudo()
+            t_domain_active = (
+                [('tournament_id', '=', tournament_id.id)] if tournament_id else [('id', '=', False)]
+            )
+            auction_queue_count = PlayerActive.search_count(
+                t_domain_active + [('state', '=', 'auction'), ('icon_player', '=', False)]
+            )
+
+            # All squads full but players still In Auction → resume screen with
+            # bulk-unsold action (do not keep presenting unbuyable players).
+            if tournament_id and all_squads_full and auction_queue_count > 0:
+                theme = tournament_id.player_display_template or 'vanilla'
+                Player = PlayerActive.with_context(active_test=False)
+                t_domain = [('tournament_id', '=', tournament_id.id)]
+                sold_count = Player.search_count(t_domain + [('state', '=', 'sold')])
+                draft_count = Player.search_count(t_domain + [('state', '=', 'draft')])
+                unsold_count = Player.search_count(t_domain + [('state', '=', 'unsold')])
+                draft_players = Player.search(
+                    t_domain + [('state', '=', 'draft')],
+                    order='sl_no asc, name asc',
+                )
+                unsold_players = Player.search(
+                    t_domain + [('state', '=', 'unsold')],
+                    order='sl_no asc, name asc',
+                )
+                auction_players = PlayerActive.search(
+                    t_domain + [('state', '=', 'auction'), ('icon_player', '=', False)],
+                    order='sl_no asc, name asc',
+                )
+                Tier = request.env['auction.player.tier'].sudo()
+                tiers = Tier.search(
+                    [('tournament_id', '=', tournament_id.id)],
+                    order='name asc',
+                )
+                if not tiers:
+                    tiers = (draft_players | unsold_players | auction_players).mapped('tier_id')
+                html = self._render_auction_resume(
+                    tournament_id, db_name, theme, auction_ids,
+                    draft_players, unsold_players, auction_players,
+                    draft_count, unsold_count, sold_count, len(auction_players),
+                    tiers, squads_full=True,
+                )
+                return request.make_response(
+                    html, [('Content-Type', 'text/html; charset=utf-8')]
+                )
+
             # If no explicit "next player" request, resume the player already on stage
             if not exclude_id:
                 on_stage_domain = [('is_on_stage', '=', True), ('state', '=', 'auction')]
@@ -872,9 +978,6 @@ class Auction(http.Controller):
                     commit_stage=not preview,
                 )
             if player:
-                auction_ids = request.env['auction.auction'].sudo().search(
-                    [('tournament_id', '=', tournament_id.id)] if tournament_id else []
-                )
                 template_map = {
                     'vanilla':       'auction_module.player_template_new',
                     'butterscotch':  'auction_module.player_template_butterscotch',
@@ -902,9 +1005,6 @@ class Auction(http.Controller):
                 sold_count = Player.search_count(t_domain + [('state', '=', 'sold')])
                 draft_count = Player.search_count(t_domain + [('state', '=', 'draft')])
                 unsold_count = Player.search_count(t_domain + [('state', '=', 'unsold')])
-                auction_ids = request.env['auction.auction'].sudo().search(
-                    [('tournament_id', '=', tournament_id.id)] if tournament_id else []
-                )
                 declared_done = bool(tournament_id and tournament_id.auction_declared_complete)
 
                 def _thank_you_html():
@@ -980,18 +1080,12 @@ class Auction(http.Controller):
                     )
                     if not tiers:
                         tiers = (draft_players | unsold_players).mapped('tier_id')
-                    html = request.render('auction_module.auction_resume_template', {
-                        'tournament': tournament_id,
-                        'theme': theme,
-                        'db_name': db_name,
-                        'draft_players': draft_players,
-                        'unsold_players': unsold_players,
-                        'draft_count': draft_count,
-                        'unsold_count': unsold_count,
-                        'sold_count': sold_count,
-                        'auction_ids': auction_ids,
-                        'tiers': tiers,
-                    }, lazy=False)
+                    html = self._render_auction_resume(
+                        tournament_id, db_name, theme, auction_ids,
+                        draft_players, unsold_players, Player.browse(),
+                        draft_count, unsold_count, sold_count, 0,
+                        tiers, squads_full=False,
+                    )
                 elif sold_count:
                     html = _thank_you_html()
                 else:
@@ -1127,6 +1221,45 @@ class Auction(http.Controller):
                 else:
                     tournament.sudo().write({'auction_declared_complete': True})
                     result = {'ok': True, 'redirect': display_url, 'error': None}
+        wants_json = 'application/json' in (request.httprequest.headers.get('Accept') or '')
+        if result.get('ok') and not wants_json:
+            return werkzeug.utils.redirect(result['redirect'], 303)
+        status = 200 if result.get('ok') else 400
+        return request.make_response(
+            _json.dumps(result),
+            headers=[('Content-Type', 'application/json')],
+            status=status,
+        )
+
+    @http.route(
+        [
+            '/<string:db_name>/auction/display_auction/<string:tournament_slug>/resume/mark-unsold',
+            '/<string:db_name>/auction/display_auction/<string:tournament_slug>/resume/mark-unsold/',
+        ],
+        type='http', auth='none', website=False, csrf=False, methods=['POST', 'GET'],
+    )
+    def display_auction_resume_mark_unsold(self, db_name, tournament_slug, **kw):
+        """Mark all remaining In-Auction players as unsold when every squad is full."""
+        import json as _json
+        display_url = '/%s/auction/display_auction/%s/' % (db_name, tournament_slug)
+        result = {'ok': False, 'error': 'Unknown error', 'redirect': display_url, 'marked': 0}
+        with self._with_db(db_name) as ok:
+            if not ok:
+                result['error'] = 'Database not found'
+            else:
+                tournament = self._resume_resolve_tournament(db_name, tournament_slug)
+                if not tournament:
+                    result['error'] = 'Tournament not found'
+                elif not self._tournament_all_squads_full(tournament):
+                    result['error'] = 'Team squads are not all full yet'
+                else:
+                    players = self._resume_mark_auction_unsold(tournament)
+                    result = {
+                        'ok': True,
+                        'redirect': display_url,
+                        'marked': len(players),
+                        'error': None,
+                    }
         wants_json = 'application/json' in (request.httprequest.headers.get('Accept') or '')
         if result.get('ok') and not wants_json:
             return werkzeug.utils.redirect(result['redirect'], 303)

@@ -27,6 +27,7 @@
       --r-glow: rgba(59,114,232,0.35);
       --r-draft: #38bdf8;
       --r-unsold: #f87171;
+      --r-auction: #f4c542;
       --r-sold: #34d399;
       --r-danger: #ef4444;
       --r-ok: #22c55e;
@@ -238,6 +239,22 @@
     .ar-stat-draft .ar-stat-num { color: var(--r-draft); }
     .ar-stat-unsold .ar-stat-num { color: var(--r-unsold); }
     .ar-stat-sold .ar-stat-num { color: var(--r-sold); }
+    .ar-stat-auction .ar-stat-num { color: var(--r-auction); }
+    .ar-banner-full {
+      margin: 0 0 18px;
+      padding: 14px 18px;
+      border-radius: var(--r-radius);
+      border: 1px solid color-mix(in srgb, var(--r-accent) 45%, transparent);
+      background: color-mix(in srgb, var(--r-accent) 12%, transparent);
+      color: var(--r-text);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .ar-banner-full strong { color: var(--r-accent); }
+    .ar-panel-auction .ar-badge {
+      color: var(--r-auction);
+      background: color-mix(in srgb, var(--r-auction) 18%, transparent);
+    }
     .ar-stat-open .ar-stat-num { color: var(--r-accent); }
 
     /* Panels */
@@ -674,6 +691,9 @@
   <t t-set="slug" t-value="tournament.slug if tournament else ''"/>
   <t t-set="open_url" t-value="'/%s/auction/display_auction/%s/resume/open' % (db, slug)"/>
   <t t-set="complete_url" t-value="'/%s/auction/display_auction/%s/resume/complete' % (db, slug)"/>
+  <t t-set="mark_unsold_url" t-value="'/%s/auction/display_auction/%s/resume/mark-unsold' % (db, slug)"/>
+  <t t-set="squads_full" t-value="squads_full or False"/>
+  <t t-set="auction_count" t-value="auction_count or 0"/>
 
   <!-- Hidden form used by JS for bulk open / complete (server redirects to presentation) -->
   <form id="ar-action-form" method="POST" t-att-action="open_url" style="display:none;">
@@ -682,7 +702,8 @@
 
   <div class="ar-shell"
        t-att-data-open-url="open_url"
-       t-att-data-complete-url="complete_url">
+       t-att-data-complete-url="complete_url"
+       t-att-data-mark-unsold-url="mark_unsold_url">
 
     <header class="ar-header">
       <div class="ar-brand">
@@ -695,13 +716,24 @@
           <div class="ar-logo-ph">🏆</div>
         </t>
         <div class="ar-title-wrap">
-          <div class="ar-eyebrow">Auction Queue Empty</div>
+          <div class="ar-eyebrow">
+            <t t-if="squads_full">All Squads Full</t>
+            <t t-else="">Auction Queue Empty</t>
+          </div>
           <h1 class="ar-title"><t t-esc="tournament.name if tournament else 'Auction'"/></h1>
           <p class="ar-sub">
-            No players are currently In Auction. Open Draft / Registered or Unsold players
-            to start or continue the live presentation.
-            <t t-if="sold_count">
-              You can also declare the auction complete to show the final Thank You screen.
+            <t t-if="squads_full">
+              Every team squad is full, but
+              <strong><t t-esc="auction_count"/></strong>
+              player(s) are still In Auction and cannot be sold.
+              Mark them as Unsold to clear the live queue, or open Draft / Unsold later if you expand squad sizes.
+            </t>
+            <t t-else="">
+              No players are currently In Auction. Open Draft / Registered or Unsold players
+              to start or continue the live presentation.
+              <t t-if="sold_count">
+                You can also declare the auction complete to show the final Thank You screen.
+              </t>
             </t>
           </p>
         </div>
@@ -715,7 +747,20 @@
       </div>
     </header>
 
+    <t t-if="squads_full">
+      <div class="ar-banner-full">
+        <strong>Squads full.</strong>
+        Remaining In Auction players have nowhere to go — mark them all as Unsold to continue.
+      </div>
+    </t>
+
     <section class="ar-stats">
+      <t t-if="squads_full">
+        <div class="ar-stat ar-stat-auction">
+          <div class="ar-stat-num"><t t-esc="auction_count"/></div>
+          <div class="ar-stat-lbl">In Auction</div>
+        </div>
+      </t>
       <div class="ar-stat ar-stat-draft">
         <div class="ar-stat-num"><t t-esc="draft_count"/></div>
         <div class="ar-stat-lbl">Draft</div>
@@ -735,6 +780,84 @@
     </section>
 
     <section class="ar-panels">
+      <t t-if="squads_full">
+        <!-- Remaining In Auction (cannot be sold — squads full) -->
+        <div class="ar-panel ar-panel-auction" data-panel="auction">
+          <div class="ar-panel-head">
+            <div class="ar-panel-title">
+              Remaining In Auction
+              <span class="ar-badge"><t t-esc="auction_count"/></span>
+            </div>
+            <div class="ar-toolbar">
+              <t t-if="tiers">
+                <div class="ar-filters" data-tier-filters="auction">
+                  <button type="button" class="ar-tier-chip is-active" data-tier-id="">All</button>
+                  <t t-foreach="tiers" t-as="tier">
+                    <button type="button" class="ar-tier-chip"
+                            t-att-data-tier-id="tier.id"
+                            t-att-style="tier.color and ('border-color:%s;color:%s' % (tier.color, tier.color)) or None">
+                      <t t-esc="tier.name"/>
+                    </button>
+                  </t>
+                </div>
+              </t>
+              <input class="ar-search" type="search"
+                     placeholder="Search serial, name or tier…"
+                     data-search="auction"
+                     autocomplete="off"/>
+            </div>
+          </div>
+          <div class="ar-list" id="ar-list-auction">
+            <t t-if="not auction_players">
+              <div class="ar-empty">No players left In Auction.</div>
+            </t>
+            <t t-foreach="auction_players" t-as="p">
+              <div class="ar-row"
+                   t-att-data-id="p.id"
+                   t-att-data-name="(p.name or '').lower()"
+                   t-att-data-sl-no="str(p.sl_no or '')"
+                   t-att-data-tier-id="p.tier_id.id if p.tier_id else ''"
+                   t-att-data-tier-name="(p.tier_id.name or '').lower() if p.tier_id else ''"
+                   t-att-data-search="' '.join(filter(None, [str(p.sl_no or ''), (p.name or '').lower(), (p.tier_id.name or '').lower() if p.tier_id else '', (p.role or '').lower()]))">
+                <span/>
+                <t t-if="p.photo">
+                  <img class="ar-avatar"
+                       t-att-src="'/%s/auction/public/image/auction.team.player/%d/photo' % (db, p.id)"
+                       alt=""/>
+                </t>
+                <t t-else="">
+                  <div class="ar-avatar-ph"><t t-esc="(p.name or '?')[:1].upper()"/></div>
+                </t>
+                <div class="ar-meta">
+                  <div class="ar-name"><t t-esc="p.name"/></div>
+                  <div class="ar-role">
+                    <t t-if="p.tournament_type == 'football' and p.dominant_position_id">
+                      <t t-esc="p.dominant_position_id.name"/>
+                    </t>
+                    <t t-else="">
+                      <t t-esc="p.role or '—'"/>
+                    </t>
+                    <t t-if="p.sl_no"> · #<t t-esc="p.sl_no"/></t>
+                  </div>
+                </div>
+                <t t-if="p.tier_id">
+                  <span class="ar-tier" t-att-style="'border-color:%s;color:%s' % (p.tier_id.color or '#7f8c8d', p.tier_id.color or '#7f8c8d')">
+                    <t t-esc="p.tier_id.name"/>
+                  </span>
+                </t>
+                <t t-else=""><span/></t>
+              </div>
+            </t>
+          </div>
+          <div class="ar-panel-foot">
+            <button type="button" class="ar-btn ar-btn-danger" id="ar-mark-unsold-btn"
+                    t-att-disabled="(not auction_count) and 'disabled' or None">
+              Mark All Remaining as Unsold
+            </button>
+          </div>
+        </div>
+      </t>
+
       <!-- Draft -->
       <div class="ar-panel ar-panel-draft" data-panel="draft">
         <div class="ar-panel-head">
@@ -940,6 +1063,7 @@
 
   var openUrl = shell.getAttribute('data-open-url');
   var completeUrl = shell.getAttribute('data-complete-url');
+  var markUnsoldUrl = shell.getAttribute('data-mark-unsold-url');
   var toastEl = document.getElementById('ar-toast');
   var modalEl = document.getElementById('ar-modal');
   var modalCard = document.getElementById('ar-modal-card');
@@ -1170,6 +1294,27 @@
     });
   }
 
+  function submitMarkUnsold() {
+    if (busy || !markUnsoldUrl) return;
+    arConfirm({
+      icon: '📭',
+      title: 'Mark remaining as Unsold?',
+      message: 'All players still <strong>In Auction</strong> will be moved to <strong>Unsold</strong>. Team squads are already full, so they cannot be sold.',
+      confirmLabel: 'Mark All Unsold',
+      danger: true,
+    }).then(function (ok) {
+      if (!ok) return;
+      busy = true;
+      shell.classList.add('ar-busy');
+      toast('Marking remaining players as Unsold…');
+      form.setAttribute('action', markUnsoldUrl);
+      form.setAttribute('method', 'POST');
+      idsInput.name = 'player_ids';
+      idsInput.value = '';
+      form.submit();
+    });
+  }
+
   document.querySelectorAll('[data-open]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var name = btn.getAttribute('data-open');
@@ -1212,6 +1357,10 @@
   var completeBtn = document.getElementById('ar-complete-btn');
   if (completeBtn) {
     completeBtn.addEventListener('click', submitComplete);
+  }
+  var markUnsoldBtn = document.getElementById('ar-mark-unsold-btn');
+  if (markUnsoldBtn) {
+    markUnsoldBtn.addEventListener('click', submitMarkUnsold);
   }
 })();
   ]]></script>
