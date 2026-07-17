@@ -148,6 +148,9 @@
                     <button class="ac-btn ac-btn--sold" id="acFinalizeBtn" onclick="acFinalizeBid()" style="display:none">
                         Sold
                     </button>
+                    <button class="ac-btn ac-btn--unsold" id="acUnsoldBtn" onclick="acMarkUnsold()" style="display:none">
+                        Unsold
+                    </button>
                     <button class="ac-btn ac-btn--reveal" id="acRevealBtn" onclick="acRevealMystery()" style="display:none">
                         Reveal Player
                     </button>
@@ -306,6 +309,7 @@ window.AC_DATA_URL      = '/auction/auctioneer/data';
 window.AC_BID_URL       = '/auction/auctioneer/place-bid';
 window.AC_RESET_URL     = '/auction/auctioneer/reset-bid';
 window.AC_FINALIZE_URL  = '/auction/auctioneer/finalize-bid';
+window.AC_UNSOLD_URL    = '/auction/auctioneer/mark-unsold';
 window.AC_DICE_URL      = '/auction/auctioneer/dice';
 window.AC_CALL_URL      = '/auction/auctioneer/call-player';
 window.AC_NEXT_URL      = '/auction/auctioneer/next-player';

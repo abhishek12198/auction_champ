@@ -3727,6 +3727,25 @@ class Auction(http.Controller):
             # ── POST: create player ─────────────────────────────────────────────
             if request.httprequest.method == 'POST':
                 try:
+                    # Optional payment-gateway modules can short-circuit this POST
+                    pay_resp = self._registration_payment_post(
+                        db_name, tournament_slug, tournament, {
+                            'tournament': tournament,
+                            'tiers': tiers,
+                            'theme': theme,
+                            'db_name': db_name,
+                            'tournament_slug': tournament_slug,
+                            'slots_left': slots_left,
+                            'max_registrations': max_reg,
+                            'current_count': current_count,
+                            'positions': football_positions,
+                            'styles': football_styles,
+                            'strengths': football_strengths,
+                        }
+                    )
+                    if pay_resp is not None:
+                        return pay_resp
+
                     vals = _build_player_vals_from_post(request, tournament)
                     player = request.env['auction.team.player'].sudo().create(vals)
                     # PRG: redirect to GET so that page refreshes don't re-submit the form
@@ -3786,6 +3805,7 @@ class Auction(http.Controller):
                 'success': success,
                 'player_id': player_id,
             }
+            ctx = self._registration_payment_get_ctx(ctx, tournament, kw)
 
             try:
                 html = request.render('auction_module.player_registration_form', ctx, lazy=False)
@@ -3799,6 +3819,14 @@ class Auction(http.Controller):
                     [('Content-Type', 'text/html; charset=utf-8')],
                 )
             return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
+
+    def _registration_payment_post(self, db_name, tournament_slug, tournament, render_ctx):
+        """Hook for payment gateway modules. Return an HTTP response to take over POST, or None."""
+        return None
+
+    def _registration_payment_get_ctx(self, ctx, tournament, kw):
+        """Hook for payment gateway modules to enrich the registration GET context."""
+        return ctx
 
     @http.route('/<string:db_name>/<string:tournament_slug>/player/check_mobile',
                 type='json', auth='none', website=False, csrf=False, methods=['POST'])

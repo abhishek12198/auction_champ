@@ -16,10 +16,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Exo+2:wght@500;600;700;800;900&amp;family=Barlow+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
   <style>
-/* ══ Fit all screens — readable projector scale ═══════════════════════ */
-html{font-size:clamp(14px, calc(100vmin / 67.5), 28px);width:100%;height:100%;
+/* ══ Fit all screens — slightly tighter for TV / projector ════════════ */
+html{font-size:clamp(12px, calc(100vmin / 76), 22px);width:100%;height:100%;
   -webkit-text-size-adjust:100%}
-@media(min-aspect-ratio:21/9){html{font-size:clamp(14px, calc(100vh / 67.5), 28px)}}
+@media(min-aspect-ratio:21/9){html{font-size:clamp(12px, calc(100vh / 76), 22px)}}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden}
 body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sans-serif}
@@ -53,24 +53,27 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 }
 
 /* ══ Header ═══════════════════════════════════════════════════════════ */
-#pj-bar{flex-shrink:0;display:grid;grid-template-columns:1fr auto 1fr;
-  align-items:center;gap:1rem;padding:.7rem 1.4rem;
+#pj-bar{flex-shrink:0;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:center;gap:.75rem;padding:.55rem 1.2rem;
   background:linear-gradient(180deg,var(--panel2),var(--panel));
   border-bottom:1px solid var(--line);position:relative;z-index:20}
-.pj-bar-left{display:flex;align-items:center;gap:.85rem;min-width:0}
-.pj-logo{height:3.4rem;width:auto;max-width:12vw;object-fit:contain}
-.pj-logo-ph{width:3.4rem;height:3.4rem;border-radius:50%;background:var(--gold);
-  display:flex;align-items:center;justify-content:center;color:#111;font-weight:900}
-.pj-tname{font-weight:800;letter-spacing:.08em;text-transform:uppercase;
-  font-size:clamp(1rem,1.8vw,1.45rem);line-height:1.15;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:36vw}
-.pj-season{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--tx2);margin-top:2px}
-.pj-bar-center{display:flex;align-items:center;gap:.75rem;justify-content:center}
-.pj-pa-text{font-weight:900;letter-spacing:.28em;text-transform:uppercase;
-  font-size:clamp(.95rem,1.7vw,1.35rem)}
-.pj-live-pill{display:inline-flex;align-items:center;gap:.4rem;background:var(--danger);
-  color:#fff;font-weight:800;font-size:.78rem;letter-spacing:.16em;padding:.35rem .85rem;
-  border-radius:999px;box-shadow:0 0 14px rgba(229,57,74,.45)}
+.pj-bar-left{display:flex;align-items:center;gap:.7rem;min-width:0;overflow:hidden}
+.pj-logo{height:2.8rem;width:auto;max-width:10vw;object-fit:contain;flex-shrink:0}
+.pj-logo-ph{width:2.8rem;height:2.8rem;border-radius:50%;background:var(--gold);
+  display:flex;align-items:center;justify-content:center;color:#111;font-weight:900;flex-shrink:0}
+.pj-identity{min-width:0;overflow:hidden}
+.pj-tname{font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  font-size:clamp(.85rem,1.5vw,1.2rem);line-height:1.15;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.pj-season{font-size:.65rem;letter-spacing:.16em;text-transform:uppercase;color:var(--tx2);margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pj-bar-center{display:flex;align-items:center;gap:.55rem;justify-content:center;
+  flex-shrink:0;z-index:2;padding:0 .4rem}
+.pj-pa-text{font-weight:900;letter-spacing:.22em;text-transform:uppercase;
+  font-size:clamp(.85rem,1.4vw,1.15rem);white-space:nowrap}
+.pj-live-pill{display:inline-flex;align-items:center;gap:.35rem;background:var(--danger);
+  color:#fff;font-weight:800;font-size:.7rem;letter-spacing:.14em;padding:.28rem .7rem;
+  border-radius:999px;box-shadow:0 0 14px rgba(229,57,74,.45);flex-shrink:0}
 .pj-live-pill-dot{width:.55rem;height:.55rem;border-radius:50%;background:#fff;
   animation:pjPulse 1.2s ease-in-out infinite}
 @keyframes pjPulse{0%,100%{opacity:1}50%{opacity:.35}}
@@ -88,7 +91,12 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   display:inline-flex;align-items:center;justify-content:center;gap:.35rem;
   font-family:inherit;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
   width:2.6rem;height:2.6rem;font-size:1.1rem;padding:0;flex-shrink:0}
-.pj-squad-btn svg,.pj-bid-summary-btn svg,.pj-remain-btn svg{width:1.25rem;height:1.25rem;display:block;fill:currentColor}
+.pj-squad-btn svg,.pj-bid-summary-btn svg,.pj-remain-btn svg,.pj-fs-btn svg{width:1.25rem;height:1.25rem;display:block;fill:currentColor}
+.pj-fs-btn svg{fill:none}
+.pj-fs-btn.is-fs .pj-fs-ico--enter{display:none}
+.pj-fs-btn.is-fs .pj-fs-ico--exit{display:block}
+.pj-fs-btn:not(.is-fs) .pj-fs-ico--exit{display:none}
+.pj-fs-btn:not(.is-fs) .pj-fs-ico--enter{display:block}
 .pj-bar-actions{display:inline-flex;align-items:center;gap:.4rem;flex-shrink:0}
 .pj-bid-summary-btn:hover,.pj-fs-btn:hover,.pj-squad-btn:hover,.pj-remain-btn:hover{border-color:var(--gold);color:var(--gold)}
 
@@ -370,42 +378,276 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   text-shadow:0 2px 10px rgba(0,0,0,.55)}
 .pj-mystery-lock-sub{opacity:.9;font-size:clamp(.8rem,1.4vw,1rem);font-weight:600}
 
-/* Mystery reveal — slanting SOLD ribbon (top-right, covers face) */
+/* Mystery SOLD — classic top-right slanting ribbon (green, slim) */
 .pj-photo-sold{
   position:absolute;top:0;right:0;left:auto;bottom:auto;
-  width:min(72%,380px);height:min(58%,360px);
-  z-index:12;display:none;overflow:hidden;
+  width:min(68%,340px);height:min(42%,260px);
+  z-index:15;display:none;overflow:hidden;
   pointer-events:none;background:transparent;border:none;
   box-shadow:none;padding:0;min-width:0;transform:none;border-radius:0;
   animation:none}
-.pj-photo-sold.show{display:block}
+.pj-photo-sold.show{display:block;opacity:1;transition:opacity .65s ease}
+.pj-photo-sold.is-faded{
+  opacity:0;pointer-events:none}
 .pj-photo-sold-ribbon{
-  position:absolute;top:18%;right:-32%;width:140%;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.3rem;
-  padding:.7rem 1.1rem .8rem;
-  transform:rotate(36deg);transform-origin:center;
-  background:linear-gradient(135deg,#7f0000 0%,#b71c1c 42%,#e53935 100%);
-  border-top:2px solid rgba(255,255,255,.55);
-  border-bottom:2px solid rgba(255,255,255,.28);
-  box-shadow:0 12px 28px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.2);
+  position:absolute;top:4%;right:-34%;width:140%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.12rem;
+  padding:.32rem .9rem .38rem;
+  transform:rotate(36deg) translateY(-12%);transform-origin:center;
+  background:linear-gradient(135deg,#00695C 0%,#00C853 42%,#69F0AE 100%);
+  border-top:1.5px solid rgba(255,255,255,.55);
+  border-bottom:1.5px solid rgba(255,255,255,.28);
+  box-shadow:0 8px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.2);
   color:#fff;text-align:center;
   animation:pjPhotoSoldIn .55s cubic-bezier(.34,1.25,.64,1) both}
+[data-mode="light"] .pj-photo-sold-ribbon{
+  background:linear-gradient(135deg,#004D40 0%,#008C3A 42%,#00B85A 100%)}
 @keyframes pjPhotoSoldIn{
-  0%{opacity:0;transform:rotate(36deg) translateY(-18px) scale(1.12)}
-  100%{opacity:1;transform:rotate(36deg) translateY(0) scale(1)}
+  0%{opacity:0;transform:rotate(36deg) translateY(-28%) scale(1.08)}
+  100%{opacity:1;transform:rotate(36deg) translateY(-12%) scale(1)}
 }
-.pj-photo-sold-label{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.55rem,3.4vw,2.5rem);
-  letter-spacing:.32em;line-height:1;text-shadow:0 2px 8px rgba(0,0,0,.35)}
-.pj-photo-sold-team{display:flex;align-items:center;justify-content:center;gap:.55rem;max-width:90%}
-.pj-photo-sold-logo{width:clamp(2rem,3.4vw,2.8rem);height:clamp(2rem,3.4vw,2.8rem);
+.pj-photo-sold-label{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.05rem,2.4vw,1.65rem);
+  letter-spacing:.28em;line-height:1;text-shadow:0 2px 6px rgba(0,0,0,.35)}
+.pj-photo-sold-team{display:flex;align-items:center;justify-content:center;gap:.35rem;max-width:90%}
+.pj-photo-sold-logo{width:clamp(1.35rem,2.4vw,1.85rem);height:clamp(1.35rem,2.4vw,1.85rem);
   border-radius:50%;object-fit:contain;background:rgba(0,0,0,.28);flex-shrink:0;
-  border:2px solid rgba(255,255,255,.5)}
-.pj-photo-sold-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(.95rem,2vw,1.45rem);
-  letter-spacing:.06em;line-height:1.1;text-align:left;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:12rem}
-.pj-photo-sold-pts{font-size:clamp(.7rem,1.2vw,.9rem);font-weight:700;opacity:.95;letter-spacing:.06em}
+  border:1.5px solid rgba(255,255,255,.5)}
+.pj-photo-sold-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(.72rem,1.45vw,1.05rem);
+  letter-spacing:.05em;line-height:1.05;text-align:left;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:9.5rem}
+.pj-photo-sold-pts{font-size:clamp(.55rem,.95vw,.72rem);font-weight:700;opacity:.95;letter-spacing:.05em}
 
-/* Hex serial badge */
+/* ══ Premium broadcast SOLD / UNSOLD status (photo only) ══════════════ */
+.pj-photo-status{
+  --pj-sold-a:#00C853; --pj-sold-b:#2ECC71; --pj-sold-c:#00E676;
+  --pj-unsold-a:#B71C1C; --pj-unsold-b:#C62828; --pj-unsold-c:#D32F2F;
+  position:absolute;inset:0;z-index:14;display:none;
+  pointer-events:none;overflow:hidden;
+  contain:layout style paint}
+.pj-photo-status.show{display:block;opacity:1;transition:opacity .65s ease}
+.pj-photo-status.is-faded{
+  opacity:0;pointer-events:none}
+[data-mode="light"] .pj-photo-status{
+  --pj-sold-a:#008C3A; --pj-sold-b:#1B9E55; --pj-sold-c:#00B85A;
+  --pj-unsold-a:#8E0000; --pj-unsold-b:#A31515; --pj-unsold-c:#B71C1C}
+.pj-photo-side.is-status-freeze .pj-photo{
+  filter:saturate(.92) brightness(.97);
+  transition:filter .25s ease}
+.pj-photo-side.is-sold-glow{
+  animation:pjStatusGlowSold .85s ease-out both}
+@keyframes pjStatusGlowSold{
+  0%{filter:saturate(.9) brightness(.95)}
+  35%{filter:saturate(1.15) brightness(1.08) drop-shadow(0 0 18px rgba(0,200,83,.45))}
+  100%{filter:saturate(1) brightness(1)}
+}
+.pj-photo-side.is-unsold-shake{
+  animation:pjStatusShake .45s cubic-bezier(.36,.07,.19,.97) both}
+@keyframes pjStatusShake{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-3px) rotate(-.3deg)}
+  40%{transform:translateX(3px) rotate(.3deg)}
+  60%{transform:translateX(-2px)}
+  80%{transform:translateX(2px)}
+}
+
+/* Soft glow wash on photo */
+.pj-status-glow{
+  position:absolute;inset:0;z-index:1;opacity:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 42%, rgba(0,200,83,.28) 0%, transparent 65%)}
+.pj-photo-status[data-kind="sold"].show .pj-status-glow{
+  animation:pjStatusWash .8s ease-out both}
+.pj-photo-status[data-kind="unsold"] .pj-status-glow{
+  background:radial-gradient(ellipse at 50% 42%, rgba(198,40,40,.22) 0%, transparent 65%)}
+.pj-photo-status[data-kind="unsold"].show .pj-status-glow{
+  animation:pjStatusWash .55s ease-out both}
+@keyframes pjStatusWash{
+  0%{opacity:0} 35%{opacity:.7} 100%{opacity:0}
+}
+
+/* Circular seal — stays on photo with readable team / points */
+.pj-status-seal{
+  position:absolute;z-index:2;
+  width:min(64%, 15rem);aspect-ratio:1;
+  left:50%;top:46%;
+  transform:translate(-50%,-50%) scale(0) rotate(-18deg);
+  opacity:0;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  will-change:transform,opacity}
+.pj-photo-status.show .pj-status-seal{
+  animation:pjSealIn .55s cubic-bezier(.2,.8,.2,1.15) .12s both}
+.pj-photo-status[data-kind="unsold"].show .pj-status-seal{
+  animation:pjSealStamp .42s cubic-bezier(.15,.9,.25,1.2) .05s both}
+@keyframes pjSealIn{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(0) rotate(-28deg)}
+  70%{opacity:1;transform:translate(-50%,-50%) scale(1.06) rotate(-12deg)}
+  100%{opacity:.92;transform:translate(-50%,-50%) scale(1) rotate(-18deg)}
+}
+@keyframes pjSealStamp{
+  0%{opacity:0;transform:translate(-50%,-58%) scale(.2) rotate(-32deg)}
+  55%{opacity:1;transform:translate(-50%,-48%) scale(1.12) rotate(-10deg)}
+  100%{opacity:.9;transform:translate(-50%,-50%) scale(1) rotate(-18deg)}
+}
+.pj-status-seal-ring{
+  position:absolute;inset:0;border-radius:50%;
+  border:2.5px solid currentColor;
+  box-shadow:inset 0 0 0 5px rgba(255,255,255,.12), inset 0 0 0 8px currentColor;
+  background:rgba(6,14,24,.88)}
+[data-mode="light"] .pj-status-seal-ring{background:rgba(255,255,255,.92)}
+.pj-photo-status[data-kind="sold"] .pj-status-seal{color:var(--pj-sold-b)}
+.pj-photo-status[data-kind="unsold"] .pj-status-seal{color:var(--pj-unsold-b)}
+.pj-status-seal-svg{position:absolute;inset:0;width:100%;height:100%;opacity:.95}
+.pj-status-seal-core{
+  position:relative;z-index:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:.28rem;
+  text-align:center;padding:18%;max-width:100%;opacity:1}
+.pj-status-seal-logo{
+  width:clamp(2.4rem,4.2vw,3.2rem);height:clamp(2.4rem,4.2vw,3.2rem);
+  border-radius:50%;object-fit:contain;flex-shrink:0;
+  background:rgba(255,255,255,.95);border:2px solid rgba(255,255,255,.85);padding:2px;
+  display:none;opacity:1;
+  box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.pj-photo-status[data-kind="sold"] .pj-status-seal-logo.is-on{display:block}
+.pj-status-seal-team{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(.95rem,1.85vw,1.35rem);
+  letter-spacing:.06em;line-height:1.05;color:#fff;opacity:1;
+  max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  text-transform:uppercase;text-shadow:0 1px 6px rgba(0,0,0,.65), 0 0 2px rgba(0,0,0,.5);
+  font-weight:900}
+[data-mode="light"] .pj-status-seal-team{color:#0a1f12;text-shadow:0 1px 0 rgba(255,255,255,.8)}
+.pj-status-seal-pts{
+  font-size:clamp(.75rem,1.25vw,.95rem);font-weight:900;letter-spacing:.1em;
+  opacity:1;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.65)}
+[data-mode="light"] .pj-status-seal-pts{color:#064020;text-shadow:none}
+.pj-photo-status[data-kind="unsold"] .pj-status-seal-logo,
+.pj-photo-status[data-kind="unsold"] .pj-status-seal-team,
+.pj-photo-status[data-kind="unsold"] .pj-status-seal-pts{display:none !important}
+
+/* Diagonal ribbon — flash ~1s then vanish; circular seal remains */
+.pj-status-ribbon-wrap{
+  position:absolute;z-index:5;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden}
+.pj-status-ribbon{
+  position:relative;
+  width:70%;
+  min-height:clamp(2.6rem,7.5vh,4.2rem);
+  display:flex;align-items:center;justify-content:center;gap:.55rem;
+  padding:.55rem 1.4rem;
+  transform:rotate(-32deg) translate(-120%, -40%);
+  opacity:0;
+  border-radius:.55rem;
+  color:#fff;
+  will-change:transform,opacity;
+  box-shadow:
+    0 10px 28px rgba(0,0,0,.38),
+    0 2px 0 rgba(255,255,255,.22) inset,
+    0 -2px 0 rgba(0,0,0,.22) inset;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  overflow:hidden}
+@media(max-width:1100px){.pj-status-ribbon{width:60%}}
+@media(max-width:820px){.pj-status-ribbon{width:55%}}
+.pj-photo-status.show .pj-status-ribbon{
+  animation:pjRibbonFlash 1s cubic-bezier(.2,.8,.2,1) .12s both}
+.pj-photo-status[data-kind="unsold"].show .pj-status-ribbon{
+  animation:pjRibbonFlashUnsold .95s cubic-bezier(.15,.9,.2,1.1) .08s both}
+@keyframes pjRibbonFlash{
+  0%{opacity:0;transform:rotate(-32deg) translate(-110%,-35%)}
+  22%{opacity:.9;transform:rotate(-32deg) translate(0,0)}
+  62%{opacity:.88;transform:rotate(-32deg) translate(0,0)}
+  100%{opacity:0;transform:rotate(-32deg) translate(0,0) scale(.97)}
+}
+@keyframes pjRibbonFlashUnsold{
+  0%{opacity:0;transform:rotate(-32deg) scale(1.25)}
+  25%{opacity:.9;transform:rotate(-32deg) scale(1)}
+  60%{opacity:.86;transform:rotate(-32deg) scale(1)}
+  100%{opacity:0;transform:rotate(-32deg) scale(.96)}
+}
+.pj-photo-status[data-kind="sold"] .pj-status-ribbon{
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.28) 0%, transparent 28%, transparent 72%, rgba(0,0,0,.18) 100%),
+    linear-gradient(105deg, var(--pj-sold-a) 0%, var(--pj-sold-b) 48%, var(--pj-sold-c) 100%);
+  border:1px solid rgba(255,255,255,.35)}
+.pj-photo-status[data-kind="unsold"] .pj-status-ribbon{
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.16) 0%, transparent 30%, transparent 70%, rgba(0,0,0,.28) 100%),
+    linear-gradient(105deg, var(--pj-unsold-a) 0%, var(--pj-unsold-b) 50%, var(--pj-unsold-c) 100%);
+  border:1px solid rgba(255,255,255,.2)}
+.pj-status-ribbon::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(180deg, rgba(255,255,255,.22) 0%, transparent 42%, rgba(0,0,0,.12) 100%);
+  mix-blend-mode:soft-light}
+.pj-status-ribbon-shine{
+  position:absolute;top:0;left:-40%;width:35%;height:100%;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
+  transform:skewX(-18deg);opacity:0;pointer-events:none}
+.pj-photo-status[data-kind="sold"].show .pj-status-ribbon-shine{
+  animation:pjRibbonShine .55s ease-out .28s both}
+@keyframes pjRibbonShine{
+  0%{opacity:0;left:-40%}
+  30%{opacity:1}
+  100%{opacity:0;left:120%}
+}
+.pj-status-ico{
+  flex-shrink:0;width:1.35rem;height:1.35rem;
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:50%;background:rgba(0,0,0,.22);
+  border:1.5px solid rgba(255,255,255,.55);
+  font-size:.85rem;font-weight:900;line-height:1;
+  box-shadow:0 1px 0 rgba(255,255,255,.25) inset}
+.pj-status-word{
+  font-family:'Bebas Neue','Exo 2',sans-serif;
+  font-weight:900;font-size:clamp(1.55rem,4.2vw,2.65rem);
+  letter-spacing:.28em;text-indent:.28em;line-height:1;
+  text-transform:uppercase;color:#fff;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,.35),
+    0 2px 8px rgba(0,0,0,.35),
+    0 0 18px rgba(0,0,0,.2)}
+.pj-photo-status[data-kind="unsold"] .pj-status-word{letter-spacing:.18em;text-indent:.18em}
+
+/* Particles — confetti (sold) / dust (unsold) */
+.pj-status-fx{
+  position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden}
+.pj-status-fx span{
+  position:absolute;width:.35rem;height:.35rem;border-radius:2px;
+  opacity:0;will-change:transform,opacity}
+.pj-photo-status[data-kind="sold"].show .pj-status-fx span{
+  animation:pjConfetti .9s ease-out both}
+.pj-photo-status[data-kind="unsold"].show .pj-status-fx span{
+  animation:pjDust .55s ease-out both;
+  width:.22rem;height:.22rem;border-radius:50%;background:rgba(255,200,180,.55) !important}
+@keyframes pjConfetti{
+  0%{opacity:0;transform:translate(0,0) scale(.4) rotate(0)}
+  15%{opacity:1}
+  100%{opacity:0;transform:translate(var(--dx), var(--dy)) scale(1) rotate(var(--rot))}
+}
+@keyframes pjDust{
+  0%{opacity:0;transform:translate(0,0) scale(.3)}
+  25%{opacity:.8}
+  100%{opacity:0;transform:translate(var(--dx), var(--dy)) scale(1)}
+}
+.pj-status-fx span:nth-child(1){left:42%;top:48%;background:#00E676;--dx:-48px;--dy:-62px;--rot:120deg;animation-delay:.48s}
+.pj-status-fx span:nth-child(2){left:55%;top:46%;background:#FFD54F;--dx:52px;--dy:-70px;--rot:-90deg;animation-delay:.5s}
+.pj-status-fx span:nth-child(3){left:48%;top:52%;background:#fff;--dx:-20px;--dy:-80px;--rot:60deg;animation-delay:.52s}
+.pj-status-fx span:nth-child(4){left:58%;top:54%;background:#2ECC71;--dx:64px;--dy:-40px;--rot:200deg;animation-delay:.54s}
+.pj-status-fx span:nth-child(5){left:40%;top:56%;background:#69F0AE;--dx:-70px;--dy:-28px;--rot:-140deg;animation-delay:.56s}
+.pj-status-fx span:nth-child(6){left:52%;top:42%;background:#FFECB3;--dx:30px;--dy:-90px;--rot:40deg;animation-delay:.5s}
+.pj-status-fx span:nth-child(7){left:46%;top:58%;background:#00C853;--dx:-36px;--dy:30px;--rot:-50deg;animation-delay:.58s}
+.pj-status-fx span:nth-child(8){left:60%;top:50%;background:#A5D6A7;--dx:72px;--dy:18px;--rot:160deg;animation-delay:.55s}
+.pj-photo-status[data-kind="unsold"] .pj-status-fx span:nth-child(1){--dx:-28px;--dy:-22px;animation-delay:.18s}
+.pj-photo-status[data-kind="unsold"] .pj-status-fx span:nth-child(2){--dx:24px;--dy:-26px;animation-delay:.2s}
+.pj-photo-status[data-kind="unsold"] .pj-status-fx span:nth-child(3){--dx:6px;--dy:-32px;animation-delay:.22s}
+.pj-photo-status[data-kind="unsold"] .pj-status-fx span:nth-child(4){--dx:32px;--dy:-12px;animation-delay:.2s}
+.pj-photo-status[data-kind="unsold"] .pj-status-fx span:nth-child(5){--dx:-34px;--dy:-8px;animation-delay:.24s}
+.pj-photo-status[data-kind="unsold"] .pj-status-fx span:nth-child(6){--dx:12px;--dy:-38px;animation-delay:.21s}
+.pj-photo-status[data-kind="unsold"] .pj-status-fx span:nth-child(7){--dx:-16px;--dy:14px;animation-delay:.25s}
+.pj-photo-status[data-kind="unsold"] .pj-status-fx span:nth-child(8){--dx:28px;--dy:10px;animation-delay:.23s}
+
+/* Legacy full-screen stamp — disabled */
+.pj-stamp-wrap{display:none !important}
+.pj-gavel-svg,.pj-verdict-row,.pj-stamp,.pj-sold-team{display:none !important}
+
 #pjSerialBadge{position:absolute;top:1rem;left:1rem;z-index:10;display:none;
   width:clamp(4.6rem,7vw,6.2rem);height:clamp(5.2rem,8vw,7rem);
   background:linear-gradient(145deg,var(--gold2),var(--gold));
@@ -417,46 +659,71 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 #pjSerialBadge .sl-no-lbl{font-size:.45rem;letter-spacing:.2em;font-weight:800;opacity:.75}
 #pjSerialBadge .sl-no-val{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.5rem,3.5vw,2.6rem);line-height:1}
 
-/* Center info */
+/* Center info — compact so base + live bid stay on screen */
 .pj-info-side{min-width:0;display:flex;flex-direction:column;justify-content:center;
-  padding:clamp(1.1rem,2.5vw,2.6rem) clamp(1.1rem,2.4vw,2.2rem);gap:1.1rem}
-.pj-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(3rem,7vw,6rem);
-  letter-spacing:.06em;line-height:.92;text-transform:uppercase}
-.pj-badges{display:flex;flex-wrap:wrap;gap:.65rem}
-.pj-tier,.pj-role{display:none;align-items:center;font-weight:800;letter-spacing:.14em;
-  text-transform:uppercase;font-size:clamp(.85rem,1.4vw,1.1rem);padding:.55rem 1.2rem;border-radius:999px}
+  padding:clamp(.7rem,1.6vw,1.6rem) clamp(.8rem,1.8vw,1.6rem);gap:.65rem;
+  overflow:hidden}
+.pj-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.2rem,5.2vw,4.4rem);
+  letter-spacing:.05em;line-height:.92;text-transform:uppercase}
+.pj-badges{display:flex;flex-wrap:wrap;gap:.45rem}
+.pj-tier,.pj-role{display:none;align-items:center;font-weight:800;letter-spacing:.12em;
+  text-transform:uppercase;font-size:clamp(.72rem,1.15vw,.95rem);padding:.4rem .9rem;border-radius:999px}
 .pj-tier{color:#fff}
 .pj-role{color:#1a1200;background:linear-gradient(135deg,var(--gold2),var(--gold));
   border:none}
 
-/* Attribute cards — large broadcast tiles */
-.pj-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem}
-.pj-stat{background:var(--card);border:1.5px solid var(--line);border-radius:1rem;
-  padding:1rem 1.15rem;display:grid;grid-template-columns:2.4rem 1fr;column-gap:.85rem;
-  align-items:center;min-height:4.6rem;
-  box-shadow:0 10px 24px rgba(0,0,0,.14)}
-.pj-stat-ico-wrap{width:2.4rem;height:2.4rem;border-radius:.7rem;flex-shrink:0;
+/* Attribute cards */
+.pj-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem .7rem}
+.pj-stat{background:var(--card);border:1.5px solid var(--line);border-radius:.75rem;
+  padding:.65rem .85rem;display:grid;grid-template-columns:2rem 1fr;column-gap:.65rem;
+  align-items:center;min-height:3.4rem;
+  box-shadow:0 8px 18px rgba(0,0,0,.12)}
+.pj-stat-ico-wrap{width:2rem;height:2rem;border-radius:.55rem;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
   background:var(--gold-soft);border:1px solid var(--line);color:var(--gold)}
-.pj-stat-ico{width:1.35rem;height:1.35rem;display:block}
-.pj-stat-body{min-width:0;display:flex;flex-direction:column;gap:.2rem}
-.pj-stat-label{font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);
+.pj-stat-ico{width:1.15rem;height:1.15rem;display:block}
+.pj-stat-body{min-width:0;display:flex;flex-direction:column;gap:.12rem}
+.pj-stat-label{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);
   font-weight:800;line-height:1.1}
-.pj-stat-val{font-size:clamp(1.15rem,2vw,1.55rem);font-weight:800;letter-spacing:.02em;
+.pj-stat-val{font-size:clamp(.95rem,1.6vw,1.25rem);font-weight:800;letter-spacing:.02em;
   color:var(--tx);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pj-chips{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.15rem}
+.pj-chips{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.1rem}
 .pj-chip{border:1px solid var(--line);background:var(--gold-soft);border-radius:999px;
-  padding:.45rem .9rem;font-size:.82rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+  padding:.35rem .7rem;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
 
 /* Base price */
-.pj-base{display:none;align-items:center;justify-content:center;gap:.9rem;margin-top:.55rem;
-  padding:1.15rem 1.6rem;border-radius:1rem;border:2.5px solid var(--gold);
+.pj-base{display:none;align-items:center;justify-content:center;gap:.65rem;margin-top:.25rem;
+  padding:.75rem 1.1rem;border-radius:.8rem;border:2px solid var(--gold);
   background:linear-gradient(135deg,var(--gold-soft),transparent 60%);
-  box-shadow:0 0 32px var(--glow), inset 0 0 20px var(--gold-soft)}
-.pj-base-label{font-weight:800;letter-spacing:.22em;text-transform:uppercase;
-  font-size:clamp(.9rem,1.5vw,1.2rem);color:var(--gold)}
-.pj-base-val{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.6rem,5.2vw,4rem);line-height:1}
-.pj-base-unit{font-weight:800;letter-spacing:.16em;font-size:1.05rem;color:var(--tx2)}
+  box-shadow:0 0 24px var(--glow), inset 0 0 16px var(--gold-soft);flex-shrink:0}
+.pj-base-label{font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  font-size:clamp(.72rem,1.2vw,.95rem);color:var(--gold)}
+.pj-base-val{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.9rem,3.8vw,2.9rem);line-height:1}
+.pj-base-unit{font-weight:800;letter-spacing:.14em;font-size:.85rem;color:var(--tx2)}
+
+/* Sold deal — replaces base price after sale */
+.pj-sold-deal{display:none;align-items:center;justify-content:center;gap:.75rem;margin-top:.25rem;
+  padding:.7rem 1.05rem;border-radius:.8rem;border:2px solid var(--ok);
+  background:linear-gradient(135deg, rgba(46,204,113,.18), transparent 60%);
+  box-shadow:0 0 22px rgba(46,204,113,.28), inset 0 0 14px rgba(46,204,113,.08);flex-shrink:0;
+  animation:pjSoldDealIn .45s ease-out both}
+@keyframes pjSoldDealIn{
+  from{opacity:0;transform:translateY(.35rem)}
+  to{opacity:1;transform:none}
+}
+.pj-sold-deal__logo{
+  width:clamp(2.4rem,3.6vw,3.1rem);height:clamp(2.4rem,3.6vw,3.1rem);
+  border-radius:50%;object-fit:contain;flex-shrink:0;
+  background:rgba(0,0,0,.2);border:2px solid rgba(46,204,113,.45);padding:2px}
+.pj-sold-deal__meta{min-width:0;display:flex;flex-direction:column;gap:.12rem}
+.pj-sold-deal__label{font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  font-size:clamp(.62rem,1vw,.78rem);color:var(--ok)}
+.pj-sold-deal__team{font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(1.15rem,2.2vw,1.65rem);letter-spacing:.04em;line-height:1.05;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:16rem}
+.pj-sold-deal__pts{font-weight:900;font-size:clamp(.9rem,1.5vw,1.15rem);color:var(--ok);
+  letter-spacing:.04em}
+.pj-sold-deal__pts-unit{font-size:.7rem;opacity:.75;margin-left:3px;letter-spacing:.1em}
 
 /* Right aside */
 .pj-aside{min-width:0;display:flex;flex-direction:column;gap:1rem;
@@ -503,31 +770,6 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 
 /* Hidden legacy chrome (kept for JS compatibility) */
 #pjStatusRibbon,#pjProgress,.pj-onair,.pj-right-panel,.pj-spine{display:none !important}
-
-/* Stamp overlay */
-.pj-stamp-wrap{position:absolute;inset:0;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:1rem;z-index:30;pointer-events:none;
-  background:rgba(0,0,0,.62);opacity:0;transition:opacity .35s}
-.pj-stamp-wrap.show{opacity:1}
-.pj-gavel-svg{width:clamp(70px,10vw,120px);filter:drop-shadow(0 8px 18px rgba(0,0,0,.5));
-  animation:pjGavelIn .6s cubic-bezier(.34,1.2,.64,1) both}
-@keyframes pjGavelIn{0%{transform:rotate(-60deg) scale(.5);opacity:0}100%{transform:rotate(-28deg) scale(1);opacity:1}}
-.pj-verdict-row{display:flex;align-items:stretch;border-radius:1rem;overflow:hidden;
-  box-shadow:0 12px 40px rgba(0,0,0,.45);animation:pjVerdictIn .4s ease .15s both}
-@keyframes pjVerdictIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
-.pj-stamp{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,5vw,4rem);letter-spacing:.12em;
-  padding:1rem 1.6rem;line-height:1}
-.pj-stamp.sold{background:linear-gradient(135deg,#c49a2a,#f5d76e);color:#1a1200}
-.pj-stamp.unsold{background:linear-gradient(135deg,#8B0000,#FF3A3A);color:#fff;border-radius:1rem}
-.pj-sold-team{display:none;align-items:center;gap:.8rem;background:rgba(0,0,0,.85);
-  padding:1rem 1.4rem;opacity:0;transform:translateX(12px);transition:opacity .4s .35s,transform .4s .35s}
-.pj-sold-team.show{opacity:1;transform:none}
-.pj-sold-team-logo{width:3.5rem;height:3.5rem;border-radius:50%;object-fit:contain;background:rgba(255,255,255,.08)}
-.pj-sold-team-label{font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(245,215,110,.7);font-weight:800}
-.pj-sold-team-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.2rem,3vw,2rem);color:#f5d76e}
-.pj-sold-pts{font-weight:900;color:#fff;font-size:1.1rem}
-.pj-sold-pts .pts-num{color:#FFD700}
-.pj-sold-pts .pts-unit{font-size:.7rem;color:rgba(255,255,255,.55);margin-left:4px}
 
 /* Sponsors — stationary, centered */
 #pj-sponsors{flex-shrink:0;border-top:1px solid var(--line);
@@ -593,12 +835,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       </div>
     </div>
     <div class="pj-bar-center">
-      <t t-if="sport == 'football'">
-        <span class="pj-pa-text">Football Auction</span>
-      </t>
-      <t t-else="">
-        <span class="pj-pa-text">Player Auction</span>
-      </t>
+      <span class="pj-pa-text">Auction</span>
       <span class="pj-live-pill"><span class="pj-live-pill-dot"></span>LIVE</span>
     </div>
     <div class="pj-bar-right">
@@ -633,7 +870,14 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
           </svg>
         </a>
       </div>
-      <button class="pj-fs-btn" id="pjFsBtn" onclick="pjToggleFs()" title="Fullscreen">&#x26F6;</button>
+      <button type="button" class="pj-fs-btn" id="pjFsBtn" onclick="pjToggleFs()" title="Fullscreen" aria-label="Fullscreen">
+        <svg class="pj-fs-ico pj-fs-ico--enter" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <svg class="pj-fs-ico pj-fs-ico--exit" viewBox="0 0 24 24" aria-hidden="true" focusable="false" hidden="hidden">
+          <path d="M8 3v3H5m11-3v3h3M8 21v-3H5m11 3v-3h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
     </div>
   </div>
 
@@ -717,6 +961,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         <div class="pj-floor" aria-hidden="true"></div>
         <div class="pj-photo-ph" id="pjPhotoPh">&#128100;</div>
         <div class="pj-serial-wm" id="pjSerialWm"></div>
+        <!-- Mystery player: classic top-right slanting SOLD ribbon -->
         <div class="pj-photo-sold" id="pjPhotoSold">
           <div class="pj-photo-sold-ribbon">
             <div class="pj-photo-sold-label">SOLD</div>
@@ -725,6 +970,41 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
               <div class="pj-photo-sold-name" id="pjPhotoSoldName"></div>
             </div>
             <div class="pj-photo-sold-pts" id="pjPhotoSoldPts"></div>
+          </div>
+        </div>
+        <div class="pj-photo-status" id="pjPhotoStatus" data-kind="sold" aria-live="polite">
+          <div class="pj-status-glow" aria-hidden="true"></div>
+          <div class="pj-status-seal" id="pjStatusSeal" aria-hidden="true">
+            <div class="pj-status-seal-ring"></div>
+            <svg class="pj-status-seal-svg" viewBox="0 0 200 200" aria-hidden="true"
+                 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+              <defs>
+                <path id="pjSealArcTop" d="M28,100 a72,72 0 1,1 144,0"/>
+                <path id="pjSealArcBot" d="M172,100 a72,72 0 1,1 -144,0"/>
+              </defs>
+              <text id="pjSealArcTopText" fill="currentColor" font-size="13" font-weight="800" letter-spacing="3.2">
+                <textPath xlink:href="#pjSealArcTop" href="#pjSealArcTop" startOffset="50%" text-anchor="middle">★★★ SOLD TO ★★★</textPath>
+              </text>
+              <text id="pjSealArcBotText" fill="currentColor" font-size="12" font-weight="800" letter-spacing="2.5">
+                <textPath xlink:href="#pjSealArcBot" href="#pjSealArcBot" startOffset="50%" text-anchor="middle">★★★★★</textPath>
+              </text>
+            </svg>
+            <div class="pj-status-seal-core">
+              <img class="pj-status-seal-logo" id="pjStatusSealLogo" src="" alt=""/>
+              <div class="pj-status-seal-team" id="pjStatusSealTeam"></div>
+              <div class="pj-status-seal-pts" id="pjStatusSealPts"></div>
+            </div>
+          </div>
+          <div class="pj-status-ribbon-wrap">
+            <div class="pj-status-ribbon" id="pjPhotoStatusRibbon" role="status">
+              <span class="pj-status-ribbon-shine" aria-hidden="true"></span>
+              <span class="pj-status-ico" id="pjStatusIco" aria-hidden="true">✓</span>
+              <span class="pj-status-word" id="pjStatusWord">SOLD</span>
+            </div>
+          </div>
+          <div class="pj-status-fx" id="pjStatusFx" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
           </div>
         </div>
       </div>
@@ -742,6 +1022,14 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
           <span class="pj-base-label">Base Price</span>
           <span class="pj-base-val" id="pjBaseVal">0</span>
           <span class="pj-base-unit">PTS</span>
+        </div>
+        <div class="pj-sold-deal" id="pjSoldDeal" style="display:none">
+          <img class="pj-sold-deal__logo" id="pjSoldDealLogo" src="" alt=""/>
+          <div class="pj-sold-deal__meta">
+            <div class="pj-sold-deal__label">Sold To</div>
+            <div class="pj-sold-deal__team" id="pjSoldDealTeam"></div>
+            <div class="pj-sold-deal__pts" id="pjSoldDealPts"></div>
+          </div>
         </div>
       </div>
 
@@ -1228,30 +1516,18 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     }
 
     var baseEl = document.getElementById('pjBase');
-    if (p.base_price) {
-      document.getElementById('pjBaseVal').textContent = Number(p.base_price).toLocaleString();
-      baseEl.style.display = 'inline-flex';
-    } else baseEl.style.display = 'none';
-
-    var stampWrap = document.getElementById('pjStampWrap');
-    var stamp = document.getElementById('pjStamp');
-    var soldTeam = document.getElementById('pjSoldTeam');
-    var gavelSvg = document.getElementById('pjGavelSvg');
-    var verdictRow = document.getElementById('pjVerdictRow');
-    var photoSold = document.getElementById('pjPhotoSold');
-    function reAnim(el){ if(!el) return; el.style.animation='none'; void el.offsetHeight; el.style.animation=''; }
-    function hidePhotoSold() {
-      if (!photoSold) return;
-      photoSold.classList.remove('show');
+    var soldDeal = document.getElementById('pjSoldDeal');
+    function hideSoldDeal() {
+      if (soldDeal) soldDeal.style.display = 'none';
     }
-    function showPhotoSoldBadge(player) {
-      if (!photoSold) return;
-      var nameEl = document.getElementById('pjPhotoSoldName');
-      var logoEl = document.getElementById('pjPhotoSoldLogo');
-      var ptsEl = document.getElementById('pjPhotoSoldPts');
-      if (nameEl) nameEl.textContent = player.team_name || '';
+    function showSoldDeal(player) {
+      if (!soldDeal) return;
+      var teamEl = document.getElementById('pjSoldDealTeam');
+      var logoEl = document.getElementById('pjSoldDealLogo');
+      var ptsEl = document.getElementById('pjSoldDealPts');
+      if (teamEl) teamEl.textContent = (player && player.team_name) || '—';
       if (logoEl) {
-        if (player.team_logo_url || player.team_logo) {
+        if (player && (player.team_logo_url || player.team_logo)) {
           logoEl.src = player.team_logo_url || ('data:image/jpeg;base64,' + player.team_logo);
           logoEl.style.display = 'block';
         } else {
@@ -1260,7 +1536,80 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         }
       }
       if (ptsEl) {
-        if (player.sold_points) {
+        if (player && player.sold_points) {
+          ptsEl.innerHTML = Number(player.sold_points).toLocaleString() +
+            '<span class="pj-sold-deal__pts-unit">PTS</span>';
+          ptsEl.style.display = 'block';
+        } else {
+          ptsEl.textContent = '';
+          ptsEl.style.display = 'none';
+        }
+      }
+      soldDeal.style.animation = 'none';
+      void soldDeal.offsetHeight;
+      soldDeal.style.animation = '';
+      soldDeal.style.display = 'inline-flex';
+    }
+    if (p.base_price) {
+      document.getElementById('pjBaseVal').textContent = Number(p.base_price).toLocaleString();
+      if (baseEl) baseEl.style.display = 'inline-flex';
+    } else if (baseEl) {
+      baseEl.style.display = 'none';
+    }
+    if (p.state === 'sold') {
+      showSoldDeal(p);
+    } else {
+      hideSoldDeal();
+    }
+
+    var stampWrap = document.getElementById('pjStampWrap');
+    var soldTeam = document.getElementById('pjSoldTeam');
+    var photoStatus = document.getElementById('pjPhotoStatus');
+    var photoSold = document.getElementById('pjPhotoSold');
+    var photoSide = document.getElementById('pjPhotoSide');
+    if (typeof window._pjSealFadeTimer === 'undefined') window._pjSealFadeTimer = null;
+    function reAnim(el){ if(!el) return; el.style.animation='none'; void el.offsetHeight; el.style.animation=''; }
+    function clearSealFade() {
+      if (window._pjSealFadeTimer) {
+        clearTimeout(window._pjSealFadeTimer);
+        window._pjSealFadeTimer = null;
+      }
+      if (photoStatus) photoStatus.classList.remove('is-faded');
+      if (photoSold) photoSold.classList.remove('is-faded');
+    }
+    function scheduleStampFade() {
+      clearSealFade();
+      window._pjSealFadeTimer = setTimeout(function() {
+        if (photoStatus && photoStatus.classList.contains('show')) {
+          photoStatus.classList.add('is-faded');
+        }
+        if (photoSold && photoSold.classList.contains('show')) {
+          photoSold.classList.add('is-faded');
+        }
+        window._pjSealFadeTimer = null;
+      }, 3000);
+    }
+    function hidePhotoSold() {
+      if (!photoSold) return;
+      photoSold.classList.remove('show', 'is-faded');
+    }
+    function showMysterySoldRibbon(player) {
+      if (!photoSold) return;
+      var nameEl = document.getElementById('pjPhotoSoldName');
+      var logoEl = document.getElementById('pjPhotoSoldLogo');
+      var ptsEl = document.getElementById('pjPhotoSoldPts');
+      if (nameEl) nameEl.textContent = (player && player.team_name) || '';
+      if (logoEl) {
+        if (player && (player.team_logo_url || player.team_logo)) {
+          logoEl.src = player.team_logo_url || ('data:image/jpeg;base64,' + player.team_logo);
+          logoEl.style.display = 'block';
+        } else {
+          logoEl.removeAttribute('src');
+          logoEl.style.display = 'none';
+        }
+      }
+      if (ptsEl) {
+        if (player && player.sold_points) {
           ptsEl.textContent = 'for ' + Number(player.sold_points).toLocaleString() + ' pts';
           ptsEl.style.display = 'block';
         } else {
@@ -1268,6 +1617,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
           ptsEl.style.display = 'none';
         }
       }
+      photoSold.classList.remove('is-faded');
       photoSold.style.animation = 'none';
       void photoSold.offsetHeight;
       photoSold.style.animation = '';
@@ -1278,46 +1628,93 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         ribbon.style.animation = '';
       }
       photoSold.classList.add('show');
+      scheduleStampFade();
     }
-    /* Mystery revealed: keep the full player visible — sold badge sits on the photo only.
-       Non-mystery (and unrevealed mystery) keep the full-screen celebration overlay. */
-    var mysteryPhotoSold = !!(p.is_mystery && p.mystery_revealed && p.state === 'sold');
-    if (mysteryPhotoSold) {
-      stampWrap.classList.remove('show');
-      soldTeam.classList.remove('show');
-      soldTeam.style.display = 'none';
-      showPhotoSoldBadge(p);
-    } else if (p.state === 'sold') {
-      hidePhotoSold();
-      stamp.textContent = 'SOLD'; stamp.className = 'pj-stamp sold';
-      reAnim(gavelSvg); reAnim(verdictRow); reAnim(stamp);
-      stampWrap.classList.add('show'); soldTeam.style.display = 'flex';
-      if (p.team_name) {
-        document.getElementById('pjSoldTeamName').textContent = p.team_name;
-        var logoEl = document.getElementById('pjSoldTeamLogo');
-        if (p.team_logo_url || p.team_logo) {
-          logoEl.src = p.team_logo_url || ('data:image/jpeg;base64,' + p.team_logo);
-          logoEl.style.display = 'block';
-        } else logoEl.style.display = 'none';
-        var ptsEl = document.getElementById('pjSoldPts');
-        if (ptsEl) {
-          if (p.sold_points) {
-            ptsEl.innerHTML = '<span class="pts-num">' + esc(String(p.sold_points)) + '</span><span class="pts-unit">pts</span>';
-            ptsEl.style.display = 'block';
-          } else ptsEl.style.display = 'none';
+    function hidePhotoStatus() {
+      if (!photoStatus) return;
+      photoStatus.classList.remove('show', 'is-faded');
+      if (photoSide) {
+        photoSide.classList.remove('is-status-freeze', 'is-sold-glow', 'is-unsold-shake');
+      }
+    }
+    function showPhotoStatus(kind, player) {
+      if (!photoStatus) return;
+      var isSold = kind === 'sold';
+      var wordEl = document.getElementById('pjStatusWord');
+      var icoEl = document.getElementById('pjStatusIco');
+      var teamEl = document.getElementById('pjStatusSealTeam');
+      var ptsEl = document.getElementById('pjStatusSealPts');
+      var logoEl = document.getElementById('pjStatusSealLogo');
+      var arcTop = document.getElementById('pjSealArcTopText');
+      var arcBot = document.getElementById('pjSealArcBotText');
+      var ribbon = document.getElementById('pjPhotoStatusRibbon');
+      var seal = document.getElementById('pjStatusSeal');
+      var fx = document.getElementById('pjStatusFx');
+      var glow = photoStatus.querySelector('.pj-status-glow');
+
+      photoStatus.setAttribute('data-kind', isSold ? 'sold' : 'unsold');
+      if (wordEl) wordEl.textContent = isSold ? 'SOLD' : 'UNSOLD';
+      if (icoEl) icoEl.textContent = isSold ? '✓' : '✕';
+      if (arcTop) {
+        var tp = arcTop.querySelector('textPath');
+        if (tp) tp.textContent = isSold ? '★★★ SOLD TO ★★★' : '★★★ NO BID ★★★';
+      }
+      if (arcBot) {
+        var bp = arcBot.querySelector('textPath');
+        if (bp) bp.textContent = isSold ? '★★★★★' : 'UNSOLD';
+      }
+      if (teamEl) teamEl.textContent = (isSold && player && player.team_name) ? player.team_name : '';
+      if (logoEl) {
+        if (isSold && player && (player.team_logo_url || player.team_logo)) {
+          logoEl.src = player.team_logo_url || ('data:image/jpeg;base64,' + player.team_logo);
+          logoEl.classList.add('is-on');
+        } else {
+          logoEl.removeAttribute('src');
+          logoEl.classList.remove('is-on');
         }
       }
-      setTimeout(function(){ soldTeam.classList.add('show'); }, 20);
+      if (ptsEl) {
+        if (isSold && player && player.sold_points) {
+          ptsEl.textContent = Number(player.sold_points).toLocaleString() + ' PTS';
+          ptsEl.style.display = '';
+        } else {
+          ptsEl.textContent = '';
+          ptsEl.style.display = 'none';
+        }
+      }
+
+      /* Replay premium broadcast sequence */
+      clearSealFade();
+      photoStatus.classList.remove('show', 'is-faded');
+      if (photoSide) {
+        photoSide.classList.remove('is-status-freeze', 'is-sold-glow', 'is-unsold-shake');
+        void photoSide.offsetHeight;
+        photoSide.classList.add('is-status-freeze');
+        if (isSold) photoSide.classList.add('is-sold-glow');
+        else photoSide.classList.add('is-unsold-shake');
+      }
+      void photoStatus.offsetHeight;
+      [glow, seal, ribbon, fx].forEach(reAnim);
+      if (fx) Array.prototype.forEach.call(fx.children, reAnim);
+      photoStatus.classList.add('show');
+      scheduleStampFade();
+    }
+    /* Status graphics live only on the player photograph */
+    if (stampWrap) stampWrap.classList.remove('show');
+    if (soldTeam) {
+      soldTeam.classList.remove('show');
+      soldTeam.style.display = 'none';
+    }
+    if (p.state === 'sold') {
+      hidePhotoSold();
+      showPhotoStatus('sold', p);
     } else if (p.state === 'unsold') {
       hidePhotoSold();
-      stamp.textContent = 'UNSOLD'; stamp.className = 'pj-stamp unsold';
-      reAnim(gavelSvg); reAnim(verdictRow); reAnim(stamp);
-      stampWrap.classList.add('show');
-      soldTeam.classList.remove('show'); soldTeam.style.display = 'none';
+      showPhotoStatus('unsold', p);
     } else {
       hidePhotoSold();
-      stampWrap.classList.remove('show');
-      soldTeam.classList.remove('show'); soldTeam.style.display = 'none';
+      hidePhotoStatus();
+      clearSealFade();
     }
     updateStatusRibbon(p);
   }
@@ -1467,16 +1864,63 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   window.pjSponScroll = function(){};
   /* Sponsors stay centered and stationary — no marquee */
 
-  window.pjToggleFs = function() {
-    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function(){});
-    else document.exitFullscreen().catch(function(){});
-  };
-  document.addEventListener('fullscreenchange', function() {
+  function pjFsElement() {
+    return document.fullscreenElement
+      || document.webkitFullscreenElement
+      || document.mozFullScreenElement
+      || document.msFullscreenElement
+      || null;
+  }
+  function pjRequestFullscreen(el) {
+    if (!el) return Promise.reject(new Error('No element'));
+    if (el.requestFullscreen) return el.requestFullscreen();
+    if (el.webkitRequestFullscreen) return Promise.resolve(el.webkitRequestFullscreen());
+    if (el.mozRequestFullScreen) return Promise.resolve(el.mozRequestFullScreen());
+    if (el.msRequestFullscreen) return Promise.resolve(el.msRequestFullscreen());
+    return Promise.reject(new Error('Fullscreen unsupported'));
+  }
+  function pjExitFullscreen() {
+    if (document.exitFullscreen) return document.exitFullscreen();
+    if (document.webkitExitFullscreen) return Promise.resolve(document.webkitExitFullscreen());
+    if (document.mozCancelFullScreen) return Promise.resolve(document.mozCancelFullScreen());
+    if (document.msExitFullscreen) return Promise.resolve(document.msExitFullscreen());
+    return Promise.reject(new Error('Exit fullscreen unsupported'));
+  }
+  function pjSyncFsBtn() {
     var btn = document.getElementById('pjFsBtn');
     if (!btn) return;
-    btn.innerHTML = document.fullscreenElement ? '\u2715' : '&#x26F6;';
-    btn.title = document.fullscreenElement ? 'Exit Fullscreen' : 'Fullscreen';
-  });
+    var active = !!pjFsElement();
+    btn.classList.toggle('is-fs', active);
+    btn.title = active ? 'Exit Fullscreen' : 'Fullscreen';
+    btn.setAttribute('aria-label', btn.title);
+    var exitIco = btn.querySelector('.pj-fs-ico--exit');
+    var enterIco = btn.querySelector('.pj-fs-ico--enter');
+    if (exitIco) {
+      if (active) exitIco.removeAttribute('hidden');
+      else exitIco.setAttribute('hidden', 'hidden');
+    }
+    if (enterIco) {
+      if (active) enterIco.setAttribute('hidden', 'hidden');
+      else enterIco.removeAttribute('hidden');
+    }
+  }
+  window.pjToggleFs = function() {
+    var active = pjFsElement();
+    var target = document.documentElement;
+    var p = active ? pjExitFullscreen() : pjRequestFullscreen(target);
+    if (p && typeof p.then === 'function') {
+      p.then(pjSyncFsBtn).catch(function(err) {
+        console.warn('Projector fullscreen failed:', err);
+      });
+    } else {
+      setTimeout(pjSyncFsBtn, 50);
+    }
+  };
+  document.addEventListener('fullscreenchange', pjSyncFsBtn);
+  document.addEventListener('webkitfullscreenchange', pjSyncFsBtn);
+  document.addEventListener('mozfullscreenchange', pjSyncFsBtn);
+  document.addEventListener('MSFullscreenChange', pjSyncFsBtn);
+  pjSyncFsBtn();
 
   var _pjBreakActive = false;
   var _pjBreakStart = null;

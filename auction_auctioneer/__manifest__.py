@@ -38,7 +38,7 @@
 
 {
     'name': 'Auction Auctioneer Console',
-    'version': '1.4.8',
+    'version': '1.4.10',
     'summary': 'Live bidding console for the Auctioneer',
     'description': """
         Provides a dedicated Auctioneer Console – a full-screen web app (no Odoo

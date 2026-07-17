@@ -32,6 +32,7 @@
     var BID_URL      = window.AC_BID_URL      || '/auction/auctioneer/place-bid';
     var RESET_URL    = window.AC_RESET_URL    || '/auction/auctioneer/reset-bid';
     var FINALIZE_URL = window.AC_FINALIZE_URL || '/auction/auctioneer/finalize-bid';
+    var UNSOLD_URL   = window.AC_UNSOLD_URL   || '/auction/auctioneer/mark-unsold';
     var DICE_URL     = window.AC_DICE_URL     || '/auction/auctioneer/dice';
     var CALL_URL     = window.AC_CALL_URL     || '/auction/auctioneer/call-player';
     var NEXT_URL     = window.AC_NEXT_URL     || '/auction/auctioneer/next-player';
@@ -533,6 +534,12 @@
             if (cardRoot) cardRoot.classList.remove('is-mystery-locked', 'is-awaiting-reveal');
             var revealBtn0 = document.getElementById('acRevealBtn');
             if (revealBtn0) revealBtn0.style.display = 'none';
+            var reset0 = document.getElementById('acResetBidBtn');
+            var sold0 = document.getElementById('acFinalizeBtn');
+            var unsold0 = document.getElementById('acUnsoldBtn');
+            if (reset0) reset0.style.display = 'none';
+            if (sold0) sold0.style.display = 'none';
+            if (unsold0) unsold0.style.display = 'none';
             var actions0 = document.querySelector('.ac-player-actions');
             if (actions0) actions0.classList.remove('is-reveal-only');
             return;
@@ -617,8 +624,11 @@
 
         // Action buttons
         var hasBid = !awaiting && p.state === 'auction' && p.current_bid && p.current_bid > 0;
+        var canUnsold = !awaiting && p.state === 'auction';
         document.getElementById('acResetBidBtn').style.display  = hasBid ? '' : 'none';
         document.getElementById('acFinalizeBtn').style.display  = hasBid ? '' : 'none';
+        var unsoldBtn = document.getElementById('acUnsoldBtn');
+        if (unsoldBtn) unsoldBtn.style.display = canUnsold ? '' : 'none';
         var revealBtn = document.getElementById('acRevealBtn');
         if (revealBtn) {
             revealBtn.style.display = awaiting ? '' : 'none';
@@ -900,6 +910,36 @@
                 return;
             }
             showToast('Bid reset', 'info');
+            clearTimeout(state.pollTimer);
+            poll();
+        });
+    };
+
+    /* ── Mark Unsold ────────────────────────────────────────────────────── */
+    window.acMarkUnsold = function () {
+        var player = state.currentPlayer;
+        if (!player || isAwaitingReveal(player) || player.state !== 'auction') return;
+        var label = isMysteryHidden(player) ? 'Mystery Player' : (player.name || 'this player');
+        var msg = 'Mark ' + label + ' as UNSOLD?';
+        if (player.current_bid && player.current_bid > 0) {
+            msg += '\n\nThere is a live bid of ' + fmtPts(player.current_bid) + ' pts — it will be discarded.';
+        }
+        if (!confirm(msg)) return;
+
+        var btn = document.getElementById('acUnsoldBtn');
+        if (btn) { btn.disabled = true; btn.textContent = '…'; }
+
+        jsonRpc(UNSOLD_URL, { player_id: player.id }, function (err, result) {
+            if (btn) { btn.disabled = false; btn.textContent = 'Unsold'; }
+            if (err || !result || !result.success) {
+                showToast((result && result.error) || 'Failed to mark unsold', 'error');
+                return;
+            }
+            showToast(
+                (isMysteryHidden(player) ? 'Mystery Player' : (player.name || 'Player'))
+                + ' marked UNSOLD',
+                'info'
+            );
             clearTimeout(state.pollTimer);
             poll();
         });

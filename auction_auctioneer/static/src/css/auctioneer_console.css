@@ -968,6 +968,15 @@ a { color: inherit; text-decoration: none; }
     color: #fff;
 }
 
+.ac-btn--unsold {
+    background: linear-gradient(135deg, #8e0000, #c62828);
+    color: #fff;
+    grid-column: 1 / -1;
+}
+.ac-btn--unsold:hover:not(:disabled) {
+    filter: brightness(1.08);
+}
+
 .ac-btn--reveal {
     background: linear-gradient(135deg, #7c3aed, #a855f7);
     color: #fff;

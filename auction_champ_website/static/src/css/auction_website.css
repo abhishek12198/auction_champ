@@ -86,6 +86,23 @@ ul   { list-style: none; }
     transition: color .2s;
 }
 .ac-nav-links a:hover { color: var(--ac-gold); }
+.ac-nav-login {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 14px !important;
+    border: 1.5px solid rgba(255,255,255,.35);
+    border-radius: 6px;
+    color: rgba(255,255,255,.9) !important;
+    font-weight: 600 !important;
+    transition: var(--ac-transition) !important;
+}
+.ac-nav-login:hover {
+    border-color: var(--ac-gold) !important;
+    color: var(--ac-gold) !important;
+    background: rgba(253, 206, 51, .08);
+}
+.ac-nav-login i { font-size: 0.85em; }
 .ac-nav-cta {
     background: var(--ac-gold) !important;
     color: var(--ac-navy) !important;
@@ -139,6 +156,12 @@ ul   { list-style: none; }
     display: inline-block;
     margin-top: 12px;
     border-bottom: none !important;
+}
+.ac-nav-mobile .ac-nav-login {
+    display: inline-flex !important;
+    margin-top: 8px;
+    border-bottom: none !important;
+    width: fit-content;
 }
 
 /* ── HERO ────────────────────────────────────────────────────── */

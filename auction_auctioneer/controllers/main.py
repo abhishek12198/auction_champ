@@ -773,6 +773,34 @@ class AuctionAuctioneerController(http.Controller):
         player.sudo().write({'current_bid': 0, 'current_bid_team_id': False})
         return {'success': True}
 
+    # ── Mark unsold ────────────────────────────────────────────────────────
+
+    @http.route('/auction/auctioneer/mark-unsold', type='json', auth='user', website=False, csrf=False)
+    def mark_unsold(self, player_id, **kw):
+        """Mark the staged player as unsold and clear any live bid."""
+        env = request.env
+        player = env['auction.team.player'].sudo().browse(int(player_id))
+        if not player.exists():
+            return {'success': False, 'error': 'Player not found'}
+        if player.state != 'auction':
+            return {'success': False, 'error': 'Player is not currently in auction'}
+
+        result = player.action_unsold()
+        if not result or not result.get('success'):
+            return result or {'success': False, 'error': 'Failed to mark unsold'}
+
+        # Clear live bid; keep on stage so projector can show UNSOLD stamp
+        player.sudo().write({
+            'current_bid': 0,
+            'current_bid_team_id': False,
+            'is_on_stage': True,
+        })
+        return {
+            'success': True,
+            'player_name': player.name,
+            'display_seconds': result.get('display_seconds', 5),
+        }
+
     # ── Finalize (sell) ────────────────────────────────────────────────────
 
     @http.route('/auction/auctioneer/finalize-bid', type='json', auth='user', website=False, csrf=False)

@@ -39,22 +39,23 @@
 
     <xpath expr="//body" position="inside">
         <style type="text/css"><![CDATA[
-/* Live bid — matches .pj-base tokens (gold / panel / Bebas) */
+/* Live bid — compact so amount + leading team fit on TV / projector */
 .pj-live-bid{
   display:none;
   flex-direction:column;
   align-items:stretch;
-  gap:.55rem;
-  margin-top:.75rem;
-  padding:1rem 1.35rem 1.1rem;
-  border-radius:1rem;
+  gap:.35rem;
+  margin-top:.35rem;
+  padding:.65rem .9rem .7rem;
+  border-radius:.8rem;
   border:2px solid var(--ok);
   background:
     linear-gradient(145deg, rgba(46,204,113,.16), transparent 58%),
     var(--card);
-  box-shadow:0 0 28px rgba(46,204,113,.28), inset 0 0 18px rgba(46,204,113,.1);
-  min-width:min(100%, 24rem);
+  box-shadow:0 0 22px rgba(46,204,113,.24), inset 0 0 14px rgba(46,204,113,.08);
+  width:100%;
   max-width:100%;
+  flex-shrink:0;
   animation:pjLiveBidIn .35s ease-out;
 }
 @keyframes pjLiveBidIn{
@@ -66,74 +67,77 @@
 }
 @keyframes pjLiveBidFlash{
   0%{transform:scale(1); color:#7dffa8}
-  35%{transform:scale(1.08); color:#fff}
+  35%{transform:scale(1.06); color:#fff}
   100%{transform:scale(1); color:#2ecc71}
 }
 .pj-live-bid__head{
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:.55rem;
+  gap:.4rem;
 }
 .pj-live-bid__pulse{
-  width:.55rem;
-  height:.55rem;
+  width:.45rem;
+  height:.45rem;
   border-radius:50%;
   background:var(--ok);
-  box-shadow:0 0 10px rgba(46,204,113,.55);
+  box-shadow:0 0 8px rgba(46,204,113,.55);
   animation:pjPulse 1.2s ease-in-out infinite;
   flex-shrink:0;
 }
 .pj-live-bid__label{
   font-weight:800;
-  letter-spacing:.28em;
+  letter-spacing:.22em;
   text-transform:uppercase;
-  font-size:clamp(.72rem,1.2vw,.95rem);
+  font-size:clamp(.62rem,1vw,.8rem);
   color:var(--ok);
 }
 .pj-live-bid__body{
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:1rem;
-  flex-wrap:wrap;
+  gap:.65rem;
+  flex-wrap:nowrap;
+  min-width:0;
 }
 .pj-live-bid__call{
   display:inline-flex;
   align-items:baseline;
-  gap:.55rem;
+  gap:.4rem;
   line-height:1;
+  flex-shrink:0;
 }
 .pj-live-bid__amount{
   font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(2.8rem,5.4vw,4.1rem);
+  font-size:clamp(1.9rem,3.6vw,2.8rem);
   line-height:1;
   color:#2ecc71;
-  text-shadow:0 0 22px rgba(46,204,113,.45);
+  text-shadow:0 0 18px rgba(46,204,113,.4);
   font-variant-numeric:tabular-nums;
   letter-spacing:.02em;
 }
 .pj-live-bid__unit{
   font-weight:800;
-  letter-spacing:.18em;
-  font-size:clamp(.78rem,1.2vw,1rem);
+  letter-spacing:.14em;
+  font-size:clamp(.65rem,1vw,.85rem);
   color:var(--ok);
-  padding-bottom:.15rem;
+  padding-bottom:.1rem;
 }
 .pj-live-bid__divider{
   width:1px;
-  height:2.4rem;
+  height:1.8rem;
   background:rgba(46,204,113,.35);
   flex-shrink:0;
 }
 .pj-live-bid__team{
   display:flex;
   align-items:center;
-  gap:.7rem;
+  gap:.5rem;
   min-width:0;
+  flex:1 1 auto;
   max-width:100%;
-  padding:.35rem .55rem .35rem .35rem;
-  border-radius:.75rem;
+  padding:.25rem .45rem .25rem .25rem;
+  border-radius:.6rem;
   background:rgba(0,0,0,.18);
   border:1px solid rgba(46,204,113,.22);
 }
@@ -142,7 +146,7 @@
   background:
     linear-gradient(145deg, rgba(30,158,85,.12), transparent 58%),
     var(--card);
-  box-shadow:0 8px 22px rgba(30,158,85,.14), inset 0 0 14px rgba(30,158,85,.06);
+  box-shadow:0 6px 16px rgba(30,158,85,.12), inset 0 0 10px rgba(30,158,85,.05);
 }
 [data-mode="light"] .pj-live-bid__amount{
   color:#1e9e55;
@@ -153,33 +157,33 @@
   border-color:rgba(30,158,85,.2);
 }
 .pj-live-bid__logo{
-  width:2.55rem;
-  height:2.55rem;
+  width:2rem;
+  height:2rem;
   border-radius:50%;
   object-fit:contain;
   background:rgba(255,255,255,.1);
   border:1.5px solid rgba(46,204,113,.35);
   flex-shrink:0;
-  padding:.15rem;
+  padding:.1rem;
 }
-.pj-live-bid__team-meta{min-width:0; text-align:left}
+.pj-live-bid__team-meta{min-width:0; text-align:left; overflow:hidden}
 .pj-live-bid__team-tag{
-  font-size:.58rem;
+  font-size:.52rem;
   font-weight:700;
-  letter-spacing:.16em;
+  letter-spacing:.14em;
   text-transform:uppercase;
   color:var(--ok);
-  margin-bottom:2px;
+  margin-bottom:1px;
 }
 .pj-live-bid__team-name{
   font-weight:800;
-  font-size:clamp(.88rem,1.45vw,1.1rem);
-  letter-spacing:.05em;
+  font-size:clamp(.72rem,1.2vw,.95rem);
+  letter-spacing:.04em;
   text-transform:uppercase;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  max-width:12.5rem;
+  max-width:100%;
   color:var(--tx);
   line-height:1.15;
 }
@@ -187,11 +191,11 @@
   display:none;
   align-items:center;
   justify-content:center;
-  gap:.55rem;
-  padding:.55rem 0 .15rem;
-  font-size:clamp(.88rem,1.3vw,1.05rem);
+  gap:.45rem;
+  padding:.35rem 0 .05rem;
+  font-size:clamp(.72rem,1.1vw,.9rem);
   font-weight:700;
-  letter-spacing:.08em;
+  letter-spacing:.06em;
   text-transform:uppercase;
   color:var(--tx2);
 }
