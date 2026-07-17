@@ -2270,6 +2270,7 @@ class Auction(http.Controller):
                         'is_mystery': dice_mystery,
                     },
                     'progress': _pj_progress(tournament),
+                    'wait_phase': _pj_wait_phase(tournament),
                     'teams': _pj_teams(tournament, db_name),
                     'recent_bids': _pj_recent_bids(tournament, db_name),
                     'top_purse': _pj_top_purse(tournament),
@@ -2360,6 +2361,7 @@ class Auction(http.Controller):
                 'player': player_payload,
                 'dice': {'state': 'idle', 'result': 0, 'is_mystery': False},
                 'progress': _pj_progress(tournament, current_player=player),
+                'wait_phase': _pj_wait_phase(tournament),
                 'teams': _pj_teams(tournament, db_name, leading_team_id=leading_team_id),
                 'recent_bids': _pj_recent_bids(tournament, db_name, player=player),
                 'top_purse': _pj_top_purse(tournament),
@@ -4437,6 +4439,51 @@ def _pj_progress(tournament, current_player=None):
             current = min(done + 1, total) if total else 0
     label = ('%s of %s' % (current, total)) if total else ''
     return {'current': current, 'total': total, 'label': label}
+
+
+def _pj_wait_phase(tournament):
+    """Idle projector screen phase when no player is on stage.
+
+    - about_to_begin: everyone still in draft (no sold/unsold/auction yet)
+    - waiting: auction underway (someone sold/unsold, or a player in auction)
+    - completed: nothing left in draft or auction
+    """
+    name = (tournament.name or 'the tournament') if tournament else 'the tournament'
+    if not tournament:
+        return {
+            'phase': 'about_to_begin',
+            'tournament_name': name,
+            'message': 'AUCTION IS ABOUT TO BEGIN..',
+        }
+    Player = request.env['auction.team.player'].sudo()
+    domain = [('tournament_id', '=', tournament.id), ('icon_player', '=', False)]
+    draft = Player.search_count(domain + [('state', '=', 'draft')])
+    auction = Player.search_count(domain + [('state', '=', 'auction')])
+    sold = Player.search_count(domain + [('state', '=', 'sold')])
+    unsold = Player.search_count(domain + [('state', '=', 'unsold')])
+    remaining = draft + auction
+    finished = sold + unsold
+
+    if remaining == 0 and finished > 0:
+        return {
+            'phase': 'completed',
+            'tournament_name': name,
+            'message': (
+                'Thank you Owners on the behalf of %s organizers, '
+                'the Auction is Completed.'
+            ) % name,
+        }
+    if auction == 0 and sold == 0 and unsold == 0:
+        return {
+            'phase': 'about_to_begin',
+            'tournament_name': name,
+            'message': 'AUCTION IS ABOUT TO BEGIN..',
+        }
+    return {
+        'phase': 'waiting',
+        'tournament_name': name,
+        'message': 'Waiting for Next Player',
+    }
 
 
 def _pj_auction_meta(tournament):

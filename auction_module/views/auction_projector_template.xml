@@ -299,8 +299,14 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 .pj-wait-hero-logo{width:min(140px,22vw);height:auto;border-radius:12px}
 .pj-wait-hero-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,5vw,3.6rem);
   letter-spacing:.12em;text-align:center}
-.pj-wait-sub{color:var(--tx2);letter-spacing:.2em;text-transform:uppercase;font-size:.75rem}
+.pj-wait-sub{color:var(--tx2);letter-spacing:.2em;text-transform:uppercase;font-size:.75rem;
+  text-align:center;max-width:min(92vw,52rem);line-height:1.45;padding:0 1rem}
+.pj-wait-sub.is-begin{color:var(--gold);font-weight:800;font-size:clamp(.85rem,1.6vw,1.15rem);
+  letter-spacing:.28em}
+.pj-wait-sub.is-complete{color:var(--gold);font-weight:700;font-size:clamp(.78rem,1.4vw,1.05rem);
+  letter-spacing:.12em;text-transform:none}
 .pj-wait-dots{display:flex;gap:.5rem}
+#pj-waiting.is-complete .pj-wait-dots{display:none}
 .pj-wait-dot{width:.55rem;height:.55rem;border-radius:50%;background:var(--gold);
   animation:pjPulse 1.2s ease-in-out infinite}
 .pj-wait-dot:nth-child(2){animation-delay:.2s}
@@ -929,7 +935,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         <t t-if="tournament"><t t-esc="tournament.name"/></t>
         <t t-else="">Auction Champ</t>
       </div>
-      <div class="pj-wait-sub">Waiting for next player</div>
+      <div class="pj-wait-sub" id="pjWaitSub">Waiting for Next Player</div>
       <div class="pj-wait-dots"><div class="pj-wait-dot"></div><div class="pj-wait-dot"></div><div class="pj-wait-dot"></div></div>
       <t t-if="tournament and tournament.logo">
         <div class="pj-wait-powered">
@@ -1744,6 +1750,28 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     }, 200);
   }
 
+  var _currentWaitPhase = null;
+  function updateWaitPhase(wp) {
+    wp = wp || {};
+    var phase = wp.phase || 'waiting';
+    var msg = wp.message || 'Waiting for Next Player';
+    var sub = document.getElementById('pjWaitSub');
+    var wait = document.getElementById('pj-waiting');
+    var kicker = wait ? wait.querySelector('.pj-wait-kicker') : null;
+    if (sub) {
+      sub.textContent = msg;
+      sub.classList.toggle('is-begin', phase === 'about_to_begin');
+      sub.classList.toggle('is-complete', phase === 'completed');
+    }
+    if (wait) wait.classList.toggle('is-complete', phase === 'completed');
+    if (kicker) {
+      if (phase === 'about_to_begin') kicker.textContent = 'Live Auction · Stand By';
+      else if (phase === 'completed') kicker.textContent = 'Auction Complete';
+      else kicker.textContent = 'Live Auction · Stand By';
+    }
+    _currentWaitPhase = phase;
+  }
+
   var _pjPollInFlight = false;
   var _pjPollInterval = 650;
   function poll() {
@@ -1777,6 +1805,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
           _currentId = null; _currentState = null; _currentPts = null; _currentMysteryRevealed = null;
           showWaiting();
         }
+        updateWaitPhase(result.wait_phase);
         if (d.state !== _currentDice || d.result !== _currentDiceNum || !!d.is_mystery !== !!_currentDiceMystery) {
           _currentDice = d.state; _currentDiceNum = d.result; _currentDiceMystery = !!d.is_mystery;
           updatePjDice(d.state, d.result, !!d.is_mystery);
