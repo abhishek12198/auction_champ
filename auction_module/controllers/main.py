@@ -3293,452 +3293,282 @@ class Auction(http.Controller):
             headers=[('Content-Type', 'application/json'), ('Cache-Control', 'no-store')],
         )
 
-    # ── Squad Poster ──────────────────────────────────────────────────────────
+    # ── Squad Poster (Instagram Story 1080×1920) ───────────────────────────────
+
+    def _sp_b64_uri(self, binary, mime='image/jpeg', size=None, quality=95):
+        """Binary field → data URI; optional resize for crisp Story cards."""
+        if not binary:
+            return ''
+        raw = binary
+        try:
+            if size:
+                processed = image_process(raw, size=size, quality=quality)
+                if processed:
+                    raw = processed
+        except Exception:
+            pass
+        if isinstance(raw, bytes):
+            raw = raw.decode('ascii')
+        # Detect png magic in decoded base64 when possible; default jpeg
+        return 'data:%s;base64,%s' % (mime, raw)
+
+    def _sp_photo_uri(self, binary):
+        """Player photo sized for 2–3× Story export clarity."""
+        if not binary:
+            return ''
+        try:
+            processed = image_process(binary, size=(640, 800), quality=95)
+            raw = processed or binary
+        except Exception:
+            raw = binary
+        if isinstance(raw, bytes):
+            raw = raw.decode('ascii')
+        return 'data:image/jpeg;base64,%s' % raw
+
+    def _sp_initials(self, name):
+        parts = [w for w in (name or 'P').split() if w]
+        return ''.join(p[0] for p in parts[:2]).upper() or '?'
+
+    def _sp_role_label(self, player, sport):
+        if sport == 'football':
+            if player.dominant_position_id and player.dominant_position_id.name:
+                return player.dominant_position_id.name
+        return (player.role or '').strip()
+
+    def _sp_is_wk(self, role):
+        lo = (role or '').lower()
+        return any(k in lo for k in ('wicket', 'keeper', 'wk'))
+
+    def _sp_category(self, role, sport):
+        lo = (role or '').lower()
+        if sport == 'football':
+            if any(k in lo for k in ('goal', 'gk', 'keeper')):
+                return 'Goalkeepers'
+            if any(k in lo for k in ('back', 'defend', 'centre-back', 'center-back', 'cb', 'lb', 'rb')):
+                return 'Defenders'
+            if any(k in lo for k in ('mid', 'dm', 'cm', 'am', 'wing')):
+                return 'Midfielders'
+            if any(k in lo for k in ('striker', 'forward', 'attack', 'st', 'cf')):
+                return 'Forwards'
+            return 'Squad'
+        if self._sp_is_wk(lo):
+            return 'Wicket Keepers'
+        if any(k in lo for k in ('all round', 'all-round', 'allround')):
+            return 'All-Rounders'
+        if any(k in lo for k in ('bowl', 'spin', 'pace', 'fast', 'medium')):
+            return 'Bowlers'
+        if any(k in lo for k in ('bat', 'open', 'middle', 'finish')):
+            return 'Batters'
+        return 'Squad'
+
+    def _sp_grid_cols(self, n):
+        if n <= 6:
+            return 3
+        if n <= 12:
+            return 4
+        if n <= 20:
+            return 5
+        return 6
+
+    def _sp_fmt_num(self, n):
+        try:
+            return '{:,}'.format(int(n or 0))
+        except Exception:
+            return str(n or 0)
+
+    def _sp_build_context(self, auction, group=False):
+        team = auction.team_id
+        tournament = auction.tournament_id
+        sport = (tournament.tournament_type or 'cricket') if tournament else 'cricket'
+        theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
+
+        icon_ids = set(team.key_player_ids.ids) if team else set()
+        players_out = []
+        ages = []
+        bid_vals = []
+
+        # Icon players first (team key players), then auction lines
+        seen = set()
+        ordered = []
+        if team:
+            for p in team.key_player_ids:
+                if p.id not in seen:
+                    ordered.append(('icon', p, 0))
+                    seen.add(p.id)
+        for line in auction.player_ids:
+            p = line.player_id
+            if not p or p.id in seen:
+                # still record points update if duplicate icon
+                if p and p.id in seen:
+                    for i, item in enumerate(ordered):
+                        if item[1].id == p.id and not item[2]:
+                            ordered[i] = (item[0], item[1], int(line.points or 0))
+                continue
+            ordered.append(('sold', p, int(line.points or 0)))
+            seen.add(p.id)
+
+        for kind, p, pts in ordered:
+            role = self._sp_role_label(p, sport)
+            is_icon = bool(p.icon_player) or (p.id in icon_ids) or kind == 'icon'
+            photo = self._sp_photo_uri(p.photo)
+            jersey_raw = (p.jersy_number or '').strip()
+            jersey = ''
+            if jersey_raw:
+                try:
+                    jersey = '%02d' % int(jersey_raw)
+                except Exception:
+                    jersey = jersey_raw[:4]
+            elif p.sl_no:
+                jersey = '%02d' % int(p.sl_no)
+            tier_name = ''
+            tier_color = ''
+            if p.tier_id:
+                tier_name = (p.tier_id.name or '').strip()
+                tier_color = (p.tier_id.color or '') or ''
+            if pts:
+                bid_vals.append(pts)
+            if getattr(p, 'age', None):
+                try:
+                    ages.append(int(p.age))
+                except Exception:
+                    pass
+            players_out.append({
+                'id': p.id,
+                'name': p.name or '',
+                'role': role,
+                'tier': tier_name,
+                'tier_color': tier_color,
+                'photo_uri': photo,
+                'initials': self._sp_initials(p.name),
+                'jersey': jersey,
+                'is_icon': is_icon,
+                'is_wk': self._sp_is_wk(role),
+                'points': int(pts or 0),
+                'category': self._sp_category(role, sport),
+            })
+
+        # Tabular squad: highest auction points first, lowest last
+        players_out.sort(key=lambda pl: (
+            -int(pl.get('points') or 0),
+            0 if pl.get('is_icon') else 1,
+            (pl.get('name') or '').lower(),
+        ))
+
+        # Optional category grouping only when explicitly requested
+        groups = []
+        if group and players_out:
+            order = (
+                ['Goalkeepers', 'Defenders', 'Midfielders', 'Forwards', 'Squad']
+                if sport == 'football'
+                else ['Batters', 'All-Rounders', 'Bowlers', 'Wicket Keepers', 'Squad']
+            )
+            cat_alias = {
+                'All Rounders': 'All-Rounders',
+                'All Rounder': 'All-Rounders',
+            }
+            bucket = {}
+            for pl in players_out:
+                cat = cat_alias.get(pl['category'], pl['category'])
+                pl['category'] = cat
+                bucket.setdefault(cat, []).append(pl)
+            for label in order:
+                if bucket.get(label):
+                    groups.append({'label': label.upper(), 'players': bucket[label]})
+            for label, pls in bucket.items():
+                if label not in order:
+                    groups.append({'label': (label or 'Squad').upper(), 'players': pls})
+
+        total_purse = int(auction.total_point or 0)
+        remaining = int(auction.remaining_points or 0)
+        spent = max(total_purse - remaining, 0)
+        n_players = len(players_out)
+
+        stats = {
+            'players': n_players,
+            'budget': self._sp_fmt_num(total_purse),
+            'spent': self._sp_fmt_num(spent),
+            'remaining': self._sp_fmt_num(remaining),
+            'owner': (team.manager or '') if team else '',
+            'highest': self._sp_fmt_num(max(bid_vals)) if bid_vals else '',
+            'lowest': self._sp_fmt_num(min(bid_vals)) if bid_vals else '',
+            'avg_age': '',
+        }
+        if ages:
+            stats['avg_age'] = str(int(round(sum(ages) / float(len(ages)))))
+
+        venue = ''
+        date_label = ''
+        season_label = ''
+        team_count = 0
+        sponsors = []
+        tourn_logo = ''
+        bg_uri = ''
+        if tournament:
+            venue = (tournament.auction_venue or tournament.venue or '').strip()
+            dt = tournament.auction_date or tournament.tournament_date
+            if dt:
+                try:
+                    date_label = fields.Date.to_string(dt) if hasattr(dt, 'year') else str(dt)
+                    try:
+                        date_label = dt.strftime('%d %b %Y')
+                    except Exception:
+                        pass
+                except Exception:
+                    date_label = str(dt)
+            season_label = (tournament.description or '').strip()
+            if len(season_label) > 48:
+                season_label = season_label[:45] + '…'
+            team_count = len(tournament.team_ids)
+            tourn_logo = self._sp_b64_uri(tournament.logo, mime='image/png', size=(256, 256), quality=95)
+            for adv in (tournament.advertiser_ids or [])[:4]:
+                if adv.image:
+                    sponsors.append({
+                        'name': adv.name or 'Sponsor',
+                        'uri': self._sp_b64_uri(adv.image, mime='image/png', size=(128, 128), quality=90),
+                    })
+            if tournament.poster_image:
+                bg_uri = self._sp_b64_uri(tournament.poster_image, mime='image/jpeg', size=(1080, 1920), quality=85)
+
+        sport_label = (sport or 'cricket').title()
+        sport_icon = '🏏' if sport == 'cricket' else ('⚽' if sport == 'football' else '🏅')
+
+        return {
+            'theme': theme,
+            'sport': sport,
+            'sport_label': sport_label,
+            'sport_icon': sport_icon,
+            'tournament_name': (tournament.name if tournament else '') or 'Tournament',
+            'season_label': season_label,
+            'venue': venue,
+            'date_label': date_label,
+            'team_count': team_count,
+            'tourn_logo_uri': tourn_logo,
+            'team_name': (team.name if team else '') or 'Team',
+            'team_logo_uri': self._sp_b64_uri(team.logo, mime='image/png', size=(320, 320), quality=95) if team else '',
+            'players': players_out,
+            'grouped': bool(group and groups),
+            'groups': groups if group else [],
+            'grid_cols': 3,
+            'palette': 'midnight-gold',
+            'dense': '1',
+            'stats': stats,
+            'manager': (team.manager or '') if team else '',
+            'sponsors': sponsors,
+            'bg_uri': bg_uri,
+            'tagline': 'Stronger Together',
+            'brand_url': 'www.auctionchamp.live',
+        }
 
     @http.route('/auction/squad-poster/<int:auction_id>', type='http', auth='user', website=False, csrf=False)
     def squad_poster_page(self, auction_id, **kw):
-        """Renders a full-page IPL-style squad poster that auto-downloads as a high-res JPG."""
-        env = request.env
-        auction = env['auction.auction'].sudo().browse(auction_id)
+        """Premium Instagram Story squad poster (1080×1920) with hi-res PNG/JPG export."""
+        auction = request.env['auction.auction'].sudo().browse(auction_id)
         if not auction.exists():
             return request.not_found()
-
-        team       = auction.team_id
-        tournament = auction.tournament_id
-
-        def b64uri(binary):
-            if not binary:
-                return ''
-            raw = binary if isinstance(binary, str) else binary.decode('utf-8')
-            return 'data:image/png;base64,' + raw
-
-        # ── Palette ──────────────────────────────────────────────────────────
-        DARK  = '#020c1b'
-        NAVY  = '#0d1b3e'
-        NAVY2 = '#16213e'
-        NAVY3 = '#0a0f1e'   # icon-section bg
-        GOLD  = '#E8A020'
-        GOLD2 = '#F5C842'
-        WHITE = '#FFFFFF'
-        LIGHT = '#f0f4f8'   # squad section bg
-        CARD  = '#FFFFFF'
-
-        # ── Role colours ─────────────────────────────────────────────────────
-        ROLE_CLR = {
-            'batter':         '#1a7f37',
-            'batsman':        '#1a7f37',
-            'bowler':         '#1565C0',
-            'all rounder':    '#E65100',
-            'allrounder':     '#E65100',
-            'all-rounder':    '#E65100',
-            'wicket keeper':  '#6A1B9A',
-            'wicketkeeper':   '#6A1B9A',
-            'wicket-keeper':  '#6A1B9A',
-            'wk':             '#6A1B9A',
-        }
-
-        def rc(role):
-            lo = (role or '').lower().strip()
-            return next((v for k, v in ROLE_CLR.items() if k in lo), '#374151')
-
-        # ── Data ─────────────────────────────────────────────────────────────
-        team_logo_src  = b64uri(team.logo)
-        tourn_logo_src = b64uri(tournament.logo) if tournament and tournament.logo else ''
-        icon_players    = list(team.key_player_ids)
-        icon_ids        = set(team.key_player_ids.ids)
-        regular_players = [p for p in auction.player_ids if p.player_id.id not in icon_ids]
-        total_players   = len(icon_players) + len(regular_players)
-
-        # ── Photo helpers ─────────────────────────────────────────────────────
-        def tp_photo(p, size):
-            """Square photo for auction.team.player (icon player)."""
-            src = b64uri(p.photo)
-            if src:
-                return (
-                    '<div style="width:%(s)dpx;height:%(s)dpx;border-radius:8px;'
-                    'overflow:hidden;margin:0 auto;">'
-                    '<img src="%(src)s" style="width:100%%;height:100%%;object-fit:contain;background:%(bg)s;">'
-                    '</div>'
-                ) % {'s': size, 'src': src, 'bg': LIGHT}
-            initials = ''.join(w[0] for w in (p.name or 'P').split()[:2]).upper()
-            return (
-                '<div style="width:%(s)dpx;height:%(s)dpx;border-radius:8px;overflow:hidden;'
-                'margin:0 auto;background:%(n)s;display:flex;align-items:center;'
-                'justify-content:center;font-size:%(fs)dpx;color:%(g)s;font-weight:900;">%(i)s</div>'
-            ) % {'s': size, 'n': NAVY, 'fs': size // 3, 'g': GOLD2, 'i': initials}
-
-        def ap_photo(p, size):
-            """Square photo for auction.auction.player (regular squad player)."""
-            src = b64uri(p.player_id.photo)
-            color = rc(p.player_id.role or '')
-            if src:
-                return (
-                    '<div style="width:%(s)dpx;height:%(s)dpx;border-radius:8px;overflow:hidden;'
-                    'margin:0 auto;border:3px solid %(c)s;'
-                    'box-shadow:0 4px 12px %(c)s33;">'
-                    '<img src="%(src)s" style="width:100%%;height:100%%;object-fit:cover;">'
-                    '</div>'
-                ) % {'s': size, 'c': color, 'src': src}
-            initials = ''.join(w[0] for w in (p.player_id.name or 'P').split()[:2]).upper()
-            return (
-                '<div style="width:%(s)dpx;height:%(s)dpx;border-radius:8px;overflow:hidden;'
-                'margin:0 auto;background:%(bg)s;border:3px solid %(c)s;'
-                'display:flex;align-items:center;justify-content:center;'
-                'font-size:%(fs)dpx;color:%(c)s;font-weight:900;">%(i)s</div>'
-            ) % {'s': size, 'bg': LIGHT, 'c': color, 'fs': size // 3, 'i': initials}
-
-        # ══════════════════════════════════════════════════════════════════════
-        # LANDSCAPE POSTER — Left hero panel + right squad content
-        # ══════════════════════════════════════════════════════════════════════
-
-        # AuctionChamp app logo (white SVG)
-        _logo_path = os.path.join(os.path.dirname(__file__), '..', 'static', 'src', 'assets', 'images', 'logo.svg')
-        try:
-            with open(_logo_path, 'rb') as _lf:
-                app_logo_src = 'data:image/svg+xml;base64,' + base64.b64encode(_lf.read()).decode('utf-8')
-        except Exception:
-            app_logo_src = ''
-
-        tourn_name = (tournament.name or '') if tournament else ''
-        tourn_desc = (tournament.description or '') if tournament else ''
-
-        # Tournament logo HTML
-        if tourn_logo_src:
-            tlogo_html = '<img src="%(src)s" style="width:100%%;height:100%%;object-fit:contain;">' % {'src': tourn_logo_src}
-        else:
-            tlogo_html = '<span style="color:%(g)s;font-size:48px;">&#127942;</span>' % {'g': GOLD}
-
-        # ── SECTION 1: LEFT HERO PANEL (Tournament info, 480px wide) ─────────────
-        tourn_section = (
-            '<div style="flex:0 0 480px;background:%(n)s;'
-            'background-image:repeating-linear-gradient(45deg,rgba(255,255,255,0.025) 0,rgba(255,255,255,0.025) 2px,transparent 2px,transparent 24px);'
-            'padding:36px 32px;display:flex;flex-direction:column;align-items:center;justify-content:center;'
-            'position:relative;overflow:hidden;border-right:2px solid rgba(232,160,32,0.25);">'
-
-            # Decorative circles in background
-            '<div style="position:absolute;top:-80px;right:-80px;width:260px;height:260px;'
-            'border-radius:50%%;border:1px solid rgba(232,160,32,0.12);"></div>'
-            '<div style="position:absolute;bottom:-100px;left:-100px;width:300px;height:300px;'
-            'border-radius:50%%;border:1px solid rgba(232,160,32,0.10);"></div>'
-
-            # AuctionChamp logo badge (top-right corner)
-            '<div style="position:absolute;top:16px;right:16px;'
-            'display:flex;align-items:center;gap:6px;'
-            'background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);'
-            'border-radius:20px;padding:6px 12px;">'
-            '<img src="%(al)s" style="height:16px;width:auto;opacity:0.9;">'
-            '</div>'
-
-            # Tournament logo (large, centered)
-            '<div style="width:140px;height:140px;border-radius:50%%;'
-            'background:linear-gradient(135deg,%(g)s,%(g2)s);padding:4px;'
-            'margin-bottom:24px;box-shadow:0 0 40px %(g)s77;">'
-            '<div style="width:100%%;height:100%%;border-radius:50%%;overflow:hidden;'
-            'background:%(n)s;">%(tlogo)s</div>'
-            '</div>'
-
-            # Tournament name
-            '<div style="color:%(w)s;font-size:32px;font-weight:900;text-align:center;'
-            'letter-spacing:2px;text-transform:uppercase;line-height:1.1;'
-            'text-shadow:0 2px 20px rgba(0,0,0,0.4);margin-bottom:12px;">%(tn)s</div>'
-
-            # Description
-            '<div style="color:rgba(255,255,255,0.75);font-size:14px;text-align:center;'
-            'letter-spacing:1px;font-style:italic;margin-bottom:20px;line-height:1.4;">%(desc)s</div>'
-
-            # Gold divider
-            '<div style="width:100px;height:2px;background:linear-gradient(90deg,transparent,%(g)s,%(g2)s,%(g)s,transparent);'
-            'margin:0 auto 20px;border-radius:1px;"></div>'
-
-            # Subtitle
-            '<div style="color:%(g)s;font-size:10px;font-weight:bold;letter-spacing:6px;'
-            'text-transform:uppercase;opacity:0.85;">OFFICIAL SQUAD</div>'
-
-            '</div>'
-        ) % {'n': NAVY, 'g': GOLD, 'g2': GOLD2, 'w': WHITE, 'al': app_logo_src,
-             'tlogo': tlogo_html, 'tn': tourn_name, 'desc': tourn_desc}
-
-        # ── SECTION 2: TEAM INFO & SQUAD (right side, 1440px wide) ──────────────
-        right_container_start = (
-            '<div style="flex:1;display:flex;flex-direction:column;'
-            'overflow:hidden;min-width:0;">'
-        )
-
-        # ══════════════════════════════════════════════════════════════════════
-        # SECTION 2 — Team Banner
-        # ══════════════════════════════════════════════════════════════════════
-        if team_logo_src:
-            tl_el = (
-                '<div style="width:120px;height:120px;border-radius:12px;'
-                'background:linear-gradient(135deg,%(g)s,%(g2)s);padding:4px;flex-shrink:0;'
-                'box-shadow:0 0 30px %(g)s55;">'
-                '<div style="width:100%%;height:100%%;border-radius:10px;overflow:hidden;'
-                'background:%(n)s;padding:8px;">'
-                '<img src="%(src)s" style="width:100%%;height:100%%;object-fit:contain;">'
-                '</div></div>'
-            ) % {'g': GOLD, 'g2': GOLD2, 'n': NAVY2, 'src': team_logo_src}
-        else:
-            initial = (team.name or 'T')[0].upper()
-            tl_el = (
-                '<div style="width:120px;height:120px;border-radius:12px;'
-                'background:linear-gradient(135deg,%(g)s,%(g2)s);flex-shrink:0;'
-                'display:flex;align-items:center;justify-content:center;'
-                'font-size:52px;color:%(n)s;font-weight:900;'
-                'box-shadow:0 0 30px %(g)s55;">%(i)s</div>'
-            ) % {'g': GOLD, 'g2': GOLD2, 'n': NAVY2, 'i': initial}
-
-        team_name    = team.name or ''
-        team_name_fs = max(24, min(46, 46 - max(0, len(team_name) - 14)))
-
-        team_section = (
-            '<div style="flex:0 0 auto;background:linear-gradient(90deg,%(n)s 0%%,%(n2)s 100%%);'
-            'border-bottom:2px solid %(g)s;padding:28px 32px;display:flex;align-items:center;gap:28px;">'
-
-            '%(tl)s'
-
-            '<div style="flex:1;min-width:0;">'
-            '<div style="color:%(g)s;font-size:11px;font-weight:bold;letter-spacing:6px;'
-            'text-transform:uppercase;margin-bottom:6px;opacity:0.85;">SQUAD ANNOUNCEMENT</div>'
-            '<div style="color:%(w)s;font-size:28px;font-weight:900;letter-spacing:1px;'
-            'text-transform:uppercase;line-height:1.1;margin-bottom:6px;">%(nm)s</div>'
-            '<div style="color:rgba(255,255,255,0.7);font-size:13px;">Owner: %(owner)s</div>'
-            '</div>'
-
-            '<div style="text-align:center;background:rgba(232,160,32,0.12);'
-            'border:1px solid rgba(232,160,32,0.35);border-radius:14px;'
-            'padding:16px 24px;flex-shrink:0;">'
-            '<div style="color:%(g)s;font-size:36px;font-weight:900;">%(tp)d</div>'
-            '<div style="color:rgba(255,255,255,0.6);font-size:9px;letter-spacing:2px;'
-            'text-transform:uppercase;margin-top:4px;">PLAYERS</div>'
-            '</div>'
-
-            '</div>'
-        ) % {'n': NAVY, 'n2': NAVY2, 'g': GOLD, 'w': WHITE,
-             'tl': tl_el, 'nm': team.name or '', 'owner': (team.manager or 'N/A'),
-             'tp': total_players}
-
-        # ══════════════════════════════════════════════════════════════════════
-        # SECTION 3 — Icon Players (compact horizontal row)
-        # ══════════════════════════════════════════════════════════════════════
-        icon_section = ''
-        if icon_players:
-            cards = ''
-            for p in icon_players[:4]:  # Limit to 4 icon players for landscape
-                role  = p.role or ''
-                color = rc(role)
-                photo = tp_photo(p, 130)
-                cards += (
-                    '<div style="text-align:center;flex:0 0 180px;">'
-
-                    # Outer gold glow ring — square with rounded corners
-                    '<div style="width:150px;height:150px;border-radius:12px;margin:0 auto 10px;'
-                    'background:linear-gradient(135deg,%(g)s,%(g2)s);padding:3px;'
-                    'box-shadow:0 0 28px %(g)s77;">'
-                    '<div style="width:100%%;height:100%%;border-radius:10px;overflow:hidden;'
-                    'background:%(n)s;">%(photo)s</div>'
-                    '</div>'
-
-                    # Icon badge
-                    '<div style="margin-top:-8px;margin-bottom:10px;position:relative;z-index:2;">'
-                    '<span style="background:linear-gradient(135deg,%(g)s,%(g2)s);color:%(n)s;'
-                    'font-size:8px;font-weight:900;letter-spacing:1px;padding:3px 12px;'
-                    'border-radius:16px;text-transform:uppercase;'
-                    'box-shadow:0 2px 8px rgba(232,160,32,0.45);">★ ICON</span>'
-                    '</div>'
-
-                    # Name
-                    '<div style="color:%(nm_c)s;font-size:13px;font-weight:bold;'
-                    'text-transform:uppercase;letter-spacing:0.5px;line-height:1.2;'
-                    'padding:0 4px;">%(name)s</div>'
-
-                    # Role badge
-                    '<div style="margin-top:6px;">'
-                    '<span style="background:%(c)s22;border:1px solid %(c)s99;'
-                    'color:%(c)s;font-size:8px;font-weight:bold;padding:3px 10px;'
-                    'border-radius:12px;text-transform:uppercase;letter-spacing:0.5px;">'
-                    '%(role)s</span>'
-                    '</div>'
-
-                    '</div>'
-                ) % {'g': GOLD, 'g2': GOLD2, 'n': NAVY3, 'nm_c': NAVY,
-                     'c': color, 'photo': photo,
-                     'name': p.name or '', 'role': role or '—'}
-
-            icon_section = (
-                '<div style="flex:0 0 auto;background:%(bg)s;padding:20px 32px;'
-                'border-bottom:1px solid rgba(14,27,62,0.12);'
-                'display:flex;align-items:flex-start;gap:16px;justify-content:center;'
-                'overflow-x:auto;">'
-                '%(cards)s'
-                '</div>'
-            ) % {'bg': LIGHT, 'g': GOLD, 'cards': cards}
-
-        # ══════════════════════════════════════════════════════════════════════
-        # SECTION 4 — The Squad (all players, wrapping grid)
-        # ══════════════════════════════════════════════════════════════════════
-        squad_section = ''
-        if regular_players:
-            players_to_show = regular_players  # show all players
-            
-            def _render_compact_card(name, role, photo_b64, clr):
-                if photo_b64:
-                    photo_section = (
-                        '<div style="width:100%;height:160px;background:{bg};display:flex;'
-                        'align-items:center;justify-content:center;">'
-                        '<img src="{src}" style="max-width:100%;max-height:160px;'
-                        'object-fit:contain;display:block;">'
-                        '</div>'
-                    ).format(src=photo_b64, bg=LIGHT)
-                else:
-                    initials = ''.join(w[0] for w in (name or 'P').split()[:2]).upper()
-                    photo_section = (
-                        '<div style="width:100%;height:160px;background:{bg};'
-                        'display:flex;align-items:center;justify-content:center;'
-                        'font-size:36px;font-weight:900;color:{c};">{i}</div>'
-                    ).format(bg=NAVY, c=clr, i=initials)
-                return (
-                    '<div style="width:calc(20% - 10px);border-radius:10px;overflow:hidden;'
-                    'box-shadow:0 3px 10px rgba(15,36,71,0.15);border:2px solid {c}55;">'
-                    '<div style="height:3px;background:{c};"></div>'
-                    '{photo}'
-                    '<div style="background:#fff;padding:6px 6px 7px;text-align:center;">'
-                    '<div style="font-size:9px;font-weight:bold;color:#0d1b3e;'
-                    'text-transform:uppercase;letter-spacing:0.4px;'
-                    'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{nm}</div>'
-                    '<span style="display:inline-block;margin-top:3px;background:{c}18;'
-                    'border:1px solid {c}88;color:{c};font-size:7px;font-weight:bold;'
-                    'padding:2px 7px;border-radius:8px;text-transform:uppercase;">'
-                    '{role}</span>'
-                    '</div>'
-                    '</div>'
-                ).format(c=clr, photo=photo_section, nm=name, role=role or '—')
-            
-            cards_html = ''.join(
-                _render_compact_card(
-                    p.player_id.name or '',
-                    p.player_id.role or '',
-                    b64uri(p.player_id.photo),
-                    rc(p.player_id.role or '')
-                ) for p in players_to_show
-            )
-
-            squad_section = (
-                '<div style="flex:1;background:%(bg)s;padding:16px 20px;">'
-
-                '<div style="font-size:10px;font-weight:bold;letter-spacing:5px;'
-                'color:%(n)s;text-transform:uppercase;margin-bottom:12px;">'
-                '★ THE SQUAD (%(cnt)d players)</div>'
-
-                '<div style="display:flex;flex-wrap:wrap;gap:10px;">'
-                '%(cards)s'
-                '</div>'
-
-                '</div>'
-            ) % {'bg': LIGHT, 'n': NAVY, 'cnt': len(players_to_show), 'cards': cards_html}
-
-        # ══════════════════════════════════════════════════════════════════════
-        # SECTION 5 — Footer (minimal, bottom of right panel)
-        # ══════════════════════════════════════════════════════════════════════
-        footer = (
-            '<div style="flex:0 0 auto;height:40px;background:%(d)s;'
-            'border-top:2px solid %(g)s;'
-            'display:flex;align-items:center;justify-content:center;gap:10px;">'
-            '<span style="color:rgba(255,255,255,0.4);font-size:9px;font-weight:bold;'
-            'letter-spacing:3px;text-transform:uppercase;">POWERED BY</span>'
-            '<span style="color:%(g)s;font-size:14px;font-weight:900;letter-spacing:2px;">'
-            'AuctionChamp</span>'
-            '</div>'
-        ) % {'g': GOLD, 'd': DARK}
-
-        # Close the right container
-        right_container_end = '</div>'
-
-        # ── JavaScript (no f-string — curly braces conflict) ─────────────────
-        team_name_js = json.dumps(team.name or 'squad')
-        js = (
-            '<script>\n'
-            '(function() {\n'
-            '  var status = document.getElementById("poster-status");\n'
-            '  var poster = document.getElementById("poster");\n'
-            '  var name   = ' + team_name_js + ';\n'
-            '  var imgs   = Array.from(poster.querySelectorAll("img"));\n'
-            '  var loads  = imgs.map(function(img) {\n'
-            '    return new Promise(function(res) {\n'
-            '      if (img.complete && img.naturalWidth) { res(); return; }\n'
-            '      img.onload = img.onerror = res;\n'
-            '    });\n'
-            '  });\n'
-            '  status.textContent = "\\u231B Loading images\\u2026";\n'
-            '  Promise.all(loads).then(function() {\n'
-            '    status.textContent = "\\u231B Rendering poster\\u2026";\n'
-            '    return html2canvas(poster, {\n'
-            '      scale: 3, useCORS: true, allowTaint: true,\n'
-            '      backgroundColor: "' + LIGHT + '",\n'
-            '      logging: false, imageTimeout: 0,\n'
-            '      width: poster.scrollWidth,\n'
-            '      windowWidth: poster.scrollWidth + 40,\n'
-            '      windowHeight: 1080\n'
-            '    });\n'
-            '  }).then(function(canvas) {\n'
-            '    canvas.toBlob(function(blob) {\n'
-            '      var url  = URL.createObjectURL(blob);\n'
-            '      var link = document.createElement("a");\n'
-            '      link.href     = url;\n'
-            '      link.download = "squad-poster-" + name.replace(/\\s+/g,"-").toLowerCase() + ".jpg";\n'
-            '      document.body.appendChild(link);\n'
-            '      link.click();\n'
-            '      document.body.removeChild(link);\n'
-            '      setTimeout(function() { URL.revokeObjectURL(url); }, 2000);\n'
-            '      status.style.background = "#065f46";\n'
-            '      status.innerHTML = "\\u2713 Download started! You may close this tab.";\n'
-            '    }, "image/jpeg", 0.96);\n'
-            '  }).catch(function(err) {\n'
-            '    console.error("Squad poster:", err);\n'
-            '    status.style.background = "#7f1d1d";\n'
-            '    status.textContent = "\\u26A0 Error: " + err.message;\n'
-            '  });\n'
-            '})();\n'
-            '</script>'
-        )
-
-        # ── Assemble full HTML page ───────────────────────────────────────────
-        html = (
-            '<!DOCTYPE html><html lang="en"><head>'
-            '<meta charset="UTF-8">'
-            '<title>Squad Poster \u2014 ' + (team.name or 'Team') + '</title>'
-            '<style>'
-            '* { margin:0; padding:0; box-sizing:border-box; }'
-            'body { background:#b8c8e0; font-family:Arial,Helvetica,sans-serif; padding-top:54px; }'
-            '#poster-status {'
-            '  position:fixed; top:0; left:0; right:0; z-index:9999;'
-            '  background:#1e293b; color:#fff; padding:14px;'
-            '  text-align:center; font-size:14px; font-family:Arial,sans-serif;'
-            '}'
-            '#poster {'
-            '  width:1920px; min-height:1080px; height:auto; margin:20px auto 40px;'
-            '  background:' + LIGHT + ';'
-            '  box-shadow:0 16px 60px rgba(0,0,0,0.40);'
-            '  overflow:visible; border-radius:4px;'
-            '  display:flex; flex-direction:row; align-items:stretch;'
-            '}'
-            '</style>'
-            '</head><body>'
-            '<div id="poster-status">&#9203; Preparing\u2026</div>'
-            '<div id="poster">'
-            + tourn_section + right_container_start + team_section + icon_section + squad_section + footer + right_container_end +
-            '</div>'
-            '<script src="/auction_module/static/src/lib/html2canvas.min.js"></script>'
-            + js +
-            '</body></html>'
-        )
-
-        return request.make_response(
-            html,
-            headers=[
-                ('Content-Type', 'text/html; charset=utf-8'),
-                ('Cache-Control', 'no-store'),
-            ]
-        )
+        # Default: flat 3-column table sorted by points. ?group=1 enables role sections.
+        group = str(kw.get('group') or '').lower() in ('1', 'true', 'yes')
+        ctx = self._sp_build_context(auction, group=group)
+        return request.render('auction_module.squad_poster_template', ctx, lazy=False)
 
     # ── Player Registration Form ──────────────────────────────────────────────
 

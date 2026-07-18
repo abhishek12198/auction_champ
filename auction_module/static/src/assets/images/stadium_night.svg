@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="sky" cx="50%" cy="18%" r="70%">
+      <stop offset="0%" stop-color="#1a3a6e"/>
+      <stop offset="45%" stop-color="#0a1628"/>
+      <stop offset="100%" stop-color="#03060c"/>
+    </radialGradient>
+    <linearGradient id="field" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0d3d24"/>
+      <stop offset="100%" stop-color="#05140c"/>
+    </linearGradient>
+    <radialGradient id="spot" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff8d6" stop-opacity="0.95"/>
+      <stop offset="35%" stop-color="#ffe08a" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#ffe08a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff4c2" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#fff4c2" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.14"/>
+      <stop offset="40%" stop-color="#ffffff" stop-opacity="0.03"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.35"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1920" fill="url(#sky)"/>
+  <!-- pitch -->
+  <ellipse cx="540" cy="1680" rx="720" ry="320" fill="url(#field)" opacity="0.9"/>
+  <ellipse cx="540" cy="1680" rx="520" ry="210" fill="none" stroke="#2d8f55" stroke-width="3" opacity="0.35"/>
+  <ellipse cx="540" cy="1680" rx="220" ry="90" fill="none" stroke="#2d8f55" stroke-width="2" opacity="0.3"/>
+  <!-- stands -->
+  <path d="M0 980 Q540 820 1080 980 L1080 1180 Q540 1040 0 1180 Z" fill="#0c1424" opacity="0.85"/>
+  <path d="M0 1080 Q540 940 1080 1080 L1080 1280 Q540 1160 0 1280 Z" fill="#121c30" opacity="0.7"/>
+  <path d="M40 1120 Q540 1000 1040 1120" fill="none" stroke="#3a4a66" stroke-width="2" opacity="0.4"/>
+  <path d="M80 1200 Q540 1100 1000 1200" fill="none" stroke="#3a4a66" stroke-width="2" opacity="0.3"/>
+  <!-- floodlight towers -->
+  <rect x="70" y="420" width="10" height="420" fill="#2a3348"/>
+  <rect x="1000" y="420" width="10" height="420" fill="#2a3348"/>
+  <rect x="40" y="400" width="70" height="28" rx="4" fill="#d8dde8"/>
+  <rect x="970" y="400" width="70" height="28" rx="4" fill="#d8dde8"/>
+  <!-- light beams -->
+  <polygon points="75,428 20,1600 200,1600" fill="url(#beam)" opacity="0.35"/>
+  <polygon points="1005,428 880,1600 1060,1600" fill="url(#beam)" opacity="0.35"/>
+  <polygon points="540,120 300,1700 780,1700" fill="url(#beam)" opacity="0.18"/>
+  <!-- floodlight glow orbs -->
+  <circle cx="75" cy="410" r="90" fill="url(#spot)"/>
+  <circle cx="1005" cy="410" r="90" fill="url(#spot)"/>
+  <circle cx="540" cy="160" r="160" fill="url(#spot)" opacity="0.7"/>
+  <circle cx="220" cy="280" r="50" fill="url(#spot)" opacity="0.5"/>
+  <circle cx="860" cy="260" r="55" fill="url(#spot)" opacity="0.5"/>
+  <!-- crowd sparkle -->
+  <g fill="#ffd76a" opacity="0.45">
+    <circle cx="180" cy="1050" r="2"/><circle cx="260" cy="1070" r="1.5"/>
+    <circle cx="340" cy="1040" r="2"/><circle cx="420" cy="1085" r="1.5"/>
+    <circle cx="500" cy="1030" r="2"/><circle cx="580" cy="1075" r="1.5"/>
+    <circle cx="660" cy="1045" r="2"/><circle cx="740" cy="1080" r="1.5"/>
+    <circle cx="820" cy="1055" r="2"/><circle cx="900" cy="1070" r="1.5"/>
+  </g>
+  <!-- glass overlay -->
+  <rect width="1080" height="1920" fill="url(#glass)"/>
+</svg>

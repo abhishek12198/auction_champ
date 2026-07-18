@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="squad_poster_template" name="Squad Poster Story">
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Squad Poster — <t t-esc="team_name"/> | AuctionChamp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Great+Vibes&amp;family=Montserrat:wght@600;700;800;900&amp;family=Oswald:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/auction_module/static/src/css/squad_poster.css"/>
+</head>
+<body class="sp-shell" data-palette="midnight-gold" id="spShell">
+
+  <div class="sp-toolbar" id="spToolbar">
+    <div class="sp-toolbar-title">Instagram Story · 1080×1920 · High Clarity Export</div>
+    <button type="button" class="sp-btn is-primary" id="spDlPng" data-fmt="png">Download PNG</button>
+    <button type="button" class="sp-btn is-primary" id="spDlJpg" data-fmt="jpg">Download JPG</button>
+    <button type="button" class="sp-btn" id="spPrint">Print</button>
+    <button type="button" class="sp-btn" id="spCopy">Copy Image</button>
+    <button type="button" class="sp-btn" id="spShare">Share</button>
+    <div class="sp-zoom-group">
+      <label class="sp-footer-txt" for="spRes">Export</label>
+      <select class="sp-select" id="spRes" title="Export resolution">
+        <option value="2" selected="selected">2160×3840 (4K · recommended)</option>
+        <option value="3">3240×5760 (ultra)</option>
+        <option value="1">1080×1920 (standard)</option>
+      </select>
+      <label class="sp-footer-txt" for="spZoom">Zoom</label>
+      <select class="sp-select" id="spZoom" title="Preview zoom">
+        <option value="fit" selected="selected">Fit Screen</option>
+        <option value="0.45">45%</option>
+        <option value="0.55">55%</option>
+        <option value="0.7">70%</option>
+        <option value="1">Actual Size</option>
+      </select>
+    </div>
+    <div class="sp-palette-row" id="spPaletteRow" role="group" aria-label="Poster color palette">
+      <span class="sp-palette-lbl">Poster Color</span>
+      <button type="button" class="sp-swatch is-active" data-palette="midnight-gold" title="Midnight Gold"></button>
+      <button type="button" class="sp-swatch" data-palette="arctic-glass" title="Arctic Glass"></button>
+      <button type="button" class="sp-swatch" data-palette="obsidian-rose" title="Obsidian Rose"></button>
+      <button type="button" class="sp-swatch" data-palette="emerald-glass" title="Emerald Glass"></button>
+      <button type="button" class="sp-swatch" data-palette="royal-violet" title="Royal Violet"></button>
+      <button type="button" class="sp-swatch" data-palette="carbon-chrome" title="Carbon Chrome"></button>
+      <button type="button" class="sp-swatch" data-palette="midnight-teal" title="Midnight Teal"></button>
+      <button type="button" class="sp-swatch" data-palette="burgundy-gold" title="Burgundy Gold"></button>
+      <button type="button" class="sp-swatch" data-palette="graphite-amber" title="Graphite Amber"></button>
+      <button type="button" class="sp-swatch" data-palette="frost-navy" title="Frost Navy"></button>
+    </div>
+    <div class="sp-status" id="spStatus">Pick a poster color · export PNG for Instagram</div>
+  </div>
+
+  <div class="sp-preview-wrap">
+    <div class="sp-preview-scale" id="spScale">
+      <div class="sp-canvas" id="spCanvas"
+           t-att-data-cols="str(grid_cols)"
+           t-att-data-sport="sport"
+           t-att-data-dense="dense or '0'">
+        <div class="sp-bg" aria-hidden="true">
+          <img class="sp-bg-stadium" src="/auction_module/static/src/assets/images/stadium_night.svg" alt=""/>
+          <t t-if="bg_uri">
+            <img class="sp-bg-img" t-att-src="bg_uri" alt=""/>
+          </t>
+          <div class="sp-bg-beams"></div>
+          <div class="sp-bg-gradient"></div>
+          <div class="sp-bg-glass"></div>
+          <div class="sp-bg-bokeh"></div>
+        </div>
+
+        <div class="sp-layer">
+          <header class="sp-header">
+            <div class="sp-hdr-left">
+              <div class="sp-tourn-block">
+                <t t-if="tourn_logo_uri">
+                  <img class="sp-tourn-logo" t-att-src="tourn_logo_uri" t-att-alt="tournament_name"/>
+                </t>
+                <t t-else="">
+                  <div class="sp-tourn-logo-ph">🏆</div>
+                </t>
+                <div class="sp-tourn-text">
+                  <h1 class="sp-tourn-name"><t t-esc="tournament_name"/></h1>
+                  <span class="sp-season-badge" t-if="season_label"><t t-esc="season_label"/></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="sp-hdr-center">
+              <div class="sp-team-logo-wrap">
+                <t t-if="team_logo_uri">
+                  <img class="sp-team-logo" t-att-src="team_logo_uri" t-att-alt="team_name"/>
+                </t>
+                <t t-else="">
+                  <div class="sp-team-logo-ph"><t t-esc="(team_name or 'T')[:1]"/></div>
+                </t>
+              </div>
+            </div>
+
+            <div class="sp-hdr-right">
+              <div class="sp-meta-row" t-if="tournament_name">
+                <span class="sp-meta-txt"><t t-esc="tournament_name"/><t t-if="season_label"> · <t t-esc="season_label"/></t></span>
+                <span class="sp-meta-ico" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>
+                </span>
+              </div>
+              <div class="sp-meta-row" t-if="venue">
+                <span class="sp-meta-txt"><t t-esc="venue"/></span>
+                <span class="sp-meta-ico" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                </span>
+              </div>
+              <div class="sp-meta-row" t-if="date_label">
+                <span class="sp-meta-txt"><t t-esc="date_label"/></span>
+                <span class="sp-meta-ico" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5l3 2"/></svg>
+                </span>
+              </div>
+              <div class="sp-meta-row" t-if="team_count">
+                <span class="sp-meta-txt"><t t-esc="team_count"/> Teams</span>
+                <span class="sp-meta-ico" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M16 11a3 3 0 1 0-2.8-4M8 11a3 3 0 1 1 2.8-4M4.5 19a4.5 4.5 0 0 1 7.2-3.6M12.3 15.4A4.5 4.5 0 0 1 19.5 19"/></svg>
+                </span>
+              </div>
+              <div class="sp-meta-row">
+                <span class="sp-meta-txt"><t t-esc="sport_label"/></span>
+                <span class="sp-meta-ico" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4zM5 6H3.5A2.5 2.5 0 0 0 6 9.8M19 6h1.5A2.5 2.5 0 0 1 18 9.8"/></svg>
+                </span>
+              </div>
+            </div>
+          </header>
+
+          <section class="sp-title-band">
+            <div class="sp-title-row">
+              <div class="sp-wing is-left" aria-hidden="true"><span></span><span></span><span></span></div>
+              <h2 class="sp-title">Squad Roster</h2>
+              <div class="sp-wing is-right" aria-hidden="true"><span></span><span></span><span></span></div>
+            </div>
+            <p class="sp-title-team"><t t-esc="team_name"/></p>
+          </section>
+
+          <section class="sp-squad">
+            <t t-if="grouped">
+              <t t-foreach="groups" t-as="grp">
+                <div class="sp-cat">
+                  <div class="sp-cat-bar"><t t-esc="grp['label']"/></div>
+                  <div class="sp-grid sp-grid-3">
+                    <t t-foreach="grp['players']" t-as="p">
+                      <t t-call="auction_module.squad_poster_player_card"/>
+                    </t>
+                  </div>
+                </div>
+              </t>
+            </t>
+            <t t-else="">
+              <div class="sp-cat-bar sp-cat-bar-wide">The Squad</div>
+              <div class="sp-grid sp-grid-3" t-att-data-count="str(len(players) if players else 0)">
+                <t t-foreach="players" t-as="p">
+                  <t t-call="auction_module.squad_poster_player_card"/>
+                </t>
+              </div>
+            </t>
+          </section>
+
+          <footer class="sp-footer">
+            <div class="sp-staff">
+              <div class="sp-staff-pill" t-if="manager">
+                <span class="sp-staff-ico" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-4 0-8 2-8 4v2h16v-2c0-2-4-4-8-4z"/></svg>
+                </span>
+                <div>
+                  <div class="sp-staff-lbl">Team Owner</div>
+                  <div class="sp-staff-name"><t t-esc="manager"/></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="sp-details">
+              <div class="sp-details-title">Team Details</div>
+              <div class="sp-details-rule"></div>
+              <div class="sp-details-row">
+                <div class="sp-detail">
+                  <div class="sp-detail-val"><t t-esc="stats['players']"/></div>
+                  <div class="sp-detail-lbl">Total Players</div>
+                </div>
+                <div class="sp-detail">
+                  <div class="sp-detail-val"><t t-esc="stats['budget']"/></div>
+                  <div class="sp-detail-lbl">Team Budget</div>
+                </div>
+                <div class="sp-detail">
+                  <div class="sp-detail-val"><t t-esc="stats['remaining']"/></div>
+                  <div class="sp-detail-lbl">Remaining</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="sp-brand">
+              <div class="sp-tagline"><t t-esc="tagline or 'Stronger Together'"/></div>
+              <img class="sp-brand-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+              <div class="sp-brand-url"><t t-esc="brand_url or 'www.auctionchamp.live'"/></div>
+            </div>
+          </footer>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/auction_module/static/src/lib/html2canvas.min.js"></script>
+  <script t-att-data-team="team_name" id="spBoot"><![CDATA[
+  (function () {
+    var canvas = document.getElementById('spCanvas');
+    var scaleEl = document.getElementById('spScale');
+    var statusEl = document.getElementById('spStatus');
+    var resEl = document.getElementById('spRes');
+    var zoomEl = document.getElementById('spZoom');
+    var teamName = (document.getElementById('spBoot') || {}).getAttribute('data-team') || 'squad';
+    var busy = false;
+    var shell = document.getElementById('spShell');
+    var PALETTE_KEY = 'ac_squad_poster_palette';
+
+    function setPalette(id) {
+      if (!shell || !id) return;
+      shell.setAttribute('data-palette', id);
+      try { localStorage.setItem(PALETTE_KEY, id); } catch (e) {}
+      var swatches = document.querySelectorAll('.sp-swatch');
+      for (var i = 0; i < swatches.length; i++) {
+        swatches[i].classList.toggle('is-active', swatches[i].getAttribute('data-palette') === id);
+      }
+      setStatus('Palette: ' + id.replace(/-/g, ' '), 'is-ok');
+    }
+    (function initPalette() {
+      var saved = '';
+      try { saved = localStorage.getItem(PALETTE_KEY) || ''; } catch (e) {}
+      if (saved) setPalette(saved);
+      var row = document.getElementById('spPaletteRow');
+      if (row) {
+        row.addEventListener('click', function (ev) {
+          var btn = ev.target.closest ? ev.target.closest('.sp-swatch') : null;
+          if (!btn) return;
+          setPalette(btn.getAttribute('data-palette'));
+        });
+      }
+    })();
+
+    function setStatus(msg, cls) {
+      if (!statusEl) return;
+      statusEl.textContent = msg || '';
+      statusEl.className = 'sp-status' + (cls ? ' ' + cls : '');
+    }
+
+    function applyZoom() {
+      if (!scaleEl || !zoomEl) return;
+      var v = zoomEl.value;
+      if (v === 'fit') {
+        var avail = Math.max(320, window.innerWidth - 48);
+        var z = Math.min(1, avail / 1080);
+        scaleEl.style.transform = 'scale(' + z.toFixed(3) + ')';
+        scaleEl.style.marginBottom = ((1920 * z) - 1920) + 'px';
+      } else {
+        var n = parseFloat(v) || 1;
+        scaleEl.style.transform = 'scale(' + n + ')';
+        scaleEl.style.marginBottom = ((1920 * n) - 1920) + 'px';
+      }
+    }
+    if (zoomEl) zoomEl.addEventListener('change', applyZoom);
+    window.addEventListener('resize', applyZoom);
+    applyZoom();
+
+    function waitImages() {
+      var imgs = Array.prototype.slice.call(canvas.querySelectorAll('img'));
+      return Promise.all(imgs.map(function (img) {
+        return new Promise(function (res) {
+          if (img.complete && img.naturalWidth) { res(); return; }
+          img.onload = img.onerror = function () { res(); };
+        });
+      }));
+    }
+
+    function slugify(s) {
+      return String(s || 'squad').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'squad';
+    }
+
+    function renderPoster() {
+      var scale = parseInt(resEl && resEl.value, 10) || 2;
+      return waitImages().then(function () {
+        return html2canvas(canvas, {
+          scale: scale,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: null,
+          logging: false,
+          imageTimeout: 0,
+          width: 1080,
+          height: 1920,
+          windowWidth: 1080,
+          windowHeight: 1920,
+          onclone: function (doc) {
+            var imgs = doc.querySelectorAll('.sp-card-photo');
+            for (var i = 0; i < imgs.length; i++) {
+              var img = imgs[i];
+              var wrap = img.parentNode;
+              if (wrap) {
+                wrap.style.display = 'flex';
+                wrap.style.alignItems = 'flex-end';
+                wrap.style.justifyContent = 'center';
+                wrap.style.overflow = 'hidden';
+                wrap.style.zIndex = '1';
+              }
+              img.style.position = 'relative';
+              img.style.width = 'auto';
+              img.style.height = '100%';
+              img.style.maxWidth = '100%';
+              img.style.maxHeight = '100%';
+              img.style.marginBottom = '0';
+              img.style.objectFit = 'unset';
+              img.style.flexShrink = '0';
+              img.style.filter = 'drop-shadow(0 10px 16px rgba(0,0,0,0.45))';
+            }
+            var panels = doc.querySelectorAll('.sp-card-panel');
+            for (var j = 0; j < panels.length; j++) {
+              panels[j].style.position = 'relative';
+              panels[j].style.zIndex = '6';
+            }
+          }
+        });
+      });
+    }
+
+    function blobFromCanvas(c, fmt) {
+      return new Promise(function (resolve, reject) {
+        if (fmt === 'png') {
+          c.toBlob(function (b) { b ? resolve(b) : reject(new Error('PNG failed')); }, 'image/png');
+        } else {
+          c.toBlob(function (b) { b ? resolve(b) : reject(new Error('JPG failed')); }, 'image/jpeg', 0.97);
+        }
+      });
+    }
+
+    function downloadBlob(blob, filename) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 2500);
+    }
+
+    function withBusy(fn) {
+      if (busy) return;
+      busy = true;
+      ['spDlPng', 'spDlJpg', 'spCopy', 'spShare'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.disabled = true;
+      });
+      Promise.resolve()
+        .then(fn)
+        .catch(function (err) {
+          console.error(err);
+          setStatus('Error: ' + (err && err.message ? err.message : err), 'is-err');
+        })
+        .then(function () {
+          busy = false;
+          ['spDlPng', 'spDlJpg', 'spCopy', 'spShare'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.disabled = false;
+          });
+        });
+    }
+
+    function exportFmt(fmt) {
+      withBusy(function () {
+        var scale = parseInt(resEl && resEl.value, 10) || 2;
+        var wh = (1080 * scale) + '×' + (1920 * scale);
+        setStatus('Rendering ' + wh + ' ' + fmt.toUpperCase() + '…');
+        return renderPoster().then(function (c) {
+          return blobFromCanvas(c, fmt).then(function (blob) {
+            var ext = fmt === 'png' ? 'png' : 'jpg';
+            downloadBlob(blob, 'squad-poster-' + slugify(teamName) + '-' + (1080 * scale) + 'x' + (1920 * scale) + '.' + ext);
+            setStatus('Downloaded ' + wh + ' · ready for Instagram Stories', 'is-ok');
+          });
+        });
+      });
+    }
+
+    var pngBtn = document.getElementById('spDlPng');
+    var jpgBtn = document.getElementById('spDlJpg');
+    if (pngBtn) pngBtn.addEventListener('click', function () { exportFmt('png'); });
+    if (jpgBtn) jpgBtn.addEventListener('click', function () { exportFmt('jpg'); });
+
+    var printBtn = document.getElementById('spPrint');
+    if (printBtn) printBtn.addEventListener('click', function () { window.print(); });
+
+    var copyBtn = document.getElementById('spCopy');
+    if (copyBtn) copyBtn.addEventListener('click', function () {
+      withBusy(function () {
+        setStatus('Copying image…');
+        return renderPoster().then(function (c) {
+          return blobFromCanvas(c, 'png').then(function (blob) {
+            if (navigator.clipboard && window.ClipboardItem) {
+              return navigator.clipboard.write([new ClipboardItem({'image/png': blob})]).then(function () {
+                setStatus('Image copied to clipboard', 'is-ok');
+              });
+            }
+            throw new Error('Clipboard image not supported in this browser');
+          });
+        });
+      });
+    });
+
+    var shareBtn = document.getElementById('spShare');
+    if (shareBtn) shareBtn.addEventListener('click', function () {
+      withBusy(function () {
+        setStatus('Preparing share…');
+        return renderPoster().then(function (c) {
+          return blobFromCanvas(c, 'png').then(function (blob) {
+            var file = new File([blob], 'squad-poster-' + slugify(teamName) + '.png', {type: 'image/png'});
+            if (navigator.share && navigator.canShare && navigator.canShare({files: [file]})) {
+              return navigator.share({
+                files: [file],
+                title: teamName + ' Squad',
+                text: teamName + ' — Official Squad Roster'
+              }).then(function () {
+                setStatus('Shared', 'is-ok');
+              });
+            }
+            downloadBlob(blob, file.name);
+            setStatus('Share unavailable — PNG downloaded instead', 'is-ok');
+          });
+        });
+      });
+    });
+  })();
+  ]]></script>
+</body>
+</html>
+</template>
+
+<template id="squad_poster_player_card" name="Squad Poster Player Card">
+  <div class="sp-card">
+    <div class="sp-card-photo-wrap">
+      <t t-if="p.get('photo_uri')">
+        <img class="sp-card-photo" t-att-src="p.get('photo_uri')" t-att-alt="p.get('name')" loading="eager"/>
+      </t>
+      <t t-else="">
+        <div class="sp-card-photo-ph"><t t-esc="p.get('initials') or '?'"/></div>
+      </t>
+      <span class="sp-jersey" t-if="p.get('jersey')"><t t-esc="p.get('jersey')"/></span>
+      <span class="sp-badge-icon" t-if="p.get('is_icon')">★ ICON</span>
+      <span class="sp-badge-c" t-if="p.get('is_wk') and not p.get('is_icon')">WK</span>
+    </div>
+    <div class="sp-card-panel">
+      <div class="sp-pname" t-att-title="p.get('name')"><t t-esc="p.get('name') or '—'"/></div>
+      <div class="sp-ptier" t-if="p.get('tier')"
+           t-attf-style="#{('color:%s;' % p.get('tier_color')) if p.get('tier_color') else ''}">
+        <t t-esc="p.get('tier')"/>
+      </div>
+      <div class="sp-prole" t-if="p.get('role')"><t t-esc="p.get('role')"/></div>
+    </div>
+  </div>
+</template>
+</odoo>
