@@ -954,7 +954,7 @@ class AuctionTeamPlayer(models.Model):
         'strawberry':   {'bg1': '#3a0f22', 'bg2': '#1c0710', 'bg3': '#5f1a38', 'accent': '#ff9bbb', 'accent2': '#ffd6a8', 'accentD': '#c2185b', 'txt': '#ffeaf3', 'sub': '#e5a9c2', 'badge1': '#ff4d84', 'badge2': '#7a1030'},
         'cherry':       {'bg1': '#2a0509', 'bg2': '#140203', 'bg3': '#4a0a13', 'accent': '#f5c842', 'accent2': '#ffdd88', 'accentD': '#9a0f22', 'txt': '#ffecec', 'sub': '#e0a0a8', 'badge1': '#e01e37', 'badge2': '#5a0810'},
         'pistah':       {'bg1': '#0e2a15', 'bg2': '#05130a', 'bg3': '#1c4d2a', 'accent': '#d4e157', 'accent2': '#eaff9a', 'accentD': '#2f7d32', 'txt': '#ecfce8', 'sub': '#a7d1a0', 'badge1': '#7cb342', 'badge2': '#1b4a1e'},
-        'lemon':        {'bg1': '#2a2408', 'bg2': '#12100a', 'bg3': '#4a3c08', 'accent': '#E8C200', 'accent2': '#FFE082', 'accentD': '#B89600', 'txt': '#fffdf0', 'sub': '#c9b86a', 'badge1': '#F5D84A', 'badge2': '#8a7000'},
+        'lemon':        {'bg1': '#1a1e10', 'bg2': '#0c0e08', 'bg3': '#2a3218', 'accent': '#D9B820', 'accent2': '#E8D48A', 'accentD': '#8F7400', 'txt': '#fff6d6', 'sub': '#d4c078', 'badge1': '#C9A400', 'badge2': '#6E5A00'},
     }
 
     def _card_render_binary(self):

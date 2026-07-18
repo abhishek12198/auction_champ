@@ -9,7 +9,7 @@
   'strawberry':   {'baseDark':'#200712','panel':'#2a0a18','panelLite':'#5f1a38','header':'#8e1146','headerLite':'#c2185b','circleLite':'#ff6aa0','accent':'#ffcf9e','accentD':'#ff5a8a','ink':'#2a0a18','muted':'#e5a9c2','txt':'#ffeaf3','blood':'#ff5a7a','brandGlow':'255,106,160','accentGlow':'255,207,158'},
   'cherry':       {'baseDark':'#150304','panel':'#180405','panelLite':'#4a0a13','header':'#7a0a18','headerLite':'#9a0f22','circleLite':'#dc143c','accent':'#f5c842','accentD':'#c01530','ink':'#180405','muted':'#e0a0a8','txt':'#ffecec','blood':'#ff4d64','brandGlow':'220,20,60','accentGlow':'245,200,66'},
   'pistah':       {'baseDark':'#061309','panel':'#0c2411','panelLite':'#1c4d2a','header':'#2f7d32','headerLite':'#38a13c','circleLite':'#6bbf4e','accent':'#d4e157','accentD':'#2f7d32','ink':'#06140a','muted':'#a7d1a0','txt':'#ecfce8','blood':'#ff7a6b','brandGlow':'107,191,78','accentGlow':'212,225,87'},
-  'lemon':        {'baseDark':'#12100a','panel':'#1c180c','panelLite':'#4a3c08','header':'#B89600','headerLite':'#E8C200','circleLite':'#F5D84A','accent':'#FFE082','accentD':'#B89600','ink':'#1a1608','muted':'#c9b86a','txt':'#fffdf0','blood':'#ff7a6b','brandGlow':'232,194,0','accentGlow':'245,216,74'},
+  'lemon':        {'baseDark':'#E8DDB8','panel':'#F7F1DC','panelLite':'#FBF6E8','header':'#C9A400','headerLite':'#D9B820','circleLite':'#F7F1DC','accent':'#8F7400','accentD':'#6E5A00','ink':'#F7F1DC','muted':'#5C4A14','txt':'#1F1A0A','blood':'#b91c1c','brandGlow':'140,110,0','accentGlow':'143,116,0','capsuleBg':'#1F1A0A','capsuleTxt':'#F7F1DC'},
 }"/>
         <t t-set="pal" t-value="fbc_print_themes.get(doc.tournament_id.player_display_template or 'vanilla', fbc_print_themes['vanilla'])"/>
         <html lang="en">
@@ -35,7 +35,7 @@
                                     <div t-attf-style="color:{{ pal['accent'] }}; font-size:0.68rem; font-weight:600; margin-top:3px; letter-spacing:2px; text-transform:uppercase;" t-esc="doc.tournament_id.description"/>
                                 </td>
                                 <td style="vertical-align:middle; text-align:right; padding:11px 20px; white-space:nowrap;">
-                                    <span t-attf-style="display:inline-block; padding:5px 14px; border-radius:20px; background-color:rgba(0,0,0,0.28); box-shadow:0 0 0 1px rgba({{ pal['accentGlow'] }},0.6); color:{{ pal['accent'] }}; font-family:'Oswald',sans-serif; font-size:0.68rem; font-weight:700; letter-spacing:3px; text-transform:uppercase;">Player Card</span>
+                                    <span t-attf-style="display:inline-block; padding:5px 14px; border-radius:20px; background-color:{{ pal.get('capsuleBg', 'rgba(0,0,0,0.28)') }}; box-shadow:0 0 0 2px {{ pal.get('capsuleTxt', pal['accent']) }}; color:{{ pal.get('capsuleTxt', pal['accent']) }}; font-family:'Oswald',sans-serif; font-size:0.68rem; font-weight:700; letter-spacing:3px; text-transform:uppercase;">Player Card</span>
                                 </td>
                             </tr>
                         </table>

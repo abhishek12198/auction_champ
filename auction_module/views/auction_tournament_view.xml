@@ -43,6 +43,11 @@
                                 string="Upload Players"
                                 class="btn-secondary"
                                 attrs="{'invisible': [('active', '=', False)]}"/>
+                        <button name="action_export_sold_unsold"
+                                type="object"
+                                string="Export Sold / Unsold"
+                                class="btn-secondary"
+                                attrs="{'invisible': [('active', '=', False)]}"/>
                         <button name="action_deactivate_tournament"
                                 type="object"
                                 string="Deactivate Tournament"

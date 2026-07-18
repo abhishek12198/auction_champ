@@ -425,6 +425,8 @@
       font-family: 'Montserrat', sans-serif;
       font-weight: 700;
       font-size: .92rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -432,6 +434,9 @@
     .ar-role {
       margin-top: 2px;
       font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
       color: var(--r-muted);
       white-space: nowrap;
       overflow: hidden;
@@ -666,6 +671,162 @@
     }
     .ar-modal-actions .ar-btn { min-width: 120px; }
 
+    /* ── Laptop / large screens: spacious, premium layout ───────────── */
+    @media (min-width: 1024px) {
+      .ar-shell {
+        max-width: 1440px;
+        padding: 32px 36px 40px;
+        gap: 24px;
+      }
+      .ar-header {
+        padding: 26px 30px;
+        gap: 22px;
+        border-radius: 20px;
+      }
+      .ar-logo, .ar-logo-ph {
+        width: 72px; height: 72px;
+        border-radius: 16px;
+      }
+      .ar-eyebrow {
+        font-size: .72rem;
+        letter-spacing: 2.6px;
+        margin-bottom: 6px;
+      }
+      .ar-title {
+        font-size: clamp(1.55rem, 2vw, 2rem);
+        letter-spacing: 0.02em;
+        white-space: normal;
+      }
+      .ar-sub {
+        margin-top: 8px;
+        font-size: .98rem;
+        line-height: 1.55;
+        max-width: 48rem;
+      }
+      .ar-stats {
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      }
+      .ar-stat {
+        padding: 22px 16px;
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+        box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+      }
+      .ar-stat-num { font-size: clamp(1.85rem, 2.4vw, 2.4rem); }
+      .ar-stat-lbl {
+        margin-top: 10px;
+        font-size: .74rem;
+        letter-spacing: 1.8px;
+      }
+      .ar-panels {
+        gap: 22px;
+        align-items: stretch;
+      }
+      .ar-panels:has(> .ar-panel:nth-child(3)) {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .ar-panel {
+        min-height: 560px;
+        max-height: min(72vh, 820px);
+        border-radius: 20px;
+        box-shadow: 0 16px 40px rgba(0,0,0,0.22);
+      }
+      .ar-panel-head {
+        padding: 18px 20px;
+        gap: 14px;
+      }
+      .ar-panel-title { font-size: 1.05rem; gap: 10px; }
+      .ar-toolbar { gap: 10px; }
+      .ar-filters { gap: 8px; margin-bottom: 4px; }
+      .ar-tier-chip { padding: 7px 14px; font-size: .76rem; }
+      .ar-search {
+        height: 42px;
+        border-radius: 12px;
+        font-size: .9rem;
+        padding: 0 14px;
+        min-width: 200px;
+      }
+      .ar-list { padding: 12px 14px; }
+      .ar-row {
+        grid-template-columns: 32px 60px minmax(0, 1fr) auto auto;
+        gap: 14px;
+        padding: 14px 14px;
+        border-radius: 14px;
+        margin-bottom: 6px;
+      }
+      .ar-row:last-child { margin-bottom: 0; }
+      .ar-avatar, .ar-avatar-ph {
+        width: 60px; height: 60px;
+        border-radius: 14px;
+      }
+      .ar-avatar-ph { font-size: 1.05rem; }
+      .ar-name {
+        font-size: 1.05rem;
+        letter-spacing: 0.06em;
+      }
+      .ar-role {
+        margin-top: 4px;
+        font-size: .8rem;
+        letter-spacing: 0.08em;
+      }
+      .ar-tier {
+        font-size: .74rem;
+        padding: 6px 12px;
+        border-radius: 10px;
+        letter-spacing: 0.08em;
+      }
+      .ar-btn {
+        height: 44px;
+        padding: 0 18px;
+        font-size: .82rem;
+        border-radius: 12px;
+      }
+      .ar-btn-sm {
+        height: 36px;
+        padding: 0 12px;
+        font-size: .76rem;
+      }
+      .ar-panel-foot { padding: 16px 18px; gap: 10px; }
+      .ar-footer {
+        padding: 20px 24px;
+        border-radius: 18px;
+        gap: 18px;
+      }
+      .ar-footer-note {
+        font-size: .92rem;
+        max-width: 46rem;
+        line-height: 1.55;
+      }
+      .ar-banner-full {
+        padding: 18px 22px;
+        font-size: .98rem;
+        border-radius: 16px;
+      }
+    }
+    @media (min-width: 1440px) {
+      .ar-shell {
+        max-width: 1600px;
+        padding: 40px 48px 48px;
+        gap: 28px;
+      }
+      .ar-panel {
+        min-height: 620px;
+        max-height: min(74vh, 900px);
+      }
+      .ar-row {
+        grid-template-columns: 36px 68px minmax(0, 1fr) auto auto;
+        padding: 16px 16px;
+        gap: 16px;
+      }
+      .ar-avatar, .ar-avatar-ph {
+        width: 68px; height: 68px;
+        border-radius: 16px;
+      }
+      .ar-name { font-size: 1.12rem; }
+      .ar-role { font-size: .84rem; }
+    }
+
     @media (max-width: 960px) {
       .ar-panels { grid-template-columns: 1fr; }
       .ar-panel { max-height: none; min-height: 320px; }
@@ -729,10 +890,9 @@
               Mark them as Unsold to clear the live queue, or open Draft / Unsold later if you expand squad sizes.
             </t>
             <t t-else="">
-              No players are currently In Auction. Open Draft / Registered or Unsold players
-              to start or continue the live presentation.
+              The live auction queue is empty. Choose Draft or Unsold players below to continue.
               <t t-if="sold_count">
-                You can also declare the auction complete to show the final Thank You screen.
+                Or declare the auction complete to show the Thank You screen.
               </t>
             </t>
           </p>

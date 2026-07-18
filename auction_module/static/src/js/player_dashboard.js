@@ -100,10 +100,10 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
                     '</div>',
                 '</div>',
 
-                /* ── Row 2: Role donut + Tier bar ── */
+                /* ── Row 2: Role / Position donut + Tier bar ── */
                 '<div class="pd-row">',
                     '<div class="pd-card pd-half">',
-                        '<div class="pd-card-title">&#127931; Role Distribution</div>',
+                        '<div class="pd-card-title" id="pd-role-title">&#127931; Role Distribution</div>',
                         '<div class="pd-chart-wrap"><canvas id="pd-donut-role"></canvas></div>',
                         '<div class="pd-legend" id="pd-role-legend"></div>',
                     '</div>',
@@ -133,7 +133,7 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
                         '<div class="pd-table-wrap">',
                             '<table class="pd-table" id="pd-icon-table">',
                                 '<thead><tr>',
-                                    '<th>#</th><th>Photo</th><th>Player</th><th>Role</th>',
+                                    '<th>#</th><th>Photo</th><th>Player</th><th class="pd-col-role">Role</th>',
                                     '<th>Tier</th><th>Team</th><th>Sold For (Pts)</th>',
                                 '</tr></thead>',
                                 '<tbody id="pd-icon-tbody"><tr><td colspan="7" class="pd-empty">Loading...</td></tr></tbody>',
@@ -149,7 +149,7 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
                         '<div class="pd-table-wrap">',
                             '<table class="pd-table" id="pd-draft-table">',
                                 '<thead><tr>',
-                                    '<th>#</th><th>Photo</th><th>Name</th><th>Role</th>',
+                                    '<th>#</th><th>Photo</th><th>Name</th><th class="pd-col-role">Role</th>',
                                     '<th>Tier</th><th>Base Price</th><th>Added On</th>',
                                 '</tr></thead>',
                                 '<tbody id="pd-draft-tbody"><tr><td colspan="7" class="pd-empty">Loading...</td></tr></tbody>',
@@ -189,7 +189,16 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
 
             this._renderStatePie(sc);
             this._renderDailyBar(d.daily || []);
-            this._renderRoleDonut(d.roles || []);
+
+            var isFootball = (d.tournament_type || '') === 'football';
+            this.$('#pd-role-title').html(
+                isFootball
+                    ? '&#9917; Playing Position Distribution'
+                    : '&#127931; Role Distribution'
+            );
+            this.$('.pd-col-role').text(isFootball ? 'Position' : 'Role');
+            this._renderRoleDonut(isFootball ? (d.positions || []) : (d.roles || []));
+
             this._renderTierBar(d.tiers || []);
             this._renderTeamBar(d.team_player_counts || []);
             this._renderPayDonut(d.paid_count, d.unpaid_count);

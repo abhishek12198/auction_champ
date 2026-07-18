@@ -577,7 +577,7 @@ input[type="file"].tr-file-hidden { display: none; }
 .swatch-strawberry  { background: linear-gradient(135deg,#ff80b5 0%,#ff2070 100%); }
 .swatch-cherry      { background: linear-gradient(135deg,#5a0000 0%,#b01020 100%); }
 .swatch-pistah      { background: linear-gradient(135deg,#002a00 0%,#007840 100%); }
-.swatch-lemon       { background: linear-gradient(135deg,#fff8dc 0%,#E8C200 55%,#B89600 100%); }
+.swatch-lemon       { background: linear-gradient(135deg,#E8DDB8 0%,#C9A400 55%,#8F7400 100%); }
 .swatch-football    { background: linear-gradient(135deg,#0a1a00 0%,#2a6000 100%); }
 
 .tr-theme-name {

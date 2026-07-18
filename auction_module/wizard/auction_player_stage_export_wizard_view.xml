@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <record id="view_player_stage_export_wizard_form" model="ir.ui.view">
+        <field name="name">auction.player.stage.export.wizard.form</field>
+        <field name="model">auction.player.stage.export.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Export Sold / Unsold Players">
+                <field name="state" invisible="1"/>
+                <field name="tournament_type" invisible="1"/>
+
+                <div attrs="{'invisible': [('state', '!=', 'choose')]}">
+                    <div style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);
+                                border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;
+                                border-left:4px solid #3b82f6;">
+                        <h3 style="margin:0 0 .3rem;color:#fff;font-size:1.15rem;font-weight:700;">
+                            Export Players (Sold / Unsold)
+                        </h3>
+                        <p style="margin:0;color:rgba(255,255,255,.65);font-size:.85rem;line-height:1.5;">
+                            Download an Excel workbook with player details for Sold and/or Unsold stages.
+                            Columns adapt to cricket (role, batting/bowling) or football (position, attributes).
+                        </p>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="tournament_id" readonly="1" force_save="1"/>
+                            <field name="export_scope" widget="radio"/>
+                        </group>
+                        <group string="Counts">
+                            <field name="sold_count" readonly="1"/>
+                            <field name="unsold_count" readonly="1"/>
+                        </group>
+                    </group>
+                </div>
+
+                <div attrs="{'invisible': [('state', '!=', 'done')]}">
+                    <div style="background:linear-gradient(135deg,#0f3d2e 0%,#163a2a 100%);
+                                border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;
+                                border-left:4px solid #22c55e;">
+                        <h3 style="margin:0 0 .3rem;color:#fff;font-size:1.15rem;font-weight:700;">
+                            Export ready
+                        </h3>
+                        <p style="margin:0;color:rgba(255,255,255,.7);font-size:.85rem;">
+                            Click the file below to download. Sold and Unsold are separate sheets when both are selected.
+                        </p>
+                    </div>
+                    <group>
+                        <field name="file_name" invisible="1"/>
+                        <field name="file_data" filename="file_name" readonly="1"/>
+                    </group>
+                </div>
+
+                <footer>
+                    <button name="action_generate_excel"
+                            type="object"
+                            string="Generate Excel"
+                            class="btn-primary"
+                            attrs="{'invisible': [('state', '!=', 'choose')]}"/>
+                    <button name="action_back"
+                            type="object"
+                            string="Generate Again"
+                            class="btn-secondary"
+                            attrs="{'invisible': [('state', '!=', 'done')]}"/>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_player_stage_export_wizard" model="ir.actions.act_window">
+        <field name="name">Export Sold / Unsold Players</field>
+        <field name="res_model">auction.player.stage.export.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</data>
+</odoo>

@@ -99,3 +99,5 @@ access_auction_player_upload_wizard_user,auction.player.upload.wizard (user),auc
 access_auction_player_upload_wizard_admin,auction.player.upload.wizard (admin),auction_module.model_auction_player_upload_wizard,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_whatsapp_share_wizard_user,auction.whatsapp.share.wizard (user),auction_module.model_auction_whatsapp_share_wizard,auction_module.group_auction_group,1,1,1,1
 access_auction_whatsapp_share_wizard_admin,auction.whatsapp.share.wizard (admin),auction_module.model_auction_whatsapp_share_wizard,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_player_stage_export_wizard_user,auction.player.stage.export.wizard (user),auction_module.model_auction_player_stage_export_wizard,auction_module.group_auction_group,1,1,1,1
+access_auction_player_stage_export_wizard_admin,auction.player.stage.export.wizard (admin),auction_module.model_auction_player_stage_export_wizard,auction_module.group_auction_group_admin,1,1,1,1

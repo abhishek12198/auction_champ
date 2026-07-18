@@ -200,19 +200,19 @@
 
                 <div class="tr-theme-grid">
                     <t t-foreach="[
+                        ('lemon',        'Lemon',        'swatch-lemon'),
                         ('vanilla',      'Vanilla',      'swatch-vanilla'),
                         ('butterscotch', 'Butterscotch', 'swatch-butterscotch'),
                         ('strawberry',   'Strawberry',   'swatch-strawberry'),
                         ('cherry',       'Cherry',       'swatch-cherry'),
                         ('pistah',       'Pistah',       'swatch-pistah'),
-                        ('lemon',        'Lemon',        'swatch-lemon'),
                     ]" t-as="theme_opt">
                         <div>
                             <input type="radio" class="tr-theme-option"
                                    t-att-id="'theme_' + theme_opt[0]"
                                    name="player_display_template"
                                    t-att-value="theme_opt[0]"
-                                   t-att-checked="'checked' if theme_opt[0] == 'vanilla' else None"/>
+                                   t-att-checked="'checked' if theme_opt[0] == 'lemon' else None"/>
                             <label class="tr-theme-label" t-att-for="'theme_' + theme_opt[0]">
                                 <div t-attf-class="tr-theme-swatch #{theme_opt[2]}">
                                     <span>&#127183;</span>
@@ -229,7 +229,7 @@
                     <div class="tr-card-img-wrap">
                         <img id="themePreviewImg"
                              class="tr-card-preview-img"
-                             src="/auction_module/static/description/player_card_vanila.jpg"
+                             src="/auction_module/static/description/player_card_lemon.jpg"
                              alt="Card Preview"/>
                     </div>
                 </div>
@@ -586,7 +586,7 @@
         'strawberry':   '/auction_module/static/description/player_card_strawberry.jpg',
         'cherry':       '/auction_module/static/description/player_card_cherry.jpg',
         'pistah':       '/auction_module/static/description/player_card_pistah.jpg',
-        'lemon':        '/auction_module/static/description/player_card_butterscotch.jpg',
+        'lemon':        '/auction_module/static/description/player_card_lemon.jpg',
     };
 
     document.querySelectorAll('input[name="player_display_template"]').forEach(function (r) {

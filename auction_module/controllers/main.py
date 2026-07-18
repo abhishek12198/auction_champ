@@ -3189,13 +3189,20 @@ class Auction(http.Controller):
         state_counts = {s: Player.search_count(t_domain + [('state', '=', s)]) for s in states}
         total = sum(state_counts.values())
 
+        tournament_type = (user_tournament.tournament_type if user_tournament else 'cricket') or 'cricket'
+        is_football = tournament_type == 'football'
+
         # ── Last 10 draft players ─────────────────────────────────────────────
         last_draft = Player.search(t_domain + [('state', '=', 'draft')], order='create_date desc', limit=10)
         draft_players = []
         for p in last_draft:
+            if is_football:
+                display_role = (p.dominant_position_id.name if p.dominant_position_id else '') or (p.role or '')
+            else:
+                display_role = p.role or ''
             draft_players.append({
                 'name':        p.name or '',
-                'role':        p.role or '',
+                'role':        display_role,
                 'tier':        p.tier_id.name if p.tier_id else '',
                 'base_price':  p.base_price or 0,
                 'photo_url':   pub_img('auction.team.player', p.id, 'photo') if p.photo else '',
@@ -3216,13 +3223,18 @@ class Auction(http.Controller):
             ])
             daily.append({'label': day.strftime('%d %b'), 'count': count})
 
-        # ── Role distribution ─────────────────────────────────────────────────
+        # ── Role / Playing-position distribution ──────────────────────────────
         all_players = Player.search(t_domain)
         role_counts = {}
+        position_counts = {}
         for p in all_players:
             role = (p.role or 'Unknown').strip() or 'Unknown'
             role_counts[role] = role_counts.get(role, 0) + 1
+            if is_football:
+                pos = (p.dominant_position_id.name if p.dominant_position_id else 'Unknown').strip() or 'Unknown'
+                position_counts[pos] = position_counts.get(pos, 0) + 1
         roles = [{'label': k, 'count': v} for k, v in sorted(role_counts.items(), key=lambda x: -x[1])]
+        positions = [{'label': k, 'count': v} for k, v in sorted(position_counts.items(), key=lambda x: -x[1])]
 
         # ── Tier distribution ─────────────────────────────────────────────────
         tier_counts = {}
@@ -3252,9 +3264,13 @@ class Auction(http.Controller):
         icon_list = []
         for p in icon_players:
             auc_line = AucPlayer.search([('player_id', '=', p.id)], order='points desc', limit=1)
+            if is_football:
+                display_role = (p.dominant_position_id.name if p.dominant_position_id else '') or (p.role or '')
+            else:
+                display_role = p.role or ''
             icon_list.append({
                 'name':      p.name or '',
-                'role':      p.role or '',
+                'role':      display_role,
                 'tier':      p.tier_id.name if p.tier_id else '',
                 'team':      p.assigned_team_id.name if p.assigned_team_id else 'Unassigned',
                 'team_logo': pub_img('auction.team', p.assigned_team_id.id, 'logo')
@@ -3279,6 +3295,8 @@ class Auction(http.Controller):
             'draft_players':     draft_players,
             'daily':             daily,
             'roles':             roles,
+            'positions':         positions,
+            'tournament_type':   tournament_type,
             'tiers':             tiers,
             'team_player_counts': team_player_counts,
             'icon_players':      icon_list,

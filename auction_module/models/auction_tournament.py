@@ -140,14 +140,14 @@ class AuctionTournament(models.Model):
         help='Hex color used to visually identify this tournament in kanban/list views.'
     )
     player_display_template = fields.Selection([
+        ('lemon', 'Lemon'),
         ('vanilla', 'Vanilla'),
         ('butterscotch', 'Butterscotch'),
         ('strawberry', 'Strawberry'),
         ('cherry', 'Cherry'),
         ('pistah', 'Pistah'),
-        ('lemon', 'Lemon'),
     ], string='Theme'
-              '', default='vanilla', required=True)
+              '', default='lemon', required=True)
     sold_display_seconds = fields.Integer(
         string='Sold Screen Duration (seconds)',
         default=5,
@@ -711,6 +711,18 @@ class AuctionTournament(models.Model):
             'type': 'ir.actions.act_window',
             'name': 'Remove Duplicate Players',
             'res_model': 'auction.remove.duplicates.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_tournament_id': self.id},
+        }
+
+    def action_export_sold_unsold(self):
+        """Open Excel export wizard for sold / unsold players."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Export Sold / Unsold Players',
+            'res_model': 'auction.player.stage.export.wizard',
             'view_mode': 'form',
             'target': 'new',
             'context': {'default_tournament_id': self.id},
