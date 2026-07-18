@@ -4601,10 +4601,7 @@ def _pj_wait_phase(tournament):
         return {
             'phase': 'completed',
             'tournament_name': name,
-            'message': (
-                'THE AUCTION FLOOR CLOSES, AND THE ROAD TO GLORY BEGINS. '
-                'THANK YOU EVERYONE.'
-            ),
+            'message': 'THE AUCTION FLOOR CLOSES, AND THE ROAD TO GLORY BEGINS.',
         }
     if auction == 0 and sold == 0 and unsold == 0:
         return {
@@ -4665,20 +4662,41 @@ def _pj_squad(tournament, db_name):
         return {'sport': sport, 'teams': []}
 
     Player = request.env['auction.team.player'].sudo()
+    Auction = request.env['auction.auction'].sudo()
     AuctionPlayer = request.env['auction.auction.player'].sudo()
     sold_lines = AuctionPlayer.search(
         [('auction_id.tournament_id', '=', tournament.id)],
         order='create_date desc, id desc',
     )
     sold_rank = {}
+    points_by_player = {}
     for idx, line in enumerate(sold_lines):
-        if line.player_id and line.player_id.id not in sold_rank:
-            sold_rank[line.player_id.id] = idx
+        if not line.player_id:
+            continue
+        pid = line.player_id.id
+        if pid not in sold_rank:
+            sold_rank[pid] = idx
+        if pid not in points_by_player:
+            points_by_player[pid] = int(line.points or 0)
+
+    auctions_by_team = {}
+    for auc in Auction.search([('tournament_id', '=', tournament.id)]):
+        if auc.team_id:
+            auctions_by_team[auc.team_id.id] = auc
+
     teams_out = []
     for team in tournament.team_ids.sorted('name'):
         logo_url = ''
         if team.logo:
             logo_url = '/%s/auction/public/image/auction.team/%d/logo' % (db_name, team.id)
+
+        auction = auctions_by_team.get(team.id)
+        max_players = int(auction.max_players or 0) if auction else 0
+        total_purse = int(auction.total_point or 0) if auction else 0
+        remaining_purse = int(auction.remaining_points or 0) if auction else 0
+        # Recruited slots = auction squad lines (what max_players caps)
+        recruited = len(auction.player_ids) if auction else 0
+        spent_purse = max(total_purse - remaining_purse, 0)
 
         players = Player.search([
             ('tournament_id', '=', tournament.id),
@@ -4719,13 +4737,18 @@ def _pj_squad(tournament, db_name):
                 'tier_name': (p.tier_id.name if p.tier_id and not mystery_hidden else '') or '',
                 'tier_color': (p.tier_id.color if p.tier_id else '') or '#888',
                 'is_icon': bool(p.icon_player),
+                'points': 0 if p.icon_player else int(points_by_player.get(p.id, 0) or 0),
             })
 
         teams_out.append({
             'id': team.id,
             'name': team.name or '',
             'logo_url': logo_url,
-            'count': len(players_out),
+            'count': recruited,
+            'max_players': max_players,
+            'total_purse': total_purse,
+            'remaining_purse': remaining_purse,
+            'spent_purse': spent_purse,
             'players': players_out,
         })
     return {'sport': sport, 'teams': teams_out}

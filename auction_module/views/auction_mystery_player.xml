@@ -57,31 +57,110 @@
     100% { opacity: 1; transform: translateX(-50%) rotate(-8deg) scale(1); }
   }
 
+  /*
+   * Reveal stays on document.body (survives player-zone HTML swaps) and sits
+   * just above the fixed Powered-by footer (~42px), themed per display template.
+   */
   #acMysteryRevealBtn {
     display: none;
+    appearance: none;
+    -webkit-appearance: none;
+    box-sizing: border-box;
     position: fixed;
     left: 50%;
-    bottom: 28px;
+    bottom: calc(42px + 14px);
     transform: translateX(-50%);
-    z-index: 10050;
+    z-index: 46;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    padding: 1rem 1.8rem;
-    border: 2px solid rgba(253, 206, 51, .9);
-    border-radius: 999px;
-    background: linear-gradient(135deg, #0f1f44, #2252b5);
-    color: #fdce33;
-    font-family: 'Rajdhani', 'Poppins', sans-serif;
-    font-size: 1.1rem;
+    width: min(440px, calc(100vw - 2rem));
+    min-height: 52px;
+    margin: 0;
+    padding: 14px 22px;
+    border: none;
+    cursor: pointer;
     font-weight: 700;
     letter-spacing: .14em;
     text-transform: uppercase;
-    cursor: pointer;
-    box-shadow: 0 12px 32px rgba(15, 31, 68, .45);
+    line-height: 1.1;
+    transition: transform .2s ease, filter .2s ease, box-shadow .2s ease, background .2s ease;
   }
-  #acMysteryRevealBtn:hover { filter: brightness(1.08); }
-  #acMysteryRevealBtn.is-visible { display: inline-flex; }
+  #acMysteryRevealBtn.is-visible { display: inline-flex !important; }
+  #acMysteryRevealBtn:hover { filter: brightness(1.06); transform: translateX(-50%) translateY(-2px); }
+  #acMysteryRevealBtn:active { transform: translateX(-50%) translateY(0); filter: brightness(.96); }
+  #acMysteryRevealBtn .ac-reveal-ico {
+    display: inline-flex;
+    width: 1.2em;
+    height: 1.2em;
+    flex-shrink: 0;
+  }
+  #acMysteryRevealBtn .ac-reveal-ico svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Vanilla (default) */
+  #acMysteryRevealBtn,
+  body[data-ac-reveal-theme="vanilla"] #acMysteryRevealBtn {
+    font-family: 'Rajdhani', 'Poppins', sans-serif;
+    border-radius: 14px;
+    color: #08205c;
+    background: linear-gradient(180deg, #fff6c8, #fdce33);
+    box-shadow: 0 10px 28px rgba(15, 31, 68, .35), inset 0 0 0 1px rgba(255, 255, 255, .55);
+  }
+
+  /* Butterscotch */
+  body[data-ac-reveal-theme="butterscotch"] #acMysteryRevealBtn {
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 2.5px;
+    border-radius: 3px;
+    color: #1a1408;
+    background: linear-gradient(135deg, #c9a227, #f5c842 55%, #ffe08a);
+    box-shadow: 0 8px 24px rgba(245, 200, 66, .4);
+  }
+
+  /* Lemon */
+  body[data-ac-reveal-theme="lemon"] #acMysteryRevealBtn {
+    font-family: 'Antonio', sans-serif;
+    letter-spacing: 2px;
+    border-radius: 50px;
+    color: #1a1608;
+    border: 1.5px solid rgba(245, 216, 74, .4);
+    background: linear-gradient(135deg, #c9a000, #e8c200 50%, #f5d84a);
+    box-shadow: 0 8px 24px rgba(232, 194, 0, .38), inset 0 1px 0 rgba(255, 255, 255, .2);
+  }
+
+  /* Strawberry */
+  body[data-ac-reveal-theme="strawberry"] #acMysteryRevealBtn {
+    font-family: 'Antonio', sans-serif;
+    letter-spacing: 2px;
+    border-radius: 50px;
+    color: #fff;
+    border: 1.5px solid rgba(233, 30, 99, .4);
+    background: linear-gradient(135deg, #880e4f, #c2185b 50%, #e91e63);
+    box-shadow: 0 8px 24px rgba(194, 24, 91, .4), inset 0 1px 0 rgba(255, 255, 255, .16);
+  }
+
+  /* Cherry */
+  body[data-ac-reveal-theme="cherry"] #acMysteryRevealBtn {
+    letter-spacing: .16em;
+    border-radius: 12px;
+    color: #fff;
+    background: linear-gradient(135deg, #8B0000, #DC143C 55%, #ff4d6d);
+    box-shadow: 0 10px 28px rgba(220, 20, 60, .45);
+  }
+
+  /* Pistah */
+  body[data-ac-reveal-theme="pistah"] #acMysteryRevealBtn {
+    letter-spacing: .12em;
+    border-radius: 14px;
+    color: #0d2010;
+    border: 1.5px solid rgba(107, 191, 78, .5);
+    background: linear-gradient(135deg, #6bbf4e, #9ae37a);
+    box-shadow: 0 10px 26px rgba(107, 191, 78, .4);
+  }
 
   .mystery-locked {
     opacity: .45 !important;
@@ -90,8 +169,13 @@
   }
 </style>
 
-<button type="button" id="acMysteryRevealBtn" onclick="acRevealMysteryPlayer()">
-  Reveal Player
+<button type="button" id="acMysteryRevealBtn" class="ac-mystery-reveal-btn" onclick="acRevealMysteryPlayer()" aria-label="Reveal Player">
+  <span class="ac-reveal-ico" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 .001 6.001A3 3 0 0 0 12 9z"/>
+    </svg>
+  </span>
+  <span class="ac-reveal-label">Reveal Player</span>
 </button>
 
 <script><![CDATA[
@@ -101,6 +185,14 @@
   window.AUCTION_MYSTERY_AWAITING_REVEAL = false;
   window.AUCTION_MYSTERY_SOLD_INFO = null;
 
+  var AC_REVEAL_BTN_HTML =
+    '<span class="ac-reveal-ico" aria-hidden="true">' +
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">' +
+        '<path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 .001 6.001A3 3 0 0 0 12 9z"/>' +
+      '</svg>' +
+    '</span>' +
+    '<span class="ac-reveal-label">Reveal Player</span>';
+
   function acMysteryFlag() {
     return document.body.getAttribute('data-is-mystery') === '1';
   }
@@ -109,6 +201,34 @@
     window.AUCTION_MYSTERY_REVEALED = !!revealed;
     if (revealed) document.body.setAttribute('data-mystery-revealed', '1');
     else document.body.removeAttribute('data-mystery-revealed');
+  }
+
+  function acMysteryDetectTheme() {
+    if (document.querySelector('.pt-actions, .pt-arena, .pt-footer')) return 'pistah';
+    if (document.querySelector('.hud-actions, .hud-arena, .hud-footer')) return 'butterscotch';
+    if (document.querySelector('.lm-actions, .lm-footer')) return 'lemon';
+    if (document.querySelector('.sw-actions, .sw-footer')) return 'strawberry';
+    if (document.querySelector('.cr-actions, .cr-footer')) return 'cherry';
+    return 'vanilla';
+  }
+
+  function acMysteryEnsureRevealBtn() {
+    var btn = document.getElementById('acMysteryRevealBtn');
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.id = 'acMysteryRevealBtn';
+      btn.className = 'ac-mystery-reveal-btn';
+      btn.setAttribute('aria-label', 'Reveal Player');
+      btn.innerHTML = AC_REVEAL_BTN_HTML;
+      btn.onclick = function () { window.acRevealMysteryPlayer(); };
+    }
+    // Always keep on body so player-zone innerHTML swaps cannot destroy it
+    if (btn.parentNode !== document.body) {
+      document.body.appendChild(btn);
+    }
+    document.body.setAttribute('data-ac-reveal-theme', acMysteryDetectTheme());
+    return btn;
   }
 
   function acMysteryNextButtons() {
@@ -195,16 +315,13 @@
   }
 
   window.acMysteryUpdateControls = function () {
-    var revealBtn = document.getElementById('acMysteryRevealBtn');
+    var revealBtn = acMysteryEnsureRevealBtn();
     var isMystery = !!window.AUCTION_IS_MYSTERY;
     var revealed = !!window.AUCTION_MYSTERY_REVEALED;
     var awaiting = !!window.AUCTION_MYSTERY_AWAITING_REVEAL;
 
-    if (revealBtn) {
-      if (revealBtn.parentNode !== document.body) document.body.appendChild(revealBtn);
-      if (isMystery && !revealed && awaiting) revealBtn.classList.add('is-visible');
-      else revealBtn.classList.remove('is-visible');
-    }
+    if (isMystery && !revealed && awaiting) revealBtn.classList.add('is-visible');
+    else revealBtn.classList.remove('is-visible');
 
     if (isMystery && (awaiting || revealed) && window.AUCTION_MYSTERY_SOLD_INFO) {
       acMysteryHideActionButtons();
@@ -233,11 +350,6 @@
     acMysteryUpdateControls();
   };
 
-  /** Apply mystery UI from attributes already on <body> (set by changeImage / sell modal).
-   *  Do NOT re-fetch the page here — that races with acCommitPlayerOnStage and can
-   *  briefly read the previous on-stage player, clearing data-is-mystery and revealing
-   *  a mystery player's identity on display_auction.
-   */
   window.acMysteryApplyFromBody = function () {
     window.AUCTION_IS_MYSTERY = acMysteryFlag();
     window.AUCTION_MYSTERY_AWAITING_REVEAL = false;
@@ -254,8 +366,6 @@
     if (!window.AUCTION_IS_MYSTERY) return;
     var playerId = parseInt(document.body.getAttribute('data-player-id') || '0', 10);
     if (playerId) {
-      // display_auction is auth=none — use db-explicit console_call (sudo whitelist)
-      // instead of /web/dataset/call_kw so the live board sees mystery_revealed.
       var parts = (window.location.pathname || '').split('/').filter(Boolean);
       var dbName = parts.length ? parts[0] : '';
       var payload = {
@@ -303,31 +413,8 @@
   };
 
   window.acMysterySyncFromZone = function () {
-    // Caller already copied data-is-mystery / data-player-id from the prefetch HTML.
     window.acMysteryApplyFromBody();
   };
-
-  async function acMysteryRefreshFlagFromServer() {
-    // Legacy helper — prefer acMysteryApplyFromBody after a zone swap.
-    // If used, still avoid trusting a stale on-stage player when possible.
-    try {
-      var url = window.location.href.split('?')[0];
-      var r = await fetch(url, { cache: 'no-store' });
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      var html = await r.text();
-      var doc = new DOMParser().parseFromString(html, 'text/html');
-      var flag = (doc.body && doc.body.getAttribute('data-is-mystery')) || '0';
-      var newId = doc.body && doc.body.getAttribute('data-player-id');
-      var curId = document.body.getAttribute('data-player-id');
-      // Only adopt server flags when the stage player matches who we are showing.
-      if (newId && curId && String(newId) === String(curId)) {
-        document.body.setAttribute('data-is-mystery', flag);
-      }
-      window.acMysteryApplyFromBody();
-    } catch (e) {
-      window.acMysteryApplyFromBody();
-    }
-  }
 
   function acMysteryWrapChangeImage() {
     if (typeof window.changeImage !== 'function' || window.changeImage._mysteryWrapped) return;
@@ -337,12 +424,9 @@
         return;
       }
       var zone = document.querySelector('[data-player-zone]');
-      // Hide stage during swap so the next identity never flashes unmasked
       if (zone) zone.style.visibility = 'hidden';
       try {
         var result = await original.apply(this, arguments);
-        // Mask from body attrs set by the theme swap — never re-fetch here
-        // (re-fetch raced with stage commit and cleared mystery masking).
         window.acMysteryApplyFromBody();
         return result;
       } finally {
@@ -357,10 +441,7 @@
     window.AUCTION_MYSTERY_AWAITING_REVEAL = false;
     window.AUCTION_MYSTERY_SOLD_INFO = null;
     acMysterySetRevealed(false);
-    var revealBtn = document.getElementById('acMysteryRevealBtn');
-    if (revealBtn && revealBtn.parentNode !== document.body) {
-      document.body.appendChild(revealBtn);
-    }
+    acMysteryEnsureRevealBtn();
     if (window.AUCTION_IS_MYSTERY) acMysteryEnsureGenericAvatar();
     acMysteryUpdateControls();
     acMysteryWrapChangeImage();
@@ -368,8 +449,6 @@
     setTimeout(acMysteryWrapChangeImage, 250);
   }
 
-  // Apply mystery flag as early as possible (script may run before body exists
-  // if included late; boot handles the normal path).
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', acMysteryBoot);
   } else {

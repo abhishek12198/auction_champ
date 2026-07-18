@@ -848,6 +848,7 @@ class AuctionTeamPlayer(models.Model):
         """Reveal a Mystery player's identity after sale (display_auction + live board).
 
         Prefer calling with ``player_id`` from the web console_call endpoint.
+        Does not replay the SOLD stamp — that is reserved for the sale moment.
         Returns ``{'success': True, 'player_name': ...}`` on success.
         """
         if not player_id:
@@ -874,15 +875,17 @@ class AuctionTeamPlayer(models.Model):
             # History unmask is best-effort — reveal flag is already set
             _logger = logging.getLogger(__name__)
             _logger.exception('Failed to unmask mystery history for player %s', player.id)
-        # Keep sold stamp alive briefly so live board can show the reveal
+        # Reveal identity only — do not replay the SOLD stamp (that is for the
+        # sale moment). Clear any lingering stamp so projector/live board show
+        # the revealed photo without the sold overlay returning.
         if player.tournament_id and player.state == 'sold':
-            from datetime import timedelta
-            display_secs = player.tournament_id.sold_display_seconds or 5
-            player.tournament_id.sudo().write({
-                'stamp_player_id': player.id,
-                'stamp_state': 'sold',
-                'stamp_expires_at': fields.Datetime.now() + timedelta(seconds=display_secs + 3),
-            })
+            tournament = player.tournament_id.sudo()
+            if tournament.stamp_player_id and tournament.stamp_player_id.id == player.id:
+                tournament.write({
+                    'stamp_player_id': False,
+                    'stamp_state': False,
+                    'stamp_expires_at': False,
+                })
         return {
             'success': True,
             'player_id': player.id,

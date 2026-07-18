@@ -122,41 +122,59 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   display:flex;flex-direction:column;gap:.85rem;align-content:start}
 .pj-sq-loading,.pj-sq-empty{width:100%;text-align:center;padding:3rem 1rem;
   color:var(--tx2);letter-spacing:.12em;text-transform:uppercase;font-size:.85rem}
-.pj-sq-team{display:flex;align-items:flex-start;gap:1rem;width:100%;
+.pj-sq-team{display:flex;align-items:stretch;gap:1.1rem;width:100%;
   border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.18);
-  padding:.7rem .9rem .75rem;min-width:0;box-sizing:border-box}
+  padding:.85rem 1rem;min-width:0;box-sizing:border-box}
 [data-mode="light"] .pj-sq-team{background:rgba(255,255,255,.55)}
-.pj-sq-team-hd{display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:.4rem;flex-shrink:0;width:7.5rem;text-align:center;padding-top:.15rem}
-.pj-sq-team-logo{width:3.2rem;height:3.2rem;border-radius:10px;object-fit:contain;
+.pj-sq-team-hd{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  gap:.45rem;flex-shrink:0;width:9.5rem;text-align:center;padding-top:.1rem}
+.pj-sq-team-logo{width:3.4rem;height:3.4rem;border-radius:10px;object-fit:contain;
   background:rgba(255,255,255,.06);border:1px solid var(--line);flex-shrink:0}
-.pj-sq-team-logo-ph{width:3.2rem;height:3.2rem;border-radius:10px;background:var(--gold);
+.pj-sq-team-logo-ph{width:3.4rem;height:3.4rem;border-radius:10px;background:var(--gold);
   color:#111;font-weight:900;display:flex;align-items:center;justify-content:center;
-  font-size:1rem;flex-shrink:0}
+  font-size:1.05rem;flex-shrink:0}
 .pj-sq-team-name{font-weight:800;letter-spacing:.06em;text-transform:uppercase;
-  font-size:.72rem;line-height:1.15;max-width:100%;overflow:hidden;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.pj-sq-team-count{font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--tx2)}
-.pj-sq-players{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:.65rem .55rem;
-  align-content:flex-start}
+  font-size:.78rem;line-height:1.15;max-width:100%;width:100%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pj-sq-meters{display:flex;flex-direction:column;gap:.45rem;width:100%;margin-top:.15rem}
+.pj-sq-meter{display:flex;flex-direction:column;gap:.18rem;width:100%;text-align:left}
+.pj-sq-meter-top{display:flex;align-items:baseline;justify-content:space-between;gap:.35rem}
+.pj-sq-meter-lbl{font-size:.52rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--tx2)}
+.pj-sq-meter-val{font-size:.72rem;font-weight:900;letter-spacing:.04em;color:var(--tx);white-space:nowrap}
+.pj-sq-meter-track{height:.38rem;border-radius:999px;background:rgba(255,255,255,.1);
+  overflow:hidden;border:1px solid rgba(255,255,255,.08)}
+[data-mode="light"] .pj-sq-meter-track{background:rgba(0,0,0,.08);border-color:rgba(0,0,0,.06)}
+.pj-sq-meter-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--gold),#ffe08a);
+  min-width:0;transition:width .35s ease}
+.pj-sq-meter-fill.is-purse{background:linear-gradient(90deg,#2bb673,#69f0ae)}
+.pj-sq-meter-fill.is-full{background:linear-gradient(90deg,#00c853,#69f0ae)}
+.pj-sq-meter-fill.is-low{background:linear-gradient(90deg,#e67e22,#f5c842)}
+.pj-sq-players{flex:1;min-width:0;display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(6.8rem,1fr));
+  gap:1.15rem .95rem;align-content:flex-start}
 .pj-sq-player{display:flex;flex-direction:column;align-items:center;text-align:center;
-  gap:.32rem;flex:0 0 calc((100% - 11 * .55rem) / 12);min-width:0;max-width:8.5rem;box-sizing:border-box}
-.pj-sq-photo{width:100%;aspect-ratio:1;max-width:7.5rem;height:auto;border-radius:10px;
+  gap:.28rem;min-width:0;box-sizing:border-box}
+.pj-sq-photo{width:100%;aspect-ratio:1;height:auto;border-radius:10px;
   object-fit:cover;object-position:top center;border:1.5px solid var(--line);
   background:rgba(255,255,255,.06);display:block}
-.pj-sq-photo-ph{width:100%;aspect-ratio:1;max-width:7.5rem;border-radius:10px;border:1.5px solid var(--line);
+.pj-sq-photo-ph{width:100%;aspect-ratio:1;border-radius:10px;border:1.5px solid var(--line);
   background:linear-gradient(145deg,var(--panel2),var(--panel));display:flex;align-items:center;
   justify-content:center;font-size:1.25rem;font-weight:800;color:var(--tx2)}
-.pj-sq-pname{font-size:1.05rem;font-weight:800;line-height:1.2;max-width:100%;
+.pj-sq-pname{width:100%;font-size:.92rem;font-weight:800;line-height:1.15;
   text-transform:uppercase;letter-spacing:.03em;
-  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.pj-sq-prole{font-size:.82rem;letter-spacing:.04em;color:var(--tx2);line-height:1.15;
-  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pj-sq-tier{font-size:.72rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
-  color:#fff;padding:.14rem .4rem;border-radius:4px;line-height:1.2;max-width:100%;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pj-sq-prole{width:100%;font-size:.72rem;letter-spacing:.04em;color:var(--tx2);line-height:1.15;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pj-sq-tier{font-size:.62rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+  color:#fff;padding:.12rem .35rem;border-radius:4px;line-height:1.2;max-width:100%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pj-sq-pts{width:100%;font-size:.78rem;font-weight:900;letter-spacing:.04em;color:var(--gold);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pj-sq-pts-unit{font-size:.58rem;font-weight:700;opacity:.75;margin-left:2px;letter-spacing:.06em}
+.pj-sq-icon-tag{font-size:.55rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--gold);opacity:.9}
 .pj-sq-none{font-size:.65rem;color:var(--tx2);letter-spacing:.08em;
-  text-transform:uppercase;padding:.55rem .2rem;opacity:.8;align-self:center}
+  text-transform:uppercase;padding:.55rem .2rem;opacity:.8;align-self:center;grid-column:1/-1}
 
 /* ══ Remaining Players Overlay (kanban-style) ══════════════════════════ */
 #pjRemainOverlay{position:fixed;inset:0;z-index:900;display:none;flex-direction:column;
@@ -307,6 +325,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 .pj-wait-sub.is-complete{color:var(--gold);font-weight:700;font-size:clamp(.7rem,1.25vw,.92rem);
   letter-spacing:.1em;text-transform:uppercase;white-space:normal;line-height:1.4}
 .pj-wait-dots{display:flex;gap:.5rem}
+#pj-waiting.is-complete .pj-wait-normal{display:none}
 #pj-waiting.is-complete .pj-wait-dots{display:none}
 .pj-wait-dot{width:.55rem;height:.55rem;border-radius:50%;background:var(--gold);
   animation:pjPulse 1.2s ease-in-out infinite}
@@ -315,6 +334,55 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 .pj-wait-powered{text-align:center;opacity:.75}
 .pj-wait-powered-lbl{font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;margin-bottom:.35rem}
 .pj-ac-logo{width:clamp(90px,14vw,140px);height:auto}
+
+/* ══ Auction Complete / Thank You ceremony ════════════════════════════ */
+.pj-complete-ceremony{display:none;position:relative;flex-direction:column;align-items:center;
+  justify-content:center;gap:clamp(.6rem,1.5vh,1.2rem);text-align:center;padding:1rem 1.5rem;
+  max-width:min(96vw,56rem);z-index:2}
+#pj-waiting.is-complete .pj-complete-ceremony{display:flex}
+.pj-ty-burst{position:absolute;inset:-20% -10%;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 55% 45% at 50% 40%,rgba(255,215,0,.22),transparent 70%),
+    radial-gradient(ellipse 40% 35% at 20% 70%,rgba(255,180,0,.1),transparent 65%),
+    radial-gradient(ellipse 40% 35% at 80% 70%,rgba(255,180,0,.1),transparent 65%);
+  animation:pjTyBurst 4s ease-in-out infinite alternate}
+@keyframes pjTyBurst{from{opacity:.65;transform:scale(.96)}to{opacity:1;transform:scale(1.04)}}
+.pj-ty-visual{position:relative;z-index:1;width:clamp(120px,16vw,200px);height:clamp(120px,16vw,200px);
+  animation:pjTyFloat 3.2s ease-in-out infinite}
+@keyframes pjTyFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.pj-ty-visual svg{width:100%;height:100%;display:block;filter:drop-shadow(0 0 28px rgba(255,215,0,.45))}
+.pj-ty-thanks{position:relative;z-index:1;font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(3.4rem,9vw,7.5rem);line-height:.92;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--gold);text-shadow:0 0 40px var(--glow),0 4px 24px rgba(0,0,0,.45);
+  opacity:0;transform:scale(.72) translateY(18px);
+  animation:pjTyThanksIn 1.1s cubic-bezier(.2,.85,.25,1) .15s forwards}
+@keyframes pjTyThanksIn{to{opacity:1;transform:scale(1) translateY(0)}}
+.pj-ty-thanks-shimmer{position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.45) 50%,transparent 65%);
+  background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:pjTyShimmer 2.8s ease-in-out 1.2s infinite;pointer-events:none}
+@keyframes pjTyShimmer{0%{background-position:120% 0}100%{background-position:-120% 0}}
+.pj-ty-message{position:relative;z-index:1;font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(1.35rem,3.4vw,2.75rem);line-height:1.25;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--tx);max-width:min(92vw,48rem);opacity:0;transform:translateY(16px);
+  animation:pjTyMsgIn .9s ease .55s forwards;text-shadow:0 2px 18px rgba(0,0,0,.4)}
+@keyframes pjTyMsgIn{to{opacity:1;transform:translateY(0)}}
+.pj-ty-tour{position:relative;z-index:1;font-size:clamp(.85rem,1.6vw,1.2rem);font-weight:800;
+  letter-spacing:.28em;text-transform:uppercase;color:var(--tx2);opacity:0;
+  animation:pjTyMsgIn .8s ease .95s forwards}
+.pj-ty-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.pj-ty-piece{position:absolute;top:-12%;width:10px;height:14px;border-radius:2px;opacity:.85;
+  animation:pjTyFall linear infinite}
+.pj-ty-piece:nth-child(odd){width:8px;height:8px;border-radius:50%}
+.pj-ty-piece:nth-child(3n){width:12px;height:6px;border-radius:1px}
+@keyframes pjTyFall{
+  0%{transform:translate3d(0,-10%,0) rotate(0deg);opacity:0}
+  8%{opacity:.9}
+  100%{transform:translate3d(var(--dx,20px),110vh,0) rotate(720deg);opacity:0}
+}
+#pj-waiting.is-complete.pj-ty-replay .pj-ty-thanks,
+#pj-waiting.is-complete.pj-ty-replay .pj-ty-message,
+#pj-waiting.is-complete.pj-ty-replay .pj-ty-tour{animation:none;opacity:0}
+#pj-waiting.is-complete.pj-ty-replay .pj-ty-visual{animation:none}
 
 /* Dice */
 .pj-dice-area{display:none;flex-direction:column;align-items:center;gap:.8rem;margin-top:.5rem}
@@ -384,6 +452,43 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   font-size:clamp(1rem,2.5vw,1.65rem);font-weight:800;letter-spacing:3px;
   text-shadow:0 2px 10px rgba(0,0,0,.55)}
 .pj-mystery-lock-sub{opacity:.9;font-size:clamp(.8rem,1.4vw,1rem);font-weight:600}
+
+/* Mystery reveal teaser — "And the player is" before real photo */
+.pj-reveal-intro{
+  position:absolute;inset:0;z-index:18;display:none;
+  align-items:center;justify-content:center;text-align:center;
+  padding:24px;pointer-events:none;
+  background:radial-gradient(ellipse at center,rgba(8,14,28,.72) 0%,rgba(4,8,18,.92) 70%);
+}
+.pj-reveal-intro.is-on{display:flex}
+.pj-reveal-intro-copy{
+  font-family:'Bebas Neue','Oswald',sans-serif;
+  font-size:clamp(1.6rem,4.2vw,3.2rem);
+  font-weight:400;letter-spacing:.12em;text-transform:uppercase;
+  color:#fff;
+  text-shadow:0 4px 24px rgba(0,0,0,.65),0 0 40px rgba(253,206,51,.35);
+  opacity:0;transform:translateY(18px) scale(.96);
+}
+.pj-reveal-intro.is-on .pj-reveal-intro-copy{
+  animation:pjRevealIntroIn .55s cubic-bezier(.22,1,.36,1) forwards;
+}
+.pj-reveal-intro.is-out .pj-reveal-intro-copy{
+  animation:pjRevealIntroOut .35s ease forwards;
+}
+@keyframes pjRevealIntroIn{
+  0%{opacity:0;transform:translateY(22px) scale(.92);letter-spacing:.28em}
+  60%{opacity:1;transform:translateY(0) scale(1.02);letter-spacing:.14em}
+  100%{opacity:1;transform:translateY(0) scale(1);letter-spacing:.12em}
+}
+@keyframes pjRevealIntroOut{
+  to{opacity:0;transform:translateY(-10px) scale(1.04)}
+}
+.pj-photo-side.is-reveal-hold img.pj-photo{
+  opacity:0 !important;
+  filter:blur(8px) brightness(.4) !important;
+  transition:none !important;
+}
+.pj-photo-side.is-reveal-hold .pj-mystery-lock{display:none !important}
 
 /* Mystery SOLD — classic top-right slanting ribbon (green, slim) */
 .pj-photo-sold{
@@ -923,31 +1028,76 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   <div id="pj-stage">
 
     <div id="pj-waiting">
-      <div class="pj-wait-kicker">Live Auction · Stand By</div>
-      <t t-if="tournament and tournament.logo">
-        <img class="pj-wait-hero-logo"
-             t-att-src="'/'+(db_name or '')+'/auction/public/image/auction.tournament/'+str(tournament.id)+'/logo'"
-             alt="Tournament logo"/>
-      </t>
-      <t t-else="">
-        <img class="pj-wait-hero-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
-      </t>
-      <div class="pj-wait-hero-name">
-        <t t-if="tournament"><t t-esc="tournament.name"/></t>
-        <t t-else="">Auction Champ</t>
-      </div>
-      <div class="pj-wait-sub" id="pjWaitSub">THE SPOTLIGHT MOVES TO THE NEXT PLAYER</div>
-      <div class="pj-wait-dots"><div class="pj-wait-dot"></div><div class="pj-wait-dot"></div><div class="pj-wait-dot"></div></div>
-      <t t-if="tournament and tournament.logo">
-        <div class="pj-wait-powered">
-          <div class="pj-wait-powered-lbl">Powered by</div>
-          <img class="pj-ac-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
+      <div class="pj-wait-normal" id="pjWaitNormal">
+        <div class="pj-wait-kicker">Live Auction · Stand By</div>
+        <t t-if="tournament and tournament.logo">
+          <img class="pj-wait-hero-logo"
+               t-att-src="'/'+(db_name or '')+'/auction/public/image/auction.tournament/'+str(tournament.id)+'/logo'"
+               alt="Tournament logo"/>
+        </t>
+        <t t-else="">
+          <img class="pj-wait-hero-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
+        </t>
+        <div class="pj-wait-hero-name">
+          <t t-if="tournament"><t t-esc="tournament.name"/></t>
+          <t t-else="">Auction Champ</t>
         </div>
-      </t>
-      <div class="pj-dice-area" id="pjDiceArea">
-        <div class="pj-dice-roll-lbl">Rolling for next player</div>
-        <div class="pj-dice" id="pjDice"><div class="pj-die-grid" id="pjDieGrid"></div></div>
-        <div class="pj-dice-num" id="pjDiceNum"></div>
+        <div class="pj-wait-sub" id="pjWaitSub">THE SPOTLIGHT MOVES TO THE NEXT PLAYER</div>
+        <div class="pj-wait-dots"><div class="pj-wait-dot"></div><div class="pj-wait-dot"></div><div class="pj-wait-dot"></div></div>
+        <t t-if="tournament and tournament.logo">
+          <div class="pj-wait-powered">
+            <div class="pj-wait-powered-lbl">Powered by</div>
+            <img class="pj-ac-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
+          </div>
+        </t>
+        <div class="pj-dice-area" id="pjDiceArea">
+          <div class="pj-dice-roll-lbl">Rolling for next player</div>
+          <div class="pj-dice" id="pjDice"><div class="pj-die-grid" id="pjDieGrid"></div></div>
+          <div class="pj-dice-num" id="pjDiceNum"></div>
+        </div>
+      </div>
+
+      <div class="pj-complete-ceremony" id="pjCompleteCeremony" aria-hidden="true">
+        <div class="pj-ty-burst" aria-hidden="true"></div>
+        <div class="pj-ty-confetti" id="pjTyConfetti" aria-hidden="true"></div>
+        <div class="pj-ty-visual" aria-hidden="true">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Trophy">
+            <defs>
+              <linearGradient id="pjTyGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ffe9a0"/>
+                <stop offset="45%" stop-color="#ffd700"/>
+                <stop offset="100%" stop-color="#c9a227"/>
+              </linearGradient>
+              <linearGradient id="pjTyGoldDk" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#ffd54a"/>
+                <stop offset="100%" stop-color="#a67c00"/>
+              </linearGradient>
+            </defs>
+            <!-- Laurels -->
+            <path d="M58 118c-18-8-28-28-26-48 10 6 18 16 22 28 2 8 2 14 4 20z" fill="url(#pjTyGold)" opacity=".85"/>
+            <path d="M48 98c-10-14-10-32-2-46 8 10 12 22 12 34 0 5-2 9-10 12z" fill="url(#pjTyGold)" opacity=".7"/>
+            <path d="M142 118c18-8 28-28 26-48-10 6-18 16-22 28-2 8-2 14-4 20z" fill="url(#pjTyGold)" opacity=".85"/>
+            <path d="M152 98c10-14 10-32 2-46-8 10-12 22-12 34 0 5 2 9 10 12z" fill="url(#pjTyGold)" opacity=".7"/>
+            <!-- Cup -->
+            <path d="M70 52h60c2 28 2 48-8 62-8 10-22 14-22 14s-14-4-22-14c-10-14-10-34-8-62z" fill="url(#pjTyGold)"/>
+            <path d="M78 58h44c1 20 1 36-5 48-5 8-14 12-17 12s-12-4-17-12c-6-12-6-28-5-48z" fill="url(#pjTyGoldDk)" opacity=".55"/>
+            <!-- Handles -->
+            <path d="M70 62c-16 2-26 14-24 30 2 12 12 18 22 16" fill="none" stroke="url(#pjTyGold)" stroke-width="8" stroke-linecap="round"/>
+            <path d="M130 62c16 2 26 14 24 30-2 12-12 18-22 16" fill="none" stroke="url(#pjTyGold)" stroke-width="8" stroke-linecap="round"/>
+            <!-- Stem + base -->
+            <rect x="92" y="126" width="16" height="22" rx="3" fill="url(#pjTyGold)"/>
+            <rect x="72" y="146" width="56" height="10" rx="4" fill="url(#pjTyGold)"/>
+            <rect x="62" y="158" width="76" height="12" rx="5" fill="url(#pjTyGoldDk)"/>
+            <!-- Star -->
+            <path d="M100 68l4.2 8.6 9.5 1.4-6.9 6.7 1.6 9.4L100 90l-8.4 4.4 1.6-9.4-6.9-6.7 9.5-1.4z" fill="#fff8dc"/>
+          </svg>
+        </div>
+        <div class="pj-ty-thanks">
+          <span>Thank You</span>
+          <span class="pj-ty-thanks-shimmer" aria-hidden="true">Thank You</span>
+        </div>
+        <div class="pj-ty-message" id="pjTyMessage">THE AUCTION FLOOR CLOSES, AND THE ROAD TO GLORY BEGINS.</div>
+        <div class="pj-ty-tour" id="pjTyTourName"></div>
       </div>
     </div>
 
@@ -968,6 +1118,10 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         <div class="pj-floor" aria-hidden="true"></div>
         <div class="pj-photo-ph" id="pjPhotoPh">&#128100;</div>
         <div class="pj-serial-wm" id="pjSerialWm"></div>
+        <!-- Mystery reveal teaser overlay -->
+        <div class="pj-reveal-intro" id="pjRevealIntro" aria-live="polite" aria-hidden="true">
+          <div class="pj-reveal-intro-copy">And the player is</div>
+        </div>
         <!-- Mystery player: classic top-right slanting SOLD ribbon -->
         <div class="pj-photo-sold" id="pjPhotoSold">
           <div class="pj-photo-sold-ribbon">
@@ -1370,14 +1524,58 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   }
 
   var _pjPhotoReq = 0;
-  function renderPlayer(p) {
+  var _pjRevealIntroTimer = null;
+
+  function hideMysteryRevealIntro() {
+    var intro = document.getElementById('pjRevealIntro');
+    var photoSide = document.getElementById('pjPhotoSide');
+    if (_pjRevealIntroTimer) {
+      clearTimeout(_pjRevealIntroTimer);
+      _pjRevealIntroTimer = null;
+    }
+    if (photoSide) photoSide.classList.remove('is-reveal-hold');
+    if (intro) {
+      intro.classList.remove('is-on', 'is-out');
+      intro.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  function playMysteryRevealIntro(onDone) {
+    var intro = document.getElementById('pjRevealIntro');
+    var photoSide = document.getElementById('pjPhotoSide');
+    if (!intro) {
+      if (onDone) onDone();
+      return;
+    }
+    if (_pjRevealIntroTimer) {
+      clearTimeout(_pjRevealIntroTimer);
+      _pjRevealIntroTimer = null;
+    }
+    if (photoSide) photoSide.classList.add('is-reveal-hold');
+    intro.classList.remove('is-out');
+    intro.classList.add('is-on');
+    intro.setAttribute('aria-hidden', 'false');
+    // Hold "And the player is" for 2 seconds, then reveal the photo
+    _pjRevealIntroTimer = setTimeout(function () {
+      intro.classList.add('is-out');
+      _pjRevealIntroTimer = setTimeout(function () {
+        hideMysteryRevealIntro();
+        if (onDone) onDone();
+      }, 350);
+    }, 2000);
+  }
+
+  function renderPlayer(p, opts) {
+    opts = opts || {};
     var mysteryHidden = !!(p.is_mystery && !p.mystery_revealed);
+    var isRevealIntro = !!opts.mysteryRevealIntro;
     var photoSide = document.getElementById('pjPhotoSide');
     var photoPh = document.getElementById('pjPhotoPh');
     var photoBg = document.getElementById('pjPhotoBg');
     var oldImg = photoSide.querySelector('img.pj-photo');
     var oldLock = photoSide.querySelector('.pj-mystery-lock');
     if (oldLock) oldLock.remove();
+    if (!isRevealIntro) hideMysteryRevealIntro();
 
     var nextSrc = '';
     if (p.photo_url || p.photo) {
@@ -1466,9 +1664,15 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     }
 
     document.getElementById('pjSerial').textContent = mysteryHidden ? '?' : ('#' + (p.sl_no || ''));
-    document.getElementById('pjName').textContent = mysteryHidden
-      ? 'Mystery Player?'
-      : (p.name || '');
+    var nameEl = document.getElementById('pjName');
+    var realName = mysteryHidden ? 'Mystery Player?' : (p.name || '');
+    if (isRevealIntro) {
+      nameEl.textContent = '???';
+      nameEl.style.opacity = '.55';
+    } else {
+      nameEl.textContent = realName;
+      nameEl.style.opacity = '';
+    }
 
     var tierEl = document.getElementById('pjTier');
     /* Mystery mode (locked): hide tier name entirely */
@@ -1712,7 +1916,12 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       soldTeam.classList.remove('show');
       soldTeam.style.display = 'none';
     }
-    if (p.state === 'sold') {
+    if (opts.skipStatusStamp || opts.mysteryRevealIntro) {
+      /* Mystery reveal: refresh photo/name only — do not replay SOLD overlay */
+      hidePhotoSold();
+      hidePhotoStatus();
+      clearSealFade();
+    } else if (p.state === 'sold') {
       hidePhotoSold();
       showPhotoStatus('sold', p);
     } else if (p.state === 'unsold') {
@@ -1724,9 +1933,20 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       clearSealFade();
     }
     updateStatusRibbon(p);
+
+    if (isRevealIntro) {
+      playMysteryRevealIntro(function () {
+        var n = document.getElementById('pjName');
+        if (n) {
+          n.textContent = p.name || '';
+          n.style.opacity = '';
+        }
+      });
+    }
   }
 
-  function showCard(p) {
+  function showCard(p, opts) {
+    opts = opts || {};
     document.getElementById('pj-waiting').classList.add('hidden');
     var card = document.getElementById('pj-card');
     var fromWaiting = !card.classList.contains('visible');
@@ -1735,12 +1955,13 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     var delay = fromWaiting ? 40 : 160;
     setTimeout(function() {
       card.classList.remove('pj-exit');
-      try { renderPlayer(p); } catch(e) { console.error('[Projector] renderPlayer error:', e); }
+      try { renderPlayer(p, opts); } catch(e) { console.error('[Projector] renderPlayer error:', e); }
       card.classList.add('visible');
     }, delay);
   }
 
   function showWaiting() {
+    hideMysteryRevealIntro();
     document.getElementById('pj-card').classList.remove('visible');
     document.getElementById('pj-card').classList.add('pj-exit');
     var badge = document.getElementById('pjSerialBadge');
@@ -1752,23 +1973,61 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   }
 
   var _currentWaitPhase = null;
+  var _pjTyConfettiBuilt = false;
+  function buildPjTyConfetti() {
+    var box = document.getElementById('pjTyConfetti');
+    if (!box || _pjTyConfettiBuilt) return;
+    var colors = ['#ffd700', '#ffe08a', '#fff', '#f5c842', '#ffb347', '#e8c200'];
+    var html = '';
+    for (var i = 0; i < 28; i++) {
+      var left = Math.round(Math.random() * 100);
+      var delay = (Math.random() * 4).toFixed(2);
+      var dur = (3.5 + Math.random() * 3.5).toFixed(2);
+      var dx = Math.round(-40 + Math.random() * 80);
+      var color = colors[i % colors.length];
+      html += '<span class="pj-ty-piece" style="left:' + left + '%;background:' + color +
+        ';animation-delay:' + delay + 's;animation-duration:' + dur + 's;--dx:' + dx + 'px"></span>';
+    }
+    box.innerHTML = html;
+    _pjTyConfettiBuilt = true;
+  }
+  function replayPjTyCeremony() {
+    var wait = document.getElementById('pj-waiting');
+    if (!wait) return;
+    wait.classList.add('pj-ty-replay');
+    void wait.offsetWidth;
+    wait.classList.remove('pj-ty-replay');
+  }
   function updateWaitPhase(wp) {
     wp = wp || {};
     var phase = wp.phase || 'waiting';
     var msg = wp.message || 'THE SPOTLIGHT MOVES TO THE NEXT PLAYER';
+    var tourName = wp.tournament_name || '';
     var sub = document.getElementById('pjWaitSub');
     var wait = document.getElementById('pj-waiting');
     var kicker = wait ? wait.querySelector('.pj-wait-kicker') : null;
+    var ceremony = document.getElementById('pjCompleteCeremony');
+    var tyMsg = document.getElementById('pjTyMessage');
+    var tyTour = document.getElementById('pjTyTourName');
+    var enteringComplete = phase === 'completed' && _currentWaitPhase !== 'completed';
+
     if (sub) {
       sub.textContent = msg;
       sub.classList.toggle('is-begin', phase === 'about_to_begin');
       sub.classList.toggle('is-complete', phase === 'completed');
     }
     if (wait) wait.classList.toggle('is-complete', phase === 'completed');
+    if (ceremony) ceremony.setAttribute('aria-hidden', phase === 'completed' ? 'false' : 'true');
+    if (tyMsg && phase === 'completed') tyMsg.textContent = msg;
+    if (tyTour) tyTour.textContent = phase === 'completed' && tourName ? tourName : '';
     if (kicker) {
       if (phase === 'about_to_begin') kicker.textContent = 'Live Auction · Stand By';
       else if (phase === 'completed') kicker.textContent = 'Auction Complete';
       else kicker.textContent = 'Live Auction · Stand By';
+    }
+    if (phase === 'completed') {
+      buildPjTyConfetti();
+      if (enteringComplete) replayPjTyCeremony();
     }
     _currentWaitPhase = phase;
   }
@@ -1814,11 +2073,20 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         return;
       }
       if (_currentDice !== 'idle') { _currentDice = 'idle'; _currentDiceNum = 0; _currentDiceMystery = false; hidePjDice(); }
+      var revealOnly = (
+        p.id === _currentId &&
+        p.state === _currentState &&
+        p.state === 'sold' &&
+        !_currentMysteryRevealed &&
+        !!p.mystery_revealed
+      );
       if (p.id !== _currentId || p.state !== _currentState || (p.sold_points || 0) !== _currentPts
           || !!p.mystery_revealed !== !!_currentMysteryRevealed) {
         _currentId = p.id; _currentState = p.state; _currentPts = p.sold_points || 0;
         _currentMysteryRevealed = !!p.mystery_revealed;
-        showCard(p);
+        showCard(p, revealOnly
+          ? {skipStatusStamp: true, mysteryRevealIntro: true}
+          : {});
       } else {
         updateStatusRibbon(p);
       }
@@ -2087,6 +2355,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 
   var _squadLoading = false;
   var _pjSquadLastFetch = 0;
+  var _pjSquadSig = '';
   var _pjLastSquadSoldPlayerId = null;
   var _pjLastSquadSoldState = null;
   var _pjLastSquadRevealedId = null;
@@ -2096,11 +2365,16 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     return !!(ov && ov.classList.contains('open'));
   }
 
+  function pjSquadSignature(data) {
+    try { return JSON.stringify(data || {}); } catch (e) { return ''; }
+  }
+
   function loadPjSquad(showLoading) {
     if (!window.PJ_SQUAD_URL || _squadLoading) return;
     var body = document.getElementById('pjSqBody');
     if (showLoading && body) {
       body.innerHTML = '<div class="pj-sq-loading">Loading squads&#8230;</div>';
+      _pjSquadSig = '';
     }
     var scrollTop = body ? body.scrollTop : 0;
     _squadLoading = true;
@@ -2112,8 +2386,14 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     })
     .then(function(r){ return r.json(); })
     .then(function(json) {
-      renderPjSquad(json.result || {});
-      if (body) body.scrollTop = scrollTop;
+      var data = json.result || {};
+      var sig = pjSquadSignature(data);
+      // Avoid wiping <img> nodes when nothing changed — that caused photo flashing.
+      if (sig !== _pjSquadSig) {
+        _pjSquadSig = sig;
+        renderPjSquad(data);
+        if (body) body.scrollTop = scrollTop;
+      }
       _pjSquadLastFetch = Date.now();
     })
     .catch(function() {
@@ -2140,8 +2420,9 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         need = true;
       }
     }
+    // Soft sync only (event-driven refresh covers live sales). Don't rebuild DOM often.
     var now = Date.now();
-    if (!need && now - _pjSquadLastFetch > 3000) need = true;
+    if (!need && now - _pjSquadLastFetch > 20000) need = true;
     if (need) loadPjSquad(false);
   }
   var _remainLoading = false;
@@ -2266,12 +2547,33 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     var teams = (data && data.teams) || [];
     if (sub) {
       sub.textContent = sport === 'football'
-        ? 'All teams · Position + Tier'
-        : 'All teams · Role + Tier';
+        ? 'Squad · Purse · Position + Points'
+        : 'Squad · Purse · Role + Points';
     }
     if (!teams.length) {
       body.innerHTML = '<div class="pj-sq-empty">No teams found</div>';
       return;
+    }
+    function fmtNum(n) {
+      n = Number(n || 0);
+      try { return n.toLocaleString(); } catch (e) { return String(n); }
+    }
+    function meterHtml(label, cur, max, kind) {
+      max = Number(max || 0);
+      cur = Number(cur || 0);
+      var pct = max > 0 ? Math.max(0, Math.min(100, Math.round((cur / max) * 100))) : 0;
+      var fillClass = 'pj-sq-meter-fill';
+      if (kind === 'purse') fillClass += ' is-purse';
+      if (pct >= 100) fillClass += ' is-full';
+      else if (kind === 'purse' && pct >= 85) fillClass += ' is-low';
+      var val = max > 0 ? (fmtNum(cur) + ' / ' + fmtNum(max)) : fmtNum(cur);
+      return '<div class="pj-sq-meter">' +
+        '<div class="pj-sq-meter-top">' +
+          '<span class="pj-sq-meter-lbl">' + escHtml(label) + '</span>' +
+          '<span class="pj-sq-meter-val">' + escHtml(val) + '</span>' +
+        '</div>' +
+        '<div class="pj-sq-meter-track"><div class="' + fillClass + '" style="width:' + pct + '%"></div></div>' +
+      '</div>';
     }
     var html = '';
     for (var i = 0; i < teams.length; i++) {
@@ -2279,11 +2581,16 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       var logo = t.logo_url
         ? '<img class="pj-sq-team-logo" src="' + escHtml(t.logo_url) + '" alt=""/>'
         : '<div class="pj-sq-team-logo-ph">' + escHtml((t.name || '?').charAt(0)) + '</div>';
+      var recruited = Number(t.count || 0);
+      var maxPlayers = Number(t.max_players || 0);
+      var spent = Number(t.spent_purse || 0);
+      var totalPurse = Number(t.total_purse || 0);
       html += '<div class="pj-sq-team">' +
         '<div class="pj-sq-team-hd">' + logo +
-          '<div style="min-width:0">' +
-            '<div class="pj-sq-team-name">' + escHtml(t.name || 'Team') + '</div>' +
-            '<div class="pj-sq-team-count">' + (t.count || 0) + ' player' + ((t.count === 1) ? '' : 's') + '</div>' +
+          '<div class="pj-sq-team-name" title="' + escHtml(t.name || 'Team') + '">' + escHtml(t.name || 'Team') + '</div>' +
+          '<div class="pj-sq-meters">' +
+            meterHtml('Squad', recruited, maxPlayers, 'squad') +
+            meterHtml('Purse', spent, totalPurse, 'purse') +
           '</div>' +
         '</div><div class="pj-sq-players">';
       var players = t.players || [];
@@ -2298,10 +2605,18 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
           var tier = p.tier_name
             ? '<span class="pj-sq-tier" style="background:' + escHtml(p.tier_color || '#888') + '">' + escHtml(p.tier_name) + '</span>'
             : '';
+          var pts = '';
+          if (p.is_icon) {
+            pts = '<div class="pj-sq-icon-tag">Icon</div>';
+          } else if (p.points != null && Number(p.points) > 0) {
+            pts = '<div class="pj-sq-pts">' + escHtml(fmtNum(p.points)) +
+              '<span class="pj-sq-pts-unit">PTS</span></div>';
+          }
           html += '<div class="pj-sq-player">' + photo +
-            '<div class="pj-sq-pname">' + escHtml(p.name || '—') + '</div>' +
-            (p.role ? '<div class="pj-sq-prole">' + escHtml(p.role) + '</div>' : '') +
+            '<div class="pj-sq-pname" title="' + escHtml(p.name || '—') + '">' + escHtml(p.name || '—') + '</div>' +
+            (p.role ? '<div class="pj-sq-prole" title="' + escHtml(p.role) + '">' + escHtml(p.role) + '</div>' : '') +
             tier +
+            pts +
           '</div>';
         }
       }
