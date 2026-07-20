@@ -8,13 +8,13 @@
   <title>Squad Poster — <t t-esc="team_name"/> | AuctionChamp</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Great+Vibes&amp;family=Montserrat:wght@600;700;800;900&amp;family=Oswald:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="/auction_module/static/src/css/squad_poster.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Oswald:wght@500;600;700&amp;family=Montserrat:wght@600;700;800;900&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/auction_module/static/src/css/squad_poster.css?v=163"/>
 </head>
-<body class="sp-shell" data-palette="midnight-gold" id="spShell">
+<body class="sp-shell" data-palette="pace-lime" id="spShell">
 
   <div class="sp-toolbar" id="spToolbar">
-    <div class="sp-toolbar-title">Instagram Story · 1080×1920 · High Clarity Export</div>
+    <div class="sp-toolbar-title">Instagram Story · 1080×1920 · Squad Reveal Poster</div>
     <button type="button" class="sp-btn is-primary" id="spDlPng" data-fmt="png">Download PNG</button>
     <button type="button" class="sp-btn is-primary" id="spDlJpg" data-fmt="jpg">Download JPG</button>
     <button type="button" class="sp-btn" id="spPrint">Print</button>
@@ -38,18 +38,15 @@
     </div>
     <div class="sp-palette-row" id="spPaletteRow" role="group" aria-label="Poster color palette">
       <span class="sp-palette-lbl">Poster Color</span>
-      <button type="button" class="sp-swatch is-active" data-palette="midnight-gold" title="Midnight Gold"></button>
-      <button type="button" class="sp-swatch" data-palette="arctic-glass" title="Arctic Glass"></button>
-      <button type="button" class="sp-swatch" data-palette="obsidian-rose" title="Obsidian Rose"></button>
-      <button type="button" class="sp-swatch" data-palette="emerald-glass" title="Emerald Glass"></button>
+      <button type="button" class="sp-swatch is-active" data-palette="pace-lime" title="Pace Lime"></button>
+      <button type="button" class="sp-swatch" data-palette="midnight-gold" title="Midnight Gold"></button>
+      <button type="button" class="sp-swatch" data-palette="ember-orange" title="Ember Orange"></button>
+      <button type="button" class="sp-swatch" data-palette="arctic-cyan" title="Arctic Cyan"></button>
       <button type="button" class="sp-swatch" data-palette="royal-violet" title="Royal Violet"></button>
       <button type="button" class="sp-swatch" data-palette="carbon-chrome" title="Carbon Chrome"></button>
-      <button type="button" class="sp-swatch" data-palette="midnight-teal" title="Midnight Teal"></button>
-      <button type="button" class="sp-swatch" data-palette="burgundy-gold" title="Burgundy Gold"></button>
-      <button type="button" class="sp-swatch" data-palette="graphite-amber" title="Graphite Amber"></button>
-      <button type="button" class="sp-swatch" data-palette="frost-navy" title="Frost Navy"></button>
+      <button type="button" class="sp-swatch" data-palette="crimson-flare" title="Crimson Flare"></button>
     </div>
-    <div class="sp-status" id="spStatus">Pick a poster color · export PNG for Instagram</div>
+    <div class="sp-status" id="spStatus">Pace Lime · export PNG for Instagram Stories</div>
   </div>
 
   <div class="sp-preview-wrap">
@@ -57,37 +54,66 @@
       <div class="sp-canvas" id="spCanvas"
            t-att-data-cols="str(grid_cols)"
            t-att-data-sport="sport"
-           t-att-data-dense="dense or '0'">
+           t-att-data-count="str(len(players) if players else 0)">
+
+        <!-- Atmospheric background -->
         <div class="sp-bg" aria-hidden="true">
-          <img class="sp-bg-stadium" src="/auction_module/static/src/assets/images/stadium_night.svg" alt=""/>
           <t t-if="bg_uri">
             <img class="sp-bg-img" t-att-src="bg_uri" alt=""/>
           </t>
-          <div class="sp-bg-beams"></div>
-          <div class="sp-bg-gradient"></div>
-          <div class="sp-bg-glass"></div>
-          <div class="sp-bg-bokeh"></div>
+          <t t-else="">
+            <img class="sp-bg-stadium" src="/auction_module/static/src/assets/images/stadium_night.svg" alt=""/>
+          </t>
+          <div class="sp-bg-vignette"></div>
+          <div class="sp-bg-glow"></div>
+          <div class="sp-bg-grunge is-left"></div>
+          <div class="sp-bg-grunge is-right"></div>
         </div>
 
         <div class="sp-layer">
+
+          <!-- ══ 1. TOURNAMENT HEADER ══ -->
           <header class="sp-header">
-            <div class="sp-hdr-left">
-              <div class="sp-tourn-block">
-                <t t-if="tourn_logo_uri">
-                  <img class="sp-tourn-logo" t-att-src="tourn_logo_uri" t-att-alt="tournament_name"/>
-                </t>
-                <t t-else="">
-                  <div class="sp-tourn-logo-ph">🏆</div>
-                </t>
-                <div class="sp-tourn-text">
-                  <h1 class="sp-tourn-name"><t t-esc="tournament_name"/></h1>
-                  <span class="sp-season-badge" t-if="season_label"><t t-esc="season_label"/></span>
-                </div>
+            <h1 class="sp-tourn-title"><t t-esc="tournament_name"/></h1>
+
+            <t t-if="organizer_name">
+              <div class="sp-presenting">
+                <span><t t-esc="organizer_name"/> PRESENTING</span>
               </div>
+            </t>
+
+            <div class="sp-hero">
+              <t t-if="tourn_logo_uri">
+                <img class="sp-hero-logo" t-att-src="tourn_logo_uri" t-att-alt="tournament_name"/>
+              </t>
+              <t t-else="">
+                <div class="sp-hero-logo-ph">
+                  <span class="sp-hero-mark">AC</span>
+                  <span class="sp-hero-season" t-if="season_label"><t t-esc="season_label"/></span>
+                </div>
+              </t>
             </div>
 
-            <div class="sp-hdr-center">
-              <div class="sp-team-logo-wrap">
+            <div class="sp-meta-bar">
+              <div class="sp-meta-item" t-if="date_label">
+                <span class="sp-meta-ico" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+                </span>
+                <span class="sp-meta-txt"><t t-esc="date_label"/></span>
+              </div>
+              <div class="sp-meta-item is-venue" t-if="venue">
+                <span class="sp-meta-ico" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                </span>
+                <span class="sp-meta-txt"><t t-esc="venue"/></span>
+              </div>
+            </div>
+          </header>
+
+          <!-- ══ 2. TEAM + OWNER BAND ══ -->
+          <section class="sp-team-band">
+            <div class="sp-team-left">
+              <div class="sp-team-logo-ring">
                 <t t-if="team_logo_uri">
                   <img class="sp-team-logo" t-att-src="team_logo_uri" t-att-alt="team_name"/>
                 </t>
@@ -95,57 +121,29 @@
                   <div class="sp-team-logo-ph"><t t-esc="(team_name or 'T')[:1]"/></div>
                 </t>
               </div>
+              <div class="sp-team-copy">
+                <div class="sp-team-kicker">OFFICIAL SQUAD</div>
+                <h2 class="sp-team-name"><t t-esc="team_name"/></h2>
+                <div class="sp-team-sub" t-if="season_label"><t t-esc="season_label"/></div>
+              </div>
             </div>
 
-            <div class="sp-hdr-right">
-              <div class="sp-meta-row" t-if="tournament_name">
-                <span class="sp-meta-txt"><t t-esc="tournament_name"/><t t-if="season_label"> · <t t-esc="season_label"/></t></span>
-                <span class="sp-meta-ico" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>
-                </span>
+            <div class="sp-owner" t-if="manager">
+              <div class="sp-owner-frame">
+                <div class="sp-owner-avatar"><t t-esc="manager_initials or 'O'"/></div>
+                <span class="sp-owner-badge">OWNER</span>
               </div>
-              <div class="sp-meta-row" t-if="venue">
-                <span class="sp-meta-txt"><t t-esc="venue"/></span>
-                <span class="sp-meta-ico" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-                </span>
-              </div>
-              <div class="sp-meta-row" t-if="date_label">
-                <span class="sp-meta-txt"><t t-esc="date_label"/></span>
-                <span class="sp-meta-ico" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5l3 2"/></svg>
-                </span>
-              </div>
-              <div class="sp-meta-row" t-if="team_count">
-                <span class="sp-meta-txt"><t t-esc="team_count"/> Teams</span>
-                <span class="sp-meta-ico" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M16 11a3 3 0 1 0-2.8-4M8 11a3 3 0 1 1 2.8-4M4.5 19a4.5 4.5 0 0 1 7.2-3.6M12.3 15.4A4.5 4.5 0 0 1 19.5 19"/></svg>
-                </span>
-              </div>
-              <div class="sp-meta-row">
-                <span class="sp-meta-txt"><t t-esc="sport_label"/></span>
-                <span class="sp-meta-ico" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4zM5 6H3.5A2.5 2.5 0 0 0 6 9.8M19 6h1.5A2.5 2.5 0 0 1 18 9.8"/></svg>
-                </span>
-              </div>
+              <div class="sp-owner-name"><t t-esc="manager"/></div>
             </div>
-          </header>
-
-          <section class="sp-title-band">
-            <div class="sp-title-row">
-              <div class="sp-wing is-left" aria-hidden="true"><span></span><span></span><span></span></div>
-              <h2 class="sp-title">Squad Roster</h2>
-              <div class="sp-wing is-right" aria-hidden="true"><span></span><span></span><span></span></div>
-            </div>
-            <p class="sp-title-team"><t t-esc="team_name"/></p>
           </section>
 
+          <!-- ══ 3. PLAYER GRID ══ -->
           <section class="sp-squad">
             <t t-if="grouped">
               <t t-foreach="groups" t-as="grp">
                 <div class="sp-cat">
                   <div class="sp-cat-bar"><t t-esc="grp['label']"/></div>
-                  <div class="sp-grid sp-grid-3">
+                  <div class="sp-grid" t-att-data-cols="str(grid_cols)">
                     <t t-foreach="grp['players']" t-as="p">
                       <t t-call="auction_module.squad_poster_player_card"/>
                     </t>
@@ -154,8 +152,9 @@
               </t>
             </t>
             <t t-else="">
-              <div class="sp-cat-bar sp-cat-bar-wide">The Squad</div>
-              <div class="sp-grid sp-grid-3" t-att-data-count="str(len(players) if players else 0)">
+              <div class="sp-grid"
+                   t-att-data-cols="str(grid_cols)"
+                   t-att-data-count="str(player_count)">
                 <t t-foreach="players" t-as="p">
                   <t t-call="auction_module.squad_poster_player_card"/>
                 </t>
@@ -163,44 +162,26 @@
             </t>
           </section>
 
+          <!-- ══ 4. SPONSORS (below players) ══ -->
+          <section class="sp-sponsors-block" t-if="has_sponsors">
+            <div class="sp-sponsors-lbl">OUR SPONSORS</div>
+            <div class="sp-sponsors-row">
+              <t t-foreach="sponsors" t-as="sp">
+                <div class="sp-sponsor" t-att-title="sp.get('name')">
+                  <img t-att-src="sp.get('uri')" t-att-alt="sp.get('name')"/>
+                </div>
+              </t>
+            </div>
+          </section>
+
+          <!-- ══ 5. FOOTER — AuctionChamp only ══ -->
           <footer class="sp-footer">
-            <div class="sp-staff">
-              <div class="sp-staff-pill" t-if="manager">
-                <span class="sp-staff-ico" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-4 0-8 2-8 4v2h16v-2c0-2-4-4-8-4z"/></svg>
-                </span>
-                <div>
-                  <div class="sp-staff-lbl">Team Owner</div>
-                  <div class="sp-staff-name"><t t-esc="manager"/></div>
-                </div>
-              </div>
-            </div>
-
-            <div class="sp-details">
-              <div class="sp-details-title">Team Details</div>
-              <div class="sp-details-rule"></div>
-              <div class="sp-details-row">
-                <div class="sp-detail">
-                  <div class="sp-detail-val"><t t-esc="stats['players']"/></div>
-                  <div class="sp-detail-lbl">Total Players</div>
-                </div>
-                <div class="sp-detail">
-                  <div class="sp-detail-val"><t t-esc="stats['budget']"/></div>
-                  <div class="sp-detail-lbl">Team Budget</div>
-                </div>
-                <div class="sp-detail">
-                  <div class="sp-detail-val"><t t-esc="stats['remaining']"/></div>
-                  <div class="sp-detail-lbl">Remaining</div>
-                </div>
-              </div>
-            </div>
-
             <div class="sp-brand">
-              <div class="sp-tagline"><t t-esc="tagline or 'Stronger Together'"/></div>
               <img class="sp-brand-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
-              <div class="sp-brand-url"><t t-esc="brand_url or 'www.auctionchamp.live'"/></div>
+              <span class="sp-brand-url"><t t-esc="brand_url or 'www.auctionchamp.live'"/></span>
             </div>
           </footer>
+
         </div>
       </div>
     </div>
@@ -233,6 +214,7 @@
       var saved = '';
       try { saved = localStorage.getItem(PALETTE_KEY) || ''; } catch (e) {}
       if (saved) setPalette(saved);
+      else setPalette('pace-lime');
       var row = document.getElementById('spPaletteRow');
       if (row) {
         row.addEventListener('click', function (ev) {
@@ -283,6 +265,13 @@
 
     function renderPoster() {
       var scale = parseInt(resEl && resEl.value, 10) || 2;
+      // Lock live square pixel sizes so html2canvas export does not stretch
+      var liveFrames = canvas.querySelectorAll('.sp-card-frame');
+      for (var lf = 0; lf < liveFrames.length; lf++) {
+        var rect = liveFrames[lf].getBoundingClientRect();
+        var side = Math.max(1, Math.round(Math.min(rect.width, rect.height)));
+        liveFrames[lf].setAttribute('data-export-side', String(side));
+      }
       return waitImages().then(function () {
         return html2canvas(canvas, {
           scale: scale,
@@ -296,31 +285,34 @@
           windowWidth: 1080,
           windowHeight: 1920,
           onclone: function (doc) {
+            var frames = doc.querySelectorAll('.sp-card-frame');
+            for (var f = 0; f < frames.length; f++) {
+              var side = parseInt(frames[f].getAttribute('data-export-side') || '0', 10);
+              frames[f].style.position = 'relative';
+              frames[f].style.overflow = 'hidden';
+              frames[f].style.display = 'flex';
+              frames[f].style.alignItems = 'center';
+              frames[f].style.justifyContent = 'center';
+              frames[f].style.flex = 'none';
+              frames[f].style.aspectRatio = '1 / 1';
+              if (side > 0) {
+                frames[f].style.width = side + 'px';
+                frames[f].style.height = side + 'px';
+                frames[f].style.maxWidth = side + 'px';
+                frames[f].style.maxHeight = side + 'px';
+              }
+            }
             var imgs = doc.querySelectorAll('.sp-card-photo');
             for (var i = 0; i < imgs.length; i++) {
               var img = imgs[i];
-              var wrap = img.parentNode;
-              if (wrap) {
-                wrap.style.display = 'flex';
-                wrap.style.alignItems = 'flex-end';
-                wrap.style.justifyContent = 'center';
-                wrap.style.overflow = 'hidden';
-                wrap.style.zIndex = '1';
-              }
               img.style.position = 'relative';
+              img.style.inset = 'auto';
               img.style.width = 'auto';
-              img.style.height = '100%';
+              img.style.height = 'auto';
               img.style.maxWidth = '100%';
               img.style.maxHeight = '100%';
-              img.style.marginBottom = '0';
-              img.style.objectFit = 'unset';
-              img.style.flexShrink = '0';
-              img.style.filter = 'drop-shadow(0 10px 16px rgba(0,0,0,0.45))';
-            }
-            var panels = doc.querySelectorAll('.sp-card-panel');
-            for (var j = 0; j < panels.length; j++) {
-              panels[j].style.position = 'relative';
-              panels[j].style.zIndex = '6';
+              img.style.objectFit = 'contain';
+              img.style.objectPosition = 'center center';
             }
           }
         });
@@ -440,7 +432,7 @@
 
 <template id="squad_poster_player_card" name="Squad Poster Player Card">
   <div class="sp-card">
-    <div class="sp-card-photo-wrap">
+    <div class="sp-card-frame">
       <t t-if="p.get('photo_uri')">
         <img class="sp-card-photo" t-att-src="p.get('photo_uri')" t-att-alt="p.get('name')" loading="eager"/>
       </t>
@@ -448,16 +440,11 @@
         <div class="sp-card-photo-ph"><t t-esc="p.get('initials') or '?'"/></div>
       </t>
       <span class="sp-jersey" t-if="p.get('jersey')"><t t-esc="p.get('jersey')"/></span>
-      <span class="sp-badge-icon" t-if="p.get('is_icon')">★ ICON</span>
+      <span class="sp-badge-icon" t-if="p.get('is_icon')">★</span>
       <span class="sp-badge-c" t-if="p.get('is_wk') and not p.get('is_icon')">WK</span>
     </div>
-    <div class="sp-card-panel">
-      <div class="sp-pname" t-att-title="p.get('name')"><t t-esc="p.get('name') or '—'"/></div>
-      <div class="sp-ptier" t-if="p.get('tier')"
-           t-attf-style="#{('color:%s;' % p.get('tier_color')) if p.get('tier_color') else ''}">
-        <t t-esc="p.get('tier')"/>
-      </div>
-      <div class="sp-prole" t-if="p.get('role')"><t t-esc="p.get('role')"/></div>
+    <div class="sp-card-name" t-att-title="p.get('name')">
+      <t t-esc="p.get('name') or '—'"/>
     </div>
   </div>
 </template>

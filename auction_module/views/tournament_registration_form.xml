@@ -139,10 +139,16 @@
                         <input type="text" id="tourDesc" name="description" class="tr-input" required="required"
                                placeholder="e.g. Season 2 · Edition 1 · Annual Championship 2025"/>
                     </div>
-                    <!-- Date -->
-                    <div>
-                        <label class="tr-label" for="tourDate">Tournament Date <span class="req">*</span></label>
-                        <input type="date" id="tourDate" name="tournament_date" class="tr-input" required="required"/>
+                    <!-- Date(s) — capsule tags + date picker -->
+                    <div class="col-full">
+                        <label class="tr-label">Tournament Date(s) <span class="req">*</span></label>
+                        <div id="tourDatesBox" class="tr-date-tags-box" tabindex="0">
+                            <div id="tourDateTags" class="tr-date-tags"></div>
+                            <input type="date" id="tourDatePicker" class="tr-date-tags-picker"
+                                   title="Add a date" aria-label="Add a tournament date"/>
+                        </div>
+                        <div id="tourDateHidden"></div>
+                        <p class="tr-hint">Pick a date to add it as a tag. Click × on a tag to remove it.</p>
                     </div>
                     <!-- Venue -->
                     <div>
@@ -526,6 +532,103 @@
 <!-- ════ JavaScript ════ -->
 <script>
 (function () {
+    // ── Multi-day tournament dates (capsule tags) ────────────
+    var dateTagsEl = document.getElementById('tourDateTags');
+    var datePicker = document.getElementById('tourDatePicker');
+    var dateHidden = document.getElementById('tourDateHidden');
+    var dateBox = document.getElementById('tourDatesBox');
+    var selectedDates = [];
+
+    function formatDateLabel(iso) {
+        var parts = (iso || '').split('-');
+        if (parts.length !== 3) return iso;
+        var d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        if (isNaN(d.getTime())) return iso;
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        var day = ('0' + d.getDate()).slice(-2);
+        return day + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+    }
+
+    function syncHiddenInputs() {
+        if (!dateHidden) return;
+        dateHidden.innerHTML = '';
+        selectedDates.forEach(function (iso) {
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'tournament_date';
+            input.value = iso;
+            dateHidden.appendChild(input);
+        });
+        if (datePicker) {
+            datePicker.required = selectedDates.length === 0;
+        }
+    }
+
+    function renderDateTags() {
+        if (!dateTagsEl) return;
+        dateTagsEl.innerHTML = '';
+        selectedDates.slice().sort().forEach(function (iso) {
+            var tag = document.createElement('span');
+            tag.className = 'tr-date-tag';
+            tag.setAttribute('data-date', iso);
+
+            var text = document.createElement('span');
+            text.textContent = formatDateLabel(iso);
+            tag.appendChild(text);
+
+            var remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'tr-date-tag-remove';
+            remove.setAttribute('aria-label', 'Remove date');
+            remove.textContent = '×';
+            remove.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                selectedDates = selectedDates.filter(function (d) { return d !== iso; });
+                renderDateTags();
+            });
+            tag.appendChild(remove);
+            dateTagsEl.appendChild(tag);
+        });
+        syncHiddenInputs();
+    }
+
+    if (datePicker &amp;&amp; dateTagsEl) {
+        datePicker.addEventListener('change', function () {
+            var iso = (this.value || '').trim();
+            if (!iso) return;
+            if (selectedDates.indexOf(iso) === -1) {
+                selectedDates.push(iso);
+                renderDateTags();
+            }
+            this.value = '';
+        });
+        if (dateBox) {
+            dateBox.addEventListener('click', function (e) {
+                if (e.target.closest('.tr-date-tag, .tr-date-tags-picker')) return;
+                datePicker.focus();
+                if (typeof datePicker.showPicker === 'function') {
+                    try { datePicker.showPicker(); } catch (err) {}
+                }
+            });
+        }
+        // Native form validation: require at least one date
+        var form = datePicker.closest('form');
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                if (!selectedDates.length) {
+                    e.preventDefault();
+                    datePicker.focus();
+                    if (typeof datePicker.showPicker === 'function') {
+                        try { datePicker.showPicker(); } catch (err) {}
+                    }
+                    alert('Please select at least one tournament date.');
+                }
+            });
+        }
+        renderDateTags();
+    }
+
     // ── Logo preview ─────────────────────────────────────────
     var logoFile = document.getElementById('logoFile');
     var logoImg  = document.getElementById('logoPreviewImg');

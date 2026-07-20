@@ -1706,6 +1706,9 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       if (p.p_category) statsHtml += stat('Category', p.p_category, ICO.tag);
       if (p.work_rate) statsHtml += stat('Work Rate', p.work_rate, ICO.bolt);
       if (p.age) statsHtml += stat('Age', String(p.age), ICO.chron);
+      if (p.height) statsHtml += stat('Height', p.height, ICO.user);
+      if (p.weight) statsHtml += stat('Weight', p.weight, ICO.user);
+      if (p.blood_group) statsHtml += stat('Blood Group', p.blood_group, ICO.tag);
       if (p.secondary_positions && p.secondary_positions.length)
         statsHtml += stat('Secondary', (p.secondary_positions.join ? p.secondary_positions.join(', ') : p.secondary_positions), ICO.user);
       if (p.use_other_attributes && p.other_attributes && p.other_attributes.length) {
@@ -1714,15 +1717,22 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
           if (oa && oa.label) statsHtml += stat(oa.label, oa.value || '—', ICO.tag);
         }
       }
+      if (p.location) statsHtml += stat('Location', p.location, ICO.tag);
       statsEl.innerHTML = statsHtml;
       if (!(p.use_other_attributes && p.other_attributes && p.other_attributes.length)) {
         statsEl.insertAdjacentHTML('beforeend', chips(p.playing_styles) + chips(p.strengths));
       }
     } else {
+      // Cricket — label is Role (not Position); show full profile attrs
+      if (p.role) statsHtml += stat('Role', p.role, ICO.user);
       if (p.batting_style) statsHtml += stat('Batting', p.batting_style, ICO.bat);
       if (p.bowling_style) statsHtml += stat('Bowling', p.bowling_style, ICO.bowl);
-      if (p.tier_name && !mysteryHidden) statsHtml += stat('Category', p.tier_name, ICO.tag);
-      if (p.role) statsHtml += stat('Position', p.role, ICO.user);
+      if (p.p_category) statsHtml += stat('Category', p.p_category, ICO.tag);
+      if (p.age) statsHtml += stat('Age', String(p.age), ICO.chron);
+      if (p.height) statsHtml += stat('Height', p.height, ICO.user);
+      if (p.weight) statsHtml += stat('Weight', p.weight, ICO.user);
+      if (p.blood_group) statsHtml += stat('Blood Group', p.blood_group, ICO.tag);
+      if (p.location) statsHtml += stat('Location', p.location, ICO.tag);
       statsEl.innerHTML = statsHtml;
     }
 
@@ -2489,8 +2499,11 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         }
         stats += pjRmStat('Blood', p.blood_group);
       } else {
+        stats += pjRmStat('Role', p.role);
         stats += pjRmStat('Bat', p.batting_style);
         stats += pjRmStat('Bowl', p.bowling_style);
+        stats += pjRmStat('Cat', p.p_category);
+        stats += pjRmStat('Loc', p.location);
         stats += pjRmStat('Blood', p.blood_group);
       }
 

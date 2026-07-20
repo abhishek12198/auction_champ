@@ -1,23 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="view_auction_player_upload_wizard_form" model="ir.ui.view">
-        <field name="name">auction.player.upload.wizard.form</field>
-        <field name="model">auction.player.upload.wizard</field>
+    <record id="view_auction_team_upload_wizard_form" model="ir.ui.view">
+        <field name="name">auction.team.upload.wizard.form</field>
+        <field name="model">auction.team.upload.wizard</field>
         <field name="arch" type="xml">
-            <form string="Upload Players">
+            <form string="Upload Teams &amp; Tiers">
                 <field name="state" invisible="1"/>
-                <field name="tournament_type" invisible="1"/>
                 <group attrs="{'invisible': [('state', '=', 'done')]}">
                     <group string="Tournament">
                         <field name="tournament_id"/>
                     </group>
                     <group string="1. Download Template">
                         <div colspan="2" class="text-muted">
-                            Download the Excel for this tournament. The file has three sheets:
-                            <b>Players</b> (data), <b>Field Guide</b> (column type: free text / selection / Many2one / Many2many),
-                            and <b>Reference Lists</b> (exact allowed values from master data and this tournament's tiers).
-                            Fill Players using those lists so Tier, Positions, Styles, Strengths, Preferred Foot, and Work Rate match.
-                            Photos ZIP optional: 1.jpg, 2.png … matching Excel row order.
+                            Excel has <b>Teams</b> and <b>Tiers</b> sheets (plus Instructions).
+                            Tiers support: Tier Name, Description, Color (label or hex), Icon Tier, Mystery (Yes/No).
+                            Logos ZIP optional: 1.jpg, 2.png … matching Teams Sl.No / row order.
                         </div>
                         <button name="action_download_template"
                                 type="object"
@@ -33,19 +30,26 @@
                     <group string="2. Upload Files">
                         <field name="excel_file" filename="excel_filename"/>
                         <field name="excel_filename" invisible="1"/>
-                        <field name="photos_zip" filename="photos_zip_filename"/>
-                        <field name="photos_zip_filename" invisible="1"/>
+                        <field name="logos_zip" filename="logos_zip_filename"/>
+                        <field name="logos_zip_filename" invisible="1"/>
                     </group>
                 </group>
                 <group attrs="{'invisible': [('state', '!=', 'done')]}">
-                    <field name="created_count"/>
-                    <field name="photo_count"/>
+                    <group string="Teams">
+                        <field name="created_count"/>
+                        <field name="updated_count"/>
+                        <field name="logo_count"/>
+                    </group>
+                    <group string="Tiers">
+                        <field name="tier_created_count"/>
+                        <field name="tier_updated_count"/>
+                    </group>
                     <field name="result_message" nolabel="1" colspan="2"/>
                 </group>
                 <footer>
                     <button name="action_import"
                             type="object"
-                            string="Import Players"
+                            string="Import Teams &amp; Tiers"
                             class="btn-primary"
                             attrs="{'invisible': [('state', '=', 'done')]}"/>
                     <button string="Close" class="btn-primary" special="cancel"

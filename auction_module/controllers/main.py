@@ -581,7 +581,13 @@ class Auction(http.Controller):
                 'preferred_foot': '',
                 'secondary_positions': '',
                 'age': '',
+                'height': '',
+                'weight': '',
                 'work_rate': '',
+                'p_category': '',
+                'blood_group': '',
+                'mobile': '',
+                'location': '',
                 'use_other_attributes': False,
                 'other_attributes': [],
                 'playing_styles': [],
@@ -2468,7 +2474,13 @@ class Auction(http.Controller):
                     'preferred_foot': '',
                     'secondary_positions': '',
                     'age': '',
+                    'height': '',
+                    'weight': '',
                     'work_rate': '',
+                    'p_category': '',
+                    'blood_group': '',
+                    'mobile': '',
+                    'location': '',
                     'use_other_attributes': False,
                     'other_attributes': [],
                     'playing_styles': [],
@@ -3331,11 +3343,12 @@ class Auction(http.Controller):
         return 'data:%s;base64,%s' % (mime, raw)
 
     def _sp_photo_uri(self, binary):
-        """Player photo sized for 2–3× Story export clarity."""
+        """Player photo for squad poster — keep natural aspect (no square crop)."""
         if not binary:
             return ''
         try:
-            processed = image_process(binary, size=(640, 800), quality=95)
+            # Fit inside box; do not force a square crop (avoids cutting heads/feet).
+            processed = image_process(binary, size=(900, 1200), quality=95)
             raw = processed or binary
         except Exception:
             raw = binary
@@ -3380,13 +3393,18 @@ class Auction(http.Controller):
         return 'Squad'
 
     def _sp_grid_cols(self, n):
-        if n <= 6:
+        """Instagram story squad grid — prefer wide rows like the sample (6-up)."""
+        if n <= 4:
+            return 2
+        if n <= 9:
             return 3
         if n <= 12:
-            return 4
-        if n <= 20:
+            return 6
+        if n <= 15:
             return 5
-        return 6
+        if n <= 18:
+            return 6
+        return 5
 
     def _sp_fmt_num(self, n):
         try:
@@ -3471,6 +3489,8 @@ class Auction(http.Controller):
             0 if pl.get('is_icon') else 1,
             (pl.get('name') or '').lower(),
         ))
+        # Instagram poster: fixed 3×5 grid — max 15 players
+        players_out = players_out[:15]
 
         # Optional category grouping only when explicitly requested
         groups = []
@@ -3523,32 +3543,39 @@ class Auction(http.Controller):
         bg_uri = ''
         if tournament:
             venue = (tournament.auction_venue or tournament.venue or '').strip()
-            dt = tournament.auction_date or tournament.tournament_date
-            if dt:
+            date_label = ''
+            if tournament.auction_date:
                 try:
-                    date_label = fields.Date.to_string(dt) if hasattr(dt, 'year') else str(dt)
-                    try:
-                        date_label = dt.strftime('%d %b %Y')
-                    except Exception:
-                        pass
+                    date_label = tournament.auction_date.strftime('%d %b %Y')
                 except Exception:
-                    date_label = str(dt)
+                    date_label = str(tournament.auction_date)
+            else:
+                date_label = tournament.format_tournament_dates(fmt='%d %b %Y') or ''
             season_label = (tournament.description or '').strip()
             if len(season_label) > 48:
                 season_label = season_label[:45] + '…'
             team_count = len(tournament.team_ids)
             tourn_logo = self._sp_b64_uri(tournament.logo, mime='image/png', size=(256, 256), quality=95)
-            for adv in (tournament.advertiser_ids or [])[:4]:
-                if adv.image:
-                    sponsors.append({
-                        'name': adv.name or 'Sponsor',
-                        'uri': self._sp_b64_uri(adv.image, mime='image/png', size=(128, 128), quality=90),
-                    })
+            sponsors = []
+            for adv in (tournament.advertiser_ids or []):
+                if not adv.image:
+                    continue
+                sponsors.append({
+                    'name': adv.name or 'Sponsor',
+                    'uri': self._sp_b64_uri(
+                        adv.image, mime='image/jpeg', size=(480, 200), quality=92
+                    ),
+                })
+                if len(sponsors) >= 8:
+                    break
             if tournament.poster_image:
                 bg_uri = self._sp_b64_uri(tournament.poster_image, mime='image/jpeg', size=(1080, 1920), quality=85)
 
         sport_label = (sport or 'cricket').title()
         sport_icon = '🏏' if sport == 'cricket' else ('⚽' if sport == 'football' else '🏅')
+        organizer_name = ''
+        if tournament:
+            organizer_name = (tournament.organizer_name or '').strip()
 
         return {
             'theme': theme,
@@ -3557,6 +3584,7 @@ class Auction(http.Controller):
             'sport_icon': sport_icon,
             'tournament_name': (tournament.name if tournament else '') or 'Tournament',
             'season_label': season_label,
+            'organizer_name': organizer_name,
             'venue': venue,
             'date_label': date_label,
             'team_count': team_count,
@@ -3567,11 +3595,14 @@ class Auction(http.Controller):
             'grouped': bool(group and groups),
             'groups': groups if group else [],
             'grid_cols': 3,
-            'palette': 'midnight-gold',
+            'palette': 'pace-lime',
             'dense': '1',
             'stats': stats,
             'manager': (team.manager or '') if team else '',
+            'manager_initials': self._sp_initials((team.manager or '') if team else ''),
             'sponsors': sponsors,
+            'has_sponsors': bool(sponsors),
+            'player_count': n_players,
             'bg_uri': bg_uri,
             'tagline': 'Stronger Together',
             'brand_url': 'www.auctionchamp.live',
@@ -3663,6 +3694,8 @@ class Auction(http.Controller):
 
             # ── Compute live slot availability ──────────────────────────────────
             max_reg = tournament.max_registrations
+            if hasattr(tournament, '_saas_effective_max_registrations'):
+                max_reg = tournament._saas_effective_max_registrations()
             current_count = 0
             slots_left = None  # None = unlimited
             if max_reg > 0:
@@ -4136,14 +4169,32 @@ class Auction(http.Controller):
                 'expose_player_contact': bool(post.get('expose_player_contact')),
             }
 
-            # Date
-            date_str = _str('tournament_date')
-            if date_str:
-                from odoo.fields import Date
+            # Dates — support multiple days for multi-day tournaments
+            from odoo.fields import Date
+            date_strs = []
+            raw_dates = post.getlist('tournament_date') if hasattr(post, 'getlist') else [post.get('tournament_date')]
+            for date_str in raw_dates:
+                if isinstance(date_str, str):
+                    date_str = date_str.strip()
+                if date_str:
+                    date_strs.append(date_str)
+            # Deduplicate while preserving order
+            seen = set()
+            unique_dates = []
+            for date_str in date_strs:
+                if date_str in seen:
+                    continue
+                seen.add(date_str)
                 try:
-                    vals['tournament_date'] = Date.to_date(date_str)
+                    unique_dates.append(Date.to_date(date_str))
                 except Exception:
                     pass
+            if unique_dates:
+                unique_dates = sorted(unique_dates)
+                vals['tournament_date'] = unique_dates[0]
+                vals['tournament_dates'] = ','.join(
+                    Date.to_string(d) for d in unique_dates
+                )
 
             # Numeric
             try:
@@ -4635,6 +4686,7 @@ def _pj_remaining_players(tournament, db_name):
             age = ''
             p_category = ''
             blood_group = ''
+            location = ''
             other_attributes = []
             use_other_attributes = False
         else:
@@ -4650,6 +4702,7 @@ def _pj_remaining_players(tournament, db_name):
             age = fb.get('age') or ''
             p_category = p.p_category or fb.get('p_category') or ''
             blood_group = p.blood_group or fb.get('blood_group') or ''
+            location = fb.get('location') or p.address or ''
             other_attributes = fb.get('other_attributes') or []
             use_other_attributes = bool(fb.get('use_other_attributes'))
 
@@ -4668,6 +4721,7 @@ def _pj_remaining_players(tournament, db_name):
             'age': age,
             'p_category': p_category,
             'blood_group': blood_group,
+            'location': location,
             'other_attributes': other_attributes,
             'use_other_attributes': use_other_attributes,
             'is_mystery': mystery_hidden,
@@ -4801,35 +4855,39 @@ def _pj_recent_bids(tournament, db_name, player=None):
 
 
 def _football_display_payload(player):
-    """Return JSON-serializable football attributes for a player, for JS displays.
+    """Return JSON-serializable sport attributes for projector / selector JS.
 
-    Always returns the keys so the projector/display JS can branch on
-    ``tournament_type`` without KeyErrors. Empty when not a football player.
+    Always returns a stable key set so clients can branch on ``tournament_type``
+    without KeyErrors. Football-only fields are empty for cricket.
     """
     is_football = bool(player.tournament_id and player.tournament_id.tournament_type == 'football')
-    empty_other = []
+    foot_map = {'left': 'Left', 'right': 'Right', 'both': 'Both'}
+    rate_map = {'low': 'Low', 'medium': 'Medium', 'high': 'High'}
+    shared = {
+        'tournament_type': (
+            player.tournament_id.tournament_type if player.tournament_id else 'cricket'
+        ),
+        'p_category': player.p_category or '',
+        'blood_group': player.blood_group or '',
+        'mobile': player.masked_contact or '',
+        'location': player.address or '',
+        'age': player.age or '',
+        'height': player.height or '',
+        'weight': player.weight or '',
+    }
     if not is_football:
         return {
-            'tournament_type': player.tournament_id.tournament_type if player.tournament_id else 'cricket',
+            **shared,
             'dominant_position': '',
             'dominant_position_code': '',
             'secondary_positions': [],
             'preferred_foot': '',
-            'age': '',
-            'height': '',
-            'weight': '',
             'work_rate': '',
-            'p_category': '',
-            'blood_group': '',
-            'mobile': '',
-            'location': '',
             'playing_styles': [],
             'strengths': [],
-            'other_attributes': empty_other,
+            'other_attributes': [],
             'use_other_attributes': False,
         }
-    foot_map = {'left': 'Left', 'right': 'Right', 'both': 'Both'}
-    rate_map = {'low': 'Low', 'medium': 'Medium', 'high': 'High'}
     other_attributes = [
         {'label': a.label or '', 'value': a.value or ''}
         for a in player.other_attribute_ids
@@ -4837,19 +4895,14 @@ def _football_display_payload(player):
     ]
     use_other = bool(other_attributes)
     return {
+        **shared,
         'tournament_type': 'football',
         'dominant_position': player.dominant_position_id.name if player.dominant_position_id else '',
         'dominant_position_code': player.dominant_position_id.code if player.dominant_position_id else '',
         'secondary_positions': [] if use_other else [p.code or p.name for p in player.secondary_position_ids],
         'preferred_foot': foot_map.get(player.preferred_foot, ''),
         'age': '' if use_other else (player.age or ''),
-        'height': player.height or '',
-        'weight': player.weight or '',
         'work_rate': '' if use_other else rate_map.get(player.work_rate, ''),
-        'p_category': player.p_category or '',
-        'blood_group': player.blood_group or '',
-        'mobile': player.masked_contact or '',
-        'location': player.address or '',
         'playing_styles': [] if use_other else [{'name': s.name, 'icon': s.icon or ''} for s in player.playing_style_ids],
         'strengths': [] if use_other else [{'name': s.name, 'icon': s.icon or ''} for s in player.strength_ids],
         'other_attributes': other_attributes,

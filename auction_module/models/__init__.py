@@ -39,6 +39,7 @@
 from . import image_compress_mixin
 from . import auction_tournament_security
 from . import auction_tournament
+from . import auction_tournament_date
 from . import auction_tournament_point_split
 from . import auction_advertiser
 from . import auction_team

@@ -184,36 +184,8 @@ class AuctionPlayerUploadWizard(models.TransientModel):
             cell.border = thin
             cell.font = Font(italic=True, color='888888')
 
-        info = wb.create_sheet('Instructions')
-        tips = [
-            'Player Upload Template — %s (%s)' % (
-                self.tournament_id.name,
-                (self.tournament_id.tournament_type or '').title(),
-            ),
-            '',
-            '1. Fill the Players sheet. Row 2 is a sample — replace or delete it.',
-            '2. Name is required. Other columns are optional.',
-            '3. Serial No is optional; if blank, players are numbered in Excel order.',
-            '4. Photos ZIP (optional): name files 1.jpg, 2.png, 3.jpeg … matching Excel data row order '
-            '(first player row after the header = 1). PNG / JPG / JPEG (any case) are supported.',
-            '5. Football — Playing Position / Secondary / Styles / Strengths: use names or codes '
-            'from the master data (comma-separated for multi values).',
-            '6. Football — Preferred Foot: Left / Right / Both. Work Rate: Low / Medium / High.',
-        ]
-        if self.tournament_id.tournament_type == 'football':
-            labels = self.tournament_id.other_attribute_label_ids.mapped('label')
-            tips.append(
-                '7. Other Attribute columns (Att-Labels from this tournament): %s' % (
-                    ', '.join(labels) if labels else
-                    '(none configured — add them on the tournament Other Attributes tab)'
-                )
-            )
-            tips.append(
-                '   Fill Label-Values under those columns; they become Other Attributes on each player.'
-            )
-        for i, line in enumerate(tips, start=1):
-            info.cell(row=i, column=1, value=line)
-        info.column_dimensions['A'].width = 110
+        self._write_field_guide_sheet(wb)
+        self._write_reference_lists_sheet(wb)
 
         buf = io.BytesIO()
         wb.save(buf)
@@ -233,6 +205,393 @@ class AuctionPlayerUploadWizard(models.TransientModel):
             'view_mode': 'form',
             'target': 'new',
         }
+
+    def _write_field_guide_sheet(self, wb):
+        """Column-by-column data entry guide (type + how to fill)."""
+        ws = wb.create_sheet('Field Guide', 1)
+        header_fill = PatternFill('solid', fgColor='1B3F8F')
+        header_font = Font(color='FFFFFF', bold=True)
+        tip_fill = PatternFill('solid', fgColor='FFF8E1')
+        thin = Border(
+            left=Side(style='thin', color='CCCCCC'),
+            right=Side(style='thin', color='CCCCCC'),
+            top=Side(style='thin', color='CCCCCC'),
+            bottom=Side(style='thin', color='CCCCCC'),
+        )
+
+        sport = (self.tournament_id.tournament_type or '').title()
+        intro = [
+            'Player Upload — Field Guide | %s | %s' % (self.tournament_id.name, sport),
+            'Use this sheet before filling Players. See "Reference Lists" for exact values from your database.',
+            'Legend — Free text: type anything. Selection: only listed options. Many2one: one matching name. '
+            'Many2many: one or more names, comma-separated.',
+            'Name is required. All other columns are optional. Row 2 on Players is a sample — replace or delete it.',
+            'Photos ZIP (optional): files named 1.jpg, 2.png, 3.jpeg … matching Excel row order '
+            '(first data row after header = 1). PNG / JPG / JPEG supported.',
+        ]
+        for i, line in enumerate(intro, start=1):
+            cell = ws.cell(row=i, column=1, value=line)
+            cell.fill = tip_fill
+            cell.font = Font(bold=(i == 1))
+            ws.merge_cells(start_row=i, start_column=1, end_row=i, end_column=4)
+
+        headers = ['Column', 'Field Type', 'How to Enter', 'Allowed Values / Notes']
+        header_row = len(intro) + 2
+        for col_idx, title in enumerate(headers, start=1):
+            cell = ws.cell(row=header_row, column=col_idx, value=title)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.border = thin
+            cell.alignment = Alignment(wrap_text=True, vertical='center')
+
+        rows = self._field_guide_rows()
+        for r_idx, row in enumerate(rows, start=header_row + 1):
+            for c_idx, val in enumerate(row, start=1):
+                cell = ws.cell(row=r_idx, column=c_idx, value=val)
+                cell.border = thin
+                cell.alignment = Alignment(wrap_text=True, vertical='top')
+                if c_idx == 2:
+                    cell.font = Font(bold=True, color='1B3F8F')
+
+        ws.column_dimensions['A'].width = 22
+        ws.column_dimensions['B'].width = 14
+        ws.column_dimensions['C'].width = 42
+        ws.column_dimensions['D'].width = 72
+        ws.row_dimensions[header_row].height = 22
+
+    def _field_guide_rows(self):
+        """Return list of [column, type, how, notes] for current sport."""
+        common_start = [
+            [
+                'Serial No',
+                'Free text / Number',
+                'Optional. Leave blank to auto-number in Excel order.',
+                'Used for display order and to match photo filenames (1.jpg = first data row).',
+            ],
+            [
+                'Name',
+                'Free text',
+                'Required. Player full name.',
+                'Do not leave blank. Rows starting with "Sample" are skipped on import.',
+            ],
+            [
+                'Contact',
+                'Free text / Number',
+                'Phone / mobile number as text or number.',
+                'Optional. Stored as text on the player.',
+            ],
+        ]
+        common_end = [
+            [
+                'Blood Group',
+                'Free text',
+                'Type as text (e.g. A+, B-, O+, AB+).',
+                'Not a dropdown in Excel — enter the usual blood-group string.',
+            ],
+            [
+                'Category',
+                'Free text',
+                'Any category label used by your tournament.',
+                'Free text (e.g. Local, Outstation). Not linked to a master list.',
+            ],
+            [
+                'Location',
+                'Free text',
+                'City / place name.',
+                'Optional free text.',
+            ],
+            [
+                'Tier',
+                'Many2one',
+                'Enter the exact Tier Name for THIS tournament (one value only).',
+                'Must match a tier on this tournament (see Reference Lists → Tiers). '
+                'Matching is case-insensitive. Wrong name = import error for that row.',
+            ],
+            [
+                'Base Price',
+                'Number',
+                'Numeric base / starting price points.',
+                'Example: 1000. Leave blank if not used.',
+            ],
+            [
+                'Jersey Name',
+                'Free text',
+                'Name printed on jersey.',
+                'Optional.',
+            ],
+            [
+                'Jersey Number',
+                'Free text / Number',
+                'Squad / jersey number.',
+                'Optional.',
+            ],
+            [
+                'Jersey Size',
+                'Free text',
+                'Size label (e.g. S, M, L, XL).',
+                'Free text — not a fixed selection in upload.',
+            ],
+        ]
+
+        if self.tournament_id.tournament_type == 'football':
+            mid = [
+                [
+                    'Playing Position',
+                    'Many2one',
+                    'ONE primary position. Use Position Name or short Code.',
+                    'Must exist in Player Positions master (see Reference Lists). '
+                    'Examples: Centre Back or CB. Case-insensitive.',
+                ],
+                [
+                    'Secondary Positions',
+                    'Many2many',
+                    'Zero or more positions, comma-separated. Name or Code for each.',
+                    'Example: CB, RB, LB  or  Centre Back, Right Back. '
+                    'See Reference Lists → Positions. Unknown values are skipped with a warning.',
+                ],
+                [
+                    'Preferred Foot',
+                    'Selection',
+                    'Exactly one of the fixed options (case-insensitive).',
+                    'Allowed only: Left | Right | Both',
+                ],
+                [
+                    'Age',
+                    'Number',
+                    'Whole number age in years.',
+                    'Example: 25',
+                ],
+                [
+                    'Height',
+                    'Number',
+                    'Height value (as used in your process, e.g. cm).',
+                    'Numeric. Example: 178',
+                ],
+                [
+                    'Weight',
+                    'Number',
+                    'Weight value (e.g. kg).',
+                    'Numeric. Example: 72',
+                ],
+                [
+                    'Playing Styles',
+                    'Many2many',
+                    'Zero or more styles, comma-separated. Use exact Style Name.',
+                    'Must match Playing Styles master (see Reference Lists). Example: Target Man, Playmaker',
+                ],
+                [
+                    'Strengths',
+                    'Many2many',
+                    'Zero or more strengths, comma-separated. Use exact Strength Name.',
+                    'Must match Strengths master (see Reference Lists). Example: Speed, Stamina',
+                ],
+                [
+                    'Work Rate',
+                    'Selection',
+                    'Exactly one of the fixed options (case-insensitive).',
+                    'Allowed only: Low | Medium | High',
+                ],
+            ]
+            for lab in self.tournament_id.other_attribute_label_ids.sorted('sequence'):
+                if not lab.label:
+                    continue
+                mid.append([
+                    lab.label,
+                    'Free text (Other Attribute)',
+                    'Type the Label-Value for this Att-Label on the player.',
+                    'Column comes from tournament Other Attributes → Att-Labels. '
+                    'Whatever you type becomes the value for "%s". Leave blank to skip.' % lab.label,
+                ])
+            return common_start + mid + common_end
+
+        mid = [
+            [
+                'Role',
+                'Free text',
+                'Playing role as text (not a fixed dropdown in upload).',
+                'Examples often used: Batsman, Bowler, All Rounder, Wicket Keeper. '
+                'Any string is accepted.',
+            ],
+            [
+                'Batting Style',
+                'Free text',
+                'Describe batting style in plain text.',
+                'Examples: Right Handed Batter, Left Handed Batter. Free text.',
+            ],
+            [
+                'Bowling Style',
+                'Free text',
+                'Describe bowling style in plain text.',
+                'Examples: Right Arm Fast, Left Arm Orthodox, Leg Spin. Free text.',
+            ],
+        ]
+        return common_start + mid + common_end
+
+    def _write_reference_lists_sheet(self, wb):
+        """Live allowed values from master / this tournament."""
+        ws = wb.create_sheet('Reference Lists', 2)
+        header_fill = PatternFill('solid', fgColor='0D7377')
+        header_font = Font(color='FFFFFF', bold=True)
+        section_fill = PatternFill('solid', fgColor='E0F2F1')
+        tip_fill = PatternFill('solid', fgColor='FFF8E1')
+        thin = Border(
+            left=Side(style='thin', color='CCCCCC'),
+            right=Side(style='thin', color='CCCCCC'),
+            top=Side(style='thin', color='CCCCCC'),
+            bottom=Side(style='thin', color='CCCCCC'),
+        )
+
+        def section_title(row, title):
+            cell = ws.cell(row=row, column=1, value=title)
+            cell.fill = section_fill
+            cell.font = Font(bold=True, size=12)
+            ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=3)
+            return row + 1
+
+        def write_table(row, headers, data_rows):
+            for c_idx, h in enumerate(headers, start=1):
+                cell = ws.cell(row=row, column=c_idx, value=h)
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.border = thin
+            row += 1
+            if not data_rows:
+                cell = ws.cell(row=row, column=1, value='(none found)')
+                cell.font = Font(italic=True, color='888888')
+                return row + 2
+            for data in data_rows:
+                for c_idx, val in enumerate(data, start=1):
+                    cell = ws.cell(row=row, column=c_idx, value=val)
+                    cell.border = thin
+                row += 1
+            return row + 1
+
+        row = 1
+        note = ws.cell(
+            row=row, column=1,
+            value=(
+                'Copy values from these lists into the Players sheet. '
+                'Names must match (case-insensitive). Do not invent codes/names that are not listed.'
+            ),
+        )
+        note.fill = tip_fill
+        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=3)
+        row = 3
+
+        # Tiers (tournament-specific Many2one)
+        row = section_title(row, 'TIERS (Many2one) — use Tier Name in the Tier column')
+        tiers = self.env['auction.player.tier'].search([
+            ('tournament_id', '=', self.tournament_id.id),
+        ])
+        row = write_table(
+            row,
+            ['Tier Name (enter this)', 'Description', 'Icon Tier'],
+            [
+                [
+                    t.name or '',
+                    t.description or '',
+                    'Yes' if t.is_an_icon_tier else '',
+                ]
+                for t in tiers
+            ],
+        )
+
+        if self.tournament_id.tournament_type == 'football':
+            row = section_title(
+                row,
+                'PLAYING POSITIONS (Many2one / Many2many) — use Name OR Code',
+            )
+            positions = self.env['auction.player.position'].search([])
+            row = write_table(
+                row,
+                ['Position Name', 'Code (short)', 'Enter either'],
+                [
+                    [
+                        p.name or '',
+                        p.code or '',
+                        '%s  or  %s' % (p.name or '', p.code or p.name or ''),
+                    ]
+                    for p in positions
+                ],
+            )
+
+            row = section_title(
+                row,
+                'PREFERRED FOOT (Selection) — only these values',
+            )
+            row = write_table(
+                row,
+                ['Allowed Value', 'Meaning'],
+                [
+                    ['Left', 'Left foot preferred'],
+                    ['Right', 'Right foot preferred'],
+                    ['Both', 'Both feet'],
+                ],
+            )
+
+            row = section_title(
+                row,
+                'WORK RATE (Selection) — only these values',
+            )
+            row = write_table(
+                row,
+                ['Allowed Value'],
+                [['Low'], ['Medium'], ['High']],
+            )
+
+            row = section_title(
+                row,
+                'PLAYING STYLES (Many2many) — comma-separated Style Names',
+            )
+            styles = self.env['auction.player.style'].search([])
+            row = write_table(
+                row,
+                ['Style Name (enter this)'],
+                [[s.name or ''] for s in styles],
+            )
+
+            row = section_title(
+                row,
+                'STRENGTHS (Many2many) — comma-separated Strength Names',
+            )
+            strengths = self.env['auction.player.strength'].search([])
+            row = write_table(
+                row,
+                ['Strength Name (enter this)'],
+                [[s.name or ''] for s in strengths],
+            )
+
+            row = section_title(
+                row,
+                'OTHER ATTRIBUTE COLUMNS (Free text Label-Values) — this tournament',
+            )
+            labels = self.tournament_id.other_attribute_label_ids.sorted('sequence')
+            row = write_table(
+                row,
+                ['Column Header (Att-Label)', 'What to type'],
+                [
+                    [
+                        lab.label or '',
+                        'Any text value for this label (becomes Other Attribute on the player)',
+                    ]
+                    for lab in labels
+                ] if labels else [],
+            )
+        else:
+            row = section_title(row, 'CRICKET — Role / Batting Style / Bowling Style')
+            row = write_table(
+                row,
+                ['Column', 'Type', 'Suggested examples (free text — not enforced)'],
+                [
+                    ['Role', 'Free text', 'Batsman, Bowler, All Rounder, Wicket Keeper'],
+                    ['Batting Style', 'Free text', 'Right Handed Batter, Left Handed Batter'],
+                    ['Bowling Style', 'Free text', 'Right Arm Fast, Left Arm Orthodox, Leg Spin, Off Spin'],
+                ],
+            )
+
+        ws.column_dimensions['A'].width = 36
+        ws.column_dimensions['B'].width = 28
+        ws.column_dimensions['C'].width = 48
 
     def action_import(self):
         self.ensure_one()
@@ -270,11 +629,19 @@ class AuctionPlayerUploadWizard(models.TransientModel):
             raise UserError(_('Excel must include a "Name" column.'))
 
         photo_map = self._parse_photos_zip()
-        Player = self.env['auction.team.player']
+        Player = self.env['auction.team.player'].sudo()
         created = 0
         photos_applied = 0
         errors = []
+        warnings = []
+        skipped_over_limit = []
         data_row_no = 0
+        tid = self.tournament_id.id
+        max_players, plan_name = self._saas_max_players_per_tournament()
+        current_count = Player.search_count([
+            ('tournament_id', '=', tid),
+            ('icon_player', '=', False),
+        ])
 
         for raw in rows[1:]:
             if not raw or all(v is None or str(v).strip() == '' for v in raw):
@@ -300,13 +667,21 @@ class AuctionPlayerUploadWizard(models.TransientModel):
                 continue
 
             try:
+                if max_players is not None and current_count >= max_players:
+                    skipped_over_limit.append(name)
+                    continue
                 vals = self._row_to_player_vals(cell, name, data_row_no, header_map, raw)
                 photo_b64 = photo_map.get(data_row_no)
                 if photo_b64:
                     vals['photo'] = photo_b64
-                    photos_applied += 1
-                Player.create(vals)
+                Player.with_context(
+                    default_tournament_id=tid,
+                    saas_skip_quota_check=True,
+                ).create(vals)
                 created += 1
+                current_count += 1
+                if photo_b64:
+                    photos_applied += 1
             except Exception as exc:
                 errors.append('Row %s (%s): %s' % (data_row_no, name, exc))
 
@@ -314,6 +689,23 @@ class AuctionPlayerUploadWizard(models.TransientModel):
             'Imported %s player(s) into %s.' % (created, self.tournament_id.name),
             'Photos attached: %s.' % photos_applied,
         ]
+        if skipped_over_limit:
+            warnings.append(
+                'Your %(plan)s plan allows up to %(max)s player(s) per tournament. '
+                '"%(tourn)s" reached that limit — %(n)s player(s) were not created: %(names)s.'
+                % {
+                    'plan': plan_name or 'current',
+                    'max': max_players,
+                    'tourn': self.tournament_id.name,
+                    'n': len(skipped_over_limit),
+                    'names': ', '.join(skipped_over_limit[:12])
+                             + ('…' if len(skipped_over_limit) > 12 else ''),
+                }
+            )
+        if warnings:
+            msg_lines.append('')
+            msg_lines.append('Warnings:')
+            msg_lines.extend(warnings)
         if errors:
             msg_lines.append('')
             msg_lines.append('Skipped / failed rows:')
@@ -334,6 +726,19 @@ class AuctionPlayerUploadWizard(models.TransientModel):
             'view_mode': 'form',
             'target': 'new',
         }
+
+    def _saas_max_players_per_tournament(self):
+        """Plan player cap for this tournament, or (None, None) if unlimited."""
+        if 'ac.saas.account' not in self.env:
+            return None, None
+        Account = self.env['ac.saas.account']
+        account = Account._get_account_for_user()
+        if not account and 'saas_account_id' in self.tournament_id._fields:
+            account = self.tournament_id.saas_account_id
+        if not account or not account.plan_id:
+            return None, None
+        plan = account.plan_id
+        return plan.max_players_per_tournament, plan.name
 
     def action_close(self):
         return {'type': 'ir.actions.act_window_close'}

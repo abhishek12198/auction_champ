@@ -1,6 +1,9 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_auction_tournament_user,auction.tournament,auction_module.model_auction_tournament,auction_module.group_auction_group,1,1,0,0
 access_auction_tournament_point_split_user,auction.tournament.point.split,auction_module.model_auction_tournament_point_split,auction_module.group_auction_group,1,0,0,0
+access_auction_tournament_date_user,auction.tournament.date,auction_module.model_auction_tournament_date,auction_module.group_auction_group,1,1,1,1
+access_auction_tournament_date_admin,auction.tournament.date (admin),auction_module.model_auction_tournament_date,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_tournament_date_public,auction.tournament.date (public),auction_module.model_auction_tournament_date,base.group_public,1,0,0,0
 access_auction_team_user,auction.team,auction_module.model_auction_team,auction_module.group_auction_group,1,1,1,1
 access_auction_team_player_user,auction.team.player,auction_module.model_auction_team_player,auction_module.group_auction_group,1,1,1,1
 access_auction_auction_user,auction.auction,auction_module.model_auction_auction,auction_module.group_auction_group,1,1,1,1
@@ -97,6 +100,8 @@ access_auction_tournament_attribute_label_user,auction.tournament.attribute.labe
 access_auction_tournament_attribute_label_admin,auction.tournament.attribute.label (admin),auction_module.model_auction_tournament_attribute_label,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_player_upload_wizard_user,auction.player.upload.wizard (user),auction_module.model_auction_player_upload_wizard,auction_module.group_auction_group,1,1,1,1
 access_auction_player_upload_wizard_admin,auction.player.upload.wizard (admin),auction_module.model_auction_player_upload_wizard,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_team_upload_wizard_user,auction.team.upload.wizard (user),auction_module.model_auction_team_upload_wizard,auction_module.group_auction_group,1,1,1,1
+access_auction_team_upload_wizard_admin,auction.team.upload.wizard (admin),auction_module.model_auction_team_upload_wizard,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_whatsapp_share_wizard_user,auction.whatsapp.share.wizard (user),auction_module.model_auction_whatsapp_share_wizard,auction_module.group_auction_group,1,1,1,1
 access_auction_whatsapp_share_wizard_admin,auction.whatsapp.share.wizard (admin),auction_module.model_auction_whatsapp_share_wizard,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_player_stage_export_wizard_user,auction.player.stage.export.wizard (user),auction_module.model_auction_player_stage_export_wizard,auction_module.group_auction_group,1,1,1,1

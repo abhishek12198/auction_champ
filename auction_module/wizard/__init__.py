@@ -52,4 +52,5 @@ from . import action_update_tier_limits
 from . import action_migrate_tier
 from . import whatsapp_share_wizard
 from . import auction_player_upload_wizard
+from . import auction_team_upload_wizard
 from . import auction_player_stage_export_wizard

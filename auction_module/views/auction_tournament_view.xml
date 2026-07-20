@@ -43,6 +43,11 @@
                                 string="Upload Players"
                                 class="btn-secondary"
                                 attrs="{'invisible': [('active', '=', False)]}"/>
+                        <button name="action_upload_teams"
+                                type="object"
+                                string="Upload Teams &amp; Tiers"
+                                class="btn-secondary"
+                                attrs="{'invisible': [('active', '=', False)]}"/>
                         <button name="action_export_sold_unsold"
                                 type="object"
                                 string="Export Sold / Unsold"
@@ -242,7 +247,11 @@
                         <group>
                             <group string="Tournament Info">
                                 <field name="tournament_type" widget="radio" options="{'horizontal': True}"/>
-                                <field name="tournament_date"/>
+                                <field name="tournament_dates" widget="date_tags"
+                                       placeholder="Pick tournament dates"/>
+                                <field name="tournament_date_ids" invisible="1"/>
+                                <field name="tournament_date" invisible="1"/>
+                                <field name="tournament_date_display" invisible="1"/>
                                 <field name="organizer_uid"/>
                                 <field name="organizer_uids" widget="many2many_tags"
                                        options="{'color_field': 'color'}"/>
@@ -493,8 +502,9 @@
                             <page string="Advertisers" name="advertisers">
                                 <p class="text-muted" style="margin-bottom:12px;">
                                     Upload sponsor or advertiser images here. They will
-                                    <strong>rotate on the live board</strong> footer at all times, and appear
-                                    <strong>prominently during Break Time</strong> on the auction screen.
+                                    <strong>rotate on the live board</strong> footer at all times,
+                                    appear <strong>prominently during Break Time</strong> on the auction screen,
+                                    and show in the <strong>Squad Poster (Instagram)</strong> footer.
                                     Recommended image size: <strong>800 × 300 px</strong> (landscape).
                                 </p>
                                 <field name="advertiser_ids" nolabel="1">
@@ -526,6 +536,8 @@
                     <field name="description"/>
                     <field name="tournament_type"/>
                     <field name="tournament_date"/>
+                    <field name="tournament_dates"/>
+                    <field name="tournament_date_display"/>
                     <field name="venue"/>
                     <field name="active"/>
                     <field name="live_board_active"/>
@@ -576,8 +588,8 @@
                                 <div class="o_atk_stats">
                                     <div class="o_atk_stat">
                                         <i class="fa fa-calendar o_atk_stat_icon" title="Date"/>
-                                        <span t-if="record.tournament_date.raw_value"
-                                              t-esc="record.tournament_date.value"/>
+                                        <span t-if="record.tournament_date_display.raw_value"
+                                              t-esc="record.tournament_date_display.value"/>
                                         <span t-else="" class="text-muted">No date set</span>
                                     </div>
                                     <div class="o_atk_stat">

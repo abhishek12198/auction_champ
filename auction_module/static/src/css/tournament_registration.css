@@ -405,6 +405,80 @@ body {
 }
 .tr-label .req { color: #e94560; margin-left: 2px; }
 
+.tr-date-tags-box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-height: 46px;
+    padding: 8px 10px;
+    border: 1.5px solid var(--tr-input-border);
+    border-radius: 10px;
+    background: #fff;
+    cursor: text;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.tr-date-tags-box:focus-within {
+    border-color: var(--tr-blue);
+    box-shadow: 0 0 0 3px var(--tr-accent-glow);
+}
+.tr-date-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.tr-date-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 6px 4px 10px;
+    border-radius: 999px;
+    background: var(--tr-blue);
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.tr-date-tag-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+}
+.tr-date-tag-remove:hover {
+    background: rgba(0, 0, 0, 0.25);
+}
+.tr-date-tags-picker {
+    flex: 1 1 140px;
+    min-width: 140px;
+    max-width: 180px;
+    height: 28px;
+    margin: 0;
+    padding: 0 4px;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: var(--tr-text);
+    cursor: pointer;
+}
+.tr-hint {
+    margin: 6px 0 0;
+    font-size: 0.8rem;
+    color: var(--tr-muted);
+}
+
 .tr-input,
 .tr-select,
 .tr-textarea {

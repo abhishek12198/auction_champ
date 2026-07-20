@@ -167,7 +167,26 @@ class AuctionTournament(models.Model):
         help='Comma-separated point values shown as quick-select buttons in the Sell Player modal. '
              'Example: 100,200,500,1000,1500'
     )
-    tournament_date = fields.Date("Tournament Date", help="The date of the tournament, displayed on the player registration form.")
+    tournament_date_ids = fields.One2many(
+        'auction.tournament.date',
+        'tournament_id',
+        string='Tournament Dates (Lines)',
+        help='Internal date lines. Prefer editing Tournament Dates.',
+    )
+    tournament_dates = fields.Char(
+        string='Tournament Dates',
+        help='One or more tournament days. Pick dates from the calendar; each appears as a tag.',
+    )
+    tournament_date = fields.Date(
+        string='Tournament Date',
+        help='Earliest tournament date (kept for sorting / compatibility). '
+             'Add all days under Tournament Dates.',
+    )
+    tournament_date_display = fields.Char(
+        string='Tournament Dates (Display)',
+        compute='_compute_tournament_date_display',
+        help='Formatted multi-day label used on registration forms, cards, and shares.',
+    )
     expose_player_contact = fields.Boolean(
         string="Unmask Player Contact?",
         default=False,
@@ -367,6 +386,169 @@ class AuctionTournament(models.Model):
             else:
                 rec.payment_tracker_url = False
 
+    @api.depends('tournament_date_ids.date', 'tournament_date', 'tournament_dates')
+    def _compute_tournament_date_display(self):
+        for rec in self:
+            rec.tournament_date_display = rec.format_tournament_dates()
+
+    def _parse_tournament_dates_char(self, value=None):
+        """Parse comma-separated ISO dates from tournament_dates Char field."""
+        self.ensure_one()
+        raw = value if value is not None else (self.tournament_dates or '')
+        dates = []
+        seen = set()
+        for part in str(raw).split(','):
+            part = (part or '').strip()
+            if not part or part in seen:
+                continue
+            try:
+                date_val = fields.Date.to_date(part)
+            except Exception:
+                continue
+            seen.add(part)
+            dates.append(date_val)
+        return sorted(dates)
+
+    def _tournament_dates_to_char(self, dates):
+        return ','.join(fields.Date.to_string(d) for d in sorted(d for d in dates if d))
+
+    def format_tournament_dates(self, fmt='%d %b %Y', joiner=' & '):
+        """Return a human-readable label for one or more tournament dates."""
+        self.ensure_one()
+        dates = sorted(d for d in self.tournament_date_ids.mapped('date') if d)
+        if not dates:
+            dates = self._parse_tournament_dates_char()
+        if not dates and self.tournament_date:
+            dates = [self.tournament_date]
+        if not dates:
+            return ''
+        if len(dates) == 1:
+            return dates[0].strftime(fmt)
+        consecutive = all((dates[i] - dates[i - 1]).days == 1 for i in range(1, len(dates)))
+        if consecutive:
+            first, last = dates[0], dates[-1]
+            if first.month == last.month and first.year == last.year:
+                return '{} – {}'.format(first.strftime('%d'), last.strftime(fmt))
+            return '{} – {}'.format(first.strftime(fmt), last.strftime(fmt))
+        return joiner.join(d.strftime(fmt) for d in dates)
+
+    def _sync_tournament_date_from_lines(self):
+        """Keep tournament_date + tournament_dates in sync with date lines."""
+        if self.env.context.get('skip_tournament_date_sync'):
+            return
+        for rec in self:
+            dates = sorted(d for d in rec.tournament_date_ids.mapped('date') if d)
+            earliest = dates[0] if dates else False
+            dates_char = rec._tournament_dates_to_char(dates) or False
+            vals = {}
+            if rec.tournament_date != earliest:
+                vals['tournament_date'] = earliest
+            if (rec.tournament_dates or False) != dates_char:
+                vals['tournament_dates'] = dates_char
+            if vals:
+                super(AuctionTournament, rec).with_context(
+                    skip_tournament_date_sync=True
+                ).write(vals)
+
+    def _sync_date_lines_from_dates_char(self):
+        """Rebuild date lines from the tournament_dates Char field."""
+        DateLine = self.env['auction.tournament.date'].with_context(
+            skip_tournament_date_sync=True
+        )
+        for rec in self:
+            wanted = set(rec._parse_tournament_dates_char())
+            existing = {line.date: line for line in rec.tournament_date_ids}
+            to_unlink = [line.id for date_val, line in existing.items() if date_val not in wanted]
+            if to_unlink:
+                DateLine.browse(to_unlink).unlink()
+            for date_val in wanted:
+                if date_val not in existing:
+                    DateLine.create({
+                        'tournament_id': rec.id,
+                        'date': date_val,
+                    })
+            # Sync earliest date without re-entering char→lines sync
+            earliest = min(wanted) if wanted else False
+            dates_char = rec._tournament_dates_to_char(wanted) or False
+            vals = {}
+            if rec.tournament_date != earliest:
+                vals['tournament_date'] = earliest
+            if (rec.tournament_dates or False) != dates_char:
+                vals['tournament_dates'] = dates_char
+            if vals:
+                super(AuctionTournament, rec).with_context(
+                    skip_tournament_date_sync=True
+                ).write(vals)
+
+    def _ensure_tournament_date_line(self, date_val):
+        """Create/update a single date line when only tournament_date is written."""
+        self.ensure_one()
+        if not date_val:
+            if self.tournament_dates:
+                self.with_context(skip_tournament_date_sync=True).write({
+                    'tournament_dates': False,
+                })
+                self._sync_date_lines_from_dates_char()
+            return
+        iso = fields.Date.to_string(date_val)
+        current = self._parse_tournament_dates_char()
+        if len(current) <= 1:
+            self.with_context(skip_tournament_date_sync=True).write({
+                'tournament_dates': iso,
+            })
+            self._sync_date_lines_from_dates_char()
+        elif date_val not in current:
+            current.append(date_val)
+            self.with_context(skip_tournament_date_sync=True).write({
+                'tournament_dates': self._tournament_dates_to_char(current),
+            })
+            self._sync_date_lines_from_dates_char()
+
+    def init(self):
+        """Migrate legacy single tournament_date values into date lines + char."""
+        cr = self.env.cr
+        cr.execute("""
+            SELECT EXISTS (
+                SELECT 1 FROM information_schema.tables
+                WHERE table_name = 'auction_tournament_date'
+            )
+        """)
+        if not cr.fetchone()[0]:
+            return
+        cr.execute("""
+            INSERT INTO auction_tournament_date
+                (tournament_id, date, create_uid, write_uid, create_date, write_date)
+            SELECT t.id, t.tournament_date, 1, 1,
+                   (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC')
+              FROM auction_tournament t
+             WHERE t.tournament_date IS NOT NULL
+               AND NOT EXISTS (
+                    SELECT 1 FROM auction_tournament_date d
+                     WHERE d.tournament_id = t.id
+               )
+        """)
+        cr.execute("""
+            SELECT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'auction_tournament'
+                  AND column_name = 'tournament_dates'
+            )
+        """)
+        if not cr.fetchone()[0]:
+            return
+        cr.execute("""
+            UPDATE auction_tournament t
+               SET tournament_dates = sub.dates
+              FROM (
+                    SELECT tournament_id,
+                           string_agg(to_char(date, 'YYYY-MM-DD'), ',' ORDER BY date) AS dates
+                      FROM auction_tournament_date
+                     GROUP BY tournament_id
+                   ) sub
+             WHERE t.id = sub.tournament_id
+               AND (t.tournament_dates IS NULL OR t.tournament_dates = '')
+        """)
+
     def set_dice_state(self, state, number=0):
         """Broadcast dice state to the projector.
 
@@ -416,7 +598,28 @@ class AuctionTournament(models.Model):
     def create(self, vals):
         if not vals.get('tournament_code'):
             vals['tournament_code'] = _generate_tournament_code(self.env)
-        return super().create(vals)
+        # Prefer char multi-dates; fall back to single tournament_date
+        if vals.get('tournament_dates') and not vals.get('tournament_date'):
+            try:
+                parsed = []
+                for part in str(vals['tournament_dates']).split(','):
+                    part = part.strip()
+                    if part:
+                        parsed.append(fields.Date.to_date(part))
+                if parsed:
+                    vals['tournament_date'] = min(parsed)
+            except Exception:
+                pass
+        date_val = vals.get('tournament_date')
+        dates_char = vals.get('tournament_dates')
+        record = super().create(vals)
+        if dates_char:
+            record._sync_date_lines_from_dates_char()
+        elif date_val and not record.tournament_date_ids:
+            record._ensure_tournament_date_line(date_val)
+        elif record.tournament_date_ids:
+            record._sync_tournament_date_from_lines()
+        return record
 
     def write(self, vals):
         """Restrict non-admin users to only modifying operational/balance fields.
@@ -445,6 +648,13 @@ class AuctionTournament(models.Model):
                     % ', '.join(sorted(disallowed))
                 )
         res = super().write(vals)
+        if self.env.context.get('skip_tournament_date_sync'):
+            return res
+        if 'tournament_dates' in vals and 'tournament_date_ids' not in vals:
+            self._sync_date_lines_from_dates_char()
+        elif 'tournament_date' in vals and 'tournament_date_ids' not in vals and 'tournament_dates' not in vals:
+            for rec in self:
+                rec._ensure_tournament_date_line(vals.get('tournament_date'))
         # When organizers are assigned, ensure each user has Active Tournament set
         # so record rules / dashboard scoping work (rules use tournament_id + tournament_ids).
         if 'organizer_uids' in vals:
@@ -672,10 +882,9 @@ class AuctionTournament(models.Model):
         if self.description:
             lines.append(self.description)
 
-        if self.tournament_date:
-            lines.append('📅 *Date:* {}'.format(
-                self.tournament_date.strftime('%d %B %Y')
-            ))
+        date_label = self.format_tournament_dates(fmt='%d %B %Y')
+        if date_label:
+            lines.append('📅 *Date:* {}'.format(date_label))
 
         if self.venue:
             venue_text = self.venue.strip()
@@ -711,6 +920,18 @@ class AuctionTournament(models.Model):
             'type': 'ir.actions.act_window',
             'name': 'Remove Duplicate Players',
             'res_model': 'auction.remove.duplicates.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_tournament_id': self.id},
+        }
+
+    def action_upload_teams(self):
+        """Open the Excel + logo ZIP team uploader for this tournament."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Upload Teams & Tiers',
+            'res_model': 'auction.team.upload.wizard',
             'view_mode': 'form',
             'target': 'new',
             'context': {'default_tournament_id': self.id},
