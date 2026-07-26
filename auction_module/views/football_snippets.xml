@@ -6,7 +6,7 @@
          Skipped when Other Attributes are populated (those replace this block). -->
     <template id="football_tag_chips">
         <t t-if="player.tournament_type == 'football' and not player.use_other_attributes and (player.playing_style_ids or player.strength_ids)">
-            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;">
+            <div class="ac-fb-chip-row" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;">
                 <t t-foreach="player.playing_style_ids" t-as="sty">
                     <span style="display:inline-flex; align-items:center; gap:5px; background:rgba(120,144,180,0.18); border:1px solid rgba(120,144,180,0.45); border-radius:999px; padding:5px 12px; font-size:0.8rem; font-weight:600; letter-spacing:0.3px; color:inherit;"><t t-esc="sty.icon"/> <t t-esc="sty.name"/></span>
                 </t>
@@ -17,7 +17,7 @@
         </t>
     </template>
 
-    <!-- Label/value rows for Other Attributes (same visual language as Secondary/Age). -->
+    <!-- Label/value rows for Other Attributes (legacy vanilla grid). -->
     <template id="football_other_attribute_rows">
         <t t-if="player.tournament_type == 'football' and player.use_other_attributes">
             <t t-foreach="player.other_attribute_ids.filtered('value')" t-as="oattr">
@@ -25,5 +25,52 @@
                 <span class="player-attr-value"><t t-esc="oattr.value or '—'"/></span>
             </t>
         </t>
+    </template>
+
+    <!-- Shared CSS: arrange theme-native football rows in a tidy 2-col grid. -->
+    <template id="football_attr_layout_css">
+        <style>
+            .ac-fb-grid{
+                display:grid;
+                grid-template-columns:repeat(2, minmax(0, 1fr));
+                gap:8px 10px;
+                width:100%;
+                align-items:stretch;
+            }
+            .ac-fb-grid > .ac-fb-span-2,
+            .ac-fb-grid > .ac-fb-chip-row{
+                grid-column:1 / -1;
+            }
+            /* Compact the oversized theme “card per attribute” look for football */
+            .ac-fb-grid .lm-stat-row,
+            .ac-fb-grid .sw-stat-row,
+            .ac-fb-grid .cr-stat-row,
+            .ac-fb-grid .hud-stat-row{
+                margin:0 !important;
+                padding:10px 12px !important;
+                gap:2px !important;
+                height:100%;
+                box-sizing:border-box;
+            }
+            .ac-fb-grid .lm-stat-val,
+            .ac-fb-grid .sw-stat-val,
+            .ac-fb-grid .cr-stat-val,
+            .ac-fb-grid .hud-stat-val{
+                font-size:clamp(1rem, 1.7vw, 1.35rem) !important;
+                line-height:1.15 !important;
+            }
+            .ac-fb-grid .lm-stat-key,
+            .ac-fb-grid .sw-stat-key,
+            .ac-fb-grid .cr-stat-key,
+            .ac-fb-grid .hud-stat-key{
+                font-size:clamp(.58rem, .85vw, .7rem) !important;
+            }
+            .ac-fb-grid .pt-stat-tile{
+                margin:0 !important;
+            }
+            @media (max-width:700px){
+                .ac-fb-grid{grid-template-columns:1fr;}
+            }
+        </style>
     </template>
 </odoo>

@@ -21,26 +21,26 @@
         }
         /* ── Theme tokens ────────────────────────────────────────────── */
 
-        /* vanilla (default) — premium royal-blue broadcast theme */
+        /* vanilla (default) — soft slate-blue broadcast theme */
         :root {
-          --rp-primary:      #2e6be6;
-          --rp-primary-dk:   #123f9e;
-          --rp-glow:         rgba(46,107,230,0.30);
-          --rp-bg:           radial-gradient(120% 90% at 50% -10%,#1f5bd6 0%,#123f9e 55%,#0a2a70 100%);
-          --rp-surface:      rgba(18,52,120,0.55);
-          --rp-surface2:     rgba(9,30,80,0.60);
-          --rp-border:       rgba(150,185,255,0.22);
+          --rp-primary:      #5b7eb8;
+          --rp-primary-dk:   #3d5f94;
+          --rp-glow:         rgba(91,126,184,0.28);
+          --rp-bg:           radial-gradient(120% 90% at 50% -10%,#7a9bc4 0%,#5b7eb8 40%,#3d5f94 70%,#1a3560 100%);
+          --rp-surface:      rgba(36,58,92,0.55);
+          --rp-surface2:     rgba(26,53,96,0.60);
+          --rp-border:       rgba(160,185,215,0.22);
           --rp-text:         #eaf1ff;
-          --rp-text-muted:   #a9c0ee;
-          --rp-header-bg:    linear-gradient(90deg,#1f5bd6,#3f7cf0);
+          --rp-text-muted:   #b4c6e0;
+          --rp-header-bg:    linear-gradient(90deg,#3d5f94,#5b7eb8);
           --rp-header-text:  #ffffff;
           --rp-card-bg:      rgba(255,255,255,0.05);
-          --rp-card-hover:   rgba(91,155,255,0.15);
+          --rp-card-hover:   rgba(138,166,212,0.15);
           --rp-tier-bg:      rgba(255,255,255,0.05);
-          --rp-sl-text:      #08205c;
-          --rp-label:        rgba(205,217,239,0.65);
+          --rp-sl-text:      #1a3560;
+          --rp-label:        rgba(200,212,232,0.65);
           --rp-value:        #ffffff;
-          --rp-count-bg:     rgba(91,155,255,0.18);
+          --rp-count-bg:     rgba(138,166,212,0.18);
           --rp-count-text:   #eaf1ff;
         }
 
@@ -134,6 +134,30 @@
           --rp-value:        rgba(232,245,233,0.68);
           --rp-count-bg:     rgba(107,191,78,0.12);
           --rp-count-text:   #A8E063;
+        }
+
+
+        /* blackberry */
+        body.rp-theme-blackberry {
+          --rp-primary:      #3B82F6;
+          --rp-primary-dk:   #1E3A8A;
+          --rp-glow:         rgba(59,130,246,0.32);
+          --rp-bg:           #050a14;
+          --rp-surface:      #0a1220;
+          --rp-surface2:     #0d1830;
+          --rp-border:       rgba(59,130,246,0.22);
+          --rp-text:         #ffffff;
+          --rp-text-muted:   rgba(255,255,255,0.52);
+          --rp-header-bg:    linear-gradient(135deg,#050a14,#0d1830);
+          --rp-header-text:  #93C5FD;
+          --rp-card-bg:      rgba(59,130,246,0.06);
+          --rp-card-hover:   rgba(59,130,246,0.12);
+          --rp-tier-bg:      rgba(59,130,246,0.08);
+          --rp-sl-text:      #050a14;
+          --rp-label:        rgba(147,197,253,0.40);
+          --rp-value:        rgba(255,255,255,0.72);
+          --rp-count-bg:     rgba(59,130,246,0.14);
+          --rp-count-text:   #93C5FD;
         }
 
         /* lemon */

@@ -134,20 +134,31 @@
           groups="auction_module.group_auction_group"
           sequence="4"/>
 
-        <!-- Payment Tracker web page -->
-        <record id="action_payment_marker" model="ir.actions.act_url">
+        <!-- Payment Tracker — root client action (stays inside /web) -->
+        <delete model="ir.actions.act_url" id="action_payment_marker"/>
+        <record id="action_payment_marker" model="ir.actions.client">
             <field name="name">Payment Tracker</field>
-            <field name="url">/auction/my/payment-marker</field>
-            <field name="target">self</field>
+            <field name="tag">auction_module.payment_marker</field>
+            <field name="target">current</field>
         </record>
 
         <menuitem id="menu_action_payment_marker"
           name="Payment Tracker"
-          parent="menu_action_auction_player"
           action="action_payment_marker"
-          sequence="99"
+          sequence="2"
+          web_icon="auction_module,static/src/description/auctions_settings.png"
           groups="auction_module.group_auction_group,auction_module.group_auction_payment_marker"/>
 
+        <!-- Force root menu (was previously under Players) -->
+        <record id="menu_action_payment_marker" model="ir.ui.menu">
+            <field name="parent_id" eval="False"/>
+            <field name="sequence">2</field>
+            <field name="web_icon">auction_module,static/src/description/auctions_settings.png</field>
+            <field name="groups_id" eval="[(6, 0, [
+                ref('auction_module.group_auction_group'),
+                ref('auction_module.group_auction_payment_marker'),
+            ])]"/>
+        </record>
         <!--<menuitem id="menu_action_launch_auction"
           name="Launch Auction"
           parent="menu_action_auction_auction"
@@ -193,7 +204,7 @@
         <menuitem id="menu_action_team_pool_wizard"
           name="Pool Generator"
           parent="menu_action_auction_auction"
-          action="auction_module.action_team_pool_wizard"
+          action="auction_module.action_team_pool_generator"
           sequence="6"
           groups="auction_module.group_auction_group"/>
 

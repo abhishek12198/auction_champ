@@ -439,3 +439,594 @@ class TeamPoolWizard(models.TransientModel):
             f'<div style="color:#6c757d;font-size:.82rem;padding:6px 0;text-align:center;">'
             f'✅ {len(matches_data)} matches generated — drag cards below to reorder</div>'
         )
+
+    # ── Client action JSON API ────────────────────────────────────────────
+
+    def _client_team_payload(self, team):
+        return {
+            'id': team.id,
+            'name': team.name or '',
+            'logo_url': (
+                '/web/image/auction.team/%s/logo' % team.id if team.logo else False
+            ),
+            'initials': ''.join(
+                w[0].upper() for w in (team.name or '?').split()[:2]
+            ) or '?',
+            'manager': team.manager or '',
+        }
+
+    @api.model
+    def _client_current_tournament(self):
+        tournament = self.env.user.tournament_id
+        if not tournament:
+            raise UserError('Select a tournament before using the Pool Generator.')
+        return tournament
+
+    @api.model
+    def _client_build_pools(self, structure, pool_names=None):
+        """Turn [[team_id, …], …] into the client pool payload."""
+        if not structure:
+            return [], 'Pool Draw'
+        wiz = self.new({})
+        name_map = {}
+        for i, name in enumerate(pool_names or [], start=1):
+            name_map[i] = (name or '').strip() or wiz._pool_label(i)
+
+        all_ids = [tid for pool_ids in structure for tid in pool_ids]
+        teams = self.env['auction.team'].browse(all_ids).exists()
+        team_map = {t.id: t for t in teams}
+        tournament_name = (
+            teams[:1].tournament_id.name if teams[:1].tournament_id else 'Pool Draw'
+        )
+        result_pools = []
+        for i, pool_ids in enumerate(structure, start=1):
+            result_pools.append({
+                'index': i,
+                'name': name_map.get(i) or wiz._pool_label(i),
+                'teams': [
+                    self._client_team_payload(team_map[tid])
+                    for tid in pool_ids if tid in team_map
+                ],
+            })
+        return result_pools, tournament_name
+
+    @api.model
+    def _client_refresh_fixture(self, fixture_data):
+        """Rebuild fixture match team payloads from current team records."""
+        if not fixture_data:
+            return False
+        matches_in = fixture_data.get('matches') or []
+        team_ids = set()
+        for m in matches_in:
+            for key in ('team_a', 'team_b'):
+                team = m.get(key) or {}
+                if team.get('id'):
+                    team_ids.add(int(team['id']))
+        team_map = {
+            t.id: self._client_team_payload(t)
+            for t in self.env['auction.team'].browse(list(team_ids)).exists()
+        }
+        matches = []
+        for m in matches_in:
+            ta = (m.get('team_a') or {})
+            tb = (m.get('team_b') or {})
+            ta_id = int(ta.get('id') or 0)
+            tb_id = int(tb.get('id') or 0)
+            if ta_id not in team_map or tb_id not in team_map:
+                continue
+            matches.append({
+                'group': m.get('group') or '',
+                'section': m.get('section') or '',
+                'team_a': team_map[ta_id],
+                'team_b': team_map[tb_id],
+            })
+        return {
+            'tournament': fixture_data.get('tournament') or '',
+            'subtitle': fixture_data.get('subtitle') or '',
+            'fixture_type': fixture_data.get('fixture_type') or 'pool_rr',
+            'outside_n': fixture_data.get('outside_n') or 1,
+            'matches': matches,
+        }
+
+    @api.model
+    def client_bootstrap(self):
+        """Initial payload for the Pool Generator client action."""
+        tournament = self.env.user.tournament_id
+        Team = self.env['auction.team']
+        domain = [('tournament_id', '=', tournament.id)] if tournament else []
+        teams = Team.search(domain, order='name')
+
+        saved_pools = False
+        saved_fixture = False
+        default_pool_count = 2
+        if tournament and tournament.pool_draw_json:
+            try:
+                raw = json.loads(tournament.pool_draw_json)
+                structure = raw.get('structure') or []
+                pool_names = raw.get('pool_names') or []
+                pools, tname = self._client_build_pools(structure, pool_names)
+                if pools:
+                    saved_pools = {
+                        'structure': structure,
+                        'pools': pools,
+                        'pool_names': pool_names,
+                        'pool_count': raw.get('pool_count') or len(structure) or 2,
+                        'team_ids': raw.get('team_ids') or [
+                            tid for pool in structure for tid in pool
+                        ],
+                        'tournament_name': tname,
+                    }
+                    default_pool_count = saved_pools['pool_count']
+            except (ValueError, TypeError):
+                saved_pools = False
+
+        if tournament and tournament.fixture_schedule_json:
+            try:
+                saved_fixture = self._client_refresh_fixture(
+                    json.loads(tournament.fixture_schedule_json)
+                )
+                if saved_fixture and not saved_fixture.get('matches'):
+                    saved_fixture = False
+            except (ValueError, TypeError):
+                saved_fixture = False
+
+        return {
+            'tournament': {
+                'id': tournament.id if tournament else False,
+                'name': tournament.name if tournament else '',
+                'logo_url': (
+                    '/web/image/auction.tournament/%s/logo' % tournament.id
+                    if tournament and tournament.logo else False
+                ),
+            },
+            'teams': [self._client_team_payload(t) for t in teams],
+            'default_pool_count': default_pool_count,
+            'saved_pools': saved_pools,
+            'saved_fixture': saved_fixture,
+            'fixture_types': [
+                {'value': 'pool_rr', 'label': 'Pool Round Robin',
+                 'hint': 'Teams play only within their own pool'},
+                {'value': 'cross_pool_rr', 'label': 'Cross Pool Round Robin',
+                 'hint': 'Every team plays teams from other pools'},
+                {'value': 'custom_outside', 'label': 'Custom Outside Matches',
+                 'hint': 'Each team plays N opponents from outside its pool'},
+            ],
+        }
+
+    @api.model
+    def client_pool_labels(self, pool_count):
+        """Default Pool A / Pool B … labels for N pools."""
+        wiz = self.new({'pool_count': pool_count or 2})
+        count = max(1, int(pool_count or 2))
+        return [
+            {'index': i, 'default_label': wiz._pool_label(i), 'custom_name': wiz._pool_label(i)}
+            for i in range(1, count + 1)
+        ]
+
+    @api.model
+    def _resolve_publish_tournament(self, structure=None):
+        """Use the teams' tournament (sudo) so projector slug always matches."""
+        tournament = False
+        if structure:
+            flat = [tid for pool in structure for tid in (pool or [])]
+            if flat:
+                team = self.env['auction.team'].sudo().browse(int(flat[0])).exists()
+                if team and team.tournament_id:
+                    tournament = team.tournament_id
+        if not tournament:
+            tournament = self.env.user.tournament_id
+        if not tournament:
+            raise UserError('Select a tournament before using the Pool Generator.')
+        return tournament.sudo()
+
+    @api.model
+    def _projector_reveal_until(self, seconds=5):
+        from datetime import datetime, timedelta
+        return datetime.utcnow() + timedelta(seconds=seconds)
+
+    @api.model
+    def _publish_pools_live(self, structure, pool_names=None, reveal_seconds=5):
+        """Write pool draw to the active tournament and push it to the projector."""
+        structure = [[int(tid) for tid in pool] for pool in (structure or [])]
+        tournament = self._resolve_publish_tournament(structure)
+        pool_names = list(pool_names or [])
+        while len(pool_names) < len(structure):
+            pool_names.append(self.new({})._pool_label(len(pool_names) + 1))
+        pools, tournament_name = self._client_build_pools(structure, pool_names)
+        if not pools:
+            raise UserError('No valid teams found in this pool draw.')
+        payload = {
+            'structure': structure,
+            'pool_names': [
+                (pool_names[i] if i < len(pool_names) else None) or self.new({})._pool_label(i + 1)
+                for i in range(len(structure))
+            ],
+            'pool_count': len(structure),
+            'team_ids': [tid for pool in structure for tid in pool],
+            'tournament_name': tournament_name or tournament.name or 'Pool Draw',
+        }
+        vals = {
+            'pool_draw_json': json.dumps(payload),
+            'pool_draw_user_id': self.env.uid,
+            'pool_draw_datetime': fields.Datetime.now(),
+            'fixture_schedule_json': False,
+            'fixture_schedule_snapshot': False,
+            'fixture_schedule_user_id': False,
+            'fixture_schedule_datetime': False,
+            'projector_board_mode': 'pools',
+            'projector_board_reveal_until': (
+                self._projector_reveal_until(reveal_seconds)
+                if reveal_seconds and reveal_seconds > 0 else False
+            ),
+        }
+        try:
+            tournament.write(vals)
+        except Exception as err:
+            # Fallback if new columns are missing mid-upgrade
+            raise UserError(
+                'Could not publish pools to projector. Upgrade auction_module '
+                'and restart Odoo, then try again. (%s)' % err
+            )
+        return pools, tournament_name or tournament.name, structure
+
+    @api.model
+    def _publish_fixture_live(self, structure, fixture_data, pool_names=None,
+                              fixture_type='pool_rr', outside_n=1, reveal_seconds=5):
+        """Write fixture + pools to tournament and push fixture board to projector."""
+        structure = [[int(tid) for tid in pool] for pool in (structure or [])]
+        tournament = self._resolve_publish_tournament(structure)
+        pool_names = list(pool_names or [])
+        while len(pool_names) < len(structure):
+            pool_names.append(self.new({})._pool_label(len(pool_names) + 1))
+        pools, tournament_name = self._client_build_pools(structure, pool_names)
+        pool_payload = {
+            'structure': structure,
+            'pool_names': [
+                (pool_names[i] if i < len(pool_names) else None) or self.new({})._pool_label(i + 1)
+                for i in range(len(structure))
+            ],
+            'pool_count': len(structure),
+            'team_ids': [tid for pool in structure for tid in pool],
+            'tournament_name': tournament_name or tournament.name or 'Pool Draw',
+        }
+        matches = []
+        for m in (fixture_data or {}).get('matches') or []:
+            ta = m.get('team_a') or {}
+            tb = m.get('team_b') or {}
+            if not ta.get('id') or not tb.get('id'):
+                continue
+            matches.append({
+                'group': m.get('group') or '',
+                'section': m.get('section') or '',
+                'team_a': {'id': int(ta['id'])},
+                'team_b': {'id': int(tb['id'])},
+            })
+        if not matches:
+            raise UserError('Fixture has no valid matches to publish.')
+        fix_payload = {
+            'tournament': (fixture_data or {}).get('tournament') or tournament.name or 'Fixture Schedule',
+            'subtitle': (fixture_data or {}).get('subtitle') or '',
+            'fixture_type': fixture_type or (fixture_data or {}).get('fixture_type') or 'pool_rr',
+            'outside_n': int(outside_n or (fixture_data or {}).get('outside_n') or 1),
+            'matches': matches,
+        }
+        try:
+            tournament.write({
+                'pool_draw_json': json.dumps(pool_payload),
+                'pool_draw_user_id': self.env.uid,
+                'pool_draw_datetime': fields.Datetime.now(),
+                'fixture_schedule_json': json.dumps(fix_payload),
+                'fixture_schedule_user_id': self.env.uid,
+                'fixture_schedule_datetime': fields.Datetime.now(),
+                'projector_board_mode': 'fixtures',
+                'projector_board_reveal_until': (
+                    self._projector_reveal_until(reveal_seconds)
+                    if reveal_seconds and reveal_seconds > 0 else False
+                ),
+            })
+        except Exception as err:
+            raise UserError(
+                'Could not publish fixtures to projector. Upgrade auction_module '
+                'and restart Odoo, then try again. (%s)' % err
+            )
+        return self._client_refresh_fixture(fix_payload)
+
+    @api.model
+    def client_generate_pools(self, team_ids, pool_count, pool_names=None):
+        """Shuffle selected teams into pools and live-publish to the projector."""
+        team_ids = [int(t) for t in (team_ids or [])]
+        pool_count = int(pool_count or 0)
+        teams = list(self.env['auction.team'].browse(team_ids).exists())
+        if pool_count <= 0 or pool_count > len(teams):
+            raise UserError('Invalid pool count for the selected teams.')
+        if len(teams) < 2:
+            raise UserError('Select at least 2 teams to generate pools.')
+
+        random.shuffle(teams)
+        pools = [[] for _ in range(pool_count)]
+        for i, team in enumerate(teams):
+            pools[i % pool_count].append(team)
+
+        name_map = {}
+        for i, name in enumerate(pool_names or [], start=1):
+            name_map[i] = (name or '').strip() or self.new({})._pool_label(i)
+
+        structure = [[t.id for t in pool] for pool in pools]
+        names = [name_map.get(i) for i in range(1, pool_count + 1)]
+        result_pools, tournament_name, structure = self._publish_pools_live(
+            structure, names, reveal_seconds=5
+        )
+        return {
+            'tournament_name': tournament_name,
+            'structure': structure,
+            'pools': result_pools,
+            'published': True,
+        }
+
+    @api.model
+    def client_apply_names(self, structure, pool_names=None):
+        """Re-label pools without reshuffling and refresh the projector board."""
+        if not structure:
+            raise UserError('Generate pools first, then you can apply custom names.')
+        result_pools, tournament_name, structure = self._publish_pools_live(
+            structure, pool_names, reveal_seconds=0
+        )
+        return {
+            'tournament_name': tournament_name,
+            'structure': structure,
+            'pools': result_pools,
+            'published': True,
+        }
+
+    @api.model
+    def client_save_pools(self, structure, pool_names=None, clear_fixture=True):
+        """Persist the current pool draw on the active tournament."""
+        tournament = self._client_current_tournament()
+        if not structure:
+            raise UserError('Generate pools before saving.')
+        structure = [[int(tid) for tid in pool] for pool in structure]
+        pool_names = list(pool_names or [])
+        while len(pool_names) < len(structure):
+            pool_names.append(self.new({})._pool_label(len(pool_names) + 1))
+        pools, tournament_name = self._client_build_pools(structure, pool_names)
+        if not pools:
+            raise UserError('No valid teams found in this pool draw.')
+        payload = {
+            'structure': structure,
+            'pool_names': [
+                (pool_names[i] if i < len(pool_names) else None) or self.new({})._pool_label(i + 1)
+                for i in range(len(structure))
+            ],
+            'pool_count': len(structure),
+            'team_ids': [tid for pool in structure for tid in pool],
+            'tournament_name': tournament_name,
+        }
+        vals = {
+            'pool_draw_json': json.dumps(payload),
+            'pool_draw_user_id': self.env.uid,
+            'pool_draw_datetime': fields.Datetime.now(),
+            'projector_board_mode': 'pools',
+            'projector_board_reveal_until': False,
+        }
+        if clear_fixture:
+            vals.update({
+                'fixture_schedule_json': False,
+                'fixture_schedule_snapshot': False,
+                'fixture_schedule_user_id': False,
+                'fixture_schedule_datetime': False,
+            })
+        tournament.write(vals)
+        return {
+            'ok': True,
+            'message': 'Pool draw saved to %s' % (tournament.name or 'tournament'),
+            'pools': pools,
+            'structure': structure,
+            'tournament_name': tournament_name,
+        }
+
+    @api.model
+    def _strip_data_url(self, image_data):
+        """Accept raw base64 or data:image/png;base64,... and return raw base64."""
+        if not image_data:
+            return False
+        raw = image_data
+        if isinstance(raw, bytes):
+            raw = raw.decode('ascii', errors='ignore')
+        raw = (raw or '').strip()
+        if not raw:
+            return False
+        if ',' in raw and raw.lower().startswith('data:'):
+            raw = raw.split(',', 1)[1]
+        return raw or False
+
+    @api.model
+    def client_save_to_tournament(self, structure, pool_names=None, fixture_data=None,
+                                  pool_image=None, fixture_image=None,
+                                  fixture_type='pool_rr', outside_n=1):
+        """Save pool + fixture data and both snapshot images on the tournament."""
+        tournament = self._client_current_tournament()
+        if not structure:
+            raise UserError('Generate pools before saving.')
+
+        # Always save pools (JSON)
+        pool_res = self.client_save_pools(
+            structure, pool_names,
+            clear_fixture=not (fixture_data and fixture_data.get('matches')),
+        )
+
+        vals = {}
+        pool_b64 = self._strip_data_url(pool_image)
+        if pool_b64:
+            vals['pool_draw_snapshot'] = pool_b64
+            vals['pool_draw_user_id'] = self.env.uid
+            vals['pool_draw_datetime'] = fields.Datetime.now()
+
+        fixture_res = False
+        if fixture_data and fixture_data.get('matches'):
+            fixture_res = self.client_save_fixture(
+                structure, fixture_data, pool_names=pool_names,
+                fixture_type=fixture_type, outside_n=outside_n,
+            )
+            fixture_b64 = self._strip_data_url(fixture_image)
+            if fixture_b64:
+                vals['fixture_schedule_snapshot'] = fixture_b64
+                vals['fixture_schedule_user_id'] = self.env.uid
+                vals['fixture_schedule_datetime'] = fields.Datetime.now()
+        else:
+            vals.update({
+                'fixture_schedule_snapshot': False,
+                'fixture_schedule_user_id': False,
+                'fixture_schedule_datetime': False,
+            })
+
+        if vals:
+            tournament.write(vals)
+
+        parts = ['Pool draw']
+        if fixture_res:
+            parts.append('fixture')
+        if pool_b64 or (fixture_res and self._strip_data_url(fixture_image)):
+            parts.append('snapshot(s)')
+        return {
+            'ok': True,
+            'message': 'Saved %s to %s' % (
+                ' + '.join(parts), tournament.name or 'tournament'
+            ),
+            'pools': pool_res.get('pools'),
+            'structure': pool_res.get('structure'),
+            'tournament_name': pool_res.get('tournament_name'),
+            'fixture': (fixture_res or {}).get('fixture') if fixture_res else False,
+            'has_pool_snapshot': bool(pool_b64),
+            'has_fixture_snapshot': bool(
+                fixture_res and self._strip_data_url(fixture_image)
+            ),
+        }
+
+    @api.model
+    def client_save_fixture(self, structure, fixture_data, pool_names=None,
+                            fixture_type='pool_rr', outside_n=1):
+        """Persist the current fixture schedule on the active tournament."""
+        tournament = self._client_current_tournament()
+        if not structure:
+            raise UserError('Generate pools before saving a fixture.')
+        if not fixture_data or not fixture_data.get('matches'):
+            raise UserError('Generate a fixture before saving.')
+
+        # Keep pools in sync without wiping the fixture we are about to save
+        self.client_save_pools(structure, pool_names, clear_fixture=False)
+        matches = []
+        for m in fixture_data.get('matches') or []:
+            ta = m.get('team_a') or {}
+            tb = m.get('team_b') or {}
+            if not ta.get('id') or not tb.get('id'):
+                continue
+            matches.append({
+                'group': m.get('group') or '',
+                'section': m.get('section') or '',
+                'team_a': {'id': int(ta['id'])},
+                'team_b': {'id': int(tb['id'])},
+            })
+        if not matches:
+            raise UserError('Fixture has no valid matches to save.')
+
+        payload = {
+            'tournament': fixture_data.get('tournament') or tournament.name or 'Fixture Schedule',
+            'subtitle': fixture_data.get('subtitle') or '',
+            'fixture_type': fixture_type or fixture_data.get('fixture_type') or 'pool_rr',
+            'outside_n': int(outside_n or fixture_data.get('outside_n') or 1),
+            'matches': matches,
+        }
+        refreshed = self._client_refresh_fixture(payload)
+        tournament.write({
+            'fixture_schedule_json': json.dumps(payload),
+            'fixture_schedule_user_id': self.env.uid,
+            'fixture_schedule_datetime': fields.Datetime.now(),
+            'projector_board_mode': 'fixtures',
+            'projector_board_reveal_until': False,
+        })
+        return {
+            'ok': True,
+            'message': 'Fixture saved to %s' % (tournament.name or 'tournament'),
+            'fixture': refreshed,
+        }
+
+    @api.model
+    def client_generate_fixture(self, structure, pool_names=None,
+                                fixture_type='pool_rr', outside_pool_count=1):
+        """Build fixture match list for the client DnD board."""
+        if not structure:
+            raise UserError('Generate pools first before creating a fixture.')
+
+        wiz = self.create({
+            'team_ids': [(6, 0, [tid for pool in structure for tid in pool])],
+            'selected_team_count': sum(len(p) for p in structure),
+            'pool_count': len(structure),
+            'pool_structure_json': json.dumps(structure),
+            'fixture_type': fixture_type or 'pool_rr',
+            'outside_pool_count': max(1, int(outside_pool_count or 1)),
+            'pool_name_ids': [
+                (0, 0, {
+                    'pool_index': i,
+                    'default_label': self.new({})._pool_label(i),
+                    'custom_name': (
+                        (pool_names[i - 1] if pool_names and i <= len(pool_names) else None)
+                        or self.new({})._pool_label(i)
+                    ),
+                })
+                for i in range(1, len(structure) + 1)
+            ],
+        })
+        pools = wiz._load_pools()
+        matches = wiz._generate_matches(pools)
+        if not matches:
+            raise UserError(
+                'No matches could be generated. '
+                'Check pool size vs. outside count, or choose a different fixture type.'
+            )
+
+        all_teams = [ta for ta, _, __ in matches] + [tb for _, tb, __ in matches]
+        tournament = next(
+            (t.tournament_id.name for t in all_teams if t.tournament_id),
+            'Fixture Schedule',
+        )
+        type_labels = {
+            'pool_rr': 'Pool Round Robin',
+            'cross_pool_rr': 'Cross Pool Round Robin',
+            'custom_outside': 'Custom Cross Pool (N = %s)' % wiz.outside_pool_count,
+        }
+        cache = {}
+
+        def _payload(team):
+            if team.id not in cache:
+                cache[team.id] = self._client_team_payload(team)
+            return cache[team.id]
+
+        matches_data = [
+            {
+                'group': grp,
+                'section': grp.split('  —  ')[0].strip() if '  —  ' in grp else grp,
+                'team_a': _payload(ta),
+                'team_b': _payload(tb),
+            }
+            for ta, tb, grp in matches
+        ]
+        result = {
+            'tournament': tournament,
+            'subtitle': type_labels.get(wiz.fixture_type, ''),
+            'fixture_type': wiz.fixture_type,
+            'outside_n': wiz.outside_pool_count,
+            'matches': matches_data,
+        }
+        # Live-publish to projector (5s reveal to match console)
+        try:
+            self._publish_fixture_live(
+                structure, result,
+                pool_names=pool_names,
+                fixture_type=wiz.fixture_type,
+                outside_n=wiz.outside_pool_count,
+                reveal_seconds=5,
+            )
+            result['published'] = True
+        except UserError:
+            result['published'] = False
+        return result

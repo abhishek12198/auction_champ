@@ -60,7 +60,9 @@ access_auction_player_tier_pd,auction.player.tier (player dashboard),auction_mod
 access_auction_tournament_pd,auction.tournament (player dashboard),auction_module.model_auction_tournament,auction_module.group_auction_player_dashboard,1,0,0,0
 access_auction_auction_player_pd,auction.auction.player (player dashboard),auction_module.model_auction_auction_player,auction_module.group_auction_player_dashboard,1,0,0,0
 access_auction_remove_duplicates_wizard_admin,auction.remove.duplicates.wizard (admin),auction_module.model_auction_remove_duplicates_wizard,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_remove_duplicates_wizard_user,auction.remove.duplicates.wizard (user),auction_module.model_auction_remove_duplicates_wizard,auction_module.group_auction_group,1,1,1,1
 access_auction_remove_duplicate_line_admin,auction.remove.duplicate.line (admin),auction_module.model_auction_remove_duplicate_line,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_remove_duplicate_line_user,auction.remove.duplicate.line (user),auction_module.model_auction_remove_duplicate_line,auction_module.group_auction_group,1,1,1,1
 access_auction_team_pool_name_line_admin,auction.team.pool.name.line (admin),auction_module.model_auction_team_pool_name_line,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_update_tier_limits_admin,auction.update.tier.limits (admin),auction_module.model_auction_update_tier_limits,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_update_tier_limits_line_admin,auction.update.tier.limits.line (admin),auction_module.model_auction_update_tier_limits_line,auction_module.group_auction_group_admin,1,1,1,1
@@ -106,3 +108,5 @@ access_auction_whatsapp_share_wizard_user,auction.whatsapp.share.wizard (user),a
 access_auction_whatsapp_share_wizard_admin,auction.whatsapp.share.wizard (admin),auction_module.model_auction_whatsapp_share_wizard,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_player_stage_export_wizard_user,auction.player.stage.export.wizard (user),auction_module.model_auction_player_stage_export_wizard,auction_module.group_auction_group,1,1,1,1
 access_auction_player_stage_export_wizard_admin,auction.player.stage.export.wizard (admin),auction_module.model_auction_player_stage_export_wizard,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_expose_contact_privacy_wizard_user,auction.expose.contact.privacy.wizard (user),auction_module.model_auction_expose_contact_privacy_wizard,auction_module.group_auction_group,1,1,1,1
+access_auction_expose_contact_privacy_wizard_admin,auction.expose.contact.privacy.wizard (admin),auction_module.model_auction_expose_contact_privacy_wizard,auction_module.group_auction_group_admin,1,1,1,1

@@ -133,7 +133,11 @@
             <field name="name">auction.auction.tree</field>
             <field name="model">auction.auction</field>
             <field name="arch" type="xml">
-                <tree string="Auction" create="0" edit="0" delete="1">
+                <tree string="Auction" create="0" edit="0" delete="1" multi_edit="0">
+                    <header>
+                        <button name="action_print_auction_roster" type="object"
+                                string="Print Roster PDF" class="btn-primary"/>
+                    </header>
                     <field name="team_id"/>
                     <field name="manager"/>
                     <field name="remaining_points"/>
@@ -299,6 +303,16 @@
                 Auction Mains
               </p>
             </field>
+        </record>
+
+        <!-- Action menu: multi-select teams → print roster PDF -->
+        <record id="action_server_print_auction_roster" model="ir.actions.server">
+            <field name="name">Print Auction Roster PDF</field>
+            <field name="model_id" ref="model_auction_auction"/>
+            <field name="binding_model_id" ref="model_auction_auction"/>
+            <field name="binding_view_types">list,form</field>
+            <field name="state">code</field>
+            <field name="code">action = records.action_print_auction_roster()</field>
         </record>
 
     </data>

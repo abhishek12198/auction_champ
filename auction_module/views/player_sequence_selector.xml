@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 <template id="player_sequence_selector">
-<html lang="en" t-att-data-theme="theme" t-att-data-balance-url="'/' + (db_name or '') + '/' + (tournament_slug or (tournament.slug if tournament else '')) + '/auction/show/team/balance'">
+<html lang="en" t-att-data-theme="theme" t-att-data-balance-url="('/' + db_name + '/' + (tournament_slug or tournament.slug) + '/auction/show/team/balance') if db_name and (tournament_slug or (tournament and tournament.slug)) else ''">
 <head>
   <meta charset="utf-8"/>
-  <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
+  <t t-if="res_company">
+    <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
+  </t>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Manual Auction</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
@@ -17,18 +19,19 @@
   <style>
 /* ═══ THEMES ══════════════════════════════════════════════════════════ */
 [data-theme="vanilla"]{
-  --accent:#E8A020;--accent2:#FFD166;--accent-glow:rgba(232,160,32,.35);
-  --bg:#060C1A;--bg-s:#0B1529;--bg-p:#0F2447;--bg-c:#142954;
-  --tx:#EEF4FF;--tx-d:rgba(200,220,255,.55);--div:rgba(232,160,32,.3);
-  --btn-bg:#0F2447;--btn-bd:#E8A020;--btn-hbg:#E8A020;--btn-tx:#EEF4FF;--btn-htx:#060C1A;
+  /* Soft pale blue — match display_auction / projector vanilla */
+  --accent:#8aa6d4;--accent2:#c8d4e8;--accent-glow:rgba(91,126,184,.35);
+  --bg:#142846;--bg-s:#1a3560;--bg-p:#243a5c;--bg-c:#2a4568;
+  --tx:#eef2f8;--tx-d:rgba(238,242,248,.55);--div:rgba(138,166,200,.32);
+  --btn-bg:#1a3560;--btn-bd:#5b7eb8;--btn-hbg:#5b7eb8;--btn-tx:#eef2f8;--btn-htx:#142846;
   --hf:'Orbitron',sans-serif;--bf:'Rajdhani',sans-serif;
-  --badge:#E8A020;--badge-tx:#060C1A;
-  --card-bg:#0B1529;--card-bd:#1E3A6A;
-  --stamp-c:#E8A020;--stamp-tx:#060C1A;
-  --sold-bg:#E8A020;--sold-tx:#060C1A;
+  --badge:#5b7eb8;--badge-tx:#eef2f8;
+  --card-bg:#1a3560;--card-bd:#3d5f94;
+  --stamp-c:#5b7eb8;--stamp-tx:#eef2f8;
+  --sold-bg:#5b7eb8;--sold-tx:#eef2f8;
   --unsold-bg:#DC143C;--unsold-tx:#fff;
   --action-unsold:#DC143C;--action-unsold-h:#b71c1c;
-  --action-sell:#E8A020;--action-sell-h:#c8860a;--action-sell-tx:#060C1A;
+  --action-sell:#5b7eb8;--action-sell-h:#3d5f94;--action-sell-tx:#eef2f8;
 }
 [data-theme="butterscotch"]{
   --accent:#F5C842;--accent2:#FF9F1C;--accent-glow:rgba(245,200,66,.35);
@@ -85,6 +88,20 @@
   --unsold-bg:#e53935;--unsold-tx:#fff;
   --action-unsold:#e53935;--action-unsold-h:#b71c1c;
   --action-sell:#6BBF4E;--action-sell-h:#4a9e30;--action-sell-tx:#060e08;
+}
+[data-theme="blackberry"]{
+  --accent:#3B82F6;--accent2:#93C5FD;--accent-glow:rgba(59,130,246,.40);
+  --bg:#050a14;--bg-s:#0a1220;--bg-p:#0d1830;--bg-c:#111f38;
+  --tx:#ffffff;--tx-d:rgba(255,255,255,.55);--div:rgba(59,130,246,.35);
+  --btn-bg:#0d1830;--btn-bd:#3B82F6;--btn-hbg:#3B82F6;--btn-tx:#fff;--btn-htx:#050a14;
+  --hf:'Orbitron',sans-serif;--bf:'Exo 2',sans-serif;
+  --badge:#3B82F6;--badge-tx:#fff;
+  --card-bg:#0a1220;--card-bd:#1e3a8a;
+  --stamp-c:#3B82F6;--stamp-tx:#fff;
+  --sold-bg:#3B82F6;--sold-tx:#fff;
+  --unsold-bg:#e53935;--unsold-tx:#fff;
+  --action-unsold:#e53935;--action-unsold-h:#b71c1c;
+  --action-sell:#3B82F6;--action-sell-h:#1e3a8a;--action-sell-tx:#fff;
 }
 [data-theme="lemon"]{
   /* Parchment light UI — dark-gold accents (not neon yellow) so text stays readable */
@@ -408,8 +425,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   border-color:var(--accent)!important;}
 
 /* ═══ PLAYER DRAWER ══════════════════════════════════════════════════ */
-.pc-overlay{position:fixed;inset:0;z-index:800;pointer-events:none}
-.pc-overlay.open{pointer-events:all}
+.pc-overlay{position:fixed;inset:0;z-index:1200;pointer-events:none;display:none}
+.pc-overlay.open{pointer-events:all;display:block}
 .pc-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(6px);
   opacity:0;transition:opacity .3s}
 .pc-overlay.open .pc-backdrop{opacity:1}
@@ -655,7 +672,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 }
 
 /* ═══ CONFIRM MODAL ══════════════════════════════════════════════════ */
-.cm-overlay{position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.7);
+.cm-overlay{position:fixed;inset:0;z-index:1400;background:rgba(0,0,0,.7);
   display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
 .cm-overlay.open{display:flex}
 .cm-box{background:var(--bg-p);border:2px solid var(--div);border-radius:14px;
@@ -673,7 +690,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .cm-confirm:hover{background:var(--action-unsold-h)}
 .cm-confirm.cm-accent{background:var(--accent);color:var(--badge-tx)}
 .cm-confirm.cm-accent:hover{background:var(--accent2);filter:brightness(1.05)}
-.cm-overlay.cm-top{z-index:1200}
+.cm-overlay.cm-top{z-index:1500}
 .cm-box.cm-reopen{
   width:min(420px,92%);padding:32px 28px 26px;
   border:1.5px solid color-mix(in srgb, var(--accent) 45%, var(--div));
@@ -706,10 +723,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
 /* ═══ SELL MODAL — Premium (mirrors Random mode) ═══════════════════ */
 /* Bridge --sm-* vars to existing page theme vars */
-[data-theme="vanilla"]    { --sm-header-bg:linear-gradient(135deg,#0f1f44,#1a2c5e);--sm-header-stripe:#E8A020;--sm-accent:#E8A020;--sm-accent-dim:rgba(232,160,32,.35);--sm-primary:#E8A020;--sm-primary-light:rgba(232,160,32,.12);--sm-badge-active:#E8A020;--sm-transfer-bg:#0B1529;--sm-sold-bg:#060C1A;--sm-sold-ribbon:#E8A020;--sm-detail-bg:#142954;--sm-maxcall-color:#E8A020;--sm-suggest-color:#EEF4FF;--sm-btn-bg:#E8A020;--sm-font:'Rajdhani',sans-serif;--sm-title-font:'Orbitron',sans-serif; }
+[data-theme="vanilla"]    { --sm-header-bg:linear-gradient(135deg,#1a3560,#3d5f94);--sm-header-stripe:#c8d4e8;--sm-accent:#8aa6d4;--sm-accent-dim:rgba(91,126,184,.35);--sm-primary:#5b7eb8;--sm-primary-light:rgba(91,126,184,.14);--sm-badge-active:#5b7eb8;--sm-transfer-bg:#1a3560;--sm-sold-bg:#142846;--sm-sold-ribbon:#5b7eb8;--sm-detail-bg:#243a5c;--sm-maxcall-color:#8aa6d4;--sm-suggest-color:#eef2f8;--sm-btn-bg:#5b7eb8;--sm-font:'Rajdhani',sans-serif;--sm-title-font:'Orbitron',sans-serif; }
 [data-theme="butterscotch"]{ --sm-header-bg:linear-gradient(135deg,#0d0800,#1a1005);--sm-header-stripe:#F5C842;--sm-accent:#F5C842;--sm-accent-dim:rgba(245,200,66,.35);--sm-primary:#F5C842;--sm-primary-light:rgba(245,200,66,.12);--sm-badge-active:#F5C842;--sm-transfer-bg:#0f0f20;--sm-sold-bg:#090912;--sm-sold-ribbon:#F5C842;--sm-detail-bg:#1d1d3a;--sm-maxcall-color:#F5C842;--sm-suggest-color:#fff;--sm-btn-bg:#F5C842;--sm-font:'Rajdhani',sans-serif;--sm-title-font:'Teko',sans-serif; }
 [data-theme="strawberry"] { --sm-header-bg:linear-gradient(135deg,#880E4F,#C2185B);--sm-header-stripe:#FFD6E8;--sm-accent:#E91E63;--sm-accent-dim:rgba(233,30,99,.25);--sm-primary:#C2185B;--sm-primary-light:rgba(194,24,91,.1);--sm-badge-active:#E91E63;--sm-transfer-bg:#FFE4EE;--sm-sold-bg:#FFF0F5;--sm-sold-ribbon:#C2185B;--sm-detail-bg:#fff;--sm-maxcall-color:#C2185B;--sm-suggest-color:#1a0a12;--sm-btn-bg:#C2185B;--sm-font:'Nunito',sans-serif;--sm-title-font:'Nunito',sans-serif; }
 [data-theme="cherry"]     { --sm-header-bg:linear-gradient(135deg,#060606,#1a0608);--sm-header-stripe:#DC143C;--sm-accent:#DC143C;--sm-accent-dim:rgba(220,20,60,.3);--sm-primary:#DC143C;--sm-primary-light:rgba(220,20,60,.12);--sm-badge-active:#DC143C;--sm-transfer-bg:#181818;--sm-sold-bg:#0d0d0d;--sm-sold-ribbon:#DC143C;--sm-detail-bg:#242424;--sm-maxcall-color:#FF1744;--sm-suggest-color:#f5f5f5;--sm-btn-bg:#DC143C;--sm-font:'Rajdhani',sans-serif;--sm-title-font:'Teko',sans-serif; }
+[data-theme="blackberry"]     { --sm-header-bg:linear-gradient(135deg,#050a14,#0d1830);--sm-header-stripe:#3B82F6;--sm-accent:#3B82F6;--sm-accent-dim:rgba(59,130,246,.35);--sm-primary:#3B82F6;--sm-primary-light:rgba(59,130,246,.12);--sm-badge-active:#3B82F6;--sm-transfer-bg:#0a1220;--sm-sold-bg:#050a14;--sm-sold-ribbon:#3B82F6;--sm-detail-bg:#111f38;--sm-maxcall-color:#93C5FD;--sm-suggest-color:#ffffff;--sm-btn-bg:#3B82F6;--sm-font:'Exo 2',sans-serif;--sm-title-font:'Orbitron',sans-serif; }
 [data-theme="pistah"]     { --sm-header-bg:linear-gradient(135deg,#030a04,#0d1f11);--sm-header-stripe:#6BBF4E;--sm-accent:#6BBF4E;--sm-accent-dim:rgba(107,191,78,.35);--sm-primary:#6BBF4E;--sm-primary-light:rgba(107,191,78,.12);--sm-badge-active:#6BBF4E;--sm-transfer-bg:#0b1a0e;--sm-sold-bg:#060e08;--sm-sold-ribbon:#6BBF4E;--sm-detail-bg:#111f14;--sm-maxcall-color:#A8E063;--sm-suggest-color:#e8f5e9;--sm-btn-bg:#6BBF4E;--sm-font:'Rajdhani',sans-serif;--sm-title-font:'Orbitron',sans-serif; }
 [data-theme="lemon"]      { --sm-header-bg:linear-gradient(135deg,#1F1A0A,#3D3210);--sm-header-stripe:#C9A400;--sm-accent:#F5D84A;--sm-accent-dim:rgba(201,164,0,.28);--sm-primary:#6E5A00;--sm-primary-light:rgba(110,90,0,.12);--sm-badge-active:#C9A400;--sm-transfer-bg:#FBF6E8;--sm-sold-bg:#1F1A0A;--sm-sold-ribbon:#C9A400;--sm-detail-bg:#FFFEF8;--sm-maxcall-color:#6E5A00;--sm-suggest-color:#1F1A0A;--sm-btn-bg:#C9A400;--sm-font:'Nunito',sans-serif;--sm-title-font:'Nunito',sans-serif; }
 
@@ -767,6 +785,26 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 [data-theme="lemon"] .ss-sub{color:rgba(255,248,220,.85)}
 [data-theme="lemon"] .mq-header{box-shadow:0 1px 8px rgba(110,90,0,.12)}
 [data-theme="lemon"] .mq-header::before{box-shadow:none}
+
+/* Strawberry sold overlay — light rose bg needs pink ink, not white */
+[data-theme="strawberry"] .sm-sold-label{color:#E91E63}
+[data-theme="strawberry"] .sm-sold-team-name{color:#C2185B}
+[data-theme="strawberry"] .sm-sold-points{color:rgba(136,14,79,.72)}
+[data-theme="strawberry"] .sm-sold-points span{color:#E91E63}
+[data-theme="strawberry"] .sm-countdown-label{color:rgba(136,14,79,.65)}
+[data-theme="strawberry"] .sm-countdown-label strong{color:#C2185B}
+[data-theme="strawberry"] .sm-progress-track{background:rgba(194,24,91,.18)}
+[data-theme="strawberry"] .sm-sold-team-logo{
+  border-color:rgba(194,24,91,.35);background:rgba(255,255,255,.75);
+}
+[data-theme="strawberry"] .sm-skip-btn{
+  background:rgba(233,30,99,.1);border-color:rgba(194,24,91,.4);color:#C2185B;
+}
+[data-theme="strawberry"] .sm-skip-btn:hover{
+  background:rgba(233,30,99,.18);border-color:#C2185B;
+}
+[data-theme="strawberry"] .sm-reveal-hint{color:rgba(136,14,79,.7)}
+[data-theme="strawberry"] .sm-mystery-name{color:#C2185B}
 
 
 #sellModal {
@@ -2129,7 +2167,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     rpc(_qdUrl, {}).then(function(res) {
       var p = res.result;
       if (!p || p.error) {
-        if (body) body.innerHTML = '<div class="pc-loading">Player not found.</div>';
+        var msg = (p && (p.message || p.error)) || 'Player not found.';
+        if (body) body.innerHTML = '<div class="pc-loading">' + msg + '</div>';
         return;
       }
       currentPlayerName      = p.name || '';
@@ -3013,7 +3052,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     var cs = getComputedStyle(document.documentElement);
     var bg = text === 'UNSOLD'
       ? (cs.getPropertyValue('--unsold-bg').trim() || '#DC143C')
-      : (cs.getPropertyValue('--sold-bg').trim()   || '#E8A020');
+      : (cs.getPropertyValue('--sold-bg').trim()   || '#5b7eb8');
     var tx = text === 'UNSOLD'
       ? (cs.getPropertyValue('--unsold-tx').trim() || '#fff')
       : (cs.getPropertyValue('--sold-tx').trim()   || '#000');
@@ -3274,7 +3313,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         });
       });
     }
-    if (!available.length) return;
+    if (!available.length) {
+      _diceLbls().forEach(function(lbl) {
+        lbl.textContent = 'No players left';
+      });
+      return;
+    }
 
     if (_diceResultTimer) { clearTimeout(_diceResultTimer); _diceResultTimer = null; }
     _dicePickedId = null;
@@ -3363,9 +3407,30 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   };
 
   /* ── Bid Summary ───────────────────────────────────────── */
+
+        function resolveAuctionPanelUrl(kind) {
+        var el = document.documentElement;
+        var url = (kind === 'rp' ? el.dataset.rpUrl : el.dataset.balanceUrl) || '';
+        // Missing db_name produced "//slug/..." which browsers treat as another host.
+        if (url.indexOf('//') === 0) { url = ''; }
+        if (url) { return url; }
+        var parts = (location.pathname || '').split('/').filter(Boolean);
+        var db = parts[0] || '';
+        var slug = '';
+        if (parts[1] === 'auction' && (parts[2] === 'display_auction' || parts[2] === 'player_selector') && parts[3]) {
+          slug = parts[3];
+        }
+        if (!db || !slug) { return ''; }
+        if (kind === 'rp') {
+          var theme = el.dataset.theme || 'vanilla';
+          return '/' + db + '/' + slug + '/auction/display_auction/remaining-players?theme=' + encodeURIComponent(theme);
+        }
+        return '/' + db + '/' + slug + '/auction/show/team/balance';
+      }
+
   window.openBidSummary = function() {
     var iframe = document.getElementById('bsIframe');
-    var url = document.documentElement.dataset.balanceUrl;
+    var url = resolveAuctionPanelUrl('balance');
     if (iframe && url) {
       var cur = iframe.getAttribute('src') || '';
       if (!cur || cur === 'about:blank') {

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_expose_contact_privacy_wizard_form" model="ir.ui.view">
+        <field name="name">auction.expose.contact.privacy.wizard.form</field>
+        <field name="model">auction.expose.contact.privacy.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Privacy Policy — Unmask Player Contact">
+                <group>
+                    <field name="tournament_id" invisible="1"/>
+                    <field name="policy_version" invisible="1"/>
+                </group>
+                <div class="alert alert-warning" role="alert" style="margin-bottom:12px;">
+                    <strong>Sensitive data warning.</strong>
+                    Enabling this will show players' full mobile numbers on printed cards and
+                    auction presentation screens. Only proceed if you are authorized and have
+                    a lawful basis to disclose this information.
+                </div>
+                <div style="max-height:280px; overflow:auto; padding:12px 14px; border:1px solid #dee2e6; border-radius:8px; background:#fafbfc; font-size:13px; line-height:1.55;">
+                    <p><strong>Privacy acknowledgement (contact unmask)</strong></p>
+                    <p>
+                        By enabling <em>Unmask Player Contact</em>, you confirm that:
+                    </p>
+                    <ul>
+                        <li>Player phone numbers are personal data collected for tournament operations.</li>
+                        <li>You will only unmask contacts when necessary for tournament administration.</li>
+                        <li>You will not share, publish, or misuse unmasked numbers beyond authorized use.</li>
+                        <li>You accept responsibility under applicable privacy / data-protection laws.</li>
+                        <li>AuctionChamp may retain a record of this acceptance (user and time).</li>
+                    </ul>
+                    <p>
+                        Full platform policy:
+                        <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+                        (effective <field name="policy_version" readonly="1" nolabel="1" class="oe_inline"/>).
+                    </p>
+                </div>
+                <group>
+                    <field name="agree"/>
+                </group>
+                <footer>
+                    <button name="action_confirm_unmask"
+                            type="object"
+                            string="I Agree — Enable Unmask"
+                            class="btn-primary"
+                            attrs="{'invisible': [('agree', '=', False)]}"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

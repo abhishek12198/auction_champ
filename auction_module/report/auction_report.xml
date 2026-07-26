@@ -1,13 +1,15 @@
 <odoo>
     <data>
         <record id="action_report_auction_players" model="ir.actions.report">
-            <field name="name">Auction Players</field>
+            <field name="name">Auction Roster PDF</field>
             <field name="model">auction.auction</field>
             <field name="report_type">qweb-pdf</field>
             <field name="report_name">auction_module.report_auction_auction_document</field>
             <field name="report_file">auction_module.report_auction_auction_document</field>
             <field name="paperformat_id" ref="auction_module.paperformat_a4_roster"/>
             <field name="print_report_name">'%s Squad Roster' % ((object.team_id.name or 'Team'))</field>
+            <field name="binding_model_id" ref="model_auction_auction"/>
+            <field name="binding_type">report</field>
         </record>
 
         <!-- Blank squad template (placeholder rows for manual fill-in) -->
@@ -86,6 +88,17 @@
             <field name="report_type">qweb-pdf</field>
             <field name="report_name">auction_module.report_player_card_list_pistah</field>
             <field name="report_file">auction_module.report_player_card_list_pistah</field>
+            <field name="paperformat_id" ref="auction_module.paperformat_card_landscape"/>
+            <field name="print_report_name">"Player_Cards" if not object.tournament_id else "%s_Players" % object.tournament_id.name.replace(" ", "_")</field>
+            <field name="groups_id" eval="[(4, ref('auction_module.group_auction_player_card_print'))]"/>
+        </record>
+
+        <record id="action_report_player_card_blackberry" model="ir.actions.report">
+            <field name="name">Player Card (Blackberry)</field>
+            <field name="model">auction.team.player</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">auction_module.report_player_card_list_blackberry</field>
+            <field name="report_file">auction_module.report_player_card_list_blackberry</field>
             <field name="paperformat_id" ref="auction_module.paperformat_card_landscape"/>
             <field name="print_report_name">"Player_Cards" if not object.tournament_id else "%s_Players" % object.tournament_id.name.replace(" ", "_")</field>
             <field name="groups_id" eval="[(4, ref('auction_module.group_auction_player_card_print'))]"/>

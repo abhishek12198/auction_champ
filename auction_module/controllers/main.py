@@ -90,6 +90,53 @@ class Auction(http.Controller):
             [('active', '=', True)], limit=1
         )
 
+    def _tournament_auction_rules_ready(self, tournament):
+        """True when the tournament has at least one auction.auction rule row."""
+        if not tournament:
+            return False
+        if hasattr(tournament, 'has_auction_rules_ready'):
+            return bool(tournament.has_auction_rules_ready())
+        return bool(request.env['auction.auction'].sudo().search_count([
+            ('tournament_id', '=', tournament.id),
+        ]))
+
+    def _auction_rules_required_page(self, tournament=None, db_name=None):
+        """Themed lock screen: set auction rules before Console / Projector."""
+        theme = 'vanilla'
+        if tournament:
+            theme = tournament.player_display_template or 'vanilla'
+        company = request.env['res.company'].sudo().search([], limit=1)
+        try:
+            db = db_name or getattr(request.env.cr, 'dbname', None) or ''
+        except Exception:
+            db = db_name or ''
+        try:
+            html = request.render('auction_module.auction_rules_required', {
+                'tournament': tournament,
+                'theme': theme,
+                'db_name': db,
+                'res_company': company,
+            }, lazy=False)
+            response = request.make_response(
+                html, [('Content-Type', 'text/html; charset=utf-8')]
+            )
+            response.status_code = 403
+            return response
+        except Exception:
+            _logger.exception('Failed to render auction rules required page')
+            name = (tournament.name if tournament else '') or 'this tournament'
+            response = request.make_response(
+                '<!DOCTYPE html><html><head><meta charset="utf-8"/>'
+                '<title>Set Auction Rules</title></head><body style="font-family:system-ui;padding:48px">'
+                '<h2>Set Auction Rules first</h2>'
+                '<p>Player Console and Projector stay locked for <strong>%s</strong> '
+                'until auction rules are created.</p>'
+                '<p><a href="/web">Back to AuctionChamp</a></p></body></html>' % name,
+                [('Content-Type', 'text/html; charset=utf-8')],
+            )
+            response.status_code = 403
+            return response
+
     @contextmanager
     def _with_db(self, db_name):
         """Open a cursor for *db_name* and inject it into the current request.
@@ -114,7 +161,11 @@ class Auction(http.Controller):
             return
 
         with registry.cursor() as cr:
-            env = api.Environment(cr, SUPERUSER_ID, {})
+            # su=True is required: Environment(cr, SUPERUSER_ID, {}) alone
+            # leaves env.su=False, so tournament-security mixins and ir.rule
+            # still apply as if a normal admin user. Public auction pages
+            # (Bid Summary, Players Left, …) must bypass those scopes.
+            env = api.Environment(cr, SUPERUSER_ID, {}, True)
             # Save whatever the framework set (may be None for auth="none")
             old_cr, old_uid, old_env, old_context = (
                 request._cr, request._uid, request._env, request._context
@@ -203,16 +254,16 @@ class Auction(http.Controller):
             db_name = dbs[0] if dbs else None
         if not db_name:
             return self._not_found()
-        # Try to resolve tournament slug for redirect
-        t_slug = ''
-        try:
-            with self._with_db(db_name) as ok:
-                if ok:
-                    tournament = request.env['auction.tournament'].sudo().search(
-                        [('active', '=', True)], limit=1)
-                    t_slug = tournament.slug if tournament else ''
-        except Exception:
-            t_slug = ''
+        # Prefer ?t=slug; otherwise resolve via _resolve_tournament (SaaS-aware).
+        t_slug = (kw.get('t') or '').strip()
+        if not t_slug:
+            try:
+                with self._with_db(db_name) as ok:
+                    if ok:
+                        tournament = self._resolve_tournament()
+                        t_slug = tournament.slug if tournament else ''
+            except Exception:
+                t_slug = ''
         target = '/{}/auction/player_selector/{}'.format(
             db_name, t_slug + '/' if t_slug else '')
         return werkzeug.utils.redirect(target, 302)
@@ -229,19 +280,26 @@ class Auction(http.Controller):
                 tournament = request.env['auction.tournament'].sudo().search(
                     [('slug', '=', tournament_slug)], limit=1)
             else:
-                tournament = request.env['auction.tournament'].sudo().search(
-                    [('active', '=', True)], limit=1)
+                # Use resolver (SaaS working tournament) — not "first active".
+                tournament = self._resolve_tournament()
+            if tournament and not self._tournament_auction_rules_ready(tournament):
+                return self._auction_rules_required_page(tournament, db_name=db_name)
+            # Resume auction view on the projector (dismiss leftover pool/fixture board)
+            if tournament:
+                tournament.action_dismiss_projector_board()
             theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
             Tier = request.env['auction.player.tier'].sudo()
             tiers = Tier.search(
                 [('tournament_id', '=', tournament.id)], order='name asc',
             ) if tournament else Tier.browse()
+            company = request.env['res.company'].sudo().search([], limit=1)
             html = request.render('auction_module.player_sequence_selector', {
                 'tournament': tournament,
                 'theme': theme,
                 'db_name': db_name,
                 'tournament_slug': tournament_slug or (tournament.slug if tournament else ''),
                 'tiers': tiers,
+                'res_company': company,
             }, lazy=False)
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
@@ -400,6 +458,7 @@ class Auction(http.Controller):
             'cherry':       'auction_module.player_template_cherry',
             'pistah':       'auction_module.player_template_pistah',
             'lemon':        'auction_module.player_template_lemon',
+            'blackberry':   'auction_module.player_template_blackberry',
         }
         template_ref = template_map.get(theme, 'auction_module.player_template_new')
         if tournament and tournament.tournament_type == 'football':
@@ -428,6 +487,7 @@ class Auction(http.Controller):
             'strawberry':   '#C2185B',
             'pistah':       '#6BBF4E',
             'lemon':        '#E8C200',
+            'blackberry':   '#3B82F6',
         }.get(theme, '#b71c1c')
 
         _unsold_text = '#090912' if theme in ('butterscotch', 'lemon') else '#fff'
@@ -524,8 +584,14 @@ class Auction(http.Controller):
         # Set on stage in the same DB transaction — projector sees the update immediately
         try:
             player.action_set_on_stage()
-        except Exception:
-            pass
+        except Exception as exc:
+            _logger.exception(
+                'action_set_on_stage failed for player %s', player_id
+            )
+            return {
+                'error': 'stage_failed',
+                'message': str(exc) or 'Could not put player on stage',
+            }
 
         photo = ''
         if player.photo:
@@ -611,7 +677,16 @@ class Auction(http.Controller):
             try:
                 player.action_clear_stage()
             except Exception:
-                pass
+                _logger.exception(
+                    'action_clear_stage failed for player %s', player_id
+                )
+                # Last resort: clear stage flag so projector can return to waiting
+                try:
+                    player.sudo().with_context(saas_skip_freeze=True).write(
+                        {'is_on_stage': False}
+                    )
+                except Exception:
+                    pass
             return {'success': True}
 
     @http.route('/auction/player_correction_teams/<int:player_id>', type='json', auth='user', website=True)
@@ -709,48 +784,97 @@ class Auction(http.Controller):
                 return self._not_found()
         return werkzeug.utils.redirect('/{}/{}/auction/show/team/balance'.format(db_name, tournament_slug), 301)
 
+    def _balance_auction_records(self, tournament):
+        """Auctions for Bid Summary — ignore tournament-security scopes.
+
+        Also match via team.tournament_id so rows still appear when
+        ``auction.auction.tournament_id`` was left empty (common SaaS
+        edge case after rules were set from a team list).
+        """
+        Auction = request.env['auction.auction'].sudo().with_context(
+            auction_skip_tournament_security=True,
+            active_test=True,
+        )
+        return Auction.search([
+            '|',
+            ('tournament_id', '=', tournament.id),
+            ('team_id.tournament_id', '=', tournament.id),
+        ])
+
+    def _render_team_balance(self, db_name, tournament, tournament_slug, **kwargs):
+        """Shared Bid Summary renderer (HTML)."""
+        auctions = self._balance_auction_records(tournament)
+        # Prefetch relations used by the balance page / max_call compute so
+        # QWeb does not trigger per-team SQL while rendering list+grid+mobile.
+        auctions.mapped('team_id')
+        auctions.mapped('player_ids.tier_id')
+        auctions.mapped('tier_limit_ids.tier_id')
+        auctions.mapped('auction_bid_slab_ids')
+        # Force max_call under the sudo/skip-security env before QWeb.
+        for auction in auctions:
+            auction.max_call
+        theme = tournament.player_display_template or 'vanilla'
+        access_type = 'internal' if request.session.uid else 'public'
+        balance_template_map = {
+            'pistah': 'auction_module.auction_details_show_pistah',
+            'blackberry': 'auction_module.auction_details_show_blackberry',
+        }
+        template_ref = balance_template_map.get(theme, 'auction_module.auction_details_show')
+        q = request.httprequest.args
+        from_projector = (kwargs.get('from') or q.get('from') or '') == 'projector'
+        mode = kwargs.get('mode') or q.get('mode') or (
+            'light' if theme in ('lemon', 'strawberry') else 'dark')
+        if mode not in ('dark', 'light'):
+            mode = 'dark'
+        company = request.env['res.company'].sudo().search([], limit=1)
+        slug = tournament_slug or tournament.slug or ''
+        return request.render(template_ref, {
+            'teams': auctions,
+            'tournament': tournament,
+            'type': access_type,
+            'theme': theme,
+            'db_name': db_name,
+            'tournament_slug': slug,
+            'from_projector': from_projector,
+            'mode': mode,
+            'res_company': company,
+        }, lazy=False)
+
     @http.route(['''/<string:db_name>/<string:tournament_slug>/auction/show/team/balance'''], type='http', auth="none", website=False)
     def auction_team_balance(self, db_name, tournament_slug, **kwargs):
         with self._with_db(db_name) as ok:
             if not ok:
                 return self._not_found()
-            tournament = request.env['auction.tournament'].sudo().search([('slug', '=', tournament_slug)], limit=1)
+            Tournament = request.env['auction.tournament'].sudo().with_context(
+                auction_skip_tournament_security=True,
+            )
+            tournament = Tournament.search([('slug', '=', tournament_slug)], limit=1)
             if not tournament:
                 return self._not_found()
-            domain = [('tournament_id', '=', tournament.id)]
-            auctions = request.env['auction.auction'].sudo().search(domain)
-            # Prefetch relations used by the balance page / max_call compute so
-            # QWeb does not trigger per-team SQL while rendering list+grid+mobile.
-            auctions.mapped('team_id')
-            auctions.mapped('player_ids.tier_id')
-            auctions.mapped('tier_limit_ids.tier_id')
-            auctions.mapped('auction_bid_slab_ids')
-            theme = tournament.player_display_template or 'vanilla'
-            # Show internal actions (View Squad button) for any logged-in user
-            access_type = 'internal' if request.session.uid else 'public'
-            balance_template_map = {
-                'pistah': 'auction_module.auction_details_show_pistah',
-            }
-            template_ref = balance_template_map.get(theme, 'auction_module.auction_details_show')
-            q = request.httprequest.args
-            from_projector = (kwargs.get('from') or q.get('from') or '') == 'projector'
-            mode = kwargs.get('mode') or q.get('mode') or (
-                'light' if theme in ('lemon', 'strawberry') else 'dark')
-            if mode not in ('dark', 'light'):
-                mode = 'dark'
-            html = request.render(template_ref, {
-                'teams': auctions,
-                'tournament': tournament,
-                'type': access_type,
-                'theme': theme,
-                'db_name': db_name,
-                'tournament_slug': tournament_slug,
-                'from_projector': from_projector,
-                'mode': mode,
-            }, lazy=False)
+            try:
+                html = self._render_team_balance(
+                    db_name, tournament, tournament_slug, **kwargs
+                )
+            except Exception:
+                _logger.exception(
+                    'Bid Summary render failed db=%s slug=%s', db_name, tournament_slug
+                )
+                return request.make_response(
+                    '<!DOCTYPE html><html><body style="font-family:system-ui;padding:24px">'
+                    '<h2>Bid Summary unavailable</h2>'
+                    '<p>Could not render the bid summary for this tournament. '
+                    'Confirm auction rules are set, then refresh.</p>'
+                    '</body></html>',
+                    [
+                        ('Content-Type', 'text/html; charset=utf-8'),
+                        ('Cache-Control', 'private, max-age=0, must-revalidate'),
+                    ],
+                    status=500,
+                )
         return request.make_response(html, [
             ('Content-Type', 'text/html; charset=utf-8'),
             ('Cache-Control', 'private, max-age=0, must-revalidate'),
+            ('X-Frame-Options', 'SAMEORIGIN'),
         ])
 
     @http.route(['''/auction/show/team/balance/json'''], type='http', auth="none", website=False)
@@ -796,18 +920,23 @@ class Auction(http.Controller):
                     json.dumps({'error': 'unknown database'}),
                     headers=[('Content-Type', 'application/json')]
                 )
-            tournament = request.env['auction.tournament'].sudo().search([('slug', '=', tournament_slug)], limit=1)
+            Tournament = request.env['auction.tournament'].sudo().with_context(
+                auction_skip_tournament_security=True,
+            )
+            tournament = Tournament.search([('slug', '=', tournament_slug)], limit=1)
             if not tournament:
                 return request.make_response(
                     json.dumps({'error': 'tournament not found'}),
                     headers=[('Content-Type', 'application/json')]
                 )
-            domain = [('tournament_id', '=', tournament.id)]
-            auctions = request.env['auction.auction'].sudo().search(domain)
+            auctions = self._balance_auction_records(tournament)
             auctions.mapped('player_ids.tier_id')
             auctions.mapped('tier_limit_ids.tier_id')
             auctions.mapped('auction_bid_slab_ids')
-            on_stage = request.env['auction.team.player'].sudo().search(
+            Player = request.env['auction.team.player'].sudo().with_context(
+                auction_skip_tournament_security=True,
+            )
+            on_stage = Player.search(
                 [('tournament_id', '=', tournament.id), ('is_on_stage', '=', True)], limit=1
             )
             player_on_stage = on_stage if on_stage else None
@@ -912,8 +1041,15 @@ class Auction(http.Controller):
                 tournament_id = request.env['auction.tournament'].sudo().search(
                     [('active', '=', True)], limit=1
                 )
+            if tournament_id and not self._tournament_auction_rules_ready(tournament_id):
+                return self._auction_rules_required_page(tournament_id, db_name=db_name)
             exclude_id = kwargs.get('exclude', 0)
             preview = str(kwargs.get('preview', '') or '') in ('1', 'true', 'True')
+            # Opening Player Showcase / display_auction must take the projector
+            # back to the live player — do not leave a prior pool/fixture board up.
+            # Skip for preview=1 prefetch so we do not flicker the board mid-countdown.
+            if tournament_id and not preview:
+                tournament_id.action_dismiss_projector_board()
 
             auction_ids = request.env['auction.auction'].sudo().search(
                 [('tournament_id', '=', tournament_id.id)] if tournament_id else []
@@ -990,6 +1126,7 @@ class Auction(http.Controller):
                     'strawberry':    'auction_module.player_template_strawberry',
                     'cherry':        'auction_module.player_template_cherry',
                     'pistah':        'auction_module.player_template_pistah',
+                    'blackberry':    'auction_module.player_template_blackberry',
                     'lemon':         'auction_module.player_template_lemon',
                 }
                 chosen = tournament_id.player_display_template if tournament_id else 'vanilla'
@@ -1002,6 +1139,7 @@ class Auction(http.Controller):
                     'tournament': tournament_id,
                     'auction_ids': auction_ids,
                     'db_name': db_name,
+                    'res_company': request.env['res.company'].sudo().search([], limit=1),
                 }, lazy=False)
             else:
                 theme = tournament_id.player_display_template if tournament_id else 'vanilla'
@@ -1213,7 +1351,11 @@ class Auction(http.Controller):
         type='http', auth='none', website=False, csrf=False, methods=['POST', 'GET'],
     )
     def display_auction_resume_complete(self, db_name, tournament_slug, **kw):
-        """Declare auction complete and go to the Thank You screen."""
+        """Declare auction complete and go to the Thank You screen.
+
+        Also clears on-stage / dice so the projector switches to its Thank You
+        ceremony on the next poll (not stuck on a leftover player card).
+        """
         import json as _json
         display_url = '/%s/auction/display_auction/%s/' % (db_name, tournament_slug)
         result = {'ok': False, 'error': 'Unknown error', 'redirect': display_url}
@@ -1225,7 +1367,29 @@ class Auction(http.Controller):
                 if not tournament:
                     result['error'] = 'Tournament not found'
                 else:
-                    tournament.sudo().write({'auction_declared_complete': True})
+                    Player = request.env['auction.team.player'].sudo().with_context(
+                        saas_skip_freeze=True,
+                    )
+                    on_stage = Player.search([
+                        ('tournament_id', '=', tournament.id),
+                        ('is_on_stage', '=', True),
+                    ])
+                    if on_stage:
+                        on_stage.write({'is_on_stage': False})
+                    try:
+                        tournament.set_dice_state('idle', 0)
+                    except Exception:
+                        pass
+                    tournament.sudo().with_context(saas_skip_freeze=True).write({
+                        'auction_declared_complete': True,
+                        'stamp_player_id': False,
+                        'stamp_state': False,
+                        'stamp_expires_at': False,
+                        'break_time_active': False,
+                        # Thank You must override live pool/fixture board on projector
+                        'projector_board_mode': 'idle',
+                        'projector_board_reveal_until': False,
+                    })
                     result = {'ok': True, 'redirect': display_url, 'error': None}
         wants_json = 'application/json' in (request.httprequest.headers.get('Accept') or '')
         if result.get('ok') and not wants_json:
@@ -1521,6 +1685,7 @@ class Auction(http.Controller):
             'tier_groups':  tier_groups,
             'total_count':  len(players),
             'theme':        theme,
+            'res_company':  request.env['res.company'].sudo().search([], limit=1),
         }
 
     @http.route('/auction/display_auction/remaining-players', type='http', auth='public', website=True, sitemap=False)
@@ -1607,6 +1772,7 @@ class Auction(http.Controller):
                 player_data_list.append(player_data)
         players_template_map = {
             'pistah': 'auction_module.auction_team_players_template_pistah',
+            'blackberry': 'auction_module.auction_team_players_template_blackberry',
         }
         template_ref = players_template_map.get(theme, 'auction_module.auction_team_players_template')
         resolved_slug = tournament_slug or (tournament.slug if tournament else '')
@@ -1850,51 +2016,406 @@ class Auction(http.Controller):
         s = json.dumps(data, ensure_ascii=False)
         return s.replace('&', r'\u0026').replace('<', r'\u003c').replace('>', r'\u003e')
 
-    @http.route('/auction/my/payment-marker', type='http', auth='user', website=False)
-    def payment_marker_redirect(self, **kw):
-        """Redirect the generic menu URL to the canonical /{db}/{slug}/auction/payment-marker URL."""
+    def _pm_user_can_access_tournament(self, tournament):
+        """True when the current user may open Payment Tracker for ``tournament``.
+
+        Accepts:
+        - Auction admins
+        - Working / profile tournament (incl. SaaS session switcher)
+        - Any tournament in ``user.tournament_ids``
+        - Tournaments owned by the user's SaaS account
+        """
+        if not tournament:
+            return False
+        _has_access, is_admin = self._get_pm_access()
+        if is_admin:
+            return True
+
+        user = request.env.user.sudo()
+        tid = tournament.id
+
+        working = self._resolve_tournament()
+        if working and working.id == tid:
+            return True
+
+        if user.tournament_id and user.tournament_id.id == tid:
+            return True
+
+        try:
+            if tid in (user.tournament_ids.ids or []):
+                return True
+        except Exception:
+            pass
+
+        # SaaS organiser: any tournament on their account
+        try:
+            account = getattr(tournament, 'saas_account_id', False)
+            if account and account.user_id and account.user_id.id == user.id:
+                return True
+        except Exception:
+            pass
+
+        return False
+
+    def _resolve_payment_marker_url(self, tournament_id=None):
+        """Resolve the Payment Tracker page URL for the current user.
+
+        Returns ``(url, error_message)``. Used by the client action and the
+        legacy redirect route so SaaS / non-SaaS share one code path.
+        """
         has_access, is_admin = self._get_pm_access()
         if not has_access:
-            return werkzeug.exceptions.Forbidden()
+            return None, 'Access denied'
 
         env = request.env
         db_name = env.cr.dbname
-
-        user_row = env.user.sudo().read(['tournament_id'])[0]
-        tournament_id = user_row['tournament_id'][0] if user_row['tournament_id'] else None
-        tournament_slug = None
+        tournament = env['auction.tournament']
 
         if tournament_id:
-            t = env['auction.tournament'].sudo().browse(tournament_id).read(['slug'])[0]
-            tournament_slug = t['slug'] or str(tournament_id)
-        elif is_admin:
-            t = env['auction.tournament'].sudo().search([('active', '=', True)], limit=1)
-            if t:
-                tournament_slug = t.slug or str(t.id)
+            try:
+                tid = int(tournament_id)
+            except (TypeError, ValueError):
+                return None, 'Invalid tournament'
+            tournament = env['auction.tournament'].sudo().browse(tid)
+            if not tournament.exists():
+                return None, 'Tournament not found'
+            if not self._pm_user_can_access_tournament(tournament):
+                return None, 'Access denied — wrong tournament'
+        else:
+            tournament = self._resolve_tournament()
+            if not tournament and is_admin:
+                tournament = env['auction.tournament'].sudo().search(
+                    [('active', '=', True)], limit=1
+                )
+            if tournament and not self._pm_user_can_access_tournament(tournament):
+                tournament = env['auction.tournament']
 
-        if not tournament_slug:
+        if not tournament or not tournament.slug:
+            return None, (
+                'No tournament assigned. Ask an administrator to assign a '
+                'tournament, or create one first.'
+            )
+
+        url = '/{}/{}/auction/payment-marker'.format(db_name, tournament.slug)
+        return url, None
+
+    def _payment_marker_payload(self, tournament):
+        """Build the Payment Tracker data dict (players, stats, teams, URLs)."""
+        env = request.env
+        db_name = env.cr.dbname
+        tournament_id = tournament.id
+        tournament_slug = tournament.slug or ''
+        _has_access, is_admin = self._get_pm_access()
+        tournament_choices, show_tournament_filter, is_saas = (
+            self._pm_tournament_filter_meta()
+        )
+
+        PLAYER_FIELDS = [
+            'id', 'sl_no', 'name', 'role', 'contact',
+            'state', 'amount_paid', 'payment_url',
+            'assigned_team_id', 'tier_id',
+        ]
+        rows = env['auction.team.player'].sudo().with_context(
+            auction_skip_tournament_security=True,
+        ).search_read(
+            [('tournament_id', '=', tournament_id)],
+            fields=PLAYER_FIELDS,
+            order='sl_no asc, name asc',
+        )
+
+        to_mark_ids = [r['id'] for r in rows if r['payment_url'] and not r['amount_paid']]
+        if to_mark_ids:
+            env['auction.team.player'].sudo().with_context(
+                auction_skip_tournament_security=True,
+            ).browse(to_mark_ids).write({'amount_paid': True})
+            mark_set = set(to_mark_ids)
+            for r in rows:
+                if r['id'] in mark_set:
+                    r['amount_paid'] = True
+
+        proof_ids = set()
+        if rows:
+            env.cr.execute(
+                """
+                SELECT DISTINCT res_id
+                  FROM ir_attachment
+                 WHERE res_model = 'auction.team.player'
+                   AND res_field = 'payment_proof'
+                   AND res_id = ANY(%s)
+                """,
+                ([r['id'] for r in rows],),
+            )
+            proof_ids = {row[0] for row in env.cr.fetchall()}
+
+        team_ids = list({r['assigned_team_id'][0] for r in rows if r['assigned_team_id']})
+        teams_map = {}
+        if team_ids:
+            for t in env['auction.team'].sudo().with_context(
+                auction_skip_tournament_security=True,
+            ).browse(team_ids).read(['id', 'name', 'manager', 'logo']):
+                teams_map[t['id']] = {
+                    'name':     t['name'] or '',
+                    'manager':  t['manager'] or '',
+                    'has_logo': bool(t['logo']),
+                }
+
+        def _mask(c):
+            c = str(c or '')
+            return (c[0] + 'X' * (len(c) - 2) + c[-1]) if len(c) > 2 else c
+
+        STATE_LABELS = {
+            'draft': 'Draft', 'auction': 'In Auction',
+            'sold': 'Sold', 'unsold': 'Unsold',
+        }
+        players_data = []
+        for r in rows:
+            team_id = r['assigned_team_id'][0] if r['assigned_team_id'] else None
+            team = teams_map.get(team_id, {})
+            players_data.append({
+                'id':                r['id'],
+                'sl_no':             r['sl_no'] or 0,
+                'name':              r['name'] or '',
+                'role':              r['role'] or '',
+                'contact':           r['contact'] or '',
+                'masked_contact':    _mask(r['contact']),
+                'state':             r['state'],
+                'state_label':       STATE_LABELS.get(r['state'], r['state']),
+                'amount_paid':       bool(r['amount_paid']),
+                'has_payment_url':   bool(r['payment_url']),
+                'proof_att_id':      1 if r['id'] in proof_ids else 0,
+                'proof_data':        '',
+                'team':              team.get('name', ''),
+                'manager':           team.get('manager', ''),
+                'tier':              r['tier_id'][1] if r['tier_id'] else '',
+            })
+
+        total = len(players_data)
+        paid_total = sum(1 for p in players_data if p['amount_paid'])
+        by_state = {st: [0, 0] for st in ('draft', 'auction', 'sold', 'unsold')}
+        for p in players_data:
+            bucket = by_state.get(p['state'])
+            if bucket:
+                bucket[0] += 1
+                if p['amount_paid']:
+                    bucket[1] += 1
+
+        logo_url = ''
+        if tournament.logo:
+            logo_url = '/web/image/auction.tournament/%s/logo' % tournament.id
+
+        return {
+            'ok': True,
+            'tournament': {
+                'id': tournament.id,
+                'name': tournament.name or '',
+                'slug': tournament_slug,
+                'logo_url': logo_url,
+            },
+            'players': players_data,
+            'stats': {
+                'total': total,
+                'paid': paid_total,
+                'unpaid': total - paid_total,
+                'by_state': {
+                    st: {'total': v[0], 'paid': v[1]} for st, v in by_state.items()
+                },
+            },
+            'teams': sorted(
+                [{'id': tid, 'name': t['name'], 'has_logo': t['has_logo']}
+                 for tid, t in teams_map.items()],
+                key=lambda t: t['name'],
+            ),
+            'urls': {
+                'toggle': '/{}/{}/auction/payment-marker/toggle'.format(
+                    db_name, tournament_slug
+                ),
+                'proof_base': '/{}/{}/auction/payment-marker/proof/'.format(
+                    db_name, tournament_slug
+                ),
+                'upload': '/{}/{}/auction/payment-marker/upload-proof'.format(
+                    db_name, tournament_slug
+                ),
+                'unlink': '/{}/{}/auction/payment-marker/unlink-proof'.format(
+                    db_name, tournament_slug
+                ),
+            },
+            'is_admin': is_admin,
+            'page_size': 40,
+            'show_tournament_filter': show_tournament_filter,
+            'tournaments': tournament_choices,
+            'is_saas': is_saas,
+        }
+
+    def _pm_tournament_filter_meta(self):
+        """Tournament dropdown choices + whether to show the filter.
+
+        SaaS organisers: locked to working tournament (no dropdown).
+        Admins: all active tournaments.
+        Other users: their assigned tournament_ids (dropdown if more than one).
+        """
+        _has_access, is_admin = self._get_pm_access()
+        env = request.env
+        is_saas = False
+        try:
+            Acc = env['ac.saas.account']
+            is_saas = bool(Acc._get_account_for_user())
+        except Exception:
+            is_saas = False
+
+        if is_saas and not is_admin:
+            return [], False, True
+
+        if is_admin:
+            tournaments = env['auction.tournament'].sudo().search(
+                [('active', '=', True)], order='name asc, id asc'
+            )
+        else:
+            user = env.user.sudo()
+            tournaments = user.tournament_ids.filtered(lambda t: t.active)
+            if not tournaments and user.tournament_id:
+                tournaments = user.tournament_id
+
+        choices = [{'id': t.id, 'name': t.name or ('Tournament #%s' % t.id)}
+                   for t in tournaments]
+        show = bool(is_admin or len(choices) > 1)
+        return choices, show, is_saas
+
+    def _render_payment_marker_page(self, tournament, embed=False):
+        """Build the Payment Tracker HTML response for a resolved tournament."""
+        env = request.env
+        payload = self._payment_marker_payload(tournament)
+        company = env['res.company'].sudo().search([], limit=1)
+        html = request.render('auction_module.payment_marker_template', {
+            'tournament':     tournament,
+            'players_json':   self._safe_json(payload['players']),
+            'stats_json':     self._safe_json(payload['stats']),
+            'teams_json':     self._safe_json(payload['teams']),
+            'toggle_url':     payload['urls']['toggle'],
+            'proof_base_url': payload['urls']['proof_base'],
+            'upload_url':     payload['urls']['upload'],
+            'unlink_url':     payload['urls']['unlink'],
+            'is_admin':       payload['is_admin'],
+            'res_company':    company,
+            'embed':          bool(embed),
+        }, lazy=False)
+        headers = [
+            ('Content-Type', 'text/html; charset=utf-8'),
+            ('X-Frame-Options', 'SAMEORIGIN'),
+            ('Cache-Control', 'private, max-age=0, must-revalidate'),
+        ]
+        return request.make_response(html, headers)
+
+    def _resolve_pm_tournament_record(self, tournament_id=None):
+        """Return (tournament, error) for Payment Tracker routes."""
+        has_access, is_admin = self._get_pm_access()
+        if not has_access:
+            return request.env['auction.tournament'], 'Access denied'
+
+        env = request.env
+        tournament = env['auction.tournament']
+
+        if tournament_id:
+            try:
+                tid = int(tournament_id)
+            except (TypeError, ValueError):
+                return tournament, 'Invalid tournament'
+            tournament = env['auction.tournament'].sudo().browse(tid)
+            if not tournament.exists():
+                return env['auction.tournament'], 'Tournament not found'
+            if not self._pm_user_can_access_tournament(tournament):
+                return env['auction.tournament'], 'Access denied — wrong tournament'
+            return tournament, None
+
+        tournament = self._resolve_tournament()
+        if not tournament and is_admin:
+            tournament = env['auction.tournament'].sudo().search(
+                [('active', '=', True)], limit=1
+            )
+        if not tournament:
+            return env['auction.tournament'], (
+                'No tournament assigned. Ask an administrator to assign a '
+                'tournament, or create one first.'
+            )
+        if not self._pm_user_can_access_tournament(tournament):
+            return env['auction.tournament'], 'Access denied — wrong tournament'
+        return tournament, None
+
+    @http.route('/auction/payment-marker/resolve', type='json', auth='user', website=False)
+    def payment_marker_resolve(self, tournament_id=None, **kw):
+        """JSON helper for legacy callers (embed URL). Prefer /data for client action."""
+        tournament, error = self._resolve_pm_tournament_record(tournament_id=tournament_id)
+        if error:
+            return {'ok': False, 'error': error}
+        embed_url = '/auction/payment-marker/embed'
+        if tournament:
+            embed_url += '?tournament_id=%s' % int(tournament.id)
+        return {
+            'ok': True,
+            'url': embed_url,
+            'tournament_id': tournament.id,
+            'slug': tournament.slug or '',
+        }
+
+    @http.route('/auction/payment-marker/data', type='json', auth='user', website=False)
+    def payment_marker_data(self, tournament_id=None, **kw):
+        """JSON payload for the native Payment Tracker client action."""
+        tournament, error = self._resolve_pm_tournament_record(tournament_id=tournament_id)
+        if error:
+            return {'ok': False, 'error': error}
+        return self._payment_marker_payload(tournament)
+
+    @http.route('/auction/payment-marker/embed', type='http', auth='user', website=False)
+    def payment_marker_embed(self, tournament_id=None, **kw):
+        """Auth'd embed page used by the backend client-action iframe."""
+        tournament, error = self._resolve_pm_tournament_record(
+            tournament_id=tournament_id or kw.get('tournament_id')
+        )
+        if error == 'Access denied' or error == 'Access denied — wrong tournament':
+            return werkzeug.exceptions.Forbidden()
+        if error or not tournament:
+            return request.make_response(
+                '<html><body style="font-family:sans-serif;padding:40px">'
+                '<h2>Payment Tracker</h2>'
+                '<p>%s</p></body></html>' % (
+                    error or 'No tournament assigned.'
+                ),
+                [('Content-Type', 'text/html; charset=utf-8')]
+            )
+        return self._render_payment_marker_page(tournament, embed=True)
+
+    @http.route('/auction/my/payment-marker', type='http', auth='user', website=False)
+    def payment_marker_redirect(self, **kw):
+        """Legacy bookmark URL → canonical payment-marker page (or error HTML)."""
+        url, error = self._resolve_payment_marker_url(
+            tournament_id=kw.get('tournament_id')
+        )
+        if error == 'Access denied':
+            return werkzeug.exceptions.Forbidden()
+        if error or not url:
             return request.make_response(
                 '<html><body style="font-family:sans-serif;padding:40px">'
                 '<h2>No tournament assigned</h2>'
-                '<p>Ask an administrator to assign a tournament to your user profile.</p>'
-                '<a href="/web">&#8592; Back</a></body></html>',
+                '<p>%s</p>'
+                '<a href="/web">&#8592; Back</a></body></html>' % (
+                    error or 'Ask an administrator to assign a tournament to your user profile.'
+                ),
                 [('Content-Type', 'text/html; charset=utf-8')]
             )
-
-        return werkzeug.utils.redirect(
-            '/{}/{}/auction/payment-marker'.format(db_name, tournament_slug), 302
-        )
+        embed = kw.get('embed')
+        if embed:
+            # Prefer dedicated embed route when possible
+            tid = kw.get('tournament_id')
+            if tid:
+                return werkzeug.utils.redirect(
+                    '/auction/payment-marker/embed?tournament_id=%s' % tid, 302
+                )
+            return werkzeug.utils.redirect('/auction/payment-marker/embed', 302)
+        return werkzeug.utils.redirect(url, 302)
 
     @http.route('/<string:db_name>/<string:tournament_slug>/auction/payment-marker',
                 type='http', auth='none', website=False)
     def payment_marker_page(self, db_name, tournament_slug, **kw):
-        """Render the Payment Tracker web page. Optimised: ≤5 DB hits regardless of player count.
-
-        auth='none' so the route is reachable even when no database is selected
-        (multi-db, logged-out). We then: (1) pin the URL's DB into the session so
-        the login form binds to the right DB, (2) bounce anonymous users to the
-        login screen, (3) elevate the request env to the logged-in user.
-        """
+        """Render the Payment Tracker web page (shareable / bookmark URL)."""
         # ── 1: Pin the URL's DB into the session (needed in multi-db mode) ──
         if request.session.db != db_name:
             try:
@@ -1920,188 +2441,55 @@ class Auction(http.Controller):
         request.uid = request.session.uid
         request._env = None
 
-        has_access, is_admin = self._get_pm_access()
+        has_access, _is_admin = self._get_pm_access()
         if not has_access:
             return werkzeug.exceptions.Forbidden()
 
-        env = request.env
-
-        # ── 1 DB: resolve tournament by slug ────────────────────────────
-        tournament = env['auction.tournament'].sudo().search(
+        tournament = request.env['auction.tournament'].sudo().search(
             [('slug', '=', tournament_slug)], limit=1
         )
         if not tournament:
             return self._not_found()
-        tournament_id = tournament.id
 
-        # Scope check: non-admins must belong to this tournament
-        if not is_admin:
-            user_row = env.user.sudo().read(['tournament_id'])[0]
-            user_tourn_id = user_row['tournament_id'][0] if user_row['tournament_id'] else None
-            if user_tourn_id != tournament_id:
-                return werkzeug.exceptions.Forbidden()
+        if not self._pm_user_can_access_tournament(tournament):
+            return werkzeug.exceptions.Forbidden()
 
-        # ── 2 DB: ONE search_read for all players ───────────────────────
-        PLAYER_FIELDS = [
-            'id', 'sl_no', 'name', 'role', 'contact',
-            'state', 'amount_paid', 'payment_url',
-            'assigned_team_id', 'tier_id', 'payment_proof',
-        ]
-        rows = env['auction.team.player'].sudo().search_read(
-            [('tournament_id', '=', tournament_id)],
-            fields=PLAYER_FIELDS,
-            order='sl_no asc, name asc',
-        )
-
-        # ── Auto-mark: filter in Python, one batch write if needed (0–1 DB) ──
-        to_mark_ids = [r['id'] for r in rows if r['payment_url'] and not r['amount_paid']]
-        if to_mark_ids:
-            env['auction.team.player'].sudo().browse(to_mark_ids).write({'amount_paid': True})
-            mark_set = set(to_mark_ids)
-            for r in rows:
-                if r['id'] in mark_set:
-                    r['amount_paid'] = True
-
-        # ── 3 DB: batch-read all unique teams (name, manager, logo) ────────
-        team_ids = list({r['assigned_team_id'][0] for r in rows if r['assigned_team_id']})
-        teams_map = {}
-        if team_ids:
-            for t in env['auction.team'].sudo().browse(team_ids).read(['id', 'name', 'manager', 'logo']):
-                teams_map[t['id']] = {
-                    'name':     t['name'] or '',
-                    'manager':  t['manager'] or '',
-                    'has_logo': bool(t['logo']),
-                }
-
-        # ── 4: Build proof data URIs from payment_proof field (ORM handles attachment lookup) ──
-        def _proof_data_uri(b64_val):
-            """Resize proof image to thumbnail and return data URI. b64_val is base64 bytes from ORM."""
-            if not b64_val:
-                return ''
-            try:
-                raw = base64.b64decode(b64_val)
-                from PIL import Image as PILImage
-                import io as _io
-                img = PILImage.open(_io.BytesIO(raw))
-                img.thumbnail((900, 1200), PILImage.LANCZOS)
-                buf = _io.BytesIO()
-                img.save(buf, format='JPEG', quality=82, optimize=True)
-                return 'data:image/jpeg;base64,' + base64.b64encode(buf.getvalue()).decode('ascii')
-            except Exception:
-                return 'data:image/jpeg;base64,' + (b64_val if isinstance(b64_val, str) else b64_val.decode('ascii'))
-
-        # ── Mask contact in Python (skip ORM computed-field overhead) ────
-        def _mask(c):
-            c = str(c or '')
-            return (c[0] + 'X' * (len(c) - 2) + c[-1]) if len(c) > 2 else c
-
-        # ── Build players_data — zero DB from here ───────────────────────
-        STATE_LABELS = {'draft': 'Draft', 'auction': 'In Auction', 'sold': 'Sold', 'unsold': 'Unsold'}
-        players_data = []
-        for r in rows:
-            team_id = r['assigned_team_id'][0] if r['assigned_team_id'] else None
-            team = teams_map.get(team_id, {})
-            players_data.append({
-                'id':                r['id'],
-                'sl_no':             r['sl_no'] or 0,
-                'name':              r['name'] or '',
-                'role':              r['role'] or '',
-                'contact':           r['contact'] or '',
-                'masked_contact':    _mask(r['contact']),
-                'state':             r['state'],
-                'state_label':       STATE_LABELS.get(r['state'], r['state']),
-                'amount_paid':       bool(r['amount_paid']),
-                'has_payment_url':   bool(r['payment_url']),
-                'proof_att_id':      1 if r['payment_proof'] else 0,
-                'proof_data':        _proof_data_uri(r['payment_proof']),
-                'team':              team.get('name', ''),
-                'manager':           team.get('manager', ''),
-                'tier':              r['tier_id'][1] if r['tier_id'] else '',
-            })
-
-        # ── Stats: single pass ───────────────────────────────────────────
-        total = len(players_data)
-        paid_total = 0
-        by_state = {st: [0, 0] for st in ('draft', 'auction', 'sold', 'unsold')}
-        for p in players_data:
-            if p['amount_paid']:
-                paid_total += 1
-            bucket = by_state.get(p['state'])
-            if bucket:
-                bucket[0] += 1
-                if p['amount_paid']:
-                    bucket[1] += 1
-        stats = {
-            'total':    total,
-            'paid':     paid_total,
-            'unpaid':   total - paid_total,
-            'by_state': {st: {'total': v[0], 'paid': v[1]} for st, v in by_state.items()},
-        }
-
-        # ── Teams for filter chips — derived from teams_map (no extra DB) ─
-        teams_data = sorted(
-            [{'id': tid, 'name': t['name'], 'has_logo': t['has_logo']}
-             for tid, t in teams_map.items()],
-            key=lambda t: t['name'],
-        )
-
-        # ── 5 DB: company ────────────────────────────────────────────────
-        company = env['res.company'].sudo().search([], limit=1)
-
-        toggle_url = '/{}/{}/auction/payment-marker/toggle'.format(db_name, tournament_slug)
-        proof_base_url = '/{}/{}/auction/payment-marker/proof/'.format(db_name, tournament_slug)
-        upload_url = '/{}/{}/auction/payment-marker/upload-proof'.format(db_name, tournament_slug)
-        unlink_url = '/{}/{}/auction/payment-marker/unlink-proof'.format(db_name, tournament_slug)
-
-        html = request.render('auction_module.payment_marker_template', {
-            'tournament':     tournament,
-            'players_json':   self._safe_json(players_data),
-            'stats_json':     self._safe_json(stats),
-            'teams_json':     self._safe_json(teams_data),
-            'toggle_url':     toggle_url,
-            'proof_base_url': proof_base_url,
-            'upload_url':     upload_url,
-            'unlink_url':     unlink_url,
-            'is_admin':       is_admin,
-            'res_company':    company,
-        }, lazy=False)
-        return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
+        embed = str(kw.get('embed') or '').lower() in ('1', 'true', 'yes')
+        return self._render_payment_marker_page(tournament, embed=embed)
 
     @http.route('/<string:db_name>/<string:tournament_slug>/auction/payment-marker/toggle',
                 type='json', auth='user', website=False, csrf=False)
     def payment_marker_toggle(self, db_name, tournament_slug, player_id, paid, **kw):
         """Toggle amount_paid on a player. ≤3 DB hits (access cached, one read, one write)."""
-        has_access, is_admin = self._get_pm_access()
+        has_access, _is_admin = self._get_pm_access()
         if not has_access:
             return {'error': 'Access denied'}
         try:
             pid = int(player_id)
             env = request.env
 
-            # Resolve tournament by slug (scope anchor)
             tourn = env['auction.tournament'].sudo().search(
                 [('slug', '=', tournament_slug)], limit=1
             )
             if not tourn:
                 return {'error': 'Tournament not found'}
 
-            # One read: verify player exists and belongs to this tournament
-            rows = env['auction.team.player'].sudo().search_read(
+            if not self._pm_user_can_access_tournament(tourn):
+                return {'error': 'Access denied — wrong tournament'}
+
+            rows = env['auction.team.player'].sudo().with_context(
+                auction_skip_tournament_security=True,
+            ).search_read(
                 [('id', '=', pid), ('tournament_id', '=', tourn.id)],
                 ['id'], limit=1
             )
             if not rows:
                 return {'error': 'Player not found'}
 
-            # Scope check for non-admins
-            if not is_admin:
-                user_row = env.user.sudo().read(['tournament_id'])[0]
-                user_tourn_id = user_row['tournament_id'][0] if user_row['tournament_id'] else None
-                if user_tourn_id != tourn.id:
-                    return {'error': 'Access denied — wrong tournament'}
-
             new_val = bool(paid)
-            env['auction.team.player'].sudo().browse(pid).write({'amount_paid': new_val})
+            env['auction.team.player'].sudo().with_context(
+                auction_skip_tournament_security=True,
+            ).browse(pid).write({'amount_paid': new_val})
             return {'success': True, 'amount_paid': new_val}
         except Exception:
             _logger.exception('payment_marker_toggle error')
@@ -2179,7 +2567,12 @@ class Auction(http.Controller):
         if not tournament:
             return _json({'error': 'Tournament not found'})
 
-        player = env['auction.team.player'].sudo().search(
+        if not self._pm_user_can_access_tournament(tournament):
+            return _json({'error': 'Access denied — wrong tournament'})
+
+        player = env['auction.team.player'].sudo().with_context(
+            auction_skip_tournament_security=True,
+        ).search(
             [('id', '=', player_id), ('tournament_id', '=', tournament.id)], limit=1
         )
         if not player:
@@ -2189,7 +2582,7 @@ class Auction(http.Controller):
         # Binary field expects base64-encoded string, not bytes
         b64_str = base64.b64encode(file_bytes).decode('ascii')
 
-        player.write({
+        player.with_context(auction_skip_tournament_security=True).write({
             'payment_proof': b64_str,
             'amount_paid':   True,
         })
@@ -2239,59 +2632,23 @@ class Auction(http.Controller):
         if not tournament:
             return _json({'error': 'Tournament not found'})
 
-        player = env['auction.team.player'].sudo().search(
+        if not self._pm_user_can_access_tournament(tournament):
+            return _json({'error': 'Access denied — wrong tournament'})
+
+        player = env['auction.team.player'].sudo().with_context(
+            auction_skip_tournament_security=True,
+        ).search(
             [('id', '=', player_id), ('tournament_id', '=', tournament.id)], limit=1
         )
         if not player:
             return _json({'error': 'Player not found'})
 
         # Clear the binary field — Odoo will delete the ir.attachment automatically
-        player.write({'payment_proof': False})
+        player.with_context(auction_skip_tournament_security=True).write({
+            'payment_proof': False,
+        })
 
         return _json({'success': True})
-
-    @http.route(['/auction/player_selector', '/auction/player_selector/'],
-                type='http', auth="none", website=False, sitemap=False)
-    def player_selector_legacy(self, **kw):
-        """Redirect legacy URL to db+slug prefixed URL."""
-        from odoo.http import db_monodb, db_list
-        db_name = db_monodb(request.httprequest)
-        if not db_name:
-            dbs = db_list(force=True, httprequest=request.httprequest)
-            db_name = dbs[0] if dbs else None
-        if not db_name:
-            return self._not_found()
-        slug = kw.get('t', '')
-        target = '/{}/auction/player_selector/{}'.format(db_name, slug + '/' if slug else '')
-        return werkzeug.utils.redirect(target, 302)
-
-    @http.route([
-        '/<string:db_name>/auction/player_selector/',
-        '/<string:db_name>/auction/player_selector/<string:tournament_slug>/',
-    ], type='http', auth="none", website=False, sitemap=False)
-    def player_selector(self, db_name, tournament_slug=None, **kw):
-        with self._with_db(db_name) as ok:
-            if not ok:
-                return self._not_found()
-            if tournament_slug:
-                tournament = request.env['auction.tournament'].sudo().search(
-                    [('slug', '=', tournament_slug)], limit=1)
-            else:
-                tournament = request.env['auction.tournament'].sudo().search(
-                    [('active', '=', True)], limit=1)
-            theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
-            Tier = request.env['auction.player.tier'].sudo()
-            tiers = Tier.search(
-                [('tournament_id', '=', tournament.id)], order='name asc',
-            ) if tournament else Tier.browse()
-            html = request.render('auction_module.player_sequence_selector', {
-                'tournament': tournament,
-                'theme': theme,
-                'db_name': db_name,
-                'tournament_slug': tournament_slug or (tournament.slug if tournament else ''),
-                'tiers': tiers,
-            }, lazy=False)
-        return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
     @http.route([
         '/auction/projector',
@@ -2332,6 +2689,17 @@ class Auction(http.Controller):
             else:
                 tournament = request.env['auction.tournament'].sudo().search(
                     [('active', '=', True)], limit=1)
+            if tournament and not self._tournament_auction_rules_ready(tournament):
+                return self._auction_rules_required_page(tournament, db_name=db_name)
+            # First hit: themed splash (same pattern as Player Showcase), then load.
+            if not kw.get('ready'):
+                slug = tournament_slug or (tournament.slug if tournament else '')
+                if slug:
+                    target = '/{}/auction/projector/{}/?ready=1'.format(db_name, slug)
+                else:
+                    target = '/{}/auction/projector/?ready=1'.format(db_name)
+                return self._showcase_loading_page(
+                    target, tournament, title='Loading Players…')
             theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
             sport = (tournament.tournament_type or 'cricket') if tournament else 'cricket'
             mode = 'light' if theme in ('lemon', 'strawberry') else 'dark'
@@ -2359,6 +2727,7 @@ class Auction(http.Controller):
             from datetime import datetime
             import pytz
             now_dt = datetime.now(pytz.utc).replace(tzinfo=None)
+            boards = _pj_boards(tournament, db_name)
             player = None
             state_override = None
             stamp_player = None
@@ -2373,6 +2742,45 @@ class Auction(http.Controller):
                 domain.append(('tournament_id', '=', tournament.id))
             on_stage = request.env['auction.team.player'].sudo().search(domain, limit=1)
 
+            # Live dice must win over a leftover on-stage row. Otherwise Roll Call
+            # dice never appears on the projector after any prior player card.
+            dice_state = tournament.dice_state if tournament else 'idle'
+            raw_dice = int(tournament.dice_result or 0) if tournament else 0
+            dice_mystery = raw_dice < 0
+            lookup_sl = abs(raw_dice) if raw_dice else 0
+            dice_result = 0 if dice_mystery else lookup_sl
+            if tournament and lookup_sl and not dice_mystery:
+                dice_player = request.env['auction.team.player'].sudo().search([
+                    ('tournament_id', '=', tournament.id),
+                    ('sl_no', '=', lookup_sl),
+                ], limit=1)
+                if (dice_player and dice_player.tier_id and dice_player.tier_id.mystery
+                        and not dice_player.mystery_revealed):
+                    dice_mystery = True
+                    dice_result = 0
+            dice_payload = {
+                'state': dice_state or 'idle',
+                'result': dice_result,
+                'is_mystery': dice_mystery,
+            }
+            # Only the rolling animation blocks the player card. Once the
+            # auctioneer opens a player (on stage), that must win over a leftover
+            # dice "result" — otherwise the projector waits ~7s for idle.
+            if dice_state == 'rolling':
+                return {
+                    'player': None,
+                    'dice': dice_payload,
+                    'progress': _pj_progress(tournament),
+                    'wait_phase': _pj_wait_phase(tournament),
+                    'teams': _pj_teams(tournament, db_name),
+                    'recent_bids': _pj_recent_bids(tournament, db_name),
+                    'top_purse': _pj_top_purse(tournament),
+                    'auction_meta': _pj_auction_meta(tournament),
+                    'break_time': bool(tournament and tournament.break_time_active),
+                    'advertisers': _pj_advertisers(tournament, db_name),
+                    'boards': boards,
+                }
+
             # Prefer a freshly called auction player over a leftover SOLD/UNSOLD
             # stamp so projector / auctioneer / player-selector updates feel instant
             # in production (stamp otherwise blocks the next card for several seconds).
@@ -2386,28 +2794,24 @@ class Auction(http.Controller):
             elif on_stage:
                 player = on_stage
             if not player:
-                dice_state = tournament.dice_state if tournament else 'idle'
-                raw_dice = int(tournament.dice_result or 0) if tournament else 0
-                # Negative dice_result = mystery roll (serial must not be shown)
-                dice_mystery = raw_dice < 0
-                lookup_sl = abs(raw_dice) if raw_dice else 0
-                dice_result = 0 if dice_mystery else lookup_sl
-                if tournament and lookup_sl and not dice_mystery:
-                    dice_player = request.env['auction.team.player'].sudo().search([
-                        ('tournament_id', '=', tournament.id),
-                        ('sl_no', '=', lookup_sl),
-                    ], limit=1)
-                    if (dice_player and dice_player.tier_id and dice_player.tier_id.mystery
-                            and not dice_player.mystery_revealed):
-                        dice_mystery = True
-                        dice_result = 0
+                # Show dice result on the waiting screen until a player is opened
+                if dice_state == 'result':
+                    return {
+                        'player': None,
+                        'dice': dice_payload,
+                        'progress': _pj_progress(tournament),
+                        'wait_phase': _pj_wait_phase(tournament),
+                        'teams': _pj_teams(tournament, db_name),
+                        'recent_bids': _pj_recent_bids(tournament, db_name),
+                        'top_purse': _pj_top_purse(tournament),
+                        'auction_meta': _pj_auction_meta(tournament),
+                        'break_time': bool(tournament and tournament.break_time_active),
+                        'advertisers': _pj_advertisers(tournament, db_name),
+                        'boards': boards,
+                    }
                 return {
                     'player': None,
-                    'dice': {
-                        'state': dice_state,
-                        'result': dice_result,
-                        'is_mystery': dice_mystery,
-                    },
+                    'dice': dice_payload,
                     'progress': _pj_progress(tournament),
                     'wait_phase': _pj_wait_phase(tournament),
                     'teams': _pj_teams(tournament, db_name),
@@ -2416,6 +2820,7 @@ class Auction(http.Controller):
                     'auction_meta': _pj_auction_meta(tournament),
                     'break_time': bool(tournament and tournament.break_time_active),
                     'advertisers': _pj_advertisers(tournament, db_name),
+                    'boards': boards,
                 }
             photo = ''
             photo_url = ''
@@ -2504,7 +2909,7 @@ class Auction(http.Controller):
                     }
             return {
                 'player': player_payload,
-                'dice': {'state': 'idle', 'result': 0, 'is_mystery': False},
+                'dice': dice_payload,
                 'progress': _pj_progress(tournament, current_player=player),
                 'wait_phase': _pj_wait_phase(tournament),
                 'teams': _pj_teams(tournament, db_name, leading_team_id=leading_team_id),
@@ -2513,6 +2918,7 @@ class Auction(http.Controller):
                 'auction_meta': _pj_auction_meta(tournament),
                 'break_time': bool(tournament and tournament.break_time_active),
                 'advertisers': _pj_advertisers(tournament, db_name),
+                'boards': boards,
             }
 
     @http.route([
@@ -2539,18 +2945,89 @@ class Auction(http.Controller):
                 [('slug', '=', tournament_slug)], limit=1)
             return _pj_remaining_players(tournament, db_name)
 
+    @http.route([
+        '/<string:db_name>/auction/projector/<string:tournament_slug>/boards/close',
+    ], type='json', auth='none', website=False, sitemap=False, csrf=False)
+    def auction_projector_boards_close(self, db_name, tournament_slug, **kw):
+        """Hide the live pool/fixture board on the projector."""
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return {'ok': False}
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('slug', '=', tournament_slug)], limit=1)
+            if tournament:
+                tournament.sudo().write({
+                    'projector_board_mode': 'idle',
+                    'projector_board_reveal_until': False,
+                })
+            return {'ok': True}
+
+    @http.route([
+        '/<string:db_name>/auction/projector/<string:tournament_slug>/boards/show',
+    ], type='json', auth='none', website=False, sitemap=False, csrf=False)
+    def auction_projector_boards_show(self, db_name, tournament_slug, mode='pools', **kw):
+        """Manually show saved pools or fixtures on the projector."""
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return {'ok': False}
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('slug', '=', tournament_slug)], limit=1)
+            if not tournament:
+                return {'ok': False}
+            mode = mode if mode in ('pools', 'fixtures') else 'pools'
+            if mode == 'pools' and not tournament.pool_draw_json:
+                return {'ok': False, 'error': 'No pool draw saved'}
+            if mode == 'fixtures' and not tournament.fixture_schedule_json:
+                return {'ok': False, 'error': 'No fixture saved'}
+            tournament.sudo().write({
+                'projector_board_mode': mode,
+                'projector_board_reveal_until': False,
+            })
+            return {'ok': True, 'boards': _pj_boards(tournament, db_name)}
+
+    def _showcase_loading_page(self, redirect_url, tournament=None, title=None):
+        """Lightweight splash before Player Console / Projector loads.
+
+        Must render eagerly (lazy=False): callers often use this inside
+        ``_with_db``, which closes the cursor on exit — deferred QWeb would
+        then hit ``Unable to use a closed cursor`` when reading tournament.
+        """
+        theme = 'lemon'
+        if tournament:
+            theme = tournament.player_display_template or 'lemon'
+        html = request.render('auction_module.auction_showcase_loading', {
+            'redirect_url': redirect_url,
+            'tournament': tournament,
+            'theme': theme,
+            'loading_title': title or 'Loading Player Console…',
+        }, lazy=False)
+        return request.make_response(
+            html, [('Content-Type', 'text/html; charset=utf-8')]
+        )
+
+    def _showcase_target_url(self, tournament):
+        """Resolve Player Console URL for the tournament algorithm."""
+        if not tournament:
+            return '/auction/display_auction'
+        db_name = request.env.cr.dbname
+        if tournament.slug:
+            if tournament.player_appearance_algorithm == 'linear':
+                return '/{}/auction/player_selector/{}/'.format(db_name, tournament.slug)
+            return '/{}/auction/display_auction/{}/'.format(db_name, tournament.slug)
+        if tournament.player_appearance_algorithm == 'linear':
+            return '/auction/player_selector'
+        return '/auction/display_auction'
+
     @http.route('/auction/showcase', type='http', auth='user', website=True)
     def auction_showcase(self, **kw):
-        """Redirect to the correct player showcase based on tournament algorithm."""
+        """Show a brief loading splash, then open the Player Console."""
         tournament = self._resolve_tournament()
-        if tournament and tournament.slug:
-            db_name = request.env.cr.dbname
-            if tournament.player_appearance_algorithm == 'linear':
-                return request.redirect('/{}/auction/player_selector/{}/'.format(db_name, tournament.slug))
-            return request.redirect('/{}/auction/display_auction/{}/'.format(db_name, tournament.slug))
-        if tournament and tournament.player_appearance_algorithm == 'linear':
-            return request.redirect('/auction/player_selector')
-        return request.redirect('/auction/display_auction')
+        if tournament and not self._tournament_auction_rules_ready(tournament):
+            return self._auction_rules_required_page(tournament)
+        if tournament:
+            tournament.action_dismiss_projector_board()
+        target = self._showcase_target_url(tournament)
+        return self._showcase_loading_page(target, tournament)
 
     @http.route('/auction/status/data', type='http', auth='public', website=True, csrf=False)
     def auction_status_data(self, last_id=0, **kw):
@@ -2589,7 +3066,7 @@ class Auction(http.Controller):
     _PUBLIC_IMAGE_FIELDS = {
         'auction.team.player': ['photo'],
         'auction.team':        ['logo'],
-        'auction.tournament':  ['logo'],
+        'auction.tournament':  ['logo', 'pool_draw_snapshot', 'fixture_schedule_snapshot'],
         'auction.history':     ['player_photo'],
         'auction.advertiser':  ['image'],
         'res.company':         ['favicon'],
@@ -3180,18 +3657,27 @@ class Auction(http.Controller):
         def pub_img(model, rec_id, field):
             return '/auction/public/image/%s/%d/%s' % (model, rec_id, field)
 
-        # ── Tournament scope: only Auction Admin sees all; others → assigned tournaments
+        # ── Tournament scope ──────────────────────────────────────────────────
+        # Prefer navbar working tournament (SaaS switcher); else Active Tournament.
+        # Non-admin / SaaS organisers always see one tournament — matches list menus.
         is_admin = request.env.user.has_group('auction_module.group_auction_group_admin')
         user = request.env.user
-        # Prefer Active Tournament; fall back to Organizers M2M so counts match list views
-        user_tournament = user.tournament_id or user.tournament_ids[:1]
-        allowed_tids = set(user.tournament_ids.ids)
-        if user.tournament_id:
-            allowed_tids.add(user.tournament_id.id)
-        if is_admin:
+        user_tournament = False
+        get_working = getattr(user, 'get_working_tournament', None)
+        if callable(get_working):
+            user_tournament = get_working()
+        if not user_tournament:
+            user_tournament = user.tournament_id or user.tournament_ids[:1]
+
+        saas_account = False
+        get_saas = getattr(user, 'get_saas_account', None)
+        if callable(get_saas):
+            saas_account = get_saas()
+
+        if is_admin and not saas_account:
             t_domain = []
-        elif allowed_tids:
-            t_domain = [('tournament_id', 'in', list(allowed_tids))]
+        elif user_tournament:
+            t_domain = [('tournament_id', '=', user_tournament.id)]
         else:
             # No tournament assigned → show nothing (do not leak all tournaments)
             t_domain = [('id', '=', False)]
@@ -3313,6 +3799,11 @@ class Auction(http.Controller):
             'team_player_counts': team_player_counts,
             'icon_players':      icon_list,
             'tournament_id':     user_tournament.id if user_tournament else None,
+            'tournament_name':   user_tournament.name if user_tournament else '',
+            'tournament_logo':   (
+                pub_img('auction.tournament', user_tournament.id, 'logo')
+                if user_tournament and user_tournament.logo else ''
+            ),
             'view_ids': {
                 'kanban': _ref('view_auction_team_player_kanban'),
                 'list':   _ref('view_auction_team_player_tree'),
@@ -3764,6 +4255,13 @@ class Auction(http.Controller):
 
                     vals = _build_player_vals_from_post(request, tournament)
                     player = request.env['auction.team.player'].sudo().create(vals)
+                    try:
+                        self._registration_after_create(player, db_name)
+                    except Exception:
+                        _logger.exception(
+                            'registration after-create hook failed for player %s',
+                            player.id,
+                        )
                     # PRG: redirect to GET so that page refreshes don't re-submit the form
                     from urllib.parse import urlencode
                     qs = urlencode({'success': '1', 'player_id': player.id})
@@ -3822,6 +4320,7 @@ class Auction(http.Controller):
                 'player_id': player_id,
             }
             ctx = self._registration_payment_get_ctx(ctx, tournament, kw)
+            ctx = self._registration_success_ctx(ctx, tournament, kw)
 
             try:
                 html = request.render('auction_module.player_registration_form', ctx, lazy=False)
@@ -3842,6 +4341,14 @@ class Auction(http.Controller):
 
     def _registration_payment_get_ctx(self, ctx, tournament, kw):
         """Hook for payment gateway modules to enrich the registration GET context."""
+        return ctx
+
+    def _registration_after_create(self, player, db_name):
+        """Hook after a public registration creates a player (notify / WhatsApp / email)."""
+        return None
+
+    def _registration_success_ctx(self, ctx, tournament, kw):
+        """Hook to enrich registration success page context."""
         return ctx
 
     @http.route('/<string:db_name>/<string:tournament_slug>/player/check_mobile',
@@ -3903,6 +4410,7 @@ class Auction(http.Controller):
                     'cherry':       'auction_module.action_report_player_card_cherry',
                     'pistah':       'auction_module.action_report_player_card_pistah',
                     'lemon':        'auction_module.action_report_player_card_lemon',
+                    'blackberry':   'auction_module.action_report_player_card_blackberry',
                 }
                 report_ref = report_map.get(theme, 'auction_module.action_report_player_card')
 
@@ -3971,6 +4479,7 @@ class Auction(http.Controller):
                     'cherry':       'auction_module.action_report_player_card_cherry',
                     'pistah':       'auction_module.action_report_player_card_pistah',
                     'lemon':        'auction_module.action_report_player_card_lemon',
+                    'blackberry':   'auction_module.action_report_player_card_blackberry',
                 }
                 report_ref = report_map.get(theme, 'auction_module.action_report_player_card')
 
@@ -4166,7 +4675,8 @@ class Auction(http.Controller):
                 'rules_regulations': _str('rules_regulations'),
                 'payment_instruction': _str('payment_instruction'),
                 'enable_jersey_section': bool(post.get('enable_jersey_section')),
-                'expose_player_contact': bool(post.get('expose_player_contact')),
+                # Contact unmask requires privacy agreement in Tournament Master — never enable from public form.
+                'expose_player_contact': False,
             }
 
             # Dates — support multiple days for multi-day tournaments
@@ -4478,7 +4988,7 @@ def _pj_wait_phase(tournament):
 
     - about_to_begin: everyone still in draft (no sold/unsold/auction yet)
     - waiting: auction underway (someone sold/unsold, or a player in auction)
-    - completed: nothing left in draft or auction
+    - completed: declared complete, or nothing left in draft/auction
     """
     name = (tournament.name or 'the tournament') if tournament else 'the tournament'
     if not tournament:
@@ -4486,6 +4996,13 @@ def _pj_wait_phase(tournament):
             'phase': 'about_to_begin',
             'tournament_name': name,
             'message': 'THE BATTLE FOR TALENT BEGINS SOON',
+        }
+    # Operator "Declare Auction Complete" → Thank You ceremony on projector
+    if tournament.auction_declared_complete:
+        return {
+            'phase': 'completed',
+            'tournament_name': name,
+            'message': 'THE AUCTION FLOOR CLOSES, AND THE ROAD TO GLORY BEGINS.',
         }
     Player = request.env['auction.team.player'].sudo()
     domain = [('tournament_id', '=', tournament.id), ('icon_player', '=', False)]
@@ -4513,6 +5030,162 @@ def _pj_wait_phase(tournament):
         'tournament_name': name,
         'message': 'THE SPOTLIGHT MOVES TO THE NEXT PLAYER',
     }
+
+
+def _pj_boards(tournament, db_name):
+    """Live pool/fixture board payload for the projector (+ snapshot URLs)."""
+    empty = {
+        'mode': 'idle',
+        'revealing': False,
+        'reveal_kind': '',
+        'tournament_name': '',
+        'pools': [],
+        'row_count': 1,
+        'fixture': False,
+        'sig': '',
+        'pool_draw_url': '',
+        'fixture_url': '',
+        'has_pools': False,
+        'has_fixture': False,
+    }
+    if not tournament:
+        return empty
+
+    try:
+        from datetime import datetime
+        import pytz
+        now_dt = datetime.now(pytz.utc).replace(tzinfo=None)
+
+        # Defensive: module may not be upgraded yet
+        mode = getattr(tournament, 'projector_board_mode', None) or 'idle'
+        reveal_until = getattr(tournament, 'projector_board_reveal_until', None)
+        # Thank You / auction-complete always overrides live pool & fixture boards
+        try:
+            if getattr(tournament, 'auction_declared_complete', False):
+                mode = 'idle'
+                reveal_until = None
+            elif _pj_wait_phase(tournament).get('phase') == 'completed':
+                mode = 'idle'
+                reveal_until = None
+        except Exception:
+            pass
+        pool_draw_json = getattr(tournament, 'pool_draw_json', None)
+        fixture_schedule_json = getattr(tournament, 'fixture_schedule_json', None)
+        pool_snap = getattr(tournament, 'pool_draw_snapshot', None)
+        fix_snap = getattr(tournament, 'fixture_schedule_snapshot', None)
+
+        ver = ''
+        if tournament.write_date:
+            try:
+                from odoo import fields as odoo_fields
+                ver = str(int(odoo_fields.Datetime.from_string(tournament.write_date).timestamp()))
+            except Exception:
+                ver = str(tournament.write_date).replace(' ', 'T')
+        base = '/%s/auction/public/image/auction.tournament/%d' % (db_name, tournament.id)
+        qs = ('?v=' + ver) if ver else ''
+        pool_url = ('%s/pool_draw_snapshot%s' % (base, qs)) if pool_snap else ''
+        fix_url = ('%s/fixture_schedule_snapshot%s' % (base, qs)) if fix_snap else ''
+
+        revealing = bool(
+            reveal_until and reveal_until > now_dt and mode in ('pools', 'fixtures')
+        )
+
+        pools = []
+        tournament_name = tournament.name or ''
+        fixture = False
+        Wizard = request.env['auction.team.pool.wizard'].sudo()
+
+        if pool_draw_json:
+            try:
+                raw = json.loads(pool_draw_json)
+                structure = raw.get('structure') or []
+                pool_names = raw.get('pool_names') or []
+                pools, tname = Wizard._client_build_pools(structure, pool_names)
+                if tname:
+                    tournament_name = tname
+            except Exception:
+                pools = []
+
+        if fixture_schedule_json:
+            try:
+                fixture = Wizard._client_refresh_fixture(json.loads(fixture_schedule_json))
+                if fixture and not fixture.get('matches'):
+                    fixture = False
+            except Exception:
+                fixture = False
+
+        def _public_team(team_payload):
+            """Rewrite auth-only /web/image logos to public projector URLs."""
+            if not team_payload:
+                return team_payload
+            tid = team_payload.get('id')
+            if tid and team_payload.get('logo_url'):
+                team_payload = dict(team_payload)
+                team_payload['logo_url'] = (
+                    '/%s/auction/public/image/auction.team/%d/logo' % (db_name, int(tid))
+                )
+            return team_payload
+
+        def _public_pools(pool_list):
+            out = []
+            for pool in pool_list or []:
+                out.append({
+                    'index': pool.get('index'),
+                    'name': pool.get('name'),
+                    'teams': [_public_team(dict(t)) for t in (pool.get('teams') or [])],
+                })
+            return out
+
+        def _public_fixture(fx):
+            if not fx:
+                return False
+            matches = []
+            for m in fx.get('matches') or []:
+                matches.append({
+                    'group': m.get('group') or '',
+                    'section': m.get('section') or '',
+                    'team_a': _public_team(dict(m.get('team_a') or {})),
+                    'team_b': _public_team(dict(m.get('team_b') or {})),
+                })
+            return {
+                'tournament': fx.get('tournament') or '',
+                'subtitle': fx.get('subtitle') or '',
+                'fixture_type': fx.get('fixture_type') or '',
+                'outside_n': fx.get('outside_n') or 1,
+                'matches': matches,
+            }
+
+        live_pools = _public_pools(pools) if mode == 'pools' else []
+        live_fixture = _public_fixture(fixture) if mode == 'fixtures' else False
+        row_count = max(1, (len(live_pools) + 1) // 2) if live_pools else 1
+
+        sig_parts = [
+            mode,
+            '1' if revealing else '0',
+            str(reveal_until or ''),
+            str(len(live_pools)),
+            str(len((live_fixture or {}).get('matches') or []) if live_fixture else 0),
+            ver,
+            str(len(pools)),
+            str(len((fixture or {}).get('matches') or []) if fixture else 0),
+        ]
+        return {
+            'mode': mode if mode in ('pools', 'fixtures') else 'idle',
+            'revealing': revealing,
+            'reveal_kind': mode if revealing else '',
+            'tournament_name': tournament_name,
+            'pools': live_pools,
+            'row_count': row_count,
+            'fixture': live_fixture,
+            'sig': '|'.join(sig_parts),
+            'pool_draw_url': pool_url,
+            'fixture_url': fix_url,
+            'has_pools': bool(pools),
+            'has_fixture': bool(fixture),
+        }
+    except Exception:
+        # Never break the main projector poll
+        return empty
 
 
 def _pj_auction_meta(tournament):
@@ -4958,6 +5631,12 @@ def _build_player_vals_from_post(request, tournament):
         'photo':         photo_data,
         'payment_proof': payment_proof_data,
     }
+
+    # Optional email (added by overlay modules such as ac_whatsapp)
+    email = (post.get('email') or '').strip()
+    Player = request.env['auction.team.player']
+    if email and 'email' in Player._fields:
+        vals['email'] = email
 
     if is_football:
         # ── Football profile ────────────────────────────────────────────────

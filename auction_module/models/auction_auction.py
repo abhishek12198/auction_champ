@@ -246,6 +246,12 @@ class Auction(models.Model):
         # 3️⃣ Slab snapping
         return self._snap_to_slab(rule_cap)
 
+    def action_print_auction_roster(self):
+        """Print squad roster PDF for one or many selected auction rule / team rows."""
+        if not self:
+            raise UserError(_('Please select at least one team to print the roster.'))
+        return self.env.ref('auction_module.action_report_auction_players').report_action(self)
+
 
 class AuctionPlayer(models.Model):
 

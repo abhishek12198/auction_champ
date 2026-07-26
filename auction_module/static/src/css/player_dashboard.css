@@ -22,33 +22,57 @@
 .pd-hdr {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     flex-shrink: 0;
-    height: 48px;
+    min-height: 68px;
+    height: auto;
     background: rgba(0,0,0,.25);
-    border-radius: 10px;
-    padding: 0 16px;
+    border-radius: 12px;
+    padding: 10px 16px;
     border: 1px solid rgba(255,255,255,.08);
+}
+.pd-hdr-brand {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 14px;
 }
 .pd-hdr-logo-wrap {
     flex-shrink: 0;
-    width: 36px; height: 36px;
-    border-radius: 8px;
-    background: rgba(255,255,255,.1);
-    border: 1px solid rgba(255,255,255,.18);
+    width: 52px; height: 52px;
+    border-radius: 12px;
+    background: linear-gradient(145deg, rgba(255,215,0,.18), rgba(255,255,255,.08));
+    border: 1px solid rgba(255,215,0,.35);
+    box-shadow: 0 0 0 1px rgba(255,215,0,.12), 0 6px 16px rgba(0,0,0,.25);
     display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
 }
-.pd-hdr-logo-ph { font-size: 1.3rem; line-height: 1; }
+.pd-hdr-logo {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    display: block;
+    background: rgba(255,255,255,.06);
+}
+.pd-hdr-logo-ph { font-size: 1.55rem; line-height: 1; }
 .pd-hdr-text {
     flex: 1; display: flex; flex-direction: column;
     justify-content: center; min-width: 0; overflow: hidden;
+    gap: 1px;
 }
-.pd-hdr-title {
-    font-size: 1rem; font-weight: 700; color: #fff;
+.pd-hdr-kicker {
+    font-size: .68rem; font-weight: 600; letter-spacing: .08em;
+    text-transform: uppercase; color: rgba(255,255,255,.5);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;
 }
+.pd-hdr-tour {
+    font-size: 1.35rem; font-weight: 800; color: #ffd54f;
+    letter-spacing: .02em; line-height: 1.15;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    text-shadow: 0 0 18px rgba(255,213,79,.28);
+}
 .pd-hdr-sub {
-    font-size: .72rem; color: rgba(255,255,255,.6);
+    font-size: .78rem; color: rgba(255,255,255,.72);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;
 }
 .pd-live-badge {
@@ -205,11 +229,21 @@
 .pd-light { background: #f0f4f8; color: #0d1b3e; }
 
 .pd-light .pd-hdr {
-    background: rgba(13,27,62,.07); border-color: rgba(13,27,62,.12);
+    background: #fff;
+    border-color: rgba(13,27,62,.1);
+    box-shadow: 0 2px 10px rgba(13,27,62,.06);
 }
-.pd-light .pd-hdr-title { color: #0d1b3e; }
+.pd-light .pd-hdr-kicker { color: rgba(13,27,62,.45); }
+.pd-light .pd-hdr-tour {
+    color: #b8860b;
+    text-shadow: none;
+}
 .pd-light .pd-hdr-sub   { color: rgba(13,27,62,.55); }
-.pd-light .pd-hdr-logo-wrap { background: rgba(13,27,62,.06); border-color: rgba(13,27,62,.18); }
+.pd-light .pd-hdr-logo-wrap {
+    background: linear-gradient(145deg, rgba(232,160,32,.16), rgba(13,27,62,.04));
+    border-color: rgba(184,134,11,.4);
+    box-shadow: 0 0 0 1px rgba(184,134,11,.12), 0 4px 12px rgba(13,27,62,.08);
+}
 .pd-light .pd-hdr-logo-ph   { color: #0d1b3e; }
 
 .pd-light .pd-live-badge {
@@ -265,7 +299,10 @@
 @media (max-width: 768px) {
     .o_player_dashboard { padding: 10px; gap: 10px; }
 
-    .pd-hdr { height: auto; padding: 8px 12px; flex-wrap: wrap; gap: 6px; }
+    .pd-hdr { height: auto; padding: 10px 12px; flex-wrap: wrap; gap: 8px; }
+    .pd-hdr-brand { width: 100%; }
+    .pd-hdr-logo-wrap { width: 44px; height: 44px; }
+    .pd-hdr-tour { font-size: 1.15rem; }
     .pd-hdr-text { min-width: 120px; }
 
     /* Stat cards: 2 per row on mobile */

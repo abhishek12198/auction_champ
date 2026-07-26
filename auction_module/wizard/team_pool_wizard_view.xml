@@ -152,10 +152,18 @@
         </field>
     </record>
 
+    <!-- Existing XML id must stay ir.actions.act_window (cannot change model in-place) -->
     <record id="action_team_pool_wizard" model="ir.actions.act_window">
-        <field name="name">Team Pool Generator</field>
+        <field name="name">Pool Generator (Classic)</field>
         <field name="res_model">auction.team.pool.wizard</field>
         <field name="view_mode">form</field>
+        <field name="target">current</field>
+    </record>
+
+    <!-- New client action for the redesigned Pool Generator UI -->
+    <record id="action_team_pool_generator" model="ir.actions.client">
+        <field name="name">Pool Generator</field>
+        <field name="tag">auction_module.pool_generator</field>
         <field name="target">current</field>
     </record>
 

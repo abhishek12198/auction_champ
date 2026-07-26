@@ -58,6 +58,7 @@ class IrActionsReport(models.Model):
             'auction_module.report_player_card_list_cherry',
             'auction_module.report_player_card_list_pistah',
             'auction_module.report_player_card_list_lemon',
+            'auction_module.report_player_card_list_blackberry',
         )
         if self.report_name in generic_card_reports and res_ids:
             players = self.env['auction.team.player'].browse(res_ids).exists()

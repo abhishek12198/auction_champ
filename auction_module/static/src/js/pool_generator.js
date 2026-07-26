@@ -1,0 +1,1014 @@
+odoo.define('auction_module.PoolGenerator', function (require) {
+    'use strict';
+
+    var AbstractAction = require('web.AbstractAction');
+    var core = require('web.core');
+    var Dialog = require('web.Dialog');
+
+    var POOL_COLORS = [
+        '#1a4f9c', '#0e6e8c', '#1e5a8a', '#2456a8',
+        '#17607a', '#2a4d8f', '#0f5575', '#1c4580',
+    ];
+
+    function esc(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    var PoolGenerator = AbstractAction.extend({
+        className: 'o_pool_generator',
+        events: {
+            'click .pg-step': '_onStepClick',
+            'input .pg-search': '_onSearch',
+            'click .pg-team-card': '_onToggleTeam',
+            'click .pg-btn-select-all': '_onSelectAll',
+            'click .pg-btn-clear': '_onClearTeams',
+            'click .pg-btn-next': '_onNext',
+            'click .pg-btn-back': '_onBack',
+            'change .pg-pool-count': '_onPoolCountChange',
+            'input .pg-pool-name': '_onPoolNameInput',
+            'click .pg-btn-generate': '_onGeneratePools',
+            'click .pg-btn-reshuffle': '_onGeneratePools',
+            'click .pg-btn-apply-names': '_onApplyNames',
+            'click .pg-btn-snapshot-pools': '_onSnapshotPools',
+            'click .pg-btn-save-tournament': '_onSaveToTournament',
+            'click .pg-ftype': '_onFixtureType',
+            'change .pg-outside-n': '_onOutsideN',
+            'click .pg-btn-fixture': '_onGenerateFixture',
+            'click .pg-btn-snapshot-fixture': '_onSnapshotFixture',
+            'click .pg-fx-remove': '_onRemoveMatch',
+        },
+
+        init: function () {
+            this._super.apply(this, arguments);
+            this.state = {
+                step: 1,
+                tournament: {},
+                teams: [],
+                selected: {},
+                search: '',
+                poolCount: 2,
+                poolNames: [],
+                structure: null,
+                pools: [],
+                tournamentName: '',
+                fixtureTypes: [],
+                fixtureType: 'pool_rr',
+                outsideN: 1,
+                fixture: null,
+            };
+            this._dragIdx = null;
+            this._revealTimer = null;
+            this._revealMsgTimer = null;
+        },
+
+        start: function () {
+            var self = this;
+            var result = this._super.apply(this, arguments);
+            this.$el.css('position', 'relative');
+            this.$el.html('<div class="pg-empty"><strong>Loading Pool Generator…</strong></div>');
+            return Promise.resolve(result).then(function () {
+                return self._rpc({
+                    model: 'auction.team.pool.wizard',
+                    method: 'client_bootstrap',
+                    args: [],
+                }).then(function (data) {
+                    self.state.tournament = data.tournament || {};
+                    self.state.teams = data.teams || [];
+                    self.state.poolCount = data.default_pool_count || 2;
+                    self.state.fixtureTypes = data.fixture_types || [];
+                    self.state.fixtureType = (self.state.fixtureTypes[0] && self.state.fixtureTypes[0].value) || 'pool_rr';
+                    self._applySavedState(data);
+                    return self._loadPoolNames(self.state.poolCount);
+                }).then(function () {
+                    self._render();
+                }).catch(function (err) {
+                    console.error('[PoolGenerator]', err);
+                    self.$el.html(
+                        '<div class="pg-empty"><strong>Could not load Pool Generator</strong>' +
+                        '<div>Check that a tournament is selected and you have access.</div></div>'
+                    );
+                });
+            });
+        },
+
+        _loadPoolNames: function (count) {
+            var self = this;
+            // Keep custom names if already restored from tournament save
+            if (this.state.poolNames && this.state.poolNames.length === count && this.state._namesFromSave) {
+                this.state._namesFromSave = false;
+                return Promise.resolve();
+            }
+            return this._rpc({
+                model: 'auction.team.pool.wizard',
+                method: 'client_pool_labels',
+                args: [count],
+            }).then(function (rows) {
+                var prev = self.state.poolNames || [];
+                self.state.poolNames = (rows || []).map(function (row, i) {
+                    return {
+                        index: row.index,
+                        default_label: row.default_label,
+                        custom_name: (prev[i] && prev[i].custom_name) || row.custom_name,
+                    };
+                });
+            });
+        },
+
+        _applySavedState: function (data) {
+            var saved = data.saved_pools;
+            if (saved && saved.structure && saved.pools) {
+                this.state.structure = saved.structure;
+                this.state.pools = saved.pools;
+                this.state.tournamentName = saved.tournament_name || this.state.tournament.name || '';
+                this.state.poolCount = saved.pool_count || saved.structure.length || 2;
+                var names = saved.pool_names || [];
+                this.state.poolNames = names.map(function (n, i) {
+                    return {
+                        index: i + 1,
+                        default_label: n || ('Pool ' + String.fromCharCode(65 + i)),
+                        custom_name: n || ('Pool ' + String.fromCharCode(65 + i)),
+                    };
+                });
+                this.state._namesFromSave = true;
+                var selected = {};
+                (saved.team_ids || []).forEach(function (id) { selected[id] = true; });
+                this.state.selected = selected;
+                this.state.step = 3;
+            }
+            if (data.saved_fixture && data.saved_fixture.matches) {
+                this.state.fixture = data.saved_fixture;
+                this.state.fixtureType = data.saved_fixture.fixture_type || this.state.fixtureType;
+                this.state.outsideN = data.saved_fixture.outside_n || this.state.outsideN;
+                if (this.state.structure) this.state.step = 4;
+            }
+        },
+
+        _selectedIds: function () {
+            var ids = [];
+            var sel = this.state.selected;
+            Object.keys(sel).forEach(function (id) {
+                if (sel[id]) ids.push(parseInt(id, 10));
+            });
+            return ids;
+        },
+
+        _nameList: function () {
+            return this.state.poolNames.map(function (p) {
+                return (p.custom_name || p.default_label || '').trim();
+            });
+        },
+
+        _toast: function (msg) {
+            var self = this;
+            this.$('.pg-toast').remove();
+            var $t = $('<div class="pg-toast"/>').text(msg);
+            this.$el.append($t);
+            setTimeout(function () { $t.fadeOut(200, function () { $t.remove(); }); }, 2200);
+        },
+
+        _render: function () {
+            var t = this.state.tournament || {};
+            var logo = t.logo_url
+                ? '<img class="pg-hdr-logo" src="' + esc(t.logo_url) + '" alt=""/>'
+                : '<div class="pg-hdr-logo-ph">🏟️</div>';
+            var html = [
+                '<div class="pg-shell">',
+                '<div class="pg-hdr">',
+                logo,
+                '<div class="pg-hdr-text">',
+                '<span class="pg-hdr-kicker">Auction Settings</span>',
+                '<span class="pg-hdr-title">Pool Generator</span>',
+                '<span class="pg-hdr-sub">' + esc(t.name || 'Select a working tournament from the systray') + '</span>',
+                '</div>',
+                '<span class="pg-stat-pill">Teams <b>' + this._selectedIds().length + '</b> / ' + this.state.teams.length + '</span>',
+                '</div>',
+                this._renderSteps(),
+                '<div class="pg-body">',
+                this._renderStepBody(),
+                '</div>',
+                '</div>',
+            ].join('');
+            this.$el.html(html);
+            if (this.state.step === 4 && this.state.fixture) {
+                this._bindFixtureDnD();
+            }
+        },
+
+        _renderSteps: function () {
+            var steps = [
+                {n: 1, label: 'Select Teams'},
+                {n: 2, label: 'Configure Pools'},
+                {n: 3, label: 'Pool Draw'},
+                {n: 4, label: 'Fixtures'},
+            ];
+            var step = this.state.step;
+            var hasPools = !!this.state.structure;
+            return '<div class="pg-steps">' + steps.map(function (s) {
+                var cls = 'pg-step';
+                if (s.n === step) cls += ' is-active';
+                if (s.n < step || (s.n === 3 && hasPools && step === 4)) cls += ' is-done';
+                return '<button type="button" class="' + cls + '" data-step="' + s.n + '">' +
+                    '<span class="pg-step-num">' + s.n + '</span>' + esc(s.label) +
+                    '</button>';
+            }).join('') + '</div>';
+        },
+
+        _renderStepBody: function () {
+            if (this.state.step === 1) return this._renderSelect();
+            if (this.state.step === 2) return this._renderConfig();
+            if (this.state.step === 3) return this._renderPools();
+            return this._renderFixture();
+        },
+
+        _renderSelect: function () {
+            var self = this;
+            var q = (this.state.search || '').toLowerCase();
+            var cards = this.state.teams.filter(function (t) {
+                if (!q) return true;
+                return (t.name || '').toLowerCase().indexOf(q) !== -1 ||
+                    (t.manager || '').toLowerCase().indexOf(q) !== -1;
+            }).map(function (t) {
+                var selected = !!self.state.selected[t.id];
+                var logo = t.logo_url
+                    ? '<img class="pg-team-logo" src="' + esc(t.logo_url) + '" alt=""/>'
+                    : '<span class="pg-team-logo-ph">' + esc(t.initials || '?') + '</span>';
+                return '<div class="pg-team-card' + (selected ? ' is-selected' : '') + '" data-id="' + t.id + '">' +
+                    logo +
+                    '<div class="pg-team-meta">' +
+                    '<span class="pg-team-name">' + esc(t.name) + '</span>' +
+                    (t.manager ? '<span class="pg-team-mgr">' + esc(t.manager) + '</span>' : '') +
+                    '</div><span class="pg-check"></span></div>';
+            }).join('');
+
+            if (!this.state.teams.length) {
+                cards = '<div class="pg-empty"><strong>No teams found</strong>' +
+                    '<div>Create teams for the active tournament first.</div></div>';
+            } else if (!cards) {
+                cards = '<div class="pg-empty"><strong>No matches</strong><div>Try another search.</div></div>';
+            }
+
+            return [
+                '<div class="pg-panel">',
+                '<h2 class="pg-panel-title">Select Teams</h2>',
+                '<p class="pg-panel-hint">Choose which teams enter the draw. You can search, select all, or pick individually.</p>',
+                '<div class="pg-toolbar">',
+                '<input class="pg-search" type="search" placeholder="Search teams…" value="' + esc(this.state.search) + '"/>',
+                '<button type="button" class="pg-btn pg-btn-select-all">Select All</button>',
+                '<button type="button" class="pg-btn pg-btn-clear">Clear</button>',
+                '</div>',
+                '<div class="pg-team-grid">' + cards + '</div>',
+                '<div class="pg-footer-bar">',
+                '<button type="button" class="pg-btn pg-btn-primary pg-btn-next" ' +
+                    (this._selectedIds().length < 2 ? 'disabled' : '') + '>Continue to Configure</button>',
+                '</div></div>',
+            ].join('');
+        },
+
+        _renderConfig: function () {
+            var names = this.state.poolNames.map(function (p) {
+                return '<div class="pg-name-row">' +
+                    '<span class="pg-name-idx">' + esc(p.default_label) + '</span>' +
+                    '<input class="pg-input pg-pool-name" data-index="' + p.index + '" ' +
+                    'value="' + esc(p.custom_name || '') + '" placeholder="' + esc(p.default_label) + '"/>' +
+                    '</div>';
+            }).join('');
+            return [
+                '<div class="pg-panel">',
+                '<h2 class="pg-panel-title">Configure Pools</h2>',
+                '<p class="pg-panel-hint">Set how many pools to create and optionally rename them (Blue Group, Red Group, …).</p>',
+                '<div class="pg-config-grid">',
+                '<div>',
+                '<label class="pg-field-label">Number of Pools</label>',
+                '<input class="pg-input pg-pool-count" type="number" min="1" max="' +
+                    Math.max(1, this._selectedIds().length) + '" value="' + this.state.poolCount + '"/>',
+                '<div style="margin-top:10px" class="pg-stat-pill">Selected teams <b>' +
+                    this._selectedIds().length + '</b></div>',
+                '</div>',
+                '<div>',
+                '<label class="pg-field-label">Pool Names</label>',
+                '<div class="pg-name-list">' + names + '</div>',
+                '</div></div>',
+                '<div class="pg-footer-bar">',
+                '<button type="button" class="pg-btn pg-btn-back">Back</button>',
+                '<button type="button" class="pg-btn pg-btn-primary pg-btn-generate">Generate Pools</button>',
+                '</div></div>',
+            ].join('');
+        },
+
+        _renderPools: function () {
+            if (!this.state.structure) {
+                return '<div class="pg-panel"><div class="pg-empty"><strong>No draw yet</strong>' +
+                    '<div>Go back and generate pools first.</div></div>' +
+                    '<div class="pg-footer-bar"><button type="button" class="pg-btn pg-btn-back">Back</button></div></div>';
+            }
+            var poolCount = (this.state.pools || []).length;
+            var rowCount = Math.max(1, Math.ceil(poolCount / 2));
+            var cols = this.state.pools.map(function (pool, i) {
+                var color = POOL_COLORS[i % POOL_COLORS.length];
+                var rows = (pool.teams || []).map(function (t, ti) {
+                    var logo = t.logo_url
+                        ? '<img class="pg-pool-team-logo" src="' + esc(t.logo_url) + '" alt=""/>'
+                        : '<span class="pg-pool-team-ph">' + esc(t.initials || '?') + '</span>';
+                    return '<div class="pg-pool-team">' +
+                        '<span class="pg-pool-team-no">' + (ti + 1) + '</span>' +
+                        logo +
+                        '<span class="pg-pool-team-name">' + esc(t.name) + '</span></div>';
+                }).join('');
+                return '<div class="pg-pool-col">' +
+                    '<div class="pg-pool-hd" style="--pool-c:' + color + '">' +
+                    '<span class="pg-pool-hd-kicker">GROUP</span>' +
+                    '<span class="pg-pool-hd-name">' + esc(pool.name) + '</span>' +
+                    '<span class="pg-pool-hd-count">' + (pool.teams || []).length + ' teams</span>' +
+                    '</div>' +
+                    '<div class="pg-pool-list">' + rows + '</div></div>';
+            }).join('');
+
+            var nameEditors = this.state.poolNames.map(function (p) {
+                return '<div class="pg-name-row">' +
+                    '<span class="pg-name-idx">#' + p.index + '</span>' +
+                    '<input class="pg-input pg-pool-name" data-index="' + p.index + '" value="' +
+                    esc(p.custom_name || '') + '"/>' +
+                    '</div>';
+            }).join('');
+
+            return [
+                '<div class="pg-panel">',
+                '<h2 class="pg-panel-title">Pool Draw</h2>',
+                '<p class="pg-panel-hint">Reshuffle to redraw randomly, rename pools and apply without reshuffling, or download a snapshot.</p>',
+                '<div class="pg-toolbar">',
+                '<button type="button" class="pg-btn pg-btn-reshuffle">Reshuffle</button>',
+                '<button type="button" class="pg-btn pg-btn-apply-names">Apply Names</button>',
+                '<button type="button" class="pg-btn pg-btn-primary pg-btn-snapshot-pools">Download Snapshot</button>',
+                '<button type="button" class="pg-btn pg-btn-ok pg-btn-save-tournament">Save to Tournament</button>',
+                '</div>',
+                '<div class="pg-stage-wrap">',
+                '<div class="pg-stage pg-stage-square pg-stage-rows-' + rowCount +
+                    '" id="pg-pool-snapshot-target" data-rows="' + rowCount + '">',
+                '<div class="pg-stage-banner">',
+                '<div class="pg-stage-kicker">Official Pool Draw</div>',
+                '<div class="pg-stage-title">' + esc(this.state.tournamentName || 'Pool Draw') + '</div>',
+                '<div class="pg-stage-rule"></div>',
+                '</div>',
+                '<div class="pg-pool-board pg-pool-board-grid pg-pool-board-rows-' + rowCount +
+                    '" id="pg-pool-board">' + cols + '</div>',
+                '<div class="pg-stage-foot">AuctionChamp · Pool Generator</div>',
+                '</div>',
+                '</div>',
+                '<div style="margin-top:16px">',
+                '<label class="pg-field-label">Rename Pools</label>',
+                '<div class="pg-name-list" style="max-width:520px">' + nameEditors + '</div>',
+                '</div>',
+                '<div class="pg-footer-bar">',
+                '<button type="button" class="pg-btn pg-btn-back">Back</button>',
+                '<button type="button" class="pg-btn pg-btn-primary pg-btn-next">Continue to Fixtures</button>',
+                '</div></div>',
+            ].join('');
+        },
+
+        _renderFixture: function () {
+            var self = this;
+            if (!this.state.structure) {
+                return '<div class="pg-panel"><div class="pg-empty"><strong>Generate pools first</strong></div>' +
+                    '<div class="pg-footer-bar"><button type="button" class="pg-btn pg-btn-back">Back</button></div></div>';
+            }
+            var icons = {
+                pool_rr: '◎',
+                cross_pool_rr: '✕',
+                custom_outside: 'N',
+            };
+            var types = (this.state.fixtureTypes || []).map(function (ft) {
+                return '<div class="pg-ftype' + (self.state.fixtureType === ft.value ? ' is-selected' : '') +
+                    '" data-value="' + esc(ft.value) + '">' +
+                    '<div class="pg-ftype-ico">' + (icons[ft.value] || '•') + '</div>' +
+                    '<div class="pg-ftype-title">' + esc(ft.label) + '</div>' +
+                    '<div class="pg-ftype-hint">' + esc(ft.hint || '') + '</div></div>';
+            }).join('');
+
+            var outside = this.state.fixtureType === 'custom_outside'
+                ? '<div style="max-width:220px;margin-bottom:12px"><label class="pg-field-label">Outside matches per team (N)</label>' +
+                  '<input class="pg-input pg-outside-n" type="number" min="1" value="' + this.state.outsideN + '"/></div>'
+                : '';
+
+            var board = '';
+            if (this.state.fixture && this.state.fixture.matches) {
+                board = [
+                    '<div class="pg-toolbar" style="margin-top:8px">',
+                    '<span class="pg-stat-pill">' + esc(this.state.fixture.subtitle || 'Fixture') +
+                    ' · <b class="pg-fx-match-count">' + this.state.fixture.matches.length + '</b> matches</span>',
+                    '<button type="button" class="pg-btn pg-btn-primary pg-btn-snapshot-fixture">Download Fixture Image</button>',
+                    '<button type="button" class="pg-btn pg-btn-ok pg-btn-save-tournament">Save Snapshot to Tournament</button>',
+                    '</div>',
+                    '<p class="pg-panel-hint" style="margin:8px 0 4px">Drag the <b>⠿</b> handle to reorder. Use <b>×</b> to remove a match. Save when the order looks right.</p>',
+                    '<div class="pg-stage-wrap">',
+                    '<div class="pg-stage pg-stage-portrait" id="pg-fixture-snapshot-target">',
+                    '<div class="pg-stage-banner">',
+                    '<div class="pg-stage-kicker">Match Schedule</div>',
+                    '<div class="pg-stage-title">' + esc(this.state.fixture.tournament || this.state.tournamentName || 'Fixture') + '</div>',
+                    '<div class="pg-stage-sub">' + esc(this.state.fixture.subtitle || '') + '</div>',
+                    '<div class="pg-stage-rule"></div>',
+                    '</div>',
+                    '<div class="pg-fixture-board pg-fixture-board-vertical" id="pg-fixture-board"></div>',
+                    '<div class="pg-stage-foot">AuctionChamp · Drag to reorder · Remove unwanted matches</div>',
+                    '</div>',
+                    '</div>',
+                ].join('');
+            }
+
+            return [
+                '<div class="pg-panel">',
+                '<h2 class="pg-panel-title">Fixture Generator</h2>',
+                '<p class="pg-panel-hint">Pick a fixture style, generate the schedule, reorder or remove matches, then save a snapshot.</p>',
+                '<div class="pg-fixture-types">' + types + '</div>',
+                outside,
+                '<div class="pg-toolbar">',
+                '<button type="button" class="pg-btn pg-btn-ok pg-btn-fixture">Generate Fixture</button>',
+                '</div>',
+                board,
+                '<div class="pg-footer-bar">',
+                '<button type="button" class="pg-btn pg-btn-back">Back</button>',
+                '</div></div>',
+            ].join('');
+        },
+
+        _onStepClick: function (ev) {
+            var step = parseInt($(ev.currentTarget).data('step'), 10);
+            if (step === 3 && !this.state.structure) return;
+            if (step === 4 && !this.state.structure) return;
+            if (step === 2 && this._selectedIds().length < 2) return;
+            this.state.step = step;
+            this._render();
+        },
+        _onSearch: function (ev) {
+            this.state.search = ev.currentTarget.value || '';
+            this._render();
+            this.$('.pg-search').focus().val(this.state.search);
+            var el = this.$('.pg-search')[0];
+            if (el) el.setSelectionRange(this.state.search.length, this.state.search.length);
+        },
+        _onToggleTeam: function (ev) {
+            var id = $(ev.currentTarget).data('id');
+            this.state.selected[id] = !this.state.selected[id];
+            this._render();
+        },
+        _onSelectAll: function () {
+            var self = this;
+            this.state.teams.forEach(function (t) { self.state.selected[t.id] = true; });
+            this._render();
+        },
+        _onClearTeams: function () {
+            this.state.selected = {};
+            this._render();
+        },
+        _onNext: function () {
+            if (this.state.step === 1 && this._selectedIds().length >= 2) {
+                this.state.step = 2;
+                this._render();
+            } else if (this.state.step === 3 && this.state.structure) {
+                this.state.step = 4;
+                this._render();
+            }
+        },
+        _onBack: function () {
+            if (this.state.step > 1) {
+                this.state.step -= 1;
+                this._render();
+            }
+        },
+        _onPoolCountChange: function (ev) {
+            var self = this;
+            var n = parseInt(ev.currentTarget.value, 10) || 1;
+            var max = Math.max(1, this._selectedIds().length);
+            n = Math.max(1, Math.min(max, n));
+            this.state.poolCount = n;
+            this._loadPoolNames(n).then(function () { self._render(); });
+        },
+        _onPoolNameInput: function (ev) {
+            var idx = parseInt($(ev.currentTarget).data('index'), 10);
+            var val = ev.currentTarget.value;
+            this.state.poolNames.forEach(function (p) {
+                if (p.index === idx) p.custom_name = val;
+            });
+        },
+        _onGeneratePools: function () {
+            var self = this;
+            var ids = this._selectedIds();
+            if (ids.length < 2) {
+                this._toast('Select at least 2 teams');
+                return;
+            }
+            if (this.state.revealing) return;
+            this._showRevealLoading('pools');
+            var rpc = this._rpc({
+                model: 'auction.team.pool.wizard',
+                method: 'client_generate_pools',
+                args: [ids, this.state.poolCount, this._nameList()],
+            });
+            Promise.all([rpc, this._waitReveal(5000)]).then(function (pair) {
+                var res = pair[0];
+                self._hideRevealLoading();
+                self.state.structure = res.structure;
+                self.state.pools = res.pools;
+                self.state.tournamentName = res.tournament_name;
+                self.state.fixture = null;
+                self.state.step = 3;
+                self._render();
+                self._toast('Pools generated');
+            }).catch(function (err) {
+                self._hideRevealLoading();
+                Dialog.alert(self, (err && err.data && err.data.message) || 'Failed to generate pools');
+            });
+        },
+        _onApplyNames: function () {
+            var self = this;
+            if (!this.state.structure) return;
+            this._rpc({
+                model: 'auction.team.pool.wizard',
+                method: 'client_apply_names',
+                args: [this.state.structure, this._nameList()],
+            }).then(function (res) {
+                self.state.pools = res.pools;
+                self.state.tournamentName = res.tournament_name;
+                self._render();
+                self._toast('Names applied');
+            });
+        },
+        _onFixtureType: function (ev) {
+            this.state.fixtureType = $(ev.currentTarget).data('value');
+            this._render();
+        },
+        _onOutsideN: function (ev) {
+            this.state.outsideN = Math.max(1, parseInt(ev.currentTarget.value, 10) || 1);
+        },
+        _onGenerateFixture: function () {
+            var self = this;
+            if (this.state.revealing) return;
+            if (!this.state.structure) {
+                this._toast('Generate pools first');
+                return;
+            }
+            this._showRevealLoading('fixtures');
+            var rpc = this._rpc({
+                model: 'auction.team.pool.wizard',
+                method: 'client_generate_fixture',
+                args: [this.state.structure, this._nameList(), this.state.fixtureType, this.state.outsideN],
+            });
+            Promise.all([rpc, this._waitReveal(5000)]).then(function (pair) {
+                var res = pair[0];
+                self._hideRevealLoading();
+                self.state.fixture = res;
+                self._render();
+                self._toast(res.matches.length + ' matches ready — drag to reorder');
+            }).catch(function (err) {
+                self._hideRevealLoading();
+                Dialog.alert(self, (err && err.data && err.data.message) || 'Failed to generate fixture');
+            });
+        },
+
+        _revealMessages: function (kind) {
+            if (kind === 'fixtures') {
+                return [
+                    'Seeding the bracket…',
+                    'Shuffling matchups…',
+                    'Balancing home & away…',
+                    'Locking in rivalries…',
+                    'Almost ready to kick off…',
+                ];
+            }
+            return [
+                'Shuffling the hat…',
+                'Drawing the lots…',
+                'Avoiding early clashes…',
+                'Balancing the groups…',
+                'Sealing the pool draw…',
+            ];
+        },
+        _showRevealLoading: function (kind) {
+            var self = this;
+            this.state.revealing = true;
+            this._hideRevealLoading(true);
+            var msgs = this._revealMessages(kind);
+            var title = kind === 'fixtures' ? 'Building Fixtures' : 'Drawing Pools';
+            var kicker = kind === 'fixtures' ? 'Fixture Generator' : 'Pool Draw';
+            var $overlay = $(
+                '<div class="pg-reveal" id="pg-reveal">' +
+                '<div class="pg-reveal-card">' +
+                '<div class="pg-reveal-kicker">' + esc(kicker) + '</div>' +
+                '<div class="pg-reveal-title">' + esc(title) + '</div>' +
+                '<div class="pg-reveal-orbit">' +
+                '<span class="pg-reveal-ring"></span>' +
+                '<span class="pg-reveal-ring pg-reveal-ring-2"></span>' +
+                '<span class="pg-reveal-core"></span>' +
+                '<span class="pg-reveal-chip pg-reveal-chip-a">A</span>' +
+                '<span class="pg-reveal-chip pg-reveal-chip-b">B</span>' +
+                '<span class="pg-reveal-chip pg-reveal-chip-c">C</span>' +
+                '</div>' +
+                '<div class="pg-reveal-msg" id="pg-reveal-msg">' + esc(msgs[0]) + '</div>' +
+                '<div class="pg-reveal-bar"><i id="pg-reveal-bar-fill"></i></div>' +
+                '<div class="pg-reveal-hint">Hold tight — the reveal is coming</div>' +
+                '</div></div>'
+            );
+            this.$el.append($overlay);
+            requestAnimationFrame(function () {
+                $overlay.addClass('is-on');
+                var fill = document.getElementById('pg-reveal-bar-fill');
+                if (fill) fill.style.transitionDuration = '5s';
+                requestAnimationFrame(function () {
+                    if (fill) fill.style.width = '100%';
+                });
+            });
+            var mi = 0;
+            this._revealMsgTimer = setInterval(function () {
+                mi = (mi + 1) % msgs.length;
+                var el = document.getElementById('pg-reveal-msg');
+                if (el) {
+                    el.classList.add('is-swap');
+                    setTimeout(function () {
+                        el.textContent = msgs[mi];
+                        el.classList.remove('is-swap');
+                    }, 180);
+                }
+            }, 900);
+        },
+        _waitReveal: function (ms) {
+            var self = this;
+            return new Promise(function (resolve) {
+                self._revealTimer = setTimeout(resolve, ms || 5000);
+            });
+        },
+        _hideRevealLoading: function (silent) {
+            this.state.revealing = false;
+            if (this._revealTimer) {
+                clearTimeout(this._revealTimer);
+                this._revealTimer = null;
+            }
+            if (this._revealMsgTimer) {
+                clearInterval(this._revealMsgTimer);
+                this._revealMsgTimer = null;
+            }
+            var $el = this.$('#pg-reveal');
+            if (!$el.length) return;
+            if (silent) {
+                $el.remove();
+                return;
+            }
+            $el.removeClass('is-on').addClass('is-out');
+            setTimeout(function () { $el.remove(); }, 280);
+        },
+
+        _bindFixtureDnD: function () {
+            var board = this.el.querySelector('#pg-fixture-board');
+            if (!board || !this.state.fixture) return;
+            this._paintFixtureBoard(board, {editable: true});
+        },
+
+        _paintFixtureBoard: function (board, opts) {
+            var self = this;
+            var editable = !!(opts && opts.editable);
+            var matches = (this.state.fixture && this.state.fixture.matches) || [];
+            board.innerHTML = '';
+            if (!matches.length) {
+                var empty = document.createElement('div');
+                empty.className = 'pg-empty';
+                empty.innerHTML = '<strong>No matches left</strong><div>Generate the fixture again, or keep this empty schedule.</div>';
+                board.appendChild(empty);
+                this._syncFixtureMatchCount();
+                return;
+            }
+            var lastSection = null;
+            matches.forEach(function (m, idx) {
+                if (m.section && m.section !== lastSection) {
+                    lastSection = m.section;
+                    var sec = document.createElement('div');
+                    sec.className = 'pg-fx-section';
+                    sec.textContent = m.section;
+                    board.appendChild(sec);
+                }
+                board.appendChild(self._makeFxCard(m, idx, editable));
+            });
+            this._syncFixtureMatchCount();
+        },
+
+        _syncFixtureMatchCount: function () {
+            var n = (this.state.fixture && this.state.fixture.matches)
+                ? this.state.fixture.matches.length : 0;
+            var el = this.el.querySelector('.pg-fx-match-count');
+            if (el) el.textContent = String(n);
+        },
+
+        _onRemoveMatch: function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            if (!this.state.fixture || !this.state.fixture.matches) return;
+            var idx = parseInt($(ev.currentTarget).data('idx'), 10);
+            if (isNaN(idx) || idx < 0 || idx >= this.state.fixture.matches.length) return;
+            this.state.fixture.matches.splice(idx, 1);
+            var board = this.el.querySelector('#pg-fixture-board');
+            if (board) this._paintFixtureBoard(board, {editable: true});
+            this._toast('Match removed');
+        },
+
+        _makeFxCard: function (match, idx, editable) {
+            var self = this;
+            var card = document.createElement('div');
+            card.className = 'pg-fx-card' + (editable ? ' is-editable' : ' is-snapshot');
+            card.dataset.idx = String(idx);
+
+            function logo(team) {
+                if (team.logo_url) {
+                    var img = document.createElement('img');
+                    img.className = 'pg-fx-logo';
+                    img.src = team.logo_url;
+                    return img;
+                }
+                var ph = document.createElement('span');
+                ph.className = 'pg-fx-logo-ph';
+                ph.textContent = team.initials || '?';
+                return ph;
+            }
+
+            var n = document.createElement('span');
+            n.className = 'pg-fx-n';
+            n.textContent = 'M' + (idx + 1);
+
+            var sideA = document.createElement('div');
+            sideA.className = 'pg-fx-side';
+            sideA.appendChild(logo(match.team_a));
+            var nameA = document.createElement('span');
+            nameA.className = 'pg-fx-name';
+            nameA.textContent = match.team_a.name;
+            sideA.appendChild(nameA);
+
+            var vs = document.createElement('span');
+            vs.className = 'pg-fx-vs';
+            vs.innerHTML = '<span>VS</span>';
+
+            var sideB = document.createElement('div');
+            sideB.className = 'pg-fx-side right';
+            var nameB = document.createElement('span');
+            nameB.className = 'pg-fx-name';
+            nameB.textContent = match.team_b.name;
+            sideB.appendChild(nameB);
+            sideB.appendChild(logo(match.team_b));
+
+            card.appendChild(n);
+            card.appendChild(sideA);
+            card.appendChild(vs);
+            card.appendChild(sideB);
+
+            if (editable) {
+                var actions = document.createElement('div');
+                actions.className = 'pg-fx-actions';
+
+                var grip = document.createElement('span');
+                grip.className = 'pg-fx-grip';
+                grip.title = 'Drag to reorder';
+                grip.setAttribute('aria-label', 'Drag to reorder');
+                grip.textContent = '⠿';
+
+                var remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'pg-fx-remove';
+                remove.title = 'Remove match';
+                remove.setAttribute('aria-label', 'Remove match');
+                remove.dataset.idx = String(idx);
+                remove.textContent = '×';
+                remove.addEventListener('mousedown', function (ev) {
+                    ev.stopPropagation();
+                });
+                remove.addEventListener('dragstart', function (ev) {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                });
+
+                actions.appendChild(grip);
+                actions.appendChild(remove);
+                card.appendChild(actions);
+
+                card.draggable = true;
+                card.addEventListener('dragstart', function (ev) {
+                    self._dragIdx = idx;
+                    card.classList.add('is-dragging');
+                    try {
+                        ev.dataTransfer.effectAllowed = 'move';
+                        ev.dataTransfer.setData('text/plain', String(idx));
+                    } catch (e) { /* ignore */ }
+                });
+                card.addEventListener('dragend', function () {
+                    card.classList.remove('is-dragging');
+                    self._dragIdx = null;
+                    Array.prototype.forEach.call(
+                        self.el.querySelectorAll('.pg-fx-card.is-over'),
+                        function (c) { c.classList.remove('is-over'); }
+                    );
+                });
+                card.addEventListener('dragover', function (ev) {
+                    ev.preventDefault();
+                    try { ev.dataTransfer.dropEffect = 'move'; } catch (e) { /* ignore */ }
+                    card.classList.add('is-over');
+                });
+                card.addEventListener('dragleave', function () {
+                    card.classList.remove('is-over');
+                });
+                card.addEventListener('drop', function (ev) {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    card.classList.remove('is-over');
+                    var from = self._dragIdx;
+                    var to = idx;
+                    if (from == null || from === to) return;
+                    var arr = self.state.fixture.matches;
+                    var item = arr.splice(from, 1)[0];
+                    arr.splice(to, 0, item);
+                    self._paintFixtureBoard(self.el.querySelector('#pg-fixture-board'), {editable: true});
+                });
+            }
+            return card;
+        },
+
+        _snapshotEl: function (el, filename, bg) {
+            var self = this;
+            return this._elToDataUrl(el, bg).then(function (dataUrl) {
+                if (!dataUrl) {
+                    self._toast('Nothing to capture');
+                    return;
+                }
+                var link = document.createElement('a');
+                link.href = dataUrl;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                self._toast('Downloaded');
+            }).catch(function (err) {
+                console.error(err);
+                self._toast('Snapshot failed');
+            });
+        },
+        _elToDataUrl: function (el, bg) {
+            if (!window.html2canvas) {
+                return Promise.reject(new Error('Snapshot library not loaded'));
+            }
+            if (!el) {
+                return Promise.resolve(false);
+            }
+            return window.html2canvas(el, {
+                scale: 2,
+                backgroundColor: bg || '#0a1628',
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+            }).then(function (canvas) {
+                return canvas.toDataURL('image/png');
+            });
+        },
+        _buildOffscreenPoolStage: function () {
+            if (!this.state.pools || !this.state.pools.length) return null;
+            var poolCount = this.state.pools.length;
+            var rowCount = Math.max(1, Math.ceil(poolCount / 2));
+            var cols = this.state.pools.map(function (pool, i) {
+                var color = POOL_COLORS[i % POOL_COLORS.length];
+                var rows = (pool.teams || []).map(function (t, ti) {
+                    var logo = t.logo_url
+                        ? '<img class="pg-pool-team-logo" src="' + esc(t.logo_url) + '" alt=""/>'
+                        : '<span class="pg-pool-team-ph">' + esc(t.initials || '?') + '</span>';
+                    return '<div class="pg-pool-team">' +
+                        '<span class="pg-pool-team-no">' + (ti + 1) + '</span>' +
+                        logo +
+                        '<span class="pg-pool-team-name">' + esc(t.name) + '</span></div>';
+                }).join('');
+                return '<div class="pg-pool-col">' +
+                    '<div class="pg-pool-hd" style="--pool-c:' + color + '">' +
+                    '<span class="pg-pool-hd-kicker">GROUP</span>' +
+                    '<span class="pg-pool-hd-name">' + esc(pool.name) + '</span>' +
+                    '<span class="pg-pool-hd-count">' + (pool.teams || []).length + ' teams</span>' +
+                    '</div>' +
+                    '<div class="pg-pool-list">' + rows + '</div></div>';
+            }).join('');
+            var wrap = document.createElement('div');
+            wrap.className = 'pg-offscreen-capture';
+            wrap.innerHTML =
+                '<div class="pg-stage pg-stage-square pg-stage-rows-' + rowCount + '">' +
+                '<div class="pg-stage-banner">' +
+                '<div class="pg-stage-kicker">Official Pool Draw</div>' +
+                '<div class="pg-stage-title">' + esc(this.state.tournamentName || 'Pool Draw') + '</div>' +
+                '<div class="pg-stage-rule"></div></div>' +
+                '<div class="pg-pool-board pg-pool-board-grid pg-pool-board-rows-' + rowCount + '">' +
+                cols + '</div>' +
+                '<div class="pg-stage-foot">AuctionChamp · Pool Generator</div></div>';
+            document.body.appendChild(wrap);
+            return wrap.firstElementChild;
+        },
+        _buildOffscreenFixtureStage: function () {
+            if (!this.state.fixture || !this.state.fixture.matches) return null;
+            var wrap = document.createElement('div');
+            wrap.className = 'pg-offscreen-capture';
+            wrap.innerHTML =
+                '<div class="pg-stage pg-stage-portrait">' +
+                '<div class="pg-stage-banner">' +
+                '<div class="pg-stage-kicker">Match Schedule</div>' +
+                '<div class="pg-stage-title">' + esc(this.state.fixture.tournament || this.state.tournamentName || 'Fixture') + '</div>' +
+                '<div class="pg-stage-sub">' + esc(this.state.fixture.subtitle || '') + '</div>' +
+                '<div class="pg-stage-rule"></div></div>' +
+                '<div class="pg-fixture-board pg-fixture-board-vertical"></div>' +
+                '<div class="pg-stage-foot">AuctionChamp · Fixture</div></div>';
+            document.body.appendChild(wrap);
+            var stage = wrap.firstElementChild;
+            var board = stage.querySelector('.pg-fixture-board');
+            this._paintFixtureBoard(board, {editable: false});
+            return stage;
+        },
+        _captureStageDataUrl: function (selector, builder) {
+            var el = selector ? this.el.querySelector(selector) : null;
+            var created = null;
+            if (!el && builder) {
+                el = builder.call(this);
+                created = el && el.parentElement;
+            }
+            var self = this;
+            return this._elToDataUrl(el, '#0a1628').then(function (url) {
+                if (created && created.parentNode) created.parentNode.removeChild(created);
+                return url;
+            }).catch(function (err) {
+                if (created && created.parentNode) created.parentNode.removeChild(created);
+                throw err;
+            });
+        },
+        _onSaveToTournament: function () {
+            var self = this;
+            if (!this.state.structure) {
+                this._toast('Generate pools first');
+                return;
+            }
+            if (this.state.saving) return;
+            this.state.saving = true;
+            this._toast('Capturing snapshots…');
+
+            var poolP = this._captureStageDataUrl(
+                '#pg-pool-snapshot-target', this._buildOffscreenPoolStage
+            );
+            var fixtureP = (this.state.fixture && this.state.fixture.matches && this.state.fixture.matches.length)
+                ? this._captureStageDataUrl(null, this._buildOffscreenFixtureStage)
+                : Promise.resolve(false);
+
+            Promise.all([poolP, fixtureP]).then(function (pair) {
+                return self._rpc({
+                    model: 'auction.team.pool.wizard',
+                    method: 'client_save_to_tournament',
+                    args: [
+                        self.state.structure,
+                        self._nameList(),
+                        self.state.fixture || false,
+                        pair[0] || false,
+                        pair[1] || false,
+                        self.state.fixtureType,
+                        self.state.outsideN,
+                    ],
+                });
+            }).then(function (res) {
+                self.state.saving = false;
+                self._toast((res && res.message) || 'Saved to tournament');
+            }).catch(function (err) {
+                self.state.saving = false;
+                console.error(err);
+                Dialog.alert(self, (err && err.data && err.data.message) || 'Failed to save to tournament');
+            });
+        },
+        _onSnapshotPools: function () {
+            this._toast('Generating image…');
+            this._snapshotEl(this.el.querySelector('#pg-pool-snapshot-target'), 'pool_draw.png', '#0a1628');
+        },
+        _onSnapshotFixture: function () {
+            var self = this;
+            if (!this.state.fixture || !this.state.fixture.matches || !this.state.fixture.matches.length) {
+                this._toast('No matches to capture');
+                return;
+            }
+            this._toast('Generating image…');
+            this._captureStageDataUrl(
+                null, this._buildOffscreenFixtureStage
+            ).then(function (dataUrl) {
+                if (!dataUrl) {
+                    self._toast('Nothing to capture');
+                    return;
+                }
+                var link = document.createElement('a');
+                link.href = dataUrl;
+                link.download = 'fixture_schedule.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                self._toast('Downloaded');
+            }).catch(function (err) {
+                console.error(err);
+                self._toast('Snapshot failed');
+            });
+        },
+    });
+
+    core.action_registry.add('auction_module.pool_generator', PoolGenerator);
+    return PoolGenerator;
+});

@@ -640,9 +640,9 @@
     align-items: center;
     justify-content: center;
     height: 46px;
-    min-width: 46px;
-    padding: 0 12px;
-    margin-right: 4px;
+    min-width: 42px;
+    padding: 0 10px;
+    margin-right: 0;
     color: rgba(255, 255, 255, 0.92);
     cursor: pointer;
     flex-shrink: 0;
@@ -652,6 +652,23 @@
     box-shadow: none;
     border-radius: 0;
     transition: background-color 0.15s ease, color 0.15s ease;
+}
+.o_auction_console_systray_icon {
+    margin-right: 0;
+}
+
+.o_auction_projector_systray_icon.o_auction_systray_disabled,
+.o_main_navbar .o_menu_systray .o_auction_projector_systray_icon.o_auction_systray_disabled {
+    opacity: 0.38 !important;
+    cursor: not-allowed;
+}
+.o_auction_projector_systray_icon.o_auction_systray_disabled:hover,
+.o_auction_projector_systray_icon.o_auction_systray_disabled:focus,
+.o_main_navbar .o_menu_systray .o_auction_projector_systray_icon.o_auction_systray_disabled:hover,
+.o_main_navbar .o_menu_systray .o_auction_projector_systray_icon.o_auction_systray_disabled:focus {
+    opacity: 0.5 !important;
+    color: inherit !important;
+    background-color: transparent !important;
 }
 
 .o_auction_projector_systray_icon:hover,

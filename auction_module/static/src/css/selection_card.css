@@ -1,0 +1,374 @@
+/* Selection Card widget — theme / option picker grid */
+.o_form_view .o_field_selection_card {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    gap: 12px;
+    width: 100%;
+    max-width: 920px;
+}
+
+.o_form_view .o_sel_card {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    margin: 0;
+    padding: 0;
+    border: 2px solid #e5e7eb;
+    border-radius: 14px;
+    background: #fff;
+    overflow: hidden;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.o_form_view .o_sel_card:hover:not(.o_sel_card_readonly):not(.o_sel_card_locked):not(:disabled) {
+    border-color: #94a3b8;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.1);
+    transform: translateY(-1px);
+}
+
+.o_form_view .o_sel_card:focus-visible {
+    outline: 2px solid #4f46e5;
+    outline-offset: 2px;
+}
+
+.o_form_view .o_sel_card_selected {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2), 0 6px 18px rgba(15, 23, 42, 0.08);
+}
+
+.o_form_view .o_sel_card_readonly,
+.o_form_view .o_sel_card:disabled {
+    cursor: default;
+    opacity: 0.85;
+}
+
+.o_form_view .o_sel_card_swatch {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 72px;
+    background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+    color: #fff;
+}
+
+.o_form_view .o_sel_card_swatch_icon {
+    font-size: 28px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.o_form_view .o_sel_card_body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+    background: #fff;
+}
+
+.o_form_view .o_sel_card_name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.25;
+}
+
+.o_form_view .o_sel_card_check {
+    font-size: 16px;
+    color: #4f46e5;
+    opacity: 0;
+    transform: scale(0.85);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.o_form_view .o_sel_card_selected .o_sel_card_check {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.o_form_view .o_sel_card_locked {
+    cursor: not-allowed;
+    border-color: #e2e8f0;
+    background: #f8fafc;
+    box-shadow: none;
+    filter: grayscale(0.85) brightness(0.96);
+    opacity: 0.72;
+    pointer-events: auto; /* keep tooltip, block selection in JS */
+}
+
+.o_form_view .o_sel_card_locked:hover,
+.o_form_view .o_sel_card_locked:focus {
+    transform: none;
+    box-shadow: none;
+    border-color: #e2e8f0;
+}
+
+.o_form_view .o_sel_card_locked .o_sel_card_swatch {
+    filter: grayscale(1) contrast(0.85);
+}
+
+.o_form_view .o_sel_card_locked .o_sel_card_body {
+    background: #f1f5f9;
+    flex-wrap: wrap;
+    row-gap: 4px;
+}
+
+.o_form_view .o_sel_card_locked .o_sel_card_name {
+    color: #64748b;
+    font-weight: 600;
+}
+
+.o_form_view .o_sel_card_lock {
+    margin-left: auto;
+    font-size: 13px;
+    color: #94a3b8;
+}
+
+.o_form_view .o_sel_card_lock_label {
+    width: 100%;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #94a3b8;
+}
+
+.o_form_view .o_sel_card_locked.o_sel_card_selected {
+    border-color: #cbd5e1;
+    box-shadow: none;
+    opacity: 0.85;
+}
+
+.o_form_view .o_sel_card_empty {
+    grid-column: 1 / -1;
+    padding: 12px 4px;
+    font-size: 13px;
+}
+
+/* Theme swatches (player_display_template values) */
+.o_form_view .o_sel_card_lemon .o_sel_card_swatch {
+    background: linear-gradient(135deg, #e8ddb8 0%, #c9a400 55%, #8f7400 100%);
+    color: #1f1a0a;
+}
+
+.o_form_view .o_sel_card_vanilla .o_sel_card_swatch {
+    background: linear-gradient(135deg, #1a3560 0%, #5b7eb8 100%);
+    color: #c8d4e8;
+}
+
+.o_form_view .o_sel_card_butterscotch .o_sel_card_swatch {
+    background: linear-gradient(135deg, #2d1a00 0%, #c07800 100%);
+    color: #ffe082;
+}
+
+.o_form_view .o_sel_card_strawberry .o_sel_card_swatch {
+    background: linear-gradient(135deg, #ff80b5 0%, #ff2070 100%);
+    color: #fff;
+}
+
+.o_form_view .o_sel_card_cherry .o_sel_card_swatch {
+    background: linear-gradient(135deg, #5a0000 0%, #b01020 100%);
+    color: #ffcdd2;
+}
+
+.o_form_view .o_sel_card_pistah .o_sel_card_swatch {
+    background: linear-gradient(135deg, #002a00 0%, #007840 100%);
+    color: #d4e157;
+}
+
+/* Presentation page helpers */
+.o_form_view .o_at_presentation_section {
+    margin: 0 0 1.5rem;
+}
+
+.o_form_view .o_at_presentation_help {
+    margin: 0 0 12px;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.45;
+    max-width: 720px;
+}
+
+.o_form_view .o_at_theme_picker_wrap {
+    width: 100%;
+    margin: 0 0 4px;
+}
+
+.o_form_view .o_at_theme_picker_wrap .o_field_widget {
+    width: 100%;
+}
+
+.o_form_view .o_at_callup_picker_wrap {
+    width: 100%;
+    margin: 0 0 4px;
+}
+
+.o_form_view .o_at_callup_picker_wrap .o_field_widget {
+    width: 100%;
+}
+
+.o_form_view .o_at_callup_section .o_field_selection_card_mode {
+    max-width: 420px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Mode cards — icon-led (not colour themes) */
+.o_form_view .o_field_selection_card_mode .o_sel_card_swatch {
+    min-height: 88px;
+    background:
+        repeating-linear-gradient(
+            -45deg,
+            rgba(255, 255, 255, 0.04) 0 8px,
+            transparent 8px 16px
+        ),
+        #0f172a;
+    color: #e2e8f0;
+}
+
+.o_form_view .o_field_selection_card_mode .o_sel_card_swatch_icon {
+    font-size: 34px;
+}
+
+.o_form_view .o_field_selection_card_mode .o_sel_card_linear .o_sel_card_swatch {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px 12px;
+    min-height: 96px;
+    background:
+        linear-gradient(180deg, rgba(148, 163, 184, 0.12), transparent 55%),
+        #111827;
+    color: #93c5fd;
+    overflow: hidden;
+}
+
+.o_form_view .o_rc_decks {
+    position: relative;
+    width: 54px;
+    height: 58px;
+    flex-shrink: 0;
+}
+
+.o_form_view .o_rc_deck {
+    position: absolute;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 1px;
+    width: 36px;
+    height: 46px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: linear-gradient(160deg, #1e3a5f 0%, #0f2744 100%);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+    font-weight: 800;
+    line-height: 1;
+}
+
+.o_form_view .o_rc_deck_1 {
+    left: 0;
+    top: 8px;
+    transform: rotate(-10deg);
+    z-index: 1;
+    opacity: 0.78;
+}
+
+.o_form_view .o_rc_deck_2 {
+    left: 10px;
+    top: 4px;
+    transform: rotate(-3deg);
+    z-index: 2;
+    opacity: 0.9;
+}
+
+.o_form_view .o_rc_deck_3 {
+    left: 18px;
+    top: 0;
+    transform: rotate(4deg);
+    z-index: 3;
+    background: linear-gradient(160deg, #2563eb 0%, #1d4ed8 100%);
+    border-color: rgba(147, 197, 253, 0.45);
+}
+
+.o_form_view .o_rc_deck_hash {
+    font-size: 9px;
+    opacity: 0.7;
+    color: #bfdbfe;
+}
+
+.o_form_view .o_rc_deck_num {
+    font-size: 14px;
+    letter-spacing: -0.02em;
+    color: #eff6ff;
+}
+
+.o_form_view .o_rc_dice {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background: linear-gradient(145deg, #fff8e7 0%, #f5d76e 55%, #e6b800 100%);
+    border: 1px solid rgba(120, 80, 0, 0.35);
+    box-shadow:
+        0 3px 8px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.o_form_view .o_rc_die_dot {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #1f2937;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+
+.o_form_view .o_rc_die_tl {
+    top: 7px;
+    left: 7px;
+}
+
+.o_form_view .o_rc_die_c {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.o_form_view .o_rc_die_br {
+    right: 7px;
+    bottom: 7px;
+}
+
+.o_form_view .o_field_selection_card_mode .o_sel_card_random .o_sel_card_swatch {
+    background:
+        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.12), transparent 45%),
+        #111827;
+    color: #fcd34d;
+}
+
+.o_form_view .o_field_selection_card_mode .o_sel_card_body {
+    min-height: 48px;
+}
+
+.o_form_view .o_at_callup_picker_wrap .o_saas_plan_caption {
+    max-width: 420px;
+    margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+    .o_form_view .o_field_selection_card {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        max-width: none;
+    }
+}
+
+.o_form_view .o_sel_card_blackberry .o_sel_card_swatch {
+    background: linear-gradient(135deg, #050a14 0%, #1e3a8a 45%, #3b82f6 100%);
+    color: #ffffff;
+    box-shadow: 0 0 18px rgba(59,130,246,.45);
+}

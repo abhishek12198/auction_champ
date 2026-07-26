@@ -10,7 +10,15 @@ const { useState, onWillStart, onMounted, onWillUnmount } = hooks;
 class TournamentSystrayItem extends Component {
     setup() {
         this.orm = useService("orm");
-        this.state = useState({ tournamentName: "", tournamentLogo: "", projectorUrl: "", expanded: false });
+        this.notification = useService("notification");
+        this.state = useState({
+            tournamentName: "",
+            tournamentLogo: "",
+            projectorUrl: "",
+            showcaseUrl: "",
+            auctionRulesReady: false,
+            expanded: false,
+        });
 
         onWillStart(async () => {
             try {
@@ -25,23 +33,30 @@ class TournamentSystrayItem extends Component {
                     this.state.tournamentName = tName;
                     this.state.tournamentLogo = "/web/image/auction.tournament/" + tId + "/logo";
 
-                    // Projector URL (opens in new tab). Not shown on mobile via CSS.
                     try {
                         const tRes = await this.orm.read(
                             "auction.tournament",
                             [tId],
-                            ["projector_url", "slug"]
+                            ["projector_url", "slug", "has_auction_rules"]
                         );
                         const tRow = tRes && tRes[0];
-                        if (tRow) {
-                            this.state.projectorUrl = tRow.projector_url || "";
-                            if (!this.state.projectorUrl && tRow.slug && session.db) {
+                        const rulesReady = Boolean(tRow && tRow.has_auction_rules);
+                        this.state.auctionRulesReady = rulesReady;
+                        if (rulesReady) {
+                            this.state.showcaseUrl = "/auction/showcase";
+                            this.state.projectorUrl = (tRow && tRow.projector_url) || "";
+                            if (!this.state.projectorUrl && tRow && tRow.slug && session.db) {
                                 this.state.projectorUrl =
                                     "/" + session.db + "/auction/projector/" + tRow.slug + "/";
                             }
+                        } else {
+                            this.state.showcaseUrl = "";
+                            this.state.projectorUrl = "";
                         }
                     } catch (_e2) {
                         this.state.projectorUrl = "";
+                        this.state.showcaseUrl = "";
+                        this.state.auctionRulesReady = false;
                     }
                 }
             } catch (_e) {
@@ -70,6 +85,15 @@ class TournamentSystrayItem extends Component {
     onProjectorClick(ev) {
         // Don't trigger the badge expanded/collapse logic
         ev.stopPropagation();
+    }
+
+    onRulesRequiredClick(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        this.notification.add(
+            "Set Auction Rules for this tournament before opening Player Console or Projector.",
+            { type: "warning", title: "Auction Rules Required" }
+        );
     }
 }
 

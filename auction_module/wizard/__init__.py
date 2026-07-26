@@ -54,3 +54,4 @@ from . import whatsapp_share_wizard
 from . import auction_player_upload_wizard
 from . import auction_team_upload_wizard
 from . import auction_player_stage_export_wizard
+from . import expose_contact_privacy_wizard

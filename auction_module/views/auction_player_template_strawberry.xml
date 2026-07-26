@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 <template id="player_template_strawberry" name="Player Auction – Strawberry">
-<html lang="en" t-att-data-balance-url="'/' + (db_name or '') + '/' + (tournament.slug if tournament else '') + '/auction/show/team/balance'">
+<html lang="en" t-att-data-balance-url="('/' + db_name + '/' + tournament.slug + '/auction/show/team/balance') if db_name and tournament and tournament.slug else ''" t-att-data-rp-url="('/' + db_name + '/' + tournament.slug + '/auction/display_auction/remaining-players?theme=strawberry') if db_name and tournament and tournament.slug else ''">
 <head>
   <meta charset="UTF-8"/>
   <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
@@ -412,6 +412,7 @@ body[data-theme="dark"] #sw-theme-btn{color:var(--berry-bright);border-color:rgb
       <!-- Stats section -->
       <div class="sw-stats-wrap">
         <div class="sw-stats-title">Player Profile</div>
+        <t t-call="auction_module.football_attr_layout_css"/>
         <t t-if="player.tournament_type != 'football'">
           <t t-if="player.batting_style">
             <div class="sw-stat-row">
@@ -425,45 +426,59 @@ body[data-theme="dark"] #sw-theme-btn{color:var(--berry-bright);border-color:rgb
               <span class="sw-stat-val"><t t-esc="player.bowling_style"/></span>
             </div>
           </t>
+          <t t-if="player.p_category">
+            <div class="sw-stat-row">
+              <span class="sw-stat-key">Category</span>
+              <span class="sw-stat-val"><t t-esc="player.p_category"/></span>
+            </div>
+          </t>
+          <t t-if="player.address">
+            <div class="sw-stat-row">
+              <span class="sw-stat-key">Location</span>
+              <span class="sw-stat-val"><t t-esc="player.address"/></span>
+            </div>
+          </t>
         </t>
-        <t t-if="player.tournament_type == 'football'">
-          <t t-if="player.dominant_position_id">
-            <div class="sw-stat-row"><span class="sw-stat-key">Position</span><span class="sw-stat-val"><t t-esc="player.dominant_position_id.name"/></span></div>
-          </t>
-          <t t-if="player.preferred_foot">
-            <div class="sw-stat-row"><span class="sw-stat-key">Foot</span><span class="sw-stat-val"><t t-esc="player.preferred_foot.capitalize()"/></span></div>
-          </t>
-          <t t-if="player.use_other_attributes">
-            <t t-foreach="player.other_attribute_ids.filtered('value')" t-as="oattr">
-              <div class="sw-stat-row"><span class="sw-stat-key"><t t-esc="oattr.label"/></span><span class="sw-stat-val"><t t-esc="oattr.value or '—'"/></span></div>
+        <t t-else="">
+          <div class="ac-fb-grid">
+            <t t-if="player.dominant_position_id">
+              <div class="sw-stat-row"><span class="sw-stat-key">Position</span><span class="sw-stat-val"><t t-esc="player.dominant_position_id.name"/></span></div>
             </t>
-          </t>
-          <t t-else="">
-            <t t-if="player.secondary_position_ids">
-              <div class="sw-stat-row"><span class="sw-stat-key">Secondary</span><span class="sw-stat-val"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span></div>
+            <t t-if="player.preferred_foot">
+              <div class="sw-stat-row"><span class="sw-stat-key">Foot</span><span class="sw-stat-val"><t t-esc="player.preferred_foot.capitalize()"/></span></div>
             </t>
-            <t t-if="player.age">
-              <div class="sw-stat-row"><span class="sw-stat-key">Age</span><span class="sw-stat-val"><t t-esc="player.age"/></span></div>
+            <t t-if="player.use_other_attributes">
+              <t t-foreach="player.other_attribute_ids.filtered('value')" t-as="oattr">
+                <div class="sw-stat-row"><span class="sw-stat-key"><t t-esc="oattr.label"/></span><span class="sw-stat-val"><t t-esc="oattr.value or '—'"/></span></div>
+              </t>
+            </t>
+            <t t-else="">
+              <t t-if="player.secondary_position_ids">
+                <div class="sw-stat-row"><span class="sw-stat-key">Secondary</span><span class="sw-stat-val"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span></div>
+              </t>
+              <t t-if="player.age">
+                <div class="sw-stat-row"><span class="sw-stat-key">Age</span><span class="sw-stat-val"><t t-esc="player.age"/></span></div>
+              </t>
+              <t t-if="player.work_rate">
+                <div class="sw-stat-row"><span class="sw-stat-key">Work Rate</span><span class="sw-stat-val"><t t-esc="player.work_rate.capitalize()"/></span></div>
+              </t>
+              <t t-if="player.height">
+                <div class="sw-stat-row"><span class="sw-stat-key">Height</span><span class="sw-stat-val"><t t-esc="player.height"/></span></div>
+              </t>
+              <t t-if="player.weight">
+                <div class="sw-stat-row"><span class="sw-stat-key">Weight</span><span class="sw-stat-val"><t t-esc="player.weight"/></span></div>
+              </t>
+            </t>
+            <t t-if="player.p_category">
+              <div class="sw-stat-row"><span class="sw-stat-key">Category</span><span class="sw-stat-val"><t t-esc="player.p_category"/></span></div>
+            </t>
+            <t t-if="player.address">
+              <div class="sw-stat-row ac-fb-span-2"><span class="sw-stat-key">Location</span><span class="sw-stat-val"><t t-esc="player.address"/></span></div>
             </t>
             <t t-call="auction_module.football_tag_chips"/>
-          </t>
-        </t>
-
-        <t t-if="player.p_category">
-          <div class="sw-stat-row">
-            <span class="sw-stat-key">Category</span>
-            <span class="sw-stat-val"><t t-esc="player.p_category"/></span>
-          </div>
-        </t>
-
-        <t t-if="player.address">
-          <div class="sw-stat-row">
-            <span class="sw-stat-key">Location</span>
-            <span class="sw-stat-val"><t t-esc="player.address"/></span>
           </div>
         </t>
       </div><!-- /sw-stats-wrap -->
-
       <!-- Actions bar -->
       <div class="sw-actions">
         <button class="sw-btn sw-btn-unsold" onclick="setPlayerUnsold()">
@@ -667,12 +682,33 @@ body[data-theme="dark"] #sw-theme-btn{color:var(--berry-bright);border-color:rgb
       setTimeout(function() { if (ov.parentNode) ov.parentNode.removeChild(ov); changeImage(true); }, displaySeconds * 1000);
     }
 
+
+      function resolveAuctionPanelUrl(kind) {
+        var el = document.documentElement;
+        var url = (kind === 'rp' ? el.dataset.rpUrl : el.dataset.balanceUrl) || '';
+        // Missing db_name produced "//slug/..." which browsers treat as another host.
+        if (url.indexOf('//') === 0) { url = ''; }
+        if (url) { return url; }
+        var parts = (location.pathname || '').split('/').filter(Boolean);
+        var db = parts[0] || '';
+        var slug = '';
+        if (parts[1] === 'auction' &amp;&amp; (parts[2] === 'display_auction' || parts[2] === 'player_selector') &amp;&amp; parts[3]) {
+          slug = parts[3];
+        }
+        if (!db || !slug) { return ''; }
+        if (kind === 'rp') {
+          var theme = el.dataset.theme || 'vanilla';
+          return '/' + db + '/' + slug + '/auction/display_auction/remaining-players?theme=' + encodeURIComponent(theme);
+        }
+        return '/' + db + '/' + slug + '/auction/show/team/balance';
+      }
+
     function openBidSummary() {
       document.getElementById('swBidDrawer').style.right = '0';
       document.getElementById('swBidArrow').innerHTML = '&#x2192;';
       document.getElementById('swBidOverlay').style.display = 'block';
       var frame = document.getElementById('swBidFrame');
-      var url = document.documentElement.dataset.balanceUrl;
+      var url = resolveAuctionPanelUrl('balance');
       if (frame &amp;&amp; url) {
         var cur = frame.getAttribute('src') || '';
         if (!cur || cur === 'about:blank') {
@@ -698,7 +734,7 @@ body[data-theme="dark"] #sw-theme-btn{color:var(--berry-bright);border-color:rgb
       if (r === '0px' || r === '0') { closeBidSummary(); } else { openBidSummary(); }
     }
     function openRemainingPlayers() {
-      document.getElementById('rpFrame').src = '/auction/display_auction/remaining-players?theme=strawberry';
+      document.getElementById('rpFrame').src = resolveAuctionPanelUrl('rp');
       document.getElementById('rpDrawer').style.right = '0';
       document.getElementById('rpTabArrow').innerHTML = '&#x2192;';
       document.getElementById('rpOverlay').style.display = 'block';

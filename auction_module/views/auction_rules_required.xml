@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="auction_rules_required" name="Auction Rules Required">
+  <t t-set="theme" t-value="(theme or (tournament.player_display_template if tournament else None) or 'vanilla')"/>
+  <html lang="en" t-att-data-theme="theme">
+    <head>
+      <meta charset="utf-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1"/>
+      <t t-if="res_company">
+        <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
+      </t>
+      <title>Set Auction Rules — AuctionChamp</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com"/>
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+      <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@700&amp;family=Barlow:wght@500;600;700&amp;family=Barlow+Condensed:wght@600;700&amp;family=Bebas+Neue&amp;family=Orbitron:wght@700&amp;family=Oswald:wght@600;700&amp;family=Rajdhani:wght@600;700&amp;family=Saira:wght@600;800&amp;display=swap" rel="stylesheet"/>
+      <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body {
+          margin: 0;
+          min-height: 100%;
+        }
+        body {
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .ac-rr-header {
+          flex: 0 0 auto;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1rem;
+          padding: 14px 22px;
+          border-bottom: 1px solid var(--rr-bdr);
+          background: var(--rr-hdr-bg);
+          backdrop-filter: blur(12px);
+        }
+        .ac-rr-brand {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          min-width: 0;
+        }
+        .ac-rr-brand-mark {
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          object-fit: contain;
+          background: var(--rr-logo-bg);
+          border: 1px solid var(--rr-bdr);
+          flex: 0 0 auto;
+        }
+        .ac-rr-brand-mark.ph {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.15rem;
+          color: var(--rr-acc);
+        }
+        .ac-rr-brand-copy { min-width: 0; }
+        .ac-rr-brand-kicker {
+          font-size: .62rem;
+          letter-spacing: .22em;
+          text-transform: uppercase;
+          font-weight: 700;
+          color: var(--rr-acc);
+          line-height: 1.2;
+        }
+        .ac-rr-brand-name {
+          font-size: 1.05rem;
+          font-weight: 800;
+          letter-spacing: .04em;
+          text-transform: uppercase;
+          color: var(--rr-tx);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: min(52vw, 360px);
+        }
+        .ac-rr-chip {
+          font-size: .62rem;
+          letter-spacing: .16em;
+          text-transform: uppercase;
+          font-weight: 700;
+          padding: .35rem .8rem;
+          border-radius: 999px;
+          border: 1px solid var(--rr-acc);
+          color: var(--rr-acc);
+          white-space: nowrap;
+        }
+
+        .ac-rr-main {
+          flex: 1 1 auto;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 32px 18px 24px;
+          background: var(--rr-bg);
+        }
+        .ac-rr-card {
+          width: 100%;
+          max-width: 520px;
+          border-radius: 20px;
+          border: 1px solid var(--rr-bdr);
+          background: var(--rr-card);
+          box-shadow: var(--rr-shadow);
+          padding: 36px 28px 30px;
+          text-align: center;
+        }
+        .ac-rr-icon {
+          width: 72px;
+          height: 72px;
+          margin: 0 auto 18px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.85rem;
+          background: var(--rr-icon-bg);
+          border: 2px solid var(--rr-acc);
+          color: var(--rr-acc);
+          box-shadow: 0 0 0 6px var(--rr-glow);
+        }
+        .ac-rr-title {
+          margin: 0 0 10px;
+          font-size: clamp(1.55rem, 3.5vw, 2rem);
+          font-weight: 800;
+          letter-spacing: .06em;
+          text-transform: uppercase;
+          color: var(--rr-tx);
+          line-height: 1.15;
+        }
+        .ac-rr-tour {
+          margin: 0 0 8px;
+          font-size: .95rem;
+          font-weight: 700;
+          letter-spacing: .04em;
+          color: var(--rr-acc);
+        }
+        .ac-rr-desc {
+          margin: 0 auto 22px;
+          max-width: 38rem;
+          font-size: .92rem;
+          line-height: 1.65;
+          color: var(--rr-muted);
+          font-weight: 500;
+        }
+        .ac-rr-steps {
+          list-style: none;
+          margin: 0 0 26px;
+          padding: 0;
+          text-align: left;
+          display: grid;
+          gap: 10px;
+        }
+        .ac-rr-steps li {
+          display: flex;
+          gap: 12px;
+          align-items: flex-start;
+          padding: 12px 14px;
+          border-radius: 12px;
+          border: 1px solid var(--rr-bdr);
+          background: var(--rr-step-bg);
+          color: var(--rr-tx);
+          font-size: .88rem;
+          line-height: 1.45;
+          font-weight: 600;
+        }
+        .ac-rr-step-num {
+          flex: 0 0 auto;
+          width: 26px;
+          height: 26px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: .72rem;
+          font-weight: 800;
+          letter-spacing: .04em;
+          background: var(--rr-acc);
+          color: var(--rr-on-acc);
+        }
+        .ac-rr-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          justify-content: center;
+        }
+        .ac-rr-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          min-height: 44px;
+          padding: 0 22px;
+          border-radius: 10px;
+          text-decoration: none;
+          font-size: .92rem;
+          font-weight: 700;
+          letter-spacing: .08em;
+          text-transform: uppercase;
+          transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+        }
+        .ac-rr-btn:hover { transform: translateY(-1px); }
+        .ac-rr-btn-primary {
+          background: linear-gradient(135deg, var(--rr-acc), var(--rr-acc2));
+          color: var(--rr-on-acc);
+          box-shadow: 0 8px 24px var(--rr-glow);
+          border: none;
+        }
+        .ac-rr-btn-ghost {
+          background: transparent;
+          color: var(--rr-tx);
+          border: 1px solid var(--rr-bdr);
+        }
+
+        .ac-rr-footer {
+          flex: 0 0 auto;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          padding: 18px 16px 22px;
+          border-top: 1px solid var(--rr-bdr);
+          background: var(--rr-hdr-bg);
+        }
+        .ac-rr-footer-lbl {
+          font-size: .58rem;
+          letter-spacing: .22em;
+          text-transform: uppercase;
+          font-weight: 700;
+          color: var(--rr-muted);
+        }
+        .ac-rr-footer-logo {
+          height: 22px;
+          width: auto;
+          opacity: .9;
+        }
+
+        /* ── Theme tokens ── */
+        html[data-theme="vanilla"] {
+          --rr-bg: linear-gradient(180deg, #243a5c 0%, #1a3560 55%, #152a4c 100%);
+          --rr-hdr-bg: rgba(26,53,96,.92);
+          --rr-card: rgba(36,58,92,.88);
+          --rr-step-bg: rgba(255,255,255,.05);
+          --rr-tx: #eef2f8;
+          --rr-muted: rgba(238,242,248,.68);
+          --rr-acc: #8aa6d4;
+          --rr-acc2: #5b7eb8;
+          --rr-on-acc: #0f1f38;
+          --rr-bdr: rgba(160,185,215,.22);
+          --rr-logo-bg: #fff;
+          --rr-icon-bg: rgba(91,126,184,.18);
+          --rr-glow: rgba(91,126,184,.28);
+          --rr-shadow: 0 18px 48px rgba(0,0,0,.35);
+          font-family: 'Rajdhani', 'Oswald', sans-serif;
+        }
+        html[data-theme="vanilla"] .ac-rr-title { font-family: 'Oswald', 'Rajdhani', sans-serif; }
+        html[data-theme="vanilla"] .ac-rr-btn { font-family: 'Oswald', 'Rajdhani', sans-serif; }
+
+        html[data-theme="lemon"] {
+          --rr-bg: linear-gradient(180deg, #F4ECD0 0%, #E8DDB8 55%, #DDD0A0 100%);
+          --rr-hdr-bg: rgba(244,236,208,.94);
+          --rr-card: rgba(255,252,240,.92);
+          --rr-step-bg: rgba(201,164,0,.08);
+          --rr-tx: #1F1A0A;
+          --rr-muted: rgba(31,26,10,.62);
+          --rr-acc: #C9A400;
+          --rr-acc2: #A88600;
+          --rr-on-acc: #fffdf5;
+          --rr-bdr: rgba(120,95,0,.28);
+          --rr-logo-bg: #F0E6C4;
+          --rr-icon-bg: rgba(201,164,0,.12);
+          --rr-glow: rgba(201,164,0,.22);
+          --rr-shadow: 0 16px 40px rgba(80,60,0,.12);
+          font-family: 'Barlow', sans-serif;
+        }
+        html[data-theme="lemon"] .ac-rr-title { font-family: 'Antonio', 'Barlow', sans-serif; }
+        html[data-theme="lemon"] .ac-rr-btn { font-family: 'Antonio', 'Barlow', sans-serif; }
+        html[data-theme="lemon"] .ac-rr-footer-logo {
+          filter: brightness(0) sepia(1) saturate(5) hue-rotate(6deg) brightness(0.58)
+                  drop-shadow(0 1px 2px rgba(80,60,0,.25));
+          opacity: 1;
+        }
+
+        html[data-theme="butterscotch"] {
+          --rr-bg: radial-gradient(ellipse 55% 40% at 50% 20%, rgba(245,200,66,.16), transparent 70%), #070B14;
+          --rr-hdr-bg: rgba(12,17,32,.94);
+          --rr-card: rgba(12,17,32,.92);
+          --rr-step-bg: rgba(245,200,66,.06);
+          --rr-tx: #fff;
+          --rr-muted: rgba(255,255,255,.62);
+          --rr-acc: #F5C842;
+          --rr-acc2: #FF9F1C;
+          --rr-on-acc: #1a1200;
+          --rr-bdr: rgba(245,200,66,.28);
+          --rr-logo-bg: #0C1120;
+          --rr-icon-bg: rgba(245,200,66,.12);
+          --rr-glow: rgba(245,200,66,.28);
+          --rr-shadow: 0 18px 48px rgba(0,0,0,.55);
+          font-family: 'Oswald', 'Barlow', sans-serif;
+        }
+        html[data-theme="butterscotch"] .ac-rr-title { font-family: 'Bebas Neue', 'Oswald', sans-serif; letter-spacing: .1em; color: #F5C842; }
+        html[data-theme="butterscotch"] .ac-rr-btn { font-family: 'Oswald', sans-serif; }
+
+        html[data-theme="strawberry"] {
+          --rr-bg: linear-gradient(180deg, #FFF0F5 0%, #FCE4EC 100%);
+          --rr-hdr-bg: rgba(255,240,245,.95);
+          --rr-card: rgba(255,255,255,.92);
+          --rr-step-bg: rgba(194,24,91,.06);
+          --rr-tx: #1a0a12;
+          --rr-muted: rgba(26,10,18,.58);
+          --rr-acc: #C2185B;
+          --rr-acc2: #E91E63;
+          --rr-on-acc: #fff;
+          --rr-bdr: rgba(194,24,91,.22);
+          --rr-logo-bg: #fff;
+          --rr-icon-bg: rgba(233,30,99,.1);
+          --rr-glow: rgba(233,30,99,.18);
+          --rr-shadow: 0 16px 40px rgba(120,20,60,.1);
+          font-family: 'Barlow', sans-serif;
+        }
+        html[data-theme="strawberry"] .ac-rr-title { font-family: 'Antonio', 'Barlow', sans-serif; color: #880E4F; }
+        html[data-theme="strawberry"] .ac-rr-btn { font-family: 'Antonio', 'Barlow', sans-serif; }
+
+        html[data-theme="cherry"] {
+          --rr-bg: radial-gradient(ellipse 70% 55% at 18% 42%, rgba(225,29,72,.14), transparent 55%), #070104;
+          --rr-hdr-bg: rgba(10,2,4,.94);
+          --rr-card: rgba(22,8,12,.92);
+          --rr-step-bg: rgba(225,29,72,.08);
+          --rr-tx: #fff5f7;
+          --rr-muted: rgba(255,245,247,.62);
+          --rr-acc: #E11D48;
+          --rr-acc2: #FB7185;
+          --rr-on-acc: #fff;
+          --rr-bdr: rgba(225,29,72,.28);
+          --rr-logo-bg: #16080c;
+          --rr-icon-bg: rgba(225,29,72,.14);
+          --rr-glow: rgba(225,29,72,.28);
+          --rr-shadow: 0 18px 48px rgba(0,0,0,.55);
+          font-family: 'Saira', sans-serif;
+        }
+        html[data-theme="cherry"] .ac-rr-title { font-family: 'Bebas Neue', 'Saira', sans-serif; letter-spacing: .1em; color: #E11D48; }
+        html[data-theme="cherry"] .ac-rr-btn { font-family: 'Saira', sans-serif; }
+
+
+        html[data-theme="blackberry"] {
+          --rr-bg: radial-gradient(ellipse 55% 40% at 50% 20%, rgba(59,130,246,.16), transparent 70%), #050a14;
+          --rr-hdr-bg: rgba(5,10,20,.94);
+          --rr-card: rgba(13,24,48,.92);
+          --rr-step-bg: rgba(59,130,246,.08);
+          --rr-tx: #ffffff;
+          --rr-muted: rgba(255,255,255,.62);
+          --rr-acc: #3B82F6;
+          --rr-acc2: #93C5FD;
+          --rr-on-acc: #050a14;
+          --rr-bdr: rgba(59,130,246,.30);
+          --rr-logo-bg: #0d1830;
+          --rr-icon-bg: rgba(59,130,246,.14);
+          --rr-glow: rgba(59,130,246,.30);
+          --rr-shadow: 0 18px 48px rgba(0,0,0,.5);
+          font-family: 'Orbitron', 'Exo 2', sans-serif;
+        }
+        html[data-theme="blackberry"] .ac-rr-title { color: #93C5FD; letter-spacing: .08em; }
+        html[data-theme="blackberry"] .ac-rr-btn { font-family: 'Orbitron', 'Exo 2', sans-serif; font-size: .78rem; }
+
+        html[data-theme="pistah"] {
+          --rr-bg: radial-gradient(ellipse 55% 40% at 50% 20%, rgba(107,191,78,.14), transparent 70%), #060e08;
+          --rr-hdr-bg: rgba(6,14,8,.94);
+          --rr-card: rgba(13,31,17,.92);
+          --rr-step-bg: rgba(107,191,78,.08);
+          --rr-tx: #e8f5e9;
+          --rr-muted: rgba(232,245,233,.62);
+          --rr-acc: #6BBF4E;
+          --rr-acc2: #9EE07A;
+          --rr-on-acc: #06200a;
+          --rr-bdr: rgba(107,191,78,.28);
+          --rr-logo-bg: #0d1f11;
+          --rr-icon-bg: rgba(107,191,78,.14);
+          --rr-glow: rgba(107,191,78,.25);
+          --rr-shadow: 0 18px 48px rgba(0,0,0,.5);
+          font-family: 'Orbitron', 'Rajdhani', sans-serif;
+        }
+        html[data-theme="pistah"] .ac-rr-title { color: #A8E063; letter-spacing: .08em; }
+        html[data-theme="pistah"] .ac-rr-btn { font-family: 'Orbitron', 'Rajdhani', sans-serif; font-size: .78rem; }
+
+        @media (max-width: 560px) {
+          .ac-rr-header { padding: 12px 14px; }
+          .ac-rr-card { padding: 28px 18px 24px; border-radius: 16px; }
+          .ac-rr-brand-name { max-width: 42vw; }
+        }
+      </style>
+    </head>
+    <body>
+      <header class="ac-rr-header">
+        <div class="ac-rr-brand">
+          <t t-if="tournament and tournament.logo">
+            <t t-if="db_name">
+              <img class="ac-rr-brand-mark"
+                   t-attf-src="/#{db_name}/auction/public/image/auction.tournament/#{tournament.id}/logo"
+                   alt=""/>
+            </t>
+            <t t-else="">
+              <img class="ac-rr-brand-mark"
+                   t-att-src="'/web/image/auction.tournament/%s/logo' % tournament.id"
+                   alt=""/>
+            </t>
+          </t>
+          <t t-else="">
+            <div class="ac-rr-brand-mark ph" aria-hidden="true">▶</div>
+          </t>
+          <div class="ac-rr-brand-copy">
+            <div class="ac-rr-brand-kicker">AuctionChamp</div>
+            <div class="ac-rr-brand-name" t-esc="tournament.name if tournament else 'Player Console'"/>
+          </div>
+        </div>
+        <div class="ac-rr-chip" t-esc="(theme or 'vanilla').replace('_', ' ').title()"/>
+      </header>
+
+      <main class="ac-rr-main">
+        <div class="ac-rr-card">
+          <div class="ac-rr-icon" aria-hidden="true">⚠</div>
+          <h1 class="ac-rr-title">Set Auction Rules first</h1>
+          <p class="ac-rr-tour" t-if="tournament" t-esc="tournament.name"/>
+          <p class="ac-rr-desc">
+            Player Console and Projector stay locked until auction rules are created
+            for this tournament — purse, max players, and bid slabs per team.
+          </p>
+          <ol class="ac-rr-steps">
+            <li>
+              <span class="ac-rr-step-num">1</span>
+              <span>Open the tournament form in AuctionChamp.</span>
+            </li>
+            <li>
+              <span class="ac-rr-step-num">2</span>
+              <span>Click <strong>Set Auction Rules</strong> and save rules for every team.</span>
+            </li>
+            <li>
+              <span class="ac-rr-step-num">3</span>
+              <span>Return here and open Player Console or Projector again.</span>
+            </li>
+          </ol>
+          <div class="ac-rr-actions">
+            <a class="ac-rr-btn ac-rr-btn-primary" href="/web">← Back to AuctionChamp</a>
+          </div>
+        </div>
+      </main>
+
+      <footer class="ac-rr-footer">
+        <span class="ac-rr-footer-lbl">Powered by</span>
+        <img class="ac-rr-footer-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+      </footer>
+    </body>
+  </html>
+</template>
+</odoo>

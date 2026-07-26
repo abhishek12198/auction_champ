@@ -80,6 +80,11 @@ class AuctionTournamentSecurityMixin(models.AbstractModel):
         return list(tids)
 
     def _auction_tournament_security_domain(self):
+        # Public HTTP pages (Bid Summary, etc.) pass this context flag after
+        # switching DB via _with_db so searches are never emptied by SaaS /
+        # organizer tournament scopes.
+        if self.env.context.get('auction_skip_tournament_security'):
+            return []
         if self._auction_is_admin():
             return []
         tids = self._auction_allowed_tournament_ids()

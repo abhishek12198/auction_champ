@@ -7,7 +7,11 @@
             <field name="model">auction.tournament</field>
             <field name="arch" type="xml">
                 <search string="Tournament">
-                    <field name="name" filter_domain="[('name','ilike',self)]" string="Name"/>
+                    <field name="name"
+                           string="Name / Code"
+                           filter_domain="['|', ('name', 'ilike', self), ('tournament_code', 'ilike', self)]"/>
+                    <field name="tournament_code" string="Tournament Code"
+                           filter_domain="[('tournament_code', 'ilike', self)]"/>
                 </search>
             </field>
         </record>
@@ -38,16 +42,6 @@
                                 type="object"
                                 string="Auction Rules"
                                 class="btn-secondary"/>
-                        <button name="action_upload_players"
-                                type="object"
-                                string="Upload Players"
-                                class="btn-secondary"
-                                attrs="{'invisible': [('active', '=', False)]}"/>
-                        <button name="action_upload_teams"
-                                type="object"
-                                string="Upload Teams &amp; Tiers"
-                                class="btn-secondary"
-                                attrs="{'invisible': [('active', '=', False)]}"/>
                         <button name="action_export_sold_unsold"
                                 type="object"
                                 string="Export Sold / Unsold"
@@ -60,19 +54,17 @@
                                 confirm="This will archive the tournament and ALL its related records (players, teams, auctions, history). This cannot be undone easily. Are you sure?"
                                 attrs="{'invisible': [('active', '=', False)]}"/>
                         <button name="action_remove_duplicates"
-
-
-                                    type="object"
-                                    class="oe_stat_button"
-                                    icon="fa-clone">
-                            </button>
+                                type="object"
+                                string="Remove Duplicates"
+                                class="btn-secondary"
+                                attrs="{'invisible': [('active', '=', False)]}"
+                                help="Find and remove duplicate players, then resequence"/>
                     </header>
                     <sheet>
                         <field name="active" invisible="1"/>
                         <field name="slug" invisible="1"/>
                         <field name="registration_open" invisible="1"/>
                         <field name="live_board_active" invisible="1"/>
-                        <field name="break_time_active" invisible="1"/>
                         <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
                                 attrs="{'invisible': [('active', '=', True)]}"/>
 
@@ -124,29 +116,6 @@
                                     <span class="o_stat_text text-danger" style="font-size:10px">STOPPED &#8212; Click to Start</span>
                                 </div>
                             </button>
-                            <!-- Break Time toggle -->
-                            <button name="action_toggle_break_time"
-                                    type="object"
-                                    class="oe_stat_button"
-                                    attrs="{'invisible': [('break_time_active', '=', False)]}"
-                                    icon="fa-coffee"
-                                    help="Break Time is ACTIVE — click to resume live board">
-                                <div class="o_stat_info">
-                                    <span class="o_stat_text text-warning">Break Time</span>
-                                    <span class="o_stat_text text-warning" style="font-size:10px">ON &#8212; Click to Resume</span>
-                                </div>
-                            </button>
-                            <button name="action_toggle_break_time"
-                                    type="object"
-                                    class="oe_stat_button"
-                                    attrs="{'invisible': [('break_time_active', '=', True)]}"
-                                    icon="fa-coffee"
-                                    help="Show a Break Time screen on the live board">
-                                <div class="o_stat_info">
-                                    <span class="o_stat_text text-muted">Break Time</span>
-                                    <span class="o_stat_text text-muted" style="font-size:10px">OFF &#8212; Click to Start</span>
-                                </div>
-                            </button>
                             <!-- Registered player count stat button -->
                             <button class="oe_stat_button" type="object"
                                     name="action_view_registered_players"
@@ -170,17 +139,6 @@
                                     <span class="o_stat_text text-muted" style="font-size:10px">Open in New Tab</span>
                                 </div>
                             </button>
-                            <!-- Share tournament on WhatsApp -->
-                            <button name="action_share_whatsapp"
-                                    type="object"
-                                    class="oe_stat_button"
-                                    icon="fa-whatsapp"
-                                    help="Compose and share tournament details on WhatsApp">
-                                <div class="o_stat_info">
-                                    <span class="o_stat_text" style="color:#25d366;">WhatsApp</span>
-                                    <span class="o_stat_text text-muted" style="font-size:10px">Share Details</span>
-                                </div>
-                            </button>
                             <!-- Open Payment Tracker in a new tab -->
                             <button name="action_open_payment_tracker"
                                     type="object"
@@ -189,7 +147,7 @@
                                     attrs="{'invisible': [('slug', '=', False)]}">
                                 <div class="o_stat_info">
                                     <span class="o_stat_text">Payment Tracker</span>
-                                    <span class="o_stat_text text-muted" style="font-size:10px">Open in New Tab</span>
+                                    <span class="o_stat_text text-muted" style="font-size:10px">Open Tracker</span>
                                 </div>
                             </button>
                             <!-- Remove duplicate players -->
@@ -225,11 +183,46 @@
                             <field name="logo" widget="image" class="oe_avatar mr-3"
                                    options="{'preview_image': 'logo', 'size': [128, 128]}"/>
                             <div class="flex-grow-1">
+                                <field name="player_display_template" invisible="1"/>
+                                <div class="o_at_tournament_title_row d-flex align-items-center justify-content-between flex-wrap">
+                                    <div class="oe_title o_at_tournament_title_main flex-grow-1">
+                                        <label for="name" class="oe_edit_only"/>
+                                        <h1 class="mb-0">
+                                            <field name="name" placeholder="e.g. IPL Auction 2025"/>
+                                        </h1>
+                                    </div>
+                                    <div class="o_at_tournament_theme_tag_col flex-shrink-0 ml-md-3 mt-2 mt-md-0">
+                                        <span class="o_at_tournament_theme_tag o_at_theme_lemon"
+                                              attrs="{'invisible': [('player_display_template', '!=', 'lemon')]}">
+                                            <i class="fa fa-paint-brush" title="Card theme"/> Lemon
+                                        </span>
+                                        <span class="o_at_tournament_theme_tag o_at_theme_vanilla"
+                                              attrs="{'invisible': [('player_display_template', '!=', 'vanilla')]}">
+                                            <i class="fa fa-paint-brush" title="Card theme"/> Vanilla
+                                        </span>
+                                        <span class="o_at_tournament_theme_tag o_at_theme_butterscotch"
+                                              attrs="{'invisible': [('player_display_template', '!=', 'butterscotch')]}">
+                                            <i class="fa fa-paint-brush" title="Card theme"/> Butterscotch
+                                        </span>
+                                        <span class="o_at_tournament_theme_tag o_at_theme_strawberry"
+                                              attrs="{'invisible': [('player_display_template', '!=', 'strawberry')]}">
+                                            <i class="fa fa-paint-brush" title="Card theme"/> Strawberry
+                                        </span>
+                                        <span class="o_at_tournament_theme_tag o_at_theme_cherry"
+                                              attrs="{'invisible': [('player_display_template', '!=', 'cherry')]}">
+                                            <i class="fa fa-paint-brush" title="Card theme"/> Cherry
+                                        </span>
+                                        <span class="o_at_tournament_theme_tag o_at_theme_pistah"
+                                              attrs="{'invisible': [('player_display_template', '!=', 'pistah')]}">
+                                            <i class="fa fa-paint-brush" title="Card theme"/> Pistah
+                                        </span>
+                                        <span class="o_at_tournament_theme_tag o_at_theme_blackberry"
+                                              attrs="{'invisible': [('player_display_template', '!=', 'blackberry')]}">
+                                            <i class="fa fa-paint-brush" title="Card theme"/> Blackberry
+                                        </span>
+                                    </div>
+                                </div>
                                 <div class="oe_title">
-                                    <label for="name" class="oe_edit_only"/>
-                                    <h1>
-                                        <field name="name" placeholder="e.g. IPL Auction 2025"/>
-                                    </h1>
                                     <label for="description" class="oe_edit_only"/>
                                     <h4 class="text-muted">
                                         <field name="description" placeholder="Short description of the tournament"/>
@@ -247,6 +240,14 @@
                         <group>
                             <group string="Tournament Info">
                                 <field name="tournament_type" widget="radio" options="{'horizontal': True}"/>
+                                <div class="alert alert-warning" role="alert" colspan="2"
+                                     style="margin:0 0 12px;border-radius:8px;"
+                                     attrs="{'invisible': [('tournament_type', '!=', 'kabaddi')]}">
+                                    <strong>Kabaddi is coming soon.</strong>
+                                    Please go back and select <b>Cricket</b> or <b>Football</b> —
+                                    Kabaddi tournaments will be available in a future update.
+                                    You cannot save while Kabaddi is selected.
+                                </div>
                                 <field name="tournament_dates" widget="date_tags"
                                        placeholder="Pick tournament dates"/>
                                 <field name="tournament_date_ids" invisible="1"/>
@@ -258,17 +259,37 @@
                                 <field name="organizer_name"/>
                                 <field name="organizer_contact"/>
                             </group>
-                            <group string="Auction Configuration">
-                                <field name="team_max_points"/>
-                                <field name="player_appearance_algorithm" widget="radio"/>
-                            </group>
                         </group>
+
+                        <!-- Player Call-Up Mode (Sequential / Lucky Dip) -->
+                        <div class="o_at_presentation_section o_at_callup_section">
+                            <separator string="Player Call-Up Mode"/>
+                            <p class="o_at_presentation_help">
+                                How the next player is called into the auction.
+                                <strong>Roll Call</strong> — bring them up from your set list,
+                                or roll the dice for a squad number;
+                                <strong>Lucky Dip</strong> — draw the next name at random.
+                            </p>
+                            <div class="o_at_callup_picker_wrap">
+                                <field name="player_appearance_algorithm"
+                                       widget="selection_card"
+                                       nolabel="1"
+                                       options="{'card_style': 'mode'}"/>
+                            </div>
+                        </div>
 
                         <!-- ── Notebook ── -->
                         <notebook>
 
-                            <!-- Tab 1: Players & Teams -->
-                            <page string="Players &amp; Teams" name="teams">
+                            <!-- Tab 1: Players -->
+                            <page string="Players" name="teams">
+
+                                <button name="action_upload_players"
+                                        type="object"
+                                        string="Upload Players"
+                                        icon="fa-cloud-upload"
+                                        class="o_at_upload_btn o_at_upload_players"
+                                        attrs="{'invisible': [('active', '=', False)]}"/>
 
                                 <!-- ── Player State Stat Buttons ── -->
                                 <div class="o_tourn_player_stats">
@@ -309,6 +330,16 @@
                                         <span class="o_tps_label">Jersey</span>
                                     </button>
                                 </div>
+                            </page>
+
+                            <!-- Teams & Tiers -->
+                            <page string="Teams &amp; Tiers" name="tiers">
+                                <button name="action_upload_teams"
+                                        type="object"
+                                        string="Upload Teams &amp; Tiers"
+                                        icon="fa-sitemap"
+                                        class="o_at_upload_btn o_at_upload_teams"
+                                        attrs="{'invisible': [('active', '=', False)]}"/>
 
                                 <separator string="Teams"/>
                                 <field name="team_ids" widget="many2many">
@@ -335,6 +366,32 @@
                                         </templates>
                                     </kanban>
                                 </field>
+
+                                <separator string="Tiers"/>
+                                <p class="text-muted">
+                                    Manage player tiers for this tournament. A DEFAULT tier is
+                                    created automatically. Add more tiers as needed and assign
+                                    them to players.
+                                </p>
+                                <field name="tier_ids" nolabel="1" context="{'default_tournament_id': active_id}">
+                                    <tree editable="bottom">
+                                        <field name="name" required="1"/>
+                                        <field name="description"/>
+                                        <field name="color" widget="selection_badge"/>
+                                        <field name="is_an_icon_tier"/>
+                                        <field name="mystery"/>
+                                    </tree>
+                                    <form>
+                                        <group>
+                                            <field name="name" required="1"/>
+                                            <field name="description"/>
+                                            <field name="color" widget="selection_badge"/>
+                                            <field name="is_an_icon_tier"/>
+                                            <field name="mystery"/>
+                                            <field name="tournament_id" invisible="1"/>
+                                        </group>
+                                    </form>
+                                </field>
                             </page>
 
                             <!-- Football Other Attribute Labels (Att-Labels) -->
@@ -356,132 +413,178 @@
                                 </field>
                             </page>
 
-                            <!-- Tab 2: Points & Bid Slabs -->
-                            <page string="Points &amp; Bid Slabs" name="points_slabs">
-                                <separator string="Bid Point Slabs"/>
-                                <p class="text-muted o_form_label">
-                                    Define the bidding increments at each point level. Teams can raise bids in steps defined here.
-                                </p>
-                                <field name="points_split_ids" nolabel="1">
-                                    <tree editable="bottom">
-                                        <field name="points" string="Starting Points"/>
-                                        <field name="no_of_calls" string="Bid Step (No. of Calls)"/>
-                                    </tree>
-                                </field>
-                            </page>
-
-                            <!-- Tab 3: Presentation & Theme -->
+                            <!-- Tab: Presentation & Theme -->
                             <page string="Presentation &amp; Theme" name="presentation">
 
-                                <!-- ── Auction Display Settings ── -->
-                                <separator string="Auction Display Settings"/>
-                                <group>
-                                    <group string="Card Theme">
-                                        <field name="player_display_template" widget="radio" options="{'horizontal': True}" nolabel="1"/>
+                                <!-- ── Card Theme ── -->
+                                <div class="o_at_presentation_section">
+                                    <separator string="Card Theme"/>
+                                    <p class="o_at_presentation_help">
+                                        Choose how player cards look on auction displays and printed PDFs.
+                                        Tap a theme card to select it.
+                                    </p>
+                                    <div class="o_at_theme_picker_wrap">
+                                        <field name="player_display_template"
+                                               widget="selection_card"
+                                               nolabel="1"/>
+                                    </div>
+                                </div>
+
+                                <!-- ── Timing & Display ── -->
+                                <div class="o_at_presentation_section">
+                                    <separator string="Timing &amp; Display"/>
+                                    <group col="2">
+                                        <group>
+                                            <field name="sold_display_seconds"/>
+                                            <field name="next_player_countdown"/>
+                                            <field name="preset_points"
+                                                   placeholder="e.g. 100,200,500,1000,1500"
+                                                   help="Comma-separated point values shown as quick-select buttons in the Sell Player modal"/>
+                                        </group>
+                                        <group>
+                                            <field name="enable_jersey_section" widget="boolean_toggle"/>
+                                            <label for="expose_player_contact" string="Player Contact"/>
+                                            <div>
+                                                <div attrs="{'invisible': [('expose_player_contact', '=', True)]}">
+                                                    <span class="text-muted">Masked (default)</span>
+                                                    <button name="action_open_expose_contact_privacy_wizard"
+                                                            type="object"
+                                                            string="Agree &amp; Unmask Contacts"
+                                                            class="btn btn-secondary btn-sm"
+                                                            icon="fa-shield"
+                                                            style="margin-left:8px;"/>
+                                                </div>
+                                                <div attrs="{'invisible': [('expose_player_contact', '=', False)]}">
+                                                    <span class="badge badge-warning" style="margin-right:8px;">Unmasked</span>
+                                                    <button name="action_remask_player_contact"
+                                                            type="object"
+                                                            string="Remask Contacts"
+                                                            class="btn btn-secondary btn-sm"
+                                                            icon="fa-eye-slash"
+                                                            confirm="Hide full mobile numbers on cards and presentation again?"/>
+                                                </div>
+                                                <field name="expose_player_contact" invisible="1"/>
+                                            </div>
+                                            <div attrs="{'invisible': [('expose_player_contact_privacy_agreed', '=', False)]}"
+                                                 colspan="2" class="text-muted" style="font-size:12px; margin-top:4px;">
+                                                <div>Privacy agreed by <field name="expose_player_contact_agreed_user_id" readonly="1" nolabel="1" class="oe_inline"/>
+                                                    on <field name="expose_player_contact_agreed_date" readonly="1" nolabel="1" class="oe_inline"/>
+                                                    (policy <field name="expose_player_contact_policy_version" readonly="1" nolabel="1" class="oe_inline"/>).
+                                                </div>
+                                            </div>
+                                            <field name="expose_player_contact_privacy_agreed" invisible="1"/>
+                                            <field name="kanban_color" widget="color_picker"
+                                                   string="Tournament Kanban Color"
+                                                   help="Color used to identify this tournament in the player kanban view."/>
+                                        </group>
                                     </group>
-                                    <group string="Timing &amp; Display">
-                                        <field name="sold_display_seconds"/>
-                                        <field name="next_player_countdown"/>
-                                        <field name="preset_points"
-                                               placeholder="e.g. 100,200,500,1000,1500"
-                                               help="Comma-separated point values shown as quick-select buttons in the Sell Player modal"/>
-                                        <field name="enable_jersey_section" widget="boolean_toggle"/>
-                                        <field name="expose_player_contact" widget="boolean_toggle"/>
-                                    </group>
-                                </group>
-                                <group>
-                                    <group string="Tournament Kanban Color"
-                                           help="Color used to identify this tournament in the player kanban view. All players belonging to this tournament will have their card tinted with this color.">
-                                        <field name="kanban_color" widget="color_picker" nolabel="1"/>
-                                    </group>
-                                </group>
+                                </div>
 
                                 <!-- ── Player Self-Registration ── -->
-                                <separator string="Player Self-Registration"/>
-                                <group>
-                                    <group string="Registration Link">
-                                        <field name="registration_url" widget="CopyClipboardChar"
-                                               readonly="1" string="Share URL"/>
-                                        <field name="payment_tracker_url" widget="CopyClipboardChar"
-                                               readonly="1" string="Payment Tracker URL"
-                                               attrs="{'invisible': [('slug', '=', False)]}"/>
-                                        <field name="max_registrations"
-                                               help="Set the maximum number of players that can register. Set to 0 for unlimited."/>
-                                        <field name="whatsapp_group_link"
-                                               placeholder="https://chat.whatsapp.com/..."
-                                               help="Players will see a 'Join WhatsApp Group' button after registering."/>
+                                <div class="o_at_presentation_section">
+                                    <separator string="Player Self-Registration"/>
+                                    <group col="2">
+                                        <group string="Links &amp; Limits">
+                                            <field name="registration_url" widget="CopyClipboardChar"
+                                                   readonly="1" string="Share URL"/>
+                                            <field name="payment_tracker_url" widget="CopyClipboardChar"
+                                                   readonly="1" string="Payment Tracker URL"
+                                                   attrs="{'invisible': [('slug', '=', False)]}"/>
+                                            <field name="max_registrations"
+                                                   help="Set the maximum number of players that can register. Set to 0 for unlimited."/>
+                                            <field name="whatsapp_group_link"
+                                                   placeholder="https://chat.whatsapp.com/..."
+                                                   help="Players will see a 'Join WhatsApp Group' button after registering."/>
+                                        </group>
+                                        <group string="How it works">
+                                            <div class="o_at_presentation_help" colspan="2">
+                                                Share the registration link with players so they can fill in their own
+                                                profile. Registrations arrive as <strong>Draft</strong> players.<br/><br/>
+                                                Set <strong>Max Registrations</strong> to <strong>0</strong> for
+                                                unlimited. Registration closes automatically once the limit is reached.
+                                            </div>
+                                        </group>
                                     </group>
-                                    <group>
-                                        <p class="text-muted" style="margin-top:6px;">
-                                            Share this link with players so they can fill in their own
-                                            profile. Registrations arrive as <strong>Draft</strong> players.<br/><br/>
-                                            Set <strong>Max Registrations</strong> to <strong>0</strong> for
-                                            unlimited. Registration closes automatically once the limit is reached.
-                                        </p>
-                                    </group>
-                                </group>
+                                </div>
 
-                                <!-- ── Projector View (Manual + Random) ── -->
-                                <group>
+                                <!-- ── Projector View ── -->
+                                <div class="o_at_presentation_section">
                                     <separator string="Projector View"/>
-                                    <group string="Projector URL">
-                                        <field name="projector_url" widget="CopyClipboardChar"
-                                               readonly="1" string="Share URL"/>
+                                    <field name="has_auction_rules" invisible="1"/>
+                                    <group col="2" attrs="{'invisible': [('has_auction_rules', '=', False)]}">
+                                        <group string="Projector URL">
+                                            <field name="projector_url" widget="CopyClipboardChar"
+                                                   readonly="1" string="Share URL"/>
+                                        </group>
+                                        <group string="How it works">
+                                            <div class="o_at_presentation_help" colspan="2">
+                                                Open this URL on a projector or large screen for the audience.
+                                                It updates in real-time while operators run
+                                                <strong>display_auction</strong> (Random) or
+                                                <strong>player_selector</strong> (Manual).
+                                            </div>
+                                        </group>
                                     </group>
-                                    <group>
-                                        <p class="text-muted" style="margin-top:6px;">
-                                            Open this URL on a projector or large screen for the audience.
-                                            It updates in real-time while operators run
-                                            <strong>display_auction</strong> (Random) or
-                                            <strong>player_selector</strong> (Manual).
-                                        </p>
-                                    </group>
-                                </group>
-
-                                <!-- ── Tournament Poster ── -->
-                                <separator string="Tournament Poster"/>
-                                <p class="text-muted o_form_label" style="margin-bottom:12px;">
-                                    Upload a poster that will be displayed on the <strong>player registration page</strong>
-                                    sidebar, above the "Why Register?" section.
-                                </p>
-                                <group>
-                                    <group string="Poster Image">
-                                        <field name="poster_image" widget="image" nolabel="1"
-                                               options="{'preview_image': 'poster_image', 'size': [300, 400]}"/>
-                                        <p class="text-muted" style="margin-top:8px; font-size:12px;">
-                                            Recommended: portrait/square format (e.g. 600 × 800 px). PNG or JPG.
-                                        </p>
-                                    </group>
-                                </group>
-
-                                <!-- ── Payment Setup ── -->
-                                <separator string="Payment Setup"/>
-                                <p class="text-muted o_form_label" style="margin-bottom:12px;">
-                                    Configure what players see in the <strong>Payment Proof</strong>
-                                    section of the registration form.
-                                </p>
-                                <group>
-                                    <group string="Payment QR / Scanner">
-                                        <field name="payment_qr_image" widget="image" nolabel="1"
-                                               options="{'preview_image': 'payment_qr_image', 'size': [200, 200]}"/>
-                                        <p class="text-muted" style="margin-top:8px; font-size:12px;">
-                                            Upload your UPI / payment QR code (PNG recommended, square format).
-                                            Players can scan it directly from the registration page.
-                                        </p>
-                                    </group>
-                                    <group string="Payment Instructions">
-                                        <field name="payment_instruction" nolabel="1"
-                                               placeholder="e.g. Pay ₹500 via UPI to 9876543210@paytm. Add your name as payment reference, then attach the screenshot below."/>
-                                        <p class="text-muted" style="margin-top:8px; font-size:12px;">
-                                            This text is shown as an instruction box above the upload
-                                            area on the registration page.
-                                        </p>
-                                    </group>
-                                </group>
+                                    <div class="alert alert-warning" role="alert"
+                                         attrs="{'invisible': [('has_auction_rules', '=', True)]}"
+                                         style="margin:8px 0 0;">
+                                        <strong>Auction rules required.</strong>
+                                        Set Auction Rules for this tournament before the Projector URL
+                                        and Player Console become available.
+                                    </div>
+                                </div>
 
                             </page>
 
-                            <!-- Tab 4: Venue -->
+                            <!-- Tab: Poster & Payment Images -->
+                            <page string="Poster &amp; Payment Images" name="poster_payment">
+
+                                <div class="o_at_presentation_section">
+                                    <separator string="Tournament Poster"/>
+                                    <p class="o_at_presentation_help">
+                                        Upload a poster shown on the player registration page sidebar,
+                                        above the "Why Register?" section.
+                                    </p>
+                                    <group col="2">
+                                        <group string="Poster Image">
+                                            <field name="poster_image" widget="image" nolabel="1"
+                                                   options="{'preview_image': 'poster_image', 'size': [240, 320]}"/>
+                                        </group>
+                                        <group>
+                                            <div class="o_at_presentation_help" colspan="2">
+                                                Recommended: portrait/square format (e.g. 600 × 800 px). PNG or JPG.
+                                            </div>
+                                        </group>
+                                    </group>
+                                </div>
+
+                                <div class="o_at_presentation_section">
+                                    <separator string="Payment Setup"/>
+                                    <p class="o_at_presentation_help">
+                                        Configure what players see in the <strong>Payment Proof</strong>
+                                        section of the registration form.
+                                    </p>
+                                    <group col="2">
+                                        <group string="Payment QR / Scanner">
+                                            <field name="payment_qr_image" widget="image" nolabel="1"
+                                                   options="{'preview_image': 'payment_qr_image', 'size': [200, 200]}"/>
+                                            <div class="o_at_presentation_help" colspan="2">
+                                                Upload your UPI / payment QR code (PNG recommended, square format).
+                                            </div>
+                                        </group>
+                                        <group string="Payment Instructions">
+                                            <field name="payment_instruction" nolabel="1"
+                                                   placeholder="e.g. Pay ₹500 via UPI to 9876543210@paytm. Add your name as payment reference, then attach the screenshot below."/>
+                                            <div class="o_at_presentation_help" colspan="2">
+                                                Shown as an instruction box above the upload area on the registration page.
+                                            </div>
+                                        </group>
+                                    </group>
+                                </div>
+
+                            </page>
+
+                            <!-- Tab: Venue -->
                             <page string="Venue" name="venue">
                                 <group string="Tournament Venue">
                                     <field name="venue" nolabel="1"
@@ -519,6 +622,49 @@
                                 </field>
                             </page>
 
+                            <!-- Tab: Pools & Fixtures (saved from Pool Generator) -->
+                            <page string="Pools and Fixtures" name="pools_fixtures">
+                                <p class="text-muted" style="margin-bottom:14px;">
+                                    Snapshots saved from the <strong>Pool Generator</strong> appear here
+                                    for this tournament. Generation is attributed to the user who last
+                                    drew pools or fixtures (or saved them). Download the saved images below.
+                                </p>
+                                <group>
+                                    <group string="Pool Draw">
+                                        <field name="pool_draw_user_id" readonly="1"
+                                               attrs="{'invisible': [('pool_draw_user_id', '=', False)]}"/>
+                                        <field name="pool_draw_datetime" readonly="1"
+                                               attrs="{'invisible': [('pool_draw_datetime', '=', False)]}"/>
+                                        <button name="action_download_pool_draw_snapshot"
+                                                type="object"
+                                                string="Download Pool Draw"
+                                                icon="fa-download"
+                                                class="btn-secondary"
+                                                attrs="{'invisible': [('pool_draw_snapshot', '=', False)]}"/>
+                                        <field name="pool_draw_snapshot" widget="image"
+                                               options="{'size': [480, 480]}"
+                                               string="Pool Draw Snapshot"/>
+                                        <field name="pool_draw_json" invisible="1"/>
+                                    </group>
+                                    <group string="Fixture Schedule">
+                                        <field name="fixture_schedule_user_id" readonly="1"
+                                               attrs="{'invisible': [('fixture_schedule_user_id', '=', False)]}"/>
+                                        <field name="fixture_schedule_datetime" readonly="1"
+                                               attrs="{'invisible': [('fixture_schedule_datetime', '=', False)]}"/>
+                                        <button name="action_download_fixture_schedule_snapshot"
+                                                type="object"
+                                                string="Download Fixture"
+                                                icon="fa-download"
+                                                class="btn-secondary"
+                                                attrs="{'invisible': [('fixture_schedule_snapshot', '=', False)]}"/>
+                                        <field name="fixture_schedule_snapshot" widget="image"
+                                               options="{'size': [480, 480]}"
+                                               string="Fixture Snapshot"/>
+                                        <field name="fixture_schedule_json" invisible="1"/>
+                                    </group>
+                                </group>
+                            </page>
+
                         </notebook>
                     </sheet>
                 </form>
@@ -547,6 +693,7 @@
                     <field name="unsold_player_count"/>
                     <field name="team_max_points"/>
                     <field name="organizer_uid"/>
+                    <field name="tournament_code"/>
                     <templates>
                         <t t-name="kanban-box">
                             <div class="o_atk_card oe_kanban_global_click">
@@ -566,6 +713,10 @@
                                     </div>
                                     <div class="o_atk_title_block">
                                         <div class="o_atk_name" t-esc="record.name.value"/>
+                                        <div t-if="record.tournament_code.raw_value"
+                                             class="o_atk_code"
+                                             t-att-title="record.tournament_code.value"
+                                             t-esc="record.tournament_code.value"/>
                                         <div class="o_atk_desc" t-esc="record.description.value"/>
                                         <div class="o_atk_badges">
                                             <span t-attf-class="o_atk_type_badge o_atk_type_#{record.tournament_type.raw_value}">
@@ -646,8 +797,6 @@
              Inherits the base form and:
                • Hides the Deactivate Tournament button
                • Makes restricted fields readonly (type, algorithm, organizers, theme)
-               • Hides the Points & Bid Slabs notebook tab
-               • Keeps team_max_points (balance) editable
         ──────────────────────────────────────────────────────────────────────── -->
         <record id="view_auction_tournament_user_form" model="ir.ui.view">
             <field name="name">auction.tournament.form.user</field>
@@ -689,11 +838,6 @@
                     <attribute name="readonly">1</attribute>
                 </field>
 
-                <!-- Hide Points & Bid Slabs tab entirely -->
-                <page name="points_slabs" position="attributes">
-                    <attribute name="invisible">1</attribute>
-                </page>
-
                 <!-- Make all editable fields in Presentation & Theme tab readonly -->
                 <field name="player_display_template" position="attributes">
                     <attribute name="readonly">1</attribute>
@@ -713,6 +857,12 @@
                 <field name="expose_player_contact" position="attributes">
                     <attribute name="readonly">1</attribute>
                 </field>
+                <xpath expr="//button[@name='action_open_expose_contact_privacy_wizard']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//button[@name='action_remask_player_contact']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
                 <field name="max_registrations" position="attributes">
                     <attribute name="readonly">1</attribute>
                 </field>

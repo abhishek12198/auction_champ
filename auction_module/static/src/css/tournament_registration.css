@@ -646,7 +646,7 @@ input[type="file"].tr-file-hidden { display: none; }
     overflow: hidden;
 }
 /* Theme swatch colors */
-.swatch-vanilla     { background: linear-gradient(135deg,#0c1a3c 0%,#2252b5 100%); }
+.swatch-vanilla     { background: linear-gradient(135deg,#1a3560 0%,#5b7eb8 100%); }
 .swatch-butterscotch{ background: linear-gradient(135deg,#2d1a00 0%,#c07800 100%); }
 .swatch-strawberry  { background: linear-gradient(135deg,#ff80b5 0%,#ff2070 100%); }
 .swatch-cherry      { background: linear-gradient(135deg,#5a0000 0%,#b01020 100%); }
@@ -992,4 +992,9 @@ input[type="file"].tr-file-hidden { display: none; }
 }
 @media (max-width: 400px) {
     .tr-theme-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.swatch-blackberry {
+  background: linear-gradient(135deg, #050a14 0%, #1e3a8a 50%, #3b82f6 100%);
+  box-shadow: 0 0 14px rgba(59,130,246,.45);
 }

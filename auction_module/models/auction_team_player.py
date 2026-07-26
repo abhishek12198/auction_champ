@@ -915,6 +915,7 @@ class AuctionTeamPlayer(models.Model):
             'cherry':        'auction_module.action_report_player_card_cherry',
             'pistah':        'auction_module.action_report_player_card_pistah',
             'lemon':         'auction_module.action_report_player_card_lemon',
+            'blackberry':    'auction_module.action_report_player_card_blackberry',
         }
         report_ref = report_map.get(template, 'auction_module.action_report_player_card')
         return self.env.ref(report_ref).report_action(self)
@@ -955,6 +956,7 @@ class AuctionTeamPlayer(models.Model):
         'cherry':       {'bg1': '#2a0509', 'bg2': '#140203', 'bg3': '#4a0a13', 'accent': '#f5c842', 'accent2': '#ffdd88', 'accentD': '#9a0f22', 'txt': '#ffecec', 'sub': '#e0a0a8', 'badge1': '#e01e37', 'badge2': '#5a0810'},
         'pistah':       {'bg1': '#0e2a15', 'bg2': '#05130a', 'bg3': '#1c4d2a', 'accent': '#d4e157', 'accent2': '#eaff9a', 'accentD': '#2f7d32', 'txt': '#ecfce8', 'sub': '#a7d1a0', 'badge1': '#7cb342', 'badge2': '#1b4a1e'},
         'lemon':        {'bg1': '#1a1e10', 'bg2': '#0c0e08', 'bg3': '#2a3218', 'accent': '#D9B820', 'accent2': '#E8D48A', 'accentD': '#8F7400', 'txt': '#fff6d6', 'sub': '#d4c078', 'badge1': '#C9A400', 'badge2': '#6E5A00'},
+        'blackberry':   {'bg1': '#0a1628', 'bg2': '#050a14', 'bg3': '#14305f', 'accent': '#60a5fa', 'accent2': '#93c5fd', 'accentD': '#1e3a8a', 'txt': '#ffffff', 'sub': '#93c5fd', 'badge1': '#3b82f6', 'badge2': '#0f285f'},
     }
 
     def _card_render_binary(self):
@@ -1546,6 +1548,25 @@ class AuctionTeamPlayer(models.Model):
 
 
     @api.model
+    def _ensure_default_tier_vals(self, vals):
+        """If no tier was chosen, assign the first tier of the player's tournament."""
+        if vals.get('tier_id'):
+            return
+        tid = vals.get('tournament_id') or self.env.context.get('default_tournament_id')
+        if not tid:
+            return
+        Tier = self.env['auction.player.tier']
+        # Prefer a normal (non-icon) tier; fall back to any tier on the tournament.
+        tier = Tier.search([
+            ('tournament_id', '=', tid),
+            ('is_an_icon_tier', '=', False),
+        ], order='id asc', limit=1)
+        if not tier:
+            tier = Tier.search([('tournament_id', '=', tid)], order='id asc', limit=1)
+        if tier:
+            vals['tier_id'] = tier.id
+
+    @api.model
     def create(self, vals):
         # Only fall back to the active tournament when no tournament was explicitly provided.
         # If vals already carries tournament_id (e.g. from the public registration form via
@@ -1555,6 +1576,8 @@ class AuctionTeamPlayer(models.Model):
             tournament_id = self.env['auction.tournament'].search([('active', '=', True)], limit=1)
             if tournament_id:
                 vals.update({'tournament_id': tournament_id.id})
+
+        self._ensure_default_tier_vals(vals)
 
         if vals.get('photo_url', False):
             image_base64 = self.get_base64_from_url(vals.get('photo_url', False))
@@ -1636,6 +1659,11 @@ class AuctionTeamPlayer(models.Model):
             on_stage.sudo().write({'is_on_stage': False})
         if random_player:
             random_player.sudo().write({'is_on_stage': True, 'mystery_revealed': False})
+            if tournament:
+                try:
+                    tournament.action_dismiss_projector_board()
+                except Exception:
+                    pass
 
         # ── Clear stamp only when it has already expired ──
         # A still-valid SOLD/UNSOLD stamp MUST survive here: the sold screen
@@ -1657,26 +1685,54 @@ class AuctionTeamPlayer(models.Model):
         return random_player
 
     def action_set_on_stage(self):
-        """Mark this player as the current on-stage player for the live board."""
-        all_on_stage = self.search([('is_on_stage', '=', True)])
-        if all_on_stage:
-            all_on_stage.sudo().write({'is_on_stage': False})
+        """Mark this player as the current on-stage player for the live board.
+
+        Clears ``is_on_stage`` only within the same tournament. On a shared SaaS
+        database, a global clear would touch other tenants (and can raise if any
+        of those accounts are frozen), which silently broke projector updates.
+        """
         for player in self:
+            tournament = player.tournament_id
+            domain = [('is_on_stage', '=', True)]
+            if tournament:
+                domain.append(('tournament_id', '=', tournament.id))
+            else:
+                domain.append(('id', 'in', player.ids))
+            others = self.search(domain) - player
+            if others:
+                others.sudo().with_context(saas_skip_freeze=True).write(
+                    {'is_on_stage': False}
+                )
             vals = {'is_on_stage': True}
             # Reset mystery mask only for a fresh auction appearance.
             # Sold + already-revealed players must stay revealed.
             if player.state != 'sold':
                 vals['mystery_revealed'] = False
+            # Runtime stage flag must not be blocked by SaaS freeze of *other*
+            # tenants; freeze for *this* tournament is still enforced below via
+            # normal write when the account itself is expired.
             player.sudo().write(vals)
+            # Opening a player ends the dice broadcast so the projector can
+            # switch to the card immediately (no wait for client idle timeout).
+            if tournament and tournament.dice_state and tournament.dice_state != 'idle':
+                try:
+                    tournament.set_dice_state('idle', 0)
+                except Exception:
+                    pass
+            # Player on stage → dismiss pool/fixture board on the projector
+            if tournament:
+                try:
+                    tournament.action_dismiss_projector_board()
+                except Exception:
+                    pass
             # Clear stamp only when it has already expired — same rule as
             # get_random_player. An active SOLD/UNSOLD stamp must survive so the
             # projector/live board finish the celebration even after the next
             # player is committed underneath.
-            tournament = player.tournament_id
             if tournament and tournament.stamp_player_id:
                 now_dt = fields.Datetime.now()
                 if not tournament.stamp_expires_at or tournament.stamp_expires_at <= now_dt:
-                    tournament.sudo().write({
+                    tournament.sudo().with_context(saas_skip_freeze=True).write({
                         'stamp_player_id': False,
                         'stamp_state': False,
                         'stamp_expires_at': False,

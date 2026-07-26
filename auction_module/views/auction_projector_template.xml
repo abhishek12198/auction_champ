@@ -24,7 +24,7 @@ html{font-size:clamp(12px, calc(100vmin / 76), 22px);width:100%;height:100%;
 html,body{width:100%;height:100%;overflow:hidden}
 body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sans-serif}
 
-/* ══ Dark / Light tokens (match reference) ═══════════════════════════ */
+/* ══ Dark / Light tokens (base) ═══════════════════════════════════════ */
 [data-mode="dark"]{
   --bg:#07111f;--bg2:#0c1a30;--panel:rgba(8,18,36,.88);--panel2:rgba(12,24,48,.92);
   --tx:#f4f7ff;--tx2:rgba(244,247,255,.62);--muted:rgba(244,247,255,.38);
@@ -42,6 +42,79 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   --danger:#d32f3a;--ok:#1e9e55;--card:#ffffff;
   --photo-veil:linear-gradient(90deg,transparent 55%,rgba(246,243,234,.55) 100%);
   --ray:rgba(196,154,42,.16);
+}
+
+/* ══ Card-theme palettes (match display_auction themes) ═══════════════ */
+[data-theme="lemon"]{
+  --bg:#E8DDB8;--bg2:#F4ECD0;--panel:rgba(240,230,196,.94);--panel2:#F0E6C4;
+  --tx:#1F1A0A;--tx2:rgba(31,26,10,.62);--muted:rgba(31,26,10,.4);
+  --gold:#C9A400;--gold2:#D9B820;--gold-soft:rgba(201,164,0,.16);
+  --line:rgba(120,95,0,.45);--glow:rgba(201,164,0,.28);
+  --danger:#c62828;--ok:#2e7d32;--card:#F4ECD0;
+  --photo-veil:linear-gradient(90deg,transparent 55%,rgba(232,221,184,.72) 100%);
+  --ray:rgba(201,164,0,.18);
+}
+/* Match display_auction lemon: AuctionChamp wordmark → dark/black brand mark */
+[data-theme="lemon"] .pj-ac-bar-logo,
+[data-theme="lemon"] .pj-ac-logo{
+  filter:brightness(0) sepia(1) saturate(5) hue-rotate(6deg) brightness(0.58)
+         drop-shadow(0 1px 2px rgba(80,60,0,.25));
+  opacity:1;
+}
+[data-theme="vanilla"]{
+  /* Softer slate-blue — easier on the eyes than saturated royal */
+  --bg:#1b2f4d;--bg2:#243a5c;--panel:rgba(32,50,78,.92);--panel2:rgba(38,58,90,.95);
+  --tx:#eef2f8;--tx2:rgba(238,242,248,.64);--muted:rgba(238,242,248,.4);
+  --gold:#c9b27a;--gold2:#dfcb9a;--gold-soft:rgba(201,178,122,.16);
+  --line:rgba(138,166,200,.38);--glow:rgba(138,166,200,.28);
+  --danger:#e5394a;--ok:#2ecc71;--card:rgba(30,46,72,.82);
+  --photo-veil:linear-gradient(90deg,transparent 55%,rgba(27,47,77,.75) 100%);
+  --ray:rgba(122,155,190,.18);
+}
+[data-theme="butterscotch"]{
+  --bg:#070B14;--bg2:#0C1120;--panel:rgba(12,17,32,.92);--panel2:rgba(16,22,40,.95);
+  --tx:#ffffff;--tx2:rgba(255,255,255,.55);--muted:rgba(255,255,255,.38);
+  --gold:#F5C842;--gold2:#FF9F1C;--gold-soft:rgba(245,200,66,.16);
+  --line:rgba(245,200,66,.42);--glow:rgba(245,200,66,.4);
+  --danger:#e53935;--ok:#2ecc71;--card:rgba(12,17,32,.85);
+  --photo-veil:linear-gradient(90deg,transparent 55%,rgba(7,11,20,.78) 100%);
+  --ray:rgba(245,200,66,.2);
+}
+[data-theme="strawberry"]{
+  --bg:#FFF0F5;--bg2:#FCE4EC;--panel:rgba(255,255,255,.94);--panel2:#ffffff;
+  --tx:#1a0a12;--tx2:rgba(26,10,18,.58);--muted:rgba(26,10,18,.4);
+  --gold:#C2185B;--gold2:#E91E63;--gold-soft:rgba(194,24,91,.12);
+  --line:rgba(194,24,91,.35);--glow:rgba(233,30,99,.22);
+  --danger:#ad1457;--ok:#2e7d32;--card:#ffffff;
+  --photo-veil:linear-gradient(90deg,transparent 55%,rgba(255,240,245,.7) 100%);
+  --ray:rgba(233,30,99,.14);
+}
+[data-theme="cherry"]{
+  --bg:#070104;--bg2:#12060a;--panel:rgba(22,8,12,.92);--panel2:rgba(28,10,16,.95);
+  --tx:#fff5f7;--tx2:rgba(255,245,247,.58);--muted:rgba(255,245,247,.38);
+  --gold:#E8C547;--gold2:#FB7185;--gold-soft:rgba(225,29,72,.16);
+  --line:rgba(225,29,72,.4);--glow:rgba(225,29,72,.35);
+  --danger:#E11D48;--ok:#2ecc71;--card:rgba(22,8,12,.88);
+  --photo-veil:linear-gradient(90deg,transparent 55%,rgba(7,1,4,.8) 100%);
+  --ray:rgba(225,29,72,.16);
+}
+[data-theme="blackberry"]{
+  --bg:#050a14;--bg2:#0a1220;--panel:rgba(13,24,48,.92);--panel2:rgba(17,31,56,.95);
+  --tx:#ffffff;--tx2:rgba(255,255,255,.58);--muted:rgba(255,255,255,.38);
+  --gold:#3B82F6;--gold2:#93C5FD;--gold-soft:rgba(59,130,246,.18);
+  --line:rgba(59,130,246,.42);--glow:rgba(59,130,246,.40);
+  --danger:#e53935;--ok:#66bb6a;--card:rgba(13,24,48,.88);
+  --photo-veil:linear-gradient(90deg,transparent 55%,rgba(5,10,20,.82) 100%);
+  --ray:rgba(59,130,246,.18);
+}
+[data-theme="pistah"]{
+  --bg:#060e08;--bg2:#0b1a0e;--panel:rgba(13,31,17,.92);--panel2:rgba(17,36,22,.95);
+  --tx:#e8f5e9;--tx2:rgba(232,245,233,.58);--muted:rgba(232,245,233,.38);
+  --gold:#6BBF4E;--gold2:#A8E063;--gold-soft:rgba(107,191,78,.16);
+  --line:rgba(107,191,78,.4);--glow:rgba(107,191,78,.35);
+  --danger:#e53935;--ok:#66bb6a;--card:rgba(13,31,17,.88);
+  --photo-veil:linear-gradient(90deg,transparent 55%,rgba(6,14,8,.8) 100%);
+  --ray:rgba(107,191,78,.16);
 }
 
 #pj-root{position:fixed;inset:0;display:flex;flex-direction:column;
@@ -85,20 +158,124 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:22vw}
 .pj-auction-date{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);
   font-weight:800;margin-top:2px}
-.pj-bid-summary-btn,.pj-fs-btn,.pj-squad-btn,.pj-remain-btn{
+.pj-bid-summary-btn,.pj-fs-btn,.pj-squad-btn,.pj-remain-btn,.pj-pool-btn,.pj-fix-btn{
   border:1px solid var(--line);background:var(--gold-soft);color:var(--tx);
   border-radius:.45rem;cursor:pointer;text-decoration:none;
   display:inline-flex;align-items:center;justify-content:center;gap:.35rem;
   font-family:inherit;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
   width:2.6rem;height:2.6rem;font-size:1.1rem;padding:0;flex-shrink:0}
-.pj-squad-btn svg,.pj-bid-summary-btn svg,.pj-remain-btn svg,.pj-fs-btn svg{width:1.25rem;height:1.25rem;display:block;fill:currentColor}
+.pj-squad-btn svg,.pj-bid-summary-btn svg,.pj-remain-btn svg,.pj-fs-btn svg,
+.pj-pool-btn svg,.pj-fix-btn svg{width:1.25rem;height:1.25rem;display:block;fill:currentColor}
 .pj-fs-btn svg{fill:none}
 .pj-fs-btn.is-fs .pj-fs-ico--enter{display:none}
 .pj-fs-btn.is-fs .pj-fs-ico--exit{display:block}
 .pj-fs-btn:not(.is-fs) .pj-fs-ico--exit{display:none}
 .pj-fs-btn:not(.is-fs) .pj-fs-ico--enter{display:block}
 .pj-bar-actions{display:inline-flex;align-items:center;gap:.4rem;flex-shrink:0}
-.pj-bid-summary-btn:hover,.pj-fs-btn:hover,.pj-squad-btn:hover,.pj-remain-btn:hover{border-color:var(--gold);color:var(--gold)}
+.pj-bid-summary-btn:hover,.pj-fs-btn:hover,.pj-squad-btn:hover,.pj-remain-btn:hover,
+.pj-pool-btn:hover,.pj-fix-btn:hover{border-color:var(--gold);color:var(--gold)}
+.pj-pool-btn.is-off,.pj-fix-btn.is-off{opacity:.35;pointer-events:none}
+.pj-pool-btn.is-live,.pj-fix-btn.is-live{border-color:var(--gold);color:var(--gold);
+  box-shadow:0 0 0 1px rgba(232,184,74,.35)}
+
+/* ══ Live Pool / Fixture board — fills stage between header and sponsors ══ */
+#pjBoardOverlay{
+  position:absolute;left:0;right:0;z-index:40;display:none;flex-direction:column;
+  background:var(--bg);
+  background-image:
+    radial-gradient(90% 70% at 18% 45%, var(--ray) 0%, transparent 55%),
+    radial-gradient(70% 55% at 88% 20%, var(--ray) 0%, transparent 50%),
+    linear-gradient(160deg, var(--bg2), var(--bg));
+  pointer-events:auto}
+#pjBoardOverlay.open{display:flex !important}
+.pj-bd-panel{flex:1;min-height:0;margin:0;display:flex;flex-direction:column;
+  border-radius:0;overflow:hidden;border:none;
+  background:transparent;box-shadow:none}
+.pj-bd-hd{display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  padding:.55rem 1.25rem .5rem;border-bottom:1px solid var(--line);flex-shrink:0;
+  background:linear-gradient(180deg, var(--panel2), transparent)}
+.pj-bd-kicker{font-size:.72rem;font-weight:800;letter-spacing:.28em;text-transform:uppercase;color:var(--gold)}
+.pj-bd-title{font-family:'Bebas Neue',sans-serif;font-weight:400;letter-spacing:.1em;text-transform:uppercase;
+  font-size:clamp(1.35rem, 3.2vh, 2.35rem);color:var(--tx);margin-top:2px;line-height:1}
+.pj-bd-close{width:2.6rem;height:2.6rem;border-radius:.5rem;border:1px solid var(--line);
+  background:var(--gold-soft);color:var(--tx);font-size:1.45rem;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;line-height:1;flex-shrink:0}
+.pj-bd-close:hover{border-color:var(--gold);color:var(--gold)}
+.pj-bd-body{flex:1;min-height:0;overflow:hidden;padding:clamp(.6rem,1.4vh,1.1rem) clamp(.8rem,1.6vw,1.4rem);
+  display:flex;align-items:stretch;justify-content:center}
+.pj-bd-reveal{width:min(520px,100%);text-align:center;padding:2rem 1.2rem;margin:auto}
+.pj-bd-reveal-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.8rem,4vh,2.8rem);letter-spacing:.12em;
+  text-transform:uppercase;color:var(--tx);margin-bottom:1rem}
+.pj-bd-reveal-msg{color:var(--tx2);font-weight:700;letter-spacing:.06em;margin-bottom:1.2rem;
+  font-size:clamp(1rem,2vh,1.35rem)}
+.pj-bd-orbit{position:relative;width:clamp(100px,14vh,140px);height:clamp(100px,14vh,140px);margin:0 auto 1.2rem}
+.pj-bd-ring{position:absolute;inset:8px;border-radius:50%;border:2px solid transparent;
+  border-top-color:var(--gold);border-right-color:rgba(224,184,74,.35);animation:pjBdOrbit 1.4s linear infinite}
+.pj-bd-ring2{inset:22px;border-top-color:var(--tx2);animation-duration:1s;animation-direction:reverse}
+.pj-bd-core{position:absolute;inset:38%;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,var(--gold),var(--bg) 70%);
+  box-shadow:0 0 24px var(--glow);animation:pjBdPulse 1.2s ease-in-out infinite}
+@keyframes pjBdOrbit{to{transform:rotate(360deg)}}
+@keyframes pjBdPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+
+.pj-bd-stage{width:100%;height:100%;min-height:0;display:flex;flex-direction:column}
+.pj-bd-pool-grid{
+  flex:1;min-height:0;width:100%;height:100%;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-auto-rows:minmax(0,1fr);align-content:stretch;
+  gap:clamp(10px,1.4vh,18px)}
+.pj-bd-stage[data-rows="1"] .pj-bd-pool-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.pj-bd-stage[data-count="1"] .pj-bd-pool-grid{grid-template-columns:minmax(0,1fr);max-width:min(720px,100%);margin:0 auto}
+
+.pj-bd-pool{border-radius:clamp(10px,1.2vh,16px);overflow:hidden;border:1px solid var(--line);
+  background:linear-gradient(180deg,var(--panel2),var(--panel));
+  box-shadow:0 10px 28px rgba(0,0,0,.28);display:flex;flex-direction:column;min-height:0}
+.pj-bd-pool-hd{padding:clamp(8px,1.3vh,14px) clamp(10px,1.2vw,16px);text-align:center;flex-shrink:0;
+  background:linear-gradient(135deg,var(--pool-c,#1a4f9c) 0%,#0b2a52 100%);
+  border-bottom:2px solid rgba(232,184,74,.55)}
+.pj-bd-pool-k{display:block;font-size:clamp(.55rem,.9vh,.7rem);letter-spacing:.22em;font-weight:800;color:rgba(232,184,74,.95)}
+.pj-bd-pool-name{display:block;font-family:'Bebas Neue',sans-serif;font-size:clamp(1.25rem,3.2vh,2.2rem);
+  letter-spacing:.08em;color:#fff;margin-top:2px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pj-bd-pool-count{display:inline-block;margin-top:clamp(3px,.6vh,6px);padding:2px 10px;border-radius:999px;
+  font-size:clamp(.58rem,1vh,.75rem);font-weight:800;color:#e8f0ff;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.12)}
+.pj-bd-pool-list{padding:clamp(6px,1vh,12px);display:flex;flex-direction:column;
+  gap:clamp(5px,1vh,10px);flex:1;min-height:0;overflow:auto}
+.pj-bd-team{display:flex;align-items:center;gap:clamp(8px,1vw,14px);
+  padding:clamp(7px,1.15vh,14px) clamp(8px,1vw,14px);border-radius:clamp(8px,1vh,12px);
+  background:rgba(255,255,255,.05);border:1px solid rgba(140,180,230,.14);flex-shrink:0}
+.pj-bd-team-no{width:clamp(1.1rem,2vh,1.6rem);font-size:clamp(.7rem,1.4vh,1rem);font-weight:800;color:var(--gold);text-align:center;flex-shrink:0}
+.pj-bd-team-logo,.pj-bd-team-ph{width:clamp(36px,5.2vh,58px);height:clamp(36px,5.2vh,58px);border-radius:10px;object-fit:contain;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);flex-shrink:0}
+.pj-bd-team-ph{display:inline-flex;align-items:center;justify-content:center;font-size:clamp(.7rem,1.5vh,1rem);font-weight:800;color:var(--gold)}
+.pj-bd-team-name{font-size:clamp(1.05rem,2.6vh,1.85rem);font-weight:800;color:var(--tx);min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:.02em}
+
+/* Fewer rows → larger type */
+.pj-bd-stage[data-rows="1"] .pj-bd-team-name{font-size:clamp(1.25rem,3.4vh,2.2rem)}
+.pj-bd-stage[data-rows="1"] .pj-bd-team-logo,.pj-bd-stage[data-rows="1"] .pj-bd-team-ph{width:clamp(48px,7vh,72px);height:clamp(48px,7vh,72px)}
+.pj-bd-stage[data-rows="2"] .pj-bd-team-name{font-size:clamp(1.1rem,2.8vh,1.95rem)}
+.pj-bd-stage[data-rows="5"] .pj-bd-team-name{font-size:clamp(.9rem,1.9vh,1.35rem)}
+.pj-bd-stage[data-rows="5"] .pj-bd-team{padding:clamp(4px,.7vh,8px) clamp(6px,.8vw,10px)}
+.pj-bd-stage[data-rows="5"] .pj-bd-team-logo,.pj-bd-stage[data-rows="5"] .pj-bd-team-ph{width:clamp(26px,3.4vh,40px);height:clamp(26px,3.4vh,40px)}
+
+.pj-bd-fx-list{display:flex;flex-direction:column;gap:clamp(6px,1vh,12px);
+  width:min(1100px,100%);margin:0 auto;height:100%;min-height:0;overflow:auto;padding-right:4px}
+.pj-bd-fx-sec{margin:clamp(4px,.8vh,10px) 0 2px;font-size:clamp(.7rem,1.3vh,.9rem);letter-spacing:.18em;text-transform:uppercase;
+  color:var(--gold);font-weight:800}
+.pj-bd-fx{display:grid;grid-template-columns:clamp(2.4rem,4vh,3.2rem) 1fr auto 1fr;gap:clamp(8px,1.2vw,16px);align-items:center;
+  padding:clamp(10px,1.6vh,18px) clamp(12px,1.4vw,20px);border-radius:clamp(10px,1.2vh,14px);border:1px solid var(--line);
+  background:linear-gradient(180deg,var(--panel2),var(--panel));flex-shrink:0}
+.pj-bd-fx-n{font-size:clamp(.75rem,1.5vh,1rem);font-weight:800;color:var(--gold)}
+.pj-bd-fx-side{display:flex;align-items:center;gap:clamp(8px,1vw,14px);min-width:0}
+.pj-bd-fx-side.right{flex-direction:row-reverse;text-align:right}
+.pj-bd-fx-name{font-size:clamp(1.05rem,2.5vh,1.75rem);font-weight:800;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pj-bd-fx-vs{font-family:'Bebas Neue',sans-serif;font-size:clamp(.9rem,2vh,1.35rem);font-weight:400;letter-spacing:.14em;color:var(--gold)}
+.pj-bd-fx .pj-bd-team-logo,.pj-bd-fx .pj-bd-team-ph{width:clamp(40px,5.5vh,60px);height:clamp(40px,5.5vh,60px)}
+.pj-bd-empty{color:var(--tx2);letter-spacing:.12em;text-transform:uppercase;
+  text-align:center;padding:3rem 1rem;font-size:clamp(1rem,2vh,1.3rem);margin:auto}
+
+#pjBoardOverlay.open ~ #pj-stage,
+#pj-root:has(#pjBoardOverlay.open) #pj-stage{visibility:hidden}
 
 /* ══ Team Squad Overlay ═══════════════════════════════════════════════ */
 #pjSquadOverlay{position:fixed;inset:0;z-index:900;display:none;flex-direction:column;
@@ -307,33 +484,44 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 /* ══ Stage ════════════════════════════════════════════════════════════ */
 #pj-stage{flex:1;position:relative;min-height:0;overflow:hidden}
 
-/* Waiting */
+/* Waiting — full-stage centered stand-by */
 #pj-waiting{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:1rem;background:rgba(0,0,0,.55);
-  backdrop-filter:blur(4px);transition:opacity .4s}
+  align-items:center;justify-content:center;gap:0;background:rgba(0,0,0,.55);
+  backdrop-filter:blur(4px);transition:opacity .4s;padding:clamp(1rem,3vh,2.5rem) 1.25rem}
 [data-mode="light"] #pj-waiting{background:rgba(255,255,255,.72)}
 #pj-waiting.hidden{opacity:0;pointer-events:none}
-.pj-wait-kicker{letter-spacing:.35em;text-transform:uppercase;font-size:.7rem;color:var(--gold);font-weight:800}
-.pj-wait-hero-logo{width:min(140px,22vw);height:auto;border-radius:12px}
-.pj-wait-hero-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,5vw,3.6rem);
-  letter-spacing:.12em;text-align:center}
+.pj-wait-normal{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;width:100%;max-width:min(96vw,42rem);margin:0 auto;
+  gap:clamp(.65rem,1.6vh,1.15rem)}
+.pj-wait-kicker{letter-spacing:.35em;text-transform:uppercase;font-size:clamp(.65rem,1.1vw,.78rem);
+  color:var(--gold);font-weight:800;text-align:center;width:100%;
+  /* letter-spacing shifts glyphs right — pad left so the word reads optically centered */
+  padding-left:.35em;box-sizing:border-box}
+.pj-wait-hero-logo{display:block;width:min(160px,28vw);height:auto;max-height:min(160px,28vh);
+  object-fit:contain;border-radius:16px;margin:0 auto;
+  box-shadow:0 12px 36px rgba(0,0,0,.35),0 0 0 1px rgba(255,215,0,.18)}
+.pj-wait-hero-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.1rem,5.2vw,3.8rem);
+  letter-spacing:.12em;text-align:center;width:100%;line-height:1.05;
+  padding-left:.12em;box-sizing:border-box}
 .pj-wait-sub{color:var(--tx2);letter-spacing:.16em;text-transform:uppercase;font-size:clamp(.72rem,1.35vw,.95rem);
-  text-align:center;max-width:min(96vw,58rem);line-height:1.35;padding:0 1rem;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  text-align:center;width:100%;max-width:min(96vw,40rem);line-height:1.4;padding:0 1rem 0 calc(1rem + .16em);
+  white-space:normal;box-sizing:border-box}
 .pj-wait-sub.is-begin{color:var(--gold);font-weight:800;font-size:clamp(.85rem,1.6vw,1.15rem);
-  letter-spacing:.22em;white-space:nowrap}
+  letter-spacing:.18em;padding-left:calc(1rem + .18em);white-space:normal}
 .pj-wait-sub.is-complete{color:var(--gold);font-weight:700;font-size:clamp(.7rem,1.25vw,.92rem);
   letter-spacing:.1em;text-transform:uppercase;white-space:normal;line-height:1.4}
-.pj-wait-dots{display:flex;gap:.5rem}
+.pj-wait-dots{display:flex;gap:.5rem;justify-content:center;align-items:center;width:100%}
 #pj-waiting.is-complete .pj-wait-normal{display:none}
 #pj-waiting.is-complete .pj-wait-dots{display:none}
 .pj-wait-dot{width:.55rem;height:.55rem;border-radius:50%;background:var(--gold);
-  animation:pjPulse 1.2s ease-in-out infinite}
+  animation:pjPulse 1.2s ease-in-out infinite;flex-shrink:0}
 .pj-wait-dot:nth-child(2){animation-delay:.2s}
 .pj-wait-dot:nth-child(3){animation-delay:.4s}
-.pj-wait-powered{text-align:center;opacity:.75}
-.pj-wait-powered-lbl{font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;margin-bottom:.35rem}
-.pj-ac-logo{width:clamp(90px,14vw,140px);height:auto}
+.pj-wait-powered{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;opacity:.8;margin-top:clamp(.35rem,1vh,.75rem);width:100%}
+.pj-wait-powered-lbl{font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;
+  margin-bottom:.4rem;padding-left:.2em;width:100%;text-align:center;box-sizing:border-box}
+.pj-ac-logo{display:block;width:clamp(88px,12vw,128px);height:auto;margin:0 auto}
 
 /* ══ Auction Complete / Thank You ceremony ════════════════════════════ */
 .pj-complete-ceremony{display:none;position:relative;flex-direction:column;align-items:center;
@@ -369,6 +557,13 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 .pj-ty-tour{position:relative;z-index:1;font-size:clamp(.85rem,1.6vw,1.2rem);font-weight:800;
   letter-spacing:.28em;text-transform:uppercase;color:var(--tx2);opacity:0;
   animation:pjTyMsgIn .8s ease .95s forwards}
+.pj-ty-logo-wrap{position:relative;z-index:1;margin-top:.55rem;opacity:0;transform:translateY(12px);
+  animation:pjTyMsgIn .8s ease 1.15s forwards;display:none}
+.pj-ty-logo-wrap.is-on{display:block}
+.pj-ty-logo{display:block;width:clamp(72px,12vw,120px);height:clamp(72px,12vw,120px);
+  object-fit:contain;border-radius:18px;margin:0 auto;
+  background:rgba(255,255,255,.08);border:2px solid rgba(255,215,0,.4);
+  box-shadow:0 10px 32px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.06) inset}
 .pj-ty-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
 .pj-ty-piece{position:absolute;top:-12%;width:10px;height:14px;border-radius:2px;opacity:.85;
   animation:pjTyFall linear infinite}
@@ -381,7 +576,8 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 }
 #pj-waiting.is-complete.pj-ty-replay .pj-ty-thanks,
 #pj-waiting.is-complete.pj-ty-replay .pj-ty-message,
-#pj-waiting.is-complete.pj-ty-replay .pj-ty-tour{animation:none;opacity:0}
+#pj-waiting.is-complete.pj-ty-replay .pj-ty-tour,
+#pj-waiting.is-complete.pj-ty-replay .pj-ty-logo-wrap{animation:none;opacity:0}
 #pj-waiting.is-complete.pj-ty-replay .pj-ty-visual{animation:none}
 
 /* Dice */
@@ -396,7 +592,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 .pj-die-dot.on{opacity:1}
 .pj-dice-num{display:none;font-family:'Bebas Neue',sans-serif;font-size:clamp(2.5rem,7vw,5rem);
   letter-spacing:.1em;color:var(--gold);text-shadow:0 0 24px var(--glow)}
-#pj-waiting.dice-active .pj-wait-hero-logo{width:min(90px,14vw)}
+#pj-waiting.dice-active .pj-wait-hero-logo{width:min(90px,14vw);max-height:min(90px,14vh)}
 @keyframes pjDiceNumIn{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
 
 /* Player card — 3 columns */
@@ -417,23 +613,83 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 .pj-spine-rail[data-status="unsold"]{background:linear-gradient(180deg,#c62828,#7f1010)}
 .pj-spine-rail[data-status="withdrawn"]{background:linear-gradient(180deg,#555,#222)}
 
-/* Photo */
+/* Photo — projected / holographic stage look */
 .pj-photo-side{position:relative;min-width:0;overflow:hidden;
-  display:flex;align-items:flex-end;justify-content:center;
+  display:flex;align-items:stretch;justify-content:center;
+  isolation:isolate;
   background:
+    radial-gradient(ellipse 70% 55% at 50% 18%, rgba(255,255,255,.08) 0%, transparent 55%),
     radial-gradient(ellipse at 50% 40%, var(--gold-soft) 0%, transparent 60%),
-    linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.55));
+    linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.62));
   border-right:1px solid var(--line);clip-path:polygon(0 0,100% 0,94% 100%,0 100%)}
 [data-mode="light"] .pj-photo-side{
-  background:radial-gradient(ellipse at 50% 40%, var(--gold-soft) 0%, transparent 60%),
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 18%, rgba(255,255,255,.45) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 40%, var(--gold-soft) 0%, transparent 60%),
     linear-gradient(180deg,#ebe6da,#d9d2c3)}
-.pj-photo{width:auto;height:100%;max-width:100%;object-fit:contain;object-position:center bottom;
-  position:relative;z-index:2;filter:drop-shadow(0 18px 28px rgba(0,0,0,.55));
-  animation:pjHeroIn .65s cubic-bezier(.2,.8,.25,1) both}
-@keyframes pjHeroIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+
+/* Soft projection beam from above */
+.pj-spotlight{
+  display:block !important;position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    radial-gradient(ellipse 48% 62% at 50% -4%, rgba(255,255,255,.22) 0%, transparent 58%),
+    linear-gradient(180deg, var(--gold-soft) 0%, transparent 46%);
+  mix-blend-mode:screen;opacity:.9;
+  animation:pjBeamPulse 5.5s ease-in-out infinite}
+[data-mode="light"] .pj-spotlight{mix-blend-mode:multiply;opacity:.35;
+  background:
+    radial-gradient(ellipse 48% 62% at 50% -4%, rgba(255,255,255,.55) 0%, transparent 58%),
+    linear-gradient(180deg, var(--gold-soft) 0%, transparent 46%)}
+@keyframes pjBeamPulse{
+  0%,100%{opacity:.78;transform:scaleY(1)}
+  50%{opacity:1;transform:scaleY(1.03)}
+}
+
+/* Floor contact shadow — sells the “projected figure” depth */
+.pj-floor{
+  display:block !important;position:absolute;left:50%;bottom:3.5%;z-index:1;
+  width:min(72%, 22rem);height:clamp(1.1rem, 3.2vh, 2.4rem);
+  transform:translateX(-50%);pointer-events:none;
+  background:radial-gradient(ellipse at center,
+    rgba(0,0,0,.62) 0%, rgba(0,0,0,.28) 42%, transparent 72%);
+  filter:blur(3px);opacity:.9}
+[data-mode="light"] .pj-floor{
+  background:radial-gradient(ellipse at center,
+    rgba(13,30,58,.35) 0%, rgba(13,30,58,.14) 42%, transparent 72%)}
+
+.pj-photo{width:100%;height:100%;max-width:100%;max-height:100%;
+  object-fit:contain;object-position:center bottom;display:block;
+  position:relative;z-index:2;flex:1 1 auto;min-width:0;min-height:0;
+  transform-origin:center bottom;
+  filter:
+    drop-shadow(0 1px 1px rgba(0,0,0,.35))
+    drop-shadow(0 10px 18px rgba(0,0,0,.45))
+    drop-shadow(0 28px 42px rgba(0,0,0,.4))
+    drop-shadow(0 0 22px var(--glow));
+  animation:
+    pjHeroIn .65s cubic-bezier(.2,.8,.25,1) both,
+    pjHeroFloat 4.8s ease-in-out .7s infinite}
+/* Fullscreen: fill the taller photo column so the empty band above the player
+   stays as tight as windowed/minimized mode. */
+#pj-root.is-fs .pj-photo{
+  object-fit:cover;
+  object-position:top center;
+}
+@keyframes pjHeroIn{
+  from{opacity:0;transform:translateY(28px) scale(.96)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes pjHeroFloat{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-7px)}
+}
+@media (prefers-reduced-motion: reduce){
+  .pj-spotlight{animation:none}
+  .pj-photo{animation:pjHeroIn .45s ease both}
+}
 .pj-photo-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
   font-size:6rem;opacity:.15;z-index:1}
-.pj-photo-bg,.pj-spotlight,.pj-floor,.pj-serial-wm{display:none}
+.pj-photo-bg,.pj-serial-wm{display:none}
 .pj-serial{display:none}
 
 /* Mystery locked — large lock above PLAYER LOCKED (same as display_auction) */
@@ -543,7 +799,11 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   --pj-sold-a:#008C3A; --pj-sold-b:#1B9E55; --pj-sold-c:#00B85A;
   --pj-unsold-a:#8E0000; --pj-unsold-b:#A31515; --pj-unsold-c:#B71C1C}
 .pj-photo-side.is-status-freeze .pj-photo{
-  filter:saturate(.92) brightness(.97);
+  filter:saturate(.92) brightness(.97)
+    drop-shadow(0 1px 1px rgba(0,0,0,.35))
+    drop-shadow(0 10px 18px rgba(0,0,0,.45))
+    drop-shadow(0 28px 42px rgba(0,0,0,.4))
+    drop-shadow(0 0 18px var(--glow));
   transition:filter .25s ease}
 .pj-photo-side.is-sold-glow{
   animation:pjStatusGlowSold .85s ease-out both}
@@ -926,6 +1186,8 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   window.PJ_DATA_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/data';
   window.PJ_SQUAD_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/squad';
   window.PJ_REMAIN_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/remaining';
+  window.PJ_BOARD_CLOSE_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/boards/close';
+  window.PJ_BOARD_SHOW_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/boards/show';
 </script>
 
 <div id="pj-root">
@@ -963,6 +1225,16 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         </div>
       </div>
       <div class="pj-bar-actions">
+        <button type="button" class="pj-pool-btn is-off" id="pjPoolBtn" onclick="pjShowBoard('pools')" title="Pool Draw" aria-label="Pool Draw">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/>
+          </svg>
+        </button>
+        <button type="button" class="pj-fix-btn is-off" id="pjFixBtn" onclick="pjShowBoard('fixtures')" title="Fixtures" aria-label="Fixtures">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h10v2H4v-2z"/>
+          </svg>
+        </button>
         <button type="button" class="pj-remain-btn" id="pjRemainBtn" onclick="openPjRemain()" title="Remaining Players" aria-label="Remaining Players">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h12v2H3v-2z"/>
@@ -990,6 +1262,22 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
           <path d="M8 3v3H5m11-3v3h3M8 21v-3H5m11 3v-3h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
+    </div>
+  </div>
+
+  <!-- Live Pool / Fixture Board Overlay -->
+  <div id="pjBoardOverlay" onclick="pjBoardBackdrop(event)">
+    <div class="pj-bd-panel" onclick="event.stopPropagation()">
+      <div class="pj-bd-hd">
+        <div>
+          <div class="pj-bd-kicker" id="pjBdKicker">Official Draw</div>
+          <div class="pj-bd-title" id="pjBdTitle">Pool Draw</div>
+        </div>
+        <button type="button" class="pj-bd-close" onclick="closePjBoard(true)" title="Close">&#215;</button>
+      </div>
+      <div class="pj-bd-body" id="pjBdBody">
+        <div class="pj-bd-empty">Waiting for pool draw&#8230;</div>
+      </div>
     </div>
   </div>
 
@@ -1036,7 +1324,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
                alt="Tournament logo"/>
         </t>
         <t t-else="">
-          <img class="pj-wait-hero-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
+          <img class="pj-wait-hero-logo pj-ac-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
         </t>
         <div class="pj-wait-hero-name">
           <t t-if="tournament"><t t-esc="tournament.name"/></t>
@@ -1098,6 +1386,13 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         </div>
         <div class="pj-ty-message" id="pjTyMessage">THE AUCTION FLOOR CLOSES, AND THE ROAD TO GLORY BEGINS.</div>
         <div class="pj-ty-tour" id="pjTyTourName"></div>
+        <div class="pj-ty-logo-wrap" id="pjTyLogoWrap">
+          <t t-if="tournament and tournament.logo">
+            <img class="pj-ty-logo" id="pjTyLogo"
+                 t-att-src="'/'+(db_name or '')+'/auction/public/image/auction.tournament/'+str(tournament.id)+'/logo'"
+                 alt="Tournament logo"/>
+          </t>
+        </div>
       </div>
     </div>
 
@@ -2030,6 +2325,11 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     if (ceremony) ceremony.setAttribute('aria-hidden', phase === 'completed' ? 'false' : 'true');
     if (tyMsg && phase === 'completed') tyMsg.textContent = msg;
     if (tyTour) tyTour.textContent = phase === 'completed' && tourName ? tourName : '';
+    var tyLogoWrap = document.getElementById('pjTyLogoWrap');
+    if (tyLogoWrap) {
+      var hasLogo = !!tyLogoWrap.querySelector('img');
+      tyLogoWrap.classList.toggle('is-on', phase === 'completed' && hasLogo);
+    }
     if (kicker) {
       if (phase === 'about_to_begin') kicker.textContent = 'Live Auction · Stand By';
       else if (phase === 'completed') kicker.textContent = 'Auction Complete';
@@ -2043,7 +2343,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   }
 
   var _pjPollInFlight = false;
-  var _pjPollInterval = 650;
+  var _pjPollInterval = 400;
   function poll() {
     if (_pjPollInFlight) return;
     _pjPollInFlight = true;
@@ -2060,6 +2360,17 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       var d = result.dice || {state:'idle', result:0, is_mystery:false};
       handlePjBreak(!!result.break_time);
       updatePjBreakAds(result.advertisers || []);
+      var waitPhase = result.wait_phase || {};
+      var boards = result.boards || {};
+      // Declare Auction Complete / Thank You must override pool & fixture boards
+      if (waitPhase.phase === 'completed') {
+        boards = Object.assign({}, boards, {
+          mode: 'idle',
+          revealing: false,
+          sig: (boards.sig || '') + '|thankyou'
+        });
+      }
+      updatePjBoards(boards);
       updateProgress(result.progress);
       updateTeamsStrip(result.teams);
       updateBids(result.recent_bids);
@@ -2075,7 +2386,12 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
           _currentId = null; _currentState = null; _currentPts = null; _currentMysteryRevealed = null;
           showWaiting();
         }
-        updateWaitPhase(result.wait_phase);
+        updateWaitPhase(waitPhase);
+        if (waitPhase.phase === 'completed') {
+          try { closePjBoard(false); } catch (eDone) {}
+          try { closePjSquad(); } catch (eSq) {}
+          try { closePjRemain(); } catch (eRm) {}
+        }
         if (d.state !== _currentDice || d.result !== _currentDiceNum || !!d.is_mystery !== !!_currentDiceMystery) {
           _currentDice = d.state; _currentDiceNum = d.result; _currentDiceMystery = !!d.is_mystery;
           updatePjDice(d.state, d.result, !!d.is_mystery);
@@ -2196,8 +2512,10 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   }
   function pjSyncFsBtn() {
     var btn = document.getElementById('pjFsBtn');
-    if (!btn) return;
+    var root = document.getElementById('pj-root');
     var active = !!pjFsElement();
+    if (root) root.classList.toggle('is-fs', active);
+    if (!btn) return;
     btn.classList.toggle('is-fs', active);
     btn.title = active ? 'Exit Fullscreen' : 'Fullscreen';
     btn.setAttribute('aria-label', btn.title);
@@ -2346,6 +2664,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         overlay.classList.add('active');
         startPjBreakClock();
         try { closePjSquad(); } catch (e) {}
+        // Keep live pool/fixture board above break when publishing
         // Ensure slider width is correct once overlay is visible
         requestAnimationFrame(function() {
           if (_pjAdPairCount) goToPjAdPair(_pjAdPairIndex);
@@ -2362,6 +2681,212 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       if (timerEl) timerEl.textContent = '\u25cf Break in progress';
     }
   }
+
+  var _pjBoardSig = '';
+  var _pjBoardColors = ['#1a4f9c', '#0e6e8c', '#1e5a8a', '#2456a8', '#17607a', '#2a4d8f', '#0f5575', '#1c4580'];
+
+  function pjEsc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function isPjBoardOpen() {
+    var ov = document.getElementById('pjBoardOverlay');
+    return !!(ov && ov.classList.contains('open'));
+  }
+
+  function layoutPjBoard() {
+    var ov = document.getElementById('pjBoardOverlay');
+    var bar = document.getElementById('pj-bar');
+    var spon = document.getElementById('pj-sponsors');
+    if (!ov) return;
+    var top = bar ? bar.offsetHeight : 0;
+    var bottom = spon ? spon.offsetHeight : 0;
+    ov.style.top = top + 'px';
+    ov.style.bottom = bottom + 'px';
+    ov.style.left = '0';
+    ov.style.right = '0';
+  }
+
+  function openPjBoard() {
+    var ov = document.getElementById('pjBoardOverlay');
+    if (!ov) return;
+    layoutPjBoard();
+    ov.classList.add('open');
+    ov.style.display = 'flex';
+    try { closePjSquad(); } catch (e) {}
+    try { closePjRemain(); } catch (e2) {}
+  }
+
+  function closePjBoard(persist) {
+    var ov = document.getElementById('pjBoardOverlay');
+    if (ov) {
+      ov.classList.remove('open');
+      ov.style.display = '';
+      ov.style.top = '';
+      ov.style.bottom = '';
+    }
+    var poolBtn = document.getElementById('pjPoolBtn');
+    var fixBtn = document.getElementById('pjFixBtn');
+    if (poolBtn) poolBtn.classList.remove('is-live');
+    if (fixBtn) fixBtn.classList.remove('is-live');
+    if (persist && window.PJ_BOARD_CLOSE_URL) {
+      fetch(window.PJ_BOARD_CLOSE_URL, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({jsonrpc:'2.0', method:'call', params:{}}),
+        cache: 'no-store'
+      }).catch(function(){});
+      _pjBoardSig = '';
+    }
+  }
+
+  function pjBoardBackdrop(ev) {
+    if (ev && ev.target && ev.target.id === 'pjBoardOverlay') closePjBoard(true);
+  }
+
+  function pjShowBoard(mode) {
+    if (!window.PJ_BOARD_SHOW_URL) return;
+    fetch(window.PJ_BOARD_SHOW_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({jsonrpc:'2.0', method:'call', params:{mode: mode}}),
+      cache: 'no-store'
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(json) {
+      var res = json.result || {};
+      if (res.boards) updatePjBoards(res.boards);
+    })
+    .catch(function(){});
+  }
+
+  function renderPjBoardReveal(kind) {
+    var title = kind === 'fixtures' ? 'Building Fixtures' : 'Drawing Pools';
+    var msg = kind === 'fixtures' ? 'Shuffling matchups…' : 'Shuffling the hat…';
+    return '<div class="pj-bd-reveal">' +
+      '<div class="pj-bd-orbit"><span class="pj-bd-ring"></span>' +
+      '<span class="pj-bd-ring pj-bd-ring2"></span><span class="pj-bd-core"></span></div>' +
+      '<div class="pj-bd-reveal-title">' + pjEsc(title) + '</div>' +
+      '<div class="pj-bd-reveal-msg">' + pjEsc(msg) + '</div></div>';
+  }
+
+  function renderPjPoolsBoard(boards) {
+    var pools = boards.pools || [];
+    if (!pools.length) return '<div class="pj-bd-empty">No pools yet</div>';
+    var rows = Math.max(1, Math.ceil(pools.length / 2));
+    var html = '<div class="pj-bd-stage" data-rows="' + rows + '" data-count="' + pools.length + '"><div class="pj-bd-pool-grid">';
+    for (var i = 0; i < pools.length; i++) {
+      var pool = pools[i];
+      var color = _pjBoardColors[i % _pjBoardColors.length];
+      html += '<div class="pj-bd-pool"><div class="pj-bd-pool-hd" style="--pool-c:' + color + '">' +
+        '<span class="pj-bd-pool-k">GROUP</span>' +
+        '<span class="pj-bd-pool-name">' + pjEsc(pool.name) + '</span>' +
+        '<span class="pj-bd-pool-count">' + ((pool.teams || []).length) + ' teams</span></div>' +
+        '<div class="pj-bd-pool-list">';
+      var teams = pool.teams || [];
+      for (var t = 0; t < teams.length; t++) {
+        var team = teams[t];
+        var logo = team.logo_url
+          ? '<img class="pj-bd-team-logo" src="' + pjEsc(team.logo_url) + '" alt=""/>'
+          : '<span class="pj-bd-team-ph">' + pjEsc(team.initials || '?') + '</span>';
+        html += '<div class="pj-bd-team"><span class="pj-bd-team-no">' + (t + 1) + '</span>' +
+          logo + '<span class="pj-bd-team-name">' + pjEsc(team.name) + '</span></div>';
+      }
+      html += '</div></div>';
+    }
+    html += '</div></div>';
+    return html;
+  }
+
+  function renderPjFixtureBoard(boards) {
+    var fx = boards.fixture || {};
+    var matches = fx.matches || [];
+    if (!matches.length) return '<div class="pj-bd-empty">No fixtures yet</div>';
+    var html = '<div class="pj-bd-stage"><div class="pj-bd-fx-list">';
+    var lastSec = null;
+    for (var i = 0; i < matches.length; i++) {
+      var m = matches[i];
+      var sec = m.section || m.group || '';
+      if (sec && sec !== lastSec) {
+        html += '<div class="pj-bd-fx-sec">' + pjEsc(sec) + '</div>';
+        lastSec = sec;
+      }
+      var ta = m.team_a || {}, tb = m.team_b || {};
+      function logo(team) {
+        return team.logo_url
+          ? '<img class="pj-bd-team-logo" src="' + pjEsc(team.logo_url) + '" alt=""/>'
+          : '<span class="pj-bd-team-ph">' + pjEsc(team.initials || '?') + '</span>';
+      }
+      html += '<div class="pj-bd-fx"><span class="pj-bd-fx-n">M' + (i + 1) + '</span>' +
+        '<div class="pj-bd-fx-side">' + logo(ta) + '<span class="pj-bd-fx-name">' + pjEsc(ta.name) + '</span></div>' +
+        '<span class="pj-bd-fx-vs">VS</span>' +
+        '<div class="pj-bd-fx-side right"><span class="pj-bd-fx-name">' + pjEsc(tb.name) + '</span>' + logo(tb) + '</div></div>';
+    }
+    html += '</div></div>';
+    return html;
+  }
+
+  function updatePjBoards(boards) {
+    boards = boards || {};
+    var poolBtn = document.getElementById('pjPoolBtn');
+    var fixBtn = document.getElementById('pjFixBtn');
+    if (poolBtn) {
+      poolBtn.classList.toggle('is-off', !boards.has_pools);
+      poolBtn.classList.toggle('is-live', boards.mode === 'pools');
+    }
+    if (fixBtn) {
+      fixBtn.classList.toggle('is-off', !boards.has_fixture);
+      fixBtn.classList.toggle('is-live', boards.mode === 'fixtures');
+    }
+
+    var mode = boards.mode || 'idle';
+    if (mode === 'idle') {
+      if (isPjBoardOpen()) closePjBoard(false);
+      _pjBoardSig = boards.sig || '';
+      return;
+    }
+
+    // Board sits between header and sponsors — keep break behind
+    try {
+      var brk = document.getElementById('pjBreakOverlay');
+      if (brk) brk.classList.remove('active');
+    } catch (e0) {}
+
+    openPjBoard();
+    layoutPjBoard();
+    var kicker = document.getElementById('pjBdKicker');
+    var title = document.getElementById('pjBdTitle');
+    var body = document.getElementById('pjBdBody');
+    if (kicker) kicker.textContent = mode === 'fixtures' ? 'Match Schedule' : 'Official Pool Draw';
+    if (title) {
+      title.textContent = boards.tournament_name || (mode === 'fixtures' ? 'Fixtures' : 'Pool Draw');
+      if (boards.fixture && boards.fixture.subtitle && mode === 'fixtures') {
+        title.textContent = (boards.tournament_name || 'Fixtures') + ' · ' + boards.fixture.subtitle;
+      }
+    }
+
+    var sig = boards.sig || '';
+    if (sig === _pjBoardSig && isPjBoardOpen() && body && body.children.length) {
+      layoutPjBoard();
+      return;
+    }
+    _pjBoardSig = sig;
+    if (!body) return;
+
+    if (boards.revealing) {
+      body.innerHTML = renderPjBoardReveal(boards.reveal_kind || mode);
+      return;
+    }
+    if (mode === 'fixtures') body.innerHTML = renderPjFixtureBoard(boards);
+    else body.innerHTML = renderPjPoolsBoard(boards);
+    requestAnimationFrame(layoutPjBoard);
+  }
+
+  window.addEventListener('resize', function () {
+    if (isPjBoardOpen()) layoutPjBoard();
+  });
 
   var _squadLoading = false;
   var _pjSquadLastFetch = 0;

@@ -299,6 +299,27 @@
   --lb-bid-from: #3b0021;
   --lb-bid-to: #831843;
 }
+
+[data-theme="blackberry"] {
+  --lb-bg: #050a14;
+  --lb-header-from: #030812;
+  --lb-header-to: #0d1830;
+  --lb-accent: #3B82F6;
+  --lb-accent2: #93C5FD;
+  --lb-glow: rgba(59,130,246,0.40);
+  --lb-live-dot: #93C5FD;
+  --lb-card: rgba(59,130,246,0.05);
+  --lb-card-border: rgba(59,130,246,0.18);
+  --lb-text: #ffffff;
+  --lb-sub: #93c5fd;
+  --lb-panel: #0a1220;
+  --lb-sep: rgba(59,130,246,0.14);
+  --lb-bid-from: #0a1628;
+  --lb-bid-to: #1e3a8a;
+  --lb-sold-from: #0a1628;
+  --lb-sold-to: #1e3a8a;
+}
+
 [data-theme="pistah"] {
   --lb-bg: #060e08;
   --lb-header-from: #030a04;
@@ -1158,6 +1179,14 @@ body::after {
     radial-gradient(150% 130% at 50% 120%, rgba(255,150,200,0.12) 0%, transparent 58%),
     linear-gradient(160deg, #3d1228 0%, #280b1a 48%, #391026 100%);
 }
+
+[data-theme="blackberry"] body::before {
+  background:
+    radial-gradient(ellipse 80% 55% at 20% 0%, rgba(59,130,246,.14), transparent 55%),
+    radial-gradient(ellipse 60% 45% at 100% 100%, rgba(30,58,138,.16), transparent 50%),
+    var(--lb-bg);
+}
+
 [data-theme="pistah"] body::before {
   background:
     radial-gradient(120% 90% at 50% -12%, rgba(190,240,160,0.24) 0%, transparent 55%),
@@ -1210,6 +1239,13 @@ body::after {
   background: linear-gradient(135deg, #2a0818 0%, #6b1240 55%, #8a1a52 100%);
   border-bottom: 1px solid rgba(244,114,182,0.28);
 }
+
+[data-theme="blackberry"] .lb-header {
+  background: linear-gradient(90deg, var(--lb-header-from), var(--lb-header-to));
+  border-bottom: 1px solid rgba(59,130,246,.28);
+  box-shadow: 0 0 24px rgba(59,130,246,.18);
+}
+
 [data-theme="pistah"] .lb-header {
   background: linear-gradient(135deg, #0c2010 0%, #1c4a22 55%, #26602e 100%);
   border-bottom: 1px solid rgba(168,224,99,0.28);
@@ -2794,6 +2830,18 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       --off-text:     #fdf2f8;
       --off-sub:      #f0abca;
     }
+    
+    [data-theme="blackberry"] {
+      --off-bg:       #050a14;
+      --off-surface:  #0a1220;
+      --off-border:   rgba(59,130,246,0.18);
+      --off-accent:   #3B82F6;
+      --off-accent2:  #93C5FD;
+      --off-glow:     rgba(59,130,246,0.35);
+      --off-text:     #ffffff;
+      --off-sub:      #93c5fd;
+    }
+
     [data-theme="pistah"] {
       --off-bg:       #050d05;
       --off-surface:  #0b1a0b;

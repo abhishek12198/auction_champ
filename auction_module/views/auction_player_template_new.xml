@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 <template id="player_template_new" name="Player Auction">
-    <html lang="en" t-att-data-balance-url="'/' + (db_name or '') + '/' + (tournament.slug if tournament else '') + '/auction/show/team/balance'">
+    <html lang="en" t-att-data-balance-url="('/' + db_name + '/' + tournament.slug + '/auction/show/team/balance') if db_name and tournament and tournament.slug else ''" t-att-data-rp-url="('/' + db_name + '/' + tournament.slug + '/auction/display_auction/remaining-players?theme=vanilla') if db_name and tournament and tournament.slug else ''">
   <head>
     <meta charset="UTF-8" />
   <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
@@ -65,18 +65,18 @@ body[data-theme="dark"] #vn-theme-btn{background:rgba(121,184,255,0.10);border-c
     <style>
 @font-face{font-family:'Varsity Team';src:url('/auction_module/static/src/assets/fonts/VarsityTeam-Bold.otf') format('opentype');font-weight:normal;font-style:normal;font-display:swap;}
 :root{
-  --vn-royal:#2e6be6;
-  --vn-royal-lt:#5b9bff;
-  --vn-navy:#0b2a6b;
-  --vn-navy-deep:#071d4d;
-  --vn-silver:#cdd9ef;
+  --vn-royal:#5b7eb8;
+  --vn-royal-lt:#8aa6d4;
+  --vn-navy:#1a3560;
+  --vn-navy-deep:#142846;
+  --vn-silver:#c8d4e8;
   --vn-head:'Varsity Team','EPSOR','Rajdhani','Oswald','Bebas Neue','Montserrat',sans-serif;
 }
 
-/* ── Stadium environment (layered, subtle, player stays the focus) ── */
+/* ── Stadium environment (layered, soft pale blue — easier on eyes) ── */
 html{
   background:radial-gradient(120% 82% at 50% -12%,
-              #3f7cf0 0%, #1f5bd6 30%, #123f9e 58%, #0a2a70 80%, #071d4d 100%) fixed;
+              #7a9bc4 0%, #5b7eb8 28%, #3d5f94 55%, #2a4a78 78%, #1a3560 100%) fixed;
 }
 body{
   background:transparent !important;
@@ -112,10 +112,10 @@ body::after{
 /* ── Header ── */
 .single-header{
   background-image:none !important;
-  background:linear-gradient(180deg, rgba(9,32,92,.55), rgba(9,32,92,0)) !important;
+  background:linear-gradient(180deg, rgba(26,53,96,.5), rgba(26,53,96,0)) !important;
   height:272px;
-  border-bottom:1px solid rgba(150,185,255,.28);
-  box-shadow:0 1px 0 rgba(120,170,255,.35);
+  border-bottom:1px solid rgba(160,185,215,.28);
+  box-shadow:0 1px 0 rgba(140,170,205,.28);
 }
 .single-header .py-3{border-bottom:1px solid rgba(255,255,255,.14) !important;}
 .vn-brand{
@@ -129,18 +129,18 @@ body::after{
   font-size:.9rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;
   color:#fff;line-height:1;
 }
-body[data-theme="light"] .vn-brand-sub{color:#0b2a6b}
+body[data-theme="light"] .vn-brand-sub{color:#1a3560}
 body[data-theme="dark"] .vn-brand-sub{color:#fff}
 @media (max-width:768px){
   .vn-brand-sub{display:none;}
 }
 .team-name h3{
-  color:#0b2a6b;
+  color:#1a3560;
   font-family:var(--vn-head);
   letter-spacing:.6px;
   text-transform:uppercase;
 }
-.team-name p{color:#3a5fae;}
+.team-name p{color:#4a6fa5;}
 .team-name .bg-white{
   background:linear-gradient(180deg,#ffffff,#eef4ff) !important;
   border-radius:8px 0 0 8px;
@@ -235,7 +235,7 @@ body[data-theme="dark"] .vn-brand-sub{color:#fff}
   filter:drop-shadow(0 0 8px rgba(91,155,255,.4));
 }
 body[data-theme="light"] .vn-footer{
-  background:#f4f7fc;border-top-color:rgba(46,107,230,.16);
+  background:#f4f7fc;border-top-color:rgba(91,126,184,.16);
 }
 body[data-theme="light"] .vn-footer-lbl{color:rgba(20,40,80,.45)}
 body[data-theme="light"] .vn-footer-logo{
@@ -243,21 +243,21 @@ body[data-theme="light"] .vn-footer-logo{
 }
 body{padding-bottom:42px;}
 
-/* ── Player image: broadcast cut-out with royal+white glow frame ── */
+/* ── Player image: broadcast cut-out with soft blue glow frame ── */
 .single-player-image .sp-image{
   border-radius:16px;
-  background:linear-gradient(180deg, rgba(46,107,230,.22), rgba(7,29,77,.5));
+  background:linear-gradient(180deg, rgba(91,126,184,.2), rgba(20,40,70,.45));
   animation:vnFrameGlow 6s ease-in-out infinite;
 }
 @keyframes vnFrameGlow{
-  0%,100%{box-shadow:0 0 0 3px rgba(255,255,255,.92),0 0 0 8px rgba(46,107,230,.5),
-                     0 0 46px rgba(46,107,230,.42),0 30px 70px rgba(0,0,0,.5);}
-  50%    {box-shadow:0 0 0 3px rgba(255,255,255,.98),0 0 0 8px rgba(46,107,230,.66),
-                     0 0 74px rgba(91,155,255,.6),0 30px 70px rgba(0,0,0,.5);}
+  0%,100%{box-shadow:0 0 0 3px rgba(255,255,255,.9),0 0 0 8px rgba(91,126,184,.35),
+                     0 0 40px rgba(91,126,184,.28),0 30px 70px rgba(0,0,0,.45);}
+  50%    {box-shadow:0 0 0 3px rgba(255,255,255,.96),0 0 0 8px rgba(91,126,184,.48),
+                     0 0 58px rgba(138,166,212,.4),0 30px 70px rgba(0,0,0,.45);}
 }
 .single-player-image img{border-radius:14px;}
 .single-player-image .sp-image-before{
-  background-color:var(--tier-color, #2e6be6) !important;
+  background-color:var(--tier-color, #5b7eb8) !important;
   border-radius:16px;
   opacity:.9;
 }
@@ -271,7 +271,7 @@ body{padding-bottom:42px;}
   backdrop-filter:blur(10px) saturate(1.1);
 }
 .player-profession-header{
-  background:linear-gradient(90deg,#1f5bd6,#3f7cf0) !important;
+  background:linear-gradient(90deg,#3d5f94,#5b7eb8) !important;
   font-family:var(--vn-head) !important;
   font-style:normal !important;
   letter-spacing:3px;
@@ -281,6 +281,18 @@ body{padding-bottom:42px;}
 }
 .player-profession-body{
   background:linear-gradient(180deg, rgba(18,52,120,.55), rgba(9,30,80,.55)) !important;
+  display:block !important;
+  grid-template-columns:none !important;
+  gap:0 !important;
+}
+.player-profession-body > .vn-fb-grid,
+.player-profession-body > .player-attr-grid{
+  display:grid !important;
+}
+.player-profession-body .vn-stat-row{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:4px !important;
 }
 .player-attr-label{
   color:var(--vn-silver) !important;
@@ -301,6 +313,87 @@ body{padding-bottom:42px;}
   text-transform:uppercase;
 }
 
+/* Football attrs: lemon-style tiles (2-col cards), not flat label:value list */
+.vn-fb-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:10px 12px;
+  width:100%;
+}
+.vn-fb-grid > .vn-fb-span-2,
+.vn-fb-grid > .player-tag-chips{
+  grid-column:1 / -1;
+}
+.vn-stat-row{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  margin:0;
+  padding:12px 14px 14px;
+  border-radius:12px;
+  border:1.5px solid rgba(121,184,255,.35);
+  background:rgba(255,255,255,.08);
+  box-sizing:border-box;
+  min-width:0;
+  height:100%;
+  transition:border-color .2s, box-shadow .2s;
+}
+.vn-stat-row:hover{
+  border-color:rgba(121,184,255,.7);
+  box-shadow:0 4px 14px rgba(0,0,0,.22);
+}
+.vn-stat-key{
+  font-family:'Rajdhani', sans-serif;
+  font-size:clamp(.58rem, .85vw, .72rem);
+  font-weight:700;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--vn-silver, #c5d4f0);
+  opacity:.85;
+  line-height:1.2;
+}
+.vn-stat-val{
+  font-family:var(--vn-head), 'Rajdhani', sans-serif;
+  font-size:clamp(1.05rem, 1.9vw, 1.45rem);
+  font-weight:700;
+  letter-spacing:.5px;
+  line-height:1.15;
+  color:#fff;
+  text-transform:uppercase;
+  text-shadow:0 1px 4px rgba(0,0,0,.35);
+  word-break:break-word;
+  overflow-wrap:anywhere;
+}
+.vn-fb-grid .player-tag-chips{
+  margin-top:6px;
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0, 1fr));
+  gap:6px;
+  width:100%;
+  overflow:visible;
+}
+.vn-fb-grid .player-tag-chip{
+  display:inline-flex !important;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  min-width:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  padding:3px 6px !important;
+  font-size:clamp(.55rem, .8vw, .66rem) !important;
+  font-weight:600;
+  letter-spacing:.2px;
+  line-height:1.2;
+  border-radius:999px;
+  box-sizing:border-box;
+}
+@media (max-width:700px){
+  .vn-fb-grid{grid-template-columns:1fr;}
+  .vn-fb-grid .player-tag-chips{grid-template-columns:repeat(2, minmax(0, 1fr));}
+}
+
 /* ── Action buttons (same actions, premium finish) ── */
 .auction-single-buttons button{
   font-family:var(--vn-head) !important;
@@ -316,22 +409,22 @@ body{padding-bottom:42px;}
   transition:.25s ease;
 }
 .auction-single-buttons button:hover{
-  background:rgba(91,155,255,.22) !important;
-  border-color:rgba(210,230,255,.9) !important;
-  box-shadow:0 0 22px rgba(91,155,255,.5) !important;
+  background:rgba(138,166,212,.2) !important;
+  border-color:rgba(200,212,230,.85) !important;
+  box-shadow:0 0 18px rgba(138,166,212,.35) !important;
   transform:translateY(-2px);
   cursor:pointer !important;
 }
 .auction-single-buttons button.sell{
   border:none !important;
-  color:#08205c !important;
+  color:#1a3560 !important;
   font-weight:700;
-  background:linear-gradient(180deg,#eaf2ff,#b9d2ff) !important;
-  box-shadow:0 8px 22px rgba(91,155,255,.5), inset 0 0 0 1px rgba(255,255,255,.6) !important;
+  background:linear-gradient(180deg,#eef3f9,#c5d4e8) !important;
+  box-shadow:0 8px 20px rgba(91,126,184,.35), inset 0 0 0 1px rgba(255,255,255,.55) !important;
 }
 .auction-single-buttons button.sell:hover{
-  background:linear-gradient(180deg,#ffffff,#cfe0ff) !important;
-  color:#071d4d !important;
+  background:linear-gradient(180deg,#ffffff,#d5e0ef) !important;
+  color:#142846 !important;
   transform:translateY(-2px);
 }
 
@@ -340,14 +433,14 @@ body{padding-bottom:42px;}
   font-family:var(--vn-head) !important;
   letter-spacing:2px;
   text-transform:uppercase;
-  border:1px solid rgba(180,205,255,.5) !important;
+  border:1px solid rgba(170,190,215,.5) !important;
   border-radius:12px !important;
-  background:linear-gradient(180deg,#2f6bf0,#1746b0) !important;
-  box-shadow:0 10px 26px rgba(46,107,230,.55), inset 0 1px 0 rgba(255,255,255,.35) !important;
+  background:linear-gradient(180deg,#5b7eb8,#3d5f94) !important;
+  box-shadow:0 10px 24px rgba(61,95,148,.4), inset 0 1px 0 rgba(255,255,255,.3) !important;
 }
 .next-player-btn:hover{
-  background:linear-gradient(180deg,#3f7cf0,#1c50c8) !important;
-  box-shadow:0 0 30px rgba(91,155,255,.6) !important;
+  background:linear-gradient(180deg,#6b8fc4,#4a6fa5) !important;
+  box-shadow:0 0 24px rgba(138,166,212,.4) !important;
 }
 
 /* ── Premium dark-mode variant (toggle preserved) ── */
@@ -360,19 +453,19 @@ body[data-theme="dark"] .single-header{
   background:linear-gradient(180deg, rgba(4,16,44,.6), rgba(4,16,44,0)) !important;
 }
 
-/* ── Bid Summary + Players Left drawers: match vanilla royal-blue theme ── */
+/* ── Bid Summary + Players Left drawers: match soft vanilla blue ── */
 #bidSummaryDrawer, #rpDrawer{
   border-left:3px solid var(--vn-royal) !important;
-  box-shadow:-6px 0 40px rgba(6,22,64,.35) !important;
+  box-shadow:-6px 0 40px rgba(26,53,96,.3) !important;
 }
 /* Fold/unfold tab handles */
 #bidSummaryDrawer > div[onclick], #rpDrawer > div[onclick]{
-  background:linear-gradient(180deg,#3f7cf0,#1746b0) !important;
-  box-shadow:-4px 2px 16px rgba(9,32,92,.45) !important;
+  background:linear-gradient(180deg,#5b7eb8,#3d5f94) !important;
+  box-shadow:-4px 2px 14px rgba(26,53,96,.35) !important;
 }
 /* Header bars (2nd div: title + close) */
 #bidSummaryDrawer > div:nth-of-type(2), #rpDrawer > div:nth-of-type(2){
-  background:linear-gradient(90deg,#1f5bd6,#3f7cf0) !important;
+  background:linear-gradient(90deg,#3d5f94,#5b7eb8) !important;
 }
 /* Athletic font + spacing for all drawer labels, titles and close buttons */
 #bidSummaryDrawer span, #rpDrawer span,
@@ -494,8 +587,8 @@ body[data-theme="dark"] .single-header{
               <p>Player Attributes</p>
             </div>
             <div class="player-profession-body">
-              <div class="player-attr-grid">
-                <t t-if="player.tournament_type != 'football'">
+              <t t-if="player.tournament_type != 'football'">
+                <div class="player-attr-grid">
                   <t t-if="player.batting_style">
                     <span class="player-attr-label">Batting Style</span>
                     <span class="player-attr-value"><t t-esc="player.batting_style"/></span>
@@ -504,50 +597,91 @@ body[data-theme="dark"] .single-header{
                     <span class="player-attr-label">Bowling Style</span>
                     <span class="player-attr-value"><t t-esc="player.bowling_style"/></span>
                   </t>
-                </t>
-                <t t-if="player.tournament_type == 'football'">
+                  <t t-if="player.p_category">
+                    <span class="player-attr-label">Player Category</span>
+                    <span class="player-attr-value"><t t-esc="player.p_category"/></span>
+                  </t>
+                  <t t-if="player.address">
+                    <span class="player-attr-label">Location</span>
+                    <span class="player-attr-value"><t t-esc="player.address"/></span>
+                  </t>
+                </div>
+              </t>
+              <t t-else="">
+                <div class="vn-fb-grid">
                   <t t-if="player.dominant_position_id">
-                    <span class="player-attr-label">Position</span>
-                    <span class="player-attr-value"><t t-esc="player.dominant_position_id.name"/></span>
+                    <div class="vn-stat-row">
+                      <span class="vn-stat-key">Position</span>
+                      <span class="vn-stat-val"><t t-esc="player.dominant_position_id.name"/></span>
+                    </div>
                   </t>
                   <t t-if="player.preferred_foot">
-                    <span class="player-attr-label">Preferred Foot</span>
-                    <span class="player-attr-value"><t t-esc="player.preferred_foot.capitalize()"/></span>
+                    <div class="vn-stat-row">
+                      <span class="vn-stat-key">Foot</span>
+                      <span class="vn-stat-val"><t t-esc="player.preferred_foot.capitalize()"/></span>
+                    </div>
                   </t>
                   <t t-if="player.use_other_attributes">
                     <t t-foreach="player.other_attribute_ids.filtered('value')" t-as="oattr">
-                      <span class="player-attr-label"><t t-esc="oattr.label"/></span>
-                      <span class="player-attr-value"><t t-esc="oattr.value or '—'"/></span>
+                      <div class="vn-stat-row">
+                        <span class="vn-stat-key"><t t-esc="oattr.label"/></span>
+                        <span class="vn-stat-val"><t t-esc="oattr.value or '—'"/></span>
+                      </div>
                     </t>
                   </t>
                   <t t-else="">
                     <t t-if="player.secondary_position_ids">
-                      <span class="player-attr-label">Secondary</span>
-                      <span class="player-attr-value"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span>
+                      <div class="vn-stat-row">
+                        <span class="vn-stat-key">Secondary</span>
+                        <span class="vn-stat-val"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span>
+                      </div>
                     </t>
                     <t t-if="player.age">
-                      <span class="player-attr-label">Age</span>
-                      <span class="player-attr-value"><t t-esc="player.age"/></span>
+                      <div class="vn-stat-row">
+                        <span class="vn-stat-key">Age</span>
+                        <span class="vn-stat-val"><t t-esc="player.age"/></span>
+                      </div>
+                    </t>
+                    <t t-if="player.work_rate">
+                      <div class="vn-stat-row">
+                        <span class="vn-stat-key">Work Rate</span>
+                        <span class="vn-stat-val"><t t-esc="player.work_rate.capitalize()"/></span>
+                      </div>
+                    </t>
+                    <t t-if="player.height">
+                      <div class="vn-stat-row">
+                        <span class="vn-stat-key">Height</span>
+                        <span class="vn-stat-val"><t t-esc="player.height"/></span>
+                      </div>
+                    </t>
+                    <t t-if="player.weight">
+                      <div class="vn-stat-row">
+                        <span class="vn-stat-key">Weight</span>
+                        <span class="vn-stat-val"><t t-esc="player.weight"/></span>
+                      </div>
                     </t>
                   </t>
-                </t>
-
-                <t t-if="player.p_category">
-                  <span class="player-attr-label">Player Category</span>
-                  <span class="player-attr-value"><t t-esc="player.p_category"/></span>
-                </t>
-                <t t-if="player.address">
-                  <span class="player-attr-label">Location</span>
-                  <span class="player-attr-value"><t t-esc="player.address"/></span>
-                </t>
-              </div>
-              <t t-if="player.tournament_type == 'football' and not player.use_other_attributes and (player.playing_style_ids or player.strength_ids)">
-                <div class="player-tag-chips">
-                  <t t-foreach="player.playing_style_ids" t-as="sty">
-                    <span class="player-tag-chip"><t t-esc="sty.icon"/> <t t-esc="sty.name"/></span>
+                  <t t-if="player.p_category">
+                    <div class="vn-stat-row">
+                      <span class="vn-stat-key">Category</span>
+                      <span class="vn-stat-val"><t t-esc="player.p_category"/></span>
+                    </div>
                   </t>
-                  <t t-foreach="player.strength_ids" t-as="strg">
-                    <span class="player-tag-chip player-tag-chip--strength"><t t-esc="strg.icon"/> <t t-esc="strg.name"/></span>
+                  <t t-if="player.address">
+                    <div class="vn-stat-row vn-fb-span-2">
+                      <span class="vn-stat-key">Location</span>
+                      <span class="vn-stat-val" style="text-transform:none; letter-spacing:0; font-size:clamp(.9rem,1.4vw,1.15rem);"><t t-esc="player.address"/></span>
+                    </div>
+                  </t>
+                  <t t-if="not player.use_other_attributes and (player.playing_style_ids or player.strength_ids)">
+                    <div class="player-tag-chips">
+                      <t t-foreach="player.playing_style_ids" t-as="sty">
+                        <span class="player-tag-chip" style="color:#fff; border-color:rgba(121,184,255,.5); background:rgba(121,184,255,.18);"><t t-esc="sty.icon"/> <t t-esc="sty.name"/></span>
+                      </t>
+                      <t t-foreach="player.strength_ids" t-as="strg">
+                        <span class="player-tag-chip player-tag-chip--strength" style="color:#fff;"><t t-esc="strg.icon"/> <t t-esc="strg.name"/></span>
+                      </t>
+                    </div>
                   </t>
                 </div>
               </t>
@@ -785,9 +919,30 @@ body[data-theme="dark"] .single-header{
         setTimeout(function() { if (ov.parentNode) ov.parentNode.removeChild(ov); changeImage(true); }, displaySeconds * 1000);
       }
 
+
+      function resolveAuctionPanelUrl(kind) {
+        var el = document.documentElement;
+        var url = (kind === 'rp' ? el.dataset.rpUrl : el.dataset.balanceUrl) || '';
+        // Missing db_name produced "//slug/..." which browsers treat as another host.
+        if (url.indexOf('//') === 0) { url = ''; }
+        if (url) { return url; }
+        var parts = (location.pathname || '').split('/').filter(Boolean);
+        var db = parts[0] || '';
+        var slug = '';
+        if (parts[1] === 'auction' &amp;&amp; (parts[2] === 'display_auction' || parts[2] === 'player_selector') &amp;&amp; parts[3]) {
+          slug = parts[3];
+        }
+        if (!db || !slug) { return ''; }
+        if (kind === 'rp') {
+          var theme = el.dataset.theme || 'vanilla';
+          return '/' + db + '/' + slug + '/auction/display_auction/remaining-players?theme=' + encodeURIComponent(theme);
+        }
+        return '/' + db + '/' + slug + '/auction/show/team/balance';
+      }
+
       function openBidSummary() {
         var frame = document.getElementById('bidSummaryFrame');
-        var url = document.documentElement.dataset.balanceUrl;
+        var url = resolveAuctionPanelUrl('balance');
         if (frame &amp;&amp; url) {
           var cur = frame.getAttribute('src') || '';
           if (!cur || cur === 'about:blank') {
@@ -816,7 +971,7 @@ body[data-theme="dark"] .single-header{
         if (r === '0px' || r === '0') { closeBidSummary(); } else { openBidSummary(); }
       }
       function openRemainingPlayers() {
-        document.getElementById('rpFrame').src = '/auction/display_auction/remaining-players?theme=vanilla';
+        document.getElementById('rpFrame').src = resolveAuctionPanelUrl('rp');
         document.getElementById('rpDrawer').style.right = '0';
         document.getElementById('rpTabArrow').innerHTML = '&#x2192;';
         document.getElementById('rpOverlay').style.display = 'block';
@@ -834,13 +989,13 @@ body[data-theme="dark"] .single-header{
       }
     </script>
       <!-- Bid Summary Drawer -->
-      <div id="bidSummaryDrawer" style="position:fixed; top:0; right:-1150px; width:1150px; max-width:96vw; height:100vh; z-index:9800; display:flex; flex-direction:column; background:#fff; border-left:3px solid #004080; box-shadow:-6px 0 32px rgba(0,0,50,0.18); transition:right .35s cubic-bezier(.4,0,.2,1);">
+      <div id="bidSummaryDrawer" style="position:fixed; top:0; right:-1150px; width:1150px; max-width:96vw; height:100vh; z-index:9800; display:flex; flex-direction:column; background:#1b2f4d; border-left:3px solid #5b7eb8; box-shadow:-6px 0 32px rgba(26,53,96,0.35); transition:right .35s cubic-bezier(.4,0,.2,1);">
         <!-- Fold/unfold tab -->
-        <div onclick="toggleBidSummary()" style="position:absolute; left:-44px; top:50%; transform:translateY(-50%); width:44px; height:130px; background:#004080; border-radius:8px 0 0 8px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; box-shadow:-4px 2px 14px rgba(0,0,50,0.3); z-index:1;">
+        <div onclick="toggleBidSummary()" style="position:absolute; left:-44px; top:50%; transform:translateY(-50%); width:44px; height:130px; background:linear-gradient(180deg,#3d5f94,#5b7eb8); border-radius:8px 0 0 8px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; box-shadow:-4px 2px 14px rgba(91,126,184,0.35); z-index:1;">
           <span id="bidSummaryTabArrow" style="color:#fff; font-size:1.2rem; line-height:1;">&#x2190;</span>
           <span style="color:#fff; writing-mode:vertical-rl; transform:rotate(180deg); font-size:0.58rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; opacity:0.9;">Summary</span>
         </div>
-        <div style="padding:16px 20px; background:#004080; color:#fff; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
+        <div style="padding:16px 20px; background:linear-gradient(90deg,#3d5f94,#5b7eb8); color:#fff; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
           <span style="font-size:1.05rem; font-weight:700; letter-spacing:.3px;">&#x1F4CA; Auction Bid Summary</span>
           <button onclick="closeBidSummary()" style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:#fff; width:32px; height:32px; border-radius:6px; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1;">&#x2715;</button>
         </div>
@@ -848,25 +1003,25 @@ body[data-theme="dark"] .single-header{
       </div>
       <div id="bidSummaryOverlay" onclick="closeBidSummary()" style="display:none; position:fixed; inset:0; z-index:9700; background:rgba(0,0,0,0.4);"></div>
       <!-- Players Left Drawer -->
-      <div id="rpDrawer" style="position:fixed; top:0; right:-900px; width:900px; max-width:96vw; height:100vh; z-index:9750; display:flex; flex-direction:column; background:#fff; border-left:3px solid #004080; box-shadow:-6px 0 32px rgba(0,0,50,0.18); transition:right .35s cubic-bezier(.4,0,.2,1);">
-        <div onclick="toggleRemainingPlayers()" style="position:absolute; left:-44px; top:65%; transform:translateY(-50%); width:44px; height:130px; background:#004080; border-radius:8px 0 0 8px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; box-shadow:-4px 2px 14px rgba(0,0,50,0.3); z-index:1;">
+      <div id="rpDrawer" style="position:fixed; top:0; right:-900px; width:900px; max-width:96vw; height:100vh; z-index:9750; display:flex; flex-direction:column; background:#1b2f4d; border-left:3px solid #5b7eb8; box-shadow:-6px 0 32px rgba(26,53,96,0.35); transition:right .35s cubic-bezier(.4,0,.2,1);">
+        <div onclick="toggleRemainingPlayers()" style="position:absolute; left:-44px; top:65%; transform:translateY(-50%); width:44px; height:130px; background:linear-gradient(180deg,#3d5f94,#5b7eb8); border-radius:8px 0 0 8px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; box-shadow:-4px 2px 14px rgba(91,126,184,0.35); z-index:1;">
           <span id="rpTabArrow" style="color:#fff; font-size:1.2rem; line-height:1;">&#x2190;</span>
           <span style="color:#fff; writing-mode:vertical-rl; transform:rotate(180deg); font-size:0.58rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; opacity:0.9; white-space:nowrap;">Players Left</span>
         </div>
-        <div style="padding:14px 20px; background:#004080; color:#fff; display:flex; align-items:center; justify-content:flex-end; flex-shrink:0;">
+        <div style="padding:14px 20px; background:linear-gradient(90deg,#3d5f94,#5b7eb8); color:#fff; display:flex; align-items:center; justify-content:flex-end; flex-shrink:0;">
           <button onclick="closeRemainingPlayers()" style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:#fff; width:32px; height:32px; border-radius:6px; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1;">&#x2715;</button>
         </div>
         <iframe id="rpFrame" style="flex:1; border:none; width:100%;" title="Remaining Players"></iframe>
       </div>
-      <div id="rpOverlay" onclick="closeRemainingPlayers()" style="display:none; position:fixed; inset:0; z-index:9650; background:rgba(0,0,0,0.4);"></div>
+      <div id="rpOverlay" onclick="closeRemainingPlayers()" style="display:none; position:fixed; inset:0; z-index:9650; background:rgba(0,0,0,0.55);"></div>
       <!-- Unsold Confirmation Modal -->
-      <div id="unsoldConfirmModal" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.65); align-items:center; justify-content:center;">
-        <div style="background:#fff; border-radius:14px; padding:36px 28px 28px; max-width:400px; width:92%; box-shadow:0 12px 40px rgba(0,0,0,0.35); text-align:center; font-family:inherit;">
-          <div style="width:56px; height:56px; border-radius:50%; background:#fff4f4; border:2px solid #e53935; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; font-size:1.6rem;">⚠️</div>
-          <h5 style="margin:0 0 10px; font-size:1.15rem; font-weight:700; color:#1a1a1a;">Set Player as Unsold?</h5>
-          <p style="color:#666; margin:0 0 26px; font-size:0.9rem; line-height:1.5;">This will set the player to Unsold. You can bring them back to Auction later.</p>
+      <div id="unsoldConfirmModal" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(10,20,40,0.72); align-items:center; justify-content:center;">
+        <div style="background:#243a5c; border-radius:14px; padding:36px 28px 28px; max-width:400px; width:92%; box-shadow:0 12px 40px rgba(0,0,0,0.45); text-align:center; font-family:inherit; border:1px solid rgba(160,185,215,0.28);">
+          <div style="width:56px; height:56px; border-radius:50%; background:rgba(229,57,53,0.15); border:2px solid #e53935; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; font-size:1.6rem;">⚠️</div>
+          <h5 style="margin:0 0 10px; font-size:1.15rem; font-weight:700; color:#eef2f8;">Set Player as Unsold?</h5>
+          <p style="color:rgba(238,242,248,0.7); margin:0 0 26px; font-size:0.9rem; line-height:1.5;">This will set the player to Unsold. You can bring them back to Auction later.</p>
           <div style="display:flex; gap:12px; justify-content:center;">
-            <button id="unsoldModalCancel" style="padding:10px 28px; border-radius:8px; border:1px solid #ddd; background:#f5f5f5; color:#444; font-size:0.95rem; cursor:pointer; font-weight:500;">Cancel</button>
+            <button id="unsoldModalCancel" style="padding:10px 28px; border-radius:8px; border:1px solid rgba(160,185,215,0.3); background:rgba(255,255,255,0.08); color:#eef2f8; font-size:0.95rem; cursor:pointer; font-weight:500;">Cancel</button>
             <button id="unsoldModalConfirm" style="padding:10px 28px; border-radius:8px; border:none; background:#e53935; color:#fff; font-size:0.95rem; font-weight:700; cursor:pointer;">Confirm</button>
           </div>
         </div>

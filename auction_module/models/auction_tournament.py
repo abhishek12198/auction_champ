@@ -116,7 +116,17 @@ class AuctionTournament(models.Model):
         help='Small JPEG logo for player-card PDFs to keep bulk prints light.',
     )
     active = fields.Boolean(default=True)
-    player_appearance_algorithm = fields.Selection([('linear', 'Manual'), ('random', 'Random')], default="linear")
+    player_appearance_algorithm = fields.Selection(
+        [
+            ('linear', 'Roll Call'),
+            ('random', 'Lucky Dip'),
+        ],
+        string='Player Call-Up Mode',
+        default='linear',
+        help='How the next player is brought into the auction: '
+             'Roll Call — pick from the set list or roll the dice for a squad number; '
+             'Lucky Dip — draw the next player at random.',
+    )
     team_max_points = fields.Integer(string="Max points alloted for a team")
     organizer_uid = fields.Many2one('res.users', 'Organizer')
     points_split_ids = fields.One2many('auction.tournament.point.split', 'tournament_id', 'Points Split')
@@ -125,6 +135,12 @@ class AuctionTournament(models.Model):
                                       'Organizers')
 
     team_ids = fields.One2many('auction.team', 'tournament_id', 'Teams')
+    tier_ids = fields.One2many(
+        'auction.player.tier', 'tournament_id',
+        string='Player Tiers',
+        help='Player tiers for this tournament (e.g. DEFAULT, A, B). '
+             'A DEFAULT tier is created automatically when the tournament is created.',
+    )
     other_attribute_label_ids = fields.One2many(
         'auction.tournament.attribute.label', 'tournament_id',
         string='Other Attribute Labels',
@@ -133,7 +149,15 @@ class AuctionTournament(models.Model):
     template_image = fields.Binary('Template Image')
     report_footer = fields.Binary('Footer')
     rules_regulations = fields.Html("Rules and Regulations")
-    tournament_type = fields.Selection([('cricket', 'Cricket'), ('football', 'Football'),('kabaddi', 'Kabaddi')], default='cricket')
+    tournament_type = fields.Selection(
+        [
+            ('cricket', 'Cricket'),
+            ('football', 'Football'),
+            ('kabaddi', 'Kabaddi (Coming Soon)'),
+        ],
+        default='cricket',
+        string='Game / Sport',
+    )
     kanban_color = fields.Char(
         string='Kanban Color',
         default='#4f46e5',
@@ -146,6 +170,7 @@ class AuctionTournament(models.Model):
         ('strawberry', 'Strawberry'),
         ('cherry', 'Cherry'),
         ('pistah', 'Pistah'),
+        ('blackberry', 'Blackberry'),
     ], string='Theme'
               '', default='lemon', required=True)
     sold_display_seconds = fields.Integer(
@@ -191,7 +216,35 @@ class AuctionTournament(models.Model):
         string="Unmask Player Contact?",
         default=False,
         help="When enabled, players' full mobile numbers are shown on player cards and the "
-             "auction display. When disabled (default), the numbers are masked (e.g. 9XXXXXXXX8).",
+             "auction display. When disabled (default), the numbers are masked (e.g. 9XXXXXXXX8). "
+             "Enabling requires accepting the privacy policy; the agreement is stored with "
+             "user and timestamp.",
+    )
+    expose_player_contact_privacy_agreed = fields.Boolean(
+        string="Contact Unmask Privacy Agreed",
+        default=False,
+        copy=False,
+        readonly=True,
+        help="True after the organizer accepted the privacy policy to unmask player contacts.",
+    )
+    expose_player_contact_agreed_user_id = fields.Many2one(
+        'res.users',
+        string="Agreed By",
+        copy=False,
+        readonly=True,
+        help="User who accepted the privacy policy to unmask player contacts.",
+    )
+    expose_player_contact_agreed_date = fields.Datetime(
+        string="Agreed On",
+        copy=False,
+        readonly=True,
+        help="When the privacy policy was accepted for unmasking player contacts.",
+    )
+    expose_player_contact_policy_version = fields.Char(
+        string="Privacy Policy Version",
+        copy=False,
+        readonly=True,
+        help="Policy version / effective date acknowledged when unmasking was enabled.",
     )
     enable_jersey_section = fields.Boolean(
         "Jersy Included?",
@@ -225,6 +278,7 @@ class AuctionTournament(models.Model):
         string='Tournament Code',
         readonly=True,
         copy=False,
+        index=True,
         help='Unique identifier for this tournament, auto-generated on creation. '
              'Format: AC# followed by 12 digits.',
     )
@@ -245,6 +299,128 @@ class AuctionTournament(models.Model):
         help='When enabled, the public /auction/live-board page streams live auction data. '
              'When disabled, visitors see an offline holding page instead.',
     )
+    pool_draw_json = fields.Text(
+        string='Saved Pool Draw',
+        copy=False,
+        help='JSON of the last saved pool draw from the Pool Generator.',
+    )
+    fixture_schedule_json = fields.Text(
+        string='Saved Fixture Schedule',
+        copy=False,
+        help='JSON of the last saved fixture schedule from the Pool Generator.',
+    )
+    pool_draw_snapshot = fields.Binary(
+        string='Pool Draw Snapshot',
+        copy=False,
+        attachment=True,
+        help='PNG snapshot of the saved pool draw board.',
+    )
+    fixture_schedule_snapshot = fields.Binary(
+        string='Fixture Snapshot',
+        copy=False,
+        attachment=True,
+        help='PNG snapshot of the saved fixture schedule board.',
+    )
+    pool_draw_user_id = fields.Many2one(
+        'res.users',
+        string='Pool Generated By',
+        copy=False,
+        readonly=True,
+        help='User who last generated or saved the pool draw.',
+    )
+    pool_draw_datetime = fields.Datetime(
+        string='Pool Generated On',
+        copy=False,
+        readonly=True,
+        help='When the pool draw was last generated or saved.',
+    )
+    fixture_schedule_user_id = fields.Many2one(
+        'res.users',
+        string='Fixture Generated By',
+        copy=False,
+        readonly=True,
+        help='User who last generated or saved the fixture schedule.',
+    )
+    fixture_schedule_datetime = fields.Datetime(
+        string='Fixture Generated On',
+        copy=False,
+        readonly=True,
+        help='When the fixture schedule was last generated or saved.',
+    )
+    projector_board_mode = fields.Selection(
+        [
+            ('idle', 'Hidden'),
+            ('pools', 'Pool Draw'),
+            ('fixtures', 'Fixtures'),
+        ],
+        string='Projector Board',
+        default='idle',
+        copy=False,
+        help='When set to pools/fixtures, the projector shows that board live '
+             '(updated when pools or fixtures are generated).',
+    )
+    projector_board_reveal_until = fields.Datetime(
+        string='Projector Reveal Until',
+        copy=False,
+        help='While in the future, projector shows a loading/reveal animation '
+             'before displaying the pool or fixture board.',
+    )
+
+    def _snapshot_download_filename(self, kind):
+        """Safe PNG filename for pool/fixture snapshot downloads."""
+        self.ensure_one()
+        base = (self.slug or self.name or 'tournament').strip()
+        base = re.sub(r'[^\w\-]+', '_', base).strip('_') or 'tournament'
+        return '%s_%s.png' % (base, kind)
+
+    def action_download_pool_draw_snapshot(self):
+        """Download the saved pool draw PNG from Pools & Fixtures."""
+        self.ensure_one()
+        if not self.pool_draw_snapshot:
+            raise UserError(_('No pool draw snapshot is saved yet. '
+                              'Save from the Pool Generator first.'))
+        filename = self._snapshot_download_filename('pool_draw')
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/web/content/auction.tournament/%d/pool_draw_snapshot/%s?download=true' % (
+                self.id, filename,
+            ),
+            'target': 'self',
+        }
+
+    def action_download_fixture_schedule_snapshot(self):
+        """Download the saved fixture schedule PNG from Pools & Fixtures."""
+        self.ensure_one()
+        if not self.fixture_schedule_snapshot:
+            raise UserError(_('No fixture snapshot is saved yet. '
+                              'Save from the Pool Generator first.'))
+        filename = self._snapshot_download_filename('fixture_schedule')
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/web/content/auction.tournament/%d/fixture_schedule_snapshot/%s?download=true' % (
+                self.id, filename,
+            ),
+            'target': 'self',
+        }
+
+    def action_dismiss_projector_board(self):
+        """Hide live pool/fixture overlay so the projector returns to auction view.
+
+        Generating pools/fixtures sets ``projector_board_mode`` to pools/fixtures.
+        Opening Player Showcase / putting a player on stage must clear that mode,
+        otherwise the projector keeps showing the old board instead of the player.
+        """
+        to_clear = self.filtered(
+            lambda t: (t.projector_board_mode and t.projector_board_mode != 'idle')
+            or bool(t.projector_board_reveal_until)
+        )
+        if to_clear:
+            to_clear.sudo().write({
+                'projector_board_mode': 'idle',
+                'projector_board_reveal_until': False,
+            })
+        return True
+
     break_time_active = fields.Boolean(
         string='Break Time',
         default=False,
@@ -302,7 +478,17 @@ class AuctionTournament(models.Model):
         compute='_compute_urls',
         store=False,
         help='Open on the audience screen. Updates live while operators run '
-             'display_auction (Random) or player_selector (Manual).',
+             'display_auction (Random) or player_selector (Manual). '
+             'Available only after auction rules are set for this tournament.',
+    )
+    has_auction_rules = fields.Boolean(
+        string='Auction Rules Set',
+        compute='_compute_has_auction_rules',
+        help='True when at least one auction rule (team purse / limits) exists '
+             'for this tournament. Required before Player Console and Projector.',
+    )
+    auction_rule_ids = fields.One2many(
+        'auction.auction', 'tournament_id', string='Auction Rules',
     )
     payment_tracker_url = fields.Char(
         string='Payment Tracker URL',
@@ -365,7 +551,7 @@ class AuctionTournament(models.Model):
         for rec in self:
             rec.slug = _slugify(rec.name or '')
 
-    @api.depends('slug', 'player_appearance_algorithm')
+    @api.depends('slug', 'player_appearance_algorithm', 'auction_rule_ids')
     def _compute_urls(self):
         # Both URL fields share one get_param() call to avoid two DB hits per form load.
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
@@ -376,7 +562,8 @@ class AuctionTournament(models.Model):
             else:
                 rec.registration_url = '{}/{}/player/register'.format(base_url, db_name)
 
-            if rec.slug:
+            # Projector is only useful once team auction rules exist.
+            if rec.slug and rec.auction_rule_ids:
                 rec.projector_url = '{}/{}/auction/projector/{}/'.format(base_url, db_name, rec.slug)
             else:
                 rec.projector_url = False
@@ -385,6 +572,18 @@ class AuctionTournament(models.Model):
                 rec.payment_tracker_url = '{}/{}/{}/auction/payment-marker'.format(base_url, db_name, rec.slug)
             else:
                 rec.payment_tracker_url = False
+
+    @api.depends('auction_rule_ids')
+    def _compute_has_auction_rules(self):
+        for rec in self:
+            rec.has_auction_rules = bool(rec.auction_rule_ids)
+
+    def has_auction_rules_ready(self):
+        """True when this tournament has at least one auction.auction rule row."""
+        self.ensure_one()
+        return bool(self.env['auction.auction'].sudo().search_count([
+            ('tournament_id', '=', self.id),
+        ]))
 
     @api.depends('tournament_date_ids.date', 'tournament_date', 'tournament_dates')
     def _compute_tournament_date_display(self):
@@ -594,8 +793,74 @@ class AuctionTournament(models.Model):
                 time.sleep(0.05 * (attempt + 1))
         return False
 
+    def _assert_tournament_type_available(self, tournament_type):
+        """Kabaddi is listed but not yet supported — force Cricket/Football."""
+        if tournament_type == 'kabaddi':
+            raise UserError(
+                'Kabaddi is coming soon!\n\n'
+                'Please go back and select Cricket or Football. '
+                'Kabaddi tournaments will be available in a future update.'
+            )
+
+    @api.onchange('tournament_type')
+    def _onchange_tournament_type_coming_soon(self):
+        if self.tournament_type == 'kabaddi':
+            return {
+                'warning': {
+                    'title': 'Kabaddi — Coming Soon',
+                    'message': (
+                        'Kabaddi support is coming soon.\n\n'
+                        'Please switch back to Cricket or Football to continue '
+                        'creating or editing this tournament.'
+                    ),
+                }
+            }
+
+    # Effective date shown on the public privacy policy page — bump when policy text changes.
+    CONTACT_UNMASK_PRIVACY_POLICY_VERSION = '21 July 2026'
+
+    def _assert_expose_player_contact_privacy(self, vals, creating=False):
+        """Block enabling contact unmask unless privacy agreement was just recorded."""
+        if not vals.get('expose_player_contact'):
+            return
+        if self.env.context.get('expose_contact_privacy_ack'):
+            return
+        if creating:
+            raise UserError(_(
+                "Unmasking player contact numbers requires accepting the privacy policy. "
+                "Leave this disabled when creating the tournament, then enable it from "
+                "Tournament Master using “Agree & Unmask Contacts”."
+            ))
+        enabling_recs = self.filtered(lambda t: not t.expose_player_contact)
+        if enabling_recs:
+            raise UserError(_(
+                "Unmasking player contact numbers requires accepting the privacy policy. "
+                "Use the “Agree & Unmask Contacts” button to review and accept before enabling."
+            ))
+
+    def action_open_expose_contact_privacy_wizard(self):
+        """Open the privacy-agreement wizard required to unmask player contacts."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Privacy Policy — Unmask Player Contact'),
+            'res_model': 'auction.expose.contact.privacy.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_tournament_id': self.id,
+            },
+        }
+
+    def action_remask_player_contact(self):
+        """Turn contact unmasking off (keeps the privacy agreement audit stamp)."""
+        self.write({'expose_player_contact': False})
+        return True
+
     @api.model
     def create(self, vals):
+        self._assert_tournament_type_available(vals.get('tournament_type'))
+        self._assert_expose_player_contact_privacy(vals, creating=True)
         if not vals.get('tournament_code'):
             vals['tournament_code'] = _generate_tournament_code(self.env)
         # Prefer char multi-dates; fall back to single tournament_date
@@ -619,7 +884,36 @@ class AuctionTournament(models.Model):
             record._ensure_tournament_date_line(date_val)
         elif record.tournament_date_ids:
             record._sync_tournament_date_from_lines()
+        record._ensure_default_tier()
         return record
+
+    def copy(self, default=None):
+        default = dict(default or {})
+        default.setdefault('expose_player_contact', False)
+        default.setdefault('expose_player_contact_privacy_agreed', False)
+        default.setdefault('expose_player_contact_agreed_user_id', False)
+        default.setdefault('expose_player_contact_agreed_date', False)
+        default.setdefault('expose_player_contact_policy_version', False)
+        new = super().copy(default)
+        new._ensure_default_tier()
+        return new
+
+    def _ensure_default_tier(self):
+        """Create a linked DEFAULT tier when the tournament has none yet."""
+        Tier = self.env['auction.player.tier'].sudo()
+        for tournament in self:
+            exists = Tier.search([
+                ('tournament_id', '=', tournament.id),
+                ('name', '=ilike', 'DEFAULT'),
+            ], limit=1)
+            if exists:
+                continue
+            Tier.create({
+                'name': 'DEFAULT',
+                'description': 'Default player tier',
+                'color': '#3498db',
+                'tournament_id': tournament.id,
+            })
 
     def write(self, vals):
         """Restrict non-admin users to only modifying operational/balance fields.
@@ -627,6 +921,9 @@ class AuctionTournament(models.Model):
         sudo() calls (env.su=True) bypass this check entirely — internal model
         methods that use sudo() must never be blocked here.
         """
+        if 'tournament_type' in vals:
+            self._assert_tournament_type_available(vals.get('tournament_type'))
+        self._assert_expose_player_contact_privacy(vals, creating=False)
         if (not self.env.su
                 and not self.env.user.has_group('auction_module.group_auction_group_admin')):
             _ALLOWED = {
@@ -728,8 +1025,9 @@ class AuctionTournament(models.Model):
             'type': 'ir.actions.act_window',
             'name': _('Auction Rules — %s') % self.name,
             'res_model': 'auction.auction',
-            'view_mode': 'tree,form',
+            'view_mode': 'kanban,tree,form',
             'views': [
+                (self.env.ref('auction_module.view_auction_auction_kanban').id, 'kanban'),
                 (self.env.ref('auction_module.view_auction_auction_tree').id, 'tree'),
                 (self.env.ref('auction_module.view_auction_auction_form').id, 'form'),
             ],
@@ -856,13 +1154,15 @@ class AuctionTournament(models.Model):
         }
 
     def action_open_payment_tracker(self):
-        """Open the Payment Tracker page in a new browser tab."""
-        db_name = self.env.cr.dbname
-        url = '/{}/{}/auction/payment-marker'.format(db_name, self.slug) if self.slug else '/auction/my/payment-marker'
+        """Open Payment Tracker as a backend client action (no URL redirect)."""
+        self.ensure_one()
         return {
-            'type': 'ir.actions.act_url',
-            'url': url,
-            'target': 'new',
+            'type': 'ir.actions.client',
+            'tag': 'auction_module.payment_marker',
+            'name': 'Payment Tracker',
+            'target': 'current',
+            'context': {'tournament_id': self.id},
+            'params': {'tournament_id': self.id},
         }
 
     def action_share_whatsapp(self):

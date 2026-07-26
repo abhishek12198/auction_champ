@@ -4,18 +4,20 @@
     <!-- Dedicated football PDF card page (called per-doc by dispatchers) -->
     <template id="report_player_card_football_page">
         <t t-set="fbc_print_themes" t-value="{
-  'vanilla':      {'baseDark':'#0a1330','panel':'#0d1834','panelLite':'#182a56','header':'#1b3f8f','headerLite':'#2252b5','circleLite':'#2a5fd0','accent':'#fdce33','accentD':'#f5b301','ink':'#0a1330','muted':'#9fb4dd','txt':'#ffffff','blood':'#ff6b6b','brandGlow':'96,140,255','accentGlow':'253,206,51'},
+  'vanilla':      {'baseDark':'#142846','panel':'#1a3560','panelLite':'#2a4568','header':'#3d5f94','headerLite':'#5b7eb8','circleLite':'#8aa6d4','accent':'#c8d4e8','accentD':'#8aa6d4','ink':'#142846','muted':'#a8bdd8','txt':'#ffffff','blood':'#ff6b6b','brandGlow':'91,126,184','accentGlow':'200,212,232'},
   'butterscotch': {'baseDark':'#170f04','panel':'#241809','panelLite':'#4a3210','header':'#7c531a','headerLite':'#b3801f','circleLite':'#d99a2a','accent':'#f5c842','accentD':'#e0901f','ink':'#241809','muted':'#d8b98a','txt':'#fff7e6','blood':'#ff6b6b','brandGlow':'245,200,66','accentGlow':'245,200,66'},
-  'strawberry':   {'baseDark':'#200712','panel':'#2a0a18','panelLite':'#5f1a38','header':'#8e1146','headerLite':'#c2185b','circleLite':'#ff6aa0','accent':'#ffcf9e','accentD':'#ff5a8a','ink':'#2a0a18','muted':'#e5a9c2','txt':'#ffeaf3','blood':'#ff5a7a','brandGlow':'255,106,160','accentGlow':'255,207,158'},
+  'strawberry':   {'baseDark':'#F8BBD0','panel':'#FFF5F9','panelLite':'#FFF0F5','header':'#C2185B','headerLite':'#E91E63','circleLite':'#FFD6E8','accent':'#880E4F','accentD':'#9d174d','ink':'#FFF5F9','muted':'#9d174d','txt':'#1a0a12','blood':'#ad1457','brandGlow':'194,24,91','accentGlow':'136,14,79','capsuleBg':'#1a0a12','capsuleTxt':'#FFF5F9','titleFont':'Atlanta College'},
   'cherry':       {'baseDark':'#150304','panel':'#180405','panelLite':'#4a0a13','header':'#7a0a18','headerLite':'#9a0f22','circleLite':'#dc143c','accent':'#f5c842','accentD':'#c01530','ink':'#180405','muted':'#e0a0a8','txt':'#ffecec','blood':'#ff4d64','brandGlow':'220,20,60','accentGlow':'245,200,66'},
   'pistah':       {'baseDark':'#061309','panel':'#0c2411','panelLite':'#1c4d2a','header':'#2f7d32','headerLite':'#38a13c','circleLite':'#6bbf4e','accent':'#d4e157','accentD':'#2f7d32','ink':'#06140a','muted':'#a7d1a0','txt':'#ecfce8','blood':'#ff7a6b','brandGlow':'107,191,78','accentGlow':'212,225,87'},
-  'lemon':        {'baseDark':'#E8DDB8','panel':'#F7F1DC','panelLite':'#FBF6E8','header':'#C9A400','headerLite':'#D9B820','circleLite':'#F7F1DC','accent':'#8F7400','accentD':'#6E5A00','ink':'#F7F1DC','muted':'#5C4A14','txt':'#1F1A0A','blood':'#b91c1c','brandGlow':'140,110,0','accentGlow':'143,116,0','capsuleBg':'#1F1A0A','capsuleTxt':'#F7F1DC'},
+  'lemon':        {'baseDark':'#E8DDB8','panel':'#F7F1DC','panelLite':'#FBF6E8','header':'#C9A400','headerLite':'#D9B820','circleLite':'#F7F1DC','accent':'#8F7400','accentD':'#6E5A00','ink':'#F7F1DC','muted':'#5C4A14','txt':'#1F1A0A','blood':'#b91c1c','brandGlow':'140,110,0','accentGlow':'143,116,0','capsuleBg':'#1F1A0A','capsuleTxt':'#F7F1DC','titleFont':'Atlanta College'},
+  'blackberry':   {'baseDark':'#050a14','panel':'#0a1628','panelLite':'#14305f','header':'#1e3a8a','headerLite':'#2563eb','circleLite':'#3b82f6','accent':'#60a5fa','accentD':'#1e3a8a','ink':'#050a14','muted':'#93c5fd','txt':'#ffffff','blood':'#ff7a6b','brandGlow':'59,130,246','accentGlow':'96,165,250','titleFont':'Atlanta College'},
 }"/>
         <t t-set="pal" t-value="fbc_print_themes.get(doc.tournament_id.player_display_template or 'vanilla', fbc_print_themes['vanilla'])"/>
+        <t t-set="title_font" t-value="pal.get('titleFont', 'Varsity Team')"/>
         <html lang="en">
             <head>
                 <title>Football Player Card</title>
-                <style>@font-face{font-family:'Varsity Team';src:url('/auction_module/static/src/assets/fonts/VarsityTeam-Bold.otf') format('opentype');font-weight:normal;font-style:normal;} html,body{margin:0;}</style>
+                <style>@font-face{font-family:'Varsity Team';src:url('/auction_module/static/src/assets/fonts/VarsityTeam-Bold.otf') format('opentype');font-weight:normal;font-style:normal;}@font-face{font-family:'Atlanta College';src:url('/auction_module/static/src/assets/fonts/Atlanta-College.ttf') format('truetype');font-weight:normal;font-style:normal;} html,body{margin:0;}</style>
             </head>
             <body t-attf-style="margin:0; padding:10px; font-family:'Barlow',sans-serif; background-color:{{ pal['baseDark'] }}; background-image:-webkit-radial-gradient(14% -10%, circle, rgba({{ pal['brandGlow'] }},0.42) 0%, rgba({{ pal['brandGlow'] }},0) 40%), -webkit-radial-gradient(86% -10%, circle, rgba({{ pal['brandGlow'] }},0.38) 0%, rgba({{ pal['brandGlow'] }},0) 40%), -webkit-radial-gradient(50% 125%, circle, rgba({{ pal['accentGlow'] }},0.15) 0%, rgba({{ pal['accentGlow'] }},0) 52%), -webkit-linear-gradient(top, {{ pal['panel'] }} 0%, {{ pal['baseDark'] }} 52%, {{ pal['baseDark'] }} 100%);">
                 <!-- Same shell as cricket (832px / paperformat_card_landscape) so both sports fill one page identically. -->
@@ -31,7 +33,7 @@
                                     </div>
                                 </td>
                                 <td style="vertical-align:middle; padding:11px 0;">
-                                    <div t-attf-style="color:{{ pal['txt'] }}; font-family:'Varsity Team','Bebas Neue',sans-serif; font-size:1.7rem; letter-spacing:1.4px; text-transform:uppercase; line-height:1; text-shadow:0 2px 6px rgba(0,0,0,0.45); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:34ch;" t-esc="doc.tournament_id.name"/>
+                                    <div t-attf-style="color:{{ pal['txt'] }}; font-family:'{{ title_font }}','Bebas Neue',sans-serif; font-size:1.7rem; letter-spacing:1.4px; text-transform:uppercase; line-height:1; text-shadow:0 2px 6px rgba(0,0,0,0.45); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:34ch;" t-esc="doc.tournament_id.name"/>
                                     <div t-attf-style="color:{{ pal['accent'] }}; font-size:0.68rem; font-weight:600; margin-top:3px; letter-spacing:2px; text-transform:uppercase;" t-esc="doc.tournament_id.description"/>
                                 </td>
                                 <td style="vertical-align:middle; text-align:right; padding:11px 20px; white-space:nowrap;">
@@ -63,11 +65,11 @@
                                 <div t-attf-style="position:relative; min-height:328px; background-color:{{ pal['panel'] }}; background-image:-webkit-radial-gradient(100% 0%, circle, rgba({{ pal['brandGlow'] }},0.20) 0%, rgba({{ pal['brandGlow'] }},0) 50%), -webkit-linear-gradient(top left, {{ pal['panelLite'] }} 0%, {{ pal['panel'] }} 100%);">
 
                                     <div t-attf-style="position:absolute; top:15px; right:18px; width:56px; height:56px; border-radius:50%; background-color:{{ pal['header'] }}; background-image:-webkit-linear-gradient(top left,{{ pal['circleLite'] }},{{ pal['header'] }}); box-shadow:0 0 0 3px {{ pal['accent'] }}, 0 0 0 6px rgba(0,0,0,0.55), 0 6px 16px rgba(0,0,0,0.5); text-align:center; line-height:56px;">
-                                        <span t-attf-style="color:{{ pal['accent'] }}; font-family:'Varsity Team','Bebas Neue',sans-serif; font-size:1.7rem; vertical-align:middle;"><t t-esc="doc.sl_no"/></span>
+                                        <span t-attf-style="color:{{ pal['accent'] }}; font-family:'{{ title_font }}','Bebas Neue',sans-serif; font-size:1.7rem; vertical-align:middle;"><t t-esc="doc.sl_no"/></span>
                                     </div>
 
                                     <div style="padding:10px 74px 7px 22px;">
-                                        <div t-attf-style="color:{{ pal['txt'] }}; font-family:'Varsity Team','Bebas Neue',sans-serif; font-size:1.85rem; line-height:0.98; letter-spacing:1px; text-transform:uppercase; text-shadow:0 3px 9px rgba(0,0,0,0.5); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" t-esc="doc.name.upper()"/>
+                                        <div t-attf-style="color:{{ pal['txt'] }}; font-family:'{{ title_font }}','Bebas Neue',sans-serif; font-size:1.85rem; line-height:0.98; letter-spacing:1px; text-transform:uppercase; text-shadow:0 3px 9px rgba(0,0,0,0.5); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" t-esc="doc.name.upper()"/>
                                         <div style="margin-top:4px;">
                                             <t t-if="doc.dominant_position_id or doc.role">
                                                 <span t-attf-style="display:inline-block; color:{{ pal['ink'] }}; background-color:{{ pal['accent'] }}; background-image:-webkit-linear-gradient(left,{{ pal['accent'] }},{{ pal['accentD'] }}); font-family:'Oswald',sans-serif; font-size:0.72rem; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; padding:2px 12px; border-radius:4px; white-space:nowrap;"><t t-esc="doc.dominant_position_id.name if doc.dominant_position_id else doc.role"/></span>

@@ -29,12 +29,12 @@
         /* ── CSS variables — identical token set as Bid Summary ── */
         :root,
         [data-theme="vanilla"] {
-          --bg:#050c1a; --bg2:#0b1529; --bg3:#0d1f3c;
-          --acc:#E8A020; --acc2:#FFD166; --glow:rgba(232,160,32,.30);
-          --bdr:rgba(232,160,32,.18); --bdr2:rgba(255,255,255,.08);
-          --tx:#EEF4FF; --tx-d:rgba(238,244,255,.55); --tx-m:rgba(238,244,255,.30);
+          --bg:#142846; --bg2:#1a3560; --bg3:#243a5c;
+          --acc:#8aa6d4; --acc2:#c8d4e8; --glow:rgba(91,126,184,.30);
+          --bdr:rgba(138,166,200,.22); --bdr2:rgba(255,255,255,.08);
+          --tx:#eef2f8; --tx-d:rgba(238,242,248,.55); --tx-m:rgba(238,242,248,.30);
           --hf:'Orbitron',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Teko',sans-serif;
-          --card-bg:rgba(11,21,41,.85); --card-bdr:rgba(232,160,32,.15);
+          --card-bg:rgba(26,53,96,.85); --card-bdr:rgba(138,166,200,.18);
         }
         [data-theme="butterscotch"] {
           --bg:#06060f; --bg2:#0f0f20; --bg3:#1a1430;

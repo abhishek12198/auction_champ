@@ -15,22 +15,22 @@
 
   <!-- ── Theme CSS custom-properties ──────────────────────────────────── -->
   <style>
-    /* vanilla (default) */
+    /* vanilla (default) — soft slate blue */
     :root {
-      --t-primary:        #004080;
-      --t-header-bg:      #004080;
+      --t-primary:        #5b7eb8;
+      --t-header-bg:      #3d5f94;
       --t-header-text:    #fff;
-      --t-drawer-bg:      #fff;
+      --t-drawer-bg:      #1b2f4d;
       --t-border-w:       3px;
-      --t-shadow-c:       rgba(0,64,128,0.18);
-      --t-tab-bg:         #004080;
+      --t-shadow-c:       rgba(91,126,184,0.22);
+      --t-tab-bg:         #5b7eb8;
       --t-arrow-c:        #fff;
       --t-overlay:        rgba(0,0,0,0.65);
-      --t-card-bg:        #fff;
-      --t-card-text:      #1a1a1a;
-      --t-cancel-bg:      #f5f5f5;
-      --t-cancel-border:  #ddd;
-      --t-cancel-text:    #444;
+      --t-card-bg:        #243a5c;
+      --t-card-text:      #eef2f8;
+      --t-cancel-bg:      rgba(255,255,255,0.08);
+      --t-cancel-border:  rgba(160,185,215,0.3);
+      --t-cancel-text:    #eef2f8;
       --t-confirm-bg:     #e53935;
       --t-confirm-text:   #fff;
     }
@@ -413,7 +413,7 @@
       <span style="font-size:1.05rem;font-weight:700;letter-spacing:.3px;">&#x1F4CA; Auction Bid Summary</span>
       <button onclick="closeBidSummary()" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:var(--t-header-text);width:32px;height:32px;border-radius:6px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">&#x2715;</button>
     </div>
-    <iframe id="bidSummaryFrame" t-att-data-balance-url="'/' + (tournament.slug if tournament else '') + '/auction/show/team/balance'" style="flex:1;border:none;width:100%;" title="Bid Summary"></iframe>
+    <iframe id="bidSummaryFrame" t-att-data-balance-url="('/' + db_name + '/' + tournament.slug + '/auction/show/team/balance') if db_name and tournament and tournament.slug else ''" style="flex:1;border:none;width:100%;" title="Bid Summary"></iframe>
   </div>
   <div id="bidSummaryOverlay" onclick="closeBidSummary()" style="display:none;position:fixed;inset:0;z-index:9700;background:rgba(0,0,0,0.4);"></div>
 
@@ -540,6 +540,14 @@
     window.openBidSummary = function() {
       var frame = document.getElementById('bidSummaryFrame');
       var url = (frame &amp;&amp; frame.dataset.balanceUrl) || '';
+      if (url &amp;&amp; url.indexOf('//') === 0) { url = ''; }
+      if (!url) {
+        var parts = (location.pathname || '').split('/').filter(Boolean);
+        var db = parts[0] || (typeof db_name !== 'undefined' ? db_name : '');
+        var slug = (document.documentElement.dataset.tournamentSlug) || '';
+        if (!slug &amp;&amp; parts[1] === 'auction' &amp;&amp; parts[3]) { slug = parts[3]; }
+        if (db &amp;&amp; slug) { url = '/' + db + '/' + slug + '/auction/show/team/balance'; }
+      }
       if (frame &amp;&amp; url) {
         var cur = frame.getAttribute('src') || '';
         if (!cur || cur === 'about:blank') {

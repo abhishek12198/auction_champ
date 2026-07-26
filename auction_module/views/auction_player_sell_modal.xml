@@ -2,25 +2,89 @@
 <odoo>
 <template id="player_sell_modal">
 <style>
-  /* ── CSS variables: Vanilla ──────────────────────────────── */
+  /* ── CSS variables: Vanilla (soft slate blue) ──────────────── */
   #sellModal {
-    --sm-header-bg:       linear-gradient(135deg,#0f1f44 0%,#1a2c5e 100%);
-    --sm-header-stripe:   #fdce33;
-    --sm-accent:          #fdce33;
-    --sm-accent-dim:      rgba(253,206,51,0.18);
-    --sm-primary:         #2252b5;
-    --sm-primary-dark:    #0f1f44;
-    --sm-primary-light:   #e8edf9;
-    --sm-btn-bg:          linear-gradient(135deg,#0f1f44,#2252b5);
-    --sm-badge-active:    #2252b5;
+    --sm-header-bg:       linear-gradient(135deg,#1a3560 0%,#243a5c 100%);
+    --sm-header-stripe:   #c9b27a;
+    --sm-accent:          #c9b27a;
+    --sm-accent-dim:      rgba(201,178,122,0.18);
+    --sm-primary:         #5b7eb8;
+    --sm-primary-dark:    #1a3560;
+    --sm-primary-light:   #eef3f9;
+    --sm-btn-bg:          linear-gradient(135deg,#1a3560,#5b7eb8);
+    --sm-badge-active:    #5b7eb8;
     --sm-transfer-bg:     #f4f6f9;
     --sm-detail-bg:       #f4f6f9;
     --sm-maxcall-color:   #16a34a;
-    --sm-suggest-color:   #1d4ed8;
-    --sm-sold-ribbon:     #2252b5;
-    --sm-sold-bg:         linear-gradient(160deg,#0f1f44 0%,#1a2c5e 60%,#243d7a 100%);
+    --sm-suggest-color:   #3d5f94;
+    --sm-sold-ribbon:     #5b7eb8;
+    --sm-sold-bg:         linear-gradient(160deg,#1a3560 0%,#243a5c 60%,#3d5f94 100%);
     --sm-font:            'Poppins','Rajdhani',sans-serif;
     --sm-title-font:      'Poppins','Teko',sans-serif;
+  }
+  /* ── Lemon ─────────────────────────────────────────────────── */
+  #sellModal[data-theme="lemon"] {
+    --sm-header-bg:       linear-gradient(135deg,#F4ECD0 0%,#E8DDB8 100%);
+    --sm-header-stripe:   #C9A400;
+    --sm-accent:          #C9A400;
+    --sm-accent-dim:      rgba(201,164,0,0.16);
+    --sm-primary:         #C9A400;
+    --sm-primary-dark:    #8F7400;
+    --sm-primary-light:   #F4ECD0;
+    --sm-btn-bg:          linear-gradient(135deg,#8F7400,#C9A400);
+    --sm-badge-active:    #C9A400;
+    --sm-transfer-bg:     #F4ECD0;
+    --sm-detail-bg:       #F0E6C4;
+    --sm-maxcall-color:   #2e7d32;
+    --sm-suggest-color:   #6E5A00;
+    --sm-sold-ribbon:     #C9A400;
+    --sm-sold-bg:         linear-gradient(160deg,#F4ECD0 0%,#E8DDB8 60%,#DDD0A0 100%);
+    --sm-font:            'Barlow',sans-serif;
+    --sm-title-font:      'Antonio','Barlow',sans-serif;
+  }
+  #sellModal[data-theme="lemon"] .sm-header-title,
+  #sellModal[data-theme="lemon"] .sm-close-btn { color: #1F1A0A; }
+  #sellModal[data-theme="lemon"] .sm-close-btn { background: rgba(31,26,10,.08); }
+  /* Lemon sold overlay — parchment bg needs dark ink, not white */
+  #sellModal[data-theme="lemon"] .sm-sold-stamp {
+    color: #1F1A0A;
+    border-color: rgba(31,26,10,.55);
+    text-shadow: none;
+  }
+  #sellModal[data-theme="lemon"] .sm-sold-label { color: #6E5A00; }
+  #sellModal[data-theme="lemon"] .sm-sold-team-name { color: #1F1A0A; }
+  #sellModal[data-theme="lemon"] .sm-sold-points { color: rgba(31,26,10,.72); }
+  #sellModal[data-theme="lemon"] .sm-sold-points span { color: #6E5A00; }
+  #sellModal[data-theme="lemon"] .sm-countdown-label { color: rgba(31,26,10,.62); }
+  #sellModal[data-theme="lemon"] .sm-countdown-label strong { color: #1F1A0A; }
+  #sellModal[data-theme="lemon"] .sm-sold-team-logo {
+    border-color: rgba(31,26,10,.28);
+    background: rgba(255,255,255,.65);
+  }
+  #sellModal[data-theme="lemon"] .sm-progress-track { background: rgba(31,26,10,.14); }
+  #sellModal[data-theme="lemon"] .sm-skip-btn {
+    background: rgba(31,26,10,.06);
+    border-color: rgba(31,26,10,.28);
+    color: #1F1A0A;
+  }
+  #sellModal[data-theme="lemon"] .sm-skip-btn:hover {
+    background: rgba(31,26,10,.12);
+    border-color: rgba(31,26,10,.45);
+  }
+  #sellModal[data-theme="lemon"] .sm-pause-btn {
+    background: rgba(201,164,0,.16);
+    border-color: rgba(110,90,0,.45);
+    color: #1F1A0A;
+  }
+  #sellModal[data-theme="lemon"] .sm-pause-btn:hover {
+    background: rgba(201,164,0,.28);
+    border-color: #6E5A00;
+    box-shadow: 0 0 12px rgba(110,90,0,.2);
+  }
+  #sellModal[data-theme="lemon"] .sm-break-banner {
+    background: rgba(201,164,0,.14);
+    border-color: rgba(110,90,0,.35);
+    color: #1F1A0A;
   }
   /* ── Butterscotch ──────────────────────────────────────────── */
   #sellModal[data-theme="butterscotch"] {
@@ -81,6 +145,27 @@
     --sm-sold-bg:         linear-gradient(160deg,#060606 0%,#1a0608 60%,#2a0a10 100%);
     --sm-font:            'Rajdhani',sans-serif;
     --sm-title-font:      'Teko','Rajdhani',sans-serif;
+  }
+
+
+  #sellModal[data-theme="blackberry"] {
+    --sm-header-bg:       linear-gradient(135deg,#050a14 0%,#0d1830 100%);
+    --sm-header-stripe:   #3B82F6;
+    --sm-accent:          #3B82F6;
+    --sm-accent-dim:      rgba(59,130,246,0.16);
+    --sm-primary:         #3B82F6;
+    --sm-primary-dark:    #1E3A8A;
+    --sm-primary-light:   #eff6ff;
+    --sm-btn-bg:          linear-gradient(135deg,#1E3A8A,#3B82F6);
+    --sm-badge-active:    #3B82F6;
+    --sm-transfer-bg:     #eff6ff;
+    --sm-detail-bg:       #dbeafe;
+    --sm-maxcall-color:   #1E3A8A;
+    --sm-suggest-color:   #1e3a8a;
+    --sm-sold-ribbon:     #3B82F6;
+    --sm-sold-bg:         linear-gradient(160deg,#050a14 0%,#0d1830 60%,#14305f 100%);
+    --sm-font:            'Exo 2','Rajdhani',sans-serif;
+    --sm-title-font:      'Orbitron','Exo 2',sans-serif;
   }
 
   #sellModal[data-theme="pistah"] {
@@ -829,16 +914,96 @@
       });
   };
 
+  /* ── Lock Sell / Unsold until the next player is on stage ─────
+     After sell or unsold, the same player stays on screen during the
+     stamp/celebration. Sell must stay disabled until changeImage /
+     smAdvance commits a new player via acCommitPlayerOnStage. */
+  window._acAuctionActionsLocked = false;
+  var AC_ACTION_BTN_SEL = [
+    'button.sell', 'button.lm-btn-sell', 'button.sw-btn-sell', 'button.hud-btn-sell',
+    'button.pt-btn-sell', 'button.cr-btn-sell',
+    'button.lm-btn-unsold', 'button.sw-btn-unsold', 'button.hud-btn-unsold',
+    'button.pt-btn-unsold', 'button.cr-btn-unsold',
+    '.auction-single-buttons button'
+  ].join(',');
+
+  window.acLockAuctionActions = function() {
+    window._acAuctionActionsLocked = true;
+    document.querySelectorAll(AC_ACTION_BTN_SEL).forEach(function(btn) {
+      // Keep Next Player enabled — only lock sell / unsold
+      var label = (btn.textContent || '').toLowerCase();
+      if (label.indexOf('next player') !== -1) return;
+      btn.disabled = true;
+      btn.setAttribute('data-ac-action-locked', '1');
+    });
+  };
+
+  window.acUnlockAuctionActions = function() {
+    window._acAuctionActionsLocked = false;
+    // Fresh zone HTML already has enabled buttons; clear any leftovers
+    document.querySelectorAll('[data-ac-action-locked="1"]').forEach(function(btn) {
+      btn.disabled = false;
+      btn.removeAttribute('data-ac-action-locked');
+    });
+  };
+
+  // Capture-phase guard so onclick handlers cannot fire while locked
+  document.addEventListener('click', function(ev) {
+    if (!window._acAuctionActionsLocked) return;
+    var t = ev.target && ev.target.closest ? ev.target.closest(AC_ACTION_BTN_SEL) : null;
+    if (!t) return;
+    var label = (t.textContent || '').toLowerCase();
+    if (label.indexOf('next player') !== -1) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+  }, true);
+
+  // Themes define setPlayerUnsold in an earlier script — wrap after load
+  if (typeof window.setPlayerUnsold === 'function' && !window.setPlayerUnsold._acWrapped) {
+    var _acOrigUnsold = window.setPlayerUnsold;
+    window.setPlayerUnsold = function() {
+      if (window._acAuctionActionsLocked) return;
+      return _acOrigUnsold.apply(this, arguments);
+    };
+    window.setPlayerUnsold._acWrapped = true;
+  }
+
+  // Lock after a successful action_unsold (themes call fetch directly)
+  (function() {
+    var _fetch = window.fetch;
+    if (!_fetch || _fetch._acAuctionWrapped) return;
+    function wrappedFetch(url, opts) {
+      var body = opts && opts.body;
+      var isUnsold = typeof body === 'string' && body.indexOf('action_unsold') !== -1;
+      var p = _fetch.apply(this, arguments);
+      if (!isUnsold) return p;
+      return p.then(function(resp) {
+        try {
+          var clone = resp.clone();
+          clone.json().then(function(data) {
+            if (data && !data.error) window.acLockAuctionActions();
+          }).catch(function() {});
+        } catch (e) {}
+        return resp;
+      });
+    }
+    wrappedFetch._acAuctionWrapped = true;
+    window.fetch = wrappedFetch;
+  })();
+
   /* Commit on-stage player for the projector after preview prefetch / countdown. */
   window.acCommitPlayerOnStage = function(playerId) {
     playerId = parseInt(playerId || '0', 10);
     if (!playerId) return Promise.resolve();
+    // New player on stage → Sell / Unsold are available again
+    window.acUnlockAuctionActions();
     return smConsoleCall('auction.team.player', 'action_set_on_stage', [[playerId]])
       .catch(function() { /* projector will catch up on next real navigation */ });
   };
 
   /* ── Open / Close ──────────────────────────────────────────── */
   window.openSellModal = function() {
+    if (window._acAuctionActionsLocked) return;
     smPlayerId     = parseInt(document.body.getAttribute('data-player-id'));
     smSelectedTeam = null;
     smTeamsData    = [];
@@ -1078,6 +1243,10 @@
 
   /* ── Sold celebration screen ─────────────────────────────────── */
   function smShowSoldScreen(result) {
+    // Player is sold — disable Sell / Unsold until next player loads
+    if (typeof window.acLockAuctionActions === 'function') {
+      window.acLockAuctionActions();
+    }
     // Hide form, show sold screen
     document.getElementById('smFormPanel').style.display = 'none';
     var soldScreen = document.getElementById('smSoldScreen');

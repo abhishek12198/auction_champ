@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="auction_showcase_loading" name="Player Console Loading">
+        <t t-set="theme" t-value="theme or ((tournament.player_display_template if tournament else 'lemon') or 'lemon')"/>
+        <html lang="en" t-att-data-theme="theme">
+            <head>
+                <meta charset="utf-8"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1"/>
+                <title t-esc="loading_title or 'Loading Player Console…'"/>
+                <link rel="preconnect" href="https://fonts.googleapis.com"/>
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+                <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@700&amp;family=Barlow:wght@500;700&amp;family=Bebas+Neue&amp;family=Orbitron:wght@700&amp;family=Oswald:wght@600;700&amp;family=Rajdhani:wght@600;700&amp;family=Saira:wght@600;800&amp;display=swap" rel="stylesheet"/>
+                <style>
+                    html, body {
+                        margin: 0;
+                        height: 100%;
+                    }
+                    .ac-sc-load {
+                        min-height: 100%;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 1rem;
+                        text-align: center;
+                        padding: 2rem;
+                        box-sizing: border-box;
+                    }
+                    .ac-sc-logo,
+                    .ac-sc-logo-ph {
+                        width: min(96px, 22vw);
+                        height: min(96px, 22vw);
+                        border-radius: 18px;
+                        object-fit: contain;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 2.4rem;
+                        box-shadow: 0 10px 28px rgba(0,0,0,.28);
+                    }
+                    .ac-sc-kicker {
+                        letter-spacing: .28em;
+                        text-transform: uppercase;
+                        font-size: .72rem;
+                        font-weight: 700;
+                    }
+                    .ac-sc-title {
+                        font-size: clamp(1.6rem, 4vw, 2.5rem);
+                        font-weight: 800;
+                        letter-spacing: .04em;
+                        margin: 0;
+                        text-transform: uppercase;
+                    }
+                    .ac-sc-tour {
+                        font-size: clamp(1rem, 2.2vw, 1.25rem);
+                        max-width: 32rem;
+                        opacity: .78;
+                    }
+                    .ac-sc-theme-chip {
+                        font-size: .68rem;
+                        letter-spacing: .18em;
+                        text-transform: uppercase;
+                        font-weight: 700;
+                        padding: .35rem .85rem;
+                        border-radius: 999px;
+                        border: 1px solid currentColor;
+                        opacity: .85;
+                    }
+                    .ac-sc-spinner {
+                        width: 42px;
+                        height: 42px;
+                        margin-top: .35rem;
+                        border-radius: 50%;
+                        border: 3px solid rgba(255,255,255,.18);
+                        border-top-color: currentColor;
+                        animation: acScSpin .8s linear infinite;
+                    }
+                    @keyframes acScSpin {
+                        to { transform: rotate(360deg); }
+                    }
+
+                    /* ── Lemon (warm parchment / citron) ── */
+                    html[data-theme="lemon"],
+                    html[data-theme="lemon"] body {
+                        background: #E8DDB8;
+                        color: #1F1A0A;
+                        font-family: 'Barlow', 'Segoe UI', sans-serif;
+                    }
+                    html[data-theme="lemon"] .ac-sc-load {
+                        background:
+                            radial-gradient(ellipse 55% 40% at 50% 30%, rgba(201,164,0,.22), transparent 70%),
+                            linear-gradient(180deg, #F4ECD0 0%, #E8DDB8 55%, #DDD0A0 100%);
+                    }
+                    html[data-theme="lemon"] .ac-sc-logo,
+                    html[data-theme="lemon"] .ac-sc-logo-ph {
+                        background: #F0E6C4;
+                        border: 2px solid rgba(120,95,0,.48);
+                    }
+                    html[data-theme="lemon"] .ac-sc-kicker,
+                    html[data-theme="lemon"] .ac-sc-spinner,
+                    html[data-theme="lemon"] .ac-sc-theme-chip { color: #8F7400; }
+                    html[data-theme="lemon"] .ac-sc-title {
+                        font-family: 'Antonio', 'Barlow', sans-serif;
+                        color: #1F1A0A;
+                    }
+                    html[data-theme="lemon"] .ac-sc-tour { color: #5C4A14; opacity: 1; }
+                    html[data-theme="lemon"] .ac-sc-spinner {
+                        border-color: rgba(120,95,0,.22);
+                        border-top-color: #C9A400;
+                    }
+
+                    /* ── Vanilla (soft slate blue) ── */
+                    html[data-theme="vanilla"],
+                    html[data-theme="vanilla"] body {
+                        background: #1a3560;
+                        color: #eef2f8;
+                        font-family: 'Rajdhani', 'Oswald', sans-serif;
+                    }
+                    html[data-theme="vanilla"] .ac-sc-load {
+                        background:
+                            radial-gradient(120% 82% at 50% -12%, #7a9bc4 0%, #5b7eb8 28%, #3d5f94 55%, #2a4a78 78%, #1a3560 100%);
+                    }
+                    html[data-theme="vanilla"] .ac-sc-logo,
+                    html[data-theme="vanilla"] .ac-sc-logo-ph {
+                        background: linear-gradient(180deg, #ffffff, #eef3f9);
+                        border: 2px solid rgba(138,166,212,.5);
+                        color: #1a3560;
+                    }
+                    html[data-theme="vanilla"] .ac-sc-kicker,
+                    html[data-theme="vanilla"] .ac-sc-theme-chip { color: #c8d4e8; }
+                    html[data-theme="vanilla"] .ac-sc-title {
+                        font-family: 'Oswald', 'Rajdhani', sans-serif;
+                        color: #fff;
+                        text-shadow: 0 0 18px rgba(91,126,184,.3);
+                    }
+                    html[data-theme="vanilla"] .ac-sc-spinner {
+                        border-color: rgba(200,212,232,.22);
+                        border-top-color: #8aa6d4;
+                        color: #8aa6d4;
+                    }
+
+                    /* ── Butterscotch (navy + gold) ── */
+                    html[data-theme="butterscotch"],
+                    html[data-theme="butterscotch"] body {
+                        background: #070B14;
+                        color: #fff;
+                        font-family: 'Oswald', 'Barlow', sans-serif;
+                    }
+                    html[data-theme="butterscotch"] .ac-sc-load {
+                        background:
+                            radial-gradient(ellipse 55% 40% at 50% 28%, rgba(245,200,66,.18), transparent 70%),
+                            radial-gradient(ellipse 70% 50% at 50% 100%, rgba(255,159,28,.12), transparent 65%),
+                            #070B14;
+                    }
+                    html[data-theme="butterscotch"] .ac-sc-logo,
+                    html[data-theme="butterscotch"] .ac-sc-logo-ph {
+                        background: #0C1120;
+                        border: 1px solid rgba(245,200,66,.55);
+                    }
+                    html[data-theme="butterscotch"] .ac-sc-kicker,
+                    html[data-theme="butterscotch"] .ac-sc-theme-chip,
+                    html[data-theme="butterscotch"] .ac-sc-spinner { color: #F5C842; }
+                    html[data-theme="butterscotch"] .ac-sc-title {
+                        font-family: 'Bebas Neue', 'Oswald', sans-serif;
+                        letter-spacing: .1em;
+                        color: #F5C842;
+                    }
+                    html[data-theme="butterscotch"] .ac-sc-spinner {
+                        border-color: rgba(245,200,66,.2);
+                        border-top-color: #F5C842;
+                    }
+
+                    /* ── Strawberry (soft rose) ── */
+                    html[data-theme="strawberry"],
+                    html[data-theme="strawberry"] body {
+                        background: #FFF0F5;
+                        color: #1a0a12;
+                        font-family: 'Barlow', 'Segoe UI', sans-serif;
+                    }
+                    html[data-theme="strawberry"] .ac-sc-load {
+                        background:
+                            radial-gradient(ellipse 55% 40% at 50% 30%, rgba(233,30,99,.14), transparent 70%),
+                            linear-gradient(180deg, #FFF0F5 0%, #FCE4EC 100%);
+                    }
+                    html[data-theme="strawberry"] .ac-sc-logo,
+                    html[data-theme="strawberry"] .ac-sc-logo-ph {
+                        background: #fff;
+                        border: 2px solid rgba(194,24,91,.28);
+                        color: #C2185B;
+                    }
+                    html[data-theme="strawberry"] .ac-sc-kicker,
+                    html[data-theme="strawberry"] .ac-sc-theme-chip,
+                    html[data-theme="strawberry"] .ac-sc-spinner { color: #C2185B; }
+                    html[data-theme="strawberry"] .ac-sc-title {
+                        font-family: 'Antonio', 'Barlow', sans-serif;
+                        color: #880E4F;
+                    }
+                    html[data-theme="strawberry"] .ac-sc-tour { color: #5a2040; opacity: 1; }
+                    html[data-theme="strawberry"] .ac-sc-spinner {
+                        border-color: rgba(194,24,91,.2);
+                        border-top-color: #E91E63;
+                    }
+
+                    /* ── Cherry (dark crimson) ── */
+                    html[data-theme="cherry"],
+                    html[data-theme="cherry"] body {
+                        background: #070104;
+                        color: #fff5f7;
+                        font-family: 'Saira', 'Segoe UI', sans-serif;
+                    }
+                    html[data-theme="cherry"] .ac-sc-load {
+                        background:
+                            radial-gradient(ellipse 70% 55% at 18% 42%, rgba(225,29,72,.14), transparent 55%),
+                            radial-gradient(ellipse 55% 45% at 88% 12%, rgba(159,18,57,.16), transparent 50%),
+                            linear-gradient(180deg, #0a0204 0%, #070104 100%);
+                    }
+                    html[data-theme="cherry"] .ac-sc-logo,
+                    html[data-theme="cherry"] .ac-sc-logo-ph {
+                        background: #16080c;
+                        border: 1px solid rgba(225,29,72,.45);
+                    }
+                    html[data-theme="cherry"] .ac-sc-kicker,
+                    html[data-theme="cherry"] .ac-sc-theme-chip,
+                    html[data-theme="cherry"] .ac-sc-spinner { color: #FB7185; }
+                    html[data-theme="cherry"] .ac-sc-title {
+                        font-family: 'Bebas Neue', 'Saira', sans-serif;
+                        letter-spacing: .12em;
+                        color: #E11D48;
+                        text-shadow: 0 0 24px rgba(225,29,72,.35);
+                    }
+                    html[data-theme="cherry"] .ac-sc-spinner {
+                        border-color: rgba(225,29,72,.22);
+                        border-top-color: #E11D48;
+                    }
+
+                    /* ── Blackberry (navy blue-glow) ── */
+                    html[data-theme="blackberry"],
+                    html[data-theme="blackberry"] body {
+                        background: #050a14;
+                        color: #ffffff;
+                        font-family: 'Orbitron', 'Rajdhani', sans-serif;
+                    }
+                    html[data-theme="blackberry"] .ac-sc-load {
+                        background:
+                            radial-gradient(ellipse 55% 40% at 50% 28%, rgba(59,130,246,.16), transparent 70%),
+                            radial-gradient(ellipse 70% 50% at 50% 100%, rgba(30,58,138,.14), transparent 65%),
+                            #050a14;
+                    }
+                    html[data-theme="blackberry"] .ac-sc-logo,
+                    html[data-theme="blackberry"] .ac-sc-logo-ph {
+                        background: #0d1830;
+                        border: 1px solid rgba(59,130,246,.45);
+                        color: #93C5FD;
+                    }
+                    html[data-theme="blackberry"] .ac-sc-kicker,
+                    html[data-theme="blackberry"] .ac-sc-theme-chip,
+                    html[data-theme="blackberry"] .ac-sc-spinner { color: #3B82F6; }
+                    html[data-theme="blackberry"] .ac-sc-title {
+                        color: #93C5FD;
+                        letter-spacing: .1em;
+                    }
+                    html[data-theme="blackberry"] .ac-sc-spinner {
+                        border-color: rgba(59,130,246,.22);
+                        border-top-color: #3B82F6;
+                    }
+
+                    /* ── Pistah (dark green) ── */
+                    html[data-theme="pistah"],
+                    html[data-theme="pistah"] body {
+                        background: #060e08;
+                        color: #e8f5e9;
+                        font-family: 'Orbitron', 'Rajdhani', sans-serif;
+                    }
+                    html[data-theme="pistah"] .ac-sc-load {
+                        background:
+                            radial-gradient(ellipse 55% 40% at 50% 28%, rgba(107,191,78,.16), transparent 70%),
+                            radial-gradient(ellipse 70% 50% at 50% 100%, rgba(46,125,50,.14), transparent 65%),
+                            #060e08;
+                    }
+                    html[data-theme="pistah"] .ac-sc-logo,
+                    html[data-theme="pistah"] .ac-sc-logo-ph {
+                        background: #0d1f11;
+                        border: 1px solid rgba(107,191,78,.45);
+                        color: #A8E063;
+                    }
+                    html[data-theme="pistah"] .ac-sc-kicker,
+                    html[data-theme="pistah"] .ac-sc-theme-chip,
+                    html[data-theme="pistah"] .ac-sc-spinner { color: #6BBF4E; }
+                    html[data-theme="pistah"] .ac-sc-title {
+                        color: #A8E063;
+                        letter-spacing: .1em;
+                    }
+                    html[data-theme="pistah"] .ac-sc-spinner {
+                        border-color: rgba(107,191,78,.22);
+                        border-top-color: #6BBF4E;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="ac-sc-load" role="status" aria-live="polite">
+                    <t t-if="tournament and tournament.logo">
+                        <img class="ac-sc-logo"
+                             t-att-src="'/web/image/auction.tournament/%s/logo' % tournament.id"
+                             alt=""/>
+                    </t>
+                    <t t-else="">
+                        <div class="ac-sc-logo-ph" aria-hidden="true">▶</div>
+                    </t>
+                    <div class="ac-sc-kicker">Auction Champ</div>
+                    <h1 class="ac-sc-title" t-esc="loading_title or 'Loading Player Console…'"/>
+                    <div t-if="tournament" class="ac-sc-tour" t-esc="tournament.name"/>
+                    <div class="ac-sc-theme-chip" t-esc="(theme or 'lemon').replace('_', ' ').title()"/>
+                    <div class="ac-sc-spinner" aria-hidden="true"></div>
+                </div>
+                <script type="text/javascript" t-att-data-redirect="redirect_url">
+                    (function () {
+                        var el = document.currentScript;
+                        if (!el) { return; }
+                        var url = el.getAttribute('data-redirect');
+                        if (!url) { return; }
+                        window.setTimeout(function () {
+                            window.location.replace(url);
+                        }, 450);
+                    })();
+                </script>
+            </body>
+        </html>
+    </template>
+</odoo>

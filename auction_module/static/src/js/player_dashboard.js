@@ -62,12 +62,15 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
         _buildLayout: function () {
             return [
                 '<div class="pd-hdr">',
-                    '<div class="pd-hdr-logo-wrap">',
-                        '<span class="pd-hdr-logo-ph">&#128100;</span>',
-                    '</div>',
-                    '<div class="pd-hdr-text">',
-                        '<span class="pd-hdr-title">Player Detail Dashboard</span>',
-                        '<span class="pd-hdr-sub" id="pd-sub">All Players &mdash; Registration Analytics</span>',
+                    '<div class="pd-hdr-brand">',
+                        '<div class="pd-hdr-logo-wrap" id="pd-hdr-logo">',
+                            '<span class="pd-hdr-logo-ph">&#127942;</span>',
+                        '</div>',
+                        '<div class="pd-hdr-text">',
+                            '<span class="pd-hdr-kicker">Player Detail Dashboard</span>',
+                            '<span class="pd-hdr-tour" id="pd-tour-name">Loading tournament&#8230;</span>',
+                            '<span class="pd-hdr-sub" id="pd-sub">Registration Analytics</span>',
+                        '</div>',
                     '</div>',
                     '<span class="pd-live-badge">&#9679; Live</span>',
                     '<button class="pd-theme-toggle">&#9790; Dark</button>',
@@ -176,6 +179,21 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
 
             // Show Tournament Settings button only when user has a linked tournament
             this.$('.pd-tournament-settings').toggle(!!this._tournamentId);
+
+            var tourName = (d.tournament_name || '').trim();
+            var tourLogo = (d.tournament_logo || '').trim();
+            this.$('#pd-tour-name').text(tourName || 'All Players');
+            this.$('#pd-sub').text('Registration Analytics');
+            if (tourLogo) {
+                this.$('#pd-hdr-logo').html(
+                    '<img class="pd-hdr-logo" src="' + tourLogo + '" alt="" ' +
+                    'onerror="this.style.display=\'none\';' +
+                    'this.nextElementSibling&&(this.nextElementSibling.style.display=\'\');">' +
+                    '<span class="pd-hdr-logo-ph" style="display:none">&#127942;</span>'
+                );
+            } else {
+                this.$('#pd-hdr-logo').html('<span class="pd-hdr-logo-ph">&#127942;</span>');
+            }
 
             var sc = d.state_counts || {};
             this.$('#pd-total').text(this._fmt(d.total));

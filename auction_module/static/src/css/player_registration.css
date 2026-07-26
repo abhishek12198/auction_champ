@@ -1242,7 +1242,7 @@ input[type="file"].reg-file-input { display: none; }
 
     /* --- Compact the fixed header --- */
     .reg-header-card {
-        padding: 12px 16px 34px;
+        padding: 12px 16px 42px;
         clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), 0 100%);
     }
     /* Row 1: app logo full-width; Row 2: name+desc left, tournament logo right */
@@ -1259,7 +1259,32 @@ input[type="file"].reg-file-input { display: none; }
         height: 42px !important;
         font-size: 1.5rem;
     }
-    .reg-header-meta { display: none; }
+    /* Keep date / venue / sport visible on small screens */
+    .reg-header-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+        padding-top: 12px;
+        padding-bottom: 4px;
+    }
+    .reg-meta-item--highlight {
+        flex: 1 1 calc(50% - 8px);
+        min-width: 0;
+        padding: 6px 10px 6px 8px;
+        border-radius: 12px;
+        align-items: flex-start;
+    }
+    .reg-meta-item--highlight .reg-meta-val {
+        font-size: .82rem;
+        white-space: normal;
+        word-break: break-word;
+        line-height: 1.25;
+    }
+    .reg-meta-item:not(.reg-meta-item--highlight) {
+        flex: 1 1 100%;
+        font-size: .72rem;
+    }
 
     /* --- Hide decorative intro strip --- */
     .reg-form-intro { display: none; }
@@ -1701,7 +1726,7 @@ a.reg-trust-card--cta .reg-trust-tx span {
     .reg-consent-note { margin: 4px 16px 0; }
 }
 @media (max-width: 640px) {
-    .reg-header-card { border-radius: 16px 16px 0 0; padding: 16px 16px 34px; }
+    .reg-header-card { border-radius: 16px 16px 0 0; padding: 16px 16px 44px; }
     .reg-hero-copy { margin: 14px 0 4px; }
     .reg-hero-sub { font-size: .85rem; }
     .reg-form-body { border-radius: 16px; }

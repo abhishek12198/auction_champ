@@ -62,6 +62,15 @@
       --w-divider: rgba(107,191,78,0.38);
     }
     </t>
+    <t t-elif="theme == 'blackberry'">
+    :root {
+      --w-primary: #3B82F6; --w-primary-dk: #1E3A8A; --w-accent: #93C5FD;
+      --w-bg: #050a14; --w-bg2: #0d1830; --w-border: rgba(59,130,246,0.28);
+      --w-text: #ffffff; --w-muted: rgba(255,255,255,0.55); --w-glow: rgba(59,130,246,0.42);
+      --w-rule-bg: rgba(59,130,246,0.10); --w-rule-bd: rgba(59,130,246,0.40);
+      --w-divider: rgba(59,130,246,0.40);
+    }
+    </t>
     <t t-elif="theme == 'lemon'">
     :root {
       --w-primary: #E8C200; --w-primary-dk: #B89600; --w-accent: #F5D84A;

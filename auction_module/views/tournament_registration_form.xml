@@ -212,6 +212,7 @@
                         ('strawberry',   'Strawberry',   'swatch-strawberry'),
                         ('cherry',       'Cherry',       'swatch-cherry'),
                         ('pistah',       'Pistah',       'swatch-pistah'),
+                        ('blackberry',   'Blackberry',   'swatch-blackberry'),
                     ]" t-as="theme_opt">
                         <div>
                             <input type="radio" class="tr-theme-option"
@@ -280,17 +281,17 @@
                     </div>
                 </div>
 
-                <!-- Show contact -->
-                <div class="tr-toggle-row" style="margin-bottom:10px;">
-                    <label class="tr-toggle">
-                        <input type="checkbox" name="expose_player_contact" value="1" id="contactToggle"/>
+                <!-- Contact unmask is only available in Tournament Master after privacy agreement -->
+                <div class="tr-toggle-row" style="margin-bottom:10px; opacity:.75;">
+                    <label class="tr-toggle" style="pointer-events:none;">
+                        <input type="checkbox" disabled="disabled" id="contactToggle"/>
                         <span class="tr-toggle-track"/>
                     </label>
                     <div class="tr-toggle-text">
                         <strong>Show Player Contact on Card / Presentation</strong>
                         <span>
-                            When enabled, players' mobile numbers are visible on printed
-                            cards and the live auction display. Keep disabled for privacy.
+                            Disabled here for privacy. After the tournament is created, enable it from
+                            Tournament Master using <em>Agree &amp; Unmask Contacts</em> (requires Privacy Policy acceptance; user and time are recorded).
                         </span>
                     </div>
                 </div>
@@ -690,6 +691,7 @@
         'cherry':       '/auction_module/static/description/player_card_cherry.jpg',
         'pistah':       '/auction_module/static/description/player_card_pistah.jpg',
         'lemon':        '/auction_module/static/description/player_card_lemon.jpg',
+        'blackberry':   '/auction_module/static/description/player_card_blackberry.jpg',
     };
 
     document.querySelectorAll('input[name="player_display_template"]').forEach(function (r) {

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 <template id="payment_marker_template" name="Payment Marker">
-<html lang="en">
+<html lang="en" t-att-class="embed and 'pm-embed' or None">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
@@ -41,6 +41,26 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--tx); min-height: 100vh; transition: background .25s, color .25s; }
 a { text-decoration: none; }
+/* Embed inside Odoo client-action iframe: keep toolbar/filters visible and scroll content */
+html.pm-embed, html.pm-embed body {
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+}
+html.pm-embed body {
+  display: flex;
+  flex-direction: column;
+}
+html.pm-embed .pm-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+html.pm-embed .pm-sticky-header { top: 0; }
+html.pm-embed .pm-nav { flex-shrink: 0; }
+html.pm-embed .pm-banner { flex-shrink: 0; }
+html.pm-embed .pm-sticky-header { flex-shrink: 0; position: relative; top: auto; }
 
 /* ── NAV ── */
 .pm-nav { background: var(--navy); color: #fff; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 200; box-shadow: 0 3px 12px rgba(0,0,0,.28); }
@@ -307,8 +327,6 @@ a { text-decoration: none; }
 <!-- ── NAV ─────────────────────────────────────────── -->
 <nav class="pm-nav">
   <div class="pm-nav-brand">
-    <img class="pm-app-logo-img" src="/auction_module/static/img/logo.svg" alt="AuctionChamp"/>
-    <div class="pm-nav-divider"></div>
     <t t-if="tournament and tournament.logo">
       <img class="pm-nav-logo" t-attf-src="/web/image/auction.tournament/#{tournament.id}/logo" alt="Logo"/>
     </t>
@@ -330,7 +348,9 @@ a { text-decoration: none; }
         <div class="pm-export-item" id="pm-export-pdf"><span class="pm-export-item-icon">&#128438;</span> Export PDF</div>
       </div>
     </div>
-    <a href="/web" class="pm-back-btn">&#8592; Back</a>
+    <t t-if="not embed">
+      <a href="/web" class="pm-back-btn">&#8592; Back</a>
+    </t>
   </div>
 </nav>
 
@@ -1383,13 +1403,32 @@ a { text-decoration: none; }
 
     lbTitle.textContent = '\uD83E\uDDFE ' + (playerName ? playerName + ' \u2014 ' : '') + 'Payment Proof';
 
-    if (!p || !p.proof_data) {
+    if (!p || !p.proof_att_id) {
       lbWrap.innerHTML = '<p style="color:var(--tx2);padding:24px;text-align:center;font-size:.95rem">No screenshot uploaded for this player.</p>';
-    } else {
-      lbWrap.innerHTML = '<img src="' + p.proof_data + '" style="max-width:100%;max-height:calc(90vh - 80px);object-fit:contain;border-radius:6px;display:block;margin:auto" alt="Payment proof"/>';
+      lbEl.classList.add('open');
+      return;
     }
 
+    /* Prefer in-memory data URI (just-uploaded); otherwise lazy-load from server. */
+    if (p.proof_data) {
+      lbWrap.innerHTML = '<img src="' + p.proof_data + '" style="max-width:100%;max-height:calc(90vh - 80px);object-fit:contain;border-radius:6px;display:block;margin:auto" alt="Payment proof"/>';
+      lbEl.classList.add('open');
+      return;
+    }
+
+    lbWrap.innerHTML = '<p style="color:var(--tx2);padding:24px;text-align:center;font-size:.95rem">Loading screenshot\u2026</p>';
     lbEl.classList.add('open');
+    var img = new Image();
+    img.alt = 'Payment proof';
+    img.style.cssText = 'max-width:100%;max-height:calc(90vh - 80px);object-fit:contain;border-radius:6px;display:block;margin:auto';
+    img.onload = function () {
+      lbWrap.innerHTML = '';
+      lbWrap.appendChild(img);
+    };
+    img.onerror = function () {
+      lbWrap.innerHTML = '<p style="color:var(--tx2);padding:24px;text-align:center;font-size:.95rem">Could not load payment proof.</p>';
+    };
+    img.src = PM_PROOF_BASE + pid + '?t=' + Date.now();
   }
 
   function closeProof() {

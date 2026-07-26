@@ -65,6 +65,16 @@
       --r-draft: #86efac; --r-unsold: #fca5a5; --r-sold: #4ade80;
     }
     </t>
+    <t t-elif="theme == 'blackberry'">
+    :root {
+      --r-primary: #3B82F6; --r-primary-dk: #1E3A8A; --r-accent: #93C5FD;
+      --r-bg: #050a14; --r-bg2: #0d1830; --r-border: rgba(59,130,246,0.28);
+      --r-text: #ffffff; --r-muted: rgba(255,255,255,0.55); --r-glow: rgba(59,130,246,0.42);
+      --r-draft: #93c5fd; --r-unsold: #fca5a5; --r-sold: #60a5fa;
+      --r-auction: #93C5FD; --r-danger: #ef4444; --r-ok: #60a5fa;
+      --r-surface: rgba(59,130,246,0.08); --r-radius: 16px;
+    }
+    </t>
     <t t-elif="theme == 'lemon'">
     :root {
       --r-primary: #E8C200; --r-primary-dk: #B89600; --r-accent: #F5D84A;

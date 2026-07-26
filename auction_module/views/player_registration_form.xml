@@ -64,6 +64,21 @@
                 --reg-section-title:#4a0000;
             }
         </t>
+        <t t-elif="theme == 'blackberry'">
+            :root {
+                --reg-primary:      #050a14;
+                --reg-primary-mid:  #1e3a8a;
+                --reg-accent:       #3b82f6;
+                --reg-accent-rgb:   59, 130, 246;
+                --reg-accent-glow:  rgba(59,130,246,.40);
+                --reg-accent-light: rgba(59,130,246,.10);
+                --reg-btn-text:     #fff;
+                --reg-bg-from:      #dbeafe;
+                --reg-bg-to:        #93c5fd;
+                --reg-ghost-num:    rgba(5,10,20,.05);
+                --reg-section-title:#0f285f;
+            }
+        </t>
         <t t-elif="theme == 'pistah'">
             :root {
                 --reg-primary:      #0a3d12;
