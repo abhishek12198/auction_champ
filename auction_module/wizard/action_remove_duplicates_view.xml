@@ -97,6 +97,7 @@
                                attrs="{'invisible': [('serial_match_count', '=', 0)]}"
                                style="margin-top:0.75rem;">
                             <tree create="0" delete="0" edit="0">
+                                <field name="player_id" invisible="1"/>
                                 <field name="player_photo" string="Photo" widget="image"
                                        options="{'size': [80, 80]}"/>
                                 <field name="player_sl_no" string="Sl No"/>

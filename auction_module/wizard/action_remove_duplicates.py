@@ -64,7 +64,9 @@ class AuctionRemoveSerialLine(models.TransientModel):
     _order = 'player_sl_no, id'
 
     wizard_id = fields.Many2one('auction.remove.duplicates.wizard', ondelete='cascade')
-    player_id = fields.Many2one('auction.team.player', string='Player', readonly=True, required=True)
+    player_id = fields.Many2one(
+        'auction.team.player', string='Player', readonly=True, required=False,
+    )
     player_sl_no = fields.Integer(related='player_id.sl_no', string='Sl No', store=False)
     player_photo = fields.Binary(related='player_id.photo', string='Photo', store=False)
     player_name = fields.Char(compute='_compute_player_display', string='Name')
@@ -310,12 +312,15 @@ class AuctionRemoveDuplicatesWizard(models.TransientModel):
     # ── Remove by serial numbers (draft only) + resequence all remaining ─
     def action_remove_by_serial(self):
         self.ensure_one()
-        players = self.serial_line_ids.mapped('player_id').filtered(
+        # Always resolve from serial_nos (source of truth). Do not rely on
+        # transient o2m lines, which the web client may recreate without player_id.
+        players, _missing, nos = self._find_draft_players_by_serial()
+        if not nos:
+            raise UserError('Enter at least one serial number.')
+
+        players = players.filtered(
             lambda p: p.exists() and p.state == 'draft' and p.tournament_id == self.tournament_id
         )
-        # Re-resolve from serial field in case lines were not persisted
-        if not players:
-            players, _missing, _nos = self._find_draft_players_by_serial()
 
         if not players:
             raise UserError(
