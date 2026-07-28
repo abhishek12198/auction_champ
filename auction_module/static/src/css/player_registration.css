@@ -1850,3 +1850,226 @@ a.reg-trust-card--cta .reg-trust-tx span {
     }
     .reg-crop-tool { width: 50px; height: 46px; font-size: 1.35rem; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Razorpay await-payment panel — full header width, centered card
+   ═══════════════════════════════════════════════════════════════════ */
+.reg-layout--success .reg-form-body:has(.ac-rzp-await),
+.reg-form-body:has(.ac-rzp-await) {
+    width: 100%;
+    max-width: none;
+}
+
+.ac-rzp-await {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 36px 28px 40px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.ac-rzp-await-inner {
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+}
+
+.ac-rzp-await-icon {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    background: linear-gradient(145deg, rgba(var(--reg-accent-rgb), .22), rgba(var(--reg-accent-rgb), .08));
+    border: 1.5px solid rgba(var(--reg-accent-rgb), .45);
+    box-shadow: 0 10px 28px rgba(var(--reg-accent-rgb), .18);
+}
+
+.ac-rzp-await-eyebrow {
+    margin: 0 0 6px;
+    font-family: 'Barlow Condensed', 'Poppins', sans-serif;
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: rgba(var(--reg-accent-rgb), 1);
+}
+
+.ac-rzp-await-title {
+    margin: 0;
+    font-family: 'Bebas Neue', 'Oswald', sans-serif;
+    letter-spacing: 2px;
+    font-size: clamp(1.9rem, 4vw, 2.45rem);
+    line-height: 1.1;
+    color: var(--reg-section-title, #111d2c);
+}
+
+.ac-rzp-await-copy {
+    max-width: 460px;
+    margin: 12px auto 0;
+    line-height: 1.7;
+    font-size: .95rem;
+    opacity: .88;
+}
+
+.ac-rzp-await-tourn {
+    margin: 14px 0 0;
+    font-size: .82rem;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    opacity: .58;
+}
+
+.ac-rzp-await-card {
+    margin: 22px auto 0;
+    width: 100%;
+    max-width: 440px;
+    padding: 22px 22px 20px;
+    border-radius: 18px;
+    border: 1.5px solid rgba(var(--reg-accent-rgb), .38);
+    background:
+        radial-gradient(120% 90% at 50% -20%, rgba(var(--reg-accent-rgb), .16) 0%, transparent 55%),
+        linear-gradient(180deg, rgba(255,255,255,.92) 0%, rgba(var(--reg-accent-rgb), .06) 100%);
+    box-shadow: 0 16px 40px rgba(0,0,0,.12);
+    text-align: center;
+}
+
+.ac-rzp-await-amount {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 18px;
+    padding-bottom: 16px;
+    border-bottom: 1px dashed rgba(var(--reg-accent-rgb), .35);
+}
+
+.ac-rzp-await-amount-label {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: rgba(var(--reg-accent-rgb), .95);
+}
+
+.ac-rzp-await-amount-value {
+    font-family: 'Bebas Neue', 'Oswald', sans-serif;
+    font-size: 2.35rem;
+    letter-spacing: 1px;
+    line-height: 1;
+    color: var(--reg-section-title, #111d2c);
+}
+
+.ac-rzp-pay-btn {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 54px;
+    padding: 14px 22px;
+    border: 0;
+    border-radius: 14px;
+    cursor: pointer;
+    font-family: 'Barlow Condensed', 'Poppins', sans-serif;
+    font-size: 1.12rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #fff;
+    background: linear-gradient(135deg, #0f9d58 0%, #16a34a 45%, #22c55e 100%);
+    box-shadow:
+        0 10px 28px rgba(22, 163, 74, .38),
+        inset 0 1px 0 rgba(255,255,255,.28);
+    transition: transform .15s ease, box-shadow .2s ease, filter .2s ease;
+}
+
+.ac-rzp-pay-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+    box-shadow:
+        0 14px 32px rgba(22, 163, 74, .46),
+        inset 0 1px 0 rgba(255,255,255,.32);
+}
+
+.ac-rzp-pay-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.ac-rzp-pay-btn:disabled {
+    opacity: .72;
+    cursor: wait;
+    transform: none;
+}
+
+.ac-rzp-pay-btn-ic {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.ac-rzp-await-err {
+    margin: 12px 0 0;
+    color: #e53935;
+    font-size: .9rem;
+    line-height: 1.4;
+}
+
+.ac-rzp-await-hint {
+    margin: 14px 0 0;
+    font-size: .82rem;
+    line-height: 1.5;
+    opacity: .72;
+}
+
+.ac-rzp-await-cancel {
+    display: inline-block;
+    margin-top: 16px;
+    font-size: .86rem;
+    font-weight: 600;
+    color: inherit;
+    opacity: .72;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.ac-rzp-await-cancel:hover {
+    opacity: 1;
+    color: var(--reg-accent);
+}
+
+.ac-rzp-optional {
+    margin: 1.5rem auto 0;
+    max-width: 440px;
+    padding: 1.15rem 1.25rem 1.2rem;
+    border-radius: 16px;
+    border: 1.5px solid rgba(var(--reg-accent-rgb), .35);
+    background: rgba(var(--reg-accent-rgb), .08);
+    text-align: center;
+}
+
+.ac-rzp-optional-title {
+    margin: 0 0 .9rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+@media (max-width: 640px) {
+    .ac-rzp-await {
+        padding: 24px 14px 28px;
+    }
+    .ac-rzp-await-card {
+        padding: 18px 16px 16px;
+    }
+    .ac-rzp-await-amount-value {
+        font-size: 2rem;
+    }
+    .ac-rzp-pay-btn {
+        min-height: 50px;
+        font-size: 1.02rem;
+    }
+}

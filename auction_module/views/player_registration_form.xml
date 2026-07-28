@@ -101,6 +101,7 @@
 </head>
 <body class="reg-page">
 <div class="reg-wrapper">
+    <t t-set="hide_reg_form" t-value="success or registration_closed or razorpay_await_payment"/>
 
     <!-- ════════════════════════════════════════
          HEADER  — dark, diagonal bottom edge
@@ -181,7 +182,7 @@
     <!-- ════════════════════════════════════════
          TRUST BAR — premium reassurance strip
          ════════════════════════════════════════ -->
-    <t t-if="not success and not registration_closed">
+    <t t-if="not hide_reg_form">
     <div class="reg-trustbar">
         <a href="#reg-form-start"
            class="reg-trust-card reg-trust-card--cta"
@@ -216,11 +217,11 @@
     <!-- ════════════════════════════════════════
          LAYOUT — main form + sticky benefits sidebar
          ════════════════════════════════════════ -->
-    <div t-attf-class="reg-layout{{' reg-layout--success' if (success or registration_closed) else ''}}">
+    <div t-attf-class="reg-layout{{' reg-layout--success' if (success or registration_closed or razorpay_await_payment) else ''}}">
     <div class="reg-main">
 
     <!-- ── Mobile-only poster (shown above form on small screens) ── -->
-    <t t-if="not success and not registration_closed and tournament and tournament.poster_image">
+    <t t-if="not hide_reg_form and tournament and tournament.poster_image">
     <div class="reg-poster-mobile">
         <img t-att-src="'data:image/png;base64,' + tournament.poster_image.decode('utf-8')"
              alt="Tournament Poster"
@@ -234,7 +235,7 @@
     <div class="reg-form-body" id="reg-form-start">
 
         <!-- Intro strip — hidden after success or when closed -->
-        <t t-if="not success and not registration_closed">
+        <t t-if="not hide_reg_form">
         <div class="reg-form-intro">
             <div class="reg-form-intro-badge">
                 <span>Registration</span>
@@ -379,7 +380,7 @@
         </t>
 
         <!-- ── Main form (hidden after success or when closed) ── -->
-        <t t-if="not success and not registration_closed">
+        <t t-if="not hide_reg_form">
 
         <!-- ── Slots capacity card ── -->
         <t t-if="max_registrations and max_registrations > 0">
@@ -989,7 +990,7 @@
     </div><!-- /reg-main -->
 
     <!-- ── STICKY BENEFITS SIDEBAR ── -->
-    <t t-if="not success and not registration_closed">
+    <t t-if="not hide_reg_form">
     <aside class="reg-aside">
         <div class="reg-aside-inner">
 

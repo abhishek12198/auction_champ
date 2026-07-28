@@ -13,11 +13,13 @@
                 ════════════════════════════════════════════════════════ -->
                 <div attrs="{'invisible': [('step', '!=', 'configure')]}">
 
-                    <div style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);
+                    <!-- Duplicate mode header -->
+                    <div attrs="{'invisible': [('delete_by_serial', '=', True)]}"
+                         style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);
                                 border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;
                                 border-left:4px solid #e94560;">
                         <h3 style="margin:0 0 .3rem;color:#fff;font-size:1.15rem;font-weight:700;letter-spacing:.03em;">
-                            🔍 Remove Duplicate Players
+                            Remove Duplicate Players
                         </h3>
                         <p style="margin:0;color:rgba(255,255,255,.65);font-size:.85rem;line-height:1.5;">
                             Select how duplicates should be detected and which player states to include.
@@ -25,11 +27,31 @@
                         </p>
                     </div>
 
-                    <group string="Tournament">
+                    <!-- Serial mode header -->
+                    <div attrs="{'invisible': [('delete_by_serial', '=', False)]}"
+                         style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);
+                                border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;
+                                border-left:4px solid #e94560;">
+                        <h3 style="margin:0 0 .3rem;color:#fff;font-size:1.15rem;font-weight:700;letter-spacing:.03em;">
+                            Delete by Serial Number
+                        </h3>
+                        <p style="margin:0;color:rgba(255,255,255,.65);font-size:.85rem;line-height:1.5;">
+                            Enter draft player serial numbers (comma-separated). Matching players appear below.
+                            Only Draft players can be removed; other states are ignored.
+                        </p>
+                    </div>
+
+                    <group>
                         <field name="tournament_id" readonly="1" force_save="1"/>
+                        <field name="tournament_type" invisible="1"/>
+                        <field name="delete_by_serial"
+                               widget="boolean_toggle"
+                               string="Delete by Serial Number?"/>
                     </group>
 
-                    <group string="Match Criteria (select one or more)">
+                    <!-- Duplicate detection options (hidden in serial mode) -->
+                    <group string="Match Criteria (select one or more)"
+                           attrs="{'invisible': [('delete_by_serial', '=', True)]}">
                         <group>
                             <field name="match_by_name"
                                    widget="boolean_toggle"
@@ -43,7 +65,8 @@
                         </group>
                     </group>
 
-                    <group string="Player States to Check">
+                    <group string="Player States to Check"
+                           attrs="{'invisible': [('delete_by_serial', '=', True)]}">
                         <group>
                             <field name="include_draft"
                                    widget="boolean_toggle"
@@ -54,6 +77,39 @@
                         </group>
                     </group>
 
+                    <!-- Serial delete UI (only when toggle is on) -->
+                    <div attrs="{'invisible': [('delete_by_serial', '=', False)]}">
+                        <div class="oe_title" style="margin-bottom:0.5rem;">
+                            <label for="serial_nos" string="Serial Numbers"
+                                   style="font-weight:600;font-size:0.95rem;"/>
+                        </div>
+                        <field name="serial_nos"
+                               nolabel="1"
+                               placeholder="e.g. 12, 15, 18, 22"
+                               style="width:100%;min-height:5.5rem;font-size:1.25rem;line-height:1.5;
+                                      padding:0.85rem 1rem;border:1.5px solid #cbd5e1;border-radius:10px;
+                                      letter-spacing:0.04em;"/>
+                        <field name="serial_info" nolabel="1" readonly="1"
+                               attrs="{'invisible': [('serial_info', '=', False)]}"
+                               style="margin-top:0.4rem;color:#b45309;font-size:0.9rem;"/>
+
+                        <field name="serial_line_ids" nolabel="1"
+                               attrs="{'invisible': [('serial_match_count', '=', 0)]}"
+                               style="margin-top:0.75rem;">
+                            <tree create="0" delete="0" edit="0">
+                                <field name="player_photo" string="Photo" widget="image"
+                                       options="{'size': [80, 80]}"/>
+                                <field name="player_sl_no" string="Sl No"/>
+                                <field name="player_name" string="Name"/>
+                                <field name="player_role" string="Role"
+                                       attrs="{'column_invisible': [('parent.tournament_type', '=', 'football')]}"/>
+                                <field name="player_position" string="Position"
+                                       attrs="{'column_invisible': [('parent.tournament_type', '!=', 'football')]}"/>
+                                <field name="player_contact" string="Mobile" optional="show"/>
+                            </tree>
+                        </field>
+                    </div>
+
                 </div>
 
                 <!-- ═══════════════════════════════════════════════════════
@@ -61,7 +117,6 @@
                 ════════════════════════════════════════════════════════ -->
                 <div attrs="{'invisible': [('step', '!=', 'preview')]}">
 
-                    <!-- Summary banner -->
                     <div attrs="{'invisible': [('duplicate_count', '=', 0)]}"
                          style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);
                                 border-radius:12px;padding:1rem 1.5rem;margin-bottom:1.1rem;
@@ -83,7 +138,6 @@
                         </div>
                     </div>
 
-                    <!-- No duplicates found banner -->
                     <div attrs="{'invisible': [('duplicate_count', '!=', 0)]}"
                          style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:12px;
                                 padding:1.25rem 1.5rem;margin-bottom:1.1rem;text-align:center;">
@@ -94,7 +148,6 @@
                         </div>
                     </div>
 
-                    <!-- Duplicate lines -->
                     <field name="line_ids" nolabel="1"
                            attrs="{'invisible': [('duplicate_count', '=', 0)]}">
                         <tree editable="bottom" decoration-danger="should_remove == True"
@@ -111,34 +164,35 @@
 
                 </div>
 
-                <!-- Invisible fields needed for attrs -->
                 <field name="step" invisible="1"/>
                 <field name="duplicate_count" invisible="1"/>
                 <field name="selected_count" invisible="1"/>
+                <field name="serial_match_count" invisible="1"/>
 
-                <!-- ── Footer ── -->
                 <footer>
-                    <!-- Step 1 footer -->
+                    <!-- Duplicate mode buttons -->
                     <button string="Find Duplicates"
                             type="object"
                             name="action_find_duplicates"
                             class="btn-primary"
-                            attrs="{'invisible': [('step', '!=', 'configure')]}"/>
-                    <button string="🔢 Resequence Players"
+                            attrs="{'invisible': ['|', ('step', '!=', 'configure'), ('delete_by_serial', '=', True)]}"/>
+                    <button string="Resequence Players"
                             type="object"
                             name="action_resequence_only"
                             class="btn-secondary"
-                            attrs="{'invisible': [('step', '!=', 'configure')]}"
+                            attrs="{'invisible': ['|', ('step', '!=', 'configure'), ('delete_by_serial', '=', True)]}"
                             confirm="This will renumber all players in the selected states from 1 based on their current order. Continue?"/>
-                    <button string="🔄 Reset Auction Bids"
+
+                    <!-- Serial mode button -->
+                    <button string="Remove Serials &amp; Resequence"
                             type="object"
-                            name="action_reset_auction_bids"
-                            class="btn-warning"
-                            attrs="{'invisible': [('step', '!=', 'configure')]}"
-                            confirm="This will reset base price, live bid price and live bid team for ALL players currently In Auction. This cannot be undone. Continue?"/>
+                            name="action_remove_by_serial"
+                            class="btn-danger"
+                            attrs="{'invisible': ['|', '|', ('step', '!=', 'configure'), ('delete_by_serial', '=', False), ('serial_match_count', '=', 0)]}"
+                            confirm="This will permanently delete the listed draft players and renumber all remaining players from 1. Continue?"/>
 
                     <!-- Step 2 footer -->
-                    <button string="⬅ Back"
+                    <button string="Back"
                             type="object"
                             name="action_back"
                             class="btn-secondary"
@@ -157,7 +211,6 @@
         </field>
     </record>
 
-    <!-- Action to open the wizard -->
     <record id="action_remove_duplicates_wizard" model="ir.actions.act_window">
         <field name="name">Remove Duplicate Players</field>
         <field name="res_model">auction.remove.duplicates.wizard</field>

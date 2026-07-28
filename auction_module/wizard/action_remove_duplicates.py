@@ -37,6 +37,7 @@
 ##############################################################################
 
 import hashlib
+import re
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError
@@ -57,11 +58,42 @@ class AuctionRemoveDuplicateLine(models.TransientModel):
     should_remove = fields.Boolean(string='Remove?', default=True)
 
 
+class AuctionRemoveSerialLine(models.TransientModel):
+    _name = 'auction.remove.serial.line'
+    _description = 'Serial Remove Player Line'
+    _order = 'player_sl_no, id'
+
+    wizard_id = fields.Many2one('auction.remove.duplicates.wizard', ondelete='cascade')
+    player_id = fields.Many2one('auction.team.player', string='Player', readonly=True, required=True)
+    player_sl_no = fields.Integer(related='player_id.sl_no', string='Sl No', store=False)
+    player_photo = fields.Binary(related='player_id.photo', string='Photo', store=False)
+    player_name = fields.Char(compute='_compute_player_display', string='Name')
+    player_contact = fields.Char(related='player_id.contact', string='Mobile', store=False)
+    player_role = fields.Char(related='player_id.role', string='Role', store=False)
+    player_position = fields.Char(compute='_compute_player_display', string='Position')
+    tournament_type = fields.Selection(
+        related='player_id.tournament_type', string='Sport', store=False,
+    )
+
+    @api.depends(
+        'player_id', 'player_id.name',
+        'player_id.dominant_position_id', 'player_id.dominant_position_id.name',
+    )
+    def _compute_player_display(self):
+        for line in self:
+            line.player_name = (line.player_id.name or '').upper()
+            pos = line.player_id.dominant_position_id
+            line.player_position = (pos.name or pos.code or '') if pos else ''
+
+
 class AuctionRemoveDuplicatesWizard(models.TransientModel):
     _name = 'auction.remove.duplicates.wizard'
     _description = 'Remove Duplicate Players Wizard'
 
     tournament_id = fields.Many2one('auction.tournament', string='Tournament', required=True)
+    tournament_type = fields.Selection(
+        related='tournament_id.tournament_type', string='Sport', readonly=True,
+    )
 
     # ── Match criteria ────────────────────────────────────────────────────
     match_by_name = fields.Boolean('Same Name', default=True)
@@ -71,6 +103,22 @@ class AuctionRemoveDuplicatesWizard(models.TransientModel):
     # ── Player states to include ──────────────────────────────────────────
     include_draft = fields.Boolean('Draft Players', default=True)
     include_auction = fields.Boolean('In Auction Players', default=True)
+
+    # ── Remove by serial (draft only) ─────────────────────────────────────
+    delete_by_serial = fields.Boolean(
+        string='Delete by Serial Number?',
+        default=False,
+        help='When enabled, enter draft player serial numbers to delete and resequence.',
+    )
+    serial_nos = fields.Text(
+        string='Serial Numbers',
+        help='Comma-separated player serial numbers (sl_no). Only draft players are matched.',
+    )
+    serial_line_ids = fields.One2many(
+        'auction.remove.serial.line', 'wizard_id', string='Matched Draft Players',
+    )
+    serial_match_count = fields.Integer(compute='_compute_serial_counts', store=False)
+    serial_info = fields.Char(string='Serial Info', readonly=True)
 
     # ── Wizard step ───────────────────────────────────────────────────────
     step = fields.Selection(
@@ -87,6 +135,67 @@ class AuctionRemoveDuplicatesWizard(models.TransientModel):
         for rec in self:
             rec.duplicate_count = len(rec.line_ids)
             rec.selected_count = len(rec.line_ids.filtered('should_remove'))
+
+    @api.depends('serial_line_ids')
+    def _compute_serial_counts(self):
+        for rec in self:
+            rec.serial_match_count = len(rec.serial_line_ids)
+
+    def _parse_serial_nos(self):
+        """Parse comma/space/semicolon separated serial numbers into unique ints."""
+        self.ensure_one()
+        raw = self.serial_nos or ''
+        parts = re.split(r'[,;\s]+', raw.strip())
+        nos = []
+        seen = set()
+        for part in parts:
+            if not part:
+                continue
+            try:
+                num = int(float(part))
+            except (TypeError, ValueError):
+                continue
+            if num not in seen:
+                seen.add(num)
+                nos.append(num)
+        return nos
+
+    def _find_draft_players_by_serial(self):
+        """Return draft players matching entered serials, plus missing serial list."""
+        self.ensure_one()
+        nos = self._parse_serial_nos()
+        if not nos or not self.tournament_id:
+            return self.env['auction.team.player'], [], nos
+
+        players = self.env['auction.team.player'].search(
+            [
+                ('tournament_id', '=', self.tournament_id.id),
+                ('state', '=', 'draft'),
+                ('sl_no', 'in', nos),
+            ],
+            order='sl_no asc, id asc',
+        )
+        found = set(players.mapped('sl_no'))
+        missing = [n for n in nos if n not in found]
+        return players, missing, nos
+
+    @api.onchange('serial_nos', 'tournament_id')
+    def _onchange_serial_nos(self):
+        players, missing, nos = self._find_draft_players_by_serial()
+        commands = [(5, 0, 0)]
+        for player in players:
+            commands.append((0, 0, {'player_id': player.id}))
+        self.serial_line_ids = commands
+
+        if not nos:
+            self.serial_info = False
+        elif missing:
+            self.serial_info = (
+                'No draft player for serial(s): %s '
+                '(only Draft players are listed; other states are ignored).'
+            ) % ', '.join(str(n) for n in missing)
+        else:
+            self.serial_info = '%d draft player(s) matched.' % len(players)
 
     # ── Step 1 → Step 2: scan for duplicates ─────────────────────────────
     def action_find_duplicates(self):
@@ -106,12 +215,9 @@ class AuctionRemoveDuplicatesWizard(models.TransientModel):
             order='sl_no asc, id asc',
         )
 
-        # Track first-seen canonical record for each key
-        seen_name = {}     # normalised name  → player
-        seen_contact = {}  # stripped contact → player
-        seen_photo = {}    # md5 hex          → player
-
-        # player_id → {keep_player, set_of_reasons}
+        seen_name = {}
+        seen_contact = {}
+        seen_photo = {}
         to_remove = {}
 
         for player in players:
@@ -150,7 +256,6 @@ class AuctionRemoveDuplicatesWizard(models.TransientModel):
                 else:
                     to_remove[player.id]['reasons'].update(reasons)
 
-        # Rebuild lines
         self.line_ids.unlink()
         lines = [
             (0, 0, {
@@ -202,24 +307,46 @@ class AuctionRemoveDuplicatesWizard(models.TransientModel):
         )
         return {'type': 'ir.actions.act_window_close'}
 
-    # ── Reset base price + live bid for all In-Auction players ───────────
-    def action_reset_auction_bids(self):
-        players = self.env['auction.team.player'].search([
-            ('tournament_id', '=', self.tournament_id.id),
-            ('state', '=', 'auction'),
-        ])
+    # ── Remove by serial numbers (draft only) + resequence all remaining ─
+    def action_remove_by_serial(self):
+        self.ensure_one()
+        players = self.serial_line_ids.mapped('player_id').filtered(
+            lambda p: p.exists() and p.state == 'draft' and p.tournament_id == self.tournament_id
+        )
+        # Re-resolve from serial field in case lines were not persisted
         if not players:
-            raise UserError('No players are currently In Auction for this tournament.')
+            players, _missing, _nos = self._find_draft_players_by_serial()
 
-        players.write({
-            'base_price': 0,
-            'current_bid': 0,
-            'current_bid_team_id': False,
-        })
+        if not players:
+            raise UserError(
+                'No draft players matched the given serial numbers. '
+                'Only players in Draft state can be removed this way.'
+            )
+
+        # Safety: never delete non-draft
+        non_draft = players.filtered(lambda p: p.state != 'draft')
+        if non_draft:
+            raise UserError(
+                'Cannot remove players that are not in Draft state: %s' % (
+                    ', '.join('%s (#%s)' % (p.name, p.sl_no) for p in non_draft)
+                )
+            )
+
+        count = len(players)
+        players.unlink()
+
+        remaining = self.env['auction.team.player'].search(
+            [('tournament_id', '=', self.tournament_id.id)],
+            order='sl_no asc, id asc',
+        )
+        for i, player in enumerate(remaining, start=1):
+            if player.sl_no != i:
+                player.sl_no = i
 
         self.env.user.notify_success(
-            message='%d In-Auction player(s) reset: base price, live bid price and live bid team cleared.' % len(players),
-            title='Auction Bids Reset ✓',
+            message='%d draft player(s) removed. Sequence numbers reissued 1 – %d.' % (
+                count, len(remaining)),
+            title='Players Removed ✓',
         )
         return {'type': 'ir.actions.act_window_close'}
 
@@ -244,7 +371,6 @@ class AuctionRemoveDuplicatesWizard(models.TransientModel):
         count = len(players_to_delete)
         players_to_delete.unlink()
 
-        # Resequence remaining players in this tournament (all states, ordered by current sl_no)
         remaining = self.env['auction.team.player'].search(
             [('tournament_id', '=', self.tournament_id.id)],
             order='sl_no asc, id asc',
