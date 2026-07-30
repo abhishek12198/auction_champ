@@ -281,9 +281,21 @@ class Auction(http.Controller):
         return hashlib.sha256(raw.encode('utf-8')).hexdigest()[:40]
 
     def _live_board_access_granted(self, tournament):
-        """True after first successful unlock (session and/or remembered cookie)."""
+        """True when the board is open, or after a successful unlock (session/cookie)."""
         if not tournament:
             return False
+        # Fresh DB read — avoid stale cache after organiser toggles protection
+        try:
+            tournament.invalidate_cache(['live_board_code_protected'])
+        except Exception:
+            pass
+        protected = bool(
+            tournament.sudo().read(['live_board_code_protected'])[0].get(
+                'live_board_code_protected', True
+            )
+        )
+        if not protected:
+            return True
         key = self._live_board_session_key(tournament.id)
         if request.session.get(key):
             return True
@@ -3335,8 +3347,8 @@ class Auction(http.Controller):
                     'db_name': db_name,
                 }, lazy=False)
             else:
-                # Public viewers must unlock with tournament unique code first.
-                # Always required on this public URL (no logged-in staff bypass).
+                # Optional Tournament Code gate (see live_board_code_protected).
+                # When protected: unlock once, then remember via session + cookie.
                 if not self._live_board_access_granted(tournament):
                     entered = (kw.get('tournament_code') or '').strip()
                     if request.httprequest.method == 'POST':
@@ -5110,8 +5122,8 @@ class Auction(http.Controller):
         )
 
 
-def _pj_player_photo_url(db_name, player):
-    """Public photo URL with write_date cache-buster + projector-sized variant."""
+def _pj_player_photo_url(db_name, player, projector_size=True):
+    """Public photo URL with write_date cache-buster (+ optional projector resize)."""
     if not player or not player.photo:
         return ''
     ver = ''
@@ -5122,10 +5134,13 @@ def _pj_player_photo_url(db_name, player):
             ver = str(player.write_date).replace(' ', 'T')
     else:
         ver = str(player.id)
-    # sz=pj → smaller JPEG from the public image route (faster stage display)
-    return '/%s/auction/public/image/auction.team.player/%d/photo?v=%s&sz=pj' % (
+    url = '/%s/auction/public/image/auction.team.player/%d/photo?v=%s' % (
         db_name, player.id, ver,
     )
+    # sz=pj → smaller JPEG for the live stage card; remaining/squad use full photo
+    if projector_size:
+        url += '&sz=pj'
+    return url
 
 
 def _pj_progress(tournament, current_player=None):
@@ -5507,7 +5522,10 @@ def _pj_remaining_players(tournament, db_name):
 
     out = []
     for p in players:
-        mystery_hidden = bool(p.tier_id and p.tier_id.mystery and not p.mystery_revealed)
+        mystery_hidden = bool(
+            (getattr(p, 'is_mystery', False) or (p.tier_id and p.tier_id.mystery))
+            and not p.mystery_revealed
+        )
         fb = _football_display_payload(p)
         if mystery_hidden:
             photo_url = ''
@@ -5526,7 +5544,8 @@ def _pj_remaining_players(tournament, db_name):
             other_attributes = []
             use_other_attributes = False
         else:
-            photo_url = _pj_player_photo_url(db_name, p)
+            # Full photo (no sz=pj) so remaining-player cards stay sharp/reliable
+            photo_url = _pj_player_photo_url(db_name, p, projector_size=False)
             name = p.name or ''
             sl_no = int(p.sl_no or 0)
             tier_name = (p.tier_id.name if p.tier_id else '') or ''

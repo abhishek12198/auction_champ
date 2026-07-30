@@ -65,6 +65,7 @@
                         <field name="slug" invisible="1"/>
                         <field name="registration_open" invisible="1"/>
                         <field name="live_board_active" invisible="1"/>
+                        <field name="live_board_code_protected" invisible="1"/>
                         <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
                                 attrs="{'invisible': [('active', '=', True)]}"/>
 
@@ -114,6 +115,29 @@
                                 <div class="o_stat_info">
                                     <span class="o_stat_text text-danger">Live Board</span>
                                     <span class="o_stat_text text-danger" style="font-size:10px">STOPPED &#8212; Click to Start</span>
+                                </div>
+                            </button>
+                            <!-- Live Board code protection toggle (saves immediately) -->
+                            <button name="action_toggle_live_board_code_protected"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    attrs="{'invisible': [('live_board_code_protected', '=', False)]}"
+                                    icon="fa-lock"
+                                    help="Live Board requires Tournament Code — click to make the URL public">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text text-warning">Board Access</span>
+                                    <span class="o_stat_text text-warning" style="font-size:10px">CODE LOCKED &#8212; Click to Open</span>
+                                </div>
+                            </button>
+                            <button name="action_toggle_live_board_code_protected"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    attrs="{'invisible': [('live_board_code_protected', '=', True)]}"
+                                    icon="fa-unlock"
+                                    help="Live Board is public (no code) — click to require Tournament Code">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text text-success">Board Access</span>
+                                    <span class="o_stat_text text-success" style="font-size:10px">PUBLIC &#8212; Click to Lock</span>
                                 </div>
                             </button>
                             <!-- Registered player count stat button -->
@@ -532,6 +556,27 @@
                                         Set Auction Rules for this tournament before the Projector URL
                                         and Player Console become available.
                                     </div>
+                                </div>
+
+                                <!-- ── Public Live Board access ── -->
+                                <div class="o_at_presentation_section">
+                                    <separator string="Public Live Board"/>
+                                    <group col="2">
+                                        <group string="Access Control">
+                                            <field name="live_board_code_protected"
+                                                   string="Require Tournament Code"/>
+                                        </group>
+                                        <group string="How it works">
+                                            <div class="o_at_presentation_help" colspan="2">
+                                                <strong>On:</strong> viewers must enter the
+                                                <strong>Tournament Code</strong> once; that browser
+                                                stays unlocked afterwards.<br/><br/>
+                                                <strong>Off:</strong> anyone with the Live Board URL
+                                                can watch without a code (board must still be
+                                                <strong>Live</strong>).
+                                            </div>
+                                        </group>
+                                    </group>
                                 </div>
 
                             </page>

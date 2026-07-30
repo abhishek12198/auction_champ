@@ -299,6 +299,14 @@ class AuctionTournament(models.Model):
         help='When enabled, the public /auction/live-board page streams live auction data. '
              'When disabled, visitors see an offline holding page instead.',
     )
+    live_board_code_protected = fields.Boolean(
+        string='Protect Live Board with Tournament Code',
+        default=True,
+        help='When enabled, public viewers must enter the Tournament Code once before '
+             'they can open the live board. After a successful unlock, that browser is '
+             'remembered (session + cookie) so they do not need to re-enter the code. '
+             'When disabled, anyone with the live board URL can view it without a code.',
+    )
     pool_draw_json = fields.Text(
         string='Saved Pool Draw',
         copy=False,
@@ -932,7 +940,7 @@ class AuctionTournament(models.Model):
                 # live-board stamp — written during SOLD / UNSOLD / NEXT-PLAYER
                 'stamp_player_id', 'stamp_state', 'stamp_expires_at',
                 # live-board controls
-                'live_board_active', 'break_time_active',
+                'live_board_active', 'break_time_active', 'live_board_code_protected',
                 # registration toggle
                 'registration_open',
                 # dice / player-selector
@@ -1056,6 +1064,16 @@ class AuctionTournament(models.Model):
         """Toggle the live board active/stopped state."""
         for rec in self:
             rec.live_board_active = not rec.live_board_active
+
+    def action_toggle_live_board_code_protected(self):
+        """Toggle whether the public live board requires the Tournament Code."""
+        for rec in self:
+            # Write via sudo so SaaS / non-admin organisers persist the change
+            # even when the form save path is restricted.
+            rec.sudo().write({
+                'live_board_code_protected': not bool(rec.live_board_code_protected),
+            })
+        return True
 
     def action_toggle_break_time(self):
         """Toggle the break time screen on the live board."""
