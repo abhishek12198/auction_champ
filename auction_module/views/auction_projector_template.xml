@@ -1607,11 +1607,241 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   </div>
 </div>
 
+<button type="button" id="pjSoundToggle" class="pj-sound-toggle is-off" aria-label="Enable auction sounds" aria-pressed="false">
+  &#128263; Enable Sound
+</button>
+
+<style>
+.pj-sound-toggle{
+  position:fixed;z-index:99999;right:18px;bottom:18px;
+  border:0;border-radius:999px;cursor:pointer;
+  padding:12px 18px;font:700 14px/1.2 system-ui,sans-serif;
+  box-shadow:0 8px 28px rgba(0,0,0,.45);
+  transition:background .15s ease,color .15s ease,transform .15s ease;
+}
+.pj-sound-toggle.is-off{
+  color:#0b1220;background:#ffd54a;
+  animation:pjSoundPulse 1.6s ease-in-out infinite;
+}
+.pj-sound-toggle.is-on{
+  color:#f4f7ff;background:#1f2a44;
+  animation:none;
+}
+.pj-sound-toggle.is-flash{
+  background:#fff176;color:#0b1220;
+}
+@keyframes pjSoundPulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.05)}
+}
+</style>
+
 <script>//<![CDATA[
 (function() {
   var _currentId = null, _currentState = null, _currentPts = null, _currentMysteryRevealed = null;
   var _currentDice = null, _currentDiceNum = 0, _currentDiceMystery = false;
   var _pollTimer = null, _diceTimer = null;
+
+  /* Sold / Unsold stamp audio — explicit Enable / Disable Sound toggle */
+  var _PJ_AUD = '/auction_module/static/src/audio/';
+  var _PJ_AUD_V = '?v=282m';
+  var _pjAudioUnlocked = false;
+  var _pjSoundEnabled = false;
+  var _pjPendingSound = null;
+  var _pjLastSoundKey = '';
+  var _pjSoundBtn = null;
+  var _pjActiveClips = [];
+
+  function _pjNewClip(src) {
+    var a = new Audio(src.indexOf('?') >= 0 ? src : (src + _PJ_AUD_V));
+    a.preload = 'auto';
+    a.volume = 1;
+    try { a.setAttribute('playsinline', 'true'); } catch (e) {}
+    return a;
+  }
+  function _pjStopAllSounds() {
+    try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) {}
+    _pjActiveClips.forEach(function (a) {
+      try { a.pause(); a.currentTime = 0; } catch (e2) {}
+    });
+    _pjActiveClips = [];
+  }
+  function _pjSyncSoundBtn(flash) {
+    if (!_pjSoundBtn) _pjSoundBtn = document.getElementById('pjSoundToggle');
+    if (!_pjSoundBtn) return;
+    if (_pjSoundEnabled) {
+      _pjSoundBtn.classList.remove('is-off', 'is-flash');
+      _pjSoundBtn.classList.add('is-on');
+      _pjSoundBtn.setAttribute('aria-pressed', 'true');
+      _pjSoundBtn.setAttribute('aria-label', 'Disable auction sounds');
+      _pjSoundBtn.innerHTML = '&#128266; Disable Sound';
+      return;
+    }
+    _pjSoundBtn.classList.remove('is-on');
+    _pjSoundBtn.classList.add('is-off');
+    _pjSoundBtn.setAttribute('aria-pressed', 'false');
+    _pjSoundBtn.setAttribute('aria-label', 'Enable auction sounds');
+    if (flash) {
+      _pjSoundBtn.classList.add('is-flash');
+      _pjSoundBtn.innerHTML = '&#128266; Tap to Enable Sound';
+    } else {
+      _pjSoundBtn.classList.remove('is-flash');
+      _pjSoundBtn.innerHTML = '&#128263; Enable Sound';
+    }
+  }
+  function _pjPickMaleVoice() {
+    try {
+      if (!window.speechSynthesis) return null;
+      var voices = window.speechSynthesis.getVoices() || [];
+      var prefer = [/guy/i, /david/i, /daniel/i, /mark/i, /male/i, /english.*us/i, /en-us/i, /en_us/i];
+      var english = voices.filter(function (v) {
+        return /en(-|_|^)/i.test(v.lang || '') || /english/i.test(v.name || '');
+      });
+      var pool = english.length ? english : voices;
+      for (var i = 0; i < prefer.length; i++) {
+        for (var j = 0; j < pool.length; j++) {
+          if (prefer[i].test(pool[j].name || '')) return pool[j];
+        }
+      }
+      /* Avoid known female voice names when falling back */
+      for (var k = 0; k < pool.length; k++) {
+        if (!/female|woman|zira|samantha|karen|moira|tessa|veena|raveena/i.test(pool[k].name || '')) {
+          return pool[k];
+        }
+      }
+      return pool[0] || null;
+    } catch (e) { return null; }
+  }
+  function _pjSpeak(word) {
+    try {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(word);
+      var male = _pjPickMaleVoice();
+      if (male) u.voice = male;
+      u.rate = 0.9;
+      u.pitch = 0.7; /* lower = more male */
+      u.volume = 1;
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+  function _pjPlayUrl(src) {
+    return new Promise(function (resolve) {
+      if (!_pjSoundEnabled) { resolve(false); return; }
+      var a = _pjNewClip(src);
+      _pjActiveClips.push(a);
+      var settled = false;
+      function finish(ok) {
+        if (settled) return;
+        settled = true;
+        resolve(!!ok);
+      }
+      a.addEventListener('playing', function () { finish(true); });
+      a.addEventListener('ended', function () {
+        _pjActiveClips = _pjActiveClips.filter(function (x) { return x !== a; });
+        finish(true);
+      });
+      a.addEventListener('error', function () { finish(false); });
+      var p = a.play();
+      if (p && p.then) {
+        p.then(function () { /* playing event will resolve */ }).catch(function (err) {
+          console.warn('[Projector] audio blocked:', src, err);
+          finish(false);
+        });
+      } else {
+        finish(false);
+      }
+    });
+  }
+  function _pjPlayNow(kind) {
+    if (!_pjSoundEnabled) return;
+    if (kind === 'sold') {
+      /* Male "Sold!" then real applause */
+      _pjPlayUrl(_PJ_AUD + 'sold_voice.mp3').then(function (ok) {
+        if (!ok && _pjSoundEnabled) _pjSpeak('Sold!');
+      });
+      setTimeout(function () {
+        if (_pjSoundEnabled) _pjPlayUrl(_PJ_AUD + 'sold_clap.wav');
+      }, 420);
+      return;
+    }
+    /* Male "Unsold!" then clear male crowd Woooo */
+    _pjPlayUrl(_PJ_AUD + 'unsold_voice.mp3').then(function (ok) {
+      if (!ok && _pjSoundEnabled) _pjSpeak('Unsold!');
+    });
+    setTimeout(function () {
+      if (!_pjSoundEnabled) return;
+      /* Clear "Wooooooo!" first so crowd reaction is obvious */
+      _pjPlayUrl(_PJ_AUD + 'unsold_whoo_voice.mp3').then(function (ok) {
+        if (!ok && _pjSoundEnabled) _pjSpeak('Woooo!');
+      });
+      setTimeout(function () {
+        if (_pjSoundEnabled) _pjPlayUrl(_PJ_AUD + 'unsold_whoo.wav');
+      }, 180);
+    }, 480);
+  }
+  function _pjWarmAudio() {
+    if (_pjAudioUnlocked) return;
+    _pjAudioUnlocked = true;
+    try {
+      var warm = _pjNewClip(_PJ_AUD + 'sold_voice.mp3');
+      warm.volume = 0.01;
+      var wp = warm.play();
+      if (wp && wp.then) {
+        wp.then(function () {
+          warm.pause();
+          warm.currentTime = 0;
+          warm.volume = 1;
+        }).catch(function () {});
+      }
+    } catch (e) {}
+  }
+  function enablePjSound() {
+    _pjWarmAudio();
+    _pjSoundEnabled = true;
+    _pjSyncSoundBtn(false);
+    if (_pjPendingSound) {
+      var pending = _pjPendingSound;
+      _pjPendingSound = null;
+      _pjPlayNow(pending);
+    }
+  }
+  function disablePjSound() {
+    _pjSoundEnabled = false;
+    _pjPendingSound = null;
+    _pjStopAllSounds();
+    _pjSyncSoundBtn(false);
+  }
+  function togglePjSound() {
+    if (_pjSoundEnabled) disablePjSound();
+    else enablePjSound();
+  }
+  function playPjStatusSound(kind, player) {
+    var key = String((player && player.id) || '') + ':' + kind + ':' + String((player && player.sold_points) || 0);
+    if (key && key === _pjLastSoundKey) return;
+    _pjLastSoundKey = key;
+    if (!_pjSoundEnabled) {
+      _pjPendingSound = kind;
+      _pjSyncSoundBtn(true);
+      return;
+    }
+    _pjPlayNow(kind);
+  }
+  function bindPjSoundBtn() {
+    _pjSoundBtn = document.getElementById('pjSoundToggle');
+    if (!_pjSoundBtn) return;
+    _pjSoundBtn.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      togglePjSound();
+    });
+    _pjSyncSoundBtn(false);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindPjSoundBtn);
+  } else {
+    bindPjSoundBtn();
+  }
 
   var _PJ_FACES = {
     1:[[0,0,0],[0,1,0],[0,0,0]],
@@ -2157,7 +2387,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         photoSide.classList.remove('is-status-freeze', 'is-sold-glow', 'is-unsold-shake');
       }
     }
-    function showPhotoStatus(kind, player) {
+    function showPhotoStatus(kind, player, playSound) {
       if (!photoStatus) return;
       var isSold = kind === 'sold';
       var wordEl = document.getElementById('pjStatusWord');
@@ -2218,6 +2448,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       if (fx) Array.prototype.forEach.call(fx.children, reAnim);
       photoStatus.classList.add('show');
       scheduleStampFade();
+      if (playSound) playPjStatusSound(isSold ? 'sold' : 'unsold', player);
     }
     /* Status graphics live only on the player photograph */
     if (stampWrap) stampWrap.classList.remove('show');
@@ -2232,10 +2463,10 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       clearSealFade();
     } else if (p.state === 'sold') {
       hidePhotoSold();
-      showPhotoStatus('sold', p);
+      showPhotoStatus('sold', p, !!opts.playStatusSound);
     } else if (p.state === 'unsold') {
       hidePhotoSold();
-      showPhotoStatus('unsold', p);
+      showPhotoStatus('unsold', p, !!opts.playStatusSound);
     } else {
       hidePhotoSold();
       hidePhotoStatus();
@@ -2412,11 +2643,17 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       );
       if (p.id !== _currentId || p.state !== _currentState || (p.sold_points || 0) !== _currentPts
           || !!p.mystery_revealed !== !!_currentMysteryRevealed) {
+        var prevId = _currentId;
+        var prevState = _currentState;
+        /* Fire on any transition into sold/unsold (same player auction→sold, or stamp). */
+        var playStatusSound = !revealOnly
+          && (p.state === 'sold' || p.state === 'unsold')
+          && prevState !== p.state;
         _currentId = p.id; _currentState = p.state; _currentPts = p.sold_points || 0;
         _currentMysteryRevealed = !!p.mystery_revealed;
         showCard(p, revealOnly
           ? {skipStatusStamp: true, mysteryRevealIntro: true}
-          : {});
+          : {playStatusSound: playStatusSound});
       } else {
         updateStatusRibbon(p);
       }
