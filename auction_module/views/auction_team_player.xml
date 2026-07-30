@@ -94,7 +94,7 @@
 
                                     <!-- Name + number overlay: bottom of photo -->
                                     <div class="pk2-photo-overlay">
-                                        <div class="pk2-name" t-esc="record.name.raw_value"/>
+                                        <div class="pk2-name text-uppercase" t-esc="record.name.raw_value"/>
                                         <div class="pk2-sub">
                                             <t t-if="record.sl_no.raw_value">
                                                 #<t t-esc="record.sl_no.raw_value"/>
@@ -384,7 +384,7 @@
                                             </t>
                                         </div>
                                         <div style="min-width:0;flex:1;">
-                                            <div class="pjk-player-name" t-esc="record.name.raw_value"/>
+                                            <div class="pjk-player-name text-uppercase" t-esc="record.name.raw_value"/>
                                             <t t-if="record.assigned_team_id.raw_value">
                                                 <div class="pjk-team-name">
                                                     <i class="fa fa-shield" title="Team"/>

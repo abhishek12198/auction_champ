@@ -83,6 +83,51 @@
 }
 @keyframes pd-pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
 
+.pd-tourn-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-shrink: 0;
+    min-width: 180px;
+    max-width: 260px;
+}
+.pd-tourn-label {
+    font-size: .62rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.5);
+    margin: 0;
+    line-height: 1.1;
+}
+.pd-tournament-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: rgba(255,255,255,.1)
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23ffd54f' d='M1 1l5 5 5-5'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+    border: 1px solid rgba(255,213,79,.4);
+    color: #fff;
+    padding: 6px 28px 6px 12px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: .9rem;
+    font-weight: 700;
+    cursor: pointer;
+    min-height: 34px;
+    width: 100%;
+    outline: none;
+}
+.pd-tournament-select:hover,
+.pd-tournament-select:focus {
+    background-color: rgba(255,255,255,.16);
+    border-color: #ffd54f;
+}
+.pd-tournament-select option {
+    background: #0d1b3e;
+    color: #fff;
+}
+
 .pd-theme-toggle, .pd-refresh-btn {
     background: rgba(255,255,255,.1);
     border: 1px solid rgba(255,255,255,.2);
@@ -245,6 +290,16 @@
     box-shadow: 0 0 0 1px rgba(184,134,11,.12), 0 4px 12px rgba(13,27,62,.08);
 }
 .pd-light .pd-hdr-logo-ph   { color: #0d1b3e; }
+.pd-light .pd-tourn-label { color: rgba(13,27,62,.5); }
+.pd-light .pd-tournament-select {
+    background-color: #fff;
+    border-color: rgba(13,27,62,.25);
+    color: #0d1b3e;
+}
+.pd-light .pd-tournament-select option {
+    background: #fff;
+    color: #0d1b3e;
+}
 
 .pd-light .pd-live-badge {
     color: #1b7a34; background: rgba(27,122,52,.1); border-color: rgba(27,122,52,.3);

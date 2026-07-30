@@ -790,26 +790,29 @@
                     <div>
                         <label class="reg-label" for="mobileNumber">Mobile Number <span class="req">*</span></label>
                         <div class="reg-mobile-wrap">
-                            <select id="countryCode" class="reg-select reg-mobile-code">
-                                <option value="+91" selected="selected">🇮🇳 +91</option>
-                                <option value="+92">🇵🇰 +92</option>
-                                <option value="+94">🇱🇰 +94</option>
-                                <option value="+880">🇧🇩 +880</option>
-                                <option value="+971">🇦🇪 +971</option>
-                                <option value="+966">🇸🇦 +966</option>
-                                <option value="+974">🇶🇦 +974</option>
-                                <option value="+968">🇴🇲 +968</option>
-                                <option value="+965">🇰🇼 +965</option>
-                                <option value="+973">🇧🇭 +973</option>
-                                <option value="+1">🇺🇸 +1</option>
-                                <option value="+44">🇬🇧 +44</option>
-                                <option value="+61">🇦🇺 +61</option>
+                            <!-- data-min / data-max = national number length (excluding country code) -->
+                            <select id="countryCode" class="reg-select reg-mobile-code"
+                                    aria-label="Country calling code">
+                                <option value="+91" data-min="10" data-max="10" data-placeholder="98765 43210" selected="selected">🇮🇳 +91</option>
+                                <option value="+92" data-min="10" data-max="10" data-placeholder="300 1234567">🇵🇰 +92</option>
+                                <option value="+94" data-min="9" data-max="9" data-placeholder="71 234 5678">🇱🇰 +94</option>
+                                <option value="+880" data-min="10" data-max="10" data-placeholder="1712 345678">🇧🇩 +880</option>
+                                <option value="+971" data-min="9" data-max="9" data-placeholder="50 123 4567">🇦🇪 +971</option>
+                                <option value="+966" data-min="9" data-max="9" data-placeholder="50 123 4567">🇸🇦 +966</option>
+                                <option value="+974" data-min="8" data-max="8" data-placeholder="3312 3456">🇶🇦 +974</option>
+                                <option value="+968" data-min="8" data-max="8" data-placeholder="9123 4567">🇴🇲 +968</option>
+                                <option value="+965" data-min="8" data-max="8" data-placeholder="5001 2345">🇰🇼 +965</option>
+                                <option value="+973" data-min="8" data-max="8" data-placeholder="3600 1234">🇧🇭 +973</option>
+                                <option value="+1" data-min="10" data-max="10" data-placeholder="202 555 0123">🇺🇸 +1</option>
+                                <option value="+44" data-min="10" data-max="10" data-placeholder="7400 123456">🇬🇧 +44</option>
+                                <option value="+61" data-min="9" data-max="9" data-placeholder="412 345 678">🇦🇺 +61</option>
                             </select>
                             <input type="tel" id="mobileNumber" class="reg-input reg-mobile-num"
                                    placeholder="98765 43210" maxlength="10"
                                    pattern="[0-9]{10}" inputmode="numeric"
                                    autocomplete="tel-national"/>
                         </div>
+                        <div id="mobileHint" class="reg-mobile-hint">Enter 10 digits (without country code)</div>
                         <!-- hidden field that holds the combined value submitted -->
                         <input type="hidden" id="contactFull" name="contact"/>
                         <div id="mobileWarning" class="reg-mobile-warning" style="display:none;">
@@ -1457,18 +1460,75 @@
     var numEl    = document.getElementById('mobileNumber');
     var fullEl   = document.getElementById('contactFull');
     var warnEl   = document.getElementById('mobileWarning');
+    var hintEl   = document.getElementById('mobileHint');
     if (!codeEl || !numEl || !fullEl) return;
 
-    // Enforce digits-only input
+    function selectedOption() {
+        return codeEl.options[codeEl.selectedIndex] || null;
+    }
+
+    function digitRules() {
+        var opt = selectedOption();
+        var min = parseInt(opt &amp;&amp; opt.getAttribute('data-min'), 10);
+        var max = parseInt(opt &amp;&amp; opt.getAttribute('data-max'), 10);
+        if (!(min > 0)) min = 10;
+        if (!(max > 0)) max = min;
+        if (max &lt; min) max = min;
+        return {
+            min: min,
+            max: max,
+            placeholder: (opt &amp;&amp; opt.getAttribute('data-placeholder')) || '',
+        };
+    }
+
+    function isCompleteLength(len) {
+        var rules = digitRules();
+        return len >= rules.min &amp;&amp; len &lt;= rules.max;
+    }
+
+    function applyCountryRules() {
+        var rules = digitRules();
+        var digits = (numEl.value || '').replace(/\D/g, '');
+        if (digits.length > rules.max) {
+            digits = digits.slice(0, rules.max);
+        }
+        numEl.value = digits;
+        numEl.setAttribute('maxlength', String(rules.max));
+        if (rules.min === rules.max) {
+            numEl.setAttribute('pattern', '[0-9]{' + rules.min + '}');
+            numEl.setAttribute('title', 'Enter ' + rules.min + ' digits for the selected country');
+            if (hintEl) {
+                hintEl.textContent = 'Enter ' + rules.min + ' digits (without country code)';
+            }
+        } else {
+            numEl.setAttribute('pattern', '[0-9]{' + rules.min + ',' + rules.max + '}');
+            numEl.setAttribute('title',
+                'Enter ' + rules.min + '–' + rules.max + ' digits for the selected country');
+            if (hintEl) {
+                hintEl.textContent =
+                    'Enter ' + rules.min + '–' + rules.max + ' digits (without country code)';
+            }
+        }
+        if (rules.placeholder) {
+            numEl.setAttribute('placeholder', rules.placeholder);
+        }
+        syncFull();
+    }
+
+    // Enforce digits-only input within the active country length
     numEl.addEventListener('input', function () {
+        var rules = digitRules();
         var v = this.value.replace(/\D/g, '');
-        if (v.length > 10) v = v.slice(0, 10);
+        if (v.length > rules.max) v = v.slice(0, rules.max);
         this.value = v;
         syncFull();
     });
 
     // Sync hidden field whenever code or number changes
-    codeEl.addEventListener('change', function () { syncFull(); checkDuplicate(); });
+    codeEl.addEventListener('change', function () {
+        applyCountryRules();
+        checkDuplicate();
+    });
 
     function syncFull() {
         var num = numEl.value.trim();
@@ -1478,15 +1538,15 @@
     // Required validation on the visible input
     numEl.setAttribute('required', 'required');
 
-    // Check duplicate on blur if 10 digits entered
+    // Check duplicate on blur when national number length is complete
     numEl.addEventListener('blur', function () {
         syncFull();
-        if (numEl.value.length === 10) checkDuplicate();
+        if (isCompleteLength(numEl.value.length)) checkDuplicate();
     });
 
     function checkDuplicate() {
         var num = numEl.value.trim();
-        if (num.length !== 10) { hideDupWarn(); return; }
+        if (!isCompleteLength(num.length)) { hideDupWarn(); return; }
         var mobile = codeEl.value + num;
         // Read db_name and tournament_slug from the form's action URL
         var form   = document.querySelector('form');
@@ -1516,11 +1576,13 @@
     function showDupWarn() { if (warnEl) warnEl.style.display = 'block'; }
     function hideDupWarn() { if (warnEl) warnEl.style.display = 'none';  }
 
-    // On form submit — sync combined value and enforce 10-digit validation
+    // On form submit — sync combined value (HTML pattern uses active country length)
     var form = document.querySelector('form');
     if (form) {
         form.addEventListener('submit', function () { syncFull(); }, true);
     }
+
+    applyCountryRules();
 })();
 </script>
 

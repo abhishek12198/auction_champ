@@ -470,6 +470,13 @@ body.reg-page::before {
     flex: 1;
     min-width: 0;
 }
+.reg-mobile-hint {
+    margin-top: 6px;
+    font-size: 0.78rem;
+    color: var(--reg-text-muted, #6b7a90);
+    line-height: 1.35;
+}
+
 .reg-mobile-warning {
     margin-top: 7px;
     padding: 8px 12px;

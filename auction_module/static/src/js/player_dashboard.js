@@ -20,6 +20,7 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
             'click .pd-theme-toggle':         '_onToggleTheme',
             'click .pd-stat':                 '_onStatClick',
             'click .pd-tournament-settings':  '_onTournamentSettings',
+            'change .pd-tournament-select':   '_onTournamentChange',
         },
 
         // Mapping from stat card class → [action name, domain]
@@ -37,6 +38,9 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
         _charts: {},
         _timer: null,
         _viewIds: {},
+        _tournamentId: null,
+        _tournaments: [],
+        _showTournamentFilter: false,
 
         start: function () {
             this.$el.addClass('o_player_dashboard');
@@ -45,6 +49,10 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
             if (localStorage.getItem('pd_theme') === 'light') {
                 this.$el.addClass('pd-light');
                 this.$el.find('.pd-theme-toggle').html('&#9790; Dark');
+            }
+            var savedTid = localStorage.getItem('pd_tournament_id');
+            if (savedTid) {
+                this._tournamentId = parseInt(savedTid, 10) || null;
             }
             this._loadData();
             var self = this;
@@ -73,6 +81,10 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
                         '</div>',
                     '</div>',
                     '<span class="pd-live-badge">&#9679; Live</span>',
+                    '<div class="pd-tourn-filter" id="pd-tourn-filter" style="display:none">',
+                        '<label class="pd-tourn-label" for="pd-tournament-select">Tournament</label>',
+                        '<select class="pd-tournament-select" id="pd-tournament-select"></select>',
+                    '</div>',
                     '<button class="pd-theme-toggle">&#9790; Dark</button>',
                     '<button class="pd-refresh-btn">&#8635; Refresh</button>',
                     '<button class="pd-tournament-settings" style="display:none">&#9881; Tournament Settings</button>',
@@ -166,7 +178,11 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
         // ── Data load ────────────────────────────────────────────────────────
         _loadData: function () {
             var self = this;
-            fetch('/auction/player-dashboard/data', { cache: 'no-store' })
+            var url = '/auction/player-dashboard/data';
+            if (this._tournamentId) {
+                url += '?tournament_id=' + encodeURIComponent(this._tournamentId);
+            }
+            fetch(url, { cache: 'no-store' })
                 .then(function (r) { return r.json(); })
                 .then(function (d) { self._render(d); })
                 .catch(function (e) { console.error('Player dashboard load failed', e); });
@@ -176,6 +192,13 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
             // cache resolved view IDs for stat card navigation
             this._viewIds = d.view_ids || {};
             this._tournamentId = d.tournament_id || null;
+            this._tournaments = d.tournaments || [];
+            this._showTournamentFilter = !!d.show_tournament_filter;
+            if (this._tournamentId) {
+                localStorage.setItem('pd_tournament_id', String(this._tournamentId));
+            }
+
+            this._paintTournamentFilter();
 
             // Show Tournament Settings button only when user has a linked tournament
             this.$('.pd-tournament-settings').toggle(!!this._tournamentId);
@@ -222,6 +245,37 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
             this._renderPayDonut(d.paid_count, d.unpaid_count);
             this._renderIconTable(d.icon_players || []);
             this._renderDraftTable(d.draft_players || []);
+        },
+
+        _paintTournamentFilter: function () {
+            var $wrap = this.$('#pd-tourn-filter');
+            var $sel = this.$('.pd-tournament-select');
+            if (!this._showTournamentFilter || !this._tournaments.length) {
+                $wrap.hide();
+                return;
+            }
+            var tid = this._tournamentId;
+            var html = this._tournaments.map(function (t) {
+                return '<option value="' + t.id + '"' +
+                    (String(t.id) === String(tid) ? ' selected' : '') + '>' +
+                    $('<div/>').text(t.name || ('Tournament #' + t.id)).html() +
+                    '</option>';
+            }).join('');
+            $sel.html(html);
+            $wrap.show();
+        },
+
+        _onTournamentChange: function (ev) {
+            this._tournamentId = parseInt(ev.currentTarget.value, 10) || null;
+            if (this._tournamentId) {
+                localStorage.setItem('pd_tournament_id', String(this._tournamentId));
+            }
+            // Destroy charts so they rebuild for the new tournament
+            var self = this;
+            Object.keys(this._charts).forEach(function (k) {
+                if (self._charts[k]) { self._charts[k].destroy(); self._charts[k] = null; }
+            });
+            this._loadData();
         },
 
         // ── Charts ───────────────────────────────────────────────────────────

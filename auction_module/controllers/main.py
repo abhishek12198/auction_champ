@@ -243,6 +243,108 @@ class Auction(http.Controller):
             headers=[('Content-Type', 'text/html; charset=utf-8')]
         )
 
+    # ── Public Live Board access (tournament code gate) ─────────────────────
+
+    @staticmethod
+    def _normalize_tournament_code(code):
+        """Normalize user input to AC#XXXXXXXXXXXX form when possible."""
+        raw = re.sub(r'\s+', '', (code or '').strip().upper())
+        if not raw:
+            return ''
+        if raw.startswith('AC#'):
+            return raw
+        if raw.startswith('AC') and len(raw) > 2 and raw[2:].replace('#', '').isdigit():
+            digits = raw[2:].lstrip('#')
+            return 'AC#%s' % digits
+        if raw.isdigit():
+            return 'AC#%s' % raw
+        return raw
+
+    def _live_board_session_key(self, tournament_id):
+        return 'ac_live_board_unlocked_%s' % int(tournament_id)
+
+    def _live_board_cookie_name(self, tournament_id):
+        return 'ac_lb_%s' % int(tournament_id)
+
+    def _live_board_cookie_token(self, tournament):
+        """Stable device token derived from tournament code (no code stored in cookie)."""
+        import hashlib
+        secret = 'auctionchamp'
+        try:
+            secret = request.env['ir.config_parameter'].sudo().get_param(
+                'database.secret', 'auctionchamp'
+            ) or 'auctionchamp'
+        except Exception:
+            pass
+        code = self._normalize_tournament_code(tournament.tournament_code or '')
+        raw = '%s|%s|%s' % (tournament.id, code, secret)
+        return hashlib.sha256(raw.encode('utf-8')).hexdigest()[:40]
+
+    def _live_board_access_granted(self, tournament):
+        """True after first successful unlock (session and/or remembered cookie)."""
+        if not tournament:
+            return False
+        key = self._live_board_session_key(tournament.id)
+        if request.session.get(key):
+            return True
+        cookie = request.httprequest.cookies.get(self._live_board_cookie_name(tournament.id))
+        expected = self._live_board_cookie_token(tournament)
+        if cookie and expected and cookie == expected:
+            # Restore session so subsequent requests in this browser stay unlocked
+            request.session[key] = True
+            return True
+        return False
+
+    def _live_board_grant_access(self, tournament, response=None):
+        """Remember unlock for this browser (session + long-lived cookie)."""
+        request.session[self._live_board_session_key(tournament.id)] = True
+        # Ensure Odoo persists the session on auth='none' routes
+        try:
+            request.session.is_dirty = True
+        except Exception:
+            pass
+        if response is not None and tournament.tournament_code:
+            response.set_cookie(
+                self._live_board_cookie_name(tournament.id),
+                self._live_board_cookie_token(tournament),
+                max_age=60 * 60 * 24 * 30,  # 30 days
+                httponly=True,
+                samesite='Lax',
+                path='/',
+            )
+        return response
+
+    def _live_board_try_unlock(self, tournament, submitted_code):
+        """Validate code against tournament_code; grant session on success."""
+        expected = self._normalize_tournament_code(tournament.tournament_code or '')
+        given = self._normalize_tournament_code(submitted_code)
+        if not expected:
+            return False
+        if given and expected == given:
+            self._live_board_grant_access(tournament)
+            return True
+        return False
+
+    def _live_board_unlock_redirect(self, db_name, tournament_slug, tournament):
+        """Redirect to live board after unlock, attaching remember-cookie."""
+        resp = werkzeug.utils.redirect(
+            '/%s/%s/auction/live-board' % (db_name, tournament_slug),
+            303,
+        )
+        return self._live_board_grant_access(tournament, response=resp)
+
+    def _render_live_board_unlock(self, tournament, db_name, tournament_slug,
+                                  theme='vanilla', error=None, entered_code=''):
+        html = request.render('auction_module.live_board_unlock_template', {
+            'tournament': tournament,
+            'theme': theme,
+            'db_name': db_name,
+            'tournament_slug': tournament_slug,
+            'error': error,
+            'entered_code': entered_code or '',
+        }, lazy=False)
+        return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
+
     @http.route(['/auction/player_selector', '/auction/player_selector/'],
                 type='http', auth="none", website=False, sitemap=False)
     def player_selector_legacy(self, **kw):
@@ -1975,7 +2077,8 @@ class Auction(http.Controller):
                 )
         if tournament and tournament.slug:
             db_name = request.env.cr.dbname
-            return request.redirect('/{}/{}/auction/live-board'.format(db_name, tournament.slug))
+            resp = request.redirect('/{}/{}/auction/live-board'.format(db_name, tournament.slug))
+            return self._live_board_grant_access(tournament, response=resp)
         return request.redirect('/web')
 
     @http.route('/auction/my/team-balance', type='http', auth='user', website=False)
@@ -3197,7 +3300,8 @@ class Auction(http.Controller):
             return self._not_found()
         return werkzeug.utils.redirect('/{}/{}/auction/live-board'.format(db_name, tournament_slug), 301)
 
-    @http.route('/<string:db_name>/<string:tournament_slug>/auction/live-board', type='http', auth='none', website=False)
+    @http.route('/<string:db_name>/<string:tournament_slug>/auction/live-board',
+                type='http', auth='none', website=False, methods=['GET', 'POST'], csrf=False)
     def auction_live_board(self, db_name, tournament_slug, **kw):
         with self._with_db(db_name) as ok:
             if not ok:
@@ -3231,6 +3335,30 @@ class Auction(http.Controller):
                     'db_name': db_name,
                 }, lazy=False)
             else:
+                # Public viewers must unlock with tournament unique code first.
+                # Always required on this public URL (no logged-in staff bypass).
+                if not self._live_board_access_granted(tournament):
+                    entered = (kw.get('tournament_code') or '').strip()
+                    if request.httprequest.method == 'POST':
+                        if not (tournament.tournament_code or '').strip():
+                            return self._render_live_board_unlock(
+                                tournament, db_name, tournament_slug, theme=theme,
+                                error='This tournament has no access code yet. Ask the organiser to open the tournament form and share the Tournament Code.',
+                                entered_code=entered,
+                            )
+                        if self._live_board_try_unlock(tournament, entered):
+                            return self._live_board_unlock_redirect(
+                                db_name, tournament_slug, tournament,
+                            )
+                        return self._render_live_board_unlock(
+                            tournament, db_name, tournament_slug, theme=theme,
+                            error='Invalid tournament code. Please check with the organiser.',
+                            entered_code=entered,
+                        )
+                    return self._render_live_board_unlock(
+                        tournament, db_name, tournament_slug, theme=theme,
+                    )
+
                 html = request.render('auction_module.public_live_board_template', {
                     'tournament': tournament,
                     'theme': theme,
@@ -3293,6 +3421,17 @@ class Auction(http.Controller):
                 return request.make_response(
                     json.dumps({'live_board_active': False}),
                     headers=[('Content-Type', 'application/json')]
+                )
+
+            if not self._live_board_access_granted(tournament):
+                return request.make_response(
+                    json.dumps({
+                        'error': 'locked',
+                        'message': 'Tournament code required',
+                        'live_board_active': True,
+                    }),
+                    headers=[('Content-Type', 'application/json')],
+                    status=403,
                 )
 
             def pub_img(model, record_id, field):
@@ -3657,29 +3796,18 @@ class Auction(http.Controller):
         def pub_img(model, rec_id, field):
             return '/auction/public/image/%s/%d/%s' % (model, rec_id, field)
 
-        # ── Tournament scope ──────────────────────────────────────────────────
-        # Prefer navbar working tournament (SaaS switcher); else Active Tournament.
-        # Non-admin / SaaS organisers always see one tournament — matches list menus.
-        is_admin = request.env.user.has_group('auction_module.group_auction_group_admin')
-        user = request.env.user
-        user_tournament = False
-        get_working = getattr(user, 'get_working_tournament', None)
-        if callable(get_working):
-            user_tournament = get_working()
-        if not user_tournament:
-            user_tournament = user.tournament_id or user.tournament_ids[:1]
+        # ── Tournament scope (same dropdown rules as Payment Tracker) ─────────
+        tournament_choices, show_tournament_filter, _is_saas = (
+            self._pm_tournament_filter_meta()
+        )
+        user_tournament = self._resolve_pd_tournament(
+            tournament_id=kw.get('tournament_id'),
+        )
 
-        saas_account = False
-        get_saas = getattr(user, 'get_saas_account', None)
-        if callable(get_saas):
-            saas_account = get_saas()
-
-        if is_admin and not saas_account:
-            t_domain = []
-        elif user_tournament:
+        if user_tournament:
             t_domain = [('tournament_id', '=', user_tournament.id)]
         else:
-            # No tournament assigned → show nothing (do not leak all tournaments)
+            # No accessible tournament → show nothing (do not leak all data)
             t_domain = [('id', '=', False)]
 
         # ── State counts ──────────────────────────────────────────────────────
@@ -3804,6 +3932,8 @@ class Auction(http.Controller):
                 pub_img('auction.tournament', user_tournament.id, 'logo')
                 if user_tournament and user_tournament.logo else ''
             ),
+            'tournaments': tournament_choices,
+            'show_tournament_filter': show_tournament_filter,
             'view_ids': {
                 'kanban': _ref('view_auction_team_player_kanban'),
                 'list':   _ref('view_auction_team_player_tree'),
@@ -3813,6 +3943,39 @@ class Auction(http.Controller):
             json.dumps(result),
             headers=[('Content-Type', 'application/json'), ('Cache-Control', 'no-store')],
         )
+
+    def _resolve_pd_tournament(self, tournament_id=None):
+        """Resolve the Player Dashboard tournament (mirrors Payment Tracker rules)."""
+        env = request.env
+        user = env.user.sudo()
+        is_admin = user.has_group('auction_module.group_auction_group_admin')
+
+        if tournament_id not in (None, False, '', 'null', 'undefined'):
+            try:
+                tid = int(tournament_id)
+            except (TypeError, ValueError):
+                tid = False
+            if tid:
+                tournament = env['auction.tournament'].sudo().browse(tid)
+                if tournament.exists() and self._pm_user_can_access_tournament(tournament):
+                    return tournament
+
+        tournament = False
+        get_working = getattr(user, 'get_working_tournament', None)
+        if callable(get_working):
+            try:
+                tournament = get_working()
+            except Exception:
+                tournament = False
+        if not tournament:
+            tournament = user.tournament_id or user.tournament_ids[:1]
+        if not tournament and is_admin:
+            tournament = env['auction.tournament'].sudo().search(
+                [('active', '=', True)], order='name asc, id asc', limit=1,
+            )
+        if tournament and not self._pm_user_can_access_tournament(tournament):
+            return env['auction.tournament']
+        return tournament
 
     # ── Squad Poster (Instagram Story 1080×1920) ───────────────────────────────
 

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="live_board_unlock_template" name="Live Board — Enter Tournament Code">
+  <t t-set="theme" t-value="(theme or (tournament.player_display_template if tournament else None) or 'vanilla')"/>
+  <html lang="en" t-att-data-theme="theme">
+    <head>
+      <meta charset="utf-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1"/>
+      <title>Enter Tournament Code — <t t-esc="tournament.name if tournament else 'Live Board'"/></title>
+      <link rel="preconnect" href="https://fonts.googleapis.com"/>
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+      <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&amp;family=Barlow:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+      <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { margin: 0; min-height: 100%; }
+        body {
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 24px 16px;
+          font-family: 'Barlow', 'Segoe UI', sans-serif;
+          background:
+            radial-gradient(ellipse at 20% 10%, rgba(253,206,51,.18), transparent 45%),
+            radial-gradient(ellipse at 80% 90%, rgba(34,82,181,.25), transparent 50%),
+            linear-gradient(160deg, #0a1429 0%, #122448 55%, #0d1b3e 100%);
+          color: #e8eaf6;
+        }
+        .lb-unlock {
+          width: 100%;
+          max-width: 440px;
+          background: rgba(255,255,255,.06);
+          border: 1px solid rgba(255,255,255,.12);
+          border-radius: 18px;
+          padding: 28px 26px 24px;
+          box-shadow: 0 20px 50px rgba(0,0,0,.35);
+          backdrop-filter: blur(10px);
+        }
+        .lb-unlock-kicker {
+          font-size: .72rem;
+          font-weight: 700;
+          letter-spacing: .12em;
+          text-transform: uppercase;
+          color: #fdce33;
+          margin-bottom: 8px;
+        }
+        .lb-unlock-title {
+          font-family: 'Rajdhani', sans-serif;
+          font-size: 1.75rem;
+          font-weight: 700;
+          margin: 0 0 6px;
+          line-height: 1.15;
+          color: #fff;
+        }
+        .lb-unlock-tour {
+          font-size: 1.05rem;
+          font-weight: 600;
+          color: rgba(255,255,255,.85);
+          margin: 0 0 18px;
+        }
+        .lb-unlock-help {
+          font-size: .9rem;
+          color: rgba(255,255,255,.62);
+          margin: 0 0 18px;
+          line-height: 1.45;
+        }
+        .lb-unlock-label {
+          display: block;
+          font-size: .75rem;
+          font-weight: 700;
+          letter-spacing: .06em;
+          text-transform: uppercase;
+          color: rgba(255,255,255,.55);
+          margin-bottom: 8px;
+        }
+        .lb-unlock-input {
+          width: 100%;
+          padding: 14px 16px;
+          border-radius: 12px;
+          border: 1.5px solid rgba(253,206,51,.45);
+          background: rgba(0,0,0,.28);
+          color: #fff;
+          font-size: 1.15rem;
+          font-weight: 700;
+          letter-spacing: .08em;
+          font-family: inherit;
+          outline: none;
+        }
+        .lb-unlock-input:focus {
+          border-color: #fdce33;
+          box-shadow: 0 0 0 3px rgba(253,206,51,.2);
+        }
+        .lb-unlock-input::placeholder { color: rgba(255,255,255,.35); letter-spacing: .04em; font-weight: 500; }
+        .lb-unlock-error {
+          margin: 12px 0 0;
+          padding: 10px 12px;
+          border-radius: 10px;
+          background: rgba(239,83,80,.15);
+          border: 1px solid rgba(239,83,80,.4);
+          color: #ffcdd2;
+          font-size: .88rem;
+          font-weight: 600;
+        }
+        .lb-unlock-btn {
+          display: block;
+          width: 100%;
+          margin-top: 16px;
+          padding: 14px 18px;
+          border: none;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #fdce33, #e09e00);
+          color: #0a1429;
+          font-family: 'Rajdhani', sans-serif;
+          font-size: 1.15rem;
+          font-weight: 700;
+          letter-spacing: .04em;
+          cursor: pointer;
+          transition: transform .12s, box-shadow .12s;
+          box-shadow: 0 8px 22px rgba(253,206,51,.28);
+        }
+        .lb-unlock-btn:hover { transform: translateY(-1px); }
+        .lb-unlock-foot {
+          margin-top: 18px;
+          text-align: center;
+          font-size: .8rem;
+          color: rgba(255,255,255,.45);
+        }
+        .lb-unlock-foot a { color: #fdce33; text-decoration: none; font-weight: 600; }
+      </style>
+    </head>
+    <body>
+      <div class="lb-unlock">
+        <div class="lb-unlock-kicker">Live Auction Access</div>
+        <h1 class="lb-unlock-title">Enter Tournament Code</h1>
+        <p class="lb-unlock-tour" t-esc="tournament.name if tournament else ''"/>
+        <p class="lb-unlock-help">
+          Ask the organiser for the unique tournament code (starts with
+          <strong>AC#</strong>). You only need to enter it once on this device —
+          next visits open the live board directly.
+        </p>
+        <form t-att-action="'/%s/%s/auction/live-board' % (db_name, tournament_slug)"
+              method="post" autocomplete="off">
+          <label class="lb-unlock-label" for="tournament_code">Tournament Code</label>
+          <input class="lb-unlock-input"
+                 type="text"
+                 id="tournament_code"
+                 name="tournament_code"
+                 placeholder="AC#XXXXXXXXXXXX"
+                 required="required"
+                 autofocus="autofocus"
+                 spellcheck="false"
+                 t-att-value="entered_code or ''"/>
+          <t t-if="error">
+            <div class="lb-unlock-error" t-esc="error"/>
+          </t>
+          <button type="submit" class="lb-unlock-btn">Unlock Live Board</button>
+        </form>
+        <div class="lb-unlock-foot">
+          Powered by <a href="/">AuctionChamp</a>
+        </div>
+      </div>
+    </body>
+  </html>
+</template>
+</odoo>
