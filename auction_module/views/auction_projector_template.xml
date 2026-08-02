@@ -2169,8 +2169,11 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
           photoPh.style.display = 'flex';
           if (photoBg) photoBg.style.display = 'none';
         };
-        /* Keep previous photo visible until the new one is ready */
-        if (!oldImg) photoPh.style.display = 'flex';
+        /* Never keep previous player's face while name/attrs already updated */
+        if (oldImg && oldImg.parentNode) oldImg.remove();
+        oldImg = null;
+        photoPh.style.display = 'flex';
+        if (photoBg) photoBg.style.display = 'none';
         img.src = nextSrc;
         if (img.complete && img.naturalWidth) commitPhoto();
         appendMysteryLock();
@@ -2678,9 +2681,15 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   tickClock();
   setInterval(tickClock, 15000);
 
-  /* Warm browser cache for remaining auction photos so next player appears instantly */
+  /* Warm browser cache for remaining auction photos so next player appears instantly.
+     Stage cards use sz=pj; remaining board uses full photos — preload BOTH. */
   var _pjPreloadedUrls = Object.create(null);
   var _pjPreloadBusy = false;
+  function pjStagePhotoUrl(url) {
+    if (!url) return '';
+    if (url.indexOf('sz=pj') >= 0) return url;
+    return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'sz=pj';
+  }
   function preloadRemainingPhotos() {
     if (_pjPreloadBusy || !window.PJ_REMAIN_URL) return;
     _pjPreloadBusy = true;
@@ -2697,7 +2706,13 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       var queue = [];
       for (var i = 0; i < players.length; i++) {
         var url = players[i] && players[i].photo_url;
-        if (url && !_pjPreloadedUrls[url]) {
+        if (!url) continue;
+        var stageUrl = pjStagePhotoUrl(url);
+        if (!_pjPreloadedUrls[stageUrl]) {
+          _pjPreloadedUrls[stageUrl] = 1;
+          queue.push(stageUrl);
+        }
+        if (!_pjPreloadedUrls[url]) {
           _pjPreloadedUrls[url] = 1;
           queue.push(url);
         }
