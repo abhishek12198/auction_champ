@@ -618,9 +618,13 @@
                                             </div>
                                         </group>
                                         <group string="Payment Instructions">
+                                            <field name="payment_proof_required"
+                                                   string="Payment Attachment Required"/>
                                             <field name="payment_instruction" nolabel="1"
                                                    placeholder="e.g. Pay ₹500 via UPI to 9876543210@paytm. Add your name as payment reference, then attach the screenshot below."/>
                                             <div class="o_at_presentation_help" colspan="2">
+                                                When <strong>Payment Attachment Required</strong> is on,
+                                                players must upload a receipt/screenshot on the registration form.
                                                 Shown as an instruction box above the upload area on the registration page.
                                             </div>
                                         </group>

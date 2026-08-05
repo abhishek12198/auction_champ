@@ -835,6 +835,12 @@
                         </select>
                     </div>
 
+                    <div>
+                        <label class="reg-label" for="orgId">Org ID# <span class="reg-opt">(optional)</span></label>
+                        <input type="text" id="orgId" name="org_id" class="reg-input"
+                               placeholder="Organisation unique ID" maxlength="64"/>
+                    </div>
+
                     <div class="col-full">
                         <label class="reg-label" for="address">Location / Address</label>
                         <textarea id="address" name="address" class="reg-textarea"
@@ -846,10 +852,17 @@
             <!-- ══════════════════════════════════════
                  04 · PAYMENT
                  ══════════════════════════════════════ -->
-            <div class="reg-section">
+            <div class="reg-section" id="paymentSection">
                 <div class="reg-section-header">
                     <div class="reg-section-strip"/>
-                    <h3>Payment Proof</h3>
+                    <h3>Payment Proof
+                        <t t-if="tournament and tournament.payment_proof_required">
+                            <span class="req">*</span>
+                        </t>
+                        <t t-else="">
+                            <span class="reg-optional-badge">Optional</span>
+                        </t>
+                    </h3>
                     <span class="reg-section-icon">💳</span>
                     <span class="reg-section-num">04</span>
                 </div>
@@ -860,7 +873,7 @@
                     <!-- LEFT: Upload + instruction -->
                     <div class="reg-payment-left">
                         <!-- Upload proof -->
-                        <div class="reg-photo-upload">
+                        <div class="reg-photo-upload" id="paymentUploadBox">
                             <div class="reg-payment-icon" id="paymentPreviewIcon">📎</div>
                             <div class="reg-file-meta">
                                 <label for="paymentInput" class="reg-file-btn">
@@ -873,9 +886,14 @@
                                     Upload Receipt / Screenshot
                                 </label>
                                 <input type="file" id="paymentInput" name="payment_proof"
-                                       accept="image/*,application/pdf" class="reg-file-input"/>
+                                       accept="image/*,application/pdf" class="reg-file-input"
+                                       t-att-required="'required' if tournament and tournament.payment_proof_required else None"
+                                       t-att-data-required="'1' if tournament and tournament.payment_proof_required else '0'"/>
                                 <p class="reg-file-hint" id="paymentFileName">
                                     JPG · PNG · PDF &#160;·&#160; Max 5 MB
+                                    <t t-if="tournament and tournament.payment_proof_required">
+                                        &#160;·&#160; Required
+                                    </t>
                                 </p>
                             </div>
                         </div>
@@ -1359,6 +1377,39 @@
             // Remove photo error if previously shown
             var errMsg = document.getElementById('photoErrorMsg');
             if (errMsg) errMsg.remove();
+
+            // Payment proof — mandatory only when tournament requires it
+            var paymentInput = document.getElementById('paymentInput');
+            var paymentBox = document.getElementById('paymentUploadBox');
+            var paymentRequired = paymentInput &amp;&amp; paymentInput.getAttribute('data-required') === '1';
+            if (paymentRequired &amp;&amp; (!paymentInput.files || !paymentInput.files[0])) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (paymentBox) {
+                    paymentBox.style.transition = 'outline .15s';
+                    paymentBox.style.outline = '2px solid #e94560';
+                    paymentBox.style.borderRadius = '10px';
+                    paymentBox.style.padding = '8px';
+                    setTimeout(function () { paymentBox.style.outline = ''; paymentBox.style.padding = ''; }, 3000);
+                }
+                var payErrId = 'paymentErrorMsg';
+                var payExisting = document.getElementById(payErrId);
+                if (!payExisting) {
+                    var payMsg = document.createElement('p');
+                    payMsg.id = payErrId;
+                    payMsg.textContent = '⚠️ Payment proof is required. Please upload a receipt or screenshot.';
+                    payMsg.style.cssText = 'color:#e94560;font-size:.8rem;font-weight:600;margin-top:.4rem;';
+                    if (paymentBox) paymentBox.appendChild(payMsg);
+                }
+                var paymentSection = document.getElementById('paymentSection');
+                if (paymentSection) {
+                    paymentSection.classList.add('mob-open');
+                    paymentSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return;
+            }
+            var payErrMsg = document.getElementById('paymentErrorMsg');
+            if (payErrMsg) payErrMsg.remove();
 
             if (!form.checkValidity()) {
                 e.preventDefault();

@@ -256,6 +256,12 @@ class AuctionTournament(models.Model):
         help='Instructions shown in the Payment section of the player registration form. '
              'E.g. "Pay ₹500 via UPI to 9876543210@paytm and attach the screenshot below."',
     )
+    payment_proof_required = fields.Boolean(
+        string='Payment Attachment Required',
+        default=False,
+        help='When enabled, players must upload a payment proof attachment on the '
+             'public registration form. When disabled, the upload is optional.',
+    )
     payment_qr_image = fields.Binary(
         string='Payment QR / Scanner',
         help='Upload a UPI QR code or payment scanner image (PNG recommended). '
@@ -937,6 +943,7 @@ class AuctionTournament(models.Model):
             _ALLOWED = {
                 # team balance & payment config
                 'team_max_points', 'payment_qr_image', 'payment_instruction',
+                'payment_proof_required',
                 # live-board stamp — written during SOLD / UNSOLD / NEXT-PLAYER
                 'stamp_player_id', 'stamp_state', 'stamp_expires_at',
                 # live-board controls

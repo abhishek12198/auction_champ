@@ -5799,6 +5799,10 @@ def _build_player_vals_from_post(request, tournament):
     proof_file = files.get('payment_proof')
     if proof_file and proof_file.filename:
         payment_proof_data = base64.b64encode(proof_file.read())
+    if tournament and tournament.payment_proof_required and not payment_proof_data:
+        raise ValueError(
+            "Payment proof is required. Please upload a receipt or payment screenshot."
+        )
 
     is_football = bool(tournament and tournament.tournament_type == 'football')
 
@@ -5806,6 +5810,7 @@ def _build_player_vals_from_post(request, tournament):
         'sl_no':         sl_no,
         'name':          name,
         'contact':       (post.get('contact') or '').strip(),
+        'org_id':        (post.get('org_id') or '').strip(),
         'address':       (post.get('address') or '').strip(),
         'blood_group':   (post.get('blood_group') or '').strip(),
         'current_team':  (post.get('current_team') or '').strip(),

@@ -8,7 +8,8 @@
             <field name="arch" type="xml">
                 <search string="Player">
                     <field name="sl_no" filter_domain="[('sl_no','=',self)]" string="Sl No"/>
-                    <field name="name" filter_domain="['|',('contact','ilike',self),('name','ilike',self)]" string="Name/Contact"/>
+                    <field name="name" filter_domain="['|','|',('contact','ilike',self),('name','ilike',self),('org_id','ilike',self)]" string="Name/Contact/Org ID"/>
+                    <field name="org_id"/>
                     <field name="assigned_team_id" filter_domain="[('assigned_team_id','ilike',self)]" string="Team"/>
                     <field name="tier_id" filter_domain="[('tier_id','ilike',self)]" string="Player Tier"/>
                     <filter string="Inactive Players" name="inactive" domain="[('active', '=', False)]"/>
@@ -268,6 +269,7 @@
                     <field name="sl_no"/>
                     <field name="name" class="text-uppercase"/>
                     <field name="contact"/>
+                    <field name="org_id" optional="hide"/>
                     <field name="role"/>
                     <field name="tier_id"/>
                     <field name="amount_paid" widget="boolean_toggle"/>
@@ -527,6 +529,7 @@
                             </group>
                             <group string="Contact Details">
                                 <field name="contact" string="Mobile Number"/>
+                                <field name="org_id"/>
                                 <field name="address"/>
                                 <field name="amount_paid" string="Payment Received"
                                        widget="boolean_toggle"/>

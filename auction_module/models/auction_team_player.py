@@ -350,6 +350,10 @@ class AuctionTeamPlayer(models.Model):
         compute='_compute_masked_contact',
         help='Contact number with all digits except the first and last replaced by X.',
     )
+    org_id = fields.Char(
+        string="Org ID#",
+        help="Organisation unique ID provided by the player (optional).",
+    )
     address = fields.Text("Address")
     batting_style = fields.Char(string="Batting Style", default='Right Handed Batter')
     bowling_style = fields.Char(string="Bowling Style", default='Right Arm')
