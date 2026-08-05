@@ -4398,6 +4398,7 @@ class Auction(http.Controller):
                     'positions': football_positions,
                     'styles': football_styles,
                     'strengths': football_strengths,
+                    'payment_proof_required': bool(tournament.payment_proof_required),
                 }, lazy=False)
                 return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
@@ -4423,6 +4424,7 @@ class Auction(http.Controller):
                             'positions': football_positions,
                             'styles': football_styles,
                             'strengths': football_strengths,
+                            'payment_proof_required': bool(tournament.payment_proof_required),
                         }
                     )
                     if pay_resp is not None:
@@ -4456,6 +4458,7 @@ class Auction(http.Controller):
                         'positions': football_positions,
                         'styles': football_styles,
                         'strengths': football_strengths,
+                        'payment_proof_required': bool(tournament.payment_proof_required),
                         'error': str(e),
                     }
                     try:
@@ -4491,6 +4494,7 @@ class Auction(http.Controller):
                 'positions': football_positions,
                 'styles': football_styles,
                 'strengths': football_strengths,
+                'payment_proof_required': bool(tournament.payment_proof_required),
                 'success': success,
                 'player_id': player_id,
             }

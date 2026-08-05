@@ -373,11 +373,20 @@
 
         <!-- ── Error ── -->
         <t t-if="error">
-            <div class="reg-alert reg-alert-error">
+            <div class="reg-alert reg-alert-error" id="regServerAlert">
                 <span class="reg-alert-icon">⚠️</span>
                 <div><strong>Submission Error</strong><span t-esc="error"/></div>
             </div>
         </t>
+
+        <!-- Client-side mandatory-field warning (shown on failed submit) -->
+        <div class="reg-alert reg-alert-error" id="regClientAlert" style="display:none;" role="alert" aria-live="assertive">
+            <span class="reg-alert-icon">⚠️</span>
+            <div>
+                <strong>Missing Required Information</strong>
+                <span id="regClientAlertMsg">Please fill all mandatory fields marked with *.</span>
+            </div>
+        </div>
 
         <!-- ── Main form (hidden after success or when closed) ── -->
         <t t-if="not hide_reg_form">
@@ -530,7 +539,9 @@
             </div>
         </t>
 
-        <form t-att-action="'/' + db_name + '/' + tournament_slug + '/player/register'" method="post" enctype="multipart/form-data">
+        <form t-att-action="'/' + db_name + '/' + tournament_slug + '/player/register'"
+              method="post" enctype="multipart/form-data" id="playerRegisterForm"
+              t-att-data-payment-required="'1' if tournament and tournament.payment_proof_required else '0'">
 
             <!-- ══════════════════════════════════════
                  01 · PLAYER IDENTITY
@@ -852,7 +863,8 @@
             <!-- ══════════════════════════════════════
                  04 · PAYMENT
                  ══════════════════════════════════════ -->
-            <div class="reg-section" id="paymentSection">
+            <div class="reg-section" id="paymentSection"
+                 t-att-data-payment-required="'1' if tournament and tournament.payment_proof_required else '0'">
                 <div class="reg-section-header">
                     <div class="reg-section-strip"/>
                     <h3>Payment Proof
@@ -867,6 +879,16 @@
                     <span class="reg-section-num">04</span>
                 </div>
 
+                <t t-if="tournament and tournament.payment_proof_required">
+                    <div class="reg-payment-must" id="paymentMustNote">
+                        <span class="req">*</span>
+                        Payment receipt / screenshot is <strong>mandatory</strong>. Please upload it before submitting.
+                    </div>
+                </t>
+                <div class="reg-payment-missed" id="paymentMissedBanner" style="display:none;" role="alert">
+                    ⚠️ You missed this required field — upload your payment receipt or screenshot to continue.
+                </div>
+
                 <!-- Two-column layout when QR is present; single column otherwise -->
                 <div t-attf-class="reg-payment-layout#{' reg-payment-has-qr' if tournament and tournament.payment_qr_image else ''}">
 
@@ -876,7 +898,7 @@
                         <div class="reg-photo-upload" id="paymentUploadBox">
                             <div class="reg-payment-icon" id="paymentPreviewIcon">📎</div>
                             <div class="reg-file-meta">
-                                <label for="paymentInput" class="reg-file-btn">
+                                <label for="paymentInput" class="reg-file-btn" id="paymentFileBtn">
                                     <svg width="15" height="15" fill="none" viewBox="0 0 24 24"
                                          stroke="currentColor" stroke-width="2.5">
                                         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
@@ -884,16 +906,27 @@
                                         <line x1="12" y1="3" x2="12" y2="15"/>
                                     </svg>
                                     Upload Receipt / Screenshot
+                                    <t t-if="tournament and tournament.payment_proof_required">
+                                        <span class="req">*</span>
+                                    </t>
                                 </label>
+                                <!-- Gate for HTML5 validation: hidden file inputs are skipped by browsers -->
+                                <t t-if="tournament and tournament.payment_proof_required">
+                                    <input type="text" id="paymentProofGate" name="payment_proof_gate"
+                                           class="reg-payment-gate" value="" required="required"
+                                           tabindex="-1" autocomplete="off" aria-label="Payment proof required"/>
+                                </t>
                                 <input type="file" id="paymentInput" name="payment_proof"
                                        accept="image/*,application/pdf" class="reg-file-input"
-                                       t-att-required="'required' if tournament and tournament.payment_proof_required else None"
                                        t-att-data-required="'1' if tournament and tournament.payment_proof_required else '0'"/>
                                 <p class="reg-file-hint" id="paymentFileName">
                                     JPG · PNG · PDF &#160;·&#160; Max 5 MB
                                     <t t-if="tournament and tournament.payment_proof_required">
-                                        &#160;·&#160; Required
+                                        &#160;·&#160; <span class="req">Required</span>
                                     </t>
+                                </p>
+                                <p class="reg-payment-field-error" id="paymentErrorMsg" style="display:none;">
+                                    ⚠️ Payment proof is required. Please upload a receipt or screenshot.
                                 </p>
                             </div>
                         </div>
@@ -1232,19 +1265,36 @@
         });
     }
 
-    // Payment receipt filename
+    // Payment receipt filename + required gate sync
     var paymentInput = document.getElementById('paymentInput');
+    function syncPaymentProofGate() {
+        var gate = document.getElementById('paymentProofGate');
+        var section = document.getElementById('paymentSection');
+        var missed = document.getElementById('paymentMissedBanner');
+        var err = document.getElementById('paymentErrorMsg');
+        var hasFile = !!(paymentInput &amp;&amp; paymentInput.files &amp;&amp; paymentInput.files[0]);
+        if (gate) gate.value = hasFile ? 'ok' : '';
+        if (hasFile) {
+            if (section) section.classList.remove('is-missing');
+            if (missed) missed.style.display = 'none';
+            if (err) err.style.display = 'none';
+        }
+    }
     if (paymentInput) {
         paymentInput.addEventListener('change', function () {
             var hint = document.getElementById('paymentFileName');
             var icon = document.getElementById('paymentPreviewIcon');
             if (this.files[0]) {
-                hint.textContent = '✓ ' + this.files[0].name;
-                hint.style.color = '#276749';
-                hint.style.fontWeight = '600';
+                if (hint) {
+                    hint.innerHTML = '✓ ' + this.files[0].name;
+                    hint.style.color = '#276749';
+                    hint.style.fontWeight = '600';
+                }
                 if (icon) { icon.textContent = '✅'; icon.style.background = '#f0fff4'; }
             }
+            syncPaymentProofGate();
         });
+        syncPaymentProofGate();
     }
 
     // Jersey name → uppercase
@@ -1340,17 +1390,92 @@
         checkFilled();
     }
 
-    // Native HTML5 validation + smooth scroll to first error
+    // Native HTML5 validation + top warning for mandatory fields
     var form = document.querySelector('form');
     if (form) {
+        function showRegTopWarning(message, focusEl) {
+            var alertBox = document.getElementById('regClientAlert');
+            var alertMsg = document.getElementById('regClientAlertMsg');
+            if (alertMsg) alertMsg.textContent = message || 'Please fill all mandatory fields marked with *.';
+            if (alertBox) {
+                alertBox.style.display = 'flex';
+                try {
+                    alertBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } catch (err) {
+                    alertBox.scrollIntoView(true);
+                }
+            }
+            if (focusEl) {
+                var parentSec = focusEl.closest ? focusEl.closest('.reg-section') : null;
+                if (parentSec) parentSec.classList.add('mob-open');
+                setTimeout(function () {
+                    try {
+                        focusEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } catch (err2) {}
+                    if (focusEl.classList) focusEl.classList.add('was-invalid');
+                }, 320);
+            }
+        }
+        function hideRegTopWarning() {
+            var alertBox = document.getElementById('regClientAlert');
+            if (alertBox) alertBox.style.display = 'none';
+        }
+        function markPaymentMissing() {
+            var section = document.getElementById('paymentSection');
+            var box = document.getElementById('paymentUploadBox');
+            var missed = document.getElementById('paymentMissedBanner');
+            var err = document.getElementById('paymentErrorMsg');
+            if (section) {
+                section.classList.add('is-missing', 'mob-open');
+            }
+            if (missed) missed.style.display = 'block';
+            if (err) err.style.display = 'block';
+            if (box) {
+                box.style.transition = 'outline .15s';
+                box.style.outline = '2px solid #e94560';
+                box.style.borderRadius = '12px';
+                setTimeout(function () { box.style.outline = ''; }, 4000);
+            }
+            showRegTopWarning(
+                'Payment proof is required. Please upload a receipt or screenshot in the Payment Proof section.',
+                section || box || document.getElementById('paymentFileBtn')
+            );
+        }
+        function clearPaymentMissing() {
+            var section = document.getElementById('paymentSection');
+            var missed = document.getElementById('paymentMissedBanner');
+            var err = document.getElementById('paymentErrorMsg');
+            if (section) section.classList.remove('is-missing');
+            if (missed) missed.style.display = 'none';
+            if (err) err.style.display = 'none';
+        }
+        function isPaymentProofRequired() {
+            var section = document.getElementById('paymentSection');
+            var paymentInput = document.getElementById('paymentInput');
+            var gate = document.getElementById('paymentProofGate');
+            return form.getAttribute('data-payment-required') === '1'
+                || (section &amp;&amp; section.getAttribute('data-payment-required') === '1')
+                || (paymentInput &amp;&amp; paymentInput.getAttribute('data-required') === '1')
+                || !!gate;
+        }
+        function hasPaymentProofFile() {
+            var paymentInput = document.getElementById('paymentInput');
+            return !!(paymentInput &amp;&amp; paymentInput.files &amp;&amp; paymentInput.files[0]);
+        }
+
         form.addEventListener('submit', function (e) {
+            hideRegTopWarning();
+
+            // Keep gate in sync before validating
+            var gate = document.getElementById('paymentProofGate');
+            if (gate) gate.value = hasPaymentProofFile() ? 'ok' : '';
+
             // Photo is mandatory — check before native validation
             var photoInput = document.getElementById('photoInput');
             var photoSection = document.getElementById('photoSection');
             if (photoInput &amp;&amp; (!photoInput.files || !photoInput.files[0])) {
                 e.preventDefault();
                 e.stopPropagation();
-                // Highlight the photo section
                 if (photoSection) {
                     photoSection.style.transition = 'outline .15s';
                     photoSection.style.outline = '2px solid #e94560';
@@ -1358,7 +1483,6 @@
                     photoSection.style.padding = '8px';
                     setTimeout(function () { photoSection.style.outline = ''; photoSection.style.padding = ''; }, 3000);
                 }
-                // Show error message under the upload area
                 var errId = 'photoErrorMsg';
                 var existing = document.getElementById(errId);
                 if (!existing) {
@@ -1368,61 +1492,45 @@
                     msg.style.cssText = 'color:#e94560;font-size:.8rem;font-weight:600;margin-top:.4rem;';
                     if (photoSection) photoSection.appendChild(msg);
                 }
-                if (photoSection) photoSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                // On mobile, ensure the containing section is open
-                var photoParentSec = photoSection &amp;&amp; photoSection.closest('.reg-section');
-                if (photoParentSec) photoParentSec.classList.add('mob-open');
+                showRegTopWarning('Player photo is required. Please upload a photo before submitting.', photoSection || photoInput);
                 return;
             }
-            // Remove photo error if previously shown
             var errMsg = document.getElementById('photoErrorMsg');
             if (errMsg) errMsg.remove();
 
             // Payment proof — mandatory only when tournament requires it
-            var paymentInput = document.getElementById('paymentInput');
-            var paymentBox = document.getElementById('paymentUploadBox');
-            var paymentRequired = paymentInput &amp;&amp; paymentInput.getAttribute('data-required') === '1';
-            if (paymentRequired &amp;&amp; (!paymentInput.files || !paymentInput.files[0])) {
+            if (isPaymentProofRequired() &amp;&amp; !hasPaymentProofFile()) {
                 e.preventDefault();
                 e.stopPropagation();
-                if (paymentBox) {
-                    paymentBox.style.transition = 'outline .15s';
-                    paymentBox.style.outline = '2px solid #e94560';
-                    paymentBox.style.borderRadius = '10px';
-                    paymentBox.style.padding = '8px';
-                    setTimeout(function () { paymentBox.style.outline = ''; paymentBox.style.padding = ''; }, 3000);
-                }
-                var payErrId = 'paymentErrorMsg';
-                var payExisting = document.getElementById(payErrId);
-                if (!payExisting) {
-                    var payMsg = document.createElement('p');
-                    payMsg.id = payErrId;
-                    payMsg.textContent = '⚠️ Payment proof is required. Please upload a receipt or screenshot.';
-                    payMsg.style.cssText = 'color:#e94560;font-size:.8rem;font-weight:600;margin-top:.4rem;';
-                    if (paymentBox) paymentBox.appendChild(payMsg);
-                }
-                var paymentSection = document.getElementById('paymentSection');
-                if (paymentSection) {
-                    paymentSection.classList.add('mob-open');
-                    paymentSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                markPaymentMissing();
                 return;
             }
-            var payErrMsg = document.getElementById('paymentErrorMsg');
-            if (payErrMsg) payErrMsg.remove();
+            clearPaymentMissing();
 
             if (!form.checkValidity()) {
                 e.preventDefault();
                 e.stopPropagation();
                 var first = form.querySelector(':invalid');
+                var labelText = 'Please fill all mandatory fields marked with *.';
                 if (first) {
-                    // On mobile, open the section containing the invalid field
+                    if (first.id === 'paymentProofGate' || first.name === 'payment_proof_gate' || first.name === 'payment_proof') {
+                        markPaymentMissing();
+                        return;
+                    }
+                    var lbl = form.querySelector('label[for="' + (first.id || '') + '"]');
+                    if (lbl) {
+                        var raw = (lbl.textContent || '').replace(/\*/g, '').replace(/\(optional\)/ig, '').trim();
+                        if (raw) labelText = raw + ' is required. Please complete this field.';
+                    } else if (first.name === 'role') {
+                        labelText = 'Role is required. Please select a role.';
+                    } else if (first.name) {
+                        labelText = 'Please complete the required field: ' + first.name.replace(/_/g, ' ') + '.';
+                    }
                     var parentSec = first.closest('.reg-section');
                     if (parentSec) parentSec.classList.add('mob-open');
-                    first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    first.classList.add('was-invalid');
                 }
-                // Shake the first invalid field
-                if (first) { first.classList.add('was-invalid'); }
+                showRegTopWarning(labelText, first);
             }
         });
     }
