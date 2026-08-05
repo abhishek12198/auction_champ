@@ -5873,5 +5873,7 @@ def _build_player_vals_from_post(request, tournament):
         vals['jersy_name']   = (post.get('jersy_name') or '').strip()
         vals['jersy_number'] = (post.get('jersy_number') or '').strip()
         vals['jersy_size']   = (post.get('jersy_size') or '').strip()
+        if not vals['jersy_size']:
+            raise ValueError("Jersey size is required. Please select a jersey size.")
 
     return vals

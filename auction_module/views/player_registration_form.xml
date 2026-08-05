@@ -861,7 +861,49 @@
             </div>
 
             <!-- ══════════════════════════════════════
-                 04 · PAYMENT
+                 04 · JERSEY  (enabled per tournament)
+                 ══════════════════════════════════════ -->
+            <t t-if="tournament and tournament.enable_jersey_section">
+            <div class="reg-section" id="jerseySection">
+                <div class="reg-section-header">
+                    <div class="reg-section-strip"/>
+                    <h3>Jersey Details</h3>
+                    <span class="reg-section-icon">👕</span>
+                    <span class="reg-section-num">04</span>
+                </div>
+
+                <div class="reg-grid">
+                    <div>
+                        <label class="reg-label" for="jerseyName">Name on Jersey <span class="reg-opt">(optional)</span></label>
+                        <input type="text" id="jerseyName" name="jersy_name" class="reg-input"
+                               placeholder="RAHUL" maxlength="20"
+                               style="text-transform:uppercase;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.08em;"/>
+                    </div>
+                    <div>
+                        <label class="reg-label" for="jerseyNumber">Jersey Number <span class="reg-opt">(optional)</span></label>
+                        <input type="text" id="jerseyNumber" name="jersy_number" class="reg-input"
+                               placeholder="18" maxlength="4"
+                               style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.06em;"/>
+                    </div>
+                    <div>
+                        <label class="reg-label" for="jerseySize">Jersey Size <span class="req">*</span></label>
+                        <select id="jerseySize" name="jersy_size" class="reg-select" required="required">
+                            <option value="">— Select Size —</option>
+                            <option value="XS">XS — Extra Small</option>
+                            <option value="S">S — Small</option>
+                            <option value="M">M — Medium</option>
+                            <option value="L">L — Large</option>
+                            <option value="XL">XL — Extra Large</option>
+                            <option value="XXL">XXL — Double XL</option>
+                            <option value="XXXL">XXXL — Triple XL</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            </t>
+
+            <!-- ══════════════════════════════════════
+                 05 · PAYMENT
                  ══════════════════════════════════════ -->
             <div class="reg-section" id="paymentSection"
                  t-att-data-payment-required="'1' if tournament and tournament.payment_proof_required else '0'">
@@ -876,7 +918,7 @@
                         </t>
                     </h3>
                     <span class="reg-section-icon">💳</span>
-                    <span class="reg-section-num">04</span>
+                    <span class="reg-section-num">05</span>
                 </div>
 
                 <t t-if="tournament and tournament.payment_proof_required">
@@ -921,9 +963,6 @@
                                        t-att-data-required="'1' if tournament and tournament.payment_proof_required else '0'"/>
                                 <p class="reg-file-hint" id="paymentFileName">
                                     JPG · PNG · PDF &#160;·&#160; Max 5 MB
-                                    <t t-if="tournament and tournament.payment_proof_required">
-                                        &#160;·&#160; <span class="req">Required</span>
-                                    </t>
                                 </p>
                                 <p class="reg-payment-field-error" id="paymentErrorMsg" style="display:none;">
                                     ⚠️ Payment proof is required. Please upload a receipt or screenshot.
@@ -969,48 +1008,6 @@
 
                 </div>
             </div>
-
-            <!-- ══════════════════════════════════════
-                 05 · JERSEY  (enabled per tournament)
-                 ══════════════════════════════════════ -->
-            <t t-if="tournament and tournament.enable_jersey_section">
-            <div class="reg-section">
-                <div class="reg-section-header">
-                    <div class="reg-section-strip"/>
-                    <h3>Jersey Details <span class="reg-optional-badge">Optional</span></h3>
-                    <span class="reg-section-icon">👕</span>
-                    <span class="reg-section-num">05</span>
-                </div>
-
-                <div class="reg-grid">
-                    <div>
-                        <label class="reg-label" for="jerseyName">Name on Jersey</label>
-                        <input type="text" id="jerseyName" name="jersy_name" class="reg-input"
-                               placeholder="RAHUL" maxlength="20"
-                               style="text-transform:uppercase;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.08em;"/>
-                    </div>
-                    <div>
-                        <label class="reg-label" for="jerseyNumber">Jersey Number</label>
-                        <input type="text" id="jerseyNumber" name="jersy_number" class="reg-input"
-                               placeholder="18" maxlength="4"
-                               style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.06em;"/>
-                    </div>
-                    <div>
-                        <label class="reg-label" for="jerseySize">Jersey Size</label>
-                        <select id="jerseySize" name="jersy_size" class="reg-select">
-                            <option value="">— Select Size —</option>
-                            <option value="XS">XS — Extra Small</option>
-                            <option value="S">S — Small</option>
-                            <option value="M">M — Medium</option>
-                            <option value="L">L — Large</option>
-                            <option value="XL">XL — Extra Large</option>
-                            <option value="XXL">XXL — Double XL</option>
-                            <option value="XXXL">XXXL — Triple XL</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            </t>
 
             <!-- ── PRIVACY REASSURANCE STRIP ── -->
             <div class="reg-consent-note">
@@ -1272,8 +1269,10 @@
         var section = document.getElementById('paymentSection');
         var missed = document.getElementById('paymentMissedBanner');
         var err = document.getElementById('paymentErrorMsg');
+        var mustNote = document.getElementById('paymentMustNote');
         var hasFile = !!(paymentInput &amp;&amp; paymentInput.files &amp;&amp; paymentInput.files[0]);
         if (gate) gate.value = hasFile ? 'ok' : '';
+        if (mustNote) mustNote.style.display = hasFile ? 'none' : '';
         if (hasFile) {
             if (section) section.classList.remove('is-missing');
             if (missed) missed.style.display = 'none';
@@ -1517,6 +1516,9 @@
                         markPaymentMissing();
                         return;
                     }
+                    if (first.id === 'jerseySize' || first.name === 'jersy_size') {
+                        labelText = 'Jersey size is required. Please select a jersey size.';
+                    } else {
                     var lbl = form.querySelector('label[for="' + (first.id || '') + '"]');
                     if (lbl) {
                         var raw = (lbl.textContent || '').replace(/\*/g, '').replace(/\(optional\)/ig, '').trim();
@@ -1525,6 +1527,7 @@
                         labelText = 'Role is required. Please select a role.';
                     } else if (first.name) {
                         labelText = 'Please complete the required field: ' + first.name.replace(/_/g, ' ') + '.';
+                    }
                     }
                     var parentSec = first.closest('.reg-section');
                     if (parentSec) parentSec.classList.add('mob-open');
