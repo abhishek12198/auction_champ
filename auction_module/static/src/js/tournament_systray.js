@@ -7,6 +7,18 @@ import { session } from "@web/session";
 const { Component, hooks } = owl;
 const { useState, onWillStart, onMounted, onWillUnmount } = hooks;
 
+function buildLiveBoardUrl(slug) {
+    if (!slug) {
+        return "";
+    }
+    const db = session.db || session.db_name || "";
+    if (db) {
+        return "/" + db + "/" + slug + "/auction/live-board";
+    }
+    // Slug-only route redirects to the db-prefixed URL
+    return "/" + slug + "/auction/live-board";
+}
+
 class TournamentSystrayItem extends Component {
     setup() {
         this.orm = useService("orm");
@@ -16,6 +28,7 @@ class TournamentSystrayItem extends Component {
             tournamentLogo: "",
             projectorUrl: "",
             showcaseUrl: "",
+            liveBoardUrl: "",
             auctionRulesReady: false,
             expanded: false,
         });
@@ -27,44 +40,62 @@ class TournamentSystrayItem extends Component {
                     [session.uid],
                     ["tournament_id"]
                 );
-                if (result && result[0] && result[0].tournament_id) {
-                    const tId = result[0].tournament_id[0];
-                    const tName = result[0].tournament_id[1];
-                    this.state.tournamentName = tName;
-                    this.state.tournamentLogo = "/web/image/auction.tournament/" + tId + "/logo";
+                if (!(result && result[0] && result[0].tournament_id)) {
+                    return;
+                }
+                const tId = result[0].tournament_id[0];
+                const tName = result[0].tournament_id[1];
+                this.state.tournamentName = tName;
+                this.state.tournamentLogo = "/web/image/auction.tournament/" + tId + "/logo";
 
+                let tRow = null;
+                try {
+                    const tRes = await this.orm.read(
+                        "auction.tournament",
+                        [tId],
+                        ["projector_url", "live_board_url", "slug", "has_auction_rules"]
+                    );
+                    tRow = tRes && tRes[0];
+                } catch (_missingField) {
+                    // live_board_url may be missing until module upgrade
                     try {
                         const tRes = await this.orm.read(
                             "auction.tournament",
                             [tId],
                             ["projector_url", "slug", "has_auction_rules"]
                         );
-                        const tRow = tRes && tRes[0];
-                        const rulesReady = Boolean(tRow && tRow.has_auction_rules);
-                        this.state.auctionRulesReady = rulesReady;
-                        if (rulesReady) {
-                            this.state.showcaseUrl = "/auction/showcase";
-                            this.state.projectorUrl = (tRow && tRow.projector_url) || "";
-                            if (!this.state.projectorUrl && tRow && tRow.slug && session.db) {
-                                this.state.projectorUrl =
-                                    "/" + session.db + "/auction/projector/" + tRow.slug + "/";
-                            }
-                        } else {
-                            this.state.showcaseUrl = "";
-                            this.state.projectorUrl = "";
-                        }
+                        tRow = tRes && tRes[0];
                     } catch (_e2) {
-                        this.state.projectorUrl = "";
-                        this.state.showcaseUrl = "";
-                        this.state.auctionRulesReady = false;
+                        tRow = null;
                     }
                 }
+
+                if (!tRow) {
+                    return;
+                }
+
+                const rulesReady = Boolean(tRow.has_auction_rules);
+                this.state.auctionRulesReady = rulesReady;
+                if (rulesReady) {
+                    this.state.showcaseUrl = "/auction/showcase";
+                    this.state.projectorUrl = tRow.projector_url || "";
+                    if (!this.state.projectorUrl && tRow.slug && session.db) {
+                        this.state.projectorUrl =
+                            "/" + session.db + "/auction/projector/" + tRow.slug + "/";
+                    }
+                } else {
+                    this.state.showcaseUrl = "";
+                    this.state.projectorUrl = "";
+                }
+
+                // Third navbar icon — same place as Console / Projector
+                this.state.liveBoardUrl =
+                    tRow.live_board_url || buildLiveBoardUrl(tRow.slug) || "/auction/my/live-board";
             } catch (_e) {
                 // leave blank on any error
             }
         });
 
-        // Close the mobile tooltip when the user taps outside the badge
         const onOutsideClick = (ev) => {
             if (this.state.expanded && this.el && !this.el.contains(ev.target)) {
                 this.state.expanded = false;
@@ -75,7 +106,6 @@ class TournamentSystrayItem extends Component {
     }
 
     onBadgeClick(ev) {
-        // Only toggle on mobile (≤767px); on desktop the name is always visible
         if (window.innerWidth <= 767) {
             ev.stopPropagation();
             this.state.expanded = !this.state.expanded;
@@ -83,7 +113,6 @@ class TournamentSystrayItem extends Component {
     }
 
     onProjectorClick(ev) {
-        // Don't trigger the badge expanded/collapse logic
         ev.stopPropagation();
     }
 
@@ -99,8 +128,6 @@ class TournamentSystrayItem extends Component {
 
 TournamentSystrayItem.template = "auction_module.TournamentSystrayItem";
 
-// sequence 51 → renders just to the left of mail.MessagingMenu (default seq 50)
-// NavBar reverses the sorted list, so seq 51 appears just before (left of) chat icon
 registry.category("systray").add(
     "auction.tournament_systray",
     { Component: TournamentSystrayItem },

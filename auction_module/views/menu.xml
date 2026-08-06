@@ -38,27 +38,53 @@
         <record id="action_player_dashboard_client" model="ir.actions.client">
             <field name="name">Player Detail Dashboard</field>
             <field name="tag">player_dashboard</field>
-        </record><menuitem id="menu_action_player_dashboard"
+        </record>
+
+        <!-- Root menu order (forced again in res.users._auction_reorder_root_menus):
+             10 Tournament(s)  20 Player Dashboard  30 Player Showcase
+             40 Auctioneer Console  50 Pool Generator  60 Auction Settings -->
+        <menuitem id="menu_action_auction_tournament"
+          name="Tournament(s)"
+          action="action_auction_tournament"
+          groups="auction_module.group_auction_group_admin"
+          web_icon="auction_module,static/img/tournament_root.png"
+          sequence="10"/>
+        <record id="menu_action_auction_tournament" model="ir.ui.menu">
+            <field name="parent_id" eval="False"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <menuitem id="menu_action_player_dashboard"
           name="Player Dashboard"
           action="action_player_dashboard_client"
-          sequence="1" web_icon="auction_module,static/src/description/player_dashboard.png"
+          sequence="20" web_icon="auction_module,static/src/description/player_dashboard.png"
           groups="auction_module.group_auction_player_dashboard"/>
 
         <!-- Explicitly replace groups so only Player Dashboard Viewer can see this menu -->
         <record id="menu_action_player_dashboard" model="ir.ui.menu">
+            <field name="parent_id" eval="False"/>
+            <field name="sequence">20</field>
             <field name="groups_id" eval="[(6, 0, [ref('auction_module.group_auction_player_dashboard')])]"/>
         </record>
-
-        <menuitem id="menu_action_auction_root"
-          name="Auction Settings"
-          sequence="20" web_icon="auction_module,static/src/description/auctions_settings.png"
-          groups="auction_module.group_auction_group"/>
 
         <menuitem id="menu_action_launch_auction_root"
           name="Player Showcase"
           action="action_launch_auction"
-          sequence="21" web_icon="auction_module,static/src/description/auction.png"
+          sequence="30" web_icon="auction_module,static/src/description/auction.png"
           groups="auction_module.group_auction_group"/>
+        <record id="menu_action_launch_auction_root" model="ir.ui.menu">
+            <field name="parent_id" eval="False"/>
+            <field name="sequence">30</field>
+        </record>
+
+        <menuitem id="menu_action_auction_root"
+          name="Auction Settings"
+          sequence="60" web_icon="auction_module,static/src/description/auctions_settings.png"
+          groups="auction_module.group_auction_group"/>
+        <record id="menu_action_auction_root" model="ir.ui.menu">
+            <field name="parent_id" eval="False"/>
+            <field name="sequence">60</field>
+        </record>
 
         <menuitem id="menu_action_auction_auction"
           name="Auction"
@@ -145,14 +171,14 @@
         <menuitem id="menu_action_payment_marker"
           name="Payment Tracker"
           action="action_payment_marker"
-          sequence="2"
+          sequence="70"
           web_icon="auction_module,static/src/description/auctions_settings.png"
           groups="auction_module.group_auction_group,auction_module.group_auction_payment_marker"/>
 
         <!-- Force root menu (was previously under Players) -->
         <record id="menu_action_payment_marker" model="ir.ui.menu">
             <field name="parent_id" eval="False"/>
-            <field name="sequence">2</field>
+            <field name="sequence">70</field>
             <field name="web_icon">auction_module,static/src/description/auctions_settings.png</field>
             <field name="groups_id" eval="[(6, 0, [
                 ref('auction_module.group_auction_group'),
@@ -203,22 +229,21 @@
 
         <menuitem id="menu_action_team_pool_wizard"
           name="Pool Generator"
-          parent="menu_action_auction_auction"
           action="auction_module.action_team_pool_generator"
-          sequence="6"
-          groups="auction_module.group_auction_group"/>
+          sequence="50"
+          web_icon="auction_module,static/description/pool.png"
+          groups="auction_module.group_auction_group,auction_module.group_auction_pool_generator"/>
 
-
-
-        <menuitem id="menu_action_auction_tournament"
-          name="Tournament(s)"
-          action="action_auction_tournament"
-          groups="auction_module.group_auction_group_admin"
-          web_icon="auction_module,static/img/tournament_root.png"
-          sequence="19"/>
-
-
-
+        <!-- Force root menu (was previously under Auction Settings → Auction) -->
+        <record id="menu_action_team_pool_wizard" model="ir.ui.menu">
+            <field name="parent_id" eval="False"/>
+            <field name="sequence">50</field>
+            <field name="web_icon">auction_module,static/description/pool.png</field>
+            <field name="groups_id" eval="[(6, 0, [
+                ref('auction_module.group_auction_group'),
+                ref('auction_module.group_auction_pool_generator'),
+            ])]"/>
+        </record>
 
         <menuitem id="menu_action_auction_team"
           name="Team(s)"
@@ -283,6 +308,10 @@ if tournament:
     }
             </field>
         </record>
+
+        <!-- Force root menu order + login landings on every module update -->
+        <function model="res.users" name="_auction_reorder_root_menus"/>
+        <function model="res.users" name="_auction_apply_home_actions_all"/>
 
     </data>
 </odoo>

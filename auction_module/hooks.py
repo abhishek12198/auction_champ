@@ -42,3 +42,5 @@ def post_init_hook(cr, registry):
 
     env = api.Environment(cr, SUPERUSER_ID, {})
     env['res.users']._auction_sync_tournament_assignments()
+    env['res.users']._auction_reorder_root_menus()
+    env['res.users']._auction_apply_home_actions_all()

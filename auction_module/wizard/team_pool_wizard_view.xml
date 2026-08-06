@@ -117,11 +117,17 @@
                         <field name="fixture_type" string="Fixture Type"/>
                         <field
                             name="outside_pool_count"
-                            string="Teams per Team Outside Pool (N)"
-                            attrs="{'invisible': [('fixture_type', '!=', 'custom_outside')],
-                                    'required':  [('fixture_type', '=',  'custom_outside')]}"
+                            string="Matches per Team (League)"
                         />
                     </group>
+                    <p class="text-muted" style="font-size:.8rem;margin:-6px 0 10px;">
+                        Default is <b>(teams in pool) − 1</b>. Every team gets
+                        <b>exactly</b> this many matches; opponents are chosen randomly.
+                        <br/>
+                        <b>Note:</b> With an odd pool size (e.g. 3 teams), an odd N such as 1 is
+                        impossible — the generator auto-adjusts to the nearest valid value (usually 2).
+                        Prefer even N for odd-sized pools. Cross-pool modes need equal pool sizes.
+                    </p>
                     <div class="o_row">
                         <button
                             name="action_generate_fixture"

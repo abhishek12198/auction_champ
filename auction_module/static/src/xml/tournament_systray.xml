@@ -2,6 +2,7 @@
 <templates xml:space="preserve">
     <t t-name="auction_module.TournamentSystrayItem" owl="1">
         <div class="o_auction_tournament_systray">
+            <!-- 1. Player Console -->
             <a t-if="state.showcaseUrl"
                t-att-href="state.showcaseUrl"
                class="o_nav_entry o_auction_projector_systray_icon o_auction_console_systray_icon"
@@ -24,6 +25,8 @@
                     <path fill="currentColor" d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12zM9.5 8.5v7l6-3.5-6-3.5z"/>
                 </svg>
             </a>
+
+            <!-- 2. Open Projector -->
             <a t-if="state.projectorUrl"
                t-att-href="state.projectorUrl"
                class="o_nav_entry o_auction_projector_systray_icon"
@@ -48,6 +51,22 @@
                     <path fill="currentColor" d="M3 3h18a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1m8.126 9H4v7h16v-7h-1.126a4.002 4.002 0 0 1-7.748 0m0-2a4.002 4.002 0 0 1 7.748 0H20V5H4v5zM15 13a2 2 0 1 0 0-4a2 2 0 0 0 0 4m-9 2h2v2H6z"/>
                 </svg>
             </a>
+
+            <!-- 3. Open Live Board (share with outsiders) -->
+            <a t-if="state.liveBoardUrl"
+               t-att-href="state.liveBoardUrl"
+               class="o_nav_entry o_auction_projector_systray_icon o_auction_liveboard_systray_icon"
+               target="_blank"
+               rel="noopener noreferrer"
+               t-on-click="onProjectorClick"
+               title="Open Live Board"
+               aria-label="Open Live Board">
+                <svg class="o_auction_projector_systray_svg" xmlns="http://www.w3.org/2000/svg"
+                     viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path fill="currentColor" d="M12 5c-4.4 0-8.2 2.7-9.8 6.5a1 1 0 0 0 0 .9C3.8 16.3 7.6 19 12 19s8.2-2.7 9.8-6.5a1 1 0 0 0 0-.9C20.2 7.7 16.4 5 12 5zm0 12c-3.3 0-6.2-2-7.6-5C5.8 9 8.7 7 12 7s6.2 2 7.6 5c-1.4 3-4.3 5-7.6 5zm0-8a3 3 0 1 0 0 6a3 3 0 0 0 0-6zm0 4a1 1 0 1 1 0-2a1 1 0 0 1 0 2z"/>
+                </svg>
+            </a>
+
             <span t-if="state.tournamentName"
                   t-att-class="'o_auction_tournament_badge' + (state.expanded ? ' o_expanded' : '')"
                   t-on-click="onBadgeClick">

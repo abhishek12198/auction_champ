@@ -71,10 +71,16 @@ class TeamPoolWizard(models.TransientModel):
     # ── fixture fields ────────────────────────────────────────────────────
     fixture_type = fields.Selection([
         ('pool_rr',       'Pool Round Robin (teams play within pool)'),
-        ('cross_pool_rr', 'Cross Pool Round Robin (all teams vs other pools)'),
+        ('cross_pool_rr', 'Cross Pool Round Robin (teams play outside pool)'),
         ('custom_outside','Custom Outside Pool Count (each team plays N teams outside pool)'),
     ], string='Fixture Type', default='pool_rr')
-    outside_pool_count = fields.Integer(string='Outside Pool Matches per Team (N)', default=1)
+    outside_pool_count = fields.Integer(
+        string='Matches per Team (League)',
+        default=1,
+        help='How many league matches each team should play. '
+             'Default = (teams in that team\'s pool) − 1. '
+             'Opponents are chosen randomly from the eligible pool for the selected fixture type.',
+    )
     fixture_html = fields.Html(string='Fixture Schedule', readonly=True, sanitize=False)
 
     # ── helpers ──────────────────────────────────────────────────────────
@@ -248,6 +254,9 @@ class TeamPoolWizard(models.TransientModel):
 
         # Persist structure so "Apply Names" can re-render without reshuffling
         self.pool_structure_json = json.dumps([[t.id for t in pool] for pool in pools])
+        # Default league matches = (teams in pool) − 1
+        self.outside_pool_count = self._default_matches_per_team(pools)
+        self.fixture_html = False
 
         # Ensure name lines are in DB (edge case: wizard opened without triggering onchange)
         if not self.pool_name_ids:
@@ -330,55 +339,331 @@ class TeamPoolWizard(models.TransientModel):
             rounds.append(pairs)
         return rounds
 
+    def _default_matches_per_team(self, pools):
+        """Default league matches = (teams in pool) − 1.
+
+        With unequal pools, use the smallest pool size − 1 so every team can
+        reach that count within its own pool for Pool Round Robin.
+        """
+        sizes = [len(p) for p in (pools or []) if p]
+        if not sizes:
+            return 1
+        return max(1, min(sizes) - 1)
+
+    def _league_matches_n(self, pools):
+        n = int(self.outside_pool_count or 0)
+        if n < 1:
+            n = self._default_matches_per_team(pools)
+        return max(1, n)
+
+    def _feasible_regular_n(self, team_count, n, max_n=None):
+        """Nearest n where every team can have exactly n matches (handshaking).
+
+        team_count * n must be even. Prefer n+1 over n-1 when the requested
+        value is impossible (e.g. 3 teams × 1 match → 2).
+        """
+        if team_count < 2:
+            return 0
+        if max_n is None:
+            max_n = team_count - 1
+        max_n = max(0, int(max_n))
+        n = max(0, min(int(n), max_n))
+        if n < 1:
+            return 0
+        if (team_count * n) % 2 == 0:
+            return n
+        candidates = []
+        if n + 1 <= max_n and (team_count * (n + 1)) % 2 == 0:
+            candidates.append(n + 1)
+        if n - 1 >= 1 and (team_count * (n - 1)) % 2 == 0:
+            candidates.append(n - 1)
+        if not candidates:
+            return 0
+        # Nearest feasible; on a tie prefer the smaller N
+        return min(candidates, key=lambda x: (abs(x - n), x))
+
+    def _circulant_regular_pairs(self, teams, n):
+        """Build an exact n-regular schedule on *teams* (circulant graph).
+
+        Every team gets exactly n matches. If the requested n is impossible
+        (odd degree-sum), it is auto-adjusted to the nearest feasible value.
+        Returns (pairs, effective_n).
+        """
+        teams = list(teams)
+        random.shuffle(teams)
+        s = len(teams)
+        if s < 2:
+            return [], 0
+        n = self._feasible_regular_n(s, n, max_n=s - 1)
+        if n < 1:
+            return [], 0
+
+        pairs = []
+        used = set()
+        # Connect each team to the next floor(n/2) neighbours on the circle
+        for k in range(1, (n // 2) + 1):
+            for i in range(s):
+                j = (i + k) % s
+                edge = (min(i, j), max(i, j))
+                if edge in used:
+                    continue
+                used.add(edge)
+                pairs.append((teams[i], teams[j]))
+        # When n is odd, s is even → add opposite (diameter) edges
+        if n % 2 == 1:
+            half = s // 2
+            for i in range(half):
+                j = i + half
+                pairs.append((teams[i], teams[j]))
+        return pairs, n
+
+    def _select_exact_n_matches(self, teams, candidate_pairs, n):
+        """Randomly choose matches so *every* team gets exactly n games.
+
+        Uses a configuration-style stub matching with many retries, then a
+        neediest-first greedy repair. Raises UserError if impossible.
+        """
+        teams = list(teams)
+        if not teams or n < 1:
+            return []
+        team_map = {t.id: t for t in teams}
+        team_ids = [t.id for t in teams]
+
+        adj = {tid: set() for tid in team_ids}
+        for ta, tb in candidate_pairs:
+            if ta.id in adj and tb.id in adj and ta.id != tb.id:
+                adj[ta.id].add(tb.id)
+                adj[tb.id].add(ta.id)
+
+        common = min(min(int(n), len(adj[tid])) for tid in team_ids)
+        common = self._feasible_regular_n(len(team_ids), common, max_n=common)
+        if common < 1:
+            raise UserError(
+                'Cannot give every team %d matches — not enough eligible opponents '
+                'for a balanced schedule. Try a different N or pool setup.' % n
+            )
+
+        def _degree_map(pairs_list):
+            deg = {tid: 0 for tid in team_ids}
+            for a, b in pairs_list:
+                deg[a.id] += 1
+                deg[b.id] += 1
+            return deg
+
+        def _from_stubs():
+            """Pair random stubs; reject invalid pairings and reshuffle."""
+            for _ in range(200):
+                stubs = []
+                for tid in team_ids:
+                    stubs.extend([tid] * common)
+                random.shuffle(stubs)
+                used = set()
+                result = []
+                ok = True
+                # Greedy scan with local repair
+                i = 0
+                while i < len(stubs) - 1:
+                    a = stubs[i]
+                    # find a valid partner in the remaining stubs
+                    found = False
+                    for j in range(i + 1, len(stubs)):
+                        b = stubs[j]
+                        if a == b:
+                            continue
+                        edge = frozenset((a, b))
+                        if edge in used or b not in adj[a]:
+                            continue
+                        used.add(edge)
+                        result.append((team_map[a], team_map[b]))
+                        # swap chosen partner next to i and advance by 2
+                        stubs[i + 1], stubs[j] = stubs[j], stubs[i + 1]
+                        found = True
+                        break
+                    if not found:
+                        ok = False
+                        break
+                    i += 2
+                if ok and len(result) == (len(team_ids) * common) // 2:
+                    deg = _degree_map(result)
+                    if all(deg[tid] == common for tid in team_ids):
+                        return result
+            return None
+
+        def _try_greedy():
+            degree = {tid: 0 for tid in team_ids}
+            used = set()
+            result = []
+            for _ in range(len(team_ids) * common):
+                needing = [tid for tid in team_ids if degree[tid] < common]
+                if not needing:
+                    break
+                random.shuffle(needing)
+                needing.sort(key=lambda tid: (
+                    degree[tid] - common,
+                    len([
+                        o for o in adj[tid]
+                        if degree[o] < common and frozenset((tid, o)) not in used
+                    ]),
+                ))
+                progress = False
+                for ta in needing:
+                    opps = [
+                        o for o in adj[ta]
+                        if degree[o] < common and frozenset((ta, o)) not in used
+                    ]
+                    if not opps:
+                        continue
+                    random.shuffle(opps)
+                    opps.sort(key=lambda o: degree[o] - common)
+                    tb = opps[0]
+                    used.add(frozenset((ta, tb)))
+                    degree[ta] += 1
+                    degree[tb] += 1
+                    result.append((team_map[ta], team_map[tb]))
+                    progress = True
+                    break
+                if not progress:
+                    return None
+            deg = _degree_map(result)
+            return result if all(deg[tid] == common for tid in team_ids) else None
+
+        built = _from_stubs()
+        if built is not None:
+            return built
+        for _ in range(80):
+            built = _try_greedy()
+            if built is not None:
+                return built
+
+        if all(len(adj[tid]) == len(team_ids) - 1 for tid in team_ids):
+            pairs, _eff = self._circulant_regular_pairs(teams, common)
+            return pairs
+
+        raise UserError(
+            'Could not give every team exactly %d matches with the current pools. '
+            'For cross-pool fixtures, keep pools the same size, or lower N.'
+            % n
+        )
+
+    def _bipartite_exact_n(self, pool_a, pool_b, n):
+        """Each team plays exactly n cross matches (requires equal pool sizes)."""
+        a = list(pool_a)
+        b = list(pool_b)
+        if not a or not b:
+            return []
+        if len(a) != len(b):
+            raise UserError(
+                'Cross-pool fixtures need equal pool sizes so every team can '
+                'get the same number of matches (pools are %d and %d). '
+                'Balance the pools, or use Pool Round Robin.'
+                % (len(a), len(b))
+            )
+        random.shuffle(a)
+        random.shuffle(b)
+        n = min(int(n), len(b))
+        if n < 1:
+            return []
+        pairs = []
+        for r in range(n):
+            for i in range(len(a)):
+                pairs.append((a[i], b[(i + r) % len(b)]))
+        return pairs
+
+    def _pack_matches_into_rounds(self, pairs):
+        """Greedy round packing: no team appears twice in the same round."""
+        rounds = []
+        busy = {}  # team_id -> set(round_index)
+        for ta, tb in pairs:
+            r = 0
+            while True:
+                if r not in busy.get(ta.id, ()) and r not in busy.get(tb.id, ()):
+                    while len(rounds) <= r:
+                        rounds.append([])
+                    rounds[r].append((ta, tb))
+                    busy.setdefault(ta.id, set()).add(r)
+                    busy.setdefault(tb.id, set()).add(r)
+                    break
+                r += 1
+        return rounds
+
     def _generate_matches(self, pools):
         """Return list of (team_a, team_b, group_label) based on fixture_type.
-        Rounds are interleaved so no team plays consecutive matches."""
+
+        Every team gets exactly N league matches (N = Matches per Team).
+        Opponents are chosen randomly from the eligible set for the fixture type.
+        """
         pool_labels = self._get_pool_labels()
         ftype = self.fixture_type
+        n = self._league_matches_n(pools)
         matches = []
 
         if ftype == 'pool_rr':
-            # Generate rounds per pool, then list each pool fully before the next
             for pi, pool in enumerate(pools, start=1):
                 label = pool_labels.get(pi, self._pool_label(pi))
-                rounds = self._round_robin_rounds(list(pool))
+                pool_teams = list(pool)
+                if len(pool_teams) < 2:
+                    continue
+                pool_n = min(n, len(pool_teams) - 1)
+                # Circulant → every team gets the same match count (auto-adjusts
+                # when requested N is impossible, e.g. 3 teams × 1 → 2)
+                selected, _eff_n = self._circulant_regular_pairs(pool_teams, pool_n)
+                rounds = self._pack_matches_into_rounds(selected)
                 for r, round_matches in enumerate(rounds):
                     for ta, tb in round_matches:
-                        matches.append((ta, tb, f'{label}  —  Round {r + 1}'))
+                        matches.append((ta, tb, '%s  —  Round %d' % (label, r + 1)))
 
-        elif ftype == 'cross_pool_rr':
-            pool_pair_rounds = []
-            for pi in range(len(pools)):
-                for pj in range(pi + 1, len(pools)):
-                    la = pool_labels.get(pi + 1, self._pool_label(pi + 1))
-                    lb = pool_labels.get(pj + 1, self._pool_label(pj + 1))
-                    label = f'{la}  ×  {lb}'
-                    rounds = self._bipartite_rounds(pools[pi], pools[pj])
-                    pool_pair_rounds.append((label, rounds))
+        elif ftype in ('cross_pool_rr', 'custom_outside'):
+            all_teams = [t for pool in pools for t in pool]
+            if len(pools) < 2 or len(all_teams) < 2:
+                return matches
 
-            max_r = max((len(r) for _, r in pool_pair_rounds), default=0)
-            for r in range(max_r):
-                for label, rounds in pool_pair_rounds:
-                    if r < len(rounds):
-                        for ta, tb in rounds[r]:
-                            matches.append((ta, tb, f'{label}  —  Round {r + 1}'))
+            sizes = [len(p) for p in pools]
+            outside_avail = [len(all_teams) - sz for sz in sizes]
+            cross_n = min(n, min(outside_avail) if outside_avail else 0)
+            if cross_n < 1:
+                raise UserError(
+                    'Not enough teams outside each pool to give every team '
+                    '%d cross-pool matches. Reduce N or change the pools.' % n
+                )
 
-        elif ftype == 'custom_outside':
-            n = max(1, self.outside_pool_count or 1)
-            all_cross = []
-            for pi in range(len(pools)):
-                for pj in range(pi + 1, len(pools)):
-                    for ta in pools[pi]:
-                        for tb in pools[pj]:
-                            all_cross.append((ta, tb))
-            random.shuffle(all_cross)
+            # Two pools: cyclic construction needs equal sizes for exact N each
+            if len(pools) == 2:
+                selected = self._bipartite_exact_n(pools[0], pools[1], cross_n)
+            else:
+                if len(set(sizes)) != 1:
+                    raise UserError(
+                        'For cross-pool fixtures with more than 2 pools, keep '
+                        'all pools the same size so every team can get exactly '
+                        '%d matches. Current sizes: %s'
+                        % (cross_n, ', '.join(str(s) for s in sizes))
+                    )
+                candidates = []
+                for pi in range(len(pools)):
+                    for pj in range(pi + 1, len(pools)):
+                        for ta in pools[pi]:
+                            for tb in pools[pj]:
+                                candidates.append((ta, tb))
+                selected = self._select_exact_n_matches(
+                    all_teams, candidates, cross_n)
 
-            match_count = {}
-            for ta, tb in all_cross:
-                if match_count.get(ta.id, 0) < n and match_count.get(tb.id, 0) < n:
-                    matches.append((ta, tb, 'Cross Pool Matches'))
-                    match_count[ta.id] = match_count.get(ta.id, 0) + 1
-                    match_count[tb.id] = match_count.get(tb.id, 0) + 1
+            team_pool = {}
+            for pi, pool in enumerate(pools, start=1):
+                for team in pool:
+                    team_pool[team.id] = pi
+            rounds = self._pack_matches_into_rounds(selected)
+            for r, round_matches in enumerate(rounds):
+                for ta, tb in round_matches:
+                    pi = team_pool.get(ta.id)
+                    pj = team_pool.get(tb.id)
+                    if pi and pj:
+                        la = pool_labels.get(pi, self._pool_label(pi))
+                        lb = pool_labels.get(pj, self._pool_label(pj))
+                        if pi > pj:
+                            la, lb = lb, la
+                        group = '%s  ×  %s  —  Round %d' % (la, lb, r + 1)
+                    else:
+                        group = 'Cross Pool Matches  —  Round %d' % (r + 1)
+                    matches.append((ta, tb, group))
 
         return matches
 
@@ -409,9 +694,9 @@ class TeamPoolWizard(models.TransientModel):
             (t.tournament_id.name for t in all_teams if t.tournament_id), 'Fixture Schedule'
         )
         type_labels = {
-            'pool_rr':        'Pool Round Robin',
-            'cross_pool_rr':  'Cross Pool Round Robin',
-            'custom_outside': f'Custom Cross Pool  (N = {self.outside_pool_count})',
+            'pool_rr':        'Pool Round Robin  (N = %s)' % self.outside_pool_count,
+            'cross_pool_rr':  'Cross Pool Round Robin  (N = %s)' % self.outside_pool_count,
+            'custom_outside': 'Custom Cross Pool  (N = %s)' % self.outside_pool_count,
         }
         subtitle = type_labels.get(self.fixture_type, '')
 
@@ -457,6 +742,12 @@ class TeamPoolWizard(models.TransientModel):
 
     @api.model
     def _client_current_tournament(self):
+        """Active tournament for Pool Generator (context wins over systray)."""
+        tid = self.env.context.get('tournament_id')
+        if tid:
+            tournament = self.env['auction.tournament'].browse(int(tid)).exists()
+            if tournament:
+                return tournament
         tournament = self.env.user.tournament_id
         if not tournament:
             raise UserError('Select a tournament before using the Pool Generator.')
@@ -529,9 +820,64 @@ class TeamPoolWizard(models.TransientModel):
         }
 
     @api.model
-    def client_bootstrap(self):
+    def _client_tournament_filter_meta(self):
+        """Tournament dropdown choices — mirrors Payment Tracker rules.
+
+        SaaS organisers: locked to working tournament (no dropdown).
+        Admins: all active tournaments.
+        Other users: assigned tournament_ids (dropdown only if more than one).
+        """
+        user = self.env.user
+        is_admin = user.has_group('auction_module.group_auction_group_admin')
+        is_saas = False
+        try:
+            Acc = self.env['ac.saas.account']
+            is_saas = bool(Acc._get_account_for_user())
+        except Exception:
+            is_saas = False
+
+        if is_saas and not is_admin:
+            return [], False, True, is_admin
+
+        if is_admin:
+            tournaments = self.env['auction.tournament'].sudo().search(
+                [('active', '=', True)], order='name asc, id asc'
+            )
+        else:
+            tournaments = user.sudo().tournament_ids.filtered(lambda t: t.active)
+            if not tournaments and user.tournament_id:
+                tournaments = user.tournament_id
+
+        choices = [
+            {'id': t.id, 'name': t.name or ('Tournament #%s' % t.id)}
+            for t in tournaments
+        ]
+        show = bool(is_admin or len(choices) > 1)
+        return choices, show, is_saas, is_admin
+
+    @api.model
+    def client_bootstrap(self, tournament_id=None):
         """Initial payload for the Pool Generator client action."""
-        tournament = self.env.user.tournament_id
+        choices, show_filter, is_saas, is_admin = self._client_tournament_filter_meta()
+
+        tournament = False
+        if tournament_id:
+            tournament = self.env['auction.tournament'].browse(int(tournament_id)).exists()
+            if not tournament:
+                raise UserError('Tournament not found.')
+            # Non-admins may only open tournaments they are allowed to see
+            if not is_admin and choices:
+                allowed = {c['id'] for c in choices}
+                if tournament.id not in allowed:
+                    raise UserError('You do not have access to that tournament.')
+        else:
+            try:
+                tournament = self._client_current_tournament()
+            except UserError:
+                tournament = self.env.user.tournament_id
+            if not tournament and choices:
+                tournament = self.env['auction.tournament'].browse(choices[0]['id']).exists()
+
         Team = self.env['auction.team']
         domain = [('tournament_id', '=', tournament.id)] if tournament else []
         teams = Team.search(domain, order='name')
@@ -583,13 +929,17 @@ class TeamPoolWizard(models.TransientModel):
             'default_pool_count': default_pool_count,
             'saved_pools': saved_pools,
             'saved_fixture': saved_fixture,
+            'tournaments': choices,
+            'show_tournament_filter': show_filter,
+            'is_saas': is_saas,
+            'is_admin': is_admin,
             'fixture_types': [
                 {'value': 'pool_rr', 'label': 'Pool Round Robin',
-                 'hint': 'Teams play only within their own pool'},
+                 'hint': 'Random opponents within the same pool (N matches per team)'},
                 {'value': 'cross_pool_rr', 'label': 'Cross Pool Round Robin',
-                 'hint': 'Every team plays teams from other pools'},
+                 'hint': 'Random opponents from other pools (N matches per team)'},
                 {'value': 'custom_outside', 'label': 'Custom Outside Matches',
-                 'hint': 'Each team plays N opponents from outside its pool'},
+                 'hint': 'Same as cross-pool: each team plays N outside opponents'},
             ],
         }
 
@@ -614,7 +964,12 @@ class TeamPoolWizard(models.TransientModel):
                 if team and team.tournament_id:
                     tournament = team.tournament_id
         if not tournament:
-            tournament = self.env.user.tournament_id
+            try:
+                tournament = self.with_context(
+                    tournament_id=self.env.context.get('tournament_id')
+                )._client_current_tournament()
+            except UserError:
+                tournament = self.env.user.tournament_id
         if not tournament:
             raise UserError('Select a tournament before using the Pool Generator.')
         return tournament.sudo()
@@ -990,8 +1345,8 @@ class TeamPoolWizard(models.TransientModel):
             'Fixture Schedule',
         )
         type_labels = {
-            'pool_rr': 'Pool Round Robin',
-            'cross_pool_rr': 'Cross Pool Round Robin',
+            'pool_rr': 'Pool Round Robin (N = %s)' % wiz.outside_pool_count,
+            'cross_pool_rr': 'Cross Pool Round Robin (N = %s)' % wiz.outside_pool_count,
             'custom_outside': 'Custom Cross Pool (N = %s)' % wiz.outside_pool_count,
         }
         cache = {}

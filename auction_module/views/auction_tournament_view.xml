@@ -174,6 +174,28 @@
                                     <span class="o_stat_text text-muted" style="font-size:10px">Open Tracker</span>
                                 </div>
                             </button>
+                            <!-- Open public Live Board (shareable with outsiders) -->
+                            <button name="action_open_live_board"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    icon="fa-tv"
+                                    attrs="{'invisible': [('slug', '=', False)]}">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text">Live Board</span>
+                                    <span class="o_stat_text text-muted" style="font-size:10px">Share / Open</span>
+                                </div>
+                            </button>
+                            <!-- Open Pool & Fixture Generator for this tournament -->
+                            <button name="action_open_pool_generator"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    icon="fa-sitemap"
+                                    groups="auction_module.group_auction_pool_generator">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text">Pools &amp; Fixtures</span>
+                                    <span class="o_stat_text text-muted" style="font-size:10px">Generate</span>
+                                </div>
+                            </button>
                             <!-- Remove duplicate players -->
                             <!-- Clear On-Stage Players -->
                             <button name="action_clear_stage"
@@ -563,11 +585,29 @@
                                 <div class="o_at_presentation_section">
                                     <separator string="Public Live Board"/>
                                     <group col="2">
+                                        <group string="Share URL">
+                                            <field name="live_board_url" widget="CopyClipboardChar"
+                                                   readonly="1" string="Live Board URL"/>
+                                            <button name="action_open_live_board"
+                                                    type="object"
+                                                    string="Open Live Board"
+                                                    class="btn-secondary"
+                                                    icon="fa-external-link"
+                                                    attrs="{'invisible': [('live_board_url', '=', False)]}"/>
+                                        </group>
+                                        <group string="How it works">
+                                            <div class="o_at_presentation_help" colspan="2">
+                                                Share this link with outsiders so they can watch the auction live.
+                                                Turn the board <strong>Live</strong> from the tournament header first.
+                                            </div>
+                                        </group>
+                                    </group>
+                                    <group col="2">
                                         <group string="Access Control">
                                             <field name="live_board_code_protected"
                                                    string="Require Tournament Code"/>
                                         </group>
-                                        <group string="How it works">
+                                        <group string="Code gate">
                                             <div class="o_at_presentation_help" colspan="2">
                                                 <strong>On:</strong> viewers must enter the
                                                 <strong>Tournament Code</strong> once; that browser
@@ -672,12 +712,29 @@
                                 </field>
                             </page>
 
-                            <!-- Tab: Pools & Fixtures (saved from Pool Generator) -->
-                            <page string="Pools and Fixtures" name="pools_fixtures">
+                            <!-- Tab: Pools & Fixtures (generate + saved snapshots) -->
+                            <page string="Pools and Fixtures" name="pools_fixtures"
+                                  groups="auction_module.group_auction_pool_generator">
+                                <div style="margin-bottom:16px;padding:14px 16px;border-radius:10px;
+                                            background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);
+                                            color:#e2e8f0;">
+                                    <div style="font-weight:700;font-size:1.05rem;margin-bottom:6px;color:#fff;">
+                                        Pool &amp; Fixture Generator
+                                    </div>
+                                    <p style="margin:0 0 12px;font-size:.85rem;line-height:1.5;opacity:.85;">
+                                        Draw pools and generate the league fixture for this tournament
+                                        without leaving the tournament form. Saved snapshots appear below
+                                        after you save from the generator.
+                                    </p>
+                                    <button name="action_open_pool_generator"
+                                            type="object"
+                                            string="Open Pool &amp; Fixture Generator"
+                                            class="btn btn-primary"
+                                            icon="fa-sitemap"/>
+                                </div>
                                 <p class="text-muted" style="margin-bottom:14px;">
-                                    Snapshots saved from the <strong>Pool Generator</strong> appear here
-                                    for this tournament. Generation is attributed to the user who last
-                                    drew pools or fixtures (or saved them). Download the saved images below.
+                                    Snapshots saved from the generator for this tournament.
+                                    Generation is attributed to the user who last drew pools or fixtures.
                                 </p>
                                 <group>
                                     <group string="Pool Draw">

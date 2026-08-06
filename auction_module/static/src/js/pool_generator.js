@@ -40,13 +40,22 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             'click .pg-btn-fixture': '_onGenerateFixture',
             'click .pg-btn-snapshot-fixture': '_onSnapshotFixture',
             'click .pg-fx-remove': '_onRemoveMatch',
+            'click .pg-fx-move-up': '_onMoveMatch',
+            'click .pg-fx-move-down': '_onMoveMatch',
+            'change .pg-tournament-select': '_onTournamentChange',
         },
 
-        init: function () {
+        init: function (parent, action) {
             this._super.apply(this, arguments);
+            var ctx = (action && action.context) || {};
+            var params = (action && action.params) || {};
+            this.tournamentId = params.tournament_id || ctx.tournament_id || false;
             this.state = {
                 step: 1,
                 tournament: {},
+                tournaments: [],
+                showTournamentFilter: false,
+                isAdmin: false,
                 teams: [],
                 selected: {},
                 search: '',
@@ -65,23 +74,58 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             this._revealMsgTimer = null;
         },
 
+        _pgRpc: function (opts) {
+            opts = opts || {};
+            var tid = this.tournamentId || (this.state.tournament && this.state.tournament.id) || false;
+            opts.context = Object.assign({}, opts.context || {}, {tournament_id: tid});
+            return this._rpc(opts);
+        },
+
+        _applyBootstrap: function (data) {
+            this.state.tournament = data.tournament || {};
+            if (this.state.tournament.id) {
+                this.tournamentId = this.state.tournament.id;
+            }
+            this.state.tournaments = data.tournaments || [];
+            this.state.showTournamentFilter = !!data.show_tournament_filter;
+            this.state.isAdmin = !!data.is_admin;
+            this.state.teams = data.teams || [];
+            this.state.poolCount = data.default_pool_count || 2;
+            this.state.fixtureTypes = data.fixture_types || this.state.fixtureTypes || [];
+            if (!this.state.fixtureType && this.state.fixtureTypes.length) {
+                this.state.fixtureType = this.state.fixtureTypes[0].value;
+            }
+            // Reset draw state for a fresh tournament load
+            this.state.selected = {};
+            this.state.structure = null;
+            this.state.pools = [];
+            this.state.fixture = null;
+            this.state.poolNames = [];
+            this.state._namesFromSave = false;
+            this.state.step = 1;
+            this.state.search = '';
+            this._applySavedState(data);
+            if (!this.state.fixtureType) {
+                this.state.fixtureType = 'pool_rr';
+            }
+        },
+
         start: function () {
             var self = this;
             var result = this._super.apply(this, arguments);
             this.$el.css('position', 'relative');
             this.$el.html('<div class="pg-empty"><strong>Loading Pool Generator…</strong></div>');
             return Promise.resolve(result).then(function () {
-                return self._rpc({
+                return self._pgRpc({
                     model: 'auction.team.pool.wizard',
                     method: 'client_bootstrap',
-                    args: [],
+                    args: [self.tournamentId || false],
                 }).then(function (data) {
-                    self.state.tournament = data.tournament || {};
-                    self.state.teams = data.teams || [];
-                    self.state.poolCount = data.default_pool_count || 2;
-                    self.state.fixtureTypes = data.fixture_types || [];
-                    self.state.fixtureType = (self.state.fixtureTypes[0] && self.state.fixtureTypes[0].value) || 'pool_rr';
-                    self._applySavedState(data);
+                    self._applyBootstrap(data);
+                    if (!(self.state.fixtureTypes && self.state.fixtureTypes.length)) {
+                        self.state.fixtureTypes = data.fixture_types || [];
+                        self.state.fixtureType = (self.state.fixtureTypes[0] && self.state.fixtureTypes[0].value) || 'pool_rr';
+                    }
                     return self._loadPoolNames(self.state.poolCount);
                 }).then(function () {
                     self._render();
@@ -95,6 +139,39 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             });
         },
 
+        _onTournamentChange: function (ev) {
+            var tid = parseInt(ev.currentTarget.value, 10) || false;
+            if (!tid || tid === this.tournamentId) {
+                return;
+            }
+            this.tournamentId = tid;
+            this._reloadForTournament();
+        },
+
+        _reloadForTournament: function () {
+            var self = this;
+            this.$el.html('<div class="pg-empty"><strong>Loading tournament…</strong></div>');
+            return this._pgRpc({
+                model: 'auction.team.pool.wizard',
+                method: 'client_bootstrap',
+                args: [this.tournamentId || false],
+            }).then(function (data) {
+                self._applyBootstrap(data);
+                self.state.fixtureTypes = data.fixture_types || self.state.fixtureTypes || [];
+                if (!self.state.fixtureType && self.state.fixtureTypes.length) {
+                    self.state.fixtureType = self.state.fixtureTypes[0].value;
+                }
+                return self._loadPoolNames(self.state.poolCount);
+            }).then(function () {
+                self._render();
+                self._toast('Switched to ' + (self.state.tournament.name || 'tournament'));
+            }).catch(function (err) {
+                console.error('[PoolGenerator]', err);
+                Dialog.alert(self, (err && err.data && err.data.message) || 'Failed to load tournament');
+                self._render();
+            });
+        },
+
         _loadPoolNames: function (count) {
             var self = this;
             // Keep custom names if already restored from tournament save
@@ -102,7 +179,7 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 this.state._namesFromSave = false;
                 return Promise.resolve();
             }
-            return this._rpc({
+            return this._pgRpc({
                 model: 'auction.team.pool.wizard',
                 method: 'client_pool_labels',
                 args: [count],
@@ -138,15 +215,24 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 (saved.team_ids || []).forEach(function (id) { selected[id] = true; });
                 this.state.selected = selected;
                 this.state.step = 3;
+                this.state.outsideN = this._defaultMatchesPerTeam();
             }
             if (data.saved_fixture && data.saved_fixture.matches) {
                 this.state.fixture = data.saved_fixture;
                 this.state.fixtureType = data.saved_fixture.fixture_type || this.state.fixtureType;
-                this.state.outsideN = data.saved_fixture.outside_n || this.state.outsideN;
+                this.state.outsideN = data.saved_fixture.outside_n || this._defaultMatchesPerTeam();
                 if (this.state.structure) this.state.step = 4;
             }
         },
 
+        _defaultMatchesPerTeam: function () {
+            // (teams in pool) − 1; unequal pools → smallest pool size − 1
+            var structure = this.state.structure || [];
+            var sizes = structure.map(function (p) { return (p || []).length; })
+                .filter(function (n) { return n > 1; });
+            if (!sizes.length) return 1;
+            return Math.max(1, Math.min.apply(null, sizes) - 1);
+        },
         _selectedIds: function () {
             var ids = [];
             var sel = this.state.selected;
@@ -170,11 +256,82 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             setTimeout(function () { $t.fadeOut(200, function () { $t.remove(); }); }, 2200);
         },
 
+        _tournamentLogoUrl: function () {
+            var t = this.state.tournament || {};
+            return t.logo_url || false;
+        },
+
+        _snapshotFilename: function (kind) {
+            // kind: 'pool' | 'fixture' → e.g. "Estadio Tournament_pool.png"
+            var name = (
+                this.state.tournamentName ||
+                (this.state.fixture && this.state.fixture.tournament) ||
+                (this.state.tournament && this.state.tournament.name) ||
+                'Tournament'
+            );
+            name = String(name)
+                .replace(/[\\/:*?"<>|]+/g, '')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .replace(/[. ]+$/g, '');
+            if (!name) name = 'Tournament';
+            var suffix = kind === 'fixture' ? 'fixture' : 'pool';
+            return name + '_' + suffix + '.png';
+        },
+
+        _stageBannerHtml: function (opts) {
+            opts = opts || {};
+            var logoUrl = this._tournamentLogoUrl();
+            var logo = logoUrl
+                ? '<img class="pg-stage-logo" src="' + esc(logoUrl) + '" alt=""/>'
+                : '';
+            var sub = opts.subtitle
+                ? '<div class="pg-stage-sub">' + esc(opts.subtitle) + '</div>'
+                : '';
+            return [
+                '<div class="pg-stage-banner' + (logo ? ' has-logo' : '') + '">',
+                logo,
+                '<div class="pg-stage-banner-text">',
+                '<div class="pg-stage-kicker">' + esc(opts.kicker || '') + '</div>',
+                '<div class="pg-stage-title">' + esc(opts.title || '') + '</div>',
+                sub,
+                '<div class="pg-stage-rule"></div>',
+                '</div>',
+                '</div>',
+            ].join('');
+        },
+
+        _stageFootHtml: function () {
+            return [
+                '<div class="pg-stage-foot" aria-label="Powered by AuctionChamp">',
+                '<span class="pg-stage-foot-lbl">Powered by</span>',
+                '<img class="pg-stage-foot-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>',
+                '</div>',
+            ].join('');
+        },
+
         _render: function () {
             var t = this.state.tournament || {};
             var logo = t.logo_url
                 ? '<img class="pg-hdr-logo" src="' + esc(t.logo_url) + '" alt=""/>'
                 : '<div class="pg-hdr-logo-ph">🏟️</div>';
+
+            var tournamentPicker = '';
+            if (this.state.showTournamentFilter && this.state.tournaments.length) {
+                var tid = this.tournamentId || t.id || false;
+                var opts = this.state.tournaments.map(function (row) {
+                    return '<option value="' + row.id + '"' +
+                        (String(row.id) === String(tid) ? ' selected="selected"' : '') + '>' +
+                        esc(row.name) + '</option>';
+                }).join('');
+                tournamentPicker = [
+                    '<div class="pg-hdr-tournament">',
+                    '<label class="pg-field-label" for="pg-tournament-select">Tournament</label>',
+                    '<select id="pg-tournament-select" class="pg-select pg-tournament-select">' + opts + '</select>',
+                    '</div>',
+                ].join('');
+            }
+
             var html = [
                 '<div class="pg-shell">',
                 '<div class="pg-hdr">',
@@ -182,8 +339,11 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 '<div class="pg-hdr-text">',
                 '<span class="pg-hdr-kicker">Auction Settings</span>',
                 '<span class="pg-hdr-title">Pool Generator</span>',
-                '<span class="pg-hdr-sub">' + esc(t.name || 'Select a working tournament from the systray') + '</span>',
+                tournamentPicker
+                    ? ''
+                    : '<span class="pg-hdr-sub">' + esc(t.name || 'Select a working tournament from the systray') + '</span>',
                 '</div>',
+                tournamentPicker,
                 '<span class="pg-stat-pill">Teams <b>' + this._selectedIds().length + '</b> / ' + this.state.teams.length + '</span>',
                 '</div>',
                 this._renderSteps(),
@@ -348,14 +508,13 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 '<div class="pg-stage-wrap">',
                 '<div class="pg-stage pg-stage-square pg-stage-rows-' + rowCount +
                     '" id="pg-pool-snapshot-target" data-rows="' + rowCount + '">',
-                '<div class="pg-stage-banner">',
-                '<div class="pg-stage-kicker">Official Pool Draw</div>',
-                '<div class="pg-stage-title">' + esc(this.state.tournamentName || 'Pool Draw') + '</div>',
-                '<div class="pg-stage-rule"></div>',
-                '</div>',
+                this._stageBannerHtml({
+                    kicker: 'Official Pool Draw',
+                    title: this.state.tournamentName || 'Pool Draw',
+                }),
                 '<div class="pg-pool-board pg-pool-board-grid pg-pool-board-rows-' + rowCount +
                     '" id="pg-pool-board">' + cols + '</div>',
-                '<div class="pg-stage-foot">AuctionChamp · Pool Generator</div>',
+                this._stageFootHtml(),
                 '</div>',
                 '</div>',
                 '<div style="margin-top:16px">',
@@ -388,10 +547,27 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                     '<div class="pg-ftype-hint">' + esc(ft.hint || '') + '</div></div>';
             }).join('');
 
-            var outside = this.state.fixtureType === 'custom_outside'
-                ? '<div style="max-width:220px;margin-bottom:12px"><label class="pg-field-label">Outside matches per team (N)</label>' +
-                  '<input class="pg-input pg-outside-n" type="number" min="1" value="' + this.state.outsideN + '"/></div>'
-                : '';
+            var outside = [
+                '<div style="max-width:280px;margin:4px 0 14px">',
+                '<label class="pg-field-label">Matches per team (league round)</label>',
+                '<input class="pg-input pg-outside-n" type="number" min="1" value="' + this.state.outsideN + '"/>',
+                '</div>',
+            ].join('');
+
+            var guide = [
+                '<div class="pg-fx-guide">',
+                '<div class="pg-fx-guide-title">How Matches per Team works</div>',
+                '<ul>',
+                '<li><b>Default</b> = (teams in that pool) − 1 (full round robin inside the pool).</li>',
+                '<li>Every team gets <b>exactly</b> this many league matches. Opponents are chosen randomly.</li>',
+                '<li><b>Pool Round Robin</b> — opponents from the <em>same</em> pool.</li>',
+                '<li><b>Cross Pool / Custom</b> — opponents from <em>other</em> pools (keep pool sizes equal).</li>',
+                '<li><b>Odd pool sizes:</b> with 3 teams you cannot give every team exactly 1 match ',
+                '(math: total match slots would be odd). The generator auto-uses the nearest valid value ',
+                '(usually <b>2</b> for a 3-team pool). Prefer even N when a pool has an odd number of teams.</li>',
+                '</ul>',
+                '</div>',
+            ].join('');
 
             var board = '';
             if (this.state.fixture && this.state.fixture.matches) {
@@ -405,14 +581,13 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                     '<p class="pg-panel-hint" style="margin:8px 0 4px">Drag the <b>⠿</b> handle to reorder. Use <b>×</b> to remove a match. Save when the order looks right.</p>',
                     '<div class="pg-stage-wrap">',
                     '<div class="pg-stage pg-stage-portrait" id="pg-fixture-snapshot-target">',
-                    '<div class="pg-stage-banner">',
-                    '<div class="pg-stage-kicker">Match Schedule</div>',
-                    '<div class="pg-stage-title">' + esc(this.state.fixture.tournament || this.state.tournamentName || 'Fixture') + '</div>',
-                    '<div class="pg-stage-sub">' + esc(this.state.fixture.subtitle || '') + '</div>',
-                    '<div class="pg-stage-rule"></div>',
-                    '</div>',
+                    this._stageBannerHtml({
+                        kicker: 'Match Schedule',
+                        title: this.state.fixture.tournament || this.state.tournamentName || 'Fixture',
+                        subtitle: this.state.fixture.subtitle || '',
+                    }),
                     '<div class="pg-fixture-board pg-fixture-board-vertical" id="pg-fixture-board"></div>',
-                    '<div class="pg-stage-foot">AuctionChamp · Drag to reorder · Remove unwanted matches</div>',
+                    this._stageFootHtml(),
                     '</div>',
                     '</div>',
                 ].join('');
@@ -421,7 +596,8 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             return [
                 '<div class="pg-panel">',
                 '<h2 class="pg-panel-title">Fixture Generator</h2>',
-                '<p class="pg-panel-hint">Pick a fixture style, generate the schedule, reorder or remove matches, then save a snapshot.</p>',
+                '<p class="pg-panel-hint">Pick a fixture style, set how many matches each team plays, generate, reorder or remove matches, then save.</p>',
+                guide,
                 '<div class="pg-fixture-types">' + types + '</div>',
                 outside,
                 '<div class="pg-toolbar">',
@@ -502,7 +678,7 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             }
             if (this.state.revealing) return;
             this._showRevealLoading('pools');
-            var rpc = this._rpc({
+            var rpc = this._pgRpc({
                 model: 'auction.team.pool.wizard',
                 method: 'client_generate_pools',
                 args: [ids, this.state.poolCount, this._nameList()],
@@ -514,6 +690,7 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 self.state.pools = res.pools;
                 self.state.tournamentName = res.tournament_name;
                 self.state.fixture = null;
+                self.state.outsideN = self._defaultMatchesPerTeam();
                 self.state.step = 3;
                 self._render();
                 self._toast('Pools generated');
@@ -525,7 +702,7 @@ odoo.define('auction_module.PoolGenerator', function (require) {
         _onApplyNames: function () {
             var self = this;
             if (!this.state.structure) return;
-            this._rpc({
+            this._pgRpc({
                 model: 'auction.team.pool.wizard',
                 method: 'client_apply_names',
                 args: [this.state.structure, this._nameList()],
@@ -551,7 +728,7 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 return;
             }
             this._showRevealLoading('fixtures');
-            var rpc = this._rpc({
+            var rpc = this._pgRpc({
                 model: 'auction.team.pool.wizard',
                 method: 'client_generate_fixture',
                 args: [this.state.structure, this._nameList(), this.state.fixtureType, this.state.outsideN],
@@ -711,6 +888,22 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             this._toast('Match removed');
         },
 
+        _onMoveMatch: function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            if (!this.state.fixture || !this.state.fixture.matches) return;
+            var $btn = $(ev.currentTarget);
+            var idx = parseInt($btn.data('idx'), 10);
+            var dir = $btn.hasClass('pg-fx-move-up') ? -1 : 1;
+            var arr = this.state.fixture.matches;
+            var to = idx + dir;
+            if (isNaN(idx) || to < 0 || to >= arr.length) return;
+            var item = arr.splice(idx, 1)[0];
+            arr.splice(to, 0, item);
+            var board = this.el.querySelector('#pg-fixture-board');
+            if (board) this._paintFixtureBoard(board, {editable: true});
+        },
+
         _makeFxCard: function (match, idx, editable) {
             var self = this;
             var card = document.createElement('div');
@@ -763,10 +956,29 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 var actions = document.createElement('div');
                 actions.className = 'pg-fx-actions';
 
+                var moveUp = document.createElement('button');
+                moveUp.type = 'button';
+                moveUp.className = 'pg-fx-move pg-fx-move-up';
+                moveUp.title = 'Move up';
+                moveUp.setAttribute('aria-label', 'Move match up');
+                moveUp.dataset.idx = String(idx);
+                moveUp.textContent = '▲';
+                moveUp.disabled = idx === 0;
+
+                var moveDown = document.createElement('button');
+                moveDown.type = 'button';
+                moveDown.className = 'pg-fx-move pg-fx-move-down';
+                moveDown.title = 'Move down';
+                moveDown.setAttribute('aria-label', 'Move match down');
+                moveDown.dataset.idx = String(idx);
+                moveDown.textContent = '▼';
+                moveDown.disabled = idx >= (self.state.fixture.matches.length - 1);
+
                 var grip = document.createElement('span');
                 grip.className = 'pg-fx-grip';
                 grip.title = 'Drag to reorder';
                 grip.setAttribute('aria-label', 'Drag to reorder');
+                grip.setAttribute('draggable', 'true');
                 grip.textContent = '⠿';
 
                 var remove = document.createElement('button');
@@ -784,20 +996,26 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                     ev.stopPropagation();
                 });
 
+                actions.appendChild(moveUp);
+                actions.appendChild(moveDown);
                 actions.appendChild(grip);
                 actions.appendChild(remove);
                 card.appendChild(actions);
 
-                card.draggable = true;
-                card.addEventListener('dragstart', function (ev) {
+                // Drag from grip only (avoids fighting × / scroll on touch)
+                card.draggable = false;
+                grip.addEventListener('dragstart', function (ev) {
                     self._dragIdx = idx;
                     card.classList.add('is-dragging');
                     try {
                         ev.dataTransfer.effectAllowed = 'move';
                         ev.dataTransfer.setData('text/plain', String(idx));
+                        if (ev.dataTransfer.setDragImage) {
+                            ev.dataTransfer.setDragImage(card, 24, 24);
+                        }
                     } catch (e) { /* ignore */ }
                 });
-                card.addEventListener('dragend', function () {
+                grip.addEventListener('dragend', function () {
                     card.classList.remove('is-dragging');
                     self._dragIdx = null;
                     Array.prototype.forEach.call(
@@ -892,13 +1110,14 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             wrap.className = 'pg-offscreen-capture';
             wrap.innerHTML =
                 '<div class="pg-stage pg-stage-square pg-stage-rows-' + rowCount + '">' +
-                '<div class="pg-stage-banner">' +
-                '<div class="pg-stage-kicker">Official Pool Draw</div>' +
-                '<div class="pg-stage-title">' + esc(this.state.tournamentName || 'Pool Draw') + '</div>' +
-                '<div class="pg-stage-rule"></div></div>' +
+                this._stageBannerHtml({
+                    kicker: 'Official Pool Draw',
+                    title: this.state.tournamentName || 'Pool Draw',
+                }) +
                 '<div class="pg-pool-board pg-pool-board-grid pg-pool-board-rows-' + rowCount + '">' +
                 cols + '</div>' +
-                '<div class="pg-stage-foot">AuctionChamp · Pool Generator</div></div>';
+                this._stageFootHtml() +
+                '</div>';
             document.body.appendChild(wrap);
             return wrap.firstElementChild;
         },
@@ -908,13 +1127,14 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             wrap.className = 'pg-offscreen-capture';
             wrap.innerHTML =
                 '<div class="pg-stage pg-stage-portrait">' +
-                '<div class="pg-stage-banner">' +
-                '<div class="pg-stage-kicker">Match Schedule</div>' +
-                '<div class="pg-stage-title">' + esc(this.state.fixture.tournament || this.state.tournamentName || 'Fixture') + '</div>' +
-                '<div class="pg-stage-sub">' + esc(this.state.fixture.subtitle || '') + '</div>' +
-                '<div class="pg-stage-rule"></div></div>' +
+                this._stageBannerHtml({
+                    kicker: 'Match Schedule',
+                    title: this.state.fixture.tournament || this.state.tournamentName || 'Fixture',
+                    subtitle: this.state.fixture.subtitle || '',
+                }) +
                 '<div class="pg-fixture-board pg-fixture-board-vertical"></div>' +
-                '<div class="pg-stage-foot">AuctionChamp · Fixture</div></div>';
+                this._stageFootHtml() +
+                '</div>';
             document.body.appendChild(wrap);
             var stage = wrap.firstElementChild;
             var board = stage.querySelector('.pg-fixture-board');
@@ -955,7 +1175,7 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 : Promise.resolve(false);
 
             Promise.all([poolP, fixtureP]).then(function (pair) {
-                return self._rpc({
+                return self._pgRpc({
                     model: 'auction.team.pool.wizard',
                     method: 'client_save_to_tournament',
                     args: [
@@ -979,7 +1199,11 @@ odoo.define('auction_module.PoolGenerator', function (require) {
         },
         _onSnapshotPools: function () {
             this._toast('Generating image…');
-            this._snapshotEl(this.el.querySelector('#pg-pool-snapshot-target'), 'pool_draw.png', '#0a1628');
+            this._snapshotEl(
+                this.el.querySelector('#pg-pool-snapshot-target'),
+                this._snapshotFilename('pool'),
+                '#0a1628'
+            );
         },
         _onSnapshotFixture: function () {
             var self = this;
@@ -997,7 +1221,7 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 }
                 var link = document.createElement('a');
                 link.href = dataUrl;
-                link.download = 'fixture_schedule.png';
+                link.download = self._snapshotFilename('fixture');
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);

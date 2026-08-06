@@ -500,6 +500,13 @@ class AuctionTournament(models.Model):
              'display_auction (Random) or player_selector (Manual). '
              'Available only after auction rules are set for this tournament.',
     )
+    live_board_url = fields.Char(
+        string='Live Board URL',
+        compute='_compute_urls',
+        store=False,
+        help='Public share link for outsiders to watch the auction live '
+             '(/…/auction/live-board). Board must be Live; optional Tournament Code gate applies.',
+    )
     has_auction_rules = fields.Boolean(
         string='Auction Rules Set',
         compute='_compute_has_auction_rules',
@@ -586,6 +593,13 @@ class AuctionTournament(models.Model):
                 rec.projector_url = '{}/{}/auction/projector/{}/'.format(base_url, db_name, rec.slug)
             else:
                 rec.projector_url = False
+
+            # Public live board — shareable with outsiders (no auction-rules gate)
+            if rec.slug:
+                rec.live_board_url = '{}/{}/{}/auction/live-board'.format(
+                    base_url, db_name, rec.slug)
+            else:
+                rec.live_board_url = False
 
             if rec.slug:
                 rec.payment_tracker_url = '{}/{}/{}/auction/payment-marker'.format(base_url, db_name, rec.slug)
@@ -1183,6 +1197,23 @@ class AuctionTournament(models.Model):
             'target': 'new',
         }
 
+    def action_open_live_board(self):
+        """Open the public Live Board URL in a new tab (share link for outsiders)."""
+        self.ensure_one()
+        url = self.live_board_url
+        if not url:
+            if self.slug:
+                url = '/%s/%s/auction/live-board' % (self.env.cr.dbname, self.slug)
+            else:
+                raise UserError(_(
+                    'Live Board URL is not available until the tournament has a name/slug.'
+                ))
+        return {
+            'type': 'ir.actions.act_url',
+            'url': url,
+            'target': 'new',
+        }
+
     def action_open_payment_tracker(self):
         """Open Payment Tracker as a backend client action (no URL redirect)."""
         self.ensure_one()
@@ -1192,6 +1223,22 @@ class AuctionTournament(models.Model):
             'name': 'Payment Tracker',
             'target': 'current',
             'context': {'tournament_id': self.id},
+            'params': {'tournament_id': self.id},
+        }
+
+    def action_open_pool_generator(self):
+        """Open Pool & Fixture Generator scoped to this tournament."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'auction_module.pool_generator',
+            'name': 'Pool & Fixture Generator — %s' % (self.name or 'Tournament'),
+            'target': 'current',
+            'context': {
+                'tournament_id': self.id,
+                'active_id': self.id,
+                'active_model': 'auction.tournament',
+            },
             'params': {'tournament_id': self.id},
         }
 

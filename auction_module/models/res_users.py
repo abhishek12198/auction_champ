@@ -93,6 +93,67 @@ class ResUsers(models.Model):
                         'tournament_id': user.tournament_ids[:1].id,
                     })
 
+    def _auction_sync_home_action(self):
+        """Login landing: Auction Admin → Tournament(s); other auction users → Player Dashboard."""
+        try:
+            admin_action = self.env.ref('auction_module.action_auction_tournament')
+            dash_action = self.env.ref('auction_module.action_player_dashboard_client')
+        except ValueError:
+            return
+        sync_ctx = dict(
+            self.env.context,
+            skip_tournament_sync=True,
+            skip_home_action_sync=True,
+        )
+        for user in self:
+            if user.share:
+                continue
+            is_admin = user.has_group('auction_module.group_auction_group_admin')
+            is_auction_user = (
+                is_admin
+                or user.has_group('auction_module.group_auction_group')
+                or user.has_group('auction_module.group_auction_player_dashboard')
+            )
+            if not is_auction_user:
+                continue
+            target = admin_action if is_admin else dash_action
+            if user.action_id != target:
+                user.with_context(**sync_ctx).sudo().write({'action_id': target.id})
+
+    @api.model
+    def _auction_apply_home_actions_all(self):
+        """Apply auction home actions to all internal users (install / upgrade)."""
+        self.search([('share', '=', False)])._auction_sync_home_action()
+        return True
+
+    @api.model
+    def _auction_reorder_root_menus(self):
+        """Force root app menu order (XML sequence updates are unreliable on upgrade).
+
+        1 Tournament(s)  2 Player Dashboard  3 Player Showcase
+        4 Auctioneer Console  5 Pool Generator  6 Auction Settings
+        """
+        Menu = self.env['ir.ui.menu'].sudo()
+        # (xml_id, sequence) — use gaps so other apps do not slip between
+        ordered = [
+            ('auction_module.menu_action_auction_tournament', 10),
+            ('ac_saas_manager.menu_saas_tournament', 10),
+            ('auction_module.menu_action_player_dashboard', 20),
+            ('auction_module.menu_action_launch_auction_root', 30),
+            ('auction_auctioneer.menu_auctioneer_console', 40),
+            ('auction_module.menu_action_team_pool_wizard', 50),
+            ('auction_module.menu_action_auction_root', 60),
+            ('auction_module.menu_action_payment_marker', 70),
+        ]
+        for xmlid, sequence in ordered:
+            menu = self.env.ref(xmlid, raise_if_not_found=False)
+            if menu and menu.exists() and menu.sequence != sequence:
+                menu.write({
+                    'sequence': sequence,
+                    'parent_id': False,
+                })
+        return True
+
     def write(self, vals):
         res = super().write(vals)
         if self.env.context.get('skip_tournament_sync'):
@@ -112,6 +173,11 @@ class ResUsers(models.Model):
                     user.with_context(**sync_ctx).sudo().write({
                         'tournament_id': user.tournament_ids[:1].id,
                     })
+        if (
+            not self.env.context.get('skip_home_action_sync')
+            and 'groups_id' in vals
+        ):
+            self._auction_sync_home_action()
         return res
 
     @api.model_create_multi
@@ -126,4 +192,6 @@ class ResUsers(models.Model):
                 updates['tournament_id'] = user.tournament_ids[:1].id
             if updates:
                 user.with_context(**sync_ctx).sudo().write(updates)
+        if not self.env.context.get('skip_home_action_sync'):
+            users._auction_sync_home_action()
         return users
