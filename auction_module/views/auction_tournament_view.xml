@@ -539,6 +539,8 @@
                                                    attrs="{'invisible': [('slug', '=', False)]}"/>
                                             <field name="max_registrations"
                                                    help="Set the maximum number of players that can register. Set to 0 for unlimited."/>
+                                            <field name="show_registration_capacity" widget="boolean_toggle"
+                                                   help="Show or hide the Registration Capacity slab on the public player registration form."/>
                                             <field name="whatsapp_group_link"
                                                    placeholder="https://chat.whatsapp.com/..."
                                                    help="Players will see a 'Join WhatsApp Group' button after registering."/>
@@ -976,9 +978,15 @@
                 <field name="max_registrations" position="attributes">
                     <attribute name="readonly">1</attribute>
                 </field>
+                <field name="show_registration_capacity" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
                 <!-- max_registrations appears twice in the base view; target the
                      Presentation tab instance explicitly to ensure it is readonly -->
                 <xpath expr="//page[@name='presentation']//field[@name='max_registrations']" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </xpath>
+                <xpath expr="//page[@name='presentation']//field[@name='show_registration_capacity']" position="attributes">
                     <attribute name="readonly">1</attribute>
                 </xpath>
                 <field name="payment_qr_image" position="attributes">

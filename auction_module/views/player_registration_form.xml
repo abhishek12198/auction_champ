@@ -104,22 +104,10 @@
     <t t-set="hide_reg_form" t-value="success or registration_closed or razorpay_await_payment"/>
 
     <!-- ════════════════════════════════════════
-         HEADER  — dark, diagonal bottom edge
+         HEADER  — tournament-first (app logo is in footer)
          ════════════════════════════════════════ -->
     <div class="reg-header-card">
         <div class="reg-header-top">
-            <!-- App logo -->
-            <img src="/auction_module/static/src/assets/images/logo.svg"
-                 alt="AuctionChamp" class="reg-app-logo"/>
-
-            <div class="reg-header-divider"/>
-
-            <!-- Tournament name -->
-            <div class="reg-header-info">
-                <h1 t-esc="tournament.name if tournament else 'Auction Tournament'"/>
-                <p t-esc="tournament.description if tournament else 'Player Registration'"/>
-            </div>
-
             <!-- Tournament logo -->
             <div class="reg-tournament-logo-wrap">
                 <t t-if="tournament and tournament.logo">
@@ -130,13 +118,23 @@
                     <span class="reg-tournament-logo-placeholder">🏆</span>
                 </t>
             </div>
+
+            <!-- Tournament name → description → Player Registration -->
+            <div class="reg-header-info">
+                <h1 class="reg-tournament-name"
+                    t-esc="tournament.name if tournament else 'Auction Tournament'"/>
+                <p class="reg-tournament-desc"
+                   t-esc="tournament.description if tournament and tournament.description else 'Join the auction pool and secure your spot.'"/>
+                <span class="reg-page-label">Player Registration</span>
+            </div>
         </div>
 
-        <!-- ── Hero copy: big title, subtitle, trust badges ── -->
         <div class="reg-hero-copy">
-            <h2 class="reg-hero-title">Player Registration</h2>
-            <p class="reg-hero-sub">Register today to enter the auction pool for
-                <strong t-esc="tournament.name if tournament else 'this tournament'"/> — verified profiles, transparent selection, and a broadcast-quality digital player card.</p>
+            <p class="reg-hero-sub">
+                Team owners are building their squads — register now to enter the auction,
+                get your official player card, and give yourself a real shot at being picked.
+                Spots fill as registrations come in, so don’t wait.
+            </p>
         </div>
 
         <!-- Meta bar: date, venue, sport -->
@@ -391,8 +389,8 @@
         <!-- ── Main form (hidden after success or when closed) ── -->
         <t t-if="not hide_reg_form">
 
-        <!-- ── Slots capacity card ── -->
-        <t t-if="max_registrations and max_registrations > 0">
+        <!-- ── Slots capacity card (optional via tournament setting) ── -->
+        <t t-if="tournament and tournament.show_registration_capacity and max_registrations and max_registrations > 0">
             <t t-set="pct" t-value="(current_count * 100 // max_registrations) if max_registrations else 0"/>
             <t t-set="urgency" t-value="'critical' if slots_left &lt;= 5 else ('warning' if slots_left &lt;= 20 else 'ok')"/>
             <div class="reg-slots-card">
@@ -554,7 +552,7 @@
                     <span class="reg-section-num">01</span>
                 </div>
 
-                <!-- Photo upload with spinning ring frame -->
+                <!-- Photo upload with square frame -->
                 <div style="margin-bottom:18px" id="photoSection">
                     <label class="reg-label">Player Photo <span class="req">*</span></label>
                     <div class="reg-photo-upload">
@@ -565,15 +563,29 @@
                             </div>
                         </div>
                         <div class="reg-file-meta">
-                            <label for="photoInput" class="reg-file-btn">
-                                <svg width="15" height="15" fill="none" viewBox="0 0 24 24"
-                                     stroke="currentColor" stroke-width="2.5">
-                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                                    <polyline points="17 8 12 3 7 8"/>
-                                    <line x1="12" y1="3" x2="12" y2="15"/>
-                                </svg>
-                                Upload Photo
-                            </label>
+                            <div class="reg-photo-actions">
+                                <label for="photoInput" class="reg-file-btn reg-photo-btn-upload" title="Upload Photo" aria-label="Upload Photo">
+                                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24"
+                                         stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                        <polyline points="17 8 12 3 7 8"/>
+                                        <line x1="12" y1="3" x2="12" y2="15"/>
+                                    </svg>
+                                    <span class="reg-file-btn-text">Upload Photo</span>
+                                </label>
+                                <button type="button" id="photoClearBtn"
+                                        class="reg-file-btn reg-file-btn-clear is-hidden"
+                                        title="Clear Photo" aria-label="Clear Photo">
+                                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24"
+                                         stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                                        <polyline points="3 6 5 6 21 6"/>
+                                        <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                                        <path d="M10 11v6M14 11v6"/>
+                                        <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                                    </svg>
+                                    <span class="reg-file-btn-text">Clear Photo</span>
+                                </button>
+                            </div>
                              <input type="file" id="photoInput" name="photo"
                                    accept="image/*" class="reg-file-input"/>
                             <p class="reg-file-hint">JPG · PNG · WEBP &#160;·&#160; Max 5 MB</p>
@@ -1161,10 +1173,34 @@
     function setPhotoPreview(src) {
         var img = document.getElementById('photoPreview');
         var ph  = document.getElementById('avatarPlaceholder');
+        var frame = document.querySelector('.reg-photo-frame');
+        var clearBtn = document.getElementById('photoClearBtn');
         if (img) { img.src = src; img.style.display = 'block'; }
         if (ph)  { ph.style.display = 'none'; }
+        if (frame) { frame.classList.add('has-photo'); }
+        if (clearBtn) { clearBtn.classList.remove('is-hidden'); }
         var errMsg = document.getElementById('photoErrorMsg');
         if (errMsg) errMsg.remove();
+    }
+
+    function clearPhotoPreview() {
+        var img = document.getElementById('photoPreview');
+        var ph  = document.getElementById('avatarPlaceholder');
+        var frame = document.querySelector('.reg-photo-frame');
+        var clearBtn = document.getElementById('photoClearBtn');
+        if (img) { img.src = ''; img.style.display = 'none'; }
+        if (ph)  { ph.style.display = ''; }
+        if (frame) { frame.classList.remove('has-photo'); }
+        if (clearBtn) { clearBtn.classList.add('is-hidden'); }
+        if (photoInput) { photoInput.value = ''; }
+    }
+
+    var photoClearBtn = document.getElementById('photoClearBtn');
+    if (photoClearBtn) {
+        photoClearBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            clearPhotoPreview();
+        });
     }
 
     function closeCropper() {

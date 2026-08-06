@@ -465,6 +465,13 @@ class AuctionTournament(models.Model):
         help='Maximum number of players that can self-register (draft state). '
              'Set to 0 for unlimited. Registration closes automatically when this limit is reached.',
     )
+    show_registration_capacity = fields.Boolean(
+        string='Show Registration Capacity',
+        default=True,
+        help='When enabled, the public player registration form shows the '
+             'Registration Capacity slab (slots left / progress). '
+             'Turn off to hide that slab from players while still enforcing Max Registrations.',
+    )
     registered_player_count = fields.Integer(
         string='Registered Players',
         compute='_compute_player_state_counts',

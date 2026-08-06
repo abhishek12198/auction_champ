@@ -106,26 +106,16 @@ body.reg-page::before {
 .reg-header-top {
     display: flex;
     align-items: center;
-    gap: 14px;
-    flex-wrap: wrap;
+    gap: 18px;
+    flex-wrap: nowrap;
     position: relative;
     z-index: 1;
 }
 
-/* App logo */
-.reg-app-logo {
-    height: 26px;
-    width: auto;
-    flex-shrink: 0;
-    filter: brightness(0) invert(1);
-    opacity: .9;
-}
-
+/* App logo / divider — removed from header; branding is in footer */
+.reg-app-logo,
 .reg-header-divider {
-    width: 1px;
-    height: 30px;
-    background: rgba(255,255,255,.25);
-    flex-shrink: 0;
+    display: none !important;
 }
 
 .reg-header-info {
@@ -133,42 +123,68 @@ body.reg-page::before {
     min-width: 0;
 }
 
+.reg-tournament-name,
 .reg-header-info h1 {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.9rem;
+    font-size: clamp(1.85rem, 4.5vw, 2.75rem);
     font-weight: 400;
-    letter-spacing: .06em;
+    letter-spacing: .05em;
     margin: 0;
-    line-height: 1.1;
-    white-space: nowrap;
+    line-height: 1.05;
+    white-space: normal;
     overflow: hidden;
-    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     color: #fff;
+    text-shadow:
+        0 2px 12px rgba(0, 0, 0, 0.45),
+        0 0 28px rgba(var(--reg-accent-rgb), 0.35);
 }
 
+.reg-tournament-desc,
 .reg-header-info p {
-    margin: 0;
-    font-size: .78rem;
-    opacity: .7;
-    font-family: 'Barlow Condensed', 'Poppins', sans-serif;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    margin-top: 1px;
+    margin: 8px 0 0;
+    font-size: .95rem;
+    line-height: 1.45;
+    opacity: 1;
+    color: rgba(255, 255, 255, 0.88);
+    font-family: 'Poppins', sans-serif;
+    letter-spacing: .01em;
+    text-transform: none;
+    font-weight: 500;
+    max-width: 42rem;
 }
 
-/* Tournament logo circle */
+.reg-page-label {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 12px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(var(--reg-accent-rgb), 0.55);
+    background: rgba(var(--reg-accent-rgb), 0.16);
+    color: var(--reg-accent);
+    font-family: 'Barlow Condensed', 'Poppins', sans-serif;
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+
+/* Tournament logo — larger now that app logo is gone */
 .reg-tournament-logo-wrap {
-    width: 72px;
-    height: 72px;
-    border-radius: 14px;
+    width: 88px;
+    height: 88px;
+    border-radius: 16px;
     background: rgba(255,255,255,.1);
-    border: 2px solid rgba(var(--reg-accent-rgb), .5);
+    border: 2px solid rgba(var(--reg-accent-rgb), .55);
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
     flex-shrink: 0;
-    box-shadow: 0 0 18px rgba(var(--reg-accent-rgb), .25);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28), 0 0 18px rgba(var(--reg-accent-rgb), .25);
 }
 
 .reg-tournament-logo-wrap img {
@@ -572,18 +588,54 @@ body.reg-page::before {
     flex-shrink: 0;
 }
 
+/* Thin accent line that travels around the square border */
 .reg-photo-frame::before {
     content: '';
     position: absolute;
-    inset: -3px;
-    border-radius: 50%;
+    inset: -4px;
+    border-radius: 14px;
+    padding: 2px; /* ring thickness */
     background: conic-gradient(
-        var(--reg-accent) 0deg 120deg,
-        rgba(var(--reg-accent-rgb),.18) 120deg 240deg,
-        var(--reg-accent) 240deg 360deg
+        from 0deg,
+        transparent 0deg,
+        transparent 250deg,
+        var(--reg-accent) 290deg,
+        #fff6d0 320deg,
+        var(--reg-accent) 350deg,
+        transparent 360deg
     );
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    mask-composite: exclude;
     z-index: 0;
-    animation: spin-ring 6s linear infinite;
+    animation: spin-ring 2.4s linear infinite;
+    pointer-events: none;
+}
+
+/* Soft static track under the moving line */
+.reg-photo-frame::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 14px;
+    border: 2px solid rgba(var(--reg-accent-rgb), 0.22);
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Stop the revolving line once a photo is set */
+.reg-photo-frame.has-photo::before {
+    animation: none;
+    background: var(--reg-accent);
+    opacity: 0.9;
+}
+.reg-photo-frame.has-photo::after {
+    border-color: rgba(var(--reg-accent-rgb), 0.55);
 }
 
 @keyframes spin-ring {
@@ -595,7 +647,7 @@ body.reg-page::before {
     z-index: 1;
     width: 100%;
     height: 100%;
-    border-radius: 50%;
+    border-radius: 10px;
     background: #f0f2f6;
     border: 3px solid #fff;
     display: flex;
@@ -608,7 +660,7 @@ body.reg-page::before {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 50%;
+    border-radius: 8px;
     display: none;
 }
 
@@ -616,9 +668,17 @@ body.reg-page::before {
 
 .reg-file-meta { flex: 1; min-width: 140px; }
 
+.reg-photo-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
 .reg-file-btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     padding: 9px 16px;
     border: 2px dashed rgba(var(--reg-accent-rgb), .6);
@@ -629,15 +689,31 @@ body.reg-page::before {
     letter-spacing: .04em;
     text-transform: uppercase;
     color: var(--reg-primary);
+    background: transparent;
     cursor: pointer;
-    transition: background .18s, border-color .18s;
+    transition: background .18s, border-color .18s, color .18s;
     white-space: nowrap;
+    line-height: 1;
 }
 
 .reg-file-btn:hover {
     background: var(--reg-accent-light);
     border-color: var(--reg-accent);
 }
+
+.reg-file-btn-clear {
+    border-style: solid;
+    border-color: rgba(233, 69, 96, 0.45);
+    color: #c53030;
+}
+
+.reg-file-btn-clear:hover {
+    background: rgba(233, 69, 96, 0.08);
+    border-color: #e94560;
+    color: #9b2c2c;
+}
+
+.reg-file-btn.is-hidden { display: none !important; }
 
 .reg-file-hint {
     font-size: .71rem;
@@ -647,6 +723,20 @@ body.reg-page::before {
 }
 
 input[type="file"].reg-file-input { display: none; }
+
+/* Mobile: icon-only upload / clear buttons */
+@media (max-width: 640px) {
+    .reg-photo-actions { gap: 6px; }
+    .reg-file-btn {
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        border-radius: 11px;
+        gap: 0;
+    }
+    .reg-file-btn .reg-file-btn-text { display: none; }
+    .reg-file-btn svg { width: 18px; height: 18px; }
+}
 
 /* ── Photo guide row (sample image + instructions) ── */
 .reg-photo-guide {
@@ -1311,19 +1401,38 @@ input[type="file"].reg-file-input { display: none; }
         padding: 12px 16px 42px;
         clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), 0 100%);
     }
-    /* Row 1: app logo full-width; Row 2: name+desc left, tournament logo right */
-    .reg-header-top     { gap: 6px 10px; flex-wrap: wrap; align-items: center; }
-    .reg-app-logo       { flex: 0 0 100%; height: 22px; }
-    .reg-header-divider { display: none; }
+    /* Row: tournament logo + name / desc / Player Registration */
+    .reg-header-top     { gap: 12px; flex-wrap: nowrap; align-items: flex-start; }
+    .reg-app-logo,
+    .reg-header-divider { display: none !important; }
     .reg-header-info    { flex: 1 1 0; min-width: 0; }
-    .reg-header-info h1 { font-size: 1.05rem; line-height: 1.25; white-space: normal; word-break: break-word; }
-    .reg-header-info p  { display: block; font-size: .72rem; opacity: .75; margin-top: 2px; }
-    .reg-tournament-logo-wrap { flex: 0 0 auto; width: 46px; height: 46px; }
+    .reg-tournament-name,
+    .reg-header-info h1 {
+        font-size: clamp(1.35rem, 6.5vw, 1.85rem);
+        line-height: 1.15;
+        white-space: normal;
+        word-break: break-word;
+        -webkit-line-clamp: 3;
+    }
+    .reg-tournament-desc,
+    .reg-header-info p  {
+        display: block;
+        font-size: .8rem;
+        opacity: 1;
+        margin-top: 6px;
+        text-transform: none;
+        letter-spacing: .01em;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 500;
+        color: rgba(255,255,255,.88);
+    }
+    .reg-page-label { margin-top: 10px; font-size: .7rem; padding: 4px 10px; }
+    .reg-tournament-logo-wrap { flex: 0 0 auto; width: 64px; height: 64px; border-radius: 12px; }
     .reg-tournament-logo-wrap img,
     .reg-tournament-logo-wrap .reg-tournament-logo-placeholder {
-        width: 42px !important;
-        height: 42px !important;
-        font-size: 1.5rem;
+        width: 58px !important;
+        height: 58px !important;
+        font-size: 1.6rem;
     }
     /* Keep date / venue / sport visible on small screens */
     .reg-header-meta {
@@ -1499,35 +1608,11 @@ body.reg-page::before {
 .reg-hero-copy {
     position: relative;
     z-index: 2;
-    margin: 22px 0 6px;
+    margin: 16px 0 4px;
     max-width: 760px;
     animation: reg-fade-up .7s .05s cubic-bezier(.2,.7,.3,1) both;
 }
-.reg-hero-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: .8rem;
-    font-weight: 700;
-    letter-spacing: .16em;
-    text-transform: uppercase;
-    color: var(--reg-accent);
-    padding: 5px 13px;
-    border: 1px solid rgba(var(--reg-accent-rgb), .4);
-    border-radius: 30px;
-    background: rgba(var(--reg-accent-rgb), .1);
-}
-.reg-hero-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(2.6rem, 6vw, 4.4rem);
-    line-height: .92;
-    letter-spacing: .03em;
-    color: #fff;
-    text-transform: uppercase;
-    margin: 14px 0 8px;
-    text-shadow: 0 6px 30px rgba(0,0,0,.5);
-}
+.reg-hero-title { display: none; } /* moved into .reg-page-label under tournament */
 .reg-hero-sub {
     font-size: .95rem;
     line-height: 1.65;
@@ -1778,7 +1863,6 @@ a.reg-trust-card--cta .reg-trust-tx span {
     .reg-poster-mobile { display: block; }
 }
 @media (max-width: 720px) {
-    .reg-hero-title { font-size: clamp(2.2rem, 9vw, 3rem); }
     .reg-trustbar {
         display: flex;
         overflow-x: auto;
