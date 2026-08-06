@@ -744,8 +744,15 @@ class AuctionTournament(models.Model):
             self._sync_date_lines_from_dates_char()
 
     def init(self):
-        """Migrate legacy single tournament_date values into date lines + char."""
+        """Schema self-heal + legacy tournament date migration.
+
+        ``show_registration_capacity`` is created here so production can pick it
+        up on registry/restart without requiring ``-u`` module upgrade.
+        """
         cr = self.env.cr
+        self._ensure_show_registration_capacity_column()
+
+        # Migrate legacy single tournament_date values into date lines + char.
         cr.execute("""
             SELECT EXISTS (
                 SELECT 1 FROM information_schema.tables
@@ -787,6 +794,33 @@ class AuctionTournament(models.Model):
              WHERE t.id = sub.tournament_id
                AND (t.tournament_dates IS NULL OR t.tournament_dates = '')
         """)
+
+    def _ensure_show_registration_capacity_column(self):
+        """Create missing column without module upgrade (hot-deploy / restart)."""
+        cr = self.env.cr
+        cr.execute("""
+            SELECT 1
+              FROM information_schema.columns
+             WHERE table_name = 'auction_tournament'
+               AND column_name = 'show_registration_capacity'
+        """)
+        if cr.fetchone():
+            return
+        cr.execute("""
+            ALTER TABLE auction_tournament
+                ADD COLUMN show_registration_capacity boolean
+                DEFAULT TRUE
+        """)
+        cr.execute("""
+            UPDATE auction_tournament
+               SET show_registration_capacity = TRUE
+             WHERE show_registration_capacity IS NULL
+        """)
+
+    def _register_hook(self):
+        super()._register_hook()
+        # Self-heal on every registry load (restart without -u).
+        self._ensure_show_registration_capacity_column()
 
     def set_dice_state(self, state, number=0):
         """Broadcast dice state to the projector.
