@@ -846,7 +846,7 @@
                         </select>
                     </div>
 
-                    <div>
+                    <div t-if="tournament and tournament.enable_org_id_registration">
                         <label class="reg-label" for="orgId">Org ID# <span class="reg-opt">(optional)</span></label>
                         <input type="text" id="orgId" name="org_id" class="reg-input"
                                placeholder="Organisation unique ID" maxlength="64"/>

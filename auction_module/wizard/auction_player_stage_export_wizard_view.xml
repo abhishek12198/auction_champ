@@ -6,7 +6,7 @@
         <field name="name">auction.player.stage.export.wizard.form</field>
         <field name="model">auction.player.stage.export.wizard</field>
         <field name="arch" type="xml">
-            <form string="Export Sold / Unsold Players">
+            <form string="Export Players">
                 <field name="state" invisible="1"/>
                 <field name="tournament_type" invisible="1"/>
 
@@ -15,11 +15,11 @@
                                 border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;
                                 border-left:4px solid #3b82f6;">
                         <h3 style="margin:0 0 .3rem;color:#fff;font-size:1.15rem;font-weight:700;">
-                            Export Players (Sold / Unsold)
+                            Export Players
                         </h3>
                         <p style="margin:0;color:rgba(255,255,255,.65);font-size:.85rem;line-height:1.5;">
-                            Download an Excel workbook with player details for Sold and/or Unsold stages.
-                            Columns adapt to cricket (role, batting/bowling) or football (position, attributes).
+                            Download Excel for Registered (Draft), Sold, Unsold, or
+                            <strong>Jersey Export</strong> (one data sheet + guidelines) with jersey-only re-import.
                         </p>
                     </div>
 
@@ -29,10 +29,29 @@
                             <field name="export_scope" widget="radio"/>
                         </group>
                         <group string="Counts">
+                            <field name="draft_count" readonly="1"/>
                             <field name="sold_count" readonly="1"/>
                             <field name="unsold_count" readonly="1"/>
+                            <field name="jersey_count" readonly="1"/>
                         </group>
                     </group>
+
+                    <div attrs="{'invisible': [('export_scope', '!=', 'jersey')]}"
+                         style="margin-top:.5rem;padding:.85rem 1rem;border-radius:10px;
+                                background:#f8fafc;border:1px solid #e2e8f0;font-size:.84rem;color:#334155;">
+                        <strong style="color:#0f172a;">Jersey Export</strong>
+                        <ul style="margin:.4rem 0 .75rem;padding-left:1.2rem;line-height:1.55;">
+                            <li><strong>Jersey Export</strong> — yellow columns for Name / Number / Size (freely editable)</li>
+                            <li><strong>Guidelines</strong> (sheet 2) — entry rules + size codes (XS–XXXL)</li>
+                            <li>Import updates <em>only</em> jersey fields using Player ID</li>
+                        </ul>
+                        <group string="Import jersey updates">
+                            <field name="import_file_name" invisible="1"/>
+                            <field name="import_file"
+                                     filename="import_file_name"
+                                     string="Upload filled Jersey Export (.xlsx)"/>
+                        </group>
+                    </div>
                 </div>
 
                 <div attrs="{'invisible': [('state', '!=', 'done')]}">
@@ -43,12 +62,29 @@
                             Export ready
                         </h3>
                         <p style="margin:0;color:rgba(255,255,255,.7);font-size:.85rem;">
-                            Click the file below to download. Sold and Unsold are separate sheets when both are selected.
+                            Click the file below to download. For Jersey Export, edit the yellow
+                            columns, then use Import Jersey Updates.
                         </p>
                     </div>
                     <group>
                         <field name="file_name" invisible="1"/>
                         <field name="file_data" filename="file_name" readonly="1"/>
+                    </group>
+                </div>
+
+                <div attrs="{'invisible': [('state', '!=', 'import_done')]}">
+                    <div style="background:linear-gradient(135deg,#1e3a5f 0%,#16213e 100%);
+                                border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;
+                                border-left:4px solid #38bdf8;">
+                        <h3 style="margin:0 0 .3rem;color:#fff;font-size:1.15rem;font-weight:700;">
+                            Jersey import complete
+                        </h3>
+                        <p style="margin:0;color:rgba(255,255,255,.7);font-size:.85rem;">
+                            Only jersey fields were applied. Other Excel columns were ignored.
+                        </p>
+                    </div>
+                    <group>
+                        <field name="import_log" readonly="1" widget="text"/>
                     </group>
                 </div>
 
@@ -58,11 +94,16 @@
                             string="Generate Excel"
                             class="btn-primary"
                             attrs="{'invisible': [('state', '!=', 'choose')]}"/>
+                    <button name="action_import_jersey"
+                            type="object"
+                            string="Import Jersey Updates"
+                            class="btn-secondary"
+                            attrs="{'invisible': ['|', ('state', '!=', 'choose'), ('export_scope', '!=', 'jersey')]}"/>
                     <button name="action_back"
                             type="object"
-                            string="Generate Again"
+                            string="Back"
                             class="btn-secondary"
-                            attrs="{'invisible': [('state', '!=', 'done')]}"/>
+                            attrs="{'invisible': [('state', '=', 'choose')]}"/>
                     <button string="Close" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>
@@ -70,7 +111,7 @@
     </record>
 
     <record id="action_player_stage_export_wizard" model="ir.actions.act_window">
-        <field name="name">Export Sold / Unsold Players</field>
+        <field name="name">Export Players</field>
         <field name="res_model">auction.player.stage.export.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>

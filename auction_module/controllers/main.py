@@ -5814,7 +5814,11 @@ def _build_player_vals_from_post(request, tournament):
         'sl_no':         sl_no,
         'name':          name,
         'contact':       (post.get('contact') or '').strip(),
-        'org_id':        (post.get('org_id') or '').strip(),
+        'org_id':        (
+            (post.get('org_id') or '').strip()
+            if tournament and tournament.enable_org_id_registration
+            else False
+        ),
         'address':       (post.get('address') or '').strip(),
         'blood_group':   (post.get('blood_group') or '').strip(),
         'current_team':  (post.get('current_team') or '').strip(),

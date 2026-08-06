@@ -251,6 +251,11 @@ class AuctionTournament(models.Model):
         default=False,
         help="Show jersey customization fields (jersey name, number, size) in the public player registration form."
     )
+    enable_org_id_registration = fields.Boolean(
+        string="Show Org ID# in Registration",
+        default=False,
+        help="Show the optional organisation unique ID field on the public player registration form.",
+    )
     payment_instruction = fields.Text(
         string='Payment Instructions',
         help='Instructions shown in the Payment section of the player registration form. '
@@ -1263,11 +1268,11 @@ class AuctionTournament(models.Model):
         }
 
     def action_export_sold_unsold(self):
-        """Open Excel export wizard for sold / unsold players."""
+        """Open Excel export wizard for Registered / Sold / Unsold / Jersey."""
         self.ensure_one()
         return {
             'type': 'ir.actions.act_window',
-            'name': 'Export Sold / Unsold Players',
+            'name': 'Export Players',
             'res_model': 'auction.player.stage.export.wizard',
             'view_mode': 'form',
             'target': 'new',
