@@ -23,10 +23,96 @@
       height:38px;padding:0 14px;font-size:.7rem;
       background:rgba(0,20,50,.75);border-color:rgba(255,215,0,.5);
     }
+
+    /* Mobile / tablet: sticky bottom auction actions (all display_auction themes) */
+    .ac-mobile-ctrl-bar{display:none}
+    @media (max-width:1024px){
+      /* Fullscreen is desktop/projector-oriented — hide on phones and tablets */
+      #fs-btn{display:none !important}
+
+      body.ac-has-mobile-ctrl .ac-mobile-ctrl-bar{
+        display:flex;
+        position:fixed;
+        left:0;right:0;bottom:0;
+        z-index:10050;
+        align-items:stretch;
+        justify-content:space-around;
+        gap:8px;
+        padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));
+        background:rgba(8,12,24,.94);
+        backdrop-filter:blur(14px);
+        -webkit-backdrop-filter:blur(14px);
+        border-top:1px solid rgba(255,255,255,.12);
+        box-shadow:0 -10px 32px rgba(0,0,0,.4);
+      }
+      body[data-theme="light"].ac-has-mobile-ctrl .ac-mobile-ctrl-bar{
+        background:rgba(255,255,255,.96);
+        border-top-color:rgba(0,0,0,.1);
+        box-shadow:0 -10px 28px rgba(0,0,0,.12);
+      }
+      body.ac-has-mobile-ctrl{
+        padding-bottom:calc(72px + env(safe-area-inset-bottom,0px)) !important;
+      }
+      /* Sell wizard must own the screen — hide sticky auction actions while open */
+      body.ac-sell-modal-open .ac-mobile-ctrl-bar{
+        display:none !important;
+      }
+      body.ac-sell-modal-open.ac-has-mobile-ctrl{
+        padding-bottom:0 !important;
+      }
+      body.ac-has-mobile-ctrl .vn-footer,
+      body.ac-has-mobile-ctrl .hud-footer,
+      body.ac-has-mobile-ctrl .sw-footer,
+      body.ac-has-mobile-ctrl .lm-footer,
+      body.ac-has-mobile-ctrl .cr-footer,
+      body.ac-has-mobile-ctrl .pt-footer,
+      body.ac-has-mobile-ctrl .bb-footer{
+        display:none !important;
+      }
+      /* Hide original in-flow action rows once buttons live in the dock */
+      body.ac-has-mobile-ctrl .auction-single-buttons,
+      body.ac-has-mobile-ctrl .next-player,
+      body.ac-has-mobile-ctrl .hud-actions,
+      body.ac-has-mobile-ctrl .hud-next-bar,
+      body.ac-has-mobile-ctrl .sw-actions,
+      body.ac-has-mobile-ctrl .lm-actions,
+      body.ac-has-mobile-ctrl .cr-actions,
+      body.ac-has-mobile-ctrl .pt-actions,
+      body.ac-has-mobile-ctrl .pt-next-strip,
+      body.ac-has-mobile-ctrl .bb-actions,
+      body.ac-has-mobile-ctrl .bb-next-strip{
+        display:none !important;
+      }
+      #ac-mobile-ctrl-bar > button{
+        flex:1 1 0;
+        min-width:0;
+        height:52px !important;
+        max-width:none !important;
+        width:auto !important;
+        position:static !important;
+        top:auto !important;
+        right:auto !important;
+        left:auto !important;
+        margin:0 !important;
+        padding:8px 6px !important;
+        border-radius:12px !important;
+        font-size:11px !important;
+        letter-spacing:.03em;
+        white-space:normal !important;
+        line-height:1.15 !important;
+        text-align:center;
+        -webkit-tap-highlight-color:transparent;
+      }
+      #ac-mobile-ctrl-bar > button svg{
+        width:14px;height:14px;flex-shrink:0;
+      }
+    }
   </style>
   <script>//<![CDATA[
 (function () {
   var _busy = false;
+  var _ctrlHomes = {};
+  var _MOBILE_MQ = '(max-width: 1024px)';
 
   function acDbName() {
     var parts = (window.location.pathname || '').split('/').filter(Boolean);
@@ -85,7 +171,71 @@
         if (btn) btn.disabled = false;
       });
   };
-  document.addEventListener('DOMContentLoaded', acSyncBreakBtn);
+
+  function acFindActionBtns() {
+    var unsold = document.querySelector('button[onclick="setPlayerUnsold()"]');
+    var sell = document.querySelector('button[onclick="openSellModal()"]');
+    var next = document.querySelector(
+      'button.next-player-btn, button.hud-next-btn, button.pt-next-btn, button.bb-next-btn, ' +
+      'button.sw-btn-next, button.lm-btn-next, button.cr-btn-next'
+    ) || document.querySelector('button[onclick="changeImage()"]');
+    return { unsold: unsold, sell: sell, next: next };
+  }
+  function acRememberHome(key, el) {
+    if (!el || _ctrlHomes[key]) return;
+    _ctrlHomes[key] = { el: el, parent: el.parentNode, next: el.nextSibling };
+  }
+  function acEnsureCtrlBar() {
+    var bar = document.getElementById('ac-mobile-ctrl-bar');
+    if (bar) return bar;
+    bar = document.createElement('nav');
+    bar.id = 'ac-mobile-ctrl-bar';
+    bar.className = 'ac-mobile-ctrl-bar';
+    bar.setAttribute('aria-label', 'Auction actions');
+    document.body.appendChild(bar);
+    return bar;
+  }
+  function acMoveCtrlsToBar() {
+    var btns = acFindActionBtns();
+    if (!btns.unsold && !btns.sell && !btns.next) return;
+    var bar = acEnsureCtrlBar();
+    [['unsold', btns.unsold], ['sell', btns.sell], ['next', btns.next]].forEach(function (pair) {
+      var key = pair[0];
+      var el = pair[1];
+      if (!el) return;
+      acRememberHome(key, el);
+      if (el.parentNode !== bar) bar.appendChild(el);
+    });
+    document.body.classList.add('ac-has-mobile-ctrl');
+  }
+  function acRestoreCtrlsFromBar() {
+    ['unsold', 'sell', 'next'].forEach(function (key) {
+      var home = _ctrlHomes[key];
+      if (!home || !home.el || !home.parent) return;
+      if (home.next && home.next.parentNode === home.parent) {
+        home.parent.insertBefore(home.el, home.next);
+      } else {
+        home.parent.appendChild(home.el);
+      }
+    });
+    document.body.classList.remove('ac-has-mobile-ctrl');
+    var bar = document.getElementById('ac-mobile-ctrl-bar');
+    if (bar && !bar.children.length) bar.remove();
+  }
+  function acSyncMobileCtrlBar() {
+    if (window.matchMedia(_MOBILE_MQ).matches) acMoveCtrlsToBar();
+    else acRestoreCtrlsFromBar();
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    acSyncBreakBtn();
+    acSyncMobileCtrlBar();
+    if (window.matchMedia) {
+      var mq = window.matchMedia(_MOBILE_MQ);
+      if (mq.addEventListener) mq.addEventListener('change', acSyncMobileCtrlBar);
+      else if (mq.addListener) mq.addListener(acSyncMobileCtrlBar);
+    }
+  });
 })();
   //]]></script>
 </template>

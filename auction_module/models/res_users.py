@@ -94,12 +94,22 @@ class ResUsers(models.Model):
                     })
 
     def _auction_sync_home_action(self):
-        """Login landing: Auction Admin → Tournament(s); other auction users → Player Dashboard."""
+        """Do NOT set a permanent Home Action (res.users.action_id).
+
+        A forced Home Action hijacks sidebar/menu clicks when the URL has only
+        menu_id or a missing action_id (known Odoo behavior) — users stay on
+        Tournament / Player Dashboard instead of opening the clicked app.
+
+        Landing is handled by root-menu order instead:
+          admin → Tournament(s) first; others → Player Dashboard first
+        (openFirstApp on login). Clear any previously forced auction home actions.
+        """
         try:
             admin_action = self.env.ref('auction_module.action_auction_tournament')
             dash_action = self.env.ref('auction_module.action_player_dashboard_client')
         except ValueError:
             return
+        forced_ids = {admin_action.id, dash_action.id}
         sync_ctx = dict(
             self.env.context,
             skip_tournament_sync=True,
@@ -108,23 +118,23 @@ class ResUsers(models.Model):
         for user in self:
             if user.share:
                 continue
-            is_admin = user.has_group('auction_module.group_auction_group_admin')
-            is_auction_user = (
-                is_admin
-                or user.has_group('auction_module.group_auction_group')
-                or user.has_group('auction_module.group_auction_player_dashboard')
-            )
-            if not is_auction_user:
-                continue
-            target = admin_action if is_admin else dash_action
-            if user.action_id != target:
-                user.with_context(**sync_ctx).sudo().write({'action_id': target.id})
+            if user.action_id and user.action_id.id in forced_ids:
+                user.with_context(**sync_ctx).sudo().write({'action_id': False})
 
     @api.model
     def _auction_apply_home_actions_all(self):
-        """Apply auction home actions to all internal users (install / upgrade)."""
+        """Clear forced auction Home Actions on all internal users."""
         self.search([('share', '=', False)])._auction_sync_home_action()
         return True
+
+    def _register_hook(self):
+        super()._register_hook()
+        # Clear forced Home Actions on restart (no -u required) so menu clicks work.
+        try:
+            self.search([('share', '=', False)])._auction_sync_home_action()
+        except Exception:
+            # Avoid blocking registry load if refs are missing mid-upgrade
+            pass
 
     @api.model
     def _auction_reorder_root_menus(self):

@@ -445,12 +445,44 @@ img { display: block; }
 }
 #lb-player-img {
   width: 100%; height: 100%; object-fit: contain; object-position: center;
-  transition: opacity .4s;
+  transition: opacity .25s ease;
 }
 .lb-photo-placeholder {
   width: 100%; height: 100%;
   display: flex; align-items: center; justify-content: center;
   font-size: 6rem; opacity: .18;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+  padding: 16px;
+  text-align: center;
+}
+.lb-photo-placeholder.lb-photo-loading {
+  opacity: 1;
+  font-size: 1rem;
+  color: rgba(255,255,255,.78);
+  background: rgba(0,0,0,.22);
+}
+.lb-photo-spinner {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,.22);
+  border-top-color: rgba(255,255,255,.92);
+  animation: lbPhotoSpin .75s linear infinite;
+  flex-shrink: 0;
+}
+.lb-photo-loading-txt {
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: .88;
+  max-width: 12rem;
+  line-height: 1.35;
+}
+@keyframes lbPhotoSpin {
+  to { transform: rotate(360deg); }
 }
 /* Mystery locked — large lock above PLAYER LOCKED (same as projector) */
 .lb-mystery-lock{
@@ -2361,13 +2393,88 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
   updateClock();
   window.addEventListener('beforeunload', function() { clearInterval(_clockTimer); });
 
+  // ── Player photo (preload so old sold face never lingers) ──────
+  var _lbPhotoLoadToken = 0;
+  var _lbLastPhotoUrl = null;
+
+  function lbShowPhotoLoader() {
+    var img = document.getElementById('lb-player-img');
+    var ph = document.getElementById('lb-photo-ph');
+    if (!img || !ph) return;
+    img.style.display = 'none';
+    img.style.opacity = '0';
+    img.removeAttribute('src');
+    _lbLastPhotoUrl = null;
+    ph.classList.add('lb-photo-loading');
+    ph.style.display = 'flex';
+    ph.innerHTML = '<span class="lb-photo-spinner" aria-hidden="true"></span>'
+      + '<span class="lb-photo-loading-txt">Loading player photo</span>';
+  }
+
+  function lbApplyPlayerPhoto(p) {
+    var img = document.getElementById('lb-player-img');
+    var ph = document.getElementById('lb-photo-ph');
+    if (!img || !ph) return;
+    var mysteryHidden = !!(p && p.is_mystery && !p.mystery_revealed);
+
+    if (!p || !p.photo_url) {
+      _lbPhotoLoadToken += 1;
+      _lbLastPhotoUrl = null;
+      img.style.display = 'none';
+      img.style.opacity = '0';
+      img.style.filter = '';
+      img.removeAttribute('src');
+      ph.classList.remove('lb-photo-loading');
+      ph.style.display = 'flex';
+      ph.textContent = mysteryHidden ? '?' : '👤';
+      return;
+    }
+
+    var url = p.photo_url;
+    // Same photo already visible — only refresh mystery filter
+    if (url === _lbLastPhotoUrl && img.getAttribute('src') === url && img.style.display !== 'none') {
+      img.style.filter = mysteryHidden ? 'grayscale(1) brightness(0.72)' : '';
+      img.style.opacity = '1';
+      ph.classList.remove('lb-photo-loading');
+      ph.style.display = 'none';
+      return;
+    }
+
+    var token = ++_lbPhotoLoadToken;
+    lbShowPhotoLoader();
+
+    var pre = new Image();
+    pre.onload = function () {
+      if (token !== _lbPhotoLoadToken) return;
+      img.src = url;
+      _lbLastPhotoUrl = url;
+      img.style.filter = mysteryHidden ? 'grayscale(1) brightness(0.72)' : '';
+      img.style.display = 'block';
+      img.style.opacity = '1';
+      ph.classList.remove('lb-photo-loading');
+      ph.style.display = 'none';
+    };
+    pre.onerror = function () {
+      if (token !== _lbPhotoLoadToken) return;
+      _lbLastPhotoUrl = null;
+      img.style.display = 'none';
+      img.style.opacity = '0';
+      img.style.filter = '';
+      img.removeAttribute('src');
+      ph.classList.remove('lb-photo-loading');
+      ph.style.display = 'flex';
+      ph.textContent = mysteryHidden ? '?' : '👤';
+    };
+    // Cached images fire onload immediately → "spot" swap with no loader flash
+    pre.src = url;
+  }
+
   // ── Render Player Panel ────────────────────────────────────────
   function renderPlayer(p, soldInfo) {
     if (!p) {
       document.getElementById('lb-pname').textContent = 'Waiting for next player…';
       document.getElementById('lb-psub').textContent = '';
-      document.getElementById('lb-photo-ph').style.display = 'flex';
-      document.getElementById('lb-player-img').style.display = 'none';
+      lbApplyPlayerPhoto(null);
       document.getElementById('lb-sl-overlay').style.display = 'none';
       document.getElementById('lb-state-overlay').style.display = 'none';
       document.getElementById('lb-sold-stamp').style.display   = 'none';
@@ -2380,23 +2487,11 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       return;
     }
 
-    // Photo
-    const img = document.getElementById('lb-player-img');
-    const ph  = document.getElementById('lb-photo-ph');
-    const mysteryLock = document.getElementById('lb-mystery-lock');
+    // Photo — preload before reveal so previous sold player never stays up
+    lbApplyPlayerPhoto(p);
+
     const mysteryHidden = !!(p.is_mystery && !p.mystery_revealed);
-    if (p.photo_url) {
-      img.src = p.photo_url;
-      img.style.display = 'block';
-      img.style.filter = mysteryHidden ? 'grayscale(1) brightness(0.72)' : '';
-      ph.style.display  = 'none';
-    } else {
-      img.style.display = 'none';
-      img.style.filter = '';
-      ph.style.display  = 'flex';
-      ph.textContent = mysteryHidden ? '?' : '👤';
-    }
-    if (mysteryLock) mysteryLock.style.display = mysteryHidden ? 'flex' : 'none';
+    const mysteryLock = document.getElementById('lb-mystery-lock');
 
     // Name + sub — Mystery Player? only; no role ??? / small ?
     document.getElementById('lb-pname').textContent = mysteryHidden
@@ -2458,6 +2553,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       soldStamp.style.display   = 'none';
       unsoldStamp.style.display = 'none';
     }
+    if (mysteryLock) mysteryLock.style.display = mysteryHidden ? 'flex' : 'none';
 
     // Badges
     const isFootball = (p.tournament_type === 'football');
@@ -2824,7 +2920,13 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
         // If player changed or state changed (e.g. auction→sold), flash the player panel
         const playerChanged = (newId !== lastPlayerId) || (newState !== lastState)
           || (newMysteryRevealed !== lastMysteryRevealed);
-        if (playerChanged && (lastPlayerId !== null || newId !== null)) {
+        const playerSwitched = (newId !== lastPlayerId);
+        if (playerSwitched) {
+          // New player: show loader immediately and render attributes now (no old face linger)
+          lbShowPhotoLoader();
+          renderPlayer(p, data.sold_info);
+          renderStatus(p, data.sold_info);
+        } else if (playerChanged && (lastPlayerId !== null || newId !== null)) {
           const panel = document.getElementById('lb-player-panel');
           panel.style.transition = 'opacity 0.3s';
           panel.style.opacity = '0';

@@ -599,19 +599,117 @@
         }
         @media (max-width: 680px) {
           .bs2-main { padding-left: 10px; padding-right: 10px; }
-          .bs2-grid { grid-template-columns: 1fr; }
           .bs2-card-head { flex-wrap: wrap; }
           .bs2-card-status { margin-left: 0; }
           .bs2-toggle-btn { min-width: 76px; }
           .bs2-back-btn,
           .bs2-fs-btn { padding: 0 12px; }
         }
+
+        /* ── Mobile / tablet: grid only + compact type (≤ 768px) ── */
+        @media (max-width: 768px) {
+          #list-section { display: none !important; }
+          #grid-section { display: block !important; }
+          .bs2-view-toggle, .bs2-v-divider { display: none !important; }
+          .bs2-fs-btn { display: none !important; }
+          .bs2-main {
+            padding-top: 108px;
+            padding-left: 10px;
+            padding-right: 10px;
+            padding-bottom: 16px;
+          }
+          .bs2-hdr {
+            grid-template-columns: 1fr auto;
+            gap: 6px 8px;
+            padding: 8px 10px;
+            height: auto;
+          }
+          .bs2-title-wrap {
+            display: flex !important;
+            grid-column: 1 / -1;
+            order: -1;
+            gap: 2px;
+          }
+          .bs2-title {
+            font-size: 1.05rem;
+            letter-spacing: .12em;
+          }
+          .bs2-live {
+            font-size: .65rem;
+            letter-spacing: .14em;
+            gap: 6px;
+          }
+          .bs2-live-dot { width: 7px; height: 7px; }
+          .bs2-left { grid-column: 1; justify-content: flex-start; }
+          .bs2-right { grid-column: 2; justify-content: flex-end; }
+          .bs2-t-logo { width: 36px; height: 36px; }
+          .bs2-t-meta { min-width: 0; flex: 1 1 auto; }
+          .bs2-t-name { font-size: .82rem; white-space: normal; }
+          .bs2-t-desc {
+            font-size: .6rem;
+            line-height: 1.25;
+            max-width: none;
+            white-space: normal;
+            overflow: visible;
+            text-overflow: unset;
+          }
+          .bs2-back-btn { font-size: .62rem; padding: 0 8px; height: 32px; }
+          /* Two teams per row */
+          .bs2-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+          }
+          .bs2-card { border-radius: 12px; }
+          .bs2-card:hover { transform: none; }
+          .bs2-card-body { padding: 10px; gap: 8px; }
+          .bs2-card-logo,
+          .bs2-logo-fallback {
+            width: 28px; height: 28px; border-radius: 7px; font-size: .8rem; flex-shrink: 0;
+          }
+          .bs2-card-name {
+            font-size: .78rem;
+            line-height: 1.15;
+            white-space: normal;
+            overflow: visible;
+            text-overflow: unset;
+            word-break: break-word;
+          }
+          .bs2-card-manager { font-size: .55rem; white-space: normal; }
+          .bs2-overline { font-size: .5rem; letter-spacing: .08em; margin-bottom: 2px; }
+          .bs2-card-purse-value { font-size: 1.15rem; }
+          .bs2-unit { font-size: .55rem; }
+          .bs2-pct-label { font-size: .55rem; }
+          .bs2-progress-lg { height: 6px; }
+          .bs2-card-stats { border-radius: 8px; }
+          .bs2-stat-col { padding: 6px 3px; }
+          .bs2-card-stats .bs2-stat-figure { font-size: .88rem; }
+          .bs2-card-stats .bs2-stat-figure .bs2-unit { font-size: .48rem; }
+          .bs2-stat-label,
+          .bs2-chip-label {
+            font-size: .46rem; letter-spacing: .04em; margin-top: 2px; white-space: normal;
+          }
+          .bs2-badge,
+          .bs2-card-status {
+            min-width: 0; padding: 3px 6px; font-size: .48rem; letter-spacing: .04em;
+          }
+          .bs2-engage {
+            height: 28px; padding: 0 8px; font-size: .58rem; letter-spacing: .04em;
+          }
+          .bs2-card-foot { flex-wrap: wrap; gap: 6px; }
+        }
+        @media (max-width: 380px) {
+          .bs2-title { font-size: .95rem; }
+          .bs2-card-name { font-size: .72rem; }
+          .bs2-card-purse-value { font-size: 1.05rem; }
+        }
       </style>
     </head>
     <body>
       <header class="bs2-hdr">
         <div class="bs2-hdr-side bs2-left">
-          <a class="bs2-back-btn" t-att-href="'/' + db_name + '/auction/projector/' + tournament_slug + '/'">&#8592; PROJECTOR</a>
+          <t t-if="from_projector">
+            <a class="bs2-back-btn" t-att-href="'/' + db_name + '/auction/projector/' + tournament_slug + '/'">&#8592; PROJECTOR</a>
+          </t>
           <t t-if="tournament and tournament.logo">
             <img class="bs2-t-logo" t-attf-src="/#{db_name}/auction/public/image/auction.tournament/#{tournament.id}/logo" alt="Tournament logo"/>
           </t>
@@ -828,7 +926,14 @@
             return { label: 'CRITICAL', cls: 'critical' };
           }
 
+          function isCompactScreen() {
+            return window.matchMedia('(max-width: 768px)').matches;
+          }
+
           function setView(mode) {
+            if (isCompactScreen()) {
+              mode = 'grid';
+            }
             var isList = mode === 'list';
             if (listSection) { listSection.style.display = isList ? '' : 'none'; }
             if (gridSection) { gridSection.style.display = isList ? 'none' : ''; }
@@ -1060,13 +1165,21 @@
           });
           window.addEventListener('beforeunload', stopPolling);
           document.addEventListener('DOMContentLoaded', function () {
-            setView('list');
+            setView(isCompactScreen() ? 'grid' : 'list');
             syncFullscreenButton();
             refreshBalance();
             if (!document.hidden) {
               startPolling();
             }
           });
+          if (window.matchMedia) {
+            var compactMq = window.matchMedia('(max-width: 768px)');
+            var onCompactChange = function () {
+              setView(isCompactScreen() ? 'grid' : (listBtn && listBtn.classList.contains('active') ? 'list' : 'grid'));
+            };
+            if (compactMq.addEventListener) compactMq.addEventListener('change', onCompactChange);
+            else if (compactMq.addListener) compactMq.addListener(onCompactChange);
+          }
         }());
       ]]></script>
       <script src="/auction_module/static/src/assets/bootstrap.bundle.min.js" defer="defer"></script>

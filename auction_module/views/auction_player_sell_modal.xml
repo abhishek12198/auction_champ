@@ -192,7 +192,8 @@
   #sellModal {
     display: none; position: fixed; inset: 0;
     background: rgba(0,0,0,0.82);
-    z-index: 9999;
+    /* Above sticky mobile action bar (z-index 10050) */
+    z-index: 11000;
     align-items: center; justify-content: center;
     padding: 16px;
     padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
@@ -584,18 +585,19 @@
   @media (max-width: 640px) {
     #sellModal {
       padding: 0;
-      align-items: flex-end;
+      align-items: stretch;
       justify-content: stretch;
     }
     .sm-card {
       max-width: 100%;
       width: 100%;
+      height: 100%;
       max-height: min(100dvh, 100vh);
-      border-radius: 18px 18px 0 0;
-      box-shadow: 0 -12px 40px rgba(0,0,0,.45);
+      border-radius: 0;
+      box-shadow: none;
     }
     .sm-header {
-      padding: max(2px, env(safe-area-inset-top)) 14px 12px;
+      padding: max(2px, env(safe-area-inset-top)) 14px 10px;
     }
     .sm-header::before {
       margin: 0 -14px 10px;
@@ -607,18 +609,25 @@
       width: 44px; height: 44px; font-size: 1.25rem;
       background: rgba(255,255,255,.2);
     }
-    .sm-transfer-row { padding: 10px 14px; gap: 8px; }
+    .sm-transfer-row { padding: 8px 14px; gap: 8px; flex-shrink: 0; }
     .sm-avatar,
     .sm-team-logo,
-    .sm-team-logo-placeholder { width: 44px; height: 44px; }
-    .sm-arrow { font-size: 1.35rem; }
-    .sm-section { padding: 10px 14px 4px; }
+    .sm-team-logo-placeholder { width: 40px; height: 40px; }
+    .sm-arrow { font-size: 1.2rem; }
+    .sm-section { padding: 8px 14px 4px; }
+    /* Cap team list height when many teams; no forced min-height (avoids empty gap before points) */
+    .sm-section-teams {
+      display: flex;
+      flex-direction: column;
+    }
     .sm-team-badges {
-      max-height: min(22vh, 140px);
+      max-height: min(42vh, 360px);
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+      align-content: flex-start;
+      padding-bottom: 2px;
     }
-    .sm-badge { padding: 7px 14px; font-size: .78rem; }
+    .sm-badge { padding: 8px 14px; font-size: .8rem; min-height: 40px; }
     .sm-pts-btn { width: 42px; height: 42px; }
     #sellPoints { font-size: 1.25rem; padding: 8px 10px; }
     .sm-presets { gap: 6px; margin-top: 8px; }
@@ -695,7 +704,7 @@
       </div>
 
       <!-- Team selector -->
-      <div class="sm-section">
+      <div class="sm-section sm-section-teams">
         <span class="sm-section-label">Select Team</span>
         <div id="smTeamBadges" class="sm-team-badges">
           <span class="sm-no-teams">Loading teams&#8230;</span>
@@ -1002,6 +1011,13 @@
   };
 
   /* ── Open / Close ──────────────────────────────────────────── */
+  function smSetSellModalOpen(isOpen) {
+    var modal = document.getElementById('sellModal');
+    if (!modal) return;
+    modal.classList.toggle('open', !!isOpen);
+    document.body.classList.toggle('ac-sell-modal-open', !!isOpen);
+  }
+
   window.openSellModal = function() {
     if (window._acAuctionActionsLocked) return;
     smPlayerId     = parseInt(document.body.getAttribute('data-player-id'));
@@ -1057,20 +1073,20 @@
     document.getElementById('smBtnSell').disabled = true;
     document.getElementById('smBtnSell').textContent = 'Sell Player';
     document.getElementById('sellPoints').value = 0;
-    document.getElementById('sellModal').classList.add('open');
+    smSetSellModalOpen(true);
     smLoadTeams(smPlayerId);
   };
 
   window.closeSellModal = function() {
     if (smCountdownTimer) { clearInterval(smCountdownTimer); smCountdownTimer = null; }
-    document.getElementById('sellModal').classList.remove('open');
+    smSetSellModalOpen(false);
   };
 
   window.smSkipToNext = function() {
     if (smBreakPaused) return;
     if (smCountdownTimer) { clearInterval(smCountdownTimer); smCountdownTimer = null; }
     smAdvanceFn = null;
-    document.getElementById('sellModal').classList.remove('open');
+    smSetSellModalOpen(false);
     document.getElementById('smSoldScreen').classList.remove('visible');
     document.getElementById('smSoldScreen').classList.remove('sm-break-on');
     document.getElementById('smFormPanel').style.display = 'flex';
@@ -1388,7 +1404,7 @@
         clearInterval(smCountdownTimer);
         smCountdownTimer = null;
         if (smBreakPaused) return;
-        document.getElementById('sellModal').classList.remove('open');
+        smSetSellModalOpen(false);
         document.getElementById('smSoldScreen').classList.remove('visible');
         document.getElementById('smFormPanel').style.display = 'flex';
         // If pre-fetch is still in-flight, wait for it (adds at most a few ms
