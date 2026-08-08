@@ -952,18 +952,33 @@
                         <div class="reg-photo-upload" id="paymentUploadBox">
                             <div class="reg-payment-icon" id="paymentPreviewIcon">📎</div>
                             <div class="reg-file-meta">
-                                <label for="paymentInput" class="reg-file-btn" id="paymentFileBtn">
-                                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24"
-                                         stroke="currentColor" stroke-width="2.5">
-                                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                                        <polyline points="17 8 12 3 7 8"/>
-                                        <line x1="12" y1="3" x2="12" y2="15"/>
-                                    </svg>
-                                    Upload Receipt / Screenshot
-                                    <t t-if="tournament and tournament.payment_proof_required">
-                                        <span class="req">*</span>
-                                    </t>
-                                </label>
+                                <div class="reg-payment-actions">
+                                    <label for="paymentInput" class="reg-file-btn" id="paymentFileBtn"
+                                           title="Upload Proof" aria-label="Upload Proof">
+                                        <svg width="15" height="15" fill="none" viewBox="0 0 24 24"
+                                             stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                            <polyline points="17 8 12 3 7 8"/>
+                                            <line x1="12" y1="3" x2="12" y2="15"/>
+                                        </svg>
+                                        <span class="reg-file-btn-text">Upload Proof</span>
+                                        <t t-if="tournament and tournament.payment_proof_required">
+                                            <span class="req">*</span>
+                                        </t>
+                                    </label>
+                                    <button type="button" id="paymentClearBtn"
+                                            class="reg-file-btn reg-file-btn-clear is-hidden"
+                                            title="Clear Proof" aria-label="Clear Proof">
+                                        <svg width="15" height="15" fill="none" viewBox="0 0 24 24"
+                                             stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                                            <polyline points="3 6 5 6 21 6"/>
+                                            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                                            <path d="M10 11v6M14 11v6"/>
+                                            <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                                        </svg>
+                                        <span class="reg-file-btn-text">Clear</span>
+                                    </button>
+                                </div>
                                 <!-- Gate for HTML5 validation: hidden file inputs are skipped by browsers -->
                                 <t t-if="tournament and tournament.payment_proof_required">
                                     <input type="text" id="paymentProofGate" name="payment_proof_gate"
@@ -1300,6 +1315,31 @@
 
     // Payment receipt filename + required gate sync
     var paymentInput = document.getElementById('paymentInput');
+    var paymentClearBtn = document.getElementById('paymentClearBtn');
+    var paymentHintDefault = 'JPG · PNG · PDF \u00a0·\u00a0 Max 5 MB';
+
+    function setPaymentProofUI(hasFile, fileName) {
+        var hint = document.getElementById('paymentFileName');
+        var icon = document.getElementById('paymentPreviewIcon');
+        if (hasFile) {
+            if (hint) {
+                hint.textContent = '✓ ' + (fileName || 'Proof attached');
+                hint.style.color = '#276749';
+                hint.style.fontWeight = '600';
+            }
+            if (icon) { icon.textContent = '✅'; icon.style.background = '#f0fff4'; }
+            if (paymentClearBtn) paymentClearBtn.classList.remove('is-hidden');
+        } else {
+            if (hint) {
+                hint.textContent = paymentHintDefault;
+                hint.style.color = '';
+                hint.style.fontWeight = '';
+            }
+            if (icon) { icon.textContent = '📎'; icon.style.background = ''; }
+            if (paymentClearBtn) paymentClearBtn.classList.add('is-hidden');
+        }
+    }
+
     function syncPaymentProofGate() {
         var gate = document.getElementById('paymentProofGate');
         var section = document.getElementById('paymentSection');
@@ -1315,18 +1355,23 @@
             if (err) err.style.display = 'none';
         }
     }
+
+    function clearPaymentProof() {
+        if (paymentInput) paymentInput.value = '';
+        setPaymentProofUI(false);
+        syncPaymentProofGate();
+    }
+
+    if (paymentClearBtn) {
+        paymentClearBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            clearPaymentProof();
+        });
+    }
     if (paymentInput) {
         paymentInput.addEventListener('change', function () {
-            var hint = document.getElementById('paymentFileName');
-            var icon = document.getElementById('paymentPreviewIcon');
-            if (this.files[0]) {
-                if (hint) {
-                    hint.innerHTML = '✓ ' + this.files[0].name;
-                    hint.style.color = '#276749';
-                    hint.style.fontWeight = '600';
-                }
-                if (icon) { icon.textContent = '✅'; icon.style.background = '#f0fff4'; }
-            }
+            var file = this.files &amp;&amp; this.files[0];
+            setPaymentProofUI(!!file, file ? file.name : '');
             syncPaymentProofGate();
         });
         syncPaymentProofGate();

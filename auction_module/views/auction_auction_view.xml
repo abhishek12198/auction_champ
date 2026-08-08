@@ -27,6 +27,7 @@
                     <field name="remaining_players_count"/>
                     <field name="max_call"/>
                     <field name="base_point"/>
+                    <field name="tier_base_kanban_html"/>
                     <templates>
                         <t t-name="kanban-box">
                             <t t-set="players_in"   t-value="record.max_players.raw_value - record.remaining_players_count.raw_value"/>
@@ -80,7 +81,7 @@
                                     <div>
                                         <div class="auk-bar-header">
                                             <span class="auk-bar-label">Budget Used</span>
-                                            <span class="auk-bar-value"><field name="remaining_points"/> pts left</span>
+                                            <span class="auk-bar-value"><t t-esc="budget_pct"/>% used</span>
                                         </div>
                                         <div class="auk-track">
                                             <div class="auk-fill" t-attf-style="width:#{budget_pct}%;background:#{budget_color};"/>
@@ -100,8 +101,8 @@
                                 <!-- ── Stat chips ─────────────────────────── -->
                                 <div class="auk-chips">
                                     <div class="auk-chip">
-                                        <div class="auk-chip-label">Base Bid</div>
-                                        <div class="auk-chip-value"><field name="base_point"/></div>
+                                        <div class="auk-chip-label">Purse Left</div>
+                                        <div class="auk-chip-value"><field name="remaining_points"/></div>
                                     </div>
                                     <div class="auk-chip">
                                         <div class="auk-chip-label">Slots Left</div>
@@ -112,6 +113,13 @@
                                         <div class="auk-chip-value"><field name="max_call"/></div>
                                     </div>
                                 </div>
+
+                                <!-- ── Tier-wise base bids ────────────────── -->
+                                <t t-if="record.tier_base_kanban_html.raw_value">
+                                    <div class="auk-tier-bases-wrap">
+                                        <field name="tier_base_kanban_html" widget="html"/>
+                                    </div>
+                                </t>
 
                                 <!-- ── Action button ──────────────────────── -->
                                 <div class="auk-footer">

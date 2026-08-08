@@ -82,6 +82,12 @@ class Auction(models.Model):
         string='Tier Recruitment',
         sanitize=False,
     )
+    tier_base_kanban_html = fields.Html(
+        compute='_compute_tier_base_kanban_html',
+        string='Tier Base Bids',
+        sanitize=False,
+        help='Compact tier-wise base bid chips for the auction kanban card.',
+    )
 
 
     @api.depends('player_ids', 'player_ids.points', 'total_point')
@@ -149,6 +155,35 @@ class Auction(models.Model):
                 )
             record.tier_recruitment_html = (
                 '<div class="atb-banner">' + ''.join(pills) + '</div>'
+            )
+
+    @api.depends(
+        'base_point',
+        'tier_limit_ids',
+        'tier_limit_ids.base_point',
+        'tier_limit_ids.tier_id',
+        'tier_limit_ids.tier_id.name',
+    )
+    def _compute_tier_base_kanban_html(self):
+        for record in self:
+            if not record.tier_limit_ids:
+                record.tier_base_kanban_html = False
+                continue
+            chips = []
+            for tl in record.tier_limit_ids:
+                base = tl.base_point if tl.base_point > 0 else (record.base_point or 0)
+                tier_name = (tl.tier_id.name or 'Tier').replace('<', '').replace('>', '')
+                chips.append(
+                    '<span class="auk-tier-chip" title="Base bid for %s">'
+                    '<span class="auk-tier-chip-name">%s</span>'
+                    '<span class="auk-tier-chip-base">%s</span>'
+                    '</span>' % (tier_name, tier_name, base)
+                )
+            record.tier_base_kanban_html = (
+                '<div class="auk-tier-bases">'
+                '<span class="auk-tier-bases-label">Tier Base</span>'
+                '<div class="auk-tier-bases-row">%s</div>'
+                '</div>' % ''.join(chips)
             )
 
     def _get_budget_safe_max(self, team, player=None):

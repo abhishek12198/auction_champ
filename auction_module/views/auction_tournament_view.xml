@@ -12,6 +12,15 @@
                            filter_domain="['|', ('name', 'ilike', self), ('tournament_code', 'ilike', self)]"/>
                     <field name="tournament_code" string="Tournament Code"
                            filter_domain="[('tournament_code', 'ilike', self)]"/>
+                    <field name="auction_date"/>
+                    <filter string="Has Auction Date" name="filter_has_auction_date"
+                            domain="[('auction_date', '!=', False)]"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Auction Date" name="groupby_auction_date"
+                                context="{'group_by': 'auction_date'}"/>
+                        <filter string="Sport" name="groupby_tournament_type"
+                                context="{'group_by': 'tournament_type'}"/>
+                    </group>
                 </search>
             </field>
         </record>
@@ -887,10 +896,36 @@
             </field>
         </record>
 
+        <record id="view_auction_tournament_calendar" model="ir.ui.view">
+            <field name="name">auction.tournament.calendar</field>
+            <field name="model">auction.tournament</field>
+            <field name="arch" type="xml">
+                <calendar string="Tournaments"
+                          js_class="auction_tournament_calendar"
+                          date_start="auction_date"
+                          mode="month"
+                          color="tournament_type"
+                          quick_add="0"
+                          create="1"
+                          event_open_popup="1">
+                    <field name="name"/>
+                    <field name="organizer_name"/>
+                    <field name="organizer_contact" widget="mobile"/>
+                    <field name="auction_date"/>
+                    <field name="auction_venue"/>
+                    <field name="venue"/>
+                    <field name="tournament_type"/>
+                    <field name="tournament_code"/>
+                    <field name="description"/>
+                    <field name="active"/>
+                </calendar>
+            </field>
+        </record>
+
         <record id="action_auction_tournament" model="ir.actions.act_window">
             <field name="name">Tournament</field>
             <field name="res_model">auction.tournament</field>
-            <field name="view_mode">kanban,tree,form</field>
+            <field name="view_mode">calendar,kanban,tree,form</field>
             <field name="search_view_id" ref="view_auction_tournament_search"/>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">

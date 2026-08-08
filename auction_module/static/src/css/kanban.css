@@ -282,6 +282,54 @@
 .auk-chip-value { font-size: .98rem; font-weight: 700; color: #1a3a5c; line-height: 1; }
 .auk-chip-accent .auk-chip-value { color: #fff; }
 
+/* Tier-wise base bid chips under the main stats */
+.auk-tier-bases-wrap {
+  padding: 2px 14px 6px;
+}
+.auk-tier-bases {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.auk-tier-bases-label {
+  font-size: .55rem;
+  font-weight: 700;
+  letter-spacing: .55px;
+  text-transform: uppercase;
+  color: #8a94a6;
+}
+.auk-tier-bases-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.auk-tier-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #eef3f9;
+  border: 1px solid #d7e2ef;
+  line-height: 1.2;
+}
+.auk-tier-chip-name {
+  font-size: .62rem;
+  font-weight: 700;
+  color: #5a6a80;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 72px;
+}
+.auk-tier-chip-base {
+  font-size: .68rem;
+  font-weight: 800;
+  color: #1a3a5c;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Footer */
 .auk-footer { padding: 11px 14px 13px; }
 .auk-btn-summary {

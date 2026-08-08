@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="auction_module.TournamentCalendarBox">
+        <div t-att-style="typeof color === 'string' ? ('background-color:' + color) + ';' : ''"
+             t-attf-class="o_event o_atk_cal_event #{record.is_highlighted ? 'o_event_hightlight' : ''} #{typeof color === 'number' ? _.str.sprintf('o_calendar_color_%s', color) : 'o_calendar_color_1'} #{record.is_hatched ? 'o_calendar_hatched o_calendar_hatched_' + (typeof color === 'number' ? color : 1): ''} #{record.is_striked ? 'o_calendar_striked o_calendar_striked_' + (typeof color === 'number' ? color : 1): ''}">
+            <span t-if="showTime" class="fc-time"/>
+            <div class="o_atk_cal_row">
+                <img class="o_atk_cal_logo"
+                     t-att-src="'/web/image/auction.tournament/' + record.id + '/logo'"
+                     alt=""
+                     onerror="this.style.display='none'; if(this.nextElementSibling){ this.nextElementSibling.style.display='inline-flex'; }"/>
+                <span class="o_atk_cal_logo_ph" style="display:none;" aria-hidden="true">
+                    <i class="fa fa-trophy"/>
+                </span>
+                <div class="o_atk_cal_text">
+                    <div class="o_event_title" t-esc="record.display_name"/>
+                    <div t-if="showLocation and record.location" class="o_atk_cal_sub" t-esc="record.location"/>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>
