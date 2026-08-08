@@ -1,184 +1,294 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-<template id="squad_poster_template" name="Squad Poster Story">
+<template id="squad_poster_template" name="Squad Poster Franchise Reveal">
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Squad Poster — <t t-esc="team_name"/> | AuctionChamp</title>
+  <link rel="shortcut icon" href="/auction_module/static/description/icon.png" type="image/png"/>
+  <link rel="icon" href="/auction_module/static/description/icon.png" type="image/png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Oswald:wght@500;600;700&amp;family=Montserrat:wght@600;700;800;900&amp;display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="/auction_module/static/src/css/squad_poster.css?v=163"/>
+  <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&amp;family=Oswald:wght@600;700&amp;family=Roboto+Condensed:ital,wght@0,700;1,700&amp;family=Russo+One&amp;family=Teko:wght@600;700&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/auction_module/static/src/css/squad_poster.css?v=275"/>
 </head>
-<body class="sp-shell" data-palette="pace-lime" id="spShell">
+<body class="sp-shell" t-att-data-palette="palette" t-att-data-team-name="team_name" t-att-data-tournament-name="tournament_name" id="spShell">
 
   <div class="sp-toolbar" id="spToolbar">
-    <div class="sp-toolbar-title">Instagram Story · 1080×1920 · Squad Reveal Poster</div>
-    <button type="button" class="sp-btn is-primary" id="spDlPng" data-fmt="png">Download PNG</button>
-    <button type="button" class="sp-btn is-primary" id="spDlJpg" data-fmt="jpg">Download JPG</button>
-    <button type="button" class="sp-btn" id="spPrint">Print</button>
-    <button type="button" class="sp-btn" id="spCopy">Copy Image</button>
-    <button type="button" class="sp-btn" id="spShare">Share</button>
-    <div class="sp-zoom-group">
-      <label class="sp-footer-txt" for="spRes">Export</label>
-      <select class="sp-select" id="spRes" title="Export resolution">
-        <option value="2" selected="selected">2160×3840 (4K · recommended)</option>
-        <option value="3">3240×5760 (ultra)</option>
-        <option value="1">1080×1920 (standard)</option>
-      </select>
-      <label class="sp-footer-txt" for="spZoom">Zoom</label>
-      <select class="sp-select" id="spZoom" title="Preview zoom">
-        <option value="fit" selected="selected">Fit Screen</option>
-        <option value="0.45">45%</option>
-        <option value="0.55">55%</option>
-        <option value="0.7">70%</option>
-        <option value="1">Actual Size</option>
-      </select>
+    <div class="sp-toolbar-title">Squad Poster · Save &amp; Share</div>
+    <div class="sp-toolbar-actions">
+      <button type="button" class="sp-btn is-primary" id="spDlPng" data-fmt="png">Save PNG</button>
+      <button type="button" class="sp-btn is-primary" id="spDlJpg" data-fmt="jpg">Save JPG</button>
+      <button type="button" class="sp-btn" id="spShare" style="display:none;">Share</button>
+      <button type="button" class="sp-btn sp-btn-desktop" id="spPrint">Print</button>
+      <button type="button" class="sp-btn is-primary" id="spEditPhotos">Adjust photos</button>
     </div>
-    <div class="sp-palette-row" id="spPaletteRow" role="group" aria-label="Poster color palette">
-      <span class="sp-palette-lbl">Poster Color</span>
-      <button type="button" class="sp-swatch is-active" data-palette="pace-lime" title="Pace Lime"></button>
+    <div class="sp-player-edit-bar" id="spPlayerEditBar"></div>
+    <!-- Docked editor (NOT full-screen — full-screen overlay was eating all clicks) -->
+    <div class="sp-peditor sp-peditor--dock" id="spPhotoEditor" aria-hidden="true" style="display:none;pointer-events:none;">
+      <div class="sp-peditor-panel" role="dialog" aria-labelledby="spPeditorTitle">
+        <div class="sp-peditor-head">
+          <h2 class="sp-peditor-title" id="spPeditorTitle">Adjust photo</h2>
+          <button type="button" class="sp-btn sp-peditor-x" id="spPeditorClose" aria-label="Close">X</button>
+        </div>
+        <p class="sp-peditor-help">Drag to move · Zoom to scale · Done applies to the poster</p>
+        <div class="sp-peditor-stage" id="spPeditorStage">
+          <img class="sp-peditor-img" id="spPeditorImg" alt="" draggable="false"/>
+        </div>
+        <div class="sp-peditor-controls">
+          <button type="button" class="sp-btn" id="spPeditorZoomOut" aria-label="Zoom out">-</button>
+          <input type="range" class="sp-peditor-range" id="spPeditorZoom" min="100" max="320" value="100" step="2"/>
+          <button type="button" class="sp-btn" id="spPeditorZoomIn" aria-label="Zoom in">+</button>
+          <span class="sp-peditor-zoom-lbl" id="spPeditorZoomLbl">100%</span>
+        </div>
+        <div class="sp-peditor-actions">
+          <button type="button" class="sp-btn" id="spPeditorReset">Reset</button>
+          <button type="button" class="sp-btn is-primary" id="spPeditorDone">Done</button>
+        </div>
+      </div>
+    </div>
+    <div class="sp-toolbar-opts">
+      <div class="sp-zoom-group">
+        <label class="sp-footer-txt" for="spZoom">Zoom</label>
+        <select class="sp-select" id="spZoom">
+          <option value="auto" selected="selected">Fit</option>
+          <option value="0.25">25%</option>
+          <option value="0.35">35%</option>
+          <option value="0.45">45%</option>
+          <option value="0.55">55%</option>
+          <option value="0.7">70%</option>
+          <option value="1">100%</option>
+        </select>
+      </div>
+      <div class="sp-zoom-group sp-btn-desktop">
+        <label class="sp-footer-txt" for="spScale">Quality</label>
+        <select class="sp-select" id="spScale">
+          <option value="1" selected="selected">1× (phone-friendly)</option>
+          <option value="2">2× (high-res)</option>
+          <option value="3">3× (max)</option>
+        </select>
+      </div>
+    </div>
+    <div class="sp-status" id="spStatus"></div>
+    <div class="sp-hint">1) Tap a player name · 2) Drag / zoom · 3) Done · 4) Save PNG/JPG</div>
+    <div class="sp-palette-row sp-btn-desktop" id="spPaletteRow">
+      <span class="sp-palette-lbl">Palette</span>
+      <button type="button" class="sp-swatch" data-palette="ember-orange" title="Ember"></button>
+      <button type="button" class="sp-swatch" data-palette="pace-lime" title="Pace Lime"></button>
       <button type="button" class="sp-swatch" data-palette="midnight-gold" title="Midnight Gold"></button>
-      <button type="button" class="sp-swatch" data-palette="ember-orange" title="Ember Orange"></button>
       <button type="button" class="sp-swatch" data-palette="arctic-cyan" title="Arctic Cyan"></button>
       <button type="button" class="sp-swatch" data-palette="royal-violet" title="Royal Violet"></button>
-      <button type="button" class="sp-swatch" data-palette="carbon-chrome" title="Carbon Chrome"></button>
-      <button type="button" class="sp-swatch" data-palette="crimson-flare" title="Crimson Flare"></button>
+      <button type="button" class="sp-swatch" data-palette="carbon-chrome" title="Carbon"></button>
+      <button type="button" class="sp-swatch" data-palette="crimson-flare" title="Crimson"></button>
     </div>
-    <div class="sp-status" id="spStatus">Pace Lime · export PNG for Instagram Stories</div>
   </div>
 
   <div class="sp-preview-wrap">
-    <div class="sp-preview-scale" id="spScale">
-      <div class="sp-canvas" id="spCanvas"
-           t-att-data-cols="str(grid_cols)"
-           t-att-data-sport="sport"
-           t-att-data-count="str(len(players) if players else 0)">
+    <div class="sp-preview-scale" id="spScaleBox">
+      <div class="sp-canvas" id="spCanvas">
 
-        <!-- Atmospheric background -->
         <div class="sp-bg" aria-hidden="true">
           <t t-if="bg_uri">
-            <img class="sp-bg-img" t-att-src="bg_uri" alt=""/>
+            <img class="sp-bg-tourn" t-att-src="bg_uri" alt=""/>
+            <div class="sp-bg-scrim"></div>
+            <div class="sp-bg-vignette"></div>
           </t>
           <t t-else="">
-            <img class="sp-bg-stadium" src="/auction_module/static/src/assets/images/stadium_night.svg" alt=""/>
+            <img class="sp-bg-img" src="/auction_module/static/src/assets/images/squad_poster/sp_bg_stadium.jpg" alt=""/>
+            <div class="sp-bg-grade"></div>
+            <img class="sp-fx-smoke" src="/auction_module/static/src/assets/images/squad_poster/sp_smoke.jpg" alt=""/>
+            <img class="sp-fx-fire" src="/auction_module/static/src/assets/images/squad_poster/sp_fire_band.jpg" alt=""/>
+            <img class="sp-fx-sparks" src="/auction_module/static/src/assets/images/squad_poster/sp_sparks.jpg" alt=""/>
+            <div class="sp-fx-flare"></div>
+            <div class="sp-bg-vignette"></div>
           </t>
-          <div class="sp-bg-vignette"></div>
-          <div class="sp-bg-glow"></div>
-          <div class="sp-bg-grunge is-left"></div>
-          <div class="sp-bg-grunge is-right"></div>
         </div>
 
         <div class="sp-layer">
 
-          <!-- ══ 1. TOURNAMENT HEADER ══ -->
           <header class="sp-header">
-            <h1 class="sp-tourn-title"><t t-esc="tournament_name"/></h1>
-
-            <t t-if="organizer_name">
-              <div class="sp-presenting">
-                <span><t t-esc="organizer_name"/> PRESENTING</span>
-              </div>
-            </t>
-
-            <div class="sp-hero">
-              <t t-if="tourn_logo_uri">
-                <img class="sp-hero-logo" t-att-src="tourn_logo_uri" t-att-alt="tournament_name"/>
-              </t>
-              <t t-else="">
-                <div class="sp-hero-logo-ph">
-                  <span class="sp-hero-mark">AC</span>
-                  <span class="sp-hero-season" t-if="season_label"><t t-esc="season_label"/></span>
+            <div class="sp-header-row">
+              <div class="sp-header-left">
+                <div class="sp-tourn-logo-wrap">
+                  <t t-if="tourn_logo_uri">
+                    <img class="sp-tourn-logo" t-att-src="tourn_logo_uri" alt=""/>
+                  </t>
+                  <t t-else="">
+                    <div class="sp-tourn-logo-ph">AC</div>
+                  </t>
                 </div>
-              </t>
-            </div>
-
-            <div class="sp-meta-bar">
-              <div class="sp-meta-item" t-if="date_label">
-                <span class="sp-meta-ico" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
-                </span>
-                <span class="sp-meta-txt"><t t-esc="date_label"/></span>
               </div>
-              <div class="sp-meta-item is-venue" t-if="venue">
-                <span class="sp-meta-ico" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-                </span>
-                <span class="sp-meta-txt"><t t-esc="venue"/></span>
+              <div class="sp-tourn-titles">
+                <div class="sp-type sp-type--gold sp-type--single" id="spTournTitle">
+                  <span class="sp-type-depth" t-esc="tournament_name"/>
+                  <span class="sp-type-glow" t-esc="tournament_name"/>
+                  <span class="sp-type-face" t-esc="tournament_name"/>
+                </div>
+                <div class="sp-season-row">
+                  <span class="sp-season-rule"></span>
+                  <span class="sp-season" t-esc="season_label or 'SEASON'"/>
+                  <span class="sp-season-rule"></span>
+                </div>
+                <t t-if="date_label or venue">
+                  <div class="sp-meta-row">
+                    <t t-if="date_label">
+                      <span class="sp-meta-item" t-esc="date_label"/>
+                    </t>
+                    <t t-if="date_label and venue">
+                      <span class="sp-meta-sep" aria-hidden="true"></span>
+                    </t>
+                    <t t-if="venue">
+                      <span class="sp-meta-item" t-esc="venue"/>
+                    </t>
+                  </div>
+                </t>
               </div>
+              <div class="sp-header-right" aria-hidden="true"></div>
             </div>
           </header>
 
-          <!-- ══ 2. TEAM + OWNER BAND ══ -->
-          <section class="sp-team-band">
+          <section class="sp-team">
             <div class="sp-team-left">
-              <div class="sp-team-logo-ring">
+              <h1 class="sp-team-name"
+                  t-att-style="'--sp-tn1:%spx;--sp-tn2:%spx;--sp-tn0:%spx;' % (team_type_line1 or 52, team_type_body or 44, team_type_only or 48)">
+                <t t-foreach="team_name_lines" t-as="line">
+                  <span class="sp-team-word">
+                    <span class="sp-team-word-depth" t-esc="line"/>
+                    <span class="sp-team-word-face" t-esc="line"/>
+                  </span>
+                </t>
+              </h1>
+            </div>
+            <div class="sp-team-mid">
+              <div class="sp-team-logo-wrap">
                 <t t-if="team_logo_uri">
-                  <img class="sp-team-logo" t-att-src="team_logo_uri" t-att-alt="team_name"/>
+                  <img class="sp-team-logo" t-att-src="team_logo_uri" alt=""/>
                 </t>
                 <t t-else="">
-                  <div class="sp-team-logo-ph"><t t-esc="(team_name or 'T')[:1]"/></div>
+                  <div class="sp-team-logo-ph" t-esc="(team_name or 'T')[:1]"/>
                 </t>
               </div>
-              <div class="sp-team-copy">
-                <div class="sp-team-kicker">OFFICIAL SQUAD</div>
-                <h2 class="sp-team-name"><t t-esc="team_name"/></h2>
-                <div class="sp-team-sub" t-if="season_label"><t t-esc="season_label"/></div>
-              </div>
             </div>
-
-            <div class="sp-owner" t-if="manager">
-              <div class="sp-owner-frame">
-                <div class="sp-owner-avatar"><t t-esc="manager_initials or 'O'"/></div>
-                <span class="sp-owner-badge">OWNER</span>
-              </div>
-              <div class="sp-owner-name"><t t-esc="manager"/></div>
+            <div class="sp-team-right">
+              <div class="sp-manager-lbl">TEAM MANAGER</div>
+              <div class="sp-manager-name" t-esc="manager or '—'"/>
             </div>
           </section>
 
-          <!-- ══ 3. PLAYER GRID ══ -->
-          <section class="sp-squad">
-            <t t-if="grouped">
+          <section class="sp-squad" t-att-data-has-icon="'1' if has_icon else '0'">
+            <t t-if="not has_icon">
+              <div class="sp-slogan" aria-hidden="true">
+                <img class="sp-slogan-logo" src="/auction_module/static/img/logo.svg" alt=""/>
+                <div class="sp-slogan-words">
+                  <span class="sp-slogan-word">BID</span>
+                  <span class="sp-slogan-dot">·</span>
+                  <span class="sp-slogan-word">BUILD</span>
+                  <span class="sp-slogan-dot">·</span>
+                  <span class="sp-slogan-word">DOMINATE</span>
+                </div>
+              </div>
+            </t>
+            <t t-if="has_icon and icon_players and not (grouped and groups)">
+              <!-- Icon / Key players — 1 centered, 2–4 distributed equally -->
+              <div class="sp-icon-hero-row"
+                   t-att-data-count="str(icon_count or len(icon_players))"
+                   t-att-style="'--sp-icon-count:%s' % (icon_count or len(icon_players) or 1)">
+                <t t-foreach="icon_players" t-as="icon_pl">
+                  <t t-call="auction_module.squad_poster_card">
+                    <t t-set="pl" t-value="icon_pl"/>
+                  </t>
+                </t>
+              </div>
+              <t t-if="player_rows">
+                <div class="sp-grid-sym"
+                     t-att-data-rows="str(grid_rows or 1)"
+                     t-att-style="'--sp-cols:%s;--sp-rows:%s;--sp-row-gap:%spx;' % (grid_cols or 5, grid_rows or 1, row_gap or 4)">
+                  <t t-foreach="player_rows or []" t-as="row">
+                    <div class="sp-grid-row">
+                      <t t-foreach="row" t-as="card_pl">
+                        <t t-call="auction_module.squad_poster_card">
+                          <t t-set="pl" t-value="card_pl"/>
+                        </t>
+                      </t>
+                    </div>
+                  </t>
+                </div>
+              </t>
+            </t>
+            <t t-elif="grouped and groups">
               <t t-foreach="groups" t-as="grp">
                 <div class="sp-cat">
-                  <div class="sp-cat-bar"><t t-esc="grp['label']"/></div>
-                  <div class="sp-grid" t-att-data-cols="str(grid_cols)">
-                    <t t-foreach="grp['players']" t-as="p">
-                      <t t-call="auction_module.squad_poster_player_card"/>
+                  <div class="sp-cat-bar" t-esc="grp['label']"/>
+                  <div class="sp-grid-sym"
+                       t-att-style="'--sp-cols:%s' % (grid_cols or 5)"
+                       t-att-data-sparse="'1' if sparse_squad else '0'">
+                    <t t-foreach="grp['players']" t-as="card_pl">
+                      <t t-call="auction_module.squad_poster_card">
+                        <t t-set="pl" t-value="card_pl"/>
+                      </t>
                     </t>
                   </div>
                 </div>
               </t>
             </t>
             <t t-else="">
-              <div class="sp-grid"
-                   t-att-data-cols="str(grid_cols)"
-                   t-att-data-count="str(player_count)">
-                <t t-foreach="players" t-as="p">
-                  <t t-call="auction_module.squad_poster_player_card"/>
+              <div class="sp-grid-sym"
+                   t-att-data-rows="str(grid_rows or 1)"
+                   t-att-style="'--sp-cols:%s;--sp-rows:%s;--sp-row-gap:%spx;' % (grid_cols or 5, grid_rows or 1, row_gap or 4)">
+                <t t-foreach="player_rows or []" t-as="row">
+                  <div class="sp-grid-row">
+                    <t t-foreach="row" t-as="card_pl">
+                      <t t-call="auction_module.squad_poster_card">
+                        <t t-set="pl" t-value="card_pl"/>
+                      </t>
+                    </t>
+                  </div>
                 </t>
               </div>
             </t>
           </section>
 
-          <!-- ══ 4. SPONSORS (below players) ══ -->
-          <section class="sp-sponsors-block" t-if="has_sponsors">
-            <div class="sp-sponsors-lbl">OUR SPONSORS</div>
-            <div class="sp-sponsors-row">
-              <t t-foreach="sponsors" t-as="sp">
-                <div class="sp-sponsor" t-att-title="sp.get('name')">
-                  <img t-att-src="sp.get('uri')" t-att-alt="sp.get('name')"/>
-                </div>
-              </t>
-            </div>
-          </section>
+          <t t-if="strike_force and strike_force.get('items')">
+            <section class="sp-strike">
+              <div class="sp-strike-rule"></div>
+              <div class="sp-strike-title" t-esc="strike_force.get('title') or 'THE STRIKE FORCE'"/>
+              <div class="sp-strike-tag" t-esc="strike_force.get('tagline') or 'ONE TEAM • ONE MISSION • ONE TROPHY'"/>
+              <div class="sp-strike-stats">
+                <t t-foreach="strike_force.get('items') or []" t-as="st">
+                  <div class="sp-strike-stat" t-att-data-icon="st.get('icon') or ''">
+                    <div t-attf-class="sp-strike-ico sp-strike-ico--#{st.get('icon') or 'bowler'}" aria-hidden="true"></div>
+                    <div class="sp-strike-num" t-esc="st.get('value') or '00'"/>
+                    <div class="sp-strike-lbl" t-esc="st.get('label') or ''"/>
+                  </div>
+                </t>
+              </div>
+              <div class="sp-strike-rule"></div>
+            </section>
+          </t>
 
-          <!-- ══ 5. FOOTER — AuctionChamp only ══ -->
+          <t t-if="has_sponsors">
+            <div class="sp-sponsors-block">
+              <div class="sp-sponsors-lbl-row">
+                <span class="sp-sponsors-rule"></span>
+                <span class="sp-sponsors-lbl">SPONSORS</span>
+                <span class="sp-sponsors-rule"></span>
+              </div>
+              <div class="sp-sponsors-row" t-att-data-count="str(len(sponsors or []))">
+                <t t-foreach="sponsors" t-as="sp">
+                  <div class="sp-sponsor">
+                    <img t-att-src="sp.get('uri')" t-att-alt="sp.get('name') or 'Sponsor'"/>
+                  </div>
+                </t>
+              </div>
+            </div>
+          </t>
+
           <footer class="sp-footer">
+            <div class="sp-hashtag" t-esc="hashtag"/>
             <div class="sp-brand">
-              <img class="sp-brand-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
-              <span class="sp-brand-url"><t t-esc="brand_url or 'www.auctionchamp.live'"/></span>
+              <img class="sp-brand-logo" src="/auction_module/static/img/logo.svg" alt="AuctionChamp" onerror="this.style.display='none'"/>
+              <span class="sp-brand-url" t-esc="brand_url"/>
             </div>
           </footer>
 
@@ -188,264 +298,58 @@
   </div>
 
   <script src="/auction_module/static/src/lib/html2canvas.min.js"></script>
-  <script t-att-data-team="team_name" id="spBoot"><![CDATA[
-  (function () {
-    var canvas = document.getElementById('spCanvas');
-    var scaleEl = document.getElementById('spScale');
-    var statusEl = document.getElementById('spStatus');
-    var resEl = document.getElementById('spRes');
-    var zoomEl = document.getElementById('spZoom');
-    var teamName = (document.getElementById('spBoot') || {}).getAttribute('data-team') || 'squad';
-    var busy = false;
-    var shell = document.getElementById('spShell');
-    var PALETTE_KEY = 'ac_squad_poster_palette';
-
-    function setPalette(id) {
-      if (!shell || !id) return;
-      shell.setAttribute('data-palette', id);
-      try { localStorage.setItem(PALETTE_KEY, id); } catch (e) {}
-      var swatches = document.querySelectorAll('.sp-swatch');
-      for (var i = 0; i < swatches.length; i++) {
-        swatches[i].classList.toggle('is-active', swatches[i].getAttribute('data-palette') === id);
-      }
-      setStatus('Palette: ' + id.replace(/-/g, ' '), 'is-ok');
-    }
-    (function initPalette() {
-      var saved = '';
-      try { saved = localStorage.getItem(PALETTE_KEY) || ''; } catch (e) {}
-      if (saved) setPalette(saved);
-      else setPalette('pace-lime');
-      var row = document.getElementById('spPaletteRow');
-      if (row) {
-        row.addEventListener('click', function (ev) {
-          var btn = ev.target.closest ? ev.target.closest('.sp-swatch') : null;
-          if (!btn) return;
-          setPalette(btn.getAttribute('data-palette'));
-        });
-      }
-    })();
-
-    function setStatus(msg, cls) {
-      if (!statusEl) return;
-      statusEl.textContent = msg || '';
-      statusEl.className = 'sp-status' + (cls ? ' ' + cls : '');
-    }
-
-    function applyZoom() {
-      if (!scaleEl || !zoomEl) return;
-      var v = zoomEl.value;
-      if (v === 'fit') {
-        var avail = Math.max(320, window.innerWidth - 48);
-        var z = Math.min(1, avail / 1080);
-        scaleEl.style.transform = 'scale(' + z.toFixed(3) + ')';
-        scaleEl.style.marginBottom = ((1920 * z) - 1920) + 'px';
-      } else {
-        var n = parseFloat(v) || 1;
-        scaleEl.style.transform = 'scale(' + n + ')';
-        scaleEl.style.marginBottom = ((1920 * n) - 1920) + 'px';
-      }
-    }
-    if (zoomEl) zoomEl.addEventListener('change', applyZoom);
-    window.addEventListener('resize', applyZoom);
-    applyZoom();
-
-    function waitImages() {
-      var imgs = Array.prototype.slice.call(canvas.querySelectorAll('img'));
-      return Promise.all(imgs.map(function (img) {
-        return new Promise(function (res) {
-          if (img.complete && img.naturalWidth) { res(); return; }
-          img.onload = img.onerror = function () { res(); };
-        });
-      }));
-    }
-
-    function slugify(s) {
-      return String(s || 'squad').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'squad';
-    }
-
-    function renderPoster() {
-      var scale = parseInt(resEl && resEl.value, 10) || 2;
-      // Lock live square pixel sizes so html2canvas export does not stretch
-      var liveFrames = canvas.querySelectorAll('.sp-card-frame');
-      for (var lf = 0; lf < liveFrames.length; lf++) {
-        var rect = liveFrames[lf].getBoundingClientRect();
-        var side = Math.max(1, Math.round(Math.min(rect.width, rect.height)));
-        liveFrames[lf].setAttribute('data-export-side', String(side));
-      }
-      return waitImages().then(function () {
-        return html2canvas(canvas, {
-          scale: scale,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: null,
-          logging: false,
-          imageTimeout: 0,
-          width: 1080,
-          height: 1920,
-          windowWidth: 1080,
-          windowHeight: 1920,
-          onclone: function (doc) {
-            var frames = doc.querySelectorAll('.sp-card-frame');
-            for (var f = 0; f < frames.length; f++) {
-              var side = parseInt(frames[f].getAttribute('data-export-side') || '0', 10);
-              frames[f].style.position = 'relative';
-              frames[f].style.overflow = 'hidden';
-              frames[f].style.display = 'flex';
-              frames[f].style.alignItems = 'center';
-              frames[f].style.justifyContent = 'center';
-              frames[f].style.flex = 'none';
-              frames[f].style.aspectRatio = '1 / 1';
-              if (side > 0) {
-                frames[f].style.width = side + 'px';
-                frames[f].style.height = side + 'px';
-                frames[f].style.maxWidth = side + 'px';
-                frames[f].style.maxHeight = side + 'px';
-              }
-            }
-            var imgs = doc.querySelectorAll('.sp-card-photo');
-            for (var i = 0; i < imgs.length; i++) {
-              var img = imgs[i];
-              img.style.position = 'relative';
-              img.style.inset = 'auto';
-              img.style.width = 'auto';
-              img.style.height = 'auto';
-              img.style.maxWidth = '100%';
-              img.style.maxHeight = '100%';
-              img.style.objectFit = 'contain';
-              img.style.objectPosition = 'center center';
-            }
-          }
-        });
-      });
-    }
-
-    function blobFromCanvas(c, fmt) {
-      return new Promise(function (resolve, reject) {
-        if (fmt === 'png') {
-          c.toBlob(function (b) { b ? resolve(b) : reject(new Error('PNG failed')); }, 'image/png');
-        } else {
-          c.toBlob(function (b) { b ? resolve(b) : reject(new Error('JPG failed')); }, 'image/jpeg', 0.97);
+  <script src="/auction_module/static/src/js/squad_poster_page.js?v=272"></script>
+  <script>
+    window.addEventListener('load', function () {
+      if (!window.spEditPlayer) {
+        var s = document.getElementById('spStatus');
+        if (s) {
+          s.textContent = 'Editor script missing — upgrade auction_module (1.5.383) and hard-refresh';
+          s.className = 'sp-status is-err';
         }
-      });
-    }
-
-    function downloadBlob(blob, filename) {
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(function () { URL.revokeObjectURL(url); }, 2500);
-    }
-
-    function withBusy(fn) {
-      if (busy) return;
-      busy = true;
-      ['spDlPng', 'spDlJpg', 'spCopy', 'spShare'].forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el) el.disabled = true;
-      });
-      Promise.resolve()
-        .then(fn)
-        .catch(function (err) {
-          console.error(err);
-          setStatus('Error: ' + (err && err.message ? err.message : err), 'is-err');
-        })
-        .then(function () {
-          busy = false;
-          ['spDlPng', 'spDlJpg', 'spCopy', 'spShare'].forEach(function (id) {
-            var el = document.getElementById(id);
-            if (el) el.disabled = false;
-          });
-        });
-    }
-
-    function exportFmt(fmt) {
-      withBusy(function () {
-        var scale = parseInt(resEl && resEl.value, 10) || 2;
-        var wh = (1080 * scale) + '×' + (1920 * scale);
-        setStatus('Rendering ' + wh + ' ' + fmt.toUpperCase() + '…');
-        return renderPoster().then(function (c) {
-          return blobFromCanvas(c, fmt).then(function (blob) {
-            var ext = fmt === 'png' ? 'png' : 'jpg';
-            downloadBlob(blob, 'squad-poster-' + slugify(teamName) + '-' + (1080 * scale) + 'x' + (1920 * scale) + '.' + ext);
-            setStatus('Downloaded ' + wh + ' · ready for Instagram Stories', 'is-ok');
-          });
-        });
-      });
-    }
-
-    var pngBtn = document.getElementById('spDlPng');
-    var jpgBtn = document.getElementById('spDlJpg');
-    if (pngBtn) pngBtn.addEventListener('click', function () { exportFmt('png'); });
-    if (jpgBtn) jpgBtn.addEventListener('click', function () { exportFmt('jpg'); });
-
-    var printBtn = document.getElementById('spPrint');
-    if (printBtn) printBtn.addEventListener('click', function () { window.print(); });
-
-    var copyBtn = document.getElementById('spCopy');
-    if (copyBtn) copyBtn.addEventListener('click', function () {
-      withBusy(function () {
-        setStatus('Copying image…');
-        return renderPoster().then(function (c) {
-          return blobFromCanvas(c, 'png').then(function (blob) {
-            if (navigator.clipboard && window.ClipboardItem) {
-              return navigator.clipboard.write([new ClipboardItem({'image/png': blob})]).then(function () {
-                setStatus('Image copied to clipboard', 'is-ok');
-              });
-            }
-            throw new Error('Clipboard image not supported in this browser');
-          });
-        });
-      });
+      }
     });
-
-    var shareBtn = document.getElementById('spShare');
-    if (shareBtn) shareBtn.addEventListener('click', function () {
-      withBusy(function () {
-        setStatus('Preparing share…');
-        return renderPoster().then(function (c) {
-          return blobFromCanvas(c, 'png').then(function (blob) {
-            var file = new File([blob], 'squad-poster-' + slugify(teamName) + '.png', {type: 'image/png'});
-            if (navigator.share && navigator.canShare && navigator.canShare({files: [file]})) {
-              return navigator.share({
-                files: [file],
-                title: teamName + ' Squad',
-                text: teamName + ' — Official Squad Roster'
-              }).then(function () {
-                setStatus('Shared', 'is-ok');
-              });
-            }
-            downloadBlob(blob, file.name);
-            setStatus('Share unavailable — PNG downloaded instead', 'is-ok');
-          });
-        });
-      });
-    });
-  })();
-  ]]></script>
+  </script>
 </body>
 </html>
 </template>
-
-<template id="squad_poster_player_card" name="Squad Poster Player Card">
-  <div class="sp-card">
+<template id="squad_poster_card" name="Squad Poster Card">
+  <article t-attf-class="sp-card#{' is-icon' if pl.get('is_icon') else ''}"
+           t-att-data-player-id="pl.get('id')"
+           t-att-data-player-name="pl.get('name') or 'Player'"
+           t-att-data-photo-full="pl.get('photo_full_uri') or pl.get('photo_uri')"
+           t-att-data-photo-crop="pl.get('photo_uri')">
     <div class="sp-card-frame">
-      <t t-if="p.get('photo_uri')">
-        <img class="sp-card-photo" t-att-src="p.get('photo_uri')" t-att-alt="p.get('name')" loading="eager"/>
+      <img class="sp-card-lava" src="/auction_module/static/src/assets/images/squad_poster/sp_icon_fire.jpg" alt=""/>
+      <t t-if="pl.get('is_icon')">
+        <div class="sp-card-spotlight" aria-hidden="true"></div>
+        <div class="sp-card-icon-badge">
+          <span class="sp-card-icon-badge-ico" aria-hidden="true">👑</span>
+          <span class="sp-card-icon-badge-txt">ICON PLAYER</span>
+        </div>
+      </t>
+      <t t-if="pl.get('photo_uri')">
+        <div class="sp-card-photo-wrap">
+          <img class="sp-card-photo" t-att-src="pl.get('photo_uri')" t-att-alt="pl.get('name') or 'Player'" draggable="false"/>
+        </div>
       </t>
       <t t-else="">
-        <div class="sp-card-photo-ph"><t t-esc="p.get('initials') or '?'"/></div>
+        <div class="sp-card-photo-ph" t-esc="pl.get('initials') or '?'"/>
       </t>
-      <span class="sp-jersey" t-if="p.get('jersey')"><t t-esc="p.get('jersey')"/></span>
-      <span class="sp-badge-icon" t-if="p.get('is_icon')">★</span>
-      <span class="sp-badge-c" t-if="p.get('is_wk') and not p.get('is_icon')">WK</span>
+      <div class="sp-card-meta">
+        <t t-if="pl.get('is_icon')">
+          <div class="sp-card-name-row">
+            <span class="sp-card-name-emblem" aria-hidden="true">★</span>
+            <div class="sp-card-name" t-esc="pl.get('name')"/>
+            <span class="sp-card-name-emblem" aria-hidden="true">★</span>
+          </div>
+        </t>
+        <t t-else="">
+          <div class="sp-card-name" t-esc="pl.get('name')"/>
+        </t>
+        <div class="sp-card-role" t-esc="pl.get('role') or 'Player'"/>
+      </div>
     </div>
-    <div class="sp-card-name" t-att-title="p.get('name')">
-      <t t-esc="p.get('name') or '—'"/>
-    </div>
-  </div>
+  </article>
 </template>
 </odoo>

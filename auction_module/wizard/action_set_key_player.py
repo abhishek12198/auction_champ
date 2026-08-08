@@ -48,23 +48,68 @@ import werkzeug.exceptions
 class SetKeyPlayer(models.TransientModel):
     _name = 'auction.set.key.player'
 
-
-    team_id = fields.Many2one('auction.team', 'Team')
+    team_id = fields.Many2one(
+        'auction.team',
+        'Team',
+        domain="[('tournament_id', '=', tournament_id)]",
+    )
     team_selection = fields.Selection(selection='_get_team_selection', string='Select Team')
     player_id = fields.Many2one('auction.team.player', 'Player')
-    player_photo  = fields.Binary()
+    tournament_id = fields.Many2one('auction.tournament', string='Tournament', readonly=True)
+    player_photo = fields.Binary()
     team_logo = fields.Binary()
 
+    def _player_from_context(self):
+        """Resolve the player being assigned (wizard active record)."""
+        if self.player_id:
+            return self.player_id
+        active_id = self.env.context.get('active_id')
+        active_model = self.env.context.get('active_model')
+        if active_id and active_model == 'auction.team.player':
+            return self.env['auction.team.player'].browse(active_id)
+        if active_id and not active_model:
+            # Fallback when only active_id is passed from player form buttons
+            player = self.env['auction.team.player'].browse(active_id)
+            return player if player.exists() else self.env['auction.team.player']
+        return self.env['auction.team.player']
+
     def _get_team_selection(self):
-        teams = self.env['auction.team'].search([], order='name asc')
+        """Only show teams from the player's tournament."""
+        domain = []
+        player = self._player_from_context()
+        tournament = player.tournament_id if player else False
+        if not tournament and self.env.context.get('default_tournament_id'):
+            tournament = self.env['auction.tournament'].browse(
+                self.env.context['default_tournament_id']
+            )
+        if tournament:
+            domain = [('tournament_id', '=', tournament.id)]
+        else:
+            # No tournament on player — avoid listing every team across all tournaments
+            domain = [('id', '=', False)]
+        teams = self.env['auction.team'].search(domain, order='name asc')
         return [(str(t.id), t.name) for t in teams]
 
     @api.model
-    def default_get(self, fields):
-        defaults = super(SetKeyPlayer, self).default_get(fields)
-        if self.env.context.get('active_id', False):
-            player = self.env['auction.team.player'].browse(self.env.context.get('active_id', False))
-            defaults.update({'player_photo': player.photo,'player_id': self.env.context.get('active_id', False)})
+    def fields_get(self, allfields=None, attributes=None):
+        # Ensure selection badges are rebuilt with the active player's tournament
+        res = super().fields_get(allfields, attributes)
+        if 'team_selection' in res:
+            res['team_selection']['selection'] = self._get_team_selection()
+        return res
+
+    @api.model
+    def default_get(self, fields_list):
+        defaults = super(SetKeyPlayer, self).default_get(fields_list)
+        active_id = self.env.context.get('active_id') or self.env.context.get('default_player_id')
+        if active_id:
+            player = self.env['auction.team.player'].browse(active_id)
+            if player.exists():
+                defaults.update({
+                    'player_photo': player.photo,
+                    'player_id': player.id,
+                    'tournament_id': player.tournament_id.id if player.tournament_id else False,
+                })
         return defaults
 
     @api.onchange('team_selection')
@@ -95,11 +140,21 @@ class SetKeyPlayer(models.TransientModel):
 
             if not team:
                 raise UserError('Please select a team before confirming.')
-            # Find the icon tier (only one should exist due to constraint)
-            icon_tier = self.env['auction.player.tier'].search([('is_an_icon_tier', '=', True)], limit=1)
+            if player.tournament_id and team.tournament_id != player.tournament_id:
+                raise UserError(
+                    'Selected team "%s" does not belong to tournament "%s".'
+                    % (team.name, player.tournament_id.display_name)
+                )
+
+            # Find the icon tier for this player's tournament
+            tier_domain = [('is_an_icon_tier', '=', True)]
+            if player.tournament_id:
+                tier_domain.append(('tournament_id', '=', player.tournament_id.id))
+            icon_tier = self.env['auction.player.tier'].search(tier_domain, limit=1)
             if not icon_tier:
                 raise UserError(
-                    'No Icon Tier is configured. Please mark one tier as "Icon Tier" in Player Tiers before promoting a player.'
+                    'No Icon Tier is configured for this tournament. '
+                    'Please mark one tier as "Icon Tier" in Player Tiers before promoting a player.'
                 )
 
             player.write({

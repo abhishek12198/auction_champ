@@ -396,6 +396,11 @@ class AuctionTeamPlayer(models.Model):
         sanitize=False,
         help='Pre-rendered Other Attribute tiles for the player kanban card.')
     photo = fields.Binary("Photo", default=_get_default_player_photo)
+    squad_poster_crop = fields.Char(
+        string="Squad Poster Crop",
+        help="JSON crop window {l,t,sw,sh} for squad poster pan/zoom. "
+             "Normalized against the full player photo.",
+    )
     photo_card = fields.Binary(
         string='Photo (Card Print)',
         compute='_compute_photo_card',

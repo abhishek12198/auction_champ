@@ -3989,10 +3989,13 @@ class Auction(http.Controller):
             return env['auction.tournament']
         return tournament
 
-    # ── Squad Poster (Instagram Story 1080×1920) ───────────────────────────────
+    # ── Squad Poster (franchise 2:3 · 1024×1536) ──────────────────────────────
+
+    SP_CANVAS_W = 1024
+    SP_CANVAS_H = 1536
 
     def _sp_b64_uri(self, binary, mime='image/jpeg', size=None, quality=95):
-        """Binary field → data URI; optional resize for crisp Story cards."""
+        """Binary field → data URI; optional resize for crisp poster cards."""
         if not binary:
             return ''
         raw = binary
@@ -4005,26 +4008,791 @@ class Auction(http.Controller):
             pass
         if isinstance(raw, bytes):
             raw = raw.decode('ascii')
-        # Detect png magic in decoded base64 when possible; default jpeg
         return 'data:%s;base64,%s' % (mime, raw)
 
-    def _sp_photo_uri(self, binary):
-        """Player photo for squad poster — keep natural aspect (no square crop)."""
+    def _sp_logo_uri(self, binary, size=(360, 360)):
+        """
+        Team/tournament logo → PNG on a transparent square.
+
+        Conservative plate removal only: edge-flood when 3+ corners are a solid
+        white/black plate. Never globally deletes white (preserves white logo art).
+        If unsure, keeps the original mark intact.
+        """
         if not binary:
             return ''
+        from io import BytesIO
+        from PIL import Image
         try:
-            # Fit inside box; do not force a square crop (avoids cutting heads/feet).
-            processed = image_process(binary, size=(900, 1200), quality=95)
-            raw = processed or binary
-        except Exception:
             raw = binary
-        if isinstance(raw, bytes):
-            raw = raw.decode('ascii')
-        return 'data:image/jpeg;base64,%s' % raw
+            if isinstance(raw, str):
+                raw = base64.b64decode(raw)
+            elif isinstance(raw, bytes):
+                try:
+                    Image.open(BytesIO(raw)).verify()
+                    # verify() exhausts; reopen below
+                except Exception:
+                    try:
+                        raw = base64.b64decode(raw)
+                    except Exception:
+                        pass
+
+            src = Image.open(BytesIO(raw if isinstance(raw, (bytes, bytearray)) else base64.b64decode(binary)))
+            try:
+                from PIL import ImageOps
+                src = ImageOps.exif_transpose(src)
+            except Exception:
+                pass
+
+            rgba = src.convert('RGBA')
+            tw, th = size
+
+            def _fit(img, use_mask=True):
+                img = img.copy()
+                img.thumbnail((tw - 8, th - 8), Image.LANCZOS)
+                canvas = Image.new('RGBA', (tw, th), (0, 0, 0, 0))
+                ow, oh = img.size
+                if use_mask:
+                    canvas.paste(img, ((tw - ow) // 2, (th - oh) // 2), img)
+                else:
+                    canvas.paste(img, ((tw - ow) // 2, (th - oh) // 2))
+                buf = BytesIO()
+                canvas.save(buf, format='PNG', optimize=True)
+                return 'data:image/png;base64,%s' % base64.b64encode(buf.getvalue()).decode('ascii')
+
+            # Already transparent artwork — never re-key
+            if 'A' in src.getbands():
+                a0, _a1 = rgba.split()[-1].getextrema()
+                if a0 < 250:
+                    return _fit(rgba, use_mask=True)
+
+            w, h = rgba.size
+            if w < 8 or h < 8:
+                return _fit(rgba, use_mask=False)
+
+            pix = rgba.load()
+
+            def _is_white(r, g, b, a):
+                return a >= 20 and r >= 242 and g >= 242 and b >= 242
+
+            def _is_black(r, g, b, a):
+                return a >= 20 and r <= 14 and g <= 14 and b <= 14
+
+            corners = [
+                pix[2, 2], pix[w - 3, 2], pix[2, h - 3], pix[w - 3, h - 3]
+            ]
+            white_n = sum(1 for c in corners if _is_white(c[0], c[1], c[2], c[3]))
+            black_n = sum(1 for c in corners if _is_black(c[0], c[1], c[2], c[3]))
+            mode = 'white' if white_n >= 3 else ('black' if black_n >= 3 else None)
+
+            if not mode:
+                # No clear plate — keep logo as-is (white details preserved)
+                return _fit(rgba, use_mask=False)
+
+            match = _is_white if mode == 'white' else _is_black
+            work = rgba.copy()
+            wp = work.load()
+            visited = [[False] * w for _ in range(h)]
+            stack = []
+            for x in range(w):
+                stack.append((x, 0))
+                stack.append((x, h - 1))
+            for y in range(h):
+                stack.append((0, y))
+                stack.append((w - 1, y))
+            cleared = 0
+            while stack:
+                x, y = stack.pop()
+                if x < 0 or y < 0 or x >= w or y >= h or visited[y][x]:
+                    continue
+                visited[y][x] = True
+                r, g, b, a = wp[x, y]
+                if not match(r, g, b, a):
+                    continue
+                wp[x, y] = (r, g, b, 0)
+                cleared += 1
+                stack.extend(((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)))
+
+            total = float(w * h)
+            bbox = work.split()[-1].getbbox()
+            # Require a real plate removal that still leaves a solid mark
+            if not bbox or cleared < total * 0.10 or cleared > total * 0.70:
+                return _fit(rgba, use_mask=False)
+
+            return _fit(work.crop(bbox), use_mask=True)
+        except Exception:
+            _logger.exception('Squad poster logo clean failed; falling back')
+            return self._sp_b64_uri(binary, mime='image/png', size=size, quality=95)
+
+    def _sp_open_image(self, binary):
+        """Decode an Odoo binary/base64 field into a PIL RGB image."""
+        from io import BytesIO
+        from PIL import Image
+        if not binary:
+            return None
+        raw = binary
+        if isinstance(raw, str):
+            raw = base64.b64decode(raw)
+        elif isinstance(raw, bytes):
+            # Odoo may store raw bytes or base64 bytes
+            try:
+                return Image.open(BytesIO(raw)).convert('RGB')
+            except Exception:
+                try:
+                    raw = base64.b64decode(raw)
+                except Exception:
+                    return None
+        try:
+            return Image.open(BytesIO(raw)).convert('RGB')
+        except Exception:
+            return None
+
+    def _sp_detect_face_box(self, im):
+        """
+        Best-effort face box (x, y, w, h) in image pixels.
+        Prefer OpenCV Haar when available; otherwise YCbCr skin-blob + head bias.
+        """
+        W, H = im.size
+        # 1) OpenCV Haar (frontal + alt) — strongest when package is installed
+        cv_box = self._sp_detect_face_opencv(im)
+        if cv_box:
+            return cv_box
+
+        # 2) YCbCr skin blob in upper torso (works for Indian skin tones without cv2)
+        skin_box = self._sp_detect_face_skin(im)
+        if skin_box:
+            return skin_box
+
+        # 3) Soft center-of-mass skin heuristic
+        cx, cy, conf = self._sp_estimate_face_center(im, with_confidence=True)
+        if conf >= 0.008:
+            fw = int(min(W, H) * (0.38 if H > W * 1.25 else 0.46))
+            fh = int(fw * 1.15)  # face boxes are slightly taller than wide
+            x = int(cx * W - fw / 2.0)
+            y = int(cy * H - fh * 0.42)
+            x = max(0, min(x, W - fw))
+            y = max(0, min(y, H - fh))
+            return x, y, max(24, fw), max(24, fh)
+
+        # 4) Portrait fallback — upper-center (typical jersey / selfie / full-body head)
+        fw = int(min(W, H) * (0.42 if H > W * 1.35 else 0.50))
+        fh = int(fw * 1.20)
+        x = max(0, (W - fw) // 2)
+        # For tall full-body shots, head is usually in the top ~22% of the frame
+        y = max(0, int(H * (0.04 if H > W * 1.35 else 0.06)))
+        if y + fh > H:
+            y = max(0, H - fh)
+        return x, y, fw, fh
+
+    def _sp_detect_face_opencv(self, im):
+        """Return (x,y,w,h) via Haar cascades, or None."""
+        try:
+            import cv2
+            import numpy as np
+            import os
+        except Exception:
+            return None
+        try:
+            W, H = im.size
+            # Work on a moderate-size copy for speed / stability
+            scale = 1.0
+            work = im
+            max_side = 720
+            if max(W, H) > max_side:
+                scale = max_side / float(max(W, H))
+                nw, nh = max(32, int(W * scale)), max(32, int(H * scale))
+                work = im.resize((nw, nh), resample=1)
+            arr = np.array(work.convert('RGB'))
+            gray = cv2.cvtColor(arr, cv2.COLOR_RGB2GRAY)
+            gray = cv2.equalizeHist(gray)
+            base = getattr(cv2.data, 'haarcascades', '') or ''
+            names = (
+                'haarcascade_frontalface_default.xml',
+                'haarcascade_frontalface_alt2.xml',
+                'haarcascade_frontalface_alt.xml',
+                'haarcascade_profileface.xml',
+            )
+            cascades = []
+            for name in names:
+                for cp in (
+                    os.path.join(base, name) if base else '',
+                    '/usr/share/opencv4/haarcascades/' + name,
+                    '/usr/share/opencv/haarcascades/' + name,
+                ):
+                    if cp and os.path.exists(cp):
+                        c = cv2.CascadeClassifier(cp)
+                        if not c.empty():
+                            cascades.append(c)
+                            break
+            if not cascades:
+                return None
+
+            w0, h0 = work.size
+            min_sz = (max(28, w0 // 14), max(28, h0 // 14))
+            candidates = []
+            for cascade in cascades:
+                for sf, mn in ((1.08, 4), (1.12, 3), (1.2, 5)):
+                    faces = cascade.detectMultiScale(
+                        gray, scaleFactor=sf, minNeighbors=mn, minSize=min_sz,
+                        flags=cv2.CASCADE_SCALE_IMAGE,
+                    )
+                    for (x, y, fw, fh) in faces:
+                        candidates.append((int(x), int(y), int(fw), int(fh)))
+
+            if not candidates:
+                return None
+
+            best = None
+            best_score = -1
+            for (x, y, fw, fh) in candidates:
+                area = fw * fh
+                if area < (w0 * h0) * 0.01:
+                    continue
+                cy = y + fh / 2.0
+                if cy > h0 * 0.82:
+                    continue
+                # Prefer larger faces higher in frame (headshots / standing portraits)
+                height_bias = 1.45 if cy < h0 * 0.40 else (1.15 if cy < h0 * 0.55 else 0.85)
+                aspect = fw / float(max(1, fh))
+                aspect_bias = 1.2 if 0.65 <= aspect <= 1.15 else 0.75
+                score = area * height_bias * aspect_bias
+                if score > best_score:
+                    best_score = score
+                    best = (x, y, fw, fh)
+            if not best:
+                return None
+            # Map back to original coordinates
+            if scale != 1.0:
+                inv = 1.0 / scale
+                x, y, fw, fh = best
+                best = (
+                    int(round(x * inv)),
+                    int(round(y * inv)),
+                    max(24, int(round(fw * inv))),
+                    max(24, int(round(fh * inv))),
+                )
+            return best
+        except Exception:
+            return None
+
+    def _sp_detect_face_skin(self, im):
+        """
+        Find the dominant face-like skin blob using YCbCr thresholds.
+        Returns (x,y,w,h) or None.
+        """
+        W, H = im.size
+        if W < 16 or H < 16:
+            return None
+        # Search upper 70% — faces rarely sit in the bottom band of portraits
+        search_h = max(16, int(H * 0.72))
+        # Downsample for speed
+        tw = min(160, W)
+        th = max(24, int(search_h * (tw / float(W))))
+        small = im.convert('RGB').resize((tw, th), resample=1)
+        pix = small.load()
+
+        # Binary skin mask
+        mask = [[0] * tw for _ in range(th)]
+        skin_n = 0
+        for y in range(th):
+            # Prefer upper rows
+            for x in range(tw):
+                r, g, b = pix[x, y]
+                # YCbCr (integer approx)
+                yv = int(0.299 * r + 0.587 * g + 0.114 * b)
+                cb = int(128 - 0.168736 * r - 0.331264 * g + 0.5 * b)
+                cr = int(128 + 0.5 * r - 0.418688 * g - 0.081312 * b)
+                # Broad skin ellipse covering fair → deep brown
+                skin = (
+                    80 <= yv <= 255
+                    and 77 <= cb <= 135
+                    and 133 <= cr <= 180
+                    and r > 40 and g > 20 and b > 10
+                    and abs(r - g) > 5
+                )
+                # Extra pass for deeper tones (lower Y, still Cb/Cr skin-ish)
+                if (not skin) and 35 <= yv <= 140 and 80 <= cb <= 130 and 130 <= cr <= 175 and r >= g >= b:
+                    skin = True
+                if not skin:
+                    continue
+                mask[y][x] = 1
+                skin_n += 1
+
+        if skin_n < max(30, tw * th * 0.012):
+            return None
+
+        # Connected components (4-connected) — keep the best face-like blob
+        seen = [[0] * tw for _ in range(th)]
+        best = None
+        best_score = -1
+        dirs = ((1, 0), (-1, 0), (0, 1), (0, -1))
+        for y0 in range(th):
+            for x0 in range(tw):
+                if not mask[y0][x0] or seen[y0][x0]:
+                    continue
+                # BFS
+                stack = [(x0, y0)]
+                seen[y0][x0] = 1
+                minx = maxx = x0
+                miny = maxy = y0
+                area = 0
+                sx = sy = 0
+                while stack:
+                    x, y = stack.pop()
+                    area += 1
+                    sx += x
+                    sy += y
+                    if x < minx: minx = x
+                    if x > maxx: maxx = x
+                    if y < miny: miny = y
+                    if y > maxy: maxy = y
+                    for dx, dy in dirs:
+                        nx, ny = x + dx, y + dy
+                        if 0 <= nx < tw and 0 <= ny < th and mask[ny][nx] and not seen[ny][nx]:
+                            seen[ny][nx] = 1
+                            stack.append((nx, ny))
+                if area < max(40, tw * th * 0.015):
+                    continue
+                bw = maxx - minx + 1
+                bh = maxy - miny + 1
+                if bw < 6 or bh < 6:
+                    continue
+                cx = sx / float(area)
+                cy = sy / float(area)
+                # Reject huge torso / jersey blobs (common false positive)
+                if area > tw * th * 0.28:
+                    continue
+                if bh > th * 0.55 and cy > th * 0.40:
+                    continue
+                aspect = bw / float(bh)
+                # Faces are roughly square / slightly tall; reject wide jersey bands
+                if aspect < 0.45 or aspect > 1.55:
+                    continue
+                # Strongly prefer blobs in the upper half (heads, not mid-torso)
+                if cy > th * 0.62:
+                    continue
+                center_bias = 1.0 - min(1.0, abs(cx / float(tw) - 0.5) * 1.6)
+                height_bias = 1.55 if cy < th * 0.35 else (1.2 if cy < th * 0.50 else 0.65)
+                fill = area / float(max(1, bw * bh))
+                if fill < 0.28:
+                    continue
+                # Prefer compact face-sized blobs over large patches
+                size_penalty = 1.0
+                face_frac = area / float(tw * th)
+                if face_frac > 0.16:
+                    size_penalty = 0.7
+                score = area * (0.55 + 0.45 * center_bias) * height_bias * (0.7 + 0.3 * fill) * size_penalty
+                if score > best_score:
+                    best_score = score
+                    # Expand box slightly to include hair / chin, map to full image
+                    pad_x = int(bw * 0.18)
+                    pad_y_top = int(bh * 0.35)  # more hair room
+                    pad_y_bot = int(bh * 0.18)
+                    minx2 = max(0, minx - pad_x)
+                    miny2 = max(0, miny - pad_y_top)
+                    maxx2 = min(tw - 1, maxx + pad_x)
+                    maxy2 = min(th - 1, maxy + pad_y_bot)
+                    sx_scale = W / float(tw)
+                    sy_scale = search_h / float(th)
+                    x = int(minx2 * sx_scale)
+                    y = int(miny2 * sy_scale)
+                    fw = max(24, int((maxx2 - minx2 + 1) * sx_scale))
+                    fh = max(24, int((maxy2 - miny2 + 1) * sy_scale))
+                    x = max(0, min(x, W - fw))
+                    y = max(0, min(y, H - fh))
+                    best = (x, y, fw, fh)
+        return best
+
+    def _sp_estimate_face_center(self, im, with_confidence=False):
+        """
+        Rough face/head anchor via skin mass in the upper frame.
+        Returns (cx, cy) or (cx, cy, confidence).
+        """
+        w, h = im.size
+        if w < 8 or h < 8:
+            return (0.5, 0.22, 0.0) if with_confidence else (0.5, 0.22)
+        search_h = max(8, int(h * 0.65))
+        region = im.convert('RGB').crop((0, 0, w, search_h))
+        sw = max(56, min(200, w // 2))
+        sh = max(56, min(200, search_h // 2))
+        small = region.resize((sw, sh), resample=1)
+        pixels = small.load()
+        xs = ys = n = 0.0
+        for y in range(sh):
+            row_w = 2.0 if y < sh * 0.45 else (1.1 if y < sh * 0.72 else 0.25)
+            for x in range(sw):
+                r, g, b = pixels[x, y]
+                yv = int(0.299 * r + 0.587 * g + 0.114 * b)
+                cb = int(128 - 0.168736 * r - 0.331264 * g + 0.5 * b)
+                cr = int(128 + 0.5 * r - 0.418688 * g - 0.081312 * b)
+                skin = (77 <= cb <= 135 and 133 <= cr <= 180 and r > 35)
+                if (not skin) and 35 <= yv <= 150 and 80 <= cb <= 130 and 130 <= cr <= 175 and r >= g:
+                    skin = True
+                if not skin:
+                    continue
+                col_w = 1.4 - abs((x / float(sw)) - 0.5)
+                wgt = row_w * max(0.2, col_w)
+                xs += x * wgt
+                ys += y * wgt
+                n += wgt
+        conf = n / float(max(1, sw * sh))
+        if n < max(8, sw * sh * 0.005):
+            out = (0.5, 0.18, conf)
+            return out if with_confidence else out[:2]
+        cx = (xs / n) / float(sw)
+        cy = ((ys / n) / float(sh)) * (search_h / float(h))
+        cx = max(0.18, min(0.82, cx))
+        cy = max(0.06, min(0.50, cy))
+        out = (cx, cy, conf)
+        return out if with_confidence else out[:2]
+
+    def _sp_face_crop_box(self, im):
+        """Return (left, top, side) square crop box for a PIL image (face-centered)."""
+        W, H = im.size
+        if W < 4 or H < 4:
+            side = max(1, min(W, H))
+            return 0, 0, side
+
+        src = im.convert('RGB')
+        fx, fy, fw, fh = self._sp_detect_face_box(src)
+        fw = max(16, int(fw))
+        fh = max(16, int(fh))
+
+        face_cx = fx + fw / 2.0
+        eyes_y = fy + fh * 0.38
+        hair_y = max(0.0, fy - fh * 0.40)
+        face_span = max(fw, fh * 0.95, 1)
+
+        side = int(round(face_span / 0.40))
+        side = max(96, side)
+
+        def _cap(v):
+            try:
+                return max(48, int(v))
+            except Exception:
+                return 48
+
+        caps = [min(W, H), side]
+        if eyes_y > 8:
+            caps.append(_cap(eyes_y / 0.34))
+        if (H - eyes_y) > 8:
+            caps.append(_cap((H - eyes_y) / 0.66))
+        if face_cx > 8:
+            caps.append(_cap(face_cx / 0.50))
+        if (W - face_cx) > 8:
+            caps.append(_cap((W - face_cx) / 0.50))
+        side = max(48, min(caps))
+
+        left = int(round(face_cx - side * 0.50))
+        top = int(round(eyes_y - side * 0.34))
+        if hair_y < top:
+            top = int(hair_y)
+        left = max(0, min(left, W - side))
+        top = max(0, min(top, H - side))
+        return left, top, side
+
+    def _sp_face_fill_crop(self, im, out_w=640, out_h=640):
+        """
+        Full-bleed square crop for player cards (fills the placeholder 100%).
+
+        Face-centered with hairroom when the source allows it. The crop window
+        always stays inside the image — no letterboxing, no mirroring.
+        """
+        from PIL import Image
+        W, H = im.size
+        if W < 4 or H < 4:
+            return im.resize((out_w, out_h), Image.LANCZOS)
+
+        src = im.convert('RGB')
+        left, top, side = self._sp_face_crop_box(src)
+        cropped = src.crop((left, top, left + side, top + side))
+        return cropped.resize((out_w, out_h), Image.LANCZOS)
+
+    def _sp_photo_binary(self, player):
+        """Load full player photo bytes (never bin_size placeholders)."""
+        if not player:
+            return False
+        raw = player.with_context(bin_size=False).photo
+        if not raw:
+            return False
+        # Guard: bin_size context sometimes leaks as "12.3 Kb" strings
+        if isinstance(raw, str) and (
+            raw.strip().endswith('Kb') or raw.strip().endswith('Mb')
+            or raw.strip().endswith('bytes') or raw.strip().endswith('Gb')
+        ):
+            return False
+        if isinstance(raw, bytes) and len(raw) < 32:
+            return False
+        return raw
+
+    def _sp_photo_uri(self, binary, size=(640, 640)):
+        """
+        Player photo → face-centered square data URI for uniform placeholders.
+        """
+        pack = self._sp_photo_pack(binary, size=size)
+        return pack.get('crop_uri') or ''
+
+    def _sp_photo_full_uri(self, binary, max_side=1200):
+        """Full player photo from DB (no face-crop) for manual pan/zoom editing."""
+        pack = self._sp_photo_pack(binary, max_side=max_side)
+        return pack.get('full_uri') or ''
+
+    def _sp_photo_pack(self, binary, size=(640, 640), max_side=1200, crop_override=None):
+        """
+        Build cropped card URI + full photo URI + crop rect on the full image.
+
+        Crop rect (l,t,sw,sh) is normalized to the full image dimensions so the
+        editor can open already framed like the poster card.
+        Optional crop_override uses a previously saved manual frame.
+        """
+        empty = {'crop_uri': '', 'full_uri': '', 'crop': None}
+        if not binary:
+            return empty
+        from io import BytesIO
+        from PIL import Image
+        try:
+            im = self._sp_open_image(binary)
+            if im is None:
+                raise ValueError('unreadable image')
+            try:
+                from PIL import ImageOps
+                im = ImageOps.exif_transpose(im)
+            except Exception:
+                pass
+            im = im.copy()
+            if im.mode != 'RGB':
+                im = im.convert('RGB')
+
+            w, h = im.size
+            side_max = max(w, h)
+            if side_max > max_side and side_max > 0:
+                scale = float(max_side) / float(side_max)
+                im = im.resize(
+                    (max(1, int(w * scale)), max(1, int(h * scale))),
+                    Image.LANCZOS,
+                )
+                w, h = im.size
+
+            used_override = False
+            left, top, side = self._sp_face_crop_box(im)
+            auto_crop = {
+                'l': float(left) / float(w),
+                't': float(top) / float(h),
+                'sw': float(side) / float(w),
+                'sh': float(side) / float(h),
+            }
+            crop = dict(auto_crop)
+
+            if crop_override and isinstance(crop_override, dict):
+                try:
+                    cl = float(crop_override.get('l', 0))
+                    ct = float(crop_override.get('t', 0))
+                    csw = float(crop_override.get('sw', 1))
+                    csh = float(crop_override.get('sh', 1))
+                    csw = max(0.05, min(1.0, csw))
+                    csh = max(0.05, min(1.0, csh))
+                    cl = max(0.0, min(1.0 - csw, cl))
+                    ct = max(0.0, min(1.0 - csh, ct))
+                    ol = int(round(cl * w))
+                    ot = int(round(ct * h))
+                    oright = int(round((cl + csw) * w))
+                    obottom = int(round((ct + csh) * h))
+                    ol = max(0, min(w - 1, ol))
+                    ot = max(0, min(h - 1, ot))
+                    oright = max(ol + 1, min(w, oright))
+                    obottom = max(ot + 1, min(h, obottom))
+                    oside = min(oright - ol, obottom - ot)
+                    if oside < 1:
+                        raise ValueError('empty crop')
+                    left, top, side = ol, ot, oside
+                    crop = {
+                        'l': float(left) / float(w),
+                        't': float(top) / float(h),
+                        'sw': float(side) / float(w),
+                        'sh': float(side) / float(h),
+                    }
+                    used_override = True
+                except Exception:
+                    used_override = False
+                    left = int(round(auto_crop['l'] * w))
+                    top = int(round(auto_crop['t'] * h))
+                    side = int(round(auto_crop['sw'] * w))
+                    crop = dict(auto_crop)
+
+            cropped = im.crop((left, top, left + side, top + side)).resize(
+                (size[0], size[1]), Image.LANCZOS
+            )
+
+            buf_c = BytesIO()
+            cropped.save(buf_c, format='JPEG', quality=93, optimize=True)
+            crop_uri = 'data:image/jpeg;base64,%s' % base64.b64encode(
+                buf_c.getvalue()
+            ).decode('ascii')
+
+            buf_f = BytesIO()
+            im.save(buf_f, format='JPEG', quality=92, optimize=True)
+            full_uri = 'data:image/jpeg;base64,%s' % base64.b64encode(
+                buf_f.getvalue()
+            ).decode('ascii')
+
+            return {
+                'crop_uri': crop_uri,
+                'full_uri': full_uri,
+                'crop': crop,
+                'auto_crop': auto_crop,
+                'manual': used_override,
+            }
+        except Exception:
+            _logger.exception('Squad poster photo pack failed; falling back')
+            try:
+                processed = image_process(binary, size=size, quality=92)
+                raw = processed or binary
+            except Exception:
+                raw = binary
+            if isinstance(raw, bytes):
+                try:
+                    raw = raw.decode('ascii')
+                except Exception:
+                    raw = base64.b64encode(raw).decode('ascii')
+            uri = 'data:image/jpeg;base64,%s' % raw
+            return {
+                'crop_uri': uri,
+                'full_uri': uri,
+                'crop': {'l': 0.0, 't': 0.0, 'sw': 1.0, 'sh': 1.0},
+                'auto_crop': {'l': 0.0, 't': 0.0, 'sw': 1.0, 'sh': 1.0},
+                'manual': False,
+            }
 
     def _sp_initials(self, name):
         parts = [w for w in (name or 'P').split() if w]
         return ''.join(p[0] for p in parts[:2]).upper() or '?'
+
+    def _sp_name_lines(self, name, max_lines=3):
+        """Split a brand name into stacked sports-poster lines."""
+        parts = [w for w in (name or '').strip().split() if w]
+        if not parts:
+            return ['']
+        if len(parts) == 1:
+            return parts[:1]
+        if len(parts) == 2 or max_lines <= 2:
+            mid = max(1, len(parts) // 2)
+            return [' '.join(parts[:mid]), ' '.join(parts[mid:])]
+        if len(parts) >= 3 and max_lines >= 3:
+            # Prefer one word per line when 3 words; otherwise pack leading words
+            if len(parts) == 3:
+                return parts[:3]
+            if len(parts) == 4:
+                return [' '.join(parts[:2]), parts[2], parts[3]]
+            mid = max(1, len(parts) - 2)
+            return [' '.join(parts[:mid]), parts[-2], parts[-1]]
+        mid = max(1, len(parts) // 2)
+        return [' '.join(parts[:mid]), ' '.join(parts[mid:])]
+
+    def _sp_team_type_scale(self, name, lines=None):
+        """
+        Font sizes for team wordmark so long names stay clear of the center logo.
+        Returns CSS pixel sizes: line1 (abbr / first), body, only (single-line).
+        """
+        text = (name or '').strip()
+        lines = list(lines or self._sp_name_lines(text, max_lines=3))
+        longest = max((len(l) for l in lines), default=len(text))
+        chars = len(text.replace(' ', ''))
+        nlines = max(1, len([l for l in lines if l]))
+        # Shrink more when few long lines (overlap / clip risk)
+        if longest >= 14 or chars >= 24:
+            return {'line1': 28, 'body': 26, 'only': 28}
+        if longest >= 11 or chars >= 18:
+            return {'line1': 34, 'body': 30, 'only': 32}
+        if longest >= 9 or chars >= 14 or nlines >= 3:
+            return {'line1': 40, 'body': 34, 'only': 38}
+        if longest >= 7 or chars >= 11:
+            return {'line1': 46, 'body': 40, 'only': 44}
+        return {'line1': 52, 'body': 44, 'only': 48}
+
+    def _sp_tourn_title_parts(self, name, season_label=''):
+        """
+        Title stack: LINE1 (gold) / HERO (gold flame) / LINE3 (silver).
+        Example: PHYSICAL / MONSOON / PREMIER LEAGUE.
+
+        Uses tournament name only. Season/description only fills gaps when the
+        name is a short venue brand — never duplicates words already in the name.
+        """
+        hero_words = {
+            'monsoon', 'champions', 'champion', 'super', 'masters', 'elite',
+            'royal', 'thunder', 'blaze', 'inferno', 'empire', 'premier',
+            'world', 'national', 'cup', 'trophy', 'slam', 'classic', 'legends',
+            'pro', 'prime', 'grand', 'united',
+        }
+        # Prefer these as the big flame hero when present
+        hero_priority = (
+            'monsoon', 'champions', 'champion', 'super', 'inferno', 'blaze',
+            'thunder', 'premier', 'cup', 'trophy',
+        )
+
+        def _tokens(text):
+            out = []
+            for w in (text or '').strip().split():
+                if not w:
+                    continue
+                if w.upper() == 'SEASON':
+                    break
+                # skip trailing year-only tokens from title body
+                if re.fullmatch(r'20\d{2}', w):
+                    continue
+                out.append(w)
+            return out
+
+        name_parts = _tokens(name)
+        season_parts = _tokens(season_label)
+
+        use_parts = list(name_parts)
+        name_has_hero = any(w.lower() in hero_words for w in name_parts)
+        season_has_hero = any(w.lower() in hero_words for w in season_parts)
+        # Borrow league phrase from season when the tournament name has no hero word
+        # (venue-style names like "ESTADIO MUD TURF") — never merge both (avoids duplicates).
+        if season_parts and season_has_hero and not name_has_hero and len(season_parts) >= 2:
+            use_parts = list(season_parts)
+
+        # Deduplicate consecutive / repeated tokens (case-insensitive)
+        deduped = []
+        seen_l = set()
+        for w in use_parts:
+            key = w.lower()
+            if key in seen_l:
+                continue
+            seen_l.add(key)
+            deduped.append(w)
+        parts = deduped
+
+        if not parts:
+            return {'line1': '', 'hero': 'TOURNAMENT', 'line3': ''}
+        if len(parts) == 1:
+            return {'line1': '', 'hero': parts[0].upper(), 'line3': ''}
+
+        hero_i = None
+        for pref in hero_priority:
+            for i, w in enumerate(parts):
+                if w.lower() == pref:
+                    hero_i = i
+                    break
+            if hero_i is not None:
+                break
+        if hero_i is None:
+            for i, w in enumerate(parts):
+                if w.lower() in hero_words:
+                    hero_i = i
+                    break
+        if hero_i is None:
+            # PHYSICAL MONSOON style: first word line1, second hero, rest line3
+            hero_i = 1 if len(parts) >= 2 else 0
+
+        line1 = ' '.join(parts[:hero_i]).strip().upper()
+        hero = parts[hero_i].upper()
+        line3 = ' '.join(parts[hero_i + 1:]).strip().upper()
+        return {'line1': line1, 'hero': hero, 'line3': line3}
+
+    def _sp_hashtag(self, team_name):
+        raw = re.sub(r'[^A-Za-z0-9]', '', team_name or '')
+        return ('#' + raw.upper()) if raw else ''
 
     def _sp_role_label(self, player, sport):
         if sport == 'football':
@@ -4058,19 +4826,68 @@ class Auction(http.Controller):
             return 'Batters'
         return 'Squad'
 
+    def _sp_strike_force(self, players, sport='cricket'):
+        """Role tallies for the Strike Force band under the squad grid."""
+        n = len(players or [])
+        cats = {}
+        for pl in (players or []):
+            cat = pl.get('category') or 'Squad'
+            cats[cat] = cats.get(cat, 0) + 1
+
+        def _fmt(v):
+            try:
+                return '%02d' % int(v)
+            except Exception:
+                return '00'
+
+        if sport == 'football':
+            items = [
+                {'key': 'players', 'value': _fmt(n), 'label': 'PLAYERS', 'icon': 'players'},
+                {'key': 'mid', 'value': _fmt(cats.get('Midfielders', 0)), 'label': 'MIDFIELDERS', 'icon': 'allround'},
+                {'key': 'def', 'value': _fmt(cats.get('Defenders', 0) + cats.get('Goalkeepers', 0)), 'label': 'DEFENDERS', 'icon': 'batter'},
+                {'key': 'fwd', 'value': _fmt(cats.get('Forwards', 0)), 'label': 'FORWARDS', 'icon': 'bowler'},
+            ]
+        else:
+            ar = cats.get('All-Rounders', 0)
+            bat = cats.get('Batters', 0) + cats.get('Wicket Keepers', 0)
+            bowl = cats.get('Bowlers', 0)
+            # Fold unclassified into batters so totals stay sensible
+            other = cats.get('Squad', 0)
+            bat += other
+            items = [
+                {'key': 'players', 'value': _fmt(n), 'label': 'PLAYERS', 'icon': 'players'},
+                {'key': 'ar', 'value': _fmt(ar), 'label': 'ALL-ROUNDERS', 'icon': 'allround'},
+                {'key': 'bat', 'value': _fmt(bat), 'label': 'BATTERS', 'icon': 'batter'},
+                {'key': 'bowl', 'value': _fmt(bowl), 'label': 'BOWLER' if bowl == 1 else 'BOWLERS', 'icon': 'bowler'},
+            ]
+        return {
+            'title': 'THE STRIKE FORCE',
+            'tagline': 'ONE TEAM • ONE MISSION • ONE TROPHY',
+            'items': items,
+        }
+
     def _sp_grid_cols(self, n):
-        """Instagram story squad grid — prefer wide rows like the sample (6-up)."""
-        if n <= 4:
-            return 2
-        if n <= 9:
-            return 3
-        if n <= 12:
-            return 6
-        if n <= 15:
-            return 5
-        if n <= 18:
-            return 6
+        """Always 5 square face placeholders per row (max 15 in 3 rows)."""
         return 5
+
+    def _sp_row_gap(self, n_rows):
+        """Tight spacing between packed player rows."""
+        return 4
+
+    def _sp_player_rows(self, players, cols):
+        """Split players into rows so incomplete last rows can be centered."""
+        cols = max(1, int(cols or 1))
+        rows = []
+        plist = list(players or [])
+        for i in range(0, len(plist), cols):
+            rows.append(plist[i:i + cols])
+        return rows
+
+    def _sp_side_cols(self, n):
+        return 3
+
+    def _sp_bottom_cols(self, n):
+        return 4
 
     def _sp_fmt_num(self, n):
         try:
@@ -4089,7 +4906,7 @@ class Auction(http.Controller):
         ages = []
         bid_vals = []
 
-        # Icon players first (team key players), then auction lines
+        # Preserve existing order: key/icon players first, then auction lines
         seen = set()
         ordered = []
         if team:
@@ -4100,7 +4917,6 @@ class Auction(http.Controller):
         for line in auction.player_ids:
             p = line.player_id
             if not p or p.id in seen:
-                # still record points update if duplicate icon
                 if p and p.id in seen:
                     for i, item in enumerate(ordered):
                         if item[1].id == p.id and not item[2]:
@@ -4112,7 +4928,27 @@ class Auction(http.Controller):
         for kind, p, pts in ordered:
             role = self._sp_role_label(p, sport)
             is_icon = bool(p.icon_player) or (p.id in icon_ids) or kind == 'icon'
-            photo = self._sp_photo_uri(p.photo)
+            photo_bin = self._sp_photo_binary(p)
+            crop_override = None
+            raw_crop = (getattr(p, 'squad_poster_crop', None) or '').strip()
+            if raw_crop:
+                try:
+                    parsed = json.loads(raw_crop)
+                    if isinstance(parsed, dict) and 'l' in parsed and 'sw' in parsed:
+                        crop_override = parsed
+                except Exception:
+                    crop_override = None
+            pack = self._sp_photo_pack(
+                photo_bin, crop_override=crop_override
+            ) if photo_bin else {
+                'crop_uri': '', 'full_uri': '', 'crop': None,
+                'auto_crop': None, 'manual': False,
+            }
+            photo = pack.get('crop_uri') or ''
+            photo_full = pack.get('full_uri') or photo
+            photo_crop = pack.get('crop')
+            photo_crop_auto = pack.get('auto_crop') or photo_crop
+            photo_manual = bool(pack.get('manual'))
             jersey_raw = (p.jersy_number or '').strip()
             jersey = ''
             if jersey_raw:
@@ -4120,8 +4956,7 @@ class Auction(http.Controller):
                     jersey = '%02d' % int(jersey_raw)
                 except Exception:
                     jersey = jersey_raw[:4]
-            elif p.sl_no:
-                jersey = '%02d' % int(p.sl_no)
+            # Do not fall back to sl_no — poster no longer shows numbers on cards
             tier_name = ''
             tier_color = ''
             if p.tier_id:
@@ -4136,29 +4971,69 @@ class Auction(http.Controller):
                     pass
             players_out.append({
                 'id': p.id,
-                'name': p.name or '',
-                'role': role,
+                'name': (p.name or '').upper(),
+                'role': (role or '').upper(),
                 'tier': tier_name,
                 'tier_color': tier_color,
                 'photo_uri': photo,
+                'photo_full_uri': photo_full or photo,
+                'photo_crop': photo_crop,
+                'photo_crop_auto': photo_crop_auto,
+                'photo_manual': photo_manual,
                 'initials': self._sp_initials(p.name),
                 'jersey': jersey,
+                'squad_no': jersey,
                 'is_icon': is_icon,
                 'is_wk': self._sp_is_wk(role),
                 'points': int(pts or 0),
                 'category': self._sp_category(role, sport),
             })
 
-        # Tabular squad: highest auction points first, lowest last
+        # Sort: icons first, then points DESC
         players_out.sort(key=lambda pl: (
-            -int(pl.get('points') or 0),
             0 if pl.get('is_icon') else 1,
+            -int(pl.get('points') or 0),
             (pl.get('name') or '').lower(),
         ))
-        # Instagram poster: fixed 3×5 grid — max 15 players
-        players_out = players_out[:15]
 
-        # Optional category grouping only when explicitly requested
+        # Icon / Key players — up to 4 in a featured top row.
+        # Remaining squad — up to 15 in a 5×3 grid below.
+        icon_players = []
+        seen_icon = set()
+        if team and team.key_player_ids:
+            by_id = {pl.get('id'): pl for pl in players_out}
+            for kp in team.key_player_ids:
+                pl = by_id.get(kp.id)
+                if pl and kp.id not in seen_icon:
+                    icon_players.append(pl)
+                    seen_icon.add(kp.id)
+        for pl in players_out:
+            pid = pl.get('id')
+            if pl.get('is_icon') and pid not in seen_icon:
+                icon_players.append(pl)
+                seen_icon.add(pid)
+        icon_players = icon_players[:4]
+        for pl in icon_players:
+            pl['is_icon'] = True
+
+        icon_id_set = {pl.get('id') for pl in icon_players}
+        rest_players = [
+            pl for pl in players_out
+            if pl.get('id') not in icon_id_set
+        ][:15]
+        for pl in rest_players:
+            pl['is_icon'] = False
+
+        has_icon = bool(icon_players)
+        icon_hero = icon_players[0] if icon_players else None
+        # Full poster roster for stats / strike force
+        players_out = icon_players + rest_players
+
+        side_players = []
+        bottom_players = []
+        grid_players = list(rest_players)
+        sym_players = list(rest_players)
+
         groups = []
         if group and players_out:
             order = (
@@ -4186,6 +5061,16 @@ class Auction(http.Controller):
         remaining = int(auction.remaining_points or 0)
         spent = max(total_purse - remaining, 0)
         n_players = len(players_out)
+        n_grid = len(rest_players)
+        grid_cols = self._sp_grid_cols(n_grid or n_players)
+        side_cols = 3
+        bottom_cols = 5
+        grid_rows = max(1, (n_grid + grid_cols - 1) // grid_cols) if n_grid else (0 if has_icon else 1)
+        row_gap = self._sp_row_gap(grid_rows)
+        sparse_squad = False
+        has_bottom = False
+        player_rows = self._sp_player_rows(rest_players, grid_cols)
+        strike_force = self._sp_strike_force(players_out, sport=sport)
 
         stats = {
             'players': n_players,
@@ -4203,13 +5088,16 @@ class Auction(http.Controller):
         venue = ''
         date_label = ''
         season_label = ''
+        season_raw = ''
         team_count = 0
         sponsors = []
         tourn_logo = ''
         bg_uri = ''
+        tournament_name = 'Tournament'
+        organizer_name = ''
         if tournament:
+            tournament_name = (tournament.name or '').strip() or 'Tournament'
             venue = (tournament.auction_venue or tournament.venue or '').strip()
-            date_label = ''
             if tournament.auction_date:
                 try:
                     date_label = tournament.auction_date.strftime('%d %b %Y')
@@ -4217,73 +5105,258 @@ class Auction(http.Controller):
                     date_label = str(tournament.auction_date)
             else:
                 date_label = tournament.format_tournament_dates(fmt='%d %b %Y') or ''
-            season_label = (tournament.description or '').strip()
+            season_raw = (tournament.description or '').strip()
+            season_label = season_raw
             if len(season_label) > 48:
                 season_label = season_label[:45] + '…'
             team_count = len(tournament.team_ids)
-            tourn_logo = self._sp_b64_uri(tournament.logo, mime='image/png', size=(256, 256), quality=95)
-            sponsors = []
+            tourn_logo = self._sp_logo_uri(tournament.logo, size=(320, 320))
             for adv in (tournament.advertiser_ids or []):
                 if not adv.image:
                     continue
                 sponsors.append({
                     'name': adv.name or 'Sponsor',
-                    'uri': self._sp_b64_uri(
-                        adv.image, mime='image/jpeg', size=(480, 200), quality=92
-                    ),
+                    'uri': self._sp_logo_uri(adv.image, size=(360, 360)),
                 })
-                if len(sponsors) >= 8:
+                if len(sponsors) >= 10:
                     break
             if tournament.poster_image:
-                bg_uri = self._sp_b64_uri(tournament.poster_image, mime='image/jpeg', size=(1080, 1920), quality=85)
+                bg_uri = self._sp_b64_uri(
+                    tournament.poster_image, mime='image/jpeg',
+                    size=(self.SP_CANVAS_W, self.SP_CANVAS_H), quality=82,
+                )
+            else:
+                bg_uri = ''
+            organizer_name = (tournament.organizer_name or '').strip()
+
+        team_name = ((team.name if team else '') or 'Team').strip()
+        manager = ((team.manager if team else '') or '').strip()
+        team_name_lines = self._sp_name_lines(team_name, max_lines=3)
+        team_type = self._sp_team_type_scale(team_name, lines=team_name_lines)
+        # Reference copy hierarchy — overridable later via tournament fields if added
+        motto = ''
+        battle_cry = ''
+        footer_slogan = ''
+        tagline = ''
 
         sport_label = (sport or 'cricket').title()
         sport_icon = '🏏' if sport == 'cricket' else ('⚽' if sport == 'football' else '🏅')
-        organizer_name = ''
-        if tournament:
-            organizer_name = (tournament.organizer_name or '').strip()
+        tourn_parts = self._sp_tourn_title_parts(tournament_name, season_label=season_raw or season_label)
+        # Season chip under the title — keep "SEASON N" only (avoid repeating league words)
+        _sm = re.search(r'(SEASON\s*\d+)', (season_raw or season_label or ''), flags=re.I)
+        if _sm:
+            season_label = _sm.group(1).upper()
+        elif not season_label:
+            season_label = 'SEASON'
 
         return {
             'theme': theme,
             'sport': sport,
             'sport_label': sport_label,
             'sport_icon': sport_icon,
-            'tournament_name': (tournament.name if tournament else '') or 'Tournament',
+            'tournament_name': tournament_name,
+            'tournament_name_lines': self._sp_name_lines(tournament_name, max_lines=3),
+            'tourn_line1': tourn_parts.get('line1') or '',
+            'tourn_hero': tourn_parts.get('hero') or tournament_name,
+            'tourn_line3': tourn_parts.get('line3') or '',
             'season_label': season_label,
             'organizer_name': organizer_name,
             'venue': venue,
             'date_label': date_label,
             'team_count': team_count,
             'tourn_logo_uri': tourn_logo,
-            'team_name': (team.name if team else '') or 'Team',
-            'team_logo_uri': self._sp_b64_uri(team.logo, mime='image/png', size=(320, 320), quality=95) if team else '',
+            'team_name': team_name,
+            'team_name_lines': team_name_lines,
+            'team_type_line1': team_type['line1'],
+            'team_type_body': team_type['body'],
+            'team_type_only': team_type['only'],
+            'team_logo_uri': self._sp_logo_uri(team.logo, size=(360, 360)) if team else '',
             'players': players_out,
+            'player_rows': player_rows,
+            'grid_players': grid_players if has_icon else players_out,
+            'side_players': side_players,
+            'bottom_players': bottom_players,
+            'sym_players': sym_players,
+            'icon_player': icon_hero if has_icon else None,
+            'icon_players': icon_players if has_icon else [],
+            'icon_count': len(icon_players) if has_icon else 0,
+            'has_icon': has_icon,
+            'has_bottom': has_bottom,
+            'sparse_squad': sparse_squad,
+            'side_cols': side_cols,
+            'bottom_cols': bottom_cols,
             'grouped': bool(group and groups),
             'groups': groups if group else [],
-            'grid_cols': 3,
-            'palette': 'pace-lime',
+            'grid_cols': grid_cols,
+            'grid_rows': grid_rows,
+            'row_gap': row_gap,
+            'palette': 'ember-orange',
             'dense': '1',
             'stats': stats,
-            'manager': (team.manager or '') if team else '',
-            'manager_initials': self._sp_initials((team.manager or '') if team else ''),
+            'manager': manager,
+            'manager_initials': self._sp_initials(manager),
             'sponsors': sponsors,
             'has_sponsors': bool(sponsors),
+            'strike_force': strike_force,
             'player_count': n_players,
             'bg_uri': bg_uri,
-            'tagline': 'Stronger Together',
+            'tagline': tagline,
+            'motto': motto,
+            'battle_cry': battle_cry,
+            'footer_slogan': footer_slogan,
+            'hashtag': self._sp_hashtag(team_name),
             'brand_url': 'www.auctionchamp.live',
+            'canvas_w': self.SP_CANVAS_W,
+            'canvas_h': self.SP_CANVAS_H,
         }
 
-    @http.route('/auction/squad-poster/<int:auction_id>', type='http', auth='user', website=False, csrf=False)
-    def squad_poster_page(self, auction_id, **kw):
-        """Premium Instagram Story squad poster (1080×1920) with hi-res PNG/JPG export."""
+    def _sp_bind_db_and_user(self, db_name=None):
+        """
+        Pin session DB (multi-db safe) and require a logged-in user.
+        Returns a redirect Response if the caller should stop, else None.
+        """
+        if db_name:
+            if request.session.db != db_name:
+                try:
+                    valid_dbs = http.db_list(force=True)
+                except Exception:
+                    valid_dbs = []
+                if valid_dbs and db_name not in valid_dbs:
+                    return request.not_found()
+                request.session.db = db_name
+                return werkzeug.utils.redirect(request.httprequest.url, 302)
+        elif not request.session.db:
+            # Last resort: single matching DB
+            try:
+                from odoo.http import db_monodb
+                mono = db_monodb(request.httprequest)
+            except Exception:
+                mono = None
+            if mono:
+                request.session.db = mono
+                return werkzeug.utils.redirect(request.httprequest.url, 302)
+            return request.not_found()
+
+        if not request.session.uid:
+            target = request.httprequest.path
+            qs = request.httprequest.query_string.decode() if request.httprequest.query_string else ''
+            if qs:
+                target += '?' + qs
+            return werkzeug.utils.redirect(
+                '/web/login?' + werkzeug.urls.url_encode({'redirect': target}), 302
+            )
+
+        # auth='none' leaves uid unset — bind env to the logged-in user
+        request.uid = request.session.uid
+        request._env = None
+        return None
+
+    def _sp_render_poster_page(self, auction_id, **kw):
+        """Build the squad poster HTML response (shared by db / non-db routes)."""
         auction = request.env['auction.auction'].sudo().browse(auction_id)
         if not auction.exists():
             return request.not_found()
-        # Default: flat 3-column table sorted by points. ?group=1 enables role sections.
         group = str(kw.get('group') or '').lower() in ('1', 'true', 'yes')
         ctx = self._sp_build_context(auction, group=group)
-        return request.render('auction_module.squad_poster_template', ctx, lazy=False)
+        html = request.render('auction_module.squad_poster_template', ctx, lazy=False)
+        if isinstance(html, bytes):
+            body = html
+        else:
+            body = str(html or '').encode('utf-8')
+        photo_map = {}
+        crop_map = {}
+        auto_map = {}
+        for pl in (ctx.get('players') or []):
+            pid = pl.get('id')
+            if not pid:
+                continue
+            sid = str(pid)
+            photo_map[sid] = pl.get('photo_full_uri') or pl.get('photo_uri') or ''
+            if pl.get('photo_crop'):
+                crop_map[sid] = pl.get('photo_crop')
+            if pl.get('photo_crop_auto'):
+                auto_map[sid] = pl.get('photo_crop_auto')
+        db_name = request.session.db or ''
+        map_tag = (
+            b'\n<script>window.__spAuctionId='
+            + str(int(auction_id)).encode('utf-8')
+            + b';window.__spDbName='
+            + json.dumps(db_name).encode('utf-8')
+            + b';window.__spFullPhotos='
+            + json.dumps(photo_map).encode('utf-8')
+            + b';window.__spPhotoCrops='
+            + json.dumps(crop_map).encode('utf-8')
+            + b';window.__spAutoCrops='
+            + json.dumps(auto_map).encode('utf-8')
+            + b';</script>'
+        )
+        editor_tag = (
+            map_tag
+            + b'\n<script src="/auction_module/static/src/js/squad_poster_editor.js?v=275">'
+            + b'</script>\n</body>'
+        )
+        if b'squad_poster_editor.js' not in body:
+            if b'</body>' in body:
+                body = body.replace(b'</body>', editor_tag, 1)
+            elif b'</BODY>' in body:
+                body = body.replace(b'</BODY>', editor_tag, 1)
+            else:
+                body = body + editor_tag
+        return request.make_response(
+            body,
+            headers=[('Content-Type', 'text/html; charset=utf-8')],
+        )
+
+    @http.route(['/auction/squad-poster/<int:auction_id>/photo-crops',
+                 '/<string:db_name>/auction/squad-poster/<int:auction_id>/photo-crops'],
+                type='json', auth='user', website=False)
+    def squad_poster_save_crops(self, auction_id, crops=None, clear_ids=None, db_name=None, **kw):
+        """Persist manual pan/zoom crop windows for squad poster cards."""
+        auction = request.env['auction.auction'].sudo().browse(auction_id)
+        if not auction.exists():
+            return {'ok': False, 'error': 'auction_not_found'}
+        Player = request.env['auction.team.player'].sudo()
+        saved = 0
+        cleared = 0
+        for pid, crop in (crops or {}).items():
+            try:
+                player = Player.browse(int(pid))
+            except Exception:
+                continue
+            if not player.exists():
+                continue
+            if not isinstance(crop, dict):
+                continue
+            try:
+                payload = {
+                    'l': float(crop.get('l', 0)),
+                    't': float(crop.get('t', 0)),
+                    'sw': float(crop.get('sw', 1)),
+                    'sh': float(crop.get('sh', 1)),
+                }
+            except Exception:
+                continue
+            player.write({'squad_poster_crop': json.dumps(payload)})
+            saved += 1
+        for pid in (clear_ids or []):
+            try:
+                player = Player.browse(int(pid))
+            except Exception:
+                continue
+            if player.exists() and player.squad_poster_crop:
+                player.write({'squad_poster_crop': False})
+                cleared += 1
+        return {'ok': True, 'saved': saved, 'cleared': cleared}
+
+    @http.route(['/auction/squad-poster/<int:auction_id>',
+                 '/<string:db_name>/auction/squad-poster/<int:auction_id>'],
+                type='http', auth='none', website=False, csrf=False)
+    def squad_poster_page(self, auction_id, db_name=None, **kw):
+        """Premium 2:3 franchise squad poster (1024×1536) with hi-res PNG/JPG export."""
+        redirect = self._sp_bind_db_and_user(db_name=db_name)
+        if redirect is not None:
+            return redirect
+        return self._sp_render_poster_page(auction_id, **kw)
 
     # ── Player Registration Form ──────────────────────────────────────────────
 

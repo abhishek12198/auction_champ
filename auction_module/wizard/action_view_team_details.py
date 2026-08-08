@@ -268,8 +268,11 @@ class ViewTeamDetails(models.TransientModel):
 
     def button_print_squad_poster(self):
         active_id = self.env.context.get('active_id', False)
+        if not active_id:
+            return False
+        # Include DB name so multi-db / fresh tabs don't hit nodb 404
         return {
             'type': 'ir.actions.act_url',
-            'url': '/auction/squad-poster/%d' % active_id,
+            'url': '/%s/auction/squad-poster/%d' % (self.env.cr.dbname, active_id),
             'target': 'new',
         }

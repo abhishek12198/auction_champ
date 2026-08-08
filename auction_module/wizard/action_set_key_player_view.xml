@@ -28,7 +28,13 @@
                     <div class="skp-section">
                         <div class="skp-section-label">
                             <i class="fa fa-shield" title="Team"/> Select Team
+                            <span attrs="{'invisible': [('tournament_id', '=', False)]}">
+                                <span> · </span>
+                                <field name="tournament_id" readonly="1" class="skp-tourn-name"
+                                       options="{'no_open': True}"/>
+                            </span>
                         </div>
+                        <field name="tournament_id" invisible="1" force_save="1"/>
                         <field name="team_selection" widget="selection_badge"/>
                         <field name="team_id" invisible="1" required="0" force_save="1"
                                options="{'no_open': True, 'no_create': True}"/>
@@ -80,6 +86,10 @@
             <field name="res_model">auction.set.key.player</field>
             <field name="view_mode">form</field>
             <field name="target">new</field>
+            <field name="context">{
+                'default_player_id': active_id,
+                'active_model': 'auction.team.player',
+            }</field>
         </record>
 
     </data>
