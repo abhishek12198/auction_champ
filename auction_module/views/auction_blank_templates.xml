@@ -933,7 +933,7 @@ html[data-theme] .lb-photo-loading-txt {
   font-size: .65rem; line-height: 1; pointer-events: none;
 }
 .lb-mvp-info { flex: 1; min-width: 0; }
-.lb-mvp-name { font-size: .76rem; font-weight: 800; color: var(--lb-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lb-mvp-name { font-size: .76rem; font-weight: 800; color: var(--lb-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; }
 .lb-mvp-sub  { font-size: .6rem; color: var(--lb-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
 .lb-mvp-right { flex-shrink: 0; text-align: right; }
 .lb-mvp-pts   { font-size: .82rem; font-weight: 900; color: var(--lb-accent2); }
@@ -944,7 +944,7 @@ html[data-theme] .lb-photo-loading-txt {
   display: flex; align-items: center; justify-content: center;
 }
 .lb-mvp-team-logo img { width: 100%; height: 100%; object-fit: contain; }
-.lb-mvp-team-name { font-size: .58rem; color: var(--lb-sub); }
+.lb-mvp-team-name { font-size: .58rem; color: var(--lb-sub); text-transform: uppercase; }
 .lb-mvp-empty { text-align: center; color: var(--lb-sub); font-size: .8rem; padding: 16px 0; }
 
 /* ── FOOTER BAR ──────────────────────────────────────────────────── */
@@ -2048,6 +2048,10 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
 </style>
 </head>
 <body>
+<t t-call="auction_module.point_unit_bootstrap">
+  <t t-set="pu_tournament" t-value="tournament"/>
+</t>
+
 
 <!-- HEADER -->
 <header class="lb-header">
@@ -2145,7 +2149,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       </div>
       <div class="lb-base-row" id="lb-base-row" style="display:none;">
         <div class="lb-base-lbl">Base Price</div>
-        <div class="lb-base-val" id="lb-base-val">— pts</div>
+        <div class="lb-base-val" id="lb-base-val">—</div>
       </div>
     </div>
   </section>
@@ -2452,10 +2456,17 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
   }
 
   function fmtPts(n) {
-    if (!n) return '0 pts';
-    if (n >= 100000) return (n/100000).toFixed(2).replace(/\.?0+$/,'') + 'L pts';
-    if (n >= 1000)   return (n/1000).toFixed(1).replace(/\.?0+$/,'') + 'K pts';
-    return n + ' pts';
+    var sym = (window.pointUnitSymbol && window.pointUnitSymbol()) || 'pts';
+    var pos = (window.AuctionPointUnit && window.AuctionPointUnit.cfg().position) || 'after';
+    var space = !(window.AuctionPointUnit && window.AuctionPointUnit.cfg().with_space === false);
+    var sep = space ? ' ' : '';
+    function wrap(core) {
+      return pos === 'before' ? (sym + sep + core) : (core + sep + sym);
+    }
+    if (!n) return wrap('0');
+    if (n >= 100000) return wrap((n/100000).toFixed(2).replace(/\.?0+$/,'') + 'L');
+    if (n >= 1000)   return wrap((n/1000).toFixed(1).replace(/\.?0+$/,'') + 'K');
+    return wrap(String(n));
   }
 
   function lbEsc(s) {
@@ -2804,6 +2815,13 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
   }
 
   // ── Render History ─────────────────────────────────────────────
+  function formatHistoryMsg(msg) {
+    if (!msg) return '';
+    return String(msg).toUpperCase()
+      .replace(/\bSOLD TO\b/g, 'sold to')
+      .replace(/\bFOR\b/g, 'for');
+  }
+
   function renderHistory(history) {
     const list = document.getElementById('lb-history-list');
     if (!history || !history.length) {
@@ -2816,7 +2834,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
         : '<span class="lb-history-avatar-ph">🏅</span>';
       return `<div class="lb-history-item">
         <div class="lb-history-avatar">${avatarHtml}</div>
-        <div class="lb-history-msg">${h.message || ''}</div>
+        <div class="lb-history-msg">${formatHistoryMsg(h.message)}</div>
         <div class="lb-history-time">${h.timestamp || ''}</div>
       </div>`;
     }).join('');

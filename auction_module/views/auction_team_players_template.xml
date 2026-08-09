@@ -555,6 +555,10 @@
         #screenshot_container .tp-card-photo-wrap { height: 180px; position: relative; overflow: hidden; }
       </style>
     </head>
+<t t-call="auction_module.point_unit_bootstrap">
+  <t t-set="pu_tournament" t-value="tournament"/>
+</t>
+
 
     <body>
       <!-- ── Page header ──────────────────────────────────────────────────── -->
@@ -671,8 +675,7 @@
                       </div>
                     </div>
                     <div class="tp-list-pts">
-                      <t t-esc="player.get('point', '—')"/>
-                      <span class="tp-list-pts-lbl">pts</span>
+                      <t t-esc="tournament.format_points(player.get('point', 0)) if tournament else player.get('point', '—')"/>
                     </div>
                   </div>
                 </t>
@@ -875,8 +878,7 @@
       <t t-else="">
         <span class="tp-pts-badge">
           <span class="pts-icon">&#128176;</span>
-          <t t-esc="player.get('point', 0)"/>
-          <span class="tp-pts-label">pts</span>
+          <t t-esc="tournament.format_points(player.get('point', 0)) if tournament else player.get('point', 0)"/>
         </span>
       </t>
 

@@ -44,3 +44,4 @@ def post_init_hook(cr, registry):
     env['res.users']._auction_sync_tournament_assignments()
     env['res.users']._auction_reorder_root_menus()
     env['res.users']._auction_apply_home_actions_all()
+    env['auction.tournament']._ensure_default_point_units()

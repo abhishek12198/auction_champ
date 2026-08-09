@@ -160,6 +160,13 @@
           groups="auction_module.group_auction_group"
           sequence="4"/>
 
+        <menuitem id="menu_action_auction_point_unit"
+          name="Player Value Units"
+          parent="menu_action_auction_conf"
+          action="action_auction_point_unit"
+          sequence="5"
+          groups="auction_module.group_auction_group_admin"/>
+
         <!-- Payment Tracker — root client action (stays inside /web) -->
         <delete model="ir.actions.act_url" id="action_payment_marker"/>
         <record id="action_payment_marker" model="ir.actions.client">

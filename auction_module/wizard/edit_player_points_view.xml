@@ -6,35 +6,47 @@
             <field name="name">auction.edit.player.point.form</field>
             <field name="model">auction.edit.player.point</field>
             <field name="arch" type="xml">
-                <form string="Auction">
-                    <field name="player_photo" widget='image' class="oe_avatar"/>
+                <form string="Edit Sold Value">
+                    <field name="tournament_id" invisible="1"/>
+                    <field name="point_unit_symbol" invisible="1"/>
+                    <field name="player_photo" widget="image" class="oe_avatar"/>
                     <div class="oe_title oe_inline">
                         <label for="player_id"/>
-                        <h1><field name="player_id" readonly="1" force_save="1"/> </h1>
+                        <h1><field name="player_id" readonly="1" force_save="1"/></h1>
                     </div>
                     <div class="oe_title oe_inline">
-                        <label for="points"/>
-                        <h1><field name="points"/></h1>
+                        <label for="points" string="New value"/>
+                        <h1>
+                            <field name="points" class="oe_inline"/>
+                            <field name="point_unit_symbol" readonly="1" class="oe_inline"
+                                     style="margin-left:8px;font-size:0.7em;opacity:0.75;"/>
+                        </h1>
                     </div>
                     <group string="Other Details">
                         <field name="contact"/>
-                        <field name="previous_points" readonly="1" force_save="1" string="Previous Value of this player"/>
-                        <field name="points_gain" readonly="1" force_save="1" string="Points Gained/Lost"/>
+                        <field name="point_unit_label" string="Unit" readonly="1"/>
+                        <field name="previous_points" invisible="1" force_save="1"/>
+                        <field name="previous_points_display" readonly="1" force_save="1"
+                                 string="Previous value"/>
+                        <field name="points_gain" invisible="1" force_save="1"/>
+                        <field name="points_gain_display" readonly="1" force_save="1"
+                                 string="Difference"/>
                     </group>
                     <footer>
-                        <button string="Update" type="object"  class="btn-primary" name="button_update_points" confirm="Please confirm the modification of point, click Ok to continue"/>
+                        <button string="Update" type="object" class="btn-primary"
+                                name="button_update_points"
+                                confirm="Confirm updating this player's sold value?"/>
                         <button string="Cancel" class="btn-secondary" special="cancel"/>
-                </footer>
+                    </footer>
                 </form>
             </field>
         </record>
 
         <record id="action_edit_player_point" model="ir.actions.act_window">
-            <field name="name">Modify Player Points</field>
+            <field name="name">Edit Sold Value</field>
             <field name="res_model">auction.edit.player.point</field>
             <field name="view_mode">form</field>
             <field name="target">new</field>
-
         </record>
 
     </data>

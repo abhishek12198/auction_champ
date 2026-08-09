@@ -69,7 +69,7 @@
                                     letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Icon Players</div>
                         <div style="font-size:13px; font-weight:bold; color:#0F2447;
                                     font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
-                            <t t-esc="', '.join([p.name for p in doc.team_id.key_player_ids]) or '—'"/>
+                            <t t-esc="', '.join([p.name for p in doc.team_id.key_player_ids]) or ''"/>
                         </div>
                     </td>
                     <td style="padding:8px 12px; border:1px solid #C8D8F0;
@@ -117,7 +117,7 @@
                                     <th style="color:#FFFFFF; padding:6px 8px; font-size:9px;
                                                text-transform:uppercase; letter-spacing:1px;
                                                border:1px solid #0F2447; text-align:center;
-                                               font-family:Arial,Helvetica,sans-serif;">Base Points</th>
+                                               font-family:Arial,Helvetica,sans-serif;">Base <t t-esc="doc.tournament_id.get_point_unit().name"/></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -137,7 +137,7 @@
                                         <td style="padding:5px 8px; border:1px solid #D0DCF0;
                                                    font-size:11px; text-align:center; color:#0F2447;
                                                    font-weight:bold; font-family:Arial,Helvetica,sans-serif;">
-                                            <t t-esc="tl.base_point or doc.base_point"/>
+                                            <span class="ac-unit-val"><t t-raw="doc.tournament_id.format_points_pdf(tl.base_point or doc.base_point)"/></span>
                                         </td>
                                     </tr>
                                 </t>
@@ -254,6 +254,8 @@
     <template id="report_auction_auction_document" name="Auction Team Roster">
         <t t-name="auction_module.report_auction_auction_document">
             <t t-call="web.html_container">
+                <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+                <style type="text/css"><t t-raw="env['auction.point.unit'].report_unicode_font_css()"/></style>
                 <t t-foreach="docs" t-as="doc">
                     <div class="page" style="font-family:Arial,Helvetica,sans-serif;
                                              color:#1A1A2E; padding:0;
@@ -281,7 +283,7 @@
                                     <th style="color:#FFFFFF; padding:9px 8px; font-size:10px;
                                                text-transform:uppercase; letter-spacing:1px;
                                                border:1px solid #0F2447; text-align:center;
-                                               font-family:Arial,Helvetica,sans-serif;">Points</th>
+                                               font-family:Arial,Helvetica,sans-serif;"><t t-esc="doc.tournament_id.get_point_unit().name"/></th>
                                     <th style="color:#FFFFFF; padding:9px 8px; font-size:10px;
                                                text-transform:uppercase; letter-spacing:1px;
                                                border:1px solid #0F2447; text-align:center;
@@ -319,8 +321,8 @@
                                         </td>
                                         <td style="padding:7px 8px; border:1px solid #D0DCF0;
                                                    text-align:center; font-size:13px; font-weight:bold;
-                                                   color:#0F2447; font-family:Georgia,'Times New Roman',serif;">
-                                            <t t-esc="player.points"/>
+                                                   color:#0F2447;">
+                                            <span class="ac-unit-val"><t t-raw="doc.tournament_id.format_points_pdf(player.points)"/></span>
                                         </td>
                                         <td style="padding:7px 8px; border:1px solid #D0DCF0;
                                                    text-align:center; font-size:10px;
@@ -342,7 +344,7 @@
                                                 letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Total Budget</div>
                                     <div style="font-size:16px; font-weight:bold; color:#FFFFFF;
                                                 font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
-                                        <t t-esc="doc.total_point"/>
+                                        <span class="ac-unit-val"><t t-raw="doc.tournament_id.format_points_pdf(doc.total_point)"/></span>
                                     </div>
                                 </td>
                                 <td style="padding:8px 12px; border:1px solid #C8D8F0;
@@ -351,7 +353,7 @@
                                                 letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Spent</div>
                                     <div style="font-size:16px; font-weight:bold; color:#E8A020;
                                                 font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
-                                        <t t-esc="doc.total_point - doc.remaining_points"/>
+                                        <span class="ac-unit-val"><t t-raw="doc.tournament_id.format_points_pdf(doc.total_point - doc.remaining_points)"/></span>
                                     </div>
                                 </td>
                                 <td style="padding:8px 12px; border:1px solid #C8D8F0;
@@ -360,7 +362,7 @@
                                                 letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Remaining Budget</div>
                                     <div style="font-size:16px; font-weight:bold; color:#6AE085;
                                                 font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
-                                        <t t-esc="doc.remaining_points"/>
+                                        <span class="ac-unit-val"><t t-raw="doc.tournament_id.format_points_pdf(doc.remaining_points)"/></span>
                                     </div>
                                 </td>
                                 <td style="padding:8px 12px; border:1px solid #C8D8F0;
@@ -375,10 +377,10 @@
                                 <td style="padding:8px 12px; border:1px solid #C8D8F0;
                                            background-color:#0F2447; text-align:center;">
                                     <div style="font-size:8px; color:#A8C0E0; text-transform:uppercase;
-                                                letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Base Points</div>
+                                                letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Base <t t-esc="doc.tournament_id.get_point_unit().name"/></div>
                                     <div style="font-size:16px; font-weight:bold; color:#FFFFFF;
                                                 font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
-                                        <t t-esc="doc.base_point"/>
+                                        <span class="ac-unit-val"><t t-raw="doc.tournament_id.format_points_pdf(doc.base_point)"/></span>
                                     </div>
                                 </td>
                             </tr>
@@ -402,6 +404,8 @@
     <template id="report_auction_blank_template" name="Auction Blank Squad Template">
         <t t-name="auction_module.report_auction_blank_template">
             <t t-call="web.html_container">
+                <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+                <style type="text/css"><t t-raw="env['auction.point.unit'].report_unicode_font_css()"/></style>
                 <t t-foreach="docs" t-as="doc">
                     <div class="page" style="font-family:Arial,Helvetica,sans-serif;
                                              color:#1A1A2E; padding:0;
@@ -441,7 +445,7 @@
                                     <th style="color:#FFFFFF; padding:9px 8px; font-size:10px;
                                                text-transform:uppercase; letter-spacing:1px;
                                                border:1px solid #0F2447; text-align:center;
-                                               font-family:Arial,Helvetica,sans-serif;">Points</th>
+                                               font-family:Arial,Helvetica,sans-serif;"><t t-esc="doc.tournament_id.get_point_unit().name"/></th>
                                     <th style="color:#FFFFFF; padding:9px 8px; font-size:10px;
                                                text-transform:uppercase; letter-spacing:1px;
                                                border:1px solid #0F2447; text-align:center;
@@ -494,16 +498,16 @@
                                 <td style="padding:8px 12px; border:1px solid #C8D8F0;
                                            background-color:#EBF3FF; text-align:center;">
                                     <div style="font-size:8px; color:#7A8DA8; text-transform:uppercase;
-                                                letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Base Points / Player</div>
+                                                letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Base <t t-esc="doc.tournament_id.get_point_unit().name"/> / Player</div>
                                     <div style="font-size:16px; font-weight:bold; color:#0F2447;
                                                 font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
-                                        <t t-esc="doc.base_point"/>
+                                        <span class="ac-unit-val"><t t-raw="doc.tournament_id.format_points_pdf(doc.base_point)"/></span>
                                     </div>
                                 </td>
                                 <td style="padding:8px 12px; border:1px solid #C8D8F0;
                                            background-color:#EBF3FF; text-align:center;">
                                     <div style="font-size:8px; color:#7A8DA8; text-transform:uppercase;
-                                                letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Points Spent</div>
+                                                letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;"><t t-esc="doc.tournament_id.get_point_unit().name"/> Spent</div>
                                     <div style="font-size:16px; font-weight:bold; color:#9AAFC8;
                                                 font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
                                         ___________

@@ -495,6 +495,10 @@
                                             <field name="preset_points"
                                                    placeholder="e.g. 100,200,500,1000,1500"
                                                    help="Comma-separated point values shown as quick-select buttons in the Sell Player modal"/>
+                                            <field name="point_unit_id"
+                                                   required="1"
+                                                   options="{'no_create_edit': False}"
+                                                   help="Unit / sign shown with player values everywhere (live, consoles, reports). Defaults to PTS."/>
                                         </group>
                                         <group>
                                             <field name="enable_jersey_section" widget="boolean_toggle"/>

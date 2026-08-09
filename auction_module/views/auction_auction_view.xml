@@ -180,13 +180,17 @@
                         <!-- Key numbers ────────────────────────────────────── -->
                         <group>
                             <group string="Budget">
-                                <field name="total_point"  string="Total Purse Value"        readonly="1"/>
+                                <field name="point_unit_name" string="Value Unit" readonly="1"/>
+                                <field name="total_point" invisible="1"/>
+                                <field name="total_point_display" string="Total Purse Value" readonly="1"/>
+                                <field name="remaining_points" invisible="1"/>
+                                <field name="remaining_points_display" string="Remaining Budget" readonly="1"/>
+                                <field name="max_call" invisible="1"/>
+                                <field name="max_call_display" string="Max Call" readonly="1"/>
                             </group>
                             <group string="Squad">
                                 <field name="max_players"             string="Max Squad Size"   readonly="1"/>
                                 <field name="remaining_players_count" string="Slots Remaining"  readonly="1"/>
-                                <field name="remaining_points"        string="Remaining Budget" readonly="1"/>
-                                <field name="max_call"                string="Max Call"         readonly="1"/>
                             </group>
                         </group>
 
@@ -205,6 +209,8 @@
                                         <field name="tier_color"/>
                                         <field name="icon_player"/>
                                         <field name="points"/>
+                                        <field name="points_display"/>
+                                        <field name="point_unit_name"/>
                                         <templates>
                                             <t t-name="kanban-box">
                                                 <t t-set="tc"  t-value="record.tier_color.raw_value || '#3498db'"/>
@@ -247,9 +253,8 @@
                                                              t-attf-style="border-color:#{tc}33; background:#{tc}0d;">
                                                             <div class="pk2-stat-label">Sold For</div>
                                                             <div class="pk2-stat-value pk2-pts-val"
-                                                                 t-attf-style="color:#{tc};">
-                                                                <t t-esc="record.points.value"/> pts
-                                                            </div>
+                                                                 t-attf-style="color:#{tc};"
+                                                                 t-esc="record.points_display.value"/>
                                                         </div>
                                                     </div>
 
@@ -257,14 +262,28 @@
                                                     <div class="pk2-actions">
                                                         <button name="%(auction_module.action_edit_player_point)d"
                                                                 type="action"
-                                                                class="pk2-btn pk2-btn-edit">
-                                                            <i class="fa fa-pencil"/> Edit Points
+                                                                class="pk2-btn pk2-btn-edit"
+                                                                title="Edit sold value">
+                                                            <i class="fa fa-pencil"/>
+                                                        </button>
+                                                        <button name="%(auction_module.action_swap_player)d"
+                                                                type="action"
+                                                                class="pk2-btn pk2-btn-swap"
+                                                                title="Swap with another team's player">
+                                                            <i class="fa fa-exchange"/>
+                                                        </button>
+                                                        <button name="%(auction_module.action_move_player)d"
+                                                                type="action"
+                                                                class="pk2-btn pk2-btn-move"
+                                                                title="Move to another team">
+                                                            <i class="fa fa-arrow-right"/>
                                                         </button>
                                                         <button name="action_recall_to_auction"
                                                                 type="object"
                                                                 class="pk2-btn pk2-btn-recall"
+                                                                title="Recall to auction"
                                                                 confirm="Bring this player back to auction? This will remove them from the team.">
-                                                            <i class="fa fa-undo"/> Recall
+                                                            <i class="fa fa-undo"/>
                                                         </button>
                                                     </div>
 
@@ -287,8 +306,8 @@
                             <page string="Bid Slabs">
                                 <field name="auction_bid_slab_ids" nolabel="1">
                                     <tree editable="bottom">
-                                        <field name="from_amount" string="From (pts)"/>
-                                        <field name="to_amount"   string="To (pts)"/>
+                                        <field name="from_amount" string="From"/>
+                                        <field name="to_amount"   string="To"/>
                                         <field name="increment"   string="Increment"/>
                                     </tree>
                                 </field>

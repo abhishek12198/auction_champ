@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      Include in standalone QWeb pages (projector, consoles, live boards):
+        <t t-call="auction_module.point_unit_bootstrap">
+            <t t-set="pu_tournament" t-value="tournament"/>
+        </t>
+    -->
+    <template id="point_unit_bootstrap" name="Point Unit JS Bootstrap">
+        <script type="text/javascript">
+            window.AC_POINT_UNIT = <t t-if="pu_tournament" t-raw="pu_tournament.get_point_unit_js_json()"/><t t-else="">{"name":"Points","symbol":"PTS","position":"after","with_space":true}</t>;
+        </script>
+        <script type="text/javascript" src="/auction_module/static/src/js/point_unit.js?v=3"/>
+    </template>
+</odoo>

@@ -547,6 +547,10 @@
         }
       </style>
     </head>
+<t t-call="auction_module.point_unit_bootstrap">
+  <t t-set="pu_tournament" t-value="tournament"/>
+</t>
+
 
     <body>
 
@@ -840,8 +844,7 @@
       <t t-else="">
         <span class="or-pts-chip">
           &#9670;
-          <t t-esc="player.get('point', 0)"/>
-          <span class="or-pts-chip-u">pts</span>
+          <t t-esc="tournament.format_points(player.get('point', 0)) if tournament else player.get('point', 0)"/>
         </span>
       </t>
 

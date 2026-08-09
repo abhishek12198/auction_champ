@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Default player-value unit used across live boards, consoles, and reports -->
+        <record id="point_unit_pts" model="auction.point.unit">
+            <field name="name">Points</field>
+            <field name="symbol">PTS</field>
+            <field name="position">after</field>
+            <field name="with_space" eval="True"/>
+            <field name="sequence">1</field>
+            <field name="active" eval="True"/>
+        </record>
+    </data>
+
+    <!-- Runs on install and upgrade: assign PTS to tournaments missing a unit -->
+    <data>
+        <function model="auction.tournament" name="_ensure_default_point_units"/>
+    </data>
+</odoo>

@@ -18,6 +18,8 @@ access_auction_player_auction_user,auction.player.auction,auction_module.model_a
 access_auction_player_draft_user,auction.player.draft,auction_module.model_auction_player_draft,auction_module.group_auction_group,1,1,1,1
 access_auction_bring_unsold_players_user,auction.bring.unsold.players,auction_module.model_auction_bring_unsold_players,auction_module.group_auction_group,1,1,1,1
 access_auction_edit_player_point_user,auction.edit.player.point,auction_module.model_auction_edit_player_point,auction_module.group_auction_group,1,1,1,1
+access_auction_swap_player_user,auction.swap.player,auction_module.model_auction_swap_player,auction_module.group_auction_group,1,1,1,1
+access_auction_move_player_user,auction.move.player,auction_module.model_auction_move_player,auction_module.group_auction_group,1,1,1,1
 access_auction_view_team_details_user,auction.view.team.details,auction_module.model_auction_view_team_details,auction_module.group_auction_group,1,1,1,1
 access_auction_player_tier_user,auction.player.tier,auction_module.model_auction_player_tier,auction_module.group_auction_group,1,1,1,1
 access_auction_auction_tier_limit_user,auction.auction.tier.limit,auction_module.model_auction_auction_tier_limit,auction_module.group_auction_group,1,1,1,1
@@ -43,6 +45,8 @@ access_auction_player_draft_admin,auction.player.draft (admin),auction_module.mo
 access_auction_bring_unsold_players_admin,auction.bring.unsold.players (admin),auction_module.model_auction_bring_unsold_players,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_team_pool_wizard_admin,auction.team.pool.wizard (admin),auction_module.model_auction_team_pool_wizard,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_edit_player_point_admin,auction.edit.player.point (admin),auction_module.model_auction_edit_player_point,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_swap_player_admin,auction.swap.player (admin),auction_module.model_auction_swap_player,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_move_player_admin,auction.move.player (admin),auction_module.model_auction_move_player,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_view_team_details_admin,auction.view.team.details (admin),auction_module.model_auction_view_team_details,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_player_tier_admin,auction.player.tier (admin),auction_module.model_auction_player_tier,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_auction_tier_limit_admin,auction.auction.tier.limit (admin),auction_module.model_auction_auction_tier_limit,auction_module.group_auction_group_admin,1,1,1,1
@@ -114,3 +118,6 @@ access_auction_player_stage_export_wizard_user,auction.player.stage.export.wizar
 access_auction_player_stage_export_wizard_admin,auction.player.stage.export.wizard (admin),auction_module.model_auction_player_stage_export_wizard,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_expose_contact_privacy_wizard_user,auction.expose.contact.privacy.wizard (user),auction_module.model_auction_expose_contact_privacy_wizard,auction_module.group_auction_group,1,1,1,1
 access_auction_expose_contact_privacy_wizard_admin,auction.expose.contact.privacy.wizard (admin),auction_module.model_auction_expose_contact_privacy_wizard,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_point_unit_user,auction.point.unit (user),auction_module.model_auction_point_unit,auction_module.group_auction_group,1,0,0,0
+access_auction_point_unit_admin,auction.point.unit (admin),auction_module.model_auction_point_unit,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_point_unit_public,auction.point.unit (public),auction_module.model_auction_point_unit,base.group_public,1,0,0,0

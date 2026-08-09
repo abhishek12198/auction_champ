@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_auction_move_player_form" model="ir.ui.view">
+            <field name="name">auction.move.player.form</field>
+            <field name="model">auction.move.player</field>
+            <field name="arch" type="xml">
+                <form string="Move Player" class="ac-swap-wizard ac-move-wizard">
+                    <field name="source_line_id" invisible="1"/>
+                    <field name="source_player_id" invisible="1"/>
+                    <field name="source_team_id" invisible="1"/>
+                    <field name="source_auction_id" invisible="1"/>
+                    <field name="source_points" invisible="1"/>
+                    <field name="tournament_id" invisible="1"/>
+                    <field name="tournament_type" invisible="1"/>
+                    <field name="point_unit_label" invisible="1"/>
+                    <field name="has_target_team" invisible="1"/>
+                    <!-- Integer is always saved from the JS board (Many2one readonly is skipped) -->
+                    <field name="selected_team_id" invisible="1" force_save="1"/>
+                    <field name="target_team_id" invisible="1" force_save="1"/>
+
+                    <field name="source_card_html" nolabel="1" readonly="1"/>
+                    <field name="board_json" widget="move_player_board" nolabel="1" force_save="1"/>
+
+                    <group class="ac-swap-points-grid" col="2">
+                        <group string="Value after move">
+                            <field name="move_points" string="New value"/>
+                            <field name="point_unit_label" string="Unit" readonly="1"/>
+                        </group>
+                        <group string="Destination">
+                            <field name="target_team_id" string="To team" readonly="1"
+                                     force_save="1" options="{'no_open': True}"/>
+                            <field name="source_team_id" string="From team" readonly="1"
+                                     options="{'no_open': True}"/>
+                        </group>
+                    </group>
+
+                    <field name="summary_html" nolabel="1" readonly="1"/>
+
+                    <footer>
+                        <button name="action_confirm_move"
+                                type="object"
+                                string="Confirm Move"
+                                class="btn-primary"
+                                confirm="Move this player to the selected team with the points shown?"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_move_player" model="ir.actions.act_window">
+            <field name="name">Move Player</field>
+            <field name="res_model">auction.move.player</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'dialog_size': 'large'}</field>
+        </record>
+
+    </data>
+</odoo>

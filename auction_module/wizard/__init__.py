@@ -42,6 +42,8 @@ from . import action_sell_player
 from . import action_set_to_auction
 from . import action_bring_to_auction
 from . import edit_player_points
+from . import action_swap_player
+from . import action_move_player
 from . import action_view_team_details
 from . import action_set_key_player
 from . import team_pool_wizard

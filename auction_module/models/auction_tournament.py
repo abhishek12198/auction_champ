@@ -36,6 +36,7 @@
 #
 ##############################################################################
 
+import json
 import re
 import random
 import time
@@ -128,6 +129,16 @@ class AuctionTournament(models.Model):
              'Lucky Dip — draw the next player at random.',
     )
     team_max_points = fields.Integer(string="Max points alloted for a team")
+    point_unit_id = fields.Many2one(
+        'auction.point.unit',
+        string='Player Value Unit',
+        ondelete='restrict',
+        # No Python default here: during module upgrade `_init_column` would
+        # query auction.point.unit before that table exists. Defaults are
+        # applied in create() and `_ensure_default_point_units`.
+        help='Unit / sign shown with player values on live boards, consoles, '
+             'and reports (e.g. PTS, ₹, $). Defaults to PTS.',
+    )
     organizer_uid = fields.Many2one('res.users', 'Organizer')
     points_split_ids = fields.One2many('auction.tournament.point.split', 'tournament_id', 'Points Split')
 
@@ -937,6 +948,10 @@ class AuctionTournament(models.Model):
         self._assert_expose_player_contact_privacy(vals, creating=True)
         if not vals.get('tournament_code'):
             vals['tournament_code'] = _generate_tournament_code(self.env)
+        if not vals.get('point_unit_id'):
+            unit = self.env['auction.point.unit'].default_unit()
+            if unit:
+                vals['point_unit_id'] = unit.id
         # Prefer char multi-dates; fall back to single tournament_date
         if vals.get('tournament_dates') and not vals.get('tournament_date'):
             try:
@@ -988,6 +1003,68 @@ class AuctionTournament(models.Model):
                 'color': '#3498db',
                 'tournament_id': tournament.id,
             })
+
+    @api.model
+    def _ensure_default_point_units(self):
+        """Assign the master PTS unit to every tournament that has none."""
+        unit = self.env['auction.point.unit'].default_unit()
+        if not unit:
+            return True
+        missing = self.sudo().search([('point_unit_id', '=', False)])
+        if missing:
+            # Bypass non-admin write restrictions during module data load.
+            missing.sudo().write({'point_unit_id': unit.id})
+        return True
+
+    def get_point_unit(self):
+        """Return the tournament's point unit, falling back to PTS."""
+        self.ensure_one()
+        return self.point_unit_id or self.env['auction.point.unit'].default_unit()
+
+    def format_points(self, amount, use_locale=True, for_pdf=False):
+        """Format a numeric player/purse value with the tournament unit."""
+        self.ensure_one()
+        unit = self.get_point_unit()
+        if not unit:
+            try:
+                num = int(amount or 0)
+            except (TypeError, ValueError):
+                num = 0
+            num_str = '{:,}'.format(num) if use_locale else str(num)
+            return '%s PTS' % num_str
+        return unit.format_value(amount, use_locale=use_locale, for_pdf=for_pdf)
+
+    def format_points_pdf(self, amount, use_locale=True):
+        """PDF formatter: Unicode symbols as HTML entities + DejaVu font."""
+        return self.format_points(amount, use_locale=use_locale, for_pdf=True)
+
+    def get_point_unit_js(self):
+        """JS-ready dict for live boards and consoles."""
+        self.ensure_one()
+        unit = self.get_point_unit()
+        if not unit:
+            return {
+                'id': False,
+                'name': 'Points',
+                'symbol': 'PTS',
+                'position': 'after',
+                'with_space': True,
+            }
+        return unit.to_js_dict()
+
+    def get_point_unit_js_json(self):
+        """JSON string safe to embed in a &lt;script&gt; tag."""
+        self.ensure_one()
+        return json.dumps(self.get_point_unit_js())
+
+    @api.model
+    def default_get(self, fields_list):
+        res = super().default_get(fields_list)
+        if 'point_unit_id' in fields_list and not res.get('point_unit_id'):
+            unit = self.env['auction.point.unit'].default_unit()
+            if unit:
+                res['point_unit_id'] = unit.id
+        return res
 
     def write(self, vals):
         """Restrict non-admin users to only modifying operational/balance fields.

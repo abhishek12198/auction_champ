@@ -665,6 +665,9 @@
 </style>
 
 <!-- ── Modal overlay ──────────────────────────────────────────── -->
+<t t-call="auction_module.point_unit_bootstrap">
+  <t t-set="pu_tournament" t-value="tournament or (player.tournament_id if player else None)"/>
+</t>
 <div id="sellModal" t-att-data-theme="player.tournament_id.player_display_template or 'vanilla'">
   <div class="sm-card">
 
@@ -713,7 +716,7 @@
 
       <!-- Points input -->
       <div class="sm-section" style="padding-top:12px;">
-        <span class="sm-section-label">Selling Points</span>
+        <span class="sm-section-label">Selling <t t-esc="(tournament or player.tournament_id).get_point_unit().name if (tournament or (player and player.tournament_id)) else 'Points'"/></span>
         <div class="sm-points-wrap">
           <button class="sm-pts-btn" onclick="smAdjustPoints(-1)">&#8722;</button>
           <input type="number" id="sellPoints" value="0" min="0" />
@@ -729,7 +732,7 @@
                 <button type="button" class="sm-preset-btn"
                         t-att-data-val="pt_clean"
                         t-att-onclick="'smSetPoints(' + pt_clean + ', this)'">
-                  <t t-esc="pt_clean"/>
+                  <t t-esc="(tournament or player.tournament_id).format_points(int(pt_clean)) if (tournament or (player and player.tournament_id)) else pt_clean"/>
                 </button>
               </t>
             </t>
@@ -740,7 +743,7 @@
       <!-- Team details -->
       <div id="teamDetailsStrip" style="display:none;">
         <div class="sm-detail-item">
-          <div class="sm-detail-key">Remaining Pts</div>
+          <div class="sm-detail-key">Remaining <t t-esc="(tournament or player.tournament_id).get_point_unit().symbol if (tournament or (player and player.tournament_id)) else 'Pts'"/></div>
           <div class="sm-detail-val" id="smRemainingPts">&#8212;</div>
         </div>
         <div class="sm-detail-item">
@@ -783,7 +786,7 @@
         <div class="sm-sold-text">
           <div class="sm-sold-label">Sold To</div>
           <div class="sm-sold-team-name" id="smSoldTeamName"></div>
-          <div class="sm-sold-points">for <span id="smSoldPoints"></span> points</div>
+          <div class="sm-sold-points">for <span id="smSoldPoints"></span></div>
         </div>
       </div>
 
@@ -1160,15 +1163,16 @@
     var lbl = document.getElementById('smTeamNameLabel');
     lbl.textContent = team.team_name; lbl.style.display = 'block';
 
-    document.getElementById('smRemainingPts').textContent     = team.remaining_points;
+    var _fmt = window.fmtUnit || function(n){ return Number(n||0).toLocaleString(); };
+    document.getElementById('smRemainingPts').textContent     = _fmt(team.remaining_points);
     document.getElementById('smRemainingPlayers').textContent = team.remaining_players;
-    document.getElementById('smMaxCall').textContent          = team.max_call;
+    document.getElementById('smMaxCall').textContent          = _fmt(team.max_call);
     document.getElementById('teamDetailsStrip').style.display = 'flex';
 
     var sug = document.getElementById('sellSuggestion');
     sug.innerHTML = team.remaining_players > 1
-      ? '\u2139 Max bid <strong>' + team.max_call + ' pts</strong> &#160;|&#160; Base for remaining: <strong>' + team.effective_base_point + ' pts</strong>'
-      : '\u2139 Last player slot! Max bid: <strong>' + team.max_call + ' pts</strong>';
+      ? '\u2139 Max bid <strong>' + _fmt(team.max_call) + '</strong> &#160;|&#160; Base for remaining: <strong>' + _fmt(team.effective_base_point) + '</strong>'
+      : '\u2139 Last player slot! Max bid: <strong>' + _fmt(team.max_call) + '</strong>';
     sug.style.display = 'block';
 
     var input = document.getElementById('sellPoints');
@@ -1220,7 +1224,7 @@
   window.smSubmitSell = function() {
     if (!smSelectedTeam || !smPlayerId) return;
     var finalPoint = parseInt(document.getElementById('sellPoints').value);
-    if (isNaN(finalPoint) || finalPoint <= 0) { smShowError('Please enter a valid points value.'); return; }
+    if (isNaN(finalPoint) || finalPoint <= 0) { smShowError('Please enter a valid ' + ((window.pointUnitName && window.pointUnitName()) || 'points') + ' value.'); return; }
 
     var btn = document.getElementById('smBtnSell');
     btn.disabled = true; btn.textContent = 'Selling\u2026';
@@ -1295,7 +1299,9 @@
     }
     document.getElementById('smSoldTeamLogo').src  = '/web/image/auction.team/' + result.team_id + '/logo';
     document.getElementById('smSoldTeamName').textContent = result.team_name;
-    document.getElementById('smSoldPoints').textContent   = result.final_point;
+    document.getElementById('smSoldPoints').textContent   = window.fmtUnit
+      ? window.fmtUnit(result.final_point)
+      : (result.final_point + ' points');
 
     // Re-trigger stamp animation by cloning the stamp element
     var oldStamp = document.querySelector('.sm-sold-stamp');

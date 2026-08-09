@@ -1012,6 +1012,35 @@
 .pk2-btn-edit { background: #ede9fe; color: #7c3aed; }
 .pk2-btn-edit:hover { background: #ddd6fe; }
 
+/* Swap-Player button */
+.pk2-btn-swap { background: #ecfdf5; color: #059669; }
+.pk2-btn-swap:hover { background: #d1fae5; }
+
+/* Move-Player button */
+.pk2-btn-move { background: #ffedd5; color: #ea580c; }
+.pk2-btn-move:hover { background: #fed7aa; }
+
+/* Signed players: icon-only action buttons */
+.o_signed_players_kanban .pk2-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 8px 10px;
+}
+.o_signed_players_kanban .pk2-btn {
+  flex: 0 0 auto;
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  padding: 0;
+  gap: 0;
+}
+.o_signed_players_kanban .pk2-btn i {
+  font-size: .82rem;
+  margin: 0;
+}
+
 /* Sold-for stat chip overrides */
 .pk2-stat-sold { border-width: 1.5px; }
 .pk2-pts-val { font-size: .9rem; font-weight: 800; }

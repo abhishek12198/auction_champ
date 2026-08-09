@@ -77,6 +77,10 @@ class ViewTeamDetails(models.TransientModel):
         spent     = auction.total_point - auction.remaining_points
         recruited = auction.max_players - auction.remaining_players_count
 
+        unit_name = auction.tournament_id.get_point_unit().name if auction.tournament_id else 'Points'
+        fmt = (auction.tournament_id.format_points
+               if auction.tournament_id else (lambda n: '{:,}'.format(int(n or 0))))
+
         # ── Masthead ──────────────────────────────────────────────────────
         logo_html = ''
         if auction.team_id.logo:
@@ -115,7 +119,7 @@ class ViewTeamDetails(models.TransientModel):
         <div style="font-size:8px;color:{muted};text-transform:uppercase;
                     letter-spacing:1px;">Total Budget</div>
         <div style="font-size:16px;font-weight:bold;color:{navy};">
-          {auction.total_point}
+          {fmt(auction.total_point)}
         </div>
       </td>
       <td style="padding:8px 12px;border-right:1px solid {border};
@@ -123,7 +127,7 @@ class ViewTeamDetails(models.TransientModel):
         <div style="font-size:8px;color:{muted};text-transform:uppercase;
                     letter-spacing:1px;">Spent</div>
         <div style="font-size:16px;font-weight:bold;color:#C0392B;">
-          {spent}
+          {fmt(spent)}
         </div>
       </td>
       <td style="padding:8px 12px;border-right:1px solid {border};
@@ -131,7 +135,7 @@ class ViewTeamDetails(models.TransientModel):
         <div style="font-size:8px;color:{muted};text-transform:uppercase;
                     letter-spacing:1px;">Remaining</div>
         <div style="font-size:16px;font-weight:bold;color:#27AE60;">
-          {auction.remaining_points}
+          {fmt(auction.remaining_points)}
         </div>
       </td>
       <td style="padding:8px 12px;border-right:1px solid {border};
@@ -146,7 +150,7 @@ class ViewTeamDetails(models.TransientModel):
         <div style="font-size:8px;color:{muted};text-transform:uppercase;
                     letter-spacing:1px;">Max Next Bid</div>
         <div style="font-size:16px;font-weight:bold;color:{gold};">
-          {auction.max_call}
+          {fmt(auction.max_call)}
         </div>
       </td>
     </tr>
@@ -169,7 +173,7 @@ class ViewTeamDetails(models.TransientModel):
         <th style="color:#FFFFFF;padding:8px;font-size:10px;text-transform:uppercase;
                    letter-spacing:1px;border:1px solid {navy};text-align:left;">Mobile</th>
         <th style="color:#FFFFFF;padding:8px;font-size:10px;text-transform:uppercase;
-                   letter-spacing:1px;border:1px solid {navy};text-align:center;">Points</th>
+                   letter-spacing:1px;border:1px solid {navy};text-align:center;">{unit_name}</th>
       </tr>
     </thead>
     <tbody>
@@ -197,7 +201,7 @@ class ViewTeamDetails(models.TransientModel):
         <td style="padding:7px 8px;border:1px solid {border};font-size:11px;
                    color:#3A4A5E;">{p.contact or '&#8212;'}</td>
         <td style="padding:7px 8px;border:1px solid {border};text-align:center;
-                   font-size:13px;font-weight:bold;color:{navy};">{p.points}</td>
+                   font-size:13px;font-weight:bold;color:{navy};">{fmt(p.points)}</td>
       </tr>
 """
             html += "    </tbody>\n  </table>\n"
@@ -220,11 +224,11 @@ class ViewTeamDetails(models.TransientModel):
                 auction, on_stage if on_stage else None
             )
             hint = (f"Max bid for next player: "
-                    f"<strong>{tier_aware_max_call}</strong> pts "
+                    f"<strong>{fmt(tier_aware_max_call)}</strong> "
                     f"&nbsp;|&nbsp; "
                     f"Remaining {auction.remaining_players_count - 1} slot(s) "
                     f"fillable at base: "
-                    f"<strong>{auction.base_point}</strong> pts each")
+                    f"<strong>{fmt(auction.base_point)}</strong> each")
             html += f"""
   <div style="padding:8px 14px;background-color:#F0F6FF;
               border-top:2px solid {gold};font-size:11px;color:#3A4A5E;">
@@ -245,14 +249,16 @@ class ViewTeamDetails(models.TransientModel):
         )
         remaining_players = auction.remaining_players_count - 1
         base_point = auction.base_point
+        fmt = (auction.tournament_id.format_points
+               if auction.tournament_id else (lambda n: '{:,}'.format(int(n or 0))))
         if auction.remaining_players_count > 1:
             suggestion_html = f"""
-                            <strong><p style="color: blue; text-align: right;">One player can go maximum points upto {tier_aware_max_call}</p></strong>
-                            <strong><p style="color: blue; text-align: right;">Remaining {remaining_players} player(s) can be bid for base points {base_point}</p></strong>
+                            <strong><p style="color: blue; text-align: right;">One player can go maximum up to {fmt(tier_aware_max_call)}</p></strong>
+                            <strong><p style="color: blue; text-align: right;">Remaining {remaining_players} player(s) can be bid for base {fmt(base_point)}</p></strong>
                         """
         else:
             suggestion_html = f"""
-                            <strong><p style="color: blue; text-align: right;">This player can go maximum points upto {tier_aware_max_call}</p></strong>
+                            <strong><p style="color: blue; text-align: right;">This player can go maximum up to {fmt(tier_aware_max_call)}</p></strong>
                         """
         return suggestion_html
 

@@ -88,7 +88,45 @@ class Auction(models.Model):
         sanitize=False,
         help='Compact tier-wise base bid chips for the auction kanban card.',
     )
+    point_unit_name = fields.Char(
+        string='Value Unit',
+        compute='_compute_point_unit_displays',
+    )
+    total_point_display = fields.Char(
+        string='Total Purse (display)',
+        compute='_compute_point_unit_displays',
+    )
+    remaining_points_display = fields.Char(
+        string='Remaining Budget (display)',
+        compute='_compute_point_unit_displays',
+    )
+    max_call_display = fields.Char(
+        string='Max Call (display)',
+        compute='_compute_point_unit_displays',
+    )
 
+    @api.depends(
+        'total_point', 'remaining_points', 'max_call',
+        'tournament_id', 'tournament_id.point_unit_id',
+        'tournament_id.point_unit_id.symbol',
+        'tournament_id.point_unit_id.position',
+        'tournament_id.point_unit_id.with_space',
+        'tournament_id.point_unit_id.name',
+    )
+    def _compute_point_unit_displays(self):
+        for record in self:
+            t = record.tournament_id
+            if t:
+                unit = t.get_point_unit()
+                record.point_unit_name = unit.name if unit else 'Points'
+                record.total_point_display = t.format_points(record.total_point or 0)
+                record.remaining_points_display = t.format_points(record.remaining_points or 0)
+                record.max_call_display = t.format_points(record.max_call or 0)
+            else:
+                record.point_unit_name = 'Points'
+                record.total_point_display = '{:,}'.format(int(record.total_point or 0))
+                record.remaining_points_display = '{:,}'.format(int(record.remaining_points or 0))
+                record.max_call_display = '{:,}'.format(int(record.max_call or 0))
 
     @api.depends('player_ids', 'player_ids.points', 'total_point')
     def _calculate_remaining_points(self):
@@ -299,13 +337,42 @@ class AuctionPlayer(models.Model):
     role       = fields.Char(related='player_id.role',         string='Role')
     tier_id    = fields.Many2one(related='player_id.tier_id',  string='Tier', comodel_name='auction.player.tier')
     icon_player = fields.Boolean(related='player_id.icon_player',   string='Key Player')
-    points = fields.Integer(string='Sold For (pts)')
+    points = fields.Integer(string='Sold For')
     # Fields used by the signed-players kanban card
     tier_color = fields.Char(string='Tier Color', compute='_compute_tier_color')
+    points_display = fields.Char(
+        string='Sold For (display)',
+        compute='_compute_points_display',
+    )
+    point_unit_name = fields.Char(
+        string='Value Unit',
+        compute='_compute_points_display',
+    )
 
     def _compute_tier_color(self):
         for rec in self:
             rec.tier_color = rec.player_id.tier_id.color or '#3498db'
+
+    @api.depends(
+        'points',
+        'auction_id',
+        'auction_id.tournament_id',
+        'auction_id.tournament_id.point_unit_id',
+        'auction_id.tournament_id.point_unit_id.symbol',
+        'auction_id.tournament_id.point_unit_id.position',
+        'auction_id.tournament_id.point_unit_id.with_space',
+        'auction_id.tournament_id.point_unit_id.name',
+    )
+    def _compute_points_display(self):
+        for rec in self:
+            tournament = rec.auction_id.tournament_id if rec.auction_id else False
+            if tournament:
+                rec.points_display = tournament.format_points(rec.points or 0)
+                unit = tournament.get_point_unit()
+                rec.point_unit_name = unit.name if unit else 'Points'
+            else:
+                rec.points_display = '{:,}'.format(int(rec.points or 0))
+                rec.point_unit_name = 'Points'
 
     def action_recall_to_auction(self):
         context = self.env.context.copy()

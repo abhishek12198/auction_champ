@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_auction_swap_player_form" model="ir.ui.view">
+            <field name="name">auction.swap.player.form</field>
+            <field name="model">auction.swap.player</field>
+            <field name="arch" type="xml">
+                <form string="Swap Player" class="ac-swap-wizard">
+                    <field name="source_line_id" invisible="1"/>
+                    <field name="source_player_id" invisible="1"/>
+                    <field name="source_team_id" invisible="1"/>
+                    <field name="source_auction_id" invisible="1"/>
+                    <field name="source_points" invisible="1"/>
+                    <field name="tournament_id" invisible="1"/>
+                    <field name="tournament_type" invisible="1"/>
+                    <field name="point_unit_label" invisible="1"/>
+                    <field name="target_team_id" invisible="1"/>
+                    <field name="target_auction_id" invisible="1"/>
+                    <field name="target_line_id" invisible="1"/>
+                    <field name="target_player_id" invisible="1"/>
+                    <field name="target_points" invisible="1"/>
+                    <field name="has_target_player" invisible="1"/>
+
+                    <field name="source_card_html" nolabel="1" readonly="1"/>
+                    <field name="board_json" widget="swap_player_board" nolabel="1"/>
+
+                    <group class="ac-swap-points-grid" col="2">
+                        <group string="Value after swap — source player → target team">
+                            <field name="source_swap_points" string="New value"/>
+                            <field name="point_unit_label" string="Unit" readonly="1"/>
+                        </group>
+                        <group string="Value after swap — selected player → current team">
+                            <field name="target_swap_points" string="New value"/>
+                            <label for="target_player_id" string="Bringing in"/>
+                            <div>
+                                <field name="target_player_id" readonly="1" class="oe_inline"
+                                         nolabel="1" options="{'no_open': True}"/>
+                            </div>
+                        </group>
+                    </group>
+
+                    <field name="summary_html" nolabel="1" readonly="1"/>
+
+                    <footer>
+                        <button name="action_confirm_swap"
+                                type="object"
+                                string="Confirm Swap"
+                                class="btn-primary"
+                                confirm="Swap these two players between teams with the points shown? This cannot be undone automatically."/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_swap_player" model="ir.actions.act_window">
+            <field name="name">Swap Player</field>
+            <field name="res_model">auction.swap.player</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'dialog_size': 'extra-large'}</field>
+        </record>
+
+    </data>
+</odoo>

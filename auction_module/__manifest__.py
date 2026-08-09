@@ -38,7 +38,7 @@
 
 {
     'name' : 'Auction Champ',
-    'version' : '1.5.416',
+    'version' : '1.5.435',
     'summary': 'Sports Auction module',
     'sequence': 10,
     'icon': '/auction_module/static/description/icon.png',
@@ -60,6 +60,9 @@
         'data/sync_user_tournaments.xml',
         'data/report_paper_format_landscape.xml',
         'data/football_data.xml',
+        'data/point_unit_data.xml',
+        'views/auction_point_unit_view.xml',
+        'views/point_unit_assets.xml',
         'views/auction_tournament_view.xml',
         'views/auction_player_tier_view.xml',
         'views/auction_player_attributes_view.xml',
@@ -114,6 +117,8 @@
         'report/auction_report.xml',
         'views/auction_team_view.xml',
         'wizard/edit_player_points_view.xml',
+        'wizard/action_swap_player_view.xml',
+        'wizard/action_move_player_view.xml',
         'views/auction_player_card_print.xml',
         'wizard/action_view_team_details_view.xml',
         'views/auction_auction_view.xml',
@@ -141,6 +146,7 @@
     ],
     'assets': {
             'web.assets_backend': [
+                    '/auction_module/static/src/js/point_unit.js',
                     '/auction_module/static/src/lib/chart.umd.min.js',
                     '/auction_module/static/src/js/auction_dashboard.js',
                     '/auction_module/static/src/css/auction_dashboard.css',
@@ -175,6 +181,10 @@
                     '/auction_module/static/src/css/selection_badge.css',
                     '/auction_module/static/src/js/selection_card_widget.js',
                     '/auction_module/static/src/css/selection_card.css',
+                    '/auction_module/static/src/js/swap_player_widget.js',
+                    '/auction_module/static/src/css/swap_player.css',
+                    '/auction_module/static/src/js/move_player_widget.js',
+                    '/auction_module/static/src/css/move_player.css',
                     '/auction_module/static/src/js/date_tags_widget.js',
                     '/auction_module/static/src/css/date_tags.css',
                     '/auction_module/static/src/js/color_picker_widget.js',
@@ -189,6 +199,7 @@
             ],
             'web.assets_frontend': [
                 '/auction_module/static/src/lib/html2canvas.min.js',
+                '/auction_module/static/src/js/point_unit.js',
                 '/auction_module/static/src/css/auction_live_queue.css',
                 '/auction_module/static/src/css/player_registration.css',
                 '/auction_module/static/src/css/tournament_registration.css',

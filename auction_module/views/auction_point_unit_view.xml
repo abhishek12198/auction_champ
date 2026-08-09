@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_auction_point_unit_tree" model="ir.ui.view">
+        <field name="name">auction.point.unit.tree</field>
+        <field name="model">auction.point.unit</field>
+        <field name="arch" type="xml">
+            <tree string="Player Value Units">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="symbol"/>
+                <field name="report_symbol"/>
+                <field name="position"/>
+                <field name="with_space"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_auction_point_unit_form" model="ir.ui.view">
+        <field name="name">auction.point.unit.form</field>
+        <field name="model">auction.point.unit</field>
+        <field name="arch" type="xml">
+            <form string="Player Value Unit">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" placeholder="e.g. Points, Rupees"/>
+                            <field name="symbol" placeholder="e.g. PTS, ₹, $, Rs"/>
+                            <field name="report_symbol"
+                                      placeholder="optional override, e.g. Rs."
+                                      help="Leave empty to print the real symbol (₹ works via embedded DejaVu font). Set only if you want a different PDF text."/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="position"/>
+                            <field name="with_space"/>
+                            <field name="sequence"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info" role="alert">
+                        Example: symbol <strong>PTS</strong> with position <strong>After</strong>
+                        shows <em>1000 PTS</em>. Symbol <strong>₹</strong> with position
+                        <strong>Before</strong> and space off shows <em>₹1000</em> on screen.
+                        In PDF reports the real symbol (including ₹) is printed using an
+                        embedded Unicode font. Set <strong>PDF / Report Symbol</strong>
+                        only if you want a different printed text.
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_auction_point_unit" model="ir.actions.act_window">
+        <field name="name">Player Value Units</field>
+        <field name="res_model">auction.point.unit</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a unit (PTS, ₹, $, etc.) for player values.
+            </p>
+            <p>
+                Assign a unit on each tournament. The symbol position controls whether
+                it appears before or after the numeric value on live boards, consoles,
+                and reports.
+            </p>
+        </field>
+    </record>
+</odoo>

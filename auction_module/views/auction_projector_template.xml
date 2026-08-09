@@ -1193,6 +1193,9 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   window.PJ_BOARD_CLOSE_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/boards/close';
   window.PJ_BOARD_SHOW_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/boards/show';
 </script>
+<t t-call="auction_module.point_unit_bootstrap">
+  <t t-set="pu_tournament" t-value="tournament"/>
+</t>
 
 <div id="pj-root">
 
@@ -1480,8 +1483,8 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         <div class="pj-stats" id="pjStats"></div>
         <div class="pj-base" id="pjBase" style="display:none">
           <span class="pj-base-label">Base Price</span>
-          <span class="pj-base-val" id="pjBaseVal">0</span>
-          <span class="pj-base-unit">PTS</span>
+          <span class="pj-base-val" id="pjBaseVal"><t t-esc="tournament.format_points(0) if tournament else '0'"/></span>
+          <span class="pj-base-unit" id="pjBaseUnit" style="display:none;"/>
         </div>
         <div class="pj-sold-deal" id="pjSoldDeal" style="display:none">
           <img class="pj-sold-deal__logo" id="pjSoldDealLogo" src="" alt=""/>
@@ -1508,7 +1511,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
           <div class="pj-purse-ico">&#129689;</div>
           <div>
             <div class="pj-purse-lbl">Top Purse</div>
-            <div class="pj-purse-val" id="pjPurseVal">0 PTS</div>
+            <div class="pj-purse-val" id="pjPurseVal"><t t-esc="tournament.format_points(0) if tournament else '0 PTS'"/></div>
             <div class="pj-purse-team" id="pjPurseTeam"></div>
           </div>
         </div>
@@ -1977,7 +1980,8 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       var teamLogo = b.team_logo_url || '/auction_module/static/img/default_icon.png';
       var ptsNum = Number(b.points || 0);
       var pts = ptsNum
-        ? (ptsNum.toLocaleString() + '<span class="pj-bid-pts-unit">PTS</span>')
+        ? (window.fmtUnitHtml ? window.fmtUnitHtml(ptsNum, 'pj-bid-pts-unit')
+            : (ptsNum.toLocaleString() + '<span class="pj-bid-pts-unit">PTS</span>'))
         : '<span class="pj-bid-pts-unit">—</span>';
       html +=
         '<div class="pj-bid-row">' +
@@ -1999,8 +2003,10 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     var val = document.getElementById('pjPurseVal');
     var team = document.getElementById('pjPurseTeam');
     if (!val) return;
-    if (!purse) { val.textContent = '0 PTS'; if (team) team.textContent = ''; return; }
-    val.textContent = Number(purse.amount || 0).toLocaleString() + ' PTS';
+    if (!purse) { val.textContent = (window.fmtUnit ? window.fmtUnit(0) : '0 PTS'); if (team) team.textContent = ''; return; }
+    val.textContent = window.fmtUnit
+      ? window.fmtUnit(purse.amount || 0)
+      : (Number(purse.amount || 0).toLocaleString() + ' PTS');
     if (team) team.textContent = purse.team_name || '';
   }
 
@@ -2290,8 +2296,10 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       }
       if (ptsEl) {
         if (player && player.sold_points) {
-          ptsEl.innerHTML = Number(player.sold_points).toLocaleString() +
-            '<span class="pj-sold-deal__pts-unit">PTS</span>';
+          ptsEl.innerHTML = window.fmtUnitHtml
+            ? window.fmtUnitHtml(player.sold_points, 'pj-sold-deal__pts-unit')
+            : (Number(player.sold_points).toLocaleString() +
+              '<span class="pj-sold-deal__pts-unit">PTS</span>');
           ptsEl.style.display = 'block';
         } else {
           ptsEl.textContent = '';
@@ -2304,7 +2312,20 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       soldDeal.style.display = 'inline-flex';
     }
     if (p.base_price) {
-      document.getElementById('pjBaseVal').textContent = Number(p.base_price).toLocaleString();
+      var baseVal = document.getElementById('pjBaseVal');
+      var baseUnit = document.getElementById('pjBaseUnit');
+      if (baseVal) {
+        if (window.fmtUnit) {
+          baseVal.textContent = window.fmtUnit(p.base_price);
+          if (baseUnit) baseUnit.style.display = 'none';
+        } else {
+          baseVal.textContent = Number(p.base_price).toLocaleString();
+          if (baseUnit) {
+            baseUnit.textContent = (window.pointUnitSymbol && window.pointUnitSymbol()) || 'PTS';
+            baseUnit.style.display = '';
+          }
+        }
+      }
       if (baseEl) baseEl.style.display = 'inline-flex';
     } else if (baseEl) {
       baseEl.style.display = 'none';
@@ -2363,7 +2384,9 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       }
       if (ptsEl) {
         if (player && player.sold_points) {
-          ptsEl.textContent = 'for ' + Number(player.sold_points).toLocaleString() + ' pts';
+          ptsEl.textContent = 'for ' + (window.fmtUnit
+            ? window.fmtUnit(player.sold_points)
+            : (Number(player.sold_points).toLocaleString() + ' pts'));
           ptsEl.style.display = 'block';
         } else {
           ptsEl.textContent = '';
@@ -2428,7 +2451,9 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       }
       if (ptsEl) {
         if (isSold && player && player.sold_points) {
-          ptsEl.textContent = Number(player.sold_points).toLocaleString() + ' PTS';
+          ptsEl.textContent = window.fmtUnit
+            ? window.fmtUnit(player.sold_points)
+            : (Number(player.sold_points).toLocaleString() + ' PTS');
           ptsEl.style.display = '';
         } else {
           ptsEl.textContent = '';
@@ -3431,8 +3456,11 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
           if (p.is_icon) {
             pts = '<div class="pj-sq-icon-tag">Icon</div>';
           } else if (p.points != null && Number(p.points) > 0) {
-            pts = '<div class="pj-sq-pts">' + escHtml(fmtNum(p.points)) +
-              '<span class="pj-sq-pts-unit">PTS</span></div>';
+            pts = '<div class="pj-sq-pts">' +
+              (window.fmtUnitHtml
+                ? window.fmtUnitHtml(p.points, 'pj-sq-pts-unit')
+                : (escHtml(fmtNum(p.points)) + '<span class="pj-sq-pts-unit">PTS</span>')) +
+              '</div>';
           }
           html += '<div class="pj-sq-player">' + photo +
             '<div class="pj-sq-pname" title="' + escHtml(p.name || '—') + '">' + escHtml(p.name || '—') + '</div>' +

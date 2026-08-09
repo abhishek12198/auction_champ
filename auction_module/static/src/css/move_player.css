@@ -1,0 +1,17 @@
+/* Move Player wizard — extends shared swap-board look */
+
+.ac-move-wizard .ac-move-board {
+  margin: 4px 0 12px;
+}
+
+.ac-move-team-chip.is-selected {
+  border-color: #ea580c;
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, .16);
+  background: #fff7ed;
+}
+
+.o_field_move_player_board.o_field_swap_player_board_loading,
+.o_field_move_player_board.o_field_swap_player_board_loading .ac-move-board {
+  opacity: .55;
+  pointer-events: none;
+}

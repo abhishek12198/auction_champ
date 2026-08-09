@@ -1411,6 +1411,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     return '/web/image/' + model + '/' + id + '/' + field;
   };
 </script>
+<t t-call="auction_module.point_unit_bootstrap">
+  <t t-set="pu_tournament" t-value="tournament"/>
+</t>
+
 
 <!-- ── HEADER ──────────────────────────────────────────────── -->
 <header class="mq-header">
@@ -1694,7 +1698,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
       <!-- Points input -->
       <div class="sm-section" style="padding-top:12px;">
-        <span class="sm-section-label">Selling Points</span>
+        <span class="sm-section-label">Selling <t t-esc="tournament.get_point_unit().name if tournament else 'Points'"/></span>
         <div class="sm-points-wrap">
           <button class="sm-pts-btn" onclick="smAdjustPoints(-1)">&#8722;</button>
           <input type="number" id="sellPoints" value="0" min="0"/>
@@ -1706,7 +1710,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       <!-- Team details strip -->
       <div id="teamDetailsStrip">
         <div class="sm-detail-item">
-          <div class="sm-detail-key">Remaining Pts</div>
+          <div class="sm-detail-key">Remaining <t t-esc="tournament.get_point_unit().symbol if tournament else 'Pts'"/></div>
           <div class="sm-detail-val" id="smRemainingPts">&#8212;</div>
         </div>
         <div class="sm-detail-item">
@@ -1743,7 +1747,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         <div class="sm-sold-text">
           <div class="sm-sold-label">Sold To</div>
           <div class="sm-sold-team-name" id="smSoldTeamName"></div>
-          <div class="sm-sold-points">for <span id="smSoldPointsEl"></span> points</div>
+          <div class="sm-sold-points">for <span id="smSoldPointsEl"></span></div>
         </div>
       </div>
       <div class="sm-countdown-wrap" id="smCountdownWrap">
@@ -2135,7 +2139,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
             '<div class="mq-ticker-item">' +
             '<span class="mq-ticker-team">' + escHtml(teamName) + '</span>' +
             '<span class="mq-ticker-dot"></span>' +
-            '<span class="mq-ticker-purse">&#x1F4B0; ' + t.remaining_points + ' pts</span>' +
+            '<span class="mq-ticker-purse">&#x1F4B0; ' + (window.fmtUnit ? window.fmtUnit(t.remaining_points) : (t.remaining_points + ' pts')) + '</span>' +
             '<span class="mq-ticker-max">Max: ' + t.max_call + '</span>' +
             '</div>';
         });
@@ -2349,7 +2353,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         ? '<img class="sb-logo" src="data:image/png;base64,' + p.team_logo + '" alt=""/>'
         : '';
       var ptsHtml = p.sold_points
-        ? '<span class="sb-pts">' + p.sold_points + ' pts</span>'
+        ? '<span class="sb-pts">' + (window.fmtUnit ? window.fmtUnit(p.sold_points) : (p.sold_points + ' pts')) + '</span>'
         : '';
       stateBanner =
         '<div class="pc-state-banner sold" id="pcSoldBanner" onclick="togglePtsEdit()">' +
@@ -2359,7 +2363,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
             '<div class="sb-team">' + escHtml(p.team_name || '—') + '</div>' +
             ptsHtml +
           '</div>' +
-          '<span class="sb-edit-hint">✎ edit pts</span>' +
+          '<span class="sb-edit-hint">✎ edit ' + ((window.pointUnitSymbol && window.pointUnitSymbol()) || 'pts') + '</span>' +
         '</div>' +
         '<div class="pc-pts-edit" id="pcPtsEdit">' +
           '<div class="pc-pts-edit-title">✎ Modify Sale</div>' +
@@ -2368,7 +2372,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
             '<div class="pc-edit-teams" id="pcEditTeams"><span style="opacity:.5;font-size:.8rem">Loading teams…</span></div>' +
           '</div>' +
           '<div>' +
-            '<div class="pc-pts-edit-section">Points</div>' +
+            '<div class="pc-pts-edit-section">' + ((window.pointUnitName && window.pointUnitName()) || 'Points') + '</div>' +
             '<div class="pc-pts-edit-row">' +
               '<button class="pc-pts-adj-btn" onclick="editAdjustPoints(-1)">&#8722;</button>' +
               '<input type="number" id="pcPtsInput" value="' + (p.sold_points || 0) + '" min="0" step="1"/>' +
@@ -2422,7 +2426,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       baseHtml =
         '<div class="pc-base">' +
           '<span class="pc-base-label">Base Price</span>' +
-          '<span class="pc-base-val">' + Number(p.base_price).toLocaleString() + ' PTS</span>' +
+          '<span class="pc-base-val">' + (window.fmtUnit ? window.fmtUnit(p.base_price) : (Number(p.base_price).toLocaleString() + ' PTS')) + '</span>' +
         '</div>';
     }
 
@@ -2546,7 +2550,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           var ptsEl   = document.querySelector('#pcSoldBanner .sb-pts');
           var teamEl  = document.querySelector('#pcSoldBanner .sb-team');
           var logoEl  = document.querySelector('#pcSoldBanner .sb-logo');
-          if (ptsEl)  ptsEl.textContent  = d.new_points + ' pts';
+          if (ptsEl)  ptsEl.textContent  = (window.fmtUnit ? window.fmtUnit(d.new_points) : (d.new_points + ' pts'));
           if (teamEl) teamEl.textContent = d.new_team_name || '';
           if (logoEl && d.new_team_logo) logoEl.src = 'data:image/png;base64,' + d.new_team_logo;
           var panel = document.getElementById('pcPtsEdit');
@@ -2755,15 +2759,16 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     var lbl = document.getElementById('smTeamNameLabel');
     lbl.textContent = team.team_name; lbl.style.display = 'block';
 
-    document.getElementById('smRemainingPts').textContent     = team.remaining_points;
+    var _fmt = window.fmtUnit || function(n){ return Number(n||0).toLocaleString(); };
+    document.getElementById('smRemainingPts').textContent     = _fmt(team.remaining_points);
     document.getElementById('smRemainingPlayers').textContent = team.remaining_players;
-    document.getElementById('smMaxCall').textContent          = team.max_call;
+    document.getElementById('smMaxCall').textContent          = _fmt(team.max_call);
     document.getElementById('teamDetailsStrip').style.display = 'flex';
 
     var sug = document.getElementById('sellSuggestion');
     sug.innerHTML = team.remaining_players > 1
-      ? '\u2139 Max bid <strong>' + team.max_call + ' pts</strong> &#160;|&#160; Base: <strong>' + team.effective_base_point + ' pts</strong>'
-      : '\u2139 Last player slot! Max bid: <strong>' + team.max_call + ' pts</strong>';
+      ? '\u2139 Max bid <strong>' + (window.fmtUnit ? window.fmtUnit(team.max_call) : (team.max_call + ' pts')) + '</strong> &#160;|&#160; Base: <strong>' + (window.fmtUnit ? window.fmtUnit(team.effective_base_point) : (team.effective_base_point + ' pts')) + '</strong>'
+      : '\u2139 Last player slot! Max bid: <strong>' + (window.fmtUnit ? window.fmtUnit(team.max_call) : (team.max_call + ' pts')) + '</strong>';
     sug.style.display = 'block';
 
     var inp = document.getElementById('sellPoints');
@@ -2795,7 +2800,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     }
     presets.forEach(function(val) {
       var btn = document.createElement('button');
-      btn.className = 'sm-preset-btn'; btn.textContent = val; btn.type = 'button';
+      btn.className = 'sm-preset-btn';
+      btn.textContent = (window.fmtUnit ? window.fmtUnit(val) : val);
+      btn.type = 'button';
+      btn.setAttribute('data-val', val);
       btn.onclick = function() {
         document.getElementById('sellPoints').value = val;
         document.querySelectorAll('.sm-preset-btn').forEach(function(b) { b.classList.remove('sm-preset-active'); });
@@ -2826,7 +2834,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     var finalPts = parseInt(document.getElementById('sellPoints').value);
     if (isNaN(finalPts) || finalPts <= 0) {
       var errEl = document.getElementById('sellError');
-      errEl.textContent = 'Please enter a valid points value.';
+      errEl.textContent = 'Please enter a valid ' + ((window.pointUnitName && window.pointUnitName()) || 'points') + ' value.';
       errEl.style.display = 'block'; return;
     }
     var btn = document.getElementById('smBtnSell');
@@ -2870,7 +2878,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     }
     document.getElementById('smSoldTeamLogo').src       = window.AUCTION_IMG_URL('auction.team', data.team_id, 'logo');
     document.getElementById('smSoldTeamName').textContent = data.team_name;
-    document.getElementById('smSoldPointsEl').textContent = data.final_point;
+    document.getElementById('smSoldPointsEl').textContent = window.fmtUnit
+      ? window.fmtUnit(data.final_point)
+      : (data.final_point + ' points');
 
     /* Re-trigger stamp animation */
     var oldStamp = document.querySelector('.sm-sold-stamp');
@@ -3815,7 +3825,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         var dotStyle = p.tier_color ? ' style="background:' + escHtml(p.tier_color) + '"' : '';
         var badge = '';
         if (p.state === 'sold') {
-          badge = '<span class="sq-badge sold">SOLD' + (p.team_name ? ' · ' + escHtml(p.team_name) : '') + (p.sold_points ? ' · ' + p.sold_points + 'pts' : '') + '</span>';
+          badge = '<span class="sq-badge sold">SOLD' + (p.team_name ? ' · ' + escHtml(p.team_name) : '') + (p.sold_points ? ' · ' + (window.fmtUnit ? window.fmtUnit(p.sold_points) : (p.sold_points + 'pts')) : '') + '</span>';
         } else if (p.state === 'unsold') {
           badge = '<span class="sq-badge unsold">UNSOLD</span>';
         } else {

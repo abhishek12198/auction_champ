@@ -935,6 +935,11 @@
         }
       </style>
     </head>
+
+<t t-call="auction_module.point_unit_bootstrap">
+  <t t-set="pu_tournament" t-value="tournament"/>
+</t>
+
     <body>
       <header class="bs2-hdr">
         <div class="bs2-hdr-side bs2-left">
@@ -1003,8 +1008,8 @@
                     <td>
                       <div class="bs2-purse-stack">
                         <div class="bs2-purse-line">
-                          <span class="bs2-purse-value" t-attf-id="team-points-#{team.id}"><t t-esc="team.remaining_points"/></span>
-                          <span class="bs2-unit">pts</span>
+                          <span class="bs2-purse-value" t-attf-id="team-points-#{team.id}"><t t-esc="tournament.format_points(team.remaining_points) if tournament else team.remaining_points"/></span>
+                          <span class="bs2-unit" style="display:none;"></span>
                         </div>
                         <div class="bs2-progress">
                           <div data-role="purse-fill" t-attf-class="bs2-progress-fill #{purse_cls}" t-attf-style="width:#{purse_pct}%"></div>
@@ -1020,8 +1025,8 @@
                     </td>
                     <td>
                       <div class="bs2-maxcall">
-                        <span class="bs2-maxcall-value" t-attf-id="team-maxcall-#{team.id}"><t t-esc="team.max_call"/></span>
-                        <span class="bs2-unit">pts</span>
+                        <span class="bs2-maxcall-value" t-attf-id="team-maxcall-#{team.id}"><t t-esc="tournament.format_points(team.max_call) if tournament else team.max_call"/></span>
+                        <span class="bs2-unit" style="display:none;"></span>
                       </div>
                     </td>
                     <td>
@@ -1082,8 +1087,8 @@
                   <div class="bs2-card-purse">
                     <div class="bs2-overline">Purse Remaining</div>
                     <div class="bs2-card-purse-line">
-                      <span class="bs2-card-purse-value" t-attf-id="grid-team-points-#{team.id}"><t t-esc="team.remaining_points"/></span>
-                      <span class="bs2-unit">pts</span>
+                      <span class="bs2-card-purse-value" t-attf-id="grid-team-points-#{team.id}"><t t-esc="tournament.format_points(team.remaining_points) if tournament else team.remaining_points"/></span>
+                      <span class="bs2-unit" style="display:none;"></span>
                     </div>
                     <div class="bs2-progress bs2-progress-lg">
                       <div data-role="purse-fill" t-attf-class="bs2-progress-fill #{purse_cls}" t-attf-style="width:#{purse_pct}%"></div>
@@ -1098,7 +1103,7 @@
                     </div>
                     <div class="bs2-stat-col">
                       <div class="bs2-stat-label">Max Bid</div>
-                      <div class="bs2-stat-figure"><span t-attf-id="grid-team-maxcall-#{team.id}"><t t-esc="team.max_call"/></span><span class="bs2-unit"> pts</span></div>
+                      <div class="bs2-stat-figure"><span t-attf-id="grid-team-maxcall-#{team.id}"><t t-esc="tournament.format_points(team.max_call) if tournament else team.max_call"/></span><span class="bs2-unit" style="display:none;"></span></div>
                     </div>
                     <div class="bs2-stat-col">
                       <div class="bs2-stat-label">Squad</div>
@@ -1144,8 +1149,8 @@
               <!-- Purse bar -->
               <div class="bs2-mob-purse-row">
                 <div>
-                  <span class="bs2-mob-pts" t-attf-id="mob-team-points-#{team.id}"><t t-esc="team.remaining_points"/></span>
-                  <span class="bs2-mob-pts-unit"> pts</span>
+                  <span class="bs2-mob-pts" t-attf-id="mob-team-points-#{team.id}"><t t-esc="tournament.format_points(team.remaining_points) if tournament else team.remaining_points"/></span>
+                  <span class="bs2-mob-pts-unit" style="display:none;"></span>
                 </div>
                 <div class="bs2-mob-bar-wrap">
                   <div class="bs2-progress">
@@ -1163,7 +1168,7 @@
                 </div>
                 <div class="bs2-mob-stat">
                   <span class="bs2-mob-stat-lbl">Max Bid</span>
-                  <span class="bs2-mob-stat-val" t-attf-id="mob-team-maxcall-#{team.id}"><t t-esc="team.max_call"/></span>
+                  <span class="bs2-mob-stat-val" t-attf-id="mob-team-maxcall-#{team.id}"><t t-esc="tournament.format_points(team.max_call) if tournament else team.max_call"/></span>
                 </div>
                 <div class="bs2-mob-stat">
                   <span class="bs2-mob-stat-lbl">Squad</span>
@@ -1259,6 +1264,9 @@
           function updateValueById(id, value) {
             var element = document.getElementById(id);
             var nextText = String(value);
+              if (window.fmtUnit && /(points|maxcall)/i.test(id || '')) {
+                nextText = window.fmtUnit(value);
+              }
             if (!element) {
               return;
             }

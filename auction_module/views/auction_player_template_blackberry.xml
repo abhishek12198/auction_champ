@@ -661,6 +661,11 @@ body[data-theme="light"] .bb-footer-logo{filter:brightness(0) sepia(1) saturate(
   <t t-call="auction_module.player_mystery_critical_css"/>
 </head>
 
+<t t-call="auction_module.point_unit_bootstrap">
+  <t t-set="pu_tournament" t-value="tournament or (player.tournament_id if player else None)"/>
+</t>
+
+
 <body t-att-data-player-id="player.id" t-att-data-next-countdown="tournament.next_player_countdown if tournament else 5" t-att-data-is-mystery="'1' if player.tier_id and player.tier_id.mystery else '0'" t-att-data-tournament-id="tournament.id if tournament else ''" t-att-data-break-time="'1' if tournament and tournament.break_time_active else '0'">
 
   <!-- ── HEADER ────────────────────────────────────────────── -->
@@ -761,7 +766,7 @@ body[data-theme="light"] .bb-footer-logo{filter:brightness(0) sepia(1) saturate(
         <t t-if="player.effective_base_price">
           <div class="bb-base-badge">
             <span class="bb-base-badge-lbl">Base Price</span>
-            <span class="bb-base-badge-val"><t t-esc="'{:,}'.format(int(player.effective_base_price or 0))"/> pts</span>
+            <span class="bb-base-badge-val"><t t-esc="(tournament or player.tournament_id).format_points(player.effective_base_price or 0) if (tournament or (player and player.tournament_id)) else '{:,}'.format(int(player.effective_base_price or 0))"/></span>
           </div>
         </t>
       </div>
