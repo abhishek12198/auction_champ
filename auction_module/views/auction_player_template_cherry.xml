@@ -504,11 +504,20 @@
           .cr-header {
             grid-template-columns: 1fr auto;
             height: auto; padding: 12px 14px; gap: 10px;
+            align-items: center;
           }
           .cr-header-center {
-            grid-column: 1 / -1; order: 3; justify-content: center;
+            grid-column: 1 / -1; order: 3; justify-content: center; min-width: 0;
           }
-          .cr-tourn-name, .cr-tourn-desc { max-width: 90vw; white-space: normal; text-align: center; }
+          .cr-tourn-name, .cr-tourn-desc {
+            max-width: 90vw; white-space: normal; text-align: center;
+            overflow-wrap: anywhere; word-break: break-word;
+          }
+          .cr-tourn-name {
+            font-size: .92rem; line-height: 1.2;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+          }
+          .cr-brand-logo { height: 24px; max-width: 120px; }
           .cr-brand-sub { display: none; }
           .cr-arena { height: auto; overflow: visible; }
           .cr-stage { display: block; }

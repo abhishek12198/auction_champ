@@ -75,13 +75,6 @@
     font-size: .78rem; color: rgba(255,255,255,.72);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;
 }
-.pd-live-badge {
-    font-size: .72rem; color: #a5d6a7; text-transform: uppercase; letter-spacing: .07em;
-    background: rgba(102,187,106,.15); border: 1px solid rgba(102,187,106,.3);
-    padding: 3px 10px; border-radius: 10px; flex-shrink: 0;
-    animation: pd-pulse 2s ease infinite;
-}
-@keyframes pd-pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
 
 .pd-tourn-filter {
     display: flex;
@@ -301,9 +294,6 @@
     color: #0d1b3e;
 }
 
-.pd-light .pd-live-badge {
-    color: #1b7a34; background: rgba(27,122,52,.1); border-color: rgba(27,122,52,.3);
-}
 .pd-light .pd-theme-toggle, .pd-light .pd-refresh-btn {
     background: rgba(13,27,62,.08); border-color: rgba(13,27,62,.18); color: #0d1b3e;
 }
@@ -349,16 +339,62 @@
 .pd-light .pd-empty { color: rgba(13,27,62,.35); }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Mobile responsive
+   Mobile / small screens
    ═══════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
     .o_player_dashboard { padding: 10px; gap: 10px; }
 
-    .pd-hdr { height: auto; padding: 10px 12px; flex-wrap: wrap; gap: 8px; }
-    .pd-hdr-brand { width: 100%; }
-    .pd-hdr-logo-wrap { width: 44px; height: 44px; }
-    .pd-hdr-tour { font-size: 1.15rem; }
-    .pd-hdr-text { min-width: 120px; }
+    .pd-hdr {
+        height: auto;
+        padding: 10px 12px;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: flex-start;
+    }
+    .pd-hdr-brand {
+        flex: 1 1 100%;
+        width: 100%;
+        min-width: 0;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    .pd-hdr-logo-wrap {
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+        flex-shrink: 0;
+    }
+    .pd-hdr-logo-ph { font-size: 1.15rem; }
+    .pd-hdr-kicker { font-size: .58rem; letter-spacing: .06em; }
+    .pd-hdr-tour {
+        font-size: .95rem;
+        font-weight: 700;
+        letter-spacing: .01em;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+        line-height: 1.25;
+        word-break: break-word;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .pd-hdr-sub { font-size: .7rem; }
+    .pd-hdr-text { min-width: 0; flex: 1; }
+
+    .pd-tourn-filter {
+        flex: 1 1 100%;
+        max-width: none;
+        min-width: 0;
+        width: 100%;
+    }
+    .pd-theme-toggle,
+    .pd-refresh-btn,
+    .pd-tournament-settings {
+        font-size: .78rem;
+        padding: 4px 10px;
+    }
 
     /* Stat cards: 2 per row on mobile */
     .pd-stat-row { gap: 6px; }
@@ -380,4 +416,14 @@
     .pd-table th, .pd-table td { padding: 6px 7px; font-size: .78rem; }
     .pd-tbl-photo { width: 28px; height: 28px; }
     .pd-team-logo { width: 22px; height: 22px; }
+}
+
+@media (max-width: 420px) {
+    .pd-hdr-logo-wrap {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+    }
+    .pd-hdr-tour { font-size: .85rem; }
+    .pd-hdr-kicker { display: none; }
 }

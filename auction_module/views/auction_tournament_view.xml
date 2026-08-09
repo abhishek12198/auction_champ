@@ -162,49 +162,6 @@
                                     </span>
                                 </div>
                             </button>
-                            <!-- Open the public form in a new tab -->
-                            <button name="action_open_registration_link"
-                                    type="object"
-                                    class="oe_stat_button"
-                                    icon="fa-share-alt">
-                                <div class="o_stat_info">
-                                    <span class="o_stat_text">Preview Form</span>
-                                    <span class="o_stat_text text-muted" style="font-size:10px">Open in New Tab</span>
-                                </div>
-                            </button>
-                            <!-- Open Payment Tracker in a new tab -->
-                            <button name="action_open_payment_tracker"
-                                    type="object"
-                                    class="oe_stat_button"
-                                    icon="fa-money"
-                                    attrs="{'invisible': [('slug', '=', False)]}">
-                                <div class="o_stat_info">
-                                    <span class="o_stat_text">Payment Tracker</span>
-                                    <span class="o_stat_text text-muted" style="font-size:10px">Open Tracker</span>
-                                </div>
-                            </button>
-                            <!-- Open public Live Board (shareable with outsiders) -->
-                            <button name="action_open_live_board"
-                                    type="object"
-                                    class="oe_stat_button"
-                                    icon="fa-tv"
-                                    attrs="{'invisible': [('slug', '=', False)]}">
-                                <div class="o_stat_info">
-                                    <span class="o_stat_text">Live Board</span>
-                                    <span class="o_stat_text text-muted" style="font-size:10px">Share / Open</span>
-                                </div>
-                            </button>
-                            <!-- Open Pool & Fixture Generator for this tournament -->
-                            <button name="action_open_pool_generator"
-                                    type="object"
-                                    class="oe_stat_button"
-                                    icon="fa-sitemap"
-                                    groups="auction_module.group_auction_pool_generator">
-                                <div class="o_stat_info">
-                                    <span class="o_stat_text">Pools &amp; Fixtures</span>
-                                    <span class="o_stat_text text-muted" style="font-size:10px">Generate</span>
-                                </div>
-                            </button>
                             <!-- Remove duplicate players -->
                             <!-- Clear On-Stage Players -->
                             <button name="action_clear_stage"
@@ -540,28 +497,21 @@
                                     </group>
                                 </div>
 
-                                <!-- ── Player Self-Registration ── -->
+                                <!-- ── Player Self-Registration (settings) ── -->
                                 <div class="o_at_presentation_section">
                                     <separator string="Player Self-Registration"/>
                                     <group col="2">
-                                        <group string="Links &amp; Limits">
-                                            <field name="registration_url" widget="CopyClipboardChar"
-                                                   readonly="1" string="Share URL"/>
-                                            <field name="payment_tracker_url" widget="CopyClipboardChar"
-                                                   readonly="1" string="Payment Tracker URL"
-                                                   attrs="{'invisible': [('slug', '=', False)]}"/>
+                                        <group string="Limits">
                                             <field name="max_registrations"
                                                    help="Set the maximum number of players that can register. Set to 0 for unlimited."/>
                                             <field name="show_registration_capacity" widget="boolean_toggle"
                                                    help="Show or hide the Registration Capacity slab on the public player registration form."/>
-                                            <field name="whatsapp_group_link"
-                                                   placeholder="https://chat.whatsapp.com/..."
-                                                   help="Players will see a 'Join WhatsApp Group' button after registering."/>
                                         </group>
                                         <group string="How it works">
                                             <div class="o_at_presentation_help" colspan="2">
-                                                Share the registration link with players so they can fill in their own
-                                                profile. Registrations arrive as <strong>Draft</strong> players.<br/><br/>
+                                                Share the registration link from the
+                                                <strong>Helper Links</strong> tab with players so they can fill in
+                                                their own profile. Registrations arrive as <strong>Draft</strong> players.<br/><br/>
                                                 Set <strong>Max Registrations</strong> to <strong>0</strong> for
                                                 unlimited. Registration closes automatically once the limit is reached.
                                             </div>
@@ -569,21 +519,110 @@
                                     </group>
                                 </div>
 
-                                <!-- ── Projector View ── -->
+                                <!-- ── Public Live Board access (settings) ── -->
                                 <div class="o_at_presentation_section">
+                                    <separator string="Public Live Board"/>
+                                    <group col="2">
+                                        <group string="Access Control">
+                                            <field name="live_board_code_protected"
+                                                   string="Require Tournament Code"/>
+                                        </group>
+                                        <group string="Code gate">
+                                            <div class="o_at_presentation_help" colspan="2">
+                                                <strong>On:</strong> viewers must enter the
+                                                <strong>Tournament Code</strong> once; that browser
+                                                stays unlocked afterwards.<br/><br/>
+                                                <strong>Off:</strong> anyone with the Live Board URL
+                                                (see <strong>Helper Links</strong>) can watch without a code
+                                                (board must still be <strong>Live</strong>).
+                                            </div>
+                                        </group>
+                                    </group>
+                                </div>
+
+                            </page>
+
+                            <!-- Tab: Helper Links -->
+                            <page string="Helper Links" name="helper_links">
+                                <div class="o_at_presentation_section o_at_helper_links">
+                                    <separator string="Player Registration"/>
+                                    <group col="2">
+                                        <group string="Share URL">
+                                            <field name="registration_url" widget="CopyClipboardChar"
+                                                   readonly="1" string="Registration URL"/>
+                                            <field name="whatsapp_group_link"
+                                                   placeholder="https://chat.whatsapp.com/..."
+                                                   help="Players will see a 'Join WhatsApp Group' button after registering."/>
+                                        </group>
+                                        <group string="How it works">
+                                            <div class="o_at_helper_side" colspan="2">
+                                                <div class="o_at_presentation_help">
+                                                    Copy and share the registration URL with players.
+                                                    Optionally add a WhatsApp group invite so players can join
+                                                    after they register.
+                                                </div>
+                                                <div class="o_at_helper_actions">
+                                                    <button name="action_open_registration_link"
+                                                            type="object"
+                                                            string="Registration Form"
+                                                            class="o_at_helper_btn o_at_helper_btn_reg"
+                                                            icon="fa-id-card-o"/>
+                                                </div>
+                                            </div>
+                                        </group>
+                                    </group>
+                                </div>
+
+                                <div class="o_at_presentation_section o_at_helper_links">
+                                    <separator string="Payment Tracker"/>
+                                    <group col="2">
+                                        <group string="Share URL">
+                                            <field name="payment_tracker_url" widget="CopyClipboardChar"
+                                                   readonly="1" string="Payment Tracker URL"
+                                                   attrs="{'invisible': [('slug', '=', False)]}"/>
+                                        </group>
+                                        <group string="How it works">
+                                            <div class="o_at_helper_side" colspan="2">
+                                                <div class="o_at_presentation_help">
+                                                    Use this link to review and mark player registration payments.
+                                                </div>
+                                                <div class="o_at_helper_actions"
+                                                     attrs="{'invisible': [('slug', '=', False)]}">
+                                                    <button name="action_open_payment_tracker"
+                                                            type="object"
+                                                            string="Payment Tracker"
+                                                            class="o_at_helper_btn o_at_helper_btn_pay"
+                                                            icon="fa-money"/>
+                                                </div>
+                                            </div>
+                                        </group>
+                                    </group>
+                                </div>
+
+                                <div class="o_at_presentation_section o_at_helper_links">
                                     <separator string="Projector View"/>
                                     <field name="has_auction_rules" invisible="1"/>
                                     <group col="2" attrs="{'invisible': [('has_auction_rules', '=', False)]}">
-                                        <group string="Projector URL">
+                                        <group string="Share URL">
                                             <field name="projector_url" widget="CopyClipboardChar"
-                                                   readonly="1" string="Share URL"/>
+                                                   readonly="1" string="Projector URL"/>
                                         </group>
                                         <group string="How it works">
-                                            <div class="o_at_presentation_help" colspan="2">
-                                                Open this URL on a projector or large screen for the audience.
-                                                It updates in real-time while operators run
-                                                <strong>display_auction</strong> (Random) or
-                                                <strong>player_selector</strong> (Manual).
+                                            <div class="o_at_helper_side" colspan="2">
+                                                <div class="o_at_presentation_help">
+                                                    Open this URL on a projector or large screen for the audience.
+                                                    It updates in real-time while operators run
+                                                    <strong>display_auction</strong> (Random) or
+                                                    <strong>player_selector</strong> (Manual).
+                                                </div>
+                                                <div class="o_at_helper_actions"
+                                                     attrs="{'invisible': [('projector_url', '=', False)]}">
+                                                    <button name="action_open_projector_link"
+                                                            type="object"
+                                                            string="Projector"
+                                                            class="o_at_helper_btn o_at_helper_btn_proj"
+                                                            icon="fa-desktop"/>
+                                                </div>
                                             </div>
                                         </group>
                                     </group>
@@ -596,45 +635,60 @@
                                     </div>
                                 </div>
 
-                                <!-- ── Public Live Board access ── -->
-                                <div class="o_at_presentation_section">
+                                <div class="o_at_presentation_section o_at_helper_links">
                                     <separator string="Public Live Board"/>
                                     <group col="2">
                                         <group string="Share URL">
                                             <field name="live_board_url" widget="CopyClipboardChar"
                                                    readonly="1" string="Live Board URL"/>
-                                            <button name="action_open_live_board"
-                                                    type="object"
-                                                    string="Open Live Board"
-                                                    class="btn-secondary"
-                                                    icon="fa-external-link"
-                                                    attrs="{'invisible': [('live_board_url', '=', False)]}"/>
                                         </group>
                                         <group string="How it works">
-                                            <div class="o_at_presentation_help" colspan="2">
-                                                Share this link with outsiders so they can watch the auction live.
-                                                Turn the board <strong>Live</strong> from the tournament header first.
-                                            </div>
-                                        </group>
-                                    </group>
-                                    <group col="2">
-                                        <group string="Access Control">
-                                            <field name="live_board_code_protected"
-                                                   string="Require Tournament Code"/>
-                                        </group>
-                                        <group string="Code gate">
-                                            <div class="o_at_presentation_help" colspan="2">
-                                                <strong>On:</strong> viewers must enter the
-                                                <strong>Tournament Code</strong> once; that browser
-                                                stays unlocked afterwards.<br/><br/>
-                                                <strong>Off:</strong> anyone with the Live Board URL
-                                                can watch without a code (board must still be
-                                                <strong>Live</strong>).
+                                            <div class="o_at_helper_side" colspan="2">
+                                                <div class="o_at_presentation_help">
+                                                    Share this link with outsiders so they can watch the auction live.
+                                                    Turn the board <strong>Live</strong> from the tournament header first.
+                                                    Code protection is configured under
+                                                    <strong>Presentation &amp; Theme</strong>.
+                                                </div>
+                                                <div class="o_at_helper_actions"
+                                                     attrs="{'invisible': [('live_board_url', '=', False)]}">
+                                                    <button name="action_open_live_board"
+                                                            type="object"
+                                                            string="Live Board"
+                                                            class="o_at_helper_btn o_at_helper_btn_live"
+                                                            icon="fa-tv"/>
+                                                </div>
                                             </div>
                                         </group>
                                     </group>
                                 </div>
 
+                                <div class="o_at_presentation_section o_at_helper_links">
+                                    <separator string="Bid Summary"/>
+                                    <group col="2">
+                                        <group string="Share URL">
+                                            <field name="bid_summary_url" widget="CopyClipboardChar"
+                                                   readonly="1" string="Bid Summary URL"/>
+                                        </group>
+                                        <group string="How it works">
+                                            <div class="o_at_helper_side" colspan="2">
+                                                <div class="o_at_presentation_help">
+                                                    Live team purse and bid summary dashboard.
+                                                    Share with operators or open on a second screen
+                                                    to track remaining points per team.
+                                                </div>
+                                                <div class="o_at_helper_actions"
+                                                     attrs="{'invisible': [('bid_summary_url', '=', False)]}">
+                                                    <button name="action_open_bid_summary"
+                                                            type="object"
+                                                            string="Bid Summary"
+                                                            class="o_at_helper_btn o_at_helper_btn_bid"
+                                                            icon="fa-bar-chart"/>
+                                                </div>
+                                            </div>
+                                        </group>
+                                    </group>
+                                </div>
                             </page>
 
                             <!-- Tab: Poster & Payment Images -->

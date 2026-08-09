@@ -540,6 +540,13 @@ class AuctionTournament(models.Model):
         store=False,
         help='Direct link to the Payment Tracker page for this tournament.',
     )
+    bid_summary_url = fields.Char(
+        string='Bid Summary URL',
+        compute='_compute_urls',
+        store=False,
+        help='Public live bid summary / team balance dashboard '
+             '(/…/auction/show/team/balance).',
+    )
     dice_state = fields.Selection(
         [('idle', 'Idle'), ('rolling', 'Rolling'), ('result', 'Result')],
         string='Dice State', default='idle',
@@ -623,6 +630,12 @@ class AuctionTournament(models.Model):
                 rec.payment_tracker_url = '{}/{}/{}/auction/payment-marker'.format(base_url, db_name, rec.slug)
             else:
                 rec.payment_tracker_url = False
+
+            if rec.slug:
+                rec.bid_summary_url = '{}/{}/{}/auction/show/team/balance'.format(
+                    base_url, db_name, rec.slug)
+            else:
+                rec.bid_summary_url = False
 
     @api.depends('auction_rule_ids')
     def _compute_has_auction_rules(self):
@@ -1315,6 +1328,21 @@ class AuctionTournament(models.Model):
             'target': 'new',
         }
 
+    def action_open_projector_link(self):
+        """Open the public projector screen in a new browser tab."""
+        self.ensure_one()
+        url = self.projector_url
+        if not url:
+            raise UserError(_(
+                'Projector URL is not available. Set auction rules and ensure '
+                'the tournament has a slug first.'
+            ))
+        return {
+            'type': 'ir.actions.act_url',
+            'url': url,
+            'target': 'new',
+        }
+
     def action_open_live_board(self):
         """Open the public Live Board URL in a new tab (share link for outsiders)."""
         self.ensure_one()
@@ -1342,6 +1370,23 @@ class AuctionTournament(models.Model):
             'target': 'current',
             'context': {'tournament_id': self.id},
             'params': {'tournament_id': self.id},
+        }
+
+    def action_open_bid_summary(self):
+        """Open the public Bid Summary (team balance) page in a new tab."""
+        self.ensure_one()
+        url = self.bid_summary_url
+        if not url:
+            if self.slug:
+                url = '/%s/%s/auction/show/team/balance' % (self.env.cr.dbname, self.slug)
+            else:
+                raise UserError(_(
+                    'Bid Summary URL is not available until the tournament has a name/slug.'
+                ))
+        return {
+            'type': 'ir.actions.act_url',
+            'url': url,
+            'target': 'new',
         }
 
     def action_open_pool_generator(self):

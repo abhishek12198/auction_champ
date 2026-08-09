@@ -486,10 +486,36 @@ body[data-theme="dark"] .single-header{
 @media (max-width:768px){
   .single-header{height:auto !important;}
   .single-header .py-3{padding:.5rem 104px .5rem 14px !important; text-align:left !important;}
-  .single-header .py-3 img{max-height:28px; width:auto;}
-  .vn-brand{justify-content:flex-start;}
+  .single-header .py-3 img{max-height:24px; width:auto; max-width:120px;}
+  .vn-brand{justify-content:flex-start; max-width:calc(100% - 110px);}
   #vn-theme-btn{top:10px; right:50px; padding:4px 10px; font-size:10px;}
-  .team-single-logo{width:70px !important; height:70px !important;}
+  .team-name{
+    flex-wrap:wrap;
+    justify-content:center !important;
+    gap:8px;
+    padding:0 8px 8px;
+  }
+  .team-name .bg-white{
+    display:block !important;
+    min-height:auto !important;
+    border-radius:8px !important;
+    padding:6px 10px;
+    max-width:100%;
+  }
+  .team-name h3{
+    font-size:.85rem !important;
+    line-height:1.2;
+    margin:0;
+    white-space:normal;
+    overflow-wrap:anywhere;
+    word-break:break-word;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .team-name p{display:none;}
+  .team-single-logo{width:48px !important; height:48px !important; object-fit:contain;}
 }
     </style>
     <t t-call="auction_module.player_mystery_critical_css"/>

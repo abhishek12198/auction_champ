@@ -80,7 +80,6 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
                             '<span class="pd-hdr-sub" id="pd-sub">Registration Analytics</span>',
                         '</div>',
                     '</div>',
-                    '<span class="pd-live-badge">&#9679; Live</span>',
                     '<div class="pd-tourn-filter" id="pd-tourn-filter" style="display:none">',
                         '<label class="pd-tourn-label" for="pd-tournament-select">Tournament</label>',
                         '<select class="pd-tournament-select" id="pd-tournament-select"></select>',

@@ -312,13 +312,17 @@ body[data-theme="dark"] #lm-theme-btn{color:var(--lemon-bright);border-color:rgb
 @media (max-width: 820px){
   html,body{height:auto; min-height:0; overflow-x:hidden; overflow-y:auto;}
   /* Header wraps; tournament block drops to its own centered row */
-  .lm-header{flex-wrap:wrap; height:auto; padding:10px 12px; gap:8px;}
-  .lm-header-brand{gap:8px;}
-  .lm-brand-sub{font-size:.75rem;}
-  .lm-header-center{order:3; flex:1 0 100%; justify-content:center;}
-  .lm-tourn-name{font-size:1.05rem; white-space:normal; text-align:center; line-height:1.1;}
-  .lm-tourn-logo{width:34px; height:34px;}
-  .lm-live-badge{font-size:.6rem; padding:4px 9px; letter-spacing:2px;}
+  .lm-header{flex-wrap:wrap; height:auto; padding:10px 12px; gap:8px; align-items:center;}
+  .lm-header-brand{gap:8px; min-width:0; max-width:48%;}
+  .lm-brand-logo{height:24px; max-width:120px;}
+  .lm-brand-sub{font-size:.7rem;}
+  .lm-header-center{order:3; flex:1 0 100%; justify-content:center; min-width:0; gap:10px; padding:0 4px;}
+  .lm-tourn-name{
+    font-size:.92rem; letter-spacing:1px; white-space:normal; text-align:center; line-height:1.2;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:break-word;
+  }
+  .lm-tourn-logo{width:34px; height:34px; object-fit:contain;}
+  .lm-live-badge{font-size:.6rem; padding:4px 9px; letter-spacing:2px; flex-shrink:0;}
   .lm-fs-btn{width:30px; height:30px;}
 
   /* Stage: single column, natural height */
