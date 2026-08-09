@@ -53,13 +53,41 @@ class UpdateTierLimitsLine(models.TransientModel):
     apply_base_point = fields.Boolean(string='Update?', default=False)
     new_base_point = fields.Integer(string='New Base Point', default=0)
 
+    apply_max_call = fields.Boolean(string='Update?', default=False)
+    new_max_call = fields.Integer(
+        string='New Max Call',
+        default=0,
+        help='Maximum bid for a player of this tier. 0 = no cap.',
+    )
+
+
+class UpdateTierLimitsSlabLine(models.TransientModel):
+    _name = 'auction.update.tier.limits.slab.line'
+    _description = 'Bid Slab Update Line'
+    _order = 'from_amount'
+
+    wizard_id = fields.Many2one('auction.update.tier.limits', ondelete='cascade')
+    from_amount = fields.Integer(string='From', required=True)
+    to_amount = fields.Integer(string='To', required=True)
+    increment = fields.Integer(string='Increment', required=True)
+
 
 class UpdateTierLimits(models.TransientModel):
     _name = 'auction.update.tier.limits'
-    _description = 'Bulk Update Tier Limits across Auctions'
+    _description = 'Bulk Update Tier Limits & Bid Slabs across Auctions'
 
     auction_ids = fields.Many2many('auction.auction', string='Selected Auctions', readonly=True)
     line_ids = fields.One2many('auction.update.tier.limits.line', 'wizard_id', string='Tier Adjustments')
+    update_slabs = fields.Boolean(
+        string='Update Bid Slabs',
+        default=False,
+        help='When ticked, replace bid slabs on all selected auctions with the table below.',
+    )
+    slab_ids = fields.One2many(
+        'auction.update.tier.limits.slab.line',
+        'wizard_id',
+        string='Bid Slabs',
+    )
 
     @api.model
     def action_open_wizard(self):
@@ -71,7 +99,7 @@ class UpdateTierLimits(models.TransientModel):
         wizard = self.create(self.default_get(list(self._fields)))
         return {
             'type': 'ir.actions.act_window',
-            'name': 'Update Tier Limits',
+            'name': 'Update Tier Limits & Slabs',
             'res_model': 'auction.update.tier.limits',
             'view_mode': 'form',
             'target': 'new',
@@ -95,19 +123,59 @@ class UpdateTierLimits(models.TransientModel):
                         'tier_id': tl.tier_id.id,
                         'new_max_players': tl.max_players,
                         'new_base_point': tl.base_point,
+                        'new_max_call': tl.max_call,
                         'apply_max_players': False,
                         'apply_base_point': False,
+                        'apply_max_call': False,
                     }))
 
-        if not lines:
+        # Prefill slabs from the first selected auction that has them
+        slab_lines = []
+        for auction in auctions:
+            slabs = auction.auction_bid_slab_ids.sorted('from_amount')
+            if slabs:
+                for s in slabs:
+                    slab_lines.append((0, 0, {
+                        'from_amount': s.from_amount,
+                        'to_amount': s.to_amount,
+                        'increment': s.increment,
+                    }))
+                break
+
+        if not lines and not slab_lines:
             raise UserError(
-                'None of the selected auctions have tier limits configured. '
-                'Please set up tier limits on the auction first.'
+                'None of the selected auctions have tier limits or bid slabs configured. '
+                'Please set them up on the auction first (Set Auction Rules).'
             )
 
         defaults['line_ids'] = lines
+        defaults['slab_ids'] = slab_lines
+        defaults['update_slabs'] = False
         defaults['auction_ids'] = [(6, 0, auction_ids)]
         return defaults
+
+    def _validate_slabs(self):
+        self.ensure_one()
+        if not self.slab_ids:
+            raise UserError('Add at least one bid slab row before applying slab updates.')
+        rows = self.slab_ids.sorted('from_amount')
+        prev_to = None
+        for s in rows:
+            if s.from_amount < 0 or s.to_amount < 0 or s.increment < 1:
+                raise UserError(
+                    'Each slab needs From/To ≥ 0 and Increment ≥ 1.'
+                )
+            if s.to_amount < s.from_amount:
+                raise UserError(
+                    'Slab "To" must be greater than or equal to "From" '
+                    '(%s → %s).' % (s.from_amount, s.to_amount)
+                )
+            if prev_to is not None and s.from_amount < prev_to:
+                raise UserError(
+                    'Slab ranges overlap or are out of order. '
+                    'Sort by From amount without overlapping ranges.'
+                )
+            prev_to = s.to_amount
 
     def button_apply(self):
         self.ensure_one()
@@ -118,38 +186,85 @@ class UpdateTierLimits(models.TransientModel):
                 'No auctions found. Please re-open this wizard from the auction list.'
             )
 
-        if not any(l.apply_max_players or l.apply_base_point for l in self.line_ids):
-            raise UserError('No changes selected. Tick the "Update?" checkbox for at least one field to apply.')
+        tier_changes = any(
+            l.apply_max_players or l.apply_base_point or l.apply_max_call
+            for l in self.line_ids
+        )
+        if not tier_changes and not self.update_slabs:
+            raise UserError(
+                'No changes selected. Tick "Update?" on a tier field and/or '
+                '"Update Bid Slabs" to apply.'
+            )
 
-        updated = 0
+        if self.update_slabs:
+            self._validate_slabs()
+
+        updated_tiers = 0
+        updated_slab_auctions = 0
+
         for auction in auctions:
             for line in self.line_ids:
-                tl = auction.tier_limit_ids.filtered(lambda t, l=line: t.tier_id.id == l.tier_id.id)
+                tl = auction.tier_limit_ids.filtered(
+                    lambda t, l=line: t.tier_id.id == l.tier_id.id
+                )
                 if not tl:
                     continue
                 vals = {}
                 if line.apply_max_players:
                     if line.new_max_players < 1:
                         raise UserError(
-                            f'Max Players for tier "{line.tier_id.name}" must be at least 1.'
+                            'Max Players for tier "%s" must be at least 1.'
+                            % line.tier_id.name
                         )
                     vals['max_players'] = line.new_max_players
                 if line.apply_base_point:
                     if line.new_base_point < 0:
                         raise UserError(
-                            f'Base Point for tier "{line.tier_id.name}" cannot be negative.'
+                            'Base Point for tier "%s" cannot be negative.'
+                            % line.tier_id.name
                         )
                     vals['base_point'] = line.new_base_point
+                if line.apply_max_call:
+                    if line.new_max_call < 0:
+                        raise UserError(
+                            'Max Call for tier "%s" cannot be negative.'
+                            % line.tier_id.name
+                        )
+                    vals['max_call'] = line.new_max_call
                 if vals:
                     tl.write(vals)
-                    updated += 1
+                    updated_tiers += 1
+
+            if self.update_slabs:
+                auction.auction_bid_slab_ids.unlink()
+                auction.write({
+                    'auction_bid_slab_ids': [
+                        (0, 0, {
+                            'from_amount': s.from_amount,
+                            'to_amount': s.to_amount,
+                            'increment': s.increment,
+                        })
+                        for s in self.slab_ids.sorted('from_amount')
+                    ],
+                })
+                updated_slab_auctions += 1
+
+        parts = []
+        if updated_tiers:
+            parts.append('%s tier limit record(s)' % updated_tiers)
+        if updated_slab_auctions:
+            parts.append('bid slabs on %s auction(s)' % updated_slab_auctions)
+        message = 'Updated %s across %s auction(s).' % (
+            ' and '.join(parts) if parts else 'nothing',
+            len(auctions),
+        )
 
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
-                'title': 'Tier Limits Updated',
-                'message': f'Updated {updated} tier limit record(s) across {len(auctions)} auction(s).',
+                'title': 'Tier Limits & Slabs Updated',
+                'message': message,
                 'type': 'success',
                 'sticky': False,
                 'next': {'type': 'ir.actions.act_window_close'},

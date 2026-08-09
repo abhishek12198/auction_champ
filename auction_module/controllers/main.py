@@ -4229,14 +4229,13 @@ class Auction(http.Controller):
             w0, h0 = work.size
             min_sz = (max(28, w0 // 14), max(28, h0 // 14))
             candidates = []
-            for cascade in cascades:
-                for sf, mn in ((1.08, 4), (1.12, 3), (1.2, 5)):
-                    faces = cascade.detectMultiScale(
-                        gray, scaleFactor=sf, minNeighbors=mn, minSize=min_sz,
-                        flags=cv2.CASCADE_SCALE_IMAGE,
-                    )
-                    for (x, y, fw, fh) in faces:
-                        candidates.append((int(x), int(y), int(fw), int(fh)))
+            # One cascade + one scale pass — enough for posters, much faster on load
+            faces = cascades[0].detectMultiScale(
+                gray, scaleFactor=1.1, minNeighbors=4, minSize=min_sz,
+                flags=cv2.CASCADE_SCALE_IMAGE,
+            )
+            for (x, y, fw, fh) in faces:
+                candidates.append((int(x), int(y), int(fw), int(fh)))
 
             if not candidates:
                 return None
@@ -4524,25 +4523,29 @@ class Auction(http.Controller):
             return False
         return raw
 
-    def _sp_photo_uri(self, binary, size=(640, 640)):
+    def _sp_photo_uri(self, binary, size=(420, 420)):
         """
         Player photo → face-centered square data URI for uniform placeholders.
         """
         pack = self._sp_photo_pack(binary, size=size)
         return pack.get('crop_uri') or ''
 
-    def _sp_photo_full_uri(self, binary, max_side=1200):
+    def _sp_photo_full_uri(self, binary, max_side=720):
         """Full player photo from DB (no face-crop) for manual pan/zoom editing."""
         pack = self._sp_photo_pack(binary, max_side=max_side)
         return pack.get('full_uri') or ''
 
-    def _sp_photo_pack(self, binary, size=(640, 640), max_side=1200, crop_override=None):
+    def _sp_photo_pack(self, binary, size=(420, 420), max_side=720,
+                       crop_override=None, include_full=True):
         """
-        Build cropped card URI + full photo URI + crop rect on the full image.
+        Build cropped card URI + optional full photo URI + crop rect.
 
         Crop rect (l,t,sw,sh) is normalized to the full image dimensions so the
         editor can open already framed like the poster card.
-        Optional crop_override uses a previously saved manual frame.
+        Optional crop_override uses a previously saved manual frame (skips face
+        detect — big speed win on repeat loads).
+
+        include_full=False for page HTML (full photos are lazy-fetched).
         """
         empty = {'crop_uri': '', 'full_uri': '', 'crop': None}
         if not binary:
@@ -4568,19 +4571,13 @@ class Auction(http.Controller):
                 scale = float(max_side) / float(side_max)
                 im = im.resize(
                     (max(1, int(w * scale)), max(1, int(h * scale))),
-                    Image.LANCZOS,
+                    Image.BILINEAR,
                 )
                 w, h = im.size
 
             used_override = False
-            left, top, side = self._sp_face_crop_box(im)
-            auto_crop = {
-                'l': float(left) / float(w),
-                't': float(top) / float(h),
-                'sw': float(side) / float(w),
-                'sh': float(side) / float(h),
-            }
-            crop = dict(auto_crop)
+            left = top = side = None
+            auto_crop = None
 
             if crop_override and isinstance(crop_override, dict):
                 try:
@@ -4610,29 +4607,50 @@ class Auction(http.Controller):
                         'sw': float(side) / float(w),
                         'sh': float(side) / float(h),
                     }
+                    # Cheap geometric auto for Reset (skip OpenCV on saved crops)
+                    fw = int(min(w, h) * (0.42 if h > w * 1.35 else 0.50))
+                    ax = max(0, (w - fw) // 2)
+                    ay = max(0, int(h * (0.04 if h > w * 1.35 else 0.06)))
+                    if ay + fw > h:
+                        ay = max(0, h - fw)
+                    auto_crop = {
+                        'l': float(ax) / float(w),
+                        't': float(ay) / float(h),
+                        'sw': float(fw) / float(w),
+                        'sh': float(fw) / float(h),
+                    }
                     used_override = True
                 except Exception:
                     used_override = False
-                    left = int(round(auto_crop['l'] * w))
-                    top = int(round(auto_crop['t'] * h))
-                    side = int(round(auto_crop['sw'] * w))
-                    crop = dict(auto_crop)
+                    left = top = side = None
+
+            if left is None:
+                left, top, side = self._sp_face_crop_box(im)
+                auto_crop = {
+                    'l': float(left) / float(w),
+                    't': float(top) / float(h),
+                    'sw': float(side) / float(w),
+                    'sh': float(side) / float(h),
+                }
+                crop = dict(auto_crop)
 
             cropped = im.crop((left, top, left + side, top + side)).resize(
-                (size[0], size[1]), Image.LANCZOS
+                (size[0], size[1]), Image.BILINEAR
             )
 
             buf_c = BytesIO()
-            cropped.save(buf_c, format='JPEG', quality=93, optimize=True)
+            cropped.save(buf_c, format='JPEG', quality=80, optimize=True)
             crop_uri = 'data:image/jpeg;base64,%s' % base64.b64encode(
                 buf_c.getvalue()
             ).decode('ascii')
 
-            buf_f = BytesIO()
-            im.save(buf_f, format='JPEG', quality=92, optimize=True)
-            full_uri = 'data:image/jpeg;base64,%s' % base64.b64encode(
-                buf_f.getvalue()
-            ).decode('ascii')
+            full_uri = ''
+            if include_full:
+                buf_f = BytesIO()
+                im.save(buf_f, format='JPEG', quality=78, optimize=True)
+                full_uri = 'data:image/jpeg;base64,%s' % base64.b64encode(
+                    buf_f.getvalue()
+                ).decode('ascii')
 
             return {
                 'crop_uri': crop_uri,
@@ -4644,7 +4662,7 @@ class Auction(http.Controller):
         except Exception:
             _logger.exception('Squad poster photo pack failed; falling back')
             try:
-                processed = image_process(binary, size=size, quality=92)
+                processed = image_process(binary, size=size, quality=80)
                 raw = processed or binary
             except Exception:
                 raw = binary
@@ -4938,14 +4956,14 @@ class Auction(http.Controller):
                         crop_override = parsed
                 except Exception:
                     crop_override = None
+            # Card crops only on page load — full photos lazy-loaded in editor
             pack = self._sp_photo_pack(
-                photo_bin, crop_override=crop_override
+                photo_bin, crop_override=crop_override, include_full=False
             ) if photo_bin else {
                 'crop_uri': '', 'full_uri': '', 'crop': None,
                 'auto_crop': None, 'manual': False,
             }
             photo = pack.get('crop_uri') or ''
-            photo_full = pack.get('full_uri') or photo
             photo_crop = pack.get('crop')
             photo_crop_auto = pack.get('auto_crop') or photo_crop
             photo_manual = bool(pack.get('manual'))
@@ -4969,6 +4987,9 @@ class Auction(http.Controller):
                     ages.append(int(p.age))
                 except Exception:
                     pass
+            icon_label = (getattr(p, 'squad_poster_icon_label', None) or '').strip()
+            if not icon_label:
+                icon_label = 'ICON PLAYER'
             players_out.append({
                 'id': p.id,
                 'name': (p.name or '').upper(),
@@ -4976,7 +4997,7 @@ class Auction(http.Controller):
                 'tier': tier_name,
                 'tier_color': tier_color,
                 'photo_uri': photo,
-                'photo_full_uri': photo_full or photo,
+                'photo_full_uri': '',
                 'photo_crop': photo_crop,
                 'photo_crop_auto': photo_crop_auto,
                 'photo_manual': photo_manual,
@@ -4984,6 +5005,7 @@ class Auction(http.Controller):
                 'jersey': jersey,
                 'squad_no': jersey,
                 'is_icon': is_icon,
+                'icon_badge': icon_label,
                 'is_wk': self._sp_is_wk(role),
                 'points': int(pts or 0),
                 'category': self._sp_category(role, sport),
@@ -5208,6 +5230,8 @@ class Auction(http.Controller):
             'brand_url': 'www.auctionchamp.live',
             'canvas_w': self.SP_CANVAS_W,
             'canvas_h': self.SP_CANVAS_H,
+            'res_company': request.env.company,
+            'db_name': request.session.db or '',
         }
 
     def _sp_bind_db_and_user(self, db_name=None):
@@ -5266,16 +5290,19 @@ class Auction(http.Controller):
         photo_map = {}
         crop_map = {}
         auto_map = {}
+        label_map = {}
         for pl in (ctx.get('players') or []):
             pid = pl.get('id')
             if not pid:
                 continue
             sid = str(pid)
-            photo_map[sid] = pl.get('photo_full_uri') or pl.get('photo_uri') or ''
+            # Full photos are lazy-loaded — do not embed megabytes of base64
             if pl.get('photo_crop'):
                 crop_map[sid] = pl.get('photo_crop')
             if pl.get('photo_crop_auto'):
                 auto_map[sid] = pl.get('photo_crop_auto')
+            if pl.get('is_icon') and pl.get('icon_badge'):
+                label_map[sid] = pl.get('icon_badge')
         db_name = request.session.db or ''
         map_tag = (
             b'\n<script>window.__spAuctionId='
@@ -5288,11 +5315,13 @@ class Auction(http.Controller):
             + json.dumps(crop_map).encode('utf-8')
             + b';window.__spAutoCrops='
             + json.dumps(auto_map).encode('utf-8')
+            + b';window.__spIconLabels='
+            + json.dumps(label_map).encode('utf-8')
             + b';</script>'
         )
         editor_tag = (
             map_tag
-            + b'\n<script src="/auction_module/static/src/js/squad_poster_editor.js?v=275">'
+            + b'\n<script src="/auction_module/static/src/js/squad_poster_editor.js?v=279">'
             + b'</script>\n</body>'
         )
         if b'squad_poster_editor.js' not in body:
@@ -5307,17 +5336,39 @@ class Auction(http.Controller):
             headers=[('Content-Type', 'text/html; charset=utf-8')],
         )
 
+    @http.route(['/auction/squad-poster/<int:auction_id>/full-photo/<int:player_id>',
+                 '/<string:db_name>/auction/squad-poster/<int:auction_id>/full-photo/<int:player_id>'],
+                type='json', auth='user', website=False)
+    def squad_poster_full_photo(self, auction_id, player_id, db_name=None, **kw):
+        """Lazy-load full player photo for the squad poster editor."""
+        auction = request.env['auction.auction'].sudo().browse(auction_id)
+        if not auction.exists():
+            return {'ok': False, 'error': 'auction_not_found'}
+        player = request.env['auction.team.player'].sudo().browse(int(player_id))
+        if not player.exists():
+            return {'ok': False, 'error': 'player_not_found'}
+        photo_bin = self._sp_photo_binary(player)
+        if not photo_bin:
+            return {'ok': False, 'error': 'no_photo'}
+        pack = self._sp_photo_pack(photo_bin, include_full=True, max_side=720)
+        uri = pack.get('full_uri') or pack.get('crop_uri') or ''
+        if not uri:
+            return {'ok': False, 'error': 'encode_failed'}
+        return {'ok': True, 'uri': uri, 'player_id': int(player_id)}
+
     @http.route(['/auction/squad-poster/<int:auction_id>/photo-crops',
                  '/<string:db_name>/auction/squad-poster/<int:auction_id>/photo-crops'],
                 type='json', auth='user', website=False)
-    def squad_poster_save_crops(self, auction_id, crops=None, clear_ids=None, db_name=None, **kw):
-        """Persist manual pan/zoom crop windows for squad poster cards."""
+    def squad_poster_save_crops(self, auction_id, crops=None, clear_ids=None,
+                                icon_labels=None, db_name=None, **kw):
+        """Persist manual pan/zoom crop windows and icon badge labels."""
         auction = request.env['auction.auction'].sudo().browse(auction_id)
         if not auction.exists():
             return {'ok': False, 'error': 'auction_not_found'}
         Player = request.env['auction.team.player'].sudo()
         saved = 0
         cleared = 0
+        labels_saved = 0
         for pid, crop in (crops or {}).items():
             try:
                 player = Player.browse(int(pid))
@@ -5346,7 +5397,26 @@ class Auction(http.Controller):
             if player.exists() and player.squad_poster_crop:
                 player.write({'squad_poster_crop': False})
                 cleared += 1
-        return {'ok': True, 'saved': saved, 'cleared': cleared}
+        for pid, label in (icon_labels or {}).items():
+            try:
+                player = Player.browse(int(pid))
+            except Exception:
+                continue
+            if not player.exists():
+                continue
+            text = (label or '').strip()
+            if not text:
+                text = False
+            elif len(text) > 28:
+                text = text[:28]
+            player.write({'squad_poster_icon_label': text})
+            labels_saved += 1
+        return {
+            'ok': True,
+            'saved': saved,
+            'cleared': cleared,
+            'labels_saved': labels_saved,
+        }
 
     @http.route(['/auction/squad-poster/<int:auction_id>',
                  '/<string:db_name>/auction/squad-poster/<int:auction_id>'],

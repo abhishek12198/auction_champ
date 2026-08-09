@@ -1,8 +1,8 @@
 /**
- * Squad Poster photo editor
- * - Opens ALREADY FRAMED like the card (same auto-crop)
- * - Full DB photo underneath — drag/zoom to reframe
- * - Yellow square = exactly what appears on the poster card
+ * Squad Poster photo editor (mobile-first)
+ * - Adjust photos → pick a player → drag/zoom in a large stage
+ * - Full photos lazy-loaded only when editing (fast page load)
+ * - No floating Edit overlays on phones (they collide on scaled posters)
  */
 (function () {
   'use strict';
@@ -13,6 +13,14 @@
   function $(sel, root) { return (root || document).querySelector(sel); }
   function $all(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
 
+  function isPhone() {
+    try {
+      return window.matchMedia('(max-width: 820px), (pointer: coarse)').matches;
+    } catch (e) {
+      return window.innerWidth <= 820;
+    }
+  }
+
   function ensureStyle() {
     if ($('#spEditorCss')) return;
     var css = document.createElement('style');
@@ -21,7 +29,13 @@
       '#spEditorRoot{width:100%;box-sizing:border-box;padding:8px 12px 10px;background:#0c0c10;border-bottom:1px solid rgba(255,255,255,.12);position:relative;z-index:2147483001;pointer-events:auto!important}',
       '#spEditorRoot *{box-sizing:border-box}',
       '#spEditorRoot .spE-title{font:700 12px/1.35 sans-serif;letter-spacing:.04em;color:rgba(255,230,180,.9);margin:0 0 6px;text-align:center}',
-      '#spEditorRoot .spE-panel{display:none;margin:8px auto 0;max-width:440px;background:#141416;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:12px}',
+      '#spEditorRoot .spE-pick{display:none;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:6px 2px 10px;scroll-snap-type:x proximity}',
+      '#spEditorRoot.is-picking .spE-pick,#spEditorRoot.is-editing .spE-pick{display:flex}',
+      '#spEditorRoot .spE-chip{flex:0 0 auto;width:76px;scroll-snap-align:start;appearance:none;border:2px solid rgba(255,255,255,.2);background:#141416;border-radius:12px;padding:6px;color:#fff;cursor:pointer;touch-action:manipulation}',
+      '#spEditorRoot .spE-chip img{width:64px;height:64px;object-fit:cover;border-radius:8px;display:block;background:#222}',
+      '#spEditorRoot .spE-chip span{display:block;margin-top:4px;font:700 10px/1.15 sans-serif;text-align:center;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '#spEditorRoot .spE-chip.is-on{border-color:#ff7a18;box-shadow:0 0 0 1px rgba(255,122,24,.45)}',
+      '#spEditorRoot .spE-panel{display:none;margin:8px auto 0;max-width:520px;background:#141416;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:12px}',
       '#spEditorRoot.is-editing .spE-panel{display:block}',
       '#spEditorRoot .spE-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}',
       '#spEditorRoot .spE-name{margin:0;font:700 15px/1.2 sans-serif;color:#fff;text-transform:uppercase;letter-spacing:.04em}',
@@ -36,18 +50,38 @@
       '#spEditorRoot .spE-frame-lbl{margin:6px 0 0;font:700 11px/1.3 sans-serif;color:#e8c547;text-transform:uppercase;letter-spacing:.08em}',
       '#spEditorRoot .spE-help{margin:8px 0 0;font:600 12px/1.4 sans-serif;color:rgba(255,255,255,.65);text-align:center}',
       '#spEditorRoot .spE-row{display:flex;align-items:center;gap:8px;margin-top:10px}',
-      '#spEditorRoot .spE-row input[type=range]{flex:1}',
-      '#spEditorRoot .spE-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}',
-      '#spEditorRoot button.spE-btn{appearance:none;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;border-radius:999px;padding:10px 16px;font:700 13px/1 sans-serif;cursor:pointer;min-height:40px;pointer-events:auto!important}',
+      '#spEditorRoot .spE-row input[type=range]{flex:1;min-height:36px}',
+      '#spEditorRoot .spE-badge-row{display:none;flex-direction:column;gap:6px;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1)}',
+      '#spEditorRoot.is-icon-edit .spE-badge-row{display:flex}',
+      '#spEditorRoot .spE-badge-lbl{font:700 11px/1.2 sans-serif;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,230,180,.85)}',
+      '#spEditorRoot .spE-badge-input{width:100%;appearance:none;border:1px solid rgba(255,220,140,.45);background:#0c0c10;color:#ffe7a8;border-radius:10px;padding:12px 14px;font:700 15px/1.2 "Oswald",sans-serif;letter-spacing:.12em;text-transform:uppercase;min-height:48px}',
+      '#spEditorRoot .spE-badge-hint{margin:0;font:600 11px/1.3 sans-serif;color:rgba(255,255,255,.5)}',
+      '#spEditorRoot .spE-actions{display:flex;justify-content:stretch;gap:8px;margin-top:12px}',
+      '#spEditorRoot .spE-actions .spE-btn{flex:1}',
+      '#spEditorRoot button.spE-btn{appearance:none;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;border-radius:999px;padding:12px 16px;font:700 14px/1 sans-serif;cursor:pointer;min-height:48px;pointer-events:auto!important;touch-action:manipulation}',
       '#spEditorRoot button.spE-btn.primary{background:linear-gradient(135deg,#ff7a18,#c45a10);color:#111;border-color:transparent}',
       '#spEditorRoot .spE-hint{margin:6px 0 0;text-align:center;font:600 12px/1.3 sans-serif;color:#6ee7b7}',
+      '#spEditorRoot .spE-loading{display:none;text-align:center;font:600 13px/1.4 sans-serif;color:rgba(255,230,180,.85);padding:8px}',
+      '#spEditorRoot.is-loading .spE-loading{display:block}',
       '#spCardHitLayer{position:fixed;inset:0;z-index:2147482500;pointer-events:none}',
-      '#spCardHitLayer .spE-hit{position:fixed;pointer-events:auto!important;cursor:pointer;border:none;border-radius:8px;background:transparent;display:flex;align-items:flex-start;justify-content:flex-start;padding:6px;touch-action:manipulation}',
-      '#spCardHitLayer .spE-hit span{background:rgba(0,0,0,.72);color:#ffe7a8;font:800 11px/1 sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:6px 8px;border-radius:6px;border:1px solid rgba(255,220,140,.5);pointer-events:none}',
-      '#spCardHitLayer .spE-hit.is-on span{border-color:#ff7a18;box-shadow:0 0 0 1px rgba(255,122,24,.45)}',
+      '#spCardHitLayer .spE-hit{position:fixed;pointer-events:auto!important;cursor:pointer;border:none;border-radius:8px;background:transparent;display:flex;align-items:flex-start;justify-content:flex-start;padding:2px;touch-action:manipulation;width:auto!important;height:auto!important;min-width:44px;min-height:32px}',
+      '#spCardHitLayer .spE-hit span{background:rgba(0,0,0,.78);color:#ffe7a8;font:800 11px/1 sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:7px 10px;border-radius:6px;border:1px solid rgba(255,220,140,.55);pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.45)}',
+      '#spCardHitLayer .spE-hit.is-on span{border-color:#ff7a18;box-shadow:0 0 0 1px rgba(255,122,24,.45),0 2px 8px rgba(0,0,0,.45)}',
       '.sp-peditor:not(#spEditorRoot){display:none!important;pointer-events:none!important}',
       '.sp-preview-scale,.sp-canvas{pointer-events:none!important}',
-      '.sp-photo-edit-btn,#spPlayerEditBar,.sp-player-edit-bar{display:none!important}'
+      '.sp-photo-edit-btn,#spPlayerEditBar,.sp-player-edit-bar{display:none!important}',
+      '@media (max-width:820px){',
+      '  #spEditorRoot{padding:10px 10px 14px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}',
+      '  #spEditorRoot .spE-title{font-size:13px;line-height:1.4}',
+      '  #spEditorRoot .spE-thumb{display:none}',
+      '  #spEditorRoot .spE-compare{display:block}',
+      '  #spEditorRoot .spE-stage{width:min(92vw,360px);max-width:100%}',
+      '  #spEditorRoot .spE-panel{max-width:none;border-radius:16px;padding:14px 12px 16px}',
+      '  #spEditorRoot .spE-actions{flex-direction:column-reverse}',
+      '  #spEditorRoot .spE-actions .spE-btn{width:100%;min-height:52px;font-size:16px}',
+      '  #spCardHitLayer .spE-hit{min-width:48px;min-height:36px;padding:1px}',
+      '  #spCardHitLayer .spE-hit span{font-size:10px;padding:6px 8px}',
+      '}'
     ].join('\n');
     document.head.appendChild(css);
   }
@@ -64,18 +98,86 @@
     return String(card.getAttribute('data-player-id') || card.getAttribute('data-player-name') || '');
   }
 
-  function fullPhotoSrc(card) {
-    var id = card.getAttribute('data-player-id');
-    var map = window.__spFullPhotos || {};
-    if (id && map[String(id)]) return map[String(id)];
-    return card.getAttribute('data-photo-full') || '';
-  }
-
   function cropPhotoSrc(card) {
     var img = card.querySelector('.sp-card-photo');
     return card.getAttribute('data-photo-crop')
       || (img && (img.getAttribute('data-orig-crop') || img.getAttribute('src')))
       || '';
+  }
+
+  function auctionId() {
+    var aid = window.__spAuctionId;
+    if (!aid) {
+      var m = (location.pathname || '').match(/\/auction\/squad-poster\/(\d+)/);
+      aid = m ? m[1] : null;
+    }
+    return aid;
+  }
+
+  function dbName() {
+    var db = window.__spDbName || '';
+    if (!db) {
+      var dm = (location.pathname || '').match(/^\/([^\/]+)\/auction\/squad-poster\//);
+      db = dm ? dm[1] : '';
+    }
+    return db;
+  }
+
+  function cropsApiUrl() {
+    var aid = auctionId();
+    if (!aid) return null;
+    var db = dbName();
+    if (db) return '/' + db + '/auction/squad-poster/' + aid + '/photo-crops';
+    return '/auction/squad-poster/' + aid + '/photo-crops';
+  }
+
+  function fullPhotoApiUrl(playerId) {
+    var aid = auctionId();
+    if (!aid || !playerId) return null;
+    var db = dbName();
+    if (db) return '/' + db + '/auction/squad-poster/' + aid + '/full-photo/' + playerId;
+    return '/auction/squad-poster/' + aid + '/full-photo/' + playerId;
+  }
+
+  function jsonRpc(url, params) {
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'call',
+        params: params || {},
+        id: Date.now(),
+      }),
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      return (data && data.result) ? data.result : data;
+    });
+  }
+
+  function loadFullPhoto(card) {
+    var id = card.getAttribute('data-player-id');
+    var map = window.__spFullPhotos || (window.__spFullPhotos = {});
+    if (id && map[String(id)]) {
+      return Promise.resolve(map[String(id)]);
+    }
+    var cached = card.getAttribute('data-photo-full');
+    if (cached) {
+      if (id) map[String(id)] = cached;
+      return Promise.resolve(cached);
+    }
+    var url = fullPhotoApiUrl(id);
+    if (!url) {
+      return Promise.resolve(cropPhotoSrc(card));
+    }
+    return jsonRpc(url, {}).then(function (res) {
+      var uri = (res && res.ok && res.uri) ? res.uri : '';
+      if (!uri) uri = cropPhotoSrc(card);
+      if (id && uri) map[String(id)] = uri;
+      return uri;
+    }).catch(function () {
+      return cropPhotoSrc(card);
+    });
   }
 
   function autoCrop(card) {
@@ -96,28 +198,11 @@
   }
 
   function storageKey() {
-    var aid = window.__spAuctionId || '';
-    if (!aid) {
-      var m = (location.pathname || '').match(/\/auction\/squad-poster\/(\d+)/);
-      aid = m ? m[1] : '0';
-    }
-    return 'spPosterCrops:' + aid;
+    return 'spPosterCrops:' + (auctionId() || '0');
   }
 
-  function cropsApiUrl() {
-    var aid = window.__spAuctionId;
-    if (!aid) {
-      var m = (location.pathname || '').match(/\/auction\/squad-poster\/(\d+)/);
-      aid = m ? m[1] : null;
-    }
-    if (!aid) return null;
-    var db = window.__spDbName || '';
-    if (!db) {
-      var dm = (location.pathname || '').match(/^\/([^\/]+)\/auction\/squad-poster\//);
-      db = dm ? dm[1] : '';
-    }
-    if (db) return '/' + db + '/auction/squad-poster/' + aid + '/photo-crops';
-    return '/auction/squad-poster/' + aid + '/photo-crops';
+  function labelsStorageKey() {
+    return 'spPosterIconLabels:' + (auctionId() || '0');
   }
 
   function readLocalCrops() {
@@ -137,6 +222,23 @@
     } catch (e) {}
   }
 
+  function readLocalLabels() {
+    try {
+      var raw = localStorage.getItem(labelsStorageKey());
+      if (!raw) return {};
+      var parsed = JSON.parse(raw);
+      return (parsed && typeof parsed === 'object') ? parsed : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function writeLocalLabels(labels) {
+    try {
+      localStorage.setItem(labelsStorageKey(), JSON.stringify(labels || {}));
+    } catch (e) {}
+  }
+
   function mergeLocalIntoPhotoCrops() {
     var local = readLocalCrops();
     window.__spPhotoCrops = window.__spPhotoCrops || {};
@@ -145,6 +247,11 @@
       if (c && typeof c.l === 'number') {
         window.__spPhotoCrops[pid] = { l: c.l, t: c.t, sw: c.sw, sh: c.sh };
       }
+    });
+    var localLabels = readLocalLabels();
+    window.__spIconLabels = window.__spIconLabels || {};
+    Object.keys(localLabels).forEach(function (pid) {
+      if (localLabels[pid]) window.__spIconLabels[pid] = String(localLabels[pid]);
     });
   }
 
@@ -159,9 +266,29 @@
     return out;
   }
 
+  function collectIconLabels() {
+    var out = {};
+    Object.keys(labelStates).forEach(function (k) {
+      if (!/^\d+$/.test(String(k))) return;
+      var txt = (labelStates[k] || '').trim();
+      if (txt) out[String(k)] = txt.slice(0, 28);
+    });
+    // Also include in-memory map so Done persists even without open
+    var map = window.__spIconLabels || {};
+    Object.keys(map).forEach(function (k) {
+      if (out[k]) return;
+      if (!/^\d+$/.test(String(k))) return;
+      var txt = String(map[k] || '').trim();
+      if (txt) out[k] = txt.slice(0, 28);
+    });
+    return out;
+  }
+
   function persistCrops(extraClearIds) {
     var crops = collectManualCrops();
+    var labels = collectIconLabels();
     writeLocalCrops(crops);
+    writeLocalLabels(labels);
     Object.keys(crops).forEach(function (pid) {
       window.__spPhotoCrops = window.__spPhotoCrops || {};
       window.__spPhotoCrops[pid] = crops[pid];
@@ -169,34 +296,63 @@
     (extraClearIds || []).forEach(function (pid) {
       if (window.__spPhotoCrops) delete window.__spPhotoCrops[String(pid)];
     });
+    Object.keys(labels).forEach(function (pid) {
+      window.__spIconLabels = window.__spIconLabels || {};
+      window.__spIconLabels[pid] = labels[pid];
+    });
     var api = cropsApiUrl();
     if (!api) return Promise.resolve({ ok: false });
-    var payload = {
-      jsonrpc: '2.0',
-      method: 'call',
-      params: {
-        crops: crops,
-        clear_ids: extraClearIds || [],
-      },
-      id: Date.now(),
-    };
-    return fetch(api, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      credentials: 'same-origin',
-      body: JSON.stringify(payload),
-    }).then(function (r) { return r.json(); }).catch(function () {
+    return jsonRpc(api, {
+      crops: crops,
+      clear_ids: extraClearIds || [],
+      icon_labels: labels,
+    }).catch(function () {
       return { ok: false };
     });
   }
 
-  /** draft = { l, t, sw, sh } normalized crop window on the full image */
   var states = {};
+  var labelStates = {};
   var active = null;
   var draft = { l: 0, t: 0, sw: 1, sh: 1 };
   var drag = null;
   var hitMap = {};
+  var chipMap = {};
   var nat = { w: 1, h: 1 };
+  var hitsEnabled = true;
+  var syncTimer = null;
+  var DEFAULT_ICON_BADGE = 'ICON PLAYER';
+
+  function isIconCard(card) {
+    return !!(card && (card.classList.contains('is-icon') || card.querySelector('.sp-card-icon-badge')));
+  }
+
+  function getBadgeText(card) {
+    var id = card && card.getAttribute('data-player-id');
+    if (id && labelStates[String(id)]) return labelStates[String(id)];
+    if (id && window.__spIconLabels && window.__spIconLabels[String(id)]) {
+      return window.__spIconLabels[String(id)];
+    }
+    var fromAttr = card && card.getAttribute('data-icon-badge');
+    if (fromAttr) return fromAttr;
+    var el = card && card.querySelector('.sp-card-icon-badge-txt');
+    return (el && el.textContent) || DEFAULT_ICON_BADGE;
+  }
+
+  function applyBadgeToCard(card, text) {
+    if (!card || !isIconCard(card)) return;
+    var txt = (text || '').trim() || DEFAULT_ICON_BADGE;
+    txt = txt.slice(0, 28).toUpperCase();
+    var el = card.querySelector('.sp-card-icon-badge-txt');
+    if (el) el.textContent = txt;
+    card.setAttribute('data-icon-badge', txt);
+    var id = card.getAttribute('data-player-id');
+    if (id) {
+      labelStates[String(id)] = txt;
+      window.__spIconLabels = window.__spIconLabels || {};
+      window.__spIconLabels[String(id)] = txt;
+    }
+  }
 
   function getState(card) {
     var k = photoKey(card);
@@ -223,8 +379,6 @@
 
   function clampDraft(d) {
     d.sw = Math.max(0.12, Math.min(1, d.sw || 1));
-    d.sh = d.sw * (nat.w / Math.max(1, nat.h)); // keep square in image pixels
-    // Re-express sh based on equal pixel side
     var sideW = d.sw * nat.w;
     d.sh = sideW / Math.max(1, nat.h);
     if (d.sh > 1) {
@@ -250,11 +404,11 @@
     imgEl.style.transform = 'none';
   }
 
-  function applyToCard(card, d) {
+  function applyToCard(card, d, fullSrc) {
     var img = card.querySelector('.sp-card-photo');
     var wrap = card.querySelector('.sp-card-photo-wrap') || (img && img.parentElement);
     if (!img || !wrap) return;
-    var full = fullPhotoSrc(card);
+    var full = fullSrc || (window.__spFullPhotos && window.__spFullPhotos[photoKey(card)]) || '';
     if (full) {
       if (!img.getAttribute('data-orig-crop')) {
         img.setAttribute('data-orig-crop', cropPhotoSrc(card) || img.src);
@@ -265,10 +419,7 @@
       var nw = img.naturalWidth || nat.w;
       var nh = img.naturalHeight || nat.h;
       if (!nw || !nh) return;
-      var dd = {
-        l: d.l, t: d.t, sw: d.sw, sh: d.sh
-      };
-      // same clamp with this image's nat
+      var dd = { l: d.l, t: d.t, sw: d.sw, sh: d.sh };
       var sideW = dd.sw * nw;
       dd.sh = sideW / nh;
       if (dd.sh > 1) {
@@ -298,7 +449,6 @@
   }
 
   function zoomPct(d) {
-    // 100% = full image width in frame; higher = tighter crop
     return Math.round(100 / Math.max(0.12, d.sw));
   }
 
@@ -314,6 +464,7 @@
   }
 
   function syncHits(list) {
+    if (!hitsEnabled) return;
     var layer = $('#spCardHitLayer');
     if (!layer) return;
     list.forEach(function (card) {
@@ -321,15 +472,14 @@
       var hit = hitMap[k];
       if (!hit) return;
       var r = card.getBoundingClientRect();
-      if (r.width < 8 || r.height < 8) {
+      if (r.width < 8 || r.height < 8 || r.bottom < 0 || r.top > window.innerHeight) {
         hit.style.display = 'none';
         return;
       }
+      // Compact Edit chip at card top-left (avoids full-card overlays colliding on mobile zoom)
       hit.style.display = 'flex';
-      hit.style.left = Math.round(r.left) + 'px';
-      hit.style.top = Math.round(r.top) + 'px';
-      hit.style.width = Math.round(r.width) + 'px';
-      hit.style.height = Math.round(r.height) + 'px';
+      hit.style.left = Math.round(r.left + 2) + 'px';
+      hit.style.top = Math.round(r.top + 2) + 'px';
     });
   }
 
@@ -355,7 +505,9 @@
     }
 
     root.innerHTML =
-      '<div class="spE-title">Tap Edit on a photo — starts matching the card, then drag to reframe</div>' +
+      '<div class="spE-title" id="spETitle">Tap <b>Adjust photos</b>, then pick a player</div>' +
+      '<div class="spE-pick" id="spEPick"></div>' +
+      '<div class="spE-loading" id="spELoading">Loading photo…</div>' +
       '<div class="spE-panel" id="spEPanel">' +
         '<div class="spE-head">' +
           '<h3 class="spE-name" id="spEName">Player</h3>' +
@@ -365,23 +517,29 @@
           '<div class="spE-thumb"><img id="spEBefore" alt=""/><span>On card now</span></div>' +
           '<div class="spE-stage-wrap">' +
             '<div class="spE-stage" id="spEStage"><img class="spE-img" id="spEImg" alt=""/></div>' +
-            '<div class="spE-frame-lbl">Card preview (drag photo)</div>' +
+            '<div class="spE-frame-lbl">Drag photo inside the yellow frame</div>' +
           '</div>' +
         '</div>' +
-        '<p class="spE-help">Yellow frame = poster crop. Pinch/zoom or slider to go tighter or wider.</p>' +
+        '<p class="spE-help">Pinch / zoom slider for tighter or wider crop</p>' +
         '<div class="spE-row">' +
-          '<button type="button" class="spE-btn" id="spEMinus">-</button>' +
+          '<button type="button" class="spE-btn" id="spEMinus">−</button>' +
           '<input type="range" id="spERange" min="100" max="400" value="100" step="2"/>' +
           '<button type="button" class="spE-btn" id="spEPlus">+</button>' +
           '<span id="spEZoomLbl">100%</span>' +
         '</div>' +
+        '<div class="spE-badge-row" id="spEBadgeRow">' +
+          '<label class="spE-badge-lbl" for="spEBadge">ICON capsule text</label>' +
+          '<input type="text" class="spE-badge-input" id="spEBadge" maxlength="28" placeholder="ICON PLAYER" autocomplete="off" autocapitalize="characters"/>' +
+          '<p class="spE-badge-hint">Shown on the gold capsule (e.g. ICON PLAYER, CAPTAIN, MVP)</p>' +
+        '</div>' +
         '<div class="spE-actions">' +
-          '<button type="button" class="spE-btn" id="spEReset">Reset auto</button>' +
+          '<button type="button" class="spE-btn" id="spEReset">Reset</button>' +
           '<button type="button" class="spE-btn primary" id="spEDone">Done</button>' +
         '</div>' +
       '</div>' +
-      '<p class="spE-hint" id="spEHint">Tap Edit on a player photo</p>';
+      '<p class="spE-hint" id="spEHint">Use Adjust photos to reframe player faces</p>';
 
+    var pickEl = $('#spEPick', root);
     var stage = $('#spEStage', root);
     var imgEl = $('#spEImg', root);
     var beforeEl = $('#spEBefore', root);
@@ -389,6 +547,48 @@
     var zoomLbl = $('#spEZoomLbl', root);
     var nameEl = $('#spEName', root);
     var hint = $('#spEHint', root);
+    var titleEl = $('#spETitle', root);
+    var badgeInput = $('#spEBadge', root);
+
+    list.forEach(function (card) {
+      var k = photoKey(card) || ('i' + Math.random());
+      getState(card);
+      if (isIconCard(card)) applyBadgeToCard(card, getBadgeText(card));
+      var chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'spE-chip';
+      var thumb = cropPhotoSrc(card);
+      var nm = card.getAttribute('data-player-name') || 'Player';
+      chip.innerHTML = '<img alt=""/><span></span>';
+      chip.querySelector('img').src = thumb;
+      chip.querySelector('span').textContent = nm;
+      chip.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        open(card);
+      });
+      pickEl.appendChild(chip);
+      chipMap[k] = chip;
+    });
+
+    function setPicking(on) {
+      root.classList.toggle('is-picking', !!on);
+      if (on) {
+        titleEl.innerHTML = 'Pick a player below, then drag to reframe';
+        hint.textContent = 'Scroll the row to find a player';
+        try { root.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+      } else if (!root.classList.contains('is-editing')) {
+        titleEl.innerHTML = 'Tap <b>Adjust photos</b>, then pick a player';
+        hint.textContent = 'Use Adjust photos to reframe player faces';
+      }
+    }
+
+    function setHits(on) {
+      hitsEnabled = on !== false;
+      var layer = $('#spCardHitLayer');
+      if (!layer) return;
+      layer.style.display = hitsEnabled ? '' : 'none';
+      if (hitsEnabled) syncHits(list);
+    }
 
     function refreshChrome() {
       layoutImg(imgEl, stage, draft);
@@ -397,31 +597,66 @@
       if (zoomLbl) zoomLbl.textContent = zp + '%';
     }
 
+    function highlightChip(card) {
+      var key = photoKey(card);
+      Object.keys(chipMap).forEach(function (k) {
+        chipMap[k].classList.toggle('is-on', k === key);
+      });
+      Object.keys(hitMap).forEach(function (k) {
+        hitMap[k].classList.toggle('is-on', hitMap[k].__spCard === card);
+      });
+    }
+
     function open(card) {
       active = card;
       var st = getState(card);
       draft = { l: st.l, t: st.t, sw: st.sw, sh: st.sh };
       nameEl.textContent = card.getAttribute('data-player-name') || 'Player';
       beforeEl.src = cropPhotoSrc(card);
-      var full = fullPhotoSrc(card) || cropPhotoSrc(card);
-      imgEl.onload = function () {
-        nat.w = imgEl.naturalWidth || 1;
-        nat.h = imgEl.naturalHeight || 1;
-        clampDraft(draft);
-        refreshChrome();
-      };
-      imgEl.src = full;
-      if (imgEl.complete && imgEl.naturalWidth) {
-        nat.w = imgEl.naturalWidth;
-        nat.h = imgEl.naturalHeight;
-        clampDraft(draft);
-        refreshChrome();
+      highlightChip(card);
+      var iconEdit = isIconCard(card);
+      root.classList.toggle('is-icon-edit', iconEdit);
+      if (badgeInput) {
+        badgeInput.value = getBadgeText(card);
+        if (iconEdit) {
+          // Live preview while typing
+          badgeInput.oninput = function () {
+            if (!active) return;
+            applyBadgeToCard(active, badgeInput.value);
+          };
+        } else {
+          badgeInput.oninput = null;
+        }
       }
-      Object.keys(hitMap).forEach(function (k) {
-        hitMap[k].classList.toggle('is-on', hitMap[k].__spCard === card);
+      root.classList.add('is-picking', 'is-loading');
+      root.classList.remove('is-editing');
+      hint.textContent = 'Loading full photo…';
+      loadFullPhoto(card).then(function (full) {
+        if (active !== card) return;
+        imgEl.onload = function () {
+          nat.w = imgEl.naturalWidth || 1;
+          nat.h = imgEl.naturalHeight || 1;
+          clampDraft(draft);
+          refreshChrome();
+          root.classList.remove('is-loading');
+          root.classList.add('is-editing');
+          hint.textContent = iconEdit
+            ? 'Drag photo · edit ICON capsule text below'
+            : 'Drag to move · zoom for tighter/wider crop';
+        };
+        imgEl.src = full || cropPhotoSrc(card);
+        if (imgEl.complete && imgEl.naturalWidth) {
+          nat.w = imgEl.naturalWidth;
+          nat.h = imgEl.naturalHeight;
+          clampDraft(draft);
+          refreshChrome();
+          root.classList.remove('is-loading');
+          root.classList.add('is-editing');
+          hint.textContent = iconEdit
+            ? 'Drag photo · edit ICON capsule text below'
+            : 'Drag to move · zoom for tighter/wider crop';
+        }
       });
-      root.classList.add('is-editing');
-      hint.textContent = 'Starts like the card · drag to move · zoom for tighter/wider crop';
       try { root.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
     }
 
@@ -430,16 +665,26 @@
         var st = getState(active);
         st.l = draft.l; st.t = draft.t; st.sw = draft.sw; st.sh = draft.sh;
         st.manual = true;
-        applyToCard(active, draft);
-        hint.textContent = 'Saved framing · will restore next time you open this poster';
+        var full = (window.__spFullPhotos && window.__spFullPhotos[photoKey(active)]) || '';
+        applyToCard(active, draft, full);
+        if (isIconCard(active) && badgeInput) {
+          applyBadgeToCard(active, badgeInput.value);
+        }
+        hint.textContent = 'Saved · will restore next time you open this poster';
         persistCrops([]);
       }
       active = null;
       drag = null;
-      root.classList.remove('is-editing');
+      root.classList.remove('is-editing', 'is-loading', 'is-icon-edit');
+      if (badgeInput) badgeInput.oninput = null;
       Object.keys(hitMap).forEach(function (k) { hitMap[k].classList.remove('is-on'); });
+      Object.keys(chipMap).forEach(function (k) { chipMap[k].classList.remove('is-on'); });
+      if (root.classList.contains('is-picking')) {
+        hint.textContent = 'Pick another player, or tap Adjust photos again to finish';
+      }
     }
 
+    // Always show compact Edit chips on every card (desktop + mobile)
     var layer = $('#spCardHitLayer');
     if (!layer) {
       layer = document.createElement('div');
@@ -448,7 +693,6 @@
     }
     layer.innerHTML = '';
     hitMap = {};
-
     list.forEach(function (card) {
       var k = photoKey(card) || ('i' + Math.random());
       var hit = document.createElement('button');
@@ -459,17 +703,17 @@
       hit.addEventListener('click', function (ev) {
         ev.preventDefault();
         ev.stopPropagation();
+        setPicking(true);
         open(card);
+        var editBtn = $('#spEditPhotos');
+        if (editBtn) editBtn.textContent = 'Done adjusting';
       });
       layer.appendChild(hit);
       hitMap[k] = hit;
-      // Re-apply saved framing on load (server + localStorage)
-      var st = getState(card);
-      if (st.manual) {
-        applyToCard(card, st);
-      }
     });
+    setHits(true);
     syncHits(list);
+
     window.addEventListener('scroll', function () { syncHits(list); }, true);
     window.addEventListener('resize', function () { syncHits(list); });
     var preview = $('.sp-preview-wrap');
@@ -478,7 +722,29 @@
     if (zoomSel) zoomSel.addEventListener('change', function () {
       setTimeout(function () { syncHits(list); }, 80);
     });
-    setInterval(function () { syncHits(list); }, 800);
+    if (syncTimer) clearInterval(syncTimer);
+    syncTimer = setInterval(function () {
+      if (hitsEnabled) syncHits(list);
+    }, 1200);
+
+    var editBtn = $('#spEditPhotos');
+    if (editBtn) {
+      editBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        var next = !root.classList.contains('is-picking') && !root.classList.contains('is-editing');
+        if (next) {
+          setPicking(true);
+          setHits(true);
+          editBtn.textContent = 'Done adjusting';
+        } else {
+          close(false);
+          setPicking(false);
+          setHits(true); // keep Edit chips visible
+          editBtn.textContent = 'Adjust photos';
+          root.classList.remove('is-picking', 'is-editing', 'is-loading', 'is-icon-edit');
+        }
+      });
+    }
 
     $('#spEDone', root).addEventListener('click', function (e) { e.preventDefault(); close(true); });
     $('#spEClose', root).addEventListener('click', function (e) { e.preventDefault(); close(false); });
@@ -492,7 +758,12 @@
       var st = getState(active);
       st.l = draft.l; st.t = draft.t; st.sw = draft.sw; st.sh = draft.sh;
       st.manual = false;
-      applyToCard(active, draft);
+      var full = (window.__spFullPhotos && window.__spFullPhotos[photoKey(active)]) || '';
+      applyToCard(active, draft, full);
+      if (isIconCard(active)) {
+        applyBadgeToCard(active, DEFAULT_ICON_BADGE);
+        if (badgeInput) badgeInput.value = DEFAULT_ICON_BADGE;
+      }
       var pid = active.getAttribute('data-player-id');
       if (pid) persistCrops([String(pid)]);
     });
@@ -526,7 +797,6 @@
       var pt = ev.touches ? ev.touches[0] : ev;
       var sidePx = draft.sw * nat.w;
       var scale = drag.stage / Math.max(1, sidePx);
-      // Moving image under window: drag right → crop moves left
       draft.l = drag.l0 - (pt.clientX - drag.x0) / (nat.w * scale);
       draft.t = drag.t0 - (pt.clientY - drag.y0) / (nat.h * scale);
       clampDraft(draft);
@@ -555,8 +825,13 @@
 
     var status = $('#spStatus');
     if (status) {
-      status.textContent = 'Tap Edit on a photo — framing is saved for next time';
+      status.textContent = 'Tap Edit on a photo — or use Adjust photos';
       status.className = 'sp-status is-ok';
+    }
+
+    var hintBar = $('.sp-hint');
+    if (hintBar) {
+      hintBar.textContent = '1) Tap Edit on a player · 2) Drag / zoom · 3) Done · 4) Save PNG/JPG';
     }
   }
 
@@ -566,6 +841,6 @@
     boot();
   }
   setTimeout(function () {
-    if (!$('#spCardHitLayer') || !$all('#spCardHitLayer .spE-hit').length) boot();
-  }, 500);
+    if (!$('#spEditorRoot')) boot();
+  }, 400);
 })();

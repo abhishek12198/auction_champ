@@ -6,12 +6,14 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Squad Poster — <t t-esc="team_name"/> | AuctionChamp</title>
-  <link rel="shortcut icon" href="/auction_module/static/description/icon.png" type="image/png"/>
-  <link rel="icon" href="/auction_module/static/description/icon.png" type="image/png"/>
+  <t t-set="sp_favicon" t-value="('/web/image/res.company/%d/favicon' % res_company.id) if (res_company and res_company.favicon) else '/auction_module/static/img/logo.svg'"/>
+  <link rel="shortcut icon" t-att-href="sp_favicon"/>
+  <link rel="icon" t-att-href="sp_favicon"/>
+  <link rel="apple-touch-icon" t-att-href="sp_favicon"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
   <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&amp;family=Oswald:wght@600;700&amp;family=Roboto+Condensed:ital,wght@0,700;1,700&amp;family=Russo+One&amp;family=Teko:wght@600;700&amp;display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="/auction_module/static/src/css/squad_poster.css?v=275"/>
+  <link rel="stylesheet" href="/auction_module/static/src/css/squad_poster.css?v=280"/>
 </head>
 <body class="sp-shell" t-att-data-palette="palette" t-att-data-team-name="team_name" t-att-data-tournament-name="tournament_name" id="spShell">
 
@@ -71,7 +73,7 @@
       </div>
     </div>
     <div class="sp-status" id="spStatus"></div>
-    <div class="sp-hint">1) Tap a player name · 2) Drag / zoom · 3) Done · 4) Save PNG/JPG</div>
+    <div class="sp-hint">1) Tap Edit on a player · 2) Drag / zoom · 3) Done · 4) Save PNG/JPG</div>
     <div class="sp-palette-row sp-btn-desktop" id="spPaletteRow">
       <span class="sp-palette-lbl">Palette</span>
       <button type="button" class="sp-swatch" data-palette="ember-orange" title="Ember"></button>
@@ -256,8 +258,7 @@
               <div class="sp-strike-tag" t-esc="strike_force.get('tagline') or 'ONE TEAM • ONE MISSION • ONE TROPHY'"/>
               <div class="sp-strike-stats">
                 <t t-foreach="strike_force.get('items') or []" t-as="st">
-                  <div class="sp-strike-stat" t-att-data-icon="st.get('icon') or ''">
-                    <div t-attf-class="sp-strike-ico sp-strike-ico--#{st.get('icon') or 'bowler'}" aria-hidden="true"></div>
+                  <div class="sp-strike-stat">
                     <div class="sp-strike-num" t-esc="st.get('value') or '00'"/>
                     <div class="sp-strike-lbl" t-esc="st.get('label') or ''"/>
                   </div>
@@ -298,7 +299,7 @@
   </div>
 
   <script src="/auction_module/static/src/lib/html2canvas.min.js"></script>
-  <script src="/auction_module/static/src/js/squad_poster_page.js?v=272"></script>
+  <script src="/auction_module/static/src/js/squad_poster_page.js?v=282"></script>
   <script>
     window.addEventListener('load', function () {
       if (!window.spEditPlayer) {
@@ -317,15 +318,15 @@
   <article t-attf-class="sp-card#{' is-icon' if pl.get('is_icon') else ''}"
            t-att-data-player-id="pl.get('id')"
            t-att-data-player-name="pl.get('name') or 'Player'"
-           t-att-data-photo-full="pl.get('photo_full_uri') or pl.get('photo_uri')"
-           t-att-data-photo-crop="pl.get('photo_uri')">
+           t-att-data-photo-crop="pl.get('photo_uri')"
+           t-att-data-icon-badge="pl.get('icon_badge') or 'ICON PLAYER'">
     <div class="sp-card-frame">
       <img class="sp-card-lava" src="/auction_module/static/src/assets/images/squad_poster/sp_icon_fire.jpg" alt=""/>
       <t t-if="pl.get('is_icon')">
         <div class="sp-card-spotlight" aria-hidden="true"></div>
         <div class="sp-card-icon-badge">
           <span class="sp-card-icon-badge-ico" aria-hidden="true">👑</span>
-          <span class="sp-card-icon-badge-txt">ICON PLAYER</span>
+          <span class="sp-card-icon-badge-txt" t-esc="pl.get('icon_badge') or 'ICON PLAYER'"/>
         </div>
       </t>
       <t t-if="pl.get('photo_uri')">

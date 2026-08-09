@@ -110,6 +110,13 @@
 
   // Phones: default to 1× export to avoid OOM crashes
   if (isMobile() && scaleSel) scaleSel.value = '1';
+  // On phones, JPG is the fast path — nudge the primary label
+  if (isMobile() && btnJpg) {
+    btnJpg.textContent = 'Save JPG (fast)';
+  }
+  if (isMobile() && btnPng) {
+    btnPng.textContent = 'Save image';
+  }
 
   function fitTeamName() {
     var left = canvas && canvas.querySelector('.sp-team-left');
@@ -228,7 +235,8 @@
       }
       var layerGap = parseFloat(getComputedStyle(layer).gap) || 3;
       usedOutside += Math.max(0, kids.length - 1) * layerGap;
-      var avail = layerH - usedOutside - 8;
+      // Extra clearance so last player row never sits under strike/sponsors
+      var avail = layerH - usedOutside - 16;
       if (avail > 120) {
         var gridRows = grid ? grid.querySelectorAll('.sp-grid-row').length : 0;
         var heroPad = heroCards.length ? 12 : 0;
@@ -236,9 +244,9 @@
         if (gridRows && side) {
           need += gridRows * side + Math.max(0, gridRows - 1) * rowGap;
         }
-        need += 6;
+        need += 10;
         if (need > avail) {
-          var scale = Math.max(0.72, avail / need);
+          var scale = Math.max(0.68, avail / need);
           if (scale < 0.995) {
             if (side && grid) {
               side = Math.max(48, Math.floor(side * scale));
@@ -421,17 +429,43 @@
       setStatus('Export library missing. Hard-refresh the page.', 'err');
       return;
     }
+    var mobile = isMobile();
     var scale = parseInt(scaleSel && scaleSel.value, 10) || 1;
-    if (isMobile()) scale = Math.min(scale, 1); // hard-cap on phones
+    if (mobile) scale = 1; // size comes from temporary smaller canvas
     var buttons = [btnPng, btnJpg, btnShare];
     buttons.forEach(function (b) { if (b) b.disabled = true; });
-    setStatus('Preparing poster…', '');
+    setStatus(mobile ? 'Saving…' : 'Preparing poster…', '');
+
+    var hitLayer = document.getElementById('spCardHitLayer');
+    var hitPrev = hitLayer ? hitLayer.style.display : '';
+    if (hitLayer) hitLayer.style.display = 'none';
 
     var prev = scaleBox ? scaleBox.style.transform : '';
     var prevOrigin = scaleBox ? scaleBox.style.transformOrigin : '';
     var prevZoom = scaleBox ? scaleBox.style.zoom : '';
-    // Capture at full size (unscaled) — critical for mobile
-    if (scaleBox) {
+    var prevCanvasW = canvas ? canvas.style.width : '';
+    var prevCanvasH = canvas ? canvas.style.height : '';
+    var photoBackups = [];
+    var softBackups = [];
+
+    // Mobile: capture a smaller canvas (720×1080) — ~2–4× faster than 1024×1536
+    var captureW = CANVAS_W;
+    var captureH = CANVAS_H;
+    if (mobile) {
+      captureW = 720;
+      captureH = 1080;
+      if (canvas) {
+        canvas.style.width = captureW + 'px';
+        canvas.style.height = captureH + 'px';
+      }
+      if (scaleBox) {
+        scaleBox.style.zoom = '1';
+        scaleBox.style.transform = 'none';
+        scaleBox.style.transformOrigin = 'top left';
+        scaleBox.style.marginBottom = '0';
+      }
+      sizeSquareCards();
+    } else if (scaleBox) {
       scaleBox.style.zoom = '1';
       scaleBox.style.transform = 'none';
       scaleBox.style.transformOrigin = 'top left';
@@ -439,140 +473,165 @@
     }
 
   function restoreExportUi() {
-    if (canvas) canvas.classList.remove('is-exporting');
+    // Restore baked photos
+    photoBackups.forEach(function (b) {
+      try {
+        if (b.wrap && b.html != null) b.wrap.innerHTML = b.html;
+      } catch (e) {}
+    });
+    photoBackups = [];
+    softBackups.forEach(function (k) {
+      k.el.style.visibility = k.v || '';
+      k.el.style.display = k.d || '';
+      k.el.style.filter = k.f || '';
+      k.el.style.mixBlendMode = k.m || '';
+    });
+    softBackups = [];
+    if (canvas) {
+      canvas.classList.remove('is-exporting');
+      canvas.style.width = prevCanvasW || '';
+      canvas.style.height = prevCanvasH || '';
+    }
+    if (hitLayer) hitLayer.style.display = hitPrev || '';
     if (scaleBox) {
       scaleBox.style.zoom = prevZoom || '';
       scaleBox.style.transform = prev || '';
       scaleBox.style.transformOrigin = prevOrigin || 'top center';
-      applyZoom();
     }
+    sizeSquareCards();
+    applyZoom();
+    restoreSloganLogoSrc();
   }
 
   function restoreSloganLogoSrc() {
     var logo = canvas && canvas.querySelector('.sp-slogan-logo');
     if (!logo) return;
-    var prev = logo.getAttribute('data-sp-export-prev');
-    if (prev) {
-      logo.setAttribute('src', prev);
+    var prevSrc = logo.getAttribute('data-sp-export-prev');
+    if (prevSrc) {
+      logo.setAttribute('src', prevSrc);
       logo.removeAttribute('data-sp-export-prev');
     }
     logo.style.filter = '';
     logo.style.opacity = '';
   }
 
-  /** html2canvas drops SVG <img>; rasterize slogan logo to PNG data-URL first. */
+  function softHide(sel) {
+    if (!canvas) return;
+    canvas.querySelectorAll(sel).forEach(function (el) {
+      softBackups.push({
+        el: el,
+        v: el.style.visibility,
+        d: el.style.display,
+        f: el.style.filter,
+        m: el.style.mixBlendMode
+      });
+      el.style.visibility = 'hidden';
+      el.style.display = 'none';
+      el.style.filter = 'none';
+      el.style.mixBlendMode = 'normal';
+    });
+  }
+
+  /** Flatten each card photo (with pan/zoom) into one small JPEG — huge html2canvas speedup */
+  function bakeCardPhotos(done) {
+    if (!mobile || !canvas) { done(); return; }
+    var wraps = canvas.querySelectorAll('.sp-card-photo-wrap');
+    if (!wraps.length) { done(); return; }
+    var i = 0;
+    function next() {
+      if (i >= wraps.length) { done(); return; }
+      var wrap = wraps[i++];
+      var img = wrap.querySelector('.sp-card-photo');
+      if (!img || !img.naturalWidth) { next(); return; }
+      var w = Math.max(32, wrap.clientWidth || 120);
+      var h = Math.max(32, wrap.clientHeight || 120);
+      var side = Math.min(160, Math.max(96, Math.round(w)));
+      try {
+        var c = document.createElement('canvas');
+        c.width = side;
+        c.height = side;
+        var ctx = c.getContext('2d', { alpha: false });
+        ctx.fillStyle = '#0a0604';
+        ctx.fillRect(0, 0, side, side);
+        var manual = img.style.width && img.style.left !== '' && img.style.position === 'absolute'
+          && img.style.transform === 'none';
+        if (manual) {
+          var iw = parseFloat(img.style.width) || img.offsetWidth || img.naturalWidth;
+          var ih = parseFloat(img.style.height) || img.offsetHeight || img.naturalHeight;
+          var il = parseFloat(img.style.left) || 0;
+          var it = parseFloat(img.style.top) || 0;
+          var sx = side / w;
+          ctx.drawImage(img, il * sx, it * sx, iw * sx, ih * sx);
+        } else {
+          // Default object-fit:cover
+          var nw = img.naturalWidth || side;
+          var nh = img.naturalHeight || side;
+          var sc = Math.max(side / nw, side / nh);
+          var dw = nw * sc;
+          var dh = nh * sc;
+          ctx.drawImage(img, (side - dw) / 2, (side - dh) / 2, dw, dh);
+        }
+        var data = c.toDataURL('image/jpeg', 0.8);
+        photoBackups.push({ wrap: wrap, html: wrap.innerHTML });
+        wrap.innerHTML = '<img class="sp-card-photo" alt="" draggable="false" src="' + data + '" style="position:absolute;left:0;top:0;width:100%;height:100%;max-width:none;max-height:none;object-fit:cover;transform:none;"/>';
+      } catch (eBake) {}
+      // Yield so UI stays responsive
+      if (i % 3 === 0) setTimeout(next, 0);
+      else next();
+    }
+    next();
+  }
+
   function prepareSloganLogoForExport(done) {
     var logo = canvas && canvas.querySelector('.sp-slogan-logo');
     if (!logo) { done(); return; }
-    var prev = logo.getAttribute('src') || '';
+    var prevSrc = logo.getAttribute('src') || '';
     if (!logo.getAttribute('data-sp-export-prev')) {
-      logo.setAttribute('data-sp-export-prev', prev);
+      logo.setAttribute('data-sp-export-prev', prevSrc);
     }
-    if (prev.indexOf('data:image/png') === 0) { done(); return; }
-
-    function applyDataUrl(dataUrl) {
+    if (prevSrc.indexOf('data:image/') === 0) { done(); return; }
+    if (window.__spSloganPng) {
+      logo.setAttribute('src', window.__spSloganPng);
       logo.style.filter = 'none';
       logo.style.opacity = '0.42';
-      logo.setAttribute('src', dataUrl);
-      if (logo.complete && logo.naturalWidth) done();
-      else {
-        logo.onload = function () { done(); };
-        logo.onerror = function () { usePngFallback(); };
-      }
+      done();
+      return;
     }
-
+    // Skip SVG raster on mobile — hide slogan logo
+    if (mobile) {
+      softBackups.push({
+        el: logo, v: logo.style.visibility, d: logo.style.display,
+        f: logo.style.filter, m: logo.style.mixBlendMode
+      });
+      logo.style.visibility = 'hidden';
+      done();
+      return;
+    }
     function usePngFallback() {
+      logo.setAttribute('src', '/auction_module/static/description/icon.png');
       logo.style.filter = 'none';
       logo.style.opacity = '0.42';
-      logo.setAttribute('src', '/auction_module/static/description/icon.png');
-      if (logo.complete && logo.naturalWidth) done();
-      else {
-        logo.onload = function () { done(); };
-        logo.onerror = function () { done(); };
-      }
+      done();
     }
-
-    function canvasHasInk(c) {
-      try {
-        var x = c.getContext('2d');
-        var d = x.getImageData(0, 0, Math.min(c.width, 64), Math.min(c.height, 64)).data;
-        for (var i = 3; i < d.length; i += 16) {
-          if (d[i] > 8) return true;
-        }
-      } catch (e) {}
-      return false;
+    if (prevSrc.indexOf('.svg') !== -1 && window.__spSloganPng) {
+      logo.setAttribute('src', window.__spSloganPng);
+      done();
+      return;
     }
-
-    function drawToPng(im) {
-      try {
-        var w = Math.max(2, im.naturalWidth || 241);
-        var h = Math.max(2, im.naturalHeight || 37);
-        var c = document.createElement('canvas');
-        c.width = w * 2;
-        c.height = h * 2;
-        var x = c.getContext('2d');
-        if (!x || !c.width || !c.height) { usePngFallback(); return; }
-        x.clearRect(0, 0, c.width, c.height);
-        x.drawImage(im, 0, 0, c.width, c.height);
-        if (!canvasHasInk(c)) { usePngFallback(); return; }
-        applyDataUrl(c.toDataURL('image/png'));
-      } catch (e) {
-        usePngFallback();
-      }
-    }
-
-    if (prev.indexOf('.svg') !== -1) {
-      fetch(prev, { credentials: 'same-origin' }).then(function (r) {
-        if (!r.ok) throw new Error('svg fetch failed');
-        return r.text();
-      }).then(function (svgText) {
-        // Explicit size required or canvas draw is blank in many browsers
-        var patched = svgText;
-        if (!/\swidth\s*=/.test(patched)) {
-          patched = patched.replace(/<svg\b/, '<svg width="482" height="74"');
-        }
-        var blob = new Blob([patched], { type: 'image/svg+xml;charset=utf-8' });
-        var url = URL.createObjectURL(blob);
-        var im = new Image();
-        im.onload = function () {
-          drawToPng(im);
-          URL.revokeObjectURL(url);
-        };
-        im.onerror = function () {
-          URL.revokeObjectURL(url);
-          usePngFallback();
-        };
-        im.src = url;
-      }).catch(function () { usePngFallback(); });
-    } else {
-      var im2 = new Image();
-      im2.crossOrigin = 'anonymous';
-      im2.onload = function () { drawToPng(im2); };
-      im2.onerror = function () { usePngFallback(); };
-      im2.src = prev;
-    }
+    usePngFallback();
   }
 
   function runCapture() {
-    sizeSquareCards();
     if (canvas) canvas.classList.add('is-exporting');
     if (window.__spClosePhotoEditor) {
       try { window.__spClosePhotoEditor(false); } catch (eClose) {}
     }
 
-    // Hide blend/filter FX on the live DOM too (ignoreElements alone is not enough)
-    var killed = [];
-    function softHide(sel) {
-      canvas.querySelectorAll(sel).forEach(function (el) {
-        killed.push({ el: el, v: el.style.visibility, d: el.style.display, f: el.style.filter, m: el.style.mixBlendMode });
-        el.style.visibility = 'hidden';
-        el.style.filter = 'none';
-        el.style.mixBlendMode = 'normal';
-      });
-    }
-    softHide('.sp-fx-smoke, .sp-fx-fire, .sp-fx-sparks, .sp-fx-flare, .sp-brand-logo, .sp-type-glow');
+    // Strip heavy textures (lava on every card + stadium FX) — biggest mobile win
+    softHide('.sp-fx-smoke, .sp-fx-fire, .sp-fx-sparks, .sp-fx-flare, .sp-brand-logo, .sp-type-glow, .sp-card-lava, .sp-bg-img, .sp-bg-tourn');
+    if (mobile) softHide('.sp-card-spotlight');
+
     canvas.querySelectorAll('img').forEach(function (img) {
-      if (img.classList && img.classList.contains('sp-slogan-logo')) return;
       img.style.filter = 'none';
       img.style.mixBlendMode = 'normal';
     });
@@ -580,12 +639,14 @@
       el.style.filter = 'none';
     });
 
+    setStatus(mobile ? 'Rendering…' : 'Capturing…', '');
+
     var opts = {
       scale: scale,
-      width: CANVAS_W,
-      height: CANVAS_H,
-      windowWidth: CANVAS_W,
-      windowHeight: CANVAS_H,
+      width: captureW,
+      height: captureH,
+      windowWidth: captureW,
+      windowHeight: captureH,
       x: 0,
       y: 0,
       scrollX: 0,
@@ -594,7 +655,7 @@
       useCORS: true,
       allowTaint: true,
       logging: false,
-      imageTimeout: 15000,
+      imageTimeout: mobile ? 1500 : 10000,
       foreignObjectRendering: false,
       removeContainer: true,
       ignoreElements: function (el) {
@@ -608,11 +669,11 @@
           if (el.classList.contains('sp-fx-sparks')) return true;
           if (el.classList.contains('sp-fx-flare')) return true;
           if (el.classList.contains('sp-type-glow')) return true;
+          if (el.classList.contains('sp-card-lava')) return true;
           if (el.classList.contains('sp-photo-edit-btn')) return true;
           if (el.classList.contains('sp-peditor')) return true;
           if (el.classList.contains('sp-hint')) return true;
         }
-        if (tag === 'img' && el.classList && el.classList.contains('sp-slogan-logo')) return false;
         if (tag === 'img' && el.complete && el.naturalWidth === 0) return true;
         return false;
       },
@@ -620,49 +681,28 @@
         var root = doc.getElementById('spCanvas') || cloned;
         if (root) {
           root.classList.add('is-exporting');
-          root.style.width = CANVAS_W + 'px';
-          root.style.height = CANVAS_H + 'px';
+          root.style.width = captureW + 'px';
+          root.style.height = captureH + 'px';
           root.style.transform = 'none';
           root.style.overflow = 'hidden';
+          root.style.background = '#050506';
         }
-        // Kill every blend/filter in the clone tree
-        Array.prototype.forEach.call(doc.querySelectorAll('*'), function (n) {
-          if (!n.style) return;
-          n.style.mixBlendMode = 'normal';
-          n.style.filter = 'none';
-          n.style.backdropFilter = 'none';
-          n.style.webkitBackdropFilter = 'none';
-        });
-        Array.prototype.forEach.call(
-          doc.querySelectorAll('svg, .sp-brand-logo, .sp-fx-smoke, .sp-fx-fire, .sp-fx-sparks, .sp-fx-flare, .sp-type-glow'),
-          function (n) { if (n && n.parentNode) n.parentNode.removeChild(n); }
-        );
-        // Export-safe slogan watermark (logo is already a PNG data-URL)
-        var slogan = doc.querySelector('.sp-slogan');
-        if (slogan) {
-          slogan.style.zIndex = '0';
-          slogan.style.opacity = '1';
-          slogan.style.visibility = 'visible';
-          slogan.style.display = 'flex';
-        }
-        Array.prototype.forEach.call(doc.querySelectorAll('.sp-slogan-logo'), function (img) {
-          img.style.filter = 'none';
-          img.style.opacity = '0.42';
-          img.style.visibility = 'visible';
-          img.style.display = 'block';
-        });
-        Array.prototype.forEach.call(doc.querySelectorAll('.sp-slogan-word'), function (el) {
-          el.style.setProperty('color', 'rgba(255,255,255,0.45)', 'important');
-          el.style.setProperty('-webkit-text-fill-color', 'rgba(255,255,255,0.45)', 'important');
-          el.style.setProperty('opacity', '1', 'important');
-          el.style.setProperty('visibility', 'visible', 'important');
-        });
-        Array.prototype.forEach.call(doc.querySelectorAll('.sp-slogan-dot'), function (el) {
-          el.style.setProperty('color', 'rgba(232,197,71,0.5)', 'important');
-          el.style.setProperty('-webkit-text-fill-color', 'rgba(232,197,71,0.5)', 'important');
-          el.style.setProperty('opacity', '1', 'important');
-        });
-        // Opaque title fills
+        var st = doc.createElement('style');
+        st.textContent = [
+          '#spCanvas.is-exporting,#spCanvas.is-exporting *{',
+          'mix-blend-mode:normal!important;filter:none!important;',
+          'backdrop-filter:none!important;-webkit-backdrop-filter:none!important;',
+          'box-shadow:none!important;text-shadow:none!important}',
+          '.sp-card-lava,.sp-fx-smoke,.sp-fx-fire,.sp-fx-sparks,.sp-fx-flare,',
+          '.sp-type-glow,.sp-brand-logo,.sp-bg-img,.sp-bg-tourn,.sp-card-spotlight{display:none!important}',
+          '.sp-bg{background:#050506!important}',
+          '.sp-strike-rule,.sp-sponsors-rule,.sp-season-rule{',
+          'background:#e8c547!important;background-image:none!important;height:2px!important;opacity:.85}',
+          '.sp-slogan-word{color:rgba(255,255,255,.45)!important;-webkit-text-fill-color:rgba(255,255,255,.45)!important}',
+          '.sp-slogan-dot{color:rgba(232,197,71,.5)!important;-webkit-text-fill-color:rgba(232,197,71,.5)!important}'
+        ].join('');
+        (doc.head || doc.documentElement).appendChild(st);
+
         var nodes = doc.querySelectorAll('.sp-type-face, .sp-team-word-face, .sp-season, .sp-strike-title, .sp-strike-num');
         for (var i = 0; i < nodes.length; i++) {
           var el = nodes[i];
@@ -687,127 +727,88 @@
           }
           el.style.setProperty('background-image', 'none', 'important');
           el.style.setProperty('background', 'transparent', 'important');
-          el.style.setProperty('-webkit-background-clip', 'border-box', 'important');
-          el.style.setProperty('background-clip', 'border-box', 'important');
           el.style.setProperty('color', fill, 'important');
           el.style.setProperty('-webkit-text-fill-color', fill, 'important');
           el.style.setProperty('-webkit-text-stroke', '0', 'important');
-          el.style.setProperty('filter', 'none', 'important');
         }
-        // Solid rules (gradients → pattern canvases can go 0×0)
-        Array.prototype.forEach.call(
-          doc.querySelectorAll('.sp-strike-rule, .sp-sponsors-rule, .sp-season-rule'),
-          function (n) {
-            n.style.background = '#e8c547';
-            n.style.backgroundImage = 'none';
-            n.style.height = '2px';
-            n.style.opacity = '0.85';
-          }
-        );
-        // Sponsor tiles — force non-zero boxes
         var srow = doc.querySelector('.sp-sponsors-row');
         if (srow) {
-          var sCols = 10, sGap = 6, sw = CANVAS_W - 52;
-          var sSide = Math.max(40, Math.floor((sw - (sCols - 1) * sGap) / sCols));
+          var sCols = 10, sGap = 6, sw = captureW - 40;
+          var sSide = Math.max(28, Math.floor((sw - (sCols - 1) * sGap) / sCols));
           Array.prototype.forEach.call(srow.querySelectorAll('.sp-sponsor'), function (box) {
             box.style.width = sSide + 'px';
             box.style.height = sSide + 'px';
-            box.style.minWidth = sSide + 'px';
-            box.style.minHeight = sSide + 'px';
             box.style.flex = '0 0 ' + sSide + 'px';
           });
         }
-        // Drop zero-size / broken images from clone (keep slogan logo — already PNG data-URL)
-        Array.prototype.forEach.call(doc.querySelectorAll('img'), function (img) {
-          var src = img.getAttribute('src') || '';
-          var isSlogan = img.classList && img.classList.contains('sp-slogan-logo');
-          if (isSlogan) {
-            img.style.filter = 'none';
-            img.style.mixBlendMode = 'normal';
-            img.style.opacity = '0.42';
-            return;
-          }
-          if (!src || src.indexOf('.svg') !== -1) {
-            if (img.parentNode) img.parentNode.removeChild(img);
-            return;
-          }
-          img.style.filter = 'none';
-          img.style.mixBlendMode = 'normal';
-          if (img.style.width === '0px' || img.style.height === '0px') {
-            if (img.parentNode) img.parentNode.removeChild(img);
-          }
-        });
       }
     };
 
-    function cleanupKilled() {
-      killed.forEach(function (k) {
-        k.el.style.visibility = k.v || '';
-        k.el.style.display = k.d || '';
-        k.el.style.filter = k.f || '';
-        k.el.style.mixBlendMode = k.m || '';
-      });
-      restoreSloganLogoSrc();
+    function finishBlob(blob, w, h) {
+      buttons.forEach(function (b) { if (b) b.disabled = false; });
+      if (!blob) { setStatus('Export failed — try again.', 'err'); return; }
+      var outFmt = mobile ? 'jpg' : fmt;
+      var filename = posterFileName(outFmt);
+      downloadBlob(blob, filename);
+      setStatus('Ready · ' + w + '×' + h, 'ok');
     }
 
+    var t0 = Date.now();
     window.html2canvas(canvas, opts).then(function (off) {
-      cleanupKilled();
       restoreExportUi();
-      // Always rasterize via an offscreen canvas (avoids JPEG alpha quirks)
+      if (!off.width || !off.height) {
+        buttons.forEach(function (b) { if (b) b.disabled = false; });
+        setStatus('Export failed — empty canvas. Try Save JPG.', 'err');
+        return;
+      }
+      setStatus('Encoding… (' + Math.round((Date.now() - t0) / 100) / 10 + 's)', '');
+
+      var mime = 'image/jpeg';
+      var q = mobile ? 0.82 : (fmt === 'jpg' ? 0.92 : 0.92);
+      if (!mobile && fmt === 'png') mime = 'image/png';
+
+      function encodeFrom(source) {
+        if (source.toBlob) {
+          source.toBlob(function (blob) {
+            finishBlob(blob, source.width, source.height);
+          }, mime, q);
+        } else {
+          var dataUrl = source.toDataURL(mime, q);
+          var arr = dataUrl.split(','), bstr = atob(arr[1]), n = bstr.length, u8 = new Uint8Array(n);
+          while (n--) u8[n] = bstr.charCodeAt(n);
+          finishBlob(new Blob([u8], { type: mime }), source.width, source.height);
+        }
+      }
+
+      if (mime === 'image/png') {
+        encodeFrom(off);
+        return;
+      }
       var out = document.createElement('canvas');
       out.width = off.width;
       out.height = off.height;
-      if (!out.width || !out.height) {
-        buttons.forEach(function (b) { if (b) b.disabled = false; });
-        setStatus('Export failed — empty canvas. Try Save PNG.', 'err');
-        return;
-      }
-      var ctx = out.getContext('2d');
+      var ctx = out.getContext('2d', { alpha: false });
       ctx.fillStyle = '#050506';
       ctx.fillRect(0, 0, out.width, out.height);
       ctx.drawImage(off, 0, 0);
-      var mime = fmt === 'jpg' ? 'image/jpeg' : 'image/png';
-      var q = fmt === 'jpg' ? 0.92 : undefined;
-      function finish(blob) {
-        buttons.forEach(function (b) { if (b) b.disabled = false; });
-        if (!blob) { setStatus('Export failed — try again.', 'err'); return; }
-        var filename = posterFileName(fmt);
-        downloadBlob(blob, filename);
-        if (!isMobile()) {
-          setStatus('Saved · ' + out.width + '×' + out.height, 'ok');
-        }
-      }
-      if (out.toBlob) {
-        out.toBlob(finish, mime, q);
-      } else {
-        var dataUrl = out.toDataURL(mime, q);
-        var arr = dataUrl.split(','), bstr = atob(arr[1]), n = bstr.length, u8 = new Uint8Array(n);
-        while (n--) u8[n] = bstr.charCodeAt(n);
-        finish(new Blob([u8], { type: mime }));
-      }
+      try { off.width = 0; off.height = 0; } catch (eFree) {}
+      encodeFrom(out);
     }).catch(function (err) {
-      cleanupKilled();
       restoreExportUi();
       buttons.forEach(function (b) { if (b) b.disabled = false; });
-      setStatus('Export error: ' + (err && err.message ? err.message : err) + ' — try Save PNG', 'err');
+      setStatus('Export error: ' + (err && err.message ? err.message : err), 'err');
     });
   }
 
-  // Wait for webfonts + images + layout settle, then rasterize SVG slogan logo for export
-  var fontsReady = (document.fonts && document.fonts.ready)
-    ? document.fonts.ready.catch(function () {})
-    : Promise.resolve();
-  fontsReady.then(function () {
-    setTimeout(function () {
-      var persist = (typeof window.__spPersistPhotoCrops === 'function')
-        ? window.__spPersistPhotoCrops()
-        : Promise.resolve();
-      Promise.resolve(persist).finally(function () {
-        prepareSloganLogoForExport(function () {
-          runCapture();
-        });
-      });
-    }, 120);
+  try {
+    if (typeof window.__spPersistPhotoCrops === 'function') window.__spPersistPhotoCrops();
+  } catch (ePersist) {}
+
+  prepareSloganLogoForExport(function () {
+    setStatus(mobile ? 'Preparing photos…' : 'Preparing…', '');
+    bakeCardPhotos(function () {
+      requestAnimationFrame(function () { runCapture(); });
+    });
   });
 }
 
@@ -818,4 +819,38 @@
   // Photo editing handled by squad_poster_editor.js (injected by controller)
   window.__spClosePhotoEditor = window.__spClosePhotoEditor || function () {};
   window.spEditPlayer = window.spEditPlayer || function () { return false; };
+
+  // Warm slogan PNG so first Save is faster
+  if (canvas && canvas.querySelector('.sp-slogan-logo') && !window.__spSloganPng) {
+    setTimeout(function () {
+      try {
+        var logo = canvas.querySelector('.sp-slogan-logo');
+        if (!logo) return;
+        var src = logo.getAttribute('src') || '';
+        if (src.indexOf('.svg') === -1) return;
+        fetch(src, { credentials: 'same-origin' }).then(function (r) { return r.text(); }).then(function (svgText) {
+          var patched = svgText;
+          if (!/\swidth\s*=/.test(patched)) {
+            patched = patched.replace(/<svg\b/, '<svg width="482" height="74"');
+          }
+          var blob = new Blob([patched], { type: 'image/svg+xml;charset=utf-8' });
+          var url = URL.createObjectURL(blob);
+          var im = new Image();
+          im.onload = function () {
+            try {
+              var c = document.createElement('canvas');
+              c.width = Math.max(2, im.naturalWidth);
+              c.height = Math.max(2, im.naturalHeight);
+              var x = c.getContext('2d');
+              x.drawImage(im, 0, 0);
+              window.__spSloganPng = c.toDataURL('image/png');
+            } catch (e) {}
+            URL.revokeObjectURL(url);
+          };
+          im.onerror = function () { URL.revokeObjectURL(url); };
+          im.src = url;
+        }).catch(function () {});
+      } catch (e) {}
+    }, 1200);
+  }
 })();

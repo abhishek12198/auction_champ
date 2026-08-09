@@ -721,3 +721,74 @@ body.hide-main-menu .oe_main_menu_navbar {
     padding: 0 !important;
     width: 100% !important;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   Update Tier Limits & Slabs wizard
+   ══════════════════════════════════════════════════════════════════ */
+.o_dialog .modal-dialog:has(.o_update_tier_slab_wiz),
+.modal-dialog:has(.o_update_tier_slab_wiz) {
+    max-width: 920px;
+    width: 92vw;
+}
+.o_update_tier_slab_wiz .o_notebook {
+    margin-top: 4px;
+}
+.o_update_tier_slab_wiz .o_notebook > .nav-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+    border-bottom: 1px solid #dbe3f0;
+    margin: 0 0 12px;
+    padding: 0;
+}
+.o_update_tier_slab_wiz .o_notebook > .nav-tabs > li {
+    float: none;
+    margin: 0;
+}
+.o_update_tier_slab_wiz .o_notebook > .nav-tabs > li > a {
+    border: 1px solid transparent;
+    border-radius: 8px 8px 0 0;
+    padding: 8px 16px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #475569;
+    background: transparent;
+}
+.o_update_tier_slab_wiz .o_notebook > .nav-tabs > li > a.active,
+.o_update_tier_slab_wiz .o_notebook > .nav-tabs > li.active > a {
+    color: #1e4080;
+    background: #f0f6ff;
+    border-color: #dbe3f0 #dbe3f0 #fff;
+}
+.o_update_tier_slab_wiz .tab-content {
+    padding: 4px 2px 8px;
+}
+.o_update_tier_slab_wiz .o_list_view {
+    width: 100%;
+}
+.o_update_tier_slab_wiz .o_list_table {
+    table-layout: auto;
+}
+.o_update_tier_slab_wiz .o_list_table th,
+.o_update_tier_slab_wiz .o_list_table td {
+    vertical-align: middle !important;
+    white-space: nowrap;
+}
+.o_update_tier_slab_wiz .o_boolean_toggle,
+.o_update_tier_slab_wiz .o_field_boolean {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+.o_update_tier_slab_wiz .o_field_boolean_toggle {
+    justify-content: center;
+}
+.o_update_tier_slab_wiz .o_group .o_td_label {
+    min-width: 0;
+    padding-right: 12px;
+}
+.o_update_tier_slab_wiz .alert {
+    font-size: 0.875rem;
+    line-height: 1.45;
+}

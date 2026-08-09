@@ -353,6 +353,9 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 '</div>',
             ].join('');
             this.$el.html(html);
+            if (this.state.step === 3 && this.state.structure) {
+                this._bindPoolTeamDnD();
+            }
             if (this.state.step === 4 && this.state.fixture) {
                 this._bindFixtureDnD();
             }
@@ -473,18 +476,23 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                     var logo = t.logo_url
                         ? '<img class="pg-pool-team-logo" src="' + esc(t.logo_url) + '" alt=""/>'
                         : '<span class="pg-pool-team-ph">' + esc(t.initials || '?') + '</span>';
-                    return '<div class="pg-pool-team">' +
+                    return '<div class="pg-pool-team" draggable="true" ' +
+                        'data-pool-idx="' + i + '" data-team-id="' + t.id + '" data-team-idx="' + ti + '" ' +
+                        'title="Drag to another pool">' +
+                        '<span class="pg-pool-team-grip" aria-hidden="true">⠿</span>' +
                         '<span class="pg-pool-team-no">' + (ti + 1) + '</span>' +
                         logo +
                         '<span class="pg-pool-team-name">' + esc(t.name) + '</span></div>';
                 }).join('');
-                return '<div class="pg-pool-col">' +
+                return '<div class="pg-pool-col" data-pool-idx="' + i + '">' +
                     '<div class="pg-pool-hd" style="--pool-c:' + color + '">' +
                     '<span class="pg-pool-hd-kicker">GROUP</span>' +
                     '<span class="pg-pool-hd-name">' + esc(pool.name) + '</span>' +
                     '<span class="pg-pool-hd-count">' + (pool.teams || []).length + ' teams</span>' +
                     '</div>' +
-                    '<div class="pg-pool-list">' + rows + '</div></div>';
+                    '<div class="pg-pool-list" data-pool-idx="' + i + '">' +
+                    (rows || '<div class="pg-pool-list-empty">Drop teams here</div>') +
+                    '</div></div>';
             }).join('');
 
             var nameEditors = this.state.poolNames.map(function (p) {
@@ -498,7 +506,7 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             return [
                 '<div class="pg-panel">',
                 '<h2 class="pg-panel-title">Pool Draw</h2>',
-                '<p class="pg-panel-hint">Reshuffle to redraw randomly, rename pools and apply without reshuffling, or download a snapshot.</p>',
+                '<p class="pg-panel-hint">Drag teams between pools to fine-tune the draw. Reshuffle redraws randomly. Rename pools and apply without reshuffling.</p>',
                 '<div class="pg-toolbar">',
                 '<button type="button" class="pg-btn pg-btn-reshuffle">Reshuffle</button>',
                 '<button type="button" class="pg-btn pg-btn-apply-names">Apply Names</button>',
@@ -713,6 +721,200 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 self._toast('Names applied');
             });
         },
+
+        /** Rebuild pools[] team lists from structure[] using cached team payloads. */
+        _rebuildPoolsFromStructure: function () {
+            var self = this;
+            var teamMap = {};
+            (this.state.pools || []).forEach(function (p) {
+                (p.teams || []).forEach(function (t) {
+                    if (t && t.id) teamMap[t.id] = t;
+                });
+            });
+            this.state.pools = (this.state.structure || []).map(function (ids, i) {
+                var prev = (self.state.pools && self.state.pools[i]) || {};
+                return {
+                    index: i + 1,
+                    name: prev.name || ('Pool ' + (i + 1)),
+                    teams: (ids || []).map(function (id) {
+                        return teamMap[id];
+                    }).filter(Boolean),
+                };
+            });
+        },
+
+        /**
+         * Move a team from one pool to another (or reorder inside the same pool).
+         * @param {number} fromPoolIdx
+         * @param {number} teamId
+         * @param {number} toPoolIdx
+         * @param {number|null} toTeamIdx insert before this index in destination (null = append)
+         */
+        _moveTeamToPool: function (fromPoolIdx, teamId, toPoolIdx, toTeamIdx) {
+            if (!this.state.structure) return false;
+            teamId = parseInt(teamId, 10);
+            fromPoolIdx = parseInt(fromPoolIdx, 10);
+            toPoolIdx = parseInt(toPoolIdx, 10);
+            var structure = this.state.structure.map(function (p) {
+                return (p || []).slice();
+            });
+            if (fromPoolIdx < 0 || toPoolIdx < 0 ||
+                fromPoolIdx >= structure.length || toPoolIdx >= structure.length) {
+                return false;
+            }
+            var from = structure[fromPoolIdx];
+            var ti = from.indexOf(teamId);
+            if (ti < 0) {
+                // ids may be strings from JSON
+                ti = from.map(Number).indexOf(teamId);
+            }
+            if (ti < 0) return false;
+
+            from.splice(ti, 1);
+            var to = structure[toPoolIdx];
+            var insertAt = (toTeamIdx == null || toTeamIdx < 0) ? to.length : toTeamIdx;
+            if (fromPoolIdx === toPoolIdx && ti < insertAt) {
+                insertAt -= 1;
+            }
+            insertAt = Math.max(0, Math.min(to.length, insertAt));
+            // Avoid no-op same position
+            if (fromPoolIdx === toPoolIdx && insertAt === ti) {
+                return false;
+            }
+            to.splice(insertAt, 0, teamId);
+            this.state.structure = structure;
+            this.state.fixture = null;
+            this._rebuildPoolsFromStructure();
+            return true;
+        },
+
+        _syncPoolsAfterMove: function () {
+            var self = this;
+            this._render();
+            this._toast('Team moved — projector updating…');
+            this._pgRpc({
+                model: 'auction.team.pool.wizard',
+                method: 'client_apply_names',
+                args: [this.state.structure, this._nameList()],
+            }).then(function (res) {
+                self.state.structure = res.structure || self.state.structure;
+                self.state.pools = res.pools || self.state.pools;
+                self.state.tournamentName = res.tournament_name || self.state.tournamentName;
+                self._toast('Pools updated');
+            }).catch(function (err) {
+                Dialog.alert(self, (err && err.data && err.data.message) || 'Failed to sync pool move');
+            });
+        },
+
+        _bindPoolTeamDnD: function () {
+            var self = this;
+            var board = this.el && this.el.querySelector('#pg-pool-board');
+            if (!board) return;
+
+            this._poolDrag = null;
+
+            function clearOver() {
+                Array.prototype.forEach.call(
+                    board.querySelectorAll('.pg-pool-team.is-over, .pg-pool-list.is-over, .pg-pool-col.is-over'),
+                    function (n) { n.classList.remove('is-over'); }
+                );
+            }
+
+            function parseDropTarget(el) {
+                var team = el.closest ? el.closest('.pg-pool-team') : null;
+                var list = el.closest ? el.closest('.pg-pool-list') : null;
+                if (!list && el.classList && el.classList.contains('pg-pool-list')) list = el;
+                if (!list) return null;
+                var toPoolIdx = parseInt(list.getAttribute('data-pool-idx'), 10);
+                var toTeamIdx = null;
+                if (team && team.getAttribute('data-team-idx') != null) {
+                    toTeamIdx = parseInt(team.getAttribute('data-team-idx'), 10);
+                }
+                return { toPoolIdx: toPoolIdx, toTeamIdx: toTeamIdx, teamEl: team, listEl: list };
+            }
+
+            Array.prototype.forEach.call(board.querySelectorAll('.pg-pool-team'), function (el) {
+                el.setAttribute('draggable', 'true');
+                el.addEventListener('dragstart', function (ev) {
+                    self._poolDrag = {
+                        poolIdx: parseInt(el.getAttribute('data-pool-idx'), 10),
+                        teamId: parseInt(el.getAttribute('data-team-id'), 10),
+                        teamIdx: parseInt(el.getAttribute('data-team-idx'), 10),
+                    };
+                    el.classList.add('is-dragging');
+                    board.classList.add('is-dnd');
+                    try {
+                        ev.dataTransfer.effectAllowed = 'move';
+                        ev.dataTransfer.setData('text/plain', String(self._poolDrag.teamId));
+                        if (ev.dataTransfer.setDragImage) {
+                            ev.dataTransfer.setDragImage(el, 20, 16);
+                        }
+                    } catch (e) { /* ignore */ }
+                });
+                el.addEventListener('dragend', function () {
+                    el.classList.remove('is-dragging');
+                    board.classList.remove('is-dnd');
+                    clearOver();
+                    self._poolDrag = null;
+                });
+                el.addEventListener('dragover', function (ev) {
+                    if (!self._poolDrag) return;
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    try { ev.dataTransfer.dropEffect = 'move'; } catch (e) { /* ignore */ }
+                    clearOver();
+                    el.classList.add('is-over');
+                    var col = el.closest('.pg-pool-col');
+                    if (col) col.classList.add('is-over');
+                });
+                el.addEventListener('drop', function (ev) {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    var drag = self._poolDrag;
+                    clearOver();
+                    if (!drag) return;
+                    var target = parseDropTarget(el);
+                    if (!target) return;
+                    if (self._moveTeamToPool(drag.poolIdx, drag.teamId, target.toPoolIdx, target.toTeamIdx)) {
+                        self._syncPoolsAfterMove();
+                    }
+                });
+            });
+
+            Array.prototype.forEach.call(board.querySelectorAll('.pg-pool-list'), function (list) {
+                list.addEventListener('dragover', function (ev) {
+                    if (!self._poolDrag) return;
+                    ev.preventDefault();
+                    try { ev.dataTransfer.dropEffect = 'move'; } catch (e) { /* ignore */ }
+                    // Only highlight list when not over a team row
+                    if (!(ev.target.closest && ev.target.closest('.pg-pool-team'))) {
+                        clearOver();
+                        list.classList.add('is-over');
+                        var col = list.closest('.pg-pool-col');
+                        if (col) col.classList.add('is-over');
+                    }
+                });
+                list.addEventListener('dragleave', function (ev) {
+                    if (!list.contains(ev.relatedTarget)) {
+                        list.classList.remove('is-over');
+                    }
+                });
+                list.addEventListener('drop', function (ev) {
+                    // If dropped on a team, that handler already ran
+                    if (ev.target.closest && ev.target.closest('.pg-pool-team')) return;
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    var drag = self._poolDrag;
+                    clearOver();
+                    if (!drag) return;
+                    var toPoolIdx = parseInt(list.getAttribute('data-pool-idx'), 10);
+                    if (self._moveTeamToPool(drag.poolIdx, drag.teamId, toPoolIdx, null)) {
+                        self._syncPoolsAfterMove();
+                    }
+                });
+            });
+        },
+
         _onFixtureType: function (ev) {
             this.state.fixtureType = $(ev.currentTarget).data('value');
             this._render();

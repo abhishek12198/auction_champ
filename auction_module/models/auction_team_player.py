@@ -401,6 +401,11 @@ class AuctionTeamPlayer(models.Model):
         help="JSON crop window {l,t,sw,sh} for squad poster pan/zoom. "
              "Normalized against the full player photo.",
     )
+    squad_poster_icon_label = fields.Char(
+        string="Squad Poster Icon Label",
+        help="Custom text for the gold ICON capsule on the squad poster "
+             "(e.g. ICON PLAYER, CAPTAIN). Empty uses the default.",
+    )
     photo_card = fields.Binary(
         string='Photo (Card Print)',
         compute='_compute_photo_card',

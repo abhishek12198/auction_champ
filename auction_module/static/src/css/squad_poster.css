@@ -54,8 +54,10 @@ html,body{margin:0;padding:0;min-height:100%;background:#030304;color:var(--sp-t
   .sp-toolbar-actions{gap:10px}
   .sp-btn{flex:1 1 42%;min-width:140px;font-size:14px;padding:12px 14px}
   .sp-btn-desktop{display:none!important}
+  #spEditPhotos{flex:1 1 100%;order:-1;min-height:48px;font-size:15px}
   .sp-preview-wrap{padding:12px 0 80px}
   .sp-status{font-size:13px;line-height:1.35}
+  .sp-hint{font-size:12px;line-height:1.4;padding:0 8px}
 }
 
 .sp-canvas{position:relative;width:1024px;height:1536px;aspect-ratio:2/3;overflow:hidden;background:#050506;box-shadow:0 24px 80px rgba(0,0,0,.65);pointer-events:none}
@@ -610,13 +612,13 @@ html,body{margin:0;padding:0;min-height:100%;background:#030304;color:var(--sp-t
   letter-spacing:0;
 }
 
-/* Strike Force band — fills space between squad and sponsors */
+/* Strike Force band — numbers/labels only, no icons above stats */
 .sp-strike{
   flex:0 0 auto;
   width:100%;
-  margin:6px 0 2px;
-  padding:0 8px 2px;
-  display:flex;flex-direction:column;align-items:center;gap:4px;
+  margin:4px 0 0;
+  padding:2px 8px 2px;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
 }
 .sp-strike-rule{
   width:100%;max-width:920px;height:1px;
@@ -625,88 +627,51 @@ html,body{margin:0;padding:0;min-height:100%;background:#030304;color:var(--sp-t
 }
 .sp-strike-title{
   font-family:"Russo One","Oswald","Teko",sans-serif;
-  font-size:28px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;
+  font-size:24px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;
   color:#f0c24a;-webkit-text-fill-color:#f0c24a;
   text-shadow:0 1px 0 #3a2000,0 0 12px rgba(255,160,40,.45);
-  margin-top:4px;
+  margin-top:2px;line-height:1.05;
 }
 .sp-strike-tag{
   font-family:"Oswald","Teko",sans-serif;
-  font-size:13px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
-  color:rgba(255,255,255,.92);
+  font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(255,255,255,.9);
   text-shadow:0 1px 4px rgba(0,0,0,.85);
+  line-height:1.15;
 }
 .sp-strike-stats{
   display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
-  width:100%;max-width:920px;gap:0;margin:4px 0 2px;
+  width:100%;max-width:920px;gap:0;margin:2px 0 0;
 }
 .sp-strike-stat{
   position:relative;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:2px;padding:6px 8px 8px;text-align:center;
+  gap:2px;padding:4px 8px 6px;text-align:center;
 }
 .sp-strike-stat:not(:last-child)::after{
-  content:"";position:absolute;right:0;top:18%;bottom:18%;width:1px;
+  content:"";position:absolute;right:0;top:16%;bottom:16%;width:1px;
   background:linear-gradient(180deg,transparent,rgba(232,197,71,.8),transparent);
 }
-.sp-strike-ico{
-  width:28px;height:28px;margin-bottom:4px;position:relative;
-  color:#e8c547;
-}
-.sp-strike-ico::before,
-.sp-strike-ico::after{content:"";position:absolute;background:currentColor;box-sizing:border-box}
-/* players — three dots + base */
-.sp-strike-ico--players::before{
-  width:8px;height:8px;border-radius:50%;left:10px;top:2px;
-  box-shadow:-10px 4px 0 0 currentColor,10px 4px 0 0 currentColor;
-}
-.sp-strike-ico--players::after{
-  width:22px;height:8px;border-radius:8px 8px 2px 2px;left:3px;bottom:2px;opacity:.9;
-}
-/* all-rounder — diamond person mark */
-.sp-strike-ico--allround::before{
-  width:10px;height:10px;border-radius:50%;left:9px;top:1px;
-}
-.sp-strike-ico--allround::after{
-  width:0;height:0;background:transparent;left:6px;top:12px;
-  border-left:8px solid transparent;border-right:8px solid transparent;border-top:14px solid currentColor;
-}
-/* batter — bat slant */
-.sp-strike-ico--batter::before{
-  width:6px;height:22px;border-radius:3px;left:14px;top:2px;
-  transform:rotate(-35deg);transform-origin:center bottom;
-}
-.sp-strike-ico--batter::after{
-  width:10px;height:6px;border-radius:2px;left:6px;bottom:4px;
-  transform:rotate(-35deg);
-}
-/* bowler — ball */
-.sp-strike-ico--bowler::before{
-  width:22px;height:22px;border-radius:50%;left:3px;top:3px;
-  border:2px solid currentColor;background:transparent;
-}
-.sp-strike-ico--bowler::after{
-  width:10px;height:2px;left:9px;top:13px;border-radius:1px;
-  box-shadow:0 -5px 0 currentColor,0 5px 0 currentColor;
-}
+.sp-strike-ico{display:none!important}
 .sp-strike-num{
   font-family:"Russo One","Oswald",sans-serif;
-  font-size:34px;line-height:1;letter-spacing:.04em;
+  font-size:30px;line-height:1;letter-spacing:.04em;
   color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.75),0 0 10px rgba(255,180,60,.25);
 }
 .sp-strike-lbl{
   font-family:"Oswald","Teko",sans-serif;
-  font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
-  color:rgba(255,230,180,.9);
+  font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,230,180,.92);
+  line-height:1.15;
 }
 
 /* Sponsors — transparent logos, blended like team/tournament marks */
 .sp-sponsors-block{
   flex:0 0 auto;
   width:100%;
-  margin-top:4px;
-  padding:4px 0 2px;
-  display:flex;flex-direction:column;align-items:center;gap:6px;
+  margin-top:2px;
+  padding:2px 0 0;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
 }
 .sp-sponsors-lbl-row{
   display:flex;align-items:center;justify-content:center;gap:12px;width:100%;max-width:920px;
