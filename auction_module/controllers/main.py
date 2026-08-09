@@ -3461,6 +3461,7 @@ class Auction(http.Controller):
                 'break_time': False,
                 'advertisers': [],
                 'stats': {},
+                'wait_phase': {},
             }
 
             if tournament:
@@ -3696,6 +3697,9 @@ class Auction(http.Controller):
                 'unsold':     Player.search_count(tdom + [('state', '=', 'unsold')]),
                 'total':      Player.search_count(tdom),
             }
+
+            # Same complete-phase logic as projector, with viewer-facing copy
+            result['wait_phase'] = _pj_wait_phase(tournament, audience='viewers')
 
         return request.make_response(
             json.dumps(result),
@@ -6308,27 +6312,47 @@ def _pj_progress(tournament, current_player=None):
     return {'current': current, 'total': total, 'label': label}
 
 
-def _pj_wait_phase(tournament):
-    """Idle projector screen phase when no player is on stage.
+def _pj_wait_phase(tournament, audience='projector'):
+    """Idle projector / live-board screen phase when no player is on stage.
 
     - about_to_begin: everyone still in draft (no sold/unsold/auction yet)
     - waiting: auction underway (someone sold/unsold, or a player in auction)
     - completed: declared complete, or nothing left in draft/auction
+
+    ``audience``:
+    - projector → owners / floor ceremony copy
+    - viewers   → public live-board Thank You Viewers copy
     """
     name = (tournament.name or 'the tournament') if tournament else 'the tournament'
     if not tournament:
         return {
             'phase': 'about_to_begin',
             'tournament_name': name,
+            'thanks_title': 'Thank You',
             'message': 'THE BATTLE FOR TALENT BEGINS SOON',
         }
-    # Operator "Declare Auction Complete" → Thank You ceremony on projector
-    if tournament.auction_declared_complete:
+
+    def _completed_payload():
+        if audience == 'viewers':
+            return {
+                'phase': 'completed',
+                'tournament_name': name,
+                'thanks_title': 'Thank You Viewers',
+                'message': (
+                    'THANKS FOR STAYING TUNED TO THE AUCTION. '
+                    'THE ROAD TO GLORY BEGINS.'
+                ),
+            }
         return {
             'phase': 'completed',
             'tournament_name': name,
+            'thanks_title': 'Thank You',
             'message': 'THE AUCTION FLOOR CLOSES, AND THE ROAD TO GLORY BEGINS.',
         }
+
+    # Operator "Declare Auction Complete" → Thank You ceremony
+    if tournament.auction_declared_complete:
+        return _completed_payload()
     Player = request.env['auction.team.player'].sudo()
     domain = [('tournament_id', '=', tournament.id), ('icon_player', '=', False)]
     draft = Player.search_count(domain + [('state', '=', 'draft')])
@@ -6339,20 +6363,18 @@ def _pj_wait_phase(tournament):
     finished = sold + unsold
 
     if remaining == 0 and finished > 0:
-        return {
-            'phase': 'completed',
-            'tournament_name': name,
-            'message': 'THE AUCTION FLOOR CLOSES, AND THE ROAD TO GLORY BEGINS.',
-        }
+        return _completed_payload()
     if auction == 0 and sold == 0 and unsold == 0:
         return {
             'phase': 'about_to_begin',
             'tournament_name': name,
+            'thanks_title': 'Thank You',
             'message': 'THE BATTLE FOR TALENT BEGINS SOON',
         }
     return {
         'phase': 'waiting',
         'tournament_name': name,
+        'thanks_title': 'Thank You',
         'message': 'THE SPOTLIGHT MOVES TO THE NEXT PLAYER',
     }
 

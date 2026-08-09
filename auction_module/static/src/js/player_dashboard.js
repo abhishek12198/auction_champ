@@ -147,8 +147,11 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
                         '<div class="pd-table-wrap">',
                             '<table class="pd-table" id="pd-icon-table">',
                                 '<thead><tr>',
-                                    '<th>#</th><th>Photo</th><th>Player</th><th class="pd-col-role">Role</th>',
-                                    '<th>Tier</th><th>Team</th><th>Sold For (Pts)</th>',
+                                    '<th class="pd-hide-sm">#</th>',
+                                    '<th class="pd-hide-sm">Photo</th>',
+                                    '<th>Player</th>',
+                                    '<th class="pd-hide-sm pd-col-role">Role</th>',
+                                    '<th>Tier</th><th>Team</th><th>Pts</th>',
                                 '</tr></thead>',
                                 '<tbody id="pd-icon-tbody"><tr><td colspan="7" class="pd-empty">Loading...</td></tr></tbody>',
                             '</table>',
@@ -163,8 +166,12 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
                         '<div class="pd-table-wrap">',
                             '<table class="pd-table" id="pd-draft-table">',
                                 '<thead><tr>',
-                                    '<th>#</th><th>Photo</th><th>Name</th><th class="pd-col-role">Role</th>',
-                                    '<th>Tier</th><th>Base Price</th><th>Added On</th>',
+                                    '<th class="pd-hide-sm">#</th>',
+                                    '<th class="pd-hide-sm">Photo</th>',
+                                    '<th>Name</th>',
+                                    '<th class="pd-hide-sm pd-col-role">Role</th>',
+                                    '<th>Tier</th><th>Base</th>',
+                                    '<th class="pd-hide-sm">Added</th>',
                                 '</tr></thead>',
                                 '<tbody id="pd-draft-tbody"><tr><td colspan="7" class="pd-empty">Loading...</td></tr></tbody>',
                             '</table>',
@@ -307,11 +314,13 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
             var ctx = this.$('#' + canvasId)[0];
             if (!ctx) return;
             if (this._charts[canvasId]) { this._charts[canvasId].destroy(); }
+            var isNarrow = typeof window !== 'undefined' && window.innerWidth <= 768;
             this._charts[canvasId] = new Chart(ctx, {
                 type: donut ? 'doughnut' : 'pie',
                 data: { labels: labels, datasets: [{ data: data, backgroundColor: colors, borderWidth: 2, borderColor: 'transparent' }] },
                 options: {
-                    responsive: true, maintainAspectRatio: true,
+                    responsive: true,
+                    maintainAspectRatio: !isNarrow,
                     plugins: { legend: { display: false } },
                     cutout: donut ? '55%' : 0,
                 },
@@ -370,15 +379,25 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
 
         _barOpts: function () {
             var self = this;
+            var isNarrow = typeof window !== 'undefined' && window.innerWidth <= 768;
             return {
-                responsive: true, maintainAspectRatio: true,
+                responsive: true, maintainAspectRatio: !isNarrow,
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { grid: { color: function () { return self._gridColor(); } },
-                         ticks: { color: function () { return self._tickColor(); }, maxRotation: 35 } },
+                         ticks: {
+                             color: function () { return self._tickColor(); },
+                             maxRotation: isNarrow ? 50 : 35,
+                             autoSkip: true,
+                             font: { size: isNarrow ? 8 : 11 },
+                         } },
                     y: { beginAtZero: true,
                          grid: { color: function () { return self._gridColor(); } },
-                         ticks: { color: function () { return self._tickColor(); }, stepSize: 1 } },
+                         ticks: {
+                             color: function () { return self._tickColor(); },
+                             stepSize: 1,
+                             font: { size: isNarrow ? 8 : 11 },
+                         } },
                 },
             };
         },
@@ -398,10 +417,10 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
                         : '';
                     var pts = p.points ? p.points.toLocaleString() : '&mdash;';
                     rows += '<tr>' +
-                        '<td>' + (i + 1) + '</td>' +
-                        '<td>' + photo + '</td>' +
+                        '<td class="pd-hide-sm">' + (i + 1) + '</td>' +
+                        '<td class="pd-hide-sm">' + photo + '</td>' +
                         '<td class="pd-tbl-name">' + (p.name || '') + '</td>' +
-                        '<td><span class="pd-role-badge">' + (p.role || '&mdash;') + '</span></td>' +
+                        '<td class="pd-hide-sm"><span class="pd-role-badge">' + (p.role || '&mdash;') + '</span></td>' +
                         '<td>' + (p.tier || '&mdash;') + '</td>' +
                         '<td class="pd-team-cell">' + teamLogo +
                             '<span class="pd-team-name">' + (p.team || 'Unassigned') + '</span></td>' +
@@ -424,13 +443,13 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
                         : '<span class="pd-tbl-photo-ph">&#128100;</span>';
                     var bp = p.base_price ? p.base_price.toLocaleString() : '&mdash;';
                     rows += '<tr>' +
-                        '<td>' + (i + 1) + '</td>' +
-                        '<td>' + photo + '</td>' +
+                        '<td class="pd-hide-sm">' + (i + 1) + '</td>' +
+                        '<td class="pd-hide-sm">' + photo + '</td>' +
                         '<td class="pd-tbl-name">' + (p.name || '') + '</td>' +
-                        '<td><span class="pd-role-badge">' + (p.role || '&mdash;') + '</span></td>' +
+                        '<td class="pd-hide-sm"><span class="pd-role-badge">' + (p.role || '&mdash;') + '</span></td>' +
                         '<td>' + (p.tier || '&mdash;') + '</td>' +
                         '<td>' + bp + '</td>' +
-                        '<td class="pd-date">' + (p.create_date || '') + '</td>' +
+                        '<td class="pd-date pd-hide-sm">' + (p.create_date || '') + '</td>' +
                         '</tr>';
                 });
             }
