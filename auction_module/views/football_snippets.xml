@@ -68,8 +68,40 @@
             .ac-fb-grid .pt-stat-tile{
                 margin:0 !important;
             }
-            @media (max-width:700px){
-                .ac-fb-grid{grid-template-columns:1fr;}
+            /* Phones/tablets: keep 2-up to cut scroll; shrink type further */
+            @media (max-width:900px){
+                .ac-fb-grid{
+                    grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+                    gap:6px 8px !important;
+                }
+                .ac-fb-grid .lm-stat-row,
+                .ac-fb-grid .sw-stat-row,
+                .ac-fb-grid .cr-stat-row,
+                .ac-fb-grid .hud-stat-row{
+                    padding:7px 9px 8px !important;
+                }
+                .ac-fb-grid .lm-stat-val,
+                .ac-fb-grid .sw-stat-val,
+                .ac-fb-grid .cr-stat-val,
+                .ac-fb-grid .hud-stat-val{
+                    font-size:.92rem !important;
+                    letter-spacing:.3px !important;
+                }
+                .ac-fb-grid .lm-stat-key,
+                .ac-fb-grid .sw-stat-key,
+                .ac-fb-grid .cr-stat-key,
+                .ac-fb-grid .hud-stat-key{
+                    font-size:.52rem !important;
+                    letter-spacing:1px !important;
+                }
+            }
+            @media (max-width:430px){
+                .ac-fb-grid .lm-stat-val,
+                .ac-fb-grid .sw-stat-val,
+                .ac-fb-grid .cr-stat-val,
+                .ac-fb-grid .hud-stat-val{
+                    font-size:.85rem !important;
+                }
             }
         </style>
     </template>

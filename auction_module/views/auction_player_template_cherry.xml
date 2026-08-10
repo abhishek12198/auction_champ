@@ -131,7 +131,7 @@
           70%  { box-shadow: 0 0 0 10px rgba(225,29,72,0); opacity: .85; }
           100% { box-shadow: 0 0 0 0 rgba(225,29,72,0); opacity: 1; }
         }
-        .cr-fs-btn, #cr-theme-btn {
+        .cr-fs-btn {
           display: inline-flex; align-items: center; justify-content: center;
           height: 34px; border-radius: 9px; cursor: pointer;
           background: rgba(225,29,72,.08);
@@ -140,12 +140,7 @@
           transition: background .2s, box-shadow .2s, transform .15s;
         }
         .cr-fs-btn { width: 34px; padding: 0; }
-        #cr-theme-btn {
-          padding: 0 12px;
-          font-family: 'Saira', sans-serif;
-          font-size: 11px; font-weight: 600; letter-spacing: .04em;
-        }
-        .cr-fs-btn:hover, #cr-theme-btn:hover {
+        .cr-fs-btn:hover {
           background: rgba(225,29,72,.18);
           box-shadow: 0 0 14px rgba(225,29,72,.25);
         }
@@ -521,11 +516,16 @@
           .cr-brand-sub { display: none; }
           .cr-arena { height: auto; overflow: visible; }
           .cr-stage { display: block; }
-          .cr-photo-col { height: 58vh; min-height: 320px; }
+          .cr-photo-col { height: 52vw; min-height: 220px; max-height: 320px; }
           .cr-photo-col::before {
             background: linear-gradient(180deg, rgba(7,1,4,.15) 0%, transparent 30%, transparent 45%, rgba(7,1,4,.9) 100%);
           }
-          .cr-stats-col { border-left: none; padding: 18px 16px; overflow: visible; }
+          .cr-stats-col { border-left: none; padding: 14px 12px; overflow: visible; }
+          .cr-stats-header { margin-bottom: 10px; padding-bottom: 8px; }
+          .cr-stats-header-title { font-size: 1.05rem; letter-spacing: 2px; }
+          .cr-stat-row { margin-bottom: 0; padding: 7px 9px 8px; gap: 2px; border-radius: 10px; }
+          .cr-stat-key { font-size: .52rem; letter-spacing: 1px; }
+          .cr-stat-val { font-size: .92rem; letter-spacing: .4px; }
           .cr-actions {
             height: auto; grid-template-columns: 1fr;
             padding: 14px 16px 18px; gap: 10px;
@@ -534,12 +534,12 @@
           .cr-id-name { font-size: 1.8rem; }
         }
         @media (max-width: 430px) {
-          .cr-photo-col { height: 52vh; min-height: 280px; }
+          .cr-photo-col { height: 48vw; min-height: 200px; max-height: 280px; }
           .cr-serial-num { font-size: 1.9rem; }
           .cr-id-name { font-size: 1.45rem; }
-          .cr-role-tag, .cr-tier-badge, .cr-base-badge { font-size: 1.15rem; min-height: 44px; padding: 8px 16px 6px; }
-          .cr-base-badge-val { font-size: 1.25rem; }
-          .cr-stat-val { font-size: 1.3rem; }
+          .cr-role-tag, .cr-tier-badge, .cr-base-badge { font-size: .68rem; min-height: 0; padding: 3px 8px; }
+          .cr-base-badge-val { font-size: .78rem; }
+          .cr-stat-val { font-size: .85rem; }
         }
       </style>
       <t t-call="auction_module.player_mystery_critical_css"/>
@@ -579,10 +579,6 @@
             <span class="cr-live-dot"></span>
             LIVE
           </div>
-          <button id="cr-theme-btn" onclick="toggleCrTheme()">
-            <span id="cr-th-dark">&#9728; Light</span>
-            <span id="cr-th-light" style="display:none">&#9790; Dark</span>
-          </button>
           <button type="button" id="ac-break-btn" class="ac-break-btn" onclick="acToggleBreakTime()" title="Break Time">&#9208; Pause</button>
           <button id="fs-btn" onclick="toggleFullscreen()" title="Fullscreen" class="cr-fs-btn">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
@@ -630,30 +626,32 @@
 
             <t t-call="auction_module.football_attr_layout_css"/>
             <t t-if="player.tournament_type != 'football'">
-              <t t-if="player.batting_style">
-                <div class="cr-stat-row">
-                  <span class="cr-stat-key">Batting</span>
-                  <span class="cr-stat-val"><t t-esc="player.batting_style"/></span>
-                </div>
-              </t>
-              <t t-if="player.bowling_style">
-                <div class="cr-stat-row">
-                  <span class="cr-stat-key">Bowling</span>
-                  <span class="cr-stat-val"><t t-esc="player.bowling_style"/></span>
-                </div>
-              </t>
-              <t t-if="player.p_category">
-                <div class="cr-stat-row">
-                  <span class="cr-stat-key">Category</span>
-                  <span class="cr-stat-val"><t t-esc="player.p_category"/></span>
-                </div>
-              </t>
-              <t t-if="player.address">
-                <div class="cr-stat-row">
-                  <span class="cr-stat-key">Location</span>
-                  <span class="cr-stat-val"><t t-esc="player.address"/></span>
-                </div>
-              </t>
+              <div class="ac-fb-grid">
+                <t t-if="player.batting_style">
+                  <div class="cr-stat-row">
+                    <span class="cr-stat-key">Batting</span>
+                    <span class="cr-stat-val"><t t-esc="player.batting_style"/></span>
+                  </div>
+                </t>
+                <t t-if="player.bowling_style">
+                  <div class="cr-stat-row">
+                    <span class="cr-stat-key">Bowling</span>
+                    <span class="cr-stat-val"><t t-esc="player.bowling_style"/></span>
+                  </div>
+                </t>
+                <t t-if="player.p_category">
+                  <div class="cr-stat-row">
+                    <span class="cr-stat-key">Category</span>
+                    <span class="cr-stat-val"><t t-esc="player.p_category"/></span>
+                  </div>
+                </t>
+                <t t-if="player.address">
+                  <div class="cr-stat-row ac-fb-span-2">
+                    <span class="cr-stat-key">Location</span>
+                    <span class="cr-stat-val"><t t-esc="player.address"/></span>
+                  </div>
+                </t>
+              </div>
             </t>
             <t t-else="">
               <div class="ac-fb-grid">
@@ -1052,26 +1050,6 @@
       <t t-call="auction_module.player_break_pause_assets"/>
       <t t-call="auction_module.player_mystery_controls"/>
       <t t-call="auction_module.player_sell_modal"/>
-      <script>
-(function(){
-  var t=localStorage.getItem('auction_cr_theme')||'dark';
-  document.body.setAttribute('data-theme',t);
-  var bd=document.getElementById('cr-th-dark');
-  var bl=document.getElementById('cr-th-light');
-  if(bd){bd.style.display=t==='dark'?'inline':'none';}
-  if(bl){bl.style.display=t==='light'?'inline':'none';}
-})();
-function toggleCrTheme(){
-  var cur=document.body.getAttribute('data-theme');
-  var nxt=cur==='dark'?'light':'dark';
-  document.body.setAttribute('data-theme',nxt);
-  localStorage.setItem('auction_cr_theme',nxt);
-  var bd=document.getElementById('cr-th-dark');
-  var bl=document.getElementById('cr-th-light');
-  if(bd){bd.style.display=nxt==='dark'?'inline':'none';}
-  if(bl){bl.style.display=nxt==='light'?'inline':'none';}
-}
-      </script>
     </body>
     </html>
   </template>

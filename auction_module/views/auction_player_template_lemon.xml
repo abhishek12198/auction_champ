@@ -252,8 +252,6 @@
     .lm-btn-next:hover { background: rgba(140,110,0,.14); border-color: var(--lemon-dark); box-shadow: 0 0 12px rgba(80,60,0,.12); transform: translateY(-1px); color: var(--lemon-dark); }
     .lm-btn-next:active { transform: translateY(0); }
 /* ── Theme toggle ── */
-#lm-theme-btn{background:rgba(232,194,0,0.08);border:1px solid rgba(232,194,0,0.25);border-radius:20px;padding:5px 14px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:var(--lemon);letter-spacing:0.04em;transition:all 0.2s}
-#lm-theme-btn:hover{background:rgba(232,194,0,0.16);box-shadow:0 0 8px rgba(232,194,0,0.20)}
 .lm-header-right{display:flex;align-items:center;gap:10px}
 .lm-fs-btn{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:34px;height:34px;border-radius:8px;background:rgba(232,194,0,0.07);border:1.5px solid rgba(232,194,0,0.28);color:var(--lemon);cursor:pointer;padding:0;transition:all 0.2s}
 .lm-fs-btn:hover{background:rgba(232,194,0,0.16);box-shadow:0 0 8px rgba(232,194,0,0.20)}
@@ -304,7 +302,6 @@ body[data-theme="dark"] .lm-brand-logo{
 }
 body[data-theme="dark"] .lm-tourn-name{color:var(--lemon-bright)}
 body[data-theme="dark"] .lm-live-badge{background:rgba(232,194,0,0.14);color:var(--lemon-bright);border-color:rgba(232,194,0,0.40)}
-body[data-theme="dark"] #lm-theme-btn{color:var(--lemon-bright);border-color:rgba(232,194,0,0.40)}
 
 /* ══════════════════════════════════════════════════════════
    MOBILE / TABLET — reflow the two-panel split into one column
@@ -327,23 +324,26 @@ body[data-theme="dark"] #lm-theme-btn{color:var(--lemon-bright);border-color:rgb
 
   /* Stage: single column, natural height */
   .lm-stage{display:block; height:auto; overflow:visible;}
-  .lm-photo-col{height:58vh; min-height:330px;}
+  .lm-photo-col{height:52vw; min-height:220px; max-height:320px;}
   .lm-photo-col::after{display:none;}
   .lm-photo{object-position:center bottom;}
   .lm-photo-wm{font-size:11rem; bottom:-8px;}
   .lm-info-col{overflow:visible; border-left:none;}
 
   /* Identity: wrap the name, keep badges readable */
-  .lm-identity{padding:14px 16px; gap:12px;}
-  .lm-serial-num{font-size:2.6rem;}
-  .lm-id-vsep{height:44px;}
+  .lm-identity{padding:8px 12px; gap:8px;}
+  .lm-serial-num{font-size:1.7rem;}
+  .lm-id-vsep{height:32px;}
   .lm-player-name{font-size:1.45rem; letter-spacing:1px; white-space:normal;}
-  .lm-role-tag, .lm-tier-badge, .lm-base-badge{font-size:1.2rem; min-height:42px; padding:8px 14px 6px;}
-  .lm-base-badge-val{font-size:1.25rem;}
+  .lm-role-tag, .lm-tier-badge, .lm-base-badge{font-size:.68rem; min-height:0; padding:3px 8px;}
+  .lm-base-badge-val{font-size:.78rem;}
 
-  /* Stats: keep projector-scale values */
-  .lm-stats-wrap{flex:none; overflow:visible; padding:14px 16px 8px;}
-  .lm-stat-val{font-size:1.3rem;}
+  /* Stats: 2-up compact cards to cut scroll */
+  .lm-stats-wrap{flex:none; overflow:visible; padding:10px 12px 8px;}
+  .lm-stats-title{font-size:.9rem; letter-spacing:2px; padding-bottom:6px; margin-bottom:8px;}
+  .lm-stat-row{margin-bottom:0; padding:7px 9px 8px; gap:2px; border-radius:8px;}
+  .lm-stat-key{font-size:.52rem; letter-spacing:1px;}
+  .lm-stat-val{font-size:.92rem; letter-spacing:.3px;}
 
   /* Actions: stack full-width */
   .lm-actions{height:auto; flex-wrap:wrap; padding:14px 16px; gap:10px;}
@@ -353,10 +353,10 @@ body[data-theme="dark"] #lm-theme-btn{color:var(--lemon-bright);border-color:rgb
   .lm-tourn-name{font-size:.92rem;}
   .lm-player-name{font-size:1.2rem;}
   .lm-serial-num{font-size:2.2rem;}
-  .lm-role-tag, .lm-tier-badge, .lm-base-badge{font-size:1.05rem;}
-  .lm-base-badge-val{font-size:1.15rem;}
-  .lm-stat-val{font-size:1.15rem;}
-  .lm-photo-col{height:52vh; min-height:290px;}
+  .lm-role-tag, .lm-tier-badge, .lm-base-badge{font-size:.65rem;}
+  .lm-base-badge-val{font-size:.75rem;}
+  .lm-stat-val{font-size:.85rem;}
+  .lm-photo-col{height:48vw; min-height:200px; max-height:280px;}
 }
   
     .lm-photo img, img.lm-photo { object-fit: cover !important; object-position: center top; }
@@ -401,10 +401,6 @@ body[data-theme="dark"] #lm-theme-btn{color:var(--lemon-bright);border-color:rgb
         <span class="lm-live-dot"></span>
         LIVE
       </div>
-      <button id="lm-theme-btn" onclick="toggleSwTheme()">
-        <span id="lm-th-dark" style="display:none">&#9728; Light</span>
-        <span id="lm-th-light">&#9790; Dark</span>
-      </button>
       <button type="button" id="ac-break-btn" class="ac-break-btn" onclick="acToggleBreakTime()" title="Break Time">&#9208; Pause</button>
       <button id="fs-btn" onclick="toggleFullscreen()" title="Fullscreen" class="lm-fs-btn">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
@@ -462,30 +458,32 @@ body[data-theme="dark"] #lm-theme-btn{color:var(--lemon-bright);border-color:rgb
         <div class="lm-stats-title">Player Profile</div>
         <t t-call="auction_module.football_attr_layout_css"/>
         <t t-if="player.tournament_type != 'football'">
-          <t t-if="player.batting_style">
-            <div class="lm-stat-row">
-              <span class="lm-stat-key">Batting</span>
-              <span class="lm-stat-val"><t t-esc="player.batting_style"/></span>
-            </div>
-          </t>
-          <t t-if="player.bowling_style">
-            <div class="lm-stat-row">
-              <span class="lm-stat-key">Bowling</span>
-              <span class="lm-stat-val"><t t-esc="player.bowling_style"/></span>
-            </div>
-          </t>
-          <t t-if="player.p_category">
-            <div class="lm-stat-row">
-              <span class="lm-stat-key">Category</span>
-              <span class="lm-stat-val"><t t-esc="player.p_category"/></span>
-            </div>
-          </t>
-          <t t-if="player.address">
-            <div class="lm-stat-row">
-              <span class="lm-stat-key">Location</span>
-              <span class="lm-stat-val"><t t-esc="player.address"/></span>
-            </div>
-          </t>
+          <div class="ac-fb-grid">
+            <t t-if="player.batting_style">
+              <div class="lm-stat-row">
+                <span class="lm-stat-key">Batting</span>
+                <span class="lm-stat-val"><t t-esc="player.batting_style"/></span>
+              </div>
+            </t>
+            <t t-if="player.bowling_style">
+              <div class="lm-stat-row">
+                <span class="lm-stat-key">Bowling</span>
+                <span class="lm-stat-val"><t t-esc="player.bowling_style"/></span>
+              </div>
+            </t>
+            <t t-if="player.p_category">
+              <div class="lm-stat-row">
+                <span class="lm-stat-key">Category</span>
+                <span class="lm-stat-val"><t t-esc="player.p_category"/></span>
+              </div>
+            </t>
+            <t t-if="player.address">
+              <div class="lm-stat-row ac-fb-span-2">
+                <span class="lm-stat-key">Location</span>
+                <span class="lm-stat-val"><t t-esc="player.address"/></span>
+              </div>
+            </t>
+          </div>
         </t>
         <t t-else="">
           <div class="ac-fb-grid">
@@ -892,26 +890,6 @@ body[data-theme="dark"] #lm-theme-btn{color:var(--lemon-bright);border-color:rgb
   <t t-call="auction_module.player_break_pause_assets"/>
   <t t-call="auction_module.player_mystery_controls"/>
   <t t-call="auction_module.player_sell_modal"/>
-  <script>
-(function(){
-  var t=localStorage.getItem('auction_sw_theme')||'light';
-  document.body.setAttribute('data-theme',t);
-  var bd=document.getElementById('lm-th-dark');
-  var bl=document.getElementById('lm-th-light');
-  if(bd){bd.style.display=t==='dark'?'inline':'none';}
-  if(bl){bl.style.display=t==='light'?'inline':'none';}
-})();
-function toggleSwTheme(){
-  var cur=document.body.getAttribute('data-theme');
-  var nxt=cur==='light'?'dark':'light';
-  document.body.setAttribute('data-theme',nxt);
-  localStorage.setItem('auction_sw_theme',nxt);
-  var bd=document.getElementById('lm-th-dark');
-  var bl=document.getElementById('lm-th-light');
-  if(bd){bd.style.display=nxt==='dark'?'inline':'none';}
-  if(bl){bl.style.display=nxt==='light'?'inline':'none';}
-}
-  </script>
 </body>
 </html>
 </template>

@@ -599,15 +599,12 @@
       opacity: 0.28;
     }
 /* ── Theme toggle ── */
-#bb-theme-btn{background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.35);border-radius:20px;padding:5px 14px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:var(--bb);letter-spacing:0.06em;transition:all 0.2s}
-#bb-theme-btn:hover{background:rgba(59,130,246,0.18);box-shadow:0 0 10px rgba(59,130,246,0.35)}
 /* Light mode overrides */
 body[data-theme="light"]{--bg:#eef4ff;--bg-surface:#e0ebff;--bg-panel:#ffffff;--bg-card:#ffffff;--text-main:#0a1628;--text-dim:rgba(10,22,40,0.55);--divider:rgba(59,130,246,0.18)}
 body[data-theme="light"] .bb-header{background:linear-gradient(90deg,#f0fced 0%,#e0ebff 50%,#f0fced 100%);border-bottom:1px solid rgba(59,130,246,0.25)}
 body[data-theme="light"] .bb-tourn-name-center{color:var(--bb-dark)}
 body[data-theme="light"] .bb-brand-season,body[data-theme="light"] .bb-tourn-desc-center{color:var(--slate-dark)}
 body[data-theme="light"] .bb-live-badge{background:rgba(59,130,246,0.12);color:var(--bb-dark);border-color:rgba(59,130,246,0.35)}
-body[data-theme="light"] #bb-theme-btn{color:var(--bb-dark)}
 body[data-theme="light"] .bb-footer{background:#eef4ff;border-top-color:rgba(59,130,246,0.22)}
 body[data-theme="light"] .bb-footer-lbl{color:rgba(13,32,16,0.45)}
 body[data-theme="light"] .bb-footer-logo{filter:brightness(0) sepia(1) saturate(6) hue-rotate(55deg) brightness(0.55)}
@@ -636,18 +633,23 @@ body[data-theme="light"] .bb-footer-logo{filter:brightness(0) sepia(1) saturate(
   .bb-right-col{overflow:visible;}
 
   /* Photo panel full width with the name overlay */
-  .bb-photo-panel{height:56vh; min-height:330px;}
+  .bb-photo-panel{height:52vw; min-height:220px; max-height:320px;}
   .bb-photo-name-block{padding:20px 18px 16px;}
   .bb-player-name{font-size:1.7rem; letter-spacing:1px;}
-  .bb-player-role{font-size:1.25rem; letter-spacing:2px;}
-  .bb-tier-badge{font-size:1.15rem; padding:10px 16px 8px;}
+  .bb-player-role{font-size:.72rem; letter-spacing:1px;}
+  .bb-tier-badge{font-size:.68rem; padding:3px 8px;}
 
   /* Info panel + action strips flow naturally, drop the left borders */
-  .bb-info-panel{overflow:visible; padding:18px 16px 14px; border-left:none;}
+  .bb-info-panel{overflow:visible; padding:14px 12px 10px; border-left:none;}
   .bb-actions{padding:12px 16px 8px; border-left:none;}
   .bb-next-strip{padding:8px 16px 14px; border-left:none;}
-  .bb-stat-val{font-size:1.15rem;}
-  .bb-stats-grid{grid-template-columns:1fr;}
+  .bb-stats-grid{
+    grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+    gap:6px 8px;
+  }
+  .bb-stat-tile{padding:7px 9px 8px; gap:2px; border-radius:8px;}
+  .bb-stat-key{font-size:.52rem; letter-spacing:1px;}
+  .bb-stat-val{font-size:.92rem; letter-spacing:.3px;}
 }
 @media (max-width: 430px){
   .bb-header-brand-text{display:none;}
@@ -655,9 +657,10 @@ body[data-theme="light"] .bb-footer-logo{filter:brightness(0) sepia(1) saturate(
   .bb-tourn-name-center{font-size:.82rem; letter-spacing:.5px;}
   .bb-tourn-logo-center{height:30px; max-width:30px;}
   .bb-player-name{font-size:1.45rem;}
-  .bb-stats-grid{grid-template-columns:1fr;}
+  .bb-stats-grid{grid-template-columns:repeat(2, minmax(0, 1fr)) !important;}
+  .bb-stat-val{font-size:.85rem;}
   .bb-actions{grid-template-columns:1fr;}
-  .bb-photo-panel{height:52vh; min-height:280px;}
+  .bb-photo-panel{height:48vw; min-height:200px; max-height:280px;}
 }
   
     .bb-photo-name-block { backdrop-filter: blur(2px); }
@@ -716,10 +719,6 @@ body[data-theme="light"] .bb-footer-logo{filter:brightness(0) sepia(1) saturate(
         <span class="bb-live-dot"></span>
         LIVE
       </div>
-      <button id="bb-theme-btn" onclick="togglePtTheme()">
-        <span id="bb-th-dark">&#9728; Light</span>
-        <span id="bb-th-light" style="display:none">&#9790; Dark</span>
-      </button>
       <button type="button" id="ac-break-btn" class="ac-break-btn" onclick="acToggleBreakTime()" title="Break Time">&#9208; Pause</button>
       <button id="fs-btn" onclick="toggleFullscreen()" title="Fullscreen" style="display:flex;align-items:center;justify-content:center;flex-shrink:0;width:34px;height:34px;border-radius:8px;background:rgba(59,130,246,0.08);border:1.5px solid rgba(59,130,246,0.40);color:var(--bb);cursor:pointer;padding:0;transition:all 0.2s">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
@@ -1273,26 +1272,6 @@ body[data-theme="light"] .bb-footer-logo{filter:brightness(0) sepia(1) saturate(
   <t t-call="auction_module.player_break_pause_assets"/>
   <t t-call="auction_module.player_mystery_controls"/>
   <t t-call="auction_module.player_sell_modal"/>
-  <script>
-(function(){
-  var t=localStorage.getItem('auction_pt_theme')||'dark';
-  document.body.setAttribute('data-theme',t);
-  var bd=document.getElementById('bb-th-dark');
-  var bl=document.getElementById('bb-th-light');
-  if(bd){bd.style.display=t==='dark'?'inline':'none';}
-  if(bl){bl.style.display=t==='light'?'inline':'none';}
-})();
-function togglePtTheme(){
-  var cur=document.body.getAttribute('data-theme');
-  var nxt=cur==='dark'?'light':'dark';
-  document.body.setAttribute('data-theme',nxt);
-  localStorage.setItem('auction_pt_theme',nxt);
-  var bd=document.getElementById('bb-th-dark');
-  var bl=document.getElementById('bb-th-light');
-  if(bd){bd.style.display=nxt==='dark'?'inline':'none';}
-  if(bl){bl.style.display=nxt==='light'?'inline':'none';}
-}
-  </script>
 </body>
 </html>
 </template>

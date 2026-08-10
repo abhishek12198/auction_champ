@@ -444,25 +444,27 @@
       .hud-next-btn {
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 10px;
-        padding: 10px 48px;
-        background: linear-gradient(135deg, rgba(245,200,66,0.09), rgba(255,159,28,0.06));
-        border: 1px solid var(--border);
-        color: var(--gold);
+        padding: 13px 36px;
+        background: rgba(255,255,255,0.06);
+        border: 1.5px solid rgba(255,255,255,0.18);
+        color: rgba(255,255,255,0.72);
         font-family: 'Oswald', sans-serif;
-        font-size: 1.05rem; font-weight: 600;
-        letter-spacing: 4px;
+        font-size: 0.95rem; font-weight: 600;
+        letter-spacing: 2.5px;
         text-transform: uppercase;
         cursor: pointer;
         transition: all .22s;
-        /* parallelogram cut */
-        clip-path: polygon(14px 0%, 100% 0%, calc(100% - 14px) 100%, 0% 100%);
-        border-radius: 0;
+        border-radius: 3px;
+        clip-path: none;
       }
       .hud-next-btn:hover {
-        background: linear-gradient(135deg, rgba(245,200,66,0.18), rgba(255,159,28,0.13));
-        box-shadow: 0 0 22px var(--gold-glow);
-        transform: scale(1.03);
+        background: rgba(255,255,255,0.11);
+        border-color: rgba(255,255,255,0.38);
+        color: var(--white);
+        box-shadow: none;
+        transform: none;
       }
       .hud-next-btn svg { transition: transform .22s; }
       .hud-next-btn:hover svg { transform: translateX(4px); }
@@ -474,44 +476,124 @@
           grid-template-columns: 1fr;
           height: auto;
         }
-        .hud-photo-col { height: 56vw; min-height: 260px; }
+        .hud-photo-col { height: 52vw; min-height: 220px; max-height: 320px; }
         .hud-photo-col::after { display: none; }
         .hud-serial-watermark { font-size: 7rem; }
         .hud-player-name { font-size: 1.8rem; }
-        /* Header: stack into a centered column so the long title stops
-           overflowing and overlapping the logos */
+        .hud-serial-number { font-size: 3.2rem; }
+        .hud-role-tag { font-size: .68rem; padding: 3px 10px 3px 8px; min-height: 0; }
+        .hud-base-badge { padding: 3px 8px 4px; min-height: 0; }
+        .hud-base-badge-val { font-size: .78rem; }
+        .hud-tier-strip { padding: 10px 14px; }
+        .hud-tier-hex { font-size: .68rem; padding: 3px 10px; min-height: 0; }
+        /* Header: brand left, Pause/FS right — logo no longer overlaps controls */
         .hud-header {
-          grid-template-columns: 1fr;
+          grid-template-columns: minmax(0, 1fr) auto;
+          grid-template-areas:
+            "brand controls"
+            "center center";
           height: auto;
-          padding: 12px 12px 14px;
-          justify-items: center;
-          gap: 8px;
+          padding: 10px 12px 12px;
+          justify-items: stretch;
+          align-items: center;
+          gap: 8px 10px;
         }
-        .hud-brand { order: 1; }
-        .hud-brand .ac-logo { height: 24px; max-width: 120px; }
-        .hud-logo-center { order: 2; gap: 10px; }
-        .hud-logo-center .tourn-logo { max-height: 44px; }
+        .hud-brand {
+          grid-area: brand;
+          justify-self: start;
+          max-width: 100%;
+          min-width: 0;
+        }
+        .hud-brand .ac-logo { height: 22px; max-width: min(130px, 42vw); }
+        .hud-logo-center {
+          grid-area: center;
+          gap: 8px;
+          width: 100%;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+        .hud-logo-center .tourn-logo { max-height: 40px; }
         .hud-tourn-info { align-items: center; }
         .hud-tourn-name {
-          font-size: 1.15rem;
-          letter-spacing: 1.5px;
+          font-size: 1.05rem;
+          letter-spacing: 1.2px;
           line-height: 1.15;
           white-space: normal;
           text-align: center;
+          max-width: 100%;
         }
-        .hud-tourn-desc { text-align: center; }
-        .hud-tourn-logo { position: static; order: 3; justify-self: end; width: 100%; }
-        .hud-header-controls { top: 10px; right: 12px; }
+        .hud-tourn-desc { text-align: center; font-size: .65rem; }
+        .hud-tourn-logo {
+          grid-area: controls;
+          position: static;
+          justify-self: end;
+          width: auto;
+        }
+        .hud-header-controls {
+          position: static;
+          top: auto;
+          right: auto;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          gap: 6px;
+        }
+
+        /* Attributes: compact 2-up grid to cut scroll */
+        .hud-stats {
+          padding: 10px 12px 8px;
+          gap: 6px;
+        }
+        .hud-stats-heading {
+          font-size: .78rem;
+          letter-spacing: 2px;
+          padding-bottom: 6px;
+          margin-bottom: 0;
+        }
+        .hud-stats .ac-fb-grid,
+        .hud-stats > .hud-attr-grid {
+          display: grid !important;
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          gap: 6px 8px !important;
+          width: 100%;
+        }
+        .hud-stats .ac-fb-grid > .ac-fb-span-2,
+        .hud-stats > .hud-attr-grid > .ac-fb-span-2 {
+          grid-column: 1 / -1;
+        }
+        .hud-stat-row {
+          padding: 7px 9px 8px !important;
+          gap: 2px !important;
+          border-radius: 8px;
+          margin: 0;
+        }
+        .hud-stat-key {
+          font-size: .55rem !important;
+          letter-spacing: 1px;
+        }
+        .hud-stat-val {
+          font-size: .92rem !important;
+          letter-spacing: .4px;
+          line-height: 1.15 !important;
+        }
+        .hud-stats > div[style*="flex-wrap"] > span {
+          font-size: .72rem !important;
+          padding: 6px 10px 5px !important;
+        }
+        .hud-actions { padding: 10px 12px; gap: 8px; }
+        .hud-btn { padding: 10px 8px; font-size: .8rem; letter-spacing: 1.5px; }
+        .hud-next-bar { padding: 8px 12px 12px; }
+        .hud-next-btn { font-size: .85rem; padding: 10px 14px; }
       }
       @media (max-width: 430px) {
-        .hud-tourn-name { font-size: 1rem; letter-spacing: 1px; }
-        .hud-player-name { font-size: 1.5rem; }
+        .hud-tourn-name { font-size: .95rem; letter-spacing: 1px; }
+        .hud-player-name { font-size: 1.35rem; letter-spacing: 2px; }
         .hud-brand-sub { display: none; }
-        .hud-brand .ac-logo { height: 22px; }
+        .hud-brand .ac-logo { height: 20px; max-width: min(110px, 38vw); }
+        .hud-photo-col { height: 48vw; min-height: 200px; max-height: 280px; }
+        .hud-stat-val { font-size: .85rem !important; }
+        .hud-stat-key { font-size: .5rem !important; }
       }
 /* ── Theme toggle ── */
-#bs-theme-btn{background:rgba(245,200,66,0.10);border:1px solid rgba(245,200,66,0.35);border-radius:20px;padding:5px 12px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:var(--gold);letter-spacing:0.04em;transition:all 0.2s}
-#bs-theme-btn:hover{background:rgba(245,200,66,0.22);box-shadow:0 0 8px rgba(245,200,66,0.30)}
 /* ── Light mode overrides ── */
 body[data-theme="light"]{
   --navy:       #fdf8ef;
@@ -525,7 +607,6 @@ body[data-theme="light"]{
 body[data-theme="light"] .hud-header{background:linear-gradient(90deg,#fdf4e0 0%,#fff8ec 50%,#fdf4e0 100%);border-bottom:1px solid rgba(180,140,20,0.28)}
 body[data-theme="light"] .hud-tourn-name{color:#4a3000}
 body[data-theme="light"] .hud-tourn-desc{color:rgba(74,48,0,0.65)}
-body[data-theme="light"] #bs-theme-btn{color:var(--gold-dark)}
 body[data-theme="light"] .bs-ctrl-btn{color:var(--gold-dark)}
 /* Logo filter for light bg — wordmark SVG is white; invert to dark gold */
 body[data-theme="light"] .hud-brand-sub{color:#4a3000}
@@ -544,7 +625,8 @@ body[data-theme="light"] .hud-stat-val{color:#1a1000}
 body[data-theme="light"] .hud-btn-unsold{background:rgba(26,16,0,0.06);border:1.5px solid rgba(26,16,0,0.20);color:rgba(26,16,0,0.72)}
 body[data-theme="light"] .hud-btn-unsold:hover{background:rgba(26,16,0,0.12);border-color:rgba(26,16,0,0.36);color:rgba(26,16,0,0.92)}
 /* Next player button */
-body[data-theme="light"] .hud-next-btn{color:var(--gold-dark)}
+body[data-theme="light"] .hud-next-btn{background:rgba(26,16,0,0.06);border:1.5px solid rgba(26,16,0,0.20);color:rgba(26,16,0,0.72)}
+body[data-theme="light"] .hud-next-btn:hover{background:rgba(26,16,0,0.12);border-color:rgba(26,16,0,0.36);color:rgba(26,16,0,0.92)}
 body[data-theme="light"] .hud-next-bar{background:var(--navy-card)}
 /* Photo column elements always sit on a dark photo — keep them bright */
 body[data-theme="light"] .hud-player-name{color:#ffffff}
@@ -619,10 +701,6 @@ body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to to
       </div>
       <div class="hud-tourn-logo">
         <div class="hud-header-controls">
-          <button id="bs-theme-btn" onclick="toggleBsTheme()">
-            <span id="bs-th-dark">&#9728; Light</span>
-            <span id="bs-th-light" style="display:none">&#9790; Dark</span>
-          </button>
           <button type="button" id="ac-break-btn" class="ac-break-btn" onclick="acToggleBreakTime()" title="Break Time">&#9208; Pause</button>
           <button id="fs-btn" onclick="toggleFullscreen()" title="Fullscreen" class="bs-ctrl-btn">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
@@ -695,30 +773,32 @@ body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to to
           <t t-call="auction_module.football_attr_layout_css"/>
 
           <t t-if="player.tournament_type != 'football'">
-            <t t-if="player.batting_style">
-              <div class="hud-stat-row">
-                <span class="hud-stat-key">Batting</span>
-                <span class="hud-stat-val"><t t-esc="player.batting_style"/></span>
-              </div>
-            </t>
-            <t t-if="player.bowling_style">
-              <div class="hud-stat-row">
-                <span class="hud-stat-key">Bowling</span>
-                <span class="hud-stat-val"><t t-esc="player.bowling_style"/></span>
-              </div>
-            </t>
-            <t t-if="player.p_category">
-              <div class="hud-stat-row">
-                <span class="hud-stat-key">Category</span>
-                <span class="hud-stat-val"><t t-esc="player.p_category"/></span>
-              </div>
-            </t>
-            <t t-if="player.address">
-              <div class="hud-stat-row">
-                <span class="hud-stat-key">Location</span>
-                <span class="hud-stat-val"><t t-esc="player.address"/></span>
-              </div>
-            </t>
+            <div class="hud-attr-grid ac-fb-grid">
+              <t t-if="player.batting_style">
+                <div class="hud-stat-row">
+                  <span class="hud-stat-key">Batting</span>
+                  <span class="hud-stat-val"><t t-esc="player.batting_style"/></span>
+                </div>
+              </t>
+              <t t-if="player.bowling_style">
+                <div class="hud-stat-row">
+                  <span class="hud-stat-key">Bowling</span>
+                  <span class="hud-stat-val"><t t-esc="player.bowling_style"/></span>
+                </div>
+              </t>
+              <t t-if="player.p_category">
+                <div class="hud-stat-row">
+                  <span class="hud-stat-key">Category</span>
+                  <span class="hud-stat-val"><t t-esc="player.p_category"/></span>
+                </div>
+              </t>
+              <t t-if="player.address">
+                <div class="hud-stat-row ac-fb-span-2">
+                  <span class="hud-stat-key">Location</span>
+                  <span class="hud-stat-val"><t t-esc="player.address"/></span>
+                </div>
+              </t>
+            </div>
           </t>
           <t t-else="">
             <div class="ac-fb-grid">
@@ -1137,26 +1217,6 @@ body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to to
     <t t-call="auction_module.player_break_pause_assets"/>
     <t t-call="auction_module.player_mystery_controls"/>
     <t t-call="auction_module.player_sell_modal"/>
-    <script>
-(function(){
-  var t=localStorage.getItem('auction_bs_theme')||'dark';
-  document.body.setAttribute('data-theme',t);
-  var bd=document.getElementById('bs-th-dark');
-  var bl=document.getElementById('bs-th-light');
-  if(bd){bd.style.display=t==='dark'?'inline':'none';}
-  if(bl){bl.style.display=t==='light'?'inline':'none';}
-})();
-function toggleBsTheme(){
-  var cur=document.body.getAttribute('data-theme');
-  var nxt=cur==='dark'?'light':'dark';
-  document.body.setAttribute('data-theme',nxt);
-  localStorage.setItem('auction_bs_theme',nxt);
-  var bd=document.getElementById('bs-th-dark');
-  var bl=document.getElementById('bs-th-light');
-  if(bd){bd.style.display=nxt==='dark'?'inline':'none';}
-  if(bl){bl.style.display=nxt==='light'?'inline':'none';}
-}
-    </script>
   </body>
 </html>
 </template>

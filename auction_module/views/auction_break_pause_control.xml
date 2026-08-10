@@ -24,11 +24,43 @@
       background:rgba(0,20,50,.75);border-color:rgba(255,215,0,.5);
     }
 
-    /* Mobile / tablet: sticky bottom auction actions (all display_auction themes) */
+    /* Mobile / tablet: sticky bottom auction actions + no-scroll viewport fit */
     .ac-mobile-ctrl-bar{display:none}
     @media (max-width:1024px){
       /* Fullscreen is desktop/projector-oriented — hide on phones and tablets */
       #fs-btn{display:none !important}
+
+      /* Fit page on small screens; allow scroll when photo + attrs need it */
+      html{
+        height:auto !important;
+        overflow-x:hidden !important;
+        overflow-y:auto !important;
+      }
+      body{
+        height:auto !important;
+        max-height:none !important;
+        min-height:100dvh !important;
+        overflow-x:hidden !important;
+        overflow-y:auto !important;
+        overscroll-behavior:auto;
+        display:block !important;
+      }
+      body.ac-sell-modal-open{
+        overflow:auto !important;
+        height:auto !important;
+        max-height:none !important;
+        display:block !important;
+      }
+      /* Headers keep natural height */
+      .hud-header,
+      .cr-header,
+      .lm-header,
+      .sw-header,
+      .pt-header,
+      .bb-header,
+      .single-header{
+        flex:0 0 auto !important;
+      }
 
       body.ac-has-mobile-ctrl .ac-mobile-ctrl-bar{
         display:flex;
@@ -37,8 +69,8 @@
         z-index:10050;
         align-items:stretch;
         justify-content:space-around;
-        gap:8px;
-        padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));
+        gap:6px;
+        padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));
         background:rgba(8,12,24,.94);
         backdrop-filter:blur(14px);
         -webkit-backdrop-filter:blur(14px);
@@ -51,7 +83,8 @@
         box-shadow:0 -10px 28px rgba(0,0,0,.12);
       }
       body.ac-has-mobile-ctrl{
-        padding-bottom:calc(72px + env(safe-area-inset-bottom,0px)) !important;
+        padding-bottom:calc(58px + env(safe-area-inset-bottom,0px)) !important;
+        box-sizing:border-box !important;
       }
       /* Sell wizard must own the screen — hide sticky auction actions while open */
       body.ac-sell-modal-open .ac-mobile-ctrl-bar{
@@ -86,7 +119,7 @@
       #ac-mobile-ctrl-bar > button{
         flex:1 1 0;
         min-width:0;
-        height:52px !important;
+        height:44px !important;
         max-width:none !important;
         width:auto !important;
         position:static !important;
@@ -94,18 +127,237 @@
         right:auto !important;
         left:auto !important;
         margin:0 !important;
-        padding:8px 6px !important;
-        border-radius:12px !important;
-        font-size:11px !important;
+        padding:6px 4px !important;
+        border-radius:10px !important;
+        font-size:10px !important;
         letter-spacing:.03em;
         white-space:normal !important;
-        line-height:1.15 !important;
+        line-height:1.1 !important;
         text-align:center;
+        display:inline-flex !important;
+        align-items:center !important;
+        justify-content:center !important;
+        gap:4px !important;
         -webkit-tap-highlight-color:transparent;
       }
       #ac-mobile-ctrl-bar > button svg{
-        width:14px;height:14px;flex-shrink:0;
+        width:12px;height:12px;flex-shrink:0;
       }
+
+      /* Stage shells: stacked column; natural height (Butterscotch-style) */
+      .hud-arena,
+      .cr-arena,
+      .lm-stage,
+      .sw-stage,
+      .pt-stage,
+      .bb-stage{
+        display:flex !important;
+        flex-direction:column !important;
+        grid-template-columns:none !important;
+        height:auto !important;
+        max-height:none !important;
+        overflow:visible !important;
+        padding-bottom:0 !important;
+      }
+      .cr-stage{
+        display:flex !important;
+        flex-direction:column !important;
+        flex:0 0 auto !important;
+        min-height:0 !important;
+        overflow:visible !important;
+        height:auto !important;
+      }
+
+      /* Photo size like Butterscotch mobile — smaller overall, not cropped strip */
+      .hud-photo-col,
+      .cr-photo-col,
+      .lm-photo-col,
+      .sw-photo-col,
+      .pt-photo-panel,
+      .bb-photo-panel{
+        height:52vw !important;
+        min-height:220px !important;
+        max-height:320px !important;
+        flex:0 0 auto !important;
+      }
+      .hud-photo-col .hud-photo-img,
+      .cr-photo-col img,
+      .lm-photo-col img.lm-photo,
+      .sw-photo-col img.sw-photo,
+      .pt-photo-panel img.pt-photo,
+      .bb-photo-panel img.bb-photo{
+        object-fit:contain !important;
+        object-position:top center !important;
+        width:100% !important;
+        height:100% !important;
+      }
+      .hud-serial-watermark,
+      .lm-photo-wm,
+      .sw-photo-wm,
+      .pt-serial-watermark,
+      .bb-serial-watermark{display:none !important;}
+
+      .hud-info-col,
+      .cr-stats-col,
+      .lm-info-col,
+      .sw-info-col,
+      .pt-right-col,
+      .bb-right-col{
+        flex:0 0 auto !important;
+        min-height:0 !important;
+        overflow:visible !important;
+        display:flex !important;
+        flex-direction:column !important;
+      }
+      .hud-stats,
+      .lm-stats-wrap,
+      .sw-stats-wrap,
+      .pt-info-panel,
+      .bb-info-panel{
+        flex:0 0 auto !important;
+        min-height:0 !important;
+        overflow:visible !important;
+      }
+      .hud-tier-strip{padding:6px 10px !important;}
+      .hud-photo-overlay{padding:6px 10px 8px !important;}
+      .hud-overlay-badges{gap:6px !important; margin-top:6px !important;}
+      .hud-player-name{font-size:1.05rem !important; letter-spacing:1px !important;}
+      .hud-serial-badge{transform:scale(.72); transform-origin:top left;}
+      .cr-id-name,.lm-player-name,.sw-player-name,
+      .pt-player-name,.bb-player-name{font-size:1.05rem !important;}
+      .cr-id-meta,.lm-id-badges,.sw-id-badges,
+      .hud-overlay-badges{gap:5px !important;}
+
+      /* Role / position + tier + base price — compact so they don't cover the photo */
+      .hud-role-tag,
+      .hud-base-badge,
+      .hud-tier-hex,
+      .cr-role-tag,.cr-tier-badge,.cr-base-badge,
+      .lm-role-tag,.lm-tier-badge,.lm-base-badge,
+      .sw-role-tag,.sw-tier-badge,.sw-base-badge,
+      .pt-tier-badge,.pt-base-badge,
+      .bb-tier-badge,.bb-base-badge,
+      .player-tier-badge,.player-base-badge{
+        min-height:0 !important;
+        height:auto !important;
+        padding:3px 8px !important;
+        font-size:.68rem !important;
+        letter-spacing:.6px !important;
+        line-height:1.15 !important;
+        border-width:1px !important;
+        border-radius:6px !important;
+        box-shadow:none !important;
+      }
+      .hud-role-tag{padding:3px 10px 3px 8px !important;}
+      .hud-base-badge,.cr-base-badge,.lm-base-badge,.sw-base-badge,
+      .pt-base-badge,.bb-base-badge,.player-base-badge{
+        padding:3px 8px 4px !important;
+        gap:1px !important;
+      }
+      .hud-base-badge-lbl,.cr-base-badge-lbl,.lm-base-badge-lbl,.sw-base-badge-lbl,
+      .pt-base-badge-lbl,.bb-base-badge-lbl,.player-base-badge-lbl{
+        font-size:.48rem !important;
+        letter-spacing:.8px !important;
+        line-height:1 !important;
+      }
+      .hud-base-badge-val,.cr-base-badge-val,.lm-base-badge-val,.sw-base-badge-val,
+      .pt-base-badge-val,.bb-base-badge-val,.player-base-badge-val{
+        font-size:.78rem !important;
+        letter-spacing:.3px !important;
+        line-height:1.1 !important;
+      }
+      /* Football position / cricket role text on photo */
+      .pt-player-role,.bb-player-role{
+        font-size:.72rem !important;
+        letter-spacing:1px !important;
+        margin-top:4px !important;
+      }
+      .pt-photo-name-block,.bb-photo-name-block{padding:6px 10px 8px !important;}
+      .pt-highlight-row,.bb-highlight-row{gap:6px !important; margin-bottom:8px !important;}
+      body.ac-has-mobile-ctrl .player-possition{font-size:.72rem !important; letter-spacing:1px !important;}
+      body.ac-has-mobile-ctrl .player-highlight-badges{gap:5px !important; margin-top:4px !important;}
+      .cr-identity,.cr-id-block{padding:6px 10px !important;}
+      .lm-identity,.sw-identity{padding:6px 10px !important; gap:6px !important;}
+      .lm-serial-num,.sw-serial-num{font-size:1.35rem !important;}
+      .lm-id-vsep,.sw-id-vsep{height:28px !important;}
+      .cr-serial-num{font-size:1.35rem !important;}
+
+      /* Vanilla layout pack */
+      body.ac-has-mobile-ctrl{padding-bottom:calc(58px + env(safe-area-inset-bottom,0px)) !important;}
+      body.ac-has-mobile-ctrl .container{
+        flex:none !important;
+        min-height:0 !important;
+        max-height:none !important;
+        overflow:visible !important;
+        padding-top:4px !important;
+        padding-bottom:4px !important;
+        display:block !important;
+      }
+      body.ac-has-mobile-ctrl .auction-single{
+        margin-top:6px !important;
+        gap:6px !important;
+        flex:none !important;
+        min-height:0 !important;
+        max-height:none !important;
+        overflow:visible !important;
+      }
+      body.ac-has-mobile-ctrl .single-player-image .sp-image{
+        height:52vw !important;
+        max-height:280px !important;
+        min-height:200px !important;
+        max-width:220px !important;
+        width:min(52vw, 220px) !important;
+      }
+      body.ac-has-mobile-ctrl .single-player-image .sp-image img,
+      body.ac-has-mobile-ctrl .single-player-image #loadImage{
+        height:100% !important;
+        width:100% !important;
+        object-fit:contain !important;
+        object-position:top center !important;
+      }
+      body.ac-has-mobile-ctrl .stroke-only{font-size:3rem !important; margin-bottom:2px !important;}
+      body.ac-has-mobile-ctrl .player-name{font-size:1.05rem !important;}
+      body.ac-has-mobile-ctrl .player-possition{font-size:.72rem !important;}
+      body.ac-has-mobile-ctrl .player-highlight-badges{
+        margin-top:4px !important; gap:5px !important;
+        justify-content:center !important; width:100% !important;
+      }
+      body.ac-has-mobile-ctrl .single-header{height:auto !important; min-height:0 !important;}
+      .lm-stats-title,.sw-stats-title,.hud-stats-heading,.cr-stats-header-title{font-size:.72rem !important; margin-bottom:4px !important; padding-bottom:4px !important;}
+    }
+    @media (max-width:430px){
+      .hud-photo-col,
+      .cr-photo-col,
+      .lm-photo-col,
+      .sw-photo-col,
+      .pt-photo-panel,
+      .bb-photo-panel{
+        height:48vw !important;
+        min-height:200px !important;
+        max-height:280px !important;
+      }
+      body.ac-has-mobile-ctrl .single-player-image .sp-image{
+        height:48vw !important;
+        max-height:240px !important;
+        min-height:180px !important;
+        max-width:190px !important;
+        width:min(48vw, 190px) !important;
+      }
+      .hud-role-tag,.hud-base-badge,.hud-tier-hex,
+      .cr-role-tag,.cr-tier-badge,.cr-base-badge,
+      .lm-role-tag,.lm-tier-badge,.lm-base-badge,
+      .sw-role-tag,.sw-tier-badge,.sw-base-badge,
+      .pt-tier-badge,.pt-base-badge,.bb-tier-badge,.bb-base-badge,
+      .player-tier-badge,.player-base-badge{
+        font-size:.62rem !important;
+        padding:2px 7px !important;
+      }
+      .hud-base-badge-val,.cr-base-badge-val,.lm-base-badge-val,.sw-base-badge-val,
+      .pt-base-badge-val,.bb-base-badge-val,.player-base-badge-val{
+        font-size:.72rem !important;
+      }
+      .pt-player-role,.bb-player-role,
+      body.ac-has-mobile-ctrl .player-possition{font-size:.65rem !important;}
     }
   </style>
   <script>//<![CDATA[

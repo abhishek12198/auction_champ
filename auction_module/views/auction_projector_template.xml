@@ -2223,6 +2223,25 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   var _pjPhotoReq = 0;
   var _pjRevealIntroTimer = null;
 
+  /** Compare photo URLs ignoring cache-busters (?v=) so sold/write_date doesn't flash. */
+  function pjPhotoStableKey(src) {
+    if (!src) return '';
+    if (String(src).indexOf('data:') === 0) return String(src).slice(0, 80);
+    var raw = String(src).split('#')[0];
+    var qi = raw.indexOf('?');
+    if (qi < 0) return raw;
+    var path = raw.slice(0, qi);
+    var kept = [];
+    var parts = raw.slice(qi + 1).split('&');
+    for (var i = 0; i < parts.length; i++) {
+      var part = parts[i];
+      if (!part) continue;
+      if (part.indexOf('v=') === 0) continue;
+      kept.push(part);
+    }
+    return kept.length ? (path + '?' + kept.join('&')) : path;
+  }
+
   function hideMysteryRevealIntro() {
     var intro = document.getElementById('pjRevealIntro');
     var photoSide = document.getElementById('pjPhotoSide');
@@ -2298,8 +2317,13 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     }
 
     if (nextSrc) {
-      /* Same URL already showing — keep it (avoids flicker / re-fetch) */
-      if (oldImg && oldImg.getAttribute('data-src') === nextSrc) {
+      var oldKey = oldImg
+        ? pjPhotoStableKey(oldImg.getAttribute('data-src') || oldImg.getAttribute('src') || '')
+        : '';
+      var nextKey = pjPhotoStableKey(nextSrc);
+      /* Same photo already showing (ignore ?v= write_date bust) — keep it */
+      if (oldImg && oldKey && oldKey === nextKey) {
+        oldImg.setAttribute('data-src', nextSrc);
         oldImg.style.filter = mysteryHidden ? 'grayscale(1) brightness(0.72)' : '';
         photoPh.style.display = 'none';
         if (photoBg) photoBg.style.display = 'none';
@@ -2313,9 +2337,18 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         try { img.fetchPriority = 'high'; } catch (e) {}
         img.decoding = 'async';
         if (mysteryHidden) img.style.filter = 'grayscale(1) brightness(0.72)';
+        /* Keep current face visible until the next image is ready (no blank flash) */
+        img.style.opacity = '0';
+        img.style.position = oldImg ? 'absolute' : '';
+        img.style.inset = oldImg ? '0' : '';
+        img.style.zIndex = oldImg ? '2' : '';
 
         function commitPhoto() {
           if (reqId !== _pjPhotoReq) return;
+          img.style.opacity = '';
+          img.style.position = '';
+          img.style.inset = '';
+          img.style.zIndex = '';
           if (oldImg && oldImg.parentNode) oldImg.remove();
           var extras = photoSide.querySelectorAll('img.pj-photo');
           for (var ei = 0; ei < extras.length; ei++) {
@@ -2332,16 +2365,25 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         img.onload = commitPhoto;
         img.onerror = function() {
           if (reqId !== _pjPhotoReq) return;
-          if (oldImg && oldImg.parentNode) oldImg.remove();
           if (img.parentNode) img.remove();
+          /* Only blank the stage if we had nothing to keep */
+          if (oldImg && oldImg.parentNode) {
+            oldImg.style.filter = mysteryHidden ? 'grayscale(1) brightness(0.72)' : '';
+            photoPh.style.display = 'none';
+          } else {
+            photoPh.style.display = 'flex';
+            if (photoBg) photoBg.style.display = 'none';
+          }
+        };
+        var wm0 = document.getElementById('pjSerialWm');
+        if (wm0) photoSide.insertBefore(img, wm0); else photoSide.appendChild(img);
+        if (!oldImg) {
           photoPh.style.display = 'flex';
           if (photoBg) photoBg.style.display = 'none';
-        };
-        /* Never keep previous player's face while name/attrs already updated */
-        if (oldImg && oldImg.parentNode) oldImg.remove();
-        oldImg = null;
-        photoPh.style.display = 'flex';
-        if (photoBg) photoBg.style.display = 'none';
+        } else {
+          photoPh.style.display = 'none';
+          if (photoBg) photoBg.style.display = 'none';
+        }
         img.src = nextSrc;
         if (img.complete && img.naturalWidth) commitPhoto();
         appendMysteryLock();
