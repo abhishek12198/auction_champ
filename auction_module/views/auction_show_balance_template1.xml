@@ -4,7 +4,8 @@
   <html lang="en" t-att-data-theme="theme"
         t-att-data-skin="'projector' if from_projector else None"
         t-att-data-mode="mode or 'dark'"
-        t-att-data-balance-json-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/show/team/balance/json'">
+        t-att-data-balance-json-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/show/team/balance/json'"
+        t-att-data-squad-json-base="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/team/'">
     <head>
       <meta charset="UTF-8"/>
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -139,6 +140,31 @@
           backdrop-filter: blur(16px);
           box-shadow: 0 16px 32px rgba(0,0,0,.35);
         }
+        /* Light themes: parchment/rose header so dark text stays readable */
+        [data-theme="lemon"] .bs2-hdr,
+        [data-theme="strawberry"] .bs2-hdr {
+          background: linear-gradient(180deg, var(--bg2), var(--bg));
+          border-bottom: 2px solid var(--bdr);
+          box-shadow: 0 8px 22px rgba(0,0,0,.08);
+        }
+        [data-theme="lemon"] .bs2-back-btn,
+        [data-theme="lemon"] .bs2-fs-btn,
+        [data-theme="lemon"] .bs2-view-toggle,
+        [data-theme="strawberry"] .bs2-back-btn,
+        [data-theme="strawberry"] .bs2-fs-btn,
+        [data-theme="strawberry"] .bs2-view-toggle {
+          background: rgba(0,0,0,.05);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 6px 14px rgba(0,0,0,.06);
+        }
+        [data-theme="lemon"] .bs2-back-btn:hover,
+        [data-theme="lemon"] .bs2-toggle-btn:hover,
+        [data-theme="lemon"] .bs2-fs-btn:hover,
+        [data-theme="strawberry"] .bs2-back-btn:hover,
+        [data-theme="strawberry"] .bs2-toggle-btn:hover,
+        [data-theme="strawberry"] .bs2-fs-btn:hover {
+          border-color: var(--bdr);
+          box-shadow: 0 8px 18px rgba(0,0,0,.1), 0 0 0 1px var(--bdr);
+        }
         .bs2-hdr-side {
           display: flex;
           align-items: center;
@@ -233,6 +259,7 @@
           font-size: 1.42rem;
           line-height: 1;
           text-transform: uppercase;
+          color: var(--tx);
         }
         .bs2-live {
           display: inline-flex;
@@ -251,6 +278,19 @@
           box-shadow: 0 0 0 0 var(--glow);
           animation: livePulse 1.4s ease-in-out infinite;
         }
+
+        .bs2-edition {
+          margin-top: 2px;
+          font-family: var(--bf);
+          font-size: .55rem;
+          font-weight: 600;
+          letter-spacing: .14em;
+          text-transform: uppercase;
+          color: var(--tx-d);
+          line-height: 1;
+          white-space: nowrap;
+        }
+
         .bs2-view-toggle {
           display: inline-flex;
           align-items: center;
@@ -417,9 +457,12 @@
         .bs2-card-purse-line,
         .bs2-maxcall {
           display: inline-flex;
-          align-items: flex-end;
+          flex-wrap: nowrap;
+          align-items: baseline;
           gap: 8px;
           line-height: .9;
+          max-width: 100%;
+          white-space: nowrap;
         }
         .bs2-purse-value,
         .bs2-maxcall-value,
@@ -431,13 +474,271 @@
           font-weight: 700;
           letter-spacing: .04em;
         }
-        .bs2-purse-value,
+        /* List view: purse readable; Max Bid fits cell (all themes) */
+        .bs2-purse-value {
+          font-size: clamp(1.35rem, 2.4vw, 2.45rem);
+          line-height: 1.05;
+          white-space: nowrap;
+          letter-spacing: .02em;
+        }
         .bs2-maxcall-value {
-          font-size: 2.65rem;
+          font-size: clamp(1.2rem, 2vw, 2rem);
+          line-height: 1.1;
+          white-space: nowrap;
+          letter-spacing: .01em;
+          max-width: 100%;
+          overflow: visible;
         }
         .bs2-card-purse-value {
           font-size: 3.28rem;
         }
+        /* Max Bid decision callout + urgency heat */
+        .bs2-maxbid {
+          display: inline-flex;
+          flex-direction: column;
+          align-items: stretch;
+          justify-content: center;
+          gap: 3px;
+          padding: 8px 10px 9px;
+          border-radius: 12px;
+          border: 1.5px solid var(--bdr);
+          background: rgba(255,255,255,.05);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+          width: 100%;
+          max-width: 100%;
+          min-width: 0;
+          box-sizing: border-box;
+          overflow: hidden;
+          container-type: inline-size;
+          container-name: maxbid;
+        }
+        /* Give Max Bid column room for ~8 digits + unit on one line */
+        .bs2-table th:nth-child(4),
+        .bs2-table td:nth-child(4) {
+          min-width: 10.5rem;
+        }
+        [data-theme="lemon"] .bs2-maxbid,
+        [data-theme="strawberry"] .bs2-maxbid {
+          background: rgba(0,0,0,.04);
+          box-shadow: none;
+        }
+        .bs2-maxbid-lbl {
+          font-family: var(--bf);
+          font-size: .58rem;
+          letter-spacing: .14em;
+          text-transform: uppercase;
+          color: var(--tx-d);
+          line-height: 1;
+        }
+        .bs2-maxbid .bs2-maxcall {
+          gap: 4px;
+          max-width: 100%;
+          min-width: 0;
+          display: block;
+        }
+        /* Full value visible — JS fitMaxBidValues scales to fit 7–8 digits + unit */
+        .bs2-maxbid .bs2-maxcall-value {
+          color: var(--acc2);
+          font-size: clamp(1.05rem, 13cqw, 1.85rem);
+          max-width: 100%;
+          overflow: visible;
+          text-overflow: clip;
+          display: block;
+          white-space: nowrap;
+          letter-spacing: 0;
+        }
+        [data-theme="vanilla"] .bs2-maxbid .bs2-maxcall-value {
+          letter-spacing: 0;
+        }
+        .bs2-maxbid-hint {
+          font-size: .52rem;
+          letter-spacing: .1em;
+          text-transform: uppercase;
+          color: var(--tx-m);
+          line-height: 1;
+        }
+        .bs2-maxbid.mb-tight {
+          border-color: rgba(234,88,12,.5);
+          background: rgba(234,88,12,.1);
+        }
+        .bs2-maxbid.mb-tight .bs2-maxcall-value { color: #fb923c; }
+        .bs2-maxbid.mb-tight .bs2-maxbid-lbl { color: rgba(251,146,60,.9); }
+        .bs2-maxbid.mb-crit {
+          border-color: rgba(220,38,38,.55);
+          background: rgba(220,38,38,.12);
+          animation: maxbidPulse 1.4s ease-in-out infinite;
+        }
+        .bs2-maxbid.mb-crit .bs2-maxcall-value { color: #f87171; }
+        .bs2-maxbid.mb-crit .bs2-maxbid-lbl { color: rgba(248,113,113,.95); }
+        @keyframes maxbidPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,.18); }
+          50% { box-shadow: 0 0 0 6px rgba(220,38,38,0); }
+        }
+        .bs2-stat-col--maxbid {
+          background: rgba(255,255,255,.06);
+          box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+          container-type: inline-size;
+          container-name: maxbidgrid;
+          min-width: 0;
+          overflow: hidden;
+        }
+        [data-theme="lemon"] .bs2-stat-col--maxbid,
+        [data-theme="strawberry"] .bs2-stat-col--maxbid {
+          background: rgba(0,0,0,.05);
+          box-shadow: none;
+        }
+        .bs2-stat-col--maxbid .bs2-stat-label {
+          color: var(--acc2);
+          font-weight: 700;
+        }
+        .bs2-stat-col--maxbid .bs2-stat-figure { color: var(--acc2); }
+        .bs2-stat-col--maxbid.mb-tight { background: rgba(234,88,12,.12); }
+        .bs2-stat-col--maxbid.mb-tight .bs2-stat-label,
+        .bs2-stat-col--maxbid.mb-tight .bs2-stat-figure { color: #fb923c; }
+        .bs2-stat-col--maxbid.mb-crit {
+          background: rgba(220,38,38,.14);
+          animation: maxbidPulse 1.4s ease-in-out infinite;
+        }
+        .bs2-stat-col--maxbid.mb-crit .bs2-stat-label,
+        .bs2-stat-col--maxbid.mb-crit .bs2-stat-figure { color: #f87171; }
+        .bs2-mob-stat--maxbid {
+          border-color: var(--bdr);
+          background: rgba(255,255,255,.07);
+          container-type: inline-size;
+          overflow: hidden;
+        }
+        [data-theme="lemon"] .bs2-mob-stat--maxbid,
+        [data-theme="strawberry"] .bs2-mob-stat--maxbid {
+          background: rgba(0,0,0,.05);
+        }
+        .bs2-mob-stat--maxbid .bs2-mob-stat-lbl {
+          color: var(--acc2);
+          font-weight: 700;
+        }
+        .bs2-mob-stat--maxbid .bs2-mob-stat-val {
+          color: var(--acc2);
+          white-space: nowrap;
+          font-size: clamp(.85rem, 14cqw, 1.15rem);
+          max-width: 100%;
+          overflow: visible;
+          text-overflow: clip;
+          letter-spacing: 0;
+        }
+        [data-theme="vanilla"] .bs2-mob-stat--maxbid .bs2-mob-stat-val {
+          letter-spacing: 0;
+        }
+        .bs2-mob-stat--maxbid.mb-tight {
+          border-color: rgba(234,88,12,.5);
+          background: rgba(234,88,12,.1);
+        }
+        .bs2-mob-stat--maxbid.mb-tight .bs2-mob-stat-lbl,
+        .bs2-mob-stat--maxbid.mb-tight .bs2-mob-stat-val { color: #fb923c; }
+        .bs2-mob-stat--maxbid.mb-crit {
+          border-color: rgba(220,38,38,.55);
+          background: rgba(220,38,38,.12);
+          animation: maxbidPulse 1.4s ease-in-out infinite;
+        }
+        .bs2-mob-stat--maxbid.mb-crit .bs2-mob-stat-lbl,
+        .bs2-mob-stat--maxbid.mb-crit .bs2-mob-stat-val { color: #f87171; }
+        @media (max-width: 768px) {
+          .bs2-maxbid-hint { display: none; }
+        }
+        /* Eye / minimal squad peek */
+        .bs2-eye-btn {
+          width: 40px;
+          height: 40px;
+          border-radius: 999px;
+          border: 1.5px solid var(--bdr);
+          background: rgba(255,255,255,.06);
+          color: var(--acc2);
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 8px 18px rgba(0,0,0,.16);
+          transition: transform .15s ease, border-color .15s ease, background .15s ease;
+        }
+        .bs2-eye-btn:hover {
+          transform: translateY(-1px);
+          border-color: var(--acc);
+          background: rgba(255,255,255,.1);
+        }
+        .bs2-eye-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        [data-theme="lemon"] .bs2-eye-btn,
+        [data-theme="strawberry"] .bs2-eye-btn {
+          background: rgba(0,0,0,.05);
+          box-shadow: 0 4px 12px rgba(0,0,0,.08);
+        }
+        .bs2-access-cell { text-align: center; }
+        #bs2-squad-overlay {
+          display: none;
+          position: fixed;
+          inset: 0;
+          z-index: 500;
+          background: rgba(0,0,0,.72);
+          backdrop-filter: blur(4px);
+          align-items: flex-end;
+          justify-content: center;
+          padding: 0;
+        }
+        #bs2-squad-overlay.open { display: flex; }
+        .bs2-sq-sheet {
+          background: var(--card-bg, var(--bg2));
+          border: 1px solid var(--card-bdr, var(--bdr));
+          border-radius: 20px 20px 0 0;
+          width: 100%;
+          max-width: 520px;
+          max-height: 80vh;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          color: var(--tx);
+        }
+        .bs2-sq-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 14px 16px 12px;
+          border-bottom: 1px solid var(--bdr2);
+          flex-shrink: 0;
+        }
+        .bs2-sq-hlogo {
+          width: 38px; height: 38px; border-radius: 9px; overflow: hidden;
+          background: rgba(255,255,255,.06);
+          display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+          border: 1px solid var(--bdr);
+        }
+        .bs2-sq-hlogo img { width: 100%; height: 100%; object-fit: contain; }
+        .bs2-sq-hname { font-size: .95rem; font-weight: 800; color: var(--tx); line-height: 1.2; }
+        .bs2-sq-hpts { font-size: .62rem; color: var(--tx-d); margin-top: 2px; }
+        .bs2-sq-hclose {
+          margin-left: auto; width: 28px; height: 28px; border-radius: 50%;
+          background: rgba(255,255,255,.08); border: 1px solid var(--bdr2);
+          cursor: pointer; color: var(--tx-d); font-size: .85rem;
+          display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .bs2-sq-body { overflow-y: auto; flex: 1; }
+        .bs2-sq-row {
+          display: flex; align-items: center; gap: 12px;
+          padding: 9px 16px; border-bottom: 1px solid var(--bdr2);
+        }
+        .bs2-sq-row:last-child { border-bottom: none; }
+        .bs2-sq-rphoto {
+          width: 42px; height: 42px; border-radius: 9px; overflow: hidden;
+          background: rgba(255,255,255,.06); flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          border: 1px solid var(--bdr2);
+        }
+        .bs2-sq-rphoto img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+        .bs2-sq-rph { font-size: 1.1rem; opacity: .35; }
+        .bs2-sq-rinfo { flex: 1; min-width: 0; }
+        .bs2-sq-rname { font-size: .83rem; font-weight: 700; color: var(--tx); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .bs2-sq-rrole { font-size: .6rem; color: var(--tx-d); margin-top: 1px; }
+        .bs2-sq-rpts { font-size: .88rem; font-weight: 900; color: var(--acc2); flex-shrink: 0; white-space: nowrap; }
+        .bs2-sq-empty { text-align: center; color: var(--tx-d); font-size: .82rem; padding: 28px 16px; }
+        .bs2-sq-loading { text-align: center; color: var(--tx-d); font-size: .82rem; padding: 28px 16px; }
+
         .bs2-unit {
           font-size: 1rem;
           color: var(--tx-d);
@@ -491,23 +792,47 @@
           font-size: 2.15rem;
           line-height: .9;
         }
-        /* Card grid stat figures (Players Needed · Max Bid · Squad):
-           shrink so 6-8 characters stay on a single line, no overflow. */
+        /* Card grid: one-line figures; Max Bid never truncates (fit scales) */
         .bs2-card-stats .bs2-stat-figure {
-          font-size: 1.42rem;
-          line-height: 1;
+          font-size: clamp(.88rem, 1.7vw, 1.28rem);
+          line-height: 1.1;
           white-space: nowrap;
           letter-spacing: .01em;
+          max-width: 100%;
+          overflow: visible;
+          text-overflow: clip;
+          display: inline-flex;
+          flex-direction: row;
+          flex-wrap: nowrap;
+          align-items: baseline;
+          justify-content: center;
+          gap: 3px;
+        }
+        .bs2-stat-col--maxbid .bs2-stat-figure {
+          font-size: clamp(.95rem, 12cqw, 1.4rem);
+          font-weight: 800;
+          max-width: 100%;
+          overflow: visible;
+          text-overflow: clip;
+          letter-spacing: 0;
+        }
+        [data-theme="vanilla"] .bs2-stat-col--maxbid .bs2-stat-figure {
+          letter-spacing: 0;
+        }
+        .bs2-card-stats .bs2-stat-figure > span {
+          white-space: nowrap;
         }
         .bs2-card-stats .bs2-stat-figure .bs2-unit {
-          font-size: .7rem;
-          margin-bottom: 3px;
+          font-size: .62em;
+          margin-bottom: 0;
+          letter-spacing: .06em;
+          flex-shrink: 0;
         }
         .bs2-chip-label,
         .bs2-stat-label {
-          margin-top: 4px;
-          font-size: .68rem;
-          letter-spacing: .18em;
+          margin-top: 0;
+          font-size: .62rem;
+          letter-spacing: .12em;
           text-transform: uppercase;
           color: var(--tx-d);
           white-space: nowrap;
@@ -620,18 +945,29 @@
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 0;
-          border-top: 1px solid rgba(255,255,255,.06);
-          border-bottom: 1px solid rgba(255,255,255,.06);
-          background: rgba(255,255,255,.03);
-          border-radius: 18px;
+          border: 1.5px solid var(--bdr);
+          border-radius: 12px;
           overflow: hidden;
+          background: rgba(255,255,255,.04);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
         }
         .bs2-stat-col {
-          padding: 14px 10px;
+          min-width: 0;
+          padding: 10px 6px 12px;
           text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
         }
         .bs2-stat-col + .bs2-stat-col {
-          border-left: 1px solid rgba(255,255,255,.08);
+          border-left: 1.5px solid var(--bdr);
+        }
+        [data-theme="strawberry"] .bs2-card-stats,
+        [data-theme="lemon"] .bs2-card-stats {
+          background: rgba(0,0,0,.04);
+          box-shadow: none;
         }
         .bs2-flash {
           animation: flashUpdate .85s ease;
@@ -786,22 +1122,28 @@
           .bs2-progress-lg { height: 6px; }
           .bs2-card-stats {
             border-radius: 8px;
+            border-width: 1px;
           }
           .bs2-stat-col {
-            padding: 6px 3px;
+            padding: 6px 3px 8px;
+            gap: 3px;
           }
           .bs2-card-stats .bs2-stat-figure {
-            font-size: .88rem;
+            font-size: clamp(.78rem, 2.8vw, 1.02rem);
+          }
+          .bs2-stat-col--maxbid .bs2-stat-figure {
+            font-size: clamp(.8rem, 2.9vw, 1.05rem);
           }
           .bs2-card-stats .bs2-stat-figure .bs2-unit {
-            font-size: .48rem;
+            font-size: .55em;
+            margin-bottom: 0;
           }
           .bs2-stat-label,
           .bs2-chip-label {
             font-size: .46rem;
             letter-spacing: .04em;
-            margin-top: 2px;
-            white-space: normal;
+            margin-top: 0;
+            white-space: nowrap;
           }
           .bs2-badge,
           .bs2-card-status {
@@ -933,6 +1275,60 @@
           justify-content: space-between;
           gap: 8px;
         }
+
+        /* Powered by AuctionChamp — mobile / smaller screens */
+        .bs2-powered {
+          display: none;
+        }
+        @media (max-width: 1024px) {
+          .bs2-powered {
+            display: flex;
+            position: relative;
+            z-index: 40;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 8px 12px 18px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid var(--bdr2);
+            background: rgba(0,0,0,.18);
+            backdrop-filter: blur(10px);
+          }
+          [data-theme="lemon"] .bs2-powered,
+          [data-theme="strawberry"] .bs2-powered {
+            background: rgba(255,255,255,.55);
+            border-color: var(--bdr);
+          }
+          .bs2-powered-lbl {
+            font-family: var(--bf);
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            color: var(--tx-d);
+            white-space: nowrap;
+          }
+          .bs2-powered-logo {
+            height: 22px;
+            width: auto;
+            max-width: 140px;
+            object-fit: contain;
+            display: block;
+            filter: drop-shadow(0 0 8px var(--glow));
+          }
+          [data-theme="lemon"] .bs2-powered-logo,
+          [data-theme="strawberry"] .bs2-powered-logo {
+            filter: brightness(0) sepia(1) saturate(5) hue-rotate(6deg) brightness(0.45);
+          }
+          [data-theme="strawberry"] .bs2-powered-logo {
+            filter: brightness(0) sepia(1) saturate(8) hue-rotate(300deg) brightness(0.55);
+          }
+          .bs2-main {
+            padding-bottom: 28px;
+          }
+        }
+
       </style>
     </head>
 
@@ -957,6 +1353,7 @@
         <div class="bs2-title-wrap">
           <div class="bs2-title">BID SUMMARY</div>
           <div class="bs2-live"><span class="bs2-live-dot"></span><span>LIVE</span></div>
+          <div class="bs2-edition"><t t-esc="(theme or 'vanilla').upper()"/> EDITION</div>
         </div>
         <div class="bs2-hdr-side bs2-right">
           <div class="bs2-view-toggle" role="tablist" aria-label="View toggle">
@@ -980,7 +1377,7 @@
                   <th>Max Bid</th>
                   <th>Squad</th>
                   <th>Status</th>
-                  <th>Access</th>
+                  <th>View</th>
                 </tr>
               </thead>
               <tbody>
@@ -990,6 +1387,8 @@
                   <t t-set="status_label" t-value="'COMFORTABLE' if purse_pct &gt;= 60 else ('HEALTHY' if purse_pct &gt;= 40 else ('BALANCED' if purse_pct &gt;= 25 else ('TIGHT' if purse_pct &gt;= 10 else 'CRITICAL')))"/>
                   <t t-set="status_cls" t-value="'comfortable' if purse_pct &gt;= 60 else ('healthy' if purse_pct &gt;= 40 else ('balanced' if purse_pct &gt;= 25 else ('tight' if purse_pct &gt;= 10 else 'critical')))"/>
                   <t t-set="players_recruited" t-value="team.max_players - team.remaining_players_count"/>
+                  <t t-set="max_share" t-value="int(team.max_call * 100 // team.remaining_points) if team.remaining_points else 100"/>
+                  <t t-set="maxbid_heat" t-value="'mb-crit' if (team.remaining_players_count &lt;= 1 or max_share &lt;= 15) else ('mb-tight' if (team.remaining_players_count &lt;= 3 or max_share &lt;= 30) else 'mb-ok')"/>
                   <tr class="bs2-row" t-attf-data-auction-id="#{team.id}" t-attf-data-total-pts="#{team.total_point}" t-attf-data-max-players="#{team.max_players}">
                     <td>
                       <div class="bs2-team-cell">
@@ -1024,9 +1423,13 @@
                       </div>
                     </td>
                     <td>
-                      <div class="bs2-maxcall">
-                        <span class="bs2-maxcall-value" t-attf-id="team-maxcall-#{team.id}"><t t-esc="tournament.format_points(team.max_call) if tournament else team.max_call"/></span>
-                        <span class="bs2-unit" style="display:none;"></span>
+                      <div data-role="maxbid-callout" t-attf-class="bs2-maxbid #{maxbid_heat}">
+                        <span class="bs2-maxbid-lbl">MAX BID</span>
+                        <div class="bs2-maxcall">
+                          <span class="bs2-maxcall-value" t-attf-id="team-maxcall-#{team.id}"><t t-esc="tournament.format_points(team.max_call) if tournament else team.max_call"/></span>
+                          <span class="bs2-unit" style="display:none;"></span>
+                        </div>
+                        <span class="bs2-maxbid-hint">can bid up to</span>
                       </div>
                     </td>
                     <td>
@@ -1039,7 +1442,8 @@
                       <span data-role="status-badge" data-base-class="bs2-badge" t-attf-class="bs2-badge #{status_cls}"><t t-esc="status_label"/></span>
                     </td>
                     <td class="bs2-access-cell">
-                      <a t-att-href="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/get/players/team/' + str(team.team_id.id) + ('?from=projector&amp;mode=' + (mode or 'dark') if from_projector else '')" class="bs2-engage">&#9654; ENGAGE</a>
+                      <button type="button" class="bs2-eye-btn" title="View squad" aria-label="View squad"
+                              t-att-data-team-id="team.team_id.id"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
                     </td>
                   </tr>
                 </t>
@@ -1065,7 +1469,9 @@
               <t t-set="purse_cls" t-value="'pf-high' if purse_pct &gt;= 60 else ('pf-mid' if purse_pct &gt;= 30 else ('pf-low' if purse_pct &gt;= 10 else 'pf-crit'))"/>
               <t t-set="status_label" t-value="'COMFORTABLE' if purse_pct &gt;= 60 else ('HEALTHY' if purse_pct &gt;= 40 else ('BALANCED' if purse_pct &gt;= 25 else ('TIGHT' if purse_pct &gt;= 10 else 'CRITICAL')))"/>
               <t t-set="status_cls" t-value="'comfortable' if purse_pct &gt;= 60 else ('healthy' if purse_pct &gt;= 40 else ('balanced' if purse_pct &gt;= 25 else ('tight' if purse_pct &gt;= 10 else 'critical')))"/>
-              <t t-set="players_recruited" t-value="team.max_players - team.remaining_players_count"/>
+                  <t t-set="players_recruited" t-value="team.max_players - team.remaining_players_count"/>
+                  <t t-set="max_share" t-value="int(team.max_call * 100 // team.remaining_points) if team.remaining_points else 100"/>
+                  <t t-set="maxbid_heat" t-value="'mb-crit' if (team.remaining_players_count &lt;= 1 or max_share &lt;= 15) else ('mb-tight' if (team.remaining_players_count &lt;= 3 or max_share &lt;= 30) else 'mb-ok')"/>
               <div class="bs2-card" t-attf-data-auction-id="#{team.id}" t-attf-data-total-pts="#{team.total_point}" t-attf-data-max-players="#{team.max_players}">
                 <div class="bs2-card-accent"></div>
                 <div class="bs2-card-body">
@@ -1101,7 +1507,7 @@
                       <div class="bs2-stat-label">Players Needed</div>
                       <div class="bs2-stat-figure" t-attf-id="grid-team-players-#{team.id}"><t t-esc="team.remaining_players_count"/></div>
                     </div>
-                    <div class="bs2-stat-col">
+                    <div data-role="maxbid-callout" t-attf-class="bs2-stat-col bs2-stat-col--maxbid #{maxbid_heat}">
                       <div class="bs2-stat-label">Max Bid</div>
                       <div class="bs2-stat-figure"><span t-attf-id="grid-team-maxcall-#{team.id}"><t t-esc="tournament.format_points(team.max_call) if tournament else team.max_call"/></span><span class="bs2-unit" style="display:none;"></span></div>
                     </div>
@@ -1113,7 +1519,8 @@
 
                   <div class="bs2-card-foot">
                     <span data-role="status-badge" data-base-class="bs2-badge bs2-card-status" t-attf-class="bs2-badge bs2-card-status #{status_cls}"><t t-esc="status_label"/></span>
-                    <a t-att-href="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/get/players/team/' + str(team.team_id.id) + ('?from=projector&amp;mode=' + (mode or 'dark') if from_projector else '')" class="bs2-engage">&#9654; ENGAGE</a>
+                    <button type="button" class="bs2-eye-btn" title="View squad" aria-label="View squad"
+                            t-att-data-team-id="team.team_id.id"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
                   </div>
                 </div>
               </div>
@@ -1129,6 +1536,8 @@
             <t t-set="status_label" t-value="'COMFORTABLE' if purse_pct &gt;= 60 else ('HEALTHY' if purse_pct &gt;= 40 else ('BALANCED' if purse_pct &gt;= 25 else ('TIGHT' if purse_pct &gt;= 10 else 'CRITICAL')))"/>
             <t t-set="status_cls" t-value="'comfortable' if purse_pct &gt;= 60 else ('healthy' if purse_pct &gt;= 40 else ('balanced' if purse_pct &gt;= 25 else ('tight' if purse_pct &gt;= 10 else 'critical')))"/>
             <t t-set="players_recruited" t-value="team.max_players - team.remaining_players_count"/>
+            <t t-set="max_share" t-value="int(team.max_call * 100 // team.remaining_points) if team.remaining_points else 100"/>
+            <t t-set="maxbid_heat" t-value="'mb-crit' if (team.remaining_players_count &lt;= 1 or max_share &lt;= 15) else ('mb-tight' if (team.remaining_players_count &lt;= 3 or max_share &lt;= 30) else 'mb-ok')"/>
             <div class="bs2-mob-row" t-attf-data-auction-id="#{team.id}" t-attf-data-total-pts="#{team.total_point}" t-attf-data-max-players="#{team.max_players}">
 
               <!-- Head: logo + name + status badge -->
@@ -1166,7 +1575,7 @@
                   <span class="bs2-mob-stat-lbl">Need</span>
                   <span class="bs2-mob-stat-val" t-attf-id="mob-team-players-#{team.id}"><t t-esc="team.remaining_players_count"/></span>
                 </div>
-                <div class="bs2-mob-stat">
+                <div data-role="maxbid-callout" t-attf-class="bs2-mob-stat bs2-mob-stat--maxbid #{maxbid_heat}">
                   <span class="bs2-mob-stat-lbl">Max Bid</span>
                   <span class="bs2-mob-stat-val" t-attf-id="mob-team-maxcall-#{team.id}"><t t-esc="tournament.format_points(team.max_call) if tournament else team.max_call"/></span>
                 </div>
@@ -1177,8 +1586,9 @@
               </div>
 
               <!-- Footer: engage button -->
-              <div class="bs2-mob-foot">
-                <a t-att-href="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/get/players/team/' + str(team.team_id.id) + ('?from=projector&amp;mode=' + (mode or 'dark') if from_projector else '')" class="bs2-engage" style="width:100%;justify-content:center;">&#9654; VIEW SQUAD</a>
+              <div class="bs2-mob-foot" style="justify-content:flex-end;">
+                <button type="button" class="bs2-eye-btn" title="View squad" aria-label="View squad" style="width:44px;height:44px;"
+                        t-att-data-team-id="team.team_id.id"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
               </div>
 
             </div>
@@ -1186,6 +1596,27 @@
         </div>
 
       </main>
+
+      <footer class="bs2-powered" aria-label="Powered by AuctionChamp">
+        <span class="bs2-powered-lbl">Powered by</span>
+        <img class="bs2-powered-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+      </footer>
+
+
+
+      <div id="bs2-squad-overlay" aria-hidden="true">
+        <div class="bs2-sq-sheet" role="dialog" aria-modal="true" aria-label="Team squad">
+          <div class="bs2-sq-header">
+            <div class="bs2-sq-hlogo" id="bs2-sq-hlogo"></div>
+            <div style="min-width:0;flex:1;">
+              <div class="bs2-sq-hname" id="bs2-sq-hname"></div>
+              <div class="bs2-sq-hpts" id="bs2-sq-hpts"></div>
+            </div>
+            <button type="button" class="bs2-sq-hclose" id="bs2-sq-hclose" aria-label="Close">&#x2715;</button>
+          </div>
+          <div class="bs2-sq-body" id="bs2-sq-body"></div>
+        </div>
+      </div>
 
       <script><![CDATA[
         (function () {
@@ -1232,6 +1663,123 @@
             if (pct >= 10) { return { label: 'TIGHT', cls: 'tight' }; }
             return { label: 'CRITICAL', cls: 'critical' };
           }
+
+
+          function fitMaxBidValues(scope) {
+            var root = scope && scope.querySelectorAll ? scope : document;
+            var nodes = root.querySelectorAll(
+              '.bs2-maxbid .bs2-maxcall-value, .bs2-stat-col--maxbid .bs2-stat-figure, .bs2-mob-stat--maxbid .bs2-mob-stat-val'
+            );
+            Array.prototype.forEach.call(nodes, function (el) {
+              var box = el.closest('.bs2-maxbid, .bs2-stat-col--maxbid, .bs2-mob-stat--maxbid');
+              if (!box) { return; }
+              el.style.fontSize = '';
+              el.style.whiteSpace = 'nowrap';
+              el.style.overflow = 'visible';
+              el.style.textOverflow = 'clip';
+              var pad = 16;
+              var available = Math.max(40, box.clientWidth - pad);
+              var size = parseFloat(window.getComputedStyle(el).fontSize) || 18;
+              var minSize = 11;
+              var guard = 0;
+              el.style.fontSize = size + 'px';
+              while (el.scrollWidth > available && size > minSize && guard < 48) {
+                size -= 0.5;
+                el.style.fontSize = size + 'px';
+                guard += 1;
+              }
+            });
+          }
+
+          function maxBidHeat(maxCall, remainingPoints, remainingPlayers) {
+            var share = remainingPoints > 0 ? Math.round((maxCall * 100) / remainingPoints) : 100;
+            if (remainingPlayers <= 1 || share <= 15) { return 'mb-crit'; }
+            if (remainingPlayers <= 3 || share <= 30) { return 'mb-tight'; }
+            return 'mb-ok';
+          }
+
+          function updateMaxBidHeat(container, maxCall, remainingPoints, remainingPlayers) {
+            if (!container) { return; }
+            var heat = maxBidHeat(maxCall, remainingPoints, remainingPlayers);
+            Array.prototype.forEach.call(container.querySelectorAll('[data-role="maxbid-callout"]'), function (el) {
+              var prev = el.className;
+              el.classList.remove('mb-ok', 'mb-tight', 'mb-crit');
+              el.classList.add(heat);
+              if (el.className !== prev) { flashUpdate(el); }
+            });
+          }
+
+          function bs2Esc(s) {
+            return String(s == null ? '' : s)
+              .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+          }
+
+          function bs2FmtPts(n) {
+            if (window.fmtUnit) { return window.fmtUnit(n); }
+            try { return Number(n || 0).toLocaleString(); } catch (e) { return String(n || 0); }
+          }
+
+          function closeSquadModal() {
+            var ov = document.getElementById('bs2-squad-overlay');
+            if (ov) {
+              ov.classList.remove('open');
+              ov.setAttribute('aria-hidden', 'true');
+            }
+          }
+
+          function openSquadModal(teamId) {
+            var ov = document.getElementById('bs2-squad-overlay');
+            var body = document.getElementById('bs2-sq-body');
+            var logoEl = document.getElementById('bs2-sq-hlogo');
+            var nameEl = document.getElementById('bs2-sq-hname');
+            var ptsEl = document.getElementById('bs2-sq-hpts');
+            if (!ov || !body || !teamId) { return; }
+            var base = htmlEl.getAttribute('data-squad-json-base') || '';
+            if (!base) { return; }
+            ov.classList.add('open');
+            ov.setAttribute('aria-hidden', 'false');
+            nameEl.textContent = 'Loading…';
+            ptsEl.textContent = '';
+            logoEl.innerHTML = '';
+            body.innerHTML = '<div class="bs2-sq-loading">Loading squad…</div>';
+            fetch(base + teamId + '/squad/json', {
+              method: 'GET',
+              headers: { 'Accept': 'application/json' },
+              cache: 'no-store'
+            }).then(function (r) {
+              if (!r.ok) { throw new Error('HTTP ' + r.status); }
+              return r.json();
+            }).then(function (team) {
+              nameEl.textContent = team.name || 'Team';
+              ptsEl.textContent = bs2FmtPts(team.remaining_points) + ' remaining';
+              logoEl.innerHTML = team.logo_url
+                ? '<img src="' + bs2Esc(team.logo_url) + '" alt=""/>'
+                : '&#128737;';
+              var players = team.players || [];
+              if (!players.length) {
+                body.innerHTML = '<div class="bs2-sq-empty">No players signed yet</div>';
+                return;
+              }
+              body.innerHTML = players.map(function (p) {
+                var photo = p.photo_url
+                  ? '<img src="' + bs2Esc(p.photo_url) + '" alt="" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<span class=bs2-sq-rph>&#128100;</span>\'"/>'
+                  : '<span class="bs2-sq-rph">&#128100;</span>';
+                var meta = p.position_code || p.role || '';
+                return '<div class="bs2-sq-row">' +
+                  '<div class="bs2-sq-rphoto">' + photo + '</div>' +
+                  '<div class="bs2-sq-rinfo">' +
+                    '<div class="bs2-sq-rname">' + bs2Esc(p.name || '—') + '</div>' +
+                    (meta ? '<div class="bs2-sq-rrole">' + bs2Esc(meta) + '</div>' : '') +
+                  '</div>' +
+                  '<div class="bs2-sq-rpts">' + bs2FmtPts(p.points) + '</div>' +
+                '</div>';
+              }).join('');
+            }).catch(function () {
+              body.innerHTML = '<div class="bs2-sq-empty">Could not load squad</div>';
+            });
+          }
+
 
           function isCompactScreen() {
             return window.matchMedia('(max-width: 768px)').matches;
@@ -1438,6 +1986,12 @@
                 updateContainer(row, remainingPoints, remainingPlayers, totalPoints, maxPlayers);
                 updateContainer(card, remainingPoints, remainingPlayers, totalPoints, maxPlayers);
                 updateContainer(mobRow, remainingPoints, remainingPlayers, totalPoints, maxPlayers);
+                updateMaxBidHeat(row, maxCall, remainingPoints, remainingPlayers);
+                updateMaxBidHeat(card, maxCall, remainingPoints, remainingPlayers);
+                fitMaxBidValues(row);
+                fitMaxBidValues(card);
+                updateMaxBidHeat(mobRow, maxCall, remainingPoints, remainingPlayers);
+                fitMaxBidValues(mobRow);
               });
             }).catch(function () {
               return null;
@@ -1445,6 +1999,22 @@
           }
 
           window.refreshBalance = refreshBalance;
+
+          document.addEventListener('click', function (e) {
+            var eye = e.target && e.target.closest ? e.target.closest('.bs2-eye-btn') : null;
+            if (eye) {
+              e.preventDefault();
+              openSquadModal(eye.getAttribute('data-team-id'));
+              return;
+            }
+            if (e.target && (e.target.id === 'bs2-sq-hclose' || e.target.id === 'bs2-squad-overlay')) {
+              closeSquadModal();
+            }
+          });
+          document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { closeSquadModal(); }
+          });
+
 
           function stopPolling() {
             if (_balanceTimer) {
@@ -1478,7 +2048,12 @@
 
           document.addEventListener('fullscreenchange', syncFullscreenButton);
           document.addEventListener('visibilitychange', function() {
-            if (document.hidden) stopPolling(); else { refreshBalance(); startPolling(); }
+            if (document.hidden) stopPolling(); else { refreshBalance(); startPolling();
+          fitMaxBidValues();
+          window.addEventListener('resize', function () {
+            window.clearTimeout(window._bs2FitMb);
+            window._bs2FitMb = window.setTimeout(function () { fitMaxBidValues(); }, 120);
+          }); }
           });
           window.addEventListener('beforeunload', stopPolling);
           document.addEventListener('DOMContentLoaded', function () {

@@ -1135,6 +1135,101 @@ class Auction(http.Controller):
                 return self._not_found()
         return werkzeug.utils.redirect('/{}/{}/auction/show/team/balance/json'.format(db_name, tournament_slug), 301)
 
+    def _minimal_team_squad_payload(self, db_name, tournament, team_id):
+        """Live-board-style minimal squad for Bid Summary eye peek."""
+        env = request.env
+        team = env['auction.team'].sudo().browse(int(team_id))
+        if not team.exists():
+            return None
+        auction = env['auction.auction'].sudo().search([
+            ('tournament_id', '=', tournament.id),
+            ('team_id', '=', team.id),
+        ], limit=1)
+        if not auction:
+            return None
+
+        def pub_img(model, record_id, field):
+            return '/%s/auction/public/image/%s/%d/%s' % (db_name, model, record_id, field)
+
+        is_football = (tournament.tournament_type == 'football')
+        players_payload = []
+        for line in auction.player_ids:
+            if not line.player_id:
+                continue
+            p = line.player_id
+            pos_code = ''
+            pos_name = ''
+            if is_football and p.dominant_position_id:
+                pos_code = (p.dominant_position_id.code or '').strip().upper()
+                pos_name = p.dominant_position_id.name or ''
+                if not pos_code and pos_name:
+                    parts = [w for w in pos_name.replace('-', ' ').split() if w]
+                    pos_code = ''.join(w[0] for w in parts).upper()[:3]
+            entry = {
+                'name': p.name or '',
+                'photo_url': pub_img('auction.team.player', p.id, 'photo') if p.photo else '',
+                'role': p.role or '',
+                'position_code': pos_code,
+                'position_name': pos_name,
+                'points': line.points,
+            }
+            if p.tier_id and p.tier_id.mystery and not p.mystery_revealed:
+                entry.update({
+                    'name': '???',
+                    'photo_url': '/auction_module/static/img/default_icon.png',
+                    'role': '???',
+                    'position_code': '?',
+                    'position_name': '???',
+                })
+            players_payload.append(entry)
+
+        return {
+            'id': team.id,
+            'name': team.name or '',
+            'logo_url': pub_img('auction.team', team.id, 'logo') if team.logo else '',
+            'remaining_points': auction.remaining_points,
+            'manager': team.manager or auction.manager or '',
+            'players': players_payload,
+        }
+
+    @http.route(
+        ['/<string:db_name>/<string:tournament_slug>/auction/team/<int:team_id>/squad/json'],
+        type='http', auth='none', website=False, csrf=False,
+    )
+    def auction_team_squad_json(self, db_name, tournament_slug, team_id, **kwargs):
+        """Minimal squad JSON for Bid Summary eye button (same shape as live board)."""
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return request.make_response(
+                    json.dumps({'error': 'unknown database'}),
+                    headers=[('Content-Type', 'application/json')],
+                    status=404,
+                )
+            Tournament = request.env['auction.tournament'].sudo().with_context(
+                auction_skip_tournament_security=True,
+            )
+            tournament = Tournament.search([('slug', '=', tournament_slug)], limit=1)
+            if not tournament:
+                return request.make_response(
+                    json.dumps({'error': 'tournament not found'}),
+                    headers=[('Content-Type', 'application/json')],
+                    status=404,
+                )
+            payload = self._minimal_team_squad_payload(db_name, tournament, team_id)
+            if not payload:
+                return request.make_response(
+                    json.dumps({'error': 'team not found'}),
+                    headers=[('Content-Type', 'application/json')],
+                    status=404,
+                )
+            return request.make_response(
+                json.dumps(payload),
+                headers=[
+                    ('Content-Type', 'application/json'),
+                    ('Cache-Control', 'no-store'),
+                ],
+            )
+
     @http.route(['''/<string:db_name>/<string:tournament_slug>/auction/show/team/balance/json'''], type='http', auth="none", website=False)
     def auction_team_balance_json(self, db_name, tournament_slug, **kwargs):
         with self._with_db(db_name) as ok:

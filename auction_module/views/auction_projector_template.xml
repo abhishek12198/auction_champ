@@ -126,7 +126,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 }
 
 /* ══ Header ═══════════════════════════════════════════════════════════ */
-#pj-bar{flex-shrink:0;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+#pj-bar{flex-shrink:0;display:grid;grid-template-columns:minmax(0,1.05fr) auto auto minmax(0,1fr);
   align-items:center;gap:.75rem;padding:.55rem 1.2rem;
   background:linear-gradient(180deg,var(--panel2),var(--panel));
   border-bottom:1px solid var(--line);position:relative;z-index:20}
@@ -138,6 +138,18 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 .pj-tname{font-weight:800;letter-spacing:.06em;text-transform:uppercase;
   font-size:clamp(.85rem,1.5vw,1.2rem);line-height:1.15;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.pj-edition{
+  justify-self:center;
+  margin:0 .35rem;
+  font-size:clamp(.78rem,1.35vw,1.05rem);
+  font-weight:700;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--tx2);
+  line-height:1;
+  white-space:nowrap;
+  opacity:.92;
+}
 .pj-season{font-size:.65rem;letter-spacing:.16em;text-transform:uppercase;color:var(--tx2);margin-top:2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pj-bar-center{display:flex;align-items:center;gap:.55rem;justify-content:center;
@@ -1377,6 +1389,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         </t>
       </div>
     </div>
+    <div class="pj-edition"><t t-esc="(theme or 'vanilla').upper()"/> EDITION</div>
     <div class="pj-bar-center">
       <span class="pj-pa-text">Auction</span>
       <span class="pj-live-pill"><span class="pj-live-pill-dot"></span>LIVE</span>
@@ -1772,49 +1785,19 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   </div>
 </div>
 
-<button type="button" id="pjSoundToggle" class="pj-sound-toggle is-off" aria-label="Enable auction sounds" aria-pressed="false">
-  &#128263; Enable Sound
-</button>
-
-<style>
-.pj-sound-toggle{
-  position:fixed;z-index:99999;right:18px;bottom:18px;
-  border:0;border-radius:999px;cursor:pointer;
-  padding:12px 18px;font:700 14px/1.2 system-ui,sans-serif;
-  box-shadow:0 8px 28px rgba(0,0,0,.45);
-  transition:background .15s ease,color .15s ease,transform .15s ease;
-}
-.pj-sound-toggle.is-off{
-  color:#0b1220;background:#ffd54a;
-  animation:pjSoundPulse 1.6s ease-in-out infinite;
-}
-.pj-sound-toggle.is-on{
-  color:#f4f7ff;background:#1f2a44;
-  animation:none;
-}
-.pj-sound-toggle.is-flash{
-  background:#fff176;color:#0b1220;
-}
-@keyframes pjSoundPulse{
-  0%,100%{transform:scale(1)}
-  50%{transform:scale(1.05)}
-}
-</style>
-
 <script>//<![CDATA[
 (function() {
   var _currentId = null, _currentState = null, _currentPts = null, _currentMysteryRevealed = null;
   var _currentDice = null, _currentDiceNum = 0, _currentDiceMystery = false;
   var _pollTimer = null, _diceTimer = null;
 
-  /* Sold / Unsold stamp audio — explicit Enable / Disable Sound toggle */
+  /* Sold / Unsold stamp audio — unlock on first user gesture (no UI toggle) */
   var _PJ_AUD = '/auction_module/static/src/audio/';
   var _PJ_AUD_V = '?v=282m';
   var _pjAudioUnlocked = false;
   var _pjSoundEnabled = false;
   var _pjPendingSound = null;
   var _pjLastSoundKey = '';
-  var _pjSoundBtn = null;
   var _pjActiveClips = [];
 
   function _pjNewClip(src) {
@@ -1830,29 +1813,6 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       try { a.pause(); a.currentTime = 0; } catch (e2) {}
     });
     _pjActiveClips = [];
-  }
-  function _pjSyncSoundBtn(flash) {
-    if (!_pjSoundBtn) _pjSoundBtn = document.getElementById('pjSoundToggle');
-    if (!_pjSoundBtn) return;
-    if (_pjSoundEnabled) {
-      _pjSoundBtn.classList.remove('is-off', 'is-flash');
-      _pjSoundBtn.classList.add('is-on');
-      _pjSoundBtn.setAttribute('aria-pressed', 'true');
-      _pjSoundBtn.setAttribute('aria-label', 'Disable auction sounds');
-      _pjSoundBtn.innerHTML = '&#128266; Disable Sound';
-      return;
-    }
-    _pjSoundBtn.classList.remove('is-on');
-    _pjSoundBtn.classList.add('is-off');
-    _pjSoundBtn.setAttribute('aria-pressed', 'false');
-    _pjSoundBtn.setAttribute('aria-label', 'Enable auction sounds');
-    if (flash) {
-      _pjSoundBtn.classList.add('is-flash');
-      _pjSoundBtn.innerHTML = '&#128266; Tap to Enable Sound';
-    } else {
-      _pjSoundBtn.classList.remove('is-flash');
-      _pjSoundBtn.innerHTML = '&#128263; Enable Sound';
-    }
   }
   function _pjPickMaleVoice() {
     try {
@@ -1964,22 +1924,11 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   function enablePjSound() {
     _pjWarmAudio();
     _pjSoundEnabled = true;
-    _pjSyncSoundBtn(false);
     if (_pjPendingSound) {
       var pending = _pjPendingSound;
       _pjPendingSound = null;
       _pjPlayNow(pending);
     }
-  }
-  function disablePjSound() {
-    _pjSoundEnabled = false;
-    _pjPendingSound = null;
-    _pjStopAllSounds();
-    _pjSyncSoundBtn(false);
-  }
-  function togglePjSound() {
-    if (_pjSoundEnabled) disablePjSound();
-    else enablePjSound();
   }
   function playPjStatusSound(kind, player) {
     var key = String((player && player.id) || '') + ':' + kind + ':' + String((player && player.sold_points) || 0);
@@ -1987,26 +1936,19 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     _pjLastSoundKey = key;
     if (!_pjSoundEnabled) {
       _pjPendingSound = kind;
-      _pjSyncSoundBtn(true);
       return;
     }
     _pjPlayNow(kind);
   }
-  function bindPjSoundBtn() {
-    _pjSoundBtn = document.getElementById('pjSoundToggle');
-    if (!_pjSoundBtn) return;
-    _pjSoundBtn.addEventListener('click', function (ev) {
-      ev.preventDefault();
-      ev.stopPropagation();
-      togglePjSound();
-    });
-    _pjSyncSoundBtn(false);
+  function _pjUnlockOnGesture() {
+    enablePjSound();
+    document.removeEventListener('pointerdown', _pjUnlockOnGesture, true);
+    document.removeEventListener('keydown', _pjUnlockOnGesture, true);
+    document.removeEventListener('touchstart', _pjUnlockOnGesture, true);
   }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bindPjSoundBtn);
-  } else {
-    bindPjSoundBtn();
-  }
+  document.addEventListener('pointerdown', _pjUnlockOnGesture, true);
+  document.addEventListener('keydown', _pjUnlockOnGesture, true);
+  document.addEventListener('touchstart', _pjUnlockOnGesture, true);
 
   var _PJ_FACES = {
     1:[[0,0,0],[0,1,0],[0,0,0]],

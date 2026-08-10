@@ -1134,6 +1134,16 @@ class TeamPoolWizard(models.TransientModel):
         }
 
     @api.model
+    def client_clear_projector_boards(self):
+        """Clear saved pools/fixtures and hide them on the projector (Pool Generator Clear)."""
+        tournament = self._client_current_tournament()
+        tournament.action_clear_pool_fixture_boards()
+        return {
+            'cleared': True,
+            'tournament_id': tournament.id,
+        }
+
+    @api.model
     def client_save_pools(self, structure, pool_names=None, clear_fixture=True):
         """Persist the current pool draw on the active tournament."""
         tournament = self._client_current_tournament()

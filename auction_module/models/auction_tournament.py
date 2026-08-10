@@ -451,6 +451,23 @@ class AuctionTournament(models.Model):
             })
         return True
 
+    def action_clear_pool_fixture_boards(self):
+        """Wipe saved pools/fixtures and hide them on the projector."""
+        for tournament in self:
+            tournament.sudo().write({
+                'pool_draw_json': False,
+                'pool_draw_snapshot': False,
+                'pool_draw_user_id': False,
+                'pool_draw_datetime': False,
+                'fixture_schedule_json': False,
+                'fixture_schedule_snapshot': False,
+                'fixture_schedule_user_id': False,
+                'fixture_schedule_datetime': False,
+                'projector_board_mode': 'idle',
+                'projector_board_reveal_until': False,
+            })
+        return True
+
     break_time_active = fields.Boolean(
         string='Break Time',
         default=False,

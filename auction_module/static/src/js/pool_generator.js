@@ -335,6 +335,7 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             var html = [
                 '<div class="pg-shell">',
                 '<div class="pg-hdr">',
+                '<div class="pg-hdr-brand">',
                 logo,
                 '<div class="pg-hdr-text">',
                 '<span class="pg-hdr-kicker">Auction Settings</span>',
@@ -342,6 +343,7 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 tournamentPicker
                     ? ''
                     : '<span class="pg-hdr-sub">' + esc(t.name || 'Select a working tournament from the systray') + '</span>',
+                '</div>',
                 '</div>',
                 tournamentPicker,
                 '<span class="pg-stat-pill">Teams <b>' + this._selectedIds().length + '</b> / ' + this.state.teams.length + '</span>',
@@ -363,19 +365,22 @@ odoo.define('auction_module.PoolGenerator', function (require) {
 
         _renderSteps: function () {
             var steps = [
-                {n: 1, label: 'Select Teams'},
-                {n: 2, label: 'Configure Pools'},
-                {n: 3, label: 'Pool Draw'},
-                {n: 4, label: 'Fixtures'},
+                {n: 1, label: 'Select Teams', short: 'Teams'},
+                {n: 2, label: 'Configure Pools', short: 'Config'},
+                {n: 3, label: 'Pool Draw', short: 'Draw'},
+                {n: 4, label: 'Fixtures', short: 'Fixtures'},
             ];
             var step = this.state.step;
             var hasPools = !!this.state.structure;
-            return '<div class="pg-steps">' + steps.map(function (s) {
+            return '<div class="pg-steps" role="tablist" aria-label="Pool generator steps">' + steps.map(function (s) {
                 var cls = 'pg-step';
                 if (s.n === step) cls += ' is-active';
                 if (s.n < step || (s.n === 3 && hasPools && step === 4)) cls += ' is-done';
-                return '<button type="button" class="' + cls + '" data-step="' + s.n + '">' +
-                    '<span class="pg-step-num">' + s.n + '</span>' + esc(s.label) +
+                return '<button type="button" class="' + cls + '" data-step="' + s.n + '" role="tab" aria-selected="' +
+                    (s.n === step ? 'true' : 'false') + '">' +
+                    '<span class="pg-step-num">' + s.n + '</span>' +
+                    '<span class="pg-step-lbl-full">' + esc(s.label) + '</span>' +
+                    '<span class="pg-step-lbl-short">' + esc(s.short) + '</span>' +
                     '</button>';
             }).join('') + '</div>';
         },
@@ -556,9 +561,9 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             }).join('');
 
             var outside = [
-                '<div style="max-width:280px;margin:4px 0 14px">',
+                '<div class="pg-outside-field">',
                 '<label class="pg-field-label">Matches per team (league round)</label>',
-                '<input class="pg-input pg-outside-n" type="number" min="1" value="' + this.state.outsideN + '"/>',
+                '<input class="pg-input pg-outside-n" type="number" min="1" inputmode="numeric" value="' + this.state.outsideN + '"/>',
                 '</div>',
             ].join('');
 
@@ -644,8 +649,35 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             this._render();
         },
         _onClearTeams: function () {
-            this.state.selected = {};
-            this._render();
+            var self = this;
+            Dialog.confirm(
+                this,
+                'Clear team selection and remove loaded pools/fixtures from the projector?',
+                {
+                    title: 'Clear',
+                    confirm_callback: function () {
+                        self.state.selected = {};
+                        self.state.structure = null;
+                        self.state.pools = [];
+                        self.state.fixture = null;
+                        self.state.step = 1;
+                        self._pgRpc({
+                            model: 'auction.team.pool.wizard',
+                            method: 'client_clear_projector_boards',
+                            args: [],
+                        }).then(function () {
+                            self._render();
+                        }).guardedCatch(function (err) {
+                            Dialog.alert(
+                                self,
+                                (err && err.data && err.data.message) ||
+                                    'Failed to clear projector boards'
+                            );
+                            self._render();
+                        });
+                    },
+                }
+            );
         },
         _onNext: function () {
             if (this.state.step === 1 && this._selectedIds().length >= 2) {
