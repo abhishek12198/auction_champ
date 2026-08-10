@@ -574,6 +574,40 @@
                                 </div>
 
                                 <div class="o_at_presentation_section o_at_helper_links">
+                                    <separator string="Admin Registration"/>
+                                    <group col="2">
+                                        <group string="Organiser URL">
+                                            <field name="admin_registration_url" widget="CopyClipboardChar"
+                                                   readonly="1" string="Admin Registration URL"
+                                                   attrs="{'invisible': [('slug', '=', False)]}"/>
+                                            <div class="text-muted" colspan="2"
+                                                 attrs="{'invisible': [('slug', '=', False)]}">
+                                                Unlock once with the tournament code (<field name="tournament_code" readonly="1" class="oe_inline"/>).
+                                                Works even when public registration is closed, until Max Registrations is reached.
+                                            </div>
+                                        </group>
+                                        <group string="How it works">
+                                            <div class="o_at_helper_side" colspan="2">
+                                                <div class="o_at_presentation_help">
+                                                    Use this link for organisers to register players themselves.
+                                                    Enter the unique tournament code once on the device, then
+                                                    keep registering until the allotment is full — both public
+                                                    and admin URLs then show squad complete.
+                                                </div>
+                                                <div class="o_at_helper_actions"
+                                                     attrs="{'invisible': [('slug', '=', False)]}">
+                                                    <button name="action_open_admin_registration_link"
+                                                            type="object"
+                                                            string="Admin Registration"
+                                                            class="o_at_helper_btn o_at_helper_btn_admin_reg"
+                                                            icon="fa-user-secret"/>
+                                                </div>
+                                            </div>
+                                        </group>
+                                    </group>
+                                </div>
+
+                                <div class="o_at_presentation_section o_at_helper_links">
                                     <separator string="Payment Tracker"/>
                                     <group col="2">
                                         <group string="Share URL">

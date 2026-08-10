@@ -102,6 +102,8 @@
 <body class="reg-page">
 <div class="reg-wrapper">
     <t t-set="hide_reg_form" t-value="success or registration_closed or razorpay_await_payment"/>
+    <t t-set="reg_path" t-value="register_path or ('/' + db_name + '/' + tournament_slug + '/player/register')"/>
+    <t t-set="is_admin_reg" t-value="bool(admin_registration)"/>
 
     <!-- ════════════════════════════════════════
          HEADER  — tournament-first (app logo is in footer)
@@ -236,11 +238,14 @@
         <t t-if="not hide_reg_form">
         <div class="reg-form-intro">
             <div class="reg-form-intro-badge">
-                <span>Registration</span>
+                <span t-if="is_admin_reg">Admin Registration</span>
+                <span t-else="">Registration</span>
             </div>
             <div class="reg-form-intro-text">
-                <h2>Player Profile Form</h2>
-                <p>Fields marked <span style="color:#e91e63">*</span> are required · Submitted players join as Draft</p>
+                <h2 t-if="is_admin_reg">Organiser Player Entry</h2>
+                <h2 t-else="">Player Profile Form</h2>
+                <p t-if="is_admin_reg">Register players using the tournament allotment · Fields marked <span style="color:#e91e63">*</span> are required</p>
+                <p t-else="">Fields marked <span style="color:#e91e63">*</span> are required · Submitted players join as Draft</p>
             </div>
         </div>
         </t>
@@ -354,7 +359,7 @@
 
                 <t t-if="tournament_slug">
                     <div class="reg-success-another">
-                        <a t-att-href="'/' + db_name + '/' + tournament_slug + '/player/register'">
+                        <a t-att-href="reg_path">
                             <!-- Plus icon -->
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                  viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -537,7 +542,7 @@
             </div>
         </t>
 
-        <form t-att-action="'/' + db_name + '/' + tournament_slug + '/player/register'"
+        <form t-att-action="reg_path"
               method="post" enctype="multipart/form-data" id="playerRegisterForm"
               t-att-data-payment-required="'1' if tournament and tournament.payment_proof_required else '0'">
 

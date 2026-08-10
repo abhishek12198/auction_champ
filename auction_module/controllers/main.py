@@ -345,6 +345,115 @@ class Auction(http.Controller):
         )
         return self._live_board_grant_access(tournament, response=resp)
 
+    # ── Admin registration unlock (tournament code, once per browser) ─────────
+
+    def _reg_admin_session_key(self, tournament_id):
+        return 'ac_reg_admin_unlocked_%s' % int(tournament_id)
+
+    def _reg_admin_cookie_name(self, tournament_id):
+        return 'ac_reg_admin_%s' % int(tournament_id)
+
+    def _reg_admin_cookie_token(self, tournament):
+        """Device token for admin registration unlock (not the raw code)."""
+        import hashlib
+        secret = 'auctionchamp'
+        try:
+            secret = request.env['ir.config_parameter'].sudo().get_param(
+                'database.secret', 'auctionchamp'
+            ) or 'auctionchamp'
+        except Exception:
+            pass
+        code = self._normalize_tournament_code(tournament.tournament_code or '')
+        raw = 'reg-admin|%s|%s|%s' % (tournament.id, code, secret)
+        return hashlib.sha256(raw.encode('utf-8')).hexdigest()[:40]
+
+    def _reg_admin_unlocked(self, tournament):
+        if not tournament:
+            return False
+        key = self._reg_admin_session_key(tournament.id)
+        if request.session.get(key):
+            return True
+        cookie = request.httprequest.cookies.get(self._reg_admin_cookie_name(tournament.id))
+        expected = self._reg_admin_cookie_token(tournament)
+        if cookie and expected and cookie == expected:
+            request.session[key] = True
+            try:
+                request.session.is_dirty = True
+            except Exception:
+                pass
+            return True
+        return False
+
+    def _reg_admin_grant(self, tournament, response=None):
+        request.session[self._reg_admin_session_key(tournament.id)] = True
+        try:
+            request.session.is_dirty = True
+        except Exception:
+            pass
+        if response is not None and tournament.tournament_code:
+            response.set_cookie(
+                self._reg_admin_cookie_name(tournament.id),
+                self._reg_admin_cookie_token(tournament),
+                max_age=60 * 60 * 24 * 30,
+                httponly=True,
+                samesite='Lax',
+                path='/',
+            )
+        return response
+
+    def _reg_admin_try_unlock(self, tournament, submitted_code):
+        expected = self._normalize_tournament_code(tournament.tournament_code or '')
+        given = self._normalize_tournament_code(submitted_code)
+        if not expected or not given or expected != given:
+            return False
+        self._reg_admin_grant(tournament)
+        return True
+
+    def _reg_path(self, db_name, tournament_slug, admin=False):
+        base = '/%s/%s/player/register' % (db_name, tournament_slug)
+        return base + '/admin' if admin else base
+
+    def _reg_capacity(self, tournament):
+        """Return max_reg, current draft count, slots_left, is_full."""
+        max_reg = tournament.max_registrations or 0
+        if hasattr(tournament, '_saas_effective_max_registrations'):
+            max_reg = tournament._saas_effective_max_registrations()
+        current_count = 0
+        slots_left = None
+        if max_reg > 0:
+            current_count = request.env['auction.team.player'].sudo().search_count([
+                ('tournament_id', '=', tournament.id),
+                ('state', '=', 'draft'),
+            ])
+            slots_left = max(0, max_reg - current_count)
+        is_full = bool(max_reg > 0 and current_count >= max_reg)
+        return max_reg, current_count, slots_left, is_full
+
+    def _reg_football_lookups(self, tournament):
+        football_positions = request.env['auction.player.position'].sudo().browse()
+        football_styles = request.env['auction.player.style'].sudo().browse()
+        football_strengths = request.env['auction.player.strength'].sudo().browse()
+        if tournament.tournament_type == 'football':
+            football_positions = request.env['auction.player.position'].sudo().search(
+                [('active', '=', True)], order='sequence asc, name asc')
+            football_styles = request.env['auction.player.style'].sudo().search(
+                [('active', '=', True)], order='sequence asc, name asc')
+            football_strengths = request.env['auction.player.strength'].sudo().search(
+                [('active', '=', True)], order='sequence asc, name asc')
+        return football_positions, football_styles, football_strengths
+
+    def _render_admin_register_unlock(self, tournament, db_name, tournament_slug,
+                                      theme='vanilla', error=None, entered_code=''):
+        html = request.render('auction_module.admin_registration_unlock_template', {
+            'tournament': tournament,
+            'theme': theme,
+            'db_name': db_name,
+            'tournament_slug': tournament_slug,
+            'error': error,
+            'entered_code': entered_code or '',
+        }, lazy=False)
+        return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
+
     def _render_live_board_unlock(self, tournament, db_name, tournament_slug,
                                   theme='vanilla', error=None, entered_code=''):
         html = request.render('auction_module.live_board_unlock_template', {
@@ -5286,11 +5395,21 @@ class Auction(http.Controller):
             return request.not_found()
         group = str(kw.get('group') or '').lower() in ('1', 'true', 'yes')
         ctx = self._sp_build_context(auction, group=group)
+        projector_mode = str(
+            kw.get('projector') or request.params.get('projector') or ''
+        ).lower() in ('1', 'true', 'yes')
+        ctx['projector_mode'] = projector_mode
         html = request.render('auction_module.squad_poster_template', ctx, lazy=False)
         if isinstance(html, bytes):
             body = html
         else:
             body = str(html or '').encode('utf-8')
+        if projector_mode:
+            # Clean projector iframe — no crop editor / photo maps
+            return request.make_response(
+                body,
+                headers=[('Content-Type', 'text/html; charset=utf-8')],
+            )
         photo_map = {}
         crop_map = {}
         auto_map = {}
@@ -5422,6 +5541,34 @@ class Auction(http.Controller):
             'labels_saved': labels_saved,
         }
 
+    @http.route([
+        '/<string:db_name>/auction/projector/<string:tournament_slug>/squad-poster/<int:auction_id>',
+    ], type='http', auth='none', website=False, sitemap=False, csrf=False)
+    def auction_projector_squad_poster(self, db_name, tournament_slug, auction_id, **kw):
+        """Public projector-safe squad poster (no login). Used by the PPT deck."""
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return self._not_found()
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('slug', '=', tournament_slug)], limit=1)
+            if not tournament:
+                return self._not_found()
+            # Only after auction is officially complete (same logic as Thank You)
+            wait = _pj_wait_phase(tournament)
+            if wait.get('phase') != 'completed':
+                return request.make_response(
+                    '<!DOCTYPE html><html><body style="font-family:system-ui;padding:24px;'
+                    'background:#111;color:#eee"><h2>Squad Posters locked</h2>'
+                    '<p>Available only after the auction is officially complete.</p>'
+                    '</body></html>',
+                    headers=[('Content-Type', 'text/html; charset=utf-8')],
+                    status=403,
+                )
+            auction = request.env['auction.auction'].sudo().browse(int(auction_id))
+            if not auction.exists() or auction.tournament_id.id != tournament.id:
+                return self._not_found()
+            return self._sp_render_poster_page(auction.id, projector=1, **kw)
+
     @http.route(['/auction/squad-poster/<int:auction_id>',
                  '/<string:db_name>/auction/squad-poster/<int:auction_id>'],
                 type='http', auth='none', website=False, csrf=False)
@@ -5479,6 +5626,19 @@ class Auction(http.Controller):
                 methods=['GET', 'POST'], csrf=False)
     def player_register(self, db_name, tournament_slug, **kw):
         """Public player self-registration form. Creates a draft player record."""
+        return self._player_register_core(db_name, tournament_slug, admin=False, **kw)
+
+    @http.route('/<string:db_name>/<string:tournament_slug>/player/register/admin', type='http',
+                auth='none', website=False, methods=['GET', 'POST'], csrf=False)
+    def player_register_admin(self, db_name, tournament_slug, **kw):
+        """Organiser registration: unlock once with tournament code, ignore public open flag.
+
+        Stays available while draft count is below max_registrations. When the
+        allotment is full, both public and admin URLs show squad complete.
+        """
+        return self._player_register_core(db_name, tournament_slug, admin=True, **kw)
+
+    def _player_register_core(self, db_name, tournament_slug, admin=False, **kw):
         with self._with_db(db_name) as ok:
             if not ok:
                 return self._not_found()
@@ -5486,48 +5646,44 @@ class Auction(http.Controller):
             tournament = request.env['auction.tournament'].sudo().search(
                 [('slug', '=', tournament_slug)], limit=1
             )
-
-            # Return 404 if tournament not found
             if not tournament:
                 return self._not_found()
 
             theme = tournament.player_display_template or 'vanilla'
+            register_path = self._reg_path(db_name, tournament_slug, admin=admin)
+            football_positions, football_styles, football_strengths = self._reg_football_lookups(tournament)
+            max_reg, current_count, slots_left, is_full = self._reg_capacity(tournament)
 
-            # ── Football lookups (only needed for football tournaments) ─────────
-            football_positions = request.env['auction.player.position'].sudo().browse()
-            football_styles = request.env['auction.player.style'].sudo().browse()
-            football_strengths = request.env['auction.player.strength'].sudo().browse()
-            if tournament.tournament_type == 'football':
-                football_positions = request.env['auction.player.position'].sudo().search(
-                    [('active', '=', True)], order='sequence asc, name asc')
-                football_styles = request.env['auction.player.style'].sudo().search(
-                    [('active', '=', True)], order='sequence asc, name asc')
-                football_strengths = request.env['auction.player.strength'].sudo().search(
-                    [('active', '=', True)], order='sequence asc, name asc')
+            # Admin path: require tournament-code unlock once per browser
+            if admin:
+                if request.httprequest.method == 'POST' and request.params.get('admin_unlock'):
+                    code = request.params.get('tournament_code') or ''
+                    if self._reg_admin_try_unlock(tournament, code):
+                        resp = werkzeug.utils.redirect(register_path, 303)
+                        return self._reg_admin_grant(tournament, response=resp)
+                    return self._render_admin_register_unlock(
+                        tournament, db_name, tournament_slug, theme=theme,
+                        error='Invalid tournament code. Please try again.',
+                        entered_code=code,
+                    )
+                if not self._reg_admin_unlocked(tournament):
+                    return self._render_admin_register_unlock(
+                        tournament, db_name, tournament_slug, theme=theme,
+                    )
 
-            # ── Compute live slot availability ──────────────────────────────────
-            max_reg = tournament.max_registrations
-            if hasattr(tournament, '_saas_effective_max_registrations'):
-                max_reg = tournament._saas_effective_max_registrations()
-            current_count = 0
-            slots_left = None  # None = unlimited
-            if max_reg > 0:
-                current_count = request.env['auction.team.player'].sudo().search_count([
-                    ('tournament_id', '=', tournament.id),
-                    ('state', '=', 'draft'),
-                ])
-                slots_left = max(0, max_reg - current_count)
-
-            is_full = (max_reg > 0 and current_count >= max_reg)
-
-            # ── Gate: closed by admin OR limit reached ──────────────────────────
-            if not tournament.registration_open or is_full:
-                # Sync the flag if the limit was hit but the flag wasn't updated yet
+            # Gate:
+            #  - public: closed when registration_open is False OR allotment full
+            #  - admin:  closed only when allotment full (can register while public is closed)
+            public_closed = (not tournament.registration_open) and not admin
+            if public_closed or is_full:
                 if is_full and tournament.registration_open:
                     try:
                         tournament.sudo().write({'registration_open': False})
                     except Exception:
-                        _logger.warning('player_register: could not auto-close registration for tournament %s', tournament.id, exc_info=True)
+                        _logger.warning(
+                            'player_register: could not auto-close registration for tournament %s',
+                            tournament.id, exc_info=True,
+                        )
                 tiers_all = request.env['auction.player.tier'].sudo().search(
                     [('is_an_icon_tier', '=', False), ('tournament_id', '=', tournament.id)],
                     order='name asc'
@@ -5546,6 +5702,8 @@ class Auction(http.Controller):
                     'styles': football_styles,
                     'strengths': football_strengths,
                     'payment_proof_required': bool(tournament.payment_proof_required),
+                    'admin_registration': admin,
+                    'register_path': register_path,
                 }, lazy=False)
                 return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
@@ -5554,25 +5712,35 @@ class Auction(http.Controller):
                 order='name asc'
             )
 
-            # ── POST: create player ─────────────────────────────────────────────
+            base_ctx = {
+                'tournament': tournament,
+                'tiers': tiers,
+                'theme': theme,
+                'db_name': db_name,
+                'tournament_slug': tournament_slug,
+                'slots_left': slots_left,
+                'max_registrations': max_reg,
+                'current_count': current_count,
+                'positions': football_positions,
+                'styles': football_styles,
+                'strengths': football_strengths,
+                'payment_proof_required': bool(tournament.payment_proof_required),
+                'admin_registration': admin,
+                'register_path': register_path,
+            }
+
             if request.httprequest.method == 'POST':
+                # Ignore unlock-only posts that somehow reach here
+                if admin and request.params.get('admin_unlock'):
+                    return werkzeug.utils.redirect(register_path, 303)
                 try:
-                    # Optional payment-gateway modules can short-circuit this POST
+                    # Re-check capacity under race before create
+                    _mr, _cc, _sl, full_now = self._reg_capacity(tournament)
+                    if full_now:
+                        return werkzeug.utils.redirect(register_path, 303)
+
                     pay_resp = self._registration_payment_post(
-                        db_name, tournament_slug, tournament, {
-                            'tournament': tournament,
-                            'tiers': tiers,
-                            'theme': theme,
-                            'db_name': db_name,
-                            'tournament_slug': tournament_slug,
-                            'slots_left': slots_left,
-                            'max_registrations': max_reg,
-                            'current_count': current_count,
-                            'positions': football_positions,
-                            'styles': football_styles,
-                            'strengths': football_strengths,
-                            'payment_proof_required': bool(tournament.payment_proof_required),
-                        }
+                        db_name, tournament_slug, tournament, dict(base_ctx)
                     )
                     if pay_resp is not None:
                         return pay_resp
@@ -5586,28 +5754,21 @@ class Auction(http.Controller):
                             'registration after-create hook failed for player %s',
                             player.id,
                         )
-                    # PRG: redirect to GET so that page refreshes don't re-submit the form
+                    # Close public registration when allotment hits max
+                    _mr2, _cc2, _sl2, full_after = self._reg_capacity(tournament)
+                    if full_after and tournament.registration_open:
+                        try:
+                            tournament.sudo().write({'registration_open': False})
+                        except Exception:
+                            _logger.warning(
+                                'player_register: could not auto-close after create for tournament %s',
+                                tournament.id, exc_info=True,
+                            )
                     from urllib.parse import urlencode
                     qs = urlencode({'success': '1', 'player_id': player.id})
-                    return werkzeug.utils.redirect(
-                        '/{}/{}/player/register?{}'.format(db_name, tournament_slug, qs), 303
-                    )
+                    return werkzeug.utils.redirect('%s?%s' % (register_path, qs), 303)
                 except Exception as e:
-                    ctx = {
-                        'tournament': tournament,
-                        'tiers': tiers,
-                        'theme': theme,
-                        'db_name': db_name,
-                        'tournament_slug': tournament_slug,
-                        'slots_left': slots_left,
-                        'max_registrations': max_reg,
-                        'current_count': current_count,
-                        'positions': football_positions,
-                        'styles': football_styles,
-                        'strengths': football_strengths,
-                        'payment_proof_required': bool(tournament.payment_proof_required),
-                        'error': str(e),
-                    }
+                    ctx = dict(base_ctx, error=str(e))
                     try:
                         html = request.render('auction_module.player_registration_form', ctx, lazy=False)
                     except Exception:
@@ -5621,7 +5782,6 @@ class Auction(http.Controller):
                         )
                     return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
-            # ── GET: show form (or success view when redirected back after POST) ─
             success = kw.get('success') == '1'
             try:
                 player_id_str = kw.get('player_id', '')
@@ -5629,22 +5789,7 @@ class Auction(http.Controller):
             except (ValueError, TypeError):
                 player_id = None
 
-            ctx = {
-                'tournament': tournament,
-                'tiers': tiers,
-                'theme': theme,
-                'db_name': db_name,
-                'tournament_slug': tournament_slug,
-                'slots_left': slots_left,
-                'max_registrations': max_reg,
-                'current_count': current_count,
-                'positions': football_positions,
-                'styles': football_styles,
-                'strengths': football_strengths,
-                'payment_proof_required': bool(tournament.payment_proof_required),
-                'success': success,
-                'player_id': player_id,
-            }
+            ctx = dict(base_ctx, success=success, player_id=player_id)
             ctx = self._registration_payment_get_ctx(ctx, tournament, kw)
             ctx = self._registration_success_ctx(ctx, tournament, kw)
 
@@ -6617,6 +6762,8 @@ def _pj_squad(tournament, db_name):
         recruited = len(auction.player_ids) if auction else 0
         spent_purse = max(total_purse - remaining_purse, 0)
 
+        icon_ids = set(team.key_player_ids.ids) if team.key_player_ids else set()
+
         players = Player.search([
             ('tournament_id', '=', tournament.id),
             ('assigned_team_id', '=', team.id),
@@ -6643,24 +6790,40 @@ def _pj_squad(tournament, db_name):
                 photo_url = ''
             else:
                 name = p.name or ''
-                photo_url = _pj_player_photo_url(db_name, p)
+                # Full-resolution photos for Team Showcase / squad overlays
+                photo_url = _pj_player_photo_url(db_name, p, projector_size=False)
             if sport == 'football':
                 role = (p.dominant_position_id.name if p.dominant_position_id else '') or ''
             else:
                 role = p.role or ''
+            jersey = ''
+            if not mystery_hidden:
+                jersey_raw = (getattr(p, 'jersy_number', None) or '').strip()
+                if jersey_raw:
+                    try:
+                        jersey = '%02d' % int(jersey_raw)
+                    except (TypeError, ValueError):
+                        jersey = jersey_raw[:4]
+            is_icon = bool(p.icon_player) or (p.id in icon_ids)
             players_out.append({
                 'id': p.id,
                 'name': name,
                 'photo_url': photo_url,
                 'role': role,
+                'jersey': jersey,
+                'sl_no': 0 if mystery_hidden else int(p.sl_no or 0),
                 'tier_name': (p.tier_id.name if p.tier_id and not mystery_hidden else '') or '',
                 'tier_color': (p.tier_id.color if p.tier_id else '') or '#888',
-                'is_icon': bool(p.icon_player),
-                'points': 0 if p.icon_player else int(points_by_player.get(p.id, 0) or 0),
+                'is_icon': is_icon,
+                'points': 0 if is_icon else int(points_by_player.get(p.id, 0) or 0),
             })
+
+        # Icons first for stable showcase ordering
+        players_out.sort(key=lambda pl: (0 if pl.get('is_icon') else 1, (pl.get('name') or '').lower()))
 
         teams_out.append({
             'id': team.id,
+            'auction_id': auction.id if auction else False,
             'name': team.name or '',
             'logo_url': logo_url,
             'count': recruited,

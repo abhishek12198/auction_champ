@@ -316,6 +316,11 @@
     color: #fff !important;
 }
 
+.o_form_view .o_at_helper_btn_admin_reg {
+    background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%) !important;
+    color: #fff !important;
+}
+
 .o_form_view .o_at_helper_btn_pay {
     background: linear-gradient(135deg, #047857 0%, #10b981 100%) !important;
     color: #fff !important;

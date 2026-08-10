@@ -158,13 +158,13 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:22vw}
 .pj-auction-date{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);
   font-weight:800;margin-top:2px}
-.pj-bid-summary-btn,.pj-fs-btn,.pj-squad-btn,.pj-remain-btn,.pj-pool-btn,.pj-fix-btn{
+.pj-bid-summary-btn,.pj-fs-btn,.pj-squad-btn,.pj-poster-btn,.pj-remain-btn,.pj-pool-btn,.pj-fix-btn{
   border:1px solid var(--line);background:var(--gold-soft);color:var(--tx);
   border-radius:.45rem;cursor:pointer;text-decoration:none;
   display:inline-flex;align-items:center;justify-content:center;gap:.35rem;
   font-family:inherit;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
   width:2.6rem;height:2.6rem;font-size:1.1rem;padding:0;flex-shrink:0}
-.pj-squad-btn svg,.pj-bid-summary-btn svg,.pj-remain-btn svg,.pj-fs-btn svg,
+.pj-squad-btn svg,.pj-poster-btn svg,.pj-bid-summary-btn svg,.pj-remain-btn svg,.pj-fs-btn svg,
 .pj-pool-btn svg,.pj-fix-btn svg{width:1.25rem;height:1.25rem;display:block;fill:currentColor}
 .pj-fs-btn svg{fill:none}
 .pj-fs-btn.is-fs .pj-fs-ico--enter{display:none}
@@ -172,8 +172,14 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 .pj-fs-btn:not(.is-fs) .pj-fs-ico--exit{display:none}
 .pj-fs-btn:not(.is-fs) .pj-fs-ico--enter{display:block}
 .pj-bar-actions{display:inline-flex;align-items:center;gap:.4rem;flex-shrink:0}
-.pj-bid-summary-btn:hover,.pj-fs-btn:hover,.pj-squad-btn:hover,.pj-remain-btn:hover,
+.pj-bid-summary-btn:hover,.pj-fs-btn:hover,.pj-squad-btn:hover,.pj-poster-btn:hover,.pj-remain-btn:hover,
 .pj-pool-btn:hover,.pj-fix-btn:hover{border-color:var(--gold);color:var(--gold)}
+.pj-poster-btn:disabled,.pj-poster-btn.is-locked{
+  opacity:.38;cursor:not-allowed;border-color:var(--line);color:var(--tx2)
+}
+.pj-poster-btn:disabled:hover,.pj-poster-btn.is-locked:hover{
+  border-color:var(--line);color:var(--tx2)
+}
 .pj-pool-btn.is-off,.pj-fix-btn.is-off{display:none !important}
 .pj-pool-btn.is-live,.pj-fix-btn.is-live{border-color:var(--gold);color:var(--gold);
   box-shadow:0 0 0 1px rgba(232,184,74,.35)}
@@ -282,6 +288,162 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   background:rgba(0,0,0,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 #pjSquadOverlay.open{display:flex}
 [data-mode="light"] #pjSquadOverlay{background:rgba(255,255,255,.82)}
+
+/* ══ AuctionChamp Projector Team Showcase — professional 16:9 ══════════ */
+#pjPosterDeck{position:fixed;inset:0;z-index:960;display:none;flex-direction:column;
+  width:100vw;height:100vh;max-width:100vw;max-height:100vh;overflow:hidden;
+  background:
+    radial-gradient(ellipse 50% 35% at 6% 0%, rgba(70,130,255,.2), transparent 55%),
+    radial-gradient(ellipse 50% 35% at 94% 0%, rgba(70,130,255,.2), transparent 55%),
+    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(8,35,80,.5), transparent 55%),
+    linear-gradient(180deg,#08162c 0%,#06101f 45%,#040b16 100%);
+  color:#fff;font-family:'Oswald','Segoe UI',sans-serif}
+#pjPosterDeck.open{display:flex}
+.pj-pd-bar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+  gap:.6rem;padding:.3rem .85rem;border-bottom:1px solid rgba(90,160,255,.16);
+  background:rgba(0,12,28,.55)}
+.pj-pd-meta{min-width:0;display:flex;align-items:center;gap:.55rem;flex:1}
+.pj-pd-brand{display:flex;align-items:center;gap:.38rem;flex-shrink:0}
+.pj-pd-brand-mark{width:1.55rem;height:1.55rem;border-radius:6px;
+  background:linear-gradient(145deg,#ff5a4a,#c41818);display:grid;place-items:center}
+.pj-pd-brand-mark svg{width:70%;height:70%}
+.pj-pd-brand-txt{font-size:.68rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.pj-pd-kicker,.pj-pd-sub{display:none}
+.pj-pd-title{font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:rgba(170,200,245,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pj-pd-close{border:1px solid rgba(90,160,255,.28);background:rgba(30,70,140,.28);color:#fff;
+  border-radius:.4rem;cursor:pointer;font:inherit;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;min-height:2.05rem;padding:0 .75rem;font-size:.68rem}
+.pj-pd-close:hover{border-color:#7eb6ff;color:#9ec8ff}
+
+.pj-pd-stage{flex:1 1 auto;min-height:0;display:flex;align-items:stretch;justify-content:center;
+  padding:.45rem 1rem .25rem;overflow:hidden;position:relative}
+.pj-pd-slide{width:100%;max-width:1720px;height:100%;min-height:0;margin:0 auto;
+  display:flex;flex-direction:column;gap:.4rem;overflow:hidden}
+.pj-pd-slide.is-enter{animation:pjPdIn .28s ease}
+.pj-pd-slide.is-enter-left{animation:pjPdInL .28s ease}
+@keyframes pjPdIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+@keyframes pjPdInL{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+
+/* Compact team identity */
+.pj-pd-team{flex:0 0 auto;display:flex;justify-content:center}
+.pj-pd-team-row{display:flex;align-items:center;gap:.85rem;max-width:100%}
+.pj-pd-logo,.pj-pd-logo-ph{width:clamp(52px,7.5vh,84px);height:clamp(52px,7.5vh,84px);
+  border-radius:14px;flex-shrink:0;border:2px solid rgba(255,215,0,.5);
+  box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.pj-pd-logo{object-fit:contain;background:rgba(255,255,255,.06)}
+.pj-pd-logo-ph{display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:900;
+  color:#111;background:linear-gradient(135deg,#ffd700,#ffe08a)}
+.pj-pd-team-text{min-width:0;text-align:left}
+.pj-pd-team-name{font-size:clamp(1.55rem,4.2vh,2.85rem);font-weight:800;font-style:italic;
+  letter-spacing:.03em;text-transform:uppercase;line-height:.95;color:#fff;
+  text-shadow:0 3px 16px rgba(0,0,0,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52vw}
+.pj-pd-team-meta{margin-top:.18rem;font-size:clamp(.7rem,1.35vh,.9rem);font-weight:700;
+  letter-spacing:.28em;text-transform:uppercase;color:#6eb6ff}
+
+.pj-pd-sec{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:.55rem;
+  font-size:clamp(.72rem,1.45vh,.92rem);font-weight:800;letter-spacing:.18em;text-transform:uppercase}
+.pj-pd-sec-icon{color:#ffd700}
+.pj-pd-sec-squad{color:#6eb6ff}
+.pj-pd-sec::before,.pj-pd-sec::after{content:'';flex:1;height:1px;max-width:24%}
+.pj-pd-sec-icon::before,.pj-pd-sec-icon::after{background:linear-gradient(90deg,transparent,rgba(255,215,0,.45),transparent)}
+.pj-pd-sec-squad::before,.pj-pd-sec-squad::after{background:linear-gradient(90deg,transparent,rgba(90,160,255,.5),transparent)}
+
+/* Icons — photo-first portrait cards */
+.pj-pd-icons-wrap{flex:0 0 auto;display:flex;flex-direction:column;gap:.3rem;
+  height:clamp(168px,34vh,280px);min-height:0}
+.pj-pd-icons{display:flex;justify-content:center;align-items:stretch;gap:.7rem;
+  flex:1 1 auto;min-height:0;width:100%;overflow:visible}
+.pj-pd-icon-card{
+  --pj-icon-w:calc((min(100%,1100px) - 2.8rem) / 5);
+  flex:0 0 var(--pj-icon-w);width:var(--pj-icon-w);max-width:210px;
+  min-width:0;min-height:0;height:100%;
+  display:flex;flex-direction:column;overflow:hidden;border-radius:14px;
+  border:2px solid rgba(255,215,0,.6);
+  background:linear-gradient(180deg,rgba(255,215,0,.14),rgba(6,14,28,.95) 42%);
+  box-shadow:0 12px 30px rgba(0,0,0,.45),0 0 20px rgba(255,215,0,.14)}
+.pj-pd-icon-photo{position:relative;flex:1 1 auto;min-height:0;width:100%;
+  background:#0c1424}
+.pj-pd-icon-photo img,.pj-pd-icon-photo .pj-pd-ph{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
+.pj-pd-icon-badge{position:absolute;top:.45rem;left:.45rem;z-index:2;width:1.7rem;height:1.7rem;
+  border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(145deg,#ffe9a0,#ffd700 45%,#c9a227);
+  border:1.5px solid rgba(255,255,255,.55);box-shadow:0 3px 10px rgba(0,0,0,.45)}
+.pj-pd-icon-badge svg{width:65%;height:65%}
+.pj-pd-icon-tag{position:absolute;top:.5rem;right:.5rem;z-index:2;font-size:.62rem;font-weight:900;
+  letter-spacing:.14em;color:#ffd700;text-shadow:0 1px 5px rgba(0,0,0,.75)}
+.pj-pd-icon-info{flex:0 0 auto;padding:.45rem .4rem .5rem;text-align:center;
+  background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.55))}
+.pj-pd-icon-name{font-size:clamp(.85rem,1.85vh,1.15rem);font-weight:800;letter-spacing:.04em;
+  text-transform:uppercase;color:#fff;line-height:1.15;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pj-pd-icon-role{margin-top:.2rem;font-size:clamp(.68rem,1.4vh,.88rem);font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:#ffd700;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Squad — photo-dominant horizontal cards, NO oversized empties */
+.pj-pd-squad-wrap{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:.3rem;overflow:hidden}
+.pj-pd-grid{flex:1 1 auto;min-height:0;overflow:hidden;display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  grid-template-rows:repeat(var(--pj-pd-rows,3),minmax(0,1fr));
+  gap:.45rem .55rem;width:100%;align-content:stretch}
+.pj-pd-card{
+  min-width:0;min-height:0;height:100%;width:100%;box-sizing:border-box;
+  display:flex;align-items:center;gap:.55rem;
+  padding:.35rem .55rem .35rem .4rem;border-radius:12px;
+  border:1.5px solid rgba(80,150,240,.5);
+  background:linear-gradient(120deg,rgba(24,58,110,.72),rgba(8,18,38,.94));
+  box-shadow:0 8px 18px rgba(0,0,0,.3);overflow:hidden}
+.pj-pd-num{flex:0 0 auto;min-width:1.85rem;height:1.85rem;padding:0 .25rem;border-radius:8px;
+  display:grid;place-items:center;background:linear-gradient(145deg,#3d8dff,#1a5fd0);
+  color:#fff;font-size:.78rem;font-weight:800;box-shadow:0 2px 8px rgba(40,120,255,.4)}
+.pj-pd-sq-photo{position:relative;flex:0 0 auto;height:86%;aspect-ratio:1 / 1;
+  max-height:100%;border-radius:10px;overflow:hidden;
+  border:2px solid rgba(130,185,255,.4);background:#0c1424;
+  box-shadow:0 4px 12px rgba(0,0,0,.35)}
+.pj-pd-sq-photo img,.pj-pd-sq-photo .pj-pd-ph{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
+.pj-pd-sq-info{min-width:0;flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;gap:.18rem}
+.pj-pd-pname{font-size:clamp(.92rem,2.05vh,1.28rem);font-weight:800;letter-spacing:.03em;
+  text-transform:uppercase;color:#fff;line-height:1.12;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pj-pd-prole{font-size:clamp(.72rem,1.5vh,.95rem);font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:#ffd700;line-height:1.1;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pj-pd-ph{display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(145deg,#1a2740,#121826);font-size:1.35rem;font-weight:800;
+  color:rgba(255,255,255,.4)}
+
+.pj-pd-empty{margin:auto;color:rgba(180,210,255,.55);letter-spacing:.14em;text-transform:uppercase;
+  font-size:.9rem;text-align:center;padding:1rem}
+.pj-pd-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:#ffd700;letter-spacing:.16em;text-transform:uppercase;font-size:.85rem;
+  background:rgba(0,0,0,.45);pointer-events:none;z-index:3}
+.pj-pd-loading[hidden]{display:none !important}
+
+.pj-pd-footer{flex:0 0 auto;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  gap:.6rem;padding:.4rem 1rem .15rem;border-top:1px solid rgba(70,140,230,.22);
+  background:linear-gradient(180deg,rgba(12,30,70,.88),rgba(6,14,32,.96))}
+.pj-pd-nav{border:1px solid rgba(90,160,255,.4);background:rgba(30,70,140,.38);color:#fff;
+  border-radius:.5rem;cursor:pointer;font:inherit;font-weight:800;letter-spacing:.12em;
+  text-transform:uppercase;min-height:2.55rem;padding:0 1rem;font-size:.72rem;
+  display:inline-flex;align-items:center;justify-content:center;gap:.4rem;user-select:none}
+.pj-pd-nav:disabled{opacity:.32;cursor:not-allowed}
+.pj-pd-nav:hover:not(:disabled){border-color:#7eb6ff;color:#9ec8ff}
+.pj-pd-nav-prev{justify-self:start}
+.pj-pd-nav-next{justify-self:end}
+.pj-pd-count{font-size:.9rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;text-align:center}
+.pj-pd-count b{color:#ffd700}
+.pj-pd-powered{grid-column:1 / -1;text-align:center;font-size:.5rem;letter-spacing:.18em;
+  text-transform:uppercase;color:rgba(150,180,220,.38);padding-bottom:.1rem}
+
+@media (max-width:1100px){
+  .pj-pd-icons-wrap{height:clamp(140px,30vh,210px)}
+  .pj-pd-pname{font-size:clamp(.78rem,1.8vh,1.05rem)}
+  .pj-pd-prole{font-size:clamp(.62rem,1.3vh,.8rem)}
+}
+
 .pj-sq-panel{flex:1;min-height:0;margin:1.1rem 1.4rem 1.2rem;display:flex;flex-direction:column;
   background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);
   border-radius:14px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.45)}
@@ -3360,6 +3522,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     var body = document.getElementById('pjRmBody');
     if (!overlay) return;
     closePjSquad();
+    closePjPosterDeck();
     overlay.classList.add('open');
     if (body) body.innerHTML = '<div class="pj-rm-loading">Loading players&#8230;</div>';
     if (_remainLoading) return;
@@ -3478,6 +3641,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     var overlay = document.getElementById('pjSquadOverlay');
     if (!overlay) return;
     closePjRemain();
+    closePjPosterDeck();
     overlay.classList.add('open');
     loadPjSquad(true);
   };
@@ -3488,11 +3652,265 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   window.pjSquadBackdrop = function(ev) {
     if (ev.target && ev.target.id === 'pjSquadOverlay') closePjSquad();
   };
+
+  var _pjPosterTeams = [];
+  var _pjPosterIdx = 0;
+  var _pjPosterLoading = false;
+  var _pjAuctionComplete = false;
+  var _pjPosterSport = 'cricket';
+
+  function setPjPosterBtnEnabled(on) {
+    _pjAuctionComplete = !!on;
+    var btn = document.getElementById('pjPosterBtn');
+    if (!btn) return;
+    btn.disabled = !on;
+    btn.classList.toggle('is-locked', !on);
+    btn.title = on
+      ? 'Team Showcase — browse squads'
+      : 'Team Showcase (available after auction complete)';
+    if (!on) closePjPosterDeck();
+  }
+
+  function isPjPosterDeckOpen() {
+    var ov = document.getElementById('pjPosterDeck');
+    return !!(ov && ov.classList.contains('open'));
+  }
+
+  function updatePjPosterChrome() {
+    var title = document.getElementById('pjPdTitle');
+    var sub = document.getElementById('pjPdSub');
+    var count = document.getElementById('pjPdCount');
+    var prev = document.getElementById('pjPdPrev');
+    var next = document.getElementById('pjPdNext');
+    var total = _pjPosterTeams.length;
+    var team = total ? _pjPosterTeams[_pjPosterIdx] : null;
+    var players = team ? (team.players || []) : [];
+    var icons = 0;
+    for (var i = 0; i < players.length; i++) {
+      if (players[i] && players[i].is_icon) icons += 1;
+    }
+    if (title) title.textContent = team ? (team.name || 'Team Showcase') : 'Team Showcase';
+    if (sub) {
+      sub.textContent = team
+        ? (players.length + ' players' + (icons ? (' · ' + icons + ' icon') : '') + ' · Squad')
+        : 'No teams available';
+    }
+    if (count) {
+      count.innerHTML = total
+        ? ('Team <b>' + (_pjPosterIdx + 1) + '</b> / ' + total)
+        : 'Team 0 / 0';
+    }
+    if (prev) prev.disabled = !total || _pjPosterIdx <= 0;
+    if (next) next.disabled = !total || _pjPosterIdx >= total - 1;
+  }
+
+  function showPjPosterLoading(on) {
+    var el = document.getElementById('pjPdLoading');
+    if (el) {
+      if (on) el.removeAttribute('hidden');
+      else el.setAttribute('hidden', 'hidden');
+    }
+  }
+
+  var PJ_PD_HAMMER =
+    '<svg viewBox="0 0 140 130" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<rect x="15" y="12" width="110" height="36" rx="8" fill="#8B4513"/>' +
+      '<ellipse cx="15" cy="30" rx="10" ry="18" fill="#3A1805"/>' +
+      '<ellipse cx="125" cy="30" rx="10" ry="18" fill="#3A1805"/>' +
+      '<rect x="62" y="38" width="16" height="82" rx="7" fill="#D4943A"/>' +
+    '</svg>';
+
+  function pjPdPhotoInner(p) {
+    if (p && p.photo_url) {
+      return '<img src="' + escHtml(p.photo_url) + '" alt="" loading="eager"/>';
+    }
+    var ch = (p && p.name) ? p.name.charAt(0) : '';
+    return '<div class="pj-pd-ph">' + escHtml(ch) + '</div>';
+  }
+
+  function pjPdIconCard(p) {
+    return '<div class="pj-pd-icon-card">' +
+      '<div class="pj-pd-icon-photo">' +
+        '<div class="pj-pd-icon-badge" title="Icon Player">' + PJ_PD_HAMMER + '</div>' +
+        '<div class="pj-pd-icon-tag">ICON</div>' +
+        pjPdPhotoInner(p) +
+      '</div>' +
+      '<div class="pj-pd-icon-info">' +
+        '<div class="pj-pd-icon-name" title="' + escHtml(p.name || '—') + '">' + escHtml(p.name || '—') + '</div>' +
+        (p.role ? '<div class="pj-pd-icon-role">' + escHtml(p.role) + '</div>' : '') +
+      '</div>' +
+    '</div>';
+  }
+
+  function pjPdSquadCard(p, index) {
+    var num = String(index + 1);
+    if (num.length < 2) num = '0' + num;
+    return '<div class="pj-pd-card">' +
+      '<div class="pj-pd-num">' + num + '</div>' +
+      '<div class="pj-pd-sq-photo">' + pjPdPhotoInner(p) + '</div>' +
+      '<div class="pj-pd-sq-info">' +
+        '<div class="pj-pd-pname" title="' + escHtml(p.name || '—') + '">' + escHtml(p.name || '—') + '</div>' +
+        (p.role ? '<div class="pj-pd-prole">' + escHtml(p.role) + '</div>' : '<div class="pj-pd-prole">&nbsp;</div>') +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderPjPosterSlide(dir) {
+    var slide = document.getElementById('pjPdSlide');
+    var empty = document.getElementById('pjPdEmpty');
+    updatePjPosterChrome();
+    if (!slide) return;
+    if (!_pjPosterTeams.length) {
+      slide.setAttribute('hidden', 'hidden');
+      slide.innerHTML = '';
+      if (empty) empty.removeAttribute('hidden');
+      showPjPosterLoading(false);
+      return;
+    }
+    if (empty) empty.setAttribute('hidden', 'hidden');
+    var team = _pjPosterTeams[_pjPosterIdx] || {};
+    var players = team.players || [];
+    var icons = [];
+    var normals = [];
+    for (var i = 0; i < players.length; i++) {
+      var p = players[i] || {};
+      if (p.is_icon) icons.push(p);
+      else normals.push(p);
+    }
+    if (icons.length > 5) icons = icons.slice(0, 5);
+    if (normals.length > 15) normals = normals.slice(0, 15);
+
+    var logo = team.logo_url
+      ? '<img class="pj-pd-logo" src="' + escHtml(team.logo_url) + '" alt=""/>'
+      : '<div class="pj-pd-logo-ph">' + escHtml((team.name || '?').charAt(0)) + '</div>';
+
+    var html = '<div class="pj-pd-team"><div class="pj-pd-team-row">' + logo +
+      '<div class="pj-pd-team-text">' +
+        '<div class="pj-pd-team-name">' + escHtml(team.name || 'Team') + '</div>' +
+        '<div class="pj-pd-team-meta">Squad</div>' +
+      '</div></div></div>';
+
+    if (icons.length) {
+      html += '<div class="pj-pd-icons-wrap">' +
+        '<div class="pj-pd-sec pj-pd-sec-icon">&#9733; Icon Players &#9733;</div>' +
+        '<div class="pj-pd-icons">';
+      for (var ii = 0; ii < icons.length; ii++) {
+        html += pjPdIconCard(icons[ii]);
+      }
+      html += '</div></div>';
+    }
+
+    var rows = normals.length ? Math.min(3, Math.max(1, Math.ceil(normals.length / 5))) : 1;
+    html += '<div class="pj-pd-squad-wrap">' +
+      '<div class="pj-pd-sec pj-pd-sec-squad">Squad – ' + normals.length + ' Players</div>';
+    if (!normals.length) {
+      html += '<div class="pj-pd-empty">No squad players yet</div>';
+    } else {
+      html += '<div class="pj-pd-grid" style="--pj-pd-rows:' + rows + '">';
+      for (var ni = 0; ni < normals.length; ni++) {
+        html += pjPdSquadCard(normals[ni], ni);
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+
+    slide.setAttribute('hidden', 'hidden');
+    slide.classList.remove('is-enter', 'is-enter-left');
+    slide.innerHTML = html;
+    void slide.offsetWidth;
+    slide.removeAttribute('hidden');
+    if (dir === 'prev') slide.classList.add('is-enter-left');
+    else slide.classList.add('is-enter');
+    showPjPosterLoading(false);
+  }
+
+  function loadPjPosterTeams(thenShow) {
+    if (!window.PJ_SQUAD_URL || _pjPosterLoading) return;
+    _pjPosterLoading = true;
+    showPjPosterLoading(true);
+    fetch(window.PJ_SQUAD_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({jsonrpc:'2.0', method:'call', params:{}}),
+      cache: 'no-store'
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(json) {
+      var data = json.result || {};
+      _pjPosterSport = (data.sport || 'cricket').toLowerCase();
+      _pjPosterTeams = data.teams || [];
+      if (_pjPosterIdx >= _pjPosterTeams.length) _pjPosterIdx = 0;
+      if (thenShow) renderPjPosterSlide();
+      else updatePjPosterChrome();
+    })
+    .catch(function() {
+      _pjPosterTeams = [];
+      updatePjPosterChrome();
+      showPjPosterLoading(false);
+      var empty = document.getElementById('pjPdEmpty');
+      var slide = document.getElementById('pjPdSlide');
+      if (slide) {
+        slide.setAttribute('hidden', 'hidden');
+        slide.innerHTML = '';
+      }
+      if (empty) {
+        empty.textContent = 'Could not load team squads';
+        empty.removeAttribute('hidden');
+      }
+    })
+    .then(function() { _pjPosterLoading = false; });
+  }
+
+  window.openPjPosterDeck = function() {
+    if (!_pjAuctionComplete) return;
+    var deck = document.getElementById('pjPosterDeck');
+    if (!deck) return;
+    closePjSquad();
+    closePjRemain();
+    try { closePjBoard(true); } catch (e0) {}
+    deck.classList.add('open');
+    deck.setAttribute('aria-hidden', 'false');
+    loadPjPosterTeams(true);
+  };
+  window.closePjPosterDeck = function() {
+    var deck = document.getElementById('pjPosterDeck');
+    var slide = document.getElementById('pjPdSlide');
+    if (deck) {
+      deck.classList.remove('open');
+      deck.setAttribute('aria-hidden', 'true');
+    }
+    if (slide) {
+      slide.setAttribute('hidden', 'hidden');
+      slide.innerHTML = '';
+    }
+    showPjPosterLoading(false);
+  };
+  window.pjPosterPrev = function() {
+    if (!_pjPosterTeams.length || _pjPosterIdx <= 0) return;
+    _pjPosterIdx -= 1;
+    renderPjPosterSlide('prev');
+  };
+  window.pjPosterNext = function() {
+    if (!_pjPosterTeams.length || _pjPosterIdx >= _pjPosterTeams.length - 1) return;
+    _pjPosterIdx += 1;
+    renderPjPosterSlide('next');
+  };
+
   document.addEventListener('keydown', function(ev) {
     if (ev.key === 'Escape') {
       try { closePjBoard(true); } catch (e0) {}
       closePjSquad();
       closePjRemain();
+      closePjPosterDeck();
+      return;
+    }
+    if (!isPjPosterDeckOpen()) return;
+    if (ev.key === 'ArrowLeft') {
+      ev.preventDefault();
+      pjPosterPrev();
+    } else if (ev.key === 'ArrowRight') {
+      ev.preventDefault();
+      pjPosterNext();
     }
   });
 })();

@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="admin_registration_unlock_template" name="Admin Registration — Enter Tournament Code">
+  <t t-set="theme" t-value="(theme or (tournament.player_display_template if tournament else None) or 'vanilla')"/>
+  <html lang="en" t-att-data-theme="theme">
+    <head>
+      <meta charset="utf-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1"/>
+      <title>Admin Registration — <t t-esc="tournament.name if tournament else 'Tournament'"/></title>
+      <link rel="preconnect" href="https://fonts.googleapis.com"/>
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+      <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&amp;family=Barlow:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+      <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { margin: 0; min-height: 100%; }
+        body {
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 24px 16px;
+          font-family: 'Barlow', 'Segoe UI', sans-serif;
+          background:
+            radial-gradient(ellipse at 20% 10%, rgba(59,130,246,.22), transparent 45%),
+            radial-gradient(ellipse at 80% 90%, rgba(253,206,51,.16), transparent 50%),
+            linear-gradient(160deg, #0a1429 0%, #122448 55%, #0d1b3e 100%);
+          color: #e8eaf6;
+        }
+        .ar-unlock {
+          width: 100%;
+          max-width: 440px;
+          background: rgba(255,255,255,.06);
+          border: 1px solid rgba(255,255,255,.12);
+          border-radius: 18px;
+          padding: 28px 26px 24px;
+          box-shadow: 0 20px 50px rgba(0,0,0,.35);
+          backdrop-filter: blur(10px);
+        }
+        .ar-unlock-kicker {
+          font-size: .72rem;
+          font-weight: 700;
+          letter-spacing: .12em;
+          text-transform: uppercase;
+          color: #60a5fa;
+          margin-bottom: 8px;
+        }
+        .ar-unlock-title {
+          font-family: 'Rajdhani', sans-serif;
+          font-size: 1.75rem;
+          font-weight: 700;
+          margin: 0 0 6px;
+          line-height: 1.15;
+          color: #fff;
+        }
+        .ar-unlock-tour {
+          font-size: 1.05rem;
+          font-weight: 600;
+          color: rgba(255,255,255,.85);
+          margin: 0 0 18px;
+        }
+        .ar-unlock-help {
+          font-size: .9rem;
+          color: rgba(255,255,255,.62);
+          margin: 0 0 18px;
+          line-height: 1.45;
+        }
+        .ar-unlock-label {
+          display: block;
+          font-size: .75rem;
+          font-weight: 700;
+          letter-spacing: .06em;
+          text-transform: uppercase;
+          color: rgba(255,255,255,.55);
+          margin-bottom: 8px;
+        }
+        .ar-unlock-input {
+          width: 100%;
+          padding: 14px 16px;
+          border-radius: 12px;
+          border: 1.5px solid rgba(96,165,250,.5);
+          background: rgba(0,0,0,.28);
+          color: #fff;
+          font-size: 1.15rem;
+          font-weight: 700;
+          letter-spacing: .08em;
+          font-family: inherit;
+          outline: none;
+        }
+        .ar-unlock-input:focus {
+          border-color: #60a5fa;
+          box-shadow: 0 0 0 3px rgba(96,165,250,.22);
+        }
+        .ar-unlock-input::placeholder { color: rgba(255,255,255,.35); letter-spacing: .04em; font-weight: 500; }
+        .ar-unlock-error {
+          margin: 12px 0 0;
+          padding: 10px 12px;
+          border-radius: 10px;
+          background: rgba(239,83,80,.15);
+          border: 1px solid rgba(239,83,80,.4);
+          color: #ffcdd2;
+          font-size: .88rem;
+          font-weight: 600;
+        }
+        .ar-unlock-btn {
+          display: block;
+          width: 100%;
+          margin-top: 16px;
+          padding: 14px 18px;
+          border: none;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          color: #fff;
+          font-family: 'Rajdhani', sans-serif;
+          font-size: 1.15rem;
+          font-weight: 700;
+          letter-spacing: .04em;
+          cursor: pointer;
+          transition: transform .12s, box-shadow .12s;
+          box-shadow: 0 8px 22px rgba(59,130,246,.28);
+        }
+        .ar-unlock-btn:hover { transform: translateY(-1px); }
+        .ar-unlock-foot {
+          margin-top: 18px;
+          text-align: center;
+          font-size: .8rem;
+          color: rgba(255,255,255,.45);
+        }
+        .ar-unlock-foot a { color: #60a5fa; text-decoration: none; font-weight: 600; }
+      </style>
+    </head>
+    <body>
+      <div class="ar-unlock">
+        <div class="ar-unlock-kicker">Organiser Access</div>
+        <h1 class="ar-unlock-title">Admin Player Registration</h1>
+        <p class="ar-unlock-tour" t-esc="tournament.name if tournament else ''"/>
+        <p class="ar-unlock-help">
+          Enter the unique tournament code (starts with <strong>AC#</strong>) to
+          register players on behalf of the tournament. You only need to enter it
+          once on this device.
+        </p>
+        <form t-att-action="'/%s/%s/player/register/admin' % (db_name, tournament_slug)"
+              method="post" autocomplete="off">
+          <input type="hidden" name="admin_unlock" value="1"/>
+          <label class="ar-unlock-label" for="tournament_code">Tournament Code</label>
+          <input class="ar-unlock-input"
+                 type="text"
+                 id="tournament_code"
+                 name="tournament_code"
+                 placeholder="AC#XXXXXXXXXXXX"
+                 required="required"
+                 autofocus="autofocus"
+                 spellcheck="false"
+                 t-att-value="entered_code or ''"/>
+          <t t-if="error">
+            <div class="ar-unlock-error" t-esc="error"/>
+          </t>
+          <button type="submit" class="ar-unlock-btn">Unlock Admin Registration</button>
+        </form>
+        <div class="ar-unlock-foot">
+          Powered by <a href="/">AuctionChamp</a>
+        </div>
+      </div>
+    </body>
+  </html>
+</template>
+</odoo>

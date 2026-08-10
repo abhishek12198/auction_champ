@@ -13,11 +13,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
   <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&amp;family=Oswald:wght@600;700&amp;family=Roboto+Condensed:ital,wght@0,700;1,700&amp;family=Russo+One&amp;family=Teko:wght@600;700&amp;display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="/auction_module/static/src/css/squad_poster.css?v=280"/>
+  <link rel="stylesheet" href="/auction_module/static/src/css/squad_poster.css?v=283"/>
 </head>
-<body class="sp-shell" t-att-data-palette="palette" t-att-data-team-name="team_name" t-att-data-tournament-name="tournament_name" id="spShell">
+<body t-attf-class="sp-shell#{' is-projector' if projector_mode else ''}" t-att-data-palette="palette" t-att-data-team-name="team_name" t-att-data-tournament-name="tournament_name" id="spShell">
 
-  <div class="sp-toolbar" id="spToolbar">
+  <div class="sp-toolbar" id="spToolbar" t-att-style="'display:none !important' if projector_mode else None">
     <div class="sp-toolbar-title">Squad Poster · Save &amp; Share</div>
     <div class="sp-toolbar-actions">
       <button type="button" class="sp-btn is-primary" id="spDlPng" data-fmt="png">Save PNG</button>

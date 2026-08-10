@@ -753,3 +753,35 @@ html,body{margin:0;padding:0;min-height:100%;background:#030304;color:var(--sp-t
 }
 
 @media print{.sp-toolbar{display:none!important}.sp-preview-wrap{padding:0}.sp-preview-scale{transform:none!important;margin-bottom:0!important}.sp-canvas{box-shadow:none}body{background:#000}}
+
+/* Projector deck embed — hide editor chrome, fit canvas to viewport */
+.sp-shell.is-projector{
+  min-height:100vh;
+  overflow:hidden;
+  background:#030304;
+}
+.sp-shell.is-projector .sp-toolbar,
+.sp-shell.is-projector .sp-hint,
+.sp-shell.is-projector .sp-peditor{
+  display:none !important;
+}
+.sp-shell.is-projector .sp-preview-wrap{
+  min-height:100vh;
+  padding:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.sp-shell.is-projector .sp-preview-scale{
+  transform:none !important;
+  margin:0 !important;
+  width:min(100vw - 24px, calc((100vh - 24px) * 2 / 3));
+  max-height:calc(100vh - 24px);
+}
+.sp-shell.is-projector .sp-canvas{
+  width:100%;
+  height:auto;
+  aspect-ratio:2 / 3;
+  max-height:calc(100vh - 24px);
+  box-shadow:0 18px 50px rgba(0,0,0,.55);
+}

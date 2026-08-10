@@ -510,6 +510,13 @@ class AuctionTournament(models.Model):
         store=False,
         help='Share this public link with players so they can self-register for the tournament.',
     )
+    admin_registration_url = fields.Char(
+        string='Admin Registration URL',
+        compute='_compute_urls',
+        store=False,
+        help='Organiser-only registration link. Unlock once with the tournament code; '
+             'stays available until Max Registrations is reached even if public registration is closed.',
+    )
     projector_url = fields.Char(
         string='Projector View URL',
         compute='_compute_urls',
@@ -610,8 +617,11 @@ class AuctionTournament(models.Model):
         for rec in self:
             if rec.slug:
                 rec.registration_url = '{}/{}/{}/player/register'.format(base_url, db_name, rec.slug)
+                rec.admin_registration_url = '{}/{}/{}/player/register/admin'.format(
+                    base_url, db_name, rec.slug)
             else:
                 rec.registration_url = '{}/{}/player/register'.format(base_url, db_name)
+                rec.admin_registration_url = False
 
             # Projector is only useful once team auction rules exist.
             if rec.slug and rec.auction_rule_ids:
@@ -1322,6 +1332,18 @@ class AuctionTournament(models.Model):
         """Open the public player registration form in a new browser tab."""
         db_name = self.env.cr.dbname
         url = '/{}/{}/player/register'.format(db_name, self.slug) if self.slug else '/{}/player/register'.format(db_name)
+        return {
+            'type': 'ir.actions.act_url',
+            'url': url,
+            'target': 'new',
+        }
+
+    def action_open_admin_registration_link(self):
+        """Open the organiser admin registration form (tournament-code unlock)."""
+        self.ensure_one()
+        if not self.slug:
+            raise UserError(_('Tournament slug is required before opening admin registration.'))
+        url = '/{}/{}/player/register/admin'.format(self.env.cr.dbname, self.slug)
         return {
             'type': 'ir.actions.act_url',
             'url': url,
