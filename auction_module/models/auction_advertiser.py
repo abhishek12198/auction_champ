@@ -43,7 +43,11 @@ class AuctionAdvertiser(models.Model):
     _name = 'auction.advertiser'
     _description = 'Auction Advertiser / Sponsor'
     _order = 'sequence, id'
-    _inherit = ['auction.image.compress.mixin', 'auction.tournament.security.mixin']
+    _inherit = [
+        'auction.image.compress.mixin',
+        'auction.tournament.security.mixin',
+        'auction.live.snapshot.mixin',
+    ]
 
     _compressible_image_fields = {
         'image': (1200, 500, 82, 'JPEG'),

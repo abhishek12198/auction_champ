@@ -305,13 +305,29 @@ def _get_default_player_photo(self):
         return base64.b64encode(f.read())
 class AuctionTeamPlayer(models.Model):
     _name = 'auction.team.player'
-    _inherit = ['auction.image.compress.mixin', 'auction.tournament.security.mixin']
+    _inherit = [
+        'auction.image.compress.mixin',
+        'auction.tournament.security.mixin',
+        'auction.live.snapshot.mixin',
+    ]
 
     # photo: keep near–Stories resolution for sharp Instagram cards.
     _compressible_image_fields = {
         'photo':         (1600, 2200, 98, 'JPEG'),
         'payment_proof': (1200, 1600, 82, 'JPEG'),
     }
+
+    def init(self):
+        super().init()
+        cr = self.env.cr
+        cr.execute("""
+            CREATE INDEX IF NOT EXISTS auction_team_player_tourney_stage_idx
+            ON auction_team_player (tournament_id, is_on_stage)
+        """)
+        cr.execute("""
+            CREATE INDEX IF NOT EXISTS auction_team_player_tourney_state_idx
+            ON auction_team_player (tournament_id, state)
+        """)
 
     @api.model
     def default_get(self, fields):
@@ -414,15 +430,15 @@ class AuctionTeamPlayer(models.Model):
     )
     photo_url = fields.Char("Photo URL")
     payment_url = fields.Char("Payment URL")
-    state = fields.Selection([('draft', 'Draft'), ('auction', 'In Auction'), ('sold', 'Sold'), ('unsold', 'Unsold')], default='draft')
+    state = fields.Selection([('draft', 'Draft'), ('auction', 'In Auction'), ('sold', 'Sold'), ('unsold', 'Unsold')], default='draft', index=True)
     amount_paid = fields.Boolean(default=True)
     active = fields.Boolean(default=True)
-    tournament_id = fields.Many2one('auction.tournament', 'Tournament')
+    tournament_id = fields.Many2one('auction.tournament', 'Tournament', index=True)
     tournament_type = fields.Selection(related='tournament_id.tournament_type')
     tournament_color = fields.Char(related='tournament_id.kanban_color', string='Tournament Color')
     assigned_team_id = fields.Many2one('auction.team', 'Team')
     icon_player = fields.Boolean("Key Player")
-    is_on_stage = fields.Boolean("Currently on Stage", default=False,
+    is_on_stage = fields.Boolean("Currently on Stage", default=False, index=True,
                                   help="True when this player is actively displayed in the auction stage. Only one player should have this True at a time.")
     tier_id = fields.Many2one('auction.player.tier', string='Tier')
     previous_tier_id = fields.Many2one('auction.player.tier', string='Previous Tier', help='Stores the tier before the player was promoted to Icon Player, used to restore on revoke.')

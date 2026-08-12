@@ -79,7 +79,11 @@ def _slugify(text):
 
 class AuctionTournament(models.Model):
     _name = 'auction.tournament'
-    _inherit = ['auction.image.compress.mixin', 'auction.tournament.security.mixin']
+    _inherit = [
+        'auction.image.compress.mixin',
+        'auction.tournament.security.mixin',
+        'auction.live.snapshot.mixin',
+    ]
 
     # logo/poster: JPEG portrait; QR code: PNG (lossless) to keep it scannable;
     # template/footer: slightly larger for print quality.
@@ -96,6 +100,7 @@ class AuctionTournament(models.Model):
         string='URL Slug',
         compute='_compute_slug',
         store=True,
+        index=True,
         help='Auto-generated URL slug used in the player registration link. '
              'Recomputed automatically when the tournament name changes.',
     )
@@ -577,6 +582,14 @@ class AuctionTournament(models.Model):
         help='Live state of the dice roll broadcast to the projector.',
     )
     dice_result = fields.Integer(string='Dice Result', default=0)
+    live_snapshot_seq = fields.Integer(
+        string='Live Snapshot Sequence',
+        default=0,
+        copy=False,
+        help='PostgreSQL-authoritative version for shared live snapshots. '
+             'Incremented in the same transaction as watched auction mutations. '
+             'Redis stores a replica of this value and must never INCR it.',
+    )
 
     def _compute_player_state_counts(self):
         """Compute all four player-state counts in a single read_group call.
@@ -868,10 +881,33 @@ class AuctionTournament(models.Model):
              WHERE show_registration_capacity IS NULL
         """)
 
+    def _ensure_live_snapshot_seq_column(self):
+        """Create live_snapshot_seq without requiring -u on every deploy."""
+        cr = self.env.cr
+        cr.execute("""
+            SELECT 1
+              FROM information_schema.columns
+             WHERE table_name = 'auction_tournament'
+               AND column_name = 'live_snapshot_seq'
+        """)
+        if cr.fetchone():
+            return
+        cr.execute("""
+            ALTER TABLE auction_tournament
+                ADD COLUMN live_snapshot_seq integer
+                DEFAULT 0
+        """)
+        cr.execute("""
+            UPDATE auction_tournament
+               SET live_snapshot_seq = 0
+             WHERE live_snapshot_seq IS NULL
+        """)
+
     def _register_hook(self):
         super()._register_hook()
         # Self-heal on every registry load (restart without -u).
         self._ensure_show_registration_capacity_column()
+        self._ensure_live_snapshot_seq_column()
 
     def set_dice_state(self, state, number=0):
         """Broadcast dice state to the projector.
@@ -903,6 +939,11 @@ class AuctionTournament(models.Model):
                         (state, number, uid, ids),
                     )
                 self.invalidate_cache(['dice_state', 'dice_result'])
+                # Raw SQL bypasses ORM write(); still dirty projector snapshots.
+                from odoo.addons.auction_module.models.auction_live_snapshot_mixin import (
+                    mark_tournament_dirty,
+                )
+                mark_tournament_dirty(self.env, ids, ('pj',))
                 return True
             except OperationalError as err:
                 msg = str(err).lower()
@@ -1014,7 +1055,57 @@ class AuctionTournament(models.Model):
         elif record.tournament_date_ids:
             record._sync_tournament_date_from_lines()
         record._ensure_default_tier()
+        # Phase 2B: slug→tid Redis map (fail-open; never break create)
+        try:
+            if record.slug:
+                from odoo.addons.auction_module.services import auction_redis_service as redis_svc
+                redis_svc.set_slug_tid(self.env, record.slug, record.id)
+        except Exception:
+            _logger.debug('auction redis slug map on create skipped', exc_info=True)
         return record
+
+    def _ac_sync_redis_slug_map(self, old_slugs=None):
+        """Best-effort Redis slug→tid update. Never raises into auction writes."""
+        try:
+            from odoo.addons.auction_module.services import auction_redis_service as redis_svc
+            old_slugs = old_slugs or {}
+            for rec in self:
+                if not rec.slug:
+                    continue
+                redis_svc.set_slug_tid(
+                    self.env, rec.slug, rec.id, old_slug=old_slugs.get(rec.id),
+                )
+        except Exception:
+            _logger.debug('auction redis slug map sync failed', exc_info=True)
+
+    @api.model
+    def action_backfill_redis_slug_map(self):
+        """Populate ac:{db}:slug:{slug}:tid for all tournaments with a slug.
+
+        Safe to call from shell / upgrade. Redis down → no-op, never fails auction.
+        """
+        tournaments = self.sudo().search([('slug', '!=', False)])
+        n = 0
+        for t in tournaments:
+            try:
+                from odoo.addons.auction_module.services import auction_redis_service as redis_svc
+                if redis_svc.set_slug_tid(self.env, t.slug, t.id):
+                    n += 1
+            except Exception:
+                _logger.debug('slug backfill skip tid=%s', t.id, exc_info=True)
+        _logger.info('auction redis slug map backfill wrote %s mappings', n)
+        return n
+
+    def unlink(self):
+        slugs = {rec.id: rec.slug for rec in self if rec.slug}
+        res = super().unlink()
+        try:
+            from odoo.addons.auction_module.services import auction_redis_service as redis_svc
+            for slug in slugs.values():
+                redis_svc.delete_slug_tid(self.env, slug)
+        except Exception:
+            _logger.debug('auction redis slug map unlink cleanup failed', exc_info=True)
+        return res
 
     def copy(self, default=None):
         default = dict(default or {})
@@ -1136,7 +1227,28 @@ class AuctionTournament(models.Model):
                     _("You do not have permission to modify: %s")
                     % ', '.join(sorted(disallowed))
                 )
+        # Capture old slugs before write when name/slug may change.
+        old_slugs = {}
+        if 'name' in vals or 'slug' in vals:
+            old_slugs = {rec.id: rec.slug for rec in self}
+        # Live-board flags also refresh gateway meta on next snapshot write;
+        # still keep slug map fresh if only slug/name changed.
         res = super().write(vals)
+        if old_slugs or 'live_board_active' in vals or 'live_board_code_protected' in vals:
+            self._ac_sync_redis_slug_map(old_slugs=old_slugs)
+            # If only board flags changed, bump dirty so meta is rewritten.
+            if 'live_board_active' in vals or 'live_board_code_protected' in vals:
+                try:
+                    from odoo.addons.auction_module.models.auction_live_snapshot_mixin import (
+                        mark_tournament_dirty,
+                    )
+                    kinds = set()
+                    if 'live_board_active' in vals or 'live_board_code_protected' in vals:
+                        kinds.add('lb')
+                    if kinds:
+                        mark_tournament_dirty(self.env, self.ids, kinds)
+                except Exception:
+                    _logger.debug('live board flag dirty skipped', exc_info=True)
         if self.env.context.get('skip_tournament_date_sync'):
             return res
         if 'tournament_dates' in vals and 'tournament_date_ids' not in vals:

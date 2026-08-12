@@ -2752,7 +2752,20 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   }
 
   var _pjPollInFlight = false;
-  var _pjPollInterval = 400;
+  var _pjPollIdle = 2000;
+  var _pjPollBurst = 400;
+  var _pjBurstUntil = 0;
+  var _pjLastFp = '';
+  function pjPollDelay() {
+    return (Date.now() < _pjBurstUntil) ? _pjPollBurst : _pjPollIdle;
+  }
+  function schedulePjPoll() {
+    clearTimeout(_pollTimer);
+    _pollTimer = setTimeout(poll, pjPollDelay());
+  }
+  function armPjBurst() {
+    _pjBurstUntil = Date.now() + 6000;
+  }
   function poll() {
     if (_pjPollInFlight) return;
     _pjPollInFlight = true;
@@ -2766,6 +2779,21 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     .then(function(json) {
       var result = json.result || {};
       var p = result.player;
+      var d0 = result.dice || {};
+      var fp = [
+        (p && p.id) || 0,
+        (p && p.state) || '',
+        (p && p.current_bid) || 0,
+        (p && p.sold_points) || 0,
+        !!((p && p.mystery_revealed)),
+        d0.state || '',
+        d0.result || 0,
+        result.break_time ? 1 : 0,
+        (result.wait_phase && result.wait_phase.phase) || '',
+        (result.boards && result.boards.sig) || ''
+      ].join('|');
+      if (_pjLastFp && fp !== _pjLastFp) armPjBurst();
+      _pjLastFp = fp;
       var d = result.dice || {state:'idle', result:0, is_mystery:false};
       handlePjBreak(!!result.break_time);
       updatePjBreakAds(result.advertisers || []);
@@ -2833,7 +2861,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       }
     })
     .catch(function(e){ console.error('[Projector] poll error:', e); })
-    .then(function() { _pjPollInFlight = false; });
+    .then(function() { _pjPollInFlight = false; schedulePjPoll(); });
   }
 
   function tickClock() {
@@ -2847,7 +2875,6 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   }
 
   poll();
-  _pollTimer = setInterval(poll, _pjPollInterval);
   setPjDiceFace(1);
   tickClock();
   setInterval(tickClock, 15000);

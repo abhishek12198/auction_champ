@@ -38,7 +38,7 @@
 
 {
     'name' : 'Auction Champ',
-    'version' : '1.5.484',
+    'version' : '1.5.486',
     'summary': 'Sports Auction module',
     'sequence': 10,
     'icon': '/auction_module/static/description/icon.png',
@@ -61,6 +61,7 @@
         'data/report_paper_format_landscape.xml',
         'data/football_data.xml',
         'data/point_unit_data.xml',
+        'data/auction_redis_config.xml',
         'views/auction_point_unit_view.xml',
         'views/point_unit_assets.xml',
         'views/auction_tournament_view.xml',

@@ -48,7 +48,7 @@ import werkzeug.exceptions
 class Auction(models.Model):
 
     _name = 'auction.auction'
-    _inherit = ['auction.tournament.security.mixin']
+    _inherit = ['auction.tournament.security.mixin', 'auction.live.snapshot.mixin']
     _rec_name = 'team_id'
     _order = 'remaining_players_count,id'
 
@@ -73,7 +73,7 @@ class Auction(models.Model):
     max_points = fields.Integer('Max Points')
     remaining_points = fields.Integer(compute='_calculate_remaining_points', store=True, string="Remaining points")
     remaining_players_count = fields.Integer(compute='_calculate_remaining_players_count', store=True, string="Remaining players required")
-    tournament_id = fields.Many2one('auction.tournament', 'Tournament')
+    tournament_id = fields.Many2one('auction.tournament', 'Tournament', index=True)
     max_call = fields.Integer(compute='_calculate_max_call', string="Max Call")
     auction_bid_slab_ids = fields.One2many('auction.auction.bid.slab', 'auction_id', 'Slab')
     tier_limit_ids = fields.One2many('auction.auction.tier.limit', 'auction_id', 'Tier Limits')
@@ -157,11 +157,17 @@ class Auction(models.Model):
         'tier_limit_ids.max_players',
     )
     def _calculate_max_call(self):
-        on_stage = self.env['auction.team.player'].search(
-            [('is_on_stage', '=', True)], limit=1
-        )
-        player = on_stage if on_stage else None
+        # Must be per-tournament. A global is_on_stage lookup picks the wrong
+        # player when two auctions run at once and corrupts max_call.
+        Player = self.env['auction.team.player']
+        tids = self.mapped('tournament_id').ids
+        on_stage = Player.search([
+            ('is_on_stage', '=', True),
+            ('tournament_id', 'in', tids),
+        ]) if tids else Player.browse()
+        by_tid = {p.tournament_id.id: p for p in on_stage}
         for record in self:
+            player = by_tid.get(record.tournament_id.id) if record.tournament_id else None
             record.max_call = record.get_max_bid_for_team(record, player)
 
     @api.depends('player_ids', 'player_ids.tier_id', 'tier_limit_ids', 'tier_limit_ids.tier_id', 'tier_limit_ids.max_players')
@@ -329,7 +335,7 @@ class Auction(models.Model):
 class AuctionPlayer(models.Model):
 
     _name = 'auction.auction.player'
-    _inherit = ['auction.tournament.security.mixin']
+    _inherit = ['auction.tournament.security.mixin', 'auction.live.snapshot.mixin']
 
     auction_id = fields.Many2one('auction.auction', 'Auction', ondelete='cascade')
     player_id = fields.Many2one('auction.team.player', 'Player')
@@ -390,7 +396,7 @@ class AuctionPlayer(models.Model):
 class AuctionBidSlab(models.Model):
 
     _name = 'auction.auction.bid.slab'
-    _inherit = ['auction.tournament.security.mixin']
+    _inherit = ['auction.tournament.security.mixin', 'auction.live.snapshot.mixin']
 
     auction_id = fields.Many2one('auction.auction', ondelete='cascade')
     from_amount = fields.Integer(required=True)
@@ -400,7 +406,7 @@ class AuctionBidSlab(models.Model):
 
 class AuctionAuctionTierLimit(models.Model):
     _name = 'auction.auction.tier.limit'
-    _inherit = ['auction.tournament.security.mixin']
+    _inherit = ['auction.tournament.security.mixin', 'auction.live.snapshot.mixin']
     _description = 'Auction Team Tier Limit'
 
     auction_id = fields.Many2one('auction.auction', ondelete='cascade')

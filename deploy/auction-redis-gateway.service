@@ -1,0 +1,32 @@
+[Unit]
+Description=AuctionChamp Phase 2B Redis Live Gateway
+After=network.target redis-server.service redis.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Change User/Group to the non-root account that owns the gateway venv on this host.
+User=abhishek
+Group=abhishek
+WorkingDirectory=/home/abhishek/PycharmProjects/auction_champ/auction_live_gateway
+Environment=AUCTION_REDIS_URL=redis://127.0.0.1:6379/1
+Environment=AUCTION_GATEWAY_HOST=127.0.0.1
+Environment=AUCTION_GATEWAY_PORT=8090
+ExecStart=/home/abhishek/PycharmProjects/auction_champ/auction_live_gateway/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8090 --workers 2 --log-level warning
+Restart=always
+RestartSec=2
+LimitNOFILE=65535
+MemoryMax=256M
+# Fail closed to localhost only — never bind 0.0.0.0
+AmbientCapabilities=
+CapabilityBoundingSet=
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/abhishek/PycharmProjects/auction_champ/auction_live_gateway
+PrivateTmp=true
+KillSignal=SIGTERM
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target

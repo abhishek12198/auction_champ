@@ -217,8 +217,11 @@ class ViewTeamDetails(models.TransientModel):
 
         # ── Hint strip ────────────────────────────────────────────────────
         if auction.remaining_players_count > 0:
+            on_stage_domain = [('is_on_stage', '=', True)]
+            if auction.tournament_id:
+                on_stage_domain.append(('tournament_id', '=', auction.tournament_id.id))
             on_stage = self.env['auction.team.player'].search(
-                [('is_on_stage', '=', True)], limit=1
+                on_stage_domain, limit=1
             )
             tier_aware_max_call = auction.get_max_bid_for_team(
                 auction, on_stage if on_stage else None
@@ -241,8 +244,11 @@ class ViewTeamDetails(models.TransientModel):
         return html
 
     def generate_suggestion(self, auction):
+        on_stage_domain = [('is_on_stage', '=', True)]
+        if auction.tournament_id:
+            on_stage_domain.append(('tournament_id', '=', auction.tournament_id.id))
         on_stage = self.env['auction.team.player'].search(
-            [('is_on_stage', '=', True)], limit=1
+            on_stage_domain, limit=1
         )
         tier_aware_max_call = auction.get_max_bid_for_team(
             auction, on_stage if on_stage else None

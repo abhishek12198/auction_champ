@@ -38,6 +38,7 @@
 
 from . import image_compress_mixin
 from . import auction_tournament_security
+from . import auction_live_snapshot_mixin
 from . import auction_point_unit
 from . import auction_tournament
 from . import auction_tournament_date

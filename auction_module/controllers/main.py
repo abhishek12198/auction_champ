@@ -39,6 +39,7 @@
 
 import re
 import logging
+import threading
 import werkzeug
 import itertools
 import pytz
@@ -65,6 +66,18 @@ from odoo.tools import sql
 from odoo.tools.image import image_process
 
 _logger = logging.getLogger(__name__)
+
+# Process-local snapshot of projector / live-board JSON. Two concurrent
+# auctions each get their own key (db + tournament). Unchanged polls skip
+# the 20–40 ORM queries that were melting the VPS.
+#
+# This cache is NOT a correctness layer: it is per-worker, dies on restart,
+# and cannot see mutations committed by another worker. Phase 2A shared
+# Redis snapshots (keyed by PostgreSQL live_snapshot_seq) are the
+# cross-worker cache. Keep this map only as a tertiary ORM-path shortcut.
+_LIVE_PAYLOAD_CACHE = {}
+_LIVE_PAYLOAD_LOCK = threading.Lock()
+_LIVE_PAYLOAD_MAX = 48
 
 
 class Auction(http.Controller):
@@ -1247,26 +1260,11 @@ class Auction(http.Controller):
                     json.dumps({'error': 'tournament not found'}),
                     headers=[('Content-Type', 'application/json')]
                 )
-            auctions = self._balance_auction_records(tournament)
-            auctions.mapped('player_ids.tier_id')
-            auctions.mapped('tier_limit_ids.tier_id')
-            auctions.mapped('auction_bid_slab_ids')
-            Player = request.env['auction.team.player'].sudo().with_context(
-                auction_skip_tournament_security=True,
+            from odoo.addons.auction_module.services.auction_live_snapshot_service import (
+                get_or_rebuild_snapshot,
             )
-            on_stage = Player.search(
-                [('tournament_id', '=', tournament.id), ('is_on_stage', '=', True)], limit=1
-            )
-            player_on_stage = on_stage if on_stage else None
-            teams_data = []
-            for auction in auctions:
-                teams_data.append({
-                    'id': auction.id,
-                    'remaining_players_count': auction.remaining_players_count,
-                    'remaining_points': auction.remaining_points,
-                    'max_call': auction.get_max_bid_for_team(auction, player_on_stage),
-                })
-            data = json.dumps({'teams': teams_data})
+            payload = get_or_rebuild_snapshot(request.env, tournament, 'bal') or {'teams': []}
+            data = json.dumps(payload)
         headers = [('Content-Type', 'application/json'), ('Cache-Control', 'max-age=3')]
         return request.make_response(data, headers)
 
@@ -3043,202 +3041,13 @@ class Auction(http.Controller):
                 return {'player': None}
             tournament = request.env['auction.tournament'].sudo().search(
                 [('slug', '=', tournament_slug)], limit=1)
-            from datetime import datetime
-            import pytz
-            now_dt = datetime.now(pytz.utc).replace(tzinfo=None)
-            boards = _pj_boards(tournament, db_name)
-            player = None
-            state_override = None
-            stamp_player = None
-            if (tournament and tournament.stamp_expires_at
-                    and tournament.stamp_expires_at > now_dt
-                    and tournament.stamp_player_id):
-                stamp_player = tournament.stamp_player_id
-
-            on_stage = request.env['auction.team.player'].browse()
-            domain = [('is_on_stage', '=', True)]
-            if tournament:
-                domain.append(('tournament_id', '=', tournament.id))
-            on_stage = request.env['auction.team.player'].sudo().search(domain, limit=1)
-
-            # Live dice must win over a leftover on-stage row. Otherwise Roll Call
-            # dice never appears on the projector after any prior player card.
-            dice_state = tournament.dice_state if tournament else 'idle'
-            raw_dice = int(tournament.dice_result or 0) if tournament else 0
-            dice_mystery = raw_dice < 0
-            lookup_sl = abs(raw_dice) if raw_dice else 0
-            dice_result = 0 if dice_mystery else lookup_sl
-            if tournament and lookup_sl and not dice_mystery:
-                dice_player = request.env['auction.team.player'].sudo().search([
-                    ('tournament_id', '=', tournament.id),
-                    ('sl_no', '=', lookup_sl),
-                ], limit=1)
-                if (dice_player and dice_player.tier_id and dice_player.tier_id.mystery
-                        and not dice_player.mystery_revealed):
-                    dice_mystery = True
-                    dice_result = 0
-            dice_payload = {
-                'state': dice_state or 'idle',
-                'result': dice_result,
-                'is_mystery': dice_mystery,
-            }
-            # Only the rolling animation blocks the player card. Once the
-            # auctioneer opens a player (on stage), that must win over a leftover
-            # dice "result" — otherwise the projector waits ~7s for idle.
-            if dice_state == 'rolling':
-                return {
-                    'player': None,
-                    'dice': dice_payload,
-                    'progress': _pj_progress(tournament),
-                    'wait_phase': _pj_wait_phase(tournament),
-                    'teams': _pj_teams(tournament, db_name),
-                    'recent_bids': _pj_recent_bids(tournament, db_name),
-                    'top_purse': _pj_top_purse(tournament),
-                    'auction_meta': _pj_auction_meta(tournament),
-                    'break_time': bool(tournament and tournament.break_time_active),
-                    'advertisers': _pj_advertisers(tournament, db_name),
-                    'boards': boards,
-                }
-
-            # Prefer a freshly called auction player over a leftover SOLD/UNSOLD
-            # stamp so projector / auctioneer / player-selector updates feel instant
-            # in production (stamp otherwise blocks the next card for several seconds).
-            if (on_stage and on_stage.state == 'auction'
-                    and (not stamp_player or stamp_player.id != on_stage.id)):
-                player = on_stage
-                state_override = None
-            elif stamp_player:
-                player = stamp_player
-                state_override = tournament.stamp_state
-            elif on_stage:
-                player = on_stage
-            if not player:
-                # Show dice result on the waiting screen until a player is opened
-                if dice_state == 'result':
-                    return {
-                        'player': None,
-                        'dice': dice_payload,
-                        'progress': _pj_progress(tournament),
-                        'wait_phase': _pj_wait_phase(tournament),
-                        'teams': _pj_teams(tournament, db_name),
-                        'recent_bids': _pj_recent_bids(tournament, db_name),
-                        'top_purse': _pj_top_purse(tournament),
-                        'auction_meta': _pj_auction_meta(tournament),
-                        'break_time': bool(tournament and tournament.break_time_active),
-                        'advertisers': _pj_advertisers(tournament, db_name),
-                        'boards': boards,
-                    }
-                return {
-                    'player': None,
-                    'dice': dice_payload,
-                    'progress': _pj_progress(tournament),
-                    'wait_phase': _pj_wait_phase(tournament),
-                    'teams': _pj_teams(tournament, db_name),
-                    'recent_bids': _pj_recent_bids(tournament, db_name),
-                    'top_purse': _pj_top_purse(tournament),
-                    'auction_meta': _pj_auction_meta(tournament),
-                    'break_time': bool(tournament and tournament.break_time_active),
-                    'advertisers': _pj_advertisers(tournament, db_name),
-                    'boards': boards,
-                }
-            photo = ''
-            photo_url = ''
-            if player.photo:
-                photo_url = _pj_player_photo_url(db_name, player)
-                # Keep tiny fallback only if URL path is unavailable to older JS
-                photo = ''
-            team_logo = ''
-            team_logo_url = ''
-            team_name = ''
-            if player.assigned_team_id:
-                team_name = player.assigned_team_id.name or ''
-                if player.assigned_team_id.logo:
-                    team_logo_url = '/%s/auction/public/image/auction.team/%d/logo' % (
-                        db_name, player.assigned_team_id.id)
-            sold_points = 0
-            if player.state == 'sold':
-                auction_line = request.env['auction.auction.player'].sudo().search(
-                    [('player_id', '=', player.id)], limit=1)
-                sold_points = auction_line.points if auction_line else 0
-            is_mystery = bool(player.tier_id and player.tier_id.mystery)
-            mystery_revealed = bool(player.mystery_revealed)
-            player_payload = {
-                'id': player.id,
-                'sl_no': player.sl_no or '',
-                'name': player.name or '',
-                'role': player.role or '',
-                'batting_style': player.batting_style or '',
-                'bowling_style': player.bowling_style or '',
-                'photo': photo,
-                'photo_url': photo_url,
-                'tier_name': player.tier_id.name if player.tier_id else '',
-                'tier_color': player.tier_color or '#3498db',
-                'base_price': player.effective_base_price or player.base_price or 0,
-                'sold_points': sold_points,
-                'state': state_override or player.state,
-                'team_name': team_name,
-                'team_logo': team_logo,
-                'team_logo_url': team_logo_url,
-                'is_mystery': is_mystery,
-                'mystery_revealed': mystery_revealed,
-            }
-            player_payload.update(_football_display_payload(player))
-            if is_mystery and not mystery_revealed:
-                player_payload.update({
-                    'name': 'Mystery Player',
-                    'role': '???',
-                    'sl_no': '?',
-                    'photo': '',
-                    'photo_url': '/auction_module/static/img/default_icon.png',
-                    'tier_name': '',
-                    'tier_color': '',
-                    'batting_style': '',
-                    'bowling_style': '',
-                    'dominant_position': '???',
-                    'preferred_foot': '',
-                    'secondary_positions': '',
-                    'age': '',
-                    'height': '',
-                    'weight': '',
-                    'work_rate': '',
-                    'p_category': '',
-                    'blood_group': '',
-                    'mobile': '',
-                    'location': '',
-                    'use_other_attributes': False,
-                    'other_attributes': [],
-                    'playing_styles': [],
-                    'strengths': [],
-                })
-            leading_team_id = None
-            if player.assigned_team_id and (state_override or player.state) == 'sold':
-                leading_team_id = player.assigned_team_id.id
-            # Live leading bid (auctioneer extension) when present
-            if hasattr(player, 'current_bid') and player.current_bid:
-                player_payload['current_bid'] = int(player.current_bid or 0)
-                cteam = getattr(player, 'current_bid_team_id', False)
-                if cteam:
-                    player_payload['current_bid_team'] = {
-                        'id': cteam.id,
-                        'name': cteam.name or '',
-                        'logo_url': (
-                            '/%s/auction/public/image/auction.team/%d/logo' % (db_name, cteam.id)
-                            if cteam.logo else ''
-                        ),
-                    }
-            return {
-                'player': player_payload,
-                'dice': dice_payload,
-                'progress': _pj_progress(tournament, current_player=player),
-                'wait_phase': _pj_wait_phase(tournament),
-                'teams': _pj_teams(tournament, db_name, leading_team_id=leading_team_id),
-                'recent_bids': _pj_recent_bids(tournament, db_name, player=player),
-                'top_purse': _pj_top_purse(tournament),
-                'auction_meta': _pj_auction_meta(tournament),
-                'break_time': bool(tournament and tournament.break_time_active),
-                'advertisers': _pj_advertisers(tournament, db_name),
-                'boards': boards,
-            }
+            if not tournament:
+                return {'player': None}
+            from odoo.addons.auction_module.services.auction_live_snapshot_service import (
+                get_or_rebuild_snapshot,
+            )
+            payload = get_or_rebuild_snapshot(request.env, tournament, 'pj')
+            return payload or {'player': None}
 
     @http.route([
         '/<string:db_name>/auction/projector/<string:tournament_slug>/squad',
@@ -3650,263 +3459,17 @@ class Auction(http.Controller):
                     status=403,
                 )
 
-            def pub_img(model, record_id, field):
-                return '/%s/auction/public/image/%s/%d/%s' % (db_name, model, record_id, field)
-
-            result = {
-                'tournament': {},
-                'current_player': None,
-                'sold_info': None,
-                'recent_history': [],
-                'top_players': [],
-                'teams': [],
-                'theme': 'vanilla',
+            from odoo.addons.auction_module.services.auction_live_snapshot_service import (
+                get_or_rebuild_snapshot,
+            )
+            result = get_or_rebuild_snapshot(env, tournament, 'lb') or {
+                'live_board_active': True,
                 'no_auction': True,
-                'break_time': False,
-                'advertisers': [],
-                'stats': {},
-                'wait_phase': {},
             }
-
-            if tournament:
-                result['theme'] = tournament.player_display_template or 'vanilla'
-                result['break_time'] = tournament.break_time_active
-                result['advertisers'] = [
-                    {
-                        'id': ad.id,
-                        'name': ad.name or '',
-                        'image_url': pub_img('auction.advertiser', ad.id, 'image'),
-                    }
-                    for ad in tournament.advertiser_ids if ad.image
-                ]
-                result['tournament'] = {
-                    'name': tournament.name or '',
-                    'description': tournament.description or '',
-                    'logo_url': pub_img('auction.tournament', tournament.id, 'logo') if tournament.logo else '',
-                    'tournament_type': tournament.tournament_type or 'cricket',
-                }
-                result['tournament_type'] = tournament.tournament_type or 'cricket'
-
-            # ── Stamp-first: check if tournament has an active sold/unsold stamp ──
-            stamp_player = None
-            stamp_state_val = None
-            now_dt = fields.Datetime.now()
-            if tournament.stamp_expires_at and tournament.stamp_expires_at > now_dt and tournament.stamp_player_id:
-                stamp_player = tournament.stamp_player_id
-                stamp_state_val = tournament.stamp_state
-
-            # ── Current player on stage (normal display) ──
-            current_player = env['auction.team.player'].sudo().search([
-                ('is_on_stage', '=', True),
-                ('tournament_id', '=', tournament.id),
-            ], limit=1)
-
-            # If stamp is active use the stamp player as the displayed player
-            # so the live board shows SOLD/UNSOLD even after is_on_stage
-            # has moved on to the next player.
-            if stamp_player:
-                current_player = stamp_player
-
-            if current_player:
-                result['no_auction'] = False
-
-                # Base price: check auctions for this tournament
-                base_price = 0
-                auctions_all = env['auction.auction'].sudo().search(
-                    [('tournament_id', '=', tournament.id)]
-                )
-                for auc in auctions_all:
-                    base = auc.base_point or 0
-                    if current_player.tier_id and auc.tier_limit_ids:
-                        tl = auc.tier_limit_ids.filtered(
-                            lambda l: l.tier_id.id == current_player.tier_id.id
-                        )
-                        if tl and tl[0].base_point > 0:
-                            base = tl[0].base_point
-                    if base > base_price:
-                        base_price = base
-
-                result['current_player'] = {
-                    'id': current_player.id,
-                    'name': current_player.name or '',
-                    'photo_url': pub_img('auction.team.player', current_player.id, 'photo') if current_player.photo else '',
-                    'role': current_player.role or '',
-                    'tier_name': current_player.tier_id.name if current_player.tier_id else '',
-                    'tier_color': current_player.tier_color or '#2252b5',
-                    'state': current_player.state,
-                    'sl_no': current_player.sl_no or 0,
-                    'icon_player': current_player.icon_player,
-                    'base_price': base_price,
-                    'batting_style': current_player.batting_style or '',
-                    'bowling_style': current_player.bowling_style or '',
-                    'is_mystery': bool(current_player.tier_id and current_player.tier_id.mystery),
-                    'mystery_revealed': bool(current_player.mystery_revealed),
-                }
-                result['current_player'].update(_football_display_payload(current_player))
-
-                # Mystery players stay redacted on the live board until revealed
-                # on the auction stage after the sale.
-                if (result['current_player']['is_mystery']
-                        and not result['current_player']['mystery_revealed']):
-                    result['current_player'].update({
-                        'name': 'Mystery Player?',
-                        'photo_url': '/auction_module/static/img/default_icon.png',
-                        'role': '',
-                        'tier_name': '',
-                        'sl_no': 0,
-                        'icon_player': False,
-                        'batting_style': '',
-                        'bowling_style': '',
-                        'dominant_position': '',
-                        'preferred_foot': '',
-                        'secondary_positions': '',
-                        'age': '',
-                        'use_other_attributes': False,
-                        'other_attributes': [],
-                        'playing_styles': [],
-                        'strengths': [],
-                    })
-
-                # ── If sold, get final points from auction line ──
-                if current_player.state == 'sold' and current_player.assigned_team_id:
-                    auc_line = env['auction.auction.player'].sudo().search(
-                        [('player_id', '=', current_player.id)], limit=1
-                    )
-                    team = current_player.assigned_team_id
-                    result['sold_info'] = {
-                        'team_name': team.name or '',
-                        'team_logo_url': pub_img('auction.team', team.id, 'logo') if team.logo else '',
-                        'amount': auc_line.points if auc_line else 0,
-                    }
-
-            # ── Recent history (last 5 transactions) ──
-            history = env['auction.history'].sudo().search(
-                [('tournament_id', '=', tournament.id)], order='create_date desc', limit=5
-            )
-            # Names that must stay hidden until Reveal (covers older history rows
-            # that were written with the real name before this fix).
-            hidden_mystery = env['auction.team.player'].sudo().search([
-                ('tournament_id', '=', tournament.id),
-                ('tier_id.mystery', '=', True),
-                ('mystery_revealed', '=', False),
-                ('state', '=', 'sold'),
-            ])
-            hidden_names = {p.name for p in hidden_mystery if p.name}
-
-            recent_history = []
-            for rec in history:
-                msg = rec.message or ''
-                photo_url = pub_img('auction.history', rec.id, 'player_photo') if rec.player_photo else ''
-                p = rec.player_id
-                must_hide = (
-                    (p and p.tier_id and p.tier_id.mystery and not p.mystery_revealed)
-                    or any(n in msg for n in hidden_names)
-                )
-                if must_hide:
-                    for n in hidden_names:
-                        if n and n in msg:
-                            msg = msg.replace(n, '???', 1)
-                    if p and p.name and p.name in msg:
-                        msg = msg.replace(p.name, '???', 1)
-                    photo_url = '/auction_module/static/img/default_icon.png'
-                recent_history.append({
-                    'message': msg,
-                    'team_logo_url': pub_img('auction.team', rec.team_id.id, 'logo') if rec.team_id and rec.team_id.logo else '',
-                    'player_photo_url': photo_url,
-                    'timestamp': rec.create_date.replace(tzinfo=pytz.utc).astimezone(pytz.timezone('Asia/Kolkata')).strftime('%I:%M %p') if rec.create_date else '',
-                })
-            result['recent_history'] = recent_history
-
-            # ── Top 5 most expensive sold players (MVP board) ──
-            top_sold = env['auction.auction.player'].sudo().search(
-                [('auction_id.tournament_id', '=', tournament.id)], order='points desc', limit=5
-            )
-            top_players = []
-            for idx, rec in enumerate(top_sold):
-                p = rec.player_id
-                name = p.name or '' if p else ''
-                photo = pub_img('auction.team.player', p.id, 'photo') if p and p.photo else ''
-                role = p.role or '' if p else ''
-                if p and p.tier_id and p.tier_id.mystery and not p.mystery_revealed:
-                    name = '???'
-                    photo = '/auction_module/static/img/default_icon.png'
-                    role = '???'
-                top_players.append({
-                    'rank': idx + 1,
-                    'player_name': name,
-                    'player_photo_url': photo,
-                    'role': role,
-                    'team_name': rec.auction_id.team_id.name if rec.auction_id and rec.auction_id.team_id else '',
-                    'team_logo_url': pub_img('auction.team', rec.auction_id.team_id.id, 'logo') if rec.auction_id and rec.auction_id.team_id and rec.auction_id.team_id.logo else '',
-                    'points': rec.points,
-                })
-            result['top_players'] = top_players
-
-            # ── Teams (from auctions in this tournament) ──
-            is_football = (tournament.tournament_type == 'football')
-            auctions = env['auction.auction'].sudo().search(
-                [('tournament_id', '=', tournament.id)]
-            )
-            for auc in auctions:
-                team = auc.team_id
-                if team:
-                    players_payload = []
-                    for line in auc.player_ids:
-                        if not line.player_id:
-                            continue
-                        p = line.player_id
-                        pos_code = ''
-                        pos_name = ''
-                        if is_football and p.dominant_position_id:
-                            pos_code = (p.dominant_position_id.code or '').strip().upper()
-                            pos_name = p.dominant_position_id.name or ''
-                            if not pos_code and pos_name:
-                                # Derive abbreviation from name words when code is empty
-                                parts = [w for w in pos_name.replace('-', ' ').split() if w]
-                                pos_code = ''.join(w[0] for w in parts).upper()[:3]
-                        entry = {
-                            'name': p.name or '',
-                            'photo_url': pub_img('auction.team.player', p.id, 'photo')
-                                         if p.photo else '',
-                            'role': p.role or '',
-                            'position_code': pos_code,
-                            'position_name': pos_name,
-                            'points': line.points,
-                        }
-                        # Keep mystery buys hidden in team lists until revealed
-                        if (p.tier_id and p.tier_id.mystery and not p.mystery_revealed):
-                            entry.update({
-                                'name': '???',
-                                'photo_url': '/auction_module/static/img/default_icon.png',
-                                'role': '???',
-                                'position_code': '?',
-                                'position_name': '???',
-                            })
-                        players_payload.append(entry)
-                    result['teams'].append({
-                        'id': team.id,
-                        'name': team.name or '',
-                        'logo_url': pub_img('auction.team', team.id, 'logo') if team.logo else '',
-                        'remaining_points': auc.remaining_points,
-                        'manager': team.manager or '',
-                        'players': players_payload,
-                    })
-
-            # ── Player state counts for this tournament (stats block) ──
-            Player = env['auction.team.player'].sudo()
-            tdom = [('tournament_id', '=', tournament.id)]
-            result['stats'] = {
-                'in_auction': Player.search_count(tdom + [('state', '=', 'auction')]),
-                'sold':       Player.search_count(tdom + [('state', '=', 'sold')]),
-                'unsold':     Player.search_count(tdom + [('state', '=', 'unsold')]),
-                'total':      Player.search_count(tdom),
-            }
-
-            # Same complete-phase logic as projector, with viewer-facing copy
-            result['wait_phase'] = _pj_wait_phase(tournament, audience='viewers')
+            body = json.dumps(result)
 
         return request.make_response(
-            json.dumps(result),
+            body,
             headers=[('Content-Type', 'application/json'), ('Cache-Control', 'no-store')]
         )
 
@@ -3944,8 +3507,11 @@ class Auction(http.Controller):
         auctions = env['auction.auction'].sudo().search(auc_domain)
 
         # Look up the on-stage player once so tier-based max_call caps are applied.
+        on_stage_domain = [('is_on_stage', '=', True)]
+        if tournament:
+            on_stage_domain.append(('tournament_id', '=', tournament.id))
         on_stage = env['auction.team.player'].sudo().search(
-            [('is_on_stage', '=', True)], limit=1
+            on_stage_domain, limit=1
         )
         player_on_stage = on_stage if on_stage else None
 
@@ -6513,6 +6079,102 @@ class Auction(http.Controller):
         )
 
 
+def _live_state_fingerprint(env, tournament):
+    """One cheap SQL row that changes iff the live screens must rebuild."""
+    if not tournament:
+        return 'none'
+    cr = env.cr
+    bid_sql = ''
+    if sql.column_exists(cr, 'auction_team_player', 'current_bid'):
+        bid_sql = ', p.current_bid, p.current_bid_team_id'
+    cr.execute("""
+        SELECT
+            t.dice_state,
+            t.dice_result,
+            COALESCE(t.break_time_active, FALSE),
+            t.stamp_state,
+            t.stamp_player_id,
+            t.stamp_expires_at,
+            COALESCE(t.projector_board_mode, 'idle'),
+            COALESCE(t.auction_declared_complete, FALSE),
+            t.write_date,
+            p.id,
+            p.state,
+            COALESCE(p.mystery_revealed, FALSE)
+            %s,
+            (SELECT MAX(write_date) FROM auction_auction WHERE tournament_id = t.id),
+            (SELECT MAX(id) FROM auction_history WHERE tournament_id = t.id)
+        FROM auction_tournament t
+        LEFT JOIN auction_team_player p
+            ON p.tournament_id = t.id AND p.is_on_stage IS TRUE
+        WHERE t.id = %%s
+        LIMIT 1
+    """ % bid_sql, [tournament.id])
+    row = cr.fetchone()
+    return tuple(row) if row else 'empty'
+
+
+def _live_payload_get(kind, tournament):
+    if not tournament:
+        return None
+    try:
+        dbname = request.env.cr.dbname
+        fp = _live_state_fingerprint(request.env, tournament)
+    except Exception:
+        _logger.debug('live fingerprint failed', exc_info=True)
+        return None
+    key = (dbname, kind, tournament.id, fp)
+    with _LIVE_PAYLOAD_LOCK:
+        return _LIVE_PAYLOAD_CACHE.get(key)
+
+
+def _live_payload_put(kind, tournament, payload):
+    if not tournament or payload is None:
+        return payload
+    try:
+        dbname = request.env.cr.dbname
+        fp = _live_state_fingerprint(request.env, tournament)
+    except Exception:
+        return payload
+    key = (dbname, kind, tournament.id, fp)
+    with _LIVE_PAYLOAD_LOCK:
+        stale = [
+            k for k in _LIVE_PAYLOAD_CACHE
+            if k[0] == dbname and k[1] == kind and k[2] == tournament.id and k != key
+        ]
+        for k in stale:
+            _LIVE_PAYLOAD_CACHE.pop(k, None)
+        if len(_LIVE_PAYLOAD_CACHE) > _LIVE_PAYLOAD_MAX:
+            _LIVE_PAYLOAD_CACHE.clear()
+        _LIVE_PAYLOAD_CACHE[key] = payload
+    return payload
+
+
+def _pj_player_state_counts(tournament, env=None):
+    """One read_group for draft/auction/sold/unsold (memoized per cursor)."""
+    env = env or request.env
+    memo = getattr(env.cr, '_ac_live_memo', None)
+    if memo is None:
+        env.cr._ac_live_memo = memo = {}
+    tid = tournament.id if tournament else 0
+    key = 'state_counts_%s' % tid
+    if key in memo:
+        return memo[key]
+    counts = {'draft': 0, 'auction': 0, 'sold': 0, 'unsold': 0}
+    if tournament:
+        groups = env['auction.team.player'].sudo().read_group(
+            [('tournament_id', '=', tournament.id), ('icon_player', '=', False)],
+            ['state'],
+            ['state'],
+        )
+        for g in groups:
+            state = g.get('state')
+            if state in counts:
+                counts[state] = g.get('state_count') or 0
+    memo[key] = counts
+    return counts
+
+
 def _pj_player_photo_url(db_name, player, projector_size=True):
     """Public photo URL with write_date cache-buster (+ optional projector resize)."""
     if not player or not player.photo:
@@ -6534,14 +6196,13 @@ def _pj_player_photo_url(db_name, player, projector_size=True):
     return url
 
 
-def _pj_progress(tournament, current_player=None):
+def _pj_progress(tournament, current_player=None, env=None):
     """Audience progress strip: Player X of Y (read-only, no state changes)."""
     if not tournament:
         return {'current': 0, 'total': 0, 'label': ''}
-    Player = request.env['auction.team.player'].sudo()
-    domain = [('tournament_id', '=', tournament.id), ('icon_player', '=', False)]
-    total = Player.search_count(domain)
-    done = Player.search_count(domain + [('state', 'in', ('sold', 'unsold'))])
+    counts = _pj_player_state_counts(tournament, env=env)
+    total = sum(counts.values())
+    done = counts['sold'] + counts['unsold']
     current = done
     if current_player:
         if current_player.state in ('sold', 'unsold'):
@@ -6552,7 +6213,7 @@ def _pj_progress(tournament, current_player=None):
     return {'current': current, 'total': total, 'label': label}
 
 
-def _pj_wait_phase(tournament, audience='projector'):
+def _pj_wait_phase(tournament, audience='projector', env=None):
     """Idle projector / live-board screen phase when no player is on stage.
 
     - about_to_begin: everyone still in draft (no sold/unsold/auction yet)
@@ -6593,12 +6254,11 @@ def _pj_wait_phase(tournament, audience='projector'):
     # Operator "Declare Auction Complete" → Thank You ceremony
     if tournament.auction_declared_complete:
         return _completed_payload()
-    Player = request.env['auction.team.player'].sudo()
-    domain = [('tournament_id', '=', tournament.id), ('icon_player', '=', False)]
-    draft = Player.search_count(domain + [('state', '=', 'draft')])
-    auction = Player.search_count(domain + [('state', '=', 'auction')])
-    sold = Player.search_count(domain + [('state', '=', 'sold')])
-    unsold = Player.search_count(domain + [('state', '=', 'unsold')])
+    counts = _pj_player_state_counts(tournament, env=env)
+    draft = counts['draft']
+    auction = counts['auction']
+    sold = counts['sold']
+    unsold = counts['unsold']
     remaining = draft + auction
     finished = sold + unsold
 
@@ -6619,7 +6279,7 @@ def _pj_wait_phase(tournament, audience='projector'):
     }
 
 
-def _pj_boards(tournament, db_name):
+def _pj_boards(tournament, db_name, env=None):
     """Live pool/fixture board payload for the projector (+ snapshot URLs)."""
     empty = {
         'mode': 'idle',
@@ -6641,6 +6301,7 @@ def _pj_boards(tournament, db_name):
     try:
         from datetime import datetime
         import pytz
+        env = env or request.env
         now_dt = datetime.now(pytz.utc).replace(tzinfo=None)
 
         # Defensive: module may not be upgraded yet
@@ -6651,7 +6312,7 @@ def _pj_boards(tournament, db_name):
             if getattr(tournament, 'auction_declared_complete', False):
                 mode = 'idle'
                 reveal_until = None
-            elif _pj_wait_phase(tournament).get('phase') == 'completed':
+            elif _pj_wait_phase(tournament, env=env).get('phase') == 'completed':
                 mode = 'idle'
                 reveal_until = None
         except Exception:
@@ -6680,7 +6341,7 @@ def _pj_boards(tournament, db_name):
         pools = []
         tournament_name = tournament.name or ''
         fixture = False
-        Wizard = request.env['auction.team.pool.wizard'].sudo()
+        Wizard = env['auction.team.pool.wizard'].sudo()
 
         if pool_draw_json:
             try:
@@ -6791,12 +6452,25 @@ def _pj_auction_meta(tournament):
     }
 
 
-def _pj_teams(tournament, db_name, leading_team_id=None):
+def _pj_tournament_auctions(tournament, env=None):
+    env = env or request.env
+    memo = getattr(env.cr, '_ac_live_memo', None)
+    if memo is None:
+        env.cr._ac_live_memo = memo = {}
+    key = 'auctions_%s' % (tournament.id if tournament else 0)
+    if key not in memo:
+        memo[key] = env['auction.auction'].sudo().search(
+            [('tournament_id', '=', tournament.id)] if tournament else [('id', '=', False)]
+        )
+    return memo[key]
+
+
+def _pj_teams(tournament, db_name, leading_team_id=None, env=None):
     """Team logo strip + purse for the projector (read-only)."""
     if not tournament:
         return []
     purse_by_team = {}
-    for auc in request.env['auction.auction'].sudo().search([('tournament_id', '=', tournament.id)]):
+    for auc in _pj_tournament_auctions(tournament, env=env):
         if auc.team_id:
             purse_by_team[auc.team_id.id] = int(auc.remaining_points or 0)
     out = []
@@ -6814,15 +6488,16 @@ def _pj_teams(tournament, db_name, leading_team_id=None):
     return out
 
 
-def _pj_squad(tournament, db_name):
+def _pj_squad(tournament, db_name, env=None):
     """Full squad board: every team + sold/icon players (projector overlay)."""
+    env = env or request.env
     sport = (tournament.tournament_type or 'cricket') if tournament else 'cricket'
     if not tournament:
         return {'sport': sport, 'teams': []}
 
-    Player = request.env['auction.team.player'].sudo()
-    Auction = request.env['auction.auction'].sudo()
-    AuctionPlayer = request.env['auction.auction.player'].sudo()
+    Player = env['auction.team.player'].sudo()
+    Auction = env['auction.auction'].sudo()
+    AuctionPlayer = env['auction.auction.player'].sudo()
     sold_lines = AuctionPlayer.search(
         [('auction_id.tournament_id', '=', tournament.id)],
         order='create_date desc, id desc',
@@ -6931,17 +6606,18 @@ def _pj_squad(tournament, db_name):
     return {'sport': sport, 'teams': teams_out}
 
 
-def _pj_remaining_players(tournament, db_name):
+def _pj_remaining_players(tournament, db_name, env=None):
     """Remaining ``auction``-state players for the projector (kanban-style cards).
 
     Mirrors ``auction.team.player`` kanban fields/logic:
     photo, name, #, tier, role/position, category, and sport-specific stats.
     """
+    env = env or request.env
     sport = (tournament.tournament_type or 'cricket') if tournament else 'cricket'
     if not tournament:
         return {'sport': sport, 'count': 0, 'players': []}
 
-    players = request.env['auction.team.player'].sudo().search([
+    players = env['auction.team.player'].sudo().search([
         ('tournament_id', '=', tournament.id),
         ('icon_player', '=', False),
         ('state', '=', 'auction'),
@@ -7028,12 +6704,13 @@ def _pj_advertisers(tournament, db_name):
     return out
 
 
-def _pj_top_purse(tournament):
+def _pj_top_purse(tournament, env=None):
     """Highest remaining purse among teams (audience 'balance' readout)."""
+    env = env or request.env
     if not tournament:
         return {'amount': 0, 'team_name': '', 'team_logo_url': ''}
     best = None
-    for auc in request.env['auction.auction'].sudo().search([('tournament_id', '=', tournament.id)]):
+    for auc in _pj_tournament_auctions(tournament, env=env):
         if not auc.team_id:
             continue
         pts = int(auc.remaining_points or 0)
@@ -7042,7 +6719,7 @@ def _pj_top_purse(tournament):
     if not best:
         return {'amount': 0, 'team_name': '', 'team_logo_url': ''}
     team = best[1]
-    db_name = request.env.cr.dbname
+    db_name = env.cr.dbname
     logo_url = ''
     if team.logo:
         logo_url = '/%s/auction/public/image/auction.team/%d/logo' % (db_name, team.id)
@@ -7053,12 +6730,13 @@ def _pj_top_purse(tournament):
     }
 
 
-def _pj_recent_bids(tournament, db_name, player=None):
+def _pj_recent_bids(tournament, db_name, player=None, env=None):
     """Last 5 completed sales for the projector Recent Bidding rail.
 
     Each row: player photo + name, sold-to team logo + name, points.
     Mystery players stay masked until revealed.
     """
+    env = env or request.env
     out = []
     if not tournament:
         return out
@@ -7074,7 +6752,7 @@ def _pj_recent_bids(tournament, db_name, player=None):
         return ''
 
     # Prefer structured sale lines (player + team + points)
-    sales = request.env['auction.auction.player'].sudo().search(
+    sales = env['auction.auction.player'].sudo().search(
         [('auction_id.tournament_id', '=', tournament.id)],
         order='id desc',
         limit=5,
@@ -7100,7 +6778,7 @@ def _pj_recent_bids(tournament, db_name, player=None):
 
     # Fallback: parse recent history rows that look like sales
     import re
-    history = request.env['auction.history'].sudo().search(
+    history = env['auction.history'].sudo().search(
         [('tournament_id', '=', tournament.id)], order='id desc', limit=12
     )
     for rec in history:

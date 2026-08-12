@@ -48,7 +48,7 @@ import werkzeug.exceptions
 class AuctionHistory(models.Model):
 
     _name = 'auction.history'
-    _inherit = ['auction.tournament.security.mixin']
+    _inherit = ['auction.tournament.security.mixin', 'auction.live.snapshot.mixin']
     _order = 'id'
 
     active = fields.Boolean(default=True)
@@ -62,5 +62,5 @@ class AuctionHistory(models.Model):
     )
     player_photo = fields.Binary()
     message = fields.Char("History Message")
-    tournament_id = fields.Many2one('auction.tournament', 'Tournament')
+    tournament_id = fields.Many2one('auction.tournament', 'Tournament', index=True)
 
