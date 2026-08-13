@@ -374,6 +374,189 @@
   text-align: center;
 }
 
+.pg-reserve {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--pg-line);
+}
+.pg-reserve-hd {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.pg-reserve-hd-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.pg-reserve-search {
+  width: 180px;
+  min-width: 0;
+  padding: 8px 10px;
+  font-size: .85rem;
+}
+.pg-reserve-board {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pg-reserve-pools {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+.pg-reserve-bucket {
+  border: 1px dashed rgba(160, 200, 255, 0.28);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.18);
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.pg-reserve-auto {
+  border-style: solid;
+  border-color: rgba(160, 200, 255, 0.22);
+}
+.pg-reserve-bucket:not(.pg-reserve-auto) {
+  border-top: 3px solid var(--pool-c, var(--pg-blue));
+}
+.pg-reserve-bucket.is-over,
+.pg-reserve-board.is-dnd .pg-reserve-bucket:hover {
+  border-style: solid;
+  border-color: var(--pool-c, var(--pg-accent));
+  background: rgba(232, 184, 74, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(232, 184, 74, 0.22);
+}
+.pg-reserve-bucket-hd {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 10px 6px;
+  border-bottom: 1px solid rgba(160, 200, 255, 0.12);
+}
+.pg-reserve-bucket-kicker {
+  font-size: .65rem;
+  letter-spacing: .14em;
+  font-weight: 800;
+  color: var(--pool-c, var(--pg-muted));
+}
+.pg-reserve-bucket-name {
+  font-weight: 800;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pg-reserve-bucket-count {
+  font-size: .75rem;
+  font-weight: 800;
+  color: var(--pg-accent2);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+.pg-reserve-drop {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+  min-height: 68px;
+  flex: 1;
+  align-content: flex-start;
+}
+.pg-reserve-auto .pg-reserve-drop {
+  max-height: 148px;
+  overflow-y: auto;
+}
+.pg-reserve-pools .pg-reserve-drop {
+  max-height: 180px;
+  overflow-y: auto;
+}
+.pg-reserve-empty {
+  width: 100%;
+  color: var(--pg-muted);
+  font-size: .8rem;
+  padding: 10px 4px;
+  text-align: center;
+}
+.pg-reserve-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 5px 8px 5px 6px;
+  border-radius: 999px;
+  background: rgba(18, 48, 90, 0.9);
+  border: 1px solid rgba(160, 200, 255, 0.28);
+  cursor: grab;
+  user-select: none;
+}
+.pg-reserve-chip.is-reserved {
+  border-color: rgba(232, 184, 74, 0.5);
+  background: rgba(232, 184, 74, 0.12);
+}
+.pg-reserve-chip.is-dragging { opacity: .45; }
+.pg-reserve-chip.is-picked {
+  border-color: var(--pg-accent);
+  box-shadow: 0 0 0 2px rgba(232, 184, 74, 0.35);
+}
+.pg-reserve-chip.is-filtered { display: none; }
+.pg-reserve-chip-grip {
+  font-size: .7rem;
+  opacity: .55;
+  line-height: 1;
+}
+.pg-reserve-chip-logo,
+.pg-reserve-chip-ph {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: contain;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.08);
+}
+.pg-reserve-chip-ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .58rem;
+  font-weight: 800;
+  color: var(--pg-accent2);
+  background: rgba(232, 184, 74, 0.2);
+}
+.pg-reserve-chip-name {
+  font-size: .8rem;
+  font-weight: 700;
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pg-reserve-chip-x {
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: .85rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+.pg-reserve-chip-x:hover { background: var(--pg-danger); }
+@media (max-width: 640px) {
+  .pg-reserve-hd { flex-direction: column; }
+  .pg-reserve-hd-actions { width: 100%; }
+  .pg-reserve-search { flex: 1; width: auto; }
+}
+
 .pg-pool-board {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

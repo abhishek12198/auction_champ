@@ -240,6 +240,59 @@ class TeamPoolWizard(models.TransientModel):
         self.result_html = False
         self.pool_structure_json = False
 
+    def _normalize_reservations(self, reservations, valid_team_ids, pool_count):
+        """Return {team_id: pool_index} with 1-based pool indexes only."""
+        out = {}
+        valid = {int(i) for i in (valid_team_ids or [])}
+        raw = reservations or {}
+        if not isinstance(raw, dict):
+            return out
+        pool_count = int(pool_count or 0)
+        for key, val in raw.items():
+            try:
+                tid = int(key)
+                pidx = int(val or 0)
+            except (TypeError, ValueError):
+                continue
+            if tid not in valid or pidx < 1 or pidx > pool_count:
+                continue
+            out[tid] = pidx
+        return out
+
+    def _assign_teams_to_pools(self, teams, pool_count, reservations=None):
+        """Place reserved teams first, then auto-fill remaining teams.
+
+        reservations: optional {team_id: pool_index} (1-based). Unreserved
+        teams are shuffled into the currently smallest pools. If every team
+        is reserved the draw is fully manual.
+        """
+        teams = list(teams)
+        pool_count = int(pool_count or 0)
+        if pool_count <= 0 or pool_count > len(teams):
+            raise UserError('Invalid pool count for the selected teams.')
+        team_map = {t.id: t for t in teams}
+        reserved = self._normalize_reservations(
+            reservations, list(team_map), pool_count,
+        )
+        pools = [[] for _ in range(pool_count)]
+        placed = set()
+        for tid, pidx in reserved.items():
+            pools[pidx - 1].append(team_map[tid])
+            placed.add(tid)
+        rest = [t for t in teams if t.id not in placed]
+        random.shuffle(rest)
+        for team in rest:
+            sizes = [len(p) for p in pools]
+            min_size = min(sizes)
+            candidates = [i for i, size in enumerate(sizes) if size == min_size]
+            pools[random.choice(candidates)].append(team)
+        if any(not pool for pool in pools):
+            raise UserError(
+                'Every pool must have at least one team. '
+                'Adjust team pool preferences or the number of pools.'
+            )
+        return pools
+
     def action_generate_pools(self):
         self.ensure_one()
         teams = list(self.team_ids)
@@ -247,10 +300,11 @@ class TeamPoolWizard(models.TransientModel):
             self.result_html = '<div class="alert alert-danger">Invalid pool count.</div>'
             return
 
-        random.shuffle(teams)
-        pools = [[] for _ in range(self.pool_count)]
-        for i, team in enumerate(teams):
-            pools[i % self.pool_count].append(team)
+        try:
+            pools = self._assign_teams_to_pools(teams, self.pool_count)
+        except UserError as err:
+            self.result_html = '<div class="alert alert-danger">%s</div>' % err.args[0]
+            return
 
         # Persist structure so "Apply Names" can re-render without reshuffling
         self.pool_structure_json = json.dumps([[t.id for t in pool] for pool in pools])
@@ -901,6 +955,7 @@ class TeamPoolWizard(models.TransientModel):
                             tid for pool in structure for tid in pool
                         ],
                         'tournament_name': tname,
+                        'reservations': raw.get('reservations') or {},
                     }
                     default_pool_count = saved_pools['pool_count']
             except (ValueError, TypeError):
@@ -1087,8 +1142,12 @@ class TeamPoolWizard(models.TransientModel):
         return self._client_refresh_fixture(fix_payload)
 
     @api.model
-    def client_generate_pools(self, team_ids, pool_count, pool_names=None):
-        """Shuffle selected teams into pools and live-publish to the projector."""
+    def client_generate_pools(self, team_ids, pool_count, pool_names=None, reservations=None):
+        """Shuffle selected teams into pools and live-publish to the projector.
+
+        Optional ``reservations`` ({team_id: pool_index, 1-based}) force those
+        teams into the chosen pool before the remaining teams are auto-filled.
+        """
         team_ids = [int(t) for t in (team_ids or [])]
         pool_count = int(pool_count or 0)
         teams = list(self.env['auction.team'].browse(team_ids).exists())
@@ -1097,10 +1156,7 @@ class TeamPoolWizard(models.TransientModel):
         if len(teams) < 2:
             raise UserError('Select at least 2 teams to generate pools.')
 
-        random.shuffle(teams)
-        pools = [[] for _ in range(pool_count)]
-        for i, team in enumerate(teams):
-            pools[i % pool_count].append(team)
+        pools = self._assign_teams_to_pools(teams, pool_count, reservations)
 
         name_map = {}
         for i, name in enumerate(pool_names or [], start=1):
@@ -1144,7 +1200,8 @@ class TeamPoolWizard(models.TransientModel):
         }
 
     @api.model
-    def client_save_pools(self, structure, pool_names=None, clear_fixture=True):
+    def client_save_pools(self, structure, pool_names=None, clear_fixture=True,
+                          reservations=None):
         """Persist the current pool draw on the active tournament."""
         tournament = self._client_current_tournament()
         if not structure:
@@ -1156,6 +1213,7 @@ class TeamPoolWizard(models.TransientModel):
         pools, tournament_name = self._client_build_pools(structure, pool_names)
         if not pools:
             raise UserError('No valid teams found in this pool draw.')
+        team_ids = [tid for pool in structure for tid in pool]
         payload = {
             'structure': structure,
             'pool_names': [
@@ -1163,8 +1221,11 @@ class TeamPoolWizard(models.TransientModel):
                 for i in range(len(structure))
             ],
             'pool_count': len(structure),
-            'team_ids': [tid for pool in structure for tid in pool],
+            'team_ids': team_ids,
             'tournament_name': tournament_name,
+            'reservations': self._normalize_reservations(
+                reservations, team_ids, len(structure),
+            ),
         }
         vals = {
             'pool_draw_json': json.dumps(payload),
@@ -1207,7 +1268,8 @@ class TeamPoolWizard(models.TransientModel):
     @api.model
     def client_save_to_tournament(self, structure, pool_names=None, fixture_data=None,
                                   pool_image=None, fixture_image=None,
-                                  fixture_type='pool_rr', outside_n=1):
+                                  fixture_type='pool_rr', outside_n=1,
+                                  reservations=None):
         """Save pool + fixture data and both snapshot images on the tournament."""
         tournament = self._client_current_tournament()
         if not structure:
@@ -1217,6 +1279,7 @@ class TeamPoolWizard(models.TransientModel):
         pool_res = self.client_save_pools(
             structure, pool_names,
             clear_fixture=not (fixture_data and fixture_data.get('matches')),
+            reservations=reservations,
         )
 
         vals = {}

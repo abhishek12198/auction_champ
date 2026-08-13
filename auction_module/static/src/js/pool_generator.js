@@ -30,6 +30,8 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             'click .pg-btn-back': '_onBack',
             'change .pg-pool-count': '_onPoolCountChange',
             'input .pg-pool-name': '_onPoolNameInput',
+            'input .pg-reserve-search': '_onReserveSearch',
+            'click .pg-btn-clear-reserves': '_onClearReserves',
             'click .pg-btn-generate': '_onGeneratePools',
             'click .pg-btn-reshuffle': '_onGeneratePools',
             'click .pg-btn-apply-names': '_onApplyNames',
@@ -68,10 +70,14 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 fixtureType: 'pool_rr',
                 outsideN: 1,
                 fixture: null,
+                reservations: {},
+                reserveSearch: '',
             };
             this._dragIdx = null;
             this._revealTimer = null;
             this._revealMsgTimer = null;
+            this._reserveDragId = null;
+            this._reservePickId = null;
         },
 
         _pgRpc: function (opts) {
@@ -104,6 +110,8 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             this.state._namesFromSave = false;
             this.state.step = 1;
             this.state.search = '';
+            this.state.reservations = {};
+            this.state.reserveSearch = '';
             this._applySavedState(data);
             if (!this.state.fixtureType) {
                 this.state.fixtureType = 'pool_rr';
@@ -214,6 +222,7 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 var selected = {};
                 (saved.team_ids || []).forEach(function (id) { selected[id] = true; });
                 this.state.selected = selected;
+                this.state.reservations = saved.reservations || {};
                 this.state.step = 3;
                 this.state.outsideN = this._defaultMatchesPerTeam();
             }
@@ -240,6 +249,62 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 if (sel[id]) ids.push(parseInt(id, 10));
             });
             return ids;
+        },
+
+        _reservedPoolFor: function (teamId) {
+            var reserved = this.state.reservations || {};
+            var v = reserved[teamId];
+            if (v == null) v = reserved[String(teamId)];
+            return parseInt(v, 10) || 0;
+        },
+
+        _reservedCount: function () {
+            var self = this;
+            return this._selectedIds().filter(function (id) {
+                return self._reservedPoolFor(id) > 0;
+            }).length;
+        },
+
+        _pruneReservations: function () {
+            var ids = this._selectedIds();
+            var idSet = {};
+            ids.forEach(function (id) {
+                idSet[id] = true;
+                idSet[String(id)] = true;
+            });
+            var max = parseInt(this.state.poolCount, 10) || 0;
+            var next = {};
+            var reserved = this.state.reservations || {};
+            Object.keys(reserved).forEach(function (key) {
+                var tid = parseInt(key, 10);
+                var pidx = parseInt(reserved[key], 10) || 0;
+                if (!tid || !idSet[tid] || pidx < 1 || pidx > max) return;
+                next[tid] = pidx;
+            });
+            this.state.reservations = next;
+            return next;
+        },
+
+        _reservationPayload: function () {
+            return this._pruneReservations();
+        },
+
+        _reserveHintText: function () {
+            var ids = this._selectedIds();
+            var reservedCount = this._reservedCount();
+            if (!ids.length) return 'Select teams first.';
+            if (reservedCount === ids.length) {
+                return 'All teams reserved — this draw will be fully manual. Drag back to Auto to un-reserve.';
+            }
+            if (reservedCount) {
+                return reservedCount + ' team(s) reserved; the rest in Auto will be assigned by the generator.';
+            }
+            return 'Optional. Drag a team into a pool to lock it there. Leave teams in Auto for random placement.';
+        },
+
+        _updateReserveHint: function () {
+            this.$('.pg-reserve-hint-text').text(this._reserveHintText());
+            this.$('.pg-btn-clear-reserves').prop('disabled', !this._reservedCount());
         },
 
         _nameList: function () {
@@ -355,6 +420,10 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 '</div>',
             ].join('');
             this.$el.html(html);
+            if (this.state.step === 2) {
+                this._paintReserveBoard();
+                this._bindReserveDnD();
+            }
             if (this.state.step === 3 && this.state.structure) {
                 this._bindPoolTeamDnD();
             }
@@ -447,7 +516,8 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             return [
                 '<div class="pg-panel">',
                 '<h2 class="pg-panel-title">Configure Pools</h2>',
-                '<p class="pg-panel-hint">Set how many pools to create and optionally rename them (Blue Group, Red Group, …).</p>',
+                '<p class="pg-panel-hint">Set how many pools to create and optionally rename them (Blue Group, Red Group, …). ' +
+                    'Drag teams into a pool below to reserve them — leave the rest in Auto.</p>',
                 '<div class="pg-config-grid">',
                 '<div>',
                 '<label class="pg-field-label">Number of Pools</label>',
@@ -460,11 +530,245 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 '<label class="pg-field-label">Pool Names</label>',
                 '<div class="pg-name-list">' + names + '</div>',
                 '</div></div>',
+                this._renderReserveBlock(),
                 '<div class="pg-footer-bar">',
                 '<button type="button" class="pg-btn pg-btn-back">Back</button>',
                 '<button type="button" class="pg-btn pg-btn-primary pg-btn-generate">Generate Pools</button>',
                 '</div></div>',
             ].join('');
+        },
+
+        _renderReserveBlock: function () {
+            var reservedCount = this._reservedCount();
+            var names = this.state.poolNames || [];
+            var autoBucket = [
+                '<div class="pg-reserve-bucket pg-reserve-auto" data-pool-index="0">',
+                '<div class="pg-reserve-bucket-hd">',
+                '<span class="pg-reserve-bucket-kicker">AUTO</span>',
+                '<span class="pg-reserve-bucket-name">Generator</span>',
+                '<span class="pg-reserve-bucket-count" data-count-for="0">0</span>',
+                '</div>',
+                '<div class="pg-reserve-drop" data-pool-index="0"></div>',
+                '</div>',
+            ].join('');
+            var poolBuckets = names.map(function (p, i) {
+                var color = POOL_COLORS[i % POOL_COLORS.length];
+                return '<div class="pg-reserve-bucket" data-pool-index="' + p.index +
+                    '" style="--pool-c:' + color + '">' +
+                    '<div class="pg-reserve-bucket-hd">' +
+                    '<span class="pg-reserve-bucket-kicker">RESERVE</span>' +
+                    '<span class="pg-reserve-bucket-name">' + esc(p.custom_name || p.default_label) + '</span>' +
+                    '<span class="pg-reserve-bucket-count" data-count-for="' + p.index + '">0</span>' +
+                    '</div>' +
+                    '<div class="pg-reserve-drop" data-pool-index="' + p.index + '"></div>' +
+                    '</div>';
+            }).join('');
+            return [
+                '<div class="pg-reserve">',
+                '<div class="pg-reserve-hd">',
+                '<div>',
+                '<label class="pg-field-label">Team pool preferences</label>',
+                '<p class="pg-panel-hint pg-reserve-hint-text" style="margin:0">' +
+                    esc(this._reserveHintText()) + '</p>',
+                '</div>',
+                '<div class="pg-reserve-hd-actions">',
+                '<input class="pg-search pg-reserve-search" type="search" placeholder="Filter teams…" value="' +
+                    esc(this.state.reserveSearch || '') + '"/>',
+                '<button type="button" class="pg-btn pg-btn-clear-reserves"' +
+                    (reservedCount ? '' : ' disabled') + '>Clear preferences</button>',
+                '</div></div>',
+                '<div class="pg-reserve-board" id="pg-reserve-board">',
+                '<div class="pg-reserve-auto-wrap">' + autoBucket + '</div>',
+                '<div class="pg-reserve-pools">' + poolBuckets + '</div>',
+                '</div></div>',
+            ].join('');
+        },
+
+        _reserveChipHtml: function (t, reserved) {
+            var logo = t.logo_url
+                ? '<img class="pg-reserve-chip-logo" src="' + esc(t.logo_url) + '" alt=""/>'
+                : '<span class="pg-reserve-chip-ph">' + esc(t.initials || '?') + '</span>';
+            var unreserve = reserved
+                ? '<button type="button" class="pg-reserve-chip-x" data-team-id="' + t.id +
+                    '" title="Move to Auto" aria-label="Move to Auto">×</button>'
+                : '';
+            return '<div class="pg-reserve-chip' + (reserved ? ' is-reserved' : '') +
+                '" draggable="true" data-team-id="' + t.id + '" title="' + esc(t.name) + '">' +
+                '<span class="pg-reserve-chip-grip" aria-hidden="true">⠿</span>' +
+                logo +
+                '<span class="pg-reserve-chip-name">' + esc(t.name) + '</span>' +
+                unreserve + '</div>';
+        },
+
+        _paintReserveBoard: function () {
+            var self = this;
+            var board = this.el && this.el.querySelector('#pg-reserve-board');
+            if (!board) return;
+            var ids = this._selectedIds();
+            var teamById = {};
+            (this.state.teams || []).forEach(function (t) { teamById[t.id] = t; });
+            var buckets = {};
+            Array.prototype.forEach.call(board.querySelectorAll('.pg-reserve-drop'), function (el) {
+                var idx = parseInt(el.getAttribute('data-pool-index'), 10) || 0;
+                buckets[idx] = el;
+                el.innerHTML = '';
+            });
+            ids.forEach(function (id) {
+                var t = teamById[id] || {id: id, name: 'Team #' + id, initials: '?'};
+                var pidx = self._reservedPoolFor(id);
+                var target = buckets[pidx] || buckets[0];
+                if (target) {
+                    target.insertAdjacentHTML('beforeend', self._reserveChipHtml(t, pidx > 0));
+                }
+            });
+            Object.keys(buckets).forEach(function (key) {
+                var el = buckets[key];
+                var n = el.querySelectorAll('.pg-reserve-chip').length;
+                var countEl = board.querySelector('[data-count-for="' + key + '"]');
+                if (countEl) countEl.textContent = String(n);
+                if (!n) {
+                    var empty = document.createElement('div');
+                    empty.className = 'pg-reserve-empty';
+                    if (!ids.length) {
+                        empty.textContent = 'No teams selected';
+                    } else if (Number(key) === 0) {
+                        empty.textContent = 'All reserved — drop here to un-reserve';
+                    } else {
+                        empty.textContent = 'Drop teams here to reserve';
+                    }
+                    el.appendChild(empty);
+                }
+            });
+            if (this._reservePickId) {
+                var picked = board.querySelector(
+                    '.pg-reserve-chip[data-team-id="' + this._reservePickId + '"]'
+                );
+                if (picked) picked.classList.add('is-picked');
+            }
+            this._updateReserveHint();
+            this._filterReserveChips();
+        },
+
+        _filterReserveChips: function () {
+            var q = (this.state.reserveSearch || '').toLowerCase();
+            this.$('.pg-reserve-chip').each(function () {
+                var name = ($(this).attr('title') || '').toLowerCase();
+                $(this).toggleClass('is-filtered', !!q && name.indexOf(q) === -1);
+            });
+        },
+
+        _setTeamReservation: function (teamId, poolIndex) {
+            teamId = parseInt(teamId, 10);
+            poolIndex = parseInt(poolIndex, 10) || 0;
+            if (!teamId) return false;
+            if (!this.state.reservations) this.state.reservations = {};
+            var prev = this._reservedPoolFor(teamId);
+            if (prev === poolIndex) return false;
+            if (poolIndex < 1) {
+                delete this.state.reservations[teamId];
+                delete this.state.reservations[String(teamId)];
+            } else {
+                this.state.reservations[teamId] = poolIndex;
+            }
+            this._paintReserveBoard();
+            return true;
+        },
+
+        _bindReserveDnD: function () {
+            var self = this;
+            var board = this.el && this.el.querySelector('#pg-reserve-board');
+            if (!board || board._pgReserveBound) return;
+            board._pgReserveBound = true;
+
+            function clearOver() {
+                Array.prototype.forEach.call(
+                    board.querySelectorAll('.is-over, .is-dragging'),
+                    function (n) { n.classList.remove('is-over', 'is-dragging'); }
+                );
+                board.classList.remove('is-dnd');
+            }
+
+            function dropIndexFrom(el) {
+                if (!el || !el.closest) return null;
+                var drop = el.closest('.pg-reserve-drop, .pg-reserve-bucket');
+                if (!drop || !board.contains(drop)) return null;
+                var idx = drop.getAttribute('data-pool-index');
+                if (idx == null) return null;
+                return parseInt(idx, 10) || 0;
+            }
+
+            board.addEventListener('dragstart', function (ev) {
+                if (ev.target.closest && ev.target.closest('.pg-reserve-chip-x')) {
+                    ev.preventDefault();
+                    return;
+                }
+                var chip = ev.target.closest && ev.target.closest('.pg-reserve-chip');
+                if (!chip || !board.contains(chip)) return;
+                var teamId = parseInt(chip.getAttribute('data-team-id'), 10);
+                self._reserveDragId = teamId;
+                chip.classList.add('is-dragging');
+                board.classList.add('is-dnd');
+                try {
+                    ev.dataTransfer.effectAllowed = 'move';
+                    ev.dataTransfer.setData('text/plain', String(teamId));
+                    if (ev.dataTransfer.setDragImage) {
+                        ev.dataTransfer.setDragImage(chip, 20, 16);
+                    }
+                } catch (e) { /* ignore */ }
+            });
+            board.addEventListener('dragend', function () {
+                clearOver();
+                self._reserveDragId = null;
+            });
+            board.addEventListener('dragover', function (ev) {
+                if (self._reserveDragId == null) return;
+                var idx = dropIndexFrom(ev.target);
+                if (idx == null) return;
+                ev.preventDefault();
+                try { ev.dataTransfer.dropEffect = 'move'; } catch (e) { /* ignore */ }
+                Array.prototype.forEach.call(
+                    board.querySelectorAll('.pg-reserve-bucket.is-over'),
+                    function (n) { n.classList.remove('is-over'); }
+                );
+                var bucket = ev.target.closest && ev.target.closest('.pg-reserve-bucket');
+                if (bucket) bucket.classList.add('is-over');
+            });
+            board.addEventListener('drop', function (ev) {
+                var idx = dropIndexFrom(ev.target);
+                var teamId = self._reserveDragId;
+                clearOver();
+                if (idx == null || teamId == null) return;
+                ev.preventDefault();
+                self._setTeamReservation(teamId, idx);
+                self._reserveDragId = null;
+                self._reservePickId = null;
+            });
+            board.addEventListener('click', function (ev) {
+                var xbtn = ev.target.closest && ev.target.closest('.pg-reserve-chip-x');
+                if (xbtn && board.contains(xbtn)) {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    self._reservePickId = null;
+                    self._setTeamReservation(xbtn.getAttribute('data-team-id'), 0);
+                    return;
+                }
+                var chip = ev.target.closest && ev.target.closest('.pg-reserve-chip');
+                if (chip && board.contains(chip)) {
+                    var teamId = parseInt(chip.getAttribute('data-team-id'), 10);
+                    self._reservePickId = self._reservePickId === teamId ? null : teamId;
+                    Array.prototype.forEach.call(board.querySelectorAll('.pg-reserve-chip'), function (n) {
+                        n.classList.toggle(
+                            'is-picked',
+                            parseInt(n.getAttribute('data-team-id'), 10) === self._reservePickId
+                        );
+                    });
+                    return;
+                }
+                var idx = dropIndexFrom(ev.target);
+                if (idx == null || self._reservePickId == null) return;
+                self._setTeamReservation(self._reservePickId, idx);
+                self._reservePickId = null;
+            });
         },
 
         _renderPools: function () {
@@ -641,6 +945,10 @@ odoo.define('auction_module.PoolGenerator', function (require) {
         _onToggleTeam: function (ev) {
             var id = $(ev.currentTarget).data('id');
             this.state.selected[id] = !this.state.selected[id];
+            if (!this.state.selected[id] && this.state.reservations) {
+                delete this.state.reservations[id];
+                delete this.state.reservations[String(id)];
+            }
             this._render();
         },
         _onSelectAll: function () {
@@ -657,6 +965,7 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                     title: 'Clear',
                     confirm_callback: function () {
                         self.state.selected = {};
+                        self.state.reservations = {};
                         self.state.structure = null;
                         self.state.pools = [];
                         self.state.fixture = null;
@@ -700,6 +1009,7 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             var max = Math.max(1, this._selectedIds().length);
             n = Math.max(1, Math.min(max, n));
             this.state.poolCount = n;
+            this._pruneReservations();
             this._loadPoolNames(n).then(function () { self._render(); });
         },
         _onPoolNameInput: function (ev) {
@@ -708,6 +1018,18 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             this.state.poolNames.forEach(function (p) {
                 if (p.index === idx) p.custom_name = val;
             });
+            var row = this.state.poolNames.filter(function (p) { return p.index === idx; })[0];
+            var label = (val || '').trim() || (row && row.default_label) || ('Pool ' + idx);
+            this.$('.pg-reserve-bucket[data-pool-index="' + idx + '"] .pg-reserve-bucket-name').text(label);
+        },
+        _onReserveSearch: function (ev) {
+            this.state.reserveSearch = ev.currentTarget.value || '';
+            this._filterReserveChips();
+        },
+        _onClearReserves: function () {
+            this.state.reservations = {};
+            this._reservePickId = null;
+            this._paintReserveBoard();
         },
         _onGeneratePools: function () {
             var self = this;
@@ -717,11 +1039,13 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 return;
             }
             if (this.state.revealing) return;
+            var reservations = this._reservationPayload();
+            var reservedCount = this._reservedCount();
             this._showRevealLoading('pools');
             var rpc = this._pgRpc({
                 model: 'auction.team.pool.wizard',
                 method: 'client_generate_pools',
-                args: [ids, this.state.poolCount, this._nameList()],
+                args: [ids, this.state.poolCount, this._nameList(), reservations],
             });
             Promise.all([rpc, this._waitReveal(5000)]).then(function (pair) {
                 var res = pair[0];
@@ -733,7 +1057,13 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 self.state.outsideN = self._defaultMatchesPerTeam();
                 self.state.step = 3;
                 self._render();
-                self._toast('Pools generated');
+                var toast = 'Pools generated';
+                if (reservedCount === ids.length) {
+                    toast = 'Manual pool assignment applied';
+                } else if (reservedCount) {
+                    toast = reservedCount + ' team(s) reserved · rest auto-assigned';
+                }
+                self._toast(toast);
             }).catch(function (err) {
                 self._hideRevealLoading();
                 Dialog.alert(self, (err && err.data && err.data.message) || 'Failed to generate pools');
@@ -1420,6 +1750,7 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                         pair[1] || false,
                         self.state.fixtureType,
                         self.state.outsideN,
+                        self._reservationPayload(),
                     ],
                 });
             }).then(function (res) {
