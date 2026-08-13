@@ -38,7 +38,7 @@
 
 {
     'name' : 'Auction Champ',
-    'version' : '1.5.486',
+    'version' : '1.5.494',
     'summary': 'Sports Auction module',
     'sequence': 10,
     'icon': '/auction_module/static/description/icon.png',
@@ -72,6 +72,7 @@
         'wizard/action_set_key_player_view.xml',
         'views/auction_player_modal_template.xml',
         'views/auction_team_player.xml',
+        'views/auction_team_player_deleted_view.xml',
         'views/auction_team_players_template.xml',
         'views/auction_team_players_template_pistah.xml',
         'views/auction_team_players_template_blackberry.xml',
@@ -138,6 +139,7 @@
         'wizard/auction_team_upload_wizard_view.xml',
         'wizard/auction_player_stage_export_wizard_view.xml',
         'wizard/expose_contact_privacy_wizard_view.xml',
+        'wizard/player_restore_wizard_view.xml',
         'views/auction_status_template.xml',
         'views/page_not_found.xml',
         'views/player_registration_form.xml',

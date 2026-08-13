@@ -878,3 +878,8 @@
 .o_tps_jersey { border-color: #6f42c1; background: #f8f4ff; }
 .o_tps_jersey_icon { font-size: 1.6rem; color: #5a32a3; }
 .o_tps_jersey .o_tps_label { color: #5a32a3; }
+
+/* Deleted / recycle bin */
+.o_tps_deleted { border-color: #6c757d; background: #f8f9fa; }
+.o_tps_deleted .o_tps_count { color: #495057; }
+.o_tps_deleted .o_tps_label { color: #495057; }

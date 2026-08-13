@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_auction_team_player_restore_wizard_form" model="ir.ui.view">
+        <field name="name">auction.team.player.restore.wizard.form</field>
+        <field name="model">auction.team.player.restore.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Restore Players — Duplicate Found">
+                <field name="warning_html" nolabel="1" colspan="2"/>
+                <separator string="Players to restore"/>
+                <field name="deleted_player_ids" nolabel="1" colspan="2">
+                    <tree create="0" delete="0">
+                        <field name="original_sl_no" string="Old Sl No"/>
+                        <field name="name"/>
+                        <field name="contact"/>
+                        <field name="state_at_delete"/>
+                    </tree>
+                </field>
+                <footer>
+                    <button name="action_confirm_restore"
+                            type="object"
+                            string="Continue Restore"
+                            class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

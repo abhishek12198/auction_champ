@@ -330,6 +330,43 @@ class AuctionTeamPlayer(models.Model):
         """)
 
     @api.model
+    def _get_next_tournament_sl_no(self, tournament_id):
+        """Next serial number for a tournament (includes archived players)."""
+        if tournament_id:
+            self.env.cr.execute(
+                "SELECT COALESCE(MAX(sl_no), 0) FROM auction_team_player "
+                "WHERE tournament_id = %s",
+                (tournament_id,),
+            )
+            return (self.env.cr.fetchone()[0] or 0) + 1
+        last = self.with_context(active_test=False).search(
+            [], limit=1, order='sl_no desc',
+        )
+        return (last.sl_no or 0) + 1
+
+    @api.model
+    def _sl_no_taken_in_tournament(self, tournament_id, sl_no):
+        """True if any live player (draft / auction / sold / unsold) has this serial."""
+        if not tournament_id or not sl_no:
+            return True
+        return bool(self.with_context(active_test=False).search_count([
+            ('tournament_id', '=', tournament_id),
+            ('sl_no', '=', sl_no),
+            ('state', 'in', ('draft', 'auction', 'sold', 'unsold')),
+        ]))
+
+    @api.model
+    def _get_restore_sl_no(self, tournament_id, original_sl_no):
+        """Reuse the old serial if it is free in this tournament; else next number."""
+        try:
+            original = int(original_sl_no or 0)
+        except (TypeError, ValueError):
+            original = 0
+        if original > 0 and not self._sl_no_taken_in_tournament(tournament_id, original):
+            return original
+        return self._get_next_tournament_sl_no(tournament_id)
+
+    @api.model
     def default_get(self, fields):
         defaults = super(AuctionTeamPlayer, self).default_get(fields)
         last_record = self.search([],limit=1, order='sl_no desc')
@@ -1629,6 +1666,12 @@ class AuctionTeamPlayer(models.Model):
         if 'tournament_id' in vals:
             self._sync_other_attributes_from_tournament()
         return res
+
+    def unlink(self):
+        """Delete the live player after copying it to the tournament recycle bin."""
+        if self and not self.env.context.get('skip_player_delete_archive'):
+            self.env['auction.team.player.deleted'].sudo()._archive_players(self)
+        return super(AuctionTeamPlayer, self).unlink()
 
     def get_icon_players(self, team_id):
         players_domain = [('icon_player', '=', True), ('assigned_team_id', '=', team_id)]

@@ -60,7 +60,7 @@
                                 type="object"
                                 string="Deactivate Tournament"
                                 class="btn-danger"
-                                confirm="This will archive the tournament and ALL its related records (players, teams, auctions, history). This cannot be undone easily. Are you sure?"
+                                confirm="This will archive the tournament and ALL its related records (players, teams, auctions, history), and permanently delete Deleted Players for this tournament. This cannot be undone easily. Are you sure?"
                                 attrs="{'invisible': [('active', '=', False)]}"/>
                         <button name="action_remove_duplicates"
                                 type="object"
@@ -161,6 +161,13 @@
                                         of <field name="max_registrations" nolabel="1" style="display:inline"/> max
                                     </span>
                                 </div>
+                            </button>
+                            <button class="oe_stat_button" type="object"
+                                    name="action_view_deleted_players"
+                                    icon="fa-trash"
+                                    help="View deleted players for this tournament and restore them if needed">
+                                <field name="deleted_player_count" widget="statinfo"
+                                       string="Deleted"/>
                             </button>
                             <!-- Remove duplicate players -->
                             <!-- Clear On-Stage Players -->
@@ -341,7 +348,56 @@
                                         </span>
                                         <span class="o_tps_label">Jersey</span>
                                     </button>
+                                    <button type="object" name="action_view_deleted_players"
+                                            class="o_tps_btn o_tps_deleted">
+                                        <span class="o_tps_count">
+                                            <field name="deleted_player_count" nolabel="1"/>
+                                        </span>
+                                        <span class="o_tps_label">Deleted</span>
+                                    </button>
                                 </div>
+                            </page>
+
+                            <page string="Deleted Players" name="deleted_players">
+                                <separator string="Deleted Players (recycle bin)"/>
+                                <p class="text-muted">
+                                    Players deleted from this tournament. Restore brings them back
+                                    with the next serial number. Use Restore All, or open the list
+                                    (Deleted chip) to multi-select and restore.
+                                </p>
+                                <button name="action_restore_all_deleted_players"
+                                        type="object"
+                                        string="Restore All Pending"
+                                        icon="fa-undo"
+                                        class="btn-primary"
+                                        confirm="Restore all pending deleted players for this tournament? Each will get the next serial number. Continue?"
+                                        attrs="{'invisible': [('deleted_player_count', '=', 0)]}"/>
+                                <field name="deleted_player_ids" nolabel="1"
+                                       context="{'restore_from_tournament': 1}">
+                                    <tree create="0" delete="0" edit="0"
+                                          decoration-muted="is_restored"
+                                          decoration-info="not is_restored"
+                                          default_order="deleted_date desc, id desc">
+                                        <field name="photo" widget="image" options="{'size': [32, 32]}"/>
+                                        <field name="original_sl_no" string="Old Sl No"/>
+                                        <field name="name"/>
+                                        <field name="contact"/>
+                                        <field name="state_at_delete"/>
+                                        <field name="tier_id"/>
+                                        <field name="deleted_date"/>
+                                        <field name="deleted_by_id"/>
+                                        <field name="is_restored"/>
+                                        <field name="restored_sl_no" string="New Sl No"/>
+                                        <field name="restored_date"/>
+                                        <field name="restored_by_id"/>
+                                        <button name="action_restore_player"
+                                                type="object"
+                                                string="Restore"
+                                                icon="fa-undo"
+                                                class="oe_highlight"
+                                                attrs="{'invisible': [('is_restored', '=', True)]}"/>
+                                    </tree>
+                                </field>
                             </page>
 
                             <!-- Teams & Tiers -->

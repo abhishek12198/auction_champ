@@ -147,6 +147,13 @@
           sequence="7"
           groups="auction_module.group_auction_group"/>
 
+        <menuitem id="menu_action_auction_deleted_players"
+          name="Deleted Players"
+          parent="menu_action_auction_player"
+          action="action_auction_team_player_deleted"
+          sequence="8"
+          groups="auction_module.group_auction_group"/>
+
         <menuitem id="menu_action_auction_pdf_to_png"
           name="Convert PDF to PNG"
           parent="menu_action_auction_player"

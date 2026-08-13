@@ -526,6 +526,15 @@ class AuctionTournament(models.Model):
         compute='_compute_player_state_counts',
         store=False,
     )
+    deleted_player_ids = fields.One2many(
+        'auction.team.player.deleted', 'tournament_id',
+        string='Deleted Players',
+    )
+    deleted_player_count = fields.Integer(
+        string='Deleted Players',
+        compute='_compute_deleted_player_count',
+        help='Players deleted from this tournament that have not been restored yet.',
+    )
     registration_url = fields.Char(
         string='Player Registration URL',
         compute='_compute_urls',
@@ -616,6 +625,19 @@ class AuctionTournament(models.Model):
             rec.auction_player_count    = c.get('auction', 0)
             rec.sold_player_count       = c.get('sold', 0)
             rec.unsold_player_count     = c.get('unsold', 0)
+
+    def _compute_deleted_player_count(self):
+        groups = self.env['auction.team.player.deleted'].sudo().read_group(
+            [('tournament_id', 'in', self.ids), ('is_restored', '=', False)],
+            ['tournament_id'],
+            ['tournament_id'],
+        )
+        counts = {
+            g['tournament_id'][0]: g['tournament_id_count']
+            for g in groups if g.get('tournament_id')
+        }
+        for rec in self:
+            rec.deleted_player_count = counts.get(rec.id, 0)
 
     @api.depends('name')
     @api.depends('logo')
@@ -1310,6 +1332,30 @@ class AuctionTournament(models.Model):
     def action_view_unsold_players(self):
         return self._player_state_action('unsold', 'Unsold Players')
 
+    def action_view_deleted_players(self):
+        """Open the recycle bin of deleted players for this tournament."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Deleted Players — %s') % self.name,
+            'res_model': 'auction.team.player.deleted',
+            'view_mode': 'tree,form',
+            'domain': [('tournament_id', '=', self.id)],
+            'context': {
+                'default_tournament_id': self.id,
+                'search_default_to_restore': 1,
+                'restore_from_tournament': 1,
+            },
+        }
+
+    def action_restore_all_deleted_players(self):
+        """Restore every pending deleted player for this tournament."""
+        self.ensure_one()
+        pending = self.deleted_player_ids.filtered(lambda r: not r.is_restored)
+        if not pending:
+            raise UserError(_('There are no deleted players waiting to restore.'))
+        return pending.with_context(restore_from_tournament=True).action_restore_player()
+
     def action_set_auction_rules(self):
         """Open the Auction Rules wizard scoped to this tournament."""
         self.ensure_one()
@@ -1410,44 +1456,52 @@ class AuctionTournament(models.Model):
         """Archive the tournament and all its related records.
 
         Archives in order:
-          1. Players   (auction.team.player)
-          2. Auctions  (auction.auction)
-          3. History   (auction.history)
-          4. Teams     (auction.team)
-          5. Advertisers/Sponsors (auction.advertiser)
-          6. The tournament itself
+          1. Hard-delete deleted-player recycle bin (auction.team.player.deleted)
+          2. Players   (auction.team.player)
+          3. Auctions  (auction.auction)
+          4. History   (auction.history)
+          5. Teams     (auction.team)
+          6. Advertisers/Sponsors (auction.advertiser)
+          7. The tournament itself
 
         Uses sudo() throughout so the operation succeeds regardless of
         which user triggers it (organizer vs admin).
         """
         for rec in self:
-            # 1. Players
+            # 1. Recycle bin is no longer needed after deactivation — hard delete
+            deleted_players = self.env['auction.team.player.deleted'].sudo().search([
+                ('tournament_id', '=', rec.id),
+            ])
+            if deleted_players:
+                deleted_players.unlink()
+
+            # 2. Players
             self.env['auction.team.player'].sudo().with_context(active_test=False).search([
                 ('tournament_id', '=', rec.id),
             ]).write({'active': False})
 
-            # 2. Auction (team auction records — also covers bid slabs / tier limits
+            # 3. Auction (team auction records — also covers bid slabs / tier limits
             #    through their parent being inactive)
             self.env['auction.auction'].sudo().with_context(active_test=False).search([
                 ('tournament_id', '=', rec.id),
             ]).write({'active': False})
 
-            # 3. Auction history
+            # 4. Auction history
             self.env['auction.history'].sudo().with_context(active_test=False).search([
                 ('tournament_id', '=', rec.id),
             ]).write({'active': False})
 
-            # 4. Teams
+            # 5. Teams
             self.env['auction.team'].sudo().with_context(active_test=False).search([
                 ('tournament_id', '=', rec.id),
             ]).write({'active': False})
 
-            # 5. Advertisers / sponsors
+            # 6. Advertisers / sponsors
             self.env['auction.advertiser'].sudo().with_context(active_test=False).search([
                 ('tournament_id', '=', rec.id),
             ]).write({'active': False})
 
-            # 6. Archive the tournament itself
+            # 7. Archive the tournament itself
             rec.sudo().write({'active': False})
 
         return {

@@ -118,6 +118,12 @@ access_auction_player_stage_export_wizard_user,auction.player.stage.export.wizar
 access_auction_player_stage_export_wizard_admin,auction.player.stage.export.wizard (admin),auction_module.model_auction_player_stage_export_wizard,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_expose_contact_privacy_wizard_user,auction.expose.contact.privacy.wizard (user),auction_module.model_auction_expose_contact_privacy_wizard,auction_module.group_auction_group,1,1,1,1
 access_auction_expose_contact_privacy_wizard_admin,auction.expose.contact.privacy.wizard (admin),auction_module.model_auction_expose_contact_privacy_wizard,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_team_player_deleted_user,auction.team.player.deleted (user),auction_module.model_auction_team_player_deleted,auction_module.group_auction_group,1,1,1,0
+access_auction_team_player_restore_wizard_user,auction.team.player.restore.wizard (user),auction_module.model_auction_team_player_restore_wizard,auction_module.group_auction_group,1,1,1,1
+access_auction_team_player_restore_wizard_admin,auction.team.player.restore.wizard (admin),auction_module.model_auction_team_player_restore_wizard,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_team_player_restore_wizard_setup,auction.team.player.restore.wizard (setup),auction_module.model_auction_team_player_restore_wizard,auction_module.group_auction_player_setup,1,1,1,1
+access_auction_team_player_deleted_admin,auction.team.player.deleted (admin),auction_module.model_auction_team_player_deleted,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_team_player_deleted_setup,auction.team.player.deleted (setup),auction_module.model_auction_team_player_deleted,auction_module.group_auction_player_setup,1,1,1,0
 access_auction_point_unit_user,auction.point.unit (user),auction_module.model_auction_point_unit,auction_module.group_auction_group,1,0,0,0
 access_auction_point_unit_admin,auction.point.unit (admin),auction_module.model_auction_point_unit,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_point_unit_public,auction.point.unit (public),auction_module.model_auction_point_unit,base.group_public,1,0,0,0
