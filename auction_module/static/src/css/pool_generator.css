@@ -552,6 +552,7 @@
   border-radius: 999px;
   background: rgba(18, 48, 90, 0.9);
   border: 1px solid rgba(160, 200, 255, 0.28);
+  color: #ffffff;
   cursor: grab;
   user-select: none;
 }
@@ -595,6 +596,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: #ffffff;
 }
 .pg-reserve-chip-x {
   width: 18px;
