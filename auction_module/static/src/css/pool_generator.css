@@ -360,18 +360,77 @@
 }
 .pg-input:focus, .pg-select:focus { border-color: rgba(232,184,74,.5); }
 .pg-name-list { display: flex; flex-direction: column; gap: 8px; }
+.pg-name-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.pg-name-hd .pg-field-label { margin-bottom: 0; }
+.pg-name-hd .pg-btn { flex-shrink: 0; padding: 6px 10px; font-size: .75rem; min-height: 0; }
+.pg-name-cols,
 .pg-name-row {
   display: grid;
-  grid-template-columns: 64px 1fr;
+  grid-template-columns: 72px minmax(140px, 240px) 68px;
   gap: 8px;
   align-items: center;
+  justify-content: start;
 }
+.pg-name-cols {
+  margin-bottom: 4px;
+}
+.pg-name-cols span {
+  font-size: .62rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: var(--pg-muted);
+  line-height: 1;
+}
+.pg-name-cols span:last-child { text-align: center; }
 .pg-name-idx {
   font-size: .75rem;
   font-weight: 800;
   letter-spacing: .08em;
   color: var(--pg-accent);
   text-align: center;
+}
+.pg-name-row .pg-pool-name,
+.pg-name-row .pg-pool-size {
+  height: 42px;
+  min-height: 42px;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  line-height: 1.2;
+}
+.pg-pool-size {
+  width: 100%;
+  text-align: center;
+  font-weight: 800;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.pg-size-hint {
+  margin-top: 8px;
+  font-size: .82rem;
+  color: var(--pg-muted);
+}
+.pg-size-hint b { color: var(--pg-tx); font-weight: 800; }
+.pg-size-hint.is-bad { color: var(--pg-danger); }
+.pg-size-hint.is-bad b { color: var(--pg-danger); }
+.pg-reserve-bucket.is-full .pg-reserve-bucket-count {
+  color: var(--pg-ok);
+}
+.pg-reserve-bucket.is-overfull {
+  border-color: var(--pg-danger);
+}
+.pg-reserve-bucket.is-overfull .pg-reserve-bucket-count {
+  color: var(--pg-danger);
+}
+.pg-reserve-more {
+  padding: 4px 0 0;
+  font-size: .72rem;
 }
 
 .pg-reserve {
@@ -1660,7 +1719,16 @@
     min-height: 44px;
     max-width: 100%;
   }
-  .pg-name-row { grid-template-columns: 48px 1fr; gap: 6px; }
+  .pg-name-cols,
+  .pg-name-row {
+    grid-template-columns: 56px minmax(0, 1fr) 64px;
+    gap: 6px;
+  }
+  .pg-name-row .pg-pool-name,
+  .pg-name-row .pg-pool-size {
+    height: 44px;
+    min-height: 44px;
+  }
 
   /* Footer in normal flow — never cover content with blur overlay */
   .pg-footer-bar {

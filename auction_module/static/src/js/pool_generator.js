@@ -30,6 +30,8 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             'click .pg-btn-back': '_onBack',
             'change .pg-pool-count': '_onPoolCountChange',
             'input .pg-pool-name': '_onPoolNameInput',
+            'change .pg-pool-size': '_onPoolSizeChange',
+            'click .pg-btn-equal-sizes': '_onEqualPoolSizes',
             'input .pg-reserve-search': '_onReserveSearch',
             'click .pg-btn-clear-reserves': '_onClearReserves',
             'click .pg-btn-generate': '_onGeneratePools',
@@ -72,6 +74,8 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 fixture: null,
                 reservations: {},
                 reserveSearch: '',
+                poolSizes: [],
+                _poolSizeKey: '',
             };
             this._dragIdx = null;
             this._revealTimer = null;
@@ -112,6 +116,8 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             this.state.search = '';
             this.state.reservations = {};
             this.state.reserveSearch = '';
+            this.state.poolSizes = [];
+            this.state._poolSizeKey = '';
             this._applySavedState(data);
             if (!this.state.fixtureType) {
                 this.state.fixtureType = 'pool_rr';
@@ -223,6 +229,10 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 (saved.team_ids || []).forEach(function (id) { selected[id] = true; });
                 this.state.selected = selected;
                 this.state.reservations = saved.reservations || {};
+                this.state.poolSizes = (saved.pool_sizes || saved.structure.map(function (p) {
+                    return (p || []).length;
+                })).map(function (n) { return parseInt(n, 10) || 0; });
+                this.state._poolSizeKey = (saved.team_ids || []).length + ':' + this.state.poolCount;
                 this.state.step = 3;
                 this.state.outsideN = this._defaultMatchesPerTeam();
             }
@@ -287,6 +297,87 @@ odoo.define('auction_module.PoolGenerator', function (require) {
 
         _reservationPayload: function () {
             return this._pruneReservations();
+        },
+
+        _evenSplit: function (total, parts) {
+            total = parseInt(total, 10) || 0;
+            parts = parseInt(parts, 10) || 0;
+            if (parts <= 0) return [];
+            var base = Math.floor(Math.max(total, 0) / parts);
+            var rem = Math.max(total, 0) % parts;
+            var out = [];
+            for (var i = 0; i < parts; i++) {
+                out.push(base + (i < rem ? 1 : 0));
+            }
+            return out;
+        },
+
+        _syncPoolSizes: function (opts) {
+            opts = opts || {};
+            var total = this._selectedIds().length;
+            var parts = parseInt(this.state.poolCount, 10) || 0;
+            var key = total + ':' + parts;
+            if (opts.reset || this.state._poolSizeKey !== key || !(this.state.poolSizes || []).length) {
+                this.state.poolSizes = this._evenSplit(total, parts);
+                this.state._poolSizeKey = key;
+            }
+            return this.state.poolSizes;
+        },
+
+        _poolSizeList: function () {
+            this._syncPoolSizes();
+            return (this.state.poolSizes || []).map(function (n) {
+                return parseInt(n, 10) || 0;
+            });
+        },
+
+        _poolSizeSum: function (sizes) {
+            return (sizes || this.state.poolSizes || []).reduce(function (sum, n) {
+                return sum + (parseInt(n, 10) || 0);
+            }, 0);
+        },
+
+        _poolSizeFor: function (index1) {
+            var sizes = this.state.poolSizes || [];
+            return parseInt(sizes[index1 - 1], 10) || 0;
+        },
+
+        _poolSizesValid: function () {
+            var sizes = this.state.poolSizes || [];
+            var total = this._selectedIds().length;
+            var parts = parseInt(this.state.poolCount, 10) || 0;
+            if (!parts || sizes.length !== parts) return false;
+            if (sizes.some(function (n) { return (parseInt(n, 10) || 0) < 1; })) return false;
+            return this._poolSizeSum(sizes) === total;
+        },
+
+        _poolSizeHintHtml: function () {
+            this._syncPoolSizes();
+            var sizes = this.state.poolSizes || [];
+            var total = this._selectedIds().length;
+            var sum = this._poolSizeSum(sizes);
+            var valid = this._poolSizesValid();
+            var expr = sizes.length ? sizes.join(' + ') : '0';
+            return (valid
+                ? 'Teams per pool: <b>' + esc(expr) + '</b> = ' + sum + ' / ' + total
+                : 'Teams per pool: <b>' + esc(expr) + '</b> = ' + sum + ' / ' + total +
+                    ' — must equal selected teams, min 1 each');
+        },
+
+        _updatePoolSizeHint: function () {
+            var $hint = this.$('.pg-size-hint');
+            if ($hint.length) {
+                $hint.toggleClass('is-bad', !this._poolSizesValid())
+                    .html(this._poolSizeHintHtml());
+            }
+            var valid = this._poolSizesValid() && this._selectedIds().length >= 2;
+            this.$('.pg-btn-generate').prop('disabled', !valid);
+            var self = this;
+            this.$('.pg-pool-size').each(function () {
+                var idx = parseInt($(this).data('index'), 10);
+                var val = self._poolSizeFor(idx);
+                if (String($(this).val()) !== String(val)) $(this).val(val);
+            });
         },
 
         _reserveHintText: function () {
@@ -506,39 +597,59 @@ odoo.define('auction_module.PoolGenerator', function (require) {
         },
 
         _renderConfig: function () {
+            this._syncPoolSizes();
+            var self = this;
+            var total = this._selectedIds().length;
+            var parts = parseInt(this.state.poolCount, 10) || 1;
+            var maxPerPool = Math.max(1, total - (parts - 1));
             var names = this.state.poolNames.map(function (p) {
                 return '<div class="pg-name-row">' +
                     '<span class="pg-name-idx">' + esc(p.default_label) + '</span>' +
                     '<input class="pg-input pg-pool-name" data-index="' + p.index + '" ' +
                     'value="' + esc(p.custom_name || '') + '" placeholder="' + esc(p.default_label) + '"/>' +
+                    '<input class="pg-input pg-pool-size" type="number" min="1" max="' + maxPerPool +
+                    '" data-index="' + p.index + '" value="' + self._poolSizeFor(p.index) +
+                    '" title="Teams in this pool" aria-label="Teams in ' +
+                    esc(p.custom_name || p.default_label) + '"/>' +
                     '</div>';
             }).join('');
+            var sizeValid = this._poolSizesValid();
             return [
                 '<div class="pg-panel">',
                 '<h2 class="pg-panel-title">Configure Pools</h2>',
-                '<p class="pg-panel-hint">Set how many pools to create and optionally rename them (Blue Group, Red Group, …). ' +
-                    'Drag teams into a pool below to reserve them — leave the rest in Auto.</p>',
+                '<p class="pg-panel-hint">Set how many pools to create, rename them, and choose how many teams each pool gets. ' +
+                    'Defaults to an even split. Drag teams into a pool below to reserve them — leave the rest in Auto.</p>',
                 '<div class="pg-config-grid">',
                 '<div>',
                 '<label class="pg-field-label">Number of Pools</label>',
                 '<input class="pg-input pg-pool-count" type="number" min="1" max="' +
-                    Math.max(1, this._selectedIds().length) + '" value="' + this.state.poolCount + '"/>',
+                    Math.max(1, total) + '" value="' + this.state.poolCount + '"/>',
                 '<div style="margin-top:10px" class="pg-stat-pill">Selected teams <b>' +
-                    this._selectedIds().length + '</b></div>',
+                    total + '</b></div>',
                 '</div>',
                 '<div>',
-                '<label class="pg-field-label">Pool Names</label>',
+                '<div class="pg-name-hd">',
+                '<label class="pg-field-label">Pool Names &amp; Sizes</label>',
+                '<button type="button" class="pg-btn pg-btn-equal-sizes">Split equally</button>',
+                '</div>',
+                '<div class="pg-name-cols" aria-hidden="true">' +
+                    '<span></span><span>Name</span><span>Teams</span>' +
+                '</div>',
                 '<div class="pg-name-list">' + names + '</div>',
+                '<div class="pg-size-hint' + (sizeValid ? '' : ' is-bad') + '">' +
+                    this._poolSizeHintHtml() + '</div>',
                 '</div></div>',
                 this._renderReserveBlock(),
                 '<div class="pg-footer-bar">',
                 '<button type="button" class="pg-btn pg-btn-back">Back</button>',
-                '<button type="button" class="pg-btn pg-btn-primary pg-btn-generate">Generate Pools</button>',
+                '<button type="button" class="pg-btn pg-btn-primary pg-btn-generate"' +
+                    (sizeValid && total >= 2 ? '' : ' disabled') + '>Generate Pools</button>',
                 '</div></div>',
             ].join('');
         },
 
         _renderReserveBlock: function () {
+            var self = this;
             var reservedCount = this._reservedCount();
             var names = this.state.poolNames || [];
             var autoBucket = [
@@ -553,12 +664,13 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             ].join('');
             var poolBuckets = names.map(function (p, i) {
                 var color = POOL_COLORS[i % POOL_COLORS.length];
+                var target = self._poolSizeFor(p.index);
                 return '<div class="pg-reserve-bucket" data-pool-index="' + p.index +
                     '" style="--pool-c:' + color + '">' +
                     '<div class="pg-reserve-bucket-hd">' +
                     '<span class="pg-reserve-bucket-kicker">RESERVE</span>' +
                     '<span class="pg-reserve-bucket-name">' + esc(p.custom_name || p.default_label) + '</span>' +
-                    '<span class="pg-reserve-bucket-count" data-count-for="' + p.index + '">0</span>' +
+                    '<span class="pg-reserve-bucket-count" data-count-for="' + p.index + '">0/' + target + '</span>' +
                     '</div>' +
                     '<div class="pg-reserve-drop" data-pool-index="' + p.index + '"></div>' +
                     '</div>';
@@ -623,20 +735,36 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             });
             Object.keys(buckets).forEach(function (key) {
                 var el = buckets[key];
+                var pidx = Number(key);
                 var n = el.querySelectorAll('.pg-reserve-chip').length;
+                var target = pidx > 0 ? self._poolSizeFor(pidx) : 0;
                 var countEl = board.querySelector('[data-count-for="' + key + '"]');
-                if (countEl) countEl.textContent = String(n);
+                if (countEl) {
+                    countEl.textContent = pidx > 0 ? (n + '/' + target) : String(n);
+                }
+                var bucket = el.closest && el.closest('.pg-reserve-bucket');
+                if (bucket) {
+                    bucket.classList.toggle('is-full', pidx > 0 && target > 0 && n >= target);
+                    bucket.classList.toggle('is-overfull', pidx > 0 && target > 0 && n > target);
+                }
                 if (!n) {
                     var empty = document.createElement('div');
                     empty.className = 'pg-reserve-empty';
                     if (!ids.length) {
                         empty.textContent = 'No teams selected';
-                    } else if (Number(key) === 0) {
+                    } else if (pidx === 0) {
                         empty.textContent = 'All reserved — drop here to un-reserve';
                     } else {
-                        empty.textContent = 'Drop teams here to reserve';
+                        empty.textContent = target
+                            ? ('Drop up to ' + target + ' team' + (target === 1 ? '' : 's'))
+                            : 'Drop teams here to reserve';
                     }
                     el.appendChild(empty);
+                } else if (pidx > 0 && target > n) {
+                    var more = document.createElement('div');
+                    more.className = 'pg-reserve-empty pg-reserve-more';
+                    more.textContent = (target - n) + ' more slot' + (target - n === 1 ? '' : 's');
+                    el.appendChild(more);
                 }
             });
             if (this._reservePickId) {
@@ -664,6 +792,18 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             if (!this.state.reservations) this.state.reservations = {};
             var prev = this._reservedPoolFor(teamId);
             if (prev === poolIndex) return false;
+            if (poolIndex > 0) {
+                var target = this._poolSizeFor(poolIndex);
+                var already = this._selectedIds().filter(function (id) {
+                    return id !== teamId && this._reservedPoolFor(id) === poolIndex;
+                }.bind(this)).length;
+                if (target && already >= target) {
+                    this._toast(
+                        'That pool is full (' + target + ' teams). Increase its size or move a team out.'
+                    );
+                    return false;
+                }
+            }
             if (poolIndex < 1) {
                 delete this.state.reservations[teamId];
                 delete this.state.reservations[String(teamId)];
@@ -991,6 +1131,7 @@ odoo.define('auction_module.PoolGenerator', function (require) {
         _onNext: function () {
             if (this.state.step === 1 && this._selectedIds().length >= 2) {
                 this.state.step = 2;
+                this._syncPoolSizes();
                 this._render();
             } else if (this.state.step === 3 && this.state.structure) {
                 this.state.step = 4;
@@ -1010,6 +1151,7 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             n = Math.max(1, Math.min(max, n));
             this.state.poolCount = n;
             this._pruneReservations();
+            this._syncPoolSizes({reset: true});
             this._loadPoolNames(n).then(function () { self._render(); });
         },
         _onPoolNameInput: function (ev) {
@@ -1021,6 +1163,29 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             var row = this.state.poolNames.filter(function (p) { return p.index === idx; })[0];
             var label = (val || '').trim() || (row && row.default_label) || ('Pool ' + idx);
             this.$('.pg-reserve-bucket[data-pool-index="' + idx + '"] .pg-reserve-bucket-name').text(label);
+        },
+        _onPoolSizeChange: function (ev) {
+            var idx = parseInt($(ev.currentTarget).data('index'), 10);
+            var total = this._selectedIds().length;
+            var parts = parseInt(this.state.poolCount, 10) || 0;
+            if (!idx || !parts) return;
+            this._syncPoolSizes();
+            var max = Math.max(1, total - (parts - 1));
+            var val = parseInt(ev.currentTarget.value, 10);
+            if (isNaN(val)) val = this._poolSizeFor(idx) || 1;
+            val = Math.max(1, Math.min(max, val));
+            this.state.poolSizes[idx - 1] = val;
+            if (parts === 2) {
+                var other = idx === 1 ? 1 : 0;
+                this.state.poolSizes[other] = total - val;
+            }
+            this._updatePoolSizeHint();
+            this._paintReserveBoard();
+        },
+        _onEqualPoolSizes: function () {
+            this._syncPoolSizes({reset: true});
+            this._updatePoolSizeHint();
+            this._paintReserveBoard();
         },
         _onReserveSearch: function (ev) {
             this.state.reserveSearch = ev.currentTarget.value || '';
@@ -1039,13 +1204,19 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 return;
             }
             if (this.state.revealing) return;
+            this._syncPoolSizes();
+            if (!this._poolSizesValid()) {
+                this._toast('Pool sizes must add up to ' + ids.length + ' teams');
+                return;
+            }
             var reservations = this._reservationPayload();
             var reservedCount = this._reservedCount();
+            var poolSizes = this._poolSizeList();
             this._showRevealLoading('pools');
             var rpc = this._pgRpc({
                 model: 'auction.team.pool.wizard',
                 method: 'client_generate_pools',
-                args: [ids, this.state.poolCount, this._nameList(), reservations],
+                args: [ids, this.state.poolCount, this._nameList(), reservations, poolSizes],
             });
             Promise.all([rpc, this._waitReveal(5000)]).then(function (pair) {
                 var res = pair[0];
@@ -1751,6 +1922,7 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                         self.state.fixtureType,
                         self.state.outsideN,
                         self._reservationPayload(),
+                        self._poolSizeList(),
                     ],
                 });
             }).then(function (res) {

@@ -240,6 +240,41 @@ class TeamPoolWizard(models.TransientModel):
         self.result_html = False
         self.pool_structure_json = False
 
+    def _even_split(self, total, parts):
+        """Split ``total`` teams into ``parts`` pools as evenly as possible."""
+        total = int(total or 0)
+        parts = int(parts or 0)
+        if parts <= 0:
+            return []
+        base, rem = divmod(max(total, 0), parts)
+        return [base + (1 if i < rem else 0) for i in range(parts)]
+
+    def _normalize_pool_sizes(self, pool_sizes, team_count, pool_count):
+        """Return a list of pool sizes that sum to ``team_count``."""
+        team_count = int(team_count or 0)
+        pool_count = int(pool_count or 0)
+        if pool_count <= 0 or team_count < pool_count:
+            raise UserError('Invalid pool count for the selected teams.')
+        default = self._even_split(team_count, pool_count)
+        if not pool_sizes:
+            return default
+        sizes = []
+        raw = list(pool_sizes or [])
+        for i in range(pool_count):
+            try:
+                n = int(raw[i]) if i < len(raw) else default[i]
+            except (TypeError, ValueError):
+                n = default[i]
+            sizes.append(n)
+        if any(n < 1 for n in sizes):
+            raise UserError('Each pool must have at least one team.')
+        if sum(sizes) != team_count:
+            raise UserError(
+                'Pool team counts must add up to %s selected teams (currently %s).'
+                % (team_count, sum(sizes))
+            )
+        return sizes
+
     def _normalize_reservations(self, reservations, valid_team_ids, pool_count):
         """Return {team_id: pool_index} with 1-based pool indexes only."""
         out = {}
@@ -259,17 +294,19 @@ class TeamPoolWizard(models.TransientModel):
             out[tid] = pidx
         return out
 
-    def _assign_teams_to_pools(self, teams, pool_count, reservations=None):
+    def _assign_teams_to_pools(self, teams, pool_count, reservations=None,
+                               pool_sizes=None):
         """Place reserved teams first, then auto-fill remaining teams.
 
         reservations: optional {team_id: pool_index} (1-based). Unreserved
-        teams are shuffled into the currently smallest pools. If every team
-        is reserved the draw is fully manual.
+        teams fill each pool up to ``pool_sizes`` (defaults to an even split).
+        If every team is reserved the draw is fully manual.
         """
         teams = list(teams)
         pool_count = int(pool_count or 0)
         if pool_count <= 0 or pool_count > len(teams):
             raise UserError('Invalid pool count for the selected teams.')
+        sizes = self._normalize_pool_sizes(pool_sizes, len(teams), pool_count)
         team_map = {t.id: t for t in teams}
         reserved = self._normalize_reservations(
             reservations, list(team_map), pool_count,
@@ -277,15 +314,36 @@ class TeamPoolWizard(models.TransientModel):
         pools = [[] for _ in range(pool_count)]
         placed = set()
         for tid, pidx in reserved.items():
-            pools[pidx - 1].append(team_map[tid])
+            slot = pidx - 1
+            if len(pools[slot]) >= sizes[slot]:
+                raise UserError(
+                    'Too many reserved teams for %s (max %s). '
+                    'Move a team back to Auto or increase that pool size.'
+                    % (self.new({})._pool_label(pidx), sizes[slot])
+                )
+            pools[slot].append(team_map[tid])
             placed.add(tid)
         rest = [t for t in teams if t.id not in placed]
         random.shuffle(rest)
-        for team in rest:
-            sizes = [len(p) for p in pools]
-            min_size = min(sizes)
-            candidates = [i for i, size in enumerate(sizes) if size == min_size]
-            pools[random.choice(candidates)].append(team)
+        for i, target in enumerate(sizes):
+            need = target - len(pools[i])
+            if need < 0:
+                raise UserError(
+                    'Too many reserved teams for %s (max %s).'
+                    % (self.new({})._pool_label(i + 1), target)
+                )
+            if need > len(rest):
+                raise UserError(
+                    'Not enough unreserved teams to fill the pools. '
+                    'Adjust pool sizes or reservations.'
+                )
+            for _ in range(need):
+                pools[i].append(rest.pop())
+        if rest:
+            raise UserError(
+                'Pool sizes do not use all selected teams. '
+                'Adjust the number of teams per pool.'
+            )
         if any(not pool for pool in pools):
             raise UserError(
                 'Every pool must have at least one team. '
@@ -956,6 +1014,9 @@ class TeamPoolWizard(models.TransientModel):
                         ],
                         'tournament_name': tname,
                         'reservations': raw.get('reservations') or {},
+                        'pool_sizes': raw.get('pool_sizes') or [
+                            len(pool or []) for pool in structure
+                        ],
                     }
                     default_pool_count = saved_pools['pool_count']
             except (ValueError, TypeError):
@@ -1142,11 +1203,13 @@ class TeamPoolWizard(models.TransientModel):
         return self._client_refresh_fixture(fix_payload)
 
     @api.model
-    def client_generate_pools(self, team_ids, pool_count, pool_names=None, reservations=None):
+    def client_generate_pools(self, team_ids, pool_count, pool_names=None,
+                              reservations=None, pool_sizes=None):
         """Shuffle selected teams into pools and live-publish to the projector.
 
         Optional ``reservations`` ({team_id: pool_index, 1-based}) force those
         teams into the chosen pool before the remaining teams are auto-filled.
+        Optional ``pool_sizes`` sets how many teams each pool should get.
         """
         team_ids = [int(t) for t in (team_ids or [])]
         pool_count = int(pool_count or 0)
@@ -1156,7 +1219,9 @@ class TeamPoolWizard(models.TransientModel):
         if len(teams) < 2:
             raise UserError('Select at least 2 teams to generate pools.')
 
-        pools = self._assign_teams_to_pools(teams, pool_count, reservations)
+        pools = self._assign_teams_to_pools(
+            teams, pool_count, reservations, pool_sizes,
+        )
 
         name_map = {}
         for i, name in enumerate(pool_names or [], start=1):
@@ -1201,7 +1266,7 @@ class TeamPoolWizard(models.TransientModel):
 
     @api.model
     def client_save_pools(self, structure, pool_names=None, clear_fixture=True,
-                          reservations=None):
+                          reservations=None, pool_sizes=None):
         """Persist the current pool draw on the active tournament."""
         tournament = self._client_current_tournament()
         if not structure:
@@ -1225,6 +1290,11 @@ class TeamPoolWizard(models.TransientModel):
             'tournament_name': tournament_name,
             'reservations': self._normalize_reservations(
                 reservations, team_ids, len(structure),
+            ),
+            'pool_sizes': self._normalize_pool_sizes(
+                pool_sizes or [len(pool) for pool in structure],
+                len(team_ids),
+                len(structure),
             ),
         }
         vals = {
@@ -1269,7 +1339,7 @@ class TeamPoolWizard(models.TransientModel):
     def client_save_to_tournament(self, structure, pool_names=None, fixture_data=None,
                                   pool_image=None, fixture_image=None,
                                   fixture_type='pool_rr', outside_n=1,
-                                  reservations=None):
+                                  reservations=None, pool_sizes=None):
         """Save pool + fixture data and both snapshot images on the tournament."""
         tournament = self._client_current_tournament()
         if not structure:
@@ -1280,6 +1350,7 @@ class TeamPoolWizard(models.TransientModel):
             structure, pool_names,
             clear_fixture=not (fixture_data and fixture_data.get('matches')),
             reservations=reservations,
+            pool_sizes=pool_sizes,
         )
 
         vals = {}
