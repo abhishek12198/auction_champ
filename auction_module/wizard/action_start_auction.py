@@ -50,7 +50,12 @@ class StartAuction(models.TransientModel):
 
     max_points = fields.Integer(string='Total Purse Value')
     max_players = fields.Integer(string='Max no of players')
-    base_point = fields.Integer(string="Base point for a player", default=1000)
+    base_point = fields.Integer(
+        string="Base point for a player",
+        default=100,
+        help="Fallback minimum bid when a tier's Base Point is 0. "
+             "Max call keeps (players left − 1) × this amount in reserve.",
+    )
     team_ids = fields.Many2many('auction.team', 'start_auction_team_rel', 'auction_start_id', 'team_id', 'Teams')
     tournament_id = fields.Many2one('auction.tournament', string='Tournament', readonly=True)
     max_limited = fields.Selection([('yes', 'Yes'), ('no', 'No')], default='no')
@@ -91,8 +96,8 @@ class StartAuction(models.TransientModel):
 
     @api.onchange('base_point')
     def onchange_base_point(self):
-        if self.base_point <= 0:
-            self.base_point = 1000
+        if self.base_point < 0:
+            self.base_point = 0
 
     def button_start_auction(self):
         auction_obj = self.env['auction.auction']
@@ -123,7 +128,10 @@ class StartAuction(models.TransientModel):
                     'team_id': team.id,
                     'total_point': self.max_points,
                     'max_players': self.max_players,
-                    'base_point': self.base_point,
+                    'base_point': self.base_point or min(
+                        (tl.base_point for tl in self.tier_limit_ids if tl.base_point > 0),
+                        default=100,
+                    ),
                     'auction_bid_slab_ids': bid_slab_data,
                     'tier_limit_ids': tier_limit_data,
                 }

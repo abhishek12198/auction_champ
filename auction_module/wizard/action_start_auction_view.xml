@@ -11,6 +11,7 @@
                             <field name="tournament_id" attrs="{'invisible': [('tournament_id', '=', False)]}"/>
                             <field name="max_points" string="Total Purse Value"/>
                             <field name="max_players" string="Max no of players"/>
+                            <field name="base_point" string="Global base point"/>
                     </group>
                     <notebook>
                         <page string="Auction Rule Settings">
