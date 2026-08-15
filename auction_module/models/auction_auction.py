@@ -159,7 +159,14 @@ class Auction(models.Model):
     def _calculate_max_call(self):
         # Must be per-tournament. A global is_on_stage lookup picks the wrong
         # player when two auctions run at once and corrupts max_call.
-        Player = self.env['auction.team.player']
+        self.mapped('tournament_id')
+        self.mapped('player_ids.player_id.tier_id')
+        self.mapped('player_ids.tier_id')
+        self.mapped('tier_limit_ids.tier_id')
+        self.mapped('auction_bid_slab_ids')
+        Player = self.env['auction.team.player'].sudo().with_context(
+            auction_skip_tournament_security=True,
+        )
         tids = self.mapped('tournament_id').ids
         on_stage = Player.search([
             ('is_on_stage', '=', True),
@@ -257,7 +264,11 @@ class Auction(models.Model):
         # that make Bid Summary / balance JSON slow when a player is on stage).
         recruited_by_tier = {}
         for line in team.player_ids:
-            tid = line.tier_id.id if line.tier_id else False
+            tid = False
+            if line.tier_id:
+                tid = line.tier_id.id
+            elif line.player_id and line.player_id.tier_id:
+                tid = line.player_id.tier_id.id
             if tid:
                 recruited_by_tier[tid] = recruited_by_tier.get(tid, 0) + 1
 
@@ -300,17 +311,20 @@ class Auction(models.Model):
         return safe_max
 
     def _snap_to_slab(self, amount):
-        """
-        Adjust amount DOWN to the nearest valid slab step
-        """
+        """Adjust amount DOWN to the nearest valid slab step."""
+        try:
+            amount = int(amount or 0)
+        except (TypeError, ValueError):
+            amount = 0
         for slab in self.auction_bid_slab_ids.sorted('from_amount', reverse=True):
-            if amount >= slab.from_amount:
-                base = slab.from_amount
-                inc = slab.increment
-
-                snapped = base + ((amount - base) // inc) * inc
-                return min(snapped, amount)
-
+            if amount < slab.from_amount:
+                continue
+            base = slab.from_amount or 0
+            inc = slab.increment or 0
+            if inc <= 0:
+                return min(amount, slab.to_amount or amount)
+            snapped = base + ((amount - base) // inc) * inc
+            return min(snapped, amount)
         return amount
 
     def get_max_bid_for_team(self, team, player=None):
