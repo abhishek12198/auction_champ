@@ -19,6 +19,9 @@ class RouteTests(unittest.TestCase):
         self.assertIn('/{db}/{slug}/auction/live-board/data', paths)
         self.assertIn('/{db}/auction/projector/{slug}/data', paths)
         self.assertIn('/{db}/{slug}/auction/show/team/balance/json', paths)
+        self.assertIn('/{db}/{slug}/auction/live-board/events', paths)
+        self.assertIn('/{db}/auction/projector/{slug}/events', paths)
+        self.assertIn('/{db}/{slug}/auction/show/team/balance/events', paths)
 
 
 if __name__ == '__main__':

@@ -215,7 +215,45 @@ def keys_for(dbname, tournament_id):
         'meta': '%s:meta' % prefix,
         'seq': '%s:seq' % prefix,
         'lock': '%s:rebuild_lock' % prefix,
+        'events': '%s:events' % prefix,
     }
+
+
+def events_channel(dbname, tournament_id):
+    """Pub/Sub channel for Phase 3 SSE invalidation events."""
+    return keys_for(dbname, tournament_id)['events']
+
+
+def publish_tournament_event(env, tournament_id, seq, targets, event='auction.update'):
+    """Publish a small invalidation event after a successful snapshot CAS.
+
+    Never raises. Redis failure must not affect auction transactions.
+    """
+    client = get_client(env, ping=False)
+    if client is None:
+        return False
+    import json
+    dbname = env.cr.dbname
+    payload = {
+        'event': event or 'auction.update',
+        'db': dbname,
+        'tournament_id': int(tournament_id),
+        'seq': int(seq),
+        'targets': sorted(t for t in (targets or []) if t in ('lb', 'pj', 'bal')),
+        'ts': time.time(),
+    }
+    if not payload['targets']:
+        return False
+    try:
+        channel = events_channel(dbname, tournament_id)
+        client.publish(channel, json.dumps(payload, separators=(',', ':')))
+        return True
+    except Exception as err:
+        _logger.warning(
+            'auction redis: PUBLISH failed tid=%s seq=%s: %s',
+            tournament_id, seq, err,
+        )
+        return False
 
 
 def slug_tid_key(dbname, slug):

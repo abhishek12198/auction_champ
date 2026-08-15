@@ -38,7 +38,7 @@
 
 {
     'name' : 'Auction Champ',
-    'version' : '1.5.499',
+    'version' : '1.5.511',
     'summary': 'Sports Auction module',
     'sequence': 10,
     'icon': '/auction_module/static/description/icon.png',
@@ -111,6 +111,7 @@
         'views/auction_showcase_loading.xml',
         'views/auction_rules_required.xml',
         'views/auction_squad_poster_template.xml',
+        'views/auction_show_balance_tracker.xml',
         'views/auction_show_balance_template1.xml',
         'views/auction_show_balance_template1_pistah.xml',
         'views/auction_show_balance_template1_blackberry.xml',

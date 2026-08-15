@@ -15,12 +15,15 @@
             <ul class="ac-sidebar-menu">
                 <t t-foreach="props.apps" t-as="app" t-key="app.id">
                     <li class="nav-item"
-                        t-att-class="{ 'ac-sidebar-active': props.currentApp === app }">
+                        t-att-class="{
+                            'ac-sidebar-active': props.currentApp === app,
+                            'o_saas_app_frozen': props.saasAccountFrozen &amp;&amp; app.name === 'Player Showcase'
+                        }">
                         <a
-                            t-attf-href="#menu_id={{ app.id }}&amp;action_id={{ app.actionID }}"
+                            t-att-href="getAppHref(app)"
                             t-att-data-menu-id="app.id"
                             t-att-data-menu-xmlid="app.xmlid"
-                            t-att-data-action-id="app.actionID"
+                            t-att-data-action-id="app.actionID or false"
                             class="nav-link ac-sidebar-link"
                             role="menuitem"
                             t-att-title="app.name"

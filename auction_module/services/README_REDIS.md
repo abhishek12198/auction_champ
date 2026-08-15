@@ -112,3 +112,38 @@ URLs and frontend intervals are unchanged.
 - SOLD / UNSOLD / BID / NEXT / DICE / BREAK / RECALL always commit in PostgreSQL.
 - Postcommit Redis errors are logged only.
 - Redis restart: next poll acquires a short rebuild lock and rebuilds from PostgreSQL.
+
+## Phase 3 — Pub/Sub + SSE (optional)
+
+After a successful Redis CAS write, Odoo PUBLISHes a small invalidation message:
+
+```
+ac:{dbname}:t:{tid}:events
+{"event":"auction.update","db":"...","tournament_id":N,"seq":N,"targets":["lb","pj"],"ts":"..."}
+```
+
+Gateway SSE endpoints (same process as `/data`):
+
+```
+GET /{db}/{slug}/auction/live-board/events
+GET /{db}/auction/projector/{slug}/events
+GET /{db}/{slug}/auction/show/team/balance/events
+```
+
+Frontend flag (default False; polling remains):
+
+```
+auction.sse.enabled = True
+```
+
+`noupdate=1` — existing DBs may need a one-shot create if the parameter is missing:
+
+```python
+ICP = env['ir.config_parameter'].sudo()
+if not ICP.get_param('auction.sse.enabled'):
+    ICP.set_param('auction.sse.enabled', 'False')
+env.cr.commit()
+```
+
+Rollback SSE without touching Redis snapshots: set `auction.sse.enabled = False`
+(and/or remove Nginx `/events` locations). Poll path is unchanged.

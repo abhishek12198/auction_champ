@@ -17,12 +17,12 @@ def _kinds(*names):
 
 
 class TestKindsForVals(unittest.TestCase):
-    def test_bid_only_dirties_projector(self):
+    def test_bid_dirties_live_and_projector(self):
         kinds = kinds_for_vals('auction.team.player', {
             'current_bid': 500,
             'current_bid_team_id': 3,
         })
-        self.assertEqual(kinds, {'pj'})
+        self.assertEqual(kinds, {'lb', 'pj'})
 
     def test_sold_dirties_all_three(self):
         kinds = kinds_for_vals('auction.team.player', {
@@ -56,7 +56,7 @@ class TestKindsForVals(unittest.TestCase):
 
     def test_mystery_reveal_not_balance(self):
         kinds = kinds_for_vals('auction.team.player', {'mystery_revealed': True})
-        self.assertEqual(kinds, {'lb', 'pj'})
+        self.assertEqual(kinds, {'lb', 'pj', 'bal'})
 
     def test_recall_swap_move_via_assignment(self):
         kinds = kinds_for_vals('auction.team.player', {
@@ -111,7 +111,8 @@ class TestKindsForVals(unittest.TestCase):
         for f in (
             'is_on_stage', 'state', 'current_bid', 'current_bid_team_id',
             'mystery_revealed', 'assigned_team_id', 'photo', 'name',
-            'tier_id', 'icon_player',
+            'tier_id', 'icon_player', 'role', 'batting_style', 'sl_no',
+            'dominant_position_id', 'preferred_foot',
         ):
             self.assertIn(f, player)
         tourney = WATCHED_FIELDS['auction.tournament']
@@ -119,9 +120,25 @@ class TestKindsForVals(unittest.TestCase):
             'dice_state', 'dice_result', 'break_time_active',
             'stamp_player_id', 'stamp_state', 'stamp_expires_at',
             'projector_board_mode', 'pool_draw_json', 'fixture_schedule_json',
-            'live_board_active', 'auction_declared_complete',
+            'live_board_active', 'live_board_code_protected',
+            'auction_declared_complete', 'name', 'logo',
+            'player_display_template', 'tournament_type',
         ):
             self.assertIn(f, tourney)
+        team = WATCHED_FIELDS['auction.team']
+        for f in ('name', 'logo', 'manager'):
+            self.assertIn(f, team)
+
+    def test_team_logo_dirties_all_three(self):
+        kinds = kinds_for_vals('auction.team', {'logo': b'x', 'name': 'T'})
+        self.assertEqual(kinds, {'lb', 'pj', 'bal'})
+
+    def test_tournament_theme_not_balance(self):
+        kinds = kinds_for_vals('auction.tournament', {
+            'player_display_template': 'cherry',
+            'name': 'Cup',
+        })
+        self.assertEqual(kinds, {'lb', 'pj'})
 
 
 class _Cr(object):
@@ -217,6 +234,101 @@ class TestPayloadSeqAndStamp(unittest.TestCase):
         t = mock.Mock()
         t.stamp_expires_at = None
         self.assertIsNone(_stamp_iso(t))
+
+
+class TestSliceBalancePlayers(unittest.TestCase):
+    def _snap(self):
+        return {
+            'player_counts': {'sold': 2, 'unsold': 1, 'auction': 0},
+            'players': {
+                'sold': [
+                    {'id': 1, 'name': 'Ashwin', 'sl_no': 5, 'contact': '999111',
+                     'role': 'Allrounder', 'team_id': 10, 'team_name': 'Kings'},
+                    {'id': 2, 'name': 'Virat', 'sl_no': 18, 'contact': '888222',
+                     'role': 'Batter', 'team_id': 11, 'team_name': 'RCB'},
+                ],
+                'unsold': [
+                    {'id': 3, 'name': 'Rohit', 'sl_no': 45, 'contact': '',
+                     'role': 'Batter', 'team_id': 0, 'team_name': ''},
+                ],
+                'auction': [],
+            },
+        }
+
+    def test_search_name_is_in_memory(self):
+        from odoo.addons.auction_module.services.auction_live_payload import (
+            slice_balance_players,
+        )
+        out = slice_balance_players(self._snap(), 'sold', query='Ash')
+        self.assertEqual(out['total'], 1)
+        self.assertEqual(out['players'][0]['name'], 'Ashwin')
+        self.assertTrue(out['from_snapshot'])
+
+    def test_search_serial_and_team_filter(self):
+        from odoo.addons.auction_module.services.auction_live_payload import (
+            slice_balance_players,
+        )
+        out = slice_balance_players(self._snap(), 'sold', query='#18')
+        self.assertEqual(out['total'], 1)
+        self.assertEqual(out['players'][0]['name'], 'Virat')
+        team = slice_balance_players(self._snap(), 'sold', team_id=10)
+        self.assertEqual(team['total'], 1)
+        self.assertEqual(team['players'][0]['name'], 'Ashwin')
+
+    def test_schema_rejects_legacy_balance(self):
+        from odoo.addons.auction_module.services.auction_live_snapshot_service import (
+            _snapshot_schema_ok,
+        )
+        self.assertFalse(_snapshot_schema_ok('bal', {'teams': [], 'seq': 1}))
+        self.assertTrue(_snapshot_schema_ok('bal', {'players': {}, 'seq': 1}))
+        self.assertFalse(_snapshot_schema_ok('bal', {
+            'players': {'sold': [{'id': 1, 'name': 'A'}], 'unsold': [], 'auction': []},
+        }))
+        self.assertTrue(_snapshot_schema_ok('bal', {
+            'players': {'sold': [{'id': 1, 'name': 'A', 'attrs': [], 'photo_url': '/x/photo?sz=bs'}], 'unsold': [], 'auction': []},
+        }))
+        self.assertTrue(_snapshot_schema_ok('pj', {'player': {}, 'seq': 1}))
+
+    def test_cricket_and_football_card_attrs(self):
+        from odoo.addons.auction_module.services.auction_live_payload import (
+            _balance_player_profile,
+        )
+        cricket = mock.Mock(
+            role='Allrounder',
+            batting_style='Right Hand Bat',
+            bowling_style='Right Arm Off Spin',
+            p_category='A',
+        )
+        role, attrs = _balance_player_profile(cricket, False, False)
+        self.assertEqual(role, 'Allrounder')
+        keys = [a['k'] for a in attrs]
+        self.assertEqual(keys, ['Batting', 'Bowling', 'Category'])
+        football = mock.Mock(
+            role='',
+            preferred_foot='right',
+            age=24,
+            work_rate='high',
+            p_category='',
+            use_other_attributes=False,
+            playing_style_ids=[],
+            strength_ids=[],
+            other_attribute_ids=[],
+        )
+        pos = mock.Mock()
+        pos.name = 'Striker'
+        pos.code = 'ST'
+        football.dominant_position_id = pos
+        sec = mock.Mock()
+        sec.code = 'CAM'
+        sec.name = 'Attacking Mid'
+        football.secondary_position_ids = [sec]
+        role, attrs = _balance_player_profile(football, False, True)
+        self.assertEqual(role, 'Striker')
+        mapped = {a['k']: a['v'] for a in attrs}
+        self.assertEqual(mapped.get('Foot'), 'Right')
+        self.assertEqual(mapped.get('Secondary'), 'CAM')
+        self.assertEqual(mapped.get('Age'), '24')
+        self.assertEqual(mapped.get('Work Rate'), 'High')
 
 
 class TestSeqZeroIsValid(unittest.TestCase):

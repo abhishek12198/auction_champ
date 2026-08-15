@@ -66,7 +66,12 @@ class GatewayTests(unittest.TestCase):
         }
         self.lb = {'tournament': {'name': 'T'}, 'live_board_active': True, 'seq': 0}
         self.pj = {'player': {'id': 1, 'name': 'P'}, 'seq': 0}
-        self.bal = {'teams': [{'id': 1, 'max_call': 100}], 'seq': 0}
+        self.bal = {
+            'teams': [{'id': 1, 'max_call': 100}],
+            'seq': 0,
+            'players': {'sold': [], 'unsold': [], 'auction': []},
+            'player_counts': {'sold': 0, 'unsold': 0, 'auction': 0},
+        }
         self.fake.kv['ac:%s:t:%s:lb' % (self.db, self.tid)] = json.dumps(self.lb)
         self.fake.kv['ac:%s:t:%s:pj' % (self.db, self.tid)] = json.dumps(self.pj)
         self.fake.kv['ac:%s:t:%s:bal' % (self.db, self.tid)] = json.dumps(self.bal)
@@ -102,6 +107,16 @@ class GatewayTests(unittest.TestCase):
         )
         self.assertEqual(r.status_code, 200)
         self.assertIn('teams', r.json())
+        self.assertIn('players', r.json())
+
+    def test_balance_without_players_falls_back(self):
+        self.fake.kv['ac:%s:t:%s:bal' % (self.db, self.tid)] = json.dumps(
+            {'teams': [{'id': 1}], 'seq': 0}
+        )
+        r = self.client.get(
+            '/%s/%s/auction/show/team/balance/json' % (self.db, self.slug)
+        )
+        self.assertEqual(r.status_code, 404)
 
     def test_projector_post_jsonrpc_wrap(self):
         r = self.client.post(

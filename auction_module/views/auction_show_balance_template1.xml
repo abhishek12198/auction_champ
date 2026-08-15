@@ -5,10 +5,15 @@
         t-att-data-skin="'projector' if from_projector else None"
         t-att-data-mode="mode or 'dark'"
         t-att-data-balance-json-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/show/team/balance/json'"
-        t-att-data-squad-json-base="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/team/'">
+        t-att-data-sse-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/show/team/balance/events'"
+        t-att-data-sse-enabled="'1' if sse_enabled else '0'"
+        t-att-data-squad-json-base="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/team/'"
+        t-att-data-players-json-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/show/team/balance/players.json'">
     <head>
       <meta charset="UTF-8"/>
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <script src="/auction_module/static/src/js/auction_sse_client.js"></script>
+      <link rel="stylesheet" href="/auction_module/static/src/css/bid_summary_tracker.css?v=1.5.510"/>
       <link t-if="res_company" rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
       <link href="/auction_module/static/src/assets/css/bootstrap.min.css" rel="stylesheet"/>
       <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -1336,7 +1341,8 @@
   <t t-set="pu_tournament" t-value="tournament"/>
 </t>
 
-    <body>
+    <body class="bs2-tab-teams">
+      <div class="bs2-top">
       <header class="bs2-hdr">
         <div class="bs2-hdr-side bs2-left">
           <t t-if="from_projector">
@@ -1364,8 +1370,12 @@
           <button type="button" class="bs2-fs-btn" id="fs-btn" aria-label="Toggle fullscreen"><span class="bs2-fs-ico">⛶</span><span class="bs2-fs-tx">FULL</span></button>
         </div>
       </header>
+      <t t-call="auction_module.bid_summary_tracker_pulse"/>
+      </div>
 
       <main class="bs2-main">
+        <div class="bs2-tracker">
+        <div class="bs2-tracker-teams" id="tracker-teams">
         <div class="bs2-panel" id="list-section">
           <div class="bs2-table-wrap">
             <table class="bs2-table">
@@ -1389,7 +1399,7 @@
                   <t t-set="players_recruited" t-value="team.max_players - team.remaining_players_count"/>
                   <t t-set="max_share" t-value="int(team.max_call * 100 // team.remaining_points) if team.remaining_points else 100"/>
                   <t t-set="maxbid_heat" t-value="'mb-crit' if (team.remaining_players_count &lt;= 1 or max_share &lt;= 15) else ('mb-tight' if (team.remaining_players_count &lt;= 3 or max_share &lt;= 30) else 'mb-ok')"/>
-                  <tr class="bs2-row" t-attf-data-auction-id="#{team.id}" t-attf-data-total-pts="#{team.total_point}" t-attf-data-max-players="#{team.max_players}">
+                  <tr class="bs2-row" t-attf-data-auction-id="#{team.id}" t-att-data-team-id="team.team_id.id" t-attf-data-total-pts="#{team.total_point}" t-attf-data-max-players="#{team.max_players}">
                     <td>
                       <div class="bs2-team-cell">
                         <t t-if="team.team_id.logo">
@@ -1472,7 +1482,7 @@
                   <t t-set="players_recruited" t-value="team.max_players - team.remaining_players_count"/>
                   <t t-set="max_share" t-value="int(team.max_call * 100 // team.remaining_points) if team.remaining_points else 100"/>
                   <t t-set="maxbid_heat" t-value="'mb-crit' if (team.remaining_players_count &lt;= 1 or max_share &lt;= 15) else ('mb-tight' if (team.remaining_players_count &lt;= 3 or max_share &lt;= 30) else 'mb-ok')"/>
-              <div class="bs2-card" t-attf-data-auction-id="#{team.id}" t-attf-data-total-pts="#{team.total_point}" t-attf-data-max-players="#{team.max_players}">
+              <div class="bs2-card" t-attf-data-auction-id="#{team.id}" t-att-data-team-id="team.team_id.id" t-attf-data-total-pts="#{team.total_point}" t-attf-data-max-players="#{team.max_players}">
                 <div class="bs2-card-accent"></div>
                 <div class="bs2-card-body">
                   <div class="bs2-card-head">
@@ -1538,7 +1548,7 @@
             <t t-set="players_recruited" t-value="team.max_players - team.remaining_players_count"/>
             <t t-set="max_share" t-value="int(team.max_call * 100 // team.remaining_points) if team.remaining_points else 100"/>
             <t t-set="maxbid_heat" t-value="'mb-crit' if (team.remaining_players_count &lt;= 1 or max_share &lt;= 15) else ('mb-tight' if (team.remaining_players_count &lt;= 3 or max_share &lt;= 30) else 'mb-ok')"/>
-            <div class="bs2-mob-row" t-attf-data-auction-id="#{team.id}" t-attf-data-total-pts="#{team.total_point}" t-attf-data-max-players="#{team.max_players}">
+            <div class="bs2-mob-row" t-attf-data-auction-id="#{team.id}" t-att-data-team-id="team.team_id.id" t-attf-data-total-pts="#{team.total_point}" t-attf-data-max-players="#{team.max_players}">
 
               <!-- Head: logo + name + status badge -->
               <div class="bs2-mob-head">
@@ -1594,7 +1604,9 @@
             </div>
           </t>
         </div>
-
+        </div>
+        <t t-call="auction_module.bid_summary_tracker_board"/>
+        </div>
       </main>
 
       <footer class="bs2-powered" aria-label="Powered by AuctionChamp">
@@ -1914,20 +1926,10 @@
             return 0;
           }
 
-          function refreshBalance() {
-            if (!balanceUrl) {
-              return Promise.resolve();
-            }
-            return fetch(balanceUrl, {
-              method: 'GET',
-              headers: { 'Accept': 'application/json' },
-              cache: 'no-store'
-            }).then(function (response) {
-              if (!response.ok) {
-                throw new Error('HTTP ' + response.status);
+          function applyBalancePayload(payload) {
+              if (window.__acTrackerOnBalance) {
+                try { window.__acTrackerOnBalance(payload); } catch (e0) {}
               }
-              return response.json();
-            }).then(function (payload) {
               normalizePayload(payload).forEach(function (entry) {
                 var auctionId = resolveAuctionId(entry);
                 if (!auctionId) {
@@ -1993,12 +1995,30 @@
                 updateMaxBidHeat(mobRow, maxCall, remainingPoints, remainingPlayers);
                 fitMaxBidValues(mobRow);
               });
+          }
+
+          function refreshBalance() {
+            if (!balanceUrl) {
+              return Promise.resolve();
+            }
+            return fetch(balanceUrl, {
+              method: 'GET',
+              headers: { 'Accept': 'application/json' },
+              cache: 'no-store'
+            }).then(function (response) {
+              if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+              }
+              return response.json();
+            }).then(function (payload) {
+              applyBalancePayload(payload);
             }).catch(function () {
               return null;
             });
           }
 
           window.refreshBalance = refreshBalance;
+          window.__acApplyBalance = applyBalancePayload;
 
           document.addEventListener('click', function (e) {
             var eye = e.target && e.target.closest ? e.target.closest('.bs2-eye-btn') : null;
@@ -2047,21 +2067,35 @@
           }
 
           document.addEventListener('fullscreenchange', syncFullscreenButton);
-          document.addEventListener('visibilitychange', function() {
-            if (document.hidden) stopPolling(); else { refreshBalance(); startPolling();
+          document.addEventListener('visibilitychange', function () {
+            if (document.hidden) {
+              stopPolling();
+            } else {
+              refreshBalance();
+              startPolling();
+            }
+          });
           fitMaxBidValues();
           window.addEventListener('resize', function () {
             window.clearTimeout(window._bs2FitMb);
             window._bs2FitMb = window.setTimeout(function () { fitMaxBidValues(); }, 120);
-          }); }
           });
           window.addEventListener('beforeunload', stopPolling);
           document.addEventListener('DOMContentLoaded', function () {
             setView(isCompactScreen() ? 'grid' : 'list');
             syncFullscreenButton();
-            refreshBalance();
-            if (!document.hidden) {
-              startPolling();
+            if (window.AuctionChampSSE && window.AuctionChampSSE.enabled(document.documentElement)) {
+              window.AuctionChampSSE.bind({
+                url: document.documentElement.getAttribute('data-sse-url'),
+                apply: applyBalancePayload,
+                startPoll: function () { refreshBalance(); startPolling(); },
+                stopPoll: stopPolling,
+              });
+            } else {
+              refreshBalance();
+              if (!document.hidden) {
+                startPolling();
+              }
             }
           });
           if (window.matchMedia) {
@@ -2074,6 +2108,7 @@
           }
         }());
       ]]></script>
+      <script src="/auction_module/static/src/js/bid_summary_tracker.js?v=1.5.510"></script>
       <script src="/auction_module/static/src/assets/bootstrap.bundle.min.js" defer="defer"></script>
     </body>
   </html>

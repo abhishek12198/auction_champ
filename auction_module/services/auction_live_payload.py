@@ -38,12 +38,38 @@ def _helpers():
     return ctrl
 
 
+def _write_date_ver(write_date):
+    if not write_date:
+        return ''
+    if hasattr(write_date, 'timestamp'):
+        try:
+            return str(int(write_date.timestamp()))
+        except Exception:
+            pass
+    try:
+        return str(int(fields.Datetime.from_string(write_date).timestamp()))
+    except Exception:
+        return str(write_date).replace(' ', 'T')
+
+
+def _public_img_url(db_name, model, record_id, field, write_date=None, sz=''):
+    url = '/%s/auction/public/image/%s/%d/%s' % (db_name, model, record_id, field)
+    qs = []
+    ver = _write_date_ver(write_date)
+    if ver:
+        qs.append('v=%s' % ver)
+    if sz:
+        qs.append('sz=%s' % sz)
+    if qs:
+        url += '?' + '&'.join(qs)
+    return url
+
+
 def build_live_board_payload(env, tournament, db_name):
     """Public live-board JSON dict. Extra ``seq`` / ``stamp_expires_at`` are additive."""
     ctrl = _helpers()
-    pub_img = lambda model, record_id, field: (
-        '/%s/auction/public/image/%s/%d/%s' % (db_name, model, record_id, field)
-    )
+    def pub_img(model, record_id, field, write_date=None, sz=''):
+        return _public_img_url(db_name, model, record_id, field, write_date, sz=sz)
     result = {
         'tournament': {},
         'current_player': None,
@@ -65,14 +91,14 @@ def build_live_board_payload(env, tournament, db_name):
             {
                 'id': ad.id,
                 'name': ad.name or '',
-                'image_url': pub_img('auction.advertiser', ad.id, 'image'),
+                'image_url': pub_img('auction.advertiser', ad.id, 'image', ad.write_date),
             }
             for ad in tournament.advertiser_ids if ad.image
         ]
         result['tournament'] = {
             'name': tournament.name or '',
             'description': tournament.description or '',
-            'logo_url': pub_img('auction.tournament', tournament.id, 'logo') if tournament.logo else '',
+            'logo_url': pub_img('auction.tournament', tournament.id, 'logo', tournament.write_date) if tournament.logo else '',
             'tournament_type': tournament.tournament_type or 'cricket',
         }
         result['tournament_type'] = tournament.tournament_type or 'cricket'
@@ -117,7 +143,7 @@ def build_live_board_payload(env, tournament, db_name):
         result['current_player'] = {
             'id': current_player.id,
             'name': current_player.name or '',
-            'photo_url': pub_img('auction.team.player', current_player.id, 'photo') if current_player.photo else '',
+            'photo_url': pub_img('auction.team.player', current_player.id, 'photo', current_player.write_date, 'pj') if current_player.photo else '',
             'role': current_player.role or '',
             'tier_name': current_player.tier_id.name if current_player.tier_id else '',
             'tier_color': current_player.tier_color or '#2252b5',
@@ -129,8 +155,25 @@ def build_live_board_payload(env, tournament, db_name):
             'bowling_style': current_player.bowling_style or '',
             'is_mystery': bool(current_player.tier_id and current_player.tier_id.mystery),
             'mystery_revealed': bool(current_player.mystery_revealed),
+            'current_bid': 0,
+            'current_bid_team': None,
         }
         result['current_player'].update(ctrl._football_display_payload(current_player))
+        # Embed live bid in :lb so Redis HIT / SSE do not depend on auctioneer
+        # Odoo route injection.
+        if (
+            current_player.state == 'auction'
+            and hasattr(current_player, 'current_bid')
+            and current_player.current_bid
+        ):
+            result['current_player']['current_bid'] = int(current_player.current_bid or 0)
+            cteam = getattr(current_player, 'current_bid_team_id', False)
+            if cteam:
+                result['current_player']['current_bid_team'] = {
+                    'id': cteam.id,
+                    'name': cteam.name or '',
+                    'logo_url': pub_img('auction.team', cteam.id, 'logo', cteam.write_date) if cteam.logo else '',
+                }
         if (result['current_player']['is_mystery']
                 and not result['current_player']['mystery_revealed']):
             result['current_player'].update({
@@ -150,6 +193,8 @@ def build_live_board_payload(env, tournament, db_name):
                 'other_attributes': [],
                 'playing_styles': [],
                 'strengths': [],
+                'current_bid': 0,
+                'current_bid_team': None,
             })
         if current_player.state == 'sold' and current_player.assigned_team_id:
             auc_line = env['auction.auction.player'].sudo().search(
@@ -158,7 +203,7 @@ def build_live_board_payload(env, tournament, db_name):
             team = current_player.assigned_team_id
             result['sold_info'] = {
                 'team_name': team.name or '',
-                'team_logo_url': pub_img('auction.team', team.id, 'logo') if team.logo else '',
+                'team_logo_url': pub_img('auction.team', team.id, 'logo', team.write_date) if team.logo else '',
                 'amount': auc_line.points if auc_line else 0,
             }
 
@@ -175,7 +220,7 @@ def build_live_board_payload(env, tournament, db_name):
     recent_history = []
     for rec in history:
         msg = rec.message or ''
-        photo_url = pub_img('auction.history', rec.id, 'player_photo') if rec.player_photo else ''
+        photo_url = pub_img('auction.history', rec.id, 'player_photo', rec.write_date, 'bs') if rec.player_photo else ''
         p = rec.player_id
         must_hide = (
             (p and p.tier_id and p.tier_id.mystery and not p.mystery_revealed)
@@ -190,7 +235,7 @@ def build_live_board_payload(env, tournament, db_name):
             photo_url = '/auction_module/static/img/default_icon.png'
         recent_history.append({
             'message': msg,
-            'team_logo_url': pub_img('auction.team', rec.team_id.id, 'logo') if rec.team_id and rec.team_id.logo else '',
+            'team_logo_url': pub_img('auction.team', rec.team_id.id, 'logo', rec.team_id.write_date) if rec.team_id and rec.team_id.logo else '',
             'player_photo_url': photo_url,
             'timestamp': rec.create_date.replace(tzinfo=pytz.utc).astimezone(pytz.timezone('Asia/Kolkata')).strftime('%I:%M %p') if rec.create_date else '',
         })
@@ -203,7 +248,7 @@ def build_live_board_payload(env, tournament, db_name):
     for idx, rec in enumerate(top_sold):
         p = rec.player_id
         name = p.name or '' if p else ''
-        photo = pub_img('auction.team.player', p.id, 'photo') if p and p.photo else ''
+        photo = pub_img('auction.team.player', p.id, 'photo', p.write_date, 'bs') if p and p.photo else ''
         role = p.role or '' if p else ''
         if p and p.tier_id and p.tier_id.mystery and not p.mystery_revealed:
             name = '???'
@@ -215,7 +260,7 @@ def build_live_board_payload(env, tournament, db_name):
             'player_photo_url': photo,
             'role': role,
             'team_name': rec.auction_id.team_id.name if rec.auction_id and rec.auction_id.team_id else '',
-            'team_logo_url': pub_img('auction.team', rec.auction_id.team_id.id, 'logo') if rec.auction_id and rec.auction_id.team_id and rec.auction_id.team_id.logo else '',
+            'team_logo_url': pub_img('auction.team', rec.auction_id.team_id.id, 'logo', rec.auction_id.team_id.write_date) if rec.auction_id and rec.auction_id.team_id and rec.auction_id.team_id.logo else '',
             'points': rec.points,
         })
     result['top_players'] = top_players
@@ -244,7 +289,7 @@ def build_live_board_payload(env, tournament, db_name):
                         pos_code = ''.join(w[0] for w in parts).upper()[:3]
                 entry = {
                     'name': p.name or '',
-                    'photo_url': pub_img('auction.team.player', p.id, 'photo') if p.photo else '',
+                    'photo_url': pub_img('auction.team.player', p.id, 'photo', p.write_date, 'bs') if p.photo else '',
                     'role': p.role or '',
                     'position_code': pos_code,
                     'position_name': pos_name,
@@ -262,7 +307,7 @@ def build_live_board_payload(env, tournament, db_name):
             result['teams'].append({
                 'id': team.id,
                 'name': team.name or '',
-                'logo_url': pub_img('auction.team', team.id, 'logo') if team.logo else '',
+                'logo_url': pub_img('auction.team', team.id, 'logo', team.write_date) if team.logo else '',
                 'remaining_points': auc.remaining_points,
                 'manager': team.manager or '',
                 'players': players_payload,
@@ -483,7 +528,250 @@ def build_balance_payload(env, tournament):
             'remaining_points': auction.remaining_points,
             'max_call': auction.get_max_bid_for_team(auction, player_on_stage),
         })
-    return {'teams': teams_data}
+    buckets, counts = build_balance_player_buckets(env, tournament)
+    return {
+        'teams': teams_data,
+        'player_counts': counts,
+        'players': buckets,
+        'sport': (tournament.tournament_type or 'cricket') if tournament else 'cricket',
+    }
+
+
+def player_bucket_counts(env, tournament):
+    """Sold / unsold / in-auction counts for Bid Summary chips (excludes icons)."""
+    counts = {'sold': 0, 'unsold': 0, 'auction': 0}
+    if not tournament:
+        return counts
+    Player = env['auction.team.player'].sudo().with_context(
+        auction_skip_tournament_security=True,
+    )
+    groups = Player.read_group(
+        [
+            ('tournament_id', '=', tournament.id),
+            ('icon_player', '=', False),
+            ('state', 'in', ['sold', 'unsold', 'auction']),
+        ],
+        ['state'],
+        ['state'],
+    )
+    for group in groups:
+        state = group.get('state')
+        if state in counts:
+            counts[state] = group.get('state_count') or 0
+    return counts
+
+
+_FOOT_LABEL = {'left': 'Left', 'right': 'Right', 'both': 'Both'}
+_RATE_LABEL = {'low': 'Low', 'medium': 'Medium', 'high': 'High'}
+
+
+def _balance_player_profile(player, mystery, is_football):
+    """Role + attribute rows matching the public player card (sport-aware)."""
+    if mystery:
+        return '???', []
+    attrs = []
+    if is_football:
+        pos = player.dominant_position_id
+        role = ((pos.name or pos.code) if pos else '') or (player.role or '')
+        if player.use_other_attributes:
+            for item in player.other_attribute_ids:
+                label = (item.label or '').strip()
+                value = (item.value or '').strip()
+                if label and value:
+                    attrs.append({'k': label, 'v': value})
+        else:
+            foot = _FOOT_LABEL.get(player.preferred_foot, '')
+            if foot:
+                attrs.append({'k': 'Foot', 'v': foot})
+            secondary = [
+                (sec.code or sec.name or '').strip()
+                for sec in player.secondary_position_ids
+                if (sec.code or sec.name)
+            ]
+            if secondary:
+                attrs.append({'k': 'Secondary', 'v': ', '.join(secondary)})
+            if player.age:
+                attrs.append({'k': 'Age', 'v': str(player.age)})
+            rate = _RATE_LABEL.get(player.work_rate, '')
+            if rate:
+                attrs.append({'k': 'Work Rate', 'v': rate})
+            tags = []
+            for style in player.playing_style_ids:
+                label = ('%s %s' % (style.icon or '', style.name or '')).strip()
+                if label:
+                    tags.append(label)
+            for strength in player.strength_ids:
+                label = ('%s %s' % (strength.icon or '', strength.name or '')).strip()
+                if label:
+                    tags.append(label)
+            if tags:
+                attrs.append({'k': 'Tags', 'v': ' · '.join(tags)})
+        if player.p_category:
+            attrs.append({'k': 'Category', 'v': player.p_category})
+        return role, attrs
+    role = player.role or ''
+    if player.batting_style:
+        attrs.append({'k': 'Batting', 'v': player.batting_style})
+    if player.bowling_style:
+        attrs.append({'k': 'Bowling', 'v': player.bowling_style})
+    if player.p_category:
+        attrs.append({'k': 'Category', 'v': player.p_category})
+    return role, attrs
+
+
+def build_balance_player_buckets(env, tournament, db_name=None):
+    """Compact player lists for the Bid Summary Redis snapshot (URLs only)."""
+    buckets = {'sold': [], 'unsold': [], 'auction': []}
+    counts = {'sold': 0, 'unsold': 0, 'auction': 0}
+    if not tournament:
+        return buckets, counts
+    db_name = db_name or env.cr.dbname
+    is_football = (tournament.tournament_type or '') == 'football'
+    Player = env['auction.team.player'].sudo().with_context(
+        auction_skip_tournament_security=True,
+    )
+    players = Player.search(
+        [
+            ('tournament_id', '=', tournament.id),
+            ('icon_player', '=', False),
+            ('state', 'in', ['sold', 'unsold', 'auction']),
+        ],
+        order='write_date desc, sl_no asc, id desc',
+    )
+    players.mapped('tier_id')
+    players.mapped('assigned_team_id')
+    players.mapped('dominant_position_id')
+    players.mapped('secondary_position_ids')
+    players.mapped('playing_style_ids')
+    players.mapped('strength_ids')
+    players.mapped('other_attribute_ids')
+    sold_ids = [p.id for p in players if p.state == 'sold']
+    points_by_pid = {}
+    if sold_ids:
+        lines = env['auction.auction.player'].sudo().search([
+            ('player_id', 'in', sold_ids),
+            ('auction_id.tournament_id', '=', tournament.id),
+        ], order='id asc')
+        for line in lines:
+            points_by_pid[line.player_id.id] = line.points or 0
+
+    auction_rows = []
+    for player in players:
+        mystery = bool(
+            player.tier_id and player.tier_id.mystery and not player.mystery_revealed
+        )
+        team = player.assigned_team_id if player.state == 'sold' else False
+        role, attrs = _balance_player_profile(player, mystery, is_football)
+        row = {
+            'id': player.id,
+            'sl_no': player.sl_no or 0,
+            'name': '???' if mystery else (player.name or ''),
+            'photo_url': (
+                '/auction_module/static/img/default_icon.png' if mystery
+                else (
+                    _public_img_url(
+                        db_name, 'auction.team.player', player.id, 'photo',
+                        player.write_date, sz='bs',
+                    ) if player.photo else ''
+                )
+            ),
+            'role': role,
+            'attrs': attrs,
+            'team_id': team.id if team else 0,
+            'team_name': (team.name or '') if team else '',
+            'team_logo_url': (
+                _public_img_url(
+                    db_name, 'auction.team', team.id, 'logo', team.write_date,
+                ) if team and team.logo else ''
+            ),
+            'points': points_by_pid.get(player.id, 0) if player.state == 'sold' else 0,
+            'base_price': player.base_price or 0,
+            'on_stage': bool(player.is_on_stage) if player.state == 'auction' else False,
+            'contact': '' if mystery else (player.contact or ''),
+        }
+        if player.state == 'auction':
+            auction_rows.append((
+                0 if player.is_on_stage else 1,
+                player.sl_no or 0,
+                player.id,
+                row,
+            ))
+        elif player.state in buckets:
+            buckets[player.state].append(row)
+    auction_rows.sort()
+    buckets['auction'] = [item[3] for item in auction_rows]
+    counts = {key: len(buckets[key]) for key in counts}
+    return buckets, counts
+
+
+def _player_row_matches(row, term):
+    term = (term or '').strip().lower()[:80]
+    if not term:
+        return True
+    serial = term.lstrip('#').strip()
+    digits = ''.join(ch for ch in term if ch.isdigit())
+    hay = ' '.join([
+        str(row.get('name') or ''),
+        str(row.get('role') or ''),
+        str(row.get('team_name') or ''),
+        str(row.get('contact') or ''),
+        str(row.get('sl_no') or ''),
+        ' '.join(
+            '%s %s' % (item.get('k') or '', item.get('v') or '')
+            for item in (row.get('attrs') or [])
+            if isinstance(item, dict)
+        ),
+    ]).lower()
+    if term in hay:
+        return True
+    if serial.isdigit() and str(row.get('sl_no') or '') == serial:
+        return True
+    contact_digits = ''.join(ch for ch in str(row.get('contact') or '') if ch.isdigit())
+    if len(digits) >= 3 and digits in contact_digits:
+        return True
+    return False
+
+
+def slice_balance_players(snap, bucket='sold', offset=0, limit=100,
+                          team_id=None, query=None):
+    """Filter/page player rows already stored on the `bal` snapshot."""
+    bucket = (bucket or 'sold').strip().lower()
+    if bucket not in ('sold', 'unsold', 'auction'):
+        bucket = 'sold'
+    try:
+        offset = max(0, int(offset or 0))
+    except (TypeError, ValueError):
+        offset = 0
+    try:
+        limit = int(limit or 100)
+    except (TypeError, ValueError):
+        limit = 100
+    limit = max(1, min(limit, 250))
+    try:
+        team_id = int(team_id) if team_id else None
+    except (TypeError, ValueError):
+        team_id = None
+    query = (query or '').strip()[:80]
+    counts = (snap or {}).get('player_counts') or {
+        'sold': 0, 'unsold': 0, 'auction': 0,
+    }
+    rows = list(((snap or {}).get('players') or {}).get(bucket) or [])
+    if team_id and bucket == 'sold':
+        rows = [row for row in rows if int(row.get('team_id') or 0) == team_id]
+    if query:
+        rows = [row for row in rows if _player_row_matches(row, query)]
+    total = len(rows)
+    return {
+        'bucket': bucket,
+        'total': total,
+        'offset': offset,
+        'limit': limit,
+        'team_id': team_id or 0,
+        'query': query,
+        'players': rows[offset:offset + limit],
+        'counts': counts,
+        'from_snapshot': True,
+    }
 
 
 def attach_seq(payload, seq):

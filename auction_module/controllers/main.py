@@ -50,6 +50,7 @@ import tempfile
 import os
 import subprocess
 import json
+import hashlib
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from odoo import http, fields, api, SUPERUSER_ID
@@ -78,6 +79,25 @@ _logger = logging.getLogger(__name__)
 _LIVE_PAYLOAD_CACHE = {}
 _LIVE_PAYLOAD_LOCK = threading.Lock()
 _LIVE_PAYLOAD_MAX = 48
+_PUBLIC_IMG_CACHE = OrderedDict()
+_PUBLIC_IMG_LOCK = threading.Lock()
+_PUBLIC_IMG_MAX = 400
+
+
+def _public_img_cache_get(key):
+    with _PUBLIC_IMG_LOCK:
+        val = _PUBLIC_IMG_CACHE.get(key)
+        if val is not None:
+            _PUBLIC_IMG_CACHE.move_to_end(key)
+        return val
+
+
+def _public_img_cache_put(key, val):
+    with _PUBLIC_IMG_LOCK:
+        _PUBLIC_IMG_CACHE[key] = val
+        _PUBLIC_IMG_CACHE.move_to_end(key)
+        while len(_PUBLIC_IMG_CACHE) > _PUBLIC_IMG_MAX:
+            _PUBLIC_IMG_CACHE.popitem(last=False)
 
 
 class Auction(http.Controller):
@@ -1064,6 +1084,9 @@ class Auction(http.Controller):
             mode = 'dark'
         company = request.env['res.company'].sudo().search([], limit=1)
         slug = tournament_slug or tournament.slug or ''
+        from odoo.addons.auction_module.services.auction_live_payload import (
+            player_bucket_counts,
+        )
         return request.render(template_ref, {
             'teams': auctions,
             'tournament': tournament,
@@ -1074,6 +1097,10 @@ class Auction(http.Controller):
             'from_projector': from_projector,
             'mode': mode,
             'res_company': company,
+            'player_counts': player_bucket_counts(request.env, tournament),
+            'sse_enabled': request.env['ir.config_parameter'].sudo().get_param(
+                'auction.sse.enabled', 'False'
+            ) in ('True', 'true', '1'),
         }, lazy=False)
 
     @http.route(['''/<string:db_name>/<string:tournament_slug>/auction/show/team/balance'''], type='http', auth="none", website=False)
@@ -1267,6 +1294,50 @@ class Auction(http.Controller):
             data = json.dumps(payload)
         headers = [('Content-Type', 'application/json'), ('Cache-Control', 'max-age=3')]
         return request.make_response(data, headers)
+
+    @http.route(
+        ['/<string:db_name>/<string:tournament_slug>/auction/show/team/balance/players.json'],
+        type='http', auth='none', website=False,
+    )
+    def auction_team_balance_players_json(self, db_name, tournament_slug, **kwargs):
+        """Paginated Sold / Unsold / In-auction players for Bid Summary boards."""
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return request.make_response(
+                    json.dumps({'error': 'unknown database'}),
+                    headers=[('Content-Type', 'application/json')],
+                    status=404,
+                )
+            Tournament = request.env['auction.tournament'].sudo().with_context(
+                auction_skip_tournament_security=True,
+            )
+            tournament = Tournament.search([('slug', '=', tournament_slug)], limit=1)
+            if not tournament:
+                return request.make_response(
+                    json.dumps({'error': 'tournament not found'}),
+                    headers=[('Content-Type', 'application/json')],
+                    status=404,
+                )
+            from odoo.addons.auction_module.services.auction_live_snapshot_service import (
+                get_or_rebuild_snapshot,
+            )
+            from odoo.addons.auction_module.services.auction_live_payload import (
+                slice_balance_players,
+            )
+            snap = get_or_rebuild_snapshot(request.env, tournament, 'bal') or {}
+            payload = slice_balance_players(
+                snap,
+                kwargs.get('bucket') or 'sold',
+                offset=kwargs.get('offset') or 0,
+                limit=kwargs.get('limit') or 100,
+                team_id=kwargs.get('team_id'),
+                query=kwargs.get('q') or kwargs.get('query') or '',
+            )
+            data = json.dumps(payload)
+        return request.make_response(data, [
+            ('Content-Type', 'application/json'),
+            ('Cache-Control', 'private, max-age=0, must-revalidate'),
+        ])
 
     def _tournament_all_squads_full(self, tournament):
         """True when every team in the tournament has a full squad (no slots left)."""
@@ -3029,6 +3100,9 @@ class Auction(http.Controller):
                 'db_name': db_name,
                 'tournament_slug': tournament_slug or (tournament.slug if tournament else ''),
                 'res_company': company,
+                'sse_enabled': request.env['ir.config_parameter'].sudo().get_param(
+                    'auction.sse.enabled', 'False'
+                ) in ('True', 'true', '1'),
             }, lazy=False)
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
@@ -3226,46 +3300,99 @@ class Auction(http.Controller):
         return 'image/jpeg'
 
     def _public_image_bytes(self, binary, model, field, **kw):
-        """Decode binary image; optionally downscale player photos for projector (sz=pj)."""
-        if (
-            model == 'auction.team.player'
-            and field == 'photo'
-            and (kw.get('sz') or '').lower() == 'pj'
-            and binary
-        ):
+        """Decode binary image; optionally downscale player photos.
+
+        ``sz=pj`` — projector stage card. ``sz=bs`` — Bid Summary thumbnail.
+        """
+        sz = (kw.get('sz') or '').lower()
+        if model == 'auction.team.player' and field == 'photo' and binary and sz in ('pj', 'bs'):
+            size = (96, 96) if sz == 'bs' else (720, 1000)
+            quality = 70 if sz == 'bs' else 82
             try:
                 binary = image_process(
-                    binary, size=(720, 1000), quality=82, output_format='JPEG',
+                    binary, size=size, quality=quality, output_format='JPEG',
                 ) or binary
             except Exception:
-                _logger.debug('public image sz=pj resize failed', exc_info=True)
+                _logger.debug('public image sz=%s resize failed', sz, exc_info=True)
         return base64.b64decode(binary)
 
-    def _public_image_response(self, image_bytes):
-        return request.make_response(image_bytes, headers=[
-            ('Content-Type', self._image_mimetype(image_bytes)),
-            # Long browser/CDN cache — projector URLs include ?v=write_date for busting
-            ('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800'),
-        ])
+    def _public_image_headers(self, image_bytes, etag=None, immutable=False):
+        headers = [
+            ('Content-Type', self._image_mimetype(image_bytes) if image_bytes else 'image/jpeg'),
+            ('Cache-Control', (
+                'public, max-age=31536000, immutable'
+                if immutable else
+                'public, max-age=86400, stale-while-revalidate=604800'
+            )),
+        ]
+        if etag:
+            headers.append(('ETag', '"%s"' % etag))
+        return headers
+
+    def _public_image_response(self, image_bytes, etag=None, immutable=False):
+        return request.make_response(
+            image_bytes,
+            headers=self._public_image_headers(image_bytes, etag=etag, immutable=immutable),
+        )
+
+    def _serve_whitelisted_image(self, model, record_id, field, **kw):
+        """Serve a public image with ETag 304 and an in-worker thumb cache."""
+        allowed_fields = self._PUBLIC_IMAGE_FIELDS.get(model)
+        if not allowed_fields or field not in allowed_fields:
+            return request.not_found()
+        try:
+            record_id = int(record_id)
+        except (TypeError, ValueError):
+            return request.not_found()
+        sz = (kw.get('sz') or '').lower()
+        if sz not in ('pj', 'bs'):
+            sz = ''
+
+        Model = request.env[model].sudo()
+        table = Model._table
+        request.env.cr.execute(
+            'SELECT write_date FROM "%s" WHERE id = %%s' % table,
+            (record_id,),
+        )
+        row = request.env.cr.fetchone()
+        if not row:
+            return request.not_found()
+        etag = hashlib.md5(
+            ('%s:%s:%s:%s:%s' % (model, record_id, field, row[0] or '', sz)).encode('utf-8')
+        ).hexdigest()
+        inm = (request.httprequest.headers.get('If-None-Match') or '')
+        inm = inm.replace('W/', '').replace('"', '').strip()
+        immutable = bool(kw.get('v') or sz)
+        if inm == etag:
+            return request.make_response(b'', status=304, headers=[
+                ('ETag', '"%s"' % etag),
+                ('Cache-Control', (
+                    'public, max-age=31536000, immutable' if immutable
+                    else 'public, max-age=86400, stale-while-revalidate=604800'
+                )),
+            ])
+
+        cache_key = None
+        if sz in ('pj', 'bs'):
+            cache_key = (request.env.cr.dbname, model, record_id, field, sz, etag)
+            hit = _public_img_cache_get(cache_key)
+            if hit:
+                return self._public_image_response(hit, etag=etag, immutable=True)
+
+        record = Model.browse(record_id)
+        binary = getattr(record, field, None)
+        if not binary:
+            return request.not_found()
+        image_bytes = self._public_image_bytes(binary, model, field, sz=sz)
+        if cache_key:
+            _public_img_cache_put(cache_key, image_bytes)
+        return self._public_image_response(image_bytes, etag=etag, immutable=immutable)
 
     @http.route('/auction/public/image/<string:model>/<int:record_id>/<string:field>',
                 type='http', auth='public', website=False, csrf=False)
     def auction_public_image(self, model, record_id, field, **kw):
         """Serve binary images to unauthenticated users for the public live-board."""
-        allowed_fields = self._PUBLIC_IMAGE_FIELDS.get(model)
-        if not allowed_fields or field not in allowed_fields:
-            return request.not_found()
-
-        record = request.env[model].sudo().browse(record_id)
-        if not record.exists():
-            return request.not_found()
-
-        binary = getattr(record, field, None)
-        if not binary:
-            return request.not_found()
-
-        return self._public_image_response(
-            self._public_image_bytes(binary, model, field, **kw))
+        return self._serve_whitelisted_image(model, record_id, field, **kw)
 
     @http.route('/<string:db_name>/auction/public/image/<string:model>/<int:record_id>/<string:field>',
                 type='http', auth='none', website=False, csrf=False)
@@ -3278,21 +3405,8 @@ class Auction(http.Controller):
         with self._with_db(db_name) as ok:
             if not ok:
                 return self._not_found()
-
-            allowed_fields = self._PUBLIC_IMAGE_FIELDS.get(model)
-            if not allowed_fields or field not in allowed_fields:
-                return self._not_found()
-
-            record = request.env[model].sudo().browse(record_id)
-            if not record.exists():
-                return self._not_found()
-
-            binary = getattr(record, field, None)
-            if not binary:
-                return self._not_found()
-
-            image_bytes = self._public_image_bytes(binary, model, field, **kw)
-        return self._public_image_response(image_bytes)
+            response = self._serve_whitelisted_image(model, record_id, field, **kw)
+        return response
 
     @http.route('/auction/live-board', type='http', auth='none', website=False)
     def auction_live_board_legacy(self, **kw):
@@ -3389,6 +3503,9 @@ class Auction(http.Controller):
                     'theme': theme,
                     'db_name': db_name,
                     'tournament_slug': tournament_slug,
+                    'sse_enabled': request.env['ir.config_parameter'].sudo().get_param(
+                        'auction.sse.enabled', 'False'
+                    ) in ('True', 'true', '1'),
                 }, lazy=False)
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 

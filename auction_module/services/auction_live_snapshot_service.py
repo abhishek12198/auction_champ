@@ -100,6 +100,13 @@ def write_snapshots_to_redis(env, tournament_id, seq, snapshots):
     # Self-heal Phase 2B slug map after a successful snapshot write.
     if ok and tournament.exists() and tournament.slug:
         redis_svc.set_slug_tid(env, tournament.slug, tournament.id)
+    # Phase 3: publish invalidation only after CAS succeeded and snapshots exist.
+    if ok:
+        targets = [k for k in ('lb', 'pj', 'bal') if snapshots.get(k) is not None]
+        try:
+            redis_svc.publish_tournament_event(env, tournament_id, seq, targets)
+        except Exception:
+            _logger.debug('auction redis publish skipped', exc_info=True)
     return ok
 
 
@@ -133,6 +140,27 @@ def rebuild_tournament_snapshots(env, tournament_id, snapshot_seq, snapshot_type
         return False
 
 
+def _snapshot_schema_ok(kind, payload):
+    """Reject stale `bal` JSON so Bid Summary rebuilds player lists/attrs."""
+    if not payload or not isinstance(payload, dict):
+        return False
+    if kind == 'bal':
+        players = payload.get('players')
+        if not isinstance(players, dict):
+            return False
+        for bucket in ('sold', 'unsold', 'auction'):
+            rows = players.get(bucket) or []
+            if rows and not isinstance(rows[0], dict):
+                return False
+            if rows and 'attrs' not in rows[0]:
+                return False
+            for row in rows[:8]:
+                photo = row.get('photo_url') or ''
+                if photo and 'sz=bs' not in photo and 'default_icon' not in photo:
+                    return False
+    return True
+
+
 def _redis_fresh(env, tournament, kind, pg_seq):
     redis_seq = redis_svc.get_seq(env, tournament.id)
     # Missing key only — seq 0 is a valid committed version.
@@ -147,6 +175,8 @@ def _redis_fresh(env, tournament, kind, pg_seq):
     if payload_seq is None:
         return None
     if int(payload_seq) != int(pg_seq):
+        return None
+    if not _snapshot_schema_ok(kind, payload):
         return None
     return payload
 
@@ -217,7 +247,7 @@ def get_or_rebuild_snapshot(env, tournament, kind):
             waited = redis_svc.wait_for_snapshot(
                 env, tournament.id, kind, pg_seq,
             )
-            if waited is not None:
+            if waited is not None and _snapshot_schema_ok(kind, waited):
                 return waited
         except Exception:
             _logger.warning(
@@ -225,7 +255,7 @@ def get_or_rebuild_snapshot(env, tournament, kind):
                 tournament.id, kind, exc_info=True,
             )
     cached = _tertiary_cache_get(kind, tournament)
-    if cached is not None:
+    if cached is not None and _snapshot_schema_ok(kind, cached):
         return payload_svc.attach_seq(cached, pg_seq) if 'seq' not in cached else cached
     t0 = time.monotonic()
     payload = _build_kind(env, tournament, kind, pg_seq)

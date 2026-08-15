@@ -216,12 +216,15 @@
 <t t-set="theme_val" t-value="theme or 'vanilla'"/>
 <html t-att-data-theme="theme_val"
       t-att-data-sport="(tournament.tournament_type if tournament else 'cricket') or 'cricket'"
-      t-att-data-live-data-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/live-board/data'">
+      t-att-data-live-data-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/live-board/data'"
+      t-att-data-sse-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/live-board/events'"
+      t-att-data-sse-enabled="'1' if sse_enabled else '0'">
 <head>
 <meta charset="UTF-8"/>
   <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title><t t-if="tournament and tournament.name"><t t-esc="tournament.name"/> - Live Board</t><t t-else="">Live Board</t></title>
+<script src="/auction_module/static/src/js/auction_sse_client.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin"/>
@@ -2776,15 +2779,13 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
   // ── Player photo (preload so old sold face never lingers) ──────
   var _lbPhotoLoadToken = 0;
   var _lbLastPhotoUrl = null;
+  var _fpHistory = null;
+  var _fpMvp = null;
+  var _fpTeams = null;
 
   function lbShowPhotoLoader() {
-    var img = document.getElementById('lb-player-img');
     var ph = document.getElementById('lb-photo-ph');
-    if (!img || !ph) return;
-    img.style.display = 'none';
-    img.style.opacity = '0';
-    img.removeAttribute('src');
-    _lbLastPhotoUrl = null;
+    if (!ph) return;
     ph.classList.add('lb-photo-loading');
     ph.style.display = 'flex';
     ph.innerHTML = ''
@@ -2819,9 +2820,9 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     }
 
     var url = p.photo_url;
-    // Same photo already visible — only refresh mystery filter
-    if (url === _lbLastPhotoUrl && img.getAttribute('src') === url && img.style.display !== 'none') {
+    if (url === _lbLastPhotoUrl && img.getAttribute('src') === url) {
       img.style.filter = mysteryHidden ? 'grayscale(1) brightness(0.72)' : '';
+      img.style.display = 'block';
       img.style.opacity = '1';
       ph.classList.remove('lb-photo-loading');
       ph.style.display = 'none';
@@ -2829,20 +2830,22 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     }
 
     var token = ++_lbPhotoLoadToken;
+    _lbLastPhotoUrl = url;
+    img.style.filter = mysteryHidden ? 'grayscale(1) brightness(0.72)' : '';
+    img.style.display = 'none';
+    img.style.opacity = '0';
     lbShowPhotoLoader();
 
-    var pre = new Image();
-    pre.onload = function () {
+    function reveal() {
       if (token !== _lbPhotoLoadToken) return;
-      img.src = url;
-      _lbLastPhotoUrl = url;
-      img.style.filter = mysteryHidden ? 'grayscale(1) brightness(0.72)' : '';
       img.style.display = 'block';
       img.style.opacity = '1';
       ph.classList.remove('lb-photo-loading');
       ph.style.display = 'none';
-    };
-    pre.onerror = function () {
+    }
+
+    img.onload = reveal;
+    img.onerror = function () {
       if (token !== _lbPhotoLoadToken) return;
       _lbLastPhotoUrl = null;
       img.style.display = 'none';
@@ -2853,8 +2856,11 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       ph.style.display = 'flex';
       ph.textContent = mysteryHidden ? '?' : '👤';
     };
-    // Cached images fire onload immediately → "spot" swap with no loader flash
-    pre.src = url;
+    if (img.getAttribute('src') === url && img.complete && img.naturalWidth) {
+      reveal();
+      return;
+    }
+    img.src = url;
   }
 
   // ── Render Player Panel ────────────────────────────────────────
@@ -3092,6 +3098,9 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
 
   function renderHistory(history) {
     const list = document.getElementById('lb-history-list');
+    var fp = JSON.stringify(history || []);
+    if (fp === _fpHistory) return;
+    _fpHistory = fp;
     if (!history || !history.length) {
       list.innerHTML = '<div class="lb-history-empty">No transactions yet</div>';
       return;
@@ -3111,6 +3120,9 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
   // ── Render MVP / Top Buys ──────────────────────────────────────
   function renderTopPlayers(topPlayers) {
     const list = document.getElementById('lb-mvp-list');
+    var fp = JSON.stringify(topPlayers || []);
+    if (fp === _fpMvp) return;
+    _fpMvp = fp;
     if (!topPlayers || !topPlayers.length) {
       list.innerHTML = '<div class="lb-mvp-empty">No sold players yet</div>';
       return;
@@ -3152,6 +3164,9 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
   function renderTeams(teams) {
     const card = document.getElementById('lb-teams-card');
     const grid = document.getElementById('lb-teams-grid');
+    var fp = JSON.stringify(teams || []);
+    if (fp === _fpTeams) return;
+    _fpTeams = fp;
     if (!teams || !teams.length) { card.style.display = 'none'; return; }
     card.style.display = '';
     _teamsData = teams;
@@ -3294,10 +3309,8 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
   }
 
   // ── Polling ────────────────────────────────────────────────────
-  function poll() {
-    fetch(document.documentElement.dataset.liveDataUrl, { cache: 'no-store' })
-      .then(r => r.json())
-      .then(data => {
+  function applyLiveBoardData(data) {
+        if (!data) return;
         // Apply theme + sport
         if (data.theme) {
           document.documentElement.setAttribute('data-theme', data.theme);
@@ -3312,13 +3325,10 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
         const newState = p ? p.state : null;
         const newMysteryRevealed = p ? !!p.mystery_revealed : null;
 
-        // If player changed or state changed (e.g. auction→sold), flash the player panel
         const playerChanged = (newId !== lastPlayerId) || (newState !== lastState)
           || (newMysteryRevealed !== lastMysteryRevealed);
         const playerSwitched = (newId !== lastPlayerId);
         if (playerSwitched) {
-          // New player: show loader immediately and render attributes now (no old face linger)
-          lbShowPhotoLoader();
           renderPlayer(p, data.sold_info);
           renderStatus(p, data.sold_info);
         } else if (playerChanged && (lastPlayerId !== null || newId !== null)) {
@@ -3346,7 +3356,12 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
         handleThankYou(data.wait_phase || {}, data.tournament || {});
         handleBreakTime(!!data.break_time, data.tournament || {});
         updateAds(data.advertisers || []);
-      })
+  }
+
+  function poll() {
+    fetch(document.documentElement.dataset.liveDataUrl, { cache: 'no-store' })
+      .then(r => r.json())
+      .then(data => { applyLiveBoardData(data); })
       .catch(function() {});
   }
 
@@ -3359,8 +3374,20 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     else { poll(); startPolling(); }
   });
   window.addEventListener('beforeunload', function() { stopPolling(); clearInterval(_clockTimer); });
-  poll();
-  startPolling();
+  window.__acApplyLiveBoard = applyLiveBoardData;
+  var _sseCtl = null;
+  if (window.AuctionChampSSE && window.AuctionChampSSE.enabled(document.documentElement)) {
+    _sseCtl = window.AuctionChampSSE.bind({
+      url: document.documentElement.dataset.sseUrl,
+      apply: applyLiveBoardData,
+      startPoll: function () { poll(); startPolling(); },
+      stopPoll: stopPolling,
+      onStampExpiry: function () { poll(); },
+    });
+  } else {
+    poll();
+    startPolling();
+  }
   window._auctionLbPoll = poll;
 })();
 ]]></script>

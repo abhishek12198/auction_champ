@@ -72,6 +72,13 @@ class FakeRedis(object):
         self.store[seq_key] = incoming
         return 1
 
+    def publish(self, channel, message):
+        self.calls.append(('publish', channel, message))
+        if self.fail_next == 'publish':
+            self.fail_next = None
+            raise ConnectionError('redis down')
+        return 1
+
 
 class FakeEnv(object):
     def __init__(self, enabled=True, uri='redis://127.0.0.1:6379/1', dbname='db_a'):
@@ -214,6 +221,19 @@ class TestRedisService(unittest.TestCase):
         ok = redis_svc.write_snapshots(env, 7, 8, {'lb': {'seq': 8, 'rebuilt': True}})
         self.assertTrue(ok)
         self.assertEqual(redis_svc.get_snapshot(env, 7, 'lb')['rebuilt'], True)
+
+    def test_publish_tournament_event(self):
+        env = FakeEnv(enabled=True)
+        ok = redis_svc.publish_tournament_event(env, 13, 42, ['lb', 'pj'])
+        self.assertTrue(ok)
+        pubs = [c for c in self.fake.calls if c[0] == 'publish']
+        self.assertEqual(len(pubs), 1)
+        channel, raw = pubs[0][1], pubs[0][2]
+        self.assertEqual(channel, 'ac:db_a:t:13:events')
+        data = json.loads(raw)
+        self.assertEqual(data['seq'], 42)
+        self.assertEqual(data['targets'], ['lb', 'pj'])
+        self.assertEqual(data['event'], 'auction.update')
 
 
 class TestOutOfOrderCallbacks(unittest.TestCase):

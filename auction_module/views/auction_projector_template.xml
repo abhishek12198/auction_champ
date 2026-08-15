@@ -1362,11 +1362,14 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   window.PJ_SLUG = '<t t-esc="tournament_slug or (tournament.slug if tournament else '')"/>';
   window.PJ_SPORT = '<t t-esc="sport or 'cricket'"/>';
   window.PJ_DATA_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/data';
+  window.PJ_EVENTS_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/events';
+  window.PJ_SSE_ENABLED = '<t t-esc="'1' if sse_enabled else '0'"/>';
   window.PJ_SQUAD_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/squad';
   window.PJ_REMAIN_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/remaining';
   window.PJ_BOARD_CLOSE_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/boards/close';
   window.PJ_BOARD_SHOW_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/boards/show';
 </script>
+<script src="/auction_module/static/src/js/auction_sse_client.js"></script>
 <t t-call="auction_module.point_unit_bootstrap">
   <t t-set="pu_tournament" t-value="tournament"/>
 </t>
@@ -2756,28 +2759,29 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   var _pjPollBurst = 400;
   var _pjBurstUntil = 0;
   var _pjLastFp = '';
+  var _pjPollAllowed = true;
   function pjPollDelay() {
     return (Date.now() < _pjBurstUntil) ? _pjPollBurst : _pjPollIdle;
   }
   function schedulePjPoll() {
+    if (!_pjPollAllowed) return;
     clearTimeout(_pollTimer);
     _pollTimer = setTimeout(poll, pjPollDelay());
   }
   function armPjBurst() {
     _pjBurstUntil = Date.now() + 6000;
   }
-  function poll() {
-    if (_pjPollInFlight) return;
-    _pjPollInFlight = true;
-    fetch(window.PJ_DATA_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({jsonrpc:'2.0',method:'call',params:{}}),
-      cache: 'no-store'
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(json) {
-      var result = json.result || {};
+  function startPjPolling() {
+    _pjPollAllowed = true;
+    schedulePjPoll();
+  }
+  function stopPjPolling() {
+    _pjPollAllowed = false;
+    clearTimeout(_pollTimer);
+    _pollTimer = null;
+  }
+  function applyProjectorResult(result) {
+      result = result || {};
       var p = result.player;
       var d0 = result.dice || {};
       var fp = [
@@ -2799,7 +2803,6 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       updatePjBreakAds(result.advertisers || []);
       var waitPhase = result.wait_phase || {};
       var boards = result.boards || {};
-      // Declare Auction Complete / Thank You must override pool & fixture boards
       if (waitPhase.phase === 'completed') {
         boards = Object.assign({}, boards, {
           mode: 'idle',
@@ -2847,7 +2850,6 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
           || !!p.mystery_revealed !== !!_currentMysteryRevealed) {
         var prevId = _currentId;
         var prevState = _currentState;
-        /* Fire on any transition into sold/unsold (same player auction→sold, or stamp). */
         var playStatusSound = !revealOnly
           && (p.state === 'sold' || p.state === 'unsold')
           && prevState !== p.state;
@@ -2859,6 +2861,19 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       } else {
         updateStatusRibbon(p);
       }
+  }
+  function poll() {
+    if (_pjPollInFlight || !_pjPollAllowed) return;
+    _pjPollInFlight = true;
+    fetch(window.PJ_DATA_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({jsonrpc:'2.0',method:'call',params:{}}),
+      cache: 'no-store'
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(json) {
+      applyProjectorResult(json.result || {});
     })
     .catch(function(e){ console.error('[Projector] poll error:', e); })
     .then(function() { _pjPollInFlight = false; schedulePjPoll(); });
@@ -2874,7 +2889,18 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     el.textContent = h + ':' + (m < 10 ? '0' : '') + m + ' ' + ampm;
   }
 
-  poll();
+  window.__acApplyProjector = applyProjectorResult;
+  if (window.AuctionChampSSE && window.PJ_SSE_ENABLED === '1') {
+    window.AuctionChampSSE.bind({
+      url: window.PJ_EVENTS_URL,
+      apply: applyProjectorResult,
+      startPoll: function () { startPjPolling(); poll(); },
+      stopPoll: stopPjPolling,
+      onStampExpiry: function () { poll(); },
+    });
+  } else {
+    poll();
+  }
   setPjDiceFace(1);
   tickClock();
   setInterval(tickClock, 15000);

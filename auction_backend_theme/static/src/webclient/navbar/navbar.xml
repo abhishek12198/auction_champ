@@ -42,6 +42,20 @@
                     <p class="ac-apps-tagline">Premier Sports Auction Platform</p>
                 </div>
 
+                <!-- SaaS account expiry (from session.saas_expiry_warning) -->
+                <div t-if="saasExpiryWarning"
+                     t-att-class="'ac-saas-expiry-banner' + ((saasExpiryWarning.urgent || saasAccountFrozen) ? ' o_urgent' : '')"
+                     role="status">
+                    <i class="fa fa-exclamation-triangle"/>
+                    <span t-esc="saasExpiryWarning.message"/>
+                </div>
+                <div t-elif="saasAccountFrozen"
+                     class="ac-saas-expiry-banner o_urgent"
+                     role="status">
+                    <i class="fa fa-exclamation-triangle"/>
+                    <span>Your account has expired and is frozen. Request reactivation from the top bar to continue.</span>
+                </div>
+
                 <!-- ── Floating sports emoji (CSS-animated) ── -->
                 <div class="ac-apps-floaters" aria-hidden="true">
                     <span>🏆</span>
@@ -59,7 +73,10 @@
                         t-as="app"
                         t-key="app.id"
                         class="o_app"
-                        t-att-class="{ focus: menuService.getCurrentApp() === app }"
+                        t-att-class="{
+                            focus: menuService.getCurrentApp() === app,
+                            'o_saas_app_frozen': saasAccountFrozen &amp;&amp; app.name === 'Player Showcase'
+                        }"
                         payload="app"
                     >
                         <a t-att-href="getMenuItemHref(app)" t-on-click.prevent="">
@@ -121,7 +138,7 @@
 
         <!-- ── Append the left sidebar AppsBar inside the nav ── -->
         <xpath expr="//nav" position="inside">
-            <AppsBar apps="apps" currentApp="menuService.getCurrentApp()"/>
+            <AppsBar apps="apps" currentApp="menuService.getCurrentApp()" saasAccountFrozen="saasAccountFrozen"/>
         </xpath>
 
     </t>

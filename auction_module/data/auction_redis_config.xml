@@ -10,5 +10,10 @@
             <field name="key">auction.redis.uri</field>
             <field name="value">redis://127.0.0.1:6379/1</field>
         </record>
+        <!-- Phase 3 SSE: frontend uses this; gateway always serves /events. -->
+        <record id="config_auction_sse_enabled" model="ir.config_parameter">
+            <field name="key">auction.sse.enabled</field>
+            <field name="value">False</field>
+        </record>
     </data>
 </odoo>

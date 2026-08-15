@@ -13,6 +13,7 @@ HOST = os.environ.get('AUCTION_GATEWAY_HOST', '127.0.0.1')
 PORT = int(os.environ.get('AUCTION_GATEWAY_PORT', '8090'))
 CONNECT_TIMEOUT = float(os.environ.get('AUCTION_REDIS_CONNECT_TIMEOUT', '0.05'))
 SOCKET_TIMEOUT = float(os.environ.get('AUCTION_REDIS_SOCKET_TIMEOUT', '0.1'))
+SSE_HEARTBEAT_SECONDS = float(os.environ.get('AUCTION_SSE_HEARTBEAT_SECONDS', '15'))
 
 # Conservative path segments: Odoo db names / slugs
 DB_RE = re.compile(r'^[A-Za-z0-9_][A-Za-z0-9_.-]{0,62}$')

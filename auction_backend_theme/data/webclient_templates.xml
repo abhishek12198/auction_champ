@@ -4,6 +4,9 @@
         Inject Google Fonts (Rajdhani + Bebas Neue) into the backend <head>.
         Pattern mirrors muk_web_theme: override web.webclient_bootstrap and prepend
         to the existing head variable via string concatenation.
+
+        Also inject critical boot CSS + a branded splash so post-login navigation
+        never paints a blank white body while assets/Owl are still loading.
     -->
     <template id="webclient_google_fonts"
               inherit_id="web.webclient_bootstrap"
@@ -16,8 +19,204 @@
                 <link rel="preconnect" href="https://fonts.googleapis.com"/>
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
                 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&amp;family=Bebas+Neue&amp;display=swap" rel="stylesheet"/>
+                <!-- Critical early paint: navy shell before web.assets_backend arrives -->
+                <style id="ac-boot-critical">
+                    /* Only paint html — avoid overriding body.o_web_client after Owl mounts */
+                    html {
+                        background: #060e22;
+                    }
+                    body.o_web_client {
+                        margin: 0;
+                    }
+                    #ac-boot-splash {
+                        position: fixed;
+                        inset: 0;
+                        z-index: 99999;
+                        display: -webkit-flex;
+                        display: flex;
+                        -webkit-flex-direction: column;
+                                flex-direction: column;
+                        -webkit-align-items: center;
+                                align-items: center;
+                        -webkit-justify-content: center;
+                                justify-content: center;
+                        gap: 0;
+                        pointer-events: none;
+                        font-family: Rajdhani, Bebas Neue, system-ui, sans-serif;
+                        background:
+                            radial-gradient(ellipse 60% 52% at 8% 0%, rgba(253,206,51,0.13) 0%, transparent 62%),
+                            radial-gradient(ellipse 60% 52% at 92% 0%, rgba(253,206,51,0.13) 0%, transparent 62%),
+                            radial-gradient(ellipse 75% 55% at 50% 35%, rgba(34,82,181,0.20) 0%, transparent 70%),
+                            linear-gradient(180deg, #060e22 0%, #0a1429 40%, #0f1e3a 70%, #060e22 100%);
+                    }
+                    #ac-boot-splash .ac-spin-track {
+                        position: relative;
+                        width: 110px;
+                        height: 110px;
+                        margin-bottom: 28px;
+                    }
+                    #ac-boot-splash .ac-spin-ring {
+                        position: absolute;
+                        inset: 0;
+                        border-radius: 50%;
+                        border: 3px solid rgba(253,206,51,0.12);
+                        border-top-color: #fdce33;
+                        border-right-color: rgba(253,206,51,0.55);
+                        -webkit-animation: acBootSpinCW 0.9s linear infinite;
+                                animation: acBootSpinCW 0.9s linear infinite;
+                    }
+                    #ac-boot-splash .ac-spin-ring-inner {
+                        position: absolute;
+                        inset: 12px;
+                        border-radius: 50%;
+                        border: 2px solid rgba(34,82,181,0.18);
+                        border-bottom-color: #2252b5;
+                        border-left-color: rgba(34,82,181,0.55);
+                        -webkit-animation: acBootSpinCCW 1.4s linear infinite;
+                                animation: acBootSpinCCW 1.4s linear infinite;
+                    }
+                    #ac-boot-splash .ac-spin-icon {
+                        position: absolute;
+                        inset: 22px;
+                        border-radius: 50%;
+                        background: linear-gradient(135deg, #1a3f96 0%, #2252b5 60%, #2563eb 100%);
+                        box-shadow: 0 0 18px rgba(253,206,51,0.22);
+                        display: -webkit-flex;
+                        display: flex;
+                        -webkit-align-items: center;
+                                align-items: center;
+                        -webkit-justify-content: center;
+                                justify-content: center;
+                        -webkit-animation: acBootPulse 2s ease-in-out infinite;
+                                animation: acBootPulse 2s ease-in-out infinite;
+                    }
+                    #ac-boot-splash .ac-spin-icon svg {
+                        width: 28px;
+                        height: auto;
+                    }
+                    #ac-boot-splash .ac-load-wordmark {
+                        width: 180px;
+                        height: auto;
+                        opacity: 0.9;
+                        filter: drop-shadow(0 2px 8px rgba(253,206,51,0.18));
+                        margin-bottom: 22px;
+                    }
+                    #ac-boot-splash .ac-load-msg {
+                        font-size: 1.05rem;
+                        font-weight: 800;
+                        letter-spacing: 1.5px;
+                        color: #fdce33;
+                        text-align: center;
+                        min-height: 1.6em;
+                        margin-bottom: 12px;
+                        -webkit-transition: opacity .25s;
+                                transition: opacity .25s;
+                    }
+                    #ac-boot-splash .ac-load-msg.ac-fade {
+                        opacity: 0;
+                    }
+                    #ac-boot-splash .ac-load-dots {
+                        display: -webkit-flex;
+                        display: flex;
+                        gap: 7px;
+                        margin-bottom: 14px;
+                    }
+                    #ac-boot-splash .ac-load-dots span {
+                        width: 7px;
+                        height: 7px;
+                        border-radius: 50%;
+                        background: #fdce33;
+                        -webkit-animation: acBootDot 1.1s ease-in-out infinite;
+                                animation: acBootDot 1.1s ease-in-out infinite;
+                    }
+                    #ac-boot-splash .ac-load-dots span:nth-child(2) {
+                        -webkit-animation-delay: .18s;
+                                animation-delay: .18s;
+                        background: rgba(253,206,51,0.7);
+                    }
+                    #ac-boot-splash .ac-load-dots span:nth-child(3) {
+                        -webkit-animation-delay: .36s;
+                                animation-delay: .36s;
+                        background: rgba(253,206,51,0.45);
+                    }
+                    #ac-boot-splash .ac-load-sub {
+                        font-size: 0.65rem;
+                        font-weight: 700;
+                        letter-spacing: 3px;
+                        text-transform: uppercase;
+                        color: rgba(255,255,255,0.22);
+                    }
+                    @-webkit-keyframes acBootSpinCW  { to { -webkit-transform: rotate(360deg); transform: rotate(360deg); } }
+                            @keyframes acBootSpinCW  { to { -webkit-transform: rotate(360deg); transform: rotate(360deg); } }
+                    @-webkit-keyframes acBootSpinCCW { to { -webkit-transform: rotate(-360deg); transform: rotate(-360deg); } }
+                            @keyframes acBootSpinCCW { to { -webkit-transform: rotate(-360deg); transform: rotate(-360deg); } }
+                    @-webkit-keyframes acBootPulse {
+                        0%, 100% { box-shadow: 0 0 16px rgba(253,206,51,0.22); }
+                        50%       { box-shadow: 0 0 32px rgba(253,206,51,0.45); }
+                    }
+                    @keyframes acBootPulse {
+                        0%, 100% { box-shadow: 0 0 16px rgba(253,206,51,0.22); }
+                        50%       { box-shadow: 0 0 32px rgba(253,206,51,0.45); }
+                    }
+                    @-webkit-keyframes acBootDot {
+                        0%, 80%, 100% { -webkit-transform: translateY(0) scale(0.75); transform: translateY(0) scale(0.75); opacity: 0.5; }
+                        40%           { -webkit-transform: translateY(-9px) scale(1.15); transform: translateY(-9px) scale(1.15); opacity: 1; }
+                    }
+                    @keyframes acBootDot {
+                        0%, 80%, 100% { -webkit-transform: translateY(0) scale(0.75); transform: translateY(0) scale(0.75); opacity: 0.5; }
+                        40%           { -webkit-transform: translateY(-9px) scale(1.15); transform: translateY(-9px) scale(1.15); opacity: 1; }
+                    }
+                </style>
             </t>
             <t t-set="head" t-value="head_auction_fonts + (head or '')"/>
+        </xpath>
+
+        <!-- Branded splash lives in the empty body until Owl WebClient mounts -->
+        <xpath expr="//t[@t-set='body_classname']" position="after">
+            <div id="ac-boot-splash" aria-live="polite" aria-busy="true">
+                <div class="ac-spin-track">
+                    <div class="ac-spin-ring"></div>
+                    <div class="ac-spin-ring-inner"></div>
+                    <div class="ac-spin-icon">
+                        <svg viewBox="0 0 37 37" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M0 2.229C0 0.998 0.998 0 2.229 0H34.771C36.002 0 37 0.998 37 2.229V16.643C36.549 16.638 36.067 16.633 35.553 16.627C34.861 16.620 34.110 16.612 33.295 16.603L23.274 16.489L23.298 13.887L23.318 11.291L23.718 11.201C24.721 10.980 25.327 9.897 25.007 8.913C24.863 8.458 24.419 7.966 24.007 7.784C23.649 7.638 12.479 7.506 12.069 7.645C11.629 7.803 11.156 8.286 10.994 8.767C10.761 9.435 10.907 10.092 11.405 10.599C11.693 10.893 12.164 11.135 12.484 11.153C12.612 11.164 12.628 12.016 12.623 18.260C12.617 25.060 12.609 25.350 12.437 25.344C12.146 25.326 11.661 25.577 11.308 25.933C10.223 27.006 10.729 28.775 12.190 29.022C12.352 29.048 14.969 29.071 17.994 29.063C21.764 29.058 23.602 29.023 23.834 28.951C24.284 28.803 24.816 28.282 24.954 27.854C25.294 26.779 24.645 25.649 23.572 25.480L23.287 25.437L23.311 22.836L23.336 20.234L33.383 20.334C34.770 20.347 35.967 20.359 37 20.368V37H29.868V35.663C29.868 34.924 29.269 34.325 28.530 34.325H8.470C7.731 34.325 7.133 34.924 7.133 35.663V37H0V2.229Z" fill="white"/>
+                        </svg>
+                    </div>
+                </div>
+                <img class="ac-load-wordmark"
+                     src="/auction_backend_theme/static/img/logo.svg"
+                     alt="Auction Champ"/>
+                <div class="ac-load-msg" id="ac-boot-msg">Entering the Arena...</div>
+                <div class="ac-load-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                <div class="ac-load-sub">Please wait</div>
+            </div>
+            <script>
+                (function () {
+                    var messages = [
+                        'Entering the Arena...',
+                        'Loading the Squad...',
+                        'Taking the Field...',
+                        'Toss in Progress...',
+                        'Locking in your Bid...',
+                        'Warming Up...',
+                        'Counting the Purse...',
+                        'Checking the Roster...',
+                    ];
+                    var idx = 0;
+                    var msgEl = document.getElementById('ac-boot-msg');
+                    if (!msgEl) { return; }
+                    setInterval(function () {
+                        msgEl.classList.add('ac-fade');
+                        setTimeout(function () {
+                            idx = (idx + 1) % messages.length;
+                            msgEl.textContent = messages[idx];
+                            msgEl.classList.remove('ac-fade');
+                        }, 260);
+                    }, 1400);
+                })();
+            </script>
         </xpath>
     </template>
 </odoo>

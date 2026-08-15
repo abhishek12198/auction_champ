@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <template id="bid_summary_tracker_pulse" name="Bid Summary tracker chips">
+    <div class="bs2-pulse" id="bs2-pulse" role="tablist" aria-label="Auction tracker">
+      <button type="button" class="bs2-pulse-btn bs2-pulse-teams active" id="pulse-teams" aria-pressed="true">
+        Summary
+      </button>
+      <button type="button" class="bs2-pulse-btn bs2-pulse-sold" id="pulse-sold" aria-pressed="false">
+        Sold <span class="bs2-pulse-n" id="pulse-sold-n"><t t-esc="(player_counts or {}).get('sold', 0)"/></span>
+      </button>
+      <button type="button" class="bs2-pulse-btn bs2-pulse-unsold" id="pulse-unsold" aria-pressed="false">
+        Unsold <span class="bs2-pulse-n" id="pulse-unsold-n"><t t-esc="(player_counts or {}).get('unsold', 0)"/></span>
+      </button>
+      <button type="button" class="bs2-pulse-btn bs2-pulse-auction" id="pulse-auction" aria-pressed="false">
+        In auction <span class="bs2-pulse-n" id="pulse-auction-n"><t t-esc="(player_counts or {}).get('auction', 0)"/></span>
+      </button>
+      <div class="bs2-pulse-filter" id="pulse-filter">
+        <span>Filtered: <span id="pulse-filter-name"></span></span>
+        <button type="button" class="bs2-pulse-clear" id="pulse-clear">Clear</button>
+      </div>
+    </div>
+  </template>
+
+  <template id="bid_summary_tracker_board" name="Bid Summary player board">
+    <div class="bs2-tracker-players" id="tracker-players">
+      <div class="bs2-pl-head">
+        <div class="bs2-pl-title" id="pl-title">Sold</div>
+        <label class="bs2-pl-search-wrap">
+          <span class="bs2-pl-search-lbl">Search</span>
+          <input type="search" class="bs2-pl-search" id="pl-search"
+                 placeholder="Name, #serial, phone, role, team"
+                 autocomplete="off" spellcheck="false"/>
+        </label>
+        <button type="button" class="bs2-pl-more" id="pl-more">Show more</button>
+      </div>
+      <div class="bs2-pl-list" id="pl-list"></div>
+    </div>
+  </template>
+</odoo>

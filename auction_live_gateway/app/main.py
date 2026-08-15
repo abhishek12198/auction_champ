@@ -89,6 +89,25 @@ def _serve_kind(db, slug, kind, wrap_jsonrpc=False):
     if raw is None:
         return _miss()
 
+    # Pre-tracker Bid Summary snapshots have teams only. Fall back to Odoo
+    # so it rebuilds Redis with Sold/Unsold/In-auction player lists.
+    if kind == 'bal':
+        try:
+            bal = json.loads(raw)
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return _error()
+        if not isinstance(bal, dict) or not isinstance(bal.get('players'), dict):
+            return _miss()
+        bags = bal.get('players') or {}
+        for bucket in ('sold', 'unsold', 'auction'):
+            rows = bags.get(bucket) or []
+            if rows and (not isinstance(rows[0], dict) or 'attrs' not in rows[0]):
+                return _miss()
+            for row in rows[:8]:
+                photo = row.get('photo_url') or ''
+                if photo and 'sz=bs' not in photo and 'default_icon' not in photo:
+                    return _miss()
+
     if wrap_jsonrpc:
         try:
             payload = json.loads(raw)
@@ -143,3 +162,26 @@ async def projector(db: str, slug: str, request: Request):
     # Accept POST so existing frontend JSON-RPC calls keep working.
     _ = await request.body()
     return _serve_kind(db, slug, 'pj', wrap_jsonrpc=True)
+
+
+# ── Phase 3 SSE ──────────────────────────────────────────────────────────────
+
+@app.get('/{db}/{slug}/auction/live-board/events')
+async def live_board_events(db: str, slug: str, request: Request):
+    from . import sse as sse_mod
+    last_id = request.headers.get('last-event-id')
+    return await sse_mod.make_sse_response(db, slug, 'lb', last_event_id=last_id)
+
+
+@app.get('/{db}/auction/projector/{slug}/events')
+async def projector_events(db: str, slug: str, request: Request):
+    from . import sse as sse_mod
+    last_id = request.headers.get('last-event-id')
+    return await sse_mod.make_sse_response(db, slug, 'pj', last_event_id=last_id)
+
+
+@app.get('/{db}/{slug}/auction/show/team/balance/events')
+async def balance_events(db: str, slug: str, request: Request):
+    from . import sse as sse_mod
+    last_id = request.headers.get('last-event-id')
+    return await sse_mod.make_sse_response(db, slug, 'bal', last_event_id=last_id)

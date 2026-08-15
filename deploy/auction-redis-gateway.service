@@ -1,5 +1,5 @@
 [Unit]
-Description=AuctionChamp Phase 2B Redis Live Gateway
+Description=AuctionChamp Phase 2B/3 Redis Live Gateway (poll + SSE)
 After=network.target redis-server.service redis.service
 Wants=network-online.target
 
@@ -12,11 +12,14 @@ WorkingDirectory=/home/abhishek/PycharmProjects/auction_champ/auction_live_gatew
 Environment=AUCTION_REDIS_URL=redis://127.0.0.1:6379/1
 Environment=AUCTION_GATEWAY_HOST=127.0.0.1
 Environment=AUCTION_GATEWAY_PORT=8090
-ExecStart=/home/abhishek/PycharmProjects/auction_champ/auction_live_gateway/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8090 --workers 2 --log-level warning
+# Prefer workers=1 so SSE ChannelManager fan-out stays in-process (one Redis
+# SUBSCRIBE per tournament). Extra workers each hold their own subscriptions.
+# Raise MemoryMax before large SSE load tests.
+ExecStart=/home/abhishek/PycharmProjects/auction_champ/auction_live_gateway/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8090 --workers 1 --log-level warning
 Restart=always
 RestartSec=2
 LimitNOFILE=65535
-MemoryMax=256M
+MemoryMax=512M
 # Fail closed to localhost only — never bind 0.0.0.0
 AmbientCapabilities=
 CapabilityBoundingSet=
