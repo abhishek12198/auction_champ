@@ -893,9 +893,24 @@
     }
 
     .o_auction_tournament_menu {
-        right: 0;
-        left: auto;
-        min-width: 220px;
+        position: fixed;
+        top: 46px;
+        left: 12px;
+        right: 12px;
+        width: auto;
+        min-width: 0;
+        max-width: none;
+        max-height: min(70vh, 420px);
+        transform: none;
+        z-index: 10050;
+    }
+
+    .o_auction_tournament_option_name {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+        word-break: break-word;
+        line-height: 1.35;
     }
 }
 

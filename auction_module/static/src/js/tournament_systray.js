@@ -5,7 +5,7 @@ import { registry } from "@web/core/registry";
 import { session } from "@web/session";
 
 const { Component, hooks } = owl;
-const { useState, onWillStart, onMounted, onWillUnmount } = hooks;
+const { useState, onWillStart, onMounted, onWillUnmount, onPatched } = hooks;
 
 /**
  * Navbar tournament badge. Auction Users with several Organizer Tournaments
@@ -41,8 +41,47 @@ class TournamentSystrayItem extends Component {
             }
             this.state.expanded = false;
         };
-        onMounted(() => document.addEventListener("click", onOutsideClick));
-        onWillUnmount(() => document.removeEventListener("click", onOutsideClick));
+        const onReposition = () => this._positionMobileMenu();
+        onMounted(() => {
+            document.addEventListener("click", onOutsideClick);
+            window.addEventListener("resize", onReposition);
+            this._positionMobileMenu();
+        });
+        onPatched(() => this._positionMobileMenu());
+        onWillUnmount(() => {
+            document.removeEventListener("click", onOutsideClick);
+            window.removeEventListener("resize", onReposition);
+        });
+    }
+
+    _positionMobileMenu() {
+        const menu = this.el && this.el.querySelector(".o_auction_tournament_menu");
+        if (!menu) {
+            return;
+        }
+        if (window.innerWidth > 767) {
+            menu.style.position = "";
+            menu.style.top = "";
+            menu.style.left = "";
+            menu.style.right = "";
+            menu.style.width = "";
+            menu.style.minWidth = "";
+            menu.style.maxWidth = "";
+            menu.style.transform = "";
+            return;
+        }
+        const navbar = document.querySelector(".o_main_navbar");
+        const badge = this.el.querySelector(".o_auction_tournament_badge");
+        const navBottom = navbar ? navbar.getBoundingClientRect().bottom : 46;
+        const badgeBottom = badge ? badge.getBoundingClientRect().bottom : navBottom;
+        menu.style.position = "fixed";
+        menu.style.top = `${Math.round(Math.max(navBottom, badgeBottom) + 8)}px`;
+        menu.style.left = "12px";
+        menu.style.right = "12px";
+        menu.style.width = "auto";
+        menu.style.minWidth = "0";
+        menu.style.maxWidth = "none";
+        menu.style.transform = "none";
     }
 
     async loadTournaments() {
