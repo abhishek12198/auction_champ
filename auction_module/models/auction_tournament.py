@@ -1705,3 +1705,19 @@ class AuctionTournament(models.Model):
             'target': 'new',
             'context': {'default_tournament_id': self.id},
         }
+
+    def action_register_player(self):
+        """Open the single-player registration wizard for this tournament."""
+        self.ensure_one()
+        if not isinstance(self.id, int):
+            raise UserError(_('Save the tournament first, then register a player.'))
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Register Player — %s') % self.name,
+            'res_model': 'auction.player.register.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_tournament_id': self.id,
+            },
+        }

@@ -835,16 +835,13 @@
       <!-- Name -->
       <p class="tp-player-name"><t t-esc="player.get('name', '—')"/></p>
 
-      <!-- Tags: role, p_type, p_category -->
+      <!-- Tags: role, p_type -->
       <div class="tp-tags">
         <t t-if="player.get('role')">
           <span class="tp-tag"><t t-esc="player.get('role')"/></span>
         </t>
         <t t-if="player.get('p_type')">
           <span class="tp-tag"><t t-esc="player.get('p_type')"/></span>
-        </t>
-        <t t-if="player.get('p_category')">
-          <span class="tp-tag tp-tag-orange"><t t-esc="player.get('p_category')"/></span>
         </t>
       </div>
 

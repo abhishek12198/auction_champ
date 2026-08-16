@@ -831,12 +831,6 @@ body[data-theme="light"] .bb-footer-logo{filter:brightness(0) sepia(1) saturate(
             </t>
           </t>
         </t>
-        <t t-if="player.p_category">
-          <div class="bb-stat-tile">
-            <div class="bb-stat-val"><t t-esc="player.p_category"/></div>
-            <div class="bb-stat-key">Category</div>
-          </div>
-        </t>
         <t t-if="player.address">
           <div class="bb-stat-tile">
             <div class="bb-stat-val"><t t-esc="player.address"/></div>

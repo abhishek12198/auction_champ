@@ -362,10 +362,6 @@
                   <span class="player-attr-label">Mobile No</span>
                   <span class="player-attr-value"><t t-esc="player.masked_contact"/></span>
                 </t>
-                <t t-if="player.p_category">
-                  <span class="player-attr-label">Category</span>
-                  <span class="player-attr-value"><t t-esc="player.p_category"/></span>
-                </t>
                 <t t-if="player.address">
                   <span class="player-attr-label">Location</span>
                   <span class="player-attr-value"><t t-esc="player.address"/></span>

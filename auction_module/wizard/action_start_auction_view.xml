@@ -6,76 +6,143 @@
             <field name="name">auction.start.auction.form</field>
             <field name="model">auction.start.auction</field>
             <field name="arch" type="xml">
-                <form string="Auction">
-                    <group col="4">
-                            <field name="tournament_id" attrs="{'invisible': [('tournament_id', '=', False)]}"/>
-                            <field name="max_points" string="Total Purse Value"/>
-                            <field name="max_players" string="Max no of players"/>
-                            <field name="base_point" string="Global base point"/>
-                    </group>
-                    <notebook>
-                        <page string="Auction Rule Settings">
-                            <separator string="Teams"/>
-                            <field name="team_ids">
-                                <kanban class="o_kanban_mobile" create="0" edit="0">
-                                    <field name="name"/>
-                                    <field name="logo"/>
-                                    <field name="tournament_id"/>
-                                    <field name="manager"/>
-                                    <field name="key_player_ids"/>
-                                    <field name="id"/>
-                                    <templates>
-                                        <t t-name="kanban-box">
-                                            <div class="oe_kanban_global_click o_kanban_record">
-                                                <div class="o_kanban_image">
-                                                    <img alt="Avatar" t-att-src="kanban_image('auction.team', 'logo', record.id.raw_value)"/>
-                                                </div>
+                <form string="Set Auction Rules" class="o_sar_wizard">
 
-                                                <div class="o_kanban_details">
-                                                    <strong t-esc="record.name.raw_value"/>
+                    <div class="sar-hero">
+                        <div class="sar-hero-icon">
+                            <i class="fa fa-legal"/>
+                        </div>
+                        <div class="sar-hero-copy">
+                            <div class="sar-hero-kicker">Auction setup</div>
+                            <div class="sar-hero-title">Set Auction Rules</div>
+                            <div class="sar-hero-sub">
+                                Purse, squad size, bases, slabs, and teams — all configured here. Nothing is assumed.
+                            </div>
+                        </div>
+                        <div class="sar-hero-tourn" attrs="{'invisible': [('tournament_id', '=', False)]}">
+                            <span class="sar-tourn-label">Tournament</span>
+                            <field name="tournament_id" readonly="1" nolabel="1"
+                                   options="{'no_open': True}"/>
+                        </div>
+                    </div>
 
-                                                    <div t-if="record.manager">
-                                                        <span> Manager: </span>
-                                                        <field name="manager"/>
-                                                    </div>
-                                                    <div t-if="record.key_player_ids">
-                                                        <span> Icon Player: </span>
-                                                        <field name="key_player_ids" widget="many2many_tags"/>
-                                                    </div>
-                                                </div>
+                    <div class="sar-metrics">
+                        <div class="sar-metric" data-step="100">
+                            <div class="sar-metric-icon sar-ic-purse"><i class="fa fa-money"/></div>
+                            <div class="sar-metric-body">
+                                <div class="sar-metric-label">Total purse</div>
+                                <field name="max_points" nolabel="1"/>
+                                <div class="sar-metric-hint">
+                                    <field name="point_unit_name" nolabel="1" readonly="1"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sar-metric" data-step="1">
+                            <div class="sar-metric-icon sar-ic-squad"><i class="fa fa-users"/></div>
+                            <div class="sar-metric-body">
+                                <div class="sar-metric-label">Max players</div>
+                                <field name="max_players" nolabel="1"/>
+                                <div class="sar-metric-hint">Squad size per team</div>
+                            </div>
+                        </div>
+                        <div class="sar-metric" data-step="50">
+                            <div class="sar-metric-icon sar-ic-base"><i class="fa fa-dot-circle-o"/></div>
+                            <div class="sar-metric-body">
+                                <div class="sar-metric-label">Global base point</div>
+                                <field name="base_point" nolabel="1"/>
+                                <div class="sar-metric-hint">Used when a tier base is 0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <field name="preview_html" widget="sar_html" nolabel="1" readonly="1"/>
+
+                    <div class="sar-section">
+                        <div class="sar-section-head">
+                            <div class="sar-section-icon"><i class="fa fa-shield"/></div>
+                            <div class="sar-section-titles">
+                                <div class="sar-section-title">Teams</div>
+                                <div class="sar-section-sub">Select at least two teams from this tournament</div>
+                            </div>
+                            <span class="sar-section-badge">
+                                <field name="team_count" nolabel="1" readonly="1"/> selected
+                            </span>
+                        </div>
+                        <field name="team_ids" class="sar-team-field" nolabel="1">
+                            <kanban class="sar-team-kanban" create="0" edit="0">
+                                <field name="name"/>
+                                <field name="logo"/>
+                                <field name="tournament_id"/>
+                                <field name="manager"/>
+                                <field name="key_player_ids"/>
+                                <field name="id"/>
+                                <templates>
+                                    <t t-name="kanban-box">
+                                        <div class="sar-team-chip">
+                                            <div class="sar-team-logo">
+                                                <img alt="Team"
+                                                     t-att-src="kanban_image('auction.team', 'logo', record.id.raw_value)"/>
                                             </div>
-                                        </t>
-                                    </templates>
-                                </kanban>
-                            </field>
-                            <separator string="Slab Setup"/>
-                            <field name="auction_bid_slab_ids" nolabel="1">
-                                <tree editable="bottom">
-                                    <field name="from_amount" string="From"/>
-                                    <field name="to_amount" string="To"/>
-                                    <field name="increment"/>
-                                </tree>
-                            </field>
-                            <separator string="Tier Limits"/>
-                            <p class="text-muted" style="margin-bottom: 8px;">
-                                Define the maximum number of players each team can bag from each tier.
-                                Set Base Point to 0 to use the global base point for that tier.
-                                Set Max Call to 0 for no per-player cap on that tier.
-                            </p>
-                            <field name="tier_limit_ids" nolabel="1">
-                                <tree editable="bottom">
-                                    <field name="tier_id" domain="[('is_an_icon_tier', '!=', True), '|', ('tournament_id', '=', parent.tournament_id), ('tournament_id', '=', False)]"/>
-                                    <field name="max_players" string="Max Players per Team"/>
-                                    <field name="base_point" string="Base Point (0 = global)"/>
-                                    <field name="max_call" string="Max Call for a Player (0 = unlimited)"/>
-                                </tree>
-                            </field>
-                        </page>
-                    </notebook>
+                                            <div class="sar-team-meta">
+                                                <div class="sar-team-name" t-esc="record.name.raw_value"/>
+                                                <div class="sar-team-owner" t-if="record.manager.raw_value">
+                                                    <t t-esc="record.manager.raw_value"/>
+                                                </div>
+                                                <div class="sar-team-owner" t-if="!record.manager.raw_value">No owner set</div>
+                                            </div>
+                                            <t t-if="record.key_player_ids.value">
+                                                <span class="sar-team-icon-badge" title="Icon player"><i class="fa fa-star"/></span>
+                                            </t>
+                                        </div>
+                                    </t>
+                                </templates>
+                            </kanban>
+                        </field>
+                    </div>
+
+                    <div class="sar-section">
+                        <div class="sar-section-head">
+                            <div class="sar-section-icon"><i class="fa fa-list-ol"/></div>
+                            <div class="sar-section-titles">
+                                <div class="sar-section-title">Bid slabs</div>
+                                <div class="sar-section-sub">From / To ranges and the increment for each band</div>
+                            </div>
+                        </div>
+                        <field name="auction_bid_slab_ids" nolabel="1" class="sar-table">
+                            <tree editable="bottom">
+                                <field name="from_amount" string="From"/>
+                                <field name="to_amount" string="To"/>
+                                <field name="increment" string="Increment"/>
+                            </tree>
+                        </field>
+                    </div>
+
+                    <div class="sar-section">
+                        <div class="sar-section-head">
+                            <div class="sar-section-icon"><i class="fa fa-th-large"/></div>
+                            <div class="sar-section-titles">
+                                <div class="sar-section-title">Tier limits</div>
+                                <div class="sar-section-sub">
+                                    Max players, base, and max call per tier. Base 0 = global base. Max call 0 = no per-player cap.
+                                </div>
+                            </div>
+                        </div>
+                        <field name="tier_limit_ids" nolabel="1" class="sar-table">
+                            <tree editable="bottom">
+                                <field name="tier_id" domain="[('is_an_icon_tier', '!=', True), '|', ('tournament_id', '=', parent.tournament_id), ('tournament_id', '=', False)]"/>
+                                <field name="max_players" string="Max Players per Team"/>
+                                <field name="base_point" string="Base Point (0 = global)"/>
+                                <field name="max_call" string="Max Call (0 = unlimited)"/>
+                            </tree>
+                        </field>
+                    </div>
+
                     <footer>
-                        <button string="Apply" type="object"  class="btn-primary" name="button_start_auction" confirm="This will start auction process, click Ok to continue"/>
+                        <button string="Apply Auction Rules" type="object" class="btn-primary"
+                                name="button_start_auction"
+                                confirm="This will start auction process, click Ok to continue"/>
                         <button string="Cancel" class="btn-secondary" special="cancel"/>
-                </footer>
+                    </footer>
                 </form>
             </field>
         </record>
@@ -85,7 +152,6 @@
             <field name="res_model">auction.start.auction</field>
             <field name="view_mode">form</field>
             <field name="target">new</field>
-
         </record>
 
     </data>

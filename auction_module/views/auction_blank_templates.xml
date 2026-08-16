@@ -719,6 +719,39 @@ html[data-theme] .lb-photo-loading-txt {
   text-shadow: 0 2px 8px rgba(0,0,0,0.7);
   line-height: 1.15;
 }
+.lb-player-name-big.lb-idle-wait {
+  display: flex;
+  align-items: baseline;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 100%;
+}
+.lb-idle-copy {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.lb-dots {
+  display: inline-flex;
+  align-items: baseline;
+  flex: 0 0 auto;
+  margin-left: .12em;
+  letter-spacing: .08em;
+}
+.lb-dots span {
+  opacity: .18;
+  animation: lbDotBlink 1.2s infinite;
+}
+.lb-dots span:nth-child(1) { animation-delay: 0s; }
+.lb-dots span:nth-child(2) { animation-delay: .18s; }
+.lb-dots span:nth-child(3) { animation-delay: .36s; }
+.lb-dots span:nth-child(4) { animation-delay: .54s; }
+@keyframes lbDotBlink {
+  0%, 20% { opacity: .18; }
+  40% { opacity: 1; }
+  80%, 100% { opacity: .18; }
+}
 .lb-player-sub { font-size: .72rem; color: rgba(255,255,255,0.65); margin-top: 3px; }
 
 .lb-player-meta {
@@ -783,6 +816,7 @@ html[data-theme] .lb-photo-loading-txt {
 .lb-status-waiting {
   background: var(--lb-card);
   padding: 28px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px;
+  overflow: hidden;
 }
 .lb-status-label {
   font-size: .65rem; font-weight: 900; letter-spacing: 2.5px; text-transform: uppercase;
@@ -810,7 +844,14 @@ html[data-theme] .lb-photo-loading-txt {
 .lb-sold-team-mgr { font-size: .7rem; color: rgba(255,255,255,.55); margin-top: 3px; }
 .lb-auction-pulse {
   font-size: .8rem; color: var(--lb-sub); text-align: center;
-  display: flex; align-items: center; justify-content: center; gap: 10px;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 100%;
+  min-width: 0;
+  width: 100%;
 }
 .lb-auction-spinner {
   width: 14px; height: 14px; border: 2px solid var(--lb-card-border);
@@ -2001,6 +2042,12 @@ html[data-theme] .lb-player-name-big{
   font-size:2.5rem;line-height:.98;
   text-shadow:0 3px 20px rgba(0,0,0,0.85),0 0 24px rgba(0,217,255,0.25);
 }
+html[data-theme] .lb-player-name-big.lb-idle-wait{
+  font-size:clamp(1.05rem, 3.2vw, 2.1rem);
+  letter-spacing:.3px;
+  line-height:1.15;
+  display:flex;
+}
 html[data-theme] .lb-player-sub{color:var(--pr-gold);letter-spacing:1.6px;text-transform:uppercase;}
 
 /* SL and state overlays */
@@ -2159,6 +2206,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
   html[data-theme] .lb-hdr-center{order:0;width:auto;}
   html[data-theme] .lb-team-chip{flex:1 1 100%;max-width:none;}
   html[data-theme] .lb-player-name-big{font-size:2.1rem;}
+  html[data-theme] .lb-player-name-big.lb-idle-wait{font-size:clamp(0.95rem, 4.2vw, 1.55rem);}
 }
 @media (max-width:600px){
   html[data-theme] .lb-header{
@@ -2313,7 +2361,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       </div>
       <div class="lb-photo-gradient"></div>
       <div class="lb-photo-name">
-        <div class="lb-player-name-big" id="lb-pname">Waiting for next player…</div>
+        <div class="lb-player-name-big lb-idle-wait" id="lb-pname"><span class="lb-idle-copy">Waiting for next player</span><span class="lb-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span><span>.</span></span></div>
         <div class="lb-player-sub" id="lb-psub"></div>
       </div>
     </div>
@@ -2342,7 +2390,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     <div class="lb-status-card" id="lb-status-card">
       <div class="lb-status-waiting">
         <div class="lb-auction-spinner"></div>
-        <div class="lb-auction-pulse">Waiting for auction to begin…</div>
+        <div class="lb-auction-pulse"><span class="lb-idle-copy">Waiting for next player</span><span class="lb-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span><span>.</span></span></div>
       </div>
     </div>
 
@@ -2607,6 +2655,30 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
 
   var _lbTyConfettiBuilt = false;
   var _lbTyPhase = '';
+  var _lbWaitPhase = {};
+  function idleHeadline(wp) {
+    wp = wp || _lbWaitPhase || {};
+    if (wp.idle_headline) return wp.idle_headline;
+    if (wp.phase === 'loading_unsold') return 'Loading from Unsold';
+    if (wp.phase === 'draft_soon') return 'Players will enter the auction soon';
+    if (wp.phase === 'about_to_begin') return 'The battle for talent begins soon';
+    if (wp.phase === 'completed') return 'Thank You Viewers';
+    return 'Waiting for next player';
+  }
+  function idleShowDots(wp) {
+    return ((wp || _lbWaitPhase || {}).phase !== 'completed');
+  }
+  function idleDotsHtml() {
+    return '<span class="lb-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span><span>.</span></span>';
+  }
+  function idleLineHtml(text, withDots) {
+    var html = '<span class="lb-idle-copy">' + lbEsc(text || '') + '</span>';
+    return withDots ? html + idleDotsHtml() : html;
+  }
+  function rememberWaitPhase(wp) {
+    if (wp) _lbWaitPhase = wp;
+    return _lbWaitPhase;
+  }
   function buildLbTyConfetti() {
     var box = document.getElementById('lbTyConfetti');
     if (!box || _lbTyConfettiBuilt) return;
@@ -2864,9 +2936,12 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
   }
 
   // ── Render Player Panel ────────────────────────────────────────
-  function renderPlayer(p, soldInfo) {
+  function renderPlayer(p, soldInfo, waitPhase) {
+    rememberWaitPhase(waitPhase);
+    var pnameEl = document.getElementById('lb-pname');
     if (!p) {
-      document.getElementById('lb-pname').textContent = 'Waiting for next player…';
+      pnameEl.innerHTML = idleLineHtml(idleHeadline(_lbWaitPhase), idleShowDots(_lbWaitPhase));
+      pnameEl.classList.add('lb-idle-wait');
       document.getElementById('lb-psub').textContent = '';
       lbApplyPlayerPhoto(null);
       document.getElementById('lb-sl-overlay').style.display = 'none';
@@ -2881,6 +2956,8 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       return;
     }
 
+    pnameEl.classList.remove('lb-idle-wait');
+
     // Photo — preload before reveal so previous sold player never stays up
     lbApplyPlayerPhoto(p);
 
@@ -2888,7 +2965,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     const mysteryLock = document.getElementById('lb-mystery-lock');
 
     // Name + sub — Mystery Player? only; no role ??? / small ?
-    document.getElementById('lb-pname').textContent = mysteryHidden
+    pnameEl.textContent = mysteryHidden
       ? 'Mystery Player?'
       : (p.name || '—');
     const subRole = (p.tournament_type === 'football')
@@ -2988,7 +3065,6 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
           r1 += lbStat('Secondary', p.secondary_positions.join(', '));
       }
       let r2 = '';
-      if (p.p_category)  r2 += lbStat('Category', p.p_category);
       if (p.blood_group) r2 += lbStat('Blood', p.blood_group);
       let sh = r1;
       if (r1 && r2) sh += '<div class="lb-stat-break"></div>';
@@ -3024,13 +3100,14 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
   }
 
   // ── Render Status Card ─────────────────────────────────────────
-  function renderStatus(currentPlayer, soldInfo) {
+  function renderStatus(currentPlayer, soldInfo, waitPhase) {
+    rememberWaitPhase(waitPhase);
     const card = document.getElementById('lb-status-card');
 
     if (!currentPlayer) {
       card.innerHTML = `<div class="lb-status-waiting">
         <div class="lb-auction-spinner"></div>
-        <div class="lb-auction-pulse">Waiting for auction to begin…</div>
+        <div class="lb-auction-pulse">${idleLineHtml(idleHeadline(_lbWaitPhase), idleShowDots(_lbWaitPhase))}</div>
       </div>`;
       return;
     }
@@ -3070,7 +3147,9 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       } else {
         bidSection = `<div style="margin-top:18px;display:flex;align-items:center;gap:12px;">
           <div class="lb-auction-spinner" style="width:20px;height:20px;border-width:3px;"></div>
-          <div style="font-size:1.05rem;font-weight:700;color:rgba(255,255,255,0.8);">Accepting bids from teams…</div>
+          <div style="font-size:1.05rem;font-weight:700;color:rgba(255,255,255,0.8);display:flex;align-items:baseline;min-width:0;">
+            <span class="lb-idle-copy">Accepting bids from teams</span>${idleDotsHtml()}
+          </div>
         </div>`;
       }
       card.innerHTML = `<div class="lb-status-auction">
@@ -3083,7 +3162,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     } else {
       card.innerHTML = `<div class="lb-status-waiting">
         <div class="lb-auction-spinner"></div>
-        <div class="lb-auction-pulse">Loading…</div>
+        <div class="lb-auction-pulse">${idleLineHtml(idleHeadline(_lbWaitPhase), idleShowDots(_lbWaitPhase))}</div>
       </div>`;
     }
   }
@@ -3328,21 +3407,23 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
         const playerChanged = (newId !== lastPlayerId) || (newState !== lastState)
           || (newMysteryRevealed !== lastMysteryRevealed);
         const playerSwitched = (newId !== lastPlayerId);
+        const waitPhase = data.wait_phase || {};
+        rememberWaitPhase(waitPhase);
         if (playerSwitched) {
-          renderPlayer(p, data.sold_info);
-          renderStatus(p, data.sold_info);
+          renderPlayer(p, data.sold_info, waitPhase);
+          renderStatus(p, data.sold_info, waitPhase);
         } else if (playerChanged && (lastPlayerId !== null || newId !== null)) {
           const panel = document.getElementById('lb-player-panel');
           panel.style.transition = 'opacity 0.3s';
           panel.style.opacity = '0';
           setTimeout(function() {
-            renderPlayer(p, data.sold_info);
-            renderStatus(p, data.sold_info);
+            renderPlayer(p, data.sold_info, waitPhase);
+            renderStatus(p, data.sold_info, waitPhase);
             panel.style.opacity = '1';
           }, 300);
         } else {
-          renderPlayer(p, data.sold_info);
-          renderStatus(p, data.sold_info);
+          renderPlayer(p, data.sold_info, waitPhase);
+          renderStatus(p, data.sold_info, waitPhase);
         }
 
         lastPlayerId = newId;

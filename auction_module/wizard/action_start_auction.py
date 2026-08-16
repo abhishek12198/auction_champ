@@ -40,6 +40,7 @@ import base64
 
 from odoo import api, models, fields, _
 from odoo.exceptions import UserError, ValidationError
+from odoo.tools import html_escape
 from odoo.tools.image import image_data_uri
 
 import werkzeug
@@ -51,10 +52,11 @@ class StartAuction(models.TransientModel):
     max_points = fields.Integer(string='Total Purse Value')
     max_players = fields.Integer(string='Max no of players')
     base_point = fields.Integer(
-        string="Base point for a player",
-        default=100,
-        help="Fallback minimum bid when a tier's Base Point is 0. "
-             "Max call keeps (players left − 1) × this amount in reserve.",
+        string="Global base point",
+        default=0,
+        help="Default minimum bid and purse reserve. Any tier with Base Point 0 "
+             "uses this value. Set it here, or set a Base Point on every tier — "
+             "nothing is assumed.",
     )
     team_ids = fields.Many2many('auction.team', 'start_auction_team_rel', 'auction_start_id', 'team_id', 'Teams')
     tournament_id = fields.Many2one('auction.tournament', string='Tournament', readonly=True)
@@ -62,6 +64,12 @@ class StartAuction(models.TransientModel):
     max_point_player = fields.Integer('Max Point for a player')
     auction_bid_slab_ids = fields.One2many('auction.bid.slab', 'wizard_id', 'Slab')
     tier_limit_ids = fields.One2many('auction.start.auction.tier.limit', 'wizard_id', 'Tier Limits')
+    point_unit_name = fields.Char(
+        related='tournament_id.point_unit_id.name',
+        readonly=True,
+    )
+    team_count = fields.Integer(compute='_compute_team_count')
+    preview_html = fields.Html(compute='_compute_preview_html', sanitize=False)
 
     @api.model
     def default_get(self, fields_list):
@@ -99,6 +107,101 @@ class StartAuction(models.TransientModel):
         if self.base_point < 0:
             self.base_point = 0
 
+    @api.depends('team_ids')
+    def _compute_team_count(self):
+        for rec in self:
+            rec.team_count = len(rec.team_ids)
+
+    def _sar_preview_chip(self, icon, text, kind):
+        return (
+            '<span class="sar-preview-chip sar-chip-%s">'
+            '<i class="fa %s"/> %s</span>'
+        ) % (kind, icon, html_escape(text))
+
+    def _sar_preview_snap(self, amount):
+        try:
+            amount = int(amount or 0)
+        except (TypeError, ValueError):
+            amount = 0
+        slabs = self.auction_bid_slab_ids.sorted('from_amount', reverse=True)
+        for slab in slabs:
+            if amount < slab.from_amount:
+                continue
+            base = slab.from_amount or 0
+            inc = slab.increment or 0
+            if inc <= 0:
+                return min(amount, slab.to_amount or amount)
+            snapped = base + ((amount - base) // inc) * inc
+            snapped = min(snapped, amount)
+            if slab.to_amount:
+                snapped = min(snapped, slab.to_amount)
+            return snapped
+        return amount
+
+    @api.depends(
+        'max_points', 'max_players', 'base_point', 'team_ids',
+        'tier_limit_ids.base_point', 'tier_limit_ids.max_players',
+        'tier_limit_ids.max_call', 'tier_limit_ids.tier_id',
+        'auction_bid_slab_ids.from_amount', 'auction_bid_slab_ids.to_amount',
+        'auction_bid_slab_ids.increment',
+    )
+    def _compute_preview_html(self):
+        for rec in self:
+            chips = []
+            n_teams = len(rec.team_ids)
+            chips.append(rec._sar_preview_chip(
+                'fa-shield',
+                '%s team%s' % (n_teams, '' if n_teams == 1 else 's'),
+                'ok' if n_teams >= 2 else 'warn',
+            ))
+            n_slabs = len(rec.auction_bid_slab_ids)
+            chips.append(rec._sar_preview_chip(
+                'fa-list-ol',
+                '%s slab%s' % (n_slabs, '' if n_slabs == 1 else 's'),
+                'ok' if n_slabs else 'muted',
+            ))
+            n_tiers = len(rec.tier_limit_ids)
+            if n_tiers:
+                chips.append(rec._sar_preview_chip(
+                    'fa-th-large',
+                    '%s tier%s' % (n_tiers, '' if n_tiers == 1 else 's'),
+                    'ok',
+                ))
+            purse = rec.max_points or 0
+            squad = rec.max_players or 0
+            global_base = rec.base_point or 0
+            if purse > 0 and squad > 1:
+                slots = squad - 1
+                tier_bases = []
+                for tl in rec.tier_limit_ids:
+                    bid = tl.base_point if tl.base_point > 0 else global_base
+                    avail = max(tl.max_players or 0, 0)
+                    if avail:
+                        tier_bases.append((bid, avail))
+                if tier_bases:
+                    tier_bases.sort(key=lambda x: x[0])
+                    reserve = 0
+                    left = slots
+                    for bid, avail in tier_bases:
+                        take = min(avail, left)
+                        reserve += take * bid
+                        left -= take
+                        if left <= 0:
+                            break
+                    if left > 0:
+                        fallback = min(b for b, _a in tier_bases)
+                        reserve += left * fallback
+                else:
+                    reserve = slots * global_base
+                safe = max(purse - reserve, 0)
+                snapped = rec._sar_preview_snap(safe)
+                chips.append(rec._sar_preview_chip(
+                    'fa-calculator',
+                    'Budget-safe max ≈ %s' % snapped,
+                    'ok' if snapped > 0 else 'warn',
+                ))
+            rec.preview_html = '<div class="sar-preview">%s</div>' % ''.join(chips)
+
     def button_start_auction(self):
         auction_obj = self.env['auction.auction']
         auction_list = []
@@ -106,6 +209,20 @@ class StartAuction(models.TransientModel):
             raise ValidationError("Points cannot be 0")
         if self.max_players <= 0:
             raise ValidationError("Number of players cannot be 0")
+        if self.base_point < 0:
+            raise ValidationError("Global base point cannot be negative.")
+        unset_tiers = self.tier_limit_ids.filtered(lambda t: t.base_point <= 0)
+        if self.tier_limit_ids:
+            if unset_tiers and self.base_point <= 0:
+                raise ValidationError(
+                    "Set a Global base point, or enter a Base Point on every tier. "
+                    "Tiers with Base Point 0 use the global value — nothing is filled in for you."
+                )
+        elif self.base_point <= 0:
+            raise ValidationError(
+                "Set a Global base point. It is the minimum bid and the amount "
+                "reserved for remaining squad slots."
+            )
 
         if not len(self.team_ids) >= 2:
             raise ValidationError("Select atleast two teams")
@@ -128,10 +245,7 @@ class StartAuction(models.TransientModel):
                     'team_id': team.id,
                     'total_point': self.max_points,
                     'max_players': self.max_players,
-                    'base_point': self.base_point or min(
-                        (tl.base_point for tl in self.tier_limit_ids if tl.base_point > 0),
-                        default=100,
-                    ),
+                    'base_point': self.base_point,
                     'auction_bid_slab_ids': bid_slab_data,
                     'tier_limit_ids': tier_limit_data,
                 }
@@ -170,6 +284,6 @@ class AuctionStartAuctionTierLimit(models.TransientModel):
     tier_id = fields.Many2one('auction.player.tier', string='Tier', required=True)
     max_players = fields.Integer(string='Max Players per Team', required=True, default=1)
     base_point = fields.Integer(string='Base Point', default=0,
-        help="Minimum bid for a player of this tier. Leave 0 to use the global base point.")
+        help="Minimum bid for this tier. 0 = use Global base point from this wizard.")
     max_call = fields.Integer(string='Max Call for a Player', default=0,
         help="Maximum bid allowed for a single player of this tier. Leave 0 for no cap.")

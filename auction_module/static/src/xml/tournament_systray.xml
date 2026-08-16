@@ -67,16 +67,33 @@
                 </svg>
             </a>
 
-            <span t-if="state.tournamentName"
-                  t-att-class="'o_auction_tournament_badge' + (state.expanded ? ' o_expanded' : '')"
-                  t-on-click="onBadgeClick">
-                <img t-if="state.tournamentLogo"
-                     t-att-src="state.tournamentLogo"
-                     class="o_auction_tournament_logo"
-                     alt=""/>
-                <i t-else="" class="fa fa-trophy o_auction_trophy_icon"/>
-                <span class="o_auction_tournament_name" t-esc="state.tournamentName"/>
-            </span>
+            <div t-if="state.tournamentName" class="o_auction_tournament_switcher">
+                <span t-att-class="'o_auction_tournament_badge' + (state.expanded ? ' o_expanded' : '') + (state.canSwitch ? ' o_can_switch' : '')"
+                      t-on-click="onBadgeClick"
+                      t-att-title="state.canSwitch ? 'Switch tournament' : state.tournamentName"
+                      role="button"
+                      tabindex="0">
+                    <img t-if="state.tournamentLogo"
+                         t-att-src="state.tournamentLogo"
+                         class="o_auction_tournament_logo"
+                         alt=""/>
+                    <i t-else="" class="fa fa-trophy o_auction_trophy_icon"/>
+                    <span class="o_auction_tournament_name" t-esc="state.tournamentName"/>
+                    <i t-if="state.canSwitch" class="fa fa-caret-down o_auction_tournament_caret"/>
+                </span>
+                <ul t-if="state.expanded and state.canSwitch and state.tournaments.length"
+                    class="o_auction_tournament_menu">
+                    <li t-foreach="state.tournaments" t-as="t" t-key="t.id"
+                        t-att-class="'o_auction_tournament_option' + (t.active ? ' o_active' : '')"
+                        t-att-data-tournament-id="t.id"
+                        t-on-click="onSelectTournament">
+                        <img t-if="t.logo" t-att-src="t.logo" class="o_auction_tournament_option_logo" alt=""/>
+                        <i t-else="" class="fa fa-trophy o_auction_tournament_option_icon"/>
+                        <span class="o_auction_tournament_option_name" t-esc="t.name"/>
+                        <i t-if="t.active" class="fa fa-check o_auction_tournament_option_check"/>
+                    </li>
+                </ul>
+            </div>
         </div>
     </t>
 </templates>

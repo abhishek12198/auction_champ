@@ -174,14 +174,6 @@
                             </div>
 
                             <div class="fbc-grid">
-                                <!-- Player Category -->
-                                <div class="fbc-cell">
-                                    <div class="fbc-ic">👤</div>
-                                    <div class="fbc-cell-body">
-                                        <div class="fbc-lbl">Player Category</div>
-                                        <div class="fbc-val"><t t-esc="player.p_category or '—'"/></div>
-                                    </div>
-                                </div>
                                 <!-- Position -->
                                 <div class="fbc-cell">
                                     <div class="fbc-ic">🥅</div>

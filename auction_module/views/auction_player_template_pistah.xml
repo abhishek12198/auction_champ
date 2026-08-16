@@ -831,12 +831,6 @@ body[data-theme="light"] .pt-footer-logo{filter:brightness(0) sepia(1) saturate(
             </t>
           </t>
         </t>
-        <t t-if="player.p_category">
-          <div class="pt-stat-tile">
-            <div class="pt-stat-val"><t t-esc="player.p_category"/></div>
-            <div class="pt-stat-key">Category</div>
-          </div>
-        </t>
         <t t-if="player.address">
           <div class="pt-stat-tile">
             <div class="pt-stat-val"><t t-esc="player.address"/></div>

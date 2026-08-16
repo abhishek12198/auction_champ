@@ -297,18 +297,16 @@ class TestSliceBalancePlayers(unittest.TestCase):
             role='Allrounder',
             batting_style='Right Hand Bat',
             bowling_style='Right Arm Off Spin',
-            p_category='A',
         )
         role, attrs = _balance_player_profile(cricket, False, False)
         self.assertEqual(role, 'Allrounder')
         keys = [a['k'] for a in attrs]
-        self.assertEqual(keys, ['Batting', 'Bowling', 'Category'])
+        self.assertEqual(keys, ['Batting', 'Bowling'])
         football = mock.Mock(
             role='',
             preferred_foot='right',
             age=24,
             work_rate='high',
-            p_category='',
             use_other_attributes=False,
             playing_style_ids=[],
             strength_ids=[],

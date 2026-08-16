@@ -639,12 +639,6 @@
                     <span class="cr-stat-val"><t t-esc="player.bowling_style"/></span>
                   </div>
                 </t>
-                <t t-if="player.p_category">
-                  <div class="cr-stat-row">
-                    <span class="cr-stat-key">Category</span>
-                    <span class="cr-stat-val"><t t-esc="player.p_category"/></span>
-                  </div>
-                </t>
                 <t t-if="player.address">
                   <div class="cr-stat-row ac-fb-span-2">
                     <span class="cr-stat-key">Location</span>
@@ -682,9 +676,6 @@
                   <t t-if="player.weight">
                     <div class="cr-stat-row"><span class="cr-stat-key">Weight</span><span class="cr-stat-val"><t t-esc="player.weight"/></span></div>
                   </t>
-                </t>
-                <t t-if="player.p_category">
-                  <div class="cr-stat-row"><span class="cr-stat-key">Category</span><span class="cr-stat-val"><t t-esc="player.p_category"/></span></div>
                 </t>
                 <t t-if="player.address">
                   <div class="cr-stat-row ac-fb-span-2"><span class="cr-stat-key">Location</span><span class="cr-stat-val"><t t-esc="player.address"/></span></div>

@@ -31,8 +31,17 @@
 
                         <!-- Tab 2: tier limits -->
                         <page string="Tier Limits" name="tier_limits">
+                            <group col="4">
+                                <field name="apply_global_base"
+                                       string="Global base point"
+                                       widget="boolean_toggle"/>
+                                <field name="new_global_base"
+                                       string="Value"
+                                       attrs="{'readonly': [('apply_global_base', '=', False)]}"/>
+                            </group>
                             <p class="text-muted" style="margin:0 0 10px;">
                                 Turn on a toggle, then edit the value next to it. Only toggled columns are written.
+                                A tier Base Point of 0 uses the auction Global base point (no hidden 100/1000).
                             </p>
                             <field name="line_ids" nolabel="1">
                                 <tree editable="bottom" create="0" delete="0"

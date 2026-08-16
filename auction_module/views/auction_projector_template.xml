@@ -2390,7 +2390,6 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     } else if (isFootball) {
       if (p.dominant_position) statsHtml += stat('Position', p.dominant_position, ICO.user);
       if (p.preferred_foot) statsHtml += stat('Preferred Foot', p.preferred_foot, ICO.foot);
-      if (p.p_category) statsHtml += stat('Category', p.p_category, ICO.tag);
       if (p.work_rate) statsHtml += stat('Work Rate', p.work_rate, ICO.bolt);
       if (p.age) statsHtml += stat('Age', String(p.age), ICO.chron);
       if (p.height) statsHtml += stat('Height', p.height, ICO.user);
@@ -2414,7 +2413,6 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       if (p.role) statsHtml += stat('Role', p.role, ICO.user);
       if (p.batting_style) statsHtml += stat('Batting', p.batting_style, ICO.bat);
       if (p.bowling_style) statsHtml += stat('Bowling', p.bowling_style, ICO.bowl);
-      if (p.p_category) statsHtml += stat('Category', p.p_category, ICO.tag);
       if (p.age) statsHtml += stat('Age', String(p.age), ICO.chron);
       if (p.height) statsHtml += stat('Height', p.height, ICO.user);
       if (p.weight) statsHtml += stat('Weight', p.weight, ICO.user);
@@ -3513,9 +3511,6 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         badges += '<span class="pj-rm-badge pj-rm-badge-tier" style="background:' + escHtml(tierColor) + '">' +
           escHtml(p.tier_name) + '</span>';
       }
-      if (p.p_category) {
-        badges += '<span class="pj-rm-badge pj-rm-badge-cat">' + escHtml(p.p_category) + '</span>';
-      }
 
       var stats = '';
       if (isFootball) {
@@ -3532,7 +3527,6 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       } else {
         stats += pjRmStat('Bat', p.batting_style);
         stats += pjRmStat('Bowl', p.bowling_style);
-        stats += pjRmStat('Cat', p.p_category);
         stats += pjRmStat('Loc', p.location);
         stats += pjRmStat('Blood', p.blood_group);
       }

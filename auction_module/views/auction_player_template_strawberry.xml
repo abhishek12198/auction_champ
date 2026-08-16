@@ -432,12 +432,6 @@ body[data-theme="dark"] .sw-live-badge{background:rgba(194,24,91,0.15);color:var
                 <span class="sw-stat-val"><t t-esc="player.bowling_style"/></span>
               </div>
             </t>
-            <t t-if="player.p_category">
-              <div class="sw-stat-row">
-                <span class="sw-stat-key">Category</span>
-                <span class="sw-stat-val"><t t-esc="player.p_category"/></span>
-              </div>
-            </t>
             <t t-if="player.address">
               <div class="sw-stat-row ac-fb-span-2">
                 <span class="sw-stat-key">Location</span>
@@ -475,9 +469,6 @@ body[data-theme="dark"] .sw-live-badge{background:rgba(194,24,91,0.15);color:var
               <t t-if="player.weight">
                 <div class="sw-stat-row"><span class="sw-stat-key">Weight</span><span class="sw-stat-val"><t t-esc="player.weight"/></span></div>
               </t>
-            </t>
-            <t t-if="player.p_category">
-              <div class="sw-stat-row"><span class="sw-stat-key">Category</span><span class="sw-stat-val"><t t-esc="player.p_category"/></span></div>
             </t>
             <t t-if="player.address">
               <div class="sw-stat-row ac-fb-span-2"><span class="sw-stat-key">Location</span><span class="sw-stat-val"><t t-esc="player.address"/></span></div>

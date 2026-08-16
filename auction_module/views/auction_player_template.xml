@@ -99,7 +99,6 @@
                 <p>Batting Style</p>
                 <p>Bowling Style</p>
                 <p>Mobile No</p>
-                <p>Player Category</p>
                 <p>Player Type</p>
 
                 <!--<p>Blood Group<span class="blood-emoji">🩸</span></p>-->
@@ -110,7 +109,6 @@
                 <p><span>:</span> <span t-esc="player.batting_style"/></p>
                 <p><span>:</span> <span t-esc="player.bowling_style"/></p>
                 <p><span>:</span> <span t-esc="player.masked_contact"/></p>
-                <p><span>:</span> <span t-esc="player.p_category"/></p>
                 <p><span>:</span> <span t-esc="player.p_type"/></p>
                 <!--<p>
                   <span>:</span> <span  style="color:#e53935; font-weight:bold;" t-if="player.blood_group" t-esc="player.blood_group"/><span t-if="not player.blood_group">NA</span>

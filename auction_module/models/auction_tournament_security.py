@@ -44,12 +44,10 @@ class AuctionTournamentSecurityMixin(models.AbstractModel):
     """Scope auction records by the user's assigned tournament(s).
 
     - Auction Administrator (and sudo): see all records.
-    - Every other user: records for Active Tournament **and** Organizer M2M
-      (``tournament_id`` ∪ ``tournament_ids``).
-
-    Using only Active Tournament left organizers who were assigned via the
-    tournament Organizers field (M2M) but missing Active Tournament with
-    empty player/team lists while dashboards (sudo) still showed counts.
+    - Auction User (non-admin): Tournament master lists every Organizer
+      Tournament; Players / Teams / auctions follow Active Tournament
+      (navbar switcher). Tournament form one2many lines still load.
+    - Everyone else: union of Active Tournament and Organizer M2M.
     """
     _name = 'auction.tournament.security.mixin'
     _description = 'Auction Tournament Security Mixin'
@@ -71,13 +69,53 @@ class AuctionTournamentSecurityMixin(models.AbstractModel):
         }
         return mapping.get(self._name, 'tournament_id')
 
+    def _auction_is_scoped_user(self):
+        """Auction User (non-admin): menus follow Active Tournament."""
+        user = self.env.user
+        return (
+            not self._auction_is_admin()
+            and user.has_group('auction_module.group_auction_group')
+        )
+
+    def _auction_form_tournament_id(self):
+        ctx = self.env.context
+        form_tid = ctx.get('default_tournament_id')
+        if not form_tid and ctx.get('active_model') == 'auction.tournament':
+            form_tid = ctx.get('active_id')
+        try:
+            return int(form_tid or 0) or False
+        except (TypeError, ValueError):
+            return False
+
     def _auction_allowed_tournament_ids(self):
-        """Union of Active Tournament and Organizer M2M assignments."""
+        """Assigned tournaments, optionally narrowed to the navbar selection.
+
+        - Administrator (and sudo): unrestricted (handled in domain helper).
+        - Auction User: Tournament master → all Organizer Tournaments;
+          other records → Active Tournament (plus the tournament form in context).
+        - Everyone else: union of Active Tournament and Organizer M2M.
+        """
         user = self.env.user
         tids = set(user.tournament_ids.ids)
         if user.tournament_id:
             tids.add(user.tournament_id.id)
-        return list(tids)
+        if not tids:
+            return []
+
+        if not self._auction_is_scoped_user():
+            return list(tids)
+
+        if self._name == 'auction.tournament':
+            return list(tids)
+
+        allowed = set()
+        working = user.get_working_tournament()
+        if working and working.id in tids:
+            allowed.add(working.id)
+        form_tid = self._auction_form_tournament_id()
+        if form_tid in tids:
+            allowed.add(form_tid)
+        return list(allowed) if allowed else [False]
 
     def _auction_tournament_security_domain(self):
         # Public HTTP pages (Bid Summary, etc.) pass this context flag after

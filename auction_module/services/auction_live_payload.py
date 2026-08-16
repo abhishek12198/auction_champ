@@ -456,7 +456,6 @@ def build_projector_payload(env, tournament, db_name):
             'height': '',
             'weight': '',
             'work_rate': '',
-            'p_category': '',
             'blood_group': '',
             'mobile': '',
             'location': '',
@@ -606,16 +605,12 @@ def _balance_player_profile(player, mystery, is_football):
                     tags.append(label)
             if tags:
                 attrs.append({'k': 'Tags', 'v': ' · '.join(tags)})
-        if player.p_category:
-            attrs.append({'k': 'Category', 'v': player.p_category})
         return role, attrs
     role = player.role or ''
     if player.batting_style:
         attrs.append({'k': 'Batting', 'v': player.batting_style})
     if player.bowling_style:
         attrs.append({'k': 'Bowling', 'v': player.bowling_style})
-    if player.p_category:
-        attrs.append({'k': 'Category', 'v': player.p_category})
     return role, attrs
 
 

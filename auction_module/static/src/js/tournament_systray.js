@@ -7,18 +7,10 @@ import { session } from "@web/session";
 const { Component, hooks } = owl;
 const { useState, onWillStart, onMounted, onWillUnmount } = hooks;
 
-function buildLiveBoardUrl(slug) {
-    if (!slug) {
-        return "";
-    }
-    const db = session.db || session.db_name || "";
-    if (db) {
-        return "/" + db + "/" + slug + "/auction/live-board";
-    }
-    // Slug-only route redirects to the db-prefixed URL
-    return "/" + slug + "/auction/live-board";
-}
-
+/**
+ * Navbar tournament badge. Auction Users with several Organizer Tournaments
+ * get a dropdown to switch Active Tournament (SaaS replaces this widget).
+ */
 class TournamentSystrayItem extends Component {
     setup() {
         this.orm = useService("orm");
@@ -29,86 +21,112 @@ class TournamentSystrayItem extends Component {
             projectorUrl: "",
             showcaseUrl: "",
             liveBoardUrl: "",
-            auctionRulesReady: false,
+            tournamentId: false,
+            tournaments: [],
+            canSwitch: false,
             expanded: false,
+            switching: false,
+            auctionRulesReady: false,
         });
 
         onWillStart(async () => {
-            try {
-                const result = await this.orm.read(
-                    "res.users",
-                    [session.uid],
-                    ["tournament_id"]
-                );
-                if (!(result && result[0] && result[0].tournament_id)) {
-                    return;
-                }
-                const tId = result[0].tournament_id[0];
-                const tName = result[0].tournament_id[1];
-                this.state.tournamentName = tName;
-                this.state.tournamentLogo = "/web/image/auction.tournament/" + tId + "/logo";
-
-                let tRow = null;
-                try {
-                    const tRes = await this.orm.read(
-                        "auction.tournament",
-                        [tId],
-                        ["projector_url", "live_board_url", "slug", "has_auction_rules"]
-                    );
-                    tRow = tRes && tRes[0];
-                } catch (_missingField) {
-                    // live_board_url may be missing until module upgrade
-                    try {
-                        const tRes = await this.orm.read(
-                            "auction.tournament",
-                            [tId],
-                            ["projector_url", "slug", "has_auction_rules"]
-                        );
-                        tRow = tRes && tRes[0];
-                    } catch (_e2) {
-                        tRow = null;
-                    }
-                }
-
-                if (!tRow) {
-                    return;
-                }
-
-                const rulesReady = Boolean(tRow.has_auction_rules);
-                this.state.auctionRulesReady = rulesReady;
-                if (rulesReady) {
-                    this.state.showcaseUrl = "/auction/showcase";
-                    this.state.projectorUrl = tRow.projector_url || "";
-                    if (!this.state.projectorUrl && tRow.slug && session.db) {
-                        this.state.projectorUrl =
-                            "/" + session.db + "/auction/projector/" + tRow.slug + "/";
-                    }
-                } else {
-                    this.state.showcaseUrl = "";
-                    this.state.projectorUrl = "";
-                }
-
-                // Third navbar icon — same place as Console / Projector
-                this.state.liveBoardUrl =
-                    tRow.live_board_url || buildLiveBoardUrl(tRow.slug) || "/auction/my/live-board";
-            } catch (_e) {
-                // leave blank on any error
-            }
+            await this.loadTournaments();
         });
 
         const onOutsideClick = (ev) => {
-            if (this.state.expanded && this.el && !this.el.contains(ev.target)) {
-                this.state.expanded = false;
+            const root = this.el;
+            if (!root || root.contains(ev.target)) {
+                return;
             }
+            this.state.expanded = false;
         };
-        onMounted(() => document.addEventListener("click", onOutsideClick, true));
-        onWillUnmount(() => document.removeEventListener("click", onOutsideClick, true));
+        onMounted(() => document.addEventListener("click", onOutsideClick));
+        onWillUnmount(() => document.removeEventListener("click", onOutsideClick));
+    }
+
+    async loadTournaments() {
+        try {
+            const data = await this.orm.call("res.users", "get_systray_tournaments", []);
+            this.applyPayload(data || {});
+        } catch (_e) {
+            this.state.tournamentName = "";
+            this.state.tournaments = [];
+            this.state.canSwitch = false;
+            this.state.projectorUrl = "";
+            this.state.showcaseUrl = "";
+            this.state.liveBoardUrl = "";
+        }
+    }
+
+    applyPayload(data) {
+        const current = data.current || null;
+        const items = data.tournaments || [];
+        this.state.tournaments = items;
+        this.state.canSwitch = Boolean(data.can_switch);
+        if (current) {
+            this.state.tournamentId = current.id;
+            this.state.tournamentName = current.name || "";
+            this.state.tournamentLogo = current.logo || "";
+            const rulesReady = Boolean(current.has_auction_rules);
+            this.state.auctionRulesReady = rulesReady;
+            this.state.projectorUrl = rulesReady ? (current.projector_url || "") : "";
+            this.state.showcaseUrl = rulesReady ? "/auction/showcase" : "";
+            this.state.liveBoardUrl = current.live_board_url || "/auction/my/live-board";
+        } else {
+            this.state.tournamentId = false;
+            this.state.tournamentName = "";
+            this.state.tournamentLogo = "";
+            this.state.projectorUrl = "";
+            this.state.showcaseUrl = "";
+            this.state.liveBoardUrl = "";
+            this.state.auctionRulesReady = false;
+        }
     }
 
     onBadgeClick(ev) {
-        if (window.innerWidth <= 767) {
-            ev.stopPropagation();
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (this.state.canSwitch) {
+            if (this.state.switching) {
+                return;
+            }
             this.state.expanded = !this.state.expanded;
+            return;
+        }
+        if (window.innerWidth <= 767) {
+            this.state.expanded = !this.state.expanded;
+        }
+    }
+
+    async onSelectTournament(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (this.state.switching) {
+            return;
+        }
+        const tournamentId = parseInt(ev.currentTarget.getAttribute("data-tournament-id"), 10);
+        if (!tournamentId) {
+            return;
+        }
+        const item = this.state.tournaments.find((t) => t.id === tournamentId);
+        if (!item || item.active) {
+            this.state.expanded = false;
+            return;
+        }
+        this.state.switching = true;
+        try {
+            await this.orm.call("res.users", "set_active_tournament", [
+                [session.uid],
+                tournamentId,
+            ]);
+            window.location.reload();
+        } catch (_e) {
+            this.state.switching = false;
+            this.state.expanded = false;
+            this.notification.add(
+                "Could not switch tournament. Please try again.",
+                { type: "danger", title: "Tournament" }
+            );
         }
     }
 

@@ -312,6 +312,14 @@
 
                                 <!-- ── Player State Stat Buttons ── -->
                                 <div class="o_tourn_player_stats">
+                                    <button type="object" name="action_register_player"
+                                            class="o_tps_btn o_tps_add"
+                                            attrs="{'invisible': [('active', '=', False)]}">
+                                        <span class="o_tps_count">
+                                            <i class="fa fa-plus" title="Register Player"/>
+                                        </span>
+                                        <span class="o_tps_label">Add Player</span>
+                                    </button>
                                     <button type="object" name="action_view_registered_players"
                                             class="o_tps_btn o_tps_draft">
                                         <span class="o_tps_count">

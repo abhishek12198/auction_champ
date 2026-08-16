@@ -275,7 +275,7 @@ odoo.define('auction_module.PaymentMarker', function (require) {
             this.$('#o_pm_tourn').text('Loading…');
             return this._rpc({
                 route: '/auction/payment-marker/data',
-                params: {tournament_id: this.tournamentId || null},
+                params: {tournament_id: null},
             }).then(function (res) {
                 if (!res || !res.ok) {
                     self.$el.html(
@@ -290,7 +290,7 @@ odoo.define('auction_module.PaymentMarker', function (require) {
                 self.urls = res.urls || {};
                 self.tournament = res.tournament || {};
                 self.tournaments = res.tournaments || [];
-                self.showTournamentFilter = !!res.show_tournament_filter;
+                self.showTournamentFilter = false;
                 self.isSaas = !!res.is_saas;
                 self.S.pageSize = res.page_size || 40;
                 self.tournamentId = self.tournament.id || self.tournamentId;

@@ -134,12 +134,6 @@
                                         <td style="color:#b91c1c; font-size:0.85rem; font-weight:700; padding:7px 0; border-bottom:1px solid #DDD0A0; vertical-align:middle;"><t t-esc="doc.blood_group"/></td>
                                     </tr>
                                 </t>
-                                <t t-if="doc.p_category">
-                                    <tr>
-                                        <td style="color:#8F7400; font-family:'Oswald',sans-serif; font-size:0.7rem; font-weight:600; letter-spacing:0.8px; text-transform:uppercase; padding:7px 10px 7px 0; white-space:nowrap; width:42%; border-bottom:1px solid #DDD0A0; vertical-align:middle;">Player Category</td>
-                                        <td style="color:#1F1A0A; font-size:0.85rem; font-weight:600; padding:7px 0; border-bottom:1px solid #DDD0A0; vertical-align:middle;"><t t-esc="doc.p_category"/></td>
-                                    </tr>
-                                </t>
                                 <t t-if="doc.address">
                                     <tr>
                                         <td style="color:#8F7400; font-family:'Oswald',sans-serif; font-size:0.7rem; font-weight:600; letter-spacing:0.8px; text-transform:uppercase; padding:7px 10px 7px 0; white-space:nowrap; width:42%; border-bottom:1px solid #DDD0A0; vertical-align:middle;">Location</td>

@@ -191,6 +191,7 @@
                             <group string="Squad">
                                 <field name="max_players"             string="Max Squad Size"   readonly="1"/>
                                 <field name="remaining_players_count" string="Slots Remaining"  readonly="1"/>
+                                <field name="base_point"              string="Global Base Point" readonly="1"/>
                             </group>
                         </group>
 

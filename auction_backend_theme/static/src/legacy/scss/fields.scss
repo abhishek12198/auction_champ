@@ -65,18 +65,25 @@
 
     .modal-header {
         background: $ac-navy-dark;
-        color: white;
+        color: #ffffff !important;
         border-radius: 8px 8px 0 0;
         border-bottom: 2px solid $ac-gold;
         font-family: 'Rajdhani', sans-serif;
 
-        .modal-title {
+        .modal-title,
+        .o_dialog_title,
+        h1, h2, h3, h4, h5, h6,
+        span {
+            color: #ffffff !important;
             font-weight: 700;
             letter-spacing: 0.06em;
             text-transform: uppercase;
         }
 
-        .btn-close {
+        .btn-close,
+        .close {
+            color: #ffffff !important;
+            text-shadow: none;
             // invert the dark SVG icon to white; force full opacity (Bootstrap defaults to 0.5)
             filter: invert(1) brightness(2);
             opacity: 1 !important;
@@ -91,11 +98,26 @@
 // ── Dialog close button — global safety net ───────────────────────────────────
 // Catches Odoo's .o_dialog wrapper and any other dark-header context where
 // Bootstrap's default dark SVG close icon would be invisible.
-.o_dialog .modal-header .btn-close,
-.o_technical_modal .modal-header .btn-close,
-.o_act_window .modal-header .btn-close {
-    filter: invert(1) brightness(2);
-    opacity: 1 !important;
+.o_dialog .modal-header,
+.o_technical_modal .modal-header,
+.o_act_window .modal-header,
+.modal .modal-header {
+    background: $ac-navy-dark;
+    color: #ffffff !important;
+
+    .modal-title,
+    .o_dialog_title,
+    h1, h2, h3, h4, h5, h6,
+    span {
+        color: #ffffff !important;
+    }
+
+    .btn-close,
+    .close {
+        color: #ffffff !important;
+        filter: invert(1) brightness(2);
+        opacity: 1 !important;
+    }
 }
 
 // Scrollbar (webkit)

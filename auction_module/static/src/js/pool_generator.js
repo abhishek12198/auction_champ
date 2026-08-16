@@ -97,7 +97,7 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 this.tournamentId = this.state.tournament.id;
             }
             this.state.tournaments = data.tournaments || [];
-            this.state.showTournamentFilter = !!data.show_tournament_filter;
+            this.state.showTournamentFilter = false;
             this.state.isAdmin = !!data.is_admin;
             this.state.teams = data.teams || [];
             this.state.poolCount = data.default_pool_count || 2;

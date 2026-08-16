@@ -809,9 +809,6 @@
         <t t-if="player.get('p_type')">
           <span class="or-tag"><t t-esc="player.get('p_type')"/></span>
         </t>
-        <t t-if="player.get('p_category')">
-          <span class="or-tag or-tag-orange"><t t-esc="player.get('p_category')"/></span>
-        </t>
       </div>
 
       <!-- Batting / bowling stat blocks -->

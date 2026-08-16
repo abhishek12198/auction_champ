@@ -68,7 +68,11 @@ class Auction(models.Model):
     total_point = fields.Integer(string="Total points")
     active = fields.Boolean(default=True)
     max_players = fields.Integer(string='Max no of players')
-    base_point = fields.Integer(string='Base Point')
+    base_point = fields.Integer(
+        string='Global Base Point',
+        help='Default minimum bid and purse reserve. A tier with Base Point 0 uses this. '
+             'Configured in Set Auction Rules — no hidden default.',
+    )
     max_limited = fields.Selection([('yes', 'Yes'), ('no', 'No')], default='no')
     max_points = fields.Integer('Max Points')
     remaining_points = fields.Integer(compute='_calculate_remaining_points', store=True, string="Remaining points")
@@ -255,10 +259,9 @@ class Auction(models.Model):
             base = team.base_point or 0
             return max(remaining_points - (slots_to_account * base), 0)
 
-        # Per-tier reserve: fill future slots at minimum cost (cheapest tier first).
-        # When no player is on stage, still use tier bases — not the hidden global
-        # base_point (wizard default 1000), which would zero max call:
-        # 5000 purse − 9 × 1000 = 0 instead of 5000 − 9 × 100 = 4100.
+        # Per-tier reserve: fill future slots at minimum cost (cheapest configured
+        # tier base first). A tier with Base Point 0 uses the global base from
+        # Set Auction Rules — never a hidden 100/1000.
         player_tier_id = player.tier_id.id if (player and player.tier_id) else False
         recruited_by_tier = {}
         for line in team.player_ids:
@@ -428,6 +431,6 @@ class AuctionAuctionTierLimit(models.Model):
     tier_id = fields.Many2one('auction.player.tier', string='Tier', required=True)
     max_players = fields.Integer(string='Max Players', required=True, default=1)
     base_point = fields.Integer(string='Base Point', default=0,
-        help="Minimum bid for a player of this tier. Leave 0 to use the global base point.")
+        help="Minimum bid for this tier. 0 = use the auction Global Base Point.")
     max_call = fields.Integer(string='Max Call for a Player', default=0,
         help="Maximum bid allowed for a single player of this tier. Leave 0 for no cap.")

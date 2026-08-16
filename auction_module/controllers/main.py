@@ -106,17 +106,19 @@ class Auction(http.Controller):
         """Return the tournament for the current request.
 
         Priority:
-        1. The logged-in user's ``tournament_id`` field on their profile.
-        2. The single tournament flagged ``active = True`` (legacy fallback).
-
-        Routes with ``auth='none'`` that switch databases via ``_with_db``
-        must NOT call this helper — they should keep their own active-based
-        lookup because no user session is available in those contexts.
+        1. Navbar / profile working tournament (``get_working_tournament``).
+        2. The logged-in user's ``tournament_id``.
+        3. The first active tournament (legacy fallback).
         """
         try:
-            user_tournament = request.env.user.sudo().tournament_id
-            if user_tournament:
-                return user_tournament
+            user = request.env.user.sudo()
+            get_working = getattr(user, 'get_working_tournament', None)
+            if callable(get_working):
+                working = get_working()
+                if working:
+                    return working
+            if user.tournament_id:
+                return user.tournament_id
         except Exception:
             pass
         return request.env['auction.tournament'].sudo().search(
@@ -906,7 +908,6 @@ class Auction(http.Controller):
                 'height': '',
                 'weight': '',
                 'work_rate': '',
-                'p_category': '',
                 'blood_group': '',
                 'mobile': '',
                 'location': '',
@@ -2134,7 +2135,6 @@ class Auction(http.Controller):
                     'bowling_style': icon.bowling_style,
                     'contact': icon.contact,
                     'p_type': icon.p_type,
-                    'p_category': icon.p_category,
                     'tier_color': icon.tier_id.color if icon.tier_id else '#01cfff',
                     'tier_name': icon.tier_id.name if icon.tier_id else 'Icon',
                     'is_icon': True,
@@ -2151,7 +2151,6 @@ class Auction(http.Controller):
                     'bowling_style': player.player_id.bowling_style,
                     'contact': player.player_id.contact,
                     'p_type': player.player_id.p_type,
-                    'p_category': player.player_id.p_category,
                     'tier_color': player.player_id.tier_id.color if player.player_id.tier_id else '#01cfff',
                     'tier_name': player.player_id.tier_id.name if player.player_id.tier_id else '',
                     'is_icon': False,
@@ -2635,38 +2634,17 @@ class Auction(http.Controller):
         }
 
     def _pm_tournament_filter_meta(self):
-        """Tournament dropdown choices + whether to show the filter.
+        """In-page tournament dropdown is unused: navbar badge is the selector.
 
-        SaaS organisers: locked to working tournament (no dropdown).
-        Admins: all active tournaments.
-        Other users: their assigned tournament_ids (dropdown if more than one).
+        Always hide the filter. Data still follows Active / working tournament.
         """
-        _has_access, is_admin = self._get_pm_access()
-        env = request.env
         is_saas = False
         try:
-            Acc = env['ac.saas.account']
+            Acc = request.env['ac.saas.account']
             is_saas = bool(Acc._get_account_for_user())
         except Exception:
             is_saas = False
-
-        if is_saas and not is_admin:
-            return [], False, True
-
-        if is_admin:
-            tournaments = env['auction.tournament'].sudo().search(
-                [('active', '=', True)], order='name asc, id asc'
-            )
-        else:
-            user = env.user.sudo()
-            tournaments = user.tournament_ids.filtered(lambda t: t.active)
-            if not tournaments and user.tournament_id:
-                tournaments = user.tournament_id
-
-        choices = [{'id': t.id, 'name': t.name or ('Tournament #%s' % t.id)}
-                   for t in tournaments]
-        show = bool(is_admin or len(choices) > 1)
-        return choices, show, is_saas
+        return [], False, is_saas
 
     def _render_payment_marker_page(self, tournament, embed=False):
         """Build the Payment Tracker HTML response for a resolved tournament."""
@@ -2731,7 +2709,7 @@ class Auction(http.Controller):
     @http.route('/auction/payment-marker/resolve', type='json', auth='user', website=False)
     def payment_marker_resolve(self, tournament_id=None, **kw):
         """JSON helper for legacy callers (embed URL). Prefer /data for client action."""
-        tournament, error = self._resolve_pm_tournament_record(tournament_id=tournament_id)
+        tournament, error = self._resolve_pm_tournament_record(tournament_id=None)
         if error:
             return {'ok': False, 'error': error}
         embed_url = '/auction/payment-marker/embed'
@@ -2747,7 +2725,7 @@ class Auction(http.Controller):
     @http.route('/auction/payment-marker/data', type='json', auth='user', website=False)
     def payment_marker_data(self, tournament_id=None, **kw):
         """JSON payload for the native Payment Tracker client action."""
-        tournament, error = self._resolve_pm_tournament_record(tournament_id=tournament_id)
+        tournament, error = self._resolve_pm_tournament_record(tournament_id=None)
         if error:
             return {'ok': False, 'error': error}
         return self._payment_marker_payload(tournament)
@@ -3703,9 +3681,7 @@ class Auction(http.Controller):
         tournament_choices, show_tournament_filter, _is_saas = (
             self._pm_tournament_filter_meta()
         )
-        user_tournament = self._resolve_pd_tournament(
-            tournament_id=kw.get('tournament_id'),
-        )
+        user_tournament = self._resolve_pd_tournament()
 
         if user_tournament:
             t_domain = [('tournament_id', '=', user_tournament.id)]
@@ -3848,20 +3824,10 @@ class Auction(http.Controller):
         )
 
     def _resolve_pd_tournament(self, tournament_id=None):
-        """Resolve the Player Dashboard tournament (mirrors Payment Tracker rules)."""
+        """Player Dashboard follows the navbar / Active Tournament only."""
         env = request.env
         user = env.user.sudo()
         is_admin = user.has_group('auction_module.group_auction_group_admin')
-
-        if tournament_id not in (None, False, '', 'null', 'undefined'):
-            try:
-                tid = int(tournament_id)
-            except (TypeError, ValueError):
-                tid = False
-            if tid:
-                tournament = env['auction.tournament'].sudo().browse(tid)
-                if tournament.exists() and self._pm_user_can_access_tournament(tournament):
-                    return tournament
 
         tournament = False
         get_working = getattr(user, 'get_working_tournament', None)
@@ -6333,22 +6299,43 @@ def _pj_progress(tournament, current_player=None, env=None):
 def _pj_wait_phase(tournament, audience='projector', env=None):
     """Idle projector / live-board screen phase when no player is on stage.
 
-    - about_to_begin: everyone still in draft (no sold/unsold/auction yet)
-    - waiting: auction underway (someone sold/unsold, or a player in auction)
-    - completed: declared complete, or nothing left in draft/auction
+    Matches projector queue-empty routing:
+    - completed: operator clicked Declare Auction Complete, **or**
+      In-Auction / Draft / Unsold are all empty and at least one player is Sold
+    - loading_unsold: In Auction empty, Unsold remaining (Draft may exist)
+    - draft_soon: In Auction and Unsold empty, Draft remaining
+    - waiting: at least one player still In Auction, none on stage
+    - about_to_begin: no sold/unsold/auction/draft yet
 
     ``audience``:
     - projector → owners / floor ceremony copy
-    - viewers   → public live-board Thank You Viewers copy
+    - viewers   → public live-board copy
     """
     name = (tournament.name or 'the tournament') if tournament else 'the tournament'
-    if not tournament:
+
+    def _idle_payload(phase, viewer_headline, projector_message):
+        if audience == 'viewers':
+            return {
+                'phase': phase,
+                'tournament_name': name,
+                'thanks_title': 'Thank You Viewers',
+                'message': viewer_headline,
+                'idle_headline': viewer_headline,
+            }
         return {
-            'phase': 'about_to_begin',
+            'phase': phase,
             'tournament_name': name,
             'thanks_title': 'Thank You',
-            'message': 'THE BATTLE FOR TALENT BEGINS SOON',
+            'message': projector_message,
+            'idle_headline': viewer_headline,
         }
+
+    if not tournament:
+        return _idle_payload(
+            'about_to_begin',
+            'The battle for talent begins soon',
+            'THE BATTLE FOR TALENT BEGINS SOON',
+        )
 
     def _completed_payload():
         if audience == 'viewers':
@@ -6376,24 +6363,33 @@ def _pj_wait_phase(tournament, audience='projector', env=None):
     auction = counts['auction']
     sold = counts['sold']
     unsold = counts['unsold']
-    remaining = draft + auction
-    finished = sold + unsold
 
-    if remaining == 0 and finished > 0:
-        return _completed_payload()
-    if auction == 0 and sold == 0 and unsold == 0:
-        return {
-            'phase': 'about_to_begin',
-            'tournament_name': name,
-            'thanks_title': 'Thank You',
-            'message': 'THE BATTLE FOR TALENT BEGINS SOON',
-        }
-    return {
-        'phase': 'waiting',
-        'tournament_name': name,
-        'thanks_title': 'Thank You',
-        'message': 'THE SPOTLIGHT MOVES TO THE NEXT PLAYER',
-    }
+    # Auto Thank You only when nothing is left to call (same as projector).
+    if draft == 0 and auction == 0 and unsold == 0:
+        if sold > 0:
+            return _completed_payload()
+        return _idle_payload(
+            'about_to_begin',
+            'The battle for talent begins soon',
+            'THE BATTLE FOR TALENT BEGINS SOON',
+        )
+    if auction == 0 and unsold > 0:
+        return _idle_payload(
+            'loading_unsold',
+            'Loading from Unsold',
+            'LOADING FROM UNSOLD',
+        )
+    if auction == 0 and unsold == 0 and draft > 0:
+        return _idle_payload(
+            'draft_soon',
+            'Players will enter the auction soon',
+            'PLAYERS WILL ENTER THE AUCTION SOON',
+        )
+    return _idle_payload(
+        'waiting',
+        'Waiting for next player',
+        'THE SPOTLIGHT MOVES TO THE NEXT PLAYER',
+    )
 
 
 def _pj_boards(tournament, db_name, env=None):
@@ -6758,7 +6754,6 @@ def _pj_remaining_players(tournament, db_name, env=None):
             dominant_position = '???'
             preferred_foot = ''
             age = ''
-            p_category = ''
             blood_group = ''
             location = ''
             other_attributes = []
@@ -6775,7 +6770,6 @@ def _pj_remaining_players(tournament, db_name, env=None):
             dominant_position = fb.get('dominant_position') or ''
             preferred_foot = fb.get('preferred_foot') or ''
             age = fb.get('age') or ''
-            p_category = p.p_category or fb.get('p_category') or ''
             blood_group = p.blood_group or fb.get('blood_group') or ''
             location = fb.get('location') or p.address or ''
             other_attributes = fb.get('other_attributes') or []
@@ -6794,7 +6788,6 @@ def _pj_remaining_players(tournament, db_name, env=None):
             'dominant_position': dominant_position,
             'preferred_foot': preferred_foot,
             'age': age,
-            'p_category': p_category,
             'blood_group': blood_group,
             'location': location,
             'other_attributes': other_attributes,
@@ -6944,7 +6937,6 @@ def _football_display_payload(player):
         'tournament_type': (
             player.tournament_id.tournament_type if player.tournament_id else 'cricket'
         ),
-        'p_category': player.p_category or '',
         'blood_group': player.blood_group or '',
         'mobile': player.masked_contact or '',
         'location': player.address or '',

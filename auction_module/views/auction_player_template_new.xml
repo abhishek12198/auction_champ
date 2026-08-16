@@ -681,12 +681,6 @@ body[data-theme="dark"] .single-header{
                       <span class="vn-stat-val"><t t-esc="player.bowling_style"/></span>
                     </div>
                   </t>
-                  <t t-if="player.p_category">
-                    <div class="vn-stat-row">
-                      <span class="vn-stat-key">Category</span>
-                      <span class="vn-stat-val"><t t-esc="player.p_category"/></span>
-                    </div>
-                  </t>
                   <t t-if="player.address">
                     <div class="vn-stat-row vn-fb-span-2">
                       <span class="vn-stat-key">Location</span>
@@ -748,12 +742,6 @@ body[data-theme="dark"] .single-header{
                         <span class="vn-stat-val"><t t-esc="player.weight"/></span>
                       </div>
                     </t>
-                  </t>
-                  <t t-if="player.p_category">
-                    <div class="vn-stat-row">
-                      <span class="vn-stat-key">Category</span>
-                      <span class="vn-stat-val"><t t-esc="player.p_category"/></span>
-                    </div>
                   </t>
                   <t t-if="player.address">
                     <div class="vn-stat-row vn-fb-span-2">

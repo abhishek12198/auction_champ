@@ -36,7 +36,8 @@
 #
 ##############################################################################
 
-from odoo import api, models, fields
+from odoo import api, models, fields, _
+from odoo.exceptions import AccessError, UserError
 
 
 class ResUsers(models.Model):
@@ -53,7 +54,8 @@ class ResUsers(models.Model):
     tournament_id = fields.Many2one(
         'auction.tournament',
         string='Active Tournament',
-        help='The tournament this user belongs to. '
+        help='The tournament this user is currently working in. '
+             'Auction Users with several Organizer Tournaments switch this from the navbar. '
              'Used to automatically scope records and QWeb templates. '
              'Visible and assignable only by Administrators.',
     )
@@ -205,3 +207,110 @@ class ResUsers(models.Model):
         if not self.env.context.get('skip_home_action_sync'):
             users._auction_sync_home_action()
         return users
+
+    def _auction_is_admin_user(self):
+        self.ensure_one()
+        return self.has_group('auction_module.group_auction_group_admin')
+
+    def _auction_is_switchable_user(self):
+        """Navbar switcher: Auction User and Administrator."""
+        self.ensure_one()
+        return (
+            self._auction_is_admin_user()
+            or self.has_group('auction_module.group_auction_group')
+        )
+
+    def _auction_switchable_tournaments(self):
+        """Tournaments this login may enable from the navbar."""
+        self.ensure_one()
+        if self._auction_is_admin_user():
+            return self.env['auction.tournament'].sudo().search(
+                [('active', '=', True)], order='name asc, id asc'
+            )
+        user = self.sudo()
+        tournaments = user.tournament_ids
+        if user.tournament_id:
+            tournaments |= user.tournament_id
+        return tournaments.sorted(
+            key=lambda t: (not t.active, t.name or '', t.id)
+        )
+
+    def get_working_tournament(self):
+        """Tournament used for menus, creates, and the navbar badge."""
+        self.ensure_one()
+        allowed = self._auction_switchable_tournaments()
+        if self.tournament_id and self.tournament_id.exists():
+            if self.tournament_id in allowed:
+                return self.tournament_id
+            if self._auction_is_admin_user():
+                return self.tournament_id
+        return allowed[:1]
+
+    def get_working_tournament_id(self):
+        tournament = self.get_working_tournament()
+        return tournament.id if tournament else False
+
+    def _auction_systray_item(self, tournament, active_id):
+        db_name = self.env.cr.dbname
+        rules_ready = bool(tournament.has_auction_rules)
+        projector_url = ''
+        if rules_ready:
+            projector_url = tournament.projector_url or ''
+            if not projector_url and tournament.slug:
+                projector_url = '/%s/auction/projector/%s/' % (db_name, tournament.slug)
+        live_board_url = tournament.live_board_url or ''
+        if not live_board_url and tournament.slug:
+            live_board_url = '/%s/%s/auction/live-board' % (db_name, tournament.slug)
+        return {
+            'id': tournament.id,
+            'name': tournament.name or _('Tournament'),
+            'active': bool(active_id and tournament.id == active_id),
+            'logo': (
+                '/web/image/auction.tournament/%s/logo' % tournament.id
+                if tournament.logo else ''
+            ),
+            'has_auction_rules': rules_ready,
+            'projector_url': projector_url,
+            'live_board_url': live_board_url or '/auction/my/live-board',
+        }
+
+    @api.model
+    def get_systray_tournaments(self):
+        """Payload for the navbar tournament badge / Auction User switcher."""
+        user = self.env.user
+        tournaments = user._auction_switchable_tournaments()
+        working = user.get_working_tournament()
+        active_id = working.id if working else False
+        items = [user._auction_systray_item(t, active_id) for t in tournaments]
+        current = next((i for i in items if i['active']), items[0] if items else None)
+        return {
+            'tournaments': items,
+            'current': current,
+            'can_switch': bool(user._auction_is_switchable_user() and len(items) > 1),
+        }
+
+    def set_active_tournament(self, tournament_id):
+        """Set Active Tournament for menus and creates (navbar switcher)."""
+        self.ensure_one()
+        if self.env.user != self and not self.env.su:
+            raise AccessError(_('You can only switch your own active tournament.'))
+        if not self._auction_is_switchable_user():
+            raise AccessError(_('You cannot switch tournament from the navbar.'))
+        tournament_id = int(tournament_id or 0)
+        if not tournament_id:
+            raise UserError(_('Select a tournament to enable.'))
+
+        allowed = self._auction_switchable_tournaments()
+        tournament = allowed.filtered(lambda t: t.id == tournament_id)
+        if not tournament and self._auction_is_admin_user():
+            tournament = self.env['auction.tournament'].sudo().browse(tournament_id).exists()
+        if not tournament:
+            raise AccessError(_(
+                'You cannot enable that tournament — it is not available for your login.'
+            ))
+
+        vals = {'tournament_id': tournament.id}
+        if not self._auction_is_admin_user():
+            vals['tournament_ids'] = [(4, tournament.id)]
+        self.sudo().write(vals)
+        return self.get_systray_tournaments()

@@ -367,7 +367,6 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
             'Batting Style',
             'Bowling Style',
             'Blood Group',
-            'Player Category',
         ]
 
     def _jersey_headers(self, include_player_id=False):
@@ -430,7 +429,6 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
             player.batting_style or '',
             player.bowling_style or '',
             player.blood_group or '',
-            player.p_category or '',
         ]
 
     def _jersey_values(self, player):

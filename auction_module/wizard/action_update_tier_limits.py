@@ -77,6 +77,16 @@ class UpdateTierLimits(models.TransientModel):
     _description = 'Bulk Update Tier Limits & Bid Slabs across Auctions'
 
     auction_ids = fields.Many2many('auction.auction', string='Selected Auctions', readonly=True)
+    apply_global_base = fields.Boolean(
+        string='Update global base point',
+        default=False,
+        help='When ticked, write Global base point on every selected auction.',
+    )
+    new_global_base = fields.Integer(
+        string='Global base point',
+        default=0,
+        help='Default minimum bid for tiers whose Base Point is 0. No hidden fallback.',
+    )
     line_ids = fields.One2many('auction.update.tier.limits.line', 'wizard_id', string='Tier Adjustments')
     update_slabs = fields.Boolean(
         string='Update Bid Slabs',
@@ -151,6 +161,8 @@ class UpdateTierLimits(models.TransientModel):
         defaults['line_ids'] = lines
         defaults['slab_ids'] = slab_lines
         defaults['update_slabs'] = False
+        defaults['apply_global_base'] = False
+        defaults['new_global_base'] = auctions[:1].base_point if auctions else 0
         defaults['auction_ids'] = [(6, 0, auction_ids)]
         return defaults
 
@@ -190,11 +202,13 @@ class UpdateTierLimits(models.TransientModel):
             l.apply_max_players or l.apply_base_point or l.apply_max_call
             for l in self.line_ids
         )
-        if not tier_changes and not self.update_slabs:
+        if not tier_changes and not self.update_slabs and not self.apply_global_base:
             raise UserError(
-                'No changes selected. Tick "Update?" on a tier field and/or '
-                '"Update Bid Slabs" to apply.'
+                'No changes selected. Tick a toggle for global base, a tier field, '
+                'and/or "Update Bid Slabs" to apply.'
             )
+        if self.apply_global_base and self.new_global_base < 0:
+            raise UserError('Global base point cannot be negative.')
 
         if self.update_slabs:
             self._validate_slabs()
@@ -235,6 +249,9 @@ class UpdateTierLimits(models.TransientModel):
                     tl.write(vals)
                     updated_tiers += 1
 
+            if self.apply_global_base:
+                auction.write({'base_point': self.new_global_base})
+
             if self.update_slabs:
                 auction.auction_bid_slab_ids.unlink()
                 auction.write({
@@ -250,6 +267,8 @@ class UpdateTierLimits(models.TransientModel):
                 updated_slab_auctions += 1
 
         parts = []
+        if self.apply_global_base:
+            parts.append('global base point')
         if updated_tiers:
             parts.append('%s tier limit record(s)' % updated_tiers)
         if updated_slab_auctions:

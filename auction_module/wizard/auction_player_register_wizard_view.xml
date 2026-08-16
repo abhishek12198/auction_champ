@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_auction_player_register_wizard_form" model="ir.ui.view">
+        <field name="name">auction.player.register.wizard.form</field>
+        <field name="model">auction.player.register.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Register Player" class="o_atp_form">
+                <field name="tournament_type" invisible="1"/>
+                <field name="enable_jersey_section" invisible="1"/>
+
+                <div class="atp-hero">
+                    <div class="atp-photo">
+                        <field name="photo" widget="image" class="oe_avatar player_photo_large"
+                               options="{'zoom': true, 'preview_image': 'photo'}"/>
+                    </div>
+                    <div class="atp-hero-main">
+                        <div class="atp-kicker">Register player</div>
+                        <div class="oe_title">
+                            <label class="o_form_label" for="name"/>
+                            <h1>
+                                <field name="name" class="text-uppercase"
+                                       placeholder="Full Name"/>
+                            </h1>
+                        </div>
+                        <div class="atp-hero-sub">
+                            <field name="role" placeholder="Role (e.g. All-Rounder)"/>
+                        </div>
+                        <div class="atp-hero-meta">
+                            <div class="atp-meta-item">
+                                <span class="atp-meta-label">Paid</span>
+                                <field name="amount_paid" string="Payment Received"
+                                       widget="boolean_toggle" nolabel="1"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="atp-cards">
+                    <div class="atp-card">
+                        <div class="atp-card-head">
+                            <i class="fa fa-trophy"/> Tournament &amp; classification
+                        </div>
+                        <group>
+                            <field name="tournament_id"
+                                   options="{'no_open': True, 'no_create': True}"/>
+                            <field name="tier_id" placeholder="Tier"
+                                   domain="[('tournament_id', '=', tournament_id)]"
+                                   options="{'no_create': True, 'no_open': True}"/>
+                            <field name="current_team"
+                                   string="Previous / Current Club"/>
+                        </group>
+                    </div>
+
+                    <div class="atp-card">
+                        <div class="atp-card-head">
+                            <i class="fa fa-phone"/> Contact details
+                        </div>
+                        <group>
+                            <field name="contact" string="Mobile Number"/>
+                            <field name="org_id"/>
+                            <field name="address"/>
+                        </group>
+                    </div>
+
+                    <div class="atp-card" attrs="{'invisible': [('tournament_type', '=', 'football')]}">
+                        <div class="atp-card-head">
+                            <i class="fa fa-dot-circle-o"/> Playing style
+                        </div>
+                        <group>
+                            <field name="batting_style"/>
+                            <field name="bowling_style"/>
+                        </group>
+                    </div>
+
+                    <div class="atp-card" attrs="{'invisible': [('tournament_type', '!=', 'football')]}">
+                        <div class="atp-card-head">
+                            <i class="fa fa-futbol-o"/> Football profile
+                        </div>
+                        <group>
+                            <field name="dominant_position_id"/>
+                            <field name="secondary_position_ids" widget="many2many_tags"/>
+                            <field name="preferred_foot"/>
+                            <field name="work_rate"/>
+                            <field name="age"/>
+                            <field name="height"/>
+                            <field name="weight"/>
+                        </group>
+                    </div>
+                </div>
+
+                <notebook>
+                    <page string="Player Characteristics"
+                          attrs="{'invisible': [('tournament_type', '!=', 'football')]}">
+                        <group>
+                            <group string="Playing Style (self-declared)">
+                                <field name="playing_style_ids" nolabel="1"
+                                       widget="many2many_tags"/>
+                            </group>
+                            <group string="Strengths (self-declared)">
+                                <field name="strength_ids" nolabel="1"
+                                       widget="many2many_tags"/>
+                            </group>
+                        </group>
+                    </page>
+                    <page string="Jersey Details"
+                          attrs="{'invisible': [('enable_jersey_section', '=', False)]}">
+                        <group>
+                            <group string="Jersey">
+                                <field name="jersy_name" string="Name on Jersey"/>
+                                <field name="jersy_number" string="Jersey Number"/>
+                                <field name="jersy_size" string="Jersey Size"/>
+                            </group>
+                        </group>
+                    </page>
+                    <page string="Other Info">
+                        <group>
+                            <field name="p_type" string="Type"/>
+                            <field name="blood_group"/>
+                        </group>
+                    </page>
+                </notebook>
+
+                <footer>
+                    <button name="action_register" type="object" string="Register"
+                            class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

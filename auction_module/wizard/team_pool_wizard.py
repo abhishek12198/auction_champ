@@ -854,16 +854,16 @@ class TeamPoolWizard(models.TransientModel):
 
     @api.model
     def _client_current_tournament(self):
-        """Active tournament for Pool Generator (context wins over systray)."""
-        tid = self.env.context.get('tournament_id')
-        if tid:
-            tournament = self.env['auction.tournament'].browse(int(tid)).exists()
+        """Active tournament for Pool Generator — follows the navbar badge."""
+        user = self.env.user
+        get_working = getattr(user, 'get_working_tournament', None)
+        if callable(get_working):
+            tournament = get_working()
             if tournament:
                 return tournament
-        tournament = self.env.user.tournament_id
-        if not tournament:
-            raise UserError('Select a tournament before using the Pool Generator.')
-        return tournament
+        if user.tournament_id:
+            return user.tournament_id
+        raise UserError('Select a tournament in the navbar before using the Pool Generator.')
 
     @api.model
     def _client_build_pools(self, structure, pool_names=None):
@@ -933,39 +933,15 @@ class TeamPoolWizard(models.TransientModel):
 
     @api.model
     def _client_tournament_filter_meta(self):
-        """Tournament dropdown choices — mirrors Payment Tracker rules.
-
-        SaaS organisers: locked to working tournament (no dropdown).
-        Admins: all active tournaments.
-        Other users: assigned tournament_ids (dropdown only if more than one).
-        """
-        user = self.env.user
-        is_admin = user.has_group('auction_module.group_auction_group_admin')
+        """In-page tournament dropdown is unused: navbar badge is the selector."""
         is_saas = False
         try:
             Acc = self.env['ac.saas.account']
             is_saas = bool(Acc._get_account_for_user())
         except Exception:
             is_saas = False
-
-        if is_saas and not is_admin:
-            return [], False, True, is_admin
-
-        if is_admin:
-            tournaments = self.env['auction.tournament'].sudo().search(
-                [('active', '=', True)], order='name asc, id asc'
-            )
-        else:
-            tournaments = user.sudo().tournament_ids.filtered(lambda t: t.active)
-            if not tournaments and user.tournament_id:
-                tournaments = user.tournament_id
-
-        choices = [
-            {'id': t.id, 'name': t.name or ('Tournament #%s' % t.id)}
-            for t in tournaments
-        ]
-        show = bool(is_admin or len(choices) > 1)
-        return choices, show, is_saas, is_admin
+        is_admin = self.env.user.has_group('auction_module.group_auction_group_admin')
+        return [], False, is_saas, is_admin
 
     @api.model
     def client_bootstrap(self, tournament_id=None):
@@ -973,22 +949,10 @@ class TeamPoolWizard(models.TransientModel):
         choices, show_filter, is_saas, is_admin = self._client_tournament_filter_meta()
 
         tournament = False
-        if tournament_id:
-            tournament = self.env['auction.tournament'].browse(int(tournament_id)).exists()
-            if not tournament:
-                raise UserError('Tournament not found.')
-            # Non-admins may only open tournaments they are allowed to see
-            if not is_admin and choices:
-                allowed = {c['id'] for c in choices}
-                if tournament.id not in allowed:
-                    raise UserError('You do not have access to that tournament.')
-        else:
-            try:
-                tournament = self._client_current_tournament()
-            except UserError:
-                tournament = self.env.user.tournament_id
-            if not tournament and choices:
-                tournament = self.env['auction.tournament'].browse(choices[0]['id']).exists()
+        try:
+            tournament = self._client_current_tournament()
+        except UserError:
+            tournament = self.env.user.tournament_id
 
         Team = self.env['auction.team']
         domain = [('tournament_id', '=', tournament.id)] if tournament else []

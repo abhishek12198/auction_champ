@@ -43,7 +43,6 @@ WATCHED_FIELDS = {
         'batting_style': frozenset(('lb', 'pj', 'bal')),
         'bowling_style': frozenset(('lb', 'pj', 'bal')),
         'sl_no': frozenset(('lb', 'pj', 'bal')),
-        'p_category': frozenset(('lb', 'pj', 'bal')),
         'blood_group': frozenset(('lb', 'pj')),
         'address': frozenset(('lb', 'pj')),
         'age': frozenset(('lb', 'pj', 'bal')),

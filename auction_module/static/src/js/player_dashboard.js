@@ -50,10 +50,6 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
                 this.$el.addClass('pd-light');
                 this.$el.find('.pd-theme-toggle').html('&#9790; Dark');
             }
-            var savedTid = localStorage.getItem('pd_tournament_id');
-            if (savedTid) {
-                this._tournamentId = parseInt(savedTid, 10) || null;
-            }
             this._loadData();
             var self = this;
             this._timer = setInterval(function () { self._loadData(); }, 30000);
@@ -185,9 +181,6 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
         _loadData: function () {
             var self = this;
             var url = '/auction/player-dashboard/data';
-            if (this._tournamentId) {
-                url += '?tournament_id=' + encodeURIComponent(this._tournamentId);
-            }
             fetch(url, { cache: 'no-store' })
                 .then(function (r) { return r.json(); })
                 .then(function (d) { self._render(d); })
@@ -199,11 +192,7 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
             this._viewIds = d.view_ids || {};
             this._tournamentId = d.tournament_id || null;
             this._tournaments = d.tournaments || [];
-            this._showTournamentFilter = !!d.show_tournament_filter;
-            if (this._tournamentId) {
-                localStorage.setItem('pd_tournament_id', String(this._tournamentId));
-            }
-
+            this._showTournamentFilter = false;
             this._paintTournamentFilter();
 
             // Show Tournament Settings button only when user has a linked tournament

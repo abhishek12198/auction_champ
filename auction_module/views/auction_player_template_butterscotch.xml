@@ -786,12 +786,6 @@ body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to to
                   <span class="hud-stat-val"><t t-esc="player.bowling_style"/></span>
                 </div>
               </t>
-              <t t-if="player.p_category">
-                <div class="hud-stat-row">
-                  <span class="hud-stat-key">Category</span>
-                  <span class="hud-stat-val"><t t-esc="player.p_category"/></span>
-                </div>
-              </t>
               <t t-if="player.address">
                 <div class="hud-stat-row ac-fb-span-2">
                   <span class="hud-stat-key">Location</span>
@@ -829,9 +823,6 @@ body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to to
                 <t t-if="player.weight">
                   <div class="hud-stat-row"><span class="hud-stat-key">Weight</span><span class="hud-stat-val"><t t-esc="player.weight"/></span></div>
                 </t>
-              </t>
-              <t t-if="player.p_category">
-                <div class="hud-stat-row"><span class="hud-stat-key">Category</span><span class="hud-stat-val"><t t-esc="player.p_category"/></span></div>
               </t>
               <t t-if="player.address">
                 <div class="hud-stat-row ac-fb-span-2"><span class="hud-stat-key">Location</span><span class="hud-stat-val"><t t-esc="player.address"/></span></div>

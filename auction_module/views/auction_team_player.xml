@@ -53,7 +53,6 @@
                     <field name="state"/>
                     <field name="tier_id"/>
                     <field name="tier_color"/>
-                    <field name="p_category"/>
                     <field name="blood_group"/>
                     <field name="assigned_team_id"/>
 
@@ -122,9 +121,6 @@
                                         <t t-if="record.role.raw_value">
                                             <span class="pk2-badge pk2-b-role" t-esc="record.role.raw_value"/>
                                         </t>
-                                    </t>
-                                    <t t-if="record.p_category.raw_value">
-                                        <span class="pk2-badge pk2-b-cat" t-esc="record.p_category.value"/>
                                     </t>
                                 </div>
 
@@ -452,15 +448,13 @@
             <field name="name">auction.team.player.form</field>
             <field name="model">auction.team.player</field>
             <field name="arch" type="xml">
-                <form string="Player Profile">
+                <form string="Player Profile" class="o_atp_form">
 
-                    <!-- Ribbons ──────────────────────────────────────── -->
                     <widget name="web_ribbon" title="Sold" bg_color="bg-success"
                             attrs="{'invisible': ['|', ('state', '!=', 'sold'), ('icon_player', '=', True)]}"/>
                     <widget name="web_ribbon" title="⭐ Icon Player" bg_color="bg-info"
                             attrs="{'invisible': [('icon_player', '=', False)]}"/>
 
-                    <!-- Header ───────────────────────────────────────── -->
                     <header>
                         <field name="state" widget="statusbar" clickable="1"
                                statusbar_visible="draft,auction,sold,unsold"/>
@@ -478,65 +472,102 @@
                     </header>
 
                     <sheet>
+                        <field name="tournament_id" invisible="1"/>
+                        <field name="tournament_type" invisible="1"/>
+                        <field name="enable_jersey_section" invisible="1"/>
+                        <field name="photo_url" invisible="1"/>
+                        <field name="use_other_attributes" invisible="1"/>
+                        <field name="icon_player" string="Key / Icon Player"
+                               widget="boolean_toggle" invisible="1"/>
 
-                        <!-- Photo + Name / Role / Tier ─────────────── -->
-                        <field name="photo" widget="image" class="oe_avatar player_photo_large"
-                               options="{'zoom': true, 'preview_image': 'photo'}"/>
-                        <div class="oe_title">
-                            <label class="o_form_label" for="name"/>
-                            <h1>
-                                <field name="name" class="text-uppercase"
-                                       placeholder="Full Name"/>
-                            </h1>
-                            <h5 style="color:#888;font-weight:400;margin-top:4px;">
-                                <field name="role" placeholder="Role (e.g. All-Rounder)"/>
-                                &#160;&#8212;&#160;
-                                <field name="tier_id" placeholder="Tier"/>
-                            </h5>
+                        <div class="atp-hero">
+                            <div class="atp-photo">
+                                <field name="photo" widget="image" class="oe_avatar player_photo_large"
+                                       options="{'zoom': true, 'preview_image': 'photo'}"/>
+                            </div>
+                            <div class="atp-hero-main">
+                                <div class="atp-kicker">Player profile</div>
+                                <div class="oe_title">
+                                    <label class="o_form_label" for="name"/>
+                                    <h1>
+                                        <field name="name" class="text-uppercase"
+                                               placeholder="Full Name"/>
+                                    </h1>
+                                </div>
+                                <div class="atp-hero-sub">
+                                    <field name="role" placeholder="Role (e.g. All-Rounder)"/>
+                                </div>
+                                <div class="atp-hero-meta">
+                                    <div class="atp-meta-item">
+                                        <span class="atp-meta-label">No.</span>
+                                        <field name="sl_no" nolabel="1"/>
+                                    </div>
+                                    <div class="atp-meta-item">
+                                        <span class="atp-meta-label">Paid</span>
+                                        <field name="amount_paid" string="Payment Received"
+                                               widget="boolean_toggle" nolabel="1"/>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Row 1 – Classification & Ownership ─────── -->
-                        <group>
-                            <group string="Player Category">
-                                <field name="icon_player" string="Key / Icon Player"
-                                       widget="boolean_toggle" invisible="1"/>
-                            </group>
-                            <group string="Tournament &amp; Team">
-                                <field name="tournament_id" groups="auction_module.group_auction_group_admin"/>
-                                <field name="assigned_team_id" string="Assigned Team"
-                                       readonly="1"/>
-                                <field name="current_team"
-                                       string="Previous / Current Club"/>
-                            </group>
-                        </group>
+                        <div class="atp-cards">
+                            <div class="atp-card">
+                                <div class="atp-card-head">
+                                    <i class="fa fa-trophy"/> Tournament &amp; classification
+                                </div>
+                                <group>
+                                    <field name="tournament_id"
+                                           groups="auction_module.group_auction_group_admin"
+                                           options="{'no_create': True}"/>
+                                    <field name="tier_id" placeholder="Tier"
+                                           domain="[('tournament_id', '=', tournament_id)]"
+                                           options="{'no_create': True, 'no_open': True}"/>
+                                    <field name="assigned_team_id" string="Assigned Team"
+                                           readonly="1"
+                                           domain="[('tournament_id', '=', tournament_id)]"/>
+                                    <field name="current_team"
+                                           string="Previous / Current Club"/>
+                                </group>
+                            </div>
 
-                        <!-- Row 2 – Playing Style &amp; Contact ──────── -->
-                        <group>
-                            <group string="Playing Style"
-                                   attrs="{'invisible': [('tournament_type', '=', 'football')]}">
-                                <field name="batting_style"/>
-                                <field name="bowling_style"/>
-                            </group>
-                            <group string="Football Profile"
-                                   attrs="{'invisible': [('tournament_type', '!=', 'football')]}">
-                                <field name="dominant_position_id"/>
-                                <field name="secondary_position_ids" widget="many2many_tags"/>
-                                <field name="preferred_foot"/>
-                                <field name="work_rate"/>
-                                <field name="age"/>
-                                <field name="height"/>
-                                <field name="weight"/>
-                            </group>
-                            <group string="Contact Details">
-                                <field name="contact" string="Mobile Number"/>
-                                <field name="org_id"/>
-                                <field name="address"/>
-                                <field name="amount_paid" string="Payment Received"
-                                       widget="boolean_toggle"/>
-                            </group>
-                        </group>
+                            <div class="atp-card">
+                                <div class="atp-card-head">
+                                    <i class="fa fa-phone"/> Contact details
+                                </div>
+                                <group>
+                                    <field name="contact" string="Mobile Number"/>
+                                    <field name="org_id"/>
+                                    <field name="address"/>
+                                </group>
+                            </div>
 
-                        <!-- Tabs ─────────────────────────────────────── -->
+                            <div class="atp-card" attrs="{'invisible': [('tournament_type', '=', 'football')]}">
+                                <div class="atp-card-head">
+                                    <i class="fa fa-dot-circle-o"/> Playing style
+                                </div>
+                                <group>
+                                    <field name="batting_style"/>
+                                    <field name="bowling_style"/>
+                                </group>
+                            </div>
+
+                            <div class="atp-card" attrs="{'invisible': [('tournament_type', '!=', 'football')]}">
+                                <div class="atp-card-head">
+                                    <i class="fa fa-futbol-o"/> Football profile
+                                </div>
+                                <group>
+                                    <field name="dominant_position_id"/>
+                                    <field name="secondary_position_ids" widget="many2many_tags"/>
+                                    <field name="preferred_foot"/>
+                                    <field name="work_rate"/>
+                                    <field name="age"/>
+                                    <field name="height"/>
+                                    <field name="weight"/>
+                                </group>
+                            </div>
+                        </div>
+
                         <notebook>
                             <page string="Player Characteristics"
                                   attrs="{'invisible': [('tournament_type', '!=', 'football')]}">
@@ -570,10 +601,11 @@
                                             <field name="value" string="Label-Value"/>
                                         </tree>
                                     </field>
-                                    <field name="use_other_attributes" invisible="1"/>
                                 </group>
                             </page>
-                            <page string="Jersey Details" groups="auction_module.group_auction_jersey_view">
+                            <page string="Jersey Details"
+                                  groups="auction_module.group_auction_jersey_view"
+                                  attrs="{'invisible': [('enable_jersey_section', '=', False)]}">
                                 <group>
                                     <group string="Jersey">
                                         <field name="jersy_name"   string="Name on Jersey"/>
@@ -607,15 +639,9 @@
                                 <group>
                                     <field name="blood_group"/>
                                     <field name="p_type"     string="Type"/>
-                                    <field name="p_category" string="Category"/>
                                 </group>
                             </page>
                         </notebook>
-
-                        <!-- Technical / invisible fields ─────────────── -->
-                        <field name="tournament_type" invisible="1"/>
-                        <field name="photo_url" invisible="1"/>
-                        <field name="sl_no"     invisible="1"/>
 
                     </sheet>
                 </form>

@@ -1,0 +1,360 @@
+/* ══════════════════════════════════════════════════════════════════
+   Backend player form  (.o_atp_form)
+   Visual layout only — same fields and actions.
+   ══════════════════════════════════════════════════════════════════ */
+
+.o_form_view.o_atp_form,
+.o_atp_form {
+    background: #eef2f8;
+}
+
+.o_atp_form .o_form_sheet_bg {
+    background: #eef2f8 !important;
+}
+
+.o_atp_form .o_form_sheet {
+    max-width: 1080px !important;
+    margin: 16px auto 28px !important;
+    padding: 22px 24px 28px !important;
+    border: 0 !important;
+    border-radius: 18px !important;
+    box-shadow: 0 12px 36px rgba(18, 32, 64, 0.08) !important;
+    background: #fff !important;
+}
+
+/* ── Status bar / header actions ─────────────────────────────────── */
+.o_atp_form .o_form_statusbar {
+    background: #fff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 8px 16px;
+}
+
+.o_atp_form .o_statusbar_buttons > .btn,
+.o_atp_form .o_form_statusbar .oe_highlight,
+.o_atp_form .o_form_statusbar button {
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.01em;
+    padding: 6px 14px !important;
+}
+
+.o_atp_form .o_form_statusbar .oe_highlight,
+.o_atp_form .o_form_statusbar .btn-primary {
+    background: linear-gradient(135deg, #1a2744 0%, #1e5fa8 100%) !important;
+    border: 0 !important;
+    color: #fff !important;
+    box-shadow: 0 6px 14px rgba(30, 77, 140, 0.25);
+}
+
+.o_atp_form .o_form_statusbar .btn-secondary {
+    background: #f1f5f9 !important;
+    border: 1px solid #dbe3f0 !important;
+    color: #1e4080 !important;
+}
+
+/* ── Hero ───────────────────────────────────────────────────────── */
+.o_atp_form .atp-hero {
+    display: flex;
+    align-items: flex-start;
+    gap: 22px;
+    padding: 8px 4px 20px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #eef2f7;
+}
+
+.o_atp_form .atp-photo {
+    flex-shrink: 0;
+}
+
+.o_atp_form .atp-photo .player_photo_large.oe_avatar,
+.o_atp_form .player_photo_large.oe_avatar {
+    width: 168px !important;
+    height: 168px !important;
+    border-radius: 18px !important;
+    overflow: hidden;
+    box-shadow: 0 10px 24px rgba(18, 32, 64, 0.16);
+    border: 3px solid #fff;
+    background: #1a2744;
+}
+
+.o_atp_form .player_photo_large.oe_avatar img {
+    width: 168px !important;
+    height: 168px !important;
+    max-width: 168px !important;
+    max-height: 168px !important;
+    object-fit: cover;
+    object-position: top center;
+    border-radius: 15px !important;
+}
+
+.o_atp_form .atp-hero-main {
+    flex: 1;
+    min-width: 0;
+    padding-top: 6px;
+}
+
+.o_atp_form .atp-kicker {
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #8a94a6;
+    margin-bottom: 4px;
+}
+
+.o_atp_form .atp-hero-main .oe_title {
+    width: 100%;
+    max-width: none;
+}
+
+.o_atp_form .atp-hero-main h1 {
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: #12203a;
+    margin: 0;
+}
+
+.o_atp_form .atp-hero-main h1 input {
+    font-weight: 800 !important;
+    font-size: 1.55rem !important;
+    color: #12203a !important;
+}
+
+.o_atp_form .atp-hero-sub {
+    margin-top: 6px;
+    max-width: 420px;
+}
+
+.o_atp_form .atp-hero-sub .o_field_widget {
+    width: 100%;
+}
+
+.o_atp_form .atp-hero-sub input {
+    border: 0 !important;
+    border-bottom: 1px dashed #d5deec !important;
+    background: transparent !important;
+    font-size: 0.95rem !important;
+    color: #5b6b82 !important;
+    padding-left: 0 !important;
+}
+
+.o_atp_form .atp-hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.o_atp_form .atp-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #f4f7fc;
+    border: 1px solid #dbe3f0;
+    border-radius: 999px;
+    padding: 5px 12px 5px 12px;
+}
+
+.o_atp_form .atp-meta-label {
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #7a8799;
+}
+
+.o_atp_form .atp-meta-item .o_field_widget,
+.o_atp_form .atp-meta-item input {
+    width: 72px !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-weight: 800 !important;
+    color: #1e4080 !important;
+    padding: 0 !important;
+}
+
+.o_atp_form .atp-meta-item .o_field_boolean,
+.o_atp_form .atp-meta-item .o_field_boolean_toggle {
+    width: auto !important;
+}
+
+/* ── Cards ──────────────────────────────────────────────────────── */
+.o_atp_form .atp-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 16px 0 18px;
+}
+
+.o_atp_form .atp-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 12px 14px 6px;
+    min-width: 0;
+}
+
+.o_atp_form .atp-card-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #1a2744;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.o_atp_form .atp-card-head i {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #1a2744, #1e5fa8);
+    color: #fbbf24;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+}
+
+.o_atp_form .atp-card .o_group {
+    margin-bottom: 4px !important;
+    width: 100% !important;
+}
+
+.o_atp_form .atp-card .o_td_label {
+    width: 38% !important;
+    min-width: 120px;
+    padding-right: 10px !important;
+}
+
+.o_atp_form .atp-card .o_form_label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #5b6b82;
+}
+
+.o_atp_form .atp-card .o_input,
+.o_atp_form .atp-card input,
+.o_atp_form .atp-card textarea,
+.o_atp_form .atp-card select {
+    border-radius: 8px !important;
+}
+
+/* ── Notebook ───────────────────────────────────────────────────── */
+.o_atp_form .o_notebook {
+    margin-top: 6px;
+}
+
+.o_atp_form .o_notebook > .nav-tabs {
+    border-bottom: 1px solid #dbe3f0;
+    gap: 4px;
+}
+
+.o_atp_form .o_notebook > .nav-tabs > li > a {
+    border-radius: 10px 10px 0 0 !important;
+    font-weight: 700;
+    font-size: 0.84rem;
+    color: #5b6b82;
+    padding: 8px 16px;
+}
+
+.o_atp_form .o_notebook > .nav-tabs > li > a.active,
+.o_atp_form .o_notebook > .nav-tabs > li.active > a {
+    color: #1e4080;
+    background: #f0f6ff;
+    border-color: #dbe3f0 #dbe3f0 #fff;
+}
+
+.o_atp_form .tab-content {
+    padding: 14px 8px 8px;
+}
+
+.o_atp_form .o_notebook .o_group {
+    background: #f8fafc;
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    padding: 8px 12px 4px;
+    margin-bottom: 12px;
+}
+
+.o_atp_form .btn-link {
+    font-weight: 700 !important;
+    color: #1e5fa8 !important;
+}
+
+@media (max-width: 900px) {
+    .o_atp_form .atp-cards {
+        grid-template-columns: 1fr;
+    }
+    .o_atp_form .atp-hero {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    .o_atp_form .atp-hero-sub,
+    .o_atp_form .atp-hero-meta {
+        justify-content: center;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+/* Register Player wizard dialog */
+.o_dialog .modal-dialog:has(.o_atp_form),
+.modal-dialog:has(.o_atp_form) {
+    max-width: 980px;
+}
+
+.o_dialog:has(.o_atp_form) .modal-content,
+.modal:has(.o_atp_form) .modal-content {
+    border: 0;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.o_dialog:has(.o_atp_form) .modal-body,
+.modal:has(.o_atp_form) .modal-body {
+    padding: 12px 16px 4px;
+    background: #eef2f8;
+}
+
+.o_dialog:has(.o_atp_form) .o_form_view.o_atp_form,
+.modal:has(.o_atp_form) .o_form_view.o_atp_form {
+    background: transparent;
+}
+
+.o_dialog:has(.o_atp_form) .modal-footer,
+.modal:has(.o_atp_form) .modal-footer {
+    background: #fff;
+    border-top: 1px solid #e8edf5;
+    padding: 12px 18px;
+}
+
+.o_dialog:has(.o_atp_form) .modal-footer .btn-primary,
+.modal:has(.o_atp_form) .modal-footer .btn-primary {
+    background: #1a2744;
+    border-color: #1a2744;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 7px 18px;
+}
+
+.o_dialog:has(.o_atp_form) .modal-footer .btn-primary:hover,
+.modal:has(.o_atp_form) .modal-footer .btn-primary:hover {
+    background: #111a30;
+    border-color: #111a30;
+}
+
+.o_dialog:has(.o_atp_form) .modal-footer .btn-secondary,
+.modal:has(.o_atp_form) .modal-footer .btn-secondary {
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 7px 16px;
+}

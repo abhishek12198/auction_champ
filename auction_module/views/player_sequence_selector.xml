@@ -2388,7 +2388,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     var attrsHtml = '';
     if (!mysteryHidden) {
       if (isFootball) {
-        if (p.p_category)     attrsHtml += attr('Category', p.p_category);
         if (p.preferred_foot) attrsHtml += attr('Preferred Foot', p.preferred_foot);
         if (p.work_rate)      attrsHtml += attr('Work Rate', p.work_rate);
         if (p.age)            attrsHtml += attr('Age', String(p.age));
@@ -2411,7 +2410,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         if (p.role) attrsHtml += attr('Role', p.role);
         if (p.batting_style) attrsHtml += attr('Batting', p.batting_style);
         if (p.bowling_style) attrsHtml += attr('Bowling', p.bowling_style);
-        if (p.p_category) attrsHtml += attr('Category', p.p_category);
         if (p.age) attrsHtml += attr('Age', String(p.age));
         if (p.height) attrsHtml += attr('Height', p.height);
         if (p.weight) attrsHtml += attr('Weight', p.weight);

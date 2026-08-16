@@ -473,11 +473,19 @@ class AuctionTeamPlayer(models.Model):
     tournament_id = fields.Many2one('auction.tournament', 'Tournament', index=True)
     tournament_type = fields.Selection(related='tournament_id.tournament_type')
     tournament_color = fields.Char(related='tournament_id.kanban_color', string='Tournament Color')
+    enable_jersey_section = fields.Boolean(
+        related='tournament_id.enable_jersey_section',
+        string='Jersey Included',
+    )
     assigned_team_id = fields.Many2one('auction.team', 'Team')
     icon_player = fields.Boolean("Key Player")
     is_on_stage = fields.Boolean("Currently on Stage", default=False, index=True,
                                   help="True when this player is actively displayed in the auction stage. Only one player should have this True at a time.")
-    tier_id = fields.Many2one('auction.player.tier', string='Tier')
+    tier_id = fields.Many2one(
+        'auction.player.tier',
+        string='Tier',
+        domain="[('tournament_id', '=', tournament_id)]",
+    )
     previous_tier_id = fields.Many2one('auction.player.tier', string='Previous Tier', help='Stores the tier before the player was promoted to Icon Player, used to restore on revoke.')
     tier_color = fields.Selection(related='tier_id.color', string='Tier Color')
     is_mystery = fields.Boolean(
@@ -506,7 +514,6 @@ class AuctionTeamPlayer(models.Model):
     jersy_name = fields.Char("Name in Jersy")
     blood_group = fields.Char("Blood Group")
     p_type =   fields.Char("Type")
-    p_category = fields.Char("Category")
     payment_proof = fields.Binary("Payment Proof", attachment=True, help="Uploaded payment screenshot/receipt from registration form.")
 
     @api.depends('contact', 'tournament_id.expose_player_contact')
@@ -578,7 +585,26 @@ class AuctionTeamPlayer(models.Model):
 
     @api.onchange('tournament_id')
     def _onchange_tournament_id_sync_other_attrs(self):
+        if self.tier_id and (
+            not self.tournament_id
+            or (self.tier_id.tournament_id and self.tier_id.tournament_id != self.tournament_id)
+        ):
+            self.tier_id = False
         self._sync_other_attributes_from_tournament()
+
+    @api.constrains('tier_id', 'tournament_id')
+    def _check_tier_belongs_to_tournament(self):
+        for player in self:
+            if (
+                player.tier_id
+                and player.tournament_id
+                and player.tier_id.tournament_id
+                and player.tier_id.tournament_id != player.tournament_id
+            ):
+                raise UserError(_(
+                    'Tier "%s" does not belong to tournament "%s". '
+                    'Choose a tier from the selected tournament.'
+                ) % (player.tier_id.name, player.tournament_id.name))
 
     def action_sync_other_attributes(self):
         """Manual sync of tournament Att-Labels onto this player."""
@@ -1191,9 +1217,9 @@ class AuctionTeamPlayer(models.Model):
 
         if is_football:
             badge = (player.dominant_position_id.name if player.dominant_position_id
-                     else (player.role or player.p_category or 'PLAYER'))
+                     else (player.role or 'PLAYER'))
         else:
-            badge = player.role or player.p_category or 'PLAYER'
+            badge = player.role or 'PLAYER'
 
         # ── Sold points — used for price cell when sold ──
         sold_points = 0
@@ -1258,10 +1284,7 @@ class AuctionTeamPlayer(models.Model):
             bowl = (player.bowling_style or '').strip() or '—'
             rows.append(('bat', 'Batting Style', bat))
             rows.append(('ball', 'Bowling Style', bowl))
-            if player.p_category:
-                rows.append(('category', 'Category', player.p_category))
-            else:
-                rows.append(('nation', 'Nationality', 'India'))
+            rows.append(('nation', 'Nationality', 'India'))
 
         rows.append(('age', 'Age', ('%d Years' % player.age) if player.age else '—'))
         rows.append(('price', price_label, price_display))
