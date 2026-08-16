@@ -14,6 +14,7 @@ const { useState, onWillStart, onMounted, onWillUnmount } = hooks;
 class TournamentSystrayItem extends Component {
     setup() {
         this.orm = useService("orm");
+        this.action = useService("action");
         this.notification = useService("notification");
         this.state = useState({
             tournamentName: "",
@@ -115,19 +116,45 @@ class TournamentSystrayItem extends Component {
         }
         this.state.switching = true;
         try {
-            await this.orm.call("res.users", "set_active_tournament", [
+            const data = await this.orm.call("res.users", "set_active_tournament", [
                 [session.uid],
                 tournamentId,
             ]);
-            window.location.reload();
+            this.applyPayload(data || {});
+            this.state.expanded = false;
+            await this._refreshAfterSwitch();
         } catch (_e) {
-            this.state.switching = false;
             this.state.expanded = false;
             this.notification.add(
                 "Could not switch tournament. Please try again.",
                 { type: "danger", title: "Tournament" }
             );
+        } finally {
+            this.state.switching = false;
         }
+    }
+
+    async _refreshAfterSwitch() {
+        const hash = (window.location.hash || "").replace(/^#/, "");
+        let actionId = 0;
+        hash.split("&").forEach((part) => {
+            const bits = part.split("=");
+            if (bits[0] === "action") {
+                actionId = parseInt(bits[1], 10) || 0;
+            }
+        });
+        if (actionId && this.action) {
+            try {
+                await this.action.doAction(actionId, {
+                    clearBreadcrumbs: true,
+                    additionalContext: { ac_working_switch: Date.now() },
+                });
+                return;
+            } catch (_e) {
+                // Fall through to a full reload if the current action cannot remount.
+            }
+        }
+        window.location.reload();
     }
 
     onProjectorClick(ev) {

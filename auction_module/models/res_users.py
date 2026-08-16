@@ -221,19 +221,81 @@ class ResUsers(models.Model):
         )
 
     def _auction_switchable_tournaments(self):
-        """Tournaments this login may enable from the navbar."""
+        """Tournaments this login may enable from the navbar.
+
+        Returns a browse recordset (ids only) so callers can ``read()`` a
+        narrow field list instead of prefetching logos / snapshots.
+        """
         self.ensure_one()
+        Tournament = self.env['auction.tournament'].sudo()
         if self._auction_is_admin_user():
-            return self.env['auction.tournament'].sudo().search(
-                [('active', '=', True)], order='name asc, id asc'
-            )
+            return Tournament.search([('active', '=', True)], order='name asc, id asc')
         user = self.sudo()
-        tournaments = user.tournament_ids
-        if user.tournament_id:
-            tournaments |= user.tournament_id
-        return tournaments.sorted(
-            key=lambda t: (not t.active, t.name or '', t.id)
+        ids = list(user.tournament_ids.ids)
+        if user.tournament_id and user.tournament_id.id not in ids:
+            ids.append(user.tournament_id.id)
+        return Tournament.browse(ids)
+
+    def _auction_systray_logo_ids(self, tournament_ids):
+        """Ids that have a logo, without reading Binary payloads."""
+        if not tournament_ids:
+            return set()
+        return set(self.env['auction.tournament'].sudo().search([
+            ('id', 'in', list(tournament_ids)),
+            ('logo', '!=', False),
+        ]).ids)
+
+    def _auction_systray_rule_ids(self, tournament_ids):
+        """Ids that have at least one auction-rule row."""
+        if not tournament_ids:
+            return set()
+        groups = self.env['auction.auction'].sudo().read_group(
+            [('tournament_id', 'in', list(tournament_ids))],
+            ['tournament_id'],
+            ['tournament_id'],
         )
+        return {
+            g['tournament_id'][0]
+            for g in groups
+            if g.get('tournament_id')
+        }
+
+    def _auction_systray_items(self, tournaments, active_id):
+        """Navbar rows: name / slug / logo URL only — no binary or URL computes."""
+        rows = tournaments.sudo().read(['id', 'name', 'slug', 'active'], load=False)
+        rows.sort(key=lambda r: (
+            not r.get('active'),
+            (r.get('name') or '').lower(),
+            r['id'],
+        ))
+        ids = [r['id'] for r in rows]
+        logo_ids = self._auction_systray_logo_ids(ids)
+        rule_ids = self._auction_systray_rule_ids(ids)
+        db_name = self.env.cr.dbname
+        items = []
+        for row in rows:
+            tid = row['id']
+            slug = row.get('slug') or ''
+            rules_ready = tid in rule_ids
+            projector_url = ''
+            if rules_ready and slug:
+                projector_url = '/%s/auction/projector/%s/' % (db_name, slug)
+            live_board_url = ''
+            if slug:
+                live_board_url = '/%s/%s/auction/live-board' % (db_name, slug)
+            items.append({
+                'id': tid,
+                'name': row.get('name') or _('Tournament'),
+                'active': bool(active_id and tid == active_id),
+                'logo': (
+                    '/web/image/auction.tournament/%s/logo' % tid
+                    if tid in logo_ids else ''
+                ),
+                'has_auction_rules': rules_ready,
+                'projector_url': projector_url,
+                'live_board_url': live_board_url or '/auction/my/live-board',
+            })
+        return items
 
     def get_working_tournament(self):
         """Tournament used for menus, creates, and the navbar badge."""
@@ -251,28 +313,8 @@ class ResUsers(models.Model):
         return tournament.id if tournament else False
 
     def _auction_systray_item(self, tournament, active_id):
-        db_name = self.env.cr.dbname
-        rules_ready = bool(tournament.has_auction_rules)
-        projector_url = ''
-        if rules_ready:
-            projector_url = tournament.projector_url or ''
-            if not projector_url and tournament.slug:
-                projector_url = '/%s/auction/projector/%s/' % (db_name, tournament.slug)
-        live_board_url = tournament.live_board_url or ''
-        if not live_board_url and tournament.slug:
-            live_board_url = '/%s/%s/auction/live-board' % (db_name, tournament.slug)
-        return {
-            'id': tournament.id,
-            'name': tournament.name or _('Tournament'),
-            'active': bool(active_id and tournament.id == active_id),
-            'logo': (
-                '/web/image/auction.tournament/%s/logo' % tournament.id
-                if tournament.logo else ''
-            ),
-            'has_auction_rules': rules_ready,
-            'projector_url': projector_url,
-            'live_board_url': live_board_url or '/auction/my/live-board',
-        }
+        items = self._auction_systray_items(tournament, active_id)
+        return items[0] if items else {}
 
     @api.model
     def get_systray_tournaments(self):
@@ -281,7 +323,7 @@ class ResUsers(models.Model):
         tournaments = user._auction_switchable_tournaments()
         working = user.get_working_tournament()
         active_id = working.id if working else False
-        items = [user._auction_systray_item(t, active_id) for t in tournaments]
+        items = user._auction_systray_items(tournaments, active_id)
         current = next((i for i in items if i['active']), items[0] if items else None)
         return {
             'tournaments': items,
@@ -309,8 +351,18 @@ class ResUsers(models.Model):
                 'You cannot enable that tournament — it is not available for your login.'
             ))
 
-        vals = {'tournament_id': tournament.id}
-        if not self._auction_is_admin_user():
+        vals = {}
+        if self.tournament_id.id != tournament.id:
+            vals['tournament_id'] = tournament.id
+        if (
+            not self._auction_is_admin_user()
+            and tournament.id not in self.tournament_ids.ids
+        ):
             vals['tournament_ids'] = [(4, tournament.id)]
-        self.sudo().write(vals)
+        if vals:
+            self.sudo().with_context(
+                skip_tournament_sync=True,
+                mail_notrack=True,
+                tracking_disable=True,
+            ).write(vals)
         return self.get_systray_tournaments()
