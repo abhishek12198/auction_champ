@@ -2377,17 +2377,25 @@ body.reg-roster-lock { overflow: hidden; }
     position: fixed;
     inset: 0;
     z-index: 10000;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    padding: 22px;
+    padding: 12px;
+    padding-top: max(12px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
     background: rgba(6, 10, 20, .78);
     backdrop-filter: blur(6px);
+    overflow: hidden;
+    height: 100%;
+    max-height: 100vh;
+    max-height: 100dvh;
+    box-sizing: border-box;
 }
 .reg-roster-overlay.open { display: flex; }
 .reg-roster-dialog {
     width: 100%;
     max-width: 860px;
-    max-height: min(88vh, 900px);
+    max-height: 100%;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -2405,6 +2413,10 @@ body.reg-roster-lock { overflow: hidden; }
     padding: 16px 18px 14px;
     background: var(--reg-primary);
     color: #fff;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 3;
 }
 .reg-roster-kicker {
     margin: 0;
@@ -2423,7 +2435,8 @@ body.reg-roster-lock { overflow: hidden; }
     line-height: 1;
 }
 .reg-roster-x {
-    width: 38px; height: 38px;
+    flex-shrink: 0;
+    width: 44px; height: 44px;
     border: 0;
     border-radius: 10px;
     background: rgba(255,255,255,.12);
@@ -2439,6 +2452,7 @@ body.reg-roster-lock { overflow: hidden; }
     padding: 12px 16px 8px;
     background: #f6f4ef;
     border-bottom: 1px solid rgba(0,0,0,.06);
+    flex-shrink: 0;
 }
 .reg-roster-search {
     display: flex;
@@ -2480,6 +2494,8 @@ body.reg-roster-lock { overflow: hidden; }
     border-color: var(--reg-primary);
 }
 .reg-roster-body {
+    flex: 1 1 auto;
+    min-height: 0;
     overflow: auto;
     padding: 14px 16px 18px;
     -webkit-overflow-scrolling: touch;
@@ -2620,17 +2636,72 @@ body.reg-roster-lock { overflow: hidden; }
     .reg-roster-cta { padding: 12px 13px; margin-bottom: 14px; }
     .reg-roster-cta-copy b { font-size: .95rem; }
     .reg-roster-overlay {
-        align-items: flex-end;
+        align-items: stretch;
+        justify-content: flex-end;
         padding: 0;
+        padding-top: env(safe-area-inset-top, 0px);
     }
     .reg-roster-dialog {
         max-width: 100%;
-        max-height: 92vh;
-        border-radius: 20px 20px 0 0;
+        width: 100%;
+        height: auto;
+        max-height: 100vh;
+        max-height: 100svh;
+        max-height: calc(100dvh - env(safe-area-inset-top, 0px));
+        border-radius: 16px 16px 0 0;
+        margin-top: auto;
+    }
+    .reg-roster-head {
+        padding: 10px 12px;
+    }
+    .reg-roster-head h2 { font-size: 1.35rem; }
+    .reg-roster-toolbar { padding: 8px 10px 6px; gap: 8px; }
+    .reg-roster-search input { padding: 8px 0; font-size: .92rem; }
+    .reg-roster-body { padding: 8px 8px 14px; }
+    .reg-roster-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
     }
     .reg-roster-card {
-        grid-template-columns: 76px minmax(0, 1fr);
+        grid-template-columns: 1fr;
+        justify-items: center;
+        text-align: center;
+        padding: 8px 6px 10px;
+        gap: 6px;
+        border-radius: 12px;
     }
-    .reg-roster-photo-wrap { width: 76px; height: 76px; }
-    .reg-roster-kv { grid-template-columns: 72px minmax(0, 1fr); }
+    .reg-roster-photo-wrap {
+        width: 52px;
+        height: 52px;
+        border-radius: 10px;
+    }
+    .reg-roster-no { font-size: .52rem; left: 3px; bottom: 3px; padding: 0 4px; }
+    .reg-roster-title {
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        margin: 0;
+        width: 100%;
+    }
+    .reg-roster-name {
+        font-size: .92rem;
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        line-height: 1.2;
+    }
+    .reg-roster-tier {
+        max-width: 100%;
+        font-size: .55rem;
+        padding: .1rem .4rem;
+    }
+    .reg-roster-main {
+        font-size: .62rem;
+        padding: .1rem .42rem;
+        margin: 0;
+    }
+    .reg-roster-chips { justify-content: center; margin-bottom: 0; gap: 3px; }
+    .reg-roster-chip { font-size: .52rem; padding: .08rem .35rem; }
+    .reg-roster-meta { display: none; }
 }

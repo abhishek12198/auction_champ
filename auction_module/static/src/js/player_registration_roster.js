@@ -40,18 +40,17 @@
                 stopFallbackPoll();
                 return;
             }
-            cache = null;
-            loading = false;
-            loadRoster();
+            silentReload();
         }, 12000);
     }
 
     function stopRosterSse() {
-        stopFallbackPoll();
         if (sseCtl && sseCtl.close) {
             try { sseCtl.close(); } catch (e) {}
         }
         sseCtl = null;
+        // bind().close() starts poll; kill it after the popup is done.
+        stopFallbackPoll();
     }
 
     function startRosterSse() {
@@ -74,6 +73,26 @@
     var loading = false;
     var activeFilter = '';
     var lastFocus = null;
+    var lastSig = '';
+
+    function payloadSig(data) {
+        if (!data) {
+            return '';
+        }
+        if (data.seq != null) {
+            return 's:' + data.seq + ':' + (data.count || 0);
+        }
+        var players = data.players || [];
+        var bits = [String(data.count || 0)];
+        for (var i = 0; i < players.length; i++) {
+            bits.push(
+                (players[i].id || '') + ':' +
+                (players[i].sl_no || '') + ':' +
+                (players[i].name || '')
+            );
+        }
+        return bits.join('|');
+    }
 
     function esc(value) {
         return String(value == null ? '' : value)
@@ -253,24 +272,29 @@
                 ? 'Search by name, team or address…'
                 : 'Search by name or team…';
         }
+        var sig = payloadSig(cache);
+        if (sig && sig === lastSig) {
+            return;
+        }
+        lastSig = sig;
+        var scroll = bodyEl.scrollTop;
         renderFilters(cache.filters || []);
         renderList();
+        bodyEl.scrollTop = scroll;
     }
 
-    function loadRoster() {
-        if (cache || loading) {
-            if (cache) {
-                renderList();
+    function fetchRoster(showLoading) {
+        var url = openBtn.getAttribute('data-url');
+        if (!url) {
+            if (showLoading) {
+                setStatus('Unable to load players.');
             }
             return;
         }
-        var url = openBtn.getAttribute('data-url');
-        if (!url) {
-            setStatus('Unable to load players.');
-            return;
+        if (showLoading) {
+            loading = true;
+            setStatus('Loading registered players…');
         }
-        loading = true;
-        setStatus('Loading registered players…');
         fetch(url, { headers: { 'Accept': 'application/json' } })
             .then(function (res) { return res.json(); })
             .then(function (data) {
@@ -279,8 +303,28 @@
             })
             .catch(function () {
                 loading = false;
-                setStatus('Could not load players. Please try again.');
+                if (showLoading) {
+                    setStatus('Could not load players. Please try again.');
+                }
             });
+    }
+
+    function silentReload() {
+        if (!popupOpen) {
+            return;
+        }
+        fetchRoster(false);
+    }
+
+    function loadRoster() {
+        if (cache) {
+            renderList();
+            return;
+        }
+        if (loading) {
+            return;
+        }
+        fetchRoster(true);
     }
 
     function openRoster() {
