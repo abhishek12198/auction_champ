@@ -53,7 +53,7 @@ class FakeRedis(object):
             raise ConnectionError('redis down')
         keys = args[:numkeys]
         argv = args[numkeys:]
-        seq_key, lb_key, pj_key, bal_key, meta_key = keys
+        seq_key, lb_key, pj_key, bal_key, meta_key, reg_key = keys
         incoming = int(argv[0])
         current = int(self.store.get(seq_key, -1))
         if incoming < current:
@@ -64,11 +64,13 @@ class FakeRedis(object):
             self.store[pj_key] = argv[2]
         if argv[3]:
             self.store[bal_key] = argv[3]
-        nmeta = int(argv[4] or 0)
+        if argv[4]:
+            self.store[reg_key] = argv[4]
+        nmeta = int(argv[5] or 0)
         if nmeta:
             self.hashes[meta_key] = {}
             for i in range(nmeta):
-                self.hashes[meta_key][str(argv[5 + i * 2])] = str(argv[6 + i * 2])
+                self.hashes[meta_key][str(argv[6 + i * 2])] = str(argv[7 + i * 2])
         self.store[seq_key] = incoming
         return 1
 
@@ -234,6 +236,22 @@ class TestRedisService(unittest.TestCase):
         self.assertEqual(data['seq'], 42)
         self.assertEqual(data['targets'], ['lb', 'pj'])
         self.assertEqual(data['event'], 'auction.update')
+
+    def test_write_register_roster_kind(self):
+        env = FakeEnv(enabled=True)
+        ok = redis_svc.write_snapshots(
+            env, 7, 3,
+            {'reg': {'seq': 3, 'count': 2, 'players': [{'name': 'A'}]}},
+        )
+        self.assertTrue(ok)
+        reg = redis_svc.get_snapshot(env, 7, 'reg')
+        self.assertEqual(reg['count'], 2)
+        self.assertEqual(reg['players'][0]['name'], 'A')
+        ok_pub = redis_svc.publish_tournament_event(env, 7, 3, ['reg'])
+        self.assertTrue(ok_pub)
+        pubs = [c for c in self.fake.calls if c[0] == 'publish']
+        self.assertTrue(pubs)
+        self.assertEqual(json.loads(pubs[-1][2])['targets'], ['reg'])
 
 
 class TestOutOfOrderCallbacks(unittest.TestCase):

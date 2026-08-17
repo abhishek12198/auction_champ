@@ -2292,3 +2292,345 @@ a.reg-trust-card--cta .reg-trust-tx span {
         font-size: 1.02rem;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   REGISTERED PLAYERS POPUP
+   ═══════════════════════════════════════════════════════════════════ */
+body.reg-roster-lock { overflow: hidden; }
+
+.reg-roster-cta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin: 0 0 18px;
+    padding: 14px 16px;
+    border: 1.5px solid rgba(var(--reg-accent-rgb), .35);
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--reg-primary) 0%, var(--reg-primary-mid) 100%);
+    color: #fff;
+    cursor: pointer;
+    text-align: left;
+    box-shadow: 0 10px 28px rgba(0,0,0,.18);
+    animation: reg-fade-up .7s .05s cubic-bezier(.2,.7,.3,1) both;
+}
+.reg-roster-cta:hover,
+.reg-roster-cta:focus {
+    border-color: rgba(var(--reg-accent-rgb), .7);
+    outline: none;
+}
+.reg-roster-cta-ic {
+    flex-shrink: 0;
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 12px;
+    font-size: 1.35rem;
+    background: rgba(var(--reg-accent-rgb), .16);
+    border: 1px solid rgba(var(--reg-accent-rgb), .35);
+}
+.reg-roster-cta-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+    gap: 2px;
+}
+.reg-roster-cta-copy b {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.05rem;
+    letter-spacing: .04em;
+    font-weight: 700;
+}
+.reg-roster-cta-copy span {
+    font-size: .72rem;
+    color: rgba(255,255,255,.68);
+}
+.reg-roster-cta-count {
+    flex-shrink: 0;
+    min-width: 42px;
+    padding: .28rem .7rem;
+    border-radius: 999px;
+    background: var(--reg-accent);
+    color: var(--reg-btn-text);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.25rem;
+    letter-spacing: .04em;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.reg-roster-slots-link {
+    display: inline;
+    margin-left: .35rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--reg-accent);
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.reg-roster-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: 22px;
+    background: rgba(6, 10, 20, .78);
+    backdrop-filter: blur(6px);
+}
+.reg-roster-overlay.open { display: flex; }
+.reg-roster-dialog {
+    width: 100%;
+    max-width: 860px;
+    max-height: min(88vh, 900px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #fff;
+    border-radius: 20px;
+    border: 1px solid rgba(var(--reg-accent-rgb), .25);
+    box-shadow: 0 30px 80px rgba(0,0,0,.5);
+    color: #1a1a1a;
+}
+.reg-roster-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px 14px;
+    background: var(--reg-primary);
+    color: #fff;
+}
+.reg-roster-kicker {
+    margin: 0;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: rgba(var(--reg-accent-rgb), .85);
+    font-family: 'Barlow Condensed', sans-serif;
+}
+.reg-roster-head h2 {
+    margin: 2px 0 0;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.7rem;
+    letter-spacing: .04em;
+    line-height: 1;
+}
+.reg-roster-x {
+    width: 38px; height: 38px;
+    border: 0;
+    border-radius: 10px;
+    background: rgba(255,255,255,.12);
+    color: #fff;
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+}
+.reg-roster-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 16px 8px;
+    background: #f6f4ef;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+}
+.reg-roster-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.1);
+}
+.reg-roster-search-ic { color: #888; font-size: 1.1rem; }
+.reg-roster-search input {
+    width: 100%;
+    border: 0;
+    outline: none;
+    background: transparent;
+    padding: 11px 0;
+    font-size: 1rem;
+}
+.reg-roster-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.reg-roster-filter {
+    border: 1px solid rgba(0,0,0,.12);
+    background: #fff;
+    border-radius: 999px;
+    padding: .28rem .75rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: .82rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    cursor: pointer;
+}
+.reg-roster-filter.is-on {
+    background: var(--reg-primary);
+    color: #fff;
+    border-color: var(--reg-primary);
+}
+.reg-roster-body {
+    overflow: auto;
+    padding: 14px 16px 18px;
+    -webkit-overflow-scrolling: touch;
+}
+.reg-roster-status {
+    text-align: center;
+    padding: 2.4rem 1rem;
+    color: #666;
+    font-size: .95rem;
+}
+.reg-roster-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+.reg-roster-card {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px;
+    border-radius: 14px;
+    background: #faf8f4;
+    border: 1px solid rgba(0,0,0,.06);
+    align-items: start;
+}
+.reg-roster-photo-wrap {
+    position: relative;
+    width: 88px;
+    height: 88px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #d8d4cc;
+    flex-shrink: 0;
+}
+.reg-roster-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 28%;
+    display: block;
+}
+.reg-roster-no {
+    position: absolute;
+    left: 5px; bottom: 5px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: rgba(0,0,0,.72);
+    color: #fff;
+    font-size: .62rem;
+    font-weight: 700;
+}
+.reg-roster-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    margin: 0 0 6px;
+}
+.reg-roster-name {
+    margin: 0;
+    min-width: 0;
+    flex: 1;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.18rem;
+    letter-spacing: .02em;
+    line-height: 1.15;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.reg-roster-tier {
+    flex-shrink: 0;
+    max-width: 42%;
+    padding: .18rem .55rem;
+    border-radius: 999px;
+    background: var(--reg-primary);
+    color: #fff;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.reg-roster-main {
+    display: inline-flex;
+    align-items: center;
+    margin: 0 0 7px;
+    padding: .22rem .7rem;
+    border-radius: 999px;
+    background: var(--reg-accent);
+    color: var(--reg-btn-text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: .82rem;
+    font-weight: 800;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    line-height: 1.2;
+}
+.reg-roster-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 6px;
+}
+.reg-roster-chip {
+    display: inline-flex;
+    padding: .15rem .5rem;
+    border-radius: 999px;
+    background: rgba(var(--reg-accent-rgb), .14);
+    color: var(--reg-section-title);
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+}
+.reg-roster-meta { display: grid; gap: 3px; }
+.reg-roster-kv {
+    display: grid;
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 6px;
+    font-size: .78rem;
+    line-height: 1.35;
+}
+.reg-roster-kv span { color: #777; }
+.reg-roster-kv b { font-weight: 600; word-break: break-word; }
+
+@media (min-width: 720px) {
+    .reg-roster-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1100px) {
+    .reg-roster-dialog { max-width: 1080px; }
+    .reg-roster-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+    .reg-roster-cta { padding: 12px 13px; margin-bottom: 14px; }
+    .reg-roster-cta-copy b { font-size: .95rem; }
+    .reg-roster-overlay {
+        align-items: flex-end;
+        padding: 0;
+    }
+    .reg-roster-dialog {
+        max-width: 100%;
+        max-height: 92vh;
+        border-radius: 20px 20px 0 0;
+    }
+    .reg-roster-card {
+        grid-template-columns: 76px minmax(0, 1fr);
+    }
+    .reg-roster-photo-wrap { width: 76px; height: 76px; }
+    .reg-roster-kv { grid-template-columns: 72px minmax(0, 1fr); }
+}

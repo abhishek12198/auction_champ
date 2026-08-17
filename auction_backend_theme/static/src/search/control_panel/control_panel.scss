@@ -257,6 +257,33 @@
             width: 100%;
             display: flex;
             align-items: center;
+            justify-content: flex-start;
+        }
+
+        // Search, then Filters / Group By — stacked, same (start) edge
+        .o_cp_bottom {
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .o_cp_bottom_right {
+            flex: 1 1 100%;
+            width: 100%;
+            min-width: 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 8px;
+        }
+        .o_search_options {
+            flex: 1 1 100%;
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            gap: 6px;
+            margin-left: 0;
         }
 
         .o_searchview,
@@ -362,13 +389,23 @@
 
         .o_cp_bottom {
             flex-wrap: wrap;
+            flex-direction: column;
+            align-items: stretch;
             gap: 6px;
+        }
+
+        .o_cp_bottom_left,
+        .o_cp_bottom_right {
+            width: 100%;
+            flex: 1 1 auto;
+            justify-content: flex-start;
         }
 
         .o_cp_switch_buttons,
         .o_control_panel_navigation {
             display: flex;
             align-items: center;
+            justify-content: flex-start;
             gap: 6px;
         }
 

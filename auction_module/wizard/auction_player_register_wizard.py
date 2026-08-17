@@ -161,24 +161,6 @@ class AuctionPlayerRegisterWizard(models.TransientModel):
         msg = _(
             'Player %s with Sl No %s has been registered on this tournament successfully!'
         ) % (player.name, player.sl_no)
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': _('Player registered'),
-                'message': msg,
-                'type': 'success',
-                'sticky': False,
-                'next': {
-                    'type': 'ir.actions.act_window',
-                    'res_model': 'auction.tournament',
-                    'res_id': self.tournament_id.id,
-                    'view_mode': 'form',
-                    'views': [(False, 'form')],
-                    'target': 'current',
-                    'context': {
-                        'player_register_flash': msg,
-                    },
-                },
-            },
-        }
+        if hasattr(self.env.user, 'notify_success'):
+            self.env.user.notify_success(message=msg, title=_('Player registered'))
+        return {'type': 'ir.actions.act_window_close'}

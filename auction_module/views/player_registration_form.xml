@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 <template id="player_registration_form" name="Player Registration Form">
-<html lang="en">
+<html lang="en"
+      t-att-data-sse-enabled="'1' if sse_enabled else '0'"
+      t-att-data-sse-url="('/' + db_name + '/' + tournament_slug + '/player/register/events') if (db_name and tournament_slug) else ''">
 <head>
     <meta charset="UTF-8"/>
   <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
@@ -178,6 +180,23 @@
             </t>
         </div>
     </div><!-- /reg-header-card -->
+
+    <!-- Registered players CTA — always visible (form, success, closed) -->
+    <t t-if="tournament and db_name and tournament_slug">
+    <button type="button"
+            class="reg-roster-cta"
+            id="regRosterOpen"
+            t-att-data-url="'/%s/%s/player/register/players' % (db_name, tournament_slug)"
+            t-att-data-sport="tournament.tournament_type or 'cricket'"
+            t-att-data-count="roster_count or 0">
+        <span class="reg-roster-cta-ic" aria-hidden="true">👥</span>
+        <span class="reg-roster-cta-copy">
+            <b>Players registered so far</b>
+            <span>See who has joined · find your friends</span>
+        </span>
+        <span class="reg-roster-cta-count" id="regRosterCount"><t t-esc="roster_count or 0"/></span>
+    </button>
+    </t>
 
     <!-- ════════════════════════════════════════
          TRUST BAR — premium reassurance strip
@@ -538,6 +557,7 @@
                     <t t-esc="current_count"/> registered · <t t-esc="max_registrations - current_count"/> open
                     <t t-if="urgency == 'critical'"> · Hurry, spots are going fast!</t>
                     <t t-elif="urgency == 'warning'"> · Register before it fills up.</t>
+                    <button type="button" class="reg-roster-slots-link" data-reg-roster-open="1">View players</button>
                 </div>
             </div>
         </t>
@@ -1131,6 +1151,29 @@
         Powered by AuctionChamp
     </div>
 </div><!-- /reg-wrapper -->
+
+<!-- ── Registered players popup ── -->
+<div id="regRosterOverlay" class="reg-roster-overlay" aria-hidden="true">
+    <div class="reg-roster-dialog" role="dialog" aria-modal="true" aria-labelledby="regRosterTitle">
+        <div class="reg-roster-head">
+            <div class="reg-roster-head-text">
+                <p class="reg-roster-kicker">Squad so far</p>
+                <h2 id="regRosterTitle">Registered Players</h2>
+            </div>
+            <button type="button" class="reg-roster-x" id="regRosterClose" aria-label="Close">&#215;</button>
+        </div>
+        <div class="reg-roster-toolbar">
+            <label class="reg-roster-search" for="regRosterSearch">
+                <span class="reg-roster-search-ic" aria-hidden="true">⌕</span>
+                <input id="regRosterSearch" type="search" placeholder="Search by name or team…" autocomplete="off"/>
+            </label>
+            <div class="reg-roster-filters" id="regRosterFilters" hidden="hidden"></div>
+        </div>
+        <div class="reg-roster-body" id="regRosterBody">
+            <div class="reg-roster-status">Tap to load registered players…</div>
+        </div>
+    </div>
+</div>
 
 <!-- ── Photo Cropper Modal ── -->
 <div id="cropperModal" class="reg-crop-overlay" aria-hidden="true">
@@ -1833,6 +1876,8 @@
     applyCountryRules();
 })();
 </script>
+<script src="/auction_module/static/src/js/auction_sse_client.js"></script>
+<script src="/auction_module/static/src/js/player_registration_roster.js"></script>
 
 </body>
 </html>

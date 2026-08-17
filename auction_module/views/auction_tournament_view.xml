@@ -366,48 +366,6 @@
                                 </div>
                             </page>
 
-                            <page string="Deleted Players" name="deleted_players">
-                                <separator string="Deleted Players (recycle bin)"/>
-                                <p class="text-muted">
-                                    Players deleted from this tournament. Restore brings them back
-                                    with the next serial number. Use Restore All, or open the list
-                                    (Deleted chip) to multi-select and restore.
-                                </p>
-                                <button name="action_restore_all_deleted_players"
-                                        type="object"
-                                        string="Restore All Pending"
-                                        icon="fa-undo"
-                                        class="btn-primary"
-                                        confirm="Restore all pending deleted players for this tournament? Each will get the next serial number. Continue?"
-                                        attrs="{'invisible': [('deleted_player_count', '=', 0)]}"/>
-                                <field name="deleted_player_ids" nolabel="1"
-                                       context="{'restore_from_tournament': 1}">
-                                    <tree create="0" delete="0" edit="0"
-                                          decoration-muted="is_restored"
-                                          decoration-info="not is_restored"
-                                          default_order="deleted_date desc, id desc">
-                                        <field name="photo" widget="image" options="{'size': [32, 32]}"/>
-                                        <field name="original_sl_no" string="Old Sl No"/>
-                                        <field name="name"/>
-                                        <field name="contact"/>
-                                        <field name="state_at_delete"/>
-                                        <field name="tier_id"/>
-                                        <field name="deleted_date"/>
-                                        <field name="deleted_by_id"/>
-                                        <field name="is_restored"/>
-                                        <field name="restored_sl_no" string="New Sl No"/>
-                                        <field name="restored_date"/>
-                                        <field name="restored_by_id"/>
-                                        <button name="action_restore_player"
-                                                type="object"
-                                                string="Restore"
-                                                icon="fa-undo"
-                                                class="oe_highlight"
-                                                attrs="{'invisible': [('is_restored', '=', True)]}"/>
-                                    </tree>
-                                </field>
-                            </page>
-
                             <!-- Teams & Tiers -->
                             <page string="Teams &amp; Tiers" name="tiers">
                                 <button name="action_upload_teams"
@@ -570,6 +528,11 @@
                                                    help="Set the maximum number of players that can register. Set to 0 for unlimited."/>
                                             <field name="show_registration_capacity" widget="boolean_toggle"
                                                    help="Show or hide the Registration Capacity slab on the public player registration form."/>
+                                            <field name="expose_registered_org_id" widget="boolean_toggle"
+                                                   attrs="{'invisible': [('enable_org_id_registration', '=', False)]}"
+                                                   help="Show Org ID# on the public registered-players popup. Hidden unless Org ID# is collected on the form."/>
+                                            <field name="expose_registered_address" widget="boolean_toggle"
+                                                   help="Show player address on the public registered-players popup so friends can recognise each other."/>
                                         </group>
                                         <group string="How it works">
                                             <div class="o_at_presentation_help" colspan="2">
@@ -1157,19 +1120,20 @@
                 <field name="enable_org_id_registration" position="attributes">
                     <attribute name="readonly">1</attribute>
                 </field>
+                <!-- Contact unmask stays wizard-gated; buttons must be usable by organisers -->
                 <field name="expose_player_contact" position="attributes">
                     <attribute name="readonly">1</attribute>
                 </field>
-                <xpath expr="//button[@name='action_open_expose_contact_privacy_wizard']" position="attributes">
-                    <attribute name="invisible">1</attribute>
-                </xpath>
-                <xpath expr="//button[@name='action_remask_player_contact']" position="attributes">
-                    <attribute name="invisible">1</attribute>
-                </xpath>
                 <field name="max_registrations" position="attributes">
                     <attribute name="readonly">1</attribute>
                 </field>
                 <field name="show_registration_capacity" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+                <field name="expose_registered_org_id" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+                <field name="expose_registered_address" position="attributes">
                     <attribute name="readonly">1</attribute>
                 </field>
                 <!-- max_registrations appears twice in the base view; target the
@@ -1184,6 +1148,9 @@
                     <attribute name="readonly">0</attribute>
                 </field>
                 <field name="payment_instruction" position="attributes">
+                    <attribute name="readonly">0</attribute>
+                </field>
+                <field name="poster_image" position="attributes">
                     <attribute name="readonly">0</attribute>
                 </field>
 

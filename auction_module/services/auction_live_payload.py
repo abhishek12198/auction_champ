@@ -7,10 +7,11 @@
 #  All Rights Reserved.
 #
 ##############################################################################
-"""Env-parameterized builders for the three public live poll payloads.
+"""Env-parameterized builders for the public live poll payloads.
 
-Reuses projector/live-board/balance logic from the HTTP controllers without
-binding to ``request.env``, so postcommit rebuilds can run on a fresh cursor.
+Reuses projector/live-board/balance/registration-roster logic from the HTTP
+controllers without binding to ``request.env``, so postcommit rebuilds can
+run on a fresh cursor.
 """
 import json
 import logging
@@ -775,3 +776,111 @@ def attach_seq(payload, seq):
     payload = dict(payload)
     payload['seq'] = int(seq or 0)
     return payload
+
+
+def registered_player_count(env, tournament):
+    if not tournament:
+        return 0
+    return env['auction.team.player'].sudo().search_count([
+        ('tournament_id', '=', tournament.id),
+        ('active', '=', True),
+    ])
+
+
+def _serialize_registered_player(player, db_name, is_football, show_org, show_address):
+    foot_labels = {'left': 'Left', 'right': 'Right', 'both': 'Both'}
+    work_labels = {'low': 'Low', 'medium': 'Medium', 'high': 'High'}
+    data = {
+        'id': player.id,
+        'sl_no': player.sl_no or 0,
+        'name': player.name or '',
+        'photo_url': _public_img_url(
+            db_name, 'auction.team.player', player.id, 'photo',
+            write_date=player.write_date, sz='reg',
+        ),
+        'current_team': (player.current_team or '').strip(),
+        'tier': player.tier_id.name if player.tier_id else '',
+    }
+    if show_org:
+        data['org_id'] = (player.org_id or '').strip()
+    if show_address:
+        data['address'] = (player.address or '').strip()
+    if is_football:
+        pos = player.dominant_position_id
+        data.update({
+            'position': pos.name if pos else (player.role or ''),
+            'position_code': pos.code if pos else '',
+            'secondary_positions': [
+                p.code or p.name for p in player.secondary_position_ids
+            ],
+            'preferred_foot': foot_labels.get(player.preferred_foot, '') or '',
+            'age': player.age or 0,
+            'height': (player.height or '').strip(),
+            'weight': (player.weight or '').strip(),
+            'work_rate': work_labels.get(player.work_rate, '') or '',
+            'styles': [s.name for s in player.playing_style_ids if s.name],
+            'strengths': [s.name for s in player.strength_ids if s.name],
+            'other_attributes': [
+                {'label': (a.label or '').strip(), 'value': (a.value or '').strip()}
+                for a in player.other_attribute_ids
+                if (a.label or '').strip() and (a.value or '').strip()
+            ],
+        })
+    else:
+        data.update({
+            'role': (player.role or '').strip(),
+            'batting_style': (player.batting_style or '').strip(),
+            'bowling_style': (player.bowling_style or '').strip(),
+        })
+    return data
+
+
+def build_register_roster_payload(env, tournament, db_name):
+    """Public-safe registered-player list for /player/register (no PII)."""
+    if not tournament:
+        return {
+            'count': 0, 'sport': 'cricket', 'show_org_id': False,
+            'show_address': False, 'filters': [], 'players': [],
+        }
+    is_football = tournament.tournament_type == 'football'
+    show_org = bool(
+        tournament.enable_org_id_registration and tournament.expose_registered_org_id
+    )
+    show_address = bool(tournament.expose_registered_address)
+    players = env['auction.team.player'].sudo().search([
+        ('tournament_id', '=', tournament.id),
+        ('active', '=', True),
+    ], order='sl_no asc, id asc')
+    if players:
+        players.mapped('tier_id')
+        players.mapped('dominant_position_id')
+        players.mapped('secondary_position_ids')
+        players.mapped('playing_style_ids')
+        players.mapped('strength_ids')
+        players.mapped('other_attribute_ids')
+    items = [
+        _serialize_registered_player(
+            player, db_name, is_football, show_org, show_address
+        )
+        for player in players
+    ]
+    filters = []
+    if is_football:
+        seen = []
+        for player in players:
+            pos = player.dominant_position_id
+            if pos and pos.name and pos.name not in seen:
+                seen.append(pos.name)
+                filters.append(pos.name)
+    else:
+        for role in ('Batter', 'Bowler', 'Allrounder'):
+            if any((p.role or '') == role for p in players):
+                filters.append(role)
+    return {
+        'count': len(items),
+        'sport': 'football' if is_football else 'cricket',
+        'show_org_id': show_org,
+        'show_address': show_address,
+        'filters': filters,
+        'players': items,
+    }

@@ -477,6 +477,16 @@ class Auction(http.Controller):
                 [('active', '=', True)], order='sequence asc, name asc')
         return football_positions, football_styles, football_strengths
 
+    def _reg_roster_count(self, tournament):
+        from odoo.addons.auction_module.services import auction_live_payload as payload_svc
+        return payload_svc.registered_player_count(request.env, tournament)
+
+    def _reg_roster_payload(self, tournament, db_name):
+        from odoo.addons.auction_module.services import auction_live_payload as payload_svc
+        return payload_svc.build_register_roster_payload(
+            request.env, tournament, db_name
+        )
+
     def _render_admin_register_unlock(self, tournament, db_name, tournament_slug,
                                       theme='vanilla', error=None, entered_code=''):
         html = request.render('auction_module.admin_registration_unlock_template', {
@@ -3281,9 +3291,28 @@ class Auction(http.Controller):
         """Decode binary image; optionally downscale player photos.
 
         ``sz=pj`` — projector stage card. ``sz=bs`` — Bid Summary thumbnail.
+        ``sz=reg`` — registration roster: face-centered square thumbnail.
         """
         sz = (kw.get('sz') or '').lower()
-        if model == 'auction.team.player' and field == 'photo' and binary and sz in ('pj', 'bs'):
+        if model == 'auction.team.player' and field == 'photo' and binary and sz == 'reg':
+            try:
+                from PIL import Image
+                from io import BytesIO
+                raw = base64.b64decode(binary)
+                im = Image.open(BytesIO(raw))
+                cropped = self._sp_face_fill_crop(im, out_w=192, out_h=192)
+                buf = BytesIO()
+                cropped.convert('RGB').save(buf, format='JPEG', quality=82, optimize=True)
+                return buf.getvalue()
+            except Exception:
+                _logger.debug('public image sz=reg face crop failed', exc_info=True)
+                try:
+                    binary = image_process(
+                        binary, size=(192, 192), quality=82, output_format='JPEG',
+                    ) or binary
+                except Exception:
+                    _logger.debug('public image sz=reg resize fallback failed', exc_info=True)
+        elif model == 'auction.team.player' and field == 'photo' and binary and sz in ('pj', 'bs'):
             size = (96, 96) if sz == 'bs' else (720, 1000)
             quality = 70 if sz == 'bs' else 82
             try:
@@ -3323,7 +3352,7 @@ class Auction(http.Controller):
         except (TypeError, ValueError):
             return request.not_found()
         sz = (kw.get('sz') or '').lower()
-        if sz not in ('pj', 'bs'):
+        if sz not in ('pj', 'bs', 'reg'):
             sz = ''
 
         Model = request.env[model].sudo()
@@ -3351,7 +3380,7 @@ class Auction(http.Controller):
             ])
 
         cache_key = None
-        if sz in ('pj', 'bs'):
+        if sz in ('pj', 'bs', 'reg'):
             cache_key = (request.env.cr.dbname, model, record_id, field, sz, etag)
             hit = _public_img_cache_get(cache_key)
             if hit:
@@ -5397,6 +5426,10 @@ class Auction(http.Controller):
             register_path = self._reg_path(db_name, tournament_slug, admin=admin)
             football_positions, football_styles, football_strengths = self._reg_football_lookups(tournament)
             max_reg, current_count, slots_left, is_full = self._reg_capacity(tournament)
+            roster_count = self._reg_roster_count(tournament)
+            sse_enabled = request.env['ir.config_parameter'].sudo().get_param(
+                'auction.sse.enabled', 'False'
+            ) in ('True', 'true', '1')
 
             # Admin path: require tournament-code unlock once per browser
             if admin:
@@ -5448,6 +5481,8 @@ class Auction(http.Controller):
                     'payment_proof_required': bool(tournament.payment_proof_required),
                     'admin_registration': admin,
                     'register_path': register_path,
+                    'roster_count': roster_count,
+                    'sse_enabled': sse_enabled,
                 }, lazy=False)
                 return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
@@ -5471,6 +5506,8 @@ class Auction(http.Controller):
                 'payment_proof_required': bool(tournament.payment_proof_required),
                 'admin_registration': admin,
                 'register_path': register_path,
+                'roster_count': roster_count,
+                'sse_enabled': sse_enabled,
             }
 
             if request.httprequest.method == 'POST':
@@ -5585,6 +5622,31 @@ class Auction(http.Controller):
                 ('state', '=', 'draft'),
             ])
             return {'duplicate': count > 0, 'count': count}
+
+    @http.route('/<string:db_name>/<string:tournament_slug>/player/register/players',
+                type='http', auth='none', website=False, methods=['GET'], csrf=False)
+    def player_register_list(self, db_name, tournament_slug, **kw):
+        """Public JSON list of registered players (Redis HIT → ORM rebuild)."""
+        empty = json.dumps({'count': 0, 'sport': 'cricket', 'players': [], 'filters': []})
+        headers = [
+            ('Content-Type', 'application/json; charset=utf-8'),
+            ('Cache-Control', 'no-store'),
+        ]
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return request.make_response(empty, headers=headers)
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('slug', '=', tournament_slug)], limit=1
+            )
+            if not tournament:
+                return request.make_response(empty, headers=headers)
+            from odoo.addons.auction_module.services.auction_live_snapshot_service import (
+                get_or_rebuild_snapshot,
+            )
+            payload = get_or_rebuild_snapshot(request.env, tournament, 'reg') or {
+                'count': 0, 'sport': 'cricket', 'players': [], 'filters': [],
+            }
+            return request.make_response(json.dumps(payload), headers=headers)
 
     @http.route('/player/card/<int:player_id>', type='http', auth='none', website=False, sitemap=False)
     def player_card_download_legacy(self, player_id, **kw):

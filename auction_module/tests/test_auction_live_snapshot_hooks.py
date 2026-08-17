@@ -23,6 +23,25 @@ class TestKindsForVals(unittest.TestCase):
             'current_bid_team_id': 3,
         })
         self.assertEqual(kinds, {'lb', 'pj'})
+        self.assertNotIn('reg', kinds)
+
+    def test_player_create_dirties_register_roster(self):
+        kinds = kinds_for_vals('auction.team.player', {
+            'name': 'Rahul',
+            'photo': b'x',
+        }, create=True)
+        self.assertIn('reg', kinds)
+        self.assertTrue({'lb', 'pj', 'reg'} <= kinds)
+
+    def test_register_privacy_flags_roster_only(self):
+        self.assertEqual(
+            kinds_for_vals('auction.tournament', {'expose_registered_address': True}),
+            {'reg'},
+        )
+        self.assertEqual(
+            kinds_for_vals('auction.tournament', {'expose_registered_org_id': True}),
+            {'reg'},
+        )
 
     def test_sold_dirties_all_three(self):
         kinds = kinds_for_vals('auction.team.player', {

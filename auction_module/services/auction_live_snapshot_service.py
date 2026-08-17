@@ -28,6 +28,7 @@ KIND_BUILDERS = {
     'lb': 'live',
     'pj': 'projector',
     'bal': 'balance',
+    'reg': 'register',
 }
 
 
@@ -71,6 +72,17 @@ def build_balance_snapshot(env, tournament, seq):
     return data
 
 
+def build_register_snapshot(env, tournament, db_name, seq):
+    t0 = time.monotonic()
+    data = payload_svc.build_register_roster_payload(env, tournament, db_name)
+    data = payload_svc.attach_seq(data, seq)
+    _logger.debug(
+        'auction snapshot build reg tid=%s seq=%s in %.1fms',
+        tournament.id, seq, (time.monotonic() - t0) * 1000,
+    )
+    return data
+
+
 def _build_kind(env, tournament, kind, seq):
     db_name = env.cr.dbname
     if kind == 'lb':
@@ -79,6 +91,8 @@ def _build_kind(env, tournament, kind, seq):
         return build_projector_snapshot(env, tournament, db_name, seq)
     if kind == 'bal':
         return build_balance_snapshot(env, tournament, seq)
+    if kind == 'reg':
+        return build_register_snapshot(env, tournament, db_name, seq)
     return None
 
 
@@ -102,7 +116,7 @@ def write_snapshots_to_redis(env, tournament_id, seq, snapshots):
         redis_svc.set_slug_tid(env, tournament.slug, tournament.id)
     # Phase 3: publish invalidation only after CAS succeeded and snapshots exist.
     if ok:
-        targets = [k for k in ('lb', 'pj', 'bal') if snapshots.get(k) is not None]
+        targets = [k for k in ('lb', 'pj', 'bal', 'reg') if snapshots.get(k) is not None]
         try:
             redis_svc.publish_tournament_event(env, tournament_id, seq, targets)
         except Exception:
@@ -122,9 +136,9 @@ def rebuild_tournament_snapshots(env, tournament_id, snapshot_seq, snapshot_type
             return False
         if snapshot_seq is None:
             snapshot_seq = _pg_seq(tournament)
-        kinds = set(snapshot_types or ('lb', 'pj', 'bal'))
+        kinds = set(snapshot_types or ('lb', 'pj', 'bal', 'reg'))
         snapshots = {}
-        for kind in ('lb', 'pj', 'bal'):
+        for kind in ('lb', 'pj', 'bal', 'reg'):
             if kind not in kinds:
                 continue
             snapshots[kind] = _build_kind(env, tournament, kind, snapshot_seq)
@@ -158,6 +172,11 @@ def _snapshot_schema_ok(kind, payload):
                 photo = row.get('photo_url') or ''
                 if photo and 'sz=bs' not in photo and 'default_icon' not in photo:
                     return False
+    if kind == 'reg':
+        if not isinstance(payload.get('players'), list):
+            return False
+        if 'count' not in payload:
+            return False
     return True
 
 

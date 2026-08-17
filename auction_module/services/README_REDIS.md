@@ -1,8 +1,8 @@
 # Auction Champ — Phase 2A Redis snapshots
 
 PostgreSQL is the **authoritative** live-auction store. Redis is an optional
-**shared replica** of the three public poll payloads (Live Board, Projector,
-Bid Summary). If Redis is disabled, missing, or down, auctions continue on
+**shared replica** of the public poll payloads (Live Board, Projector,
+Bid Summary, and the player-registration roster). If Redis is disabled, missing, or down, auctions continue on
 the existing ORM polling path.
 
 The process-local `_LIVE_PAYLOAD_CACHE` is only a tertiary shortcut on one
@@ -21,6 +21,7 @@ writes on a timer.
 ac:{dbname}:t:{tid}:lb
 ac:{dbname}:t:{tid}:pj
 ac:{dbname}:t:{tid}:bal
+ac:{dbname}:t:{tid}:reg
 ac:{dbname}:t:{tid}:meta
 ac:{dbname}:t:{tid}:seq
 ac:{dbname}:t:{tid}:rebuild_lock
@@ -122,12 +123,15 @@ ac:{dbname}:t:{tid}:events
 {"event":"auction.update","db":"...","tournament_id":N,"seq":N,"targets":["lb","pj"],"ts":"..."}
 ```
 
+`targets` may include `reg` when the public registration roster changes.
+
 Gateway SSE endpoints (same process as `/data`):
 
 ```
 GET /{db}/{slug}/auction/live-board/events
 GET /{db}/auction/projector/{slug}/events
 GET /{db}/{slug}/auction/show/team/balance/events
+GET /{db}/{slug}/player/register/events
 ```
 
 Frontend flag (default False; polling remains):

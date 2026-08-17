@@ -38,7 +38,7 @@
 
 {
     'name': 'Auction Champ — Login Theme',
-    'version': '1.0',
+    'version': '1.0.1',
     'summary': 'Beautiful sports-themed login screen for Auction Champ',
     'icon': '/auction_login_theme/static/description/icon.png',
     'description': """

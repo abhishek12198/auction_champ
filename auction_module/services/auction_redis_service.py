@@ -26,9 +26,8 @@ CONNECT_TIMEOUT = 0.05
 SOCKET_TIMEOUT = 0.1
 REBUILD_LOCK_TTL = 5
 
-# Atomic compare-and-set: never let an older postcommit overwrite a newer seq.
-# KEYS: seq, lb, pj, bal, meta
-# ARGV: incoming_seq, lb_json|'', pj_json|'', bal_json|'',
+# KEYS: seq, lb, pj, bal, meta, reg
+# ARGV: incoming_seq, lb_json|'', pj_json|'', bal_json|'', reg_json|'',
 #       meta field count, then field/value pairs
 _CAS_LUA = """
 local seq_key = KEYS[1]
@@ -49,13 +48,16 @@ end
 if ARGV[4] ~= '' then
     redis.call('SET', KEYS[4], ARGV[4])
 end
-local nmeta = tonumber(ARGV[5]) or 0
+if ARGV[5] ~= '' then
+    redis.call('SET', KEYS[6], ARGV[5])
+end
+local nmeta = tonumber(ARGV[6]) or 0
 if nmeta > 0 then
     redis.call('DEL', KEYS[5])
     local i = 0
     while i < nmeta do
-        local fk = ARGV[6 + (i * 2)]
-        local fv = ARGV[7 + (i * 2)]
+        local fk = ARGV[7 + (i * 2)]
+        local fv = ARGV[8 + (i * 2)]
         redis.call('HSET', KEYS[5], fk, fv)
         i = i + 1
     end
@@ -63,6 +65,8 @@ end
 redis.call('SET', seq_key, incoming)
 return 1
 """
+
+SNAPSHOT_KINDS = ('lb', 'pj', 'bal', 'reg')
 
 _pool_lock = threading.Lock()
 _client = None
@@ -212,6 +216,7 @@ def keys_for(dbname, tournament_id):
         'lb': '%s:lb' % prefix,
         'pj': '%s:pj' % prefix,
         'bal': '%s:bal' % prefix,
+        'reg': '%s:reg' % prefix,
         'meta': '%s:meta' % prefix,
         'seq': '%s:seq' % prefix,
         'lock': '%s:rebuild_lock' % prefix,
@@ -239,7 +244,7 @@ def publish_tournament_event(env, tournament_id, seq, targets, event='auction.up
         'db': dbname,
         'tournament_id': int(tournament_id),
         'seq': int(seq),
-        'targets': sorted(t for t in (targets or []) if t in ('lb', 'pj', 'bal')),
+        'targets': sorted(t for t in (targets or []) if t in SNAPSHOT_KINDS),
         'ts': time.time(),
     }
     if not payload['targets']:
@@ -339,8 +344,8 @@ def get_seq(env, tournament_id):
 
 
 def get_snapshot(env, tournament_id, kind):
-    """Return decoded JSON dict for kind in ('lb','pj','bal'), or None."""
-    if kind not in ('lb', 'pj', 'bal'):
+    """Return decoded JSON dict for kind in SNAPSHOT_KINDS, or None."""
+    if kind not in SNAPSHOT_KINDS:
         return None
     client = get_client(env)
     if client is None:
@@ -368,7 +373,7 @@ def get_snapshot(env, tournament_id, kind):
 def write_snapshots(env, tournament_id, seq, snapshots, meta=None):
     """Atomically write snapshots if incoming seq >= stored seq.
 
-    ``snapshots`` is a dict with optional keys lb/pj/bal (JSON-serializable).
+    ``snapshots`` is a dict with optional keys lb/pj/bal/reg (JSON-serializable).
     Returns True if written, False if rejected/unavailable. Never raises.
     """
     client = get_client(env)
@@ -379,17 +384,18 @@ def write_snapshots(env, tournament_id, seq, snapshots, meta=None):
     lb = json.dumps(snapshots['lb'], separators=(',', ':')) if snapshots.get('lb') is not None else ''
     pj = json.dumps(snapshots['pj'], separators=(',', ':')) if snapshots.get('pj') is not None else ''
     bal = json.dumps(snapshots['bal'], separators=(',', ':')) if snapshots.get('bal') is not None else ''
+    reg = json.dumps(snapshots['reg'], separators=(',', ':')) if snapshots.get('reg') is not None else ''
     meta = meta or {}
     meta_args = []
     for mk, mv in meta.items():
         meta_args.extend([str(mk), '' if mv is None else str(mv)])
-    argv = [int(seq), lb, pj, bal, len(meta)] + meta_args
+    argv = [int(seq), lb, pj, bal, reg, len(meta)] + meta_args
     try:
         t0 = time.monotonic()
         ok = client.eval(
             _CAS_LUA,
-            5,
-            keys['seq'], keys['lb'], keys['pj'], keys['bal'], keys['meta'],
+            6,
+            keys['seq'], keys['lb'], keys['pj'], keys['bal'], keys['meta'], keys['reg'],
             *argv
         )
         _logger.debug(

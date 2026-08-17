@@ -1003,25 +1003,3 @@
 .o_tourn_player_stats {
     position: relative;
 }
-.o_tps_flash {
-    flex: 1 0 100%;
-    order: -1;
-    background: #ecfdf5;
-    border: 1px solid #6ee7b7;
-    color: #047857;
-    font-weight: 700;
-    font-size: 0.88rem;
-    border-radius: 10px;
-    padding: 10px 14px;
-    box-shadow: 0 6px 16px rgba(4, 120, 87, 0.12);
-    animation: o-tps-flash-in 0.2s ease-out;
-}
-.o_tps_flash.o_tps_flash-out {
-    opacity: 0;
-    transform: translateY(-6px);
-    transition: opacity 0.45s ease, transform 0.45s ease;
-}
-@keyframes o-tps-flash-in {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
-}

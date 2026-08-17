@@ -11,12 +11,14 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="theme-color" content="#060e22"/>
   <title>Auction Champ — Enter the Arena</title>
   <link rel="icon" t-att-href="favicon_url" type="image/x-icon"/>
   <style>
     /* ── Reset ──────────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; }
+    html { background: #060e22; color-scheme: dark; }
 
     /* ── Stadium Background — module navy palette ────────────────────── */
     body {

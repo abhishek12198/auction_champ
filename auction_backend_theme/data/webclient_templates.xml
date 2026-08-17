@@ -20,18 +20,27 @@
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
                 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&amp;family=Bebas+Neue&amp;display=swap" rel="stylesheet"/>
                 <!-- Critical early paint: navy shell before web.assets_backend arrives -->
+                <meta name="theme-color" content="#060e22"/>
                 <style id="ac-boot-critical">
-                    /* Only paint html — avoid overriding body.o_web_client after Owl mounts */
+                    /* Navy canvas from the first paint so login → /web never flashes white. */
                     html {
                         background: #060e22;
                     }
+                    html.ac-booting {
+                        background: #060e22;
+                        color-scheme: dark;
+                    }
                     body.o_web_client {
                         margin: 0;
+                        background-color: #060e22;
                     }
                     #ac-boot-splash {
                         position: fixed;
                         inset: 0;
                         z-index: 99999;
+                        opacity: 1;
+                        -webkit-transition: opacity 0.22s ease;
+                                transition: opacity 0.22s ease;
                         display: -webkit-flex;
                         display: flex;
                         -webkit-flex-direction: column;
@@ -166,6 +175,9 @@
                         0%, 80%, 100% { -webkit-transform: translateY(0) scale(0.75); transform: translateY(0) scale(0.75); opacity: 0.5; }
                         40%           { -webkit-transform: translateY(-9px) scale(1.15); transform: translateY(-9px) scale(1.15); opacity: 1; }
                     }
+                    #ac-boot-splash.ac-boot-gone {
+                        opacity: 0;
+                    }
                 </style>
             </t>
             <t t-set="head" t-value="head_auction_fonts + (head or '')"/>
@@ -194,6 +206,14 @@
             </div>
             <script>
                 (function () {
+                    var root = document.documentElement;
+                    root.classList.add('ac-booting');
+                    // Owl mounts onto body with position "self" and replaces body
+                    // children. Park the splash on the html element so it survives that patch.
+                    var splash = document.getElementById('ac-boot-splash');
+                    if (splash &amp;&amp; splash.parentNode !== root) {
+                        root.appendChild(splash);
+                    }
                     var messages = [
                         'Entering the Arena...',
                         'Loading the Squad...',

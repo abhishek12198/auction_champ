@@ -272,6 +272,18 @@ class AuctionTournament(models.Model):
         default=False,
         help="Show the optional organisation unique ID field on the public player registration form.",
     )
+    expose_registered_org_id = fields.Boolean(
+        string="Show Org ID# on Registered List",
+        default=False,
+        help="When enabled, Org ID# is visible on the public “players registered so far” "
+             "popup. Only applies when Org ID# is collected on the registration form.",
+    )
+    expose_registered_address = fields.Boolean(
+        string="Show Address on Registered List",
+        default=False,
+        help="When enabled, player address is visible on the public “players registered so far” "
+             "popup so friends can recognise each other. Off by default.",
+    )
     payment_instruction = fields.Text(
         string='Payment Instructions',
         help='Instructions shown in the Payment section of the player registration form. '
@@ -837,6 +849,7 @@ class AuctionTournament(models.Model):
         """
         cr = self.env.cr
         self._ensure_show_registration_capacity_column()
+        self._ensure_registered_list_privacy_columns()
 
         # Migrate legacy single tournament_date values into date lines + char.
         cr.execute("""
@@ -903,6 +916,28 @@ class AuctionTournament(models.Model):
              WHERE show_registration_capacity IS NULL
         """)
 
+    def _ensure_registered_list_privacy_columns(self):
+        """Create public-roster privacy flags without requiring -u on deploy."""
+        cr = self.env.cr
+        for col in ('expose_registered_org_id', 'expose_registered_address'):
+            cr.execute("""
+                SELECT 1
+                  FROM information_schema.columns
+                 WHERE table_name = 'auction_tournament'
+                   AND column_name = %s
+            """, (col,))
+            if cr.fetchone():
+                continue
+            cr.execute("""
+                ALTER TABLE auction_tournament
+                    ADD COLUMN %s boolean DEFAULT FALSE
+            """ % col)
+            cr.execute("""
+                UPDATE auction_tournament
+                   SET %s = FALSE
+                 WHERE %s IS NULL
+            """ % (col, col))
+
     def _ensure_live_snapshot_seq_column(self):
         """Create live_snapshot_seq without requiring -u on every deploy."""
         cr = self.env.cr
@@ -929,6 +964,7 @@ class AuctionTournament(models.Model):
         super()._register_hook()
         # Self-heal on every registry load (restart without -u).
         self._ensure_show_registration_capacity_column()
+        self._ensure_registered_list_privacy_columns()
         self._ensure_live_snapshot_seq_column()
 
     def set_dice_state(self, state, number=0):
@@ -1136,6 +1172,8 @@ class AuctionTournament(models.Model):
         default.setdefault('expose_player_contact_agreed_user_id', False)
         default.setdefault('expose_player_contact_agreed_date', False)
         default.setdefault('expose_player_contact_policy_version', False)
+        default.setdefault('expose_registered_org_id', False)
+        default.setdefault('expose_registered_address', False)
         new = super().copy(default)
         new._ensure_default_tier()
         return new
@@ -1234,6 +1272,14 @@ class AuctionTournament(models.Model):
                 # team balance & payment config
                 'team_max_points', 'payment_qr_image', 'payment_instruction',
                 'payment_proof_required',
+                # tournament poster on the registration page
+                'poster_image',
+                # contact unmask (wizard + remask button)
+                'expose_player_contact',
+                'expose_player_contact_privacy_agreed',
+                'expose_player_contact_agreed_user_id',
+                'expose_player_contact_agreed_date',
+                'expose_player_contact_policy_version',
                 # live-board stamp — written during SOLD / UNSOLD / NEXT-PLAYER
                 'stamp_player_id', 'stamp_state', 'stamp_expires_at',
                 # live-board controls
