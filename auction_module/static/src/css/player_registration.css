@@ -2534,7 +2534,7 @@ body.reg-roster-lock { overflow: hidden; }
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center 28%;
+    object-position: center center;
     display: block;
 }
 .reg-roster-no {

@@ -17,7 +17,7 @@
           rel="stylesheet"/>
 
     <!-- Registration form CSS -->
-    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.532"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.533"/>
 
     <!-- ── Per-theme CSS custom properties ────────────────────── -->
     <style>
@@ -1877,7 +1877,7 @@
 })();
 </script>
 <script src="/auction_module/static/src/js/auction_sse_client.js"></script>
-<script src="/auction_module/static/src/js/player_registration_roster.js?v=1.5.532"></script>
+<script src="/auction_module/static/src/js/player_registration_roster.js?v=1.5.533"></script>
 
 </body>
 </html>

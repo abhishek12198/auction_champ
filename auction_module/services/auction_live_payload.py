@@ -796,7 +796,7 @@ def _serialize_registered_player(player, db_name, is_football, show_org, show_ad
         'name': player.name or '',
         'photo_url': _public_img_url(
             db_name, 'auction.team.player', player.id, 'photo',
-            write_date=player.write_date, sz='reg',
+            write_date=player.write_date, sz='rt',
         ),
         'current_team': (player.current_team or '').strip(),
         'tier': player.tier_id.name if player.tier_id else '',

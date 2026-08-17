@@ -3291,27 +3291,28 @@ class Auction(http.Controller):
         """Decode binary image; optionally downscale player photos.
 
         ``sz=pj`` — projector stage card. ``sz=bs`` — Bid Summary thumbnail.
-        ``sz=reg`` — registration roster: face-centered square thumbnail.
+        ``sz=reg`` / ``sz=rt`` — registration roster square thumbnail
+        (EXIF-correct, upper-center crop — not face-zoom).
         """
         sz = (kw.get('sz') or '').lower()
-        if model == 'auction.team.player' and field == 'photo' and binary and sz == 'reg':
+        if model == 'auction.team.player' and field == 'photo' and binary and sz in ('reg', 'rt'):
             try:
                 from PIL import Image
                 from io import BytesIO
                 raw = base64.b64decode(binary)
                 im = Image.open(BytesIO(raw))
-                cropped = self._sp_face_fill_crop(im, out_w=192, out_h=192)
+                cropped = self._sp_roster_thumb_crop(im, out_w=384, out_h=384)
                 buf = BytesIO()
-                cropped.convert('RGB').save(buf, format='JPEG', quality=82, optimize=True)
+                cropped.convert('RGB').save(buf, format='JPEG', quality=88, optimize=True)
                 return buf.getvalue()
             except Exception:
-                _logger.debug('public image sz=reg face crop failed', exc_info=True)
+                _logger.debug('public image sz=%s roster crop failed', sz, exc_info=True)
                 try:
                     binary = image_process(
-                        binary, size=(192, 192), quality=82, output_format='JPEG',
+                        binary, size=(384, 384), quality=88, output_format='JPEG',
                     ) or binary
                 except Exception:
-                    _logger.debug('public image sz=reg resize fallback failed', exc_info=True)
+                    _logger.debug('public image sz=%s resize fallback failed', sz, exc_info=True)
         elif model == 'auction.team.player' and field == 'photo' and binary and sz in ('pj', 'bs'):
             size = (96, 96) if sz == 'bs' else (720, 1000)
             quality = 70 if sz == 'bs' else 82
@@ -3352,7 +3353,7 @@ class Auction(http.Controller):
         except (TypeError, ValueError):
             return request.not_found()
         sz = (kw.get('sz') or '').lower()
-        if sz not in ('pj', 'bs', 'reg'):
+        if sz not in ('pj', 'bs', 'reg', 'rt'):
             sz = ''
 
         Model = request.env[model].sudo()
@@ -3380,7 +3381,7 @@ class Auction(http.Controller):
             ])
 
         cache_key = None
-        if sz in ('pj', 'bs', 'reg'):
+        if sz in ('pj', 'bs', 'reg', 'rt'):
             cache_key = (request.env.cr.dbname, model, record_id, field, sz, etag)
             hit = _public_img_cache_get(cache_key)
             if hit:
@@ -4374,6 +4375,34 @@ class Auction(http.Controller):
         left = max(0, min(left, W - side))
         top = max(0, min(top, H - side))
         return left, top, side
+
+    def _sp_roster_thumb_crop(self, im, out_w=384, out_h=384):
+        """Consistent square roster thumbnail.
+
+        Face-detection was zooming some photos and clipping others off-center.
+        This path is deterministic: honour EXIF orientation, take the largest
+        square from the upper-centre (heads sit there on portraits), then
+        downscale. No Haar / skin heuristic.
+        """
+        from PIL import Image, ImageOps
+        try:
+            im = ImageOps.exif_transpose(im)
+        except Exception:
+            pass
+        src = im.convert('RGB')
+        width, height = src.size
+        if width < 4 or height < 4:
+            return src.resize((out_w, out_h), Image.LANCZOS)
+        side = min(width, height)
+        left = (width - side) // 2
+        if height > width:
+            top = int(round((height - side) * 0.10))
+        else:
+            top = 0
+        top = max(0, min(top, height - side))
+        left = max(0, min(left, width - side))
+        cropped = src.crop((left, top, left + side, top + side))
+        return cropped.resize((out_w, out_h), Image.LANCZOS)
 
     def _sp_face_fill_crop(self, im, out_w=640, out_h=640):
         """
