@@ -284,6 +284,12 @@ class AuctionTournament(models.Model):
         help="When enabled, player address is visible on the public “players registered so far” "
              "popup so friends can recognise each other. Off by default.",
     )
+    player_address_required = fields.Boolean(
+        string="Address Required on Registration",
+        default=False,
+        help="When enabled, Location / Address is mandatory on /player/register. "
+             "When disabled, the field stays optional.",
+    )
     payment_instruction = fields.Text(
         string='Payment Instructions',
         help='Instructions shown in the Payment section of the player registration form. '
@@ -850,6 +856,7 @@ class AuctionTournament(models.Model):
         cr = self.env.cr
         self._ensure_show_registration_capacity_column()
         self._ensure_registered_list_privacy_columns()
+        self._ensure_player_address_required_column()
 
         # Migrate legacy single tournament_date values into date lines + char.
         cr.execute("""
@@ -938,6 +945,28 @@ class AuctionTournament(models.Model):
                  WHERE %s IS NULL
             """ % (col, col))
 
+    def _ensure_player_address_required_column(self):
+        """Create player_address_required without requiring -u on deploy."""
+        cr = self.env.cr
+        cr.execute("""
+            SELECT 1
+              FROM information_schema.columns
+             WHERE table_name = 'auction_tournament'
+               AND column_name = 'player_address_required'
+        """)
+        if cr.fetchone():
+            return
+        cr.execute("""
+            ALTER TABLE auction_tournament
+                ADD COLUMN player_address_required boolean
+                DEFAULT FALSE
+        """)
+        cr.execute("""
+            UPDATE auction_tournament
+               SET player_address_required = FALSE
+             WHERE player_address_required IS NULL
+        """)
+
     def _ensure_live_snapshot_seq_column(self):
         """Create live_snapshot_seq without requiring -u on every deploy."""
         cr = self.env.cr
@@ -965,6 +994,7 @@ class AuctionTournament(models.Model):
         # Self-heal on every registry load (restart without -u).
         self._ensure_show_registration_capacity_column()
         self._ensure_registered_list_privacy_columns()
+        self._ensure_player_address_required_column()
         self._ensure_live_snapshot_seq_column()
 
     def set_dice_state(self, state, number=0):
@@ -1174,6 +1204,7 @@ class AuctionTournament(models.Model):
         default.setdefault('expose_player_contact_policy_version', False)
         default.setdefault('expose_registered_org_id', False)
         default.setdefault('expose_registered_address', False)
+        default.setdefault('player_address_required', False)
         new = super().copy(default)
         new._ensure_default_tier()
         return new
@@ -1405,6 +1436,11 @@ class AuctionTournament(models.Model):
     def action_set_auction_rules(self):
         """Open the Auction Rules wizard scoped to this tournament."""
         self.ensure_one()
+        if self.has_auction_rules:
+            raise UserError(_(
+                'Auction rules are already set for this tournament. '
+                'Delete all auction rule records, then set them again.'
+            ))
         return {
             'type': 'ir.actions.act_window',
             'name': _('Set Auction Rules — %s') % self.name,
@@ -1491,12 +1527,28 @@ class AuctionTournament(models.Model):
             count = len(history)
             if history:
                 history.unlink()
+            if self.env.context.get('revoke_wizard'):
+                continue
             message = _(
                 'Cleared %(count)s auction history record(s) for "%(name)s".'
             ) % {'count': count, 'name': rec.name}
             if hasattr(self.env.user, 'notify_success'):
                 self.env.user.notify_success(message)
         return True
+
+    def action_open_revoke_transactions(self):
+        """Open the combined restore wizard for stage, history, sold and unsold."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Restore Transactions'),
+            'res_model': 'auction.revoke.transactions.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_tournament_id': self.id,
+            },
+        }
 
     def action_deactivate_tournament(self):
         """Archive the tournament and all its related records.

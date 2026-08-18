@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_auction_revoke_transactions_wizard_form" model="ir.ui.view">
+        <field name="name">auction.revoke.transactions.wizard.form</field>
+        <field name="model">auction.revoke.transactions.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Restore Transactions" class="o_rt_wizard">
+                <field name="tournament_id" invisible="1"/>
+                <field name="stage_count" invisible="1"/>
+                <field name="history_count" invisible="1"/>
+                <field name="sold_count" invisible="1"/>
+                <field name="unsold_count" invisible="1"/>
+
+                <div class="rt-hero">
+                    <div class="rt-hero-icon" title="Bring selected auction activity back to In Auction">
+                        <i class="fa fa-history"/>
+                    </div>
+                    <div class="rt-hero-copy">
+                        <div class="rt-hero-kicker">Reset auction activity</div>
+                        <div class="rt-hero-title">Restore Transactions</div>
+                        <div class="rt-hero-sub">
+                            Restore this tournament’s auction state. Tick what you want to reverse —
+                            sold and unsold players return to <strong>In Auction</strong>.
+                            Untick anything you want to keep.
+                        </div>
+                    </div>
+                    <div class="rt-hero-tourn">
+                        <span class="rt-tourn-label">Tournament</span>
+                        <field name="tournament_name" readonly="1" nolabel="1"/>
+                    </div>
+                </div>
+
+                <div class="rt-options">
+                    <div class="rt-card rt-card-stage"
+                         title="Reset players currently on stage and clear the live-board stamp. The projector / live display returns to waiting.">
+                        <div class="rt-card-icon"><i class="fa fa-desktop"/></div>
+                        <div class="rt-card-copy">
+                            <div class="rt-card-title">Clear Stage?</div>
+                            <div class="rt-card-sub">Reset on-stage players and the live board stamp</div>
+                        </div>
+                        <span class="rt-count">
+                            <field name="stage_count" readonly="1" nolabel="1"/>
+                            <span>on stage</span>
+                        </span>
+                        <field name="clear_stage" nolabel="1"/>
+                    </div>
+
+                    <div class="rt-card rt-card-history"
+                         title="Permanently delete this tournament’s auction history records. Those entries cannot be recovered.">
+                        <div class="rt-card-icon"><i class="fa fa-book"/></div>
+                        <div class="rt-card-copy">
+                            <div class="rt-card-title">Clear History</div>
+                            <div class="rt-card-sub">Permanently delete this tournament's auction history</div>
+                        </div>
+                        <span class="rt-count">
+                            <field name="history_count" readonly="1" nolabel="1"/>
+                            <span>records</span>
+                        </span>
+                        <field name="clear_history" nolabel="1"/>
+                    </div>
+
+                    <div class="rt-card rt-card-sold"
+                         title="Recall all sold players back to In Auction. Team assignments and sale amounts for those players are reversed.">
+                        <div class="rt-card-icon"><i class="fa fa-gavel"/></div>
+                        <div class="rt-card-copy">
+                            <div class="rt-card-title">Restore Sold Players?</div>
+                            <div class="rt-card-sub">Recall sold players back to auction</div>
+                        </div>
+                        <span class="rt-count">
+                            <field name="sold_count" readonly="1" nolabel="1"/>
+                            <span>sold</span>
+                        </span>
+                        <field name="revoke_sold" nolabel="1"/>
+                    </div>
+
+                    <div class="rt-card rt-card-unsold"
+                         title="Bring all unsold players back to In Auction so they can be called again.">
+                        <div class="rt-card-icon"><i class="fa fa-refresh"/></div>
+                        <div class="rt-card-copy">
+                            <div class="rt-card-title">Restore Unsold Players</div>
+                            <div class="rt-card-sub">Bring unsold players back into auction</div>
+                        </div>
+                        <span class="rt-count">
+                            <field name="unsold_count" readonly="1" nolabel="1"/>
+                            <span>unsold</span>
+                        </span>
+                        <field name="revoke_unsold" nolabel="1"/>
+                    </div>
+                </div>
+
+                <div class="rt-warn">
+                    <div class="rt-warn-main">
+                        <div class="rt-warn-icon" title="Irreversible change">
+                            <i class="fa fa-exclamation-triangle"/>
+                        </div>
+                        <div class="rt-warn-copy">
+                            <div class="rt-warn-title">This cannot be undone</div>
+                            <div class="rt-warn-text">
+                                If you enable these options, player and history states will change.
+                                Sold / unsold records and deleted history
+                                <strong>cannot be brought back to their original state</strong>.
+                                Accept the warning below before Restore Selected is available.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="rt-warn-accept">
+                        <field name="accept_warning" nolabel="1"/>
+                        <span>I understand and accept that these changes cannot be reversed</span>
+                    </div>
+                </div>
+
+                <footer>
+                    <button name="action_apply"
+                            type="object"
+                            string="Restore Selected"
+                            class="btn-primary"
+                            attrs="{'invisible': [('accept_warning', '=', False)]}"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_auction_revoke_transactions" model="ir.actions.act_window">
+        <field name="name">Restore Transactions</field>
+        <field name="res_model">auction.revoke.transactions.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="view_auction_revoke_transactions_wizard_form"/>
+    </record>
+</odoo>

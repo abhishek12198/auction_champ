@@ -5981,6 +5981,7 @@ class Auction(http.Controller):
                 'rules_regulations': _str('rules_regulations'),
                 'payment_instruction': _str('payment_instruction'),
                 'enable_jersey_section': bool(post.get('enable_jersey_section')),
+                'player_address_required': bool(post.get('player_address_required')),
                 # Contact unmask requires privacy agreement in Tournament Master — never enable from public form.
                 'expose_player_contact': False,
             }
@@ -7109,6 +7110,10 @@ def _build_player_vals_from_post(request, tournament):
             "Payment proof is required. Please upload a receipt or payment screenshot."
         )
 
+    address = (post.get('address') or '').strip()
+    if tournament and tournament.player_address_required and not address:
+        raise ValueError("Location / Address is required.")
+
     is_football = bool(tournament and tournament.tournament_type == 'football')
 
     vals = {
@@ -7120,7 +7125,7 @@ def _build_player_vals_from_post(request, tournament):
             if tournament and tournament.enable_org_id_registration
             else False
         ),
-        'address':       (post.get('address') or '').strip(),
+        'address':       address,
         'blood_group':   (post.get('blood_group') or '').strip(),
         'current_team':  (post.get('current_team') or '').strip(),
         'state':         'draft',

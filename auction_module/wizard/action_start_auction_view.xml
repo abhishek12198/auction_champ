@@ -31,7 +31,7 @@
                             <div class="sar-metric-icon sar-ic-purse"><i class="fa fa-money"/></div>
                             <div class="sar-metric-body">
                                 <div class="sar-metric-label">Total purse</div>
-                                <field name="max_points" nolabel="1"/>
+                                <field name="max_points" nolabel="1" widget="ac_points"/>
                                 <div class="sar-metric-hint">
                                     <field name="point_unit_name" nolabel="1" readonly="1"/>
                                 </div>
@@ -49,7 +49,7 @@
                             <div class="sar-metric-icon sar-ic-base"><i class="fa fa-dot-circle-o"/></div>
                             <div class="sar-metric-body">
                                 <div class="sar-metric-label">Global base point</div>
-                                <field name="base_point" nolabel="1"/>
+                                <field name="base_point" nolabel="1" widget="ac_points"/>
                                 <div class="sar-metric-hint">Used when a tier base is 0</div>
                             </div>
                         </div>
@@ -69,7 +69,7 @@
                             </span>
                         </div>
                         <field name="team_ids" class="sar-team-field" nolabel="1">
-                            <kanban class="sar-team-kanban" create="0" edit="0">
+                            <kanban class="sar-team-kanban" create="0" edit="0" delete="1">
                                 <field name="name"/>
                                 <field name="logo"/>
                                 <field name="tournament_id"/>
@@ -93,6 +93,9 @@
                                             <t t-if="record.key_player_ids.value">
                                                 <span class="sar-team-icon-badge" title="Icon player"><i class="fa fa-star"/></span>
                                             </t>
+                                            <a type="delete" class="sar-team-remove" title="Remove team">
+                                                <i class="fa fa-times"/>
+                                            </a>
                                         </div>
                                     </t>
                                 </templates>
@@ -105,14 +108,16 @@
                             <div class="sar-section-icon"><i class="fa fa-list-ol"/></div>
                             <div class="sar-section-titles">
                                 <div class="sar-section-title">Bid slabs</div>
-                                <div class="sar-section-sub">From / To ranges and the increment for each band</div>
+                                <div class="sar-section-sub">
+                                    Each band starts where the last one ended. Set Until and Increment — From is filled for you.
+                                </div>
                             </div>
                         </div>
-                        <field name="auction_bid_slab_ids" nolabel="1" class="sar-table">
+                        <field name="auction_bid_slab_ids" nolabel="1" class="sar-table sar-slabs">
                             <tree editable="bottom">
-                                <field name="from_amount" string="From"/>
-                                <field name="to_amount" string="To"/>
-                                <field name="increment" string="Increment"/>
+                                <field name="from_amount" string="From" widget="ac_points"/>
+                                <field name="to_amount" string="Until" widget="ac_points"/>
+                                <field name="increment" string="Increment" widget="ac_points"/>
                             </tree>
                         </field>
                     </div>
@@ -123,16 +128,16 @@
                             <div class="sar-section-titles">
                                 <div class="sar-section-title">Tier limits</div>
                                 <div class="sar-section-sub">
-                                    Max players, base, and max call per tier. Base 0 = global base. Max call 0 = no per-player cap.
+                                    Max players, base, and max call per tier. Base 0 uses global base. Max call 0 means no cap.
                                 </div>
                             </div>
                         </div>
-                        <field name="tier_limit_ids" nolabel="1" class="sar-table">
-                            <tree editable="bottom">
-                                <field name="tier_id" domain="[('is_an_icon_tier', '!=', True), '|', ('tournament_id', '=', parent.tournament_id), ('tournament_id', '=', False)]"/>
-                                <field name="max_players" string="Max Players per Team"/>
-                                <field name="base_point" string="Base Point (0 = global)"/>
-                                <field name="max_call" string="Max Call (0 = unlimited)"/>
+                        <field name="tier_limit_ids" nolabel="1" class="sar-table o_ac_tier_table">
+                            <tree editable="bottom" create="0">
+                                <field name="tier_id" string="Tier" readonly="1" force_save="1"/>
+                                <field name="max_players" string="Max / team"/>
+                                <field name="base_point" string="Base (0 = global)" widget="ac_points"/>
+                                <field name="max_call" string="Max call (0 = none)" widget="ac_points"/>
                             </tree>
                         </field>
                     </div>

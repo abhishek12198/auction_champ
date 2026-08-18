@@ -130,3 +130,5 @@ access_auction_point_unit_public,auction.point.unit (public),auction_module.mode
 access_auction_player_register_wizard_user,auction.player.register.wizard (user),auction_module.model_auction_player_register_wizard,auction_module.group_auction_group,1,1,1,1
 access_auction_player_register_wizard_admin,auction.player.register.wizard (admin),auction_module.model_auction_player_register_wizard,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_player_register_wizard_setup,auction.player.register.wizard (setup),auction_module.model_auction_player_register_wizard,auction_module.group_auction_player_setup,1,1,1,1
+access_auction_revoke_transactions_wizard_user,auction.revoke.transactions.wizard,auction_module.model_auction_revoke_transactions_wizard,auction_module.group_auction_group,1,1,1,1
+access_auction_revoke_transactions_wizard_admin,auction.revoke.transactions.wizard (admin),auction_module.model_auction_revoke_transactions_wizard,auction_module.group_auction_group_admin,1,1,1,1

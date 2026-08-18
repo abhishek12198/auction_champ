@@ -1,0 +1,37 @@
+.o_ac_points_words {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: #1e4080;
+    line-height: 1.3;
+    white-space: normal;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    max-width: 100%;
+}
+.o_ac_points_words.o_ac_points_words_empty {
+    color: #8a94a6;
+}
+
+.o_sar_wizard .sar-metric .o_ac_points_words {
+    font-size: 0.72rem;
+    color: #1e4080;
+}
+.o_sar_wizard .sar-metric:has(.o_ac_points_words:not(.o_ac_points_words_empty)) .sar-metric-hint .o_field_widget {
+    display: none !important;
+}
+
+.o_sar_wizard .sar-card-row .o_ac_points_words,
+.o_ac_tier_table .o_ac_points_words {
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: #334e80;
+}
+
+.o_ac_tier_table td.sar-hint-global .o_ac_points_words,
+.o_ac_tier_table td.sar-hint-uncapped .o_ac_points_words {
+    display: none;
+}

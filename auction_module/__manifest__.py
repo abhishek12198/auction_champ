@@ -38,7 +38,7 @@
 
 {
     'name' : 'Auction Champ',
-    'version' : '1.5.533',
+    'version' : '1.5.548',
     'summary': 'Sports Auction module',
     'sequence': 10,
     'icon': '/auction_module/static/description/icon.png',
@@ -142,6 +142,7 @@
         'wizard/expose_contact_privacy_wizard_view.xml',
         'wizard/player_restore_wizard_view.xml',
         'wizard/auction_player_register_wizard_view.xml',
+        'wizard/action_revoke_transactions_view.xml',
         'views/auction_status_template.xml',
         'views/page_not_found.xml',
         'views/player_registration_form.xml',
@@ -153,6 +154,7 @@
     'assets': {
             'web.assets_backend': [
                     '/auction_module/static/src/js/point_unit.js',
+                    '/auction_module/static/src/js/ac_points_widget.js',
                     '/auction_module/static/src/lib/chart.umd.min.js',
                     '/auction_module/static/src/js/auction_dashboard.js',
                     '/auction_module/static/src/css/auction_dashboard.css',
@@ -164,6 +166,9 @@
                     '/auction_module/static/src/js/center_toast.js',
                     '/auction_module/static/src/css/wizard_style.css',
                     '/auction_module/static/src/css/set_auction_rules.css',
+                    '/auction_module/static/src/css/ac_points.css',
+                    '/auction_module/static/src/css/revoke_transactions.css',
+                    '/auction_module/static/src/js/revoke_transactions.js',
                     '/auction_module/static/src/js/set_auction_rules.js',
                     '/auction_module/static/src/css/sticky_header.css',
                     '/auction_module/static/src/lib/html2canvas.min.js',

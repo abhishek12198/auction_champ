@@ -17,7 +17,7 @@
                     <div class="oe_title oe_inline">
                         <label for="points" string="New value"/>
                         <h1>
-                            <field name="points" class="oe_inline"/>
+                            <field name="points" class="oe_inline" widget="ac_points"/>
                             <field name="point_unit_symbol" readonly="1" class="oe_inline"
                                      style="margin-left:8px;font-size:0.7em;opacity:0.75;"/>
                         </h1>

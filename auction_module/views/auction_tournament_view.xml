@@ -46,16 +46,11 @@
                                 type="object"
                                 string="Set Auction Rules"
                                 class="btn-primary"
-                                attrs="{'invisible': [('active', '=', False)]}"/>
+                                attrs="{'invisible': ['|', ('active', '=', False), ('has_auction_rules', '=', True)]}"/>
                         <button name="action_view_auction_rules"
                                 type="object"
                                 string="Auction Rules"
                                 class="btn-secondary"/>
-                        <button name="action_export_sold_unsold"
-                                type="object"
-                                string="Export Players"
-                                class="btn-secondary"
-                                attrs="{'invisible': [('active', '=', False)]}"/>
                         <button name="action_deactivate_tournament"
                                 type="object"
                                 string="Deactivate Tournament"
@@ -71,6 +66,7 @@
                     </header>
                     <sheet>
                         <field name="active" invisible="1"/>
+                        <field name="has_auction_rules" invisible="1"/>
                         <field name="slug" invisible="1"/>
                         <field name="registration_open" invisible="1"/>
                         <field name="live_board_active" invisible="1"/>
@@ -169,29 +165,15 @@
                                 <field name="deleted_player_count" widget="statinfo"
                                        string="Deleted"/>
                             </button>
-                            <!-- Remove duplicate players -->
-                            <!-- Clear On-Stage Players -->
-                            <button name="action_clear_stage"
+                            <button name="action_open_revoke_transactions"
                                     type="object"
-                                    class="oe_stat_button"
-                                    icon="fa-times-circle"
-                                    confirm="This will clear all players currently on stage. Continue?"
-                                    help="Remove the on-stage flag from all players (resets the live auction display)">
+                                    class="oe_stat_button o_rt_restore_stat"
+                                    icon="fa-history"
+                                    attrs="{'invisible': [('active', '=', False)]}"
+                                    help="Restore auction activity: clear the live stage, delete this tournament’s auction history, and bring sold/unsold players back to In Auction. This cannot be undone.">
                                 <div class="o_stat_info">
-                                    <span class="o_stat_text text-danger">Clear Stage</span>
-                                    <span class="o_stat_text text-danger" style="font-size:10px">Reset On-Stage</span>
-                                </div>
-                            </button>
-                            <button name="action_clear_auction_history"
-                                    type="object"
-                                    class="oe_stat_button"
-                                    icon="fa-trash"
-                                    confirm="This will permanently delete all Auction History records for THIS tournament only. This cannot be undone. Continue?"
-                                    help="Delete auction.history entries for this tournament only"
-                                    attrs="{'invisible': [('active', '=', False)]}">
-                                <div class="o_stat_info">
-                                    <span class="o_stat_text text-danger">Clean History</span>
-                                    <span class="o_stat_text text-danger" style="font-size:10px">This Tournament</span>
+                                    <span class="o_stat_text">Restore</span>
+                                    <span class="o_stat_text" style="font-size:10px">Transactions</span>
                                 </div>
                             </button>
 
@@ -533,6 +515,8 @@
                                                    help="Show Org ID# on the public registered-players popup. Hidden unless Org ID# is collected on the form."/>
                                             <field name="expose_registered_address" widget="boolean_toggle"
                                                    help="Show player address on the public registered-players popup so friends can recognise each other."/>
+                                            <field name="player_address_required" widget="boolean_toggle"
+                                                   help="When on, Location / Address is mandatory on /player/register. When off, players may leave it blank."/>
                                         </group>
                                         <group string="How it works">
                                             <div class="o_at_presentation_help" colspan="2">
@@ -1041,6 +1025,16 @@
             </field>
         </record>
 
+        <!-- Action menu on tournament form: Export Players wizard -->
+        <record id="action_server_export_players" model="ir.actions.server">
+            <field name="name">Export Players</field>
+            <field name="model_id" ref="model_auction_tournament"/>
+            <field name="binding_model_id" ref="model_auction_tournament"/>
+            <field name="binding_view_types">form</field>
+            <field name="state">code</field>
+            <field name="code">action = records.action_export_sold_unsold()</field>
+        </record>
+
         <record id="action_auction_tournament" model="ir.actions.act_window">
             <field name="name">Tournament</field>
             <field name="res_model">auction.tournament</field>
@@ -1134,6 +1128,9 @@
                     <attribute name="readonly">1</attribute>
                 </field>
                 <field name="expose_registered_address" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+                <field name="player_address_required" position="attributes">
                     <attribute name="readonly">1</attribute>
                 </field>
                 <!-- max_registrations appears twice in the base view; target the

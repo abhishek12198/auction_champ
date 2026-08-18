@@ -84,6 +84,113 @@
         global.AC_POINT_UNIT = Object.assign({}, cfg(), obj);
     }
 
+    var SMALL = [
+        'Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+        'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
+        'Seventeen', 'Eighteen', 'Nineteen',
+    ];
+    var TENS = [
+        '', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety',
+    ];
+
+    function belowHundred(n) {
+        if (n < 20) {
+            return SMALL[n];
+        }
+        var t = Math.floor(n / 10);
+        var o = n % 10;
+        return o ? TENS[t] + ' ' + SMALL[o] : TENS[t];
+    }
+
+    function belowThousand(n) {
+        if (n < 100) {
+            return belowHundred(n);
+        }
+        var h = Math.floor(n / 100);
+        var r = n % 100;
+        return SMALL[h] + ' Hundred' + (r ? ' ' + belowHundred(r) : '');
+    }
+
+    /**
+     * Indian numbering: Thousand / Lakh / Crore.
+     * 10000 → "Ten Thousand"
+     */
+    function toWords(amount) {
+        var n = Math.trunc(Math.abs(Number(amount) || 0));
+        if (!isFinite(n)) {
+            n = 0;
+        }
+        if (n === 0) {
+            return 'Zero';
+        }
+        if (n >= 1e12) {
+            return numStr(n, true);
+        }
+        var parts = [];
+        var crore = Math.floor(n / 10000000);
+        n %= 10000000;
+        var lakh = Math.floor(n / 100000);
+        n %= 100000;
+        var thousand = Math.floor(n / 1000);
+        var rest = n % 1000;
+        if (crore) {
+            parts.push(toWords(crore) + ' Crore');
+        }
+        if (lakh) {
+            parts.push(belowThousand(lakh) + ' Lakh');
+        }
+        if (thousand) {
+            parts.push(belowThousand(thousand) + ' Thousand');
+        }
+        if (rest) {
+            parts.push(belowThousand(rest));
+        }
+        return parts.join(' ');
+    }
+
+    function singularUnit(unitName) {
+        var u = String(unitName || 'Points').trim() || 'Points';
+        if (/^points$/i.test(u)) {
+            return 'Point';
+        }
+        if (/ies$/i.test(u)) {
+            return u.replace(/ies$/i, 'y');
+        }
+        if (/s$/i.test(u) && !/ss$/i.test(u)) {
+            return u.replace(/s$/i, '');
+        }
+        return u;
+    }
+
+    function pluralUnit(unitName) {
+        var u = String(unitName || 'Points').trim() || 'Points';
+        if (/^points$/i.test(u) || /^point$/i.test(u)) {
+            return 'Points';
+        }
+        if (/s$/i.test(u)) {
+            return u;
+        }
+        var s = singularUnit(u);
+        if (/[sxz]$/i.test(s) || /(ch|sh)$/i.test(s)) {
+            return s + 'es';
+        }
+        if (/y$/i.test(s) && !/[aeiou]y$/i.test(s)) {
+            return s.slice(0, -1) + 'ies';
+        }
+        return s + 's';
+    }
+
+    function unitLabel(amount, unitName) {
+        var n = Math.trunc(Math.abs(Number(amount) || 0));
+        var unit = unitName || name();
+        return n === 1 ? singularUnit(unit) : pluralUnit(unit);
+    }
+
+    /** e.g. 10000 → "Ten Thousand Points" */
+    function formatWords(amount, unitName) {
+        return toWords(amount) + ' ' + unitLabel(amount, unitName);
+    }
+
     global.AuctionPointUnit = {
         format: format,
         formatHtml: formatHtml,
@@ -92,6 +199,9 @@
         name: name,
         setConfig: setConfig,
         cfg: cfg,
+        toWords: toWords,
+        formatWords: formatWords,
+        unitLabel: unitLabel,
     };
 
     // Convenience aliases used by consoles

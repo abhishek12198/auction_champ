@@ -281,6 +281,21 @@
                     </div>
                 </div>
 
+                <!-- Address required -->
+                <div class="tr-toggle-row" style="margin-bottom:10px;">
+                    <label class="tr-toggle">
+                        <input type="checkbox" name="player_address_required" value="1" id="addressRequiredToggle"/>
+                        <span class="tr-toggle-track"/>
+                    </label>
+                    <div class="tr-toggle-text">
+                        <strong>Address Required on Player Registration</strong>
+                        <span>
+                            When on, Location / Address is mandatory on /player/register.
+                            Leave off to keep the field optional.
+                        </span>
+                    </div>
+                </div>
+
                 <!-- Contact unmask is only available in Tournament Master after privacy agreement -->
                 <div class="tr-toggle-row" style="margin-bottom:10px; opacity:.75;">
                     <label class="tr-toggle" style="pointer-events:none;">

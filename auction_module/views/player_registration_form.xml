@@ -890,9 +890,18 @@
                     </div>
 
                     <div class="col-full">
-                        <label class="reg-label" for="address">Location / Address</label>
+                        <label class="reg-label" for="address">
+                            Location / Address
+                            <t t-if="tournament and tournament.player_address_required">
+                                <span class="req">*</span>
+                            </t>
+                            <t t-else="">
+                                <span class="reg-opt">(optional)</span>
+                            </t>
+                        </label>
                         <textarea id="address" name="address" class="reg-textarea"
-                                  placeholder="Street, City, State…" rows="2"/>
+                                  placeholder="Street, City, State…" rows="2"
+                                  t-att-required="'required' if tournament and tournament.player_address_required else None"/>
                     </div>
                 </div>
             </div>

@@ -37,6 +37,7 @@
                                        widget="boolean_toggle"/>
                                 <field name="new_global_base"
                                        string="Value"
+                                       widget="ac_points"
                                        attrs="{'readonly': [('apply_global_base', '=', False)]}"/>
                             </group>
                             <p class="text-muted" style="margin:0 0 10px;">
@@ -47,7 +48,7 @@
                                 <tree editable="bottom" create="0" delete="0"
                                       decoration-success="apply_max_players or apply_base_point or apply_max_call"
                                       class="o_update_tier_lines">
-                                    <field name="tier_id" string="Tier" readonly="1"/>
+                                    <field name="tier_id" string="Tier" readonly="1" force_save="1"/>
                                     <field name="apply_max_players"
                                            string="Max Players"
                                            widget="boolean_toggle"/>
@@ -59,12 +60,14 @@
                                            widget="boolean_toggle"/>
                                     <field name="new_base_point"
                                            string="Value"
+                                           widget="ac_points"
                                            attrs="{'readonly': [('apply_base_point', '=', False)]}"/>
                                     <field name="apply_max_call"
                                            string="Max Call"
                                            widget="boolean_toggle"/>
                                     <field name="new_max_call"
                                            string="Value (0=none)"
+                                           widget="ac_points"
                                            attrs="{'readonly': [('apply_max_call', '=', False)]}"/>
                                 </tree>
                             </field>
@@ -93,9 +96,9 @@
                             <field name="slab_ids" nolabel="1"
                                    attrs="{'readonly': [('update_slabs', '=', False)]}">
                                 <tree editable="bottom">
-                                    <field name="from_amount" string="From"/>
-                                    <field name="to_amount" string="To"/>
-                                    <field name="increment" string="Increment"/>
+                                    <field name="from_amount" string="From" widget="ac_points"/>
+                                    <field name="to_amount" string="To" widget="ac_points"/>
+                                    <field name="increment" string="Increment" widget="ac_points"/>
                                 </tree>
                             </field>
                         </page>
