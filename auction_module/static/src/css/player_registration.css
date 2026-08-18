@@ -2296,7 +2296,13 @@ a.reg-trust-card--cta .reg-trust-tx span {
 /* ═══════════════════════════════════════════════════════════════════
    REGISTERED PLAYERS POPUP
    ═══════════════════════════════════════════════════════════════════ */
-body.reg-roster-lock { overflow: hidden; }
+body.reg-roster-lock {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overscroll-behavior: none;
+}
 
 .reg-roster-cta {
     display: flex;
@@ -2389,6 +2395,7 @@ body.reg-roster-lock { overflow: hidden; }
     max-height: 100vh;
     max-height: 100dvh;
     box-sizing: border-box;
+    overscroll-behavior: contain;
 }
 .reg-roster-overlay.open { display: flex; }
 .reg-roster-dialog {
@@ -2494,11 +2501,12 @@ body.reg-roster-lock { overflow: hidden; }
     border-color: var(--reg-primary);
 }
 .reg-roster-body {
-    flex: 1 1 auto;
+    flex: 1 1 0;
     min-height: 0;
     overflow: auto;
     padding: 14px 16px 18px;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
 }
 .reg-roster-status {
     text-align: center;
@@ -2637,27 +2645,40 @@ body.reg-roster-lock { overflow: hidden; }
     .reg-roster-cta-copy b { font-size: .95rem; }
     .reg-roster-overlay {
         align-items: stretch;
-        justify-content: flex-end;
+        justify-content: stretch;
         padding: 0;
         padding-top: env(safe-area-inset-top, 0px);
+        height: 100%;
+        max-height: 100%;
     }
     .reg-roster-dialog {
         max-width: 100%;
         width: 100%;
-        height: auto;
-        max-height: 100vh;
-        max-height: 100svh;
-        max-height: calc(100dvh - env(safe-area-inset-top, 0px));
+        height: 100%;
+        max-height: 100%;
+        min-height: 0;
+        margin-top: 0;
         border-radius: 16px 16px 0 0;
-        margin-top: auto;
     }
     .reg-roster-head {
         padding: 10px 12px;
+        position: relative;
+        flex-shrink: 0;
     }
     .reg-roster-head h2 { font-size: 1.35rem; }
-    .reg-roster-toolbar { padding: 8px 10px 6px; gap: 8px; }
-    .reg-roster-search input { padding: 8px 0; font-size: .92rem; }
-    .reg-roster-body { padding: 8px 8px 14px; }
+    .reg-roster-toolbar {
+        padding: 8px 10px 6px;
+        gap: 8px;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 2;
+    }
+    .reg-roster-search input { padding: 8px 0; font-size: 16px; }
+    .reg-roster-body {
+        padding: 8px 8px max(18px, env(safe-area-inset-bottom, 12px));
+        flex: 1 1 0;
+        min-height: 0;
+    }
     .reg-roster-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
