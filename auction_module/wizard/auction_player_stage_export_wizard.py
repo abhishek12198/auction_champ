@@ -111,9 +111,33 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
             wiz.draft_count = Player.search_count(base + [('state', '=', 'draft')])
             wiz.sold_count = Player.search_count(base + [('state', '=', 'sold')])
             wiz.unsold_count = Player.search_count(base + [('state', '=', 'unsold')])
-            wiz.jersey_count = Player.search_count(
-                base + [('state', 'in', ('draft', 'auction', 'sold', 'unsold'))]
-            )
+            wiz.jersey_count = Player.search_count(wiz._jersey_player_domain())
+
+    def _jersey_player_domain(self):
+        """Jersey list: assigned ICON players + sold (non-draft/auction/unsold)."""
+        self.ensure_one()
+        return [
+            ('tournament_id', '=', self.tournament_id.id),
+            ('assigned_team_id', '!=', False),
+            '|',
+            ('icon_player', '=', True),
+            '&',
+            ('icon_player', '=', False),
+            ('state', '=', 'sold'),
+        ]
+
+    def _jersey_players(self):
+        """ICON players first within each team, then sold players."""
+        self.ensure_one()
+        return self.env['auction.team.player'].search(
+            self._jersey_player_domain(),
+            order='assigned_team_id, sl_no asc, name asc',
+        ).sorted(lambda p: (
+            (p.assigned_team_id.name or '').lower(),
+            0 if p.icon_player else 1,
+            p.sl_no or 0,
+            (p.name or '').lower(),
+        ))
 
     def action_generate_excel(self):
         self.ensure_one()
@@ -232,9 +256,6 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
                     'Row %d: Player ID %s not found in this tournament.'
                     % (row_idx, player_id)
                 )
-                continue
-            if player.icon_player:
-                skipped += 1
                 continue
 
             try:
@@ -446,6 +467,11 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
             'unsold': 'Unsold',
         }.get(state, state or '')
 
+    def _jersey_status_label(self, player):
+        if player.icon_player:
+            return '★ ICON'
+        return self._state_label(player.state)
+
     def _player_base_row(self, seq, player, include_player_id=False):
         row = []
         if include_player_id:
@@ -623,14 +649,7 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
     # ── Jersey export: 1 main sheet + Guidelines (sheet 2) ───────────────
 
     def _write_jersey_workbook(self, wb):
-        players = self.env['auction.team.player'].search(
-            [
-                ('tournament_id', '=', self.tournament_id.id),
-                ('icon_player', '=', False),
-                ('state', 'in', ('draft', 'auction', 'sold', 'unsold')),
-            ],
-            order='assigned_team_id, sl_no asc, name asc',
-        )
+        players = self._jersey_players()
         # Sheet 1 = data, Sheet 2 = guidelines
         self._write_jersey_main_sheet(wb, players)
         self._write_jersey_guidelines_sheet(wb)
@@ -666,19 +685,20 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
                % _IMPORT_SHEET_NAME, None, False),
             (6, '2. Do not change Player ID (needed to match players on import).', None, False),
             (7, '3. Other columns (name, mobile, attributes, team, status) are ignored on import.', None, False),
-            (8, '4. Save the file → Export Players → Import Jersey Updates.', None, False),
-            (10, 'JERSEY NAME', section_fill, True),
-            (11, '• Name printed on the jersey (usually short name / surname).', None, False),
-            (12, '• Use UPPERCASE. Maximum %d characters.' % _JERSEY_NAME_MAX, None, False),
-            (13, "• Allowed: A–Z, 0–9, space, hyphen (-), apostrophe ('), period (.).", None, False),
-            (14, "Examples OK: RAHUL  ·  D'SOUZA  ·  AL-AMIN", ok_fill, False),
-            (15, 'Avoid: emoji, @ # $ %, full sentences.', bad_fill, False),
-            (17, 'JERSEY NUMBER', section_fill, True),
-            (18, '• Squad / jersey number on the kit.', None, False),
-            (19, '• Maximum %d characters. Letters and digits only (no spaces).' % _JERSEY_NUMBER_MAX, None, False),
-            (20, 'Examples OK: 7  ·  10  ·  18  ·  99', ok_fill, False),
-            (21, 'Avoid: 1000 (too long), values with spaces, #18.', bad_fill, False),
-            (23, 'JERSEY SIZE — type exactly one of these codes', section_fill, True),
+            (8, '4. Rows include assigned ICON players (★ ICON) first, then Sold players. Draft / In Auction / Unsold are excluded.', None, False),
+            (9, '5. Save the file → Export Players → Import Jersey Updates.', None, False),
+            (11, 'JERSEY NAME', section_fill, True),
+            (12, '• Name printed on the jersey (usually short name / surname).', None, False),
+            (13, '• Use UPPERCASE. Maximum %d characters.' % _JERSEY_NAME_MAX, None, False),
+            (14, "• Allowed: A–Z, 0–9, space, hyphen (-), apostrophe ('), period (.).", None, False),
+            (15, "Examples OK: RAHUL  ·  D'SOUZA  ·  AL-AMIN", ok_fill, False),
+            (16, 'Avoid: emoji, @ # $ %, full sentences.', bad_fill, False),
+            (18, 'JERSEY NUMBER', section_fill, True),
+            (19, '• Squad / jersey number on the kit.', None, False),
+            (20, '• Maximum %d characters. Letters and digits only (no spaces).' % _JERSEY_NUMBER_MAX, None, False),
+            (21, 'Examples OK: 7  ·  10  ·  18  ·  99', ok_fill, False),
+            (22, 'Avoid: 1000 (too long), values with spaces, #18.', bad_fill, False),
+            (24, 'JERSEY SIZE — type exactly one of these codes', section_fill, True),
         ]
 
         for row_idx, text, fill, is_section in rows:
@@ -703,20 +723,20 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
             ('XXL', 'Double XL'),
             ('XXXL', 'Triple XL'),
         ]
-        ws['A24'] = 'Code'
-        ws['B24'] = 'Meaning'
-        ws['A24'].fill = tip_fill
-        ws['B24'].fill = tip_fill
-        ws['A24'].font = Font(bold=True, size=10)
-        ws['B24'].font = Font(bold=True, size=10)
+        ws['A25'] = 'Code'
+        ws['B25'] = 'Meaning'
+        ws['A25'].fill = tip_fill
+        ws['B25'].fill = tip_fill
+        ws['A25'].font = Font(bold=True, size=10)
+        ws['B25'].font = Font(bold=True, size=10)
 
         for i, (code, meaning) in enumerate(size_rows):
-            r = 25 + i
+            r = 26 + i
             ws.cell(row=r, column=1, value=code).font = Font(bold=True, size=11)
             ws.cell(row=r, column=1).fill = ok_fill
             ws.cell(row=r, column=2, value=meaning).font = Font(size=10)
 
-        note_row = 25 + len(size_rows) + 1
+        note_row = 26 + len(size_rows) + 1
         ws.merge_cells(start_row=note_row, start_column=1, end_row=note_row, end_column=2)
         ws.cell(
             row=note_row, column=1,
@@ -741,7 +761,7 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
             row=1, column=1,
             value=(
                 'EDIT YELLOW COLUMNS ONLY — Jersey Name / Number / Size  ·  '
-                'Players grouped by Assigned Team (colour bands)  ·  '
+                'ICON (★) players first, then Sold  ·  Draft / In Auction / Unsold excluded  ·  '
                 'Size codes → Guidelines sheet  ·  Other columns ignored on import'
             ),
         )
@@ -776,11 +796,19 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
         for idx, team in enumerate(teams):
             team_players = players.filtered(
                 lambda p, tid=team.id: p.assigned_team_id.id == tid
-            ).sorted(lambda p: (p.sl_no or 0, p.name or ''))
+            ).sorted(lambda p: (
+                0 if p.icon_player else 1,
+                p.sl_no or 0,
+                (p.name or '').lower(),
+            ))
             if team_players:
                 groups.append((team, team_players, idx % len(_TEAM_COLORS)))
         unassigned = players.filtered(lambda p: not p.assigned_team_id).sorted(
-            lambda p: (p.sl_no or 0, p.name or ''))
+            lambda p: (
+                0 if p.icon_player else 1,
+                p.sl_no or 0,
+                (p.name or '').lower(),
+            ))
         if unassigned:
             groups.append((None, unassigned, None))
 
@@ -816,7 +844,7 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
                     + self._jersey_values(player)
                     + [
                         player.assigned_team_id.name if player.assigned_team_id else '',
-                        self._state_label(player.state),
+                        self._jersey_status_label(player),
                     ]
                 )
                 for col_idx, value in enumerate(values, start=1):
@@ -834,6 +862,9 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
                         cell.fill = row_fill
                         if header == 'Player Name':
                             cell.font = Font(bold=True)
+                        if header == 'Status' and player.icon_player:
+                            cell.font = Font(bold=True, color='B45309')
+                            cell.alignment = Alignment(horizontal='center')
                         # Left accent bar feel on Sl.No
                         if header == 'Sl.No':
                             cell.fill = PatternFill('solid', fgColor=header_fg)

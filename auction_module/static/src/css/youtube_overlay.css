@@ -1,0 +1,1035 @@
+/* AuctionChamp live broadcast overlay — isolated to .auctionchamp-live-overlay */
+
+html[data-page="obs"],
+html[data-page="obs"] body {
+    background: transparent !important;
+}
+
+html[data-page="watch"],
+html[data-page="watch"] body {
+    background: #05070c;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    font-family: 'Exo 2', 'Barlow Condensed', sans-serif;
+}
+
+html[data-theme="lemon"]{
+  --panel:rgba(32,24,8,.88);--tx:#fff8e8;--tx2:rgba(255,248,232,.7);
+  --gold:#C9A400;--gold2:#D9B820;--line:rgba(201,164,0,.45);
+  --danger:#c62828;--ok:#43a047;
+}
+html[data-theme="vanilla"]{
+  --panel:rgba(18,32,54,.9);--tx:#eef2f8;--tx2:rgba(238,242,248,.68);
+  --gold:#c9b27a;--gold2:#dfcb9a;--line:rgba(138,166,200,.4);
+  --danger:#e5394a;--ok:#2ecc71;
+}
+html[data-theme="butterscotch"]{
+  --panel:rgba(8,12,22,.9);--tx:#fff;--tx2:rgba(255,255,255,.62);
+  --gold:#F5C842;--gold2:#FF9F1C;--line:rgba(245,200,66,.45);
+  --danger:#e53935;--ok:#2ecc71;
+}
+html[data-theme="strawberry"]{
+  --panel:rgba(42,10,22,.9);--tx:#fff5f8;--tx2:rgba(255,245,248,.68);
+  --gold:#E91E63;--gold2:#F48FB1;--line:rgba(233,30,99,.42);
+  --danger:#ad1457;--ok:#2e7d32;
+}
+html[data-theme="cherry"]{
+  --panel:rgba(18,6,10,.9);--tx:#fff5f7;--tx2:rgba(255,245,247,.64);
+  --gold:#E8C547;--gold2:#FB7185;--line:rgba(225,29,72,.42);
+  --danger:#E11D48;--ok:#2ecc71;
+}
+html[data-theme="blackberry"]{
+  --panel:rgba(8,14,28,.9);--tx:#fff;--tx2:rgba(255,255,255,.64);
+  --gold:#3B82F6;--gold2:#93C5FD;--line:rgba(59,130,246,.45);
+  --danger:#e53935;--ok:#66bb6a;
+}
+html[data-theme="pistah"]{
+  --panel:rgba(8,18,10,.9);--tx:#e8f5e9;--tx2:rgba(232,245,233,.64);
+  --gold:#6BBF4E;--gold2:#A8E063;--line:rgba(107,191,78,.42);
+  --danger:#e53935;--ok:#66bb6a;
+}
+
+#ytWatchStage {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background: #05070c;
+}
+#ytWatchFrame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+.ytov-watch-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+.ytov-watch-empty-card {
+    max-width: 32rem;
+    padding: 1.6rem 1.8rem;
+    border-radius: 1rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--tx);
+    text-align: center;
+}
+.ytov-watch-empty-card h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: .06em;
+    margin-bottom: .4rem;
+}
+.ytov-watch-empty-card p {
+    color: var(--tx2);
+    line-height: 1.45;
+    font-size: .95rem;
+}
+
+html[data-page="watch"] .ytov-watch-fs {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 6;
+    pointer-events: auto;
+    cursor: pointer;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--tx);
+    font-family: 'Exo 2', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    border-radius: 999px;
+}
+html[data-page="watch"] .ytov-watch-landscape {
+    display: none;
+    position: fixed;
+    right: 20px;
+    bottom: 64px;
+    z-index: 6;
+    pointer-events: auto;
+    cursor: pointer;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--tx);
+    font-family: 'Exo 2', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: 9px 13px;
+    border-radius: 999px;
+}
+html[data-page="watch"] .ytov-watch-landscape:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+}
+html[data-page="watch"] .ytov-watch-fs:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+}
+html[data-page="watch"]:fullscreen .ytov-watch-fs,
+html[data-page="watch"]:-webkit-full-screen .ytov-watch-fs {
+    opacity: .7;
+}
+
+.auctionchamp-live-overlay,
+.auctionchamp-live-overlay * {
+    box-sizing: border-box;
+}
+
+.auctionchamp-live-overlay {
+    --ac-primary: var(--gold);
+    --ac-secondary: var(--gold2);
+    --ac-accent: var(--gold);
+    --ac-text: var(--tx);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    width: 1920px;
+    height: 1080px;
+    transform-origin: top left;
+    pointer-events: none;
+    color: var(--ac-text);
+    padding: 56px 64px 168px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.auctionchamp-live-overlay .ident-bar,
+.auctionchamp-live-overlay .meta-bar,
+.auctionchamp-live-overlay .ipl-player-card,
+.auctionchamp-live-overlay .wait-chip,
+.auctionchamp-live-overlay .pause-banner,
+.auctionchamp-live-overlay .complete-banner,
+.auctionchamp-live-overlay .footer-bar,
+.auctionchamp-live-overlay .sponsor-display,
+.auctionchamp-live-overlay .branding,
+.auctionchamp-live-overlay .overlay-stack {
+    pointer-events: none;
+}
+
+.auctionchamp-live-overlay .top-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.auctionchamp-live-overlay .ident-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    max-width: 680px;
+    padding: 8px 12px 8px 8px;
+    border-radius: 16px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+}
+
+.auctionchamp-live-overlay .ident-logo,
+.auctionchamp-live-overlay .ident-logo-ph {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    object-fit: contain;
+    background: rgba(0,0,0,.25);
+    flex-shrink: 0;
+}
+
+.auctionchamp-live-overlay .ident-logo-ph {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+
+.auctionchamp-live-overlay .ident-logo-ph:empty {
+    display: none;
+}
+
+.auctionchamp-live-overlay .ident-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+}
+
+.auctionchamp-live-overlay .ident-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    letter-spacing: .04em;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.auctionchamp-live-overlay .ident-season {
+    font-size: 14px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--tx2);
+    font-weight: 700;
+    margin-top: 4px;
+}
+
+.auctionchamp-live-overlay .meta-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    flex-shrink: 0;
+}
+
+.auctionchamp-live-overlay .live-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    letter-spacing: .16em;
+    font-size: 14px;
+}
+
+.auctionchamp-live-overlay .live-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--danger);
+    box-shadow: 0 0 8px var(--danger);
+}
+
+.auctionchamp-live-overlay .progress-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: .04em;
+    color: var(--ac-primary);
+}
+
+.auctionchamp-live-overlay .conn-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ok);
+    opacity: .55;
+}
+.auctionchamp-live-overlay[data-conn="connecting"] .conn-dot,
+.auctionchamp-live-overlay[data-conn="reconnecting"] .conn-dot {
+    background: var(--gold);
+}
+.auctionchamp-live-overlay[data-conn="disconnected"] .conn-dot {
+    background: var(--danger);
+}
+
+.auctionchamp-live-overlay .wait-chip {
+    position: absolute;
+    left: 64px;
+    bottom: 168px;
+    padding: 10px 20px;
+    border-radius: 999px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--tx2);
+}
+
+.auctionchamp-live-overlay .pause-banner,
+.auctionchamp-live-overlay .complete-banner {
+    position: absolute;
+    left: 50%;
+    top: 46%;
+    transform: translate(-50%, -50%);
+    padding: 14px 28px;
+    border-radius: 12px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    letter-spacing: .12em;
+    color: var(--ac-text);
+    text-align: center;
+}
+
+.auctionchamp-live-overlay .complete-banner {
+    color: var(--ac-primary);
+}
+
+.auctionchamp-live-overlay .wait-chip[hidden],
+.auctionchamp-live-overlay .ipl-player-card[hidden],
+.auctionchamp-live-overlay .ipl-live-box[hidden],
+.auctionchamp-live-overlay .ipl-bid-team[hidden],
+.auctionchamp-live-overlay .ipl-stamp[hidden],
+.auctionchamp-live-overlay .pause-banner[hidden],
+.auctionchamp-live-overlay .complete-banner[hidden],
+.auctionchamp-live-overlay .sponsor-display[hidden] {
+    display: none !important;
+}
+
+.auctionchamp-live-overlay .bottom-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+.auctionchamp-live-overlay .overlay-stack {
+    position: absolute;
+    left: 64px;
+    right: 64px;
+    bottom: 96px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
+    width: auto;
+    margin-top: 0;
+    padding-bottom: 0;
+}
+
+/* IPL-style unified player card (photo + name + base + live bid + attributes) */
+.auctionchamp-live-overlay .ipl-player-card {
+    display: flex;
+    align-items: stretch;
+    gap: 20px;
+    min-width: 0;
+    max-width: 760px;
+    padding: 14px 22px 14px 14px;
+    border-radius: 18px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+}
+
+.auctionchamp-live-overlay[data-state="player_intro"] .ipl-player-card {
+    animation: ac-lo-intro .7s ease-out;
+}
+
+.auctionchamp-live-overlay .ipl-player-card.is-sold {
+    border-color: var(--ok);
+}
+.auctionchamp-live-overlay .ipl-player-card.is-unsold {
+    border-color: var(--danger);
+}
+
+.auctionchamp-live-overlay .ipl-photo-wrap {
+    position: relative;
+    width: 130px;
+    flex-shrink: 0;
+}
+
+.auctionchamp-live-overlay .ipl-photo,
+.auctionchamp-live-overlay .ipl-photo-ph {
+    width: 130px;
+    height: 156px;
+    border-radius: 12px;
+    object-fit: cover;
+    object-position: top center;
+    background: rgba(0,0,0,.3);
+    border: 1px solid var(--line);
+}
+
+.auctionchamp-live-overlay .ipl-photo-ph {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+}
+
+.auctionchamp-live-overlay .ipl-photo.is-on {
+    position: relative;
+    z-index: 1;
+}
+
+.auctionchamp-live-overlay .ipl-body {
+    min-width: 0;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 10px;
+    flex: 1;
+}
+
+.auctionchamp-live-overlay .ipl-main {
+    min-width: 0;
+    flex: 1;
+}
+
+.auctionchamp-live-overlay .ipl-attrs {
+    width: 170px;
+    min-width: 170px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.auctionchamp-live-overlay .ipl-lot {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--ac-secondary);
+}
+
+.auctionchamp-live-overlay .ipl-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px;
+    letter-spacing: .04em;
+    line-height: .92;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.auctionchamp-live-overlay .ipl-prices {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.auctionchamp-live-overlay .ipl-price-box {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(0,0,0,.22);
+    min-width: 120px;
+}
+
+.auctionchamp-live-overlay .ipl-base-box .ipl-price-label {
+    color: var(--tx2);
+}
+
+.auctionchamp-live-overlay .ipl-live-box {
+    border-color: var(--gold);
+    background: rgba(255, 193, 7, .08);
+    box-shadow: 0 0 18px rgba(255, 193, 7, .15);
+}
+
+.auctionchamp-live-overlay .ipl-player-card.has-live-bid .ipl-live-box {
+    border-color: var(--ac-primary);
+    background: rgba(255, 193, 7, .12);
+    box-shadow: 0 0 22px rgba(255, 193, 7, .22);
+}
+
+.auctionchamp-live-overlay .ipl-player-card.is-sold .ipl-live-box {
+    border-color: var(--ok);
+    background: rgba(76, 175, 80, .12);
+    box-shadow: 0 0 18px rgba(76, 175, 80, .2);
+}
+
+.auctionchamp-live-overlay .ipl-price-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ac-primary);
+}
+
+.auctionchamp-live-overlay .ipl-player-card.is-sold .ipl-live-box .ipl-price-label {
+    color: var(--ok);
+}
+
+.auctionchamp-live-overlay .ipl-price-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 44px;
+    line-height: 1;
+    letter-spacing: .02em;
+}
+
+.auctionchamp-live-overlay .ipl-live-box .ipl-price-val {
+    font-size: 52px;
+    color: var(--gold);
+}
+
+.auctionchamp-live-overlay .ipl-player-card.is-sold .ipl-live-box .ipl-price-val {
+    color: var(--ok);
+}
+
+.auctionchamp-live-overlay .ipl-live-box.is-tick .ipl-price-val {
+    animation: ac-lo-tick .4s ease;
+}
+
+.auctionchamp-live-overlay .ipl-chips {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin-top: 0;
+    width: 100%;
+}
+
+.auctionchamp-live-overlay .ipl-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(0,0,0,.2);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ac-secondary);
+}
+
+.auctionchamp-live-overlay .ipl-bid-team {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--tx2);
+}
+
+.auctionchamp-live-overlay .ipl-bid-team-logo,
+.auctionchamp-live-overlay .ipl-bid-team-ph {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: contain;
+    background: rgba(255,255,255,.08);
+    flex-shrink: 0;
+}
+
+.auctionchamp-live-overlay .ipl-bid-team-ph {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.auctionchamp-live-overlay .ipl-stamp {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: .16em;
+    margin-top: 2px;
+}
+
+.auctionchamp-live-overlay[data-state="sold"] .ipl-stamp {
+    color: var(--ok);
+    animation: ac-lo-sold .55s ease-out;
+}
+
+.auctionchamp-live-overlay[data-state="unsold"] .ipl-stamp {
+    color: var(--danger);
+}
+
+.auctionchamp-live-overlay .team-logo,
+.auctionchamp-live-overlay .team-logo-ph {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: contain;
+    background: rgba(255,255,255,.08);
+}
+
+.auctionchamp-live-overlay .team-logo-ph {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.auctionchamp-live-overlay .footer-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 20px;
+    width: auto;
+    transform: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    z-index: 1;
+    padding: 0 64px;
+    box-sizing: border-box;
+}
+
+html[data-page="obs"] .auctionchamp-live-overlay .footer-bar {
+    transform: translateX(72px);
+}
+
+.auctionchamp-live-overlay .sponsor-display {
+    width: max-content;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 8px 22px 10px;
+    border-radius: 14px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.auctionchamp-live-overlay .sponsor-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--ac-secondary);
+    text-align: center;
+    width: 100%;
+}
+
+.auctionchamp-live-overlay .sponsor-track {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px 22px;
+}
+
+.auctionchamp-live-overlay .sponsor-logo {
+    height: 44px;
+    width: auto;
+    max-width: 140px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,.35));
+}
+
+.auctionchamp-live-overlay .branding {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    opacity: .9;
+}
+
+.auctionchamp-live-overlay .branding img {
+    height: 28px;
+    width: auto;
+    display: block;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,.45));
+}
+
+@keyframes ac-lo-intro {
+    from { opacity: 0; transform: translateX(-28px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+@keyframes ac-lo-tick {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.08); color: var(--ac-secondary); }
+    100% { transform: scale(1); }
+}
+@keyframes ac-lo-sold {
+    from { transform: scale(1.35); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* Watch page — fluid HUD (OBS keeps the 1920×1080 canvas) */
+html[data-page="watch"] .auctionchamp-live-overlay {
+    width: 100%;
+    height: 100%;
+    transform: none !important;
+    padding: 20px 20px 96px;
+}
+html[data-page="watch"] .auctionchamp-live-overlay .overlay-stack {
+    left: 20px;
+    right: 20px;
+    bottom: 84px;
+}
+html[data-page="watch"] .auctionchamp-live-overlay .ident-name {
+    font-size: clamp(20px, 3.2vw, 42px);
+}
+html[data-page="watch"] .auctionchamp-live-overlay .ident-season {
+    font-size: clamp(11px, 1.15vw, 14px);
+    letter-spacing: .11em;
+}
+html[data-page="watch"] .auctionchamp-live-overlay .progress-label {
+    font-size: clamp(18px, 2.2vw, 28px);
+}
+html[data-page="watch"] .auctionchamp-live-overlay .ipl-name {
+    font-size: clamp(32px, 4.4vw, 52px);
+}
+html[data-page="watch"] .auctionchamp-live-overlay .ipl-price-val {
+    font-size: clamp(30px, 3.5vw, 44px);
+}
+html[data-page="watch"] .auctionchamp-live-overlay .ipl-live-box .ipl-price-val {
+    font-size: clamp(34px, 4vw, 52px);
+}
+html[data-page="watch"] .auctionchamp-live-overlay .footer-bar {
+    transform: none;
+    padding: 0 20px;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (max-width: 900px) {
+    html[data-page="watch"] .ytov-watch-fs {
+        display: none;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay {
+        padding: 10px 10px 76px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .overlay-stack {
+        left: 10px;
+        right: 10px;
+        bottom: 70px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .top-row {
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: stretch;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ident-bar {
+        max-width: none;
+        flex: 1 1 210px;
+        padding: 6px 9px 6px 6px;
+        border-radius: 10px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ident-logo,
+    html[data-page="watch"] .auctionchamp-live-overlay .ident-logo-ph {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ident-name {
+        font-size: clamp(16px, 4.1vw, 21px);
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ident-season {
+        font-size: clamp(9px, 2.2vw, 11px);
+        letter-spacing: .06em;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .meta-bar {
+        padding: 5px 8px;
+        gap: 6px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .live-pill {
+        font-size: 10px;
+        letter-spacing: .08em;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .progress-label {
+        font-size: clamp(12px, 3.2vw, 16px);
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .wait-chip {
+        left: 12px;
+        bottom: 86px;
+        max-width: calc(100% - 24px);
+        font-size: 11px;
+        padding: 7px 10px;
+        letter-spacing: .08em;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .pause-banner,
+    html[data-page="watch"] .auctionchamp-live-overlay .complete-banner {
+        font-size: clamp(22px, 7.2vw, 30px);
+        padding: 10px 16px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-player-card {
+        max-width: min(100%, 430px);
+        gap: 6px;
+        padding: 6px 7px 6px 6px;
+        border-radius: 12px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-photo-wrap {
+        width: 56px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-photo,
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-photo-ph {
+        width: 56px;
+        height: 68px;
+        border-radius: 7px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-body {
+        gap: 6px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-attrs {
+        width: 112px;
+        min-width: 112px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-name {
+        font-size: clamp(15px, 3.6vw, 20px);
+        line-height: .95;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-lot {
+        font-size: 8px;
+        letter-spacing: .09em;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-prices {
+        gap: 5px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-price-box {
+        padding: 3px 6px;
+        min-width: 64px;
+        border-radius: 7px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-price-label {
+        font-size: 7px;
+        letter-spacing: .07em;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-price-val {
+        font-size: clamp(14px, 3.2vw, 17px);
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-live-box .ipl-price-val {
+        font-size: clamp(15px, 3.4vw, 19px);
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-chips {
+        gap: 4px;
+        margin-top: 2px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-chip {
+        font-size: 8px;
+        padding: 2px 6px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-bid-team {
+        font-size: 11px;
+        gap: 6px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-bid-team-logo,
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-bid-team-ph {
+        width: 18px;
+        height: 18px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-stamp {
+        font-size: 17px;
+        letter-spacing: .12em;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .footer-bar {
+        bottom: 8px;
+        gap: 7px;
+        padding: 0 12px;
+        align-items: flex-end;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .sponsor-display {
+        padding: 6px 12px 8px;
+        border-radius: 10px;
+        margin-left: auto;
+        margin-right: 0;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .sponsor-label {
+        font-size: 9px;
+        letter-spacing: .14em;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .sponsor-track {
+        gap: 8px 10px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .sponsor-logo {
+        height: 24px;
+        max-width: 76px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .branding img {
+        height: 18px;
+    }
+    html[data-page="watch"] .ytov-watch-landscape {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        right: 12px;
+        bottom: calc(12px + env(safe-area-inset-bottom));
+    }
+}
+
+@media (max-width: 480px) {
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-player-card {
+        max-width: 100%;
+        padding: 5px 6px;
+        gap: 5px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-photo-wrap {
+        width: 50px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-photo,
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-photo-ph {
+        width: 50px;
+        height: 60px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-attrs {
+        width: 98px;
+        min-width: 98px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-name {
+        font-size: clamp(14px, 4.6vw, 18px);
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-price-box {
+        min-width: 58px;
+        padding: 3px 5px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-price-val {
+        font-size: clamp(12px, 4vw, 15px);
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-live-box .ipl-price-val {
+        font-size: clamp(13px, 4.2vw, 16px);
+    }
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+    html[data-page="watch"] .auctionchamp-live-overlay {
+        padding: 8px 10px 58px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .overlay-stack {
+        left: 10px;
+        right: 10px;
+        bottom: 52px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .top-row {
+        gap: 6px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ident-bar {
+        flex: 1 1 240px;
+        padding: 5px 8px 5px 5px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ident-name {
+        font-size: clamp(14px, 2.2vw, 18px);
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .meta-bar {
+        padding: 4px 7px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .live-pill,
+    html[data-page="watch"] .auctionchamp-live-overlay .progress-label {
+        font-size: 10px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .wait-chip {
+        font-size: 10px;
+        padding: 6px 9px;
+        bottom: 64px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-player-card {
+        max-width: min(100%, 390px);
+        padding: 5px 6px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-photo-wrap,
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-photo,
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-photo-ph {
+        width: 48px;
+        height: 56px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-attrs {
+        width: 92px;
+        min-width: 92px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-name {
+        font-size: clamp(13px, 2.2vw, 16px);
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-price-box {
+        min-width: 52px;
+        padding: 3px 5px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-price-val {
+        font-size: clamp(11px, 1.9vw, 14px);
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-live-box .ipl-price-val {
+        font-size: clamp(12px, 2.1vw, 15px);
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .ipl-chip {
+        font-size: 8px;
+        padding: 2px 6px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .footer-bar {
+        bottom: 6px;
+        gap: 5px;
+        align-items: flex-end;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .sponsor-display {
+        padding: 5px 10px 6px;
+        margin-left: auto;
+        margin-right: 0;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .sponsor-logo {
+        height: 18px;
+        max-width: 60px;
+    }
+    html[data-page="watch"] .auctionchamp-live-overlay .branding img {
+        height: 14px;
+    }
+    html[data-page="watch"] .ytov-watch-landscape {
+        bottom: calc(10px + env(safe-area-inset-bottom));
+    }
+}

@@ -51,6 +51,11 @@ from odoo.exceptions import UserError
 from odoo.tools.image import image_data_uri, image_process
 from odoo.exceptions import UserError, ValidationError
 
+_YOUTUBE_ID_RE = re.compile(
+    r'(?:youtu\.be/|youtube(?:-nocookie)?\.com/(?:watch\?(?:.*&)?v=|embed/|live/|shorts/))'
+    r'([A-Za-z0-9_-]{11})'
+)
+
 import werkzeug
 import werkzeug.exceptions
 
@@ -574,6 +579,26 @@ class AuctionTournament(models.Model):
              'display_auction (Random) or player_selector (Manual). '
              'Available only after auction rules are set for this tournament.',
     )
+    youtube_url = fields.Char(
+        string='YouTube Stream URL',
+        help='Watch, Live, or youtu.be link used on the public Watch page. '
+             'OBS overlay does not need this — it sits on the camera in OBS.',
+    )
+    youtube_overlay_url = fields.Char(
+        string='YouTube Overlay URL',
+        compute='_compute_urls',
+        store=False,
+        help='Transparent 1920×1080 page for OBS Browser Source. Updates from '
+             'the same live projector snapshot (Redis/SSE). Available after '
+             'auction rules are set.',
+    )
+    youtube_watch_url = fields.Char(
+        string='YouTube Watch URL',
+        compute='_compute_urls',
+        store=False,
+        help='Public page: YouTube stream plus player overlay. Available after '
+             'auction rules are set. Paste a YouTube URL above for the embed.',
+    )
     live_board_url = fields.Char(
         string='Live Board URL',
         compute='_compute_urls',
@@ -696,8 +721,14 @@ class AuctionTournament(models.Model):
             # Projector is only useful once team auction rules exist.
             if rec.slug and rec.auction_rule_ids:
                 rec.projector_url = '{}/{}/auction/projector/{}/'.format(base_url, db_name, rec.slug)
+                rec.youtube_overlay_url = '{}/{}/auction/yt-overlay/{}/'.format(
+                    base_url, db_name, rec.slug)
+                rec.youtube_watch_url = '{}/{}/{}/auction/watch'.format(
+                    base_url, db_name, rec.slug)
             else:
                 rec.projector_url = False
+                rec.youtube_overlay_url = False
+                rec.youtube_watch_url = False
 
             # Public live board — shareable with outsiders (no auction-rules gate)
             if rec.slug:
@@ -857,6 +888,7 @@ class AuctionTournament(models.Model):
         self._ensure_show_registration_capacity_column()
         self._ensure_registered_list_privacy_columns()
         self._ensure_player_address_required_column()
+        self._ensure_youtube_url_column()
 
         # Migrate legacy single tournament_date values into date lines + char.
         cr.execute("""
@@ -967,6 +999,22 @@ class AuctionTournament(models.Model):
              WHERE player_address_required IS NULL
         """)
 
+    def _ensure_youtube_url_column(self):
+        """Create youtube_url without requiring -u on deploy."""
+        cr = self.env.cr
+        cr.execute("""
+            SELECT 1
+              FROM information_schema.columns
+             WHERE table_name = 'auction_tournament'
+               AND column_name = 'youtube_url'
+        """)
+        if cr.fetchone():
+            return
+        cr.execute("""
+            ALTER TABLE auction_tournament
+                ADD COLUMN youtube_url varchar
+        """)
+
     def _ensure_live_snapshot_seq_column(self):
         """Create live_snapshot_seq without requiring -u on every deploy."""
         cr = self.env.cr
@@ -995,6 +1043,7 @@ class AuctionTournament(models.Model):
         self._ensure_show_registration_capacity_column()
         self._ensure_registered_list_privacy_columns()
         self._ensure_player_address_required_column()
+        self._ensure_youtube_url_column()
         self._ensure_live_snapshot_seq_column()
 
     def set_dice_state(self, state, number=0):
@@ -1303,6 +1352,8 @@ class AuctionTournament(models.Model):
                 # team balance & payment config
                 'team_max_points', 'payment_qr_image', 'payment_instruction',
                 'payment_proof_required',
+                # YouTube overlay / watch embed
+                'youtube_url',
                 # tournament poster on the registration page
                 'poster_image',
                 # contact unmask (wizard + remask button)
@@ -1638,6 +1689,45 @@ class AuctionTournament(models.Model):
         if not url:
             raise UserError(_(
                 'Projector URL is not available. Set auction rules and ensure '
+                'the tournament has a slug first.'
+            ))
+        return {
+            'type': 'ir.actions.act_url',
+            'url': url,
+            'target': 'new',
+        }
+
+    def youtube_embed_id(self):
+        """11-character YouTube video / live ID, or empty."""
+        self.ensure_one()
+        raw = (self.youtube_url or '').strip()
+        if not raw:
+            return ''
+        match = _YOUTUBE_ID_RE.search(raw)
+        return match.group(1) if match else ''
+
+    def action_open_youtube_overlay(self):
+        """Open the transparent OBS overlay in a new tab."""
+        self.ensure_one()
+        url = self.youtube_overlay_url
+        if not url:
+            raise UserError(_(
+                'YouTube Overlay URL is not available. Set auction rules and '
+                'ensure the tournament has a slug first.'
+            ))
+        return {
+            'type': 'ir.actions.act_url',
+            'url': url,
+            'target': 'new',
+        }
+
+    def action_open_youtube_watch(self):
+        """Open the public Watch page in a new tab."""
+        self.ensure_one()
+        url = self.youtube_watch_url
+        if not url:
+            raise UserError(_(
+                'Watch URL is not available. Set auction rules and ensure '
                 'the tournament has a slug first.'
             ))
         return {

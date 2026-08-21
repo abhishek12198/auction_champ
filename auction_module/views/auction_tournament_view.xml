@@ -681,6 +681,66 @@
                                 </div>
 
                                 <div class="o_at_presentation_section o_at_helper_links">
+                                    <separator string="YouTube Overlay"/>
+                                    <group col="2" attrs="{'invisible': [('has_auction_rules', '=', False)]}">
+                                        <group string="Stream &amp; URLs">
+                                            <field name="youtube_url"
+                                                   placeholder="https://www.youtube.com/watch?v=… or Live URL"
+                                                   help="Used on the public Watch page. OBS overlay is transparent and does not embed YouTube."/>
+                                            <field name="youtube_overlay_url" widget="CopyClipboardChar"
+                                                   readonly="1" string="OBS Overlay URL"/>
+                                            <field name="youtube_watch_url" widget="CopyClipboardChar"
+                                                   readonly="1" string="Watch URL"/>
+                                        </group>
+                                        <group string="How it works">
+                                            <div class="o_at_helper_side" colspan="2">
+                                                <div class="o_at_presentation_help">
+                                                    Viewers on <strong>youtube.com</strong> only see what
+                                                    OBS sends. AuctionChamp cannot draw graphics on
+                                                    YouTube’s own page.<br/><br/>
+                                                    <strong>For YouTube Live viewers:</strong> add
+                                                    <strong>OBS Overlay URL</strong> as a Browser Source
+                                                    (1920×1080, transparent). It sits on the camera;
+                                                    OBS composites it into the stream. Then share the
+                                                    normal YouTube Live / Watch link — the overlay is
+                                                    already in the video.<br/><br/>
+                                                    OBS: FPS 30, Custom CSS empty, transparent
+                                                    background. Do not use YouTube Studio as a browser
+                                                    for this HTML.<br/><br/>
+                                                    <strong>AuctionChamp Watch URL:</strong> optional
+                                                    second page. Paste the YouTube URL in the field
+                                                    above, then share <em>this</em> Watch link (not
+                                                    youtube.com) if you want live HTML graphics on
+                                                    top of an embed. Use this for testing or for
+                                                    viewers you send to AuctionChamp.
+                                                </div>
+                                                <div class="o_at_helper_actions">
+                                                    <button name="action_open_youtube_overlay"
+                                                            type="object"
+                                                            string="OBS Overlay"
+                                                            class="o_at_helper_btn o_at_helper_btn_yt"
+                                                            icon="fa-youtube-play"
+                                                            attrs="{'invisible': [('youtube_overlay_url', '=', False)]}"/>
+                                                    <button name="action_open_youtube_watch"
+                                                            type="object"
+                                                            string="Watch"
+                                                            class="o_at_helper_btn o_at_helper_btn_ytwatch"
+                                                            icon="fa-play-circle"
+                                                            attrs="{'invisible': [('youtube_watch_url', '=', False)]}"/>
+                                                </div>
+                                            </div>
+                                        </group>
+                                    </group>
+                                    <div class="alert alert-warning" role="alert"
+                                         attrs="{'invisible': [('has_auction_rules', '=', True)]}"
+                                         style="margin:8px 0 0;">
+                                        <strong>Auction rules required.</strong>
+                                        Set Auction Rules before the YouTube Overlay and Watch URLs
+                                        become available.
+                                    </div>
+                                </div>
+
+                                <div class="o_at_presentation_section o_at_helper_links">
                                     <separator string="Public Live Board"/>
                                     <group col="2">
                                         <group string="Share URL">
@@ -1148,6 +1208,9 @@
                     <attribute name="readonly">0</attribute>
                 </field>
                 <field name="poster_image" position="attributes">
+                    <attribute name="readonly">0</attribute>
+                </field>
+                <field name="youtube_url" position="attributes">
                     <attribute name="readonly">0</attribute>
                 </field>
 

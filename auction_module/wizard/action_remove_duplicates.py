@@ -278,6 +278,27 @@ class AuctionRemoveDuplicatesWizard(models.TransientModel):
             'target': 'new',
         }
 
+    def _auto_open_registration(self):
+        """Open registration if it's closed and slots are still available."""
+        t = self.tournament_id
+        if not t or t.registration_open:
+            return
+        max_reg = t.max_registrations or 0
+        if max_reg:
+            current = self.env['auction.team.player'].search_count([
+                ('tournament_id', '=', t.id),
+                ('state', '=', 'draft'),
+            ])
+            if current >= max_reg:
+                return
+        t.registration_open = True
+        url = t.registration_url or ''
+        self.env.user.notify_info(
+            message='Registration auto-opened.%s' % (
+                ' URL: %s' % url if url else ''),
+            title='Registration Open ✓',
+        )
+
     # ── Standalone resequence (no duplicate detection needed) ────────────
     def action_resequence_only(self):
         if not any([self.include_draft, self.include_auction]):
@@ -307,6 +328,7 @@ class AuctionRemoveDuplicatesWizard(models.TransientModel):
                 len(players), len(players), updated),
             title='Resequence Complete ✓',
         )
+        self._auto_open_registration()
         return {'type': 'ir.actions.act_window_close'}
 
     # ── Remove by serial numbers (draft only) + resequence all remaining ─
@@ -353,6 +375,7 @@ class AuctionRemoveDuplicatesWizard(models.TransientModel):
                 count, len(remaining)),
             title='Players Removed ✓',
         )
+        self._auto_open_registration()
         return {'type': 'ir.actions.act_window_close'}
 
     # ── Step 2 → Step 1: back ─────────────────────────────────────────────
@@ -388,4 +411,5 @@ class AuctionRemoveDuplicatesWizard(models.TransientModel):
             message='%d duplicate(s) removed. Sequence numbers reissued 1 – %d.' % (count, len(remaining)),
             title='Duplicates Removed ✓',
         )
+        self._auto_open_registration()
         return {'type': 'ir.actions.act_window_close'}

@@ -1098,6 +1098,16 @@ class Auction(http.Controller):
         from odoo.addons.auction_module.services.auction_live_payload import (
             player_bucket_counts,
         )
+        # View Tiers only when multiple non-icon tiers exist (single tier = no value).
+        Tier = request.env['auction.player.tier'].sudo()
+        non_icon_tier_ids = set(Tier.search([
+            ('tournament_id', '=', tournament.id),
+            ('is_an_icon_tier', '=', False),
+        ]).ids)
+        if len(non_icon_tier_ids) <= 1 and auctions:
+            for tl in auctions.mapped('tier_limit_ids'):
+                if tl.tier_id and not tl.tier_id.is_an_icon_tier:
+                    non_icon_tier_ids.add(tl.tier_id.id)
         return request.render(template_ref, {
             'teams': auctions,
             'tournament': tournament,
@@ -1109,6 +1119,7 @@ class Auction(http.Controller):
             'mode': mode,
             'res_company': company,
             'player_counts': player_bucket_counts(request.env, tournament),
+            'show_tiers_btn': len(non_icon_tier_ids) > 1,
             'sse_enabled': request.env['ir.config_parameter'].sudo().get_param(
                 'auction.sse.enabled', 'False'
             ) in ('True', 'true', '1'),
@@ -1186,6 +1197,29 @@ class Auction(http.Controller):
                 return self._not_found()
         return werkzeug.utils.redirect('/{}/{}/auction/show/team/balance/json'.format(db_name, tournament_slug), 301)
 
+    def _team_tier_breakdown(self, auction):
+        """Per-tier recruited / max for Bid Summary View Tiers modal."""
+        tiers = []
+        if not auction or not auction.tier_limit_ids:
+            return tiers
+        for tl in auction.tier_limit_ids:
+            tier = tl.tier_id
+            if not tier or tier.is_an_icon_tier:
+                continue
+            recruited = sum(
+                1 for line in auction.player_ids
+                if line.player_id and line.player_id.tier_id
+                and line.player_id.tier_id.id == tier.id
+            )
+            tiers.append({
+                'id': tier.id,
+                'name': tier.name or 'Tier',
+                'color': tier.color or '#3498db',
+                'count': recruited,
+                'max': tl.max_players or 0,
+            })
+        return tiers
+
     def _minimal_team_squad_payload(self, db_name, tournament, team_id):
         """Live-board-style minimal squad for Bid Summary eye peek."""
         env = request.env
@@ -1241,6 +1275,7 @@ class Auction(http.Controller):
             'remaining_points': auction.remaining_points,
             'manager': team.manager or auction.manager or '',
             'players': players_payload,
+            'tiers': self._team_tier_breakdown(auction),
         }
 
     @http.route(
@@ -3094,6 +3129,72 @@ class Auction(http.Controller):
             }, lazy=False)
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
+    def _youtube_overlay_page(self, db_name, tournament_slug, page='obs'):
+        """OBS-transparent overlay or public Watch page; same pj live feed.
+
+        Missing slug still renders the canvas (AUCTION NOT LIVE) so OBS never
+        lands on an opaque Odoo 404. Auction-rules gate is skipped for the
+        same reason — idle overlay is broadcast-safe.
+        """
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return self._not_found()
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('slug', '=', tournament_slug)], limit=1)
+            overlay_status = 'ok' if tournament else 'missing'
+            theme = (tournament.player_display_template if tournament else None) or 'vanilla'
+            sport = (tournament.tournament_type if tournament else None) or 'cricket'
+            mode = 'light' if theme in ('lemon', 'strawberry') else 'dark'
+            company = request.env['res.company'].sudo().search([], limit=1)
+            embed_id = tournament.youtube_embed_id() if (page == 'watch' and tournament) else ''
+            logo_url = ''
+            if tournament and tournament.logo:
+                ver = ''
+                if tournament.write_date:
+                    try:
+                        ver = str(int(fields.Datetime.from_string(
+                            tournament.write_date).timestamp()))
+                    except Exception:
+                        ver = ''
+                logo_url = '/%s/auction/public/image/auction.tournament/%d/logo' % (
+                    db_name, tournament.id)
+                if ver:
+                    logo_url += '?v=' + ver
+            sse_enabled = False
+            if tournament:
+                sse_enabled = request.env['ir.config_parameter'].sudo().get_param(
+                    'auction.sse.enabled', 'False'
+                ) in ('True', 'true', '1')
+            html = request.render('auction_module.youtube_overlay_template', {
+                'tournament': tournament,
+                'theme': theme,
+                'mode': mode,
+                'sport': sport,
+                'page': page,
+                'db_name': db_name,
+                'tournament_slug': (tournament.slug if tournament else tournament_slug) or tournament_slug,
+                'res_company': company,
+                'youtube_embed_id': embed_id,
+                'tournament_logo_url': logo_url,
+                'overlay_status': overlay_status,
+                'sse_enabled': sse_enabled,
+            }, lazy=False)
+        return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
+
+    @http.route([
+        '/<string:db_name>/auction/yt-overlay/<string:tournament_slug>/',
+        '/<string:db_name>/auction/yt-overlay/<string:tournament_slug>',
+    ], type='http', auth='none', website=False, sitemap=False)
+    def auction_youtube_overlay(self, db_name, tournament_slug, **kw):
+        return self._youtube_overlay_page(db_name, tournament_slug, page='obs')
+
+    @http.route([
+        '/<string:db_name>/<string:tournament_slug>/auction/watch',
+        '/<string:db_name>/<string:tournament_slug>/auction/watch/',
+    ], type='http', auth='none', website=False, sitemap=False)
+    def auction_youtube_watch(self, db_name, tournament_slug, **kw):
+        return self._youtube_overlay_page(db_name, tournament_slug, page='watch')
+
     @http.route([
         '/<string:db_name>/auction/projector/<string:tournament_slug>/data',
     ], type='json', auth="none", website=False, sitemap=False, csrf=False)
@@ -3110,6 +3211,13 @@ class Auction(http.Controller):
             )
             payload = get_or_rebuild_snapshot(request.env, tournament, 'pj')
             return payload or {'player': None}
+
+    @http.route([
+        '/<string:db_name>/auction/yt-overlay/<string:tournament_slug>/data',
+    ], type='json', auth='none', website=False, sitemap=False, csrf=False)
+    def auction_youtube_overlay_data(self, db_name, tournament_slug, **kw):
+        """Nginx fallback for overlay polls — same Redis `pj` snapshot as projector."""
+        return self.auction_projector_data(db_name, tournament_slug, **kw)
 
     @http.route([
         '/<string:db_name>/auction/projector/<string:tournament_slug>/squad',
@@ -3285,6 +3393,12 @@ class Auction(http.Controller):
         # Windows ICO (common for company favicon)
         if image_bytes[:4] == b'\x00\x00\x01\x00':
             return 'image/x-icon'
+        head_src = image_bytes
+        if head_src.startswith(b'\xef\xbb\xbf'):
+            head_src = head_src[3:]
+        head = head_src.lstrip()[:256].lower()
+        if head.startswith(b'<svg') or (head.startswith(b'<?xml') and b'<svg' in head):
+            return 'image/svg+xml'
         return 'image/jpeg'
 
     def _public_image_bytes(self, binary, model, field, **kw):
@@ -3372,13 +3486,16 @@ class Auction(http.Controller):
         inm = inm.replace('W/', '').replace('"', '').strip()
         immutable = bool(kw.get('v') or sz)
         if inm == etag:
-            return request.make_response(b'', status=304, headers=[
+            # Odoo 15 request.make_response() does not accept status=.
+            resp = request.make_response(b'', headers=[
                 ('ETag', '"%s"' % etag),
                 ('Cache-Control', (
                     'public, max-age=31536000, immutable' if immutable
                     else 'public, max-age=86400, stale-while-revalidate=604800'
                 )),
             ])
+            resp.status_code = 304
+            return resp
 
         cache_key = None
         if sz in ('pj', 'bs', 'reg', 'rt'):
@@ -6670,16 +6787,27 @@ def _pj_tournament_auctions(tournament, env=None):
     return memo[key]
 
 
-def _pj_teams(tournament, db_name, leading_team_id=None, env=None):
-    """Team logo strip + purse for the projector (read-only)."""
+def _pj_teams(tournament, db_name, leading_team_id=None, env=None, player_on_stage=None):
+    """Team strip + purse / max bid / slots for projector and broadcast overlay."""
     if not tournament:
         return []
-    purse_by_team = {}
+    auc_by_team = {}
     for auc in _pj_tournament_auctions(tournament, env=env):
         if auc.team_id:
-            purse_by_team[auc.team_id.id] = int(auc.remaining_points or 0)
+            auc_by_team[auc.team_id.id] = auc
     out = []
     for team in tournament.team_ids:
+        auc = auc_by_team.get(team.id)
+        remaining = int(auc.remaining_points or 0) if auc else 0
+        total = int(auc.total_point or 0) if auc else 0
+        max_players = int(auc.max_players or 0) if auc else 0
+        slots = int(auc.remaining_players_count or 0) if auc else 0
+        max_call = 0
+        if auc:
+            try:
+                max_call = int(auc.get_max_bid_for_team(auc, player_on_stage) or 0)
+            except Exception:
+                max_call = 0
         logo_url = ''
         if team.logo:
             logo_url = '/%s/auction/public/image/auction.team/%d/logo' % (db_name, team.id)
@@ -6688,7 +6816,11 @@ def _pj_teams(tournament, db_name, leading_team_id=None, env=None):
             'name': team.name or '',
             'logo_url': logo_url,
             'leading': bool(leading_team_id and team.id == leading_team_id),
-            'remaining_points': purse_by_team.get(team.id, 0),
+            'remaining_points': remaining,
+            'total_point': total,
+            'max_players': max_players,
+            'remaining_players_count': slots,
+            'max_call': max_call,
         })
     return out
 

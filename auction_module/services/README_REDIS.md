@@ -130,6 +130,7 @@ Gateway SSE endpoints (same process as `/data`):
 ```
 GET /{db}/{slug}/auction/live-board/events
 GET /{db}/auction/projector/{slug}/events
+GET /{db}/auction/yt-overlay/{slug}/events
 GET /{db}/{slug}/auction/show/team/balance/events
 GET /{db}/{slug}/player/register/events
 ```

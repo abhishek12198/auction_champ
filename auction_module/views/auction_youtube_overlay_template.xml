@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="youtube_overlay_template" name="Auction YouTube Overlay">
+<html lang="en"
+      t-att-data-theme="theme"
+      t-att-data-mode="mode or 'dark'"
+      t-att-data-page="page or 'obs'"
+      t-att-data-sport="sport or 'cricket'"
+      t-att-data-overlay-status="overlay_status or 'ok'"
+      t-att-data-sse-enabled="'1' if sse_enabled else '0'">
+    <head>
+  <meta charset="utf-8"/>
+  <t t-if="page == 'watch'">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  </t>
+  <t t-else="">
+    <meta name="viewport" content="width=1920, height=1080, initial-scale=1"/>
+  </t>
+  <title>
+    <t t-if="page == 'watch'">Watch — </t>
+    <t t-else="">Overlay — </t>
+    <t t-if="tournament"><t t-esc="tournament.name"/></t>
+    <t t-else="">AuctionChamp</t>
+  </title>
+  <link rel="shortcut icon"
+        t-att-href="('/' + db_name + '/auction/public/image/res.company/' + str(res_company.id) + '/favicon') if (db_name and res_company and res_company.favicon) else '/auction_module/static/description/icon.png'"
+        type="image/x-icon"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Exo+2:wght@500;600;700;800;900&amp;family=Barlow+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" t-att-href="'/auction_module/static/src/css/youtube_overlay.css?v=1.5.573'"/>
+</head>
+<body>
+  <t t-if="page == 'watch'">
+    <div id="ytWatchStage">
+      <t t-if="youtube_embed_id">
+        <iframe id="ytWatchFrame"
+                t-att-src="'https://www.youtube-nocookie.com/embed/' + youtube_embed_id + '?autoplay=1&amp;modestbranding=1&amp;rel=0&amp;playsinline=1&amp;fs=0'"
+                allow="autoplay; encrypted-media; picture-in-picture"
+                title="YouTube live"/>
+      </t>
+      <t t-else="">
+        <div class="ytov-watch-empty">
+          <div class="ytov-watch-empty-card">
+            <h1>Stream not linked</h1>
+            <p>Ask the organiser to paste a YouTube Watch or Live URL on the tournament. Player graphics still update above this message.</p>
+          </div>
+        </div>
+      </t>
+    </div>
+    <button type="button" id="ytWatchFs" class="ytov-watch-fs" title="Fullscreen with auction overlay">Fullscreen</button>
+    <button type="button" id="ytWatchLandscape" class="ytov-watch-landscape" title="Switch to landscape mode">Landscape</button>
+  </t>
+
+  <div id="ytov-root" class="auctionchamp-live-overlay" data-state="idle" data-conn="connecting">
+    <div class="top-row">
+      <div class="ident-bar">
+        <t t-if="tournament_logo_url">
+          <img class="ident-logo"
+               t-att-src="tournament_logo_url"
+               alt=""
+               onerror="this.style.display='none'; var ph=document.getElementById('ytovLogoPh'); if(ph) ph.hidden=false;"/>
+          <div class="ident-logo-ph" id="ytovLogoPh" hidden="hidden"></div>
+        </t>
+        <t t-else="">
+          <div class="ident-logo-ph"></div>
+        </t>
+        <div class="ident-copy">
+          <div class="ident-name"><t t-esc="tournament.name if tournament else 'AuctionChamp'"/></div>
+          <div class="ident-season" t-if="tournament and tournament.description">
+            <t t-esc="tournament.description"/>
+          </div>
+        </div>
+      </div>
+      <div class="meta-bar">
+        <span class="live-pill"><span class="live-dot"/>LIVE</span>
+        <span class="progress-label" id="ytovProgress"></span>
+        <span class="conn-dot" id="ytovConn" aria-hidden="true"/>
+      </div>
+    </div>
+
+    <div class="pause-banner" id="ytovPaused" hidden="hidden">AUCTION PAUSED</div>
+    <div class="complete-banner" id="ytovCompleted" hidden="hidden">AUCTION COMPLETED</div>
+    <div class="wait-chip" id="ytovWait">Waiting for next player</div>
+
+    <div class="overlay-stack">
+      <div class="bottom-row">
+        <div class="ipl-player-card" id="ytovPlayer" hidden="hidden">
+          <div class="ipl-photo-wrap">
+            <div class="ipl-photo-ph" id="ytovPhotoPh">&#9733;</div>
+            <img class="ipl-photo" id="ytovPhoto" alt="" src="/auction_module/static/description/icon.png"/>
+          </div>
+          <div class="ipl-body">
+            <div class="ipl-main">
+              <div class="ipl-lot" id="ytovLot"></div>
+              <div class="ipl-name" id="ytovName"></div>
+              <div class="ipl-prices">
+                <div class="ipl-price-box ipl-base-box">
+                  <span class="ipl-price-label">Base</span>
+                  <span class="ipl-price-val" id="ytovBaseVal"></span>
+                </div>
+                <div class="ipl-price-box ipl-live-box" id="ytovLiveBox" hidden="hidden">
+                  <span class="ipl-price-label" id="ytovLiveLabel">Current Bid</span>
+                  <span class="ipl-price-val" id="ytovBidVal"></span>
+                </div>
+              </div>
+              <div class="ipl-bid-team" id="ytovBidTeam" hidden="hidden">
+                <img class="ipl-bid-team-logo" id="ytovBidTeamLogo" alt="" hidden="hidden"/>
+                <span class="ipl-bid-team-ph" id="ytovBidTeamLogoPh" hidden="hidden"></span>
+                <span id="ytovBidTeamName"></span>
+              </div>
+              <div class="ipl-stamp" id="ytovStamp" hidden="hidden"></div>
+            </div>
+            <div class="ipl-attrs">
+              <div class="ipl-chips" id="ytovChips"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bar">
+      <div class="sponsor-display" id="ytovSponsor" hidden="hidden">
+        <div class="sponsor-label">Our Sponsors</div>
+        <div class="sponsor-track" id="ytovSponsorTrack"></div>
+      </div>
+      <div class="branding">
+        <img src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    window.YTOV_DB = '<t t-esc="db_name or ''"/>';
+    window.YTOV_SLUG = '<t t-esc="tournament_slug or ''"/>';
+    window.YTOV_DATA_URL = '/' + window.YTOV_DB + '/auction/yt-overlay/' + window.YTOV_SLUG + '/data';
+    window.YTOV_EVENTS_URL = '/' + window.YTOV_DB + '/auction/yt-overlay/' + window.YTOV_SLUG + '/events';
+    window.YTOV_SSE_ENABLED = document.documentElement.getAttribute('data-sse-enabled') || '0';
+  </script>
+  <t t-call="auction_module.point_unit_bootstrap">
+    <t t-set="pu_tournament" t-value="tournament"/>
+  </t>
+  <script src="/auction_module/static/src/js/auction_sse_client.js"/>
+  <script src="/auction_module/static/src/js/youtube_overlay.js?v=1.5.573"/>
+</body>
+</html>
+</template>
+</odoo>

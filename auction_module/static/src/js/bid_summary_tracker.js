@@ -314,7 +314,7 @@
     var teams = $('tracker-teams');
     if (teams) {
       teams.addEventListener('click', function (e) {
-        if (e.target.closest && e.target.closest('.bs2-eye-btn')) { return; }
+        if (e.target.closest && (e.target.closest('.bs2-eye-btn') || e.target.closest('.bs2-tiers-btn'))) { return; }
         var row = e.target.closest ? e.target.closest('[data-team-id]') : null;
         if (!row) { return; }
         var tid = row.getAttribute('data-team-id');
