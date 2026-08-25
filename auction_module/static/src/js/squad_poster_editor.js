@@ -135,6 +135,10 @@
     var aid = auctionId();
     if (!aid || !playerId) return null;
     var db = dbName();
+    if (String(playerId) === 'owner') {
+      if (db) return '/' + db + '/auction/squad-poster/' + aid + '/owner-full-photo';
+      return '/auction/squad-poster/' + aid + '/owner-full-photo';
+    }
     if (db) return '/' + db + '/auction/squad-poster/' + aid + '/full-photo/' + playerId;
     return '/auction/squad-poster/' + aid + '/full-photo/' + playerId;
   }
@@ -266,6 +270,12 @@
     return out;
   }
 
+  function collectOwnerCrop() {
+    var st = states.owner;
+    if (!st || !st.manual) return null;
+    return { l: st.l, t: st.t, sw: st.sw, sh: st.sh };
+  }
+
   function collectIconLabels() {
     var out = {};
     Object.keys(labelStates).forEach(function (k) {
@@ -286,8 +296,13 @@
 
   function persistCrops(extraClearIds) {
     var crops = collectManualCrops();
+    var ownerCrop = collectOwnerCrop();
+    var clearOwner = (extraClearIds || []).indexOf('owner') !== -1;
     var labels = collectIconLabels();
-    writeLocalCrops(crops);
+    var localCrops = {};
+    Object.keys(crops).forEach(function (pid) { localCrops[pid] = crops[pid]; });
+    if (ownerCrop) localCrops.owner = ownerCrop;
+    writeLocalCrops(localCrops);
     writeLocalLabels(labels);
     Object.keys(crops).forEach(function (pid) {
       window.__spPhotoCrops = window.__spPhotoCrops || {};
@@ -302,10 +317,17 @@
     });
     var api = cropsApiUrl();
     if (!api) return Promise.resolve({ ok: false });
+    if (ownerCrop) {
+      window.__spPhotoCrops = window.__spPhotoCrops || {};
+      window.__spPhotoCrops.owner = ownerCrop;
+    }
+    if (clearOwner && window.__spPhotoCrops) delete window.__spPhotoCrops.owner;
     return jsonRpc(api, {
       crops: crops,
       clear_ids: extraClearIds || [],
       icon_labels: labels,
+      owner_crop: ownerCrop,
+      clear_owner: clearOwner,
     }).catch(function () {
       return { ok: false };
     });

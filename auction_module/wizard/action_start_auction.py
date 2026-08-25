@@ -48,6 +48,7 @@ import werkzeug.exceptions
 
 class StartAuction(models.TransientModel):
     _name = 'auction.start.auction'
+    _description = 'Start Auction'
 
     max_points = fields.Integer(string='Total Purse Value')
     max_players = fields.Integer(string='Max no of players')
@@ -268,6 +269,7 @@ class StartAuction(models.TransientModel):
 class AuctionBidSlab(models.TransientModel):
 
     _name = 'auction.bid.slab'
+    _description = 'Start Auction Bid Slab'
 
     wizard_id = fields.Many2one('auction.start.auction', ondelete='cascade')
 

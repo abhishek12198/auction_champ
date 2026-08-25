@@ -47,6 +47,7 @@ import werkzeug.exceptions
 
 class SellPlayer(models.TransientModel):
     _name = 'auction.sell.player'
+    _description = 'Sell Player'
 
     final_point = fields.Integer(string="Selling for (Points)", required=True)
     team_id = fields.Many2one('auction.team', 'Sold To', required=True)

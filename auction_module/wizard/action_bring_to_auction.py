@@ -47,6 +47,7 @@ import werkzeug.exceptions
 
 class BringUnsoldPlayers(models.TransientModel):
     _name = 'auction.bring.unsold.players'
+    _description = 'Bring Unsold Players'
 
     player_ids = fields.Many2many('auction.team.player', 'player_unsold_player_rel', 'unsold_player_id', 'player_id', 'Selected Players')
     tournament_id = fields.Many2one('auction.tournament', 'Tournament')

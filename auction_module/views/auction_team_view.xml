@@ -131,6 +131,11 @@
                             <group string="Team Details">
                                 <field name="tournament_id" string="League / Tournament" groups="auction_module.group_auction_group_admin"/>
                             </group>
+                            <group string="Owner">
+                                <field name="owner_photo" widget="image"
+                                       options="{'size': [128, 128]}"
+                                       help="Optional. When uploaded, the Squad Poster shows TEAM OWNER, this photo, and the owner name in the player-name size."/>
+                            </group>
                         </group>
 
                         <notebook>

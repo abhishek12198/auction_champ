@@ -48,6 +48,7 @@ import werkzeug.exceptions
 
 class AuctionTournamentPointSplit(models.Model):
     _name = 'auction.tournament.point.split'
+    _description = 'Tournament Point Split'
     _inherit = ['auction.tournament.security.mixin']
 
     points = fields.Integer(string="Point")

@@ -200,6 +200,48 @@
     width: 100%;
 }
 
+/* Keep all card themes on one row (8 compact tiles). */
+.o_form_view .o_at_theme_picker_wrap .o_field_selection_card {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 8px;
+    max-width: none;
+}
+
+.o_form_view .o_at_theme_picker_wrap .o_sel_card {
+    border-radius: 10px;
+    min-width: 0;
+}
+
+.o_form_view .o_at_theme_picker_wrap .o_sel_card_swatch {
+    min-height: 44px;
+}
+
+.o_form_view .o_at_theme_picker_wrap .o_sel_card_swatch_icon {
+    font-size: 18px;
+}
+
+.o_form_view .o_at_theme_picker_wrap .o_sel_card_body {
+    padding: 6px 6px;
+    gap: 4px;
+}
+
+.o_form_view .o_at_theme_picker_wrap .o_sel_card_name {
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.o_form_view .o_at_theme_picker_wrap .o_sel_card_check {
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.o_form_view .o_at_theme_picker_wrap .o_sel_card_lock_label {
+    font-size: 9px;
+}
+
 .o_form_view .o_at_callup_picker_wrap {
     width: 100%;
     margin: 0 0 4px;
@@ -360,10 +402,19 @@
     margin-top: 10px;
 }
 
+@media (max-width: 1100px) {
+    .o_form_view .o_at_theme_picker_wrap .o_field_selection_card {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
 @media (max-width: 768px) {
     .o_form_view .o_field_selection_card {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         max-width: none;
+    }
+    .o_form_view .o_at_theme_picker_wrap .o_field_selection_card {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 

@@ -13,9 +13,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
   <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&amp;family=Oswald:wght@600;700&amp;family=Roboto+Condensed:ital,wght@0,700;1,700&amp;family=Russo+One&amp;family=Teko:wght@600;700&amp;display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="/auction_module/static/src/css/squad_poster.css?v=283"/>
+  <link rel="stylesheet" href="/auction_module/static/src/css/squad_poster.css?v=290"/>
 </head>
-<body t-attf-class="sp-shell#{' is-projector' if projector_mode else ''}" t-att-data-palette="palette" t-att-data-team-name="team_name" t-att-data-tournament-name="tournament_name" id="spShell">
+<body t-attf-class="sp-shell#{' is-projector' if projector_mode else ''}" data-bg="stadium-fire" t-att-data-team-name="team_name" t-att-data-tournament-name="tournament_name" id="spShell">
 
   <div class="sp-toolbar" id="spToolbar" t-att-style="'display:none !important' if projector_mode else None">
     <div class="sp-toolbar-title">Squad Poster · Save &amp; Share</div>
@@ -74,15 +74,32 @@
     </div>
     <div class="sp-status" id="spStatus"></div>
     <div class="sp-hint">1) Tap Edit on a player · 2) Drag / zoom · 3) Done · 4) Save PNG/JPG</div>
-    <div class="sp-palette-row sp-btn-desktop" id="spPaletteRow">
-      <span class="sp-palette-lbl">Palette</span>
-      <button type="button" class="sp-swatch" data-palette="ember-orange" title="Ember"></button>
-      <button type="button" class="sp-swatch" data-palette="pace-lime" title="Pace Lime"></button>
-      <button type="button" class="sp-swatch" data-palette="midnight-gold" title="Midnight Gold"></button>
-      <button type="button" class="sp-swatch" data-palette="arctic-cyan" title="Arctic Cyan"></button>
-      <button type="button" class="sp-swatch" data-palette="royal-violet" title="Royal Violet"></button>
-      <button type="button" class="sp-swatch" data-palette="carbon-chrome" title="Carbon"></button>
-      <button type="button" class="sp-swatch" data-palette="crimson-flare" title="Crimson"></button>
+    <div class="sp-bg-row" id="spBgRow">
+      <span class="sp-bg-lbl">Background</span>
+      <button type="button" class="sp-bg-chip" data-bg="stadium-fire" title="Stadium Fire">
+        <span class="sp-bg-chip-preview"></span><span class="sp-bg-chip-name">Stadium</span>
+      </button>
+      <button type="button" class="sp-bg-chip" data-bg="inferno" title="Inferno">
+        <span class="sp-bg-chip-preview"></span><span class="sp-bg-chip-name">Inferno</span>
+      </button>
+      <button type="button" class="sp-bg-chip" data-bg="night-flood" title="Night Floodlights">
+        <span class="sp-bg-chip-preview"></span><span class="sp-bg-chip-name">Night</span>
+      </button>
+      <button type="button" class="sp-bg-chip" data-bg="pitch-green" title="Pitch Green">
+        <span class="sp-bg-chip-preview"></span><span class="sp-bg-chip-name">Pitch</span>
+      </button>
+      <button type="button" class="sp-bg-chip" data-bg="gold-arena" title="Gold Arena">
+        <span class="sp-bg-chip-preview"></span><span class="sp-bg-chip-name">Gold</span>
+      </button>
+      <button type="button" class="sp-bg-chip" data-bg="ice-night" title="Ice Night">
+        <span class="sp-bg-chip-preview"></span><span class="sp-bg-chip-name">Ice</span>
+      </button>
+      <button type="button" class="sp-bg-chip" data-bg="royal" title="Royal">
+        <span class="sp-bg-chip-preview"></span><span class="sp-bg-chip-name">Royal</span>
+      </button>
+      <button type="button" class="sp-bg-chip" data-bg="carbon" title="Carbon Dark">
+        <span class="sp-bg-chip-preview"></span><span class="sp-bg-chip-name">Carbon</span>
+      </button>
     </div>
   </div>
 
@@ -92,19 +109,18 @@
 
         <div class="sp-bg" aria-hidden="true">
           <t t-if="bg_uri">
-            <img class="sp-bg-tourn" t-att-src="bg_uri" alt=""/>
-            <div class="sp-bg-scrim"></div>
-            <div class="sp-bg-vignette"></div>
+            <img class="sp-bg-photo sp-bg-tourn" t-att-src="bg_uri" alt=""/>
           </t>
           <t t-else="">
-            <img class="sp-bg-img" src="/auction_module/static/src/assets/images/squad_poster/sp_bg_stadium.jpg" alt=""/>
-            <div class="sp-bg-grade"></div>
-            <img class="sp-fx-smoke" src="/auction_module/static/src/assets/images/squad_poster/sp_smoke.jpg" alt=""/>
-            <img class="sp-fx-fire" src="/auction_module/static/src/assets/images/squad_poster/sp_fire_band.jpg" alt=""/>
-            <img class="sp-fx-sparks" src="/auction_module/static/src/assets/images/squad_poster/sp_sparks.jpg" alt=""/>
-            <div class="sp-fx-flare"></div>
-            <div class="sp-bg-vignette"></div>
+            <img class="sp-bg-photo sp-bg-img" src="/auction_module/static/src/assets/images/squad_poster/sp_bg_stadium.jpg" alt=""/>
           </t>
+          <div class="sp-bg-grade"></div>
+          <div class="sp-bg-wash"></div>
+          <img class="sp-fx-smoke" src="/auction_module/static/src/assets/images/squad_poster/sp_smoke.jpg" alt=""/>
+          <img class="sp-fx-fire" src="/auction_module/static/src/assets/images/squad_poster/sp_fire_band.jpg" alt=""/>
+          <img class="sp-fx-sparks" src="/auction_module/static/src/assets/images/squad_poster/sp_sparks.jpg" alt=""/>
+          <div class="sp-fx-flare"></div>
+          <div class="sp-bg-vignette"></div>
         </div>
 
         <div class="sp-layer">
@@ -172,8 +188,18 @@
                 </t>
               </div>
             </div>
-            <div class="sp-team-right">
-              <div class="sp-manager-lbl">TEAM MANAGER</div>
+            <div t-attf-class="sp-team-right#{' has-photo' if manager_photo_uri else ''}">
+              <div class="sp-manager-lbl">TEAM OWNER</div>
+              <t t-if="manager_photo_uri">
+                <article class="sp-card sp-owner-card"
+                         data-player-id="owner"
+                         t-att-data-player-name="manager or 'Team Owner'"
+                         t-att-data-photo-crop="manager_photo_uri">
+                  <div class="sp-card-photo-wrap sp-owner-photo-wrap">
+                    <img class="sp-card-photo sp-owner-photo" t-att-src="manager_photo_uri" alt="" draggable="false"/>
+                  </div>
+                </article>
+              </t>
               <div class="sp-manager-name" t-esc="manager or '—'"/>
             </div>
           </section>
@@ -294,12 +320,19 @@
           </footer>
 
         </div>
+
+        <div class="sp-gloss" aria-hidden="true">
+          <div class="sp-gloss-film"></div>
+          <div class="sp-gloss-beam"></div>
+          <div class="sp-gloss-hot"></div>
+          <div class="sp-gloss-rim"></div>
+        </div>
       </div>
     </div>
   </div>
 
   <script src="/auction_module/static/src/lib/html2canvas.min.js"></script>
-  <script src="/auction_module/static/src/js/squad_poster_page.js?v=282"></script>
+  <script src="/auction_module/static/src/js/squad_poster_page.js?v=284"></script>
   <script>
     window.addEventListener('load', function () {
       if (!window.spEditPlayer) {

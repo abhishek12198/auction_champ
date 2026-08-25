@@ -47,6 +47,7 @@ import werkzeug.exceptions
 
 class SetPlayerDraft(models.TransientModel):
     _name = 'auction.player.draft'
+    _description = 'Set Players to Draft'
 
     player_ids = fields.Many2many('auction.team.player', 'player_draft_player_rel', 'auction_player_id', 'player_id', 'Selected Players')
     tournament_id = fields.Many2one('auction.tournament', 'Tournament')

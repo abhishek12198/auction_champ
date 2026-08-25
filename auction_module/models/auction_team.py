@@ -47,6 +47,7 @@ import werkzeug.exceptions
 
 class AuctionTeam(models.Model):
     _name = 'auction.team'
+    _description = 'Auction Team'
     _inherit = [
         'auction.image.compress.mixin',
         'auction.tournament.security.mixin',
@@ -55,6 +56,7 @@ class AuctionTeam(models.Model):
 
     _compressible_image_fields = {
         'logo': (400, 400, 82, 'JPEG'),
+        'owner_photo': (400, 400, 82, 'JPEG'),
     }
 
     @api.model
@@ -72,4 +74,14 @@ class AuctionTeam(models.Model):
                             help="Add team logo")
     tournament_id = fields.Many2one('auction.tournament', 'Tournament')
     manager = fields.Char('Owner')
+    owner_photo = fields.Binary(
+        string='Owner Photo',
+        attachment=True,
+        help='Optional. When set, the Squad Poster shows TEAM OWNER, this photo, '
+             'and the owner name.',
+    )
+    squad_poster_owner_crop = fields.Char(
+        string='Squad Poster Owner Crop',
+        help='JSON crop window {l,t,sw,sh} for the owner photo on the squad poster.',
+    )
     key_player_ids = fields.Many2many('auction.team.player', 'team_player_rel', 'team_id', 'player_id', 'Icon Players')

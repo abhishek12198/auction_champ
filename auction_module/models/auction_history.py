@@ -48,6 +48,7 @@ import werkzeug.exceptions
 class AuctionHistory(models.Model):
 
     _name = 'auction.history'
+    _description = 'Auction History'
     _inherit = ['auction.tournament.security.mixin', 'auction.live.snapshot.mixin']
     _order = 'id'
 

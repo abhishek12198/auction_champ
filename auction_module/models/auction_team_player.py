@@ -305,6 +305,7 @@ def _get_default_player_photo(self):
         return base64.b64encode(f.read())
 class AuctionTeamPlayer(models.Model):
     _name = 'auction.team.player'
+    _description = 'Auction Player'
     _inherit = [
         'auction.image.compress.mixin',
         'auction.tournament.security.mixin',

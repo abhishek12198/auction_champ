@@ -47,6 +47,7 @@ import werkzeug.exceptions
 
 class SetAuctionPlayer(models.TransientModel):
     _name = 'auction.player.auction'
+    _description = 'Set Players to Auction'
 
     player_ids = fields.Many2many('auction.team.player', 'player_auction_player_rel', 'auction_player_id', 'player_ids', 'Selected Players')
     tournament_id = fields.Many2one('auction.tournament', 'Tournament')

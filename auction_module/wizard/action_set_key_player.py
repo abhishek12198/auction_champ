@@ -47,6 +47,7 @@ import werkzeug.exceptions
 
 class SetKeyPlayer(models.TransientModel):
     _name = 'auction.set.key.player'
+    _description = 'Set Key Player'
 
     team_id = fields.Many2one(
         'auction.team',

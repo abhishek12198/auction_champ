@@ -84,6 +84,7 @@ def _slugify(text):
 
 class AuctionTournament(models.Model):
     _name = 'auction.tournament'
+    _description = 'Tournament'
     _inherit = [
         'auction.image.compress.mixin',
         'auction.tournament.security.mixin',
@@ -129,14 +130,14 @@ class AuctionTournament(models.Model):
     active = fields.Boolean(default=True)
     player_appearance_algorithm = fields.Selection(
         [
-            ('linear', 'Roll Call'),
             ('random', 'Lucky Dip'),
+            ('linear', 'Roll Call'),
         ],
         string='Player Call-Up Mode',
-        default='linear',
+        default='random',
         help='How the next player is brought into the auction: '
-             'Roll Call — pick from the set list or roll the dice for a squad number; '
-             'Lucky Dip — draw the next player at random.',
+             'Lucky Dip — draw the next player at random; '
+             'Roll Call — pick from the set list or roll the dice for a squad number.',
     )
     team_max_points = fields.Integer(string="Max points alloted for a team")
     point_unit_id = fields.Many2one(
@@ -350,7 +351,7 @@ class AuctionTournament(models.Model):
              'When disabled, visitors see an offline holding page instead.',
     )
     live_board_code_protected = fields.Boolean(
-        string='Protect Live Board with Tournament Code',
+        string='Lock by Tournament Code',
         default=True,
         help='When enabled, public viewers must enter the Tournament Code once before '
              'they can open the live board. After a successful unlock, that browser is '
@@ -554,7 +555,7 @@ class AuctionTournament(models.Model):
         string='Deleted Players',
     )
     deleted_player_count = fields.Integer(
-        string='Deleted Players',
+        string='Deleted Player Count',
         compute='_compute_deleted_player_count',
         help='Players deleted from this tournament that have not been restored yet.',
     )
@@ -1601,7 +1602,26 @@ class AuctionTournament(models.Model):
             },
         }
 
+    def _assert_can_deactivate_tournament(self):
+        """Hook for SaaS / extra access checks before archive."""
+        return True
+
     def action_deactivate_tournament(self):
+        """Open the consent wizard before archiving this tournament."""
+        self.ensure_one()
+        self._assert_can_deactivate_tournament()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Deactivate Tournament'),
+            'res_model': 'auction.deactivate.tournament.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_tournament_id': self.id,
+            },
+        }
+
+    def _archive_tournament_data(self):
         """Archive the tournament and all its related records.
 
         Archives in order:
@@ -1616,6 +1636,7 @@ class AuctionTournament(models.Model):
         Uses sudo() throughout so the operation succeeds regardless of
         which user triggers it (organizer vs admin).
         """
+        self._assert_can_deactivate_tournament()
         for rec in self:
             # 1. Recycle bin is no longer needed after deactivation — hard delete
             deleted_players = self.env['auction.team.player.deleted'].sudo().search([

@@ -47,6 +47,7 @@ import werkzeug.exceptions
 
 class ViewTeamDetails(models.TransientModel):
     _name = 'auction.view.team.details'
+    _description = 'View Team Details'
 
     html_field = fields.Html()
     team_id = fields.Many2one('auction.team', 'Team')

@@ -85,20 +85,33 @@
     }
   }
 
-  function syncPalette() {
-    var pal = (shell && shell.getAttribute('data-palette')) || 'ember-orange';
-    document.querySelectorAll('.sp-swatch').forEach(function (b) {
-      b.classList.toggle('is-active', b.getAttribute('data-palette') === pal);
-    });
+  var BG_KEY = 'acSquadPosterBg';
+  var BG_OPTS = ['stadium-fire','inferno','night-flood','pitch-green','gold-arena','ice-night','royal','carbon'];
+
+  function currentBg() {
+    var bg = (shell && shell.getAttribute('data-bg')) || 'stadium-fire';
+    try {
+      var saved = window.localStorage.getItem(BG_KEY);
+      if (saved && BG_OPTS.indexOf(saved) !== -1) bg = saved;
+    } catch (e) {}
+    return bg;
   }
 
-  document.querySelectorAll('.sp-swatch').forEach(function (btn) {
+  function applyBg(bg) {
+    if (!bg || BG_OPTS.indexOf(bg) === -1) bg = 'stadium-fire';
+    if (shell) shell.setAttribute('data-bg', bg);
+    document.querySelectorAll('.sp-bg-chip').forEach(function (b) {
+      b.classList.toggle('is-active', b.getAttribute('data-bg') === bg);
+    });
+    try { window.localStorage.setItem(BG_KEY, bg); } catch (e2) {}
+  }
+
+  document.querySelectorAll('.sp-bg-chip').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      var p = btn.getAttribute('data-palette');
-      if (shell) shell.setAttribute('data-palette', p);
-      syncPalette();
+      applyBg(btn.getAttribute('data-bg'));
     });
   });
+  applyBg(currentBg());
 
   if (zoomSel) zoomSel.addEventListener('change', applyZoom);
   window.addEventListener('resize', function () {
@@ -106,7 +119,6 @@
     sizeSquareCards();
   });
   applyZoom();
-  syncPalette();
 
   // Phones: default to 1× export to avoid OOM crashes
   if (isMobile() && scaleSel) scaleSel.value = '1';

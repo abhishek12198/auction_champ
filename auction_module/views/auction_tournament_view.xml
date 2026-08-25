@@ -51,12 +51,6 @@
                                 type="object"
                                 string="Auction Rules"
                                 class="btn-secondary"/>
-                        <button name="action_deactivate_tournament"
-                                type="object"
-                                string="Deactivate Tournament"
-                                class="btn-danger"
-                                confirm="This will archive the tournament and ALL its related records (players, teams, auctions, history), and permanently delete Deleted Players for this tournament. This cannot be undone easily. Are you sure?"
-                                attrs="{'invisible': [('active', '=', False)]}"/>
                         <button name="action_remove_duplicates"
                                 type="object"
                                 string="Remove Duplicates"
@@ -176,6 +170,17 @@
                                     <span class="o_stat_text" style="font-size:10px">Transactions</span>
                                 </div>
                             </button>
+                            <button name="action_deactivate_tournament"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    icon="fa-archive"
+                                    attrs="{'invisible': [('active', '=', False)]}"
+                                    help="Archive this tournament and all related players, teams, auction rules, history and sponsors. Recycle-bin players are deleted permanently.">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text text-danger">Deactivate</span>
+                                    <span class="o_stat_text text-danger" style="font-size:10px">Tournament</span>
+                                </div>
+                            </button>
 
                         </div>
 
@@ -260,16 +265,22 @@
                                 <field name="organizer_name"/>
                                 <field name="organizer_contact"/>
                             </group>
+                            <group string="Venue">
+                                <field name="venue"
+                                       placeholder="Venue name, address, city…"/>
+                                <field name="auction_date"/>
+                                <field name="auction_venue" placeholder="e.g. Auction Arena, City Stadium Hall"/>
+                            </group>
                         </group>
 
-                        <!-- Player Call-Up Mode (Sequential / Lucky Dip) -->
+                        <!-- Player Call-Up Mode (Lucky Dip / Roll Call) -->
                         <div class="o_at_presentation_section o_at_callup_section">
                             <separator string="Player Call-Up Mode"/>
                             <p class="o_at_presentation_help">
                                 How the next player is called into the auction.
+                                <strong>Lucky Dip</strong> — draw the next name at random;
                                 <strong>Roll Call</strong> — bring them up from your set list,
-                                or roll the dice for a squad number;
-                                <strong>Lucky Dip</strong> — draw the next name at random.
+                                or roll the dice for a squad number.
                             </p>
                             <div class="o_at_callup_picker_wrap">
                                 <field name="player_appearance_algorithm"
@@ -536,7 +547,8 @@
                                     <group col="2">
                                         <group string="Access Control">
                                             <field name="live_board_code_protected"
-                                                   string="Require Tournament Code"/>
+                                                   string="Lock by Tournament Code"
+                                                   widget="boolean_toggle"/>
                                         </group>
                                         <group string="Code gate">
                                             <div class="o_at_presentation_help" colspan="2">
@@ -846,18 +858,6 @@
                                     </group>
                                 </div>
 
-                            </page>
-
-                            <!-- Tab: Venue -->
-                            <page string="Venue" name="venue">
-                                <group string="Tournament Venue">
-                                    <field name="venue" nolabel="1"
-                                           placeholder="Enter the venue name, address, city and any other location details..."/>
-                                </group>
-                                <group string="Auction Day" col="2">
-                                    <field name="auction_date"/>
-                                    <field name="auction_venue" placeholder="e.g. Auction Arena, City Stadium Hall"/>
-                                </group>
                             </page>
 
                             <!-- Tab 5: Rules & Regulations -->

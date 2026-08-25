@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_auction_deactivate_tournament_wizard_form" model="ir.ui.view">
+        <field name="name">auction.deactivate.tournament.wizard.form</field>
+        <field name="model">auction.deactivate.tournament.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Deactivate Tournament" class="o_dt_wizard">
+                <field name="tournament_id" invisible="1"/>
+                <field name="player_count" invisible="1"/>
+                <field name="team_count" invisible="1"/>
+                <field name="auction_count" invisible="1"/>
+                <field name="history_count" invisible="1"/>
+                <field name="advertiser_count" invisible="1"/>
+                <field name="deleted_player_count" invisible="1"/>
+
+                <div class="dt-hero">
+                    <div class="dt-hero-icon"><i class="fa fa-archive"/></div>
+                    <div class="dt-hero-copy">
+                        <div class="dt-hero-kicker">Archive entire tournament</div>
+                        <div class="dt-hero-title">Deactivate Tournament</div>
+                        <div class="dt-hero-sub">
+                            This archives <strong><field name="tournament_name" readonly="1" nolabel="1"/></strong>
+                            and all related auction data listed below.
+                            Public links (registration, live board, projector) will stop working.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dt-list-wrap">
+                    <div class="dt-list-title">We will deactivate / archive the following:</div>
+                    <ul class="dt-list">
+                        <li>
+                            <strong>Tournament</strong> — hide it from active lists (can be found later under Archived).
+                        </li>
+                        <li>
+                            <strong>Players</strong> — all draft, in-auction, sold, unsold and icon players
+                            (<field name="player_count" readonly="1" nolabel="1"/> records).
+                        </li>
+                        <li>
+                            <strong>Teams</strong> — squads, purses and assigned players
+                            (<field name="team_count" readonly="1" nolabel="1"/> teams).
+                        </li>
+                        <li>
+                            <strong>Auction rules</strong> — purses, bid slabs and tier limits
+                            (<field name="auction_count" readonly="1" nolabel="1"/> team rule records).
+                        </li>
+                        <li>
+                            <strong>Auction history</strong> — sold / unsold log
+                            (<field name="history_count" readonly="1" nolabel="1"/> records).
+                        </li>
+                        <li>
+                            <strong>Advertisers / sponsors</strong>
+                            (<field name="advertiser_count" readonly="1" nolabel="1"/> records).
+                        </li>
+                        <li>
+                            <strong>Deleted-player recycle bin</strong> — permanently removed
+                            (<field name="deleted_player_count" readonly="1" nolabel="1"/> records). This cannot be restored.
+                        </li>
+                        <li>
+                            <strong>Public access</strong> — player registration, live board, bid summary and projector URLs for this tournament.
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="dt-warn">
+                    <div class="dt-warn-copy">
+                        <div class="dt-warn-title">Consent required</div>
+                        <div class="dt-warn-text">
+                            Archiving hides this tournament’s data from day-to-day use.
+                            Recycle-bin players are deleted permanently.
+                            Tick the box below to confirm you want to proceed.
+                        </div>
+                    </div>
+                    <div class="dt-consent">
+                        <field name="accept_consent" nolabel="1"/>
+                        <span>I have read the list above and I consent to deactivate this tournament and all related data.</span>
+                    </div>
+                </div>
+
+                <footer>
+                    <button name="action_confirm"
+                            type="object"
+                            string="Deactivate Tournament"
+                            class="btn-danger"
+                            attrs="{'invisible': [('accept_consent', '=', False)]}"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

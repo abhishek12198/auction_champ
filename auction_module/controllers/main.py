@@ -735,6 +735,7 @@ class Auction(http.Controller):
             'player':      player,
             'tournament':  tournament,
             'auction_ids': auction_ids,
+            'photo_focus_uri': self._player_stage_photo_uri(player),
         })
 
     @http.route('/auction/player_modal/<int:player_id>', type='http', auth='public', website=True)
@@ -1573,6 +1574,7 @@ class Auction(http.Controller):
                     'auction_ids': auction_ids,
                     'db_name': db_name,
                     'res_company': request.env['res.company'].sudo().search([], limit=1),
+                    'photo_focus_uri': self._player_stage_photo_uri(player),
                 }, lazy=False)
             else:
                 theme = tournament_id.player_display_template if tournament_id else 'vanilla'
@@ -4538,6 +4540,57 @@ class Auction(http.Controller):
         cropped = src.crop((left, top, left + side, top + side))
         return cropped.resize((out_w, out_h), Image.LANCZOS)
 
+    def _da_face_portrait_crop(self, im, out_w=720, out_h=1000):
+        """Portrait crop with the detected face in the upper third of the frame.
+
+        Used by live display (Blackberry / Pistah) so full-body shots still
+        show the player's face instead of empty space or legs.
+        """
+        from PIL import Image
+        src = im.convert('RGB') if im.mode != 'RGB' else im
+        W, H = src.size
+        if W < 8 or H < 8:
+            return src.resize((out_w, out_h), Image.LANCZOS)
+        fx, fy, fw, fh = self._sp_detect_face_box(src)
+        face_cx = fx + fw / 2.0
+        eyes_y = fy + fh * 0.38
+        aspect = out_w / float(out_h)
+        crop_h = H
+        crop_w = int(round(crop_h * aspect))
+        if crop_w > W:
+            crop_w = W
+            crop_h = int(round(crop_w / aspect))
+        crop_w = max(8, min(crop_w, W))
+        crop_h = max(8, min(crop_h, H))
+        left = int(round(face_cx - crop_w * 0.50))
+        top = int(round(eyes_y - crop_h * 0.28))
+        left = max(0, min(left, W - crop_w))
+        top = max(0, min(top, H - crop_h))
+        cropped = src.crop((left, top, left + crop_w, top + crop_h))
+        return cropped.resize((out_w, out_h), Image.LANCZOS)
+
+    def _player_stage_photo_uri(self, player):
+        """Face-centered portrait data-URI for the live auction photo panel."""
+        from odoo.tools.image import image_data_uri
+        raw = self._sp_photo_binary(player) if player else False
+        if not raw:
+            return ''
+        try:
+            from io import BytesIO
+            im = self._sp_open_image(raw)
+            if im is None:
+                return image_data_uri(raw)
+            cropped = self._da_face_portrait_crop(im, 720, 1000)
+            buf = BytesIO()
+            cropped.save(buf, format='JPEG', quality=86, optimize=True)
+            return 'data:image/jpeg;base64,%s' % base64.b64encode(buf.getvalue()).decode('ascii')
+        except Exception:
+            _logger.debug('stage photo face crop failed', exc_info=True)
+            try:
+                return image_data_uri(raw)
+            except Exception:
+                return ''
+
     def _sp_photo_binary(self, player):
         """Load full player photo bytes (never bin_size placeholders)."""
         if not player:
@@ -5185,6 +5238,28 @@ class Auction(http.Controller):
 
         team_name = ((team.name if team else '') or 'Team').strip()
         manager = ((team.manager if team else '') or '').strip()
+        owner_photo_uri = ''
+        owner_photo_crop = None
+        owner_photo_crop_auto = None
+        if team and team.owner_photo:
+            owner_override = None
+            raw_owner_crop = (team.squad_poster_owner_crop or '').strip()
+            if raw_owner_crop:
+                try:
+                    parsed_owner = json.loads(raw_owner_crop)
+                    if isinstance(parsed_owner, dict) and 'l' in parsed_owner and 'sw' in parsed_owner:
+                        owner_override = parsed_owner
+                except Exception:
+                    owner_override = None
+            owner_pack = self._sp_photo_pack(
+                team.owner_photo,
+                size=(320, 320),
+                crop_override=owner_override,
+                include_full=False,
+            )
+            owner_photo_uri = owner_pack.get('crop_uri') or ''
+            owner_photo_crop = owner_pack.get('crop')
+            owner_photo_crop_auto = owner_pack.get('auto_crop') or owner_photo_crop
         team_name_lines = self._sp_name_lines(team_name, max_lines=3)
         team_type = self._sp_team_type_scale(team_name, lines=team_name_lines)
         # Reference copy hierarchy — overridable later via tournament fields if added
@@ -5249,6 +5324,9 @@ class Auction(http.Controller):
             'stats': stats,
             'manager': manager,
             'manager_initials': self._sp_initials(manager),
+            'manager_photo_uri': owner_photo_uri,
+            'manager_photo_crop': owner_photo_crop,
+            'manager_photo_crop_auto': owner_photo_crop_auto,
             'sponsors': sponsors,
             'has_sponsors': bool(sponsors),
             'strike_force': strike_force,
@@ -5345,6 +5423,10 @@ class Auction(http.Controller):
                 auto_map[sid] = pl.get('photo_crop_auto')
             if pl.get('is_icon') and pl.get('icon_badge'):
                 label_map[sid] = pl.get('icon_badge')
+        if ctx.get('manager_photo_crop'):
+            crop_map['owner'] = ctx.get('manager_photo_crop')
+        if ctx.get('manager_photo_crop_auto'):
+            auto_map['owner'] = ctx.get('manager_photo_crop_auto')
         db_name = request.session.db or ''
         map_tag = (
             b'\n<script>window.__spAuctionId='
@@ -5363,7 +5445,7 @@ class Auction(http.Controller):
         )
         editor_tag = (
             map_tag
-            + b'\n<script src="/auction_module/static/src/js/squad_poster_editor.js?v=279">'
+            + b'\n<script src="/auction_module/static/src/js/squad_poster_editor.js?v=280">'
             + b'</script>\n</body>'
         )
         if b'squad_poster_editor.js' not in body:
@@ -5397,6 +5479,23 @@ class Auction(http.Controller):
         if not uri:
             return {'ok': False, 'error': 'encode_failed'}
         return {'ok': True, 'uri': uri, 'player_id': int(player_id)}
+
+    @http.route(['/auction/squad-poster/<int:auction_id>/owner-full-photo',
+                 '/<string:db_name>/auction/squad-poster/<int:auction_id>/owner-full-photo'],
+                type='json', auth='user', website=False)
+    def squad_poster_owner_full_photo(self, auction_id, db_name=None, **kw):
+        """Lazy-load full owner photo for the squad poster editor."""
+        auction = request.env['auction.auction'].sudo().browse(auction_id)
+        if not auction.exists() or not auction.team_id:
+            return {'ok': False, 'error': 'auction_not_found'}
+        photo_bin = auction.team_id.owner_photo
+        if not photo_bin:
+            return {'ok': False, 'error': 'no_photo'}
+        pack = self._sp_photo_pack(photo_bin, include_full=True, max_side=720)
+        uri = pack.get('full_uri') or pack.get('crop_uri') or ''
+        if not uri:
+            return {'ok': False, 'error': 'encode_failed'}
+        return {'ok': True, 'uri': uri, 'player_id': 'owner'}
 
     @http.route(['/auction/squad-poster/<int:auction_id>/photo-crops',
                  '/<string:db_name>/auction/squad-poster/<int:auction_id>/photo-crops'],
@@ -5453,11 +5552,36 @@ class Auction(http.Controller):
                 text = text[:28]
             player.write({'squad_poster_icon_label': text})
             labels_saved += 1
+        team = auction.team_id
+        owner_saved = 0
+        owner_cleared = 0
+        if team:
+            if kw.get('clear_owner'):
+                if team.squad_poster_owner_crop:
+                    team.write({'squad_poster_owner_crop': False})
+                    owner_cleared = 1
+            else:
+                owner_crop = kw.get('owner_crop')
+                if isinstance(owner_crop, dict) and 'l' in owner_crop and 'sw' in owner_crop:
+                    try:
+                        payload = {
+                            'l': float(owner_crop.get('l', 0)),
+                            't': float(owner_crop.get('t', 0)),
+                            'sw': float(owner_crop.get('sw', 1)),
+                            'sh': float(owner_crop.get('sh', 1)),
+                        }
+                    except Exception:
+                        payload = None
+                    if payload:
+                        team.write({'squad_poster_owner_crop': json.dumps(payload)})
+                        owner_saved = 1
         return {
             'ok': True,
             'saved': saved,
             'cleared': cleared,
             'labels_saved': labels_saved,
+            'owner_saved': owner_saved,
+            'owner_cleared': owner_cleared,
         }
 
     @http.route([

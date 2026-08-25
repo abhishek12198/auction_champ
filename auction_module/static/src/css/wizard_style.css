@@ -792,3 +792,97 @@ body.hide-main-menu .oe_main_menu_navbar {
     font-size: 0.875rem;
     line-height: 1.45;
 }
+
+/* ── Deactivate Tournament wizard ── */
+.o_dialog .modal-dialog:has(.o_dt_wizard),
+.modal-dialog:has(.o_dt_wizard) {
+    max-width: 640px;
+}
+.o_dt_wizard .dt-hero {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #7f1d1d 0%, #b91c1c 100%);
+    color: #fff;
+}
+.o_dt_wizard .dt-hero-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,.12);
+    font-size: 20px;
+    flex-shrink: 0;
+}
+.o_dt_wizard .dt-hero-kicker {
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    opacity: .8;
+    font-weight: 700;
+}
+.o_dt_wizard .dt-hero-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+.o_dt_wizard .dt-hero-sub {
+    margin-top: 4px;
+    font-size: 13px;
+    line-height: 1.45;
+    opacity: .92;
+}
+.o_dt_wizard .dt-list-wrap {
+    padding: 4px 4px 8px;
+}
+.o_dt_wizard .dt-list-title {
+    font-weight: 700;
+    color: #7f1d1d;
+    margin-bottom: 8px;
+}
+.o_dt_wizard .dt-list {
+    margin: 0;
+    padding-left: 18px;
+    color: #1f2937;
+    line-height: 1.55;
+}
+.o_dt_wizard .dt-list li {
+    margin: 0 0 8px;
+}
+.o_dt_wizard .dt-list .o_field_widget {
+    display: inline;
+    font-weight: 700;
+}
+.o_dt_wizard .dt-warn {
+    margin-top: 8px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+}
+.o_dt_wizard .dt-warn-title {
+    font-weight: 800;
+    color: #991b1b;
+    margin-bottom: 4px;
+}
+.o_dt_wizard .dt-warn-text {
+    font-size: 13px;
+    color: #7f1d1d;
+    line-height: 1.45;
+}
+.o_dt_wizard .dt-consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 12px;
+    font-weight: 600;
+    color: #111827;
+}
+.o_dt_wizard .dt-consent .o_field_boolean {
+    margin-top: 2px;
+}

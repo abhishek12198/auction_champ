@@ -48,6 +48,7 @@ import werkzeug.exceptions
 class Auction(models.Model):
 
     _name = 'auction.auction'
+    _description = 'Team Auction Rules'
     _inherit = ['auction.tournament.security.mixin', 'auction.live.snapshot.mixin']
     _rec_name = 'team_id'
     _order = 'remaining_players_count,id'
@@ -353,6 +354,7 @@ class Auction(models.Model):
 class AuctionPlayer(models.Model):
 
     _name = 'auction.auction.player'
+    _description = 'Auction Player Line'
     _inherit = ['auction.tournament.security.mixin', 'auction.live.snapshot.mixin']
 
     auction_id = fields.Many2one('auction.auction', 'Auction', ondelete='cascade')
@@ -414,6 +416,7 @@ class AuctionPlayer(models.Model):
 class AuctionBidSlab(models.Model):
 
     _name = 'auction.auction.bid.slab'
+    _description = 'Auction Bid Slab'
     _inherit = ['auction.tournament.security.mixin', 'auction.live.snapshot.mixin']
 
     auction_id = fields.Many2one('auction.auction', ondelete='cascade')

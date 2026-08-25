@@ -47,13 +47,13 @@ class UpdateTierLimitsLine(models.TransientModel):
     wizard_id = fields.Many2one('auction.update.tier.limits', ondelete='cascade')
     tier_id = fields.Many2one('auction.player.tier', string='Tier', readonly=True)
 
-    apply_max_players = fields.Boolean(string='Update?', default=False)
+    apply_max_players = fields.Boolean(string='Update Max Players?', default=False)
     new_max_players = fields.Integer(string='New Max Players', default=1)
 
-    apply_base_point = fields.Boolean(string='Update?', default=False)
+    apply_base_point = fields.Boolean(string='Update Base Point?', default=False)
     new_base_point = fields.Integer(string='New Base Point', default=0)
 
-    apply_max_call = fields.Boolean(string='Update?', default=False)
+    apply_max_call = fields.Boolean(string='Update Max Call?', default=False)
     new_max_call = fields.Integer(
         string='New Max Call',
         default=0,
