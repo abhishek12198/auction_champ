@@ -1,803 +1,918 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-  <template id="player_template_cherry" name="Player Auction – Cherry">
-    <html lang="en" t-att-data-balance-url="('/' + db_name + '/' + tournament.slug + '/auction/show/team/balance') if db_name and tournament and tournament.slug else ''" t-att-data-rp-url="('/' + db_name + '/' + tournament.slug + '/auction/display_auction/remaining-players?theme=cherry') if db_name and tournament and tournament.slug else ''">
-    <head>
-      <meta charset="UTF-8"/>
-      <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-      <link rel="preconnect" href="https://fonts.googleapis.com"/>
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
-      <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Saira:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&amp;display=swap" rel="stylesheet"/>
-      <title>Player Showcase – Cherry</title>
-      <style>
-        @font-face{font-family:'Tottenham';src:url('/auction_module/static/src/assets/fonts/Tottenham%20-%20Personal%202.otf') format('opentype');font-weight:normal;font-style:normal;font-display:swap;}
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        :root {
-          --cherry:        #E11D48;
-          --cherry-dark:   #9F1239;
-          --cherry-deep:   #4C0519;
-          --cherry-bright: #FB7185;
-          --cherry-glow:   rgba(225,29,72,0.38);
-          --cherry-line:   rgba(225,29,72,0.28);
-          --gold:          #E8C547;
-          --gold-dim:      rgba(232,197,71,0.72);
-          --bg:            #070104;
-          --bg-elevated:   #12060a;
-          --bg-panel:      #16080c;
-          --text-main:     #fff5f7;
-          --text-dim:      rgba(255,245,247,0.55);
-          --ink:           #1a050a;
-        }
-        html, body {
-          height: 100vh; overflow: hidden;
-          background: var(--bg); color: var(--text-main);
-          font-family: 'Saira', sans-serif;
-        }
-        body::before {
-          content: '';
-          position: fixed; inset: 0; pointer-events: none; z-index: 0;
-          background:
-            radial-gradient(ellipse 70% 55% at 18% 42%, rgba(225,29,72,.09) 0%, transparent 55%),
-            radial-gradient(ellipse 55% 45% at 88% 12%, rgba(159,18,57,.12) 0%, transparent 50%),
-            linear-gradient(180deg, #0a0204 0%, #070104 100%);
-        }
-        body::after {
-          content: '';
-          position: fixed; inset: 0; pointer-events: none; z-index: 1; opacity: .035;
-          background-image: repeating-linear-gradient(
-            0deg, transparent, transparent 2px, rgba(255,255,255,.35) 2px, rgba(255,255,255,.35) 3px
-          );
-        }
+<template id="player_template_cherry" name="Player Auction – Cherry">
+    <html lang="en" data-theme="cherry" t-att-data-balance-url="('/' + db_name + '/' + tournament.slug + '/auction/show/team/balance') if db_name and tournament and tournament.slug else ''" t-att-data-rp-url="('/' + db_name + '/' + tournament.slug + '/auction/display_auction/remaining-players?theme=cherry') if db_name and tournament and tournament.slug else ''">
+  <head>
+    <meta charset="UTF-8" />
+  <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/no_mobile_zoom.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&amp;family=Barlow+Condensed:wght@400;500;600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <title>Player Showcase</title>
+    <style>
+      /* Sports display font for the Cherry theme */
+      @font-face {
+        font-family: 'Baseball Club Solid';
+        src: url('/auction_module/static/src/assets/fonts/BaseballClubSolid.otf') format('opentype');
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
+      }
+      /* ── Reset ─────────────────────────────────────────────── */
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* ── HEADER ─────────────────────────────────────────────── */
-        .cr-header {
-          position: relative; z-index: 30;
-          display: grid;
-          grid-template-columns: minmax(160px, 1fr) auto minmax(160px, 1fr);
+      :root {
+        --gold:        #E11D48;
+        --gold-dark:   #9F1239;
+        --amber:       #FB7185;
+        --gold-glow:   rgba(225,29,72,0.28);
+        --navy:        #070104;
+        --navy-card:   #12060A;
+        --border:      rgba(225,29,72,0.22);
+        --border-hot:  rgba(225,29,72,0.55);
+        --dim:         rgba(255,255,255,0.48);
+        --white:       #ffffff;
+      }
+
+      html, body {
+        height: 100vh;
+        overflow: hidden;
+        background: var(--navy);
+        color: var(--white);
+        font-family: 'Barlow Condensed', sans-serif;
+      }
+
+      /* ══════════════════════════════════════════
+         HEADER
+      ══════════════════════════════════════════ */
+      .hud-header {
+        position: relative;
+        z-index: 20;
+        display: grid;
+        grid-template-columns: minmax(160px, 1fr) auto minmax(160px, 1fr);
+        align-items: center;
+        height: 84px;
+        padding: 0 36px;
+        background: var(--navy-card);
+        border-bottom: 2px solid var(--gold);
+      }
+      /* subtle diagonal gold shimmer in header */
+      .hud-header::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(105deg, transparent 38%, rgba(225,29,72,0.05) 50%, transparent 62%);
+        pointer-events: none;
+      }
+
+      .hud-brand {
+        display: flex; align-items: center; gap: 12px;
+        text-decoration: none; color: inherit; min-width: 0;
+      }
+      .hud-brand .ac-logo {
+        height: 28px; width: auto; max-width: 150px;
+        object-fit: contain; display: block; flex-shrink: 0;
+        filter: drop-shadow(0 0 8px rgba(225,29,72,0.45));
+      }
+      .hud-brand-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+      .hud-brand-sub {
+        font-family: 'Oswald', sans-serif;
+        font-size: .85rem; font-weight: 700; letter-spacing: 2px;
+        text-transform: uppercase; color: var(--gold); line-height: 1;
+      }
+
+      .hud-tourn-info { display: flex; flex-direction: column; justify-content: center; align-items: center; min-width: 0; }
+      .hud-tourn-name {
+        font-family: 'Baseball Club Solid', 'Oswald', sans-serif;
+        font-size: 1.35rem; font-weight: 700;
+        color: var(--gold);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        max-width: min(42vw, 420px);
+      }
+      .hud-tourn-desc {
+        margin-top: 4px;
+        font-size: 0.72rem; font-weight: 500;
+        letter-spacing: 1.8px;
+        text-transform: uppercase;
+        color: var(--dim);
+        text-align: center;
+      }
+
+      .hud-logo-center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 14px;
+      }
+      .hud-logo-center .tourn-logo {
+        max-height: 54px; max-width: 120px;
+        object-fit: contain;
+      }
+      .hud-header-controls {
+        position: absolute;
+        top: 8px;
+        right: 36px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 21;
+      }
+      .hud-hdr-drawer-btn {
+        height: 32px; padding: 0 10px; border-radius: 7px; flex-shrink: 0; white-space: nowrap; cursor: pointer;
+        background: rgba(225,29,72,0.10); border: 1.5px solid rgba(225,29,72,0.35); color: var(--gold);
+        font: 700 10px/1 'Barlow Condensed', sans-serif; letter-spacing: .08em; text-transform: uppercase;
+      }
+      .hud-hdr-drawer-btn:hover { background: rgba(225,29,72,0.22); }
+      .bs-ctrl-btn { display:flex;align-items:center;justify-content:center;flex-shrink:0;width:32px;height:32px;border-radius:7px;background:rgba(225,29,72,0.10);border:1.5px solid rgba(225,29,72,0.35);color:var(--gold);cursor:pointer;padding:0;transition:all 0.2s }
+      .bs-ctrl-btn:hover { background:rgba(225,29,72,0.22);box-shadow:0 0 8px rgba(225,29,72,0.30) }
+
+      /* ══════════════════════════════════════════
+         ARENA — two-panel full-height split
+      ══════════════════════════════════════════ */
+      .hud-arena {
+        display: grid;
+        grid-template-columns: 53% 1fr;
+        height: calc(100vh - 84px - 42px);
+        overflow: hidden;
+      }
+
+      /* ── LEFT: photo panel ────────────────── */
+      .hud-photo-col {
+        position: relative;
+        overflow: hidden;
+        background: #050810;
+      }
+
+      .hud-photo-col .hud-photo-img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        object-position: top center;
+      }
+
+      /* right-edge fade so photo area blends into info panel */
+      .hud-photo-col::after {
+        content: '';
+        position: absolute; inset: 0;
+        background: linear-gradient(
+          to right,
+          transparent 60%,
+          rgba(7,11,20,0.5) 82%,
+          var(--navy) 100%
+        );
+        z-index: 2;
+        pointer-events: none;
+      }
+
+      /* bottom scrim for overlaid name */
+      .hud-photo-col::before {
+        content: '';
+        position: absolute;
+        bottom: 0; left: 0; right: 0; height: 42%;
+        background: linear-gradient(to top, rgba(7,11,20,0.96) 0%, transparent 100%);
+        z-index: 3;
+        pointer-events: none;
+      }
+
+      /* huge serial watermark centred behind photo */
+      .hud-serial-watermark {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        font-family: 'Baseball Club Solid', 'Oswald', sans-serif;
+        font-size: clamp(11rem, 22vw, 20rem);
+        font-weight: 700;
+        color: rgba(225,29,72,0.05);
+        line-height: 1;
+        letter-spacing: -6px;
+        user-select: none;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      /* serial badge — top-left of photo */
+      .hud-serial-badge {
+        position: absolute;
+        top: 22px; left: 24px;
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .hud-serial-label {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 0.6rem; font-weight: 700;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--dim);
+        line-height: 1;
+      }
+      .hud-serial-number {
+        font-family: 'Baseball Club Solid', 'Oswald', sans-serif;
+        font-size: 4.8rem; font-weight: 700;
+        color: var(--gold);
+        line-height: 1;
+        text-shadow: 0 0 28px rgba(225,29,72,0.45);
+      }
+
+      /* name + role overlay at bottom of photo */
+      .hud-photo-overlay {
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        padding: 22px 28px 26px;
+        z-index: 4;
+      }
+      .hud-player-name {
+        font-family: 'Baseball Club Solid', 'Oswald', sans-serif;
+        font-size: clamp(2.2rem, 4vw, 3.6rem);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        color: var(--white);
+        line-height: 1;
+        text-shadow: 0 2px 20px rgba(0,0,0,0.9);
+      }
+      /* angled badge for role — sports HUD style */
+      .hud-overlay-badges {
+        display: flex; flex-wrap: wrap; align-items: stretch; gap: 12px;
+        margin-top: 12px;
+      }
+      .hud-role-tag {
+        display: inline-flex;
+        align-items: center;
+        margin-top: 0;
+        padding: 12px 28px 10px 18px;
+        min-height: 48px;
+        background: linear-gradient(135deg, var(--gold-dark), var(--amber));
+        color: var(--navy);
+        font-family: 'Oswald', 'Barlow Condensed', sans-serif;
+        font-size: clamp(1.2rem, 2.5vw, 1.85rem); font-weight: 700;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%);
+        box-shadow: 0 6px 22px rgba(225,29,72,.35);
+      }
+      .hud-base-badge {
+        display: inline-flex; flex-direction: column;
+        align-items: flex-start; justify-content: center; gap: 2px;
+        padding: 8px 20px 10px; min-height: 48px;
+        border-radius: 4px;
+        background: linear-gradient(135deg, #fff8dc, var(--gold) 40%, var(--amber));
+        color: #1a1000;
+        border: 2px solid rgba(255,255,255,.35);
+        box-shadow: 0 6px 22px rgba(225,29,72,.4);
+      }
+      .hud-base-badge-lbl {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: .62rem; font-weight: 800; letter-spacing: 2px;
+        text-transform: uppercase; opacity: .8; line-height: 1;
+      }
+      .hud-base-badge-val {
+        font-family: 'Oswald', sans-serif;
+        font-size: clamp(1.35rem, 2.8vw, 2.05rem); font-weight: 700;
+        letter-spacing: 1px; line-height: 1;
+      }
+
+      /* gold vertical accent line on left edge of photo */
+      .hud-photo-col-accent {
+        position: absolute;
+        top: 0; left: 0;
+        width: 4px; height: 100%;
+        background: linear-gradient(to bottom, var(--gold), var(--amber), transparent);
+        z-index: 6;
+      }
+
+      /* ── RIGHT: info panel ────────────────── */
+      .hud-info-col {
+        display: flex;
+        flex-direction: column;
+        background: var(--navy-card);
+        border-left: 1px solid rgba(225,29,72,0.12);
+        overflow: hidden;
+      }
+
+      /* tier strip */
+      .hud-tier-strip {
+        flex-shrink: 0;
+        padding: 16px 28px 15px;
+        background: rgba(225,29,72,0.03);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .hud-tier-label-dim {
+        font-size: 0.75rem; font-weight: 600;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+      /* hexagon-clipped tier badge */
+      .hud-tier-hex {
+        display: inline-flex;
+        align-items: center;
+        padding: 12px 30px 10px 24px;
+        min-height: 48px;
+        font-family: 'Oswald', sans-serif;
+        font-size: clamp(1.15rem, 2.3vw, 1.75rem); font-weight: 600;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0% 50%);
+        color: #0a0800 !important;
+        box-shadow: 0 6px 20px rgba(0,0,0,.35);
+      }
+
+      /* stats area — projector-first */
+      .hud-stats {
+        flex: 1;
+        padding: 18px 28px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        overflow-y: auto;
+      }
+      .hud-stats-heading {
+        font-family: 'Baseball Club Solid', 'Oswald', sans-serif;
+        font-size: 1rem; font-weight: 600;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        color: var(--gold);
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 4px;
+      }
+
+      .hud-stat-row {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 14px 18px 16px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        transition: border-color .2s, background .2s;
+      }
+      .hud-stat-row:hover {
+        border-color: rgba(225,29,72,0.48);
+        background: rgba(225,29,72,0.05);
+      }
+      .hud-stat-key {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: clamp(.62rem, .95vw, .74rem); font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--gold);
+      }
+      .hud-stat-val {
+        font-family: 'Oswald', 'Barlow Condensed', sans-serif;
+        font-size: clamp(1.4rem, 2.6vw, 2.05rem); font-weight: 600;
+        letter-spacing: 1px; line-height: 1.05;
+        color: var(--white);
+        word-break: break-word;
+        text-transform: uppercase;
+      }
+      .hud-stats > div[style*="flex-wrap"] > span {
+        font-family: 'Oswald', sans-serif !important;
+        font-size: clamp(.9rem, 1.5vw, 1.15rem) !important;
+        font-weight: 600 !important;
+        letter-spacing: 1px !important;
+        padding: 10px 16px 8px !important;
+        border-radius: 10px !important;
+        border-width: 2px !important;
+        text-transform: uppercase !important;
+      }
+
+      /* ── action buttons ─────────────────────── */
+      .hud-actions {
+        flex-shrink: 0;
+        padding: 14px 28px;
+        display: flex;
+        gap: 12px;
+        border-top: 1px solid var(--border);
+        background: rgba(225,29,72,0.025);
+      }
+      .hud-btn {
+        flex: 1;
+        padding: 13px 10px;
+        font-family: 'Oswald', sans-serif;
+        font-size: 0.95rem; font-weight: 600;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: all .22s;
+      }
+      .hud-btn-unsold {
+        background: rgba(255,255,255,0.06);
+        border: 1.5px solid rgba(255,255,255,0.18);
+        color: rgba(255,255,255,0.72);
+      }
+      .hud-btn-unsold:hover {
+        background: rgba(255,255,255,0.11);
+        border-color: rgba(255,255,255,0.38);
+        color: var(--white);
+      }
+      .hud-btn-sell {
+        background: linear-gradient(135deg, var(--gold-dark) 0%, var(--amber) 100%);
+        color: var(--navy);
+        font-weight: 700;
+        box-shadow: 0 4px 18px rgba(225,29,72,0.28);
+        /* angled right edge */
+        clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+        padding-right: 22px;
+      }
+      .hud-btn-sell:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 26px rgba(225,29,72,0.46);
+      }
+      .hud-btn-sell:disabled { opacity: .4; cursor: not-allowed; }
+
+      /* ── next player bar ────────────────────── */
+      .hud-next-bar {
+        flex-shrink: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 12px 28px 14px;
+        border-top: 1px solid var(--border);
+        background: var(--navy-card);
+      }
+      .hud-next-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 13px 36px;
+        background: rgba(255,255,255,0.06);
+        border: 1.5px solid rgba(255,255,255,0.18);
+        color: rgba(255,255,255,0.72);
+        font-family: 'Oswald', sans-serif;
+        font-size: 0.95rem; font-weight: 600;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all .22s;
+        border-radius: 3px;
+        clip-path: none;
+      }
+      .hud-next-btn:hover {
+        background: rgba(255,255,255,0.11);
+        border-color: rgba(255,255,255,0.38);
+        color: var(--white);
+        box-shadow: none;
+        transform: none;
+      }
+      .hud-next-btn svg { transition: transform .22s; }
+      .hud-next-btn:hover svg { transform: translateX(4px); }
+
+      /* ── responsive ─────────────────────────── */
+      @media (max-width: 900px) {
+        html, body { height: auto; overflow: auto; overflow-x: hidden; }
+        .hud-arena {
+          grid-template-columns: 1fr;
+          height: auto;
+        }
+        .hud-photo-col { height: 52vw; min-height: 220px; max-height: 320px; }
+        .hud-photo-col::after { display: none; }
+        .hud-serial-watermark { font-size: 7rem; }
+        .hud-player-name { font-size: 1.8rem; }
+        .hud-serial-number { font-size: 3.2rem; }
+        .hud-role-tag { font-size: .68rem; padding: 3px 10px 3px 8px; min-height: 0; }
+        .hud-base-badge { padding: 3px 8px 4px; min-height: 0; }
+        .hud-base-badge-val { font-size: .78rem; }
+        .hud-tier-strip { padding: 10px 14px; }
+        .hud-tier-hex { font-size: .68rem; padding: 3px 10px; min-height: 0; }
+        /* Header: brand left, Pause/FS right — logo no longer overlaps controls */
+        .hud-header {
+          grid-template-columns: minmax(0, 1fr) auto;
+          grid-template-areas:
+            "brand controls"
+            "center center";
+          height: auto;
+          padding: 10px 12px 12px;
+          justify-items: stretch;
           align-items: center;
-          height: 72px; padding: 0 28px;
-          background: linear-gradient(180deg, rgba(18,6,10,.96) 0%, rgba(10,2,4,.92) 100%);
-          border-bottom: 1px solid var(--cherry-line);
-          backdrop-filter: blur(10px);
+          gap: 8px 10px;
         }
-        .cr-header::after {
-          content: '';
-          position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
-          background: linear-gradient(90deg,
-            transparent 0%, var(--cherry-dark) 18%, var(--cherry) 48%,
-            var(--cherry-bright) 52%, var(--cherry) 62%, var(--cherry-dark) 82%, transparent 100%);
-          box-shadow: 0 0 18px var(--cherry-glow);
-        }
-        .cr-header-brand { display: flex; align-items: center; }
-        .cr-header-brand a {
-          display: flex; align-items: center; gap: 12px;
-          text-decoration: none; color: inherit;
-        }
-        .cr-brand-logo {
-          height: 28px; width: auto; max-width: 168px;
-          object-fit: contain; display: block;
-          filter: drop-shadow(0 0 10px rgba(225,29,72,.45));
-        }
-        .cr-brand-text { display: flex; flex-direction: column; gap: 2px; }
-        .cr-brand-sub {
-          font-size: .78rem; font-weight: 600; letter-spacing: 2.2px;
-          text-transform: uppercase; color: var(--cherry-bright);
-        }
-        .cr-header-center {
-          display: flex; justify-content: center; align-items: center; gap: 14px;
+        .hud-brand {
+          grid-area: brand;
+          justify-self: start;
+          max-width: 100%;
           min-width: 0;
         }
-        .cr-tourn-logo {
-          height: 48px; width: auto; max-width: 110px; flex-shrink: 0;
-          object-fit: contain; border-radius: 10px; padding: 4px;
-          background: rgba(225,29,72,.08);
-          border: 1px solid var(--cherry-line);
-          box-shadow: 0 0 20px rgba(225,29,72,.18);
+        .hud-brand .ac-logo { height: 22px; max-width: min(130px, 42vw); }
+        .hud-logo-center {
+          grid-area: center;
+          gap: 8px;
+          width: 100%;
+          flex-wrap: wrap;
+          justify-content: center;
         }
-        .cr-tourn-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-        .cr-tourn-name {
-          font-family: 'Tottenham', 'Bebas Neue', sans-serif;
-          font-size: 1.15rem; letter-spacing: 1.5px; line-height: 1.05;
-          color: var(--text-main);
-          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-          max-width: min(42vw, 420px);
+        .hud-logo-center .tourn-logo { max-height: 40px; }
+        .hud-tourn-info { align-items: center; }
+        .hud-tourn-name {
+          font-size: 1.05rem;
+          letter-spacing: 1.2px;
+          line-height: 1.15;
+          white-space: normal;
+          text-align: center;
+          max-width: 100%;
         }
-        .cr-tourn-desc {
-          font-size: .62rem; font-weight: 500; letter-spacing: 1.6px;
-          text-transform: uppercase; color: var(--text-dim);
-          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-          max-width: min(42vw, 420px);
+        .hud-tourn-desc { text-align: center; font-size: .65rem; }
+        .hud-tourn-logo {
+          grid-area: controls;
+          position: static;
+          justify-self: end;
+          width: auto;
         }
-        .cr-header-right {
-          display: flex; align-items: center; justify-content: flex-end; gap: 10px;
-        }
-        .cr-live-badge {
-          display: flex; align-items: center; gap: 8px;
-          padding: 6px 14px; border-radius: 999px;
-          background: rgba(225,29,72,.12);
-          border: 1px solid rgba(225,29,72,.38);
-          font-family: 'Bebas Neue', sans-serif;
-          font-size: .88rem; letter-spacing: 3px; color: var(--cherry-bright);
-        }
-        .cr-live-dot {
-          width: 8px; height: 8px; border-radius: 50%;
-          background: var(--cherry);
-          box-shadow: 0 0 0 0 rgba(225,29,72,.55);
-          animation: crLivePulse 1.6s ease-out infinite;
-        }
-        @keyframes crLivePulse {
-          0%   { box-shadow: 0 0 0 0 rgba(225,29,72,.55); opacity: 1; }
-          70%  { box-shadow: 0 0 0 10px rgba(225,29,72,0); opacity: .85; }
-          100% { box-shadow: 0 0 0 0 rgba(225,29,72,0); opacity: 1; }
-        }
-        .cr-fs-btn {
-          display: inline-flex; align-items: center; justify-content: center;
-          height: 34px; border-radius: 9px; cursor: pointer;
-          background: rgba(225,29,72,.08);
-          border: 1px solid rgba(225,29,72,.32);
-          color: var(--cherry-bright);
-          transition: background .2s, box-shadow .2s, transform .15s;
-        }
-        .cr-fs-btn { width: 34px; padding: 0; }
-        .cr-fs-btn:hover {
-          background: rgba(225,29,72,.18);
-          box-shadow: 0 0 14px rgba(225,29,72,.25);
+        .hud-header-controls {
+          position: static;
+          top: auto;
+          right: auto;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          gap: 6px;
         }
 
-        /* ── ARENA ──────────────────────────────────────────────── */
-        .cr-arena {
-          position: relative; z-index: 5;
-          height: calc(100vh - 72px - 42px);
-          display: flex; flex-direction: column;
-          overflow: hidden;
-          animation: crReveal .55s cubic-bezier(.22,1,.36,1) both;
+        /* Attributes: compact 2-up grid to cut scroll */
+        .hud-stats {
+          padding: 10px 12px 8px;
+          gap: 6px;
         }
-        @keyframes crReveal {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: none; }
+        .hud-stats-heading {
+          font-size: .78rem;
+          letter-spacing: 2px;
+          padding-bottom: 6px;
+          margin-bottom: 0;
         }
-        .cr-stage {
-          flex: 1; min-height: 0;
-          display: grid;
-          grid-template-columns: 1.15fr 0.85fr;
-          overflow: hidden;
+        .hud-stats .ac-fb-grid,
+        .hud-stats > .hud-attr-grid {
+          display: grid !important;
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          gap: 6px 8px !important;
+          width: 100%;
         }
+        .hud-stats .ac-fb-grid > .ac-fb-span-2,
+        .hud-stats > .hud-attr-grid > .ac-fb-span-2 {
+          grid-column: 1 / -1;
+        }
+        .hud-stat-row {
+          padding: 7px 9px 8px !important;
+          gap: 2px !important;
+          border-radius: 8px;
+          margin: 0;
+        }
+        .hud-stat-key {
+          font-size: .55rem !important;
+          letter-spacing: 1px;
+        }
+        .hud-stat-val {
+          font-size: .92rem !important;
+          letter-spacing: .4px;
+          line-height: 1.15 !important;
+        }
+        .hud-stats > div[style*="flex-wrap"] > span {
+          font-size: .72rem !important;
+          padding: 6px 10px 5px !important;
+        }
+        .hud-actions { padding: 10px 12px; gap: 8px; }
+        .hud-btn { padding: 10px 8px; font-size: .8rem; letter-spacing: 1.5px; }
+        .hud-next-bar { padding: 8px 12px 12px; }
+        .hud-next-btn { font-size: .85rem; padding: 10px 14px; }
+      }
+      @media (max-width: 430px) {
+        .hud-tourn-name { font-size: .95rem; letter-spacing: 1px; }
+        .hud-player-name { font-size: 1.35rem; letter-spacing: 2px; }
+        .hud-brand-sub { display: none; }
+        .hud-brand .ac-logo { height: 20px; max-width: min(110px, 38vw); }
+        .hud-photo-col { height: 48vw; min-height: 200px; max-height: 280px; }
+        .hud-stat-val { font-size: .85rem !important; }
+        .hud-stat-key { font-size: .5rem !important; }
+      }
+/* ── Theme toggle ── */
+/* ── Light mode overrides ── */
+body[data-theme="light"]{
+  --navy:       #fdf8ef;
+  --navy-card:  #ffffff;
+  --white:      #1a1000;
+  --dim:        rgba(26,16,0,0.50);
+  --border:     rgba(180,140,20,0.22);
+  --border-hot: rgba(180,140,20,0.55);
+}
+/* Header */
+body[data-theme="light"] .hud-header{background:linear-gradient(90deg,#fdf4e0 0%,#fff8ec 50%,#fdf4e0 100%);border-bottom:1px solid rgba(180,140,20,0.28)}
+body[data-theme="light"] .hud-tourn-name{color:#4a3000}
+body[data-theme="light"] .hud-tourn-desc{color:rgba(74,48,0,0.65)}
+body[data-theme="light"] .bs-ctrl-btn{color:var(--gold-dark)}
+/* Logo filter for light bg — wordmark SVG is white; invert to dark gold */
+body[data-theme="light"] .hud-brand-sub{color:#4a3000}
+body[data-theme="light"] .hud-brand .ac-logo{
+  filter:brightness(0) sepia(1) saturate(6) hue-rotate(5deg) brightness(0.55)
+          drop-shadow(0 0 6px rgba(180,140,20,0.30));
+}
+/* Info column */
+body[data-theme="light"] .hud-info-col{border-left-color:rgba(180,140,20,0.25)}
+body[data-theme="light"] .hud-stats-heading{color:var(--gold-dark);border-bottom-color:rgba(180,140,20,0.28)}
+body[data-theme="light"] .hud-stat-row{background:rgba(180,140,20,0.04)}
+body[data-theme="light"] .hud-stat-row:hover{background:rgba(180,140,20,0.10);border-color:rgba(180,140,20,0.45)}
+body[data-theme="light"] .hud-stat-key{color:var(--gold-dark)}
+body[data-theme="light"] .hud-stat-val{color:#1a1000}
+/* Unsold button — hardcoded white refs → swap to dark */
+body[data-theme="light"] .hud-btn-unsold{background:rgba(26,16,0,0.06);border:1.5px solid rgba(26,16,0,0.20);color:rgba(26,16,0,0.72)}
+body[data-theme="light"] .hud-btn-unsold:hover{background:rgba(26,16,0,0.12);border-color:rgba(26,16,0,0.36);color:rgba(26,16,0,0.92)}
+/* Next player button */
+body[data-theme="light"] .hud-next-btn{background:rgba(26,16,0,0.06);border:1.5px solid rgba(26,16,0,0.20);color:rgba(26,16,0,0.72)}
+body[data-theme="light"] .hud-next-btn:hover{background:rgba(26,16,0,0.12);border-color:rgba(26,16,0,0.36);color:rgba(26,16,0,0.92)}
+body[data-theme="light"] .hud-next-bar{background:var(--navy-card)}
+/* Photo column elements always sit on a dark photo — keep them bright */
+body[data-theme="light"] .hud-player-name{color:#ffffff}
+body[data-theme="light"] .hud-serial-label{color:rgba(255,255,255,0.55)}
+body[data-theme="light"] .hud-serial-number{color:var(--gold)}
+body[data-theme="light"] .hud-role-tag{color:#1a0800}
+/* Photo edge gradient — blend into light info panel cleanly */
+body[data-theme="light"] .hud-photo-col::after{background:linear-gradient(to right,transparent 65%,rgba(253,248,239,0.6) 88%,#fdf8ef 100%)}
+body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to top,rgba(7,11,20,0.96) 0%,transparent 100%)}
 
-        /* Photo */
-        .cr-photo-col {
-          position: relative; overflow: hidden;
-          background: #050103;
-        }
-        .cr-photo-blur {
-          position: absolute; inset: -8%;
-          width: 116%; height: 116%;
-          object-fit: cover; object-position: center top;
-          filter: blur(28px) brightness(.28) saturate(1.15);
-          transform: scale(1.05);
-          z-index: 1; pointer-events: none;
-        }
-        .cr-photo {
-          position: absolute; inset: 0;
-          width: 100%; height: 100%;
-          object-fit: cover; object-position: center 28%;
-          z-index: 2;
-          animation: crPhotoIn .7s cubic-bezier(.22,1,.36,1) both;
-        }
-        @keyframes crPhotoIn {
-          from { opacity: 0; transform: scale(1.02); }
-          to   { opacity: 1; transform: none; }
-        }
-        .cr-photo-col::before {
-          content: '';
-          position: absolute; inset: 0; z-index: 3; pointer-events: none;
-          background:
-            linear-gradient(90deg, transparent 58%, rgba(7,1,4,.35) 82%, var(--bg-panel) 100%),
-            linear-gradient(180deg, rgba(7,1,4,.25) 0%, transparent 22%, transparent 52%, rgba(7,1,4,.88) 100%);
-        }
-        .cr-photo-col::after {
-          content: '';
-          position: absolute; left: 0; top: 0; bottom: 0; width: 4px; z-index: 4;
-          background: linear-gradient(180deg, var(--cherry-bright), var(--cherry), var(--cherry-dark));
-          box-shadow: 0 0 18px var(--cherry-glow);
-        }
-        .cr-serial-badge {
-          position: absolute; z-index: 5; top: 18px; left: 22px;
-          display: flex; align-items: baseline; gap: 4px;
-          padding: 8px 14px 6px;
-          border-radius: 12px;
-          background: rgba(7,1,4,.55);
-          border: 1px solid rgba(232,197,71,.35);
-          backdrop-filter: blur(8px);
-          box-shadow: 0 8px 24px rgba(0,0,0,.35);
-        }
-        .cr-serial-hash {
-          font-family: 'Bebas Neue', sans-serif;
-          font-size: 1.1rem; color: var(--gold-dim); line-height: 1;
-        }
-        .cr-serial-num {
-          font-family: 'Tottenham', 'Bebas Neue', sans-serif;
-          font-size: 2.4rem; line-height: .9;
-          background: linear-gradient(135deg, #fff4c2 0%, var(--gold) 45%, #b8860b 100%);
-          -webkit-background-clip: text; background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-        .cr-photo-overlay {
-          position: absolute; z-index: 5;
-          left: 22px; right: 28px; bottom: 22px;
-          display: flex; flex-direction: column; gap: 14px;
-          animation: crNameIn .65s .12s cubic-bezier(.22,1,.36,1) both;
-        }
-        @keyframes crNameIn {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: none; }
-        }
-        .cr-id-name {
-          font-family: 'Tottenham', 'Bebas Neue', sans-serif;
-          font-size: clamp(2rem, 4.2vw, 3.4rem);
-          letter-spacing: .04em; text-transform: uppercase; line-height: .95;
-          color: #fff;
-          text-shadow: 0 4px 28px rgba(0,0,0,.65), 0 0 24px rgba(225,29,72,.28);
-          max-width: 95%;
-        }
-        .cr-id-meta { display: flex; flex-wrap: wrap; align-items: stretch; gap: 12px; }
-        .cr-role-tag, .cr-tier-badge, .cr-base-badge {
-          display: inline-flex; align-items: center; justify-content: center;
-          font-family: 'Bebas Neue', sans-serif;
-          font-size: clamp(1.35rem, 2.8vw, 2.15rem);
-          font-weight: 400; letter-spacing: 2.5px;
-          text-transform: uppercase; border-radius: 12px;
-          padding: 10px 22px 8px; line-height: 1;
-          min-height: 52px;
-        }
-        .cr-role-tag {
-          color: #fff;
-          background: linear-gradient(135deg, var(--cherry-dark), var(--cherry));
-          border: 2px solid rgba(255,255,255,.28);
-          box-shadow: 0 8px 28px rgba(225,29,72,.45), inset 0 1px 0 rgba(255,255,255,.2);
-          text-shadow: 0 2px 8px rgba(0,0,0,.35);
-        }
-        .cr-tier-badge {
-          border: 2px solid transparent;
-          box-shadow: 0 8px 24px rgba(0,0,0,.35);
-          text-shadow: 0 2px 8px rgba(0,0,0,.25);
-        }
-        .cr-base-badge {
-          flex-direction: column; align-items: flex-start; gap: 3px;
-          padding: 8px 20px 10px;
-          color: #1a1200;
-          background: linear-gradient(135deg, #b8860b, var(--gold) 55%, #fff4c2);
-          border: 2px solid rgba(255,255,255,.4);
-          box-shadow: 0 8px 28px rgba(232,197,71,.45);
-          text-shadow: none;
-        }
-        .cr-base-badge-lbl {
-          font-family: 'Saira', sans-serif;
-          font-size: .62rem; font-weight: 800; letter-spacing: 2px;
-          opacity: .85; line-height: 1;
-        }
-        .cr-base-badge-val {
-          font-size: clamp(1.4rem, 2.9vw, 2.2rem);
-          letter-spacing: 1px; line-height: 1;
-        }
+    /* Powered-by footer */
+    .hud-footer {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 42px; z-index: 40;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      background: var(--navy-card);
+      border-top: 1px solid var(--border);
+    }
+    .hud-footer-lbl {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .62rem; font-weight: 700; letter-spacing: 2.2px;
+      text-transform: uppercase; color: var(--dim);
+    }
+    .hud-footer-logo {
+      height: 22px; width: auto; max-width: 140px;
+      object-fit: contain; display: block;
+      filter: drop-shadow(0 0 8px rgba(225,29,72,.4));
+    }
+    body[data-theme="light"] .hud-footer {
+      background: #fff; border-top-color: rgba(180,140,20,.22);
+    }
+    body[data-theme="light"] .hud-footer-logo {
+      filter: brightness(0) sepia(1) saturate(6) hue-rotate(5deg) brightness(0.55);
+    }
+    
+    .hud-photo img, img.hud-photo, .hud-player-img { object-fit: cover !important; object-position: center top; }
+    .hud-name-overlay, .hud-player-name {
+      text-transform: uppercase; letter-spacing: .05em;
+      text-shadow: 0 4px 24px rgba(0,0,0,.55), 0 0 18px rgba(225,29,72,.25);
+    }
+    .hud-stat-row .hud-stat:has(.hud-stat-label) { /* progressive */ }
 
-        /* Stats — projector-first hierarchy */
-        .cr-stats-col {
-          position: relative;
-          display: flex; flex-direction: column;
-          padding: 22px 26px 18px;
-          overflow: auto;
-          background:
-            linear-gradient(160deg, rgba(22,8,12,.98) 0%, rgba(12,4,8,.98) 100%);
-          border-left: 1px solid rgba(225,29,72,.14);
-        }
-        .cr-stats-header {
-          display: flex; align-items: center; justify-content: space-between;
-          margin-bottom: 18px; padding-bottom: 12px;
-          border-bottom: 1px solid rgba(225,29,72,.18);
-        }
-        .cr-stats-header-title {
-          font-family: 'Bebas Neue', sans-serif;
-          font-size: 1.35rem; letter-spacing: 4px; color: var(--cherry-bright);
-        }
-        .cr-stats-header-mark {
-          width: 56px; height: 4px; border-radius: 2px;
-          background: linear-gradient(90deg, var(--cherry), transparent);
-        }
-        .cr-stat-row {
-          display: flex; flex-direction: column; gap: 4px;
-          margin-bottom: 12px;
-          padding: 14px 18px 16px;
-          border-radius: 14px;
-          background: rgba(255,255,255,.04);
-          border: 1px solid rgba(225,29,72,.16);
-          box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
-          transition: border-color .2s, background .2s, transform .2s;
-        }
-        .cr-stat-row:hover {
-          border-color: rgba(225,29,72,.36);
-          background: rgba(225,29,72,.09);
-          transform: translateX(2px);
-        }
-        .cr-stat-key {
-          font-family: 'Saira', sans-serif;
-          font-size: clamp(.62rem, .95vw, .74rem);
-          font-weight: 700; letter-spacing: 2.2px;
-          text-transform: uppercase; color: var(--cherry-bright);
-          opacity: .9;
-        }
-        .cr-stat-val {
-          font-family: 'Bebas Neue', sans-serif;
-          font-size: clamp(1.5rem, 2.8vw, 2.15rem);
-          font-weight: 400; letter-spacing: 1.5px;
-          line-height: 1.05; color: #fff;
-          text-shadow: 0 2px 14px rgba(0,0,0,.35);
-          word-break: break-word;
-          text-transform: uppercase;
-        }
-        .cr-stat-val.cr-blood { color: var(--cherry-bright); }
-        /* Football style/strength chips — oversized for projector */
-        .cr-stats-col .cr-fb-chips,
-        .cr-stats-col > div[style*="flex-wrap"] {
-          gap: 12px !important;
-          margin-top: 8px !important;
-          margin-bottom: 8px;
-        }
-        .cr-stats-col > div[style*="flex-wrap"] > span {
-          font-family: 'Bebas Neue', sans-serif !important;
-          font-size: clamp(.95rem, 1.6vw, 1.25rem) !important;
-          font-weight: 400 !important;
-          letter-spacing: 1.5px !important;
-          padding: 10px 18px 8px !important;
-          border-radius: 12px !important;
-          border-width: 2px !important;
-          text-transform: uppercase !important;
-        }
-        .cr-wm {
-          display: flex; align-items: center; justify-content: center;
-          gap: 14px; padding: 14px 0 2px;
-          opacity: .22; pointer-events: none; user-select: none;
-          margin-top: auto;
-        }
-        .cr-wm-rule {
-          flex: 1; height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(225,29,72,.5), transparent);
-        }
-
-        /* Actions */
-        .cr-actions {
-          flex-shrink: 0;
-          display: grid;
-          grid-template-columns: 1fr 1.25fr 1fr;
-          gap: 12px;
-          height: 76px; padding: 12px 24px;
-          background: linear-gradient(180deg, rgba(18,6,10,.9), rgba(7,1,4,.98));
-          border-top: 1px solid rgba(225,29,72,.16);
-        }
-        .cr-btn {
-          height: 100%;
-          display: inline-flex; align-items: center; justify-content: center; gap: 9px;
-          border: none; cursor: pointer;
-          font-family: 'Bebas Neue', sans-serif;
-          font-size: 1rem; letter-spacing: 2px;
-          border-radius: 14px;
-          transition: transform .18s ease, box-shadow .2s, filter .2s, background .2s;
-          white-space: nowrap;
-        }
-        .cr-btn-unsold {
-          background: rgba(225,29,72,.06);
-          border: 1.5px solid rgba(225,29,72,.42);
-          color: var(--cherry-bright);
-        }
-        .cr-btn-unsold:hover {
-          background: rgba(225,29,72,.14);
-          transform: translateY(-1px);
-          box-shadow: 0 8px 22px rgba(225,29,72,.18);
-        }
-        .cr-btn-sell {
-          position: relative; overflow: hidden;
-          background: linear-gradient(135deg, var(--cherry-dark) 0%, var(--cherry) 55%, #fb7185 120%);
-          color: #fff;
-          border: 1px solid rgba(255,255,255,.16);
-          box-shadow: 0 8px 28px rgba(225,29,72,.42);
-        }
-        .cr-btn-sell::after {
-          content: '';
-          position: absolute; inset: 0;
-          background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.22) 50%, transparent 65%);
-          transform: translateX(-120%);
-          animation: crSheen 3.2s ease-in-out infinite;
-        }
-        @keyframes crSheen {
-          0%, 55% { transform: translateX(-120%); }
-          75%, 100% { transform: translateX(120%); }
-        }
-        .cr-btn-sell:hover:not(:disabled) {
-          transform: translateY(-2px);
-          filter: brightness(1.06);
-          box-shadow: 0 12px 34px rgba(225,29,72,.55);
-        }
-        .cr-btn-sell:disabled { opacity: .38; cursor: not-allowed; }
-        .cr-btn-sell:disabled::after { display: none; }
-        .cr-btn-next {
-          background: rgba(232,197,71,.07);
-          border: 1.5px solid rgba(232,197,71,.35);
-          color: var(--gold);
-        }
-        .cr-btn-next:hover {
-          background: rgba(232,197,71,.14);
-          transform: translateY(-1px);
-          box-shadow: 0 8px 22px rgba(232,197,71,.18);
-        }
-        .cr-btn:active { transform: translateY(0); }
-
-        /* Powered-by footer */
-        .cr-footer {
-          position: fixed; bottom: 0; left: 0; right: 0;
-          height: 42px; z-index: 40;
-          display: flex; align-items: center; justify-content: center; gap: 10px;
-          background: rgba(7,1,4,.96);
-          border-top: 1px solid rgba(225,29,72,.18);
-        }
-        .cr-footer-lbl {
-          font-family: 'Saira', sans-serif;
-          font-size: .62rem; font-weight: 700; letter-spacing: 2.2px;
-          text-transform: uppercase; color: rgba(255,245,247,.5);
-        }
-        .cr-footer-logo {
-          height: 22px; width: auto; max-width: 140px;
-          object-fit: contain; display: block;
-          filter: drop-shadow(0 0 8px rgba(225,29,72,.35));
-        }
-
-        /* Light mode */
-        body[data-theme="light"] {
-          --bg: #fff5f7; --bg-elevated: #ffffff; --bg-panel: #fff0f3;
-          --text-main: #2d0810; --text-dim: rgba(45,8,16,.55);
-        }
-        body[data-theme="light"]::before {
-          background:
-            radial-gradient(ellipse 70% 55% at 20% 30%, rgba(225,29,72,.08) 0%, transparent 55%),
-            linear-gradient(180deg, #fff8fa 0%, #fff5f7 100%);
-        }
-        body[data-theme="light"]::after { opacity: .02; }
-        body[data-theme="light"] .cr-header {
-          background: linear-gradient(180deg, #fff 0%, #fff5f7 100%);
-        }
-        body[data-theme="light"] .cr-tourn-name { color: var(--cherry-dark); }
-        body[data-theme="light"] .cr-brand-logo {
-          filter: brightness(0) sepia(1) saturate(8) hue-rotate(320deg) brightness(.75)
-                  drop-shadow(0 0 6px rgba(225,29,72,.25));
-        }
-        body[data-theme="light"] .cr-stats-col {
-          background: linear-gradient(160deg, #fff 0%, #fff5f7 100%);
-        }
-        body[data-theme="light"] .cr-stat-row { background: rgba(225,29,72,.03); }
-        body[data-theme="light"] .cr-stat-val { color: var(--cherry-deep); text-shadow: none; }
-        body[data-theme="light"] .cr-stat-key { color: var(--cherry-dark); }
-        body[data-theme="light"] .cr-actions {
-          background: linear-gradient(180deg, #fff 0%, #fff5f7 100%);
-        }
-        body[data-theme="light"] .cr-footer {
-          background: #fff5f7; border-top-color: rgba(225,29,72,.16);
-        }
-        body[data-theme="light"] .cr-footer-lbl { color: rgba(45,8,16,.45); }
-        body[data-theme="light"] .cr-footer-logo {
-          filter: brightness(0) sepia(1) saturate(8) hue-rotate(320deg) brightness(.75);
-        }
-        body[data-theme="light"] .cr-photo-col::before {
-          background:
-            linear-gradient(90deg, transparent 58%, rgba(255,245,247,.45) 84%, var(--bg-panel) 100%),
-            linear-gradient(180deg, rgba(7,1,4,.2) 0%, transparent 22%, transparent 48%, rgba(7,1,4,.82) 100%);
-        }
-        body[data-theme="light"] .cr-id-name { color: #fff; }
-        body[data-theme="light"] .cr-live-badge { color: var(--cherry-dark); }
-
-        /* Responsive */
-        @media (max-width: 900px) {
-          html, body { height: auto; min-height: 0; overflow-x: hidden; overflow-y: auto; }
-          .cr-header {
-            grid-template-columns: 1fr auto;
-            height: auto; padding: 12px 14px; gap: 10px;
-            align-items: center;
-          }
-          .cr-header-center {
-            grid-column: 1 / -1; order: 3; justify-content: center; min-width: 0;
-          }
-          .cr-tourn-name, .cr-tourn-desc {
-            max-width: 90vw; white-space: normal; text-align: center;
-            overflow-wrap: anywhere; word-break: break-word;
-          }
-          .cr-tourn-name {
-            font-size: .92rem; line-height: 1.2;
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-          }
-          .cr-brand-logo { height: 24px; max-width: 120px; }
-          .cr-brand-sub { display: none; }
-          .cr-arena { height: auto; overflow: visible; }
-          .cr-stage { display: block; }
-          .cr-photo-col { height: 52vw; min-height: 220px; max-height: 320px; }
-          .cr-photo-col::before {
-            background: linear-gradient(180deg, rgba(7,1,4,.15) 0%, transparent 30%, transparent 45%, rgba(7,1,4,.9) 100%);
-          }
-          .cr-stats-col { border-left: none; padding: 14px 12px; overflow: visible; }
-          .cr-stats-header { margin-bottom: 10px; padding-bottom: 8px; }
-          .cr-stats-header-title { font-size: 1.05rem; letter-spacing: 2px; }
-          .cr-stat-row { margin-bottom: 0; padding: 7px 9px 8px; gap: 2px; border-radius: 10px; }
-          .cr-stat-key { font-size: .52rem; letter-spacing: 1px; }
-          .cr-stat-val { font-size: .92rem; letter-spacing: .4px; }
-          .cr-actions {
-            height: auto; grid-template-columns: 1fr;
-            padding: 14px 16px 18px; gap: 10px;
-          }
-          .cr-btn { height: 48px; }
-          .cr-id-name { font-size: 1.8rem; }
-        }
-        @media (max-width: 430px) {
-          .cr-photo-col { height: 48vw; min-height: 200px; max-height: 280px; }
-          .cr-serial-num { font-size: 1.9rem; }
-          .cr-id-name { font-size: 1.45rem; }
-          .cr-role-tag, .cr-tier-badge, .cr-base-badge { font-size: .68rem; min-height: 0; padding: 3px 8px; }
-          .cr-base-badge-val { font-size: .78rem; }
-          .cr-stat-val { font-size: .85rem; }
-        }
-      </style>
-      <t t-call="auction_module.player_mystery_critical_css"/>
-    </head>
+  </style>
+    <t t-call="auction_module.player_mystery_critical_css"/>
+  </head>
 
 <t t-call="auction_module.point_unit_bootstrap">
   <t t-set="pu_tournament" t-value="tournament or (player.tournament_id if player else None)"/>
 </t>
 
 
-    <body t-att-data-player-id="player.id" t-att-data-next-countdown="tournament.next_player_countdown if tournament else 5" t-att-data-is-mystery="'1' if player.tier_id and player.tier_id.mystery else '0'" t-att-data-tournament-id="tournament.id if tournament else ''" t-att-data-break-time="'1' if tournament and tournament.break_time_active else '0'">
+  <body t-att-data-player-id="player.id" t-att-data-next-countdown="tournament.next_player_countdown if tournament else 5" t-att-data-is-mystery="'1' if player.tier_id and player.tier_id.mystery else '0'" t-att-data-tournament-id="tournament.id if tournament else ''" t-att-data-break-time="'1' if tournament and tournament.break_time_active else '0'">
 
-      <header class="cr-header">
-        <div class="cr-header-brand">
-          <a href="/web">
-            <img src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ" class="cr-brand-logo"/>
-            <div class="cr-brand-text">
-              <div class="cr-brand-sub">Cherry Edition</div>
-            </div>
-          </a>
+    <!-- ══════════════════════════════════════
+         HEADER
+    ══════════════════════════════════════ -->
+    <header class="hud-header">
+      <a href="/web" class="hud-brand">
+        <img class="ac-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
+        <div class="hud-brand-text">
+          <div class="hud-brand-sub">Cherry Edition</div>
         </div>
-        <div class="cr-header-center">
-          <t t-if="tournament and tournament.logo">
-            <img class="cr-tourn-logo" t-att-src="image_data_uri(tournament.logo)" alt="Tournament Logo"/>
-          </t>
-          <t t-if="tournament">
-            <div class="cr-tourn-info">
-              <div class="cr-tourn-name"><t t-esc="tournament.name"/></div>
-              <t t-if="tournament.description">
-                <div class="cr-tourn-desc"><t t-esc="tournament.description"/></div>
-              </t>
-            </div>
-          </t>
+      </a>
+      <div class="hud-logo-center">
+        <t t-if="player.tournament_id and player.tournament_id.logo">
+          <img class="tourn-logo" t-att-src="image_data_uri(player.tournament_id.logo)" alt="Tournament Logo"/>
+        </t>
+        <div class="hud-tourn-info">
+          <div class="hud-tourn-name"><t t-esc="player.tournament_id.name"/></div>
+          <div class="hud-tourn-desc"><t t-esc="player.tournament_id.description"/></div>
         </div>
-        <div class="cr-header-right">
-          <div class="cr-live-badge">
-            <span class="cr-live-dot"></span>
-            LIVE
-          </div>
+      </div>
+      <div class="hud-tourn-logo">
+        <div class="hud-header-controls">
+          <button type="button" class="hud-hdr-drawer-btn" onclick="toggleRemainingPlayers()">Players Left</button>
+          <button type="button" class="hud-hdr-drawer-btn" onclick="toggleBidSummary()">Bid Summary</button>
           <button type="button" id="ac-break-btn" class="ac-break-btn" onclick="acToggleBreakTime()" title="Break Time">&#9208; Pause</button>
-          <button id="fs-btn" onclick="toggleFullscreen()" title="Fullscreen" class="cr-fs-btn">
+          <button id="fs-btn" onclick="toggleFullscreen()" title="Fullscreen" class="bs-ctrl-btn">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
           </button>
         </div>
-      </header>
+      </div>
+    </header>
 
-      <div class="cr-arena" data-player-zone="">
-        <div class="cr-stage">
+    <!-- ══════════════════════════════════════
+         ARENA
+    ══════════════════════════════════════ -->
+    <div class="hud-arena" data-player-zone="">
 
-          <div class="cr-photo-col">
-            <img class="cr-photo-blur" t-att-src="photo_focus_uri or image_data_uri(player.photo)" aria-hidden="true" alt=""/>
-            <img class="cr-photo" id="loadImage" t-att-src="photo_focus_uri or image_data_uri(player.photo)" alt="Player Photo"/>
-            <div class="cr-serial-badge">
-              <span class="cr-serial-hash">#</span>
-              <span class="cr-serial-num"><t t-esc="'%02d' % (player.sl_no or 0)"/></span>
-            </div>
-            <div class="cr-photo-overlay">
-              <div class="cr-id-name" data-sm-name=""><t t-esc="player.name.upper() if player.name else ''"/></div>
-              <div class="cr-id-meta">
-                <t t-if="(player.dominant_position_id.name if player.tournament_type == 'football' else player.role)">
-                  <div class="cr-role-tag" data-sm-role=""><t t-esc="player.dominant_position_id.name if player.tournament_type == 'football' else player.role"/></div>
-                </t>
-                <t t-if="player.tier_id">
-                  <div class="cr-tier-badge"
-                       t-att-style="'background:' + (player.tier_id.color or '#E11D48') + '; color:#fff; border-color:rgba(255,255,255,0.35);'">
-                    <t t-esc="player.tier_id.name"/>
-                  </div>
-                </t>
-                <t t-if="player.effective_base_price">
-                  <div class="cr-base-badge">
-                    <span class="cr-base-badge-lbl">Base Price</span>
-                    <span class="cr-base-badge-val"><t t-esc="(tournament or player.tournament_id).format_points(player.effective_base_price or 0) if (tournament or (player and player.tournament_id)) else '{:,}'.format(int(player.effective_base_price or 0))"/></span>
-                  </div>
-                </t>
-              </div>
-            </div>
-          </div>
+      <!-- ── LEFT: Photo panel ── -->
+      <div class="hud-photo-col">
+        <!-- left accent bar -->
+        <div class="hud-photo-col-accent"></div>
 
-          <div class="cr-stats-col">
-            <div class="cr-stats-header">
-              <div class="cr-stats-header-title">Player Profile</div>
-              <div class="cr-stats-header-mark"></div>
-            </div>
+        <!-- giant serial watermark behind photo -->
+        <div class="hud-serial-watermark"><t t-esc="player.sl_no"/></div>
 
-            <t t-call="auction_module.football_attr_layout_css"/>
-            <t t-if="player.tournament_type != 'football'">
-              <div class="ac-fb-grid">
-                <t t-if="player.batting_style">
-                  <div class="cr-stat-row">
-                    <span class="cr-stat-key">Batting</span>
-                    <span class="cr-stat-val"><t t-esc="player.batting_style"/></span>
-                  </div>
-                </t>
-                <t t-if="player.bowling_style">
-                  <div class="cr-stat-row">
-                    <span class="cr-stat-key">Bowling</span>
-                    <span class="cr-stat-val"><t t-esc="player.bowling_style"/></span>
-                  </div>
-                </t>
-                <t t-if="player.address">
-                  <div class="cr-stat-row ac-fb-span-2">
-                    <span class="cr-stat-key">Location</span>
-                    <span class="cr-stat-val"><t t-esc="player.address"/></span>
-                  </div>
-                </t>
-              </div>
-            </t>
-            <t t-else="">
-              <div class="ac-fb-grid">
-                <t t-if="player.dominant_position_id">
-                  <div class="cr-stat-row"><span class="cr-stat-key">Position</span><span class="cr-stat-val"><t t-esc="player.dominant_position_id.name"/></span></div>
-                </t>
-                <t t-if="player.preferred_foot">
-                  <div class="cr-stat-row"><span class="cr-stat-key">Foot</span><span class="cr-stat-val"><t t-esc="player.preferred_foot.capitalize()"/></span></div>
-                </t>
-                <t t-if="player.use_other_attributes">
-                  <t t-foreach="player.other_attribute_ids.filtered('value')" t-as="oattr">
-                    <div class="cr-stat-row"><span class="cr-stat-key"><t t-esc="oattr.label"/></span><span class="cr-stat-val"><t t-esc="oattr.value or '—'"/></span></div>
-                  </t>
-                </t>
-                <t t-else="">
-                  <t t-if="player.secondary_position_ids">
-                    <div class="cr-stat-row"><span class="cr-stat-key">Secondary</span><span class="cr-stat-val"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span></div>
-                  </t>
-                  <t t-if="player.age">
-                    <div class="cr-stat-row"><span class="cr-stat-key">Age</span><span class="cr-stat-val"><t t-esc="player.age"/></span></div>
-                  </t>
-                  <t t-if="player.work_rate">
-                    <div class="cr-stat-row"><span class="cr-stat-key">Work Rate</span><span class="cr-stat-val"><t t-esc="player.work_rate.capitalize()"/></span></div>
-                  </t>
-                  <t t-if="player.height">
-                    <div class="cr-stat-row"><span class="cr-stat-key">Height</span><span class="cr-stat-val"><t t-esc="player.height"/></span></div>
-                  </t>
-                  <t t-if="player.weight">
-                    <div class="cr-stat-row"><span class="cr-stat-key">Weight</span><span class="cr-stat-val"><t t-esc="player.weight"/></span></div>
-                  </t>
-                </t>
-                <t t-if="player.address">
-                  <div class="cr-stat-row ac-fb-span-2"><span class="cr-stat-key">Location</span><span class="cr-stat-val"><t t-esc="player.address"/></span></div>
-                </t>
-                <t t-call="auction_module.football_tag_chips"/>
-              </div>
-            </t>
+        <!-- photo fills full column height -->
+        <img class="hud-photo-img"
+             t-att-src="image_data_uri(player.photo)"
+             alt="Player Photo"
+             id="loadImage" />
 
-            <div class="cr-wm">
-              <div class="cr-wm-rule"></div>
-              <svg width="28" height="28" viewBox="0 0 44 44" fill="none" aria-hidden="true">
-                <circle cx="22" cy="22" r="14" stroke="rgba(225,29,72,.9)" stroke-width="1.5" fill="rgba(225,29,72,.08)"/>
-                <path d="M16 8 Q12 16 13 22 Q14 30 16 36" stroke="rgba(225,29,72,.65)" stroke-width="1.1" fill="none"/>
-                <path d="M28 8 Q32 16 31 22 Q30 30 28 36" stroke="rgba(225,29,72,.65)" stroke-width="1.1" fill="none"/>
-              </svg>
-              <div class="cr-wm-rule"></div>
-            </div>
-          </div>
+        <!-- serial badge — top left -->
+        <div class="hud-serial-badge">
+          <span class="hud-serial-label">No.</span>
+          <span class="hud-serial-number"><t t-esc="player.sl_no"/></span>
         </div>
 
-        <div class="cr-actions">
-          <button class="cr-btn cr-btn-unsold" onclick="setPlayerUnsold()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-            Set Unsold
-          </button>
-          <button class="cr-btn cr-btn-sell" onclick="openSellModal()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
-            Sell to Team
-          </button>
-          <button class="cr-btn cr-btn-next" onclick="changeImage()">
-            Next Player
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18L14.5 12 6 6V18ZM16 6V18H18V6H16Z"/></svg>
-          </button>
+        <!-- player name + role + base price overlaid at bottom -->
+        <div class="hud-photo-overlay">
+          <div class="hud-player-name" data-sm-name=""><t t-esc="player.name.upper()"/></div>
+          <div class="hud-overlay-badges">
+            <t t-if="(player.dominant_position_id.name if player.tournament_type == 'football' else player.role)">
+              <div class="hud-role-tag" data-sm-role=""><t t-esc="player.dominant_position_id.name if player.tournament_type == 'football' else player.role"/></div>
+            </t>
+            <t t-if="player.effective_base_price">
+              <div class="hud-base-badge">
+                <span class="hud-base-badge-lbl">Base Price</span>
+                <span class="hud-base-badge-val"><t t-esc="(tournament or player.tournament_id).format_points(player.effective_base_price or 0) if (tournament or (player and player.tournament_id)) else '{:,}'.format(int(player.effective_base_price or 0))"/></span>
+              </div>
+            </t>
+          </div>
         </div>
       </div>
 
-      <footer class="cr-footer">
-        <span class="cr-footer-lbl">Powered by</span>
-        <img class="cr-footer-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
-      </footer>
+      <!-- ── RIGHT: Info panel ── -->
+      <div class="hud-info-col">
 
-      <script>
-        async function changeImage(skipOverlay) {
-          var currentPlayerId = document.body.getAttribute('data-player-id');
-          var countSecs = Math.max(1, parseInt(document.body.getAttribute('data-next-countdown') || '5'));
-          var overlay = document.getElementById('ac-next-overlay');
-          var countEl = document.getElementById('ac-next-count');
-          var mainDiv = document.getElementById('ac-next-main');
-          var lastDiv = document.getElementById('ac-next-last');
+        <!-- tier strip -->
+        <div class="hud-tier-strip">
+          <t t-if="player.tier_id">
+            <span class="hud-tier-hex"
+                  t-att-style="'background:' + (player.tier_id.color or '#F5C842') + '; color:#0a0800;'">
+              <t t-esc="player.tier_id.name"/>
+            </span>
+          </t>
+          <t t-else="">
+            <span class="hud-tier-label-dim">Auction Tier</span>
+          </t>
+        </div>
 
-          var html;
-          try {
-            var fetchUrl = window.location.href.split('?')[0] + '?exclude=' + currentPlayerId + '&amp;preview=1';
-            var r = await fetch(fetchUrl, {cache: 'no-store'});
-            if (!r.ok) throw new Error('HTTP ' + r.status);
-            html = await r.text();
-          } catch(e) {
-            console.error('Next player load failed:', e);
-            window.location.reload();
-            return;
+        <!-- stats -->
+        <div class="hud-stats">
+          <div class="hud-stats-heading">Player Profile</div>
+          <t t-call="auction_module.football_attr_layout_css"/>
+
+          <t t-if="player.tournament_type != 'football'">
+            <div class="hud-attr-grid ac-fb-grid">
+              <t t-if="player.batting_style">
+                <div class="hud-stat-row">
+                  <span class="hud-stat-key">Batting</span>
+                  <span class="hud-stat-val"><t t-esc="player.batting_style"/></span>
+                </div>
+              </t>
+              <t t-if="player.bowling_style">
+                <div class="hud-stat-row">
+                  <span class="hud-stat-key">Bowling</span>
+                  <span class="hud-stat-val"><t t-esc="player.bowling_style"/></span>
+                </div>
+              </t>
+              <t t-if="player.address">
+                <div class="hud-stat-row ac-fb-span-2">
+                  <span class="hud-stat-key">Location</span>
+                  <span class="hud-stat-val"><t t-esc="player.address"/></span>
+                </div>
+              </t>
+            </div>
+          </t>
+          <t t-else="">
+            <div class="ac-fb-grid">
+              <t t-if="player.dominant_position_id">
+                <div class="hud-stat-row"><span class="hud-stat-key">Position</span><span class="hud-stat-val"><t t-esc="player.dominant_position_id.name"/></span></div>
+              </t>
+              <t t-if="player.preferred_foot">
+                <div class="hud-stat-row"><span class="hud-stat-key">Preferred Foot</span><span class="hud-stat-val"><t t-esc="player.preferred_foot.capitalize()"/></span></div>
+              </t>
+              <t t-if="player.use_other_attributes">
+                <t t-foreach="player.other_attribute_ids.filtered('value')" t-as="oattr">
+                  <div class="hud-stat-row"><span class="hud-stat-key"><t t-esc="oattr.label"/></span><span class="hud-stat-val"><t t-esc="oattr.value or '—'"/></span></div>
+                </t>
+              </t>
+              <t t-else="">
+                <t t-if="player.secondary_position_ids">
+                  <div class="hud-stat-row"><span class="hud-stat-key">Secondary</span><span class="hud-stat-val"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span></div>
+                </t>
+                <t t-if="player.age">
+                  <div class="hud-stat-row"><span class="hud-stat-key">Age</span><span class="hud-stat-val"><t t-esc="player.age"/></span></div>
+                </t>
+                <t t-if="player.work_rate">
+                  <div class="hud-stat-row"><span class="hud-stat-key">Work Rate</span><span class="hud-stat-val"><t t-esc="player.work_rate.capitalize()"/></span></div>
+                </t>
+                <t t-if="player.height">
+                  <div class="hud-stat-row"><span class="hud-stat-key">Height</span><span class="hud-stat-val"><t t-esc="player.height"/></span></div>
+                </t>
+                <t t-if="player.weight">
+                  <div class="hud-stat-row"><span class="hud-stat-key">Weight</span><span class="hud-stat-val"><t t-esc="player.weight"/></span></div>
+                </t>
+              </t>
+              <t t-if="player.address">
+                <div class="hud-stat-row ac-fb-span-2"><span class="hud-stat-key">Location</span><span class="hud-stat-val"><t t-esc="player.address"/></span></div>
+              </t>
+              <t t-call="auction_module.football_tag_chips"/>
+            </div>
+          </t>
+        </div>
+
+        <!-- action buttons -->
+        <div class="hud-actions cr-actions">
+          <button class="hud-btn hud-btn-unsold" onclick="setPlayerUnsold()">Set Unsold</button>
+          <button class="hud-btn hud-btn-sell" onclick="openSellModal()">Sell to Team</button>
+        </div>
+
+        <!-- next player -->
+        <div class="hud-next-bar">
+          <button class="hud-next-btn" onclick="changeImage()">
+            Next Player
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 18L14.5 12 6 6V18ZM16 6V18H18V6H16Z"/>
+            </svg>
+          </button>
+        </div>
+
+      </div><!-- /hud-info-col -->
+    </div><!-- /hud-arena -->
+
+    <footer class="hud-footer cr-footer">
+      <span class="hud-footer-lbl">Powered by</span>
+      <img class="hud-footer-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+    </footer>
+
+    <script>
+      async function changeImage(skipOverlay) {
+        var currentPlayerId = document.body.getAttribute('data-player-id');
+        var countSecs = Math.max(1, parseInt(document.body.getAttribute('data-next-countdown') || '5'));
+        var overlay = document.getElementById('ac-next-overlay');
+        var countEl = document.getElementById('ac-next-count');
+        var mainDiv = document.getElementById('ac-next-main');
+        var lastDiv = document.getElementById('ac-next-last');
+
+        // Fetch the next player first, before showing any overlay
+        var html;
+        try {
+          var fetchUrl = window.location.href.split('?')[0] + '?exclude=' + currentPlayerId + '&amp;preview=1';
+          var r = await fetch(fetchUrl, {cache: 'no-store'});
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          html = await r.text();
+        } catch(e) {
+          console.error('Next player load failed:', e);
+          window.location.reload();
+          return;
+        }
+
+        var parser = new DOMParser();
+        var newDoc = parser.parseFromString(html, 'text/html');
+        if (!newDoc.body || !newDoc.body.getAttribute('data-player-id')) {
+          window.location.replace(window.location.href);
+          return;
+        }
+        var newPlayerId = newDoc.body.getAttribute('data-player-id');
+
+        // Last player — show message directly, no countdown
+        if (newPlayerId === currentPlayerId) {
+          if (mainDiv) mainDiv.style.display = 'none';
+          if (lastDiv) lastDiv.style.display = 'block';
+          if (overlay) {
+            overlay.style.display = 'flex';
+            requestAnimationFrame(function() {
+              requestAnimationFrame(function() { overlay.style.opacity = '1'; });
+            });
           }
+          return;
+        }
 
-          var parser = new DOMParser();
-          var newDoc = parser.parseFromString(html, 'text/html');
-          if (!newDoc.body || !newDoc.body.getAttribute('data-player-id')) {
-            window.location.replace(window.location.href);
-            return;
-          }
-          var newPlayerId = newDoc.body.getAttribute('data-player-id');
+        var zone    = document.querySelector('[data-player-zone]');
+        var newZone = newDoc.querySelector('[data-player-zone]');
 
-          if (newPlayerId === currentPlayerId) {
-            if (mainDiv) mainDiv.style.display = 'none';
-            if (lastDiv) lastDiv.style.display = 'block';
-            if (overlay) {
-              overlay.style.display = 'flex';
-              requestAnimationFrame(function() {
-                requestAnimationFrame(function() { overlay.style.opacity = '1'; });
-              });
-            }
-            return;
-          }
-
-          var zone    = document.querySelector('[data-player-zone]');
-          var newZone = newDoc.querySelector('[data-player-zone]');
-
-          if (skipOverlay || !overlay) {
-            if (newPlayerId) document.body.setAttribute('data-player-id', newPlayerId);
-            var _mf = (newDoc.body &amp;&amp; newDoc.body.getAttribute('data-is-mystery')) || '0';
-            document.body.setAttribute('data-is-mystery', _mf);
-            document.body.removeAttribute('data-mystery-revealed');
-            if (zone &amp;&amp; newZone) { zone.innerHTML = newZone.innerHTML; }
-            if (typeof window.acMysteryApplyFromBody === 'function') { window.acMysteryApplyFromBody(); }
-            if (typeof window.acCommitPlayerOnStage === 'function') {
-              await window.acCommitPlayerOnStage(newPlayerId);
-            }
-            return;
-          }
-
-          if (mainDiv) mainDiv.style.display = 'flex';
-          if (lastDiv) lastDiv.style.display = 'none';
-          overlay.style.display = 'flex';
-          requestAnimationFrame(function() {
-            requestAnimationFrame(function() { overlay.style.opacity = '1'; });
-          });
-          if (countEl) countEl.textContent = countSecs;
-
-          await new Promise(function(resolve) {
-            var remaining = countSecs;
-            var tick = setInterval(function() {
-              remaining--;
-              if (remaining &lt;= 0) { clearInterval(tick); resolve(); }
-              else {
-                if (countEl) {
-                  countEl.textContent = remaining;
-                  countEl.classList.remove('ac-count-pop');
-                  void countEl.offsetWidth;
-                  countEl.classList.add('ac-count-pop');
-                }
-              }
-            }, 1000);
-          });
-
+        // Skip overlay when called after sold — swap player immediately
+        if (skipOverlay || !overlay) {
           if (newPlayerId) document.body.setAttribute('data-player-id', newPlayerId);
           var _mf = (newDoc.body &amp;&amp; newDoc.body.getAttribute('data-is-mystery')) || '0';
           document.body.setAttribute('data-is-mystery', _mf);
@@ -807,241 +922,303 @@
           if (typeof window.acCommitPlayerOnStage === 'function') {
             await window.acCommitPlayerOnStage(newPlayerId);
           }
-          overlay.style.opacity = '0';
-          setTimeout(function() { overlay.style.display = 'none'; }, 400);
+          return;
         }
 
-        function closeNextOverlay() {
-          var ov = document.getElementById('ac-next-overlay');
-          if (!ov) return;
-          ov.style.opacity = '0';
-          setTimeout(function() { ov.style.display = 'none'; }, 400);
-        }
+        // Show countdown overlay, then swap
+        if (mainDiv) mainDiv.style.display = 'flex';
+        if (lastDiv) lastDiv.style.display = 'none';
+        overlay.style.display = 'flex';
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() { overlay.style.opacity = '1'; });
+        });
+        if (countEl) countEl.textContent = countSecs;
 
-        document.addEventListener('keydown', function(event) {
-          if (event.code === 'Space') { event.preventDefault(); changeImage(); }
+        await new Promise(function(resolve) {
+          var remaining = countSecs;
+          var tick = setInterval(function() {
+            remaining--;
+            if (remaining &lt;= 0) { clearInterval(tick); resolve(); }
+            else {
+              if (countEl) {
+                countEl.textContent = remaining;
+                countEl.classList.remove('ac-count-pop');
+                void countEl.offsetWidth;
+                countEl.classList.add('ac-count-pop');
+              }
+            }
+          }, 1000);
         });
 
-        function setPlayerUnsold() {
-          document.getElementById('crUnsoldModal').style.display = 'flex';
+        if (newPlayerId) document.body.setAttribute('data-player-id', newPlayerId);
+        var _mf = (newDoc.body &amp;&amp; newDoc.body.getAttribute('data-is-mystery')) || '0';
+        document.body.setAttribute('data-is-mystery', _mf);
+        document.body.removeAttribute('data-mystery-revealed');
+        if (zone &amp;&amp; newZone) { zone.innerHTML = newZone.innerHTML; }
+        if (typeof window.acMysteryApplyFromBody === 'function') { window.acMysteryApplyFromBody(); }
+        if (typeof window.acCommitPlayerOnStage === 'function') {
+          await window.acCommitPlayerOnStage(newPlayerId);
         }
+        overlay.style.opacity = '0';
+        setTimeout(function() { overlay.style.display = 'none'; }, 400);
+      }
 
-        (function() {
-          document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('crUnsoldCancel').addEventListener('click', function() {
-              document.getElementById('crUnsoldModal').style.display = 'none';
-            });
-            document.getElementById('crUnsoldConfirm').addEventListener('click', function() {
-              document.getElementById('crUnsoldModal').style.display = 'none';
-              var playerId = parseInt(document.body.getAttribute('data-player-id'));
-              if (!playerId) { showUnsoldToast('Error: Player ID not found', true); return; }
-              fetch('/web/dataset/call_kw', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                  jsonrpc: '2.0', method: 'call',
-                  params: { model: 'auction.team.player', method: 'action_unsold', args: [[playerId]], kwargs: {} }
-                })
-              }).then(r => r.json()).then(function(result) {
-                if (result.error) showUnsoldToast('Failed to mark player as unsold', true);
-                else {
-                  var secs = (result.result &amp;&amp; result.result.display_seconds > 0) ? result.result.display_seconds : 5;
-                  showUnsoldStamp(secs, '#E11D48', '#fff');
+      function closeNextOverlay() {
+        var ov = document.getElementById('ac-next-overlay');
+        if (!ov) return;
+        ov.style.opacity = '0';
+        setTimeout(function() { ov.style.display = 'none'; }, 400);
+      }
+
+      document.addEventListener("keydown", function(event) {
+        if (event.code === "Space") {
+          event.preventDefault();
+          changeImage();
+        }
+      });
+
+      function setPlayerUnsold() {
+        var modal = document.getElementById('unsoldConfirmModal');
+        modal.style.display = 'flex';
+      }
+
+      (function() {
+        document.addEventListener('DOMContentLoaded', function() {
+          document.getElementById('unsoldModalCancel').addEventListener('click', function() {
+            document.getElementById('unsoldConfirmModal').style.display = 'none';
+          });
+          document.getElementById('unsoldModalConfirm').addEventListener('click', function() {
+            document.getElementById('unsoldConfirmModal').style.display = 'none';
+            var playerId = parseInt(document.body.getAttribute('data-player-id'));
+            if (!playerId) {
+              showUnsoldToast('Error: Player ID not found', true);
+              return;
+            }
+            fetch('/web/dataset/call_kw', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                jsonrpc: '2.0',
+                method: 'call',
+                params: {
+                  model: 'auction.team.player',
+                  method: 'action_unsold',
+                  args: [[playerId]],
+                  kwargs: {}
                 }
-              }).catch(function() { showUnsoldToast('Failed to mark player as unsold', true); });
+              })
+            }).then(function(response) {
+              return response.json();
+            }).then(function(result) {
+              if (result.error) {
+                showUnsoldToast('Failed to mark player as unsold', true);
+              } else {
+                var secs = (result.result &amp;&amp; result.result.display_seconds > 0) ? result.result.display_seconds : 5;
+                showUnsoldStamp(secs, '#F5C842', '#090912');
+              }
+            }).catch(function() {
+              showUnsoldToast('Failed to mark player as unsold', true);
             });
           });
-        })();
-
-        function showUnsoldToast(message, isError) {
-          var toast = document.getElementById('crToast');
-          toast.textContent = message;
-          toast.style.background = isError ? '#9F1239' : '#1b5e20';
-          toast.style.display = 'block';
-          setTimeout(function() { toast.style.display = 'none'; }, 3500);
-        }
-
-        function showUnsoldStamp(displaySeconds, stampColor, stampText) {
-          if (!document.getElementById('_unsoldStampCSS')) {
-            var s = document.createElement('style');
-            s.id = '_unsoldStampCSS';
-            s.textContent = '@keyframes _unsoldDrop{0%{transform:rotate(-22deg) scale(2.4);opacity:0}100%{transform:rotate(-22deg) scale(1);opacity:.92}}@keyframes _unsoldFadeIn{from{opacity:0}to{opacity:1}}';
-            document.head.appendChild(s);
-          }
-          var img = document.getElementById('loadImage');
-          var r = img.getBoundingClientRect();
-          var ov = document.createElement('div');
-          ov.style.cssText = 'position:fixed;z-index:9500;top:'+r.top+'px;left:'+r.left+'px;width:'+r.width+'px;height:'+r.height+'px;background:rgba(0,0,0,0.48);display:flex;align-items:center;justify-content:center;animation:_unsoldFadeIn .35s ease;pointer-events:none;';
-          var stamp = document.createElement('div');
-          stamp.style.cssText = 'background:'+stampColor+';color:'+stampText+';font-size:clamp(1.8rem,5vw,3.2rem);font-weight:900;letter-spacing:6px;padding:8px 36px;border:5px solid rgba(255,255,255,0.85);border-radius:6px;box-shadow:0 0 0 3px '+stampColor+',0 8px 40px rgba(0,0,0,.5);opacity:0;animation:_unsoldDrop .5s cubic-bezier(.34,1.3,.64,1) .15s forwards;text-shadow:2px 3px 8px rgba(0,0,0,.4);';
-          stamp.textContent = 'UNSOLD';
-          var barWrap = document.createElement('div');
-          barWrap.style.cssText = 'position:absolute;bottom:12px;left:16px;right:16px;';
-          var barTrack = document.createElement('div');
-          barTrack.style.cssText = 'background:rgba(255,255,255,0.25);border-radius:4px;height:6px;overflow:hidden;';
-          var bar = document.createElement('div');
-          bar.style.cssText = 'height:100%;width:100%;background:'+stampColor+';border-radius:4px;transition:width '+displaySeconds+'s linear;';
-          barTrack.appendChild(bar);
-          barWrap.appendChild(barTrack);
-          ov.appendChild(stamp);
-          ov.appendChild(barWrap);
-          document.body.appendChild(ov);
-          requestAnimationFrame(function() { requestAnimationFrame(function() { bar.style.width = '0%'; }); });
-          setTimeout(function() { if (ov.parentNode) ov.parentNode.removeChild(ov); changeImage(true); }, displaySeconds * 1000);
-        }
-
-        function resolveAuctionPanelUrl(kind) {
-          var el = document.documentElement;
-          var url = (kind === 'rp' ? el.dataset.rpUrl : el.dataset.balanceUrl) || '';
-          if (url.indexOf('//') === 0) { url = ''; }
-          if (url) { return url; }
-          var parts = (location.pathname || '').split('/').filter(Boolean);
-          var db = parts[0] || '';
-          var slug = '';
-          if (parts[1] === 'auction' &amp;&amp; (parts[2] === 'display_auction' || parts[2] === 'player_selector') &amp;&amp; parts[3]) {
-            slug = parts[3];
-          }
-          if (!db || !slug) { return ''; }
-          if (kind === 'rp') {
-            var theme = el.dataset.theme || 'vanilla';
-            return '/' + db + '/' + slug + '/auction/display_auction/remaining-players?theme=' + encodeURIComponent(theme);
-          }
-          return '/' + db + '/' + slug + '/auction/show/team/balance';
-        }
-
-        function openBidSummary() {
-          document.getElementById('crBidDrawer').style.right = '0';
-          document.getElementById('crBidArrow').innerHTML = '&#x2192;';
-          document.getElementById('crBidOverlay').style.display = 'block';
-          var frame = document.getElementById('crBidFrame');
-          var url = resolveAuctionPanelUrl('balance');
-          if (frame &amp;&amp; url) {
-            var cur = frame.getAttribute('src') || '';
-            if (!cur || cur === 'about:blank') {
-              frame.src = url;
-            } else {
-              try {
-                if (frame.contentWindow &amp;&amp; typeof frame.contentWindow.refreshBalance === 'function') {
-                  frame.contentWindow.refreshBalance();
-                }
-              } catch (e) {}
-            }
-          }
-          document.body.style.overflow = 'hidden';
-        }
-        function closeBidSummary() {
-          document.getElementById('crBidDrawer').style.right = '-1150px';
-          document.getElementById('crBidArrow').innerHTML = '&#x2190;';
-          document.getElementById('crBidOverlay').style.display = 'none';
-          document.body.style.overflow = '';
-        }
-        function toggleBidSummary() {
-          var r = document.getElementById('crBidDrawer').style.right;
-          if (r === '0px' || r === '0') { closeBidSummary(); } else { openBidSummary(); }
-        }
-        function openRemainingPlayers() {
-          document.getElementById('rpFrame').src = resolveAuctionPanelUrl('rp');
-          document.getElementById('rpDrawer').style.right = '0';
-          document.getElementById('rpTabArrow').innerHTML = '&#x2192;';
-          document.getElementById('rpOverlay').style.display = 'block';
-          document.body.style.overflow = 'hidden';
-        }
-        function closeRemainingPlayers() {
-          document.getElementById('rpDrawer').style.right = '-900px';
-          document.getElementById('rpTabArrow').innerHTML = '&#x2190;';
-          document.getElementById('rpOverlay').style.display = 'none';
-          document.body.style.overflow = '';
-        }
-        function toggleRemainingPlayers() {
-          var r = document.getElementById('rpDrawer').style.right;
-          if (r === '0px' || r === '0') { closeRemainingPlayers(); } else { openRemainingPlayers(); }
-        }
-        function toggleFullscreen() {
-          if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(function(e) { console.warn(e); });
-          } else {
-            document.exitFullscreen();
-          }
-        }
-        document.addEventListener('fullscreenchange', function() {
-          var btn = document.getElementById('fs-btn');
-          if (!btn) return;
-          if (document.fullscreenElement) {
-            sessionStorage.setItem('auction_fullscreen', '1');
-            btn.title = 'Exit Fullscreen';
-            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>';
-          } else {
-            sessionStorage.removeItem('auction_fullscreen');
-            btn.title = 'Enter Fullscreen';
-            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>';
-          }
         });
-        if (sessionStorage.getItem('auction_fullscreen') === '1') {
-          document.documentElement.requestFullscreen().catch(function(e) { console.warn(e); });
+      })();
+
+      function showUnsoldToast(message, isError) {
+        var toast = document.getElementById('unsoldToast');
+        toast.textContent = message;
+        toast.style.background = isError ? '#8B0000' : '#1b5e20';
+        toast.style.display = 'block';
+        setTimeout(function() { toast.style.display = 'none'; }, 3500);
+      }
+
+      function showUnsoldStamp(displaySeconds, stampColor, stampText) {
+        if (!document.getElementById('_unsoldStampCSS')) {
+          var s = document.createElement('style');
+          s.id = '_unsoldStampCSS';
+          s.textContent = '@keyframes _unsoldDrop{0%{transform:rotate(-22deg) scale(2.4);opacity:0}100%{transform:rotate(-22deg) scale(1);opacity:.92}}@keyframes _unsoldFadeIn{from{opacity:0}to{opacity:1}}';
+          document.head.appendChild(s);
         }
-      </script>
+        var img = document.getElementById('loadImage');
+        var r = img.getBoundingClientRect();
+        var ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;z-index:9500;top:'+r.top+'px;left:'+r.left+'px;width:'+r.width+'px;height:'+r.height+'px;background:rgba(0,0,0,0.48);display:flex;align-items:center;justify-content:center;animation:_unsoldFadeIn .35s ease;pointer-events:none;';
+        var stamp = document.createElement('div');
+        stamp.style.cssText = 'background:'+stampColor+';color:'+stampText+';font-size:clamp(1.8rem,5vw,3.2rem);font-weight:900;letter-spacing:6px;padding:8px 36px;border:5px solid rgba(255,255,255,0.85);border-radius:6px;box-shadow:0 0 0 3px '+stampColor+',0 8px 40px rgba(0,0,0,.5);opacity:0;animation:_unsoldDrop .5s cubic-bezier(.34,1.3,.64,1) .15s forwards;text-shadow:2px 3px 8px rgba(0,0,0,.4);';
+        stamp.textContent = 'UNSOLD';
+        var barWrap = document.createElement('div');
+        barWrap.style.cssText = 'position:absolute;bottom:12px;left:16px;right:16px;';
+        var barTrack = document.createElement('div');
+        barTrack.style.cssText = 'background:rgba(255,255,255,0.25);border-radius:4px;height:6px;overflow:hidden;';
+        var bar = document.createElement('div');
+        bar.style.cssText = 'height:100%;width:100%;background:'+stampColor+';border-radius:4px;transition:width '+displaySeconds+'s linear;';
+        barTrack.appendChild(bar);
+        barWrap.appendChild(barTrack);
+        ov.appendChild(stamp);
+        ov.appendChild(barWrap);
+        document.body.appendChild(ov);
+        requestAnimationFrame(function() { requestAnimationFrame(function() { bar.style.width = '0%'; }); });
+        setTimeout(function() { if (ov.parentNode) ov.parentNode.removeChild(ov); changeImage(true); }, displaySeconds * 1000);
+      }
 
-      <div id="crBidDrawer" style="position:fixed;top:0;right:-1150px;width:1150px;max-width:96vw;height:100vh;z-index:9800;display:flex;flex-direction:column;background:#12060a;border-left:3px solid #E11D48;box-shadow:-6px 0 40px rgba(225,29,72,0.28);transition:right .35s cubic-bezier(.4,0,.2,1);">
-        <div onclick="toggleBidSummary()" style="position:absolute;left:-44px;top:50%;transform:translateY(-50%);width:44px;height:130px;background:linear-gradient(180deg,#4C0519,#9F1239);border-radius:8px 0 0 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;box-shadow:-4px 2px 14px rgba(225,29,72,0.38);border:1px solid rgba(225,29,72,0.28);">
-          <span id="crBidArrow" style="color:#fb7185;font-size:1.2rem;line-height:1;">&#x2190;</span>
-          <span style="color:#fb7185;writing-mode:vertical-rl;transform:rotate(180deg);font-size:0.58rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:0.9;">Summary</span>
+
+      function resolveAuctionPanelUrl(kind) {
+        var el = document.documentElement;
+        var url = (kind === 'rp' ? el.dataset.rpUrl : el.dataset.balanceUrl) || '';
+        // Missing db_name produced "//slug/..." which browsers treat as another host.
+        if (url.indexOf('//') === 0) { url = ''; }
+        if (url) { return url; }
+        var parts = (location.pathname || '').split('/').filter(Boolean);
+        var db = parts[0] || '';
+        var slug = '';
+        if (parts[1] === 'auction' &amp;&amp; (parts[2] === 'display_auction' || parts[2] === 'player_selector') &amp;&amp; parts[3]) {
+          slug = parts[3];
+        }
+        if (!db || !slug) { return ''; }
+        if (kind === 'rp') {
+          var theme = el.dataset.theme || 'vanilla';
+          return '/' + db + '/' + slug + '/auction/display_auction/remaining-players?theme=' + encodeURIComponent(theme);
+        }
+        return '/' + db + '/' + slug + '/auction/show/team/balance';
+      }
+
+      function openBidSummary() {
+        var frame = document.getElementById('bidSummaryFrame');
+        var url = resolveAuctionPanelUrl('balance');
+        if (frame &amp;&amp; url) {
+          var cur = frame.getAttribute('src') || '';
+          if (!cur || cur === 'about:blank') {
+            frame.src = url;
+          } else {
+            try {
+              if (frame.contentWindow &amp;&amp; typeof frame.contentWindow.refreshBalance === 'function') {
+                frame.contentWindow.refreshBalance();
+              }
+            } catch (e) {}
+          }
+        }
+        document.getElementById('bidSummaryDrawer').style.right = '0';
+        document.getElementById('bidSummaryTabArrow').innerHTML = '&#x2192;';
+        document.getElementById('bidSummaryOverlay').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+      }
+      function closeBidSummary() {
+        document.getElementById('bidSummaryDrawer').style.right = '-1150px';
+        document.getElementById('bidSummaryTabArrow').innerHTML = '&#x2190;';
+        document.getElementById('bidSummaryOverlay').style.display = 'none';
+        document.body.style.overflow = '';
+      }
+      function toggleBidSummary() {
+        var r = document.getElementById('bidSummaryDrawer').style.right;
+        if (r === '0px' || r === '0') { closeBidSummary(); } else { openBidSummary(); }
+      }
+      function openRemainingPlayers() {
+        document.getElementById('rpFrame').src = resolveAuctionPanelUrl('rp');
+        document.getElementById('rpDrawer').style.right = '0';
+        document.getElementById('rpTabArrow').innerHTML = '&#x2192;';
+        document.getElementById('rpOverlay').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+      }
+      function closeRemainingPlayers() {
+        document.getElementById('rpDrawer').style.right = '-900px';
+        document.getElementById('rpTabArrow').innerHTML = '&#x2190;';
+        document.getElementById('rpOverlay').style.display = 'none';
+        document.body.style.overflow = '';
+      }
+      function toggleRemainingPlayers() {
+        var r = document.getElementById('rpDrawer').style.right;
+        if (r === '0px' || r === '0') { closeRemainingPlayers(); } else { openRemainingPlayers(); }
+      }
+    </script>
+      <!-- Bid Summary Drawer — Cherry Theme -->
+      <div id="bidSummaryDrawer" style="position:fixed; top:0; right:-1150px; width:1150px; max-width:96vw; height:100vh; z-index:9800; display:flex; flex-direction:column; background:rgba(9,9,18,0.99); border-left:3px solid #F5C842; box-shadow:-6px 0 40px rgba(225,29,72,0.2); transition:right .35s cubic-bezier(.4,0,.2,1);">
+        <!-- Fold/unfold tab -->
+        <div onclick="toggleBidSummary()" style="display:none; position:absolute; left:-44px; top:50%; transform:translateY(-50%); width:44px; height:130px; background:linear-gradient(180deg,#6b4f00,#C8960C); border-radius:8px 0 0 8px; cursor:pointer; flex-direction:column; align-items:center; justify-content:center; gap:6px; box-shadow:-4px 2px 14px rgba(225,29,72,0.3); z-index:1; border:1px solid rgba(225,29,72,0.25);">
+          <span id="bidSummaryTabArrow" style="color:#F5C842; font-size:1.2rem; line-height:1;">&#x2190;</span>
+          <span style="color:#F5C842; writing-mode:vertical-rl; transform:rotate(180deg); font-size:0.58rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; opacity:0.9;">Summary</span>
         </div>
-        <div style="padding:16px 20px;background:linear-gradient(135deg,#0a0305,#2a0a10);color:#fff5f7;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:2px solid #E11D48;">
-          <span style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px;">Auction Bid Summary</span>
-          <button onclick="closeBidSummary()" style="background:rgba(225,29,72,0.14);border:1px solid rgba(225,29,72,0.38);color:#fff5f7;width:32px;height:32px;border-radius:6px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">&#x2715;</button>
+        <div style="padding:16px 20px; background:rgba(9,9,18,0.99); color:#fff; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; border-bottom:2px solid #F5C842;">
+          <span style="font-size:1.05rem; font-weight:700; letter-spacing:.3px; color:#F5C842;">&#x1F4CA; Auction Bid Summary</span>
+          <button onclick="closeBidSummary()" style="background:rgba(225,29,72,0.1); border:1px solid rgba(225,29,72,0.4); color:#F5C842; width:32px; height:32px; border-radius:6px; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1;">&#x2715;</button>
         </div>
-        <iframe id="crBidFrame" style="flex:1;border:none;width:100%;" title="Bid Summary"></iframe>
+        <iframe id="bidSummaryFrame" style="flex:1; border:none; width:100%;" title="Bid Summary"></iframe>
       </div>
-      <div id="crBidOverlay" onclick="closeBidSummary()" style="display:none;position:fixed;inset:0;z-index:9700;background:rgba(0,0,0,0.65);"></div>
-
-      <div id="rpDrawer" style="position:fixed;top:0;right:-900px;width:900px;max-width:96vw;height:100vh;z-index:9750;display:flex;flex-direction:column;background:#12060a;border-left:3px solid #E11D48;box-shadow:-6px 0 40px rgba(225,29,72,0.28);transition:right .35s cubic-bezier(.4,0,.2,1);">
-        <div onclick="toggleRemainingPlayers()" style="position:absolute;left:-44px;top:65%;transform:translateY(-50%);width:44px;height:130px;background:linear-gradient(180deg,#4C0519,#9F1239);border-radius:8px 0 0 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;box-shadow:-4px 2px 14px rgba(225,29,72,0.38);border:1px solid rgba(225,29,72,0.28);">
-          <span id="rpTabArrow" style="color:#fb7185;font-size:1.2rem;line-height:1;">&#x2190;</span>
-          <span style="color:#fb7185;writing-mode:vertical-rl;transform:rotate(180deg);font-size:0.58rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:0.9;white-space:nowrap;">Players Left</span>
+      <div id="bidSummaryOverlay" onclick="closeBidSummary()" style="display:none; position:fixed; inset:0; z-index:9700; background:rgba(0,0,0,0.75);"></div>
+      <!-- Players Left Drawer — Cherry Theme -->
+      <div id="rpDrawer" style="position:fixed; top:0; right:-900px; width:900px; max-width:96vw; height:100vh; z-index:9750; display:flex; flex-direction:column; background:rgba(9,9,18,0.99); border-left:3px solid #C8960C; box-shadow:-6px 0 32px rgba(225,29,72,0.30); transition:right .35s cubic-bezier(.4,0,.2,1);">
+        <div onclick="toggleRemainingPlayers()" style="display:none; position:absolute; left:-44px; top:65%; transform:translateY(-50%); width:44px; height:130px; background:linear-gradient(180deg,#6b4f00,#C8960C); border-radius:8px 0 0 8px; cursor:pointer; flex-direction:column; align-items:center; justify-content:center; gap:6px; box-shadow:-4px 2px 14px rgba(225,29,72,0.3); z-index:1; border:1px solid rgba(225,29,72,0.25);">
+          <span id="rpTabArrow" style="color:#F5C842; font-size:1.2rem; line-height:1;">&#x2190;</span>
+          <span style="color:#F5C842; writing-mode:vertical-rl; transform:rotate(180deg); font-size:0.58rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; opacity:0.9; white-space:nowrap;">Players Left</span>
         </div>
-        <div style="padding:14px 20px;background:linear-gradient(135deg,#0a0305,#2a0a10);color:#fb7185;display:flex;align-items:center;justify-content:flex-end;flex-shrink:0;border-bottom:2px solid #E11D48;">
-          <button onclick="closeRemainingPlayers()" style="background:rgba(225,29,72,0.14);border:1px solid rgba(225,29,72,0.38);color:#fb7185;width:32px;height:32px;border-radius:6px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">&#x2715;</button>
+        <div style="padding:14px 20px; background:rgba(9,9,18,0.99); color:#F5C842; display:flex; align-items:center; justify-content:flex-end; flex-shrink:0; border-bottom:2px solid #C8960C;">
+          <button onclick="closeRemainingPlayers()" style="background:rgba(225,29,72,0.15); border:1px solid rgba(225,29,72,0.4); color:#F5C842; width:32px; height:32px; border-radius:6px; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1;">&#x2715;</button>
         </div>
-        <iframe id="rpFrame" style="flex:1;border:none;width:100%;" title="Remaining Players"></iframe>
+        <iframe id="rpFrame" style="flex:1; border:none; width:100%;" title="Remaining Players"></iframe>
       </div>
-      <div id="rpOverlay" onclick="closeRemainingPlayers()" style="display:none;position:fixed;inset:0;z-index:9650;background:rgba(0,0,0,0.65);"></div>
-
-      <div id="crUnsoldModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.82);align-items:center;justify-content:center;">
-        <div style="background:#16080c;border-radius:16px;padding:36px 28px 28px;max-width:400px;width:92%;box-shadow:0 12px 48px rgba(225,29,72,0.28),0 0 0 1px rgba(225,29,72,0.38);border-top:3px solid #E11D48;text-align:center;font-family:'Saira',sans-serif;">
-          <div style="width:56px;height:56px;border-radius:50%;background:rgba(225,29,72,0.12);border:2px solid #E11D48;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.6rem;">!</div>
-          <h5 style="margin:0 0 10px;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:#fff5f7;">Set Player as Unsold?</h5>
-          <p style="color:rgba(255,245,247,0.60);margin:0 0 26px;font-size:0.9rem;line-height:1.55;">This will mark the player as Unsold. You can bring them back to Auction later.</p>
-          <div style="display:flex;gap:12px;justify-content:center;">
-            <button id="crUnsoldCancel" style="padding:10px 28px;border-radius:8px;border:1px solid rgba(245,245,245,0.18);background:rgba(255,255,255,0.07);color:#fff5f7;font-size:0.9rem;cursor:pointer;font-weight:500;">Cancel</button>
-            <button id="crUnsoldConfirm" style="padding:10px 28px;border-radius:8px;border:none;background:#E11D48;color:#fff;font-size:0.9rem;font-weight:700;cursor:pointer;box-shadow:0 0 16px rgba(225,29,72,0.48);">Confirm</button>
+      <div id="rpOverlay" onclick="closeRemainingPlayers()" style="display:none; position:fixed; inset:0; z-index:9650; background:rgba(0,0,0,0.75);"></div>
+      <!-- Unsold Confirmation Modal — Cherry Theme -->
+      <div id="unsoldConfirmModal" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.85); align-items:center; justify-content:center;">
+        <div style="background:rgba(9,9,18,0.98); border-radius:14px; padding:36px 28px 28px; max-width:400px; width:92%; box-shadow:0 12px 48px rgba(225,29,72,0.2), 0 0 0 1px rgba(225,29,72,0.45); border-top:3px solid #F5C842; text-align:center; font-family:inherit;">
+          <div style="width:56px; height:56px; border-radius:50%; background:rgba(225,29,72,0.1); border:2px solid #F5C842; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; font-size:1.6rem; box-shadow:0 0 18px rgba(225,29,72,0.35);">⚠️</div>
+          <h5 style="margin:0 0 10px; font-size:1.15rem; font-weight:700; color:#ffffff;">Set Player as Unsold?</h5>
+          <p style="color:rgba(255,255,255,0.55); margin:0 0 26px; font-size:0.9rem; line-height:1.5;">This will set the player to Unsold. You can bring them back to Auction later.</p>
+          <div style="display:flex; gap:12px; justify-content:center;">
+            <button id="unsoldModalCancel" style="padding:10px 28px; border-radius:8px; border:1px solid rgba(225,29,72,0.3); background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.8); font-size:0.95rem; cursor:pointer; font-weight:500;">Cancel</button>
+            <button id="unsoldModalConfirm" style="padding:10px 28px; border-radius:8px; border:none; background:linear-gradient(135deg,#F5C842,#FF9F1C); color:#090912; font-size:0.95rem; font-weight:800; cursor:pointer; box-shadow:0 0 20px rgba(225,29,72,0.4); letter-spacing:0.3px;">Confirm</button>
           </div>
         </div>
       </div>
-
-      <div id="crToast" style="display:none;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:10001;color:#fff;padding:12px 28px;border-radius:8px;font-size:0.9rem;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.5);"></div>
-
-      <style>
-        @keyframes ac-count-pop { 0%{transform:scale(1.35);opacity:.55} 100%{transform:scale(1);opacity:1} }
-        .ac-count-pop { animation: ac-count-pop 0.45s cubic-bezier(.22,1,.36,1); }
-      </style>
-      <div id="ac-next-overlay" style="display:none;opacity:0;position:fixed;inset:0;z-index:11000;background:rgba(8,0,2,0.91);backdrop-filter:blur(6px);transition:opacity .4s;align-items:center;justify-content:center;flex-direction:column;gap:18px;">
-        <div id="ac-next-main" style="display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;">
-          <p style="color:rgba(255,210,220,0.75);font-size:1.25rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;margin:0;font-family:'Bebas Neue',sans-serif;">Next player out of the deck is</p>
-          <div id="ac-next-count" style="font-size:11rem;font-weight:900;color:#E11D48;line-height:1;text-shadow:0 0 80px rgba(225,29,72,0.7),0 0 20px rgba(225,29,72,0.5);font-variant-numeric:tabular-nums;">5</div>
-          <p style="color:rgba(255,210,220,0.4);font-size:0.85rem;letter-spacing:1.5px;margin:0;">Get ready…</p>
-        </div>
-        <div id="ac-next-last" style="display:none;text-align:center;padding:20px 32px;">
-          <p style="color:rgba(255,210,220,0.55);font-size:0.8rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 12px;font-family:'Bebas Neue',sans-serif;">End of Deck</p>
-          <p style="color:#fce4ec;font-size:1.6rem;font-weight:800;margin:0 0 10px;">This is the last player<br/>in the auction!</p>
-          <p style="color:rgba(255,210,220,0.4);font-size:0.88rem;margin:0 0 28px;">Sell or set this player as unsold to wrap up.</p>
-          <button onclick="closeNextOverlay()" style="padding:10px 28px;border-radius:8px;border:1px solid rgba(225,29,72,0.45);background:rgba(225,29,72,0.15);color:#E11D48;font-size:0.95rem;cursor:pointer;font-weight:600;">Got it</button>
-        </div>
+      <!-- Toast notification -->
+      <div id="unsoldToast" style="display:none; position:fixed; bottom:28px; left:50%; transform:translateX(-50%); z-index:10001; color:#fff; padding:12px 28px; border-radius:8px; font-size:0.95rem; font-weight:600; box-shadow:0 4px 16px rgba(0,0,0,0.5);"></div>
+    <!-- Next-player countdown overlay -->
+    <style>
+      @keyframes ac-count-pop { 0%{transform:scale(1.35);opacity:.55} 100%{transform:scale(1);opacity:1} }
+      .ac-count-pop { animation: ac-count-pop 0.45s cubic-bezier(.22,1,.36,1); }
+    </style>
+    <div id="ac-next-overlay" style="display:none;opacity:0;position:fixed;inset:0;z-index:11000;background:rgba(10,8,0,0.90);backdrop-filter:blur(6px);transition:opacity .4s;align-items:center;justify-content:center;flex-direction:column;gap:18px;">
+      <div id="ac-next-main" style="display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;">
+        <p style="color:rgba(255,240,180,0.75);font-size:1.25rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;margin:0;">Next player out of the deck is</p>
+        <div id="ac-next-count" style="font-size:11rem;font-weight:900;color:#F5C842;line-height:1;text-shadow:0 0 80px rgba(225,29,72,0.7),0 0 20px rgba(225,29,72,0.5);font-variant-numeric:tabular-nums;">5</div>
+        <p style="color:rgba(255,240,180,0.4);font-size:0.85rem;letter-spacing:1.5px;margin:0;">Get ready…</p>
       </div>
+      <div id="ac-next-last" style="display:none;text-align:center;padding:20px 32px;">
+        <div style="font-size:3.5rem;margin-bottom:20px;">🏁</div>
+        <p style="color:rgba(255,240,180,0.55);font-size:0.8rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 12px;">End of Deck</p>
+        <p style="color:#FFF8DC;font-size:1.6rem;font-weight:800;margin:0 0 10px;">This is the last player<br/>in the auction!</p>
+        <p style="color:rgba(255,240,180,0.4);font-size:0.88rem;margin:0 0 28px;">Sell or set this player as unsold to wrap up.</p>
+        <button onclick="closeNextOverlay()" style="padding:10px 28px;border-radius:8px;border:1px solid rgba(225,29,72,0.45);background:rgba(225,29,72,0.12);color:#F5C842;font-size:0.95rem;cursor:pointer;font-weight:600;">Got it</button>
+      </div>
+    </div>
+    <!-- Fullscreen Toggle moved into header right section -->
+    <script>
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(function(e) { console.warn(e); });
+        } else {
+          document.exitFullscreen();
+        }
+      }
+      document.addEventListener('fullscreenchange', function() {
+        var btn = document.getElementById('fs-btn');
+        if (!btn) return;
+        if (document.fullscreenElement) {
+          sessionStorage.setItem('auction_fullscreen', '1');
+          btn.title = 'Exit Fullscreen';
+          btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>';
+        } else {
+          sessionStorage.removeItem('auction_fullscreen');
+          btn.title = 'Enter Fullscreen';
+          btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>';
+        }
+      });
+      if (sessionStorage.getItem('auction_fullscreen') === '1') {
+        document.documentElement.requestFullscreen().catch(function(e) { console.warn(e); });
+      }
+    </script>
+    <t t-call="auction_module.player_break_pause_assets"/>
+    <t t-call="auction_module.player_mystery_controls"/>
+    <t t-call="auction_module.player_sell_modal"/>
+  </body>
+</html>
+</template>
 
-      <t t-call="auction_module.player_break_pause_assets"/>
-      <t t-call="auction_module.player_mystery_controls"/>
-      <t t-call="auction_module.player_sell_modal"/>
-    </body>
-    </html>
-  </template>
 </odoo>

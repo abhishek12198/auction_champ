@@ -5,7 +5,8 @@
   <head>
     <meta charset="UTF-8" />
   <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/no_mobile_zoom.css"/>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1" />
     <link
@@ -125,6 +126,12 @@
         gap: 8px;
         z-index: 21;
       }
+      .hud-hdr-drawer-btn {
+        height: 32px; padding: 0 10px; border-radius: 7px; flex-shrink: 0; white-space: nowrap; cursor: pointer;
+        background: rgba(245,200,66,0.10); border: 1.5px solid rgba(245,200,66,0.35); color: var(--gold);
+        font: 700 10px/1 'Barlow Condensed', sans-serif; letter-spacing: .08em; text-transform: uppercase;
+      }
+      .hud-hdr-drawer-btn:hover { background: rgba(245,200,66,0.22); }
       .bs-ctrl-btn { display:flex;align-items:center;justify-content:center;flex-shrink:0;width:32px;height:32px;border-radius:7px;background:rgba(245,200,66,0.10);border:1.5px solid rgba(245,200,66,0.35);color:var(--gold);cursor:pointer;padding:0;transition:all 0.2s }
       .bs-ctrl-btn:hover { background:rgba(245,200,66,0.22);box-shadow:0 0 8px rgba(245,200,66,0.30) }
 
@@ -701,6 +708,8 @@ body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to to
       </div>
       <div class="hud-tourn-logo">
         <div class="hud-header-controls">
+          <button type="button" class="hud-hdr-drawer-btn" onclick="toggleRemainingPlayers()">Players Left</button>
+          <button type="button" class="hud-hdr-drawer-btn" onclick="toggleBidSummary()">Bid Summary</button>
           <button type="button" id="ac-break-btn" class="ac-break-btn" onclick="acToggleBreakTime()" title="Break Time">&#9208; Pause</button>
           <button id="fs-btn" onclick="toggleFullscreen()" title="Fullscreen" class="bs-ctrl-btn">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
@@ -1123,7 +1132,7 @@ body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to to
       <!-- Bid Summary Drawer — Butterscotch Theme -->
       <div id="bidSummaryDrawer" style="position:fixed; top:0; right:-1150px; width:1150px; max-width:96vw; height:100vh; z-index:9800; display:flex; flex-direction:column; background:rgba(9,9,18,0.99); border-left:3px solid #F5C842; box-shadow:-6px 0 40px rgba(245,200,66,0.2); transition:right .35s cubic-bezier(.4,0,.2,1);">
         <!-- Fold/unfold tab -->
-        <div onclick="toggleBidSummary()" style="position:absolute; left:-44px; top:50%; transform:translateY(-50%); width:44px; height:130px; background:linear-gradient(180deg,#6b4f00,#C8960C); border-radius:8px 0 0 8px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; box-shadow:-4px 2px 14px rgba(245,200,66,0.3); z-index:1; border:1px solid rgba(245,200,66,0.25);">
+        <div onclick="toggleBidSummary()" style="display:none; position:absolute; left:-44px; top:50%; transform:translateY(-50%); width:44px; height:130px; background:linear-gradient(180deg,#6b4f00,#C8960C); border-radius:8px 0 0 8px; cursor:pointer; flex-direction:column; align-items:center; justify-content:center; gap:6px; box-shadow:-4px 2px 14px rgba(245,200,66,0.3); z-index:1; border:1px solid rgba(245,200,66,0.25);">
           <span id="bidSummaryTabArrow" style="color:#F5C842; font-size:1.2rem; line-height:1;">&#x2190;</span>
           <span style="color:#F5C842; writing-mode:vertical-rl; transform:rotate(180deg); font-size:0.58rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; opacity:0.9;">Summary</span>
         </div>
@@ -1136,7 +1145,7 @@ body[data-theme="light"] .hud-photo-col::before{background:linear-gradient(to to
       <div id="bidSummaryOverlay" onclick="closeBidSummary()" style="display:none; position:fixed; inset:0; z-index:9700; background:rgba(0,0,0,0.75);"></div>
       <!-- Players Left Drawer — Butterscotch Theme -->
       <div id="rpDrawer" style="position:fixed; top:0; right:-900px; width:900px; max-width:96vw; height:100vh; z-index:9750; display:flex; flex-direction:column; background:rgba(9,9,18,0.99); border-left:3px solid #C8960C; box-shadow:-6px 0 32px rgba(245,200,66,0.30); transition:right .35s cubic-bezier(.4,0,.2,1);">
-        <div onclick="toggleRemainingPlayers()" style="position:absolute; left:-44px; top:65%; transform:translateY(-50%); width:44px; height:130px; background:linear-gradient(180deg,#6b4f00,#C8960C); border-radius:8px 0 0 8px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; box-shadow:-4px 2px 14px rgba(245,200,66,0.3); z-index:1; border:1px solid rgba(245,200,66,0.25);">
+        <div onclick="toggleRemainingPlayers()" style="display:none; position:absolute; left:-44px; top:65%; transform:translateY(-50%); width:44px; height:130px; background:linear-gradient(180deg,#6b4f00,#C8960C); border-radius:8px 0 0 8px; cursor:pointer; flex-direction:column; align-items:center; justify-content:center; gap:6px; box-shadow:-4px 2px 14px rgba(245,200,66,0.3); z-index:1; border:1px solid rgba(245,200,66,0.25);">
           <span id="rpTabArrow" style="color:#F5C842; font-size:1.2rem; line-height:1;">&#x2190;</span>
           <span style="color:#F5C842; writing-mode:vertical-rl; transform:rotate(180deg); font-size:0.58rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; opacity:0.9; white-space:nowrap;">Players Left</span>
         </div>

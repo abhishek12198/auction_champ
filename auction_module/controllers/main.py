@@ -1584,7 +1584,41 @@ class Auction(http.Controller):
                 sold_count = Player.search_count(t_domain + [('state', '=', 'sold')])
                 draft_count = Player.search_count(t_domain + [('state', '=', 'draft')])
                 unsold_count = Player.search_count(t_domain + [('state', '=', 'unsold')])
+                auction_count = PlayerActive.search_count(
+                    t_domain + [('state', '=', 'auction'), ('icon_player', '=', False)]
+                )
                 declared_done = bool(tournament_id and tournament_id.auction_declared_complete)
+                if auction_count:
+                    player = PlayerActive.get_random_player(
+                        tournament_id=tournament_id,
+                        commit_stage=not preview,
+                    )
+                    if player:
+                        _theme_map = {
+                            'vanilla':       'auction_module.player_template_new',
+                            'butterscotch':  'auction_module.player_template_butterscotch',
+                            'strawberry':    'auction_module.player_template_strawberry',
+                            'cherry':        'auction_module.player_template_cherry',
+                            'pistah':        'auction_module.player_template_pistah',
+                            'blackberry':    'auction_module.player_template_blackberry',
+                            'lemon':         'auction_module.player_template_lemon',
+                        }
+                        _picked = tournament_id.player_display_template if tournament_id else 'vanilla'
+                        html = request.render(
+                            _theme_map.get(_picked, 'auction_module.player_template_new'),
+                            {
+                                'player': player,
+                                'tournament': tournament_id,
+                                'auction_ids': auction_ids,
+                                'db_name': db_name,
+                                'res_company': request.env['res.company'].sudo().search([], limit=1),
+                                'photo_focus_uri': self._player_stage_photo_uri(player),
+                            },
+                            lazy=False,
+                        )
+                        return request.make_response(
+                            html, [('Content-Type', 'text/html; charset=utf-8')]
+                        )
 
                 def _thank_you_html():
                     teams_payload = []
@@ -1641,7 +1675,7 @@ class Auction(http.Controller):
                 # - Any Draft or Unsold left → Resume (operator can open them)
                 # - Sold only (nothing left to open) → Thank You
                 # - No players at all → Welcome
-                if declared_done:
+                if declared_done and not auction_count:
                     html = _thank_you_html()
                 elif draft_count > 0 or unsold_count > 0:
                     draft_players = Player.search(
@@ -6688,10 +6722,10 @@ def _pj_wait_phase(tournament, audience='projector', env=None):
             'message': 'THE AUCTION FLOOR CLOSES, AND THE ROAD TO GLORY BEGINS.',
         }
 
-    # Operator "Declare Auction Complete" → Thank You ceremony
-    if tournament.auction_declared_complete:
-        return _completed_payload()
     counts = _pj_player_state_counts(tournament, env=env)
+    # Players already back In Auction: do not keep Thank You (stale complete flag).
+    if tournament.auction_declared_complete and not counts.get('auction'):
+        return _completed_payload()
     draft = counts['draft']
     auction = counts['auction']
     sold = counts['sold']

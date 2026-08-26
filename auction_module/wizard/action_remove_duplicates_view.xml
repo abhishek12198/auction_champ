@@ -182,7 +182,7 @@
                             name="action_resequence_only"
                             class="btn-secondary"
                             attrs="{'invisible': ['|', ('step', '!=', 'configure'), ('delete_by_serial', '=', True)]}"
-                            confirm="This will renumber all players in the selected states from 1 based on their current order. Continue?"/>
+                            confirm="This will renumber Draft players first (1, 2, 3…), then Icon players after them, then any remaining players. Continue?"/>
 
                     <!-- Serial mode button -->
                     <button string="Remove Serials &amp; Resequence"

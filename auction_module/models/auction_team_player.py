@@ -1887,13 +1887,46 @@ class AuctionTeamPlayer(models.Model):
             'display_seconds': display_seconds if display_seconds and display_seconds > 0 else 5,
         }
 
+    def _clear_live_bid(self):
+        """Drop any live-bid leftover before a player returns to auction."""
+        vals = {}
+        if 'current_bid' in self._fields:
+            vals['current_bid'] = 0
+        if 'current_bid_team_id' in self._fields:
+            vals['current_bid_team_id'] = False
+        if vals:
+            self.write(vals)
+
+    def _reopen_live_after_recall(self, tournaments=None):
+        """Clear Thank You / complete state and put a player back on stage."""
+        tournaments = tournaments or self.mapped('tournament_id')
+        if not tournaments:
+            return
+        tournaments.sudo().write({
+            'auction_declared_complete': False,
+            'stamp_player_id': False,
+            'stamp_state': False,
+            'stamp_expires_at': False,
+        })
+        Player = self.env['auction.team.player'].sudo()
+        for tournament in tournaments:
+            try:
+                Player.get_random_player(tournament_id=tournament)
+            except Exception:
+                pass
+
     def action_recall_auction_sold(self):
         context = self.env.context.copy()
+        recalled = self.env['auction.team.player']
         for player in self:
             if player.state == 'sold':
+                player._clear_live_bid()
                 auction_player = self.env['auction.auction.player'].search([('player_id', '=', player.id)])
                 if auction_player:
                     auction_player.action_recall_to_auction()
+                    recalled |= player
+        tournaments = (recalled | self).mapped('tournament_id')
+        self._reopen_live_after_recall(tournaments)
         if context.get('mass_update', False):
             message =  'Selected players brought back to auction successfully!. The player will be available in the auction'
             self.env.user.notify_success(message)
@@ -1906,6 +1939,7 @@ class AuctionTeamPlayer(models.Model):
             if player.icon_player:
                 continue
             if player.state in ('draft', 'unsold'):
+                player._clear_live_bid()
                 player.state = 'auction'
                 opened |= player
                 if not context.get('mass_update', False) and len(self) == 1:
@@ -1915,8 +1949,7 @@ class AuctionTeamPlayer(models.Model):
                     except Exception:
                         pass
         tournaments = opened.mapped('tournament_id')
-        if tournaments:
-            tournaments.sudo().write({'auction_declared_complete': False})
+        self._reopen_live_after_recall(tournaments)
         if opened and (context.get('mass_update', False) or len(opened) > 1):
             message = 'Selected players brought to auction successfully!'
             try:

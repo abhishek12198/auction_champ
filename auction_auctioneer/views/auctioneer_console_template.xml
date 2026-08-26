@@ -5,12 +5,13 @@
 <head>
     <meta charset="UTF-8"/>
     <link rel="shortcut icon" t-att-href="favicon_url" type="image/x-icon"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/no_mobile_zoom.css"/>
     <title>Auctioneer Console</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Exo+2:wght@500;600;700;800;900&amp;family=Barlow+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="/auction_auctioneer/static/src/css/auctioneer_console.css"/>
+    <link rel="stylesheet" href="/auction_auctioneer/static/src/css/auctioneer_console.css?v=1.4.16"/>
 </head>
 <body class="ac-body" id="acBody" t-att-data-sport="tournament.tournament_type if tournament else 'cricket'">
 
@@ -318,6 +319,11 @@ window.AC_CSRF_TOKEN    = '<t t-esc="request.csrf_token()"/>';
 window.AC_SPORT         = '<t t-esc="tournament.tournament_type if tournament else 'cricket'"/>';
 <t t-set="ac_showcase_mode" t-value="'manual' if (not tournament or tournament.player_appearance_algorithm == 'linear') else 'random'"/>
 window.AC_SHOWCASE_MODE = '<t t-esc="ac_showcase_mode"/>';
+</script>
+<t t-call="auction_module.point_unit_bootstrap">
+    <t t-set="pu_tournament" t-value="tournament"/>
+</t>
+<script>
 
 (function() {
     var saved = localStorage.getItem('ac_theme') || 'dark';
@@ -335,7 +341,7 @@ window.acToggleTheme = function() {
     document.getElementById('acThemeIcon').textContent = next === 'dark' ? '☀' : '🌙';
 };
 </script>
-<script src="/auction_auctioneer/static/src/js/auctioneer_console.js"></script>
+<script src="/auction_auctioneer/static/src/js/auctioneer_console.js?v=1.4.16"></script>
 </body>
 </html>
 </template>

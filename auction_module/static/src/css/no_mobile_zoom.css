@@ -1,0 +1,15 @@
+/* Keep display-auction / console usable on phones: no pinch or double-tap zoom */
+html {
+    touch-action: manipulation;
+    -ms-touch-action: manipulation;
+}
+button,
+a,
+input,
+select,
+textarea,
+label,
+[onclick],
+[role="button"] {
+    touch-action: manipulation;
+}

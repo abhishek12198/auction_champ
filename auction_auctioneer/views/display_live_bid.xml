@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="live_bid_pad" name="Display Auction Live Bid Pad">
+        <button type="button" id="acLiveBidLaunch" class="ac-livebid-launch" aria-label="Open Live Bid">
+            LIVE BID
+        </button>
+        <section id="acLiveBidPad" class="ac-livebid"
+                 t-att-data-tournament-id="tournament.id if tournament else ''"
+                 t-att-data-csrf="request.csrf_token()">
+            <div class="ac-livebid-bar">
+                <span class="ac-livebid-title">Live Bid</span>
+                <div class="ac-livebid-leadhead" id="acLiveBidLeadHead">
+                    <img class="ac-livebid-leadhead-logo" id="acLiveBidLeadLogo" src="" alt=""/>
+                    <span class="ac-livebid-leadhead-name" id="acLiveBidLeadName"></span>
+                    <span class="ac-livebid-leadhead-pts" id="acLiveBidLeadPts"></span>
+                </div>
+                <div class="ac-livebid-actions">
+                    <button type="button" class="ac-livebid-btn" id="acLiveBidToggle" aria-expanded="false">View all teams</button>
+                    <button type="button" class="ac-livebid-close" id="acLiveBidClose" aria-label="Close Bid Panel" title="Close">×</button>
+                </div>
+            </div>
+            <div class="ac-livebid-grid" id="acLiveBidGrid"></div>
+        </section>
+        <div class="ac-livebid-overlay" id="acLiveBidModal" hidden="hidden">
+            <div class="ac-livebid-modal" role="dialog" aria-modal="true" aria-labelledby="acLbModalTeam">
+                <button type="button" class="ac-livebid-modal-x" id="acLbModalClose" aria-label="Close">×</button>
+                <div class="ac-livebid-modal-head">
+                    <img id="acLbModalLogo" src="" alt="" class="ac-livebid-modal-logo"/>
+                    <div>
+                        <h3 class="ac-livebid-modal-team" id="acLbModalTeam"></h3>
+                        <p class="ac-livebid-modal-meta" id="acLbModalMeta"></p>
+                    </div>
+                </div>
+                <div class="ac-livebid-modal-limits">
+                    <div>
+                        <span>Base</span>
+                        <strong id="acLbModalBase"></strong>
+                    </div>
+                    <div>
+                        <span>Max call</span>
+                        <strong id="acLbModalMax"></strong>
+                    </div>
+                </div>
+                <label class="ac-livebid-modal-label" for="acLbBidInput">Points</label>
+                <div class="ac-livebid-modal-row">
+                    <button type="button" class="ac-livebid-adj" id="acLbDec">−</button>
+                    <input type="number" id="acLbBidInput" min="0" step="1"/>
+                    <button type="button" class="ac-livebid-adj" id="acLbInc">+</button>
+                </div>
+                <div class="ac-livebid-presets" id="acLbPresets"></div>
+                <p class="ac-livebid-hint" id="acLbHint"></p>
+                <button type="button" class="ac-livebid-place" id="acLbPlace">Place Bid</button>
+            </div>
+        </div>
+        <div class="ac-livebid-toast" id="acLiveBidToast"></div>
+        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_live_bid.css?v=32"/>
+        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_showcase.css?v=4"/>
+        <script src="/auction_auctioneer/static/src/js/display_live_bid.js?v=32"></script>
+    </template>
+
+    <!-- Under player profile, above Unsold / Sell / Next -->
+    <template id="live_bid_pad_blackberry" inherit_id="auction_module.player_template_blackberry">
+        <xpath expr="//div[hasclass('bb-info-panel')]" position="after">
+            <t t-call="auction_auctioneer.live_bid_pad"/>
+        </xpath>
+    </template>
+
+    <template id="live_bid_pad_pistah" inherit_id="auction_module.player_template_pistah">
+        <xpath expr="//div[hasclass('pt-info-panel')]" position="after">
+            <t t-call="auction_auctioneer.live_bid_pad"/>
+        </xpath>
+    </template>
+
+    <template id="live_bid_pad_cherry" inherit_id="auction_module.player_template_cherry">
+        <xpath expr="//div[hasclass('hud-actions')]" position="before">
+            <t t-call="auction_auctioneer.live_bid_pad"/>
+        </xpath>
+    </template>
+
+    <template id="live_bid_pad_lemon" inherit_id="auction_module.player_template_lemon">
+        <xpath expr="//div[hasclass('lm-actions')]" position="before">
+            <t t-call="auction_auctioneer.live_bid_pad"/>
+        </xpath>
+    </template>
+
+    <template id="live_bid_pad_strawberry" inherit_id="auction_module.player_template_strawberry">
+        <xpath expr="//div[hasclass('sw-actions')]" position="before">
+            <t t-call="auction_auctioneer.live_bid_pad"/>
+        </xpath>
+    </template>
+
+    <template id="live_bid_pad_butterscotch" inherit_id="auction_module.player_template_butterscotch">
+        <xpath expr="//div[hasclass('hud-actions')]" position="before">
+            <t t-call="auction_auctioneer.live_bid_pad"/>
+        </xpath>
+    </template>
+
+    <template id="live_bid_pad_vanilla" inherit_id="auction_module.player_template_new">
+        <xpath expr="//div[hasclass('auction-single-buttons')]" position="before">
+            <t t-call="auction_auctioneer.live_bid_pad"/>
+        </xpath>
+    </template>
+
+    <!-- Phone: name + tier on the photo (Lemon / Strawberry keep identity strip on desktop) -->
+    <template id="live_bid_phone_id_lemon" inherit_id="auction_module.player_template_lemon">
+        <xpath expr="//div[hasclass('lm-photo-col')]" position="inside">
+            <div class="ac-phone-id">
+                <div class="ac-phone-id-name" data-sm-name=""><t t-esc="player.name.upper() if player.name else ''"/></div>
+                <div class="ac-phone-id-meta">
+                    <t t-if="(player.dominant_position_id.name if player.tournament_type == 'football' else player.role)">
+                        <span class="lm-role-tag" data-sm-role=""><t t-esc="player.dominant_position_id.name if player.tournament_type == 'football' else player.role"/></span>
+                    </t>
+                    <t t-if="player.tier_id">
+                        <span class="lm-tier-badge"
+                              t-att-style="'background-color: ' + (player.tier_id.color or '#E8C200') + '; color: #fff;'">
+                            <t t-esc="player.tier_id.name"/>
+                        </span>
+                    </t>
+                    <t t-if="player.effective_base_price">
+                        <span class="lm-base-badge">
+                            <span class="lm-base-badge-val"><t t-esc="(tournament or player.tournament_id).format_points(player.effective_base_price or 0) if (tournament or (player and player.tournament_id)) else '{:,}'.format(int(player.effective_base_price or 0))"/></span>
+                        </span>
+                    </t>
+                </div>
+            </div>
+        </xpath>
+    </template>
+
+    <template id="live_bid_phone_id_strawberry" inherit_id="auction_module.player_template_strawberry">
+        <xpath expr="//div[hasclass('sw-photo-col')]" position="inside">
+            <div class="ac-phone-id">
+                <div class="ac-phone-id-name" data-sm-name=""><t t-esc="player.name.upper() if player.name else ''"/></div>
+                <div class="ac-phone-id-meta">
+                    <t t-if="(player.dominant_position_id.name if player.tournament_type == 'football' else player.role)">
+                        <span class="sw-role-tag" data-sm-role=""><t t-esc="player.dominant_position_id.name if player.tournament_type == 'football' else player.role"/></span>
+                    </t>
+                    <t t-if="player.tier_id">
+                        <span class="sw-tier-badge"
+                              t-att-style="'background-color: ' + (player.tier_id.color or '#C2185B') + '; color: #fff;'">
+                            <t t-esc="player.tier_id.name"/>
+                        </span>
+                    </t>
+                    <t t-if="player.effective_base_price">
+                        <span class="sw-base-badge">
+                            <span class="sw-base-badge-val"><t t-esc="(tournament or player.tournament_id).format_points(player.effective_base_price or 0) if (tournament or (player and player.tournament_id)) else '{:,}'.format(int(player.effective_base_price or 0))"/></span>
+                        </span>
+                    </t>
+                </div>
+            </div>
+        </xpath>
+    </template>
+</odoo>

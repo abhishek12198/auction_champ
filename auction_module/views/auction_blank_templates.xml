@@ -2703,9 +2703,12 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     void overlay.offsetWidth;
     overlay.classList.remove('lb-ty-replay');
   }
-  function handleThankYou(waitPhase, tournamentData) {
+  function handleThankYou(waitPhase, tournamentData, player) {
     waitPhase = waitPhase || {};
     var phase = waitPhase.phase || '';
+    if (player && phase === 'completed') {
+      phase = 'waiting';
+    }
     var overlay = document.getElementById('lb-thankyou-overlay');
     var liveBadge = document.querySelector('.lb-live-badge');
     var entering = phase === 'completed' && _lbTyPhase !== 'completed';
@@ -3434,7 +3437,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
         renderTopPlayers(data.top_players || []);
         renderTeams(data.teams);
         renderStats(data.stats);
-        handleThankYou(data.wait_phase || {}, data.tournament || {});
+        handleThankYou(data.wait_phase || {}, data.tournament || {}, p);
         handleBreakTime(!!data.break_time, data.tournament || {});
         updateAds(data.advertisers || []);
   }

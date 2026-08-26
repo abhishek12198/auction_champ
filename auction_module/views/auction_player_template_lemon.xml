@@ -5,7 +5,8 @@
 <head>
   <meta charset="UTF-8"/>
   <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
+  <link rel="stylesheet" href="/auction_module/static/src/css/no_mobile_zoom.css"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
   <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;700&amp;family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
@@ -118,7 +119,7 @@
     }
     .lm-photo {
       position: absolute; inset: 0; width: 100%; height: 100%;
-      object-fit: contain; object-position: center bottom; z-index: 1;
+      object-fit: cover; object-position: center 28%; z-index: 1;
     }
     /* Corner bracket ornaments */
     .lm-corner { position: absolute; z-index: 5; width: 36px; height: 36px; }
@@ -253,6 +254,12 @@
     .lm-btn-next:active { transform: translateY(0); }
 /* ── Theme toggle ── */
 .lm-header-right{display:flex;align-items:center;gap:10px}
+.lm-hdr-drawer-btn{
+  height:34px;padding:0 11px;border-radius:8px;flex-shrink:0;white-space:nowrap;cursor:pointer;
+  background:rgba(232,194,0,0.08);border:1.5px solid rgba(232,194,0,0.32);color:var(--lemon);
+  font:700 10px/1 'Antonio',sans-serif;letter-spacing:.08em;text-transform:uppercase;
+}
+.lm-hdr-drawer-btn:hover{background:rgba(232,194,0,0.18);}
 .lm-fs-btn{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:34px;height:34px;border-radius:8px;background:rgba(232,194,0,0.07);border:1.5px solid rgba(232,194,0,0.28);color:var(--lemon);cursor:pointer;padding:0;transition:all 0.2s}
 .lm-fs-btn:hover{background:rgba(232,194,0,0.16);box-shadow:0 0 8px rgba(232,194,0,0.20)}
 /* Powered-by footer */
@@ -326,7 +333,7 @@ body[data-theme="dark"] .lm-live-badge{background:rgba(232,194,0,0.14);color:var
   .lm-stage{display:block; height:auto; overflow:visible;}
   .lm-photo-col{height:52vw; min-height:220px; max-height:320px;}
   .lm-photo-col::after{display:none;}
-  .lm-photo{object-position:center bottom;}
+  .lm-photo{object-position:center 28%;}
   .lm-photo-wm{font-size:11rem; bottom:-8px;}
   .lm-info-col{overflow:visible; border-left:none;}
 
@@ -359,7 +366,7 @@ body[data-theme="dark"] .lm-live-badge{background:rgba(232,194,0,0.14);color:var
   .lm-photo-col{height:48vw; min-height:200px; max-height:280px;}
 }
   
-    .lm-photo img, img.lm-photo { object-fit: cover !important; object-position: center top; }
+    .lm-photo img, img.lm-photo { object-fit: cover !important; object-position: center 28%; }
     .lm-name { text-transform: uppercase; letter-spacing: .05em; }
 
   </style>
@@ -397,6 +404,8 @@ body[data-theme="dark"] .lm-live-badge{background:rgba(232,194,0,0.14);color:var
       </t>
     </div>
     <div class="lm-header-right">
+      <button type="button" class="lm-hdr-drawer-btn" onclick="toggleRemainingPlayers()">Players Left</button>
+      <button type="button" class="lm-hdr-drawer-btn" onclick="toggleBidSummary()">Bid Summary</button>
       <div class="lm-live-badge">
         <span class="lm-live-dot"></span>
         LIVE
@@ -414,7 +423,7 @@ body[data-theme="dark"] .lm-live-badge{background:rgba(232,194,0,0.14);color:var
     <!-- Photo column -->
     <div class="lm-photo-col">
       <div class="lm-photo-wm"><t t-esc="player.sl_no or ''"/></div>
-      <img class="lm-photo" id="loadImage" t-att-src="image_data_uri(player.photo)" alt="Player Photo"/>
+      <img class="lm-photo" id="loadImage" t-att-src="photo_focus_uri or image_data_uri(player.photo)" alt="Player Photo"/>
       <div class="lm-corner lm-corner-tl"></div>
       <div class="lm-corner lm-corner-tr"></div>
       <div class="lm-corner lm-corner-bl"></div>
@@ -815,7 +824,7 @@ body[data-theme="dark"] .lm-live-badge{background:rgba(232,194,0,0.14);color:var
 
   <!-- Bid Summary Drawer -->
   <div id="swBidDrawer" style="position:fixed;top:0;right:-1150px;width:1150px;max-width:96vw;height:100vh;z-index:9800;display:flex;flex-direction:column;background:#fff;border-left:3px solid #E8C200;box-shadow:-6px 0 32px rgba(232,194,0,0.18);transition:right .35s cubic-bezier(.4,0,.2,1);">
-    <div onclick="toggleBidSummary()" style="position:absolute;left:-44px;top:50%;transform:translateY(-50%);width:44px;height:130px;background:linear-gradient(180deg,#B89600,#E8C200);border-radius:8px 0 0 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;box-shadow:-4px 2px 14px rgba(232,194,0,0.30);">
+    <div onclick="toggleBidSummary()" style="display:none;position:absolute;left:-44px;top:50%;transform:translateY(-50%);width:44px;height:130px;background:linear-gradient(180deg,#B89600,#E8C200);border-radius:8px 0 0 8px;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:6px;box-shadow:-4px 2px 14px rgba(232,194,0,0.30);">
       <span id="swBidArrow" style="color:#fff;font-size:1.2rem;line-height:1;">&#x2190;</span>
       <span style="color:#fff;writing-mode:vertical-rl;transform:rotate(180deg);font-size:0.58rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:0.9;">Summary</span>
     </div>
@@ -829,7 +838,7 @@ body[data-theme="dark"] .lm-live-badge{background:rgba(232,194,0,0.14);color:var
 
   <!-- Players Left Drawer — Lemon Theme -->
   <div id="rpDrawer" style="position:fixed;top:0;right:-900px;width:900px;max-width:96vw;height:100vh;z-index:9750;display:flex;flex-direction:column;background:#fff;border-left:3px solid #E8C200;box-shadow:-6px 0 32px rgba(232,194,0,0.22);transition:right .35s cubic-bezier(.4,0,.2,1);">
-    <div onclick="toggleRemainingPlayers()" style="position:absolute;left:-44px;top:65%;transform:translateY(-50%);width:44px;height:130px;background:linear-gradient(180deg,#B89600,#E8C200);border-radius:8px 0 0 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;box-shadow:-4px 2px 14px rgba(232,194,0,0.30);">
+    <div onclick="toggleRemainingPlayers()" style="display:none;position:absolute;left:-44px;top:65%;transform:translateY(-50%);width:44px;height:130px;background:linear-gradient(180deg,#B89600,#E8C200);border-radius:8px 0 0 8px;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:6px;box-shadow:-4px 2px 14px rgba(232,194,0,0.30);">
       <span id="rpTabArrow" style="color:#fff;font-size:1.2rem;line-height:1;">&#x2190;</span>
       <span style="color:#fff;writing-mode:vertical-rl;transform:rotate(180deg);font-size:0.58rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:0.9;white-space:nowrap;">Players Left</span>
     </div>

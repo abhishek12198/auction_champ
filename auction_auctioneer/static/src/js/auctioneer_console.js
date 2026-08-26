@@ -58,6 +58,12 @@
     /* ── Helpers ────────────────────────────────────────────────────────── */
     function fmtPts(n) {
         if (n === null || n === undefined) return '—';
+        if (window.fmtUnit) return window.fmtUnit(n);
+        return Number(n).toLocaleString() + ' PTS';
+    }
+    function fmtPtsNum(n) {
+        if (n === null || n === undefined) return '—';
+        if (window.fmtUnitNum) return window.fmtUnitNum(n);
         return Number(n).toLocaleString();
     }
 
@@ -167,7 +173,6 @@
                 chips.push(attrChip('Position', p.dominant_position || p.dominant_position_code));
                 chips.push(attrChip('Foot', p.preferred_foot));
                 chips.push(attrChip('Age', p.age));
-                if (p.p_category) chips.push(attrChip('Category', p.p_category));
                 if (p.secondary_positions && p.secondary_positions.length) {
                     chips.push(attrChip('Secondary', p.secondary_positions.join(', ')));
                 }
@@ -289,6 +294,8 @@
 
     function syncDiceFab() {
         var fab = document.getElementById('acDiceFab');
+        var deskDiceBtn = document.getElementById('acDiceBtn');
+        var nextBtn = document.getElementById('acNextBtn');
         if (!fab) return;
         var mode = state.showcaseMode === 'random' ? 'random' : 'manual';
         var isMobile = window.matchMedia('(max-width: 900px)').matches;
@@ -311,6 +318,18 @@
         } else {
             if (numEl) numEl.textContent = '';
             if (lbl) lbl.textContent = 'Roll Dice';
+        }
+
+        // Mobile safety fallback: keep at least one visible call-control in bar.
+        if (isMobile) {
+            if (deskDiceBtn && mode === 'manual') {
+                deskDiceBtn.style.display = show ? 'inline-flex' : '';
+            }
+            if (nextBtn && mode === 'random') {
+                nextBtn.style.display = 'inline-flex';
+            }
+        } else if (deskDiceBtn) {
+            deskDiceBtn.style.display = '';
         }
     }
 
@@ -602,7 +621,7 @@
             document.getElementById('acBasePrice').textContent = fmtPts(p.base_price);
             var bidEl = document.getElementById('acCurrentBid');
             if (p.current_bid && p.current_bid > 0) {
-                bidEl.textContent = fmtPts(p.current_bid) + ' pts';
+                bidEl.textContent = fmtPts(p.current_bid);
             } else {
                 bidEl.textContent = '—';
             }
@@ -680,9 +699,9 @@
                 + (disabled && !isActive
                     ? '<div class="ac-team-no-bid" title="' + esc(disabledReason) + '">' + esc(disabledReason) + '</div>'
                     : !isActive
-                        ? '<div class="ac-team-next-bid" onclick="event.stopPropagation();acOpenBidModal(' + team.id + ')" title="Custom bid"><strong>' + fmtPts(team.next_bid) + '</strong> <span>pts</span></div>'
+                        ? '<div class="ac-team-next-bid" onclick="event.stopPropagation();acOpenBidModal(' + team.id + ')" title="Custom bid"><strong>' + fmtPts(team.next_bid) + '</strong></div>'
                         : (player && player.current_bid
-                            ? '<div class="ac-team-leading-pts">' + fmtPts(player.current_bid) + ' pts</div>'
+                            ? '<div class="ac-team-leading-pts">' + fmtPts(player.current_bid) + '</div>'
                             : ''))
                 + '</div>'
                 + '</div>';
@@ -711,7 +730,7 @@
             if (err || !result) { showToast('Network error. Please retry.', 'error'); return; }
             if (!result.success) { showToast(result.error || 'Bid failed', 'error'); return; }
 
-            showToast('✅ ' + fmtPts(result.current_bid) + ' pts — ' + result.team_name, 'success');
+            showToast('✅ ' + fmtPts(result.current_bid) + ' — ' + result.team_name, 'success');
             clearTimeout(state.pollTimer);
             poll();
         });
@@ -729,7 +748,7 @@
         document.getElementById('acModalTeamLogo').src = team.logo_url || '';
         document.getElementById('acModalTeamName').textContent = team.name || '';
         document.getElementById('acModalTeamMeta').textContent =
-            'Remaining: ' + fmtPts(team.remaining_points) + ' pts  |  Max call: ' + fmtPts(team.max_call) + ' pts';
+            'Remaining: ' + fmtPts(team.remaining_points) + '  |  Max call: ' + fmtPts(team.max_call);
 
         // Player info (masked for mystery)
         var hidden = isMysteryHidden(player);
@@ -767,7 +786,7 @@
     function refreshModalBid(team) {
         if (!document.getElementById('acBidModal').style.display || document.getElementById('acBidModal').style.display === 'none') return;
         document.getElementById('acModalTeamMeta').textContent =
-            'Remaining: ' + fmtPts(team.remaining_points) + ' pts  |  Max call: ' + fmtPts(team.max_call) + ' pts';
+            'Remaining: ' + fmtPts(team.remaining_points) + '  |  Max call: ' + fmtPts(team.max_call);
         document.getElementById('acModalBase').textContent = fmtPts(team.effective_base);
         document.getElementById('acModalMax').textContent  = fmtPts(team.max_call);
         // Only update bid input if it hasn't been manually changed
@@ -835,10 +854,10 @@
         var hint = document.getElementById('acBidHint');
         var btn  = document.getElementById('acPlaceBidBtn');
         if (value < team.effective_base) {
-            hint.textContent = '⚠ Below base price (' + fmtPts(team.effective_base) + ' pts)';
+            hint.textContent = '⚠ Below base price (' + fmtPts(team.effective_base) + ')';
             btn.disabled = true;
         } else if (value > team.max_call) {
-            hint.textContent = '⚠ Exceeds max call (' + fmtPts(team.max_call) + ' pts)';
+            hint.textContent = '⚠ Exceeds max call (' + fmtPts(team.max_call) + ')';
             btn.disabled = true;
         } else {
             hint.textContent = '';
@@ -888,7 +907,7 @@
                 return;
             }
 
-            showToast('✅ Bid of ' + fmtPts(result.current_bid) + ' pts placed for ' + result.team_name, 'success');
+            showToast('✅ Bid of ' + fmtPts(result.current_bid) + ' placed for ' + result.team_name, 'success');
             // Close modal and force an immediate poll
             document.getElementById('acBidModal').style.display = 'none';
             state.selectedTeam = null;
@@ -922,7 +941,7 @@
         var label = isMysteryHidden(player) ? 'Mystery Player' : (player.name || 'this player');
         var msg = 'Mark ' + label + ' as UNSOLD?';
         if (player.current_bid && player.current_bid > 0) {
-            msg += '\n\nThere is a live bid of ' + fmtPts(player.current_bid) + ' pts — it will be discarded.';
+            msg += '\n\nThere is a live bid of ' + fmtPts(player.current_bid) + ' — it will be discarded.';
         }
         if (!confirm(msg)) return;
 
@@ -972,7 +991,7 @@
         document.getElementById('acSoldTeamLogo').src = player.current_bid_team.logo_url || '';
         document.getElementById('acSoldTeamName').textContent = player.current_bid_team.name || '';
         document.getElementById('acSoldTeamMeta').textContent = team
-            ? fmtPts(team.remaining_points - player.current_bid) + ' pts remaining after sale'
+            ? fmtPts(team.remaining_points - player.current_bid) + ' remaining after sale'
             : '';
 
         document.getElementById('acSoldBidPts').textContent = fmtPts(player.current_bid);

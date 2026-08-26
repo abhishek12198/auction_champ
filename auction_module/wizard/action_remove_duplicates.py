@@ -299,33 +299,48 @@ class AuctionRemoveDuplicatesWizard(models.TransientModel):
             title='Registration Open ✓',
         )
 
+    def _resequence_remaining(self):
+        """Renumber serials: Draft first (current order), then Icon players, then the rest."""
+        self.ensure_one()
+        Player = self.env['auction.team.player']
+        remaining = Player.search([('tournament_id', '=', self.tournament_id.id)])
+        if not remaining:
+            return 0, 0, 0, 0
+
+        def _sort_key(p):
+            return (p.sl_no or 0, p.id)
+
+        draft = remaining.filtered(lambda p: p.state == 'draft').sorted(_sort_key)
+        icons = remaining.filtered(
+            lambda p: p.icon_player and p.id not in draft.ids
+        ).sorted(_sort_key)
+        rest = remaining.filtered(
+            lambda p: p.id not in draft.ids and p.id not in icons.ids
+        ).sorted(_sort_key)
+        ordered = draft + icons + rest
+        original = {p.id: p.sl_no for p in ordered}
+        # Two-pass so overlapping serials never collide mid-write.
+        offset = 100000
+        for i, player in enumerate(ordered, start=1):
+            player.sl_no = offset + i
+        updated = 0
+        for i, player in enumerate(ordered, start=1):
+            player.sl_no = i
+            if original.get(player.id) != i:
+                updated += 1
+        return len(ordered), updated, len(draft), len(icons)
+
     # ── Standalone resequence (no duplicate detection needed) ────────────
     def action_resequence_only(self):
-        if not any([self.include_draft, self.include_auction]):
-            raise UserError('Please include at least one player state (Draft or In Auction) to resequence.')
-
-        states = []
-        if self.include_draft:
-            states.append('draft')
-        if self.include_auction:
-            states.append('auction')
-
-        players = self.env['auction.team.player'].search(
-            [('tournament_id', '=', self.tournament_id.id), ('state', 'in', states)],
-            order='sl_no asc, id asc',
-        )
-        if not players:
-            raise UserError('No players found in the selected states for this tournament.')
-
-        updated = 0
-        for i, player in enumerate(players, start=1):
-            if player.sl_no != i:
-                player.sl_no = i
-                updated += 1
+        total, updated, n_draft, n_icon = self._resequence_remaining()
+        if not total:
+            raise UserError('No players found for this tournament.')
 
         self.env.user.notify_success(
-            message='%d player(s) resequenced (1 – %d). %d sequence number(s) updated.' % (
-                len(players), len(players), updated),
+            message=(
+                '%d player(s) resequenced (1 – %d): %d Draft, then %d Icon, '
+                'then remaining. %d sequence number(s) updated.'
+            ) % (total, total, n_draft, n_icon, updated),
             title='Resequence Complete ✓',
         )
         self._auto_open_registration()
@@ -362,17 +377,13 @@ class AuctionRemoveDuplicatesWizard(models.TransientModel):
         count = len(players)
         players.unlink()
 
-        remaining = self.env['auction.team.player'].search(
-            [('tournament_id', '=', self.tournament_id.id)],
-            order='sl_no asc, id asc',
-        )
-        for i, player in enumerate(remaining, start=1):
-            if player.sl_no != i:
-                player.sl_no = i
+        total, _updated, n_draft, n_icon = self._resequence_remaining()
 
         self.env.user.notify_success(
-            message='%d draft player(s) removed. Sequence numbers reissued 1 – %d.' % (
-                count, len(remaining)),
+            message=(
+                '%d draft player(s) removed. Sequence reissued 1 – %d '
+                '(%d Draft, then %d Icon, then remaining).'
+            ) % (count, total, n_draft, n_icon),
             title='Players Removed ✓',
         )
         self._auto_open_registration()
@@ -399,16 +410,13 @@ class AuctionRemoveDuplicatesWizard(models.TransientModel):
         count = len(players_to_delete)
         players_to_delete.unlink()
 
-        remaining = self.env['auction.team.player'].search(
-            [('tournament_id', '=', self.tournament_id.id)],
-            order='sl_no asc, id asc',
-        )
-        for i, player in enumerate(remaining, start=1):
-            if player.sl_no != i:
-                player.sl_no = i
+        total, _updated, n_draft, n_icon = self._resequence_remaining()
 
         self.env.user.notify_success(
-            message='%d duplicate(s) removed. Sequence numbers reissued 1 – %d.' % (count, len(remaining)),
+            message=(
+                '%d duplicate(s) removed. Sequence reissued 1 – %d '
+                '(%d Draft, then %d Icon, then remaining).'
+            ) % (count, total, n_draft, n_icon),
             title='Duplicates Removed ✓',
         )
         self._auto_open_registration()

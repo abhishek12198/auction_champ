@@ -62,13 +62,29 @@ class AuctionAuctioneerController(http.Controller):
     # ── Helpers ────────────────────────────────────────────────────────────
 
     @staticmethod
+    def _is_auctioneer():
+        user = request.env.user
+        if not user or user._is_public():
+            return False
+        return user.has_group('auction_auctioneer.group_auctioneer')
+
+    @staticmethod
     def _resolve_tournament():
         """Return the tournament scoped to the current logged-in user.
 
         Priority:
-        1. The user's ``tournament_id`` field on their res.users profile.
-        2. The single tournament flagged ``active = True`` (admin fallback).
+        1. Explicit ``tournament_id`` query/param (display-auction live bid pad).
+        2. The user's ``tournament_id`` field on their res.users profile.
+        3. The single tournament flagged ``active = True`` (admin fallback).
         """
+        raw = request.httprequest.args.get('tournament_id') or request.params.get('tournament_id')
+        if raw:
+            try:
+                rec = request.env['auction.tournament'].sudo().browse(int(raw))
+                if rec.exists():
+                    return rec
+            except (TypeError, ValueError):
+                pass
         try:
             user = request.env['res.users'].sudo().browse(request.uid)
             if user.tournament_id:
@@ -199,6 +215,12 @@ class AuctionAuctioneerController(http.Controller):
     def auctioneer_data(self, **kw):
         """Return JSON payload consumed by the Auctioneer Console JS."""
         env = request.env
+        if not self._is_auctioneer():
+            return request.make_response(
+                json.dumps({'ok': False, 'error': 'not_auctioneer'}),
+                headers=[('Content-Type', 'application/json')],
+                status=403,
+            )
         tournament = self._resolve_tournament()
 
         result = {
@@ -326,7 +348,6 @@ class AuctionAuctioneerController(http.Controller):
                 'secondary_positions': [] if mystery_hidden else (fb.get('secondary_positions') or []),
                 'preferred_foot': '' if mystery_hidden else (fb.get('preferred_foot') or ''),
                 'age': '' if mystery_hidden else (fb.get('age') or ''),
-                'p_category': '' if mystery_hidden else (fb.get('p_category') or ''),
                 'other_attributes': [] if mystery_hidden else (fb.get('other_attributes') or []),
                 'use_other_attributes': (
                     False if mystery_hidden else bool(fb.get('use_other_attributes'))
@@ -342,6 +363,20 @@ class AuctionAuctioneerController(http.Controller):
         )
 
         player = current_player if current_player else None
+
+        tier_sold_by_auction = {}
+        if player and player.tier_id and auctions:
+            for g in env['auction.auction.player'].sudo().read_group(
+                [
+                    ('auction_id', 'in', auctions.ids),
+                    ('player_id.tier_id', '=', player.tier_id.id),
+                    ('player_id', '!=', player.id),
+                ],
+                ['auction_id'],
+                ['auction_id'],
+            ):
+                if g.get('auction_id'):
+                    tier_sold_by_auction[g['auction_id'][0]] = g.get('auction_id_count') or 0
 
         for auc in auctions:
             team = auc.team_id
@@ -402,11 +437,7 @@ class AuctionAuctioneerController(http.Controller):
             if can_bid and player and player.tier_id and auc.tier_limit_ids:
                 tl = auc.tier_limit_ids.filtered(lambda l: l.tier_id.id == player.tier_id.id)
                 if tl:
-                    already_sold = env['auction.auction.player'].sudo().search_count([
-                        ('auction_id', '=', auc.id),
-                        ('player_id.tier_id', '=', player.tier_id.id),
-                        ('player_id', '!=', player.id),
-                    ])
+                    already_sold = tier_sold_by_auction.get(auc.id, 0)
                     if already_sold >= tl[0].max_players:
                         can_bid = False
                         can_bid_reason = 'Tier slot full'
@@ -424,6 +455,7 @@ class AuctionAuctioneerController(http.Controller):
                 'can_bid': can_bid,
                 'can_bid_reason': can_bid_reason,
                 'remaining_players': auc.remaining_players_count,
+                'max_players': auc.max_players or 0,
                 'manager': team.manager or '',
                 'slabs': [
                     {'from_amount': s.from_amount, 'increment': s.increment}
@@ -674,6 +706,8 @@ class AuctionAuctioneerController(http.Controller):
     @http.route('/auction/auctioneer/place-bid', type='json', auth='user', website=False, csrf=False)
     def place_bid(self, player_id, team_id, bid_amount, **kw):
         """Record a live bid for the current player."""
+        if not self._is_auctioneer():
+            return {'success': False, 'error': 'Only auctioneers can place live bids'}
         env = request.env
         player = env['auction.team.player'].sudo().browse(int(player_id))
         if not player.exists() or not player.is_on_stage or player.state != 'auction':

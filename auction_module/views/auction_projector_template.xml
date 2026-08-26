@@ -1014,12 +1014,12 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   0%{opacity:0} 35%{opacity:.7} 100%{opacity:0}
 }
 
-/* Circular seal — stays on photo with readable team / points */
+/* Circular rubber-stamp seal */
 .pj-status-seal{
   position:absolute;z-index:2;
-  width:min(64%, 15rem);aspect-ratio:1;
-  left:50%;top:46%;
-  transform:translate(-50%,-50%) scale(0) rotate(-18deg);
+  width:min(94%, 26rem);aspect-ratio:1;
+  left:50%;top:50%;
+  transform:translate(-50%,-50%) scale(0) rotate(-14deg);
   opacity:0;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   will-change:transform,opacity}
@@ -1029,52 +1029,64 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   animation:pjSealStamp .42s cubic-bezier(.15,.9,.25,1.2) .05s both}
 @keyframes pjSealIn{
   0%{opacity:0;transform:translate(-50%,-50%) scale(0) rotate(-28deg)}
-  70%{opacity:1;transform:translate(-50%,-50%) scale(1.06) rotate(-12deg)}
-  100%{opacity:.92;transform:translate(-50%,-50%) scale(1) rotate(-18deg)}
+  70%{opacity:1;transform:translate(-50%,-50%) scale(1.06) rotate(-10deg)}
+  100%{opacity:.96;transform:translate(-50%,-50%) scale(1) rotate(-14deg)}
 }
 @keyframes pjSealStamp{
   0%{opacity:0;transform:translate(-50%,-58%) scale(.2) rotate(-32deg)}
   55%{opacity:1;transform:translate(-50%,-48%) scale(1.12) rotate(-10deg)}
-  100%{opacity:.9;transform:translate(-50%,-50%) scale(1) rotate(-18deg)}
+  100%{opacity:.9;transform:translate(-50%,-50%) scale(1) rotate(-14deg)}
 }
 .pj-status-seal-ring{
-  position:absolute;inset:0;border-radius:50%;
-  border:2.5px solid currentColor;
-  box-shadow:inset 0 0 0 5px rgba(255,255,255,.12), inset 0 0 0 8px currentColor;
-  background:rgba(6,14,24,.88)}
-[data-mode="light"] .pj-status-seal-ring{background:rgba(255,255,255,.92)}
+  position:absolute;inset:1.5%;border-radius:50%;
+  border:3px solid currentColor;
+  box-shadow:inset 0 0 0 4px rgba(255,255,255,.14), inset 0 0 0 7px currentColor;
+  background:rgba(4,18,12,.62)}
+.pj-status-seal-ring--inner{
+  inset:16%;
+  border:1.6px dashed currentColor;
+  box-shadow:none;
+  background:transparent}
+[data-mode="light"] .pj-status-seal-ring{background:rgba(255,255,255,.9)}
 .pj-photo-status[data-kind="sold"] .pj-status-seal{color:var(--pj-sold-b)}
 .pj-photo-status[data-kind="unsold"] .pj-status-seal{color:var(--pj-unsold-b)}
-.pj-status-seal-svg{position:absolute;inset:0;width:100%;height:100%;opacity:.95}
+.pj-status-seal-svg{position:absolute;inset:0;width:100%;height:100%;opacity:.98;z-index:4;
+  font-family:'Bebas Neue','Exo 2',sans-serif;text-transform:uppercase;pointer-events:none}
 .pj-status-seal-core{
-  position:relative;z-index:1;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:.28rem;
-  text-align:center;padding:18%;max-width:100%;opacity:1}
+  position:relative;z-index:1;
+  width:52%;aspect-ratio:1;
+  display:flex;align-items:center;justify-content:center}
+.pj-status-seal-mark{
+  position:absolute;inset:0;
+  width:100%;height:100%;object-fit:contain;
+  mix-blend-mode:screen;
+  filter:sepia(1) saturate(14) hue-rotate(70deg) brightness(1.05);
+  opacity:.95;pointer-events:none}
+.pj-photo-status[data-kind="unsold"] .pj-status-seal-mark{display:none}
 .pj-status-seal-logo{
-  width:clamp(2.4rem,4.2vw,3.2rem);height:clamp(2.4rem,4.2vw,3.2rem);
+  position:absolute;z-index:3;
+  left:50%;top:46%;transform:translate(-50%,-50%);
+  width:54%;height:54%;
   border-radius:50%;object-fit:contain;flex-shrink:0;
-  background:rgba(255,255,255,.95);border:2px solid rgba(255,255,255,.85);padding:2px;
+  background:rgba(255,255,255,.96);border:2px solid rgba(255,255,255,.9);padding:2px;
   display:none;opacity:1;
-  box-shadow:0 2px 8px rgba(0,0,0,.35)}
+  box-shadow:0 2px 10px rgba(0,0,0,.4)}
 .pj-photo-status[data-kind="sold"] .pj-status-seal-logo.is-on{display:block}
-.pj-status-seal-team{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(.95rem,1.85vw,1.35rem);
-  letter-spacing:.06em;line-height:1.05;color:#fff;opacity:1;
-  max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  text-transform:uppercase;text-shadow:0 1px 6px rgba(0,0,0,.65), 0 0 2px rgba(0,0,0,.5);
-  font-weight:900}
-[data-mode="light"] .pj-status-seal-team{color:#0a1f12;text-shadow:0 1px 0 rgba(255,255,255,.8)}
-.pj-status-seal-pts{
-  font-size:clamp(.75rem,1.25vw,.95rem);font-weight:900;letter-spacing:.1em;
-  opacity:1;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.65)}
-[data-mode="light"] .pj-status-seal-pts{color:#064020;text-shadow:none}
 .pj-photo-status[data-kind="unsold"] .pj-status-seal-logo,
-.pj-photo-status[data-kind="unsold"] .pj-status-seal-team,
 .pj-photo-status[data-kind="unsold"] .pj-status-seal-pts{display:none !important}
+.pj-status-seal-pts{
+  position:absolute;z-index:3;left:50%;bottom:2%;
+  transform:translateX(-50%);
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(1.15rem,2.6vw,1.85rem);
+  font-weight:900;letter-spacing:.05em;line-height:1;
+  color:currentColor;white-space:nowrap;
+  text-shadow:0 1px 5px rgba(0,0,0,.55);
+  pointer-events:none}
 
-/* Diagonal ribbon — flash ~1s then vanish; circular seal remains */
-.pj-status-ribbon-wrap{
+/* Diagonal ribbon — hidden; circular seal is the sold overlay */
+.pj-status-ribbon-wrap{display:none !important}
+.pj-status-ribbon-wrap-off{
   position:absolute;z-index:5;inset:0;
   display:flex;align-items:center;justify-content:center;
   overflow:hidden}
@@ -1252,7 +1264,8 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 .pj-base-unit{font-weight:800;letter-spacing:.14em;font-size:.85rem;color:var(--tx2)}
 
 /* Sold deal — replaces base price after sale */
-.pj-sold-deal{display:none;align-items:center;justify-content:center;gap:.75rem;margin-top:.25rem;
+.pj-sold-deal{display:none !important} /* replaced by pj-live-bid SOLD panel */
+.pj-sold-deal-old{display:none;align-items:center;justify-content:center;gap:.75rem;margin-top:.25rem;
   padding:.7rem 1.05rem;border-radius:.8rem;border:2px solid var(--ok);
   background:linear-gradient(135deg, rgba(46,204,113,.18), transparent 60%);
   box-shadow:0 0 22px rgba(46,204,113,.28), inset 0 0 14px rgba(46,204,113,.08);flex-shrink:0;
@@ -1617,22 +1630,23 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
           <div class="pj-status-glow" aria-hidden="true"></div>
           <div class="pj-status-seal" id="pjStatusSeal" aria-hidden="true">
             <div class="pj-status-seal-ring"></div>
+            <div class="pj-status-seal-ring pj-status-seal-ring--inner"></div>
             <svg class="pj-status-seal-svg" viewBox="0 0 200 200" aria-hidden="true"
                  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
               <defs>
-                <path id="pjSealArcTop" d="M28,100 a72,72 0 1,1 144,0"/>
-                <path id="pjSealArcBot" d="M172,100 a72,72 0 1,1 -144,0"/>
+                <path id="pjSealArcTop" d="M38,58 A80,80 0 0,1 162,58"/>
+                <path id="pjSealArcBot" d="M36,158 A80,80 0 0,0 164,158"/>
               </defs>
-              <text id="pjSealArcTopText" fill="currentColor" font-size="13" font-weight="800" letter-spacing="3.2">
-                <textPath xlink:href="#pjSealArcTop" href="#pjSealArcTop" startOffset="50%" text-anchor="middle">★★★ SOLD TO ★★★</textPath>
+              <text id="pjSealArcTopText" fill="currentColor" font-size="18" font-weight="800" letter-spacing="3.8">
+                <textPath xlink:href="#pjSealArcTop" href="#pjSealArcTop" startOffset="50%" text-anchor="middle">SOLD TO</textPath>
               </text>
-              <text id="pjSealArcBotText" fill="currentColor" font-size="12" font-weight="800" letter-spacing="2.5">
-                <textPath xlink:href="#pjSealArcBot" href="#pjSealArcBot" startOffset="50%" text-anchor="middle">★★★★★</textPath>
+              <text id="pjSealArcBotText" fill="currentColor" font-size="16" font-weight="800" letter-spacing="1.4">
+                <textPath xlink:href="#pjSealArcBot" href="#pjSealArcBot" startOffset="50%" text-anchor="middle">TEAM</textPath>
               </text>
             </svg>
             <div class="pj-status-seal-core">
+              <img class="pj-status-seal-mark" src="/auction_module/static/img/sold_overlay_gray.png" alt=""/>
               <img class="pj-status-seal-logo" id="pjStatusSealLogo" src="" alt=""/>
-              <div class="pj-status-seal-team" id="pjStatusSealTeam"></div>
               <div class="pj-status-seal-pts" id="pjStatusSealPts"></div>
             </div>
           </div>
@@ -1884,13 +1898,6 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   function _pjPlayNow(kind) {
     if (!_pjSoundEnabled) return;
     if (kind === 'sold') {
-      /* Male "Sold!" then real applause */
-      _pjPlayUrl(_PJ_AUD + 'sold_voice.mp3').then(function (ok) {
-        if (!ok && _pjSoundEnabled) _pjSpeak('Sold!');
-      });
-      setTimeout(function () {
-        if (_pjSoundEnabled) _pjPlayUrl(_PJ_AUD + 'sold_clap.wav');
-      }, 420);
       return;
     }
     /* Male "Unsold!" then clear male crowd Woooo */
@@ -2477,11 +2484,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     } else if (baseEl) {
       baseEl.style.display = 'none';
     }
-    if (p.state === 'sold') {
-      showSoldDeal(p);
-    } else {
-      hideSoldDeal();
-    }
+    hideSoldDeal();
 
     var stampWrap = document.getElementById('pjStampWrap');
     var soldTeam = document.getElementById('pjSoldTeam');
@@ -2565,8 +2568,6 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       var isSold = kind === 'sold';
       var wordEl = document.getElementById('pjStatusWord');
       var icoEl = document.getElementById('pjStatusIco');
-      var teamEl = document.getElementById('pjStatusSealTeam');
-      var ptsEl = document.getElementById('pjStatusSealPts');
       var logoEl = document.getElementById('pjStatusSealLogo');
       var arcTop = document.getElementById('pjSealArcTopText');
       var arcBot = document.getElementById('pjSealArcBotText');
@@ -2580,13 +2581,37 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       if (icoEl) icoEl.textContent = isSold ? '✓' : '✕';
       if (arcTop) {
         var tp = arcTop.querySelector('textPath');
-        if (tp) tp.textContent = isSold ? '★★★ SOLD TO ★★★' : '★★★ NO BID ★★★';
+        if (tp) tp.textContent = isSold ? 'SOLD TO' : 'NO BID';
       }
       if (arcBot) {
         var bp = arcBot.querySelector('textPath');
-        if (bp) bp.textContent = isSold ? '★★★★★' : 'UNSOLD';
+        var teamNm = (isSold && player && player.team_name) ? String(player.team_name).toUpperCase() : 'UNSOLD';
+        if (bp) {
+          bp.textContent = teamNm;
+          bp.removeAttribute('textLength');
+        }
+        var pathEl = document.getElementById('pjSealArcBot');
+        var usable = 300;
+        try { if (pathEl && pathEl.getTotalLength) usable = pathEl.getTotalLength() * 0.92; } catch (e1) {}
+        var len = teamNm.length || 1;
+        var fs = 15;
+        if (len > 12) fs = 13;
+        if (len > 16) fs = 11.5;
+        if (len > 20) fs = 10;
+        if (len > 26) fs = 8.5;
+        if (len > 32) fs = 7.5;
+        arcBot.setAttribute('font-size', String(fs));
+        arcBot.setAttribute('letter-spacing', len > 18 ? '0' : '0.8');
+        if (bp) {
+          try {
+            var tw = bp.getComputedTextLength ? bp.getComputedTextLength() : 0;
+            if (tw > usable || len > 16) {
+              bp.setAttribute('textLength', String(Math.max(80, usable)));
+              bp.setAttribute('lengthAdjust', 'spacingAndGlyphs');
+            }
+          } catch (e3) {}
+        }
       }
-      if (teamEl) teamEl.textContent = (isSold && player && player.team_name) ? player.team_name : '';
       if (logoEl) {
         if (isSold && player && (player.team_logo_url || player.team_logo)) {
           logoEl.src = player.team_logo_url || ('data:image/jpeg;base64,' + player.team_logo);
@@ -2596,11 +2621,12 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
           logoEl.classList.remove('is-on');
         }
       }
+      var ptsEl = document.getElementById('pjStatusSealPts');
       if (ptsEl) {
         if (isSold && player && player.sold_points) {
           ptsEl.textContent = window.fmtUnit
             ? window.fmtUnit(player.sold_points)
-            : (Number(player.sold_points).toLocaleString() + ' PTS');
+            : Number(player.sold_points).toLocaleString();
           ptsEl.style.display = '';
         } else {
           ptsEl.textContent = '';
@@ -2849,7 +2875,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         var prevId = _currentId;
         var prevState = _currentState;
         var playStatusSound = !revealOnly
-          && (p.state === 'sold' || p.state === 'unsold')
+          && p.state === 'unsold'
           && prevState !== p.state;
         _currentId = p.id; _currentState = p.state; _currentPts = p.sold_points || 0;
         _currentMysteryRevealed = !!p.mystery_revealed;

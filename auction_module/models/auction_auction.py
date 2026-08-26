@@ -405,6 +405,8 @@ class AuctionPlayer(models.Model):
         print(self.tier_id)
         for player in self:
             player_obj = player.player_id
+            if hasattr(player_obj, '_clear_live_bid'):
+                player_obj._clear_live_bid()
             player.player_id.assigned_team_id = False
             player.player_id.state = 'auction'
 

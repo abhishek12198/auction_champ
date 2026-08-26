@@ -73,5 +73,10 @@ class BringUnsoldPlayers(models.TransientModel):
             players_unsold.with_context({'mass_update' : True}).action_auction()
 
         if players_sold:
+            if hasattr(players_sold, '_clear_live_bid'):
+                players_sold._clear_live_bid()
             players_sold.with_context({'mass_update' : True}).action_recall_auction_sold()
+        tournaments = self.player_ids.mapped('tournament_id') | self.tournament_id
+        if tournaments:
+            tournaments.sudo().write({'auction_declared_complete': False})
 
