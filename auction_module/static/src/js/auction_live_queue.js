@@ -85,18 +85,21 @@ odoo.define('auction_module.auction_live_queue', function (require) {
     /* Expose so the modal template's changeImage() can reload the grid */
     window._auctionReloadGrid  = loadPlayers;
 
-    bus.on('notification', null, function (notifications) {
-        notifications.forEach(function (notification) {
-            if (notification[1].type === 'player_queue_update') {
-                loadPlayers();
-            }
+    function bindQueueBus() {
+        if (!document.getElementById('auction_grid')) {
+            return;
+        }
+        bus.on('notification', null, function (notifications) {
+            notifications.forEach(function (notification) {
+                if (notification[1].type === 'player_queue_update') {
+                    loadPlayers();
+                }
+            });
         });
-    });
-
-    bus.addChannel('auction_player_update');
-    bus.startPolling();
-
-    $(document).ready(function () {
+        bus.addChannel('auction_player_update');
+        bus.startPolling();
         loadPlayers();
-    });
+    }
+
+    $(document).ready(bindQueueBus);
 });

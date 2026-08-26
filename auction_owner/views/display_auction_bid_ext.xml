@@ -363,7 +363,7 @@
             if (result && result.success) {
                 _lastBidAmt = newVal;
                 var pts = document.getElementById('oc-bp-pts');
-                if (pts) pts.textContent = newVal.toLocaleString() + ' pts';
+                if (pts) pts.textContent = (window.fmtUnit ? window.fmtUnit(newVal) : (newVal.toLocaleString() + ' pts'));
                 exitEditMode();
             } else {
                 alert('Could not correct bid: ' + ((result && result.error) || 'Unknown error'));
@@ -418,7 +418,7 @@
             }
             if (team) team.textContent = d.team_name || '---';
             if (pts)  pts.textContent  = d.current_bid
-                ? d.current_bid.toLocaleString() + ' pts' : '---';
+                ? (window.fmtUnit ? window.fmtUnit(d.current_bid) : (d.current_bid.toLocaleString() + ' pts')) : '---';
             if (open) open.style.display = 'none';
             if (live) live.style.display  = 'flex';
         } else {
@@ -429,8 +429,14 @@
         }
     }
 
+    function tournamentSlug() {
+        var m = location.pathname.match(/\/auction\/display_auction\/([^/]+)/);
+        return m ? m[1] : '';
+    }
     function poll() {
-        fetch('/auction/owner/live-bid', { cache: 'no-store' })
+        var slug = tournamentSlug();
+        var url = '/auction/owner/live-bid' + (slug ? ('?t=' + encodeURIComponent(slug)) : '');
+        fetch(url, { cache: 'no-store' })
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (d) { if (d) updateBidPanel(d); })
             .catch(function () {});
@@ -445,8 +451,34 @@
         initEditControls();
     });
 
+    function projectorSseUrl() {
+        var path = location.pathname || '';
+        var m = path.match(/^\/([^/]+)\/auction\/display_auction\/([^/]+)/);
+        if (!m) return '';
+        return '/' + m[1] + '/auction/projector/' + m[2] + '/events';
+    }
+    var _ocPollTimer = null;
+    function startOcPoll() {
+        if (!_ocPollTimer) _ocPollTimer = setInterval(poll, 2000);
+    }
+    function stopOcPoll() {
+        if (_ocPollTimer) { clearInterval(_ocPollTimer); _ocPollTimer = null; }
+    }
     poll();
-    setInterval(poll, 2000);
+    var sseUrl = projectorSseUrl();
+    if (sseUrl && typeof EventSource !== 'undefined') {
+        try {
+            var es = new EventSource(sseUrl);
+            es.addEventListener('snapshot', function () { stopOcPoll(); poll(); });
+            es.addEventListener('auction.update', function () { stopOcPoll(); poll(); });
+            es.onopen = function () { stopOcPoll(); poll(); };
+            es.onerror = function () { startOcPoll(); };
+        } catch (e) {
+            startOcPoll();
+        }
+    } else {
+        startOcPoll();
+    }
 })();
 //]]></script>
 

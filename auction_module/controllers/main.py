@@ -2132,14 +2132,20 @@ class Auction(http.Controller):
     def _remaining_players_ctx(self, tournament, theme):
         """Build the render context for the Remaining Players drawer."""
         t_domain = [('tournament_id', '=', tournament.id)] if tournament else []
-        players = request.env['auction.team.player'].sudo().search(
+        Player = request.env['auction.team.player'].sudo()
+        on_stage = Player.search(t_domain + [('is_on_stage', '=', True)], limit=1)
+        on_stage_id = on_stage.id if on_stage else False
+        players = Player.search(
             t_domain + [('state', '=', 'auction'), ('icon_player', '=', False)],
             order='sl_no asc',
         )
-        # Group players by tier (preserving encounter order)
+        # Group players by tier (preserving encounter order). The player
+        # currently on stage is shown in a dedicated block above the list.
         tier_map = {}
         tier_order = []
         for p in players:
+            if on_stage_id and p.id == on_stage_id:
+                continue
             key = p.tier_id.id if p.tier_id else 0
             if key not in tier_map:
                 tier_order.append(key)
@@ -2151,10 +2157,11 @@ class Auction(http.Controller):
             tier_map[key]['players'].append(p)
         tier_groups = [tier_map[k] for k in tier_order]
         return {
-            'tier_groups':  tier_groups,
-            'total_count':  len(players),
-            'theme':        theme,
-            'res_company':  request.env['res.company'].sudo().search([], limit=1),
+            'tier_groups':      tier_groups,
+            'on_stage_player':  on_stage if on_stage else False,
+            'total_count':      len(players),
+            'theme':            theme,
+            'res_company':      request.env['res.company'].sudo().search([], limit=1),
         }
 
     @http.route('/auction/display_auction/remaining-players', type='http', auth='public', website=True, sitemap=False)

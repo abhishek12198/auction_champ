@@ -26,6 +26,7 @@
     function metaEl() { return document.getElementById('acLiveBidMeta'); }
     function toastEl() { return document.getElementById('acLiveBidToast'); }
     function modalEl() { return document.getElementById('acLiveBidModal'); }
+    function infoEl() { return document.getElementById('acLiveBidInfo'); }
 
     function tournamentId() {
         var pad = padEl();
@@ -286,7 +287,6 @@
                 foot = '<div class="ac-livebid-leadamt">' + fmt(player.current_bid) + '</div>';
             }
             return '<button type="button" class="' + cls + '" data-team-id="' + team.id + '"'
-                + (off ? ' disabled="disabled"' : '')
                 + ' title="' + esc(team.name) + '">'
                 + '<div class="ac-livebid-head">'
                 + logo
@@ -392,6 +392,96 @@
         modal.hidden = true;
     }
 
+    function squadRecruited(team) {
+        var left = squadSlotsLeft(team);
+        var maxP = Number(team.max_players || 0) || 0;
+        if (!maxP) return '—';
+        if (left == null || isNaN(left)) return '— / ' + maxP;
+        return Math.max(0, maxP - left) + ' / ' + maxP;
+    }
+
+    function closeTeamInfo() {
+        var el = infoEl();
+        if (!el) return;
+        el.classList.remove('is-on');
+        el.hidden = true;
+    }
+
+    function openTeamInfo(teamId) {
+        var team = teamsCache.filter(function (t) { return Number(t.id) === Number(teamId); })[0];
+        var el = infoEl();
+        if (!el || !team) return;
+        closeCustom();
+        var logo = document.getElementById('acLbInfoLogo');
+        var nameEl = document.getElementById('acLbInfoName');
+        var mgrEl = document.getElementById('acLbInfoMgr');
+        var leadEl = document.getElementById('acLbInfoLead');
+        var rows = document.getElementById('acLbInfoRows');
+        var note = document.getElementById('acLbInfoNote');
+        var src = logoUrl(team);
+        if (logo) {
+            if (src) {
+                logo.src = src;
+                logo.style.display = '';
+            } else {
+                logo.removeAttribute('src');
+                logo.style.display = 'none';
+            }
+        }
+        if (nameEl) nameEl.textContent = team.name || '';
+        if (mgrEl) {
+            mgrEl.textContent = team.manager || '';
+            mgrEl.style.display = team.manager ? '' : 'none';
+        }
+        var lead = leadTeam(playerCache);
+        var isLead = !!(lead && Number(lead.id) === Number(team.id));
+        if (leadEl) leadEl.hidden = !isLead;
+        var rem = remaining(team) || 0;
+        var tot = totalPts(team) || 0;
+        var nextBid = team.next_bid || team.effective_base || 0;
+        var rowsHtml = [
+            ['Purse left / max purse', fmt(rem) + ' / ' + fmt(tot)],
+            ['Squad / full squad', squadRecruited(team)],
+            ['Next bid', fmt(nextBid)],
+            ['Next max point', fmt(maxCall(team))],
+            ['Base', fmt(team.effective_base)],
+        ].map(function (row) {
+            return '<div class="ac-livebid-info-row"><span>' + esc(row[0]) + '</span><strong>' + esc(row[1]) + '</strong></div>';
+        }).join('');
+        if (rows) rows.innerHTML = rowsHtml;
+        if (note) {
+            if (!canBid(team) && bidReason(team)) {
+                note.textContent = bidReason(team);
+                note.style.display = '';
+            } else {
+                note.textContent = '';
+            }
+        }
+        el.hidden = false;
+        el.classList.add('is-on');
+    }
+
+    var holdTimer = null;
+    var holdFired = false;
+    var holdStartX = 0;
+    var holdStartY = 0;
+
+    function liveBidTileFrom(ev) {
+        return ev.target && ev.target.closest && ev.target.closest('#acLiveBidGrid .ac-livebid-tile');
+    }
+    function clearHoldTimer() {
+        if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+    }
+    function startHold(teamId) {
+        clearHoldTimer();
+        holdTimer = setTimeout(function () {
+            holdTimer = null;
+            holdFired = true;
+            openTeamInfo(teamId);
+            setTimeout(function () { holdFired = false; }, 700);
+        }, 480);
+    }
+
     function refreshPad() {
         var pad = padEl();
         if (!pad) return;
@@ -404,7 +494,43 @@
     }
     window.acInitLiveBidPad = refreshPad;
 
+    document.addEventListener('pointerdown', function (ev) {
+        var tile = liveBidTileFrom(ev);
+        if (!tile) return;
+        if (ev.pointerType === 'mouse' && ev.button !== 0) return;
+        holdStartX = ev.clientX;
+        holdStartY = ev.clientY;
+        startHold(parseInt(tile.getAttribute('data-team-id'), 10));
+    });
+    document.addEventListener('pointermove', function (ev) {
+        if (!holdTimer) return;
+        if (Math.abs(ev.clientX - holdStartX) > 12 || Math.abs(ev.clientY - holdStartY) > 12) {
+            clearHoldTimer();
+        }
+    });
+    document.addEventListener('pointerup', clearHoldTimer);
+    document.addEventListener('pointercancel', clearHoldTimer);
+    document.addEventListener('contextmenu', function (ev) {
+        var tile = liveBidTileFrom(ev);
+        if (!tile) return;
+        ev.preventDefault();
+        holdFired = true;
+        openTeamInfo(parseInt(tile.getAttribute('data-team-id'), 10));
+        setTimeout(function () { holdFired = false; }, 700);
+    });
+
     document.addEventListener('click', function (ev) {
+        if (ev.target.closest('#acLbInfoClose') || ev.target.id === 'acLiveBidInfo') {
+            closeTeamInfo();
+            holdFired = false;
+            return;
+        }
+        if (holdFired) {
+            holdFired = false;
+            ev.preventDefault();
+            ev.stopPropagation();
+            return;
+        }
         if (ev.target.closest('#acLiveBidToggle')) {
             setExpanded(!isExpanded());
             applyChrome();
@@ -517,7 +643,10 @@
         }
     });
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') closeCustom();
+        if (e.key === 'Escape') {
+            closeCustom();
+            closeTeamInfo();
+        }
     });
 
     var obsTimer = null;
@@ -543,11 +672,57 @@
         window.changeImage._acLiveBid = true;
     }
 
+    function projectorSseUrl() {
+        var path = location.pathname || '';
+        var m = path.match(/^\/([^/]+)\/auction\/display_auction\/([^/]+)/);
+        if (!m) return '';
+        return '/' + m[1] + '/auction/projector/' + m[2] + '/events';
+    }
+    function startHttpPoll() {
+        if (!pollTimer) {
+            pollTimer = setInterval(function () {
+                wrapChangeImage();
+                poll();
+            }, 2500);
+        }
+    }
+    function stopHttpPoll() {
+        if (pollTimer) {
+            clearInterval(pollTimer);
+            pollTimer = null;
+        }
+    }
+    function startBidSse() {
+        var url = projectorSseUrl();
+        if (!url || typeof EventSource === 'undefined') {
+            startHttpPoll();
+            return;
+        }
+        var es;
+        try {
+            es = new EventSource(url);
+        } catch (e) {
+            startHttpPoll();
+            return;
+        }
+        function onEvt() {
+            stopHttpPoll();
+            wrapChangeImage();
+            poll();
+        }
+        es.addEventListener('snapshot', onEvt);
+        es.addEventListener('auction.update', onEvt);
+        es.onopen = function () {
+            stopHttpPoll();
+            poll();
+        };
+        es.onerror = function () {
+            startHttpPoll();
+        };
+    }
+
     refreshPad();
     watchZone();
     wrapChangeImage();
-    pollTimer = setInterval(function () {
-        wrapChangeImage();
-        poll();
-    }, 2500);
+    startBidSse();
 })();

@@ -101,7 +101,9 @@ def build_live_board_payload(env, tournament, db_name):
             'description': tournament.description or '',
             'logo_url': pub_img('auction.tournament', tournament.id, 'logo', tournament.write_date) if tournament.logo else '',
             'tournament_type': tournament.tournament_type or 'cricket',
+            'live_bid_sound': bool(tournament.live_bid_sound),
         }
+        result['live_bid_sound'] = bool(tournament.live_bid_sound)
         result['tournament_type'] = tournament.tournament_type or 'cricket'
 
     stamp_player = None
@@ -141,10 +143,13 @@ def build_live_board_payload(env, tournament, db_name):
                     base = tl[0].base_point
             if base > base_price:
                 base_price = base
+        # bin_size: do not pull the full binary into the snapshot rebuild.
+        # Full photo (no sz=pj): the resized stage URL was hanging on live board.
+        has_photo = bool(current_player.with_context(bin_size=True).photo)
         result['current_player'] = {
             'id': current_player.id,
             'name': current_player.name or '',
-            'photo_url': pub_img('auction.team.player', current_player.id, 'photo', None, 'pj') if current_player.photo else '',
+            'photo_url': pub_img('auction.team.player', current_player.id, 'photo', current_player.write_date) if has_photo else '',
             'role': current_player.role or '',
             'tier_name': current_player.tier_id.name if current_player.tier_id else '',
             'tier_color': current_player.tier_color or '#2252b5',
@@ -377,6 +382,7 @@ def build_projector_payload(env, tournament, db_name):
             'top_purse': ctrl._pj_top_purse(tournament, env=env),
             'auction_meta': ctrl._pj_auction_meta(tournament),
             'break_time': bool(tournament and tournament.break_time_active),
+            'live_bid_sound': bool(tournament and tournament.live_bid_sound),
             'advertisers': ctrl._pj_advertisers(tournament, db_name),
             'boards': boards,
             'stamp_expires_at': _stamp_iso(tournament),
@@ -490,6 +496,7 @@ def build_projector_payload(env, tournament, db_name):
         'top_purse': ctrl._pj_top_purse(tournament, env=env),
         'auction_meta': ctrl._pj_auction_meta(tournament),
         'break_time': bool(tournament and tournament.break_time_active),
+        'live_bid_sound': bool(tournament and tournament.live_bid_sound),
         'advertisers': ctrl._pj_advertisers(tournament, db_name),
         'boards': boards,
         'stamp_expires_at': _stamp_iso(tournament),

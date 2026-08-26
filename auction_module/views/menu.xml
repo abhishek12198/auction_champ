@@ -42,7 +42,7 @@
 
         <!-- Root menu order (forced again in res.users._auction_reorder_root_menus):
              10 Tournament(s)  20 Player Dashboard  30 Player Showcase
-             40 Auctioneer Console  50 Pool Generator  60 Auction Settings -->
+             50 Pool Generator  60 Auction Settings -->
         <menuitem id="menu_action_auction_tournament"
           name="Tournament(s)"
           action="action_auction_tournament"

@@ -1383,6 +1383,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   window.PJ_BOARD_SHOW_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/boards/show';
 </script>
 <script src="/auction_module/static/src/js/auction_sse_client.js"></script>
+<script src="/auction_module/static/src/js/live_bid_tick.js"></script>
 <t t-call="auction_module.point_unit_bootstrap">
   <t t-set="pu_tournament" t-value="tournament"/>
 </t>
@@ -2807,6 +2808,9 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   function applyProjectorResult(result) {
       result = result || {};
       var p = result.player;
+      if (window.acLiveBidTick) {
+        window.acLiveBidTick.maybePlay(!!result.live_bid_sound, p);
+      }
       var d0 = result.dice || {};
       var fp = [
         (p && p.id) || 0,

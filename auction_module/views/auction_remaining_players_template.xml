@@ -365,7 +365,28 @@
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          text-transform: uppercase;
         }
+        .rp-card-on-stage {
+          border-color: var(--rp-primary);
+          background: var(--rp-card-hover);
+          box-shadow: 0 0 0 2px var(--rp-glow), 0 8px 22px rgba(0,0,0,.28);
+        }
+        .rp-card-on-stage .rp-name { white-space: normal; }
+        .rp-on-stage-tag {
+          display: inline-block;
+          margin-left: 6px;
+          padding: 2px 8px;
+          border-radius: 999px;
+          background: var(--rp-primary);
+          color: var(--rp-sl-text, #fff);
+          font-size: 0.62rem;
+          font-weight: 800;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          vertical-align: middle;
+        }
+        .rp-on-stage-block .rp-tier-name { color: var(--rp-primary); }
         .rp-stat {
           display: flex;
           align-items: baseline;
@@ -449,10 +470,48 @@
       </div>
 
       <div class="rp-body">
-        <t t-if="not tier_groups">
+        <t t-if="not tier_groups and not on_stage_player">
           <div class="rp-empty">
             <div class="rp-empty-icon">🏁</div>
             <div class="rp-empty-text">No players remaining in auction.</div>
+          </div>
+        </t>
+
+        <t t-if="on_stage_player">
+          <t t-set="osp" t-value="on_stage_player"/>
+          <div class="rp-tier-section rp-on-stage-block" t-attf-style="--tier-color: #{osp.tier_id.color if osp.tier_id else '#7f8c8d'};">
+            <div class="rp-tier-header">
+              <div class="rp-tier-dot"></div>
+              <span class="rp-tier-name">On Stage</span>
+            </div>
+            <div class="rp-player-grid">
+              <div class="rp-card rp-card-on-stage">
+                <div class="rp-photo-wrap">
+                  <img class="rp-photo"
+                       t-attf-src="/web/image/auction.team.player/#{osp.id}/photo"
+                       t-att-alt="osp.name"/>
+                  <span class="rp-sl">#<t t-esc="osp.sl_no"/></span>
+                </div>
+                <div class="rp-info">
+                  <div class="rp-name" t-att-title="(osp.name or '').upper()">
+                    <t t-esc="(osp.name or '').upper()"/>
+                    <span class="rp-on-stage-tag">On Stage</span>
+                  </div>
+                  <div class="rp-stat">
+                    <span class="rp-stat-label">Role</span>
+                    <span class="rp-stat-value"><t t-esc="osp.role or '—'"/></span>
+                  </div>
+                  <div class="rp-stat">
+                    <span class="rp-stat-label">Bat</span>
+                    <span class="rp-stat-value"><t t-esc="osp.batting_style or '—'"/></span>
+                  </div>
+                  <div class="rp-stat">
+                    <span class="rp-stat-label">Bowl</span>
+                    <span class="rp-stat-value"><t t-esc="osp.bowling_style or '—'"/></span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </t>
 
@@ -473,7 +532,7 @@
                     <span class="rp-sl">#<t t-esc="player.sl_no"/></span>
                   </div>
                   <div class="rp-info">
-                    <div class="rp-name" t-att-title="player.name"><t t-esc="player.name"/></div>
+                    <div class="rp-name" t-att-title="(player.name or '').upper()"><t t-esc="(player.name or '').upper()"/></div>
                     <div class="rp-stat">
                       <span class="rp-stat-label">Role</span>
                       <span class="rp-stat-value"><t t-esc="player.role or '—'"/></span>

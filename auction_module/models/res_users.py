@@ -143,7 +143,7 @@ class ResUsers(models.Model):
         """Force root app menu order (XML sequence updates are unreliable on upgrade).
 
         1 Tournament(s)  2 Player Dashboard  3 Player Showcase
-        4 Auctioneer Console  5 Pool Generator  6 Auction Settings
+        4 Pool Generator  5 Auction Settings
         """
         Menu = self.env['ir.ui.menu'].sudo()
         # (xml_id, sequence) — use gaps so other apps do not slip between
@@ -152,7 +152,6 @@ class ResUsers(models.Model):
             ('ac_saas_manager.menu_saas_tournament', 10),
             ('auction_module.menu_action_player_dashboard', 20),
             ('auction_module.menu_action_launch_auction_root', 30),
-            ('auction_auctioneer.menu_auctioneer_console', 40),
             ('auction_module.menu_action_team_pool_wizard', 50),
             ('auction_module.menu_action_auction_root', 60),
             ('auction_module.menu_action_payment_marker', 70),

@@ -358,6 +358,12 @@ class AuctionTournament(models.Model):
              'remembered (session + cookie) so they do not need to re-enter the code. '
              'When disabled, anyone with the live board URL can view it without a code.',
     )
+    live_bid_sound = fields.Boolean(
+        string='Live Bid Sound',
+        default=False,
+        help='When enabled, the public Live Board and Projector play a short cue '
+             'each time a team updates the live bid on the player on stage.',
+    )
     pool_draw_json = fields.Text(
         string='Saved Pool Draw',
         copy=False,
@@ -1367,6 +1373,7 @@ class AuctionTournament(models.Model):
                 'stamp_player_id', 'stamp_state', 'stamp_expires_at',
                 # live-board controls
                 'live_board_active', 'break_time_active', 'live_board_code_protected',
+                'live_bid_sound',
                 # registration toggle
                 'registration_open',
                 # dice / player-selector

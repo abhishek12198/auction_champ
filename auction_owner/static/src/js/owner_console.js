@@ -23,6 +23,7 @@ const S = {
 const $ = id => document.getElementById(id);
 const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const fmt = n => (n||0).toLocaleString();
+const fmtU = n => (window.fmtUnit ? window.fmtUnit(n) : (fmt(n) + ' pts'));
 function show(id, v) { const e=$(id); if(e) e.style.display = v?'':'none'; }
 function txt(id, v)  { const e=$(id); if(e) e.textContent = v||'—'; }
 function src(id, v)  { const e=$(id); if(e) e.src = v||''; }
@@ -124,7 +125,7 @@ function flashRivalBid(player) {
     const alertEl = $('ocRivalAlert');
     const msgEl   = $('ocRivalMsg');
     if (alertEl && msgEl) {
-        msgEl.textContent = teamName + ' raised to ' + amount + ' pts!';
+        msgEl.textContent = teamName + ' raised to ' + (window.fmtUnit?window.fmtUnit(amount):(amount+' pts'))+'!';
         // Reset animation by toggling class
         alertEl.classList.remove('oc-rival-show');
         void alertEl.offsetWidth; // reflow
@@ -143,7 +144,7 @@ function flashRivalBid(player) {
     }
 
     // 3. Toast notification
-    toast('🔥 ' + teamName + ' — ' + amount + ' pts!', 'warn');
+    toast('🔥 ' + teamName + ' — ' + (window.fmtUnit?window.fmtUnit(amount):(amount+' pts'))+'!', 'warn');
 
     // 4. Haptic feedback on mobile (two short buzzes)
     if (navigator.vibrate) navigator.vibrate([80, 60, 80]);
@@ -186,8 +187,8 @@ function renderPlayer(p) {
     if (ring) ring.style.background = p.tier_color ? `conic-gradient(${p.tier_color},#fff3,${p.tier_color})` : '';
 
     txt('ocSlNo', p.sl_no ? '#' + p.sl_no : '');
-    txt('ocBasePrice', p.base_price ? fmt(p.base_price)+' pts' : '—');
-    txt('ocCurrentBid', p.current_bid ? fmt(p.current_bid)+' pts' : 'No bids yet');
+    txt('ocBasePrice', p.base_price ? fmtU(p.base_price) : '—');
+    txt('ocCurrentBid', p.current_bid ? fmtU(p.current_bid) : 'No bids yet');
 
     const hasLeader = p.current_bid_team && p.current_bid_team.name;
     show('ocLeadingTeam', !!hasLeader);
@@ -212,9 +213,9 @@ function renderBidPanel(myTeam, player) {
     const pct = myTeam.total_points > 0 ? (myTeam.remaining_points / myTeam.total_points * 100) : 0;
     const barFill = $('ocMyPurseBar');
     if (barFill) barFill.style.width = pct + '%';
-    txt('ocMyPurse', fmt(myTeam.remaining_points)+' / '+fmt(myTeam.total_points)+' pts');
+    txt('ocMyPurse', fmt(myTeam.remaining_points)+' / '+fmtU(myTeam.total_points));
 
-    txt('ocMaxCallVal', myTeam.max_call > 0 ? fmt(myTeam.max_call)+' pts' : '—');
+    txt('ocMaxCallVal', myTeam.max_call > 0 ? fmtU(myTeam.max_call) : '—');
 
     const input   = $('ocBidInput');
     const bidBtn  = $('ocBidCta');
@@ -247,7 +248,7 @@ function renderBidPanel(myTeam, player) {
         }
         if (bidBtn) bidBtn.disabled = false;
         if (reasonEl) {
-            reasonEl.textContent = myTeam.max_call > 0 ? 'Max call for this player: '+fmt(myTeam.max_call)+' pts' : '';
+            reasonEl.textContent = myTeam.max_call > 0 ? 'Max call for this player: '+fmtU(myTeam.max_call) : '';
             reasonEl.className = 'oc-bid-reason oc-reason-ok';
         }
         renderPresets(S.presets, myTeam);
@@ -266,7 +267,7 @@ function renderQuickBidBox(canBid, nextBidOrReason, isLeading) {
     if (canBid) {
         box.classList.add('oc-qb-active');
         box.classList.remove('oc-qb-disabled', 'oc-qb-leading');
-        if (hint) hint.textContent = '⚡ Tap · ' + fmt(nextBidOrReason) + ' pts';
+        if (hint) hint.textContent = '⚡ Tap · ' + fmtU(nextBidOrReason);
     } else if (isLeading) {
         box.classList.add('oc-qb-leading');
         box.classList.remove('oc-qb-active', 'oc-qb-disabled');
@@ -298,7 +299,7 @@ window.ocQuickBid = function() {
     .then(resp => {
         const res = resp.result || resp;
         if (res.success) {
-            toast('⚡ Quick Bid: ' + fmt(bidAmount) + ' pts!', 'ok');
+            toast('⚡ Quick Bid: ' + fmtU(bidAmount) + '!', 'ok');
             fetchData();
         } else {
             toast(res.error || 'Bid failed', 'err');
@@ -380,8 +381,8 @@ function renderTeamsStrip(teams, myTeamId) {
 </div>
 <div class="oc-strip-purse-bar"><div class="oc-strip-purse-fill" style="width:${pct}%"></div></div>
 <div class="oc-strip-stats">
-  <div class="oc-strip-stat"><span class="oc-strip-stat-k">Purse</span><span class="oc-strip-stat-v">${fmt(t.remaining_points)} pts</span></div>
-  <div class="oc-strip-stat"><span class="oc-strip-stat-k">Max call</span><span class="oc-strip-stat-v">${t.max_call>0?fmt(t.max_call)+' pts':'—'}</span></div>
+  <div class="oc-strip-stat"><span class="oc-strip-stat-k">Purse</span><span class="oc-strip-stat-v">${fmtU(t.remaining_points)}</span></div>
+  <div class="oc-strip-stat"><span class="oc-strip-stat-k">Max call</span><span class="oc-strip-stat-v">${t.max_call>0?fmtU(t.max_call):'—'}</span></div>
   <div class="oc-strip-stat"><span class="oc-strip-stat-k">Squad</span><span class="oc-strip-stat-v">${t.player_count||0} / ${t.max_players||'?'}</span></div>
 </div>
 <span class="oc-strip-badge ${t.can_bid?'oc-strip-badge-ok':'oc-strip-badge-no'}">
@@ -421,11 +422,11 @@ function renderTeamsFull() {
 <div class="oc-team-card-body">
   <div class="oc-budget-row">
     <div class="oc-budget-bar-bg"><div class="oc-budget-bar-fill" style="width:${pct}%"></div></div>
-    <div class="oc-budget-text">${fmt(t.remaining_points)} / ${fmt(t.total_points)} pts</div>
+    <div class="oc-budget-text">${fmt(t.remaining_points)} / ${fmtU(t.total_points)}</div>
   </div>
   <div class="oc-team-stats-row">
-    <span class="oc-stat-pill"><span class="oc-stat-pill-icon">💰</span> Max call: ${t.max_call>0?fmt(t.max_call)+' pts':'—'}</span>
-    ${player?`<span class="oc-stat-pill"><span class="oc-stat-pill-icon">⬆️</span> Next bid: ${fmt(t.next_bid)} pts</span>`:''}
+    <span class="oc-stat-pill"><span class="oc-stat-pill-icon">💰</span> Max call: ${t.max_call>0?fmtU(t.max_call):'—'}</span>
+    ${player?`<span class="oc-stat-pill"><span class="oc-stat-pill-icon">⬆️</span> Next bid: ${fmtU(t.next_bid)}</span>`:''}
   </div>
   <div class="oc-can-bid-row">
     <span class="oc-can-bid-chip ${t.can_bid?'oc-chip-ok':'oc-chip-no'}">
@@ -453,7 +454,7 @@ function renderMySquad() {
     if (banner) banner.style.display = '';
     src('ocMySquadLogo', myTeam.logo_url);
     txt('ocMySquadTeam', myTeam.name);
-    txt('ocMySquadPurse', fmt(myTeam.remaining_points)+' / '+fmt(myTeam.total_points)+' pts remaining');
+    txt('ocMySquadPurse', fmt(myTeam.remaining_points)+' / '+fmtU(myTeam.total_points)+' remaining');
 
     const squad = myTeam.squad || [];
     if (countEl) countEl.innerHTML = `<div class="oc-squad-count-n">${squad.length}</div><div class="oc-squad-count-lbl">Players</div>`;
@@ -470,7 +471,7 @@ function renderMySquad() {
       ${p.tier_name ? `<span class="oc-squad-tier" style="border-color:${esc(p.tier_color)};color:${esc(p.tier_color)}">${esc(p.tier_name)}</span>` : ''}
     </div>
   </div>
-  <div class="oc-squad-pts">${fmt(p.points)} pts</div>
+  <div class="oc-squad-pts">${fmtU(p.points)}</div>
 </div>`).join('');
 }
 
@@ -486,8 +487,8 @@ window.ocOpenSquadSheet = function(team) {
   <div>
     <div class="oc-sheet-head-name">${esc(team.name)}</div>
     <div class="oc-sheet-head-meta">
-      Purse: ${fmt(team.remaining_points)} / ${fmt(team.total_points)} pts (${pct}%) &nbsp;·&nbsp;
-      Max call: ${team.max_call>0?fmt(team.max_call)+' pts':'—'} &nbsp;·&nbsp;
+      Purse: ${fmt(team.remaining_points)} / ${fmtU(team.total_points)} (${pct}%) &nbsp;·&nbsp;
+      Max call: ${team.max_call>0?fmtU(team.max_call):'—'} &nbsp;·&nbsp;
       Squad: ${team.player_count||squad.length} / ${team.max_players||'?'}
     </div>
   </div>
@@ -504,7 +505,7 @@ window.ocOpenSquadSheet = function(team) {
       ${p.tier_name?`<span class="oc-squad-tier" style="border-color:${esc(p.tier_color)};color:${esc(p.tier_color)}">${esc(p.tier_name)}</span>`:''}
     </div>
   </div>
-  <div class="oc-squad-pts">${fmt(p.points)} pts</div>
+  <div class="oc-squad-pts">${fmtU(p.points)}</div>
 </div>`).join('')}
 </div>`;
     bd.classList.add('oc-open'); sh.classList.add('oc-open');
@@ -578,10 +579,10 @@ window.ocOpenBidConfirm = function() {
     const input = $('ocBidInput');
     const amount = parseInt((input&&input.value)||'0', 10);
     if (!amount || amount < (myTeam.effective_base||1)) {
-        toast('Bid must be at least '+fmt(myTeam.effective_base)+' pts', 'err'); return;
+        toast('Bid must be at least '+fmtU(myTeam.effective_base), 'err'); return;
     }
     if (myTeam.max_call>0 && amount>myTeam.max_call) {
-        toast('Exceeds your max call of '+fmt(myTeam.max_call)+' pts', 'err'); return;
+        toast('Exceeds your max call of '+fmtU(myTeam.max_call), 'err'); return;
     }
     S.pendingBid = { playerId: player.id, teamId: myTeam.id, amount };
     txt('ocConfirmPlayer', player.name);
@@ -613,7 +614,7 @@ window.ocSubmitBid = function() {
     .then(resp => {
         const res = resp.result || resp;
         if (res.success) {
-            toast('Bid of '+fmt(bid.amount)+' pts placed! 🎯','ok');
+            toast('Bid of '+fmtU(bid.amount)+' placed! 🎯','ok');
             ocCancelBidConfirm();
             fetchData();
         } else {
@@ -633,7 +634,7 @@ window.ocRevokeBid = function() {
     }
     const remaining = revoke.remaining;
     if (!confirm(
-        'Revoke your bid of ' + fmt(player.current_bid) + ' pts?\n' +
+        'Revoke your bid of ' + fmtU(player.current_bid) + '?\n' +
         'The bid will revert to the previous team\'s call.\n' +
         'Revokes remaining after this: ' + (remaining - 1) + '/' + revoke.max
     )) return;
@@ -654,7 +655,7 @@ window.ocRevokeBid = function() {
         const res = resp.result || resp;
         if (res.success) {
             const msg = res.prev_team_name
-                ? 'Bid revoked ✓ — ' + res.prev_team_name + ' leads with ' + fmt(res.new_bid) + ' pts'
+                ? 'Bid revoked ✓ — ' + res.prev_team_name + ' leads with ' + fmtU(res.new_bid)
                 : 'Bid revoked ✓ — player is now open for bids';
             toast(msg, 'ok');
             fetchData();
@@ -832,7 +833,7 @@ window.ocSquadSnapshot = function(mode, btn) {
     ${p.role      ? `<span style="${chipStyle(acl, 'rgba(255,255,255,.08)')}">${esc(p.role)}</span>`       : ''}
     ${p.tier_name ? `<span style="${chipStyle(p.tier_color || acl, 'transparent')}border:1px solid ${esc(p.tier_color || ac)};">${esc(p.tier_name)}</span>` : ''}
   </div>
-  <div style="font-size:.95rem;font-weight:800;color:${acl};">${fmtN(p.points)} pts</div>
+  <div style="font-size:.95rem;font-weight:800;color:${acl};">${window.fmtUnit?window.fmtUnit(p.points):fmtN(p.points)+' pts'}</div>
 </div>`
         : p => `
 <div style="background:#111520;border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:10px 13px;display:flex;align-items:center;gap:12px;">
@@ -844,7 +845,7 @@ window.ocSquadSnapshot = function(mode, btn) {
       ${p.tier_name ? `<span style="${chipStyle(p.tier_color || acl, 'transparent')}border:1px solid ${esc(p.tier_color || ac)};">${esc(p.tier_name)}</span>` : ''}
     </div>
   </div>
-  <div style="font-size:.86rem;font-weight:800;color:${acl};flex-shrink:0;">${fmtN(p.points)} pts</div>
+  <div style="font-size:.86rem;font-weight:800;color:${acl};flex-shrink:0;">${window.fmtUnit?window.fmtUnit(p.points):fmtN(p.points)+' pts'}</div>
 </div>`;
 
     const cardsHtml = isLaptop
@@ -860,7 +861,7 @@ window.ocSquadSnapshot = function(mode, btn) {
     <div style="flex:1;min-width:0;">
       <div style="font-size:${isLaptop ? '1.2rem' : '1rem'};font-weight:800;color:#e8edf8;">${esc(myTeam.name)}</div>
       ${tournName ? `<div style="font-size:.7rem;color:${acl};margin-top:2px;font-weight:600;letter-spacing:.04em;">${esc(tournName)}</div>` : ''}
-      <div style="font-size:.74rem;color:#8899bb;margin-top:4px;">${fmtN(myTeam.remaining_points)} / ${fmtN(myTeam.total_points)} pts remaining</div>
+      <div style="font-size:.74rem;color:#8899bb;margin-top:4px;">${fmtN(myTeam.remaining_points)} / ${window.fmtUnit?window.fmtUnit(myTeam.total_points):fmtN(myTeam.total_points)+' pts'} remaining</div>
     </div>
     <div style="background:rgba(255,255,255,.05);border:1.5px solid ${ac};border-radius:12px;padding:${isLaptop ? '12px 20px' : '9px 14px'};text-align:center;flex-shrink:0;">
       <div style="font-size:${isLaptop ? '1.8rem' : '1.4rem'};font-weight:900;color:${acl};line-height:1;">${squad.length}</div>

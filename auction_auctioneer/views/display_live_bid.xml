@@ -52,10 +52,25 @@
                 <button type="button" class="ac-livebid-place" id="acLbPlace">Place Bid</button>
             </div>
         </div>
+        <div class="ac-livebid-overlay ac-livebid-info-overlay" id="acLiveBidInfo" hidden="hidden">
+            <div class="ac-livebid-modal ac-livebid-info-card" role="dialog" aria-modal="true" aria-labelledby="acLbInfoName">
+                <button type="button" class="ac-livebid-modal-x" id="acLbInfoClose" aria-label="Close">×</button>
+                <div class="ac-livebid-info-head">
+                    <img id="acLbInfoLogo" src="" alt="" class="ac-livebid-info-logo"/>
+                    <div class="ac-livebid-info-id">
+                        <h3 class="ac-livebid-info-name" id="acLbInfoName"></h3>
+                        <p class="ac-livebid-info-mgr" id="acLbInfoMgr"></p>
+                        <span class="ac-livebid-info-badge" id="acLbInfoLead" hidden="hidden">Leading bid</span>
+                    </div>
+                </div>
+                <div class="ac-livebid-info-rows" id="acLbInfoRows"></div>
+                <p class="ac-livebid-info-note" id="acLbInfoNote"></p>
+            </div>
+        </div>
         <div class="ac-livebid-toast" id="acLiveBidToast"></div>
-        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_live_bid.css?v=32"/>
+        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_live_bid.css?v=34"/>
         <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_showcase.css?v=4"/>
-        <script src="/auction_auctioneer/static/src/js/display_live_bid.js?v=32"></script>
+        <script src="/auction_auctioneer/static/src/js/display_live_bid.js?v=35"></script>
     </template>
 
     <!-- Under player profile, above Unsold / Sell / Next -->

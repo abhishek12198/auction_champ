@@ -78,6 +78,18 @@ class AuctionOwnerController(http.Controller):
         )
 
     @staticmethod
+    def _tournament_from_request(**kw):
+        """Resolve tournament by slug (?t=) so two live auctions do not mix."""
+        slug = (kw.get('t') or '').strip()
+        if slug:
+            found = request.env['auction.tournament'].sudo().search(
+                [('slug', '=', slug)], limit=1
+            )
+            if found:
+                return found
+        return None
+
+    @staticmethod
     def _pub_img(model, record_id, field):
         return '/auction/public/image/%s/%d/%s' % (model, record_id, field)
 
@@ -375,9 +387,11 @@ class AuctionOwnerController(http.Controller):
     @http.route('/auction/owner/counter-check', type='http', auth='public',
                 website=False, csrf=False, methods=['GET'])
     def counter_check(self, **kw):
-        tournament = request.env['auction.tournament'].sudo().search(
-            [('active', '=', True)], limit=1
-        )
+        tournament = self._tournament_from_request(**kw)
+        if not tournament:
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('active', '=', True)], limit=1
+            )
         result = {'started_at': None, 'hammer_count': 3, 'age_seconds': None}
         if tournament and tournament.counter_started_at:
             result['started_at']   = tournament.counter_started_at.isoformat()
@@ -398,8 +412,12 @@ class AuctionOwnerController(http.Controller):
     @http.route('/auction/owner/live-bid', type='http', auth='public',
                 website=False, csrf=False, methods=['GET'])
     def live_bid(self, **kw):
+        tournament = self._tournament_from_request(**kw)
+        domain = [('is_on_stage', '=', True)]
+        if tournament:
+            domain.append(('tournament_id', '=', tournament.id))
         player = request.env['auction.team.player'].sudo().search(
-            [('is_on_stage', '=', True)], limit=1
+            domain, limit=1
         )
         result = {
             'has_bid': False,
@@ -433,9 +451,11 @@ class AuctionOwnerController(http.Controller):
     @http.route('/auction/owner/enable-counter', type='http', auth='public',
                 website=False, csrf=False, methods=['GET', 'POST'])
     def enable_counter(self, **kw):
-        tournament = request.env['auction.tournament'].sudo().search(
-            [('active', '=', True)], limit=1
-        )
+        tournament = self._tournament_from_request(**kw)
+        if not tournament:
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('active', '=', True)], limit=1
+            )
         if not tournament:
             _logger.warning('enable_counter: no active tournament found')
             payload = {'ok': False, 'reason': 'no_tournament'}

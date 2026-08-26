@@ -278,7 +278,10 @@
 <div class="oc-toast" id="ocToast"></div>
 
 <script src="/auction_module/static/src/lib/html2canvas.min.js"></script>
-<script src="/auction_owner/static/src/js/owner_console.js?v=2"></script>
+<t t-call="auction_module.point_unit_bootstrap">
+    <t t-set="pu_tournament" t-value="tournament"/>
+</t>
+<script src="/auction_owner/static/src/js/owner_console.js?v=3"></script>
 
 <!-- Squad snapshot button styles -->
 <style>

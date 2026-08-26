@@ -113,38 +113,53 @@
 .ac-livebid-leadhead {
     display: none;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     min-width: 0;
-    flex: 1 1 120px;
+    flex: 1 1 160px;
 }
-.ac-livebid-leadhead.is-on { display: flex; }
+.ac-livebid-leadhead.is-on {
+    display: flex;
+    padding: 2px 8px 2px 3px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--lb-accent) 28%, transparent);
+    border: 1px solid var(--lb-accent);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--lb-accent) 45%, transparent);
+    animation: acLiveBidPulse 1.15s ease-in-out infinite;
+}
 .ac-livebid-leadhead-logo {
-    width: 20px;
-    height: 20px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     object-fit: contain;
-    background: rgba(255,255,255,.12);
+    background: rgba(255,255,255,.14);
     flex-shrink: 0;
+    border: 2px solid var(--lb-bright);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--lb-accent) 70%, transparent);
+}
+.ac-livebid-leadhead.is-on .ac-livebid-leadhead-logo {
+    animation: acLiveBidLogoRing 1.15s ease-in-out infinite;
 }
 .ac-livebid-leadhead-name {
-    font: 700 11px/1.15 inherit;
+    font: 800 12px/1.15 inherit;
     letter-spacing: .04em;
     text-transform: uppercase;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     min-width: 0;
-    color: var(--lb-text);
+    color: var(--lb-bright);
 }
 .ac-livebid-leadhead-pts {
     flex-shrink: 0;
-    font: 800 11px/1 inherit;
+    font: 800 13px/1 inherit;
     letter-spacing: .03em;
-    color: var(--lb-bright);
-    padding: 3px 7px;
+    color: var(--lb-ink);
+    padding: 5px 11px;
     border-radius: 999px;
-    background: var(--lb-tile);
-    border: 1px solid var(--lb-tile-line);
+    background: var(--lb-accent);
+    border: 1px solid var(--lb-bright);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--lb-accent) 65%, transparent);
+    animation: acLiveBidPtsFlash 1.15s ease-in-out infinite;
 }
 .ac-livebid-actions {
     display: flex;
@@ -237,17 +252,46 @@
     border-color: var(--lb-accent);
     background: color-mix(in srgb, var(--lb-accent) 16%, transparent);
 }
+@keyframes acLiveBidPulse {
+    0%, 100% { box-shadow: 0 0 0 2px var(--lb-accent), 0 0 8px color-mix(in srgb, var(--lb-accent) 40%, transparent); }
+    50% { box-shadow: 0 0 0 3px var(--lb-bright), 0 0 18px color-mix(in srgb, var(--lb-accent) 75%, transparent); }
+}
+@keyframes acLiveBidLogoRing {
+    0%, 100% { box-shadow: 0 0 0 2px var(--lb-accent), 0 0 6px var(--lb-accent); }
+    50% { box-shadow: 0 0 0 3px var(--lb-bright), 0 0 14px var(--lb-accent); }
+}
+@keyframes acLiveBidPtsFlash {
+    0%, 100% { transform: scale(1); filter: brightness(1); }
+    50% { transform: scale(1.08); filter: brightness(1.22); }
+}
 .ac-livebid-tile.is-lead {
+    overflow: visible;
+    z-index: 3;
     border-color: var(--lb-accent);
-    background: color-mix(in srgb, var(--lb-accent) 22%, transparent);
-    box-shadow: inset 0 0 0 2px var(--lb-accent);
+    background: color-mix(in srgb, var(--lb-accent) 42%, transparent);
+    animation: acLiveBidPulse 1.15s ease-in-out infinite;
 }
 .ac-livebid-tile.is-lead .ac-livebid-name {
     color: var(--lb-bright);
+    font-weight: 800;
+}
+.ac-livebid-tile.is-lead .ac-livebid-logo,
+.ac-livebid-tile.is-lead .ac-livebid-ph {
+    border: 2px solid var(--lb-bright);
+    animation: acLiveBidLogoRing 1.15s ease-in-out infinite;
 }
 .ac-livebid-tile.is-lead .ac-livebid-leadamt {
-    background: var(--lb-accent);
+    background: var(--lb-bright);
     color: var(--lb-ink);
+    font-size: 13px;
+    min-width: 54px;
+    box-shadow: 0 0 12px color-mix(in srgb, var(--lb-accent) 70%, transparent);
+    animation: acLiveBidPtsFlash 1.15s ease-in-out infinite;
+}
+.ac-livebid-tile {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
 }
 .ac-livebid-tile.is-off {
     opacity: .62;
@@ -388,6 +432,73 @@
     background: color-mix(in srgb, #040810 62%, transparent);
 }
 .ac-livebid-overlay.is-on { display: flex; }
+
+.ac-livebid-info-card { max-width: 400px; }
+.ac-livebid-info-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-right: 28px;
+    margin-bottom: 14px;
+}
+.ac-livebid-info-logo {
+    width: 58px;
+    height: 58px;
+    border-radius: 14px;
+    object-fit: contain;
+    background: var(--lb-tile);
+    border: 1px solid var(--lb-tile-line);
+    flex-shrink: 0;
+}
+.ac-livebid-info-name {
+    margin: 0;
+    font: 800 17px/1.15 inherit;
+    text-transform: uppercase;
+}
+.ac-livebid-info-mgr {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: var(--lb-muted);
+}
+.ac-livebid-info-badge {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--lb-hot, #FF8A00) 22%, transparent);
+    color: var(--lb-hot, #FF8A00);
+    font: 800 10px/1 inherit;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.ac-livebid-info-rows { display: grid; gap: 8px; }
+.ac-livebid-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--lb-tile-line);
+    background: var(--lb-tile);
+}
+.ac-livebid-info-row span {
+    font-size: 11px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--lb-muted);
+}
+.ac-livebid-info-row strong {
+    font-size: 15px;
+    color: var(--lb-bright);
+    text-align: right;
+}
+.ac-livebid-info-note {
+    min-height: 0;
+    margin: 10px 0 0;
+    font-size: 12px;
+    color: var(--lb-danger);
+}
 .ac-livebid-modal {
     position: relative;
     width: 100%;
@@ -746,8 +857,11 @@ body[data-theme="dark"] .player-profession .ac-livebid-overlay {
     }
     .ac-livebid-btn { height: 28px; font-size: 10px; padding: 0 10px; }
     .ac-livebid-title { font-size: 10px; }
-    .ac-livebid-leadhead-name { font-size: 10px; }
-    .ac-livebid-leadhead-pts { font-size: 10px; padding: 2px 7px; }
+    .ac-livebid-leadhead-name { font-size: 11px; }
+    .ac-livebid-leadhead-pts { font-size: 13px; padding: 4px 10px; }
+    .ac-livebid-leadhead-logo { width: 26px; height: 26px; }
+    .ac-livebid-tile.is-lead .ac-livebid-logo,
+    .ac-livebid-tile.is-lead .ac-livebid-ph { width: 26px; height: 26px; }
 }
 @media (max-width: 420px) {
     .ac-livebid-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }

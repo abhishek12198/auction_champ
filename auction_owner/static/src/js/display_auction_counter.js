@@ -6,7 +6,9 @@ window.ocEnableCounter = function (btn) {
     btn.disabled = true;
     btn.textContent = '⏳ Counter Active…';
 
-    fetch('/auction/owner/enable-counter', {
+    var slugMatch = location.pathname.match(/\/auction\/display_auction\/([^/]+)/);
+    var slug = slugMatch ? slugMatch[1] : '';
+    fetch('/auction/owner/enable-counter' + (slug ? ('?t=' + encodeURIComponent(slug)) : ''), {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: '{}',
