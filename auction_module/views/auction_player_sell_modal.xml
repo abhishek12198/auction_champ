@@ -1045,7 +1045,9 @@
         smAvatar.style.visibility = 'hidden';
       } else {
         smAvatar.style.visibility = '';
-        smAvatar.src = '/web/image/auction.team.player/' + smPlayerId + '/photo';
+        var livePhoto = document.getElementById('loadImage');
+        var liveSrc = livePhoto && (livePhoto.currentSrc || livePhoto.src);
+        smAvatar.src = liveSrc || ('/web/image/auction.team.player/' + smPlayerId + '/photo');
       }
     }
     var zone = document.querySelector('[data-player-zone]');
@@ -1106,20 +1108,42 @@
   };
 
   /* ── Load teams ─────────────────────────────────────────────── */
+  function smParseTeamsPayload(result) {
+    if (Array.isArray(result)) {
+      return { teams: result, current_bid: 0, current_bid_team_id: false };
+    }
+    return {
+      teams: (result && result.teams) || [],
+      current_bid: (result && result.current_bid) || 0,
+      current_bid_team_id: (result && result.current_bid_team_id) || false,
+    };
+  }
+
+  function smSelectTeamById(teamId, points) {
+    if (!teamId) return;
+    var team = smTeamsData.filter(function (t) {
+      return String(t.team_id) === String(teamId);
+    })[0];
+    if (!team || !team.tier_slots_ok) return;
+    smSelectTeam(team);
+    if (points) {
+      var input = document.getElementById('sellPoints');
+      if (input) input.value = points;
+      var sellBtn = document.getElementById('smBtnSell');
+      if (sellBtn) sellBtn.disabled = false;
+    }
+  }
+
   function smLoadTeams(playerId) {
-    fetch('/web/dataset/call_kw', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        jsonrpc: '2.0', method: 'call',
-        params: { model: 'auction.team.player', method: 'get_sell_teams_data', args: [playerId], kwargs: {} }
-      })
-    })
-    .then(function(r) { return r.json(); })
+    smConsoleCall('auction.team.player', 'get_sell_teams_data', [playerId])
     .then(function(data) {
       if (data.error) { smShowError('Failed to load teams. Please try again.'); return; }
-      smTeamsData = data.result || [];
+      var payload = smParseTeamsPayload(data.result);
+      smTeamsData = payload.teams;
       smRenderBadges(smTeamsData);
+      if (payload.current_bid && payload.current_bid_team_id) {
+        smSelectTeamById(payload.current_bid_team_id, payload.current_bid);
+      }
     })
     .catch(function() { smShowError('Network error loading teams.'); });
   }

@@ -2718,8 +2718,19 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
   function smLoadTeams2(playerId) {
     callKw('auction.team.player', 'get_sell_teams_data', [playerId]).then(function(res) {
-      smTeamsData2 = res.result || [];
+      var payload = res.result || [];
+      smTeamsData2 = Array.isArray(payload) ? payload : (payload.teams || []);
       smRenderBadges2(smTeamsData2);
+      var bid = !Array.isArray(payload) ? (payload.current_bid || 0) : 0;
+      var tid = !Array.isArray(payload) ? payload.current_bid_team_id : false;
+      if (bid && tid) {
+        var team = smTeamsData2.filter(function (t) { return String(t.team_id) === String(tid); })[0];
+        if (team && team.tier_slots_ok) {
+          smSelectTeam2(team);
+          var input = document.getElementById('sellPoints');
+          if (input) input.value = bid;
+        }
+      }
     }).catch(function() {
       document.getElementById('smTeamBadges').innerHTML = '<span class="sm-no-teams">Network error loading teams.</span>';
     });

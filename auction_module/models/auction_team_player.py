@@ -757,6 +757,27 @@ class AuctionTeamPlayer(models.Model):
         # Only show teams that belong to the same tournament as the player
         auction_domain = [('tournament_id', '=', tournament.id)] if tournament else []
         auctions = self.env['auction.auction'].search(auction_domain)
+        if auctions:
+            auctions.mapped('team_id')
+            auctions.mapped('tier_limit_ids.tier_id')
+            auctions.mapped('auction_bid_slab_ids')
+            auctions.mapped('player_ids.player_id.tier_id')
+
+        sold_by_auction = {}
+        if player.tier_id and auctions:
+            grouped = self.env['auction.auction.player'].read_group(
+                [
+                    ('auction_id', 'in', auctions.ids),
+                    ('player_id.tier_id', '=', player.tier_id.id),
+                    ('player_id', '!=', player.id),
+                ],
+                ['auction_id'],
+                ['auction_id'],
+            )
+            for grp in grouped:
+                if grp.get('auction_id'):
+                    sold_by_auction[grp['auction_id'][0]] = grp.get('auction_id_count') or 0
+
         teams = []
         for auction in auctions:
             if auction.remaining_players_count <= 0 or auction.remaining_points <= 0:
@@ -764,6 +785,7 @@ class AuctionTeamPlayer(models.Model):
 
             # Compute effective base point for this player's tier
             effective_base = auction.base_point
+            tier_limit = False
             if player.tier_id and auction.tier_limit_ids:
                 tier_limit = auction.tier_limit_ids.filtered(
                     lambda l: l.tier_id.id == player.tier_id.id
@@ -775,18 +797,10 @@ class AuctionTeamPlayer(models.Model):
             # Exclude the current player from the count to avoid stale-record false positives
             # (e.g. if a player was previously sold to this team without proper record cleanup).
             tier_slots_ok = True
-            if player.tier_id and auction.tier_limit_ids:
-                tier_limit = auction.tier_limit_ids.filtered(
-                    lambda l: l.tier_id.id == player.tier_id.id
-                )
-                if tier_limit:
-                    already_sold = self.env['auction.auction.player'].search_count([
-                        ('auction_id', '=', auction.id),
-                        ('player_id.tier_id', '=', player.tier_id.id),
-                        ('player_id', '!=', player.id),
-                    ])
-                    if already_sold >= tier_limit[0].max_players:
-                        tier_slots_ok = False
+            if tier_limit:
+                already_sold = sold_by_auction.get(auction.id, 0)
+                if already_sold >= tier_limit[0].max_players:
+                    tier_slots_ok = False
 
             # Check the team can actually afford the tier's minimum bid.
             tier_aware_max_call = auction.get_max_bid_for_team(auction, player)
@@ -814,7 +828,13 @@ class AuctionTeamPlayer(models.Model):
                 'preset_points': tournament_preset_points,
                 'slabs': effective_slabs,
             })
-        return teams
+        return {
+            'teams': teams,
+            'current_bid': int(player.current_bid or 0),
+            'current_bid_team_id': (
+                player.current_bid_team_id.id if player.current_bid_team_id else False
+            ),
+        }
 
     @api.model
     def action_sell_from_web(self, player_id, team_id, final_point):

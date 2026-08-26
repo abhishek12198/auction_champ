@@ -27,45 +27,9 @@
     var _origOpen = window.openSellModal;
 
     window.openSellModal = function () {
+        /* Team list + locked bid now arrive in one console_call. Extra
+           /auction/auctioneer/locked-bid round-trip is no longer needed. */
         _origOpen();
-
-        fetch('/auction/auctioneer/locked-bid', { cache: 'no-store' })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (!data.current_bid || !data.current_bid_team_id) return;
-
-                var lockedBid    = data.current_bid;
-                var lockedTeamId = String(data.current_bid_team_id);
-
-                var badgesEl = document.getElementById('smTeamBadges');
-                if (!badgesEl) return;
-
-                var observer = new MutationObserver(function (mutations, obs) {
-                    // Badges are real once at least one .sm-badge exists
-                    if (!badgesEl.querySelector('.sm-badge')) return;
-                    obs.disconnect();
-
-                    var badge = badgesEl.querySelector(
-                        '.sm-badge[data-team-id="' + lockedTeamId + '"]'
-                    );
-                    if (!badge || badge.disabled) return;
-
-                    // Simulate a click to run the full smSelectTeam logic
-                    badge.click();
-
-                    // Override the points input with the locked bid amount
-                    var input = document.getElementById('sellPoints');
-                    if (input) {
-                        input.value = lockedBid;
-                        // Make sure the Sell button is enabled
-                        var sellBtn = document.getElementById('smBtnSell');
-                        if (sellBtn) sellBtn.disabled = false;
-                    }
-                });
-
-                observer.observe(badgesEl, { childList: true });
-            })
-            .catch(function () {});
     };
 })();
         //]]></script>
