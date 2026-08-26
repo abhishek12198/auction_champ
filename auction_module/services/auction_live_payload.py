@@ -144,7 +144,7 @@ def build_live_board_payload(env, tournament, db_name):
         result['current_player'] = {
             'id': current_player.id,
             'name': current_player.name or '',
-            'photo_url': pub_img('auction.team.player', current_player.id, 'photo', current_player.write_date, 'pj') if current_player.photo else '',
+            'photo_url': pub_img('auction.team.player', current_player.id, 'photo', None, 'pj') if current_player.photo else '',
             'role': current_player.role or '',
             'tier_name': current_player.tier_id.name if current_player.tier_id else '',
             'tier_color': current_player.tier_color or '#2252b5',

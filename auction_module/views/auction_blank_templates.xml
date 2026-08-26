@@ -2854,9 +2854,14 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
   // ── Player photo (preload so old sold face never lingers) ──────
   var _lbPhotoLoadToken = 0;
   var _lbLastPhotoUrl = null;
+  var _lbLastPhotoPlayerId = null;
   var _fpHistory = null;
   var _fpMvp = null;
   var _fpTeams = null;
+
+  function lbPhotoStableKey(url) {
+    return String(url || '').replace(/([?&])v=[^&]*/g, '$1').replace(/[?&]$/, '');
+  }
 
   function lbShowPhotoLoader() {
     var ph = document.getElementById('lb-photo-ph');
@@ -2884,6 +2889,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     if (!p || !p.photo_url) {
       _lbPhotoLoadToken += 1;
       _lbLastPhotoUrl = null;
+      _lbLastPhotoPlayerId = null;
       img.style.display = 'none';
       img.style.opacity = '0';
       img.style.filter = '';
@@ -2895,17 +2901,23 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     }
 
     var url = p.photo_url;
-    if (url === _lbLastPhotoUrl && img.getAttribute('src') === url) {
+    var samePlayer = p.id && _lbLastPhotoPlayerId === p.id;
+    var sameUrl = lbPhotoStableKey(url) === lbPhotoStableKey(_lbLastPhotoUrl)
+      || lbPhotoStableKey(url) === lbPhotoStableKey(img.getAttribute('src'));
+    if ((samePlayer || sameUrl) && img.getAttribute('src') && img.complete && img.naturalWidth) {
       img.style.filter = mysteryHidden ? 'grayscale(1) brightness(0.72)' : '';
       img.style.display = 'block';
       img.style.opacity = '1';
       ph.classList.remove('lb-photo-loading');
       ph.style.display = 'none';
+      _lbLastPhotoUrl = url;
+      _lbLastPhotoPlayerId = p.id;
       return;
     }
 
     var token = ++_lbPhotoLoadToken;
     _lbLastPhotoUrl = url;
+    _lbLastPhotoPlayerId = p.id || null;
     img.style.filter = mysteryHidden ? 'grayscale(1) brightness(0.72)' : '';
     img.style.display = 'none';
     img.style.opacity = '0';
@@ -2923,6 +2935,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     img.onerror = function () {
       if (token !== _lbPhotoLoadToken) return;
       _lbLastPhotoUrl = null;
+      _lbLastPhotoPlayerId = null;
       img.style.display = 'none';
       img.style.opacity = '0';
       img.style.filter = '';
