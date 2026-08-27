@@ -847,6 +847,11 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   animation:
     pjHeroIn .65s cubic-bezier(.2,.8,.25,1) both,
     pjHeroFloat 4.8s ease-in-out .7s infinite}
+.pj-photo.is-wait{
+  opacity:0 !important;
+  visibility:hidden !important;
+  animation:none !important;
+}
 /* Fullscreen: fill the taller photo column so the empty band above the player
    stays as tight as windowed/minimized mode. */
 #pj-root.is-fs .pj-photo{
@@ -867,6 +872,57 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 }
 .pj-photo-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
   font-size:6rem;opacity:.15;z-index:1}
+
+/* Lightweight stage curtains — next player entrance */
+.pj-stage-curtain{
+  position:absolute;inset:0;z-index:9;pointer-events:none;
+  visibility:hidden;overflow:hidden;
+}
+.pj-stage-curtain.is-run{visibility:visible}
+.pj-curtain{
+  position:absolute;top:0;height:100%;width:52%;
+  background:
+    repeating-linear-gradient(90deg,
+      #4a1018 0 11px,
+      #6e1824 11px 22px,
+      #3a0c12 22px 30px);
+  box-shadow:inset 0 0 38px rgba(0,0,0,.5);
+  will-change:transform;
+  transition:transform .4s cubic-bezier(.22,.75,.25,1);
+}
+.pj-curtain::after{
+  content:'';position:absolute;top:0;bottom:0;width:8px;
+  background:linear-gradient(90deg,#f1d27a,#b8902c 55%,#7a6418);
+}
+.pj-curtain-l{left:0;transform:translate3d(-104%,0,0)}
+.pj-curtain-l::after{right:0}
+.pj-curtain-r{right:0;transform:translate3d(104%,0,0)}
+.pj-curtain-r::after{left:0}
+.pj-stage-curtain.is-shut .pj-curtain-l,
+.pj-stage-curtain.is-shut .pj-curtain-r{
+  transform:translate3d(0,0,0);
+  transition-duration:.42s;
+}
+.pj-stage-curtain.is-open .pj-curtain-l{
+  transform:translate3d(-104%,0,0);transition-duration:.52s;
+}
+.pj-stage-curtain.is-open .pj-curtain-r{
+  transform:translate3d(104%,0,0);transition-duration:.52s;
+}
+.pj-curtain-crest{
+  position:absolute;left:50%;top:46%;z-index:3;
+  width:3.4rem;height:3.4rem;
+  transform:translate(-50%,-50%) scale(.82);
+  opacity:0;transition:opacity .16s ease;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.45));
+}
+.pj-stage-curtain.is-shut .pj-curtain-crest{opacity:1;transition-delay:.18s}
+.pj-crest-ico{width:100%;height:100%;display:block}
+html[data-sport="football"] .pj-crest-cricket{display:none}
+html:not([data-sport="football"]) .pj-crest-football{display:none}
+@media (prefers-reduced-motion: reduce){
+  .pj-stage-curtain{display:none !important}
+}
 .pj-photo-bg,.pj-serial-wm{display:none}
 .pj-serial{display:none}
 
@@ -1610,6 +1666,24 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         <div class="pj-spotlight" aria-hidden="true"></div>
         <div class="pj-photo-bg" id="pjPhotoBg"></div>
         <div class="pj-floor" aria-hidden="true"></div>
+        <div class="pj-stage-curtain" id="pjStageCurtain" aria-hidden="true">
+          <div class="pj-curtain pj-curtain-l"></div>
+          <div class="pj-curtain pj-curtain-r"></div>
+          <div class="pj-curtain-crest">
+            <svg class="pj-crest-ico pj-crest-cricket" viewBox="0 0 48 48" aria-hidden="true">
+              <rect x="10" y="10" width="3.4" height="30" rx="1.2" fill="#f4e3a3"/>
+              <rect x="22.3" y="7" width="3.4" height="33" rx="1.2" fill="#ffe9b0"/>
+              <rect x="34.6" y="10" width="3.4" height="30" rx="1.2" fill="#f4e3a3"/>
+              <rect x="8.5" y="7.2" width="31" height="2.6" rx="1.1" fill="#d4af37"/>
+            </svg>
+            <svg class="pj-crest-ico pj-crest-football" viewBox="0 0 48 48" aria-hidden="true">
+              <circle cx="24" cy="24" r="15" fill="#f4f4f4" stroke="#d4af37" stroke-width="1.6"/>
+              <polygon points="24,14 28.4,17.2 26.8,22.4 21.2,22.4 19.6,17.2" fill="#1a1a1a"/>
+              <path d="M24 14 L30 8 M28.4 17 L36 16 M26.8 22 L34 28 M21.2 22 L14 28 M19.6 17 L12 16 M24 14 L18 8"
+                    fill="none" stroke="#1a1a1a" stroke-width="1.4"/>
+            </svg>
+          </div>
+        </div>
         <div class="pj-photo-ph" id="pjPhotoPh">&#128100;</div>
         <div class="pj-serial-wm" id="pjSerialWm"></div>
         <!-- Mystery reveal teaser overlay -->
@@ -2175,6 +2249,63 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 
   var _pjPhotoReq = 0;
   var _pjRevealIntroTimer = null;
+  var _pjLastPid = null;
+  var _pjCurtainT1 = null;
+  var _pjCurtainT2 = null;
+  var _pjCurtainT3 = null;
+  var _pjCurtainShut = false;
+  var _pjCurtainReady = null;
+
+  function pjPrefersReducedMotion() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+  function clearStageCurtainTimers() {
+    if (_pjCurtainT1) { clearTimeout(_pjCurtainT1); _pjCurtainT1 = null; }
+    if (_pjCurtainT2) { clearTimeout(_pjCurtainT2); _pjCurtainT2 = null; }
+    if (_pjCurtainT3) { clearTimeout(_pjCurtainT3); _pjCurtainT3 = null; }
+  }
+  function beginStageCurtain() {
+    var el = document.getElementById('pjStageCurtain');
+    if (!el || pjPrefersReducedMotion()) {
+      _pjCurtainShut = true;
+      return;
+    }
+    clearStageCurtainTimers();
+    _pjCurtainShut = false;
+    _pjCurtainReady = null;
+    el.classList.remove('is-open');
+    el.classList.add('is-run');
+    void el.offsetWidth;
+    el.classList.add('is-shut');
+    _pjCurtainT1 = setTimeout(function () {
+      _pjCurtainShut = true;
+      if (_pjCurtainReady) {
+        var fn = _pjCurtainReady;
+        _pjCurtainReady = null;
+        fn();
+      }
+    }, 450);
+  }
+  function finishStageCurtain(onShut) {
+    var el = document.getElementById('pjStageCurtain');
+    function swapThenOpen() {
+      if (onShut) onShut();
+      if (!el || pjPrefersReducedMotion()) return;
+      _pjCurtainT2 = setTimeout(function () {
+        el.classList.remove('is-shut');
+        el.classList.add('is-open');
+        _pjCurtainT3 = setTimeout(function () {
+          el.classList.remove('is-run', 'is-open');
+        }, 560);
+      }, 140);
+    }
+    if (!el || pjPrefersReducedMotion()) {
+      if (onShut) onShut();
+      return;
+    }
+    if (_pjCurtainShut) swapThenOpen();
+    else _pjCurtainReady = swapThenOpen;
+  }
 
   /** Compare photo URLs ignoring cache-busters (?v=) so sold/write_date doesn't flash. */
   function pjPhotoStableKey(src) {
@@ -2283,36 +2414,46 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
         appendMysteryLock();
       } else {
         var reqId = ++_pjPhotoReq;
+        var nextPid = p && p.id;
+        var changed = !!(nextPid && _pjLastPid && nextPid !== _pjLastPid && !isRevealIntro);
+        if (nextPid) _pjLastPid = nextPid;
+        if (changed) beginStageCurtain();
         var img = document.createElement('img');
-        img.className = 'pj-photo';
+        img.className = 'pj-photo' + (changed ? ' is-wait' : '');
         img.alt = p.name || '';
         img.setAttribute('data-src', nextSrc);
         try { img.fetchPriority = 'high'; } catch (e) {}
         img.decoding = 'async';
         if (mysteryHidden) img.style.filter = 'grayscale(1) brightness(0.72)';
         /* Keep current face visible until the next image is ready (no blank flash) */
-        img.style.opacity = '0';
+        img.style.opacity = changed ? '' : '0';
         img.style.position = oldImg ? 'absolute' : '';
         img.style.inset = oldImg ? '0' : '';
         img.style.zIndex = oldImg ? '2' : '';
 
         function commitPhoto() {
           if (reqId !== _pjPhotoReq) return;
-          img.style.opacity = '';
-          img.style.position = '';
-          img.style.inset = '';
-          img.style.zIndex = '';
-          if (oldImg && oldImg.parentNode) oldImg.remove();
-          var extras = photoSide.querySelectorAll('img.pj-photo');
-          for (var ei = 0; ei < extras.length; ei++) {
-            if (extras[ei] !== img) extras[ei].remove();
+          function revealPhoto() {
+            if (reqId !== _pjPhotoReq) return;
+            img.classList.remove('is-wait');
+            img.style.opacity = '';
+            img.style.position = '';
+            img.style.inset = '';
+            img.style.zIndex = '';
+            if (oldImg && oldImg.parentNode) oldImg.remove();
+            var extras = photoSide.querySelectorAll('img.pj-photo');
+            for (var ei = 0; ei < extras.length; ei++) {
+              if (extras[ei] !== img) extras[ei].remove();
+            }
+            if (!img.parentNode) {
+              var wm = document.getElementById('pjSerialWm');
+              if (wm) photoSide.insertBefore(img, wm); else photoSide.appendChild(img);
+            }
+            photoPh.style.display = 'none';
+            if (photoBg) photoBg.style.display = 'none';
           }
-          if (!img.parentNode) {
-            var wm = document.getElementById('pjSerialWm');
-            if (wm) photoSide.insertBefore(img, wm); else photoSide.appendChild(img);
-          }
-          photoPh.style.display = 'none';
-          if (photoBg) photoBg.style.display = 'none';
+          if (changed) finishStageCurtain(revealPhoto);
+          else revealPhoto();
         }
 
         img.onload = commitPhoto;
