@@ -7,9 +7,15 @@
     <link rel="shortcut icon" t-att-href="favicon_url" type="image/x-icon"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
     <title>Owner Console</title>
-    <link rel="stylesheet" href="/auction_owner/static/src/css/owner_console.css?v=2"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/auction_owner/static/src/css/owner_console.css?v=8"/>
 </head>
-<body class="oc-body" t-att-data-theme="tournament.player_display_template if tournament else 'vanilla'">
+<body class="oc-body"
+      t-att-data-theme="tournament.player_display_template if tournament else 'vanilla'"
+      t-att-data-db="db_name"
+      t-att-data-slug="tournament.slug if tournament else ''">
 
 <!-- ═══════ HEADER ════════════════════════════════════════════════════ -->
 <header class="oc-header">
@@ -84,19 +90,35 @@
             <!-- Active player -->
             <div class="oc-player-wrap" id="ocPlayerWrap" style="display:none">
                 <div class="oc-player-photo-col">
+                    <div class="oc-player-photo-frame">
                     <div class="oc-player-photo-ring" id="ocPhotoRing">
                         <img class="oc-player-photo" id="ocPlayerPhoto" src="" alt="Player"/>
-                        <!-- SOLD overlay — shown when player is confirmed sold -->
-                        <div class="oc-sold-overlay" id="ocSoldOverlay">
-                            <div class="oc-sold-stamp">SOLD</div>
-                            <div class="oc-sold-to" id="ocSoldTo">
-                                <img class="oc-sold-logo" id="ocSoldLogo" src="" alt="" style="display:none"/>
-                                <span id="ocSoldTeamName"></span>
+                    </div>
+                        <!-- Same circular seal as projector — outside the spinning ring so it stays upright -->
+                        <div class="oc-photo-status" id="ocPhotoStatus" data-kind="sold" aria-live="polite">
+                            <div class="oc-status-glow" aria-hidden="true"></div>
+                            <div class="oc-status-seal" id="ocStatusSeal" aria-hidden="true">
+                                <div class="oc-status-seal-ring"></div>
+                                <div class="oc-status-seal-ring oc-status-seal-ring--inner"></div>
+                                <svg class="oc-status-seal-svg" viewBox="0 0 200 200" aria-hidden="true"
+                                     xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                                    <defs>
+                                        <path id="ocSealArcTop" d="M38,58 A80,80 0 0,1 162,58"/>
+                                        <path id="ocSealArcBot" d="M36,158 A80,80 0 0,0 164,158"/>
+                                    </defs>
+                                    <text id="ocSealArcTopText" fill="currentColor" font-size="18" font-weight="800" letter-spacing="3.8">
+                                        <textPath xlink:href="#ocSealArcTop" href="#ocSealArcTop" startOffset="50%" text-anchor="middle">SOLD TO</textPath>
+                                    </text>
+                                    <text id="ocSealArcBotText" fill="currentColor" font-size="16" font-weight="800" letter-spacing="1.4">
+                                        <textPath xlink:href="#ocSealArcBot" href="#ocSealArcBot" startOffset="50%" text-anchor="middle">TEAM</textPath>
+                                    </text>
+                                </svg>
+                                <div class="oc-status-seal-core">
+                                    <img class="oc-status-seal-mark" src="/auction_module/static/img/sold_overlay_gray.png" alt=""/>
+                                    <img class="oc-status-seal-logo" id="ocStatusSealLogo" src="" alt=""/>
+                                    <div class="oc-status-seal-pts" id="ocStatusSealPts"></div>
+                                </div>
                             </div>
-                        </div>
-                        <!-- UNSOLD overlay — shown when player is marked unsold -->
-                        <div class="oc-unsold-overlay" id="ocUnsoldOverlay">
-                            <div class="oc-unsold-stamp">UNSOLD</div>
                         </div>
                     </div>
                     <div class="oc-tier-pill" id="ocTierPill">—</div>
@@ -112,13 +134,18 @@
                         <div class="oc-bid-box oc-bid-box-base">
                             <div class="oc-bid-box-lbl">BASE PRICE</div>
                             <div class="oc-bid-box-val" id="ocBasePrice">—</div>
+                            <div class="oc-maxcall-sub" id="ocBaseMaxCall" title="Your max call vs other teams">
+                                <span class="oc-maxcall-sub-lbl">Max call</span>
+                                <span class="oc-maxcall-sub-val" id="ocBaseMaxCallVal">—</span>
+                            </div>
                         </div>
-                        <div class="oc-bid-box oc-bid-box-current" id="ocCurrentBidBox" onclick="ocQuickBid()">
+                        <div class="oc-bid-box oc-bid-box-current" id="ocCurrentBidBox">
                             <div class="oc-bid-box-lbl">CURRENT BID</div>
                             <div class="oc-bid-box-val oc-bid-live" id="ocCurrentBid">—</div>
                             <div class="oc-qb-hint" id="ocQbHint"></div>
                         </div>
                     </div>
+                    <div class="oc-lead-warn" id="ocLeadWarn" style="display:none">You have the current bid</div>
                     <div class="oc-leading-team" id="ocLeadingTeam" style="display:none">
                         <img class="oc-leading-logo" id="ocLeadingLogo" src="" alt=""/>
                         <div>
@@ -148,47 +175,6 @@
             <div class="oc-teams-strip" id="ocTeamsStrip">
                 <!-- rendered by JS -->
             </div>
-        </div>
-
-        <!-- ── My Bid Panel ─────────────────────────────────────────── -->
-        <div class="oc-bid-panel" id="ocBidPanel" style="display:none">
-            <div class="oc-bid-panel-top">
-                <div class="oc-my-brand">
-                    <img class="oc-my-logo" id="ocMyTeamLogo" src="" alt=""/>
-                    <div>
-                        <div class="oc-my-name" id="ocMyTeamName">—</div>
-                        <div class="oc-my-purse-row">
-                            <div class="oc-purse-bar-track"><div class="oc-purse-bar-fill" id="ocMyPurseBar"></div></div>
-                            <span class="oc-my-purse-text" id="ocMyPurse">—</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="oc-max-call-badge" id="ocMaxCallBadge">
-                    <div class="oc-max-call-lbl">MAX CALL</div>
-                    <div class="oc-max-call-val" id="ocMaxCallVal">—</div>
-                </div>
-            </div>
-            <div class="oc-bid-row" id="ocBidRow">
-                <button class="oc-step" onclick="ocChangeBid(-1)">&#x2212;</button>
-                <input  class="oc-bid-input" id="ocBidInput" type="number" min="1" inputmode="numeric"/>
-                <button class="oc-step" onclick="ocChangeBid(1)">+</button>
-                <button class="oc-bid-cta" id="ocBidCta" onclick="ocOpenBidConfirm()">
-                    &#x1F3CF; BID NOW
-                </button>
-            </div>
-            <!-- Revoke last bid (shown only when revoke is active and owner is leading) -->
-            <div id="ocRevokeWrap" style="display:none">
-                <button class="oc-revoke-btn" id="ocRevokeBtn" onclick="ocRevokeBid()">
-                    &#x21A9; Revoke Bid
-                </button>
-                <span class="oc-revoke-hint" id="ocRevokeHint"></span>
-            </div>
-            <!-- Preset quick-select buttons (rendered by JS from tournament.preset_points) -->
-            <div class="oc-presets-wrap" id="ocPresetsWrap" style="display:none">
-                <div class="oc-presets-lbl">&#x26A1; Quick Pick</div>
-                <div class="oc-presets" id="ocPresets"></div>
-            </div>
-            <div class="oc-bid-reason" id="ocBidReason"></div>
         </div>
 
     </section>
@@ -243,6 +229,52 @@
     <div class="oc-sheet-inner" id="ocSheetInner"></div>
 </aside>
 
+<!-- ═══════ CUSTOM BID SHEET ═════════════════════════════════════════ -->
+<div class="oc-overlay" id="ocCustomBidOverlay" style="display:none" onclick="ocCloseCustomBid()">
+    <div class="oc-modal oc-custom-bid-modal" onclick="event.stopPropagation()">
+        <button type="button" class="oc-modal-x" onclick="ocCloseCustomBid()" aria-label="Close">×</button>
+        <div class="oc-modal-head">
+            <div class="oc-modal-icon">&#x1F3CF;</div>
+            <div class="oc-modal-title">Place Bid</div>
+        </div>
+        <div class="oc-custom-stats">
+            <div class="oc-custom-stat">
+                <span>Max Call</span>
+                <strong id="ocMaxCallVal">—</strong>
+            </div>
+            <div class="oc-custom-stat">
+                <span>Purse left</span>
+                <strong id="ocMyPurse">—</strong>
+            </div>
+            <div class="oc-custom-stat">
+                <span>Squad</span>
+                <strong id="ocCustomSquad">—</strong>
+            </div>
+        </div>
+        <div class="oc-bid-panel" id="ocBidPanel">
+            <div class="oc-bid-row" id="ocBidRow">
+                <button type="button" class="oc-step" onclick="ocChangeBid(-1)">&#x2212;</button>
+                <input class="oc-bid-input" id="ocBidInput" type="number" min="1" inputmode="numeric"/>
+                <button type="button" class="oc-step" onclick="ocChangeBid(1)">+</button>
+            </div>
+            <button type="button" class="oc-bid-cta oc-custom-bid-cta" id="ocBidCta" onclick="ocOpenBidConfirm()">
+                &#x1F3CF; BID NOW
+            </button>
+            <div id="ocRevokeWrap" style="display:none">
+                <button type="button" class="oc-revoke-btn" id="ocRevokeBtn" onclick="ocRevokeBid()">
+                    &#x21A9; Revoke Bid
+                </button>
+                <span class="oc-revoke-hint" id="ocRevokeHint"></span>
+            </div>
+            <div class="oc-presets-wrap" id="ocPresetsWrap" style="display:none">
+                <div class="oc-presets-lbl">Quick select</div>
+                <div class="oc-presets" id="ocPresets"></div>
+            </div>
+            <div class="oc-bid-reason" id="ocBidReason"></div>
+        </div>
+    </div>
+</div>
+
 <!-- ═══════ BID CONFIRM MODAL ════════════════════════════════════════ -->
 <div class="oc-overlay" id="ocBidOverlay" style="display:none" onclick="ocCancelBidConfirm()">
     <div class="oc-modal" onclick="event.stopPropagation()">
@@ -262,7 +294,7 @@
             </div>
             <div class="oc-confirm-pts-block">
                 <div class="oc-confirm-pts" id="ocConfirmPts">—</div>
-                <div class="oc-confirm-pts-unit">POINTS</div>
+                <div class="oc-confirm-pts-unit" id="ocConfirmPtsUnit">POINTS</div>
             </div>
         </div>
         <div class="oc-modal-foot">
@@ -281,7 +313,7 @@
 <t t-call="auction_module.point_unit_bootstrap">
     <t t-set="pu_tournament" t-value="tournament"/>
 </t>
-<script src="/auction_owner/static/src/js/owner_console.js?v=3"></script>
+<script src="/auction_owner/static/src/js/owner_console.js?v=11"></script>
 
 <!-- Squad snapshot button styles -->
 <style>

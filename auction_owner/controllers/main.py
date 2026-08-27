@@ -67,10 +67,18 @@ class AuctionOwnerController(http.Controller):
     @staticmethod
     def _resolve_tournament():
         """Return the tournament for the current user.
-        - For users with an assigned tournament_id, always use that.
-        - Admins/unassigned users fall back to the first active tournament.
+
+        Team owners must always see the tournament of their assigned team,
+        never a random active tournament or a leftover Active Tournament.
         """
         user = request.env['res.users'].sudo().browse(request.session.uid)
+        team = user.auction_team_id or getattr(user, 'team_id', False)
+        if team and team.tournament_id:
+            return team.tournament_id
+        if user.has_group('auction_owner.group_auction_owner') and not user.has_group(
+            'auction_module.group_auction_group_admin'
+        ):
+            return team.tournament_id if team else False
         if user.tournament_id:
             return user.tournament_id
         return request.env['auction.tournament'].sudo().search(
@@ -92,6 +100,12 @@ class AuctionOwnerController(http.Controller):
     @staticmethod
     def _pub_img(model, record_id, field):
         return '/auction/public/image/%s/%d/%s' % (model, record_id, field)
+
+    @staticmethod
+    def _fmt_pts(tournament, amount):
+        if tournament and hasattr(tournament, 'format_points'):
+            return tournament.format_points(amount)
+        return '{:,}'.format(int(amount or 0))
 
     @staticmethod
     def _get_effective_base(auction, player):
@@ -168,13 +182,15 @@ class AuctionOwnerController(http.Controller):
             can_bid_reason = 'No budget left'
         elif _tier_base > 0 and auc.remaining_points < _tier_base:
             can_bid = False
-            can_bid_reason = 'Purse below %s minimum (%d pts)' % (_tier_name, _tier_base)
+            can_bid_reason = 'Purse below %s minimum (%s)' % (
+                _tier_name, self._fmt_pts(auc.tournament_id, _tier_base),
+            )
         elif live_max_call <= 0:
             can_bid = False
             can_bid_reason = 'Budget reserved for other players'
         elif next_bid_val > live_max_call:
             can_bid = False
-            can_bid_reason = 'Max call: %d pts' % live_max_call
+            can_bid_reason = 'Max call: %s' % self._fmt_pts(auc.tournament_id, live_max_call)
 
         # Current-bid restriction: owner cannot raise their own bid
         if can_bid and player and player.current_bid_team_id and \
@@ -232,6 +248,7 @@ class AuctionOwnerController(http.Controller):
                 'tournament': tournament,
                 'user': user,
                 'favicon_url': '/web/image/res.company/%d/favicon' % request.env.company.id,
+                'db_name': request.env.cr.dbname,
             },
         )
 
@@ -259,6 +276,12 @@ class AuctionOwnerController(http.Controller):
                 'name': tournament.name or '',
                 'theme': tournament.player_display_template or 'vanilla',
                 'logo_url': self._pub_img('auction.tournament', tournament.id, 'logo') if tournament.logo else '',
+                'slug': tournament.slug or '',
+                'db_name': request.env.cr.dbname,
+                'point_unit': (
+                    tournament.get_point_unit_js()
+                    if hasattr(tournament, 'get_point_unit_js') else None
+                ),
             }
             if tournament.preset_points:
                 try:
@@ -276,14 +299,12 @@ class AuctionOwnerController(http.Controller):
             on_stage_domain.append(('tournament_id', '=', tournament.id))
         current_player = env['auction.team.player'].sudo().search(
             on_stage_domain, limit=1
-        )
+        ) if tournament else env['auction.team.player'].sudo().browse()
 
         if current_player:
             base_price = 0
             auc_domain = [('tournament_id', '=', tournament.id)] if tournament else []
             auctions_all = env['auction.auction'].sudo().search(auc_domain)
-            if not auctions_all:
-                auctions_all = env['auction.auction'].sudo().search([])
             for auc in auctions_all:
                 base = self._get_effective_base(auc, current_player)
                 if base > base_price:
@@ -508,7 +529,10 @@ class AuctionOwnerController(http.Controller):
         effective_base = self._get_effective_base(auction, player)
 
         if bid_amount < effective_base:
-            return {'success': False, 'error': 'Bid must be at least %d pts (base price).' % effective_base}
+            return {
+                'success': False,
+                'error': 'Bid must be at least %s (base price).' % self._fmt_pts(tournament, effective_base),
+            }
 
         # Guard: purse must cover the tier's minimum before going further
         if player.tier_id and auction.tier_limit_ids:
@@ -518,15 +542,23 @@ class AuctionOwnerController(http.Controller):
             if _tier_min > 0 and auction.remaining_points < _tier_min:
                 return {
                     'success': False,
-                    'error': 'Insufficient purse for "%s" tier (requires %d pts, you have %d pts).' % (
-                        player.tier_id.name, _tier_min, auction.remaining_points
+                    'error': 'Insufficient purse for "%s" tier (requires %s, you have %s).' % (
+                        player.tier_id.name,
+                        self._fmt_pts(tournament, _tier_min),
+                        self._fmt_pts(tournament, auction.remaining_points),
                     ),
                 }
 
         # Pass player so tier max_call cap and per-tier budget reserves are applied
         live_max_call = auction.get_max_bid_for_team(auction, player)
         if bid_amount > live_max_call:
-            return {'success': False, 'error': 'Bid of %d exceeds your max call of %d pts.' % (bid_amount, live_max_call)}
+            return {
+                'success': False,
+                'error': 'Bid of %s exceeds your max call of %s.' % (
+                    self._fmt_pts(tournament, bid_amount),
+                    self._fmt_pts(tournament, live_max_call),
+                ),
+            }
 
         if player.tier_id and auction.tier_limit_ids:
             tl = auction.tier_limit_ids.filtered(lambda l: l.tier_id.id == player.tier_id.id)

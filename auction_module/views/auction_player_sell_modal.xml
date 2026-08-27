@@ -462,32 +462,71 @@
     pointer-events: none;
   }
 
-  /* SOLD ribbon — diagonal across the photo */
-  .sm-sold-ribbon {
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    display: flex; align-items: center; justify-content: center;
-    pointer-events: none; z-index: 3;
+  /* Projector-style circular SOLD seal on the sold-screen photo */
+  .sm-photo-status{
+    --sm-sold-a:#00C853; --sm-sold-b:#2ECC71; --sm-sold-c:#00E676;
+    position:absolute;inset:0;z-index:4;display:none;pointer-events:none;overflow:hidden;
   }
-  .sm-sold-stamp {
-    background: var(--sm-sold-ribbon);
-    color: #fff;
-    font-family: var(--sm-title-font);
-    font-size: 4.5rem; font-weight: 900;
-    letter-spacing: 10px;
-    padding: 8px 48px;
-    transform: rotate(-22deg);
-    border: 6px solid rgba(255,255,255,0.85);
-    border-radius: 6px;
-    box-shadow:
-      0 0 0 3px var(--sm-sold-ribbon),
-      0 8px 40px rgba(0,0,0,0.5);
-    opacity: 0;
-    animation: stampDrop .5s cubic-bezier(.34,1.3,.64,1) .15s forwards;
-    text-shadow: 2px 3px 8px rgba(0,0,0,0.4);
+  .sm-photo-status.sm-status-show{display:block}
+  .sm-status-glow{
+    position:absolute;inset:0;z-index:1;opacity:0;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 42%, rgba(0,200,83,.28) 0%, transparent 65%);
   }
-  @keyframes stampDrop {
-    0%   { transform: rotate(-22deg) scale(2.4); opacity: 0; }
-    100% { transform: rotate(-22deg) scale(1);   opacity: 0.92; }
+  .sm-photo-status.sm-status-show .sm-status-glow{
+    animation:smStatusWash .8s ease-out both;
+  }
+  @keyframes smStatusWash{0%{opacity:0} 35%{opacity:.7} 100%{opacity:0}}
+  .sm-status-seal{
+    position:absolute;z-index:2;
+    width:min(72%, 16rem);aspect-ratio:1;
+    left:50%;top:48%;
+    transform:translate(-50%,-50%) scale(0) rotate(-14deg);
+    opacity:0;border-radius:50%;color:var(--sm-sold-b);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .sm-photo-status.sm-status-show .sm-status-seal{
+    animation:smSealIn .55s cubic-bezier(.2,.8,.2,1.15) .12s both;
+  }
+  @keyframes smSealIn{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(0) rotate(-28deg)}
+    70%{opacity:1;transform:translate(-50%,-50%) scale(1.06) rotate(-10deg)}
+    100%{opacity:.96;transform:translate(-50%,-50%) scale(1) rotate(-14deg)}
+  }
+  .sm-status-seal-ring{
+    position:absolute;inset:1.5%;border-radius:50%;
+    border:3px solid currentColor;
+    box-shadow:inset 0 0 0 3px rgba(255,255,255,.14), inset 0 0 0 6px currentColor;
+    background:rgba(4,18,12,.62);
+  }
+  .sm-status-seal-ring--inner{
+    inset:16%;border:1.4px dashed currentColor;box-shadow:none;background:transparent;
+  }
+  .sm-status-seal-svg{
+    position:absolute;inset:0;width:100%;height:100%;opacity:.98;z-index:4;
+    font-family:'Bebas Neue','Oswald',sans-serif;text-transform:uppercase;pointer-events:none;
+  }
+  .sm-status-seal-core{
+    position:relative;z-index:1;width:52%;aspect-ratio:1;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .sm-status-seal-mark{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+    mix-blend-mode:screen;
+    filter:sepia(1) saturate(14) hue-rotate(70deg) brightness(1.05);
+    opacity:.95;pointer-events:none;
+  }
+  .sm-status-seal-logo{
+    position:absolute;z-index:3;left:50%;top:46%;transform:translate(-50%,-50%);
+    width:54%;height:54%;border-radius:50%;object-fit:contain;
+    background:rgba(255,255,255,.96);border:2px solid rgba(255,255,255,.9);padding:2px;
+    display:none;box-shadow:0 2px 10px rgba(0,0,0,.4);
+  }
+  .sm-status-seal-logo.is-on{display:block}
+  .sm-status-seal-pts{
+    position:absolute;z-index:3;left:50%;bottom:2%;transform:translateX(-50%);
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(.85rem,3vw,1.2rem);font-weight:900;letter-spacing:.05em;line-height:1;
+    color:currentColor;white-space:nowrap;text-shadow:0 1px 5px rgba(0,0,0,.55);
   }
 
   /* Sold info panel */
@@ -772,11 +811,33 @@
     <!-- ── SOLD CELEBRATION SCREEN ──────────────────────────── -->
     <div id="smSoldScreen">
 
-      <!-- Player photo with SOLD stamp -->
+      <!-- Player photo with projector-style SOLD seal -->
       <div class="sm-sold-photo-wrap">
         <img id="smSoldPhoto" class="sm-sold-photo" src="" alt="Player" />
-        <div class="sm-sold-ribbon">
-          <div class="sm-sold-stamp">SOLD</div>
+        <div class="sm-photo-status" id="smPhotoStatus" data-kind="sold">
+          <div class="sm-status-glow" aria-hidden="true"></div>
+          <div class="sm-status-seal" aria-hidden="true">
+            <div class="sm-status-seal-ring"></div>
+            <div class="sm-status-seal-ring sm-status-seal-ring--inner"></div>
+            <svg class="sm-status-seal-svg" viewBox="0 0 200 200" aria-hidden="true"
+                 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+              <defs>
+                <path id="smSealArcTop" d="M38,58 A80,80 0 0,1 162,58"/>
+                <path id="smSealArcBot" d="M36,158 A80,80 0 0,0 164,158"/>
+              </defs>
+              <text id="smSealArcTopText" fill="currentColor" font-size="18" font-weight="800" letter-spacing="3.8">
+                <textPath xlink:href="#smSealArcTop" href="#smSealArcTop" startOffset="50%" text-anchor="middle">SOLD TO</textPath>
+              </text>
+              <text id="smSealArcBotText" fill="currentColor" font-size="16" font-weight="800" letter-spacing="1.4">
+                <textPath xlink:href="#smSealArcBot" href="#smSealArcBot" startOffset="50%" text-anchor="middle">TEAM</textPath>
+              </text>
+            </svg>
+            <div class="sm-status-seal-core">
+              <img class="sm-status-seal-mark" src="/auction_module/static/img/sold_overlay_gray.png" alt=""/>
+              <img class="sm-status-seal-logo" id="smStatusSealLogo" src="" alt=""/>
+              <div class="sm-status-seal-pts" id="smStatusSealPts"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1285,6 +1346,35 @@
     });
   };
 
+  function smSetSealArcText(textId, value) {
+    var el = document.getElementById(textId);
+    if (!el) return;
+    var path = el.querySelector('textPath');
+    if (path) path.textContent = value || '';
+  }
+  function smPaintSoldSeal(teamName, logoUrl, ptsTxt) {
+    var overlay = document.getElementById('smPhotoStatus');
+    if (!overlay) return;
+    overlay.setAttribute('data-kind', 'sold');
+    smSetSealArcText('smSealArcTopText', 'SOLD TO');
+    smSetSealArcText('smSealArcBotText', String(teamName || 'TEAM').toUpperCase());
+    var logoEl = document.getElementById('smStatusSealLogo');
+    if (logoEl) {
+      if (logoUrl) {
+        logoEl.src = logoUrl;
+        logoEl.classList.add('is-on');
+      } else {
+        logoEl.removeAttribute('src');
+        logoEl.classList.remove('is-on');
+      }
+    }
+    var ptsEl = document.getElementById('smStatusSealPts');
+    if (ptsEl) ptsEl.textContent = ptsTxt || '';
+    overlay.classList.remove('sm-status-show');
+    void overlay.offsetWidth;
+    overlay.classList.add('sm-status-show');
+  }
+
   /* ── Sold celebration screen ─────────────────────────────────── */
   function smShowSoldScreen(result) {
     // Player is sold — disable Sell / Unsold until next player loads
@@ -1323,14 +1413,11 @@
     }
     document.getElementById('smSoldTeamLogo').src  = '/web/image/auction.team/' + result.team_id + '/logo';
     document.getElementById('smSoldTeamName').textContent = result.team_name;
-    document.getElementById('smSoldPoints').textContent   = window.fmtUnit
+    var ptsTxt = window.fmtUnit
       ? window.fmtUnit(result.final_point)
       : (result.final_point + ' points');
-
-    // Re-trigger stamp animation by cloning the stamp element
-    var oldStamp = document.querySelector('.sm-sold-stamp');
-    var newStamp = oldStamp.cloneNode(true);
-    oldStamp.parentNode.replaceChild(newStamp, oldStamp);
+    document.getElementById('smSoldPoints').textContent = ptsTxt;
+    smPaintSoldSeal(result.team_name, '/web/image/auction.team/' + result.team_id + '/logo', ptsTxt);
 
     soldScreen.classList.add('visible');
 

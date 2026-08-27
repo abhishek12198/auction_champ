@@ -707,6 +707,105 @@ html[data-theme] .lb-photo-loading-txt {
   font-size: .76rem; font-weight: 700; color: #fca5a5;
   margin-top: 6px; letter-spacing: 1.5px; text-transform: uppercase;
 }
+
+/* Projector-style circular SOLD / UNSOLD seal on the live-board photo */
+.lb-photo-status{
+  --lb-sold-a:#00C853; --lb-sold-b:#2ECC71; --lb-sold-c:#00E676;
+  --lb-unsold-a:#B71C1C; --lb-unsold-b:#C62828; --lb-unsold-c:#D32F2F;
+  position:absolute;inset:0;border-radius:inherit;
+  z-index:12;display:none;pointer-events:none;overflow:hidden;
+}
+.lb-photo-status.lb-status-show{display:block}
+.lb-status-glow{
+  position:absolute;inset:0;z-index:1;opacity:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 42%, rgba(0,200,83,.28) 0%, transparent 65%);
+}
+.lb-photo-status[data-kind="sold"].lb-status-show .lb-status-glow{
+  animation:lbStatusWash .8s ease-out both;
+}
+.lb-photo-status[data-kind="unsold"] .lb-status-glow{
+  background:radial-gradient(ellipse at 50% 42%, rgba(198,40,40,.22) 0%, transparent 65%);
+}
+.lb-photo-status[data-kind="unsold"].lb-status-show .lb-status-glow{
+  animation:lbStatusWash .55s ease-out both;
+}
+@keyframes lbStatusWash{
+  0%{opacity:0} 35%{opacity:.7} 100%{opacity:0}
+}
+.lb-status-seal{
+  position:absolute;z-index:2;
+  width:min(78%, 17.5rem);aspect-ratio:1;
+  left:50%;top:46%;
+  transform:translate(-50%,-50%) scale(0) rotate(-14deg);
+  opacity:0;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+}
+.lb-photo-status.lb-status-show .lb-status-seal{
+  animation:lbSealIn .55s cubic-bezier(.2,.8,.2,1.15) .12s both;
+}
+.lb-photo-status[data-kind="unsold"].lb-status-show .lb-status-seal{
+  animation:lbSealStamp .42s cubic-bezier(.15,.9,.25,1.2) .05s both;
+}
+@keyframes lbSealIn{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(0) rotate(-28deg)}
+  70%{opacity:1;transform:translate(-50%,-50%) scale(1.06) rotate(-10deg)}
+  100%{opacity:.96;transform:translate(-50%,-50%) scale(1) rotate(-14deg)}
+}
+@keyframes lbSealStamp{
+  0%{opacity:0;transform:translate(-50%,-58%) scale(.2) rotate(-32deg)}
+  55%{opacity:1;transform:translate(-50%,-48%) scale(1.12) rotate(-10deg)}
+  100%{opacity:.9;transform:translate(-50%,-50%) scale(1) rotate(-14deg)}
+}
+.lb-status-seal-ring{
+  position:absolute;inset:1.5%;border-radius:50%;
+  border:3px solid currentColor;
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.14), inset 0 0 0 6px currentColor;
+  background:rgba(4,18,12,.62);
+}
+.lb-status-seal-ring--inner{
+  inset:16%;
+  border:1.4px dashed currentColor;
+  box-shadow:none;background:transparent;
+}
+.lb-photo-status[data-kind="sold"] .lb-status-seal{color:var(--lb-sold-b)}
+.lb-photo-status[data-kind="unsold"] .lb-status-seal{color:var(--lb-unsold-b)}
+.lb-photo-status[data-kind="unsold"] .lb-status-seal-ring{background:rgba(28,6,6,.7)}
+.lb-status-seal-svg{
+  position:absolute;inset:0;width:100%;height:100%;opacity:.98;z-index:4;
+  font-family:'Bebas Neue','Oswald',sans-serif;text-transform:uppercase;pointer-events:none;
+}
+.lb-status-seal-core{
+  position:relative;z-index:1;
+  width:52%;aspect-ratio:1;
+  display:flex;align-items:center;justify-content:center;
+}
+.lb-status-seal-mark{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+  mix-blend-mode:screen;
+  filter:sepia(1) saturate(14) hue-rotate(70deg) brightness(1.05);
+  opacity:.95;pointer-events:none;
+}
+.lb-photo-status[data-kind="unsold"] .lb-status-seal-mark{display:none}
+.lb-status-seal-logo{
+  position:absolute;z-index:3;
+  left:50%;top:46%;transform:translate(-50%,-50%);
+  width:54%;height:54%;
+  border-radius:50%;object-fit:contain;flex-shrink:0;
+  background:rgba(255,255,255,.96);border:2px solid rgba(255,255,255,.9);padding:2px;
+  display:none;
+  box-shadow:0 2px 10px rgba(0,0,0,.4);
+}
+.lb-photo-status[data-kind="sold"] .lb-status-seal-logo.is-on{display:block}
+.lb-photo-status[data-kind="unsold"] .lb-status-seal-logo,
+.lb-photo-status[data-kind="unsold"] .lb-status-seal-pts{display:none !important}
+.lb-status-seal-pts{
+  position:absolute;z-index:3;left:50%;bottom:2%;
+  transform:translateX(-50%);
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(.85rem,3.2vw,1.15rem);font-weight:900;letter-spacing:.05em;line-height:1;
+  color:currentColor;white-space:nowrap;
+  text-shadow:0 1px 5px rgba(0,0,0,.55);
+}
 .lb-photo-gradient {
   position: absolute; bottom: 0; left: 0; right: 0;
   height: 120px;
@@ -2482,25 +2581,30 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       </div>
       <div class="lb-sl-overlay" id="lb-sl-overlay" style="display:none;">#<span id="lb-sl-num">--</span></div>
       <div class="lb-state-overlay lb-state-auction" id="lb-state-overlay" style="display:none;">LIVE</div>
-      <!-- SOLD STAMP -->
-      <div class="lb-stamp-overlay lb-stamp-sold" id="lb-sold-stamp" style="display:none;">
-        <div class="lb-stamp-box">
-          <div class="lb-stamp-hammer">🔨</div>
-          <div class="lb-stamp-word">SOLD</div>
-          <div class="lb-stamp-pts" id="stamp-pts"></div>
-          <div class="lb-stamp-team">
-            <div class="lb-stamp-team-logo" id="stamp-team-logo-wrap">
-              <img id="stamp-team-logo" src="" alt=""/>
-            </div>
-            <div class="lb-stamp-team-name" id="stamp-team-name"></div>
+      <!-- Projector-style SOLD / UNSOLD circular seal -->
+      <div class="lb-photo-status" id="lbPhotoStatus" data-kind="sold" aria-live="polite">
+        <div class="lb-status-glow" aria-hidden="true"></div>
+        <div class="lb-status-seal" id="lbStatusSeal" aria-hidden="true">
+          <div class="lb-status-seal-ring"></div>
+          <div class="lb-status-seal-ring lb-status-seal-ring--inner"></div>
+          <svg class="lb-status-seal-svg" viewBox="0 0 200 200" aria-hidden="true"
+               xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <defs>
+              <path id="lbSealArcTop" d="M38,58 A80,80 0 0,1 162,58"/>
+              <path id="lbSealArcBot" d="M36,158 A80,80 0 0,0 164,158"/>
+            </defs>
+            <text id="lbSealArcTopText" fill="currentColor" font-size="18" font-weight="800" letter-spacing="3.8">
+              <textPath xlink:href="#lbSealArcTop" href="#lbSealArcTop" startOffset="50%" text-anchor="middle">SOLD TO</textPath>
+            </text>
+            <text id="lbSealArcBotText" fill="currentColor" font-size="16" font-weight="800" letter-spacing="1.4">
+              <textPath xlink:href="#lbSealArcBot" href="#lbSealArcBot" startOffset="50%" text-anchor="middle">TEAM</textPath>
+            </text>
+          </svg>
+          <div class="lb-status-seal-core">
+            <img class="lb-status-seal-mark" src="/auction_module/static/img/sold_overlay_gray.png" alt=""/>
+            <img class="lb-status-seal-logo" id="lbStatusSealLogo" src="" alt=""/>
+            <div class="lb-status-seal-pts" id="lbStatusSealPts"></div>
           </div>
-        </div>
-      </div>
-      <!-- UNSOLD STAMP -->
-      <div class="lb-stamp-overlay lb-stamp-unsold" id="lb-unsold-stamp" style="display:none;">
-        <div class="lb-stamp-box">
-          <div class="lb-stamp-word">UNSOLD</div>
-          <!--<div class="lb-stamp-sub">Goes back to pool</div>-->
         </div>
       </div>
       <div class="lb-photo-gradient"></div>
@@ -3132,6 +3236,50 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     }, 4000);
   }
 
+  // ── Projector-style SOLD / UNSOLD seal on the live-board photo ──
+  function setLbSealArcText(textId, value) {
+    var el = document.getElementById(textId);
+    if (!el) return;
+    var path = el.querySelector('textPath');
+    if (path) path.textContent = value || '';
+  }
+  function hideLbPhotoStatus() {
+    var overlay = document.getElementById('lbPhotoStatus');
+    if (overlay) overlay.classList.remove('lb-status-show');
+  }
+  function showLbPhotoStatus(kind, soldInfo) {
+    var overlay = document.getElementById('lbPhotoStatus');
+    if (!overlay) return;
+    var isSold = kind === 'sold';
+    overlay.setAttribute('data-kind', isSold ? 'sold' : 'unsold');
+    setLbSealArcText('lbSealArcTopText', isSold ? 'SOLD TO' : 'NO BID');
+    var teamName = ((soldInfo && soldInfo.team_name) || (isSold ? 'TEAM' : 'UNSOLD')).toUpperCase();
+    setLbSealArcText('lbSealArcBotText', teamName);
+    var logoEl = document.getElementById('lbStatusSealLogo');
+    if (logoEl) {
+      if (isSold && soldInfo && soldInfo.team_logo_url) {
+        logoEl.src = soldInfo.team_logo_url;
+        logoEl.classList.add('is-on');
+      } else {
+        logoEl.removeAttribute('src');
+        logoEl.classList.remove('is-on');
+      }
+    }
+    var ptsEl = document.getElementById('lbStatusSealPts');
+    if (ptsEl) {
+      if (isSold && soldInfo && soldInfo.amount) {
+        ptsEl.textContent = fmtPts(soldInfo.amount);
+        ptsEl.style.display = '';
+      } else {
+        ptsEl.textContent = '';
+        ptsEl.style.display = 'none';
+      }
+    }
+    overlay.classList.remove('lb-status-show');
+    void overlay.offsetWidth;
+    overlay.classList.add('lb-status-show');
+  }
+
   // ── Render Player Panel ────────────────────────────────────────
   function renderPlayer(p, soldInfo, waitPhase) {
     rememberWaitPhase(waitPhase);
@@ -3143,8 +3291,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       lbApplyPlayerPhoto(null);
       document.getElementById('lb-sl-overlay').style.display = 'none';
       document.getElementById('lb-state-overlay').style.display = 'none';
-      document.getElementById('lb-sold-stamp').style.display   = 'none';
-      document.getElementById('lb-unsold-stamp').style.display = 'none';
+      hideLbPhotoStatus();
       var lockClear = document.getElementById('lb-mystery-lock');
       if (lockClear) lockClear.style.display = 'none';
       document.getElementById('lb-badges-row').innerHTML = '';
@@ -3182,44 +3329,15 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     stEl.className = 'lb-state-overlay lb-state-' + (p.state || 'auction');
     stEl.textContent = p.state === 'sold' ? 'SOLD' : p.state === 'unsold' ? 'UNSOLD' : 'LIVE';
 
-    // Sold / Unsold stamp
-    const soldStamp   = document.getElementById('lb-sold-stamp');
-    const unsoldStamp = document.getElementById('lb-unsold-stamp');
+    // Projector-style SOLD / UNSOLD seal on the player photo
     if (p.state === 'sold' && soldInfo) {
-      const wasVisible = soldStamp.style.display !== 'none';
-      soldStamp.style.display  = '';
-      unsoldStamp.style.display = 'none';
-      if (!wasVisible) {
-        // reset animation only on first show
-        soldStamp.style.animation = 'none';
-        soldStamp.offsetHeight; // reflow
-        soldStamp.style.animation = '';
-      }
-      document.getElementById('stamp-pts').textContent = fmtPts(soldInfo.amount);
-      document.getElementById('stamp-team-name').textContent = soldInfo.team_name || '';
-      const logoImg  = document.getElementById('stamp-team-logo');
-      const logoWrap = document.getElementById('stamp-team-logo-wrap');
-      if (soldInfo.team_logo_url) {
-        logoImg.src = soldInfo.team_logo_url;
-        logoWrap.style.display = '';
-      } else {
-        logoWrap.style.display = 'none';
-      }
-      stEl.style.display = 'none'; // stamp replaces the badge
+      showLbPhotoStatus('sold', soldInfo);
+      stEl.style.display = 'none';
     } else if (p.state === 'unsold') {
-      const wasVisible = unsoldStamp.style.display !== 'none';
-      unsoldStamp.style.display = '';
-      soldStamp.style.display   = 'none';
-      if (!wasVisible) {
-        // reset animation only on first show
-        unsoldStamp.style.animation = 'none';
-        unsoldStamp.offsetHeight;
-        unsoldStamp.style.animation = '';
-      }
-      stEl.style.display = 'none'; // stamp replaces the badge
+      showLbPhotoStatus('unsold', null);
+      stEl.style.display = 'none';
     } else {
-      soldStamp.style.display   = 'none';
-      unsoldStamp.style.display = 'none';
+      hideLbPhotoStatus();
     }
     if (mysteryLock) mysteryLock.style.display = mysteryHidden ? 'flex' : 'none';
 

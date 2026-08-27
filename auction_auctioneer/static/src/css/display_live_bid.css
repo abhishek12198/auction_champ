@@ -1063,7 +1063,7 @@ body[data-theme="dark"] .player-profession .ac-livebid-overlay {
     .cr-stats-col:has(#acLiveBidPad) .ac-fb-grid {
         flex: 1 1 auto !important;
         min-height: 180px !important;
-        overflow: auto !important;
+        overflow: hidden !important;
     }
     .bb-actions,
     .bb-next-strip,

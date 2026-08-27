@@ -92,6 +92,8 @@ class AuctionTeamOwnerUser(models.Model):
                 team.owner_user_id.sudo().write({
                     'password': password,
                     'auction_team_id': team.id,
+                    'tournament_id': team.tournament_id.id if team.tournament_id else False,
+                    'tournament_ids': [(4, team.tournament_id.id)] if team.tournament_id else [],
                     'groups_id': [(4, owner_group.id), (4, internal_group.id)],
                 })
                 team.write({'owner_password': password})
@@ -111,6 +113,8 @@ class AuctionTeamOwnerUser(models.Model):
                     'login': login,
                     'password': password,
                     'auction_team_id': team.id,
+                    'tournament_id': team.tournament_id.id if team.tournament_id else False,
+                    'tournament_ids': [(4, team.tournament_id.id)] if team.tournament_id else [],
                 }
                 if team.logo:
                     user_vals['image_1920'] = team.logo

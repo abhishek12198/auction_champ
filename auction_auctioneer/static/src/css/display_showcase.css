@@ -42,8 +42,8 @@ body:has(#acLiveBidPad) {
         flex: 1 1 auto !important;
         min-height: 140px !important;
         max-height: none !important;
-        overflow: auto !important;
-        padding: 12px 14px 8px !important;
+        overflow: hidden !important;
+        padding: 8px 12px 6px !important;
     }
 
     body:has(#acLiveBidPad) #acLiveBidPad.is-on.is-open {
@@ -105,7 +105,7 @@ body:has(#acLiveBidPad) {
     body:has(#acLiveBidPad) .player-profession {
         flex: 1 1 auto !important;
         min-height: 140px !important;
-        overflow: auto !important;
+        overflow: hidden !important;
     }
     body:has(#acLiveBidPad) .auction-single-buttons {
         display: grid !important;
@@ -153,14 +153,55 @@ body:has(#acLiveBidPad) .ac-livebid-chip:hover {
     filter: brightness(1.08);
 }
 
-/* Compact profile type */
+/* Compact profile attributes so they fit without a scroller */
+body:has(#acLiveBidPad) .bb-stats-grid,
+body:has(#acLiveBidPad) .pt-stats-grid,
+body:has(#acLiveBidPad) .ac-fb-grid,
+body:has(#acLiveBidPad) .vn-fb-grid,
+body:has(#acLiveBidPad) .player-attr-grid {
+    gap: 5px 8px !important;
+    margin-bottom: 0 !important;
+    row-gap: 5px !important;
+}
 body:has(#acLiveBidPad) .hud-stat-row,
 body:has(#acLiveBidPad) .lm-stat-row,
 body:has(#acLiveBidPad) .sw-stat-row,
 body:has(#acLiveBidPad) .cr-stat-row,
 body:has(#acLiveBidPad) .bb-stat-tile,
-body:has(#acLiveBidPad) .pt-stat-tile {
+body:has(#acLiveBidPad) .pt-stat-tile,
+body:has(#acLiveBidPad) .vn-stat-row {
     margin-bottom: 0 !important;
+    padding: 5px 8px 6px !important;
+    gap: 1px !important;
+}
+body:has(#acLiveBidPad) .bb-stat-val,
+body:has(#acLiveBidPad) .pt-stat-val,
+body:has(#acLiveBidPad) .lm-stat-val,
+body:has(#acLiveBidPad) .sw-stat-val,
+body:has(#acLiveBidPad) .hud-stat-val,
+body:has(#acLiveBidPad) .cr-stat-val,
+body:has(#acLiveBidPad) .vn-stat-val,
+body:has(#acLiveBidPad) .player-attr-value {
+    font-size: .82rem !important;
+    line-height: 1.15 !important;
+    letter-spacing: .2px !important;
+}
+body:has(#acLiveBidPad) .bb-stat-key,
+body:has(#acLiveBidPad) .pt-stat-key,
+body:has(#acLiveBidPad) .lm-stat-key,
+body:has(#acLiveBidPad) .sw-stat-key,
+body:has(#acLiveBidPad) .hud-stat-key,
+body:has(#acLiveBidPad) .cr-stat-key,
+body:has(#acLiveBidPad) .vn-stat-key,
+body:has(#acLiveBidPad) .player-attr-label {
+    font-size: .52rem !important;
+    letter-spacing: .08em !important;
+}
+body:has(#acLiveBidPad) .lm-stats-title,
+body:has(#acLiveBidPad) .hud-stats-heading {
+    font-size: .72rem !important;
+    margin-bottom: 6px !important;
+    padding-bottom: 4px !important;
 }
 
 /* ── Phone ─────────────────────────────────────────────────── */

@@ -206,90 +206,131 @@ input{font-family:inherit}
 /* ── Player wrap — mobile: vertical stack, tablet+: side-by-side ── */
 .oc-player-wrap{
     display:flex;flex-direction:column;align-items:center;
-    gap:16px;padding:20px 16px 16px;
+    gap:12px;padding:16px 12px 14px;
+    max-width:100%;overflow-x:hidden;
 }
 
 .oc-player-photo-col{
     display:flex;flex-direction:column;align-items:center;gap:10px;flex-shrink:0;
     width:100%;
 }
-/* Square / portrait rectangle — no spin ring on square */
-.oc-player-photo-ring{
+.oc-player-photo-frame{
+    position:relative;
     width:180px;height:220px;
+    flex-shrink:0;
+}
+/* Square / portrait — still photo, same as live board */
+.oc-player-photo-ring{
+    width:100%;height:100%;
     border-radius:12px;
     padding:3px;
-    background:conic-gradient(var(--c),var(--c-l),var(--c));
-    animation:spin-ring 8s linear infinite;
-    flex-shrink:0;
-    position:relative;
+    background:linear-gradient(145deg,var(--c-l),var(--c));
+    overflow:hidden;
 }
-@keyframes spin-ring{to{transform:rotate(360deg)}}
 .oc-player-photo{
     width:100%;height:100%;
     border-radius:10px;
     object-fit:cover;object-position:top center;
     background:var(--surf2);
-    animation:spin-ring 8s linear infinite reverse;
 }
 
-/* ── SOLD overlay ────────────────────────────────────────────── */
-.oc-sold-overlay{
+/* ── Projector-style SOLD / UNSOLD seal on the photo ────────── */
+.oc-photo-status{
+    --oc-sold-a:#00C853; --oc-sold-b:#2ECC71; --oc-sold-c:#00E676;
+    --oc-unsold-a:#B71C1C; --oc-unsold-b:#C62828; --oc-unsold-c:#D32F2F;
     position:absolute;inset:3px;border-radius:10px;
-    background:rgba(0,0,0,.72);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-    animation:spin-ring 8s linear infinite reverse;
-    opacity:0;pointer-events:none;
-    transition:opacity .3s;
-    z-index:5;
+    z-index:6;display:none;pointer-events:none;overflow:hidden;
 }
-.oc-sold-overlay.oc-sold-show{opacity:1}
-.oc-sold-stamp{
-    font-size:1.4rem;font-weight:900;letter-spacing:.1em;
-    color:#fff;text-transform:uppercase;
-    background:var(--red);
-    border:2px solid rgba(255,255,255,.6);
-    border-radius:4px;
-    padding:2px 14px;
-    transform:rotate(-12deg);
-    text-shadow:0 1px 4px rgba(0,0,0,.7);
-    animation:sold-stamp-in .35s cubic-bezier(.25,1.5,.5,1) forwards;
+.oc-photo-status.oc-status-show{display:block}
+.oc-status-glow{
+    position:absolute;inset:0;z-index:1;opacity:0;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 42%, rgba(0,200,83,.28) 0%, transparent 65%);
 }
-@keyframes sold-stamp-in{
-    0%{transform:rotate(-12deg) scale(2.5);opacity:0}
-    100%{transform:rotate(-12deg) scale(1);opacity:1}
+.oc-photo-status[data-kind="sold"].oc-status-show .oc-status-glow{
+    animation:ocStatusWash .8s ease-out both;
 }
-.oc-sold-to{
-    display:flex;align-items:center;gap:6px;
-    max-width:150px;padding:2px 4px;
+.oc-photo-status[data-kind="unsold"] .oc-status-glow{
+    background:radial-gradient(ellipse at 50% 42%, rgba(198,40,40,.22) 0%, transparent 65%);
 }
-.oc-sold-logo{
-    width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0;
-    border:1.5px solid rgba(245,197,24,.75);background:rgba(255,255,255,.1);
+.oc-photo-status[data-kind="unsold"].oc-status-show .oc-status-glow{
+    animation:ocStatusWash .55s ease-out both;
 }
-#ocSoldTeamName{
-    font-size:.75rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;
-    color:var(--gold);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+@keyframes ocStatusWash{
+    0%{opacity:0} 35%{opacity:.7} 100%{opacity:0}
 }
-/* UNSOLD overlay */
-.oc-unsold-overlay{
-    position:absolute;inset:3px;border-radius:10px;
-    background:rgba(0,0,0,.72);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    opacity:0;pointer-events:none;transition:opacity .3s;z-index:5;
+.oc-status-seal{
+    position:absolute;z-index:2;
+    width:86%;aspect-ratio:1;
+    left:50%;top:50%;
+    transform:translate(-50%,-50%) scale(0) rotate(-14deg);
+    opacity:0;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
 }
-.oc-unsold-overlay.oc-unsold-show{opacity:1}
-.oc-unsold-stamp{
-    font-size:1.4rem;font-weight:900;letter-spacing:.1em;
-    color:#fff;text-transform:uppercase;
-    background:#e65c00;
-    border:2px solid rgba(255,255,255,.6);border-radius:4px;
-    padding:2px 14px;transform:rotate(-12deg);
-    text-shadow:0 1px 4px rgba(0,0,0,.7);
-    animation:unsold-stamp-in .35s cubic-bezier(.25,1.5,.5,1) forwards;
+.oc-photo-status.oc-status-show .oc-status-seal{
+    animation:ocSealIn .55s cubic-bezier(.2,.8,.2,1.15) .12s both;
 }
-@keyframes unsold-stamp-in{
-    0%{transform:rotate(-12deg) scale(2.5);opacity:0}
-    100%{transform:rotate(-12deg) scale(1);opacity:1}
+.oc-photo-status[data-kind="unsold"].oc-status-show .oc-status-seal{
+    animation:ocSealStamp .42s cubic-bezier(.15,.9,.25,1.2) .05s both;
+}
+@keyframes ocSealIn{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(0) rotate(-28deg)}
+    70%{opacity:1;transform:translate(-50%,-50%) scale(1.06) rotate(-10deg)}
+    100%{opacity:.96;transform:translate(-50%,-50%) scale(1) rotate(-14deg)}
+}
+@keyframes ocSealStamp{
+    0%{opacity:0;transform:translate(-50%,-58%) scale(.2) rotate(-32deg)}
+    55%{opacity:1;transform:translate(-50%,-48%) scale(1.12) rotate(-10deg)}
+    100%{opacity:.9;transform:translate(-50%,-50%) scale(1) rotate(-14deg)}
+}
+.oc-status-seal-ring{
+    position:absolute;inset:1.5%;border-radius:50%;
+    border:3px solid currentColor;
+    box-shadow:inset 0 0 0 3px rgba(255,255,255,.14), inset 0 0 0 6px currentColor;
+    background:rgba(4,18,12,.62);
+}
+.oc-status-seal-ring--inner{
+    inset:16%;
+    border:1.4px dashed currentColor;
+    box-shadow:none;background:transparent;
+}
+.oc-photo-status[data-kind="sold"] .oc-status-seal{color:var(--oc-sold-b)}
+.oc-photo-status[data-kind="unsold"] .oc-status-seal{color:var(--oc-unsold-b)}
+.oc-photo-status[data-kind="unsold"] .oc-status-seal-ring{background:rgba(28,6,6,.7)}
+.oc-status-seal-svg{
+    position:absolute;inset:0;width:100%;height:100%;opacity:.98;z-index:4;
+    font-family:'Bebas Neue','Exo 2',sans-serif;text-transform:uppercase;pointer-events:none;
+}
+.oc-status-seal-core{
+    position:relative;z-index:1;
+    width:52%;aspect-ratio:1;
+    display:flex;align-items:center;justify-content:center;
+}
+.oc-status-seal-mark{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+    mix-blend-mode:screen;
+    filter:sepia(1) saturate(14) hue-rotate(70deg) brightness(1.05);
+    opacity:.95;pointer-events:none;
+}
+.oc-photo-status[data-kind="unsold"] .oc-status-seal-mark{display:none}
+.oc-status-seal-logo{
+    position:absolute;z-index:3;
+    left:50%;top:46%;transform:translate(-50%,-50%);
+    width:54%;height:54%;
+    border-radius:50%;object-fit:contain;flex-shrink:0;
+    background:rgba(255,255,255,.96);border:2px solid rgba(255,255,255,.9);padding:2px;
+    display:none;
+    box-shadow:0 2px 10px rgba(0,0,0,.4);
+}
+.oc-photo-status[data-kind="sold"] .oc-status-seal-logo.is-on{display:block}
+.oc-photo-status[data-kind="unsold"] .oc-status-seal-logo,
+.oc-photo-status[data-kind="unsold"] .oc-status-seal-pts{display:none !important}
+.oc-status-seal-pts{
+    position:absolute;z-index:3;left:50%;bottom:2%;
+    transform:translateX(-50%);
+    font-family:'Bebas Neue',sans-serif;
+    font-size:.78rem;font-weight:900;letter-spacing:.05em;line-height:1;
+    color:currentColor;white-space:nowrap;
+    text-shadow:0 1px 5px rgba(0,0,0,.55);
 }
 /* Tier pill — prominent, easy to read at a glance */
 .oc-tier-pill{
@@ -304,26 +345,34 @@ input{font-family:inherit}
 /* Info column — centered on mobile */
 .oc-player-info-col{
     flex:1;min-width:0;
-    display:flex;flex-direction:column;gap:12px;
+    display:flex;flex-direction:column;gap:8px;
     width:100%;align-items:center;text-align:center;
+    overflow-x:hidden;
 }
 .oc-player-name{
-    font-size:1.9rem;font-weight:900;line-height:1.1;text-transform:uppercase;
+    font-size:1.45rem;font-weight:900;line-height:1.15;text-transform:uppercase;
     background:linear-gradient(135deg,var(--txt),var(--c-l));
     -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    max-width:100%;overflow-wrap:anywhere;
 }
-.oc-player-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-/* Bigger chips — role chip is highlighted solid */
+.oc-player-chips{
+    display:flex;flex-wrap:wrap;gap:4px;justify-content:center;
+    max-width:100%;
+}
 .oc-chip{
-    font-size:.9rem;font-weight:800;padding:5px 14px;border-radius:12px;
+    font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:8px;
+    line-height:1.25;max-width:100%;
 }
 .oc-chip-role{
     background:var(--c);color:#fff;
-    border:2px solid var(--c-l);
-    font-size:1rem;padding:6px 18px;
+    border:1px solid var(--c-l);
+    font-size:.72rem;padding:3px 10px;
     box-shadow:0 2px 8px var(--c20);
 }
-.oc-chip-style{background:var(--surf2);color:var(--txt2);border:1px solid var(--border2)}
+.oc-chip-style{
+    background:var(--surf2);color:var(--txt2);border:1px solid var(--border2);
+    white-space:normal;overflow-wrap:anywhere;text-align:center;
+}
 
 /* Bid display */
 .oc-bid-display{display:flex;gap:8px}
@@ -332,7 +381,26 @@ input{font-family:inherit}
     display:flex;flex-direction:column;align-items:center;gap:3px;
 }
 .oc-bid-box-base{background:var(--surf2);border:1px solid var(--border2)}
-.oc-bid-box-current{background:var(--c10);border:1px solid var(--c40);position:relative;transition:background .2s,border-color .2s,box-shadow .2s}
+.oc-maxcall-sub{
+    display:flex;flex-direction:column;align-items:center;gap:0;
+    margin-top:2px;line-height:1.15;
+}
+.oc-maxcall-sub-lbl{
+    font-size:.5rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.85;
+}
+.oc-maxcall-sub-val{font-size:.72rem;font-weight:800;}
+.oc-maxcall-high .oc-maxcall-sub-lbl,
+.oc-maxcall-high .oc-maxcall-sub-val{color:var(--green)}
+.oc-maxcall-med .oc-maxcall-sub-lbl,
+.oc-maxcall-med .oc-maxcall-sub-val{color:var(--amber)}
+.oc-maxcall-low .oc-maxcall-sub-lbl,
+.oc-maxcall-low .oc-maxcall-sub-val{color:var(--red)}
+.oc-bid-box-current{
+    background:var(--c10);border:1px solid var(--c40);position:relative;
+    transition:background .2s,border-color .2s,box-shadow .2s;
+    -webkit-user-select:none;user-select:none;
+    -webkit-touch-callout:none;touch-action:manipulation;
+}
 .oc-bid-box-lbl{font-size:.7rem;font-weight:800;letter-spacing:.08em;color:var(--txt3);text-transform:uppercase}
 .oc-bid-box-val{font-size:1.2rem;font-weight:900;color:var(--txt)}
 .oc-bid-live{color:var(--c-l)!important;font-size:1.4rem!important}
@@ -370,6 +438,45 @@ input{font-family:inherit}
 #ocCurrentBidBox.oc-qb-disabled .oc-qb-hint{color:var(--red);font-size:.58rem}
 #ocCurrentBidBox.oc-qb-placing{opacity:.6;pointer-events:none}
 #ocCurrentBidBox.oc-qb-placing .oc-qb-hint::before{content:'⏳ ';}
+
+.oc-lead-warn{
+    margin-top:8px;padding:8px 12px;border-radius:10px;
+    background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35);
+    color:var(--green);font-size:.78rem;font-weight:800;text-align:center;
+}
+.oc-custom-bid-modal{max-width:420px;padding-bottom:8px}
+.oc-modal-x{
+    position:absolute;top:10px;right:12px;width:32px;height:32px;
+    border:0;border-radius:50%;background:var(--surf2);color:var(--txt);
+    font-size:1.3rem;line-height:1;cursor:pointer;z-index:2;
+}
+.oc-custom-stats{
+    display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;
+    padding:12px 16px 4px;
+}
+.oc-custom-stat{
+    background:var(--surf2);border:1px solid var(--border2);border-radius:10px;
+    padding:8px 6px;text-align:center;
+}
+.oc-custom-stat span{
+    display:block;font-size:.58rem;font-weight:800;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--txt3);margin-bottom:4px;
+}
+.oc-custom-stat strong{display:block;font-size:.82rem;font-weight:800;color:var(--c-l)}
+#ocCustomBidOverlay .oc-bid-panel{
+    order:unset;box-shadow:none;border:none;background:transparent;
+    padding:8px 16px 16px;
+}
+#ocCustomBidOverlay .oc-presets{
+    flex-wrap:wrap;
+    overflow:visible;
+}
+#ocCustomBidOverlay .oc-preset-btn.oc-preset-on{
+    border-color:var(--c-l);
+    background:var(--c20);
+    color:var(--c-l);
+}
+.oc-custom-bid-cta{width:100%;margin-top:8px}
 
 .oc-leading-team{
     display:flex;align-items:center;gap:10px;
@@ -818,17 +925,17 @@ input{font-family:inherit}
 /* ═══════ RESPONSIVE — TABLET+ (640px) ════════════════════════ */
 @media(min-width:640px){
     /* Side-by-side layout on tablet+ */
-    .oc-player-wrap{flex-direction:row;align-items:flex-start;padding:24px 20px 20px}
+    .oc-player-wrap{flex-direction:row;align-items:flex-start;padding:18px 16px 16px}
     .oc-player-photo-col{width:auto}
-    .oc-player-photo-ring{width:200px;height:240px}
+    .oc-player-photo-frame{width:180px;height:216px}
     .oc-player-info-col{align-items:flex-start;text-align:left}
     .oc-player-chips{justify-content:flex-start}
-    .oc-player-name{font-size:2.2rem}
-    .oc-tier-pill{font-size:1.1rem;padding:6px 22px}
-    .oc-chip{font-size:1rem;padding:6px 16px}
-    .oc-chip-role{font-size:1.1rem;padding:7px 20px}
-    .oc-bid-box-val{font-size:1.3rem}
-    .oc-bid-live{font-size:1.5rem!important}
+    .oc-player-name{font-size:1.55rem}
+    .oc-tier-pill{font-size:.85rem;padding:4px 14px}
+    .oc-chip{font-size:.72rem;padding:3px 9px}
+    .oc-chip-role{font-size:.75rem;padding:4px 11px}
+    .oc-bid-box-val{font-size:1.1rem}
+    .oc-bid-live{font-size:1.2rem!important}
     .oc-teams-strip{flex-wrap:wrap;overflow-x:visible}
     .oc-strip-card{width:calc(50% - 5px)}
 }
@@ -891,12 +998,11 @@ input{font-family:inherit}
     /* Squad slide-in from the right on desktop */
     .oc-sheet{max-width:420px;left:auto;right:0;border-radius:20px 0 0 20px}
 
-    /* Player name bigger on bigger canvas */
-    .oc-player-name{font-size:2.6rem}
-    .oc-player-photo-ring{width:220px;height:270px}
-    .oc-tier-pill{font-size:1.2rem;padding:7px 26px}
-    .oc-chip{font-size:1.05rem;padding:7px 18px}
-    .oc-chip-role{font-size:1.2rem;padding:8px 22px}
+    .oc-player-name{font-size:1.7rem}
+    .oc-player-photo-frame{width:190px;height:230px}
+    .oc-tier-pill{font-size:.9rem;padding:4px 16px}
+    .oc-chip{font-size:.75rem;padding:4px 10px}
+    .oc-chip-role{font-size:.78rem;padding:4px 12px}
 }
 
 

@@ -68,8 +68,8 @@
             </div>
         </div>
         <div class="ac-livebid-toast" id="acLiveBidToast"></div>
-        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_live_bid.css?v=34"/>
-        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_showcase.css?v=4"/>
+        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_live_bid.css?v=35"/>
+        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_showcase.css?v=5"/>
         <script src="/auction_auctioneer/static/src/js/display_live_bid.js?v=35"></script>
     </template>
 

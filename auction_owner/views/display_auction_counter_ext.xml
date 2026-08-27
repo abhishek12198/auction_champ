@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Drop leftover owner sell-modal inherit if an older upgrade left it. Skip if missing. -->
+    <delete model="ir.ui.view" search="[('key','=','auction_owner.player_sell_modal_bid_ext')]"/>
+    <delete model="ir.model.data" search="[('module','=','auction_owner'),('name','=','player_sell_modal_bid_ext')]"/>
 
     <!--
         Inject counter CSS + JS into the sell modal (t-called by ALL 5 themes).

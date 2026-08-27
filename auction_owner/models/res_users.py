@@ -36,7 +36,7 @@
 #
 ##############################################################################
 
-from odoo import models, fields
+from odoo import api, models, fields
 
 
 class ResUsers(models.Model):
@@ -47,3 +47,29 @@ class ResUsers(models.Model):
         string='My Auction Team',
         help='Assign this user to a team so they can use the Owner Console.',
     )
+
+    def _sync_tournament_from_auction_team(self):
+        """Keep Active Tournament aligned with the assigned owner team."""
+        for user in self:
+            team = user.auction_team_id
+            if not team or not team.tournament_id:
+                continue
+            vals = {}
+            if user.tournament_id.id != team.tournament_id.id:
+                vals['tournament_id'] = team.tournament_id.id
+            if team.tournament_id.id not in user.tournament_ids.ids:
+                vals['tournament_ids'] = [(4, team.tournament_id.id)]
+            if vals:
+                user.with_context(skip_tournament_sync=True).write(vals)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        users = super().create(vals_list)
+        users._sync_tournament_from_auction_team()
+        return users
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'auction_team_id' in vals:
+            self._sync_tournament_from_auction_team()
+        return res
