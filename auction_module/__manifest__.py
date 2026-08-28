@@ -38,7 +38,7 @@
 
 {
     'name' : 'Auction Champ',
-    'version' : '1.5.632',
+    'version' : '1.5.638',
     'summary': 'Sports Auction module',
     'sequence': 10,
     'icon': '/auction_module/static/description/icon.png',
@@ -147,6 +147,7 @@
         'wizard/action_deactivate_tournament_view.xml',
         'views/auction_status_template.xml',
         'views/page_not_found.xml',
+        'views/social_preview_head.xml',
         'views/player_registration_form.xml',
         'views/tournament_registration_form.xml',
         'views/auction_dashboard_template.xml',

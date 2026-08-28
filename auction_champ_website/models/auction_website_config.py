@@ -68,14 +68,10 @@ class AuctionWebsiteConfig(models.Model):
         help='URL for the "Watch Live Auction" button.',
     )
 
-    # ── Statistics ────────────────────────────────────────────────────────
-    stat_1_value = fields.Char(string='Stat 1 — Value', default='100+')
+    # ── Statistics (labels only — values are computed live from the DB) ──
     stat_1_label = fields.Char(string='Stat 1 — Label', default='Tournaments Managed')
-    stat_2_value = fields.Char(string='Stat 2 — Value', default='10,000+')
     stat_2_label = fields.Char(string='Stat 2 — Label', default='Players Registered')
-    stat_3_value = fields.Char(string='Stat 3 — Value', default='500+')
     stat_3_label = fields.Char(string='Stat 3 — Label', default='Teams Managed')
-    stat_4_value = fields.Char(string='Stat 4 — Value', default='Live')
     stat_4_label = fields.Char(string='Stat 4 — Label', default='Auction Automation')
 
     # ── Testimonials ──────────────────────────────────────────────────────
@@ -141,3 +137,47 @@ class AuctionWebsiteConfig(models.Model):
         if not record:
             record = self.create({})
         return record
+
+    @staticmethod
+    def _format_stat_count(count):
+        """Format a DB count for the hero strip (e.g. 1234 → '1,234+')."""
+        count = int(count or 0)
+        if count <= 0:
+            return '0'
+        return '{:,}+'.format(count)
+
+    @api.model
+    def get_hero_stats(self):
+        """Build hero statistics from live database counts.
+
+        Includes archived (inactive) tournaments/teams/players so the strip
+        reflects everything managed on the platform, not only current season.
+        """
+        config = self.get_singleton()
+        env = self.env
+
+        tournaments = env['auction.tournament'].sudo().with_context(
+            active_test=False
+        ).search_count([])
+        players = env['auction.team.player'].sudo().with_context(
+            active_test=False
+        ).search_count([])
+        teams = env['auction.team'].sudo().with_context(
+            active_test=False
+        ).search_count([])
+        live_auctions = env['auction.tournament'].sudo().search_count([
+            ('live_board_active', '=', True),
+            ('active', '=', True),
+        ])
+
+        return {
+            'stat_1_value': self._format_stat_count(tournaments),
+            'stat_1_label': config.stat_1_label or 'Tournaments Managed',
+            'stat_2_value': self._format_stat_count(players),
+            'stat_2_label': config.stat_2_label or 'Players Registered',
+            'stat_3_value': self._format_stat_count(teams),
+            'stat_3_label': config.stat_3_label or 'Teams Managed',
+            # Live auction count when boards are active; "Live" when idle.
+            'stat_4_value': str(live_auctions) if live_auctions else 'Live',
+            'stat_4_label': config.stat_4_label or 'Auction Automation',
+        }

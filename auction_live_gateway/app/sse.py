@@ -88,7 +88,7 @@ async def _check_lb_protection(dbname, tid):
 
 async def sse_stream(dbname, slug, kind, last_event_id=None):
     """Async generator for one SSE client (protection already checked)."""
-    if kind not in ('lb', 'pj', 'bal'):
+    if kind not in ('lb', 'pj', 'bal', 'reg'):
         return
 
     tid, err = await async_redis.resolve_tid(dbname, slug)

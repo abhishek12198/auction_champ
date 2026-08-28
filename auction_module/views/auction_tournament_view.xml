@@ -824,9 +824,13 @@
                                             <field name="poster_image" widget="image" nolabel="1"
                                                    options="{'preview_image': 'poster_image', 'size': [240, 320]}"/>
                                         </group>
-                                        <group>
+                                        <group string="Social Share Image (optional)">
+                                            <field name="social_share_image" widget="image" nolabel="1"
+                                                   options="{'preview_image': 'social_share_image', 'size': [240, 126]}"/>
                                             <div class="o_at_presentation_help" colspan="2">
-                                                Recommended: portrait/square format (e.g. 600 × 800 px). PNG or JPG.
+                                                Used when a public tournament URL is shared on WhatsApp,
+                                                Telegram, Facebook, LinkedIn or X. Recommended 1200 × 630 px.
+                                                If empty, the poster is used, then the logo.
                                             </div>
                                         </group>
                                     </group>
@@ -1210,6 +1214,9 @@
                     <attribute name="readonly">0</attribute>
                 </field>
                 <field name="poster_image" position="attributes">
+                    <attribute name="readonly">0</attribute>
+                </field>
+                <field name="social_share_image" position="attributes">
                     <attribute name="readonly">0</attribute>
                 </field>
                 <field name="youtube_url" position="attributes">

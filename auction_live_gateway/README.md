@@ -1,7 +1,7 @@
 # AuctionChamp — Phase 2B/3 Redis Live Gateway
 
-Lightweight FastAPI service that serves Live Board / Projector / Bid Summary
-JSON **directly from Redis**, plus Phase 3 **SSE** over Redis Pub/Sub.
+Lightweight FastAPI service that serves Live Board / Projector / Bid Summary /
+Registration roster JSON **directly from Redis**, plus Phase 3 **SSE** over Redis Pub/Sub.
 Odoo is not imported. PostgreSQL is not used.
 
 ```
@@ -53,7 +53,9 @@ Same as Phase 2B. Live Board Option A meta:
 ```
 GET /{db}/{slug}/auction/live-board/events
 GET /{db}/auction/projector/{slug}/events
+GET /{db}/auction/yt-overlay/{slug}/events
 GET /{db}/{slug}/auction/show/team/balance/events
+GET /{db}/{slug}/player/register/events
 ```
 
 Behaviour:
@@ -65,6 +67,7 @@ Behaviour:
 5. Heartbeat comment every ~15s
 
 Projector SSE sends **raw `:pj` JSON** (not JSON-RPC). Clients apply it like `json.result`.
+YouTube overlay `/data` and `/events` reuse the same `:pj` Redis snapshot (no extra key).
 
 Frontend only opens `EventSource` when `auction.sse.enabled = True` (default False).
 Polling code stays as fallback.

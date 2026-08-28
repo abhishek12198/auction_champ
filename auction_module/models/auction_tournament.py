@@ -96,6 +96,7 @@ class AuctionTournament(models.Model):
     _compressible_image_fields = {
         'logo':              (400,  400,  82, 'JPEG'),
         'poster_image':      (900,  1200, 82, 'JPEG'),
+        'social_share_image': (1200, 630,  85, 'JPEG'),
         'payment_qr_image':  (600,  600,  0,  'PNG'),
         'template_image':    (1200, 900,  85, 'JPEG'),
         'report_footer':     (1200, 300,  85, 'JPEG'),
@@ -317,6 +318,12 @@ class AuctionTournament(models.Model):
         help='Upload a tournament poster image. It will be displayed on the player registration page '
              'in the sidebar, above the "Why Register?" section.',
     )
+    social_share_image = fields.Binary(
+        string='Social Share Image',
+        help='Optional 1200×630 image used when this tournament URL is shared on '
+             'WhatsApp, Telegram, Facebook, LinkedIn or X. If empty, the poster '
+             'is used, then the logo, then the Auction Champ default.',
+    )
     organizer_name = fields.Char(
         string='Organizer Name',
         help='Name of the person or organization running this tournament.',
@@ -360,8 +367,8 @@ class AuctionTournament(models.Model):
     )
     live_bid_sound = fields.Boolean(
         string='Live Bid Sound',
-        default=False,
-        help='When enabled, the public Live Board and Projector play a short cue '
+        default=True,
+        help='When enabled, the public Live Board and Projector play a coin clink '
              'each time a team updates the live bid on the player on stage.',
     )
     pool_draw_json = fields.Text(
@@ -1363,6 +1370,7 @@ class AuctionTournament(models.Model):
                 'youtube_url',
                 # tournament poster on the registration page
                 'poster_image',
+                'social_share_image',
                 # contact unmask (wizard + remask button)
                 'expose_player_contact',
                 'expose_player_contact_privacy_agreed',
@@ -1937,3 +1945,18 @@ class AuctionTournament(models.Model):
                 'default_tournament_id': self.id,
             },
         }
+
+    @api.model
+    def get_social_preview(self, page_key=None, tournament=None):
+        """QWeb-safe Open Graph dict for the initial HTML response."""
+        from odoo.addons.auction_module.services import social_preview as seo
+        rec = tournament if tournament else self
+        try:
+            if rec and getattr(rec, 'ids', None):
+                rec = rec[:1]
+            else:
+                rec = self.env['auction.tournament']
+            return seo.build_preview(rec, page_key or 'home')
+        except Exception:
+            _logger.exception('social preview metadata failed')
+            return seo.build_preview(self.env['auction.tournament'], 'home')

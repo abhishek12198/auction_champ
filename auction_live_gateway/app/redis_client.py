@@ -113,6 +113,7 @@ def tid_keys(dbname, tid):
         'lb': '%s:lb' % prefix,
         'pj': '%s:pj' % prefix,
         'bal': '%s:bal' % prefix,
+        'reg': '%s:reg' % prefix,
         'meta': '%s:meta' % prefix,
         'seq': '%s:seq' % prefix,
     }
@@ -149,7 +150,7 @@ def get_meta(dbname, tid):
 
 def get_raw_snapshot(dbname, tid, kind):
     """Return (json_str, None) or (None, 'miss'|'error'|'bad')."""
-    if kind not in ('lb', 'pj', 'bal'):
+    if kind not in ('lb', 'pj', 'bal', 'reg'):
         return None, 'miss'
     client = get_client()
     if client is None:

@@ -5,8 +5,10 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <meta name="description" content="AuctionChamp — India's complete cricket auction and tournament management platform. Player registrations, live auctions, fixtures, points tables and more."/>
-    <title>AuctionChamp — India's Cricket Auction &amp; Tournament Management Platform</title>
+    <t t-call="auction_module.social_preview_head">
+        <t t-set="og_page_key" t-value="'website_home'"/>
+        <t t-set="og_record" t-value="None"/>
+    </t>
     <link rel="shortcut icon" href="/auction_module/static/description/icon.png" type="image/png"/>
 
     <!-- Bootstrap 5 -->
@@ -123,31 +125,31 @@
         <div class="ac-hero-stats">
             <div class="ac-stat-item">
                 <span class="ac-stat-value"
-                      t-att-data-target="config.stat_1_value or '100+'"
-                      t-esc="config.stat_1_value or '100+'"/>
+                      t-att-data-target="hero_stats.get('stat_1_value') if hero_stats else '0'"
+                      t-esc="hero_stats.get('stat_1_value') if hero_stats else '0'"/>
                 <span class="ac-stat-label"
-                      t-esc="config.stat_1_label or 'Tournaments Managed'"/>
+                      t-esc="(hero_stats.get('stat_1_label') if hero_stats else None) or config.stat_1_label or 'Tournaments Managed'"/>
             </div>
             <div class="ac-stat-item">
                 <span class="ac-stat-value"
-                      t-att-data-target="config.stat_2_value or '10,000+'"
-                      t-esc="config.stat_2_value or '10,000+'"/>
+                      t-att-data-target="hero_stats.get('stat_2_value') if hero_stats else '0'"
+                      t-esc="hero_stats.get('stat_2_value') if hero_stats else '0'"/>
                 <span class="ac-stat-label"
-                      t-esc="config.stat_2_label or 'Players Registered'"/>
+                      t-esc="(hero_stats.get('stat_2_label') if hero_stats else None) or config.stat_2_label or 'Players Registered'"/>
             </div>
             <div class="ac-stat-item">
                 <span class="ac-stat-value"
-                      t-att-data-target="config.stat_3_value or '500+'"
-                      t-esc="config.stat_3_value or '500+'"/>
+                      t-att-data-target="hero_stats.get('stat_3_value') if hero_stats else '0'"
+                      t-esc="hero_stats.get('stat_3_value') if hero_stats else '0'"/>
                 <span class="ac-stat-label"
-                      t-esc="config.stat_3_label or 'Teams Managed'"/>
+                      t-esc="(hero_stats.get('stat_3_label') if hero_stats else None) or config.stat_3_label or 'Teams Managed'"/>
             </div>
             <div class="ac-stat-item">
                 <span class="ac-stat-value"
-                      t-att-data-target="config.stat_4_value or 'Live'"
-                      t-esc="config.stat_4_value or 'Live'"/>
+                      t-att-data-target="hero_stats.get('stat_4_value') if hero_stats else 'Live'"
+                      t-esc="hero_stats.get('stat_4_value') if hero_stats else 'Live'"/>
                 <span class="ac-stat-label"
-                      t-esc="config.stat_4_label or 'Auction Automation'"/>
+                      t-esc="(hero_stats.get('stat_4_label') if hero_stats else None) or config.stat_4_label or 'Auction Automation'"/>
             </div>
         </div>
     </div>
@@ -447,8 +449,8 @@
             <div class="ac-divider-inv"></div>
             <p class="ac-section-sub-inv">
                 These tournaments are conducting live player auctions at this moment.
-                Track the current player on stage, see the latest bid, and jump straight
-                into the live board.
+                Track the current player on stage, see the latest bid, and unlock the
+                live board with the tournament code from the organiser.
             </p>
         </div>
 
@@ -568,8 +570,8 @@
                     <a t-att-href="lt.get('live_board_url', '/auction/live-board')"
                        class="ac-live-cta"
                        target="_blank" rel="noopener">
-                        <i class="fas fa-tv"></i>
-                        Watch Live Board
+                        <i class="fas fa-lock"></i>
+                        Enter Code &amp; Watch Live
                     </a>
 
                 </div>
@@ -708,29 +710,42 @@
             <p class="ac-section-sub">Choose the plan that fits your tournament size. All plans include full auction functionality.</p>
         </div>
 
-        <!-- Dynamic pricing from database -->
+        <!-- Dynamic pricing from SaaS plans -->
         <t t-if="pricing_plans">
             <div class="ac-pricing-grid">
                 <t t-foreach="pricing_plans" t-as="plan">
-                    <div t-att-class="'ac-pricing-card' + (' highlighted' if plan.is_highlighted else '')">
-                        <t t-if="plan.badge">
-                            <span class="ac-pricing-badge" t-esc="plan.badge"/>
+                    <div t-att-class="'ac-pricing-card' + (' highlighted' if plan.get('is_highlighted') else '')">
+                        <t t-if="plan.get('badge')">
+                            <span class="ac-pricing-badge" t-esc="plan.get('badge')"/>
                         </t>
-                        <h3 class="ac-pricing-name" t-esc="plan.name"/>
-                        <p class="ac-pricing-subtitle" t-esc="plan.subtitle or ''"/>
-                        <ul class="ac-pricing-features">
-                            <t t-foreach="(plan.features or '').split('\n')" t-as="feat">
-                                <t t-if="feat.strip()">
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span t-esc="feat.strip()"/>
-                                    </li>
+                        <h3 class="ac-pricing-name" t-esc="plan.get('name')"/>
+                        <p class="ac-pricing-subtitle" t-esc="plan.get('subtitle') or ''"/>
+                        <t t-if="plan.get('price_amount') or plan.get('price_per_tournament')">
+                            <div class="ac-pricing-price">
+                                <t t-if="plan.get('price_amount')">
+                                    <span class="ac-pricing-amount" t-esc="plan.get('price_amount')"/>
                                 </t>
+                                <t t-if="plan.get('price_per_tournament')">
+                                    <span class="ac-pricing-period">
+                                        (<t t-esc="plan.get('price_per_tournament')"/>)
+                                    </span>
+                                </t>
+                                <t t-if="plan.get('price_validity')">
+                                    <span class="ac-pricing-validity" t-esc="plan.get('price_validity')"/>
+                                </t>
+                            </div>
+                        </t>
+                        <ul class="ac-pricing-features">
+                            <t t-foreach="plan.get('features') or []" t-as="feat">
+                                <li>
+                                    <i class="fas fa-check"></i>
+                                    <span t-esc="feat"/>
+                                </li>
                             </t>
                         </ul>
-                        <a t-att-href="plan.contact_url or 'mailto:sales@auctionchamp.in'"
+                        <a t-att-href="plan.get('contact_url') or 'mailto:sales@auctionchamp.in'"
                            class="ac-pricing-cta">
-                            Contact Us
+                            <t t-esc="plan.get('cta_label') or 'Contact Us'"/>
                         </a>
                     </div>
                 </t>
@@ -754,7 +769,7 @@
                 </div>
                 <div class="ac-pricing-card highlighted">
                     <span class="ac-pricing-badge">Most Popular</span>
-                    <h3 class="ac-pricing-name">Professional Plan</h3>
+                    <h3 class="ac-pricing-name">Pro Plan</h3>
                     <p class="ac-pricing-subtitle">Built for growing tournaments</p>
                     <ul class="ac-pricing-features">
                         <li><i class="fas fa-check"></i><span>Up to 5 Tournaments</span></li>
@@ -767,7 +782,7 @@
                     <a href="mailto:sales@auctionchamp.in" class="ac-pricing-cta">Contact Us</a>
                 </div>
                 <div class="ac-pricing-card">
-                    <h3 class="ac-pricing-name">Enterprise Plan</h3>
+                    <h3 class="ac-pricing-name">Champion Plan</h3>
                     <p class="ac-pricing-subtitle">For large-scale tournaments</p>
                     <ul class="ac-pricing-features">
                         <li><i class="fas fa-check"></i><span>Unlimited Tournaments</span></li>
@@ -956,6 +971,9 @@
                 <li><a href="#why">About Us</a></li>
                 <li><a href="#testimonials">Testimonials</a></li>
                 <li><a href="#faq">FAQ</a></li>
+                <li><a href="/user-manual">User Manual</a></li>
+                <li><a href="/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/terms-and-conditions">Terms &amp; Conditions</a></li>
                 <li><a href="#contact">Contact Sales</a></li>
             </ul>
         </div>

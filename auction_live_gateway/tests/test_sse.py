@@ -41,7 +41,10 @@ class SseRouteTests(unittest.TestCase):
         paths = {getattr(r, 'path', None) for r in app.routes}
         self.assertIn('/{db}/{slug}/auction/live-board/events', paths)
         self.assertIn('/{db}/auction/projector/{slug}/events', paths)
+        self.assertIn('/{db}/auction/yt-overlay/{slug}/events', paths)
         self.assertIn('/{db}/{slug}/auction/show/team/balance/events', paths)
+        self.assertIn('/{db}/{slug}/player/register/events', paths)
+        self.assertIn('/{db}/{slug}/player/register/players', paths)
 
     def test_invalid_db_404(self):
         r = self.client.get('/bad db!/%s/auction/live-board/events' % self.slug)
@@ -132,6 +135,23 @@ class SseRouteTests(unittest.TestCase):
         )
         self.assertEqual(r.status_code, 200)
         self.assertIn('teams', r.text)
+
+    @mock.patch('app.sse.sse_stream')
+    @mock.patch('app.sse.async_redis.resolve_tid', new_callable=mock.AsyncMock)
+    def test_register_events_no_option_a(self, resolve, stream):
+        resolve.return_value = (self.tid, None)
+
+        async def _gen(*a, **kw):
+            yield sse_mod._format_sse(
+                'snapshot', {'count': 2, 'players': [], 'seq': 4}, event_id=4
+            )
+
+        stream.side_effect = _gen
+        r = self.client.get(
+            '/%s/%s/player/register/events' % (self.db, self.slug)
+        )
+        self.assertEqual(r.status_code, 200)
+        self.assertIn('"count":2', r.text)
 
 
 class ChannelFanoutTests(unittest.IsolatedAsyncioTestCase):

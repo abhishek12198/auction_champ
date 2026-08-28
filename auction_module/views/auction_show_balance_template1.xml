@@ -21,7 +21,10 @@
       <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&amp;family=Barlow+Condensed:wght@400;500;600;700;800&amp;family=Teko:wght@500;600;700&amp;family=Rajdhani:wght@500;600;700&amp;family=Oswald:wght@500;600;700&amp;family=Bebas+Neue&amp;display=swap"
             rel="stylesheet" media="print" onload="this.media='all'"/>
       <noscript><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&amp;family=Barlow+Condensed:wght@400;500;600;700;800&amp;family=Teko:wght@500;600;700&amp;family=Rajdhani:wght@500;600;700&amp;family=Oswald:wght@500;600;700&amp;family=Bebas+Neue&amp;display=swap" rel="stylesheet"/></noscript>
-      <title>Auction Bid Summary</title>
+      <t t-call="auction_module.social_preview_head">
+          <t t-set="og_page_key" t-value="'bid_summary'"/>
+          <t t-set="og_record" t-value="tournament"/>
+      </t>
       <style>
         /* Sports display font used by the Butterscotch theme */
         @font-face {

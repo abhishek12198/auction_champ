@@ -102,6 +102,7 @@ def tid_keys(dbname, tid):
         'lb': '%s:lb' % prefix,
         'pj': '%s:pj' % prefix,
         'bal': '%s:bal' % prefix,
+        'reg': '%s:reg' % prefix,
         'meta': '%s:meta' % prefix,
         'seq': '%s:seq' % prefix,
         'events': '%s:events' % prefix,
@@ -146,7 +147,7 @@ async def get_seq(dbname, tid):
 
 
 async def get_raw_snapshot(dbname, tid, kind):
-    if kind not in ('lb', 'pj', 'bal'):
+    if kind not in ('lb', 'pj', 'bal', 'reg'):
         return None, 'miss'
     try:
         client = await get_client()

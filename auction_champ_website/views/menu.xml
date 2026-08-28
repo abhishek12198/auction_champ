@@ -27,14 +27,5 @@
         groups="auction_module.group_auction_group_admin"
         sequence="11"/>
 
-    <!-- Website Pricing Plans -->
-    <menuitem
-        id="menu_auction_website_pricing"
-        name="Website Pricing Plans"
-        parent="auction_module.menu_action_auction_conf"
-        action="auction_champ_website.action_auction_website_pricing"
-        groups="auction_module.group_auction_group_admin"
-        sequence="12"/>
-
 </data>
 </odoo>

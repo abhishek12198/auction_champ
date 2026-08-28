@@ -109,9 +109,10 @@ class ResUsers(models.Model):
         try:
             admin_action = self.env.ref('auction_module.action_auction_tournament')
             dash_action = self.env.ref('auction_module.action_player_dashboard_client')
+            showcase_action = self.env.ref('auction_module.action_launch_auction')
         except ValueError:
             return
-        forced_ids = {admin_action.id, dash_action.id}
+        forced_ids = {admin_action.id, dash_action.id, showcase_action.id}
         sync_ctx = dict(
             self.env.context,
             skip_tournament_sync=True,

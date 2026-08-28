@@ -39,58 +39,5 @@
             <field name="sequence">6</field>
         </record>
 
-        <!-- ── Default Pricing Plans ──────────────────────────────────── -->
-        <record id="pricing_starter" model="auction.website.pricing">
-            <field name="name">Starter Plan</field>
-            <field name="subtitle">Perfect for small local leagues</field>
-            <field name="features">Up to 2 Tournaments
-Up to 10 Teams per Auction
-Up to 150 Players
-Live Auction Dashboard
-Player Registration Portal
-Basic Fixture Management
-PDF Player Cards
-Email Support</field>
-            <field name="contact_url">mailto:sales@auctionchamp.in?subject=Starter Plan Enquiry</field>
-            <field name="is_highlighted">False</field>
-            <field name="sequence">1</field>
-        </record>
-
-        <record id="pricing_professional" model="auction.website.pricing">
-            <field name="name">Professional Plan</field>
-            <field name="subtitle">Built for growing tournaments</field>
-            <field name="badge">Most Popular</field>
-            <field name="features">Up to 5 Tournaments
-Unlimited Teams
-Unlimited Players
-Live Auction + Live Display Screen
-Icon Player Management
-Automatic Fixture Generator
-Points Table &amp; NRR Calculator
-Sponsor &amp; Branding Management
-Statistics &amp; Analytics
-Priority Support</field>
-            <field name="contact_url">mailto:sales@auctionchamp.in?subject=Professional Plan Enquiry</field>
-            <field name="is_highlighted">True</field>
-            <field name="sequence">2</field>
-        </record>
-
-        <record id="pricing_enterprise" model="auction.website.pricing">
-            <field name="name">Enterprise Plan</field>
-            <field name="subtitle">For large-scale &amp; multi-city tournaments</field>
-            <field name="features">Unlimited Tournaments
-Unlimited Teams &amp; Players
-All Professional Features
-Custom Branding &amp; Domain
-Multi-admin Access
-Advanced Auction Analytics
-Financial Reports &amp; Excel Export
-Dedicated Account Manager
-SLA-backed Support</field>
-            <field name="contact_url">mailto:sales@auctionchamp.in?subject=Enterprise Plan Enquiry</field>
-            <field name="is_highlighted">False</field>
-            <field name="sequence">3</field>
-        </record>
-
     </data>
 </odoo>

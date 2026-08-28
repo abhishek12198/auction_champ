@@ -19,6 +19,7 @@
     var selectedTeam = null;
     var pollTimer = null;
     var boundPad = null;
+    var lastHeroKey = '';
 
     function padEl() { return document.getElementById('acLiveBidPad'); }
     function launchEl() { return document.getElementById('acLiveBidLaunch'); }
@@ -196,6 +197,37 @@
         if (team.remaining_players != null) return Number(team.remaining_players);
         return null;
     }
+    function paintBidHero(lead, logoSrc, amount) {
+        var hero = document.getElementById('acBidHero');
+        var logo = document.getElementById('acBidHeroLogo');
+        var teamEl = document.getElementById('acBidHeroTeam');
+        var ptsEl = document.getElementById('acBidHeroPts');
+        var lbl = hero && hero.querySelector('.ac-bid-hero-lbl');
+        if (!hero) return;
+        var sold = !!(playerCache && playerCache.state === 'sold');
+        var on = !!(amount > 0 && (lead || sold));
+        hero.classList.toggle('is-on', on);
+        hero.classList.toggle('is-sold', sold);
+        if (lbl) lbl.textContent = sold ? 'SOLD' : 'Current Bid';
+        if (ptsEl) ptsEl.textContent = amount ? fmt(amount) : '—';
+        if (teamEl) teamEl.textContent = on ? ((lead && lead.name) || 'Leading team') : '';
+        if (logo) {
+            if (on && logoSrc) {
+                logo.src = logoSrc;
+                logo.style.display = '';
+            } else {
+                logo.removeAttribute('src');
+                logo.style.display = 'none';
+            }
+        }
+        var key = on ? (String((lead && lead.id) || '') + ':' + amount + (sold ? ':s' : '')) : '';
+        if (key && key !== lastHeroKey) {
+            hero.classList.remove('is-flash');
+            void hero.offsetWidth;
+            hero.classList.add('is-flash');
+        }
+        lastHeroKey = key;
+    }
     function isSquadFull(team) {
         var left = squadSlotsLeft(team);
         if (left != null && left <= 0) return true;
@@ -220,43 +252,9 @@
         allowed = true;
         applyChrome();
         var lead = leadTeam(player);
-        var leadHead = document.getElementById('acLiveBidLeadHead');
-        var leadLogo = document.getElementById('acLiveBidLeadLogo');
-        var leadName = document.getElementById('acLiveBidLeadName');
-        var leadPts = document.getElementById('acLiveBidLeadPts');
         var leadLogoSrc = lead ? logoUrl(lead) : '';
         var leadAmt = player && player.current_bid ? Number(player.current_bid) : 0;
-        if (leadHead) {
-            if (lead && (lead.name || leadLogoSrc || leadAmt)) {
-                leadHead.classList.add('is-on');
-                if (leadName) leadName.textContent = lead.name || '';
-                if (leadLogo) {
-                    if (leadLogoSrc) {
-                        leadLogo.src = leadLogoSrc;
-                        leadLogo.style.display = '';
-                    } else {
-                        leadLogo.removeAttribute('src');
-                        leadLogo.style.display = 'none';
-                    }
-                }
-                if (leadPts) {
-                    if (leadAmt) {
-                        leadPts.textContent = fmt(leadAmt);
-                        leadPts.style.display = '';
-                    } else {
-                        leadPts.textContent = '';
-                        leadPts.style.display = 'none';
-                    }
-                }
-            } else {
-                leadHead.classList.remove('is-on');
-                if (leadName) leadName.textContent = '';
-                if (leadPts) {
-                    leadPts.textContent = '';
-                    leadPts.style.display = 'none';
-                }
-            }
-        }
+        paintBidHero(lead, leadLogoSrc, leadAmt);
         var html = teams.map(function (team) {
             var leadOn = !!(lead && Number(lead.id) === Number(team.id));
             var off = !player || !canBid(team);

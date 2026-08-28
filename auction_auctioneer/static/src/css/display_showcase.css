@@ -39,23 +39,38 @@ body:has(#acLiveBidPad) {
     body:has(#acLiveBidPad) .sw-stats-wrap,
     body:has(#acLiveBidPad) .hud-stats,
     body:has(#acLiveBidPad) .cr-stats-col .ac-fb-grid {
-        flex: 1 1 auto !important;
-        min-height: 140px !important;
-        max-height: none !important;
+        flex: 0 1 auto !important;
+        min-height: 220px !important;
+        max-height: 48% !important;
         overflow: hidden !important;
         padding: 8px 12px 6px !important;
     }
 
+    body:has(#acLiveBidPad) .ac-bid-hero {
+        flex-shrink: 0 !important;
+        margin: 4px 12px 6px !important;
+        padding: 8px 16px !important;
+    }
+
     body:has(#acLiveBidPad) #acLiveBidPad.is-on.is-open {
         display: flex !important;
-        flex: 0 0 auto !important;
-        max-height: 42% !important;
+        flex-direction: column !important;
+        flex: 1 1 auto !important;
+        min-height: 140px !important;
+        max-height: none !important;
         margin: 0 10px 8px !important;
-        padding: 8px 10px 10px !important;
+        padding: 6px 10px 8px !important;
         border: 1px solid color-mix(in srgb, var(--lb-accent) 28%, transparent) !important;
         border-radius: 12px !important;
         background: color-mix(in srgb, var(--lb-accent) 7%, transparent) !important;
         overflow: hidden !important;
+    }
+    body:has(#acLiveBidPad) .ac-livebid-grid {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
     }
 
     body:has(#acLiveBidPad) .bb-actions,
@@ -103,8 +118,9 @@ body:has(#acLiveBidPad) {
         max-height: calc(100vh - 140px);
     }
     body:has(#acLiveBidPad) .player-profession {
-        flex: 1 1 auto !important;
-        min-height: 140px !important;
+        flex: 0 1 auto !important;
+        min-height: 220px !important;
+        max-height: 48% !important;
         overflow: hidden !important;
     }
     body:has(#acLiveBidPad) .auction-single-buttons {
@@ -137,7 +153,6 @@ body:has(#acLiveBidPad) .ac-livebid-title {
 body:has(#acLiveBidPad) .ac-livebid-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 8px;
-    max-height: min(32vh, 250px);
     align-items: start;
 }
 body:has(#acLiveBidPad) .ac-livebid-chip {
@@ -153,15 +168,19 @@ body:has(#acLiveBidPad) .ac-livebid-chip:hover {
     filter: brightness(1.08);
 }
 
-/* Compact profile attributes so they fit without a scroller */
+/* Profile: 2 attributes per row, room for 4–5 rows (8–10 fields) */
 body:has(#acLiveBidPad) .bb-stats-grid,
 body:has(#acLiveBidPad) .pt-stats-grid,
 body:has(#acLiveBidPad) .ac-fb-grid,
 body:has(#acLiveBidPad) .vn-fb-grid,
-body:has(#acLiveBidPad) .player-attr-grid {
-    gap: 5px 8px !important;
+body:has(#acLiveBidPad) .player-attr-grid,
+body:has(#acLiveBidPad) .hud-stats .ac-fb-grid,
+body:has(#acLiveBidPad) .lm-stats-wrap .ac-fb-grid,
+body:has(#acLiveBidPad) .sw-stats-wrap .ac-fb-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px 12px !important;
     margin-bottom: 0 !important;
-    row-gap: 5px !important;
 }
 body:has(#acLiveBidPad) .hud-stat-row,
 body:has(#acLiveBidPad) .lm-stat-row,
@@ -171,8 +190,10 @@ body:has(#acLiveBidPad) .bb-stat-tile,
 body:has(#acLiveBidPad) .pt-stat-tile,
 body:has(#acLiveBidPad) .vn-stat-row {
     margin-bottom: 0 !important;
-    padding: 5px 8px 6px !important;
-    gap: 1px !important;
+    padding: 7px 10px 8px !important;
+    gap: 2px !important;
+    min-height: 42px;
+    box-sizing: border-box;
 }
 body:has(#acLiveBidPad) .bb-stat-val,
 body:has(#acLiveBidPad) .pt-stat-val,
@@ -182,8 +203,8 @@ body:has(#acLiveBidPad) .hud-stat-val,
 body:has(#acLiveBidPad) .cr-stat-val,
 body:has(#acLiveBidPad) .vn-stat-val,
 body:has(#acLiveBidPad) .player-attr-value {
-    font-size: .82rem !important;
-    line-height: 1.15 !important;
+    font-size: .9rem !important;
+    line-height: 1.2 !important;
     letter-spacing: .2px !important;
 }
 body:has(#acLiveBidPad) .bb-stat-key,
@@ -194,7 +215,7 @@ body:has(#acLiveBidPad) .hud-stat-key,
 body:has(#acLiveBidPad) .cr-stat-key,
 body:has(#acLiveBidPad) .vn-stat-key,
 body:has(#acLiveBidPad) .player-attr-label {
-    font-size: .52rem !important;
+    font-size: .58rem !important;
     letter-spacing: .08em !important;
 }
 body:has(#acLiveBidPad) .lm-stats-title,
@@ -206,6 +227,35 @@ body:has(#acLiveBidPad) .hud-stats-heading {
 
 /* ── Phone ─────────────────────────────────────────────────── */
 @media (max-width: 820px) {
+    html:has(#acLiveBidPad),
+    body:has(#acLiveBidPad) {
+        height: auto !important;
+        max-height: none !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
+    body:has(#acLiveBidPad) .bb-stage,
+    body:has(#acLiveBidPad) .pt-stage,
+    body:has(#acLiveBidPad) .lm-stage,
+    body:has(#acLiveBidPad) .sw-stage,
+    body:has(#acLiveBidPad) .hud-arena,
+    body:has(#acLiveBidPad) .cr-arena .cr-stage {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    body:has(#acLiveBidPad) .bb-right-col,
+    body:has(#acLiveBidPad) .pt-right-col,
+    body:has(#acLiveBidPad) .cr-stats-col,
+    body:has(#acLiveBidPad) .lm-info-col,
+    body:has(#acLiveBidPad) .sw-info-col,
+    body:has(#acLiveBidPad) .hud-info-col {
+        height: auto !important;
+        overflow: visible !important;
+        max-height: none !important;
+    }
     body:has(#acLiveBidPad) .bb-hdr-drawer-btn,
     body:has(#acLiveBidPad) .pt-hdr-drawer-btn,
     body:has(#acLiveBidPad) .cr-hdr-drawer-btn,
@@ -221,16 +271,22 @@ body:has(#acLiveBidPad) .hud-stats-heading {
         right: 10px;
         z-index: 10060;
     }
+    body:has(#acLiveBidPad) .ac-bid-hero {
+        margin: 4px 8px !important;
+        padding: 4px 10px !important;
+    }
     body:has(#acLiveBidPad) .ac-livebid-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        max-height: min(40vh, 360px);
+        max-height: min(38vh, 280px);
     }
     body:has(#acLiveBidPad) #acLiveBidPad.is-on.is-open {
-        margin: 8px !important;
-        padding: 8px !important;
+        margin: 4px 8px !important;
+        padding: 6px !important;
         border-radius: 12px !important;
         border: 1px solid color-mix(in srgb, var(--lb-accent) 28%, transparent);
         background: color-mix(in srgb, var(--lb-accent) 8%, transparent);
+        flex: 0 0 auto !important;
         max-height: none !important;
+        overflow: visible !important;
     }
 }

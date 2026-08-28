@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      Crawler-facing SEO / Open Graph / Twitter tags.
+      Rendered in the initial QWeb HTML (no JavaScript).
+      Callers: <t t-call="auction_module.social_preview_head">
+                 <t t-set="og_page_key" t-value="'player_register'"/>
+               </t>
+    -->
+    <template id="social_preview_head" name="Social Preview Head">
+        <t t-set="seo" t-value="request.env['auction.tournament'].get_social_preview(og_page_key or 'home', og_record)"/>
+        <title t-esc="seo.get('title') or 'Auction Champ'"/>
+        <meta name="description" t-att-content="seo.get('description') or ''"/>
+        <link rel="canonical" t-att-href="seo.get('canonical') or ''"/>
+        <meta name="robots" t-att-content="seo.get('robots') or 'index,follow'"/>
+
+        <meta property="og:type" t-att-content="seo.get('og_type') or 'website'"/>
+        <meta property="og:site_name" t-att-content="seo.get('og_site_name') or 'Auction Champ'"/>
+        <meta property="og:title" t-att-content="seo.get('og_title') or ''"/>
+        <meta property="og:description" t-att-content="seo.get('og_description') or ''"/>
+        <meta property="og:image" t-att-content="seo.get('og_image') or ''"/>
+        <meta property="og:image:width" t-att-content="seo.get('og_image_width') or '1200'"/>
+        <meta property="og:image:height" t-att-content="seo.get('og_image_height') or '630'"/>
+        <meta property="og:image:type" content="image/jpeg"/>
+        <meta property="og:image:alt" t-att-content="seo.get('og_title') or 'Auction Champ'"/>
+        <meta property="og:url" t-att-content="seo.get('og_url') or ''"/>
+
+        <meta name="twitter:card" t-att-content="seo.get('twitter_card') or 'summary_large_image'"/>
+        <meta name="twitter:title" t-att-content="seo.get('twitter_title') or ''"/>
+        <meta name="twitter:description" t-att-content="seo.get('twitter_description') or ''"/>
+        <meta name="twitter:image" t-att-content="seo.get('twitter_image') or ''"/>
+    </template>
+</odoo>

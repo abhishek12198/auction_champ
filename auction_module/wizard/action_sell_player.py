@@ -292,9 +292,10 @@ class SellPlayer(models.TransientModel):
                 'points': self.final_point,
 
             }
-            message = player.name + ' sold to the '+ auction.team_id.name + ' for ' +str(self.final_point) + ' points successfully!'
+            sold_amt = player._history_value(self.final_point)
+            message = '%s sold to %s for %s!' % (player.name, auction.team_id.name, sold_amt)
             if player.tier_id and player.tier_id.mystery:
-                message = '??? sold to the ' + auction.team_id.name + ' for ' + str(self.final_point) + ' points successfully!'
+                message = '%s sold to %s for %s!' % ('???', auction.team_id.name, sold_amt)
                 player.mystery_revealed = False
             auction_player_line = self.env['auction.auction.player'].search([('player_id', '=', player.id)])
             if not auction_player_line:
@@ -306,7 +307,9 @@ class SellPlayer(models.TransientModel):
                 auction_line_data.update({'auction_id': auction.id})
                 auction_player_line.write(auction_line_data)
             # Side-effect notification (does NOT affect navigation)
-            notify_msg = player.name + ' sold to the '+ auction.team_id.name + ' for ' +str(self.final_point) + ' points successfully!'
+            notify_msg = '%s sold to %s for %s!' % (
+                player.name, auction.team_id.name, player._history_value(self.final_point)
+            )
             self.env.user.notify_success(
                 message=notify_msg,
                 title="CONGRATULATIONS!"  # 👈 key marker

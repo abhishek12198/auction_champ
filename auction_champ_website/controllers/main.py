@@ -50,6 +50,64 @@ _logger = logging.getLogger(__name__)
 class AuctionChampHomepage(Website):
     """Override the website root to serve the AuctionChamp marketing page."""
 
+    def _get_public_pricing_plans(self):
+        """Build website pricing cards from SaaS plans."""
+        config = request.env['auction.website.config'].sudo().get_singleton()
+        contact_email = (config.contact_email or '').strip() or 'support@auctionchamp.in'
+        plan_labels = {
+            'standard': 'Starter',
+            'classic': 'Classic',
+            'pro': 'Pro',
+            'pro_plus': 'Champion',
+        }
+        theme_labels = {
+            'lemon': 'Lemon',
+            'vanilla': 'Vanilla',
+            'butterscotch': 'Butterscotch',
+            'strawberry': 'Strawberry',
+            'cherry': 'Cherry',
+            'pistah': 'Pistah',
+            'blackberry': 'Blackberry',
+        }
+        plans = request.env['ac.saas.plan'].sudo().search(
+            [('active', '=', True)],
+            order='sequence asc, id asc',
+        )
+        cards = []
+        for plan in plans:
+            themes = plan.get_allowed_templates() or []
+            features = [
+                'Up to %s tournaments' % (plan.max_tournaments or 0),
+                'Up to %s teams per tournament' % (plan.max_teams_per_tournament or 0),
+                'Up to %s players per tournament' % (plan.max_players_per_tournament or 0),
+                'Random mode: %s' % ('Yes' if plan.allow_random_mode else 'No'),
+                'Parallel tournaments (multi-device): %s' % (
+                    'Yes' if plan.allow_parallel_sessions else 'No'
+                ),
+                'Themes: %s' % (
+                    ', '.join(theme_labels.get(t, t.title()) for t in themes) if themes else '—'
+                ),
+            ]
+            price_info = plan.get_website_price_display()
+            cards.append({
+                'name': '%s Plan' % plan_labels.get(plan.code, (plan.name or 'Plan')),
+                'subtitle': plan.description or '',
+                'badge': 'Recommended' if plan.recommended else '',
+                'price_amount': price_info.get('amount') or '',
+                'price_per_tournament': price_info.get('per_tournament') or '',
+                'price_validity': price_info.get('validity') or '',
+                'features': features,
+                'plan_id': plan.id,
+                'contact_url': 'mailto:%s?subject=%s%%20Plan%%20Enquiry' % (
+                    contact_email,
+                    (plan.name or 'AuctionChamp').replace(' ', '%20')
+                ),
+                'cta_label': 'Contact Us',
+                'cta_buy': False,
+                'is_highlighted': bool(plan.recommended),
+            })
+        return cards
+
     def _get_live_tournaments_data(self):
         """Return summarized data for all currently live tournaments (live_board_active=True).
 
@@ -176,16 +234,17 @@ class AuctionChampHomepage(Website):
     @http.route('/', type='http', auth='public', website=True, sitemap=True)
     def index(self, **kw):
         try:
-            config = request.env['auction.website.config'].sudo().get_singleton()
+            Config = request.env['auction.website.config'].sudo()
+            config = Config.get_singleton()
+            hero_stats = Config.get_hero_stats()
             faq_items = request.env['auction.website.faq'].sudo().search(
                 [('active', '=', True)], order='sequence asc'
             )
-            pricing_plans = request.env['auction.website.pricing'].sudo().search(
-                [('active', '=', True)], order='sequence asc'
-            )
+            pricing_plans = self._get_public_pricing_plans()
             live_tournaments = self._get_live_tournaments_data()
             return request.render('auction_champ_website.homepage', {
                 'config': config,
+                'hero_stats': hero_stats,
                 'faq_items': faq_items,
                 'pricing_plans': pricing_plans,
                 'current_year': date.today().year,
@@ -194,6 +253,27 @@ class AuctionChampHomepage(Website):
         except Exception:
             _logger.exception("AuctionChamp homepage render error — falling back to default")
             return super().index(**kw)
+
+    @http.route('/privacy-policy', type='http', auth='public', website=True, sitemap=True)
+    def privacy_policy(self, **kw):
+        """Render public privacy policy page for website visitors."""
+        return request.render('auction_champ_website.privacy_policy_page', {
+            'current_year': date.today().year,
+        })
+
+    @http.route('/terms-and-conditions', type='http', auth='public', website=True, sitemap=True)
+    def terms_and_conditions(self, **kw):
+        """Render public terms and conditions page for website visitors."""
+        return request.render('auction_champ_website.terms_conditions_page', {
+            'current_year': date.today().year,
+        })
+
+    @http.route('/user-manual', type='http', auth='public', website=True, sitemap=True)
+    def user_manual(self, **kw):
+        """Render public AuctionChamp user manual page."""
+        return request.render('auction_champ_website.user_manual_page', {
+            'current_year': date.today().year,
+        })
 
     @http.route('/auction/live-tournaments/data', type='http', auth='public', website=True, csrf=False)
     def live_tournaments_data(self, **kw):

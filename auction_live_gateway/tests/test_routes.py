@@ -18,10 +18,14 @@ class RouteTests(unittest.TestCase):
         self.assertIn('/ready', paths)
         self.assertIn('/{db}/{slug}/auction/live-board/data', paths)
         self.assertIn('/{db}/auction/projector/{slug}/data', paths)
+        self.assertIn('/{db}/auction/yt-overlay/{slug}/data', paths)
         self.assertIn('/{db}/{slug}/auction/show/team/balance/json', paths)
         self.assertIn('/{db}/{slug}/auction/live-board/events', paths)
         self.assertIn('/{db}/auction/projector/{slug}/events', paths)
+        self.assertIn('/{db}/auction/yt-overlay/{slug}/events', paths)
         self.assertIn('/{db}/{slug}/auction/show/team/balance/events', paths)
+        self.assertIn('/{db}/{slug}/player/register/players', paths)
+        self.assertIn('/{db}/{slug}/player/register/events', paths)
 
 
 if __name__ == '__main__':

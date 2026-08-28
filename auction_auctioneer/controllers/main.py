@@ -216,11 +216,12 @@ class AuctionAuctioneerController(http.Controller):
         """Return JSON payload consumed by the Auctioneer Console JS."""
         env = request.env
         if not self._is_auctioneer():
-            return request.make_response(
+            resp = request.make_response(
                 json.dumps({'ok': False, 'error': 'not_auctioneer'}),
                 headers=[('Content-Type', 'application/json')],
-                status=403,
             )
+            resp.status_code = 403
+            return resp
         tournament = self._resolve_tournament()
 
         result = {

@@ -6,7 +6,10 @@
     <head>
       <meta charset="UTF-8"/>
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-      <title>Remaining Players</title>
+      <t t-call="auction_module.social_preview_head">
+          <t t-set="og_page_key" t-value="'remaining_players'"/>
+          <t t-set="og_record" t-value="tournament"/>
+      </t>
       <link rel="preconnect" href="https://fonts.googleapis.com"/>
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
       <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&amp;family=Oswald:wght@500;600;700&amp;family=Bebas+Neue&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>

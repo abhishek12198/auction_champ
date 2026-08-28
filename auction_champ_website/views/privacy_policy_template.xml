@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="privacy_policy_page" name="AuctionChamp Privacy Policy">
+        <html lang="en">
+            <head>
+                <meta charset="UTF-8"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+                <t t-call="auction_module.social_preview_head">
+                    <t t-set="og_page_key" t-value="'website_privacy'"/>
+                    <t t-set="og_record" t-value="None"/>
+                </t>
+                <link rel="shortcut icon" href="/auction_module/static/description/icon.png" type="image/png"/>
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" crossorigin="anonymous"/>
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous"/>
+                <link rel="preconnect" href="https://fonts.googleapis.com"/>
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
+                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Poppins:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+                <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css"/>
+            </head>
+            <body>
+                <nav class="ac-nav scrolled" id="acNav">
+                    <div class="ac-nav-inner">
+                        <a href="/" class="ac-nav-logo">
+                            <picture>
+                                <source srcset="/auction_module/static/description/icon.svg" type="image/svg+xml"/>
+                                <img src="/auction_module/static/description/icon.png" alt="AuctionChamp Logo" class="ac-nav-logo-img"/>
+                            </picture>
+                        </a>
+                        <ul class="ac-nav-links">
+                            <li><a href="/">Home</a></li>
+                            <li><a href="/privacy-policy" style="color:#f5a623;">Privacy Policy</a></li>
+                            <li><a href="/web" class="ac-nav-login"><i class="fas fa-right-to-bracket"></i>Login</a></li>
+                        </ul>
+                    </div>
+                </nav>
+
+                <section class="ac-policy-section">
+                    <div class="ac-policy-container">
+                        <div class="ac-policy-card">
+                            <span class="ac-label">Legal</span>
+                            <h1 class="ac-policy-title">Privacy Policy</h1>
+                            <p class="ac-policy-meta">Effective Date: <strong>21 July 2026</strong></p>
+                            <p>
+                                AuctionChamp ("we", "our", "us") is committed to protecting your privacy.
+                                This Privacy Policy explains how we collect, use, store, and protect information
+                                when you use our website and tournament management services.
+                            </p>
+
+                            <h2>1. Information We Collect</h2>
+                            <ul>
+                                <li>Account information such as name, email address, and phone number.</li>
+                                <li>Tournament and operational data entered by organizers and authorized users.</li>
+                                <li>Player registration data submitted through registration forms.</li>
+                                <li>Technical data such as browser type, IP address, and usage logs.</li>
+                            </ul>
+
+                            <h2>2. How We Use Information</h2>
+                            <ul>
+                                <li>To provide and improve AuctionChamp services.</li>
+                                <li>To support live auction, tournament, and reporting workflows.</li>
+                                <li>To communicate service updates, support messages, and important notices.</li>
+                                <li>To maintain platform security, prevent misuse, and comply with legal obligations.</li>
+                            </ul>
+
+                            <h2>3. Data Sharing</h2>
+                            <p>
+                                We do not sell personal data. Information may be shared only with trusted
+                                service providers and partners who support platform operations, or when
+                                required by law.
+                            </p>
+
+                            <h2>4. Data Security</h2>
+                            <p>
+                                We apply reasonable technical and organizational safeguards to protect your
+                                data. No internet-based service can guarantee absolute security, but we
+                                continuously improve our protection controls.
+                            </p>
+
+                            <h2>5. Data Retention</h2>
+                            <p>
+                                We retain data for as long as required to deliver services, meet legal
+                                requirements, resolve disputes, and enforce agreements.
+                            </p>
+
+                            <h2>6. Your Rights</h2>
+                            <p>
+                                Depending on applicable laws, you may request access, correction, or deletion
+                                of your personal data. Contact us using the details below for such requests.
+                            </p>
+
+                            <h2>7. Contact Us</h2>
+                            <p>
+                                For privacy-related questions, contact us at
+                                <a href="mailto:auctionchamp.live@gmail.com">auctionchamp.live@gmail.com</a>.
+                            </p>
+
+                            <h2>8. Policy Updates</h2>
+                            <p>
+                                We may update this Privacy Policy from time to time. Changes become effective
+                                when posted on this page.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <footer class="ac-footer" style="padding-top:36px;">
+                    <div class="ac-footer-bottom" style="border-top:none; padding-top:0;">
+                        <span class="ac-footer-tagline">"Powering the Future of Cricket Auctions &amp; Tournament Management"</span>
+                        <span class="ac-footer-copyright">&#169; <t t-esc="current_year"/> AuctionChamp. All rights reserved.</span>
+                    </div>
+                </footer>
+            </body>
+        </html>
+    </template>
+</odoo>

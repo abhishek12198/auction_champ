@@ -8,7 +8,10 @@
     <meta charset="UTF-8"/>
   <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"/>
-    <title t-esc="(tournament.name + ' — Player Registration') if tournament else 'Player Registration'"/>
+    <t t-call="auction_module.social_preview_head">
+        <t t-set="og_page_key" t-value="'player_register'"/>
+        <t t-set="og_record" t-value="tournament"/>
+    </t>
 
     <!-- Google Fonts: Bebas Neue · Barlow Condensed · Poppins (body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com"/>

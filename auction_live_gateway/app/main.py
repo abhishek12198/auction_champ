@@ -164,6 +164,13 @@ async def projector(db: str, slug: str, request: Request):
     return _serve_kind(db, slug, 'pj', wrap_jsonrpc=True)
 
 
+@app.post('/{db}/auction/yt-overlay/{slug}/data')
+async def youtube_overlay(db: str, slug: str, request: Request):
+    # Overlay reuses the projector (`pj`) snapshot — no extra Redis key.
+    _ = await request.body()
+    return _serve_kind(db, slug, 'pj', wrap_jsonrpc=True)
+
+
 # ── Phase 3 SSE ──────────────────────────────────────────────────────────────
 
 @app.get('/{db}/{slug}/auction/live-board/events')
@@ -180,8 +187,27 @@ async def projector_events(db: str, slug: str, request: Request):
     return await sse_mod.make_sse_response(db, slug, 'pj', last_event_id=last_id)
 
 
+@app.get('/{db}/auction/yt-overlay/{slug}/events')
+async def youtube_overlay_events(db: str, slug: str, request: Request):
+    from . import sse as sse_mod
+    last_id = request.headers.get('last-event-id')
+    return await sse_mod.make_sse_response(db, slug, 'pj', last_event_id=last_id)
+
+
 @app.get('/{db}/{slug}/auction/show/team/balance/events')
 async def balance_events(db: str, slug: str, request: Request):
     from . import sse as sse_mod
     last_id = request.headers.get('last-event-id')
     return await sse_mod.make_sse_response(db, slug, 'bal', last_event_id=last_id)
+
+
+@app.get('/{db}/{slug}/player/register/players')
+def register_roster(db: str, slug: str):
+    return _serve_kind(db, slug, 'reg', wrap_jsonrpc=False)
+
+
+@app.get('/{db}/{slug}/player/register/events')
+async def register_events(db: str, slug: str, request: Request):
+    from . import sse as sse_mod
+    last_id = request.headers.get('last-event-id')
+    return await sse_mod.make_sse_response(db, slug, 'reg', last_event_id=last_id)

@@ -75,6 +75,9 @@ class GatewayTests(unittest.TestCase):
         self.fake.kv['ac:%s:t:%s:lb' % (self.db, self.tid)] = json.dumps(self.lb)
         self.fake.kv['ac:%s:t:%s:pj' % (self.db, self.tid)] = json.dumps(self.pj)
         self.fake.kv['ac:%s:t:%s:bal' % (self.db, self.tid)] = json.dumps(self.bal)
+        self.fake.kv['ac:%s:t:%s:reg' % (self.db, self.tid)] = json.dumps({
+            'seq': 0, 'count': 1, 'sport': 'cricket', 'players': [{'name': 'A'}],
+        })
         self.fake.kv['ac:%s:t:%s:seq' % (self.db, self.tid)] = '0'
 
     def tearDown(self):
@@ -109,6 +112,16 @@ class GatewayTests(unittest.TestCase):
         self.assertIn('teams', r.json())
         self.assertIn('players', r.json())
 
+    def test_register_roster_hit(self):
+        r = self.client.get(
+            '/%s/%s/player/register/players' % (self.db, self.slug)
+        )
+        self.assertEqual(r.status_code, 200)
+        body = r.json()
+        self.assertEqual(body['count'], 1)
+        self.assertEqual(body['players'][0]['name'], 'A')
+        self.assertEqual(r.headers.get('cache-control'), 'no-store')
+
     def test_balance_without_players_falls_back(self):
         self.fake.kv['ac:%s:t:%s:bal' % (self.db, self.tid)] = json.dumps(
             {'teams': [{'id': 1}], 'seq': 0}
@@ -127,6 +140,16 @@ class GatewayTests(unittest.TestCase):
         body = r.json()
         self.assertEqual(body['jsonrpc'], '2.0')
         self.assertIn('result', body)
+        self.assertEqual(body['result']['player']['id'], 1)
+
+    def test_youtube_overlay_reuses_projector_snapshot(self):
+        r = self.client.post(
+            '/%s/auction/yt-overlay/%s/data' % (self.db, self.slug),
+            json={'jsonrpc': '2.0', 'method': 'call', 'params': {}, 'id': 1},
+        )
+        self.assertEqual(r.status_code, 200)
+        body = r.json()
+        self.assertEqual(body['jsonrpc'], '2.0')
         self.assertEqual(body['result']['player']['id'], 1)
 
     def test_unknown_slug_404(self):

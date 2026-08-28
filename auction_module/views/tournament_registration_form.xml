@@ -6,7 +6,10 @@
     <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Register Your Tournament — AuctionChamp</title>
+    <t t-call="auction_module.social_preview_head">
+        <t t-set="og_page_key" t-value="'tournament_register'"/>
+        <t t-set="og_record" t-value="None"/>
+    </t>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Barlow+Condensed:wght@600;700&amp;family=Poppins:wght@400;600&amp;display=swap" rel="stylesheet"/>

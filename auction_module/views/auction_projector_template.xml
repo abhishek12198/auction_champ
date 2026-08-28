@@ -1443,7 +1443,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   window.PJ_BOARD_SHOW_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/boards/show';
 </script>
 <script src="/auction_module/static/src/js/auction_sse_client.js"></script>
-<script src="/auction_module/static/src/js/live_bid_tick.js"></script>
+<script src="/auction_module/static/src/js/live_bid_tick.js?v=2"></script>
 <t t-call="auction_module.point_unit_bootstrap">
   <t t-set="pu_tournament" t-value="tournament"/>
 </t>
@@ -1966,23 +1966,8 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   }
   function _pjPlayNow(kind) {
     if (!_pjSoundEnabled) return;
-    if (kind === 'sold') {
-      return;
-    }
-    /* Male "Unsold!" then clear male crowd Woooo */
-    _pjPlayUrl(_PJ_AUD + 'unsold_voice.mp3').then(function (ok) {
-      if (!ok && _pjSoundEnabled) _pjSpeak('Unsold!');
-    });
-    setTimeout(function () {
-      if (!_pjSoundEnabled) return;
-      /* Clear "Wooooooo!" first so crowd reaction is obvious */
-      _pjPlayUrl(_PJ_AUD + 'unsold_whoo_voice.mp3').then(function (ok) {
-        if (!ok && _pjSoundEnabled) _pjSpeak('Woooo!');
-      });
-      setTimeout(function () {
-        if (_pjSoundEnabled) _pjPlayUrl(_PJ_AUD + 'unsold_whoo.wav');
-      }, 180);
-    }, 480);
+    /* Unsold has no projector sound. Sold is handled separately if enabled. */
+    if (kind !== 'sold') return;
   }
   function _pjWarmAudio() {
     if (_pjAudioUnlocked) return;

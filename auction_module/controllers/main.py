@@ -100,6 +100,87 @@ def _public_img_cache_put(key, val):
             _PUBLIC_IMG_CACHE.popitem(last=False)
 
 
+def _http_response(data, headers=None, cookies=None, status=200):
+    """Odoo 15 HttpRequest.make_response() is (data, headers, cookies) only."""
+    resp = request.make_response(data, headers=headers, cookies=cookies)
+    if status not in (None, 200):
+        resp.status_code = int(status)
+    return resp
+
+
+def _auction_web_menu_action_href(menu_xmlid, action_xmlid):
+    """Deep-link into the Odoo backend without using a bare /web landing."""
+    env = request.env.sudo()
+    menu = env.ref(menu_xmlid, raise_if_not_found=False)
+    action = env.ref(action_xmlid, raise_if_not_found=False)
+    if menu and action:
+        return '/web#menu_id=%d&action_id=%d' % (menu.id, action.id)
+    if action:
+        return '/web#action=%d' % action.id
+    return None
+
+
+def _auction_web_action_href(action_xmlid, record=None):
+    """Open a backend window action (optionally on one record)."""
+    action = request.env.ref(action_xmlid, raise_if_not_found=False)
+    if not action:
+        return None
+    if record:
+        return '/web#id=%d&model=%s&view_type=form&action=%d' % (
+            record.id, record._name, action.id,
+        )
+    return '/web#action=%d' % action.id
+
+
+def auction_backend_home_url(tournament=None):
+    """Backend URL that does not bounce through Player Showcase (/auction/showcase).
+
+    Plain /web re-opens the user's landing app; when that is Player Showcase
+    (URL action), they loop back to this rules lock screen.
+    """
+    user = request.env.user
+    # SaaS organizer → Tournament(s)
+    url = _auction_web_menu_action_href(
+        'ac_saas_manager.menu_saas_tournament',
+        'ac_saas_manager.action_saas_tournament',
+    )
+    if url:
+        return url
+    # Administrator → Tournament(s), optionally this tournament's form
+    if user.has_group('auction_module.group_auction_group_admin'):
+        if tournament:
+            url = _auction_web_action_href(
+                'auction_module.action_auction_tournament', tournament,
+            )
+            if url:
+                return url
+        url = _auction_web_menu_action_href(
+            'auction_module.menu_action_auction_tournament',
+            'auction_module.action_auction_tournament',
+        )
+        if url:
+            return url
+    # Auction organiser → Auction Settings (window actions, not URL actions)
+    url = _auction_web_menu_action_href(
+        'auction_module.menu_action_auction_root',
+        'auction_module.action_auction_auction',
+    )
+    if url:
+        return url
+    url = _auction_web_action_href('auction_module.action_auction_start_auction')
+    if url:
+        return url
+    return '/web'
+
+
+def auction_rules_setup_url():
+    """Direct link to the Set Auction Rules wizard."""
+    return (
+        _auction_web_action_href('auction_module.action_auction_start_auction')
+        or auction_backend_home_url()
+    )
+
+
 class Auction(http.Controller):
 
     def _resolve_tournament(self):
@@ -151,6 +232,8 @@ class Auction(http.Controller):
                 'theme': theme,
                 'db_name': db,
                 'res_company': company,
+                'back_url': auction_backend_home_url(tournament),
+                'rules_setup_url': auction_rules_setup_url(),
             }, lazy=False)
             response = request.make_response(
                 html, [('Content-Type', 'text/html; charset=utf-8')]
@@ -166,7 +249,9 @@ class Auction(http.Controller):
                 '<h2>Set Auction Rules first</h2>'
                 '<p>Player Console and Projector stay locked for <strong>%s</strong> '
                 'until auction rules are created.</p>'
-                '<p><a href="/web">Back to AuctionChamp</a></p></body></html>' % name,
+                '<p><a href="%s">Back to AuctionChamp</a></p></body></html>' % (
+                    name, auction_backend_home_url(tournament),
+                ),
                 [('Content-Type', 'text/html; charset=utf-8')],
             )
             response.status_code = 403
@@ -272,7 +357,7 @@ class Auction(http.Controller):
             except Exception:
                 pass
         # Fallback: plain HTML 404
-        return request.make_response(
+        return _http_response(
             '<html><head><title>404 Not Found</title></head><body><h1>404 Not Found</h1><p>The requested URL was not found on the server.</p></body></html>',
             status=404,
             headers=[('Content-Type', 'text/html; charset=utf-8')]
@@ -1145,7 +1230,7 @@ class Auction(http.Controller):
                 _logger.exception(
                     'Bid Summary render failed db=%s slug=%s', db_name, tournament_slug
                 )
-                return request.make_response(
+                return _http_response(
                     '<!DOCTYPE html><html><body style="font-family:system-ui;padding:24px">'
                     '<h2>Bid Summary unavailable</h2>'
                     '<p>Could not render the bid summary for this tournament. '
@@ -1287,7 +1372,7 @@ class Auction(http.Controller):
         """Minimal squad JSON for Bid Summary eye button (same shape as live board)."""
         with self._with_db(db_name) as ok:
             if not ok:
-                return request.make_response(
+                return _http_response(
                     json.dumps({'error': 'unknown database'}),
                     headers=[('Content-Type', 'application/json')],
                     status=404,
@@ -1297,14 +1382,14 @@ class Auction(http.Controller):
             )
             tournament = Tournament.search([('slug', '=', tournament_slug)], limit=1)
             if not tournament:
-                return request.make_response(
+                return _http_response(
                     json.dumps({'error': 'tournament not found'}),
                     headers=[('Content-Type', 'application/json')],
                     status=404,
                 )
             payload = self._minimal_team_squad_payload(db_name, tournament, team_id)
             if not payload:
-                return request.make_response(
+                return _http_response(
                     json.dumps({'error': 'team not found'}),
                     headers=[('Content-Type', 'application/json')],
                     status=404,
@@ -1350,7 +1435,7 @@ class Auction(http.Controller):
         """Paginated Sold / Unsold / In-auction players for Bid Summary boards."""
         with self._with_db(db_name) as ok:
             if not ok:
-                return request.make_response(
+                return _http_response(
                     json.dumps({'error': 'unknown database'}),
                     headers=[('Content-Type', 'application/json')],
                     status=404,
@@ -1360,7 +1445,7 @@ class Auction(http.Controller):
             )
             tournament = Tournament.search([('slug', '=', tournament_slug)], limit=1)
             if not tournament:
-                return request.make_response(
+                return _http_response(
                     json.dumps({'error': 'tournament not found'}),
                     headers=[('Content-Type', 'application/json')],
                     status=404,
@@ -1806,7 +1891,7 @@ class Auction(http.Controller):
         if result.get('ok') and not wants_json:
             return werkzeug.utils.redirect(result['redirect'], 303)
         status = 200 if result.get('ok') else 400
-        return request.make_response(
+        return _http_response(
             _json.dumps(result),
             headers=[('Content-Type', 'application/json')],
             status=status,
@@ -1864,7 +1949,7 @@ class Auction(http.Controller):
         if result.get('ok') and not wants_json:
             return werkzeug.utils.redirect(result['redirect'], 303)
         status = 200 if result.get('ok') else 400
-        return request.make_response(
+        return _http_response(
             _json.dumps(result),
             headers=[('Content-Type', 'application/json')],
             status=status,
@@ -1903,7 +1988,7 @@ class Auction(http.Controller):
         if result.get('ok') and not wants_json:
             return werkzeug.utils.redirect(result['redirect'], 303)
         status = 200 if result.get('ok') else 400
-        return request.make_response(
+        return _http_response(
             _json.dumps(result),
             headers=[('Content-Type', 'application/json')],
             status=status,
@@ -1958,7 +2043,7 @@ class Auction(http.Controller):
             seen = set()
             auction_ids = [i for i in auction_ids if not (i in seen or seen.add(i))]
             if not auction_ids:
-                return request.make_response(
+                return _http_response(
                     'No teams selected.',
                     headers=[('Content-Type', 'text/plain; charset=utf-8')],
                     status=400,
@@ -1973,7 +2058,7 @@ class Auction(http.Controller):
             by_id = {a.id: a for a in auctions}
             ordered = Auction.browse([i for i in auction_ids if i in by_id])
             if not ordered:
-                return request.make_response(
+                return _http_response(
                     'No matching teams found for this tournament.',
                     headers=[('Content-Type', 'text/plain; charset=utf-8')],
                     status=404,
@@ -1987,7 +2072,7 @@ class Auction(http.Controller):
                     'Roster PDF failed for tournament=%s auctions=%s',
                     tournament.id, ordered.ids,
                 )
-                return request.make_response(
+                return _http_response(
                     'Could not generate roster PDF.',
                     headers=[('Content-Type', 'text/plain; charset=utf-8')],
                     status=500,
@@ -3407,7 +3492,10 @@ class Auction(http.Controller):
     _PUBLIC_IMAGE_FIELDS = {
         'auction.team.player': ['photo'],
         'auction.team':        ['logo'],
-        'auction.tournament':  ['logo', 'pool_draw_snapshot', 'fixture_schedule_snapshot'],
+        'auction.tournament':  [
+            'logo', 'poster_image', 'social_share_image',
+            'pool_draw_snapshot', 'fixture_schedule_snapshot',
+        ],
         'auction.history':     ['player_photo'],
         'auction.advertiser':  ['image'],
         'res.company':         ['favicon'],
@@ -3576,6 +3664,42 @@ class Auction(http.Controller):
             response = self._serve_whitelisted_image(model, record_id, field, **kw)
         return response
 
+    def _serve_social_preview_jpeg(self, tournament=None):
+        """1200×630 JPEG for WhatsApp/Open Graph crawlers (no auth)."""
+        from odoo.addons.auction_module.services import social_preview as seo
+        rec = tournament if (tournament and tournament.id) else None
+        jpeg = seo.cached_og_jpeg(rec)
+        etag = hashlib.md5(jpeg).hexdigest()
+        inm = (request.httprequest.headers.get('If-None-Match') or '').replace('"', '').strip()
+        headers = [
+            ('Content-Type', 'image/jpeg'),
+            ('Cache-Control', 'public, max-age=86400'),
+            ('ETag', '"%s"' % etag),
+        ]
+        if inm == etag:
+            resp = request.make_response(b'', headers=headers)
+            resp.status_code = 304
+            return resp
+        return request.make_response(jpeg, headers=headers)
+
+    @http.route('/auction/social-preview.jpg', type='http', auth='none', website=False, csrf=False)
+    def auction_social_preview_brand(self, **kw):
+        """Fallback Auction Champ OG image when no tournament is in the URL."""
+        return self._serve_social_preview_jpeg(None)
+
+    @http.route(
+        '/<string:db_name>/<string:tournament_slug>/auction/social-preview.jpg',
+        type='http', auth='none', website=False, csrf=False,
+    )
+    def auction_social_preview_tournament(self, db_name, tournament_slug, **kw):
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return self._serve_social_preview_jpeg(None)
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('slug', '=', tournament_slug)], limit=1
+            )
+            return self._serve_social_preview_jpeg(tournament or None)
+
     @http.route('/auction/live-board', type='http', auth='none', website=False)
     def auction_live_board_legacy(self, **kw):
         """Redirect legacy /auction/live-board URL to the db-slug-based URL."""
@@ -3734,7 +3858,7 @@ class Auction(http.Controller):
                 )
 
             if not self._live_board_access_granted(tournament):
-                return request.make_response(
+                return _http_response(
                     json.dumps({
                         'error': 'locked',
                         'message': 'Tournament code required',
@@ -5640,7 +5764,7 @@ class Auction(http.Controller):
             # Only after auction is officially complete (same logic as Thank You)
             wait = _pj_wait_phase(tournament)
             if wait.get('phase') != 'completed':
-                return request.make_response(
+                return _http_response(
                     '<!DOCTYPE html><html><body style="font-family:system-ui;padding:24px;'
                     'background:#111;color:#eee"><h2>Squad Posters locked</h2>'
                     '<p>Available only after the auction is officially complete.</p>'
@@ -6102,7 +6226,7 @@ class Auction(http.Controller):
                         <p><a href="javascript:history.back()">&#8592; Go Back</a></p>
                     </div></body></html>
                 """.format()
-                return request.make_response(
+                return _http_response(
                     body.encode('utf-8'),
                     headers=[
                         ('Content-Type', 'text/html; charset=utf-8'),
@@ -6164,7 +6288,7 @@ class Auction(http.Controller):
                     '<p><a href="javascript:history.back()">&#8592; Go Back</a></p>'
                     '</div></body></html>'
                 )
-                return request.make_response(
+                return _http_response(
                     body.encode('utf-8'),
                     headers=[
                         ('Content-Type', 'text/html; charset=utf-8'),

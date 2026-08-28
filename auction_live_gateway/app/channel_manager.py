@@ -18,7 +18,7 @@ class TournamentChannel(object):
         self.tid = int(tid)
         self.channel = async_redis.tid_keys(dbname, tid)['events']
         # kind -> set of asyncio.Queue
-        self.subscribers = {'lb': set(), 'pj': set(), 'bal': set()}
+        self.subscribers = {'lb': set(), 'pj': set(), 'bal': set(), 'reg': set()}
         self._task = None
         self._pubsub = None
         self._lock = asyncio.Lock()
@@ -86,12 +86,12 @@ class TournamentChannel(object):
             _logger.warning('sse listen loop ended: %s', err)
             metrics.incr_sse('sse_redis_errors')
             # Wake subscribers so they can close / fallback
-            await self._fanout({'_error': 'redis', 'targets': ['lb', 'pj', 'bal']})
+            await self._fanout({'_error': 'redis', 'targets': ['lb', 'pj', 'bal', 'reg']})
 
     async def _fanout(self, event):
         targets = event.get('targets') or []
         if event.get('_error'):
-            targets = ['lb', 'pj', 'bal']
+            targets = ['lb', 'pj', 'bal', 'reg']
         for kind in targets:
             queues = list(self.subscribers.get(kind) or ())
             for q in queues:

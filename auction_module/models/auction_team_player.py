@@ -919,7 +919,9 @@ class AuctionTeamPlayer(models.Model):
         auction_line_data = {'player_id': player.id, 'points': final_point}
         is_mystery = bool(player.tier_id and player.tier_id.mystery)
         display_name = '???' if is_mystery else (player.name or '')
-        message = '%s sold to %s for %d points!' % (display_name, auction.team_id.name, final_point)
+        message = '%s sold to %s for %s!' % (
+            display_name, auction.team_id.name, player._history_value(final_point)
+        )
 
         auction.player_ids = [(0, 0, auction_line_data)]
         player.assigned_team_id = auction.team_id.id
@@ -943,7 +945,9 @@ class AuctionTeamPlayer(models.Model):
             })
 
         # Notify operators with real name; live board uses the ??? history message
-        notify_msg = '%s sold to %s for %d points!' % (player.name, auction.team_id.name, final_point)
+        notify_msg = '%s sold to %s for %s!' % (
+            player.name, auction.team_id.name, player._history_value(final_point)
+        )
         self.env.user.notify_success(message=notify_msg, title='CONGRATULATIONS!')
         return {
             'success': True,
@@ -2061,7 +2065,9 @@ class AuctionTeamPlayer(models.Model):
             old_line.points = new_points
             new_team_name = old_team.name
             new_team_logo = old_team.logo.decode('utf-8') if old_team.logo else ''
-        message = '%s sale corrected: sold to %s for %d pts' % (player.name, new_team_name, new_points)
+        message = '%s sale corrected: sold to %s for %s' % (
+            player.name, new_team_name, player._history_value(new_points)
+        )
         self.env.user.notify_success(message=message, title='Sale Updated')
         return {
             'success': True,
@@ -2096,7 +2102,9 @@ class AuctionTeamPlayer(models.Model):
             'points': points,
 
         }
-        message = player.name + ' sold to the '+ auction.team_id.name+' for ' + str(points) + ' points successfully!'
+        message = '%s sold to %s for %s!' % (
+            player.name, auction.team_id.name, player._history_value(points)
+        )
 
         auction.player_ids = [(0, 0, auction_line_data)]
         player.assigned_team_id = auction.team_id and auction.team_id.id or False
@@ -2104,6 +2112,13 @@ class AuctionTeamPlayer(models.Model):
         # is_on_stage stays True — cleared on next player call
         self.create_auction_history(team_id.id, message, tournament_id=player.tournament_id.id, player=player)
         self.env.user.notify_success(message)
+
+    def _history_value(self, amount):
+        """Format an amount with the tournament unit for history / notify text."""
+        tournament = self.tournament_id
+        if tournament:
+            return tournament.format_points(amount or 0)
+        return '{:,}'.format(int(amount or 0))
 
     def create_auction_history(self, team_id, message, tournament_id, player):
         is_mystery_hidden = bool(

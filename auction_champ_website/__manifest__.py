@@ -38,7 +38,7 @@
 
 {
     'name': 'AuctionChamp Website',
-    'version': '1.0.2',
+    'version': '1.0.17',
     'summary': 'Responsive marketing website for AuctionChamp cricket auction platform',
     'sequence': 15,
     'description': """
@@ -51,15 +51,17 @@ with hero, features, testimonials, pricing, FAQ, and footer sections.
 The website configurator is accessible under Auction Settings > Configuration.
     """,
     'category': 'Auction/Website',
-    'depends': ['auction_module'],
+    'depends': ['auction_module', 'ac_saas_manager'],
     'data': [
         'security/ir.model.access.csv',
         'data/website_default_data.xml',
         'views/website_homepage_template.xml',
+        'views/privacy_policy_template.xml',
+        'views/terms_conditions_template.xml',
+        'views/user_manual_template.xml',
         'views/web_favicon.xml',
         'views/auction_website_config_view.xml',
         'views/auction_website_faq_view.xml',
-        'views/auction_website_pricing_view.xml',
         'views/menu.xml',
     ],
     'installable': True,

@@ -27,7 +27,10 @@
     />
 
     <link rel="stylesheet" href="/auction_module/static/src/assets/css/style.css" />
-    <title>Player Showcase</title>
+    <t t-call="auction_module.social_preview_head">
+        <t t-set="og_page_key" t-value="'display_auction'"/>
+        <t t-set="og_record" t-value="tournament"/>
+    </t>
 
     <style>
 /* ── Vanilla top controls (Pause / Fullscreen) ── */

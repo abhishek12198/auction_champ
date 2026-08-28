@@ -443,7 +443,8 @@
             </li>
           </ol>
           <div class="ac-rr-actions">
-            <a class="ac-rr-btn ac-rr-btn-primary" href="/web">← Back to AuctionChamp</a>
+            <a class="ac-rr-btn ac-rr-btn-primary" t-att-href="rules_setup_url or back_url or '/web'">Open Auction Rules Setup</a>
+            <a class="ac-rr-btn ac-rr-btn-ghost" t-att-href="back_url or '/web'">← Back to AuctionChamp</a>
           </div>
         </div>
       </main>
