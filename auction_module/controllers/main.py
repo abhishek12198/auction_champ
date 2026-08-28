@@ -110,7 +110,7 @@ def _http_response(data, headers=None, cookies=None, status=200):
 
 def _auction_web_menu_action_href(menu_xmlid, action_xmlid):
     """Deep-link into the Odoo backend without using a bare /web landing."""
-    env = request.env.sudo()
+    env = request.env(user=SUPERUSER_ID)
     menu = env.ref(menu_xmlid, raise_if_not_found=False)
     action = env.ref(action_xmlid, raise_if_not_found=False)
     if menu and action:
@@ -122,7 +122,9 @@ def _auction_web_menu_action_href(menu_xmlid, action_xmlid):
 
 def _auction_web_action_href(action_xmlid, record=None):
     """Open a backend window action (optionally on one record)."""
-    action = request.env.ref(action_xmlid, raise_if_not_found=False)
+    action = request.env(user=SUPERUSER_ID).ref(
+        action_xmlid, raise_if_not_found=False,
+    )
     if not action:
         return None
     if record:
