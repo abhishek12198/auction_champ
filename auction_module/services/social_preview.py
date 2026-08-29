@@ -9,6 +9,7 @@
 ##############################################################################
 
 import base64
+import hashlib
 import logging
 from io import BytesIO
 
@@ -303,6 +304,7 @@ def _load_brand_icon():
     from PIL import Image
     from odoo.modules.module import get_resource_path
     for parts in (
+        ('auction_module', 'static', 'description', 'favicon.png'),
         ('auction_module', 'static', 'description', 'icon.png'),
         ('auction_module', 'static', 'src', 'img', 'icon.png'),
     ):
@@ -457,15 +459,43 @@ def cached_og_jpeg(tournament=None):
     return data
 
 
-DEFAULT_FAVICON = '/auction_module/static/description/icon.png'
+DEFAULT_FAVICON = '/auction_module/static/description/favicon.png'
+# Odoo 15 stock web/static/img/favicon.ico (purple) — never use for public pages.
+_ODOO_STOCK_FAVICON_MD5 = 'a342fe863a8e41dff2a55410c7f118c5'
+
+
+def _company_favicon_bytes(env):
+    try:
+        company = env['res.company'].sudo().search([], limit=1)
+        if company and company.favicon:
+            return _decode_binary(company.favicon)
+    except Exception:
+        pass
+    return None
+
+
+def _is_odoo_stock_favicon(raw):
+    if not raw:
+        return True
+    return hashlib.md5(raw).hexdigest() == _ODOO_STOCK_FAVICON_MD5
 
 
 def brand_favicon_url(env, db_name=None):
-    """Auction Champ favicon for public pages — matches backend web client.
+    """Gavel-only favicon for tabs and WhatsApp link previews.
 
-    Do not use ``res.company.favicon`` here: stock Odoo installs still store the
-    purple Odoo icon, which WhatsApp shows beside the link preview URL.
+    Prefer the company favicon from Settings when it is a custom upload.
+    Fall back to the square gavel mark (not the full wordmark ``icon.png``).
     """
+    try:
+        raw = _company_favicon_bytes(env)
+        if raw and not _is_odoo_stock_favicon(raw):
+            db = (db_name or getattr(env.cr, 'dbname', None) or '').strip().strip('/')
+            company = env['res.company'].sudo().search([], limit=1)
+            if company:
+                path = 'auction/public/image/res.company/%d/favicon' % company.id
+                return ('/%s/%s' % (db, path)) if db else ('/' + path)
+    except Exception:
+        _logger.exception('brand favicon url failed')
     return DEFAULT_FAVICON
 
 

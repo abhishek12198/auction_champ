@@ -3728,7 +3728,7 @@ class Auction(http.Controller):
     def auction_root_favicon(self, **kw):
         """Root favicon for WhatsApp / browsers (overrides stock Odoo icon)."""
         from odoo.modules.module import get_resource_path
-        path = get_resource_path('auction_module', 'static', 'description', 'icon.png')
+        path = get_resource_path('auction_module', 'static', 'description', 'favicon.png')
         if not path:
             return self._not_found()
         with open(path, 'rb') as fav:

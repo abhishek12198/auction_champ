@@ -1963,7 +1963,7 @@ class AuctionTournament(models.Model):
 
     @api.model
     def get_brand_favicon_url(self, db_name=None):
-        """QWeb favicon — static Auction Champ icon (same as backend)."""
+        """QWeb favicon — gavel mark, same as backend browser tab."""
         from odoo.addons.auction_module.services import social_preview as seo
         try:
             return seo.brand_favicon_url(self.env, db_name=db_name)

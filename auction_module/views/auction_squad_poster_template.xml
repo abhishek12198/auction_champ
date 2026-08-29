@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Squad Poster — <t t-esc="team_name"/> | AuctionChamp</title>
     <t t-call="auction_module.page_head_favicon"/>
-    <link rel="apple-touch-icon" href="/auction_module/static/description/icon.png"/>
+    <link rel="apple-touch-icon" href="/auction_module/static/description/favicon.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
   <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&amp;family=Oswald:wght@600;700&amp;family=Roboto+Condensed:ital,wght@0,700;1,700&amp;family=Russo+One&amp;family=Teko:wght@600;700&amp;display=swap" rel="stylesheet"/>
