@@ -334,7 +334,7 @@
     }
 
     function fitOverlayToViewport() {
-        if (!popupOpen) {
+        if (!popupOpen || !isNarrowScreen()) {
             return;
         }
         var vv = window.visualViewport;
@@ -354,10 +354,17 @@
     }
 
     function onViewportChange() {
+        if (!isNarrowScreen()) {
+            clearOverlayViewport();
+            return;
+        }
         fitOverlayToViewport();
     }
 
     function bindViewport() {
+        if (!isNarrowScreen()) {
+            return;
+        }
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', onViewportChange);
             window.visualViewport.addEventListener('scroll', onViewportChange);
@@ -376,6 +383,7 @@
     function openRoster() {
         lastFocus = document.activeElement;
         lockY = window.scrollY || window.pageYOffset || 0;
+        clearOverlayViewport();
         overlay.classList.add('open');
         overlay.setAttribute('aria-hidden', 'false');
         document.body.style.top = '-' + lockY + 'px';

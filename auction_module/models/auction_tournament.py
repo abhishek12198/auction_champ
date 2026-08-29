@@ -1930,6 +1930,456 @@ class AuctionTournament(models.Model):
             'context': {'default_tournament_id': self.id},
         }
 
+    def action_open_player_categorization(self):
+        """Open the Player Categorization board for this tournament."""
+        self.ensure_one()
+        if not isinstance(self.id, int):
+            raise UserError(_('Save the tournament first, then open Player Categorization.'))
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'auction_module.player_categorization',
+            'name': 'Player Categorization — %s' % (self.name or 'Tournament'),
+            'target': 'current',
+            'context': {
+                'tournament_id': self.id,
+                'active_id': self.id,
+                'active_model': 'auction.tournament',
+            },
+            'params': {'tournament_id': self.id},
+        }
+
+    # ── Player Categorization board (client action RPC) ───────────────────
+
+    @api.model
+    def _categorization_tournament(self, tournament_id):
+        tournament = self.browse(tournament_id)
+        if not tournament.exists():
+            raise UserError(_('Tournament not found.'))
+        return tournament
+
+    @api.model
+    def _categorization_player_payload(self, player, sport):
+        team = player.assigned_team_id
+        role_label = ''
+        if sport == 'football':
+            role_label = (
+                player.dominant_position_id.name
+                if player.dominant_position_id else ''
+            )
+        else:
+            role_label = player.role or ''
+        return {
+            'id': player.id,
+            'sl_no': player.sl_no or 0,
+            'name': player.name or '',
+            'photo_url': '/web/image/auction.team.player/%d/photo' % player.id,
+            'tier_id': player.tier_id.id if player.tier_id else False,
+            'icon_player': bool(player.icon_player),
+            'state': player.state or '',
+            'role_label': role_label,
+            'team_id': team.id if team else False,
+            'team_name': team.name if team else '',
+            'team_logo_url': (
+                '/web/image/auction.team/%d/logo' % team.id if team else ''
+            ),
+        }
+
+    @api.model
+    def categorization_bootstrap(self, tournament_id):
+        """Return tiers, players, and teams for the categorization board."""
+        tournament = self._categorization_tournament(tournament_id)
+        sport = tournament.tournament_type or 'cricket'
+        Tier = self.env['auction.player.tier'].sudo()
+        Player = self.env['auction.team.player'].sudo()
+        Team = self.env['auction.team'].sudo()
+
+        tiers = Tier.search([('tournament_id', '=', tournament.id)], order='sequence asc, id asc')
+        players = Player.search(
+            [('tournament_id', '=', tournament.id)],
+            order='sl_no asc, id asc',
+        )
+        teams = Team.search(
+            [('tournament_id', '=', tournament.id)],
+            order='name asc',
+        )
+
+        tier_payload = []
+        for tier in tiers:
+            tier_players = players.filtered(lambda p, t=tier: p.tier_id.id == t.id)
+            tier_payload.append({
+                'id': tier.id,
+                'name': tier.name or '',
+                'color': tier.color or '#3498db',
+                'sequence': tier.sequence or 0,
+                'is_an_icon_tier': bool(tier.is_an_icon_tier),
+                'mystery': bool(tier.mystery),
+                'player_ids': tier_players.ids,
+                'count': len(tier_players),
+            })
+
+        unassigned = players.filtered(lambda p: not p.tier_id)
+        has_icon = any(t['is_an_icon_tier'] for t in tier_payload)
+
+        return {
+            'tournament': {
+                'id': tournament.id,
+                'name': tournament.name or '',
+                'tournament_type': sport,
+                'has_icon_tier': has_icon,
+            },
+            'tiers': tier_payload,
+            'unassigned': {
+                'player_ids': unassigned.ids,
+                'count': len(unassigned),
+            },
+            'players': {
+                str(p.id): self._categorization_player_payload(p, sport)
+                for p in players
+            },
+            'teams': [{
+                'id': team.id,
+                'name': team.name or '',
+                'logo_url': '/web/image/auction.team/%d/logo' % team.id,
+            } for team in teams],
+            'tier_colors': [
+                c[0] for c in self.env['auction.player.tier']._fields['color'].selection
+            ],
+        }
+
+    @api.model
+    def _categorization_clear_icon(self, player):
+        """Remove icon status without restoring previous_tier (caller sets tier)."""
+        if not player.icon_player:
+            return
+        team = player.assigned_team_id
+        player.write({
+            'assigned_team_id': False,
+            'state': 'auction',
+            'icon_player': False,
+            'previous_tier_id': False,
+        })
+        if team:
+            team.key_player_ids = [(3, player.id)]
+
+    @api.model
+    def _categorization_set_icon(self, player, team, icon_tier):
+        if not team:
+            raise UserError(_('Please select a team for the Icon Player.'))
+        if player.tournament_id and team.tournament_id != player.tournament_id:
+            raise UserError(_(
+                'Selected team "%s" does not belong to this tournament.'
+            ) % team.name)
+        old_team = player.assigned_team_id
+        if player.icon_player and old_team and old_team != team:
+            old_team.key_player_ids = [(3, player.id)]
+        prev_tier = False
+        if not player.icon_player and player.tier_id and not player.tier_id.is_an_icon_tier:
+            prev_tier = player.tier_id.id
+        elif player.previous_tier_id:
+            prev_tier = player.previous_tier_id.id
+        player.write({
+            'icon_player': True,
+            'state': 'sold',
+            'assigned_team_id': team.id,
+            'previous_tier_id': prev_tier,
+            'tier_id': icon_tier.id,
+        })
+        team.key_player_ids = [(4, player.id)]
+
+    @api.model
+    def _categorization_resequence(self, tournament, ordered_player_ids):
+        """Assign sl_no 1..n from the board order (two-pass)."""
+        Player = self.env['auction.team.player'].sudo()
+        players = Player.browse([i for i in ordered_player_ids if i]).exists()
+        by_id = {p.id: p for p in players}
+        ordered = [by_id[i] for i in ordered_player_ids if i in by_id]
+        # Include any players missing from the board payload (safety)
+        remaining = Player.search([
+            ('tournament_id', '=', tournament.id),
+            ('id', 'not in', [p.id for p in ordered]),
+        ], order='sl_no asc, id asc')
+        ordered = list(ordered) + list(remaining)
+        offset = 100000
+        for i, player in enumerate(ordered, start=1):
+            player.sl_no = offset + i
+        for i, player in enumerate(ordered, start=1):
+            player.sl_no = i
+        return len(ordered)
+
+    @api.model
+    def categorization_move_player(
+        self, tournament_id, player_id, target_tier_id,
+        index=None, team_id=None, column_orders=None,
+    ):
+        """Move one player — thin wrapper around multi-move."""
+        return self.categorization_move_players(
+            tournament_id,
+            [player_id] if player_id else [],
+            target_tier_id,
+            index=index,
+            team_id=team_id,
+            column_orders=column_orders,
+        )
+
+    @api.model
+    def categorization_move_players(
+        self, tournament_id, player_ids, target_tier_id,
+        index=None, team_id=None, column_orders=None,
+    ):
+        """Move one or more players to a tier (icon requires team_id) and resequence.
+
+        ``column_orders``: optional list of ``{tier_id, player_ids}`` reflecting
+        the full board after the drop (preferred for accurate order).
+        """
+        tournament = self._categorization_tournament(tournament_id)
+        Player = self.env['auction.team.player'].sudo()
+        ids = []
+        seen = set()
+        for raw in (player_ids or []):
+            try:
+                pid = int(raw)
+            except (TypeError, ValueError):
+                continue
+            if pid in seen:
+                continue
+            seen.add(pid)
+            ids.append(pid)
+        if not ids:
+            raise UserError(_('No players selected to move.'))
+
+        players = Player.browse(ids).exists()
+        if len(players) != len(ids):
+            raise UserError(_('One or more players were not found.'))
+        for player in players:
+            if player.tournament_id.id != tournament.id:
+                raise UserError(_('Player not found in this tournament.'))
+
+        Tier = self.env['auction.player.tier'].sudo()
+        target_tier = Tier.browse(target_tier_id) if target_tier_id else Tier
+        if target_tier_id:
+            if not target_tier.exists() or target_tier.tournament_id.id != tournament.id:
+                raise UserError(_('Target tier not found in this tournament.'))
+
+        is_icon_target = bool(target_tier and target_tier.is_an_icon_tier)
+
+        if is_icon_target:
+            team = self.env['auction.team'].sudo().browse(team_id) if team_id else False
+            if not team or not team.exists():
+                # Allow reorder-only when every player is already an icon with a team
+                all_ok = all(
+                    p.icon_player and p.assigned_team_id and p.tier_id == target_tier
+                    for p in players
+                )
+                if not all_ok:
+                    raise UserError(_('Select a team when moving players into the Icon Tier.'))
+            else:
+                for player in players:
+                    self._categorization_set_icon(player, team, target_tier)
+        else:
+            for player in players:
+                if player.icon_player:
+                    self._categorization_clear_icon(player)
+                player.write({'tier_id': target_tier.id if target_tier else False})
+
+        ordered_ids = []
+        if column_orders:
+            for col in column_orders:
+                ordered_ids.extend(col.get('player_ids') or [])
+        else:
+            tiers = Tier.search([('tournament_id', '=', tournament.id)], order='sequence asc, id asc')
+            all_players = Player.search(
+                [('tournament_id', '=', tournament.id)],
+                order='sl_no asc, id asc',
+            )
+            move_set = set(ids)
+            for tier in tiers:
+                col_ids = [
+                    p.id for p in all_players
+                    if p.tier_id.id == tier.id and p.id not in move_set
+                ]
+                if target_tier and tier.id == target_tier.id:
+                    pos = 0 if index is None else max(0, min(int(index), len(col_ids)))
+                    col_ids[pos:pos] = ids
+                ordered_ids.extend(col_ids)
+            unassigned = [
+                p.id for p in all_players
+                if not p.tier_id and p.id not in move_set
+            ]
+            if not target_tier_id:
+                pos = 0 if index is None else max(0, min(int(index), len(unassigned)))
+                unassigned[pos:pos] = ids
+            ordered_ids.extend(unassigned)
+
+        unique_ordered = []
+        seen_ord = set()
+        for pid in ordered_ids:
+            if pid not in seen_ord:
+                seen_ord.add(pid)
+                unique_ordered.append(pid)
+
+        self._categorization_resequence(tournament, unique_ordered)
+        return self.categorization_bootstrap(tournament.id)
+
+    @api.model
+    def categorization_reorder(self, tournament_id, column_orders):
+        """Persist board order (same-tier or cross-tier already applied client-side).
+
+        For cross-tier moves that are not icon, callers should use
+        ``categorization_move_player``. This method only rewrites ``sl_no``
+        (and optionally syncs tier_id from column membership for non-icon).
+        """
+        tournament = self._categorization_tournament(tournament_id)
+        Player = self.env['auction.team.player'].sudo()
+        Tier = self.env['auction.player.tier'].sudo()
+
+        ordered_ids = []
+        for col in (column_orders or []):
+            tier_id = col.get('tier_id') or False
+            player_ids = col.get('player_ids') or []
+            tier = Tier.browse(tier_id) if tier_id else Tier
+            if tier_id and (not tier.exists() or tier.tournament_id.id != tournament.id):
+                raise UserError(_('Invalid tier in reorder payload.'))
+            if tier and tier.is_an_icon_tier:
+                # Do not silently change icon assignment here — only order
+                ordered_ids.extend(player_ids)
+                continue
+            for pid in player_ids:
+                player = Player.browse(pid)
+                if not player.exists() or player.tournament_id.id != tournament.id:
+                    continue
+                if player.icon_player:
+                    continue
+                if (player.tier_id.id if player.tier_id else False) != (tier_id or False):
+                    player.write({'tier_id': tier_id or False})
+            ordered_ids.extend(player_ids)
+
+        seen = set()
+        unique_ordered = []
+        for pid in ordered_ids:
+            if pid not in seen:
+                seen.add(pid)
+                unique_ordered.append(pid)
+        self._categorization_resequence(tournament, unique_ordered)
+        return self.categorization_bootstrap(tournament.id)
+
+    @api.model
+    def categorization_create_tier(
+        self, tournament_id, name, color=None, is_an_icon_tier=False,
+        mystery=False,
+    ):
+        """Create a new player tier from the categorization board."""
+        tournament = self._categorization_tournament(tournament_id)
+        name = (name or '').strip()
+        if not name:
+            raise UserError(_('Tier name is required.'))
+        Tier = self.env['auction.player.tier'].sudo()
+        if is_an_icon_tier:
+            existing = Tier.search([
+                ('tournament_id', '=', tournament.id),
+                ('is_an_icon_tier', '=', True),
+            ], limit=1)
+            if existing:
+                raise UserError(_(
+                    '"%s" is already the Icon Tier. Unmark it first or create a normal tier.'
+                ) % existing.name)
+        allowed = {c[0] for c in Tier._fields['color'].selection}
+        if not color or color not in allowed:
+            color = '#3498db'
+        last = Tier.search(
+            [('tournament_id', '=', tournament.id)],
+            order='sequence desc, id desc',
+            limit=1,
+        )
+        sequence = (last.sequence or 0) + 10 if last else 10
+        Tier.create({
+            'name': name,
+            'color': color,
+            'is_an_icon_tier': bool(is_an_icon_tier),
+            'mystery': bool(mystery),
+            'sequence': sequence,
+            'tournament_id': tournament.id,
+        })
+        return self.categorization_bootstrap(tournament.id)
+
+    @api.model
+    def categorization_reorder_tiers(self, tournament_id, tier_ids_ordered):
+        """Persist left-to-right tier order from the categorization board."""
+        tournament = self._categorization_tournament(tournament_id)
+        Tier = self.env['auction.player.tier'].sudo()
+        ordered = []
+        seen = set()
+        for raw in (tier_ids_ordered or []):
+            try:
+                tid = int(raw)
+            except (TypeError, ValueError):
+                continue
+            if tid in seen:
+                continue
+            seen.add(tid)
+            ordered.append(tid)
+        tiers = Tier.browse(ordered).exists()
+        by_id = {t.id: t for t in tiers}
+        seq = 10
+        for tid in ordered:
+            tier = by_id.get(tid)
+            if not tier or tier.tournament_id.id != tournament.id:
+                continue
+            tier.sequence = seq
+            seq += 10
+        return self.categorization_bootstrap(tournament.id)
+
+    @api.model
+    def categorization_resequence_by_tiers(self, tournament_id, column_orders=None):
+        """Renumber player ``sl_no`` from tier order, then order within each tier.
+
+        Auction sequence becomes: Tier 1 players (top→bottom), Tier 2, …,
+        then Unassigned (if any). Within a tier, current board / ``sl_no`` order
+        is kept unless ``column_orders`` is provided.
+        """
+        tournament = self._categorization_tournament(tournament_id)
+        Player = self.env['auction.team.player'].sudo()
+        Tier = self.env['auction.player.tier'].sudo()
+
+        ordered_ids = []
+        if column_orders:
+            for col in column_orders:
+                ordered_ids.extend(col.get('player_ids') or [])
+        else:
+            tiers = Tier.search(
+                [('tournament_id', '=', tournament.id)],
+                order='sequence asc, id asc',
+            )
+            players = Player.search(
+                [('tournament_id', '=', tournament.id)],
+                order='sl_no asc, id asc',
+            )
+            for tier in tiers:
+                ordered_ids.extend(
+                    players.filtered(lambda p, t=tier: p.tier_id.id == t.id).ids
+                )
+            ordered_ids.extend(players.filtered(lambda p: not p.tier_id).ids)
+
+        unique_ordered = []
+        seen = set()
+        for pid in ordered_ids:
+            if pid not in seen:
+                seen.add(pid)
+                unique_ordered.append(pid)
+
+        # Also sync tier.sequence from column_orders when provided
+        if column_orders:
+            tier_ids = [
+                col.get('tier_id') for col in column_orders
+                if col.get('tier_id')
+            ]
+            if tier_ids:
+                self.categorization_reorder_tiers(tournament.id, tier_ids)
+
+        count = self._categorization_resequence(tournament, unique_ordered)
+        data = self.categorization_bootstrap(tournament.id)
+        data['resequence_count'] = count
+        return data
+
     def action_register_player(self):
         """Open the single-player registration wizard for this tournament."""
         self.ensure_one()

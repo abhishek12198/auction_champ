@@ -38,7 +38,7 @@
 
 {
     'name' : 'Auction Champ',
-    'version' : '1.5.647',
+    'version' : '1.5.661',
     'summary': 'Sports Auction module',
     'sequence': 10,
     'icon': '/auction_module/static/description/icon.png',
@@ -184,6 +184,8 @@
                     '/auction_module/static/src/js/fixture_dnd.js',
                     '/auction_module/static/src/js/pool_generator.js',
                     '/auction_module/static/src/css/pool_generator.css',
+                    '/auction_module/static/src/js/player_categorization.js',
+                    '/auction_module/static/src/css/player_categorization.css',
                     # auction_live_queue.css is intentionally excluded from backend assets
                     # because it overrides html/body height and overflow which breaks
                     # Odoo's backend layout (including the Import File feature).

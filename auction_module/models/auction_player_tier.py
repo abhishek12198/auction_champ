@@ -44,9 +44,15 @@ class AuctionPlayerTier(models.Model):
     _name = 'auction.player.tier'
     _inherit = ['auction.tournament.security.mixin']
     _description = 'Auction Player Tier'
+    _order = 'sequence, id'
 
     name = fields.Char(string='Tier Name', required=True)
     description = fields.Char(string='Description')
+    sequence = fields.Integer(
+        string='Sequence',
+        default=10,
+        help='Auction / categorization order for this tier (lower = earlier).',
+    )
     color = fields.Selection([
         ('#e74c3c', 'Red'),
         ('#e67e22', 'Orange'),
@@ -82,6 +88,14 @@ class AuctionPlayerTier(models.Model):
             user_tournament = self.env.user.tournament_id
             if user_tournament:
                 defaults['tournament_id'] = user_tournament.id
+        tournament_id = defaults.get('tournament_id')
+        if tournament_id and 'sequence' in fields_list and 'sequence' not in defaults:
+            last = self.search(
+                [('tournament_id', '=', tournament_id)],
+                order='sequence desc, id desc',
+                limit=1,
+            )
+            defaults['sequence'] = (last.sequence or 0) + 10 if last else 10
         return defaults
 
     def action_migrate_tier(self):

@@ -19,7 +19,7 @@
           rel="stylesheet"/>
 
     <!-- Registration form CSS -->
-    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.549"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.661"/>
 
     <!-- ── Per-theme CSS custom properties ────────────────────── -->
     <style>
@@ -568,6 +568,57 @@
               method="post" enctype="multipart/form-data" id="playerRegisterForm"
               t-att-data-payment-required="'1' if tournament and tournament.payment_proof_required else '0'">
 
+            <input type="hidden" name="source_player_id" id="sourcePlayerId" value=""
+                   data-has-photo="0"/>
+            <input type="hidden" name="reuse_source_photo" id="reuseSourcePhoto" value="0"/>
+
+            <!-- Optional: returning player lookup — collapsed by default (most are new) -->
+            <div class="reg-returning is-collapsed" id="returningPlayerPanel">
+                <button type="button" class="reg-returning-toggle" id="returningToggleBtn"
+                        aria-expanded="false" aria-controls="returningLookupBody">
+                    <span class="reg-returning-toggle-label">
+                        Already on Auction Champ? <strong>Find my details</strong>
+                    </span>
+                    <span class="reg-returning-toggle-hint">optional</span>
+                    <span class="reg-returning-chevron" aria-hidden="true">▾</span>
+                </button>
+                <div class="reg-returning-body" id="returningLookupBody" hidden="hidden">
+                    <p class="reg-returning-desc">
+                        Enter your registered mobile to auto-fill the form. Payment is still required here.
+                    </p>
+                    <div class="reg-returning-row" id="returningLookupRow">
+                        <select id="lookupCountryCode" class="reg-select reg-mobile-code"
+                                aria-label="Country calling code for lookup">
+                            <option value="+91" selected="selected">🇮🇳 +91</option>
+                            <option value="+92">🇵🇰 +92</option>
+                            <option value="+94">🇱🇰 +94</option>
+                            <option value="+880">🇧🇩 +880</option>
+                            <option value="+971">🇦🇪 +971</option>
+                            <option value="+966">🇸🇦 +966</option>
+                            <option value="+974">🇶🇦 +974</option>
+                            <option value="+968">🇴🇲 +968</option>
+                            <option value="+965">🇰🇼 +965</option>
+                            <option value="+973">🇧🇭 +973</option>
+                            <option value="+1">🇺🇸 +1</option>
+                            <option value="+44">🇬🇧 +44</option>
+                            <option value="+61">🇦🇺 +61</option>
+                        </select>
+                        <input type="tel" id="lookupMobileNumber" class="reg-input reg-mobile-num"
+                               placeholder="Mobile number" maxlength="12"
+                               inputmode="numeric" autocomplete="tel-national"/>
+                        <button type="button" class="reg-returning-find" id="returningFindBtn">Find</button>
+                        <button type="button" class="reg-returning-skip" id="returningSkipBtn">I'm new</button>
+                    </div>
+                    <div class="reg-returning-status" id="returningStatus" hidden="hidden"></div>
+                </div>
+                <div class="reg-returning-found" id="returningFoundBanner" hidden="hidden">
+                    <div class="reg-returning-found-text" id="returningFoundText"></div>
+                    <button type="button" class="reg-returning-clear" id="returningClearBtn">
+                        Clear
+                    </button>
+                </div>
+            </div>
+
             <!-- ══════════════════════════════════════
                  01 · PLAYER IDENTITY
                  ══════════════════════════════════════ -->
@@ -581,7 +632,10 @@
 
                 <!-- Photo upload with square frame -->
                 <div style="margin-bottom:18px" id="photoSection">
-                    <label class="reg-label">Player Photo <span class="req">*</span></label>
+                    <label class="reg-label" for="photoInput">Player Photo
+                        <span class="req" id="photoReqMark">*</span>
+                        <span class="reg-opt" id="photoOptMark" hidden="hidden">(kept from prior registration — change if you want)</span>
+                    </label>
                     <div class="reg-photo-upload">
                         <div class="reg-photo-frame">
                             <div class="reg-photo-circle" id="photoCircle">
@@ -865,8 +919,8 @@
                         <div id="mobileHint" class="reg-mobile-hint">Enter 10 digits (without country code)</div>
                         <!-- hidden field that holds the combined value submitted -->
                         <input type="hidden" id="contactFull" name="contact"/>
-                        <div id="mobileWarning" class="reg-mobile-warning" style="display:none;">
-                            ⚠️ This mobile number is already registered in this tournament. You can still continue with this registration.
+                        <div id="mobileWarning" class="reg-mobile-warning" style="display:none;" role="status">
+                            ⚠️ This mobile is already registered in this tournament. You can still continue.
                         </div>
                     </div>
 
@@ -1186,6 +1240,20 @@
     </div>
 </div>
 
+<!-- ── Duplicate mobile notice (dismissible) ── -->
+<div id="mobileDupModal" class="reg-dup-overlay" hidden="hidden" aria-hidden="true">
+    <div class="reg-dup-dialog" role="alertdialog" aria-modal="true"
+         aria-labelledby="mobileDupTitle" aria-describedby="mobileDupMsg">
+        <div class="reg-dup-icon" aria-hidden="true">⚠️</div>
+        <h3 id="mobileDupTitle" class="reg-dup-title">Already registered</h3>
+        <p id="mobileDupMsg" class="reg-dup-msg">
+            This mobile number is already registered in this tournament.
+            You can ignore this and continue with your registration.
+        </p>
+        <button type="button" class="reg-dup-ok" id="mobileDupOk">OK, continue</button>
+    </div>
+</div>
+
 <!-- ── Photo Cropper Modal ── -->
 <div id="cropperModal" class="reg-crop-overlay" aria-hidden="true">
     <div class="reg-crop-dialog" role="dialog" aria-modal="true" aria-label="Adjust your photo">
@@ -1267,7 +1335,37 @@
         if (frame) { frame.classList.remove('has-photo'); }
         if (clearBtn) { clearBtn.classList.add('is-hidden'); }
         if (photoInput) { photoInput.value = ''; }
+        var sourceEl = document.getElementById('sourcePlayerId');
+        if (sourceEl) {
+            sourceEl.setAttribute('data-has-photo', '0');
+        }
+        var reuseEl = document.getElementById('reuseSourcePhoto');
+        if (reuseEl) reuseEl.value = '0';
+        var reqMark = document.getElementById('photoReqMark');
+        var optMark = document.getElementById('photoOptMark');
+        if (reqMark) reqMark.hidden = false;
+        if (optMark) optMark.hidden = true;
     }
+
+    window.regSetPhotoPreview = setPhotoPreview;
+    window.regClearPhotoPreview = clearPhotoPreview;
+    window.regMarkSourcePhoto = function (hasPhoto) {
+        var reqMark = document.getElementById('photoReqMark');
+        var optMark = document.getElementById('photoOptMark');
+        var reuseEl = document.getElementById('reuseSourcePhoto');
+        var sourceEl = document.getElementById('sourcePlayerId');
+        if (hasPhoto) {
+            if (reqMark) reqMark.hidden = true;
+            if (optMark) optMark.hidden = false;
+            if (reuseEl) reuseEl.value = '1';
+            if (sourceEl) sourceEl.setAttribute('data-has-photo', '1');
+        } else {
+            if (reqMark) reqMark.hidden = false;
+            if (optMark) optMark.hidden = true;
+            if (reuseEl) reuseEl.value = '0';
+            if (sourceEl) sourceEl.setAttribute('data-has-photo', '0');
+        }
+    };
 
     var photoClearBtn = document.getElementById('photoClearBtn');
     if (photoClearBtn) {
@@ -1311,6 +1409,7 @@
         photoInput.addEventListener('change', function () {
             var f = this.files &amp;&amp; this.files[0];
             if (!f) return;
+            if (window.regMarkSourcePhoto) window.regMarkSourcePhoto(false);
             if (!/^image\//.test(f.type)) {
                 var reader = new FileReader();
                 reader.onload = function (e) { setPhotoPreview(e.target.result); };
@@ -1367,6 +1466,7 @@
                     photoInput.files = dt.files;
                 } catch (err) { /* older browser — original file stays */ }
                 setPhotoPreview(canvas.toDataURL('image/jpeg', 0.92));
+                if (window.regMarkSourcePhoto) window.regMarkSourcePhoto(false);
                 closeCropper();
             }, 'image/jpeg', 0.92);
         });
@@ -1609,10 +1709,14 @@
             var gate = document.getElementById('paymentProofGate');
             if (gate) gate.value = hasPaymentProofFile() ? 'ok' : '';
 
-            // Photo is mandatory — check before native validation
+            // Photo is mandatory — unless reusing a verified prior registration photo
             var photoInput = document.getElementById('photoInput');
             var photoSection = document.getElementById('photoSection');
-            if (photoInput &amp;&amp; (!photoInput.files || !photoInput.files[0])) {
+            var sourceEl = document.getElementById('sourcePlayerId');
+            var hasSourcePhoto = !!(sourceEl &amp;&amp; sourceEl.value &amp;&amp;
+                sourceEl.getAttribute('data-has-photo') === '1');
+            var hasNewPhoto = !!(photoInput &amp;&amp; photoInput.files &amp;&amp; photoInput.files[0]);
+            if (photoInput &amp;&amp; !hasNewPhoto &amp;&amp; !hasSourcePhoto) {
                 e.preventDefault();
                 e.stopPropagation();
                 if (photoSection) {
@@ -1875,8 +1979,56 @@
         .catch(function () { hideDupWarn(); });
     }
 
-    function showDupWarn() { if (warnEl) warnEl.style.display = 'block'; }
-    function hideDupWarn() { if (warnEl) warnEl.style.display = 'none';  }
+    function showDupWarn() {
+        if (warnEl) warnEl.style.display = 'block';
+        var modal = document.getElementById('mobileDupModal');
+        if (modal &amp;&amp; !modal.classList.contains('is-shown-once')) {
+            modal.hidden = false;
+            modal.setAttribute('aria-hidden', 'false');
+            modal.classList.add('is-open', 'is-shown-once');
+            var ok = document.getElementById('mobileDupOk');
+            if (ok) {
+                try { ok.focus(); } catch (e) { /* */ }
+            }
+        }
+    }
+    function hideDupWarn() {
+        if (warnEl) warnEl.style.display = 'none';
+    }
+    function closeDupModal() {
+        var modal = document.getElementById('mobileDupModal');
+        if (!modal) return;
+        modal.hidden = true;
+        modal.setAttribute('aria-hidden', 'true');
+        modal.classList.remove('is-open');
+        if (numEl) {
+            try { numEl.focus(); } catch (e) { /* */ }
+        }
+    }
+    window.regShowMobileDupWarn = showDupWarn;
+    window.regHideMobileDupWarn = hideDupWarn;
+    (function bindDupModal() {
+        var modal = document.getElementById('mobileDupModal');
+        var ok = document.getElementById('mobileDupOk');
+        if (ok) ok.addEventListener('click', closeDupModal);
+        if (modal) {
+            modal.addEventListener('click', function (ev) {
+                if (ev.target === modal) closeDupModal();
+            });
+        }
+        document.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Escape' &amp;&amp; modal &amp;&amp; modal.classList.contains('is-open')) {
+                closeDupModal();
+            }
+        });
+    })();
+
+    // Reset popup-once when the number changes
+    numEl.addEventListener('input', function () {
+        var modal = document.getElementById('mobileDupModal');
+        if (modal) modal.classList.remove('is-shown-once');
+        hideDupWarn();
+    });
 
     // On form submit — sync combined value (HTML pattern uses active country length)
     var form = document.querySelector('form');
@@ -1886,9 +2038,272 @@
 
     applyCountryRules();
 })();
+(function () {
+    var panel = document.getElementById('returningPlayerPanel');
+    if (!panel) return;
+    var toggleBtn = document.getElementById('returningToggleBtn');
+    var bodyEl = document.getElementById('returningLookupBody');
+    var findBtn = document.getElementById('returningFindBtn');
+    var skipBtn = document.getElementById('returningSkipBtn');
+    var clearBtn = document.getElementById('returningClearBtn');
+    var lookupCode = document.getElementById('lookupCountryCode');
+    var lookupNum = document.getElementById('lookupMobileNumber');
+    var statusEl = document.getElementById('returningStatus');
+    var foundBanner = document.getElementById('returningFoundBanner');
+    var foundText = document.getElementById('returningFoundText');
+    var sourceEl = document.getElementById('sourcePlayerId');
+    var toggleLabel = panel.querySelector('.reg-returning-toggle-label');
+
+    function regPathParts() {
+        var form = document.getElementById('playerRegisterForm');
+        var parts = ((form &amp;&amp; form.getAttribute('action')) || window.location.pathname).split('/');
+        var regIdx = parts.indexOf('player');
+        if (regIdx &lt; 2) return null;
+        return { dbName: parts[regIdx - 2], slug: parts[regIdx - 1] };
+    }
+
+    function setStatus(msg, isError) {
+        if (!statusEl) return;
+        if (!msg) {
+            statusEl.hidden = true;
+            statusEl.textContent = '';
+            statusEl.classList.remove('is-error', 'is-ok');
+            return;
+        }
+        statusEl.hidden = false;
+        statusEl.textContent = msg;
+        statusEl.classList.toggle('is-error', !!isError);
+        statusEl.classList.toggle('is-ok', !isError);
+    }
+
+    function setExpanded(open) {
+        panel.classList.toggle('is-collapsed', !open);
+        panel.classList.toggle('is-open', !!open);
+        if (bodyEl) bodyEl.hidden = !open;
+        if (toggleBtn) toggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (toggleLabel) {
+            toggleLabel.innerHTML = open
+                ? 'Looking up a past registration'
+                : 'Already on Auction Champ? <strong>Find my details</strong>';
+        }
+        if (open &amp;&amp; lookupNum) {
+            try { lookupNum.focus(); } catch (e) { /* */ }
+        }
+    }
+
+    function setVal(id, value) {
+        var el = document.getElementById(id);
+        if (!el || value === undefined || value === null || value === false) return;
+        el.value = value;
+        try {
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+        } catch (e) { /* */ }
+    }
+
+    function setSelect(id, value) {
+        var el = document.getElementById(id);
+        if (!el || value === undefined || value === null || value === false || value === '') return;
+        el.value = String(value);
+        try { el.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) { /* */ }
+    }
+
+    function setRadio(name, value) {
+        if (!value) return;
+        var el = document.querySelector('input[name="' + name + '"][value="' + value + '"]');
+        if (el) {
+            el.checked = true;
+            try { el.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) { /* */ }
+        }
+    }
+
+    function setChecks(name, ids) {
+        var wanted = {};
+        (ids || []).forEach(function (id) { wanted[String(id)] = true; });
+        document.querySelectorAll('input[name="' + name + '"]').forEach(function (cb) {
+            cb.checked = !!wanted[String(cb.value)];
+        });
+    }
+
+    function applyProfile(profile) {
+        if (!profile) return;
+        if (sourceEl) {
+            sourceEl.value = profile.source_player_id || '';
+            sourceEl.setAttribute('data-has-photo', profile.has_photo ? '1' : '0');
+        }
+
+        setVal('playerName', profile.name || '');
+        setVal('currentTeam', profile.current_team || '');
+        setVal('address', profile.address || '');
+        setVal('orgId', profile.org_id || '');
+        setVal('playerEmail', profile.email || '');
+        setSelect('bloodGroup', profile.blood_group || '');
+        if (profile.tier_id) setSelect('playerTier', profile.tier_id);
+
+        setRadio('role', profile.role || '');
+        setSelect('battingStyle', profile.batting_style || '');
+        setSelect('bowlingStyle', profile.bowling_style || '');
+
+        setSelect('dominantPosition', profile.dominant_position_id || '');
+        setSelect('preferredFoot', profile.preferred_foot || '');
+        setSelect('workRate', profile.work_rate || '');
+        setVal('playerAge', profile.age || '');
+        setVal('playerHeight', profile.height || '');
+        setVal('playerWeight', profile.weight || '');
+        setChecks('secondary_position_ids', profile.secondary_position_ids || []);
+        setChecks('playing_style_ids', profile.playing_style_ids || []);
+        setChecks('strength_ids', profile.strength_ids || []);
+
+        setVal('jerseyName', profile.jersy_name || '');
+        setVal('jerseyNumber', profile.jersy_number || '');
+        setSelect('jerseySize', profile.jersy_size || '');
+
+        var codeEl = document.getElementById('countryCode');
+        var numEl = document.getElementById('mobileNumber');
+        var fullEl = document.getElementById('contactFull');
+        if (codeEl &amp;&amp; profile.country_code) codeEl.value = profile.country_code;
+        if (numEl &amp;&amp; profile.national_number) {
+            numEl.value = String(profile.national_number).replace(/\D/g, '');
+            try { numEl.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) { /* */ }
+        }
+        if (fullEl &amp;&amp; profile.contact) fullEl.value = profile.contact;
+        if (codeEl) {
+            try { codeEl.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) { /* */ }
+        }
+
+        if (profile.has_photo &amp;&amp; profile.photo_url &amp;&amp; window.regSetPhotoPreview) {
+            window.regSetPhotoPreview(profile.photo_url);
+            if (window.regMarkSourcePhoto) window.regMarkSourcePhoto(true);
+        } else if (window.regMarkSourcePhoto) {
+            window.regMarkSourcePhoto(false);
+        }
+
+        var paymentInput = document.getElementById('paymentInput');
+        if (paymentInput) paymentInput.value = '';
+
+        setExpanded(false);
+        if (foundBanner) foundBanner.hidden = false;
+        panel.classList.add('has-found');
+        if (foundText) {
+            foundText.textContent = 'Details filled. Review and update if needed, then submit.';
+        }
+        if (toggleLabel) {
+            toggleLabel.innerHTML = 'Details filled';
+        }
+        setStatus('');
+        var nameEl = document.getElementById('playerName');
+        if (nameEl) {
+            try { nameEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e2) { /* */ }
+        }
+    }
+
+    function clearReturning() {
+        if (sourceEl) {
+            sourceEl.value = '';
+            sourceEl.setAttribute('data-has-photo', '0');
+        }
+        var reuseEl = document.getElementById('reuseSourcePhoto');
+        if (reuseEl) reuseEl.value = '0';
+        if (window.regClearPhotoPreview) window.regClearPhotoPreview();
+        if (window.regMarkSourcePhoto) window.regMarkSourcePhoto(false);
+        if (foundBanner) foundBanner.hidden = true;
+        panel.classList.remove('has-found');
+        setStatus('');
+        if (lookupNum) lookupNum.value = '';
+        setExpanded(false);
+    }
+
+    function doLookup() {
+        var parts = regPathParts();
+        if (!parts) return;
+        var num = ((lookupNum &amp;&amp; lookupNum.value) || '').replace(/\D/g, '');
+        if (num.length &lt; 8) {
+            setStatus('Enter your registered mobile number.', true);
+            if (lookupNum) lookupNum.focus();
+            return;
+        }
+        var mobile = ((lookupCode &amp;&amp; lookupCode.value) || '+91') + num;
+        if (findBtn) {
+            findBtn.disabled = true;
+            findBtn.textContent = '…';
+        }
+        setStatus('Searching…');
+        var url = '/' + parts.dbName + '/' + parts.slug + '/player/lookup_profile';
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                jsonrpc: '2.0', method: 'call', id: 1,
+                params: { mobile: mobile }
+            })
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            var result = data &amp;&amp; data.result;
+            if (result &amp;&amp; result.found &amp;&amp; result.profile) {
+                applyProfile(result.profile);
+                if (result.duplicate_this_tournament) {
+                    if (window.regShowMobileDupWarn) window.regShowMobileDupWarn();
+                }
+            } else if (result &amp;&amp; result.duplicate_this_tournament) {
+                setStatus('This mobile is already used here. You can still continue.', true);
+            } else {
+                setStatus('No match found. Continue as a new entry.', true);
+            }
+        })
+        .catch(function () {
+            setStatus('Lookup failed. Continue as a new entry.', true);
+        })
+        .then(function () {
+            if (findBtn) {
+                findBtn.disabled = false;
+                findBtn.textContent = 'Find';
+            }
+        });
+    }
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function () {
+            var open = panel.classList.contains('is-collapsed');
+            if (open) {
+                if (foundBanner) foundBanner.hidden = true;
+                panel.classList.remove('has-found');
+            }
+            setExpanded(open);
+        });
+    }
+    if (lookupNum) {
+        lookupNum.addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '').slice(0, 12);
+        });
+        lookupNum.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Enter') {
+                ev.preventDefault();
+                doLookup();
+            }
+        });
+    }
+    if (findBtn) findBtn.addEventListener('click', doLookup);
+    if (skipBtn) {
+        skipBtn.addEventListener('click', function () {
+            clearReturning();
+            setExpanded(false);
+            var nameEl = document.getElementById('playerName');
+            if (nameEl) nameEl.focus();
+        });
+    }
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function () {
+            clearReturning();
+        });
+    }
+
+    // Start collapsed
+    setExpanded(false);
+})();
 </script>
 <script src="/auction_module/static/src/js/auction_sse_client.js"></script>
-<script src="/auction_module/static/src/js/player_registration_roster.js?v=1.5.549"></script>
+<script src="/auction_module/static/src/js/player_registration_roster.js?v=1.5.661"></script>
 
 </body>
 </html>

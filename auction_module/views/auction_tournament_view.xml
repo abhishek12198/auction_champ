@@ -302,6 +302,12 @@
                                         icon="fa-cloud-upload"
                                         class="o_at_upload_btn o_at_upload_players"
                                         attrs="{'invisible': [('active', '=', False)]}"/>
+                                <button name="action_open_player_categorization"
+                                        type="object"
+                                        string="Player Categorization"
+                                        icon="fa-th-large"
+                                        class="o_at_upload_btn o_at_player_categorization"
+                                        attrs="{'invisible': [('active', '=', False)]}"/>
 
                                 <!-- ── Player State Stat Buttons ── -->
                                 <div class="o_tourn_player_stats">
@@ -402,6 +408,7 @@
                                 </p>
                                 <field name="tier_ids" nolabel="1" context="{'default_tournament_id': active_id}">
                                     <tree editable="bottom">
+                                        <field name="sequence" widget="handle"/>
                                         <field name="name" required="1"/>
                                         <field name="description"/>
                                         <field name="color" widget="selection_badge"/>
@@ -410,6 +417,7 @@
                                     </tree>
                                     <form>
                                         <group>
+                                            <field name="sequence"/>
                                             <field name="name" required="1"/>
                                             <field name="description"/>
                                             <field name="color" widget="selection_badge"/>

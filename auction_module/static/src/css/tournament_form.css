@@ -164,6 +164,17 @@
         linear-gradient(135deg, #6a4206 0%, #ad6b00 45%, #d09218 100%) !important;
 }
 
+.o_form_view .o_at_player_categorization {
+    background:
+        linear-gradient(135deg, #0f5c4c 0%, #148f75 48%, #1db894 100%) !important;
+    margin-left: 10px !important;
+}
+
+.o_form_view .o_at_player_categorization:hover {
+    background:
+        linear-gradient(135deg, #0d5043 0%, #117a65 48%, #19a484 100%) !important;
+}
+
 /* Tournament calendar event: logo + name */
 .o_calendar_view .o_atk_cal_event {
     padding: 2px 4px !important;

@@ -6109,13 +6109,75 @@ class Auction(http.Controller):
             )
             if not tournament:
                 return {'duplicate': False}
-            mobile = (mobile or '').strip()
+            mobile = _normalize_registration_contact(mobile)
             count = request.env['auction.team.player'].sudo().search_count([
                 ('tournament_id', '=', tournament.id),
-                ('contact', '=', mobile),
+                ('contact', 'in', _registration_contact_variants(mobile)),
                 ('state', '=', 'draft'),
             ])
             return {'duplicate': count > 0, 'count': count}
+
+    @http.route('/<string:db_name>/<string:tournament_slug>/player/lookup_profile',
+                type='json', auth='none', website=False, csrf=False, methods=['POST'])
+    def player_lookup_profile(self, db_name, tournament_slug, mobile=None, **kw):
+        """Find a prior Auction Champ registration by mobile (any tournament).
+
+        Returns non-payment profile fields for form prefill. Payment must still
+        be completed for the current tournament.
+        """
+        empty = {'found': False, 'duplicate_this_tournament': False, 'count': 0}
+        with self._with_db(db_name) as ok:
+            if not ok or not mobile:
+                return empty
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('slug', '=', tournament_slug)], limit=1
+            )
+            if not tournament:
+                return empty
+
+            mobile = _normalize_registration_contact(mobile)
+            variants = _registration_contact_variants(mobile)
+            if not variants:
+                return empty
+
+            Player = request.env['auction.team.player'].sudo()
+            candidates = Player.search(
+                [('contact', 'in', variants)],
+                order='write_date desc, id desc',
+                limit=40,
+            )
+
+            same_tournament_drafts = candidates.filtered(
+                lambda p: p.tournament_id.id == tournament.id and p.state == 'draft'
+            )
+            same_count = len(same_tournament_drafts)
+            other = candidates.filtered(
+                lambda p: p.tournament_id.id != tournament.id
+            )
+
+            pick = Player.browse()
+            if other:
+                typed = other.filtered(
+                    lambda p: p.tournament_id.tournament_type == tournament.tournament_type
+                )
+                pool = typed or other
+                with_photo = pool.filtered(lambda p: bool(p.photo))
+                pick = (with_photo[:1] or pool[:1])
+
+            if not pick:
+                return {
+                    'found': False,
+                    'duplicate_this_tournament': bool(same_count),
+                    'count': same_count,
+                }
+
+            profile = _registration_profile_payload(pick, tournament, db_name)
+            return {
+                'found': True,
+                'duplicate_this_tournament': bool(same_count),
+                'count': same_count,
+                'profile': profile,
+            }
 
     @http.route('/<string:db_name>/<string:tournament_slug>/player/register/players',
                 type='http', auth='none', website=False, methods=['GET'], csrf=False)
@@ -7551,6 +7613,102 @@ def _football_display_payload(player):
     }
 
 
+def _normalize_registration_contact(mobile):
+    """Normalize submitted mobile to a compact E.164-ish string."""
+    raw = (mobile or '').strip().replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+    if not raw:
+        return ''
+    if raw.startswith('00'):
+        raw = '+' + raw[2:]
+    if not raw.startswith('+') and raw.isdigit():
+        raw = '+' + raw
+    return raw
+
+
+def _registration_contact_variants(mobile):
+    """Return plausible stored contact variants for lookup."""
+    mobile = _normalize_registration_contact(mobile)
+    variants = set()
+    if not mobile:
+        return []
+    variants.add(mobile)
+    digits = ''.join(c for c in mobile if c.isdigit())
+    if digits:
+        variants.add('+' + digits)
+        variants.add(digits)
+    return list(variants)
+
+
+def _split_registration_contact(contact):
+    """Split stored contact into (country_code, national_number)."""
+    contact = _normalize_registration_contact(contact)
+    codes = (
+        '+880', '+971', '+966', '+974', '+968', '+965', '+973',
+        '+91', '+92', '+94', '+61', '+44', '+1',
+    )
+    for code in codes:
+        if contact.startswith(code):
+            return code, contact[len(code):]
+    if contact.startswith('+') and len(contact) > 3:
+        return contact[:3], contact[3:]
+    return '+91', ''.join(c for c in contact if c.isdigit())
+
+
+def _registration_profile_payload(player, tournament, db_name):
+    """Safe public profile for registration prefill (no payment fields)."""
+    contact = player.contact or ''
+    country_code, national = _split_registration_contact(contact)
+    photo_url = ''
+    if player.photo and db_name:
+        photo_url = '/%s/auction/public/image/auction.team.player/%d/photo?sz=reg&v=%s' % (
+            db_name, player.id, int(player.write_date.timestamp()) if player.write_date else player.id,
+        )
+
+    tier_id = False
+    tier_name = player.tier_id.name if player.tier_id else ''
+    if tier_name and tournament:
+        match = tournament.tier_ids.filtered(
+            lambda t: (t.name or '').strip().lower() == tier_name.strip().lower()
+        )[:1]
+        if match:
+            tier_id = match.id
+
+    profile = {
+        'source_player_id': player.id,
+        'source_tournament': player.tournament_id.name or '',
+        'has_photo': bool(player.photo),
+        'photo_url': photo_url,
+        'name': player.name or '',
+        'contact': contact,
+        'country_code': country_code,
+        'national_number': national,
+        'blood_group': player.blood_group or '',
+        'org_id': player.org_id or '',
+        'address': player.address or '',
+        'current_team': player.current_team or '',
+        'tier_id': tier_id or False,
+        'tier_name': tier_name,
+        'role': player.role or '',
+        'batting_style': player.batting_style or '',
+        'bowling_style': player.bowling_style or '',
+        'dominant_position_id': player.dominant_position_id.id if player.dominant_position_id else False,
+        'preferred_foot': player.preferred_foot or '',
+        'age': player.age or False,
+        'height': player.height or '',
+        'weight': player.weight or '',
+        'work_rate': player.work_rate or '',
+        'secondary_position_ids': player.secondary_position_ids.ids,
+        'playing_style_ids': player.playing_style_ids.ids,
+        'strength_ids': player.strength_ids.ids,
+        'jersy_name': player.jersy_name or '',
+        'jersy_number': player.jersy_number or '',
+        'jersy_size': player.jersy_size or '',
+    }
+    if 'email' in player._fields:
+        profile['email'] = player.email or ''
+    return profile
+
+
 def _build_player_vals_from_post(request, tournament):
     """Extract and validate POST form data into a dict for auction.team.player.create()."""
     post = request.httprequest.form
@@ -7572,15 +7730,35 @@ def _build_player_vals_from_post(request, tournament):
     if raw_tier and raw_tier.isdigit():
         tier_id = int(raw_tier)
 
-    # Photo upload — mandatory
+    contact = _normalize_registration_contact(post.get('contact') or '')
+
+    # Photo upload — mandatory unless reusing a verified prior registration photo
     photo_data = False
     photo_file = files.get('photo')
     if photo_file and photo_file.filename:
         photo_data = base64.b64encode(photo_file.read())
+
+    source_player = False
+    raw_source = (post.get('source_player_id') or '').strip()
+    if raw_source.isdigit():
+        source_player = request.env['auction.team.player'].sudo().browse(int(raw_source)).exists()
+        if source_player:
+            source_ok = (
+                contact
+                and _normalize_registration_contact(source_player.contact or '') in
+                set(_registration_contact_variants(contact))
+            )
+            if not source_ok:
+                source_player = False
+
+    if not photo_data and source_player and source_player.photo:
+        reuse = (post.get('reuse_source_photo') or '').strip() == '1'
+        if reuse:
+            photo_data = source_player.photo
     if not photo_data:
         raise ValueError("Player photo is required. Please upload a photo.")
 
-    # Payment proof upload
+    # Payment proof upload (never copied from a prior registration)
     payment_proof_data = False
     proof_file = files.get('payment_proof')
     if proof_file and proof_file.filename:
@@ -7599,7 +7777,7 @@ def _build_player_vals_from_post(request, tournament):
     vals = {
         'sl_no':         sl_no,
         'name':          name,
-        'contact':       (post.get('contact') or '').strip(),
+        'contact':       contact,
         'org_id':        (
             (post.get('org_id') or '').strip()
             if tournament and tournament.enable_org_id_registration

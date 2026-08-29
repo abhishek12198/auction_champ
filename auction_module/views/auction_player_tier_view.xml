@@ -24,6 +24,7 @@
             <field name="model">auction.player.tier</field>
             <field name="arch" type="xml">
                 <tree string="Player Tier">
+                    <field name="sequence" widget="handle"/>
                     <field name="name"/>
                     <field name="description"/>
                     <field name="color"/>
@@ -47,6 +48,7 @@
                         <group>
                             <field name="name" required="1"/>
                             <field name="description"/>
+                            <field name="sequence"/>
                             <field name="is_an_icon_tier"/>
                             <field name="mystery"/>
                             <field name="color" widget="selection_badge"/>
