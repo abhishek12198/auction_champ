@@ -1963,10 +1963,20 @@ class AuctionTournament(models.Model):
 
     @api.model
     def get_brand_favicon_url(self, db_name=None):
-        """QWeb favicon — company branding via public route, same as backend."""
+        """QWeb favicon — static Auction Champ icon (same as backend)."""
         from odoo.addons.auction_module.services import social_preview as seo
         try:
             return seo.brand_favicon_url(self.env, db_name=db_name)
         except Exception:
             _logger.exception('get_brand_favicon_url failed')
+            return seo.DEFAULT_FAVICON
+
+    @api.model
+    def get_brand_favicon_absolute_url(self, db_name=None):
+        """Absolute favicon URL for link-preview crawlers."""
+        from odoo.addons.auction_module.services import social_preview as seo
+        try:
+            return seo.brand_favicon_absolute_url(self.env, db_name=db_name)
+        except Exception:
+            _logger.exception('get_brand_favicon_absolute_url failed')
             return seo.DEFAULT_FAVICON

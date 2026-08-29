@@ -3724,6 +3724,28 @@ class Auction(http.Controller):
         """Fallback Auction Champ OG image when no tournament is in the URL."""
         return self._serve_social_preview_jpeg(None)
 
+    @http.route('/favicon.ico', type='http', auth='none', website=False, csrf=False, sitemap=False)
+    def auction_root_favicon(self, **kw):
+        """Root favicon for WhatsApp / browsers (overrides stock Odoo icon)."""
+        from odoo.modules.module import get_resource_path
+        path = get_resource_path('auction_module', 'static', 'description', 'icon.png')
+        if not path:
+            return self._not_found()
+        with open(path, 'rb') as fav:
+            data = fav.read()
+        etag = hashlib.md5(data).hexdigest()
+        inm = (request.httprequest.headers.get('If-None-Match') or '').replace('"', '').strip()
+        headers = [
+            ('Content-Type', 'image/png'),
+            ('Cache-Control', 'public, max-age=604800'),
+            ('ETag', '"%s"' % etag),
+        ]
+        if inm == etag:
+            resp = request.make_response(b'', headers=headers)
+            resp.status_code = 304
+            return resp
+        return request.make_response(data, headers=headers)
+
     @http.route(
         '/<string:db_name>/<string:tournament_slug>/auction/social-preview.jpg',
         type='http', auth='none', website=False, csrf=False,

@@ -461,17 +461,14 @@ DEFAULT_FAVICON = '/auction_module/static/description/icon.png'
 
 
 def brand_favicon_url(env, db_name=None):
-    """Same branding as backend: company favicon, else Auction Champ default.
+    """Auction Champ favicon for public pages — matches backend web client.
 
-    Public tournament pages (auth=none) cannot use /web/image/... — use the
-    whitelisted public image route instead.
+    Do not use ``res.company.favicon`` here: stock Odoo installs still store the
+    purple Odoo icon, which WhatsApp shows beside the link preview URL.
     """
-    try:
-        db = (db_name or getattr(env.cr, 'dbname', None) or '').strip().strip('/')
-        company = env['res.company'].sudo().search([], limit=1)
-        if company and company.favicon:
-            path = 'auction/public/image/res.company/%d/favicon' % company.id
-            return ('/%s/%s' % (db, path)) if db else ('/' + path)
-    except Exception:
-        _logger.exception('brand favicon url failed')
     return DEFAULT_FAVICON
+
+
+def brand_favicon_absolute_url(env=None, db_name=None):
+    """Absolute favicon URL for crawlers (WhatsApp, Telegram, etc.)."""
+    return public_base_url().rstrip('/') + DEFAULT_FAVICON
