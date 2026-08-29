@@ -6,7 +6,6 @@
       t-att-data-sse-url="('/' + db_name + '/' + tournament_slug + '/player/register/events') if (db_name and tournament_slug) else ''">
 <head>
     <meta charset="UTF-8"/>
-  <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"/>
     <t t-call="auction_module.social_preview_head">
         <t t-set="og_page_key" t-value="'player_register'"/>

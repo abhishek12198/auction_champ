@@ -10,7 +10,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
+    <t t-call="auction_module.page_head_favicon"/>
   <title>Open Players — <t t-esc="tournament.name if tournament else 'Auction'"/> | AuctionChamp</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&amp;family=Open+Sans:wght@400;600&amp;display=swap" rel="stylesheet"/>
   <style>

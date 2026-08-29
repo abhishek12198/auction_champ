@@ -8,6 +8,7 @@
                </t>
     -->
     <template id="social_preview_head" name="Social Preview Head">
+        <t t-call="auction_module.page_head_favicon"/>
         <t t-set="seo" t-value="request.env['auction.tournament'].get_social_preview(og_page_key or 'home', og_record)"/>
         <title t-esc="seo.get('title') or 'Auction Champ'"/>
         <meta name="description" t-att-content="seo.get('description') or ''"/>

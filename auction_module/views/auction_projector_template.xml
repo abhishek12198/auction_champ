@@ -9,9 +9,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>Projector — <t t-if="tournament"><t t-esc="tournament.name"/></t></title>
-  <link rel="shortcut icon"
-        t-att-href="('/' + db_name + '/auction/public/image/res.company/' + str(res_company.id) + '/favicon') if (db_name and res_company and res_company.favicon) else '/auction_module/static/description/icon.png'"
-        type="image/x-icon"/>
+  <t t-call="auction_module.page_head_favicon"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Exo+2:wght@500;600;700;800;900&amp;family=Barlow+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet"/>

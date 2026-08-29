@@ -4,7 +4,6 @@
     <html lang="en" t-att-data-balance-url="('/' + db_name + '/' + tournament.slug + '/auction/show/team/balance') if db_name and tournament and tournament.slug else ''" t-att-data-rp-url="('/' + db_name + '/' + tournament.slug + '/auction/display_auction/remaining-players?theme=vanilla') if db_name and tournament and tournament.slug else ''">
   <head>
     <meta charset="UTF-8" />
-  <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
     <link rel="stylesheet" href="/auction_module/static/src/css/no_mobile_zoom.css"/>
     <link

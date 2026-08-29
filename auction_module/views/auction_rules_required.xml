@@ -6,9 +6,7 @@
     <head>
       <meta charset="utf-8"/>
       <meta name="viewport" content="width=device-width, initial-scale=1"/>
-      <t t-if="res_company">
-        <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
-      </t>
+      <t t-call="auction_module.page_head_favicon"/>
       <title>Set Auction Rules — AuctionChamp</title>
       <link rel="preconnect" href="https://fonts.googleapis.com"/>
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>

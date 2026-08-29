@@ -6,7 +6,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
   <title>Players Payment Status Tracker</title>
-  <link rel="shortcut icon" t-attf-href="/web/image/res.company/#{res_company.id}/favicon" type="image/x-icon"/>
+    <t t-call="auction_module.page_head_favicon"/>
   <style>
 /* ═══════════════════════════════════════════════════════════════════
    Players Payment Status Tracker  —  IPL-grade, mobile-first

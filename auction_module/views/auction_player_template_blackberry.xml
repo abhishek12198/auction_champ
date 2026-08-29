@@ -4,8 +4,11 @@
 <html lang="en" t-att-data-balance-url="('/' + db_name + '/' + tournament.slug + '/auction/show/team/balance') if db_name and tournament and tournament.slug else ''" t-att-data-rp-url="('/' + db_name + '/' + tournament.slug + '/auction/display_auction/remaining-players?theme=blackberry') if db_name and tournament and tournament.slug else ''">
 <head>
   <meta charset="UTF-8" />
-  <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
+  <t t-call="auction_module.social_preview_head">
+      <t t-set="og_page_key" t-value="'display_auction'"/>
+      <t t-set="og_record" t-value="tournament"/>
+  </t>
   <link rel="stylesheet" href="/auction_module/static/src/css/no_mobile_zoom.css"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
         rel="stylesheet"
@@ -15,7 +18,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Exo+2:wght@300;400;500;600;700;800&amp;display=swap"
         rel="stylesheet"/>
-  <title>Player Showcase – Blackberry</title>
   <style>
     @font-face{font-family:'Atlanta College';src:url('/auction_module/static/src/assets/fonts/Atlanta-College.ttf') format('truetype');font-weight:normal;font-style:normal;font-display:swap;}
     @font-face{font-family:'Varsity Team';src:url('/auction_module/static/src/assets/fonts/VarsityTeam-Bold.otf') format('opentype');font-weight:normal;font-style:normal;font-display:swap;}

@@ -221,7 +221,6 @@
       t-att-data-sse-enabled="'1' if sse_enabled else '0'">
 <head>
 <meta charset="UTF-8"/>
-  <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <t t-call="auction_module.social_preview_head">
     <t t-set="og_page_key" t-value="'live_board'"/>
@@ -3946,7 +3945,6 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
 <html t-att-data-theme="theme_val">
 <head>
   <meta charset="UTF-8"/>
-  <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <t t-call="auction_module.social_preview_head">
       <t t-set="og_page_key" t-value="'live_board_offline'"/>

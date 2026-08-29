@@ -22,51 +22,51 @@ BRAND_DESCRIPTION = (
     'Professional cricket tournament management and auction platform.'
 )
 
-# page_key -> (title suffix, description template with {name} and {season})
+# page_key -> (title suffix, short description for WhatsApp / OG)
 PAGE_COPY = {
     'player_register': (
         'Player Registration',
-        'Register as a player for {name}{season}.',
+        'Register to join this tournament.',
     ),
     'live_board': (
-        'Live Auction',
-        'Watch the {name}{season} live auction as it happens.',
+        'Live',
+        'Watch the live auction.',
     ),
     'live_board_offline': (
-        'Live Auction',
-        'Live auction board for {name}{season}.',
+        'Live',
+        'Live auction board.',
     ),
     'live_board_unlock': (
-        'Live Auction',
-        'Watch the {name}{season} live auction.',
+        'Live',
+        'Watch the live auction.',
     ),
     'welcome': (
         'Auction',
-        '{name}{season} on Auction Champ.',
+        'Auction welcome page.',
     ),
     'thank_you': (
         'Auction Complete',
-        '{name}{season} auction is complete.',
+        'Auction has concluded.',
     ),
     'bid_summary': (
         'Bid Summary',
-        'Team purse and bid summary for {name}{season}.',
+        'Team purses and bid summary.',
     ),
     'remaining_players': (
         'Players Left',
-        'Players still available in the {name}{season} auction.',
+        'Players still available in the auction.',
     ),
     'squad': (
         'Squad',
-        'Team squad for {name}{season}.',
+        'Team squad list.',
     ),
     'player_card': (
         'Player Card',
-        'Player card from {name}{season}.',
+        'Player card.',
     ),
     'display_auction': (
-        'Live Auction',
-        'Live auction console for {name}{season}.',
+        'Live',
+        'Watch the live auction.',
     ),
     'tournament_register': (
         'Register Your Tournament',
@@ -171,21 +171,21 @@ def tournament_season(tournament):
     return ''
 
 
+TITLE_SEP = ' - '
+
+
 def _page_copy(page_key, name, season):
-    suffix, desc_tpl = PAGE_COPY.get(page_key) or PAGE_COPY['home']
-    season_bit = (' ' + season) if season else ''
+    suffix, description = PAGE_COPY.get(page_key) or PAGE_COPY['home']
     name = name or SITE_NAME
     if page_key in ('website_home', 'home', 'tournament_register') and not tournament_bound(page_key):
-        title = ('%s — %s' % (SITE_NAME, suffix)) if suffix else SITE_NAME
+        title = ('%s%s%s' % (SITE_NAME, TITLE_SEP, suffix)) if suffix else SITE_NAME
         if page_key == 'website_home':
-            title = 'Auction Champ — Cricket Auction & Tournament Management'
-        description = desc_tpl.format(name=name, season=season_bit)
+            title = 'Auction Champ - Cricket Auction & Tournament Management'
         return title, description
     if suffix:
-        title = '%s — %s' % (name, suffix)
+        title = '%s%s%s' % (name, TITLE_SEP, suffix)
     else:
-        title = ('%s %s' % (name, season)).strip() or name
-    description = desc_tpl.format(name=name, season=season_bit)
+        title = name
     return title, description
 
 
@@ -220,21 +220,15 @@ def build_preview(tournament, page_key='home', db_name=None):
     """Return a dict of SEO/OG values for QWeb. Never includes private data."""
     page_key = _safe_text(page_key, 'home') or 'home'
     name = ''
-    season = ''
-    extra_desc = ''
     rec = tournament
     if rec and getattr(rec, 'ids', None):
         rec = rec[:1]
         name = _safe_text(rec.name)
-        season = tournament_season(rec)
-        extra_desc = _clip(_safe_text(rec.description), 160)
         db_name = db_name or rec.env.cr.dbname
     else:
         rec = None
 
-    title, description = _page_copy(page_key, name or SITE_NAME, season)
-    if extra_desc and rec and page_key in ('player_register', 'live_board', 'welcome', 'home'):
-        description = extra_desc
+    title, description = _page_copy(page_key, name or SITE_NAME, '')
 
     url = canonical_url()
     image = og_image_url(rec, db_name=db_name)
@@ -402,26 +396,37 @@ def _compose_logo_card(logo_im, title, subtitle):
     return canvas
 
 
+def _compose_logo_only(logo_im):
+    """Center tournament logo on brand background — no text overlay."""
+    from PIL import Image
+    canvas = Image.new('RGB', (OG_WIDTH, OG_HEIGHT), (11, 29, 54))
+    if not logo_im:
+        return canvas
+    logo = logo_im.convert('RGBA')
+    max_side = 420
+    logo.thumbnail((max_side, max_side), Image.LANCZOS)
+    lx = (OG_WIDTH - logo.width) // 2
+    ly = (OG_HEIGHT - logo.height) // 2
+    if logo.mode == 'RGBA':
+        canvas.paste(logo, (lx, ly), logo)
+    else:
+        canvas.paste(logo.convert('RGB'), (lx, ly))
+    return canvas
+
+
 def compose_og_jpeg(tournament=None):
     """Return JPEG bytes (1200×630) for WhatsApp / Open Graph."""
-    from PIL import Image
-    source = None
-    title = SITE_NAME
-    subtitle = 'Auction & Tournament Platform'
     if tournament and tournament.id:
-        title = _safe_text(tournament.name, SITE_NAME)
-        season = tournament_season(tournament)
-        subtitle = ('%s · Auction Champ' % season) if season else 'Auction Champ'
+        # Optional dedicated share image, then poster, then logo.
         for field in ('social_share_image', 'poster_image', 'logo'):
             if getattr(tournament, field, False):
                 im = _open_image(tournament[field])
                 if im:
-                    source = field
                     if field == 'logo':
-                        return _jpeg_bytes(_compose_logo_card(im, title, subtitle))
+                        return _jpeg_bytes(_compose_logo_only(im))
                     return _jpeg_bytes(_cover_crop(im, OG_WIDTH, OG_HEIGHT))
     icon = _load_brand_icon()
-    return _jpeg_bytes(_compose_logo_card(icon, title, subtitle))
+    return _jpeg_bytes(_compose_logo_card(icon, SITE_NAME, 'Auction & Tournament Platform'))
 
 
 def _jpeg_bytes(im):
@@ -450,3 +455,23 @@ def cached_og_jpeg(tournament=None):
             _OG_CACHE.clear()
     _OG_CACHE[key] = data
     return data
+
+
+DEFAULT_FAVICON = '/auction_module/static/description/icon.png'
+
+
+def brand_favicon_url(env, db_name=None):
+    """Same branding as backend: company favicon, else Auction Champ default.
+
+    Public tournament pages (auth=none) cannot use /web/image/... — use the
+    whitelisted public image route instead.
+    """
+    try:
+        db = (db_name or getattr(env.cr, 'dbname', None) or '').strip().strip('/')
+        company = env['res.company'].sudo().search([], limit=1)
+        if company and company.favicon:
+            path = 'auction/public/image/res.company/%d/favicon' % company.id
+            return ('/%s/%s' % (db, path)) if db else ('/' + path)
+    except Exception:
+        _logger.exception('brand favicon url failed')
+    return DEFAULT_FAVICON

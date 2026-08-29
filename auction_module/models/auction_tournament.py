@@ -1960,3 +1960,13 @@ class AuctionTournament(models.Model):
         except Exception:
             _logger.exception('social preview metadata failed')
             return seo.build_preview(self.env['auction.tournament'], 'home')
+
+    @api.model
+    def get_brand_favicon_url(self, db_name=None):
+        """QWeb favicon — company branding via public route, same as backend."""
+        from odoo.addons.auction_module.services import social_preview as seo
+        try:
+            return seo.brand_favicon_url(self.env, db_name=db_name)
+        except Exception:
+            _logger.exception('get_brand_favicon_url failed')
+            return seo.DEFAULT_FAVICON

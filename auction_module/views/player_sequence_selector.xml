@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8"/>
   <t t-if="res_company">
-    <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
+    <t t-call="auction_module.page_head_favicon"/>
   </t>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Manual Auction</title>

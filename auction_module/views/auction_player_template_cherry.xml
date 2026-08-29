@@ -4,8 +4,11 @@
     <html lang="en" data-theme="cherry" t-att-data-balance-url="('/' + db_name + '/' + tournament.slug + '/auction/show/team/balance') if db_name and tournament and tournament.slug else ''" t-att-data-rp-url="('/' + db_name + '/' + tournament.slug + '/auction/display_auction/remaining-players?theme=cherry') if db_name and tournament and tournament.slug else ''">
   <head>
     <meta charset="UTF-8" />
-  <link rel="shortcut icon" t-att-href="'/web/image/res.company/%d/favicon' % res_company.id" type="image/x-icon"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
+    <t t-call="auction_module.social_preview_head">
+        <t t-set="og_page_key" t-value="'display_auction'"/>
+        <t t-set="og_record" t-value="tournament"/>
+    </t>
     <link rel="stylesheet" href="/auction_module/static/src/css/no_mobile_zoom.css"/>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1" />
@@ -13,7 +16,6 @@
       href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&amp;family=Barlow+Condensed:wght@400;500;600;700&amp;display=swap"
       rel="stylesheet"
     />
-    <title>Player Showcase</title>
     <style>
       /* Sports display font for the Cherry theme */
       @font-face {

@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="bid_summary_unavailable" name="Bid Summary Unavailable">
+  <t t-set="theme" t-value="theme or (tournament.player_display_template if tournament else None) or 'vanilla'"/>
+  <html lang="en" t-att-data-theme="theme">
+    <head>
+      <meta charset="utf-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1"/>
+      <t t-call="auction_module.social_preview_head">
+          <t t-set="og_page_key" t-value="'bid_summary'"/>
+          <t t-set="og_record" t-value="tournament"/>
+      </t>
+      <link rel="preconnect" href="https://fonts.googleapis.com"/>
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+      <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&amp;family=Oswald:wght@600;700&amp;family=Barlow:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+      <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { margin: 0; min-height: 100%; }
+        body {
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          font-family: Barlow, system-ui, sans-serif;
+          background: var(--bsu-bg);
+          color: var(--bsu-tx);
+        }
+        .bsu-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1rem;
+          padding: 14px 22px;
+          border-bottom: 1px solid var(--bsu-bdr);
+          background: var(--bsu-hdr);
+        }
+        .bsu-brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .bsu-mark {
+          width: 42px; height: 42px; border-radius: 12px;
+          object-fit: contain; background: var(--bsu-logo-bg);
+          border: 1px solid var(--bsu-bdr);
+        }
+        .bsu-mark.ph {
+          display: flex; align-items: center; justify-content: center;
+          font-size: 1.1rem; color: var(--bsu-acc);
+        }
+        .bsu-kicker {
+          font-size: .62rem; letter-spacing: .22em; text-transform: uppercase;
+          font-weight: 700; color: var(--bsu-acc);
+        }
+        .bsu-tour-name {
+          font-family: Oswald, Rajdhani, sans-serif;
+          font-size: 1.05rem; font-weight: 700; letter-spacing: .04em;
+          text-transform: uppercase; white-space: nowrap;
+          overflow: hidden; text-overflow: ellipsis;
+          max-width: min(52vw, 360px);
+        }
+        .bsu-chip {
+          font-size: .62rem; letter-spacing: .16em; text-transform: uppercase;
+          font-weight: 700; padding: .35rem .8rem; border-radius: 999px;
+          border: 1px solid var(--bsu-acc); color: var(--bsu-acc);
+        }
+        .bsu-main {
+          flex: 1 1 auto;
+          display: flex; align-items: center; justify-content: center;
+          padding: 32px 18px 24px;
+        }
+        .bsu-card {
+          width: 100%; max-width: 520px; text-align: center;
+          border-radius: 20px; border: 1px solid var(--bsu-bdr);
+          background: var(--bsu-card); box-shadow: var(--bsu-shadow);
+          padding: 36px 28px 30px;
+        }
+        .bsu-icon {
+          width: 72px; height: 72px; margin: 0 auto 18px;
+          border-radius: 50%; display: flex; align-items: center; justify-content: center;
+          font-size: 1.85rem; background: var(--bsu-icon-bg);
+          border: 2px solid var(--bsu-acc); color: var(--bsu-acc);
+          box-shadow: 0 0 0 6px var(--bsu-glow);
+        }
+        .bsu-title {
+          margin: 0 0 10px;
+          font-family: Oswald, Rajdhani, sans-serif;
+          font-size: clamp(1.55rem, 3.5vw, 2rem);
+          font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+          line-height: 1.15; color: var(--bsu-tx);
+        }
+        .bsu-desc {
+          margin: 0 auto 8px; max-width: 38rem;
+          font-size: .95rem; line-height: 1.65;
+          color: var(--bsu-muted); font-weight: 500;
+        }
+        .bsu-hint {
+          margin: 18px 0 0; font-size: .78rem; letter-spacing: .12em;
+          text-transform: uppercase; font-weight: 700; color: var(--bsu-acc);
+        }
+        .bsu-footer {
+          flex: 0 0 auto; display: flex; flex-direction: column;
+          align-items: center; gap: 6px; padding: 18px 16px 22px;
+          border-top: 1px solid var(--bsu-bdr); background: var(--bsu-hdr);
+        }
+        .bsu-footer-lbl {
+          font-size: .58rem; letter-spacing: .22em; text-transform: uppercase;
+          font-weight: 700; color: var(--bsu-muted);
+        }
+        .bsu-footer-logo { height: 22px; width: auto; opacity: .9; }
+
+        html[data-theme="vanilla"] {
+          --bsu-bg: linear-gradient(180deg, #243a5c 0%, #1a3560 55%, #152a4c 100%);
+          --bsu-hdr: rgba(26,53,96,.92); --bsu-card: rgba(36,58,92,.88);
+          --bsu-tx: #eef2f8; --bsu-muted: rgba(238,242,248,.68);
+          --bsu-acc: #8aa6d4; --bsu-bdr: rgba(160,185,215,.22);
+          --bsu-logo-bg: #fff; --bsu-icon-bg: rgba(91,126,184,.18);
+          --bsu-glow: rgba(91,126,184,.28); --bsu-shadow: 0 18px 48px rgba(0,0,0,.35);
+        }
+        html[data-theme="lemon"] {
+          --bsu-bg: linear-gradient(180deg, #F4ECD0 0%, #E8DDB8 100%);
+          --bsu-hdr: rgba(244,236,208,.94); --bsu-card: rgba(255,252,240,.92);
+          --bsu-tx: #1F1A0A; --bsu-muted: rgba(31,26,10,.62);
+          --bsu-acc: #C9A400; --bsu-bdr: rgba(120,95,0,.28);
+          --bsu-logo-bg: #F0E6C4; --bsu-icon-bg: rgba(201,164,0,.12);
+          --bsu-glow: rgba(201,164,0,.22); --bsu-shadow: 0 16px 40px rgba(80,60,0,.12);
+        }
+        html[data-theme="butterscotch"] {
+          --bsu-bg: radial-gradient(ellipse 55% 40% at 50% 20%, rgba(245,200,66,.16), transparent 70%), #070B14;
+          --bsu-hdr: rgba(12,17,32,.94); --bsu-card: rgba(12,17,32,.92);
+          --bsu-tx: #fff; --bsu-muted: rgba(255,255,255,.62);
+          --bsu-acc: #F5C842; --bsu-bdr: rgba(245,200,66,.28);
+          --bsu-logo-bg: #0C1120; --bsu-icon-bg: rgba(245,200,66,.12);
+          --bsu-glow: rgba(245,200,66,.28); --bsu-shadow: 0 18px 48px rgba(0,0,0,.55);
+        }
+        html[data-theme="strawberry"] {
+          --bsu-bg: linear-gradient(180deg, #FFF0F5 0%, #FCE4EC 100%);
+          --bsu-hdr: rgba(255,240,245,.95); --bsu-card: rgba(255,255,255,.92);
+          --bsu-tx: #1a0a12; --bsu-muted: rgba(26,10,18,.58);
+          --bsu-acc: #C2185B; --bsu-bdr: rgba(194,24,91,.22);
+          --bsu-logo-bg: #fff; --bsu-icon-bg: rgba(233,30,99,.1);
+          --bsu-glow: rgba(233,30,99,.18); --bsu-shadow: 0 16px 40px rgba(120,20,60,.1);
+        }
+        html[data-theme="cherry"] {
+          --bsu-bg: radial-gradient(ellipse 70% 55% at 18% 42%, rgba(225,29,72,.14), transparent 55%), #070104;
+          --bsu-hdr: rgba(10,2,4,.94); --bsu-card: rgba(22,8,12,.92);
+          --bsu-tx: #fff5f7; --bsu-muted: rgba(255,245,247,.62);
+          --bsu-acc: #E11D48; --bsu-bdr: rgba(225,29,72,.28);
+          --bsu-logo-bg: #16080c; --bsu-icon-bg: rgba(225,29,72,.14);
+          --bsu-glow: rgba(225,29,72,.28); --bsu-shadow: 0 18px 48px rgba(0,0,0,.55);
+        }
+        html[data-theme="blackberry"] {
+          --bsu-bg: radial-gradient(ellipse 55% 40% at 50% 20%, rgba(59,130,246,.16), transparent 70%), #050a14;
+          --bsu-hdr: rgba(5,10,20,.94); --bsu-card: rgba(13,24,48,.92);
+          --bsu-tx: #ffffff; --bsu-muted: rgba(255,255,255,.62);
+          --bsu-acc: #3B82F6; --bsu-bdr: rgba(59,130,246,.30);
+          --bsu-logo-bg: #0d1830; --bsu-icon-bg: rgba(59,130,246,.14);
+          --bsu-glow: rgba(59,130,246,.30); --bsu-shadow: 0 18px 48px rgba(0,0,0,.5);
+        }
+        html[data-theme="pistah"] {
+          --bsu-bg: radial-gradient(ellipse 55% 40% at 50% 20%, rgba(107,191,78,.14), transparent 70%), #060e08;
+          --bsu-hdr: rgba(6,14,8,.94); --bsu-card: rgba(13,31,17,.92);
+          --bsu-tx: #e8f5e9; --bsu-muted: rgba(232,245,233,.62);
+          --bsu-acc: #6BBF4E; --bsu-bdr: rgba(107,191,78,.28);
+          --bsu-logo-bg: #0d1f11; --bsu-icon-bg: rgba(107,191,78,.14);
+          --bsu-glow: rgba(107,191,78,.25); --bsu-shadow: 0 18px 48px rgba(0,0,0,.5);
+        }
+      </style>
+    </head>
+    <body>
+      <header class="bsu-header">
+        <div class="bsu-brand">
+          <t t-if="tournament and tournament.logo and db_name">
+            <img class="bsu-mark"
+                 t-attf-src="/#{db_name}/auction/public/image/auction.tournament/#{tournament.id}/logo"
+                 alt=""/>
+          </t>
+          <t t-elif="tournament and tournament.logo">
+            <img class="bsu-mark"
+                 t-att-src="'/web/image/auction.tournament/%s/logo' % tournament.id"
+                 alt=""/>
+          </t>
+          <t t-else="">
+            <div class="bsu-mark ph" aria-hidden="true">📊</div>
+          </t>
+          <div>
+            <div class="bsu-kicker">AuctionChamp · Bid Summary</div>
+            <div class="bsu-tour-name" t-esc="tournament.name if tournament else 'Tournament'"/>
+          </div>
+        </div>
+        <div class="bsu-chip" t-esc="(theme or 'vanilla').replace('_', ' ').title()"/>
+      </header>
+
+      <main class="bsu-main">
+        <div class="bsu-card">
+          <div class="bsu-icon" aria-hidden="true">⏳</div>
+          <h1 class="bsu-title">Not Available Yet</h1>
+          <p class="bsu-desc" t-if="unavailable_reason == 'no_rules'">
+            The Bid Summary will appear here once auction rules are configured for this tournament.
+            Team purses, max bids and squad progress are shown after the auction setup is complete.
+          </p>
+          <p class="bsu-desc" t-else="">
+            The Bid Summary is not available at the moment because the live auction has not started yet.
+            Please check back once bidding begins — team balances and squad details will update here in real time.
+          </p>
+          <p class="bsu-hint">Waiting for auction to start</p>
+        </div>
+      </main>
+
+      <footer class="bsu-footer">
+        <span class="bsu-footer-lbl">Powered by</span>
+        <img class="bsu-footer-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+      </footer>
+    </body>
+  </html>
+</template>
+</odoo>

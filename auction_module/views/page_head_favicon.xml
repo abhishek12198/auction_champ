@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      Same favicon as backend (company favicon from Settings, else AC default).
+      Uses /{db}/auction/public/image/... so auth-free live board / projector pages work.
+    -->
+    <template id="page_head_favicon" name="Page Head Favicon">
+        <t t-set="fav_url" t-value="request.env['auction.tournament'].get_brand_favicon_url(favicon_db_name or db_name)"/>
+        <link rel="icon" t-att-href="fav_url"/>
+        <link rel="shortcut icon" t-att-href="fav_url"/>
+    </template>
+</odoo>
