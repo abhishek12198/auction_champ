@@ -19,7 +19,7 @@
           rel="stylesheet"/>
 
     <!-- Registration form CSS -->
-    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.661"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.660"/>
 
     <!-- ── Per-theme CSS custom properties ────────────────────── -->
     <style>
@@ -1240,20 +1240,6 @@
     </div>
 </div>
 
-<!-- ── Duplicate mobile notice (dismissible) ── -->
-<div id="mobileDupModal" class="reg-dup-overlay" hidden="hidden" aria-hidden="true">
-    <div class="reg-dup-dialog" role="alertdialog" aria-modal="true"
-         aria-labelledby="mobileDupTitle" aria-describedby="mobileDupMsg">
-        <div class="reg-dup-icon" aria-hidden="true">⚠️</div>
-        <h3 id="mobileDupTitle" class="reg-dup-title">Already registered</h3>
-        <p id="mobileDupMsg" class="reg-dup-msg">
-            This mobile number is already registered in this tournament.
-            You can ignore this and continue with your registration.
-        </p>
-        <button type="button" class="reg-dup-ok" id="mobileDupOk">OK, continue</button>
-    </div>
-</div>
-
 <!-- ── Photo Cropper Modal ── -->
 <div id="cropperModal" class="reg-crop-overlay" aria-hidden="true">
     <div class="reg-crop-dialog" role="dialog" aria-modal="true" aria-label="Adjust your photo">
@@ -1981,54 +1967,10 @@
 
     function showDupWarn() {
         if (warnEl) warnEl.style.display = 'block';
-        var modal = document.getElementById('mobileDupModal');
-        if (modal &amp;&amp; !modal.classList.contains('is-shown-once')) {
-            modal.hidden = false;
-            modal.setAttribute('aria-hidden', 'false');
-            modal.classList.add('is-open', 'is-shown-once');
-            var ok = document.getElementById('mobileDupOk');
-            if (ok) {
-                try { ok.focus(); } catch (e) { /* */ }
-            }
-        }
     }
     function hideDupWarn() {
         if (warnEl) warnEl.style.display = 'none';
     }
-    function closeDupModal() {
-        var modal = document.getElementById('mobileDupModal');
-        if (!modal) return;
-        modal.hidden = true;
-        modal.setAttribute('aria-hidden', 'true');
-        modal.classList.remove('is-open');
-        if (numEl) {
-            try { numEl.focus(); } catch (e) { /* */ }
-        }
-    }
-    window.regShowMobileDupWarn = showDupWarn;
-    window.regHideMobileDupWarn = hideDupWarn;
-    (function bindDupModal() {
-        var modal = document.getElementById('mobileDupModal');
-        var ok = document.getElementById('mobileDupOk');
-        if (ok) ok.addEventListener('click', closeDupModal);
-        if (modal) {
-            modal.addEventListener('click', function (ev) {
-                if (ev.target === modal) closeDupModal();
-            });
-        }
-        document.addEventListener('keydown', function (ev) {
-            if (ev.key === 'Escape' &amp;&amp; modal &amp;&amp; modal.classList.contains('is-open')) {
-                closeDupModal();
-            }
-        });
-    })();
-
-    // Reset popup-once when the number changes
-    numEl.addEventListener('input', function () {
-        var modal = document.getElementById('mobileDupModal');
-        if (modal) modal.classList.remove('is-shown-once');
-        hideDupWarn();
-    });
 
     // On form submit — sync combined value (HTML pattern uses active country length)
     var form = document.querySelector('form');
@@ -2243,7 +2185,8 @@
             if (result &amp;&amp; result.found &amp;&amp; result.profile) {
                 applyProfile(result.profile);
                 if (result.duplicate_this_tournament) {
-                    if (window.regShowMobileDupWarn) window.regShowMobileDupWarn();
+                    var warnEl = document.getElementById('mobileWarning');
+                    if (warnEl) warnEl.style.display = 'block';
                 }
             } else if (result &amp;&amp; result.duplicate_this_tournament) {
                 setStatus('This mobile is already used here. You can still continue.', true);
@@ -2303,7 +2246,7 @@
 })();
 </script>
 <script src="/auction_module/static/src/js/auction_sse_client.js"></script>
-<script src="/auction_module/static/src/js/player_registration_roster.js?v=1.5.661"></script>
+<script src="/auction_module/static/src/js/player_registration_roster.js?v=1.5.660"></script>
 
 </body>
 </html>

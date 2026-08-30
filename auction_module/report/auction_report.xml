@@ -31,7 +31,7 @@
             <field name="report_name">auction_module.report_player_card_list</field>
             <field name="report_file">auction_module.report_player_card_list</field>
             <field name="paperformat_id" ref="auction_module.paperformat_card_landscape"/>
-            <field name="print_report_name">object.get_player_cards_print_filename()</field>
+            <field name="print_report_name">"Player_Cards" if not object.tournament_id else "%s_Players" % object.tournament_id.name.replace(" ", "_")</field>
             <field name="groups_id" eval="[(4, ref('auction_module.group_auction_player_card_print'))]"/>
         </record>
 
@@ -43,7 +43,7 @@
             <field name="report_name">auction_module.report_player_card_list_butterscotch</field>
             <field name="report_file">auction_module.report_player_card_list_butterscotch</field>
             <field name="paperformat_id" ref="auction_module.paperformat_card_landscape"/>
-            <field name="print_report_name">object.get_player_cards_print_filename()</field>
+            <field name="print_report_name">"Player_Cards" if not object.tournament_id else "%s_Players" % object.tournament_id.name.replace(" ", "_")</field>
             <field name="groups_id" eval="[(4, ref('auction_module.group_auction_player_card_print'))]"/>
         </record>
         <!-- Player card list print – Strawberry -->
@@ -54,7 +54,7 @@
             <field name="report_name">auction_module.report_player_card_list_strawberry</field>
             <field name="report_file">auction_module.report_player_card_list_strawberry</field>
             <field name="paperformat_id" ref="auction_module.paperformat_card_landscape"/>
-            <field name="print_report_name">object.get_player_cards_print_filename()</field>
+            <field name="print_report_name">"Player_Cards" if not object.tournament_id else "%s_Players" % object.tournament_id.name.replace(" ", "_")</field>
             <field name="groups_id" eval="[(4, ref('auction_module.group_auction_player_card_print'))]"/>
         </record>
 
@@ -65,7 +65,7 @@
             <field name="report_name">auction_module.report_player_card_list_cherry</field>
             <field name="report_file">auction_module.report_player_card_list_cherry</field>
             <field name="paperformat_id" ref="auction_module.paperformat_card_landscape"/>
-            <field name="print_report_name">object.get_player_cards_print_filename()</field>
+            <field name="print_report_name">"Player_Cards" if not object.tournament_id else "%s_Players" % object.tournament_id.name.replace(" ", "_")</field>
             <field name="groups_id" eval="[(4, ref('auction_module.group_auction_player_card_print'))]"/>
         </record>
 
@@ -78,7 +78,7 @@
             <field name="report_name">auction_module.report_player_card_list_lemon</field>
             <field name="report_file">auction_module.report_player_card_list_lemon</field>
             <field name="paperformat_id" ref="auction_module.paperformat_card_landscape"/>
-            <field name="print_report_name">object.get_player_cards_print_filename()</field>
+            <field name="print_report_name">"Player_Cards" if not object.tournament_id else "%s_Players" % object.tournament_id.name.replace(" ", "_")</field>
             <field name="groups_id" eval="[(4, ref('auction_module.group_auction_player_card_print'))]"/>
         </record>
 
@@ -89,7 +89,7 @@
             <field name="report_name">auction_module.report_player_card_list_pistah</field>
             <field name="report_file">auction_module.report_player_card_list_pistah</field>
             <field name="paperformat_id" ref="auction_module.paperformat_card_landscape"/>
-            <field name="print_report_name">object.get_player_cards_print_filename()</field>
+            <field name="print_report_name">"Player_Cards" if not object.tournament_id else "%s_Players" % object.tournament_id.name.replace(" ", "_")</field>
             <field name="groups_id" eval="[(4, ref('auction_module.group_auction_player_card_print'))]"/>
         </record>
 
@@ -100,7 +100,7 @@
             <field name="report_name">auction_module.report_player_card_list_blackberry</field>
             <field name="report_file">auction_module.report_player_card_list_blackberry</field>
             <field name="paperformat_id" ref="auction_module.paperformat_card_landscape"/>
-            <field name="print_report_name">object.get_player_cards_print_filename()</field>
+            <field name="print_report_name">"Player_Cards" if not object.tournament_id else "%s_Players" % object.tournament_id.name.replace(" ", "_")</field>
             <field name="groups_id" eval="[(4, ref('auction_module.group_auction_player_card_print'))]"/>
         </record>
 
@@ -114,7 +114,7 @@
             <field name="report_name">auction_module.report_player_card_football_list</field>
             <field name="report_file">auction_module.report_player_card_football_list</field>
             <field name="paperformat_id" ref="auction_module.paperformat_card_landscape"/>
-            <field name="print_report_name">object.get_player_cards_print_filename()</field>
+            <field name="print_report_name">"Player_Cards" if not object.tournament_id else "%s_Players" % object.tournament_id.name.replace(" ", "_")</field>
             <field name="groups_id" eval="[(4, ref('auction_module.group_auction_player_card_print'))]"/>
         </record>
     </data>

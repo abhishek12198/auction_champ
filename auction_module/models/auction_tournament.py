@@ -563,6 +563,12 @@ class AuctionTournament(models.Model):
         compute='_compute_player_state_counts',
         store=False,
     )
+    auction_history_count = fields.Integer(
+        string='Auction History',
+        compute='_compute_auction_history_count',
+        store=False,
+        help='Number of auction history events for this tournament.',
+    )
     deleted_player_ids = fields.One2many(
         'auction.team.player.deleted', 'tournament_id',
         string='Deleted Players',
@@ -682,6 +688,19 @@ class AuctionTournament(models.Model):
             rec.auction_player_count    = c.get('auction', 0)
             rec.sold_player_count       = c.get('sold', 0)
             rec.unsold_player_count     = c.get('unsold', 0)
+
+    def _compute_auction_history_count(self):
+        groups = self.env['auction.history'].sudo().with_context(active_test=False).read_group(
+            [('tournament_id', 'in', self.ids)],
+            ['tournament_id'],
+            ['tournament_id'],
+        )
+        counts = {
+            g['tournament_id'][0]: g['tournament_id_count']
+            for g in groups if g.get('tournament_id')
+        }
+        for rec in self:
+            rec.auction_history_count = counts.get(rec.id, 0)
 
     def _compute_deleted_player_count(self):
         groups = self.env['auction.team.player.deleted'].sudo().read_group(
@@ -1475,6 +1494,18 @@ class AuctionTournament(models.Model):
 
     def action_view_unsold_players(self):
         return self._player_state_action('unsold', 'Unsold Players')
+
+    def action_view_auction_history(self):
+        """Open the custom auction-history board for this tournament."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'auction_module.auction_history_board',
+            'name': _('Auction History — %s') % (self.name or ''),
+            'target': 'current',
+            'context': {'tournament_id': self.id},
+            'params': {'tournament_id': self.id},
+        }
 
     def action_view_deleted_players(self):
         """Open the recycle bin of deleted players for this tournament."""

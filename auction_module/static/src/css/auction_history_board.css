@@ -1,0 +1,979 @@
+/* Auction History Board — Payment Tracker palette + mobile-first layout */
+
+.o_ah_board_action,
+.o_ah_app {
+  --ah-navy: #0d1e3a;
+  --ah-navy-dark: #0a1429;
+  --ah-blue: #2252b5;
+  --ah-gold: #fdce33;
+  --ah-gold-dark: #e09e00;
+  --ah-bg: #f0f4fa;
+  --ah-surf: #ffffff;
+  --ah-surf2: #f5f7fb;
+  --ah-tx: #0d1e3a;
+  --ah-tx2: #5a6b85;
+  --ah-tx3: #8b9bb4;
+  --ah-bdr: #dbe3f0;
+  --ah-ok: #15803d;
+  --ah-ok-bg: #dcfce7;
+  --ah-muted-bg: #e8eef6;
+  --ah-font: 'Rajdhani', 'Trebuchet MS', system-ui, sans-serif;
+}
+
+.o_ah_board_action {
+  position: relative;
+  width: 100%;
+  min-height: calc(100vh - 46px);
+  box-sizing: border-box;
+  background: var(--ah-bg);
+  color: var(--ah-tx);
+  font-family: var(--ah-font);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.o_ah_app {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100%;
+  max-width: 100%;
+  min-height: calc(100vh - 46px);
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background: var(--ah-bg);
+  color: var(--ah-tx);
+  font-family: var(--ah-font);
+}
+
+/* ── Header (matches Payment Tracker) ── */
+.o_ah_hdr {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px;
+  padding: 12px 16px;
+  min-height: 64px;
+  box-sizing: border-box;
+  width: 100%;
+  flex-shrink: 0;
+  background-color: #0d1e3a !important;
+  background-image: linear-gradient(135deg, #0a1429 0%, #0d1e3a 55%, #2252b5 140%) !important;
+  color: #fff !important;
+  border-bottom: 2px solid rgba(253, 206, 51, 0.35);
+}
+
+.o_ah_hdr_left {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 12px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.o_ah_logo_ph {
+  width: 42px;
+  height: 42px;
+  max-width: 42px;
+  max-height: 42px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: #fdce33;
+  color: #0a1429;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  border: 1px solid rgba(253, 206, 51, 0.35);
+}
+
+.o_ah_hdr_text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: #fff;
+}
+
+.o_ah_kicker {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fdce33 !important;
+  line-height: 1.2;
+}
+
+.o_ah_title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #fff !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: min(48vw, 420px);
+  line-height: 1.25;
+}
+
+.o_ah_sub {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.o_ah_hdr_actions {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.o_ah_btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  padding: 7px 12px;
+  min-height: 36px;
+  cursor: pointer;
+  font-family: var(--ah-font);
+  font-weight: 700;
+  font-size: 0.88rem;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: none;
+  transition: background .15s, border-color .15s, color .15s, transform .12s;
+}
+
+.o_ah_btn:hover { transform: translateY(-1px); }
+.o_ah_btn:active { transform: translateY(0); }
+
+.o_ah_btn_gold {
+  background: #fdce33 !important;
+  color: #0a1429 !important;
+  border-color: #fdce33 !important;
+}
+
+.o_ah_btn_gold:hover {
+  background: #ffe066 !important;
+}
+
+.o_ah_btn_ghost {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+.o_ah_btn_ghost:hover {
+  background: rgba(253, 206, 51, 0.18) !important;
+  border-color: rgba(253, 206, 51, 0.55) !important;
+}
+
+/* ── Toolbar: search + filters ── */
+.o_ah_toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: var(--ah-surf);
+  border-bottom: 1px solid var(--ah-bdr);
+  flex-shrink: 0;
+}
+
+.o_ah_search_wrap {
+  position: relative;
+  flex: 1 1 220px;
+  min-width: 0;
+  max-width: 360px;
+}
+
+.o_ah_search {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 8px;
+  border: 1px solid var(--ah-bdr);
+  background: var(--ah-surf2);
+  color: var(--ah-tx);
+  padding: 9px 34px 9px 12px;
+  outline: none;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  min-height: 40px;
+}
+
+.o_ah_search:focus {
+  border-color: var(--ah-blue);
+  box-shadow: 0 0 0 3px rgba(34, 82, 181, 0.15);
+  background: #fff;
+}
+
+.o_ah_search_clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: var(--ah-tx3);
+  cursor: pointer;
+  padding: 6px 8px;
+  font-size: 14px;
+}
+
+.o_ah_filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 1px;
+}
+
+.o_ah_filters::-webkit-scrollbar { display: none; }
+
+.o_ah_filter {
+  flex: 0 0 auto;
+  border: 1px solid var(--ah-bdr);
+  background: var(--ah-surf2);
+  color: var(--ah-tx2);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: inherit;
+  min-height: 34px;
+}
+
+.o_ah_filter:hover {
+  border-color: var(--ah-blue);
+  color: var(--ah-blue);
+}
+
+.o_ah_filter.active {
+  background: linear-gradient(135deg, var(--ah-gold), var(--ah-gold-dark));
+  color: var(--ah-navy);
+  border-color: transparent;
+}
+
+/* ── Body / list ── */
+.o_ah_body {
+  flex: 1;
+  padding: 12px 16px 16px;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.o_ah_loading,
+.o_ah_empty {
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--ah-tx2);
+  border: 1px dashed var(--ah-bdr);
+  border-radius: 12px;
+  background: var(--ah-surf);
+}
+
+.o_ah_empty strong {
+  display: block;
+  color: var(--ah-tx);
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+.o_ah_list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.o_ah_row {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.o_ah_rail {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.o_ah_rail::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: -10px;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(34, 82, 181, 0.4), rgba(13, 30, 58, 0.06));
+}
+
+.o_ah_dot {
+  position: relative;
+  z-index: 1;
+  width: 10px;
+  height: 10px;
+  margin-top: 26px;
+  border-radius: 50%;
+  background: var(--ah-gold);
+  box-shadow: 0 0 0 3px rgba(253, 206, 51, 0.22);
+}
+
+.o_ah_row_sold .o_ah_dot {
+  background: var(--ah-ok);
+  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.18);
+}
+
+.o_ah_row_unsold .o_ah_dot {
+  background: var(--ah-tx3);
+  box-shadow: 0 0 0 3px rgba(139, 155, 180, 0.22);
+}
+
+.o_ah_row_other .o_ah_dot {
+  background: var(--ah-blue);
+  box-shadow: 0 0 0 3px rgba(34, 82, 181, 0.18);
+}
+
+.o_ah_card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--ah-surf);
+  border: 1px solid var(--ah-bdr);
+  box-shadow: 0 1px 2px rgba(13, 30, 58, 0.04);
+  min-width: 0;
+}
+
+.o_ah_card_main {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.o_ah_player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 180px;
+}
+
+.o_ah_photo {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--ah-surf2);
+  border: 1px solid var(--ah-bdr);
+  flex-shrink: 0;
+}
+
+.o_ah_photo_ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: var(--ah-tx3);
+}
+
+.o_ah_player_meta {
+  min-width: 0;
+}
+
+.o_ah_player_top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+  flex-wrap: wrap;
+}
+
+.o_ah_sl {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--ah-navy);
+  background: rgba(253, 206, 51, 0.35);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
+
+.o_ah_badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  border-radius: 6px;
+  padding: 2px 7px;
+  text-transform: uppercase;
+}
+
+.o_ah_badge_sold { background: var(--ah-ok-bg); color: var(--ah-ok); }
+.o_ah_badge_unsold { background: var(--ah-muted-bg); color: var(--ah-tx2); }
+.o_ah_badge_other { background: rgba(34, 82, 181, 0.12); color: var(--ah-blue); }
+
+.o_ah_player_name {
+  font-size: 15px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--ah-tx);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.o_ah_mid {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+.o_ah_team_lbl {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ah-tx3);
+  margin-bottom: 3px;
+  font-weight: 700;
+}
+
+.o_ah_team_row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.o_ah_team_logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: contain;
+  background: var(--ah-surf2);
+  border: 1px solid var(--ah-bdr);
+  flex-shrink: 0;
+}
+
+.o_ah_team_logo_ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--ah-tx3);
+}
+
+.o_ah_team_meta { min-width: 0; }
+
+.o_ah_team_name {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--ah-tx);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.o_ah_price {
+  display: block;
+  margin-top: 1px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ah-blue);
+}
+
+.o_ah_msg {
+  font-size: 13px;
+  color: var(--ah-tx2);
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+.o_ah_time {
+  text-align: right;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  padding-left: 4px;
+}
+
+.o_ah_date {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ah-tx2);
+}
+
+.o_ah_clock {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ah-navy);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Pager ── */
+.o_ah_pager {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin-top: auto;
+  padding: 8px 12px 12px;
+  background: linear-gradient(180deg, transparent, var(--ah-bg) 28%);
+}
+
+.o_ah_pager_inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--ah-surf);
+  border: 1px solid var(--ah-bdr);
+  box-shadow: 0 -4px 16px rgba(13, 30, 58, 0.06);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.o_ah_pager_info {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ah-tx2);
+  font-variant-numeric: tabular-nums;
+}
+
+.o_ah_pager_nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.o_ah_prev,
+.o_ah_next,
+.o_ah_page_btn {
+  border: 1px solid var(--ah-bdr);
+  background: var(--ah-surf2);
+  color: var(--ah-tx);
+  border-radius: 8px;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.o_ah_page_btn.active {
+  background: var(--ah-navy);
+  color: #fff;
+  border-color: var(--ah-navy);
+}
+
+.o_ah_prev:disabled,
+.o_ah_next:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.o_ah_ellipsis {
+  padding: 0 4px;
+  color: var(--ah-tx3);
+}
+
+/* ══════════ Tablet ══════════ */
+@media (max-width: 900px) {
+  .o_ah_title {
+    max-width: min(55vw, 360px);
+  }
+
+  .o_ah_card_main {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .o_ah_player,
+  .o_ah_mid {
+    flex: 1 1 100%;
+  }
+}
+
+/* ══════════ Mobile — dense list rows (10–15 visible) ══════════ */
+@media (max-width: 640px) {
+  .o_ah_hdr {
+    flex-wrap: nowrap;
+    padding: 8px 10px;
+    min-height: 0;
+    gap: 8px;
+  }
+
+  .o_ah_hdr_left {
+    width: auto;
+    flex: 1 1 auto;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .o_ah_logo_ph {
+    display: none;
+  }
+
+  .o_ah_back {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 5px 8px;
+  }
+
+  .o_ah_title {
+    font-size: 0.92rem;
+    max-width: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    -webkit-line-clamp: unset;
+  }
+
+  .o_ah_kicker {
+    font-size: 0.6rem;
+  }
+
+  .o_ah_sub {
+    font-size: 0.68rem;
+  }
+
+  .o_ah_hdr_actions {
+    margin-left: 0;
+    flex-shrink: 0;
+  }
+
+  .o_ah_btn_lbl {
+    display: none;
+  }
+
+  .o_ah_btn {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 5px 8px;
+  }
+
+  .o_ah_toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 8px 10px;
+  }
+
+  .o_ah_search_wrap {
+    max-width: none;
+    flex: 1 1 auto;
+  }
+
+  .o_ah_search {
+    min-height: 34px;
+    padding: 6px 30px 6px 10px;
+    font-size: 0.85rem;
+  }
+
+  .o_ah_filters {
+    width: 100%;
+  }
+
+  .o_ah_filter {
+    flex: 1 1 0;
+    text-align: center;
+    padding: 5px 4px;
+    font-size: 10px;
+    min-height: 28px;
+  }
+
+  .o_ah_body {
+    padding: 6px 8px 8px;
+  }
+
+  .o_ah_list {
+    gap: 0;
+    border: 1px solid var(--ah-bdr);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--ah-surf);
+  }
+
+  /* Flat dense rows — no cards, no timeline rail */
+  .o_ah_row {
+    display: block;
+    grid-template-columns: none;
+    gap: 0;
+    border-bottom: 1px solid var(--ah-bdr);
+  }
+
+  .o_ah_row:last-child {
+    border-bottom: none;
+  }
+
+  .o_ah_rail {
+    display: none;
+  }
+
+  .o_ah_card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    min-height: 44px;
+  }
+
+  .o_ah_card:active {
+    background: var(--ah-surf2);
+  }
+
+  .o_ah_card_main {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-wrap: nowrap;
+  }
+
+  .o_ah_player {
+    flex: 1 1 42%;
+    min-width: 0;
+    gap: 6px;
+  }
+
+  .o_ah_photo {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+  }
+
+  .o_ah_photo_ph {
+    font-size: 14px;
+  }
+
+  .o_ah_player_top {
+    margin-bottom: 0;
+    gap: 4px;
+  }
+
+  .o_ah_sl {
+    font-size: 9px;
+    padding: 1px 4px;
+  }
+
+  .o_ah_badge {
+    font-size: 8px;
+    padding: 1px 4px;
+    letter-spacing: 0.04em;
+  }
+
+  .o_ah_player_name {
+    font-size: 11px;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .o_ah_mid {
+    flex: 1 1 38%;
+    min-width: 0;
+    padding: 0;
+    border: none;
+  }
+
+  .o_ah_team_lbl {
+    display: none;
+  }
+
+  .o_ah_team_row {
+    gap: 5px;
+  }
+
+  .o_ah_team_logo {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+  }
+
+  .o_ah_team_logo_ph {
+    font-size: 11px;
+  }
+
+  .o_ah_team_name {
+    font-size: 10px;
+    line-height: 1.15;
+  }
+
+  .o_ah_price {
+    font-size: 10px;
+    margin-top: 0;
+    line-height: 1.15;
+  }
+
+  .o_ah_msg {
+    font-size: 10px;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .o_ah_team_unsold .o_ah_team_name {
+    font-size: 10px;
+  }
+
+  .o_ah_time {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    text-align: right;
+    padding: 0;
+    border: none;
+    width: auto;
+    flex: 0 0 auto;
+    gap: 0;
+  }
+
+  .o_ah_date {
+    font-size: 9px;
+    line-height: 1.1;
+  }
+
+  .o_ah_clock {
+    font-size: 11px;
+    margin-top: 0;
+    line-height: 1.15;
+  }
+
+  .o_ah_pager {
+    padding: 4px 8px 8px;
+  }
+
+  .o_ah_pager_inner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 8px;
+  }
+
+  .o_ah_pager_info {
+    text-align: left;
+    font-size: 11px;
+  }
+
+  .o_ah_pager_nav {
+    justify-content: flex-end;
+    width: auto;
+    flex: 1 1 auto;
+  }
+
+  .o_ah_prev,
+  .o_ah_next {
+    flex: 0 0 auto;
+    min-width: 0;
+    height: 28px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+
+  .o_ah_page_btn {
+    min-width: 26px;
+    height: 28px;
+    padding: 0 4px;
+    font-size: 11px;
+  }
+
+  .o_ah_ellipsis {
+    font-size: 11px;
+  }
+}
+
+/* Extra-narrow phones — even denser */
+@media (max-width: 380px) {
+  .o_ah_card {
+    padding: 5px 6px;
+    min-height: 40px;
+    gap: 6px;
+  }
+
+  .o_ah_photo {
+    width: 28px;
+    height: 28px;
+  }
+
+  .o_ah_player_name {
+    font-size: 10px;
+  }
+
+  .o_ah_team_name,
+  .o_ah_price,
+  .o_ah_msg {
+    font-size: 9px;
+  }
+
+  .o_ah_team_logo {
+    width: 18px;
+    height: 18px;
+  }
+
+  .o_ah_clock {
+    font-size: 10px;
+  }
+
+  .o_ah_date {
+    font-size: 8px;
+  }
+
+  .o_ah_filter {
+    padding: 4px 2px;
+    font-size: 9px;
+    letter-spacing: 0;
+    min-height: 26px;
+  }
+
+  /* Hide date on very narrow — keep only time */
+  .o_ah_date {
+    display: none;
+  }
+}

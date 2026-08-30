@@ -159,6 +159,13 @@
                                 <field name="deleted_player_count" widget="statinfo"
                                        string="Deleted"/>
                             </button>
+                            <button class="oe_stat_button" type="object"
+                                    name="action_view_auction_history"
+                                    icon="fa-history"
+                                    help="View sold / unsold auction history for this tournament">
+                                <field name="auction_history_count" widget="statinfo"
+                                       string="History"/>
+                            </button>
                             <button name="action_open_revoke_transactions"
                                     type="object"
                                     class="oe_stat_button o_rt_restore_stat"

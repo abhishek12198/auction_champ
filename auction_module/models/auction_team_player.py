@@ -1010,40 +1010,6 @@ class AuctionTeamPlayer(models.Model):
             'player_name': player.name or '',
         }
 
-    def get_player_cards_print_filename(self):
-        """PDF basename (no extension) for Print Player Cards.
-
-        Multi-tier selection:
-            ``{Tournament} - {Short Desc} Player Cards``
-        Single-tier selection:
-            ``{Tournament} - {Short Desc} Player Cards({Tier})``
-        """
-        players = self.exists()
-        if not players:
-            return 'Player Cards'
-
-        tournament = players.mapped('tournament_id')[:1]
-        t_name = (tournament.name or 'Tournament').strip() if tournament else 'Tournament'
-        t_desc = (tournament.description or '').strip() if tournament else ''
-        if t_desc:
-            base = '%s - %s Player Cards' % (t_name, t_desc)
-        else:
-            base = '%s Player Cards' % t_name
-
-        tier_keys = {
-            p.tier_id.id if p.tier_id else False
-            for p in players
-        }
-        if len(tier_keys) == 1:
-            tier = players[0].tier_id
-            tier_label = (tier.name or '').strip() if tier else 'Unassigned'
-            if tier_label:
-                base = '%s(%s)' % (base, tier_label)
-
-        safe = re.sub(r'[\\/:*?"<>|]+', '-', base)
-        safe = re.sub(r'\s+', ' ', safe).strip(' .')
-        return safe or 'Player Cards'
-
     def print_player_cards(self):
         # Refresh print photos so crop/size matches the card frame (wkhtmltopdf
         # ignores object-fit; pre-cropped JPEGs prevent stretch).

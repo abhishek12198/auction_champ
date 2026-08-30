@@ -39,5 +39,12 @@
             <field name="view_mode">tree</field>
         </record>
 
+        <!-- Custom timeline / list board (opened from Tournament smart button) -->
+        <record id="action_auction_history_board" model="ir.actions.client">
+            <field name="name">Auction History Board</field>
+            <field name="tag">auction_module.auction_history_board</field>
+            <field name="target">current</field>
+        </record>
+
     </data>
 </odoo>

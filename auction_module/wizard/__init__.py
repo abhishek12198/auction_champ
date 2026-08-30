@@ -61,3 +61,4 @@ from . import player_restore_wizard
 from . import auction_player_register_wizard
 from . import action_revoke_transactions
 from . import action_deactivate_tournament
+from . import auction_player_card_wizard
