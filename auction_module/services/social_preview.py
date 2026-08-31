@@ -180,15 +180,15 @@ def _clip(text, limit=200):
     return text[: limit - 1].rstrip() + '…'
 
 
-def _preview_detail_line(label, value, label_width=16):
-    """One detail row: label on the left, WhatsApp-bold value on the right."""
+def _preview_detail_line(label, value, emoji=''):
+    """One detail row for link previews (plain text — OG has no bold/markdown)."""
     value = _safe_text(value)
     if not value:
         return ''
     label = _safe_text(label).rstrip(':') + ':'
-    emphasis = '*%s*' % value
-    gap = max(2, label_width - len(label))
-    return '%s%s%s' % (label, ' ' * gap, emphasis)
+    if emoji:
+        label = '%s %s' % (emoji, label)
+    return '%s %s' % (label, value)
 
 
 def tournament_season(tournament):
@@ -298,12 +298,12 @@ def _enrich_registration_description(base_description, tournament):
     try:
         dates = rec.format_tournament_dates(fmt='%d %b %Y')
         if dates:
-            lines.append(_preview_detail_line('Date', dates))
+            lines.append(_preview_detail_line('Date', dates, '📅'))
     except Exception:
         pass
     venue = _tournament_venue_label(rec)
     if venue:
-        lines.append(_preview_detail_line('Venue', venue))
+        lines.append(_preview_detail_line('Venue', venue, '📍'))
     if len(lines) <= 1:
         return base_description
     return '\n'.join(line for line in lines if line)
@@ -317,10 +317,10 @@ def _enrich_auction_description(base_description, tournament):
     lines = [_safe_text(base_description) or '']
     auction_date = _auction_date_label(rec)
     if auction_date:
-        lines.append(_preview_detail_line('Auction Date', auction_date))
+        lines.append(_preview_detail_line('Auction Date', auction_date, '📅'))
     venue = _auction_venue_label(rec)
     if venue:
-        lines.append(_preview_detail_line('Auction Venue', venue))
+        lines.append(_preview_detail_line('Auction Venue', venue, '📍'))
     if len(lines) <= 1:
         return base_description
     return '\n'.join(line for line in lines if line)

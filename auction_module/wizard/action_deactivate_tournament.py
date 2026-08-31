@@ -90,4 +90,4 @@ class AuctionDeactivateTournamentWizard(models.TransientModel):
             ))
         if not self.tournament_id:
             raise UserError(_('No tournament selected.'))
-        return self.tournament_id._deactivate_tournament_records()
+        return self.tournament_id._archive_tournament_data()
