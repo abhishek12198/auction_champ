@@ -557,10 +557,26 @@
   user-select: none;
 }
 .pg-reserve-chip.is-reserved {
-  border-color: rgba(232, 184, 74, 0.5);
-  background: rgba(232, 184, 74, 0.12);
+  border-color: rgba(232, 184, 74, 0.55);
+  background: linear-gradient(180deg, var(--pg-panel2) 0%, var(--pg-panel) 100%);
+  color: var(--pg-tx);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
 }
-.pg-reserve-chip.is-dragging { opacity: .45; }
+.pg-reserve-chip.is-dragging {
+  opacity: 1;
+  border-color: var(--pg-accent);
+  background: linear-gradient(180deg, #1a3358 0%, var(--pg-panel) 100%);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+.pg-reserve-chip.is-dragging .pg-reserve-chip-name,
+.pg-reserve-chip.is-reserved .pg-reserve-chip-name {
+  color: var(--pg-tx);
+}
+.pg-reserve-chip.is-dragging .pg-reserve-chip-grip,
+.pg-reserve-chip.is-reserved .pg-reserve-chip-grip {
+  color: var(--pg-muted);
+  opacity: 1;
+}
 .pg-reserve-chip.is-picked {
   border-color: var(--pg-accent);
   box-shadow: 0 0 0 2px rgba(232, 184, 74, 0.35);

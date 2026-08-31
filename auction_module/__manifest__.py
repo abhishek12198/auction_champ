@@ -38,7 +38,7 @@
 
 {
     'name' : 'Auction Champ',
-    'version' : '1.5.671',
+    'version' : '1.5.675',
     'summary': 'Sports Auction module',
     'sequence': 10,
     'icon': '/auction_module/static/description/icon.png',

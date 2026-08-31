@@ -37,10 +37,91 @@
 ##############################################################################
 
 from odoo import models
+import logging
+import re
+import time
+
+from odoo.tools.safe_eval import safe_eval
+
+_logger = logging.getLogger(__name__)
+
+PLAYER_CARD_REPORT_NAMES = frozenset({
+    'auction_module.report_player_card_list',
+    'auction_module.report_player_card_list_butterscotch',
+    'auction_module.report_player_card_list_strawberry',
+    'auction_module.report_player_card_list_cherry',
+    'auction_module.report_player_card_list_pistah',
+    'auction_module.report_player_card_list_lemon',
+    'auction_module.report_player_card_list_blackberry',
+    'auction_module.report_player_card_football_list',
+})
 
 
 class IrActionsReport(models.Model):
     _inherit = 'ir.actions.report'
+
+    def _is_player_card_report(self):
+        self.ensure_one()
+        return self.report_name in PLAYER_CARD_REPORT_NAMES
+
+    @staticmethod
+    def _safe_filename_part(text, fallback=''):
+        """Sanitize one filename segment; keep spaces for readable download names."""
+        text = ' '.join((text or '').split())
+        text = re.sub(r'[\\/:*?"<>|]+', '', text)
+        return text.strip() or fallback
+
+    def _player_card_download_basename(self, players):
+        """Build PDF basename from tournament, short description, and selection."""
+        players = players.exists()
+        if not players:
+            return 'Players'
+
+        tournament = players[0].tournament_id
+        parts = []
+        if tournament:
+            if tournament.name:
+                parts.append(self._safe_filename_part(tournament.name, 'Tournament'))
+            if tournament.description:
+                parts.append(self._safe_filename_part(tournament.description))
+
+        if len(players) == 1:
+            parts.append(self._safe_filename_part(players[0].name, 'Player'))
+        else:
+            parts.append('Players')
+            tier_groups = {p.tier_id.id if p.tier_id else False for p in players}
+            if len(tier_groups) == 1:
+                tier = players[0].tier_id
+                if tier and tier.name:
+                    parts.append(self._safe_filename_part(tier.name))
+
+        return ' '.join(part for part in parts if part)
+
+    def get_download_filename(self, docids, extension='pdf'):
+        """Download filename (with extension) for report downloads."""
+        self.ensure_one()
+        if isinstance(docids, str):
+            ids = [int(x) for x in docids.split(',') if x.strip()]
+        else:
+            ids = [int(x) for x in (docids or []) if x]
+        if not ids:
+            return '%s.%s' % (self.name, extension)
+        obj = self.env[self.model].browse(ids).exists()
+        if self._is_player_card_report() and obj:
+            base = self._player_card_download_basename(obj)
+            return '%s.%s' % (base, extension)
+        if self.print_report_name and len(obj) == 1:
+            try:
+                report_name = safe_eval(
+                    self.print_report_name, {'object': obj, 'time': time}
+                )
+                if report_name:
+                    return '%s.%s' % (report_name, extension)
+            except Exception:
+                _logger.exception(
+                    'print_report_name failed for report %s', self.report_name
+                )
+        return '%s.%s' % (self.name, extension)
 
     def _render_qweb_pdf(self, res_ids=None, data=None):
         """Route football player-card prints to the football report action.
