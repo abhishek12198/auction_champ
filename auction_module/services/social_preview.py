@@ -161,10 +161,34 @@ def _safe_text(value, fallback=''):
 
 
 def _clip(text, limit=200):
-    text = _safe_text(text)
+    """Clip text; preserve intentional line breaks for link previews."""
+    if text is None:
+        return ''
+    if isinstance(text, bytes):
+        try:
+            text = text.decode('utf-8')
+        except Exception:
+            return ''
+    lines = []
+    for line in str(text).split('\n'):
+        cleaned = _safe_text(line, fallback='')
+        if cleaned:
+            lines.append(cleaned)
+    text = '\n'.join(lines)
     if len(text) <= limit:
         return text
     return text[: limit - 1].rstrip() + '…'
+
+
+def _preview_detail_line(label, value, label_width=16):
+    """One detail row: label on the left, WhatsApp-bold value on the right."""
+    value = _safe_text(value)
+    if not value:
+        return ''
+    label = _safe_text(label).rstrip(':') + ':'
+    emphasis = '*%s*' % value
+    gap = max(2, label_width - len(label))
+    return '%s%s%s' % (label, ' ' * gap, emphasis)
 
 
 def tournament_season(tournament):
@@ -266,23 +290,23 @@ def _auction_venue_label(tournament):
 
 
 def _enrich_registration_description(base_description, tournament):
-    """Player registration links — tournament dates and venue."""
+    """Player registration links — tournament date and venue."""
     if not tournament or not getattr(tournament, 'ids', None):
         return base_description
     rec = tournament[:1]
-    parts = [_safe_text(base_description) or '']
+    lines = [_safe_text(base_description) or '']
     try:
         dates = rec.format_tournament_dates(fmt='%d %b %Y')
         if dates:
-            parts.append('Dates: %s' % dates)
+            lines.append(_preview_detail_line('Date', dates))
     except Exception:
         pass
     venue = _tournament_venue_label(rec)
     if venue:
-        parts.append('Venue: %s' % venue)
-    if len(parts) <= 1:
+        lines.append(_preview_detail_line('Venue', venue))
+    if len(lines) <= 1:
         return base_description
-    return ' '.join(part for part in parts if part)
+    return '\n'.join(line for line in lines if line)
 
 
 def _enrich_auction_description(base_description, tournament):
@@ -290,16 +314,16 @@ def _enrich_auction_description(base_description, tournament):
     if not tournament or not getattr(tournament, 'ids', None):
         return base_description
     rec = tournament[:1]
-    parts = [_safe_text(base_description) or '']
+    lines = [_safe_text(base_description) or '']
     auction_date = _auction_date_label(rec)
     if auction_date:
-        parts.append('Auction Date: %s' % auction_date)
+        lines.append(_preview_detail_line('Auction Date', auction_date))
     venue = _auction_venue_label(rec)
     if venue:
-        parts.append('Auction Venue: %s' % venue)
-    if len(parts) <= 1:
+        lines.append(_preview_detail_line('Auction Venue', venue))
+    if len(lines) <= 1:
         return base_description
-    return ' '.join(part for part in parts if part)
+    return '\n'.join(line for line in lines if line)
 
 
 def _enrich_page_description(base_description, tournament, page_key):
@@ -331,10 +355,10 @@ def build_preview(tournament, page_key='home', db_name=None):
     image = og_image_url(rec, db_name=db_name)
     return {
         'title': title,
-        'description': _clip(description, 300),
+        'description': _clip(description, 320),
         'og_type': 'website',
         'og_title': title,
-        'og_description': _clip(description, 300),
+        'og_description': _clip(description, 320),
         'og_image': image,
         'og_image_width': str(OG_WIDTH),
         'og_image_height': str(OG_HEIGHT),
@@ -342,7 +366,7 @@ def build_preview(tournament, page_key='home', db_name=None):
         'og_site_name': SITE_NAME,
         'twitter_card': 'summary_large_image',
         'twitter_title': title,
-        'twitter_description': _clip(description, 300),
+        'twitter_description': _clip(description, 320),
         'twitter_image': image,
         'canonical': url,
         'robots': 'index,follow',
