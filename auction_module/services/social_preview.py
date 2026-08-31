@@ -18,9 +18,7 @@ _logger = logging.getLogger(__name__)
 OG_WIDTH = 1200
 OG_HEIGHT = 630
 # Bump when JPEG layout changes (cache-bust for crawlers).
-OG_COMPOSE_VERSION = '2'
-# Inset poster inside OG canvas so WhatsApp shows more of the artwork.
-OG_POSTER_MARGIN = 0.08
+OG_COMPOSE_VERSION = '3'
 SITE_NAME = 'Auction Champ'
 BRAND_TITLE = 'Auction Champ'
 BRAND_DESCRIPTION = (
@@ -398,25 +396,23 @@ def _cover_crop(im, width, height):
     return im.crop((left, top, left + width, top + height))
 
 
-def _contain_fit(im, width, height, bg=(11, 29, 54), margin=OG_POSTER_MARGIN):
-    """Scale image to fit inside the canvas (letterbox) — full poster visible."""
+def _cover_crop_top(im, width, height, bg=(11, 29, 54)):
+    """Cover-fill OG canvas; crop from the poster header downward (not centered)."""
     from PIL import Image
     im = im.convert('RGB')
-    canvas = Image.new('RGB', (width, height), bg)
     src_w, src_h = im.size
     if src_w < 1 or src_h < 1:
-        return canvas
-    pad_x = int(round(width * margin))
-    pad_y = int(round(height * margin))
-    max_w = max(1, width - (2 * pad_x))
-    max_h = max(1, height - (2 * pad_y))
-    scale = min(max_w / float(src_w), max_h / float(src_h))
-    nw = max(1, int(round(src_w * scale)))
-    nh = max(1, int(round(src_h * scale)))
-    resized = im.resize((nw, nh), Image.LANCZOS)
-    left = (width - nw) // 2
-    top = (height - nh) // 2
-    canvas.paste(resized, (left, top))
+        return Image.new('RGB', (width, height), bg)
+    scale = max(width / float(src_w), height / float(src_h))
+    nw, nh = max(1, int(round(src_w * scale))), max(1, int(round(src_h * scale)))
+    im = im.resize((nw, nh), Image.LANCZOS)
+    left = max(0, (nw - width) // 2)
+    top = 0
+    cropped = im.crop((left, top, left + width, top + height))
+    if cropped.size == (width, height):
+        return cropped
+    canvas = Image.new('RGB', (width, height), bg)
+    canvas.paste(cropped, (0, 0))
     return canvas
 
 
@@ -546,7 +542,7 @@ def compose_og_jpeg(tournament=None):
                 if im:
                     if field == 'logo':
                         return _jpeg_bytes(_compose_logo_only(im))
-                    return _jpeg_bytes(_contain_fit(im, OG_WIDTH, OG_HEIGHT))
+                    return _jpeg_bytes(_cover_crop_top(im, OG_WIDTH, OG_HEIGHT))
     icon = _load_brand_icon()
     return _jpeg_bytes(_compose_logo_card(icon, SITE_NAME, 'Auction & Tournament Platform'))
 
