@@ -17,6 +17,10 @@ _logger = logging.getLogger(__name__)
 
 OG_WIDTH = 1200
 OG_HEIGHT = 630
+# Bump when JPEG layout changes (cache-bust for crawlers).
+OG_COMPOSE_VERSION = '2'
+# Inset poster inside OG canvas so WhatsApp shows more of the artwork.
+OG_POSTER_MARGIN = 0.08
 SITE_NAME = 'Auction Champ'
 BRAND_TITLE = 'Auction Champ'
 BRAND_DESCRIPTION = (
@@ -94,6 +98,16 @@ PAGE_COPY = {
         BRAND_DESCRIPTION,
     ),
 }
+
+# Link-preview metadata: which date/venue fields to append per page type.
+REGISTRATION_META_PAGE_KEYS = frozenset(('player_register',))
+AUCTION_META_PAGE_KEYS = frozenset((
+    'live_board',
+    'live_board_offline',
+    'live_board_unlock',
+    'display_auction',
+    'bid_summary',
+))
 
 _OG_CACHE = {}
 _OG_CACHE_MAX = 64
@@ -211,10 +225,91 @@ def og_image_url(tournament, db_name=None):
     if tournament and tournament.id and tournament.slug:
         db = db_name or (tournament.env.cr.dbname if tournament.env else '')
         if db and tournament.slug:
-            return '%s/%s/%s/auction/social-preview.jpg?v=%s' % (
-                base, db, tournament.slug, image_version(tournament),
+            return '%s/%s/%s/auction/social-preview.jpg?v=%s-%s' % (
+                base, db, tournament.slug, image_version(tournament), OG_COMPOSE_VERSION,
             )
-    return '%s/auction/social-preview.jpg?v=1' % base
+    return '%s/auction/social-preview.jpg?v=%s' % (base, OG_COMPOSE_VERSION)
+
+
+def _tournament_venue_label(tournament):
+    if not tournament:
+        return ''
+    venue = _safe_text(getattr(tournament, 'venue', '') or '')
+    if not venue:
+        return ''
+    venue = ' '.join(venue.split())
+    if len(venue) > 72:
+        venue = venue[:71].rstrip() + '…'
+    return venue
+
+
+def _auction_date_label(tournament):
+    if not tournament:
+        return ''
+    auction_date = getattr(tournament, 'auction_date', False)
+    if not auction_date:
+        return ''
+    try:
+        return auction_date.strftime('%d %b %Y')
+    except Exception:
+        return _safe_text(auction_date)
+
+
+def _auction_venue_label(tournament):
+    if not tournament:
+        return ''
+    venue = _safe_text(getattr(tournament, 'auction_venue', '') or '')
+    if not venue:
+        return ''
+    venue = ' '.join(venue.split())
+    if len(venue) > 72:
+        venue = venue[:71].rstrip() + '…'
+    return venue
+
+
+def _enrich_registration_description(base_description, tournament):
+    """Player registration links — tournament dates and venue."""
+    if not tournament or not getattr(tournament, 'ids', None):
+        return base_description
+    rec = tournament[:1]
+    parts = [_safe_text(base_description) or '']
+    try:
+        dates = rec.format_tournament_dates(fmt='%d %b %Y')
+        if dates:
+            parts.append('Dates: %s' % dates)
+    except Exception:
+        pass
+    venue = _tournament_venue_label(rec)
+    if venue:
+        parts.append('Venue: %s' % venue)
+    if len(parts) <= 1:
+        return base_description
+    return ' '.join(part for part in parts if part)
+
+
+def _enrich_auction_description(base_description, tournament):
+    """Live / bid summary links — auction date and auction venue."""
+    if not tournament or not getattr(tournament, 'ids', None):
+        return base_description
+    rec = tournament[:1]
+    parts = [_safe_text(base_description) or '']
+    auction_date = _auction_date_label(rec)
+    if auction_date:
+        parts.append('Auction Date: %s' % auction_date)
+    venue = _auction_venue_label(rec)
+    if venue:
+        parts.append('Auction Venue: %s' % venue)
+    if len(parts) <= 1:
+        return base_description
+    return ' '.join(part for part in parts if part)
+
+
+def _enrich_page_description(base_description, tournament, page_key):
+    if page_key in REGISTRATION_META_PAGE_KEYS:
+        return _enrich_registration_description(base_description, tournament)
+    if page_key in AUCTION_META_PAGE_KEYS:
+        return _enrich_auction_description(base_description, tournament)
+    return base_description
 
 
 def build_preview(tournament, page_key='home', db_name=None):
@@ -231,14 +326,17 @@ def build_preview(tournament, page_key='home', db_name=None):
 
     title, description = _page_copy(page_key, name or SITE_NAME, '')
 
+    if rec and tournament_bound(page_key):
+        description = _enrich_page_description(description, rec, page_key)
+
     url = canonical_url()
     image = og_image_url(rec, db_name=db_name)
     return {
         'title': title,
-        'description': _clip(description, 200),
+        'description': _clip(description, 300),
         'og_type': 'website',
         'og_title': title,
-        'og_description': _clip(description, 200),
+        'og_description': _clip(description, 300),
         'og_image': image,
         'og_image_width': str(OG_WIDTH),
         'og_image_height': str(OG_HEIGHT),
@@ -246,7 +344,7 @@ def build_preview(tournament, page_key='home', db_name=None):
         'og_site_name': SITE_NAME,
         'twitter_card': 'summary_large_image',
         'twitter_title': title,
-        'twitter_description': _clip(description, 200),
+        'twitter_description': _clip(description, 300),
         'twitter_image': image,
         'canonical': url,
         'robots': 'index,follow',
@@ -298,6 +396,28 @@ def _cover_crop(im, width, height):
     left = max(0, (nw - width) // 2)
     top = max(0, (nh - height) // 2)
     return im.crop((left, top, left + width, top + height))
+
+
+def _contain_fit(im, width, height, bg=(11, 29, 54), margin=OG_POSTER_MARGIN):
+    """Scale image to fit inside the canvas (letterbox) — full poster visible."""
+    from PIL import Image
+    im = im.convert('RGB')
+    canvas = Image.new('RGB', (width, height), bg)
+    src_w, src_h = im.size
+    if src_w < 1 or src_h < 1:
+        return canvas
+    pad_x = int(round(width * margin))
+    pad_y = int(round(height * margin))
+    max_w = max(1, width - (2 * pad_x))
+    max_h = max(1, height - (2 * pad_y))
+    scale = min(max_w / float(src_w), max_h / float(src_h))
+    nw = max(1, int(round(src_w * scale)))
+    nh = max(1, int(round(src_h * scale)))
+    resized = im.resize((nw, nh), Image.LANCZOS)
+    left = (width - nw) // 2
+    top = (height - nh) // 2
+    canvas.paste(resized, (left, top))
+    return canvas
 
 
 def _load_brand_icon():
@@ -426,7 +546,7 @@ def compose_og_jpeg(tournament=None):
                 if im:
                     if field == 'logo':
                         return _jpeg_bytes(_compose_logo_only(im))
-                    return _jpeg_bytes(_cover_crop(im, OG_WIDTH, OG_HEIGHT))
+                    return _jpeg_bytes(_contain_fit(im, OG_WIDTH, OG_HEIGHT))
     icon = _load_brand_icon()
     return _jpeg_bytes(_compose_logo_card(icon, SITE_NAME, 'Auction & Tournament Platform'))
 
@@ -439,12 +559,13 @@ def _jpeg_bytes(im):
 
 
 def cached_og_jpeg(tournament=None):
-    key = 'brand'
+    key = 'brand:%s' % OG_COMPOSE_VERSION
     if tournament and tournament.id:
-        key = '%s:%s:%s' % (
+        key = '%s:%s:%s:%s' % (
             tournament.env.cr.dbname,
             tournament.id,
             image_version(tournament),
+            OG_COMPOSE_VERSION,
         )
     hit = _OG_CACHE.get(key)
     if hit:

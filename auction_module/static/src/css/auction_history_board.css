@@ -718,7 +718,24 @@
   }
 
   .o_ah_body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     padding: 6px 8px 8px;
+  }
+
+  /* Scroll list inside body; pager stays pinned below (always tappable) */
+  .o_ah_board_action {
+    overflow: hidden;
+    height: calc(100vh - 46px);
+    min-height: calc(100vh - 46px);
+  }
+
+  .o_ah_app {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .o_ah_list {
@@ -885,47 +902,90 @@
   }
 
   .o_ah_pager {
-    padding: 4px 8px 8px;
+    position: relative;
+    bottom: auto;
+    flex-shrink: 0;
+    z-index: 20;
+    margin-top: 0;
+    padding: 6px 8px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    background: var(--ah-bg);
+    border-top: 1px solid var(--ah-bdr);
+    box-shadow: 0 -4px 14px rgba(13, 30, 58, 0.1);
   }
 
   .o_ah_pager_inner {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: stretch;
     gap: 6px;
-    padding: 6px 8px;
-    border-radius: 8px;
+    padding: 8px 10px;
+    border-radius: 10px;
   }
 
   .o_ah_pager_info {
-    text-align: left;
+    text-align: center;
     font-size: 11px;
+    flex-shrink: 0;
   }
 
+  /* Landscape-style horizontal pager — swipe sideways for more pages */
   .o_ah_pager_nav {
-    justify-content: flex-end;
-    width: auto;
-    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 2px 0;
+    touch-action: pan-x;
+  }
+
+  .o_ah_pager_nav::-webkit-scrollbar {
+    display: none;
   }
 
   .o_ah_prev,
   .o_ah_next {
     flex: 0 0 auto;
-    min-width: 0;
-    height: 28px;
-    padding: 0 8px;
-    font-size: 11px;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 10px;
+    font-size: 0;
+    line-height: 36px;
+    touch-action: manipulation;
+  }
+
+  .o_ah_prev::after {
+    content: "\2039";
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  .o_ah_next::after {
+    content: "\203A";
+    font-size: 18px;
+    font-weight: 800;
   }
 
   .o_ah_page_btn {
-    min-width: 26px;
-    height: 28px;
-    padding: 0 4px;
-    font-size: 11px;
+    flex: 0 0 auto;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 8px;
+    font-size: 13px;
+    touch-action: manipulation;
   }
 
   .o_ah_ellipsis {
-    font-size: 11px;
+    flex: 0 0 auto;
+    font-size: 13px;
+    line-height: 36px;
+    padding: 0 2px;
   }
 }
 

@@ -244,13 +244,28 @@ odoo.define('auction_module.AuctionHistoryBoard', function (require) {
                     esc(d.start) + '\u2013' + esc(d.end) + ' / ' + esc(total) +
                 '  </div>',
                 '  <div class="o_ah_pager_nav">',
-                '    <button type="button" class="o_ah_prev"' + (page <= 1 ? ' disabled' : '') + '>&#8249; Previous</button>',
+                '    <button type="button" class="o_ah_prev" aria-label="Previous page"' +
+                    (page <= 1 ? ' disabled' : '') + '>&#8249; Previous</button>',
                 buttons,
-                '    <button type="button" class="o_ah_next"' + (page >= pages ? ' disabled' : '') + '>Next &#8250;</button>',
+                '    <button type="button" class="o_ah_next" aria-label="Next page"' +
+                    (page >= pages ? ' disabled' : '') + '>Next &#8250;</button>',
                 '  </div>',
                 '</div>',
             ].join('');
             this.$('#o_ah_pager').html(html);
+            this._scrollPagerToActive();
+        },
+
+        _scrollPagerToActive: function () {
+            var $nav = this.$('.o_ah_pager_nav');
+            var $active = $nav.find('.o_ah_page_btn.active');
+            if (!$nav.length || !$active.length) {
+                return;
+            }
+            var navEl = $nav[0];
+            var btnEl = $active[0];
+            var target = btnEl.offsetLeft - (navEl.clientWidth / 2) + (btnEl.offsetWidth / 2);
+            navEl.scrollLeft = Math.max(0, target);
         },
 
         _pageButtons: function (page, pages) {
