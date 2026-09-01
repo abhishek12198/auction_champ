@@ -58,13 +58,15 @@
           name="Player Dashboard"
           action="action_player_dashboard_client"
           sequence="20" web_icon="auction_module,static/src/description/player_dashboard.png"
-          groups="auction_module.group_auction_player_dashboard"/>
+          groups="auction_module.group_auction_group,auction_module.group_auction_player_dashboard"/>
 
-        <!-- Explicitly replace groups so only Player Dashboard Viewer can see this menu -->
         <record id="menu_action_player_dashboard" model="ir.ui.menu">
             <field name="parent_id" eval="False"/>
             <field name="sequence">20</field>
-            <field name="groups_id" eval="[(6, 0, [ref('auction_module.group_auction_player_dashboard')])]"/>
+            <field name="groups_id" eval="[(6, 0, [
+                ref('auction_module.group_auction_group'),
+                ref('auction_module.group_auction_player_dashboard'),
+            ])]"/>
         </record>
 
         <menuitem id="menu_action_launch_auction_root"

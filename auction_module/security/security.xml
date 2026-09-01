@@ -8,10 +8,10 @@
         <field name="name">Auction</field>
     </record>
 
-    <!-- Base user group — can do auction (Auction Team(s)) and Player Showcase -->
+    <!-- Base user group — Player Dashboard landing, Player Showcase, Auction Team(s) -->
     <record id="group_auction_group" model="res.groups">
         <field name="name">User</field>
-        <field name="comment">Can access Player Showcase and Auction Team(s) to run auction and revert actions.</field>
+        <field name="comment">Lands on Player Dashboard; can access Player Showcase and Auction Team(s) to run auction and revert actions.</field>
         <field name="category_id" ref="auction_module.auction_categ"/>
     </record>
 
