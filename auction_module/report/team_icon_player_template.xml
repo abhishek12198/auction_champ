@@ -1,81 +1,285 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
+    <data>
+        <record id="action_download_team_icon_posters" model="ir.actions.server">
+            <field name="name">Download Icon Posters (JPG)</field>
+            <field name="model_id" ref="auction_module.model_auction_team"/>
+            <field name="binding_model_id" ref="auction_module.model_auction_team"/>
+            <field name="state">code</field>
+            <field name="code">action = records.action_download_icon_player_posters()</field>
+            <field name="groups_id" eval="[(4, ref('auction_module.group_auction_player_card_print'))]"/>
+        </record>
+    </data>
 
-    <template id="template_tournament_details_report" name="Tournament Details Report">
-    <t t-name="module_name.template_tournament_details_report">
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&amp;display=swap');
+    <template id="icon_player_poster_image" name="Icon Player Poster Image">
+        <t t-set="bg_gradient" t-value="'linear-gradient(135deg, #08162f 0%, #0f2f58 58%, #174072 100%)'"/>
+        <html>
+            <head>
+                <meta charset="utf-8"/>
+                <style>
+                    * { box-sizing: border-box; margin: 0; padding: 0; }
+                    html, body {
+                        width: 1024px;
+                        height: 1536px;
+                        overflow: hidden;
+                        background: #071225;
+                        font-family: "Inter", "Montserrat", "Segoe UI", Arial, sans-serif;
+                    }
+                    .ip-wrap {
+                        position: relative;
+                        width: 1024px;
+                        height: 1536px;
+                        background: linear-gradient(135deg, #08162f 0%, #0f2f58 58%, #174072 100%);
+                        color: #ffffff;
+                        overflow: hidden;
+                    }
+                    .ip-bg-stadium-img {
+                        position: absolute;
+                        inset: 0;
+                        z-index: 0;
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                        object-position: center;
+                        opacity: 0.33;
+                    }
+                    .ip-bg-vignette {
+                        position: absolute;
+                        inset: 0;
+                        z-index: 0;
+                        background:
+                            radial-gradient(ellipse at 68% 48%, rgba(255, 186, 38, 0.32) 0%, rgba(255, 186, 38, 0) 40%),
+                            linear-gradient(90deg, rgba(3, 10, 24, 0.90) 0%, rgba(8, 21, 44, 0.78) 45%, rgba(10, 26, 54, 0.48) 100%);
+                    }
+                    .ip-bg-flames-img {
+                        position: absolute;
+                        left: 0;
+                        right: 0;
+                        bottom: -8px;
+                        width: 100%;
+                        height: 36%;
+                        z-index: 1;
+                        object-fit: cover;
+                        object-position: bottom center;
+                        opacity: 0.34;
+                    }
+                    .ip-wrap:before {
+                        content: "";
+                        position: absolute;
+                        right: -180px;
+                        top: -180px;
+                        width: 760px;
+                        height: 760px;
+                        border-radius: 50%;
+                        background: radial-gradient(circle, rgba(246, 191, 53, 0.30) 0%, rgba(246, 191, 53, 0) 68%);
+                    }
+                    .ip-wrap:after {
+                        content: "";
+                        position: absolute;
+                        left: -280px;
+                        bottom: -280px;
+                        width: 900px;
+                        height: 900px;
+                        border-radius: 50%;
+                        background: radial-gradient(circle, rgba(31, 84, 153, 0.42) 0%, rgba(31, 84, 153, 0) 72%);
+                    }
+                    .ip-inner {
+                        position: relative;
+                        z-index: 2;
+                        width: 100%;
+                        height: 100%;
+                        padding: 48px 46px 40px;
+                        display: block;
+                    }
+                    .ip-left {
+                        width: 100%;
+                    }
+                    .ip-top {
+                        display: flex;
+                        align-items: center;
+                        gap: 16px;
+                    }
+                    .ip-tour-logo {
+                        width: 88px;
+                        height: 88px;
+                        border-radius: 14px;
+                        border: 2px solid rgba(255, 255, 255, 0.28);
+                        background: rgba(255, 255, 255, 0.08);
+                        object-fit: cover;
+                    }
+                    .ip-tour-text small {
+                        display: block;
+                        font-size: 15px;
+                        letter-spacing: 2px;
+                        text-transform: uppercase;
+                        color: #f6cd73;
+                        font-weight: 700;
+                    }
+                    .ip-tour-text h1 {
+                        margin-top: 8px;
+                        font-size: 52px;
+                        line-height: 0.98;
+                        letter-spacing: 1px;
+                        text-transform: uppercase;
+                        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.28);
+                    }
+                    .ip-tour-text p {
+                        margin-top: 12px;
+                        color: #c8dbf5;
+                        font-size: 20px;
+                        line-height: 1.25;
+                        max-width: 760px;
+                    }
+                    .ip-team-chip {
+                        margin-top: 18px;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 14px;
+                        border: 1px solid rgba(246, 205, 115, 0.7);
+                        border-radius: 999px;
+                        background: rgba(0, 0, 0, 0.26);
+                        padding: 10px 22px 10px 12px;
+                    }
+                    .ip-team-logo {
+                        width: 58px;
+                        height: 58px;
+                        border-radius: 12px;
+                        border: 1px solid rgba(255,255,255,0.30);
+                        background: rgba(255,255,255,0.15);
+                        object-fit: cover;
+                    }
+                    .ip-team-chip b { font-size: 34px; letter-spacing: 1px; }
+                    .ip-team-chip span {
+                        display: block;
+                        font-size: 13px;
+                        text-transform: uppercase;
+                        letter-spacing: 1.2px;
+                        color: #f6cd73;
+                        margin-bottom: 4px;
+                        font-weight: 700;
+                    }
+                    .ip-player-meta {
+                        margin-top: 26px;
+                        border-top: 2px solid rgba(255, 255, 255, 0.24);
+                        padding-top: 26px;
+                    }
+                    .ip-badge {
+                        display: inline-block;
+                        padding: 10px 18px;
+                        border-radius: 999px;
+                        font-size: 16px;
+                        font-weight: 800;
+                        letter-spacing: 1.8px;
+                        text-transform: uppercase;
+                        color: #0d2040;
+                        background: #f6bf35;
+                    }
+                    .ip-player-name {
+                        margin-top: 20px;
+                        font-size: 72px;
+                        line-height: 0.95;
+                        text-transform: uppercase;
+                        font-weight: 900;
+                        text-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+                    }
+                    .ip-player-role {
+                        margin-top: 16px;
+                        font-size: 30px;
+                        font-weight: 600;
+                        letter-spacing: 1px;
+                        color: #c7ddff;
+                    }
+                    .ip-player-photo-wrap {
+                        width: 100%;
+                        height: 860px;
+                        margin-top: 24px;
+                        border-radius: 28px;
+                        padding: 10px;
+                        background: linear-gradient(150deg, rgba(246,191,53,0.95), rgba(246,191,53,0.18));
+                        box-shadow: 0 25px 80px rgba(0,0,0,0.45);
+                        position: relative;
+                        overflow: hidden;
+                    }
+                    .ip-player-photo {
+                        width: 100%;
+                        height: 100%;
+                        border-radius: 22px;
+                        object-fit: contain;
+                        object-position: center bottom;
+                        background: transparent;
+                        position: relative;
+                        z-index: 2;
+                    }
+                    .ip-player-photo-wrap:before {
+                        content: "";
+                        position: absolute;
+                        left: -8%;
+                        right: -8%;
+                        bottom: -16%;
+                        height: 75%;
+                        z-index: 1;
+                        background: radial-gradient(ellipse at center, rgba(246,191,53,0.55) 0%, rgba(246,191,53,0.09) 55%, rgba(246,191,53,0) 80%);
+                    }
+                    .ip-player-photo-wrap:after {
+                        content: "";
+                        position: absolute;
+                        inset: 0;
+                        z-index: 1;
+                        background: linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.16) 100%);
+                    }
+                    .ip-mark {
+                        position: absolute;
+                        right: 34px;
+                        bottom: 28px;
+                        font-size: 20px;
+                        letter-spacing: 2px;
+                        color: rgba(255,255,255,0.78);
+                        text-transform: uppercase;
+                        font-weight: 800;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="ip-wrap">
+                    <img t-if="stadium_bg_uri" class="ip-bg-stadium-img" t-att-src="stadium_bg_uri" alt=""/>
+                    <div class="ip-bg-vignette"/>
+                    <img t-if="flame_bg_uri" class="ip-bg-flames-img" t-att-src="flame_bg_uri" alt=""/>
+                    <div class="ip-inner">
+                        <div class="ip-left">
+                            <div>
+                                <div class="ip-top">
+                                    <img t-if="tournament_logo_uri" t-att-src="tournament_logo_uri" class="ip-tour-logo" alt="Tournament"/>
+                                    <div t-else="" class="ip-tour-logo"/>
+                                    <div class="ip-tour-text">
+                                        <small>Tournament Showcase</small>
+                                        <h1 t-esc="tournament_name or 'Tournament'"/>
+                                        <p t-esc="tournament_desc or 'Official icon player announcement card.'"/>
+                                    </div>
+                                </div>
+                                <div class="ip-team-chip">
+                                    <img t-if="team_logo_uri" t-att-src="team_logo_uri" class="ip-team-logo" alt="Team"/>
+                                    <div t-else="" class="ip-team-logo"/>
+                                    <div>
+                                        <span>Represents Team</span>
+                                        <b t-esc="team_name or 'Team'"/>
+                                    </div>
+                                </div>
+                            </div>
 
-            .container {
-                width: 100%;
-                margin: 0 auto;
-                padding: 20px;
-                font-family: 'Roboto', sans-serif;
-                box-sizing: border-box;
-            }
-
-            .header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                border-bottom: 2px solid #ddd;
-                padding-bottom: 10px;
-                margin-bottom: 20px;
-            }
-
-            .tournament-logo {
-                max-height: 80px;
-            }
-
-            .tournament-name {
-                font-size: 24px;
-                font-weight: 700;
-                color: #333;
-                text-align: center;
-                flex: 1;
-            }
-
-            .square-box {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                border: 2px solid #ddd;
-                padding: 20px;
-                border-radius: 8px;
-                background-color: #f9f9f9;
-            }
-
-            .team-logo, .icon-player {
-                max-height: 150px;
-                max-width: 150px;
-                border-radius: 8px;
-            }
-
-            .team-logo {
-                margin-right: 20px;
-            }
-        </style>
-        <t t-call="web.html_container">
-            <t t-foreach="docs" t-as="doc">
-                <div class="page">
-                        <!-- Header with Tournament Logo and Name -->
-                        <div class="header">
-                            <img t-att-src="image_data_uri(docs.tournament_id.logo)" alt="Tournament Logo" class="tournament-logo" style="width: 40px; height:40px;"/>
-                            <div class="tournament-name">
-                                <t t-esc="docs.name"/>
+                            <div class="ip-player-meta">
+                                <span class="ip-badge">Icon Player</span>
+                                <div class="ip-player-name" t-esc="player_name or 'Player Name'"/>
+                                <div class="ip-player-role" t-esc="player_role or 'Role'"/>
+                            </div>
+                            <div class="ip-player-photo-wrap">
+                                <img t-if="player_photo_uri" t-att-src="player_photo_uri" class="ip-player-photo" alt="Icon Player"/>
+                                <div t-else="" class="ip-player-photo"/>
                             </div>
                         </div>
-
-                        <!-- Square Box with Team Logo and Icon Player Photo -->
-                        <div class="square-box">
-                            <img t-att-src="image_data_uri(docs.logo)" alt="Team Logo" class="team-logo" style="width: 40px; height:40px;"/>
-                            <img t-att-src="image_data_uri(docs.key_player_ids.photo)" alt="Icon Player Photo" class="icon-player" style="width: 40px; height:40px;"/>
-                        </div>
+                    </div>
+                    <div class="ip-mark">AuctionChamp Icon Series</div>
                 </div>
-            </t>
-        </t>
-    </t>
-</template>
-
-
+            </body>
+        </html>
+    </template>
 </odoo>

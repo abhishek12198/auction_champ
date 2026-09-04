@@ -186,7 +186,7 @@
     <!-- Registered players CTA — always visible (form, success, closed) -->
     <t t-if="tournament and db_name and tournament_slug">
     <button type="button"
-            class="reg-roster-cta"
+            class="reg-roster-cta reg-roster-cta--mobile-hide"
             id="regRosterOpen"
             t-att-data-url="'/%s/%s/player/register/players' % (db_name, tournament_slug)"
             t-att-data-sport="tournament.tournament_type or 'cricket'"
@@ -205,6 +205,17 @@
          ════════════════════════════════════════ -->
     <t t-if="not hide_reg_form">
     <div class="reg-trustbar">
+        <t t-if="tournament and tournament.icon_player_count">
+            <a href="#reg-icon-players-panel"
+               class="reg-trust-card"
+               aria-label="View Icon Players">
+                <span class="reg-trust-ic">👑</span>
+                <div class="reg-trust-tx">
+                    <b>Icon Players</b>
+                    <span t-esc="tournament.icon_player_count"/> assigned by teams
+                </div>
+            </a>
+        </t>
         <a href="#reg-form-start"
            class="reg-trust-card reg-trust-card--cta"
            id="reg-secure-registration-btn"
@@ -238,6 +249,64 @@
     <!-- ════════════════════════════════════════
          LAYOUT — main form + sticky benefits sidebar
          ════════════════════════════════════════ -->
+    <!-- Icon Players panel (public registration) -->
+    <t t-if="not hide_reg_form and tournament and tournament.icon_player_count">
+        <div id="reg-icon-players-panel"
+             style="margin: -8px 0 18px; padding: 14px 14px 8px; border-radius: 16px;
+                    border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04);
+                    backdrop-filter: blur(8px);">
+            <div style="display:flex; align-items:center; gap:10px; margin: 0 0 10px;">
+                <span style="font-size:1.25rem; width:40px; height:40px; display:inline-flex; align-items:center; justify-content:center;
+                             border-radius:12px; border:1px solid rgba(var(--reg-accent-rgb), .35);
+                             background: rgba(var(--reg-accent-rgb), .12);">👑</span>
+                <div>
+                    <div style="font-family:'Barlow Condensed',sans-serif; font-weight:800; color:#fff; letter-spacing:.03em;">
+                        Icon Players
+                    </div>
+                    <div style="font-size:.75rem; color: rgba(255,255,255,.62);">
+                        Assigned teams &amp; players
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <t t-foreach="tournament.team_ids" t-as="team" t-key="team.id">
+                    <t t-if="team.key_player_ids">
+                        <div style="display:flex; align-items:flex-start; gap:12px;">
+                            <img t-if="team.logo"
+                                 t-att-src="'/web/image/auction.team/%s/logo' % team.id"
+                                 alt=""
+                                 style="width:44px; height:44px; border-radius:12px; object-fit:cover; border:1px solid rgba(var(--reg-accent-rgb), .22);
+                                        background:#fff;"/>
+                            <div t-else=""
+                                 style="width:44px; height:44px; border-radius:12px; border:1px solid rgba(var(--reg-accent-rgb), .22);
+                                        background: rgba(var(--reg-accent-rgb), .12); display:flex; align-items:center; justify-content:center;
+                                        color: rgba(255,255,255,.85);">
+                                🏟️
+                            </div>
+
+                            <div style="flex:1; min-width:0;">
+                                <div style="color:#fff; font-weight:800; letter-spacing:.02em; font-family:'Barlow Condensed',sans-serif;">
+                                    <t t-esc="team.name"/>
+                                </div>
+                                <div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:8px;">
+                                    <t t-foreach="team.key_player_ids" t-as="p" t-key="p.id">
+                                        <span style="display:inline-flex; align-items:center; gap:6px;
+                                                     padding:6px 10px; border-radius:999px;
+                                                     border:1px solid rgba(var(--reg-accent-rgb), .25);
+                                                     background: rgba(0,0,0,.18); color:#fff; font-size:.78rem;">
+                                            <span t-esc="p.name"/>
+                                            <span style="opacity:.65;">(<t t-esc="p.role or 'Icon'"/> )</span>
+                                        </span>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+            </div>
+        </div>
+    </t>
     <div t-attf-class="reg-layout{{' reg-layout--success' if (success or registration_closed or razorpay_await_payment) else ''}}">
     <div class="reg-main">
 
@@ -632,15 +701,32 @@
 
                 <!-- Photo upload with square frame -->
                 <div style="margin-bottom:18px" id="photoSection">
-                    <label class="reg-label" for="photoInput">Player Photo
-                        <span class="req" id="photoReqMark">*</span>
-                        <span class="reg-opt" id="photoOptMark" hidden="hidden">(kept from prior registration — change if you want)</span>
-                    </label>
+                    <div style="display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;">
+                        <label class="reg-label" for="photoInput">Player Photo
+                            <span class="req" id="photoReqMark">*</span>
+                            <span class="reg-opt" id="photoOptMark" hidden="hidden">(kept from prior registration — change if you want)</span>
+                        </label>
+                        <button type="button"
+                                class="reg-photo-info-btn"
+                                id="photoInfoBtn"
+                                aria-label="How to upload a good player photo"
+                                aria-expanded="false"
+                                aria-controls="photoInfoPopup"
+                                title="Photo upload guidance">
+                            ℹ️
+                        </button>
+                    </div>
+                    <div id="photoInfoPopup" class="reg-photo-info-popup" hidden="hidden">
+                        Upload a clear, front-facing portrait with a plain background — similar to the sample shown.
+                    </div>
                     <div class="reg-photo-upload">
-                        <div class="reg-photo-frame">
+                        <div class="reg-photo-frame has-photo">
                             <div class="reg-photo-circle" id="photoCircle">
-                                <img id="photoPreview" src="" alt=""/>
-                                <span class="avatar-placeholder" id="avatarPlaceholder">📷</span>
+                                <img id="photoPreview"
+                                     src="/auction_module/static/src/background/player_registration_model.png"
+                                     alt="Player photo preview"
+                                     style="display:block;"/>
+                                <span class="avatar-placeholder" id="avatarPlaceholder" style="display:none;">📷</span>
                             </div>
                         </div>
                         <div class="reg-file-meta">
@@ -670,18 +756,6 @@
                              <input type="file" id="photoInput" name="photo"
                                    accept="image/*" class="reg-file-input"/>
                             <p class="reg-file-hint">JPG · PNG · WEBP &#160;·&#160; Max 5 MB</p>
-                        </div>
-                    </div>
-
-                    <!-- Sample photo + short caption -->
-                    <div class="reg-photo-guide">
-                        <div class="reg-photo-sample">
-                            <img src="/auction_module/static/src/background/player_registration_model.png"
-                                 alt="Sample photo"/>
-                            <p class="reg-photo-sample-label">📸 Sample Photo</p>
-                        </div>
-                        <div class="reg-photo-instructions">
-                            <p class="reg-pi-caption">Upload a clear, front-facing portrait with a plain background — similar to the sample shown.</p>
                         </div>
                     </div>
                 </div>
@@ -1114,11 +1188,6 @@
                                 <img t-att-src="'data:image/png;base64,' + tournament.payment_qr_image.decode('utf-8')"
                                      class="reg-payment-qr" alt="Payment QR Code"/>
                             </div>
-                            <a t-att-href="'data:image/png;base64,' + tournament.payment_qr_image.decode('utf-8')"
-                               download="payment-qr.png" class="reg-payment-qr-download">
-                                ⬇ Download QR
-                            </a>
-                            <p class="reg-payment-qr-hint">Scan to pay, then upload receipt.</p>
                         </div>
                     </div>
                     </t>
@@ -1278,6 +1347,7 @@
     var cropperLoaded = false;
     var cropperLoading = false;
     var pendingFile = null;
+    var PHOTO_SAMPLE_SRC = '/auction_module/static/src/background/player_registration_model.png';
 
     function loadCropper(cb) {
         if (cropperLoaded) { cb(); return; }
@@ -1316,9 +1386,9 @@
         var ph  = document.getElementById('avatarPlaceholder');
         var frame = document.querySelector('.reg-photo-frame');
         var clearBtn = document.getElementById('photoClearBtn');
-        if (img) { img.src = ''; img.style.display = 'none'; }
-        if (ph)  { ph.style.display = ''; }
-        if (frame) { frame.classList.remove('has-photo'); }
+        if (img) { img.src = PHOTO_SAMPLE_SRC; img.style.display = 'block'; }
+        if (ph)  { ph.style.display = 'none'; }
+        if (frame) { frame.classList.add('has-photo'); }
         if (clearBtn) { clearBtn.classList.add('is-hidden'); }
         if (photoInput) { photoInput.value = ''; }
         var sourceEl = document.getElementById('sourcePlayerId');
@@ -1332,6 +1402,29 @@
         if (reqMark) reqMark.hidden = false;
         if (optMark) optMark.hidden = true;
     }
+
+    function bindPhotoInfo() {
+        var btn = document.getElementById('photoInfoBtn');
+        var pop = document.getElementById('photoInfoPopup');
+        if (!btn || !pop) return;
+        btn.addEventListener('click', function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            var hidden = pop.hasAttribute('hidden');
+            if (hidden) pop.removeAttribute('hidden');
+            else pop.setAttribute('hidden', 'hidden');
+            btn.setAttribute('aria-expanded', hidden ? 'true' : 'false');
+        });
+        document.addEventListener('click', function (ev2) {
+            if (pop.hasAttribute('hidden')) return;
+            if (!pop.contains(ev2.target) &amp;&amp; ev2.target !== btn) {
+                pop.setAttribute('hidden', 'hidden');
+                btn.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+
+    bindPhotoInfo();
 
     window.regSetPhotoPreview = setPhotoPreview;
     window.regClearPhotoPreview = clearPhotoPreview;

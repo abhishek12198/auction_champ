@@ -347,6 +347,14 @@
                                         </span>
                                         <span class="o_tps_label">Sold</span>
                                     </button>
+                                    <button type="object" name="action_view_icon_players"
+                                            class="o_tps_btn o_tps_auction"
+                                            attrs="{'invisible': [('icon_player_count', '=', 0)]}">
+                                        <span class="o_tps_count">
+                                            <field name="icon_player_count" nolabel="1"/>
+                                        </span>
+                                        <span class="o_tps_label">Icons</span>
+                                    </button>
                                     <button type="object" name="action_view_unsold_players"
                                             class="o_tps_btn o_tps_unsold">
                                         <span class="o_tps_count">

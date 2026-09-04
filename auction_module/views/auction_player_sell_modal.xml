@@ -1148,14 +1148,21 @@
     smSetSellModalOpen(false);
   };
 
+  function smHideSoldUi() {
+    smSetSellModalOpen(false);
+    var soldScreen = document.getElementById('smSoldScreen');
+    if (soldScreen) {
+      soldScreen.classList.remove('visible');
+      soldScreen.classList.remove('sm-break-on');
+    }
+    var formPanel = document.getElementById('smFormPanel');
+    if (formPanel) formPanel.style.display = 'flex';
+  }
+
   window.smSkipToNext = function() {
     if (smBreakPaused) return;
     if (smCountdownTimer) { clearInterval(smCountdownTimer); smCountdownTimer = null; }
     smAdvanceFn = null;
-    smSetSellModalOpen(false);
-    document.getElementById('smSoldScreen').classList.remove('visible');
-    document.getElementById('smSoldScreen').classList.remove('sm-break-on');
-    document.getElementById('smFormPanel').style.display = 'flex';
     // Mystery players stay on stage until revealed — do not advance yet.
     var isMystery = (document.body.getAttribute('data-is-mystery') === '1')
       || !!window.AUCTION_IS_MYSTERY;
@@ -1163,9 +1170,20 @@
       window.AUCTION_IS_MYSTERY = true;
       window.acMysteryMarkSold(window._acMysteryPendingSold || null);
       window._acMysteryPendingSold = null;
+      smHideSoldUi();
       return;
     }
-    if (typeof changeImage === 'function') { changeImage(true); } else { window.location.reload(); }
+    // Keep sold overlay up until the next player is swapped in, so the
+    // previous photo does not flash briefly under an empty stage.
+    if (typeof changeImage === 'function') {
+      Promise.resolve(changeImage(true)).then(smHideSoldUi).catch(function() {
+        smHideSoldUi();
+        window.location.reload();
+      });
+    } else {
+      smHideSoldUi();
+      window.location.reload();
+    }
   };
 
   /* ── Load teams ─────────────────────────────────────────────── */
@@ -1467,6 +1485,7 @@
           final_point: result.final_point
         });
         window._acMysteryPendingSold = null;
+        smHideSoldUi();
         return;
       }
       if (_preFetchedHtml) {
@@ -1489,12 +1508,20 @@
           if (typeof window.acCommitPlayerOnStage === 'function') {
             window.acCommitPlayerOnStage(newId);
           }
+          smHideSoldUi();
           return;
         }
       }
-      // Fallback: pre-fetch failed or same player — let changeImage handle it
-      if (typeof changeImage === 'function') { changeImage(true); }
-      else { window.location.reload(); }
+      // Fallback: pre-fetch failed or same player — swap under the overlay first
+      if (typeof changeImage === 'function') {
+        Promise.resolve(changeImage(true)).then(smHideSoldUi).catch(function() {
+          smHideSoldUi();
+          window.location.reload();
+        });
+      } else {
+        smHideSoldUi();
+        window.location.reload();
+      }
     }
     smAdvanceFn = smAdvance;
 
@@ -1521,11 +1548,7 @@
         clearInterval(smCountdownTimer);
         smCountdownTimer = null;
         if (smBreakPaused) return;
-        smSetSellModalOpen(false);
-        document.getElementById('smSoldScreen').classList.remove('visible');
-        document.getElementById('smFormPanel').style.display = 'flex';
-        // If pre-fetch is still in-flight, wait for it (adds at most a few ms
-        // on cloud since it started seconds ago); otherwise advance immediately.
+        // Keep sold overlay visible until smAdvance swaps the next player in.
         if (_preFetchDone) {
           smAdvance();
         } else {

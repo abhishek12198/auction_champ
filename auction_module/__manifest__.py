@@ -118,6 +118,7 @@
         'views/auction_show_balance_template1_pistah.xml',
         'views/auction_show_balance_template1_blackberry.xml',
         'report/auction_report_template.xml',
+        'report/team_icon_player_template.xml',
         'views/auction_history_template.xml',
         'report/players_card.xml',
         'report/auction_report.xml',

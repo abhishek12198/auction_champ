@@ -137,7 +137,6 @@
                                        help="Optional. When uploaded, the Squad Poster shows TEAM OWNER, this photo, and the owner name in the player-name size."/>
                             </group>
                         </group>
-
                         <notebook>
                             <page string="⭐  Icon Players" name="icon_players">
                                 <field name="key_player_ids" nolabel="1"

@@ -558,6 +558,11 @@ class AuctionTournament(models.Model):
         compute='_compute_player_state_counts',
         store=False,
     )
+    icon_player_count = fields.Integer(
+        string='Icons',
+        compute='_compute_player_state_counts',
+        store=False,
+    )
     unsold_player_count = fields.Integer(
         string='Unsold',
         compute='_compute_player_state_counts',
@@ -672,22 +677,34 @@ class AuctionTournament(models.Model):
         """
         groups = self.env['auction.team.player'].sudo().with_context(active_test=False).read_group(
             [('tournament_id', 'in', self.ids)],
-            ['tournament_id', 'state'],
-            ['tournament_id', 'state'],
+            ['tournament_id', 'state', 'icon_player'],
+            ['tournament_id', 'state', 'icon_player'],
             lazy=False,
         )
-        # Build nested dict: {tournament_id: {state: count}}
-        counts = {}
+        # Build per-tournament counters in one pass.
+        counts = {tid: {'draft': 0, 'auction': 0, 'sold_non_icon': 0, 'unsold': 0, 'icon': 0} for tid in self.ids}
         for g in groups:
             tid = g['tournament_id'][0]
             state = g['state']
-            counts.setdefault(tid, {})[state] = g['__count']
+            is_icon = bool(g.get('icon_player'))
+            c = counts.setdefault(tid, {'draft': 0, 'auction': 0, 'sold_non_icon': 0, 'unsold': 0, 'icon': 0})
+            if state == 'draft':
+                c['draft'] += g['__count']
+            elif state == 'auction':
+                c['auction'] += g['__count']
+            elif state == 'unsold':
+                c['unsold'] += g['__count']
+            elif state == 'sold' and not is_icon:
+                c['sold_non_icon'] += g['__count']
+            if is_icon:
+                c['icon'] += g['__count']
         for rec in self:
             c = counts.get(rec.id, {})
             rec.registered_player_count = c.get('draft', 0)
             rec.auction_player_count    = c.get('auction', 0)
-            rec.sold_player_count       = c.get('sold', 0)
+            rec.sold_player_count       = c.get('sold_non_icon', 0)
             rec.unsold_player_count     = c.get('unsold', 0)
+            rec.icon_player_count       = c.get('icon', 0)
 
     def _compute_auction_history_count(self):
         groups = self.env['auction.history'].sudo().with_context(active_test=False).read_group(
@@ -1490,7 +1507,49 @@ class AuctionTournament(models.Model):
         return self._player_state_action('auction', 'In Auction Players')
 
     def action_view_sold_players(self):
-        return self._player_state_action('sold', 'Sold Players')
+        self.ensure_one()
+        ctx = {'default_tournament_id': self.id}
+        if not self.active:
+            ctx['active_test'] = False
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Sold Players — %s' % self.name,
+            'res_model': 'auction.team.player',
+            'view_mode': 'tree,form,kanban',
+            'views': [
+                (self.env.ref('auction_module.view_auction_team_player_tree').id, 'tree'),
+                (self.env.ref('auction_module.view_auction_team_player_form').id, 'form'),
+                (self.env.ref('auction_module.view_auction_team_player_kanban').id, 'kanban'),
+            ],
+            'domain': [
+                ('tournament_id', '=', self.id),
+                ('state', '=', 'sold'),
+                ('icon_player', '=', False),
+            ],
+            'context': ctx,
+        }
+
+    def action_view_icon_players(self):
+        self.ensure_one()
+        ctx = {'default_tournament_id': self.id}
+        if not self.active:
+            ctx['active_test'] = False
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Icon Players — %s' % self.name,
+            'res_model': 'auction.team.player',
+            'view_mode': 'tree,form,kanban',
+            'views': [
+                (self.env.ref('auction_module.view_auction_team_player_tree').id, 'tree'),
+                (self.env.ref('auction_module.view_auction_team_player_form').id, 'form'),
+                (self.env.ref('auction_module.view_auction_team_player_kanban').id, 'kanban'),
+            ],
+            'domain': [
+                ('tournament_id', '=', self.id),
+                ('icon_player', '=', True),
+            ],
+            'context': ctx,
+        }
 
     def action_view_unsold_players(self):
         return self._player_state_action('unsold', 'Unsold Players')

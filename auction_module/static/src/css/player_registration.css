@@ -798,7 +798,7 @@ body.reg-page::before {
         linear-gradient(#fff 0 0);
     mask-composite: exclude;
     z-index: 0;
-    animation: spin-ring 2.4s linear infinite;
+    animation: none;
     pointer-events: none;
 }
 
@@ -852,6 +852,41 @@ body.reg-page::before {
 .avatar-placeholder { font-size: 2.2rem; user-select: none; line-height: 1; }
 
 .reg-file-meta { flex: 1; min-width: 140px; }
+
+/* Photo guidance (info button + small popup) */
+.reg-photo-info-btn {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    border: 1px solid rgba(var(--reg-accent-rgb), .35);
+    background: rgba(var(--reg-accent-rgb), .12);
+    color: #f0b429;
+    cursor: pointer;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color .15s, transform .15s;
+}
+.reg-photo-info-btn:hover,
+.reg-photo-info-btn:focus {
+    border-color: rgba(var(--reg-accent-rgb), .7);
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.reg-photo-info-popup {
+    margin-top: 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(var(--reg-accent-rgb), .35);
+    background: #f6f9ff;
+    padding: 10px 12px;
+    font-size: .88rem;
+    line-height: 1.45;
+    color: rgba(10, 26, 54, .92);
+    box-shadow: 0 10px 28px rgba(0,0,0,.06);
+}
 
 .reg-photo-actions {
     display: flex;
@@ -2548,6 +2583,13 @@ body.reg-roster-lock {
     letter-spacing: .04em;
     text-align: center;
     line-height: 1.2;
+}
+
+@media (max-width: 640px) {
+    /* Avoid duplicate CTA on small screens — we already show “View players”. */
+    .reg-roster-cta--mobile-hide {
+        display: none !important;
+    }
 }
 
 .reg-roster-slots-link {
