@@ -1159,6 +1159,43 @@
     if (formPanel) formPanel.style.display = 'flex';
   }
 
+  function smCurrentStagePhotoSrc() {
+    var livePhoto = document.getElementById('loadImage');
+    if (livePhoto) {
+      var liveSrc = livePhoto.currentSrc || livePhoto.getAttribute('src') || '';
+      if (liveSrc) return liveSrc;
+    }
+    var avatar = document.getElementById('smPlayerAvatar');
+    if (avatar) {
+      var avatarSrc = avatar.currentSrc || avatar.getAttribute('src') || '';
+      if (avatarSrc) return avatarSrc;
+    }
+    return '';
+  }
+
+  function smWaitForImg(img, timeoutMs) {
+    return new Promise(function(resolve) {
+      if (!img) { resolve(); return; }
+      if (img.complete && img.naturalWidth > 0) { resolve(); return; }
+      var done = false;
+      var finish = function() {
+        if (done) return;
+        done = true;
+        img.removeEventListener('load', finish);
+        img.removeEventListener('error', finish);
+        resolve();
+      };
+      img.addEventListener('load', finish);
+      img.addEventListener('error', finish);
+      setTimeout(finish, timeoutMs || 2500);
+    });
+  }
+
+  // Hide sold UI only after the next stage photo has painted (or timed out).
+  function smHideSoldUiAfterStageReady() {
+    return smWaitForImg(document.getElementById('loadImage'), 2500).then(smHideSoldUi);
+  }
+
   window.smSkipToNext = function() {
     if (smBreakPaused) return;
     if (smCountdownTimer) { clearInterval(smCountdownTimer); smCountdownTimer = null; }
@@ -1173,13 +1210,15 @@
       smHideSoldUi();
       return;
     }
-    // Keep sold overlay up until the next player is swapped in, so the
-    // previous photo does not flash briefly under an empty stage.
+    // Keep sold overlay up until the next player's photo is ready, so the
+    // previously sold face never flashes under an empty / loading stage.
     if (typeof changeImage === 'function') {
-      Promise.resolve(changeImage(true)).then(smHideSoldUi).catch(function() {
-        smHideSoldUi();
-        window.location.reload();
-      });
+      Promise.resolve(changeImage(true))
+        .then(smHideSoldUiAfterStageReady)
+        .catch(function() {
+          smHideSoldUi();
+          window.location.reload();
+        });
     } else {
       smHideSoldUi();
       window.location.reload();
@@ -1419,15 +1458,37 @@
       final_point: result.final_point
     };
 
-    // Fill in data
+    // Fill in data — use the already-painted stage photo so #smSoldPhoto never
+    // keeps showing the previously sold player while a new /web/image URL loads.
     var soldPhoto = document.getElementById('smSoldPhoto');
     if (isMystery) {
       soldPhoto.removeAttribute('src');
       soldPhoto.alt = 'Mystery Player';
       soldPhoto.style.visibility = 'hidden';
+      soldPhoto.style.opacity = '';
     } else {
       soldPhoto.style.visibility = '';
-      soldPhoto.src = '/web/image/auction.team.player/' + result.player_id + '/photo';
+      soldPhoto.alt = 'Player';
+      var stageSrc = smCurrentStagePhotoSrc();
+      if (stageSrc) {
+        soldPhoto.style.opacity = '';
+        soldPhoto.src = stageSrc;
+      } else {
+        var photoUrl = '/web/image/auction.team.player/' + result.player_id + '/photo';
+        // No stage photo available — hide until the new image is decoded so the
+        // previous sale's face cannot linger under the SOLD seal.
+        soldPhoto.style.opacity = '0';
+        var pre = new Image();
+        pre.onload = function() {
+          soldPhoto.src = photoUrl;
+          soldPhoto.style.opacity = '';
+        };
+        pre.onerror = function() {
+          soldPhoto.src = photoUrl;
+          soldPhoto.style.opacity = '';
+        };
+        pre.src = photoUrl;
+      }
     }
     document.getElementById('smSoldTeamLogo').src  = '/web/image/auction.team/' + result.team_id + '/logo';
     document.getElementById('smSoldTeamName').textContent = result.team_name;
@@ -1508,16 +1569,18 @@
           if (typeof window.acCommitPlayerOnStage === 'function') {
             window.acCommitPlayerOnStage(newId);
           }
-          smHideSoldUi();
+          smHideSoldUiAfterStageReady();
           return;
         }
       }
       // Fallback: pre-fetch failed or same player — swap under the overlay first
       if (typeof changeImage === 'function') {
-        Promise.resolve(changeImage(true)).then(smHideSoldUi).catch(function() {
-          smHideSoldUi();
-          window.location.reload();
-        });
+        Promise.resolve(changeImage(true))
+          .then(smHideSoldUiAfterStageReady)
+          .catch(function() {
+            smHideSoldUi();
+            window.location.reload();
+          });
       } else {
         smHideSoldUi();
         window.location.reload();
