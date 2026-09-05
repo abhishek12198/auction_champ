@@ -19,7 +19,7 @@
           rel="stylesheet"/>
 
     <!-- Registration form CSS -->
-    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.660"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.663"/>
 
     <!-- ── Per-theme CSS custom properties ────────────────────── -->
     <style>
@@ -183,21 +183,41 @@
         </div>
     </div><!-- /reg-header-card -->
 
-    <!-- Registered players CTA — always visible (form, success, closed) -->
-    <t t-if="tournament and db_name and tournament_slug">
-    <button type="button"
-            class="reg-roster-cta reg-roster-cta--mobile-hide"
-            id="regRosterOpen"
-            t-att-data-url="'/%s/%s/player/register/players' % (db_name, tournament_slug)"
-            t-att-data-sport="tournament.tournament_type or 'cricket'"
-            t-att-data-count="roster_count or 0">
-        <span class="reg-roster-cta-ic" aria-hidden="true">👥</span>
-        <span class="reg-roster-cta-copy">
-            <b>Players registered so far</b>
-            <span>See who has joined · find your friends</span>
-        </span>
-        <span class="reg-roster-cta-count" id="regRosterCount"><t t-esc="roster_count or 0"/></span>
-    </button>
+    <!-- Roster / Icon CTAs — compact buttons that open popups (like roster) -->
+    <t t-set="show_roster_cta" t-value="bool(tournament and db_name and tournament_slug and tournament.show_registered_players)"/>
+    <t t-set="show_icons_cta" t-value="bool(tournament and tournament.show_registration_icon_players and tournament.icon_player_count)"/>
+    <t t-if="show_roster_cta or show_icons_cta">
+    <div class="reg-cta-stack">
+        <t t-if="show_roster_cta">
+        <button type="button"
+                class="reg-roster-cta"
+                id="regRosterOpen"
+                t-att-data-url="'/%s/%s/player/register/players' % (db_name, tournament_slug)"
+                t-att-data-sport="tournament.tournament_type or 'cricket'"
+                t-att-data-count="roster_count or 0">
+            <span class="reg-roster-cta-ic" aria-hidden="true">👥</span>
+            <span class="reg-roster-cta-copy">
+                <b>Players registered so far</b>
+                <span>See who has joined · find your friends</span>
+            </span>
+            <span class="reg-roster-cta-count" id="regRosterCount"><t t-esc="roster_count or 0"/></span>
+        </button>
+        </t>
+        <t t-if="show_icons_cta">
+        <button type="button"
+                class="reg-roster-cta"
+                id="regIconsOpen"
+                aria-haspopup="dialog"
+                aria-controls="regIconsOverlay">
+            <span class="reg-roster-cta-ic" aria-hidden="true">👑</span>
+            <span class="reg-roster-cta-copy">
+                <b>Icon Players</b>
+                <span>Assigned by teams · tap to view</span>
+            </span>
+            <span class="reg-roster-cta-count"><t t-esc="tournament.icon_player_count"/></span>
+        </button>
+        </t>
+    </div>
     </t>
 
     <!-- ════════════════════════════════════════
@@ -205,17 +225,6 @@
          ════════════════════════════════════════ -->
     <t t-if="not hide_reg_form">
     <div class="reg-trustbar">
-        <t t-if="tournament and tournament.icon_player_count">
-            <a href="#reg-icon-players-panel"
-               class="reg-trust-card"
-               aria-label="View Icon Players">
-                <span class="reg-trust-ic">👑</span>
-                <div class="reg-trust-tx">
-                    <b>Icon Players</b>
-                    <span t-esc="tournament.icon_player_count"/> assigned by teams
-                </div>
-            </a>
-        </t>
         <a href="#reg-form-start"
            class="reg-trust-card reg-trust-card--cta"
            id="reg-secure-registration-btn"
@@ -249,64 +258,6 @@
     <!-- ════════════════════════════════════════
          LAYOUT — main form + sticky benefits sidebar
          ════════════════════════════════════════ -->
-    <!-- Icon Players panel (public registration) -->
-    <t t-if="not hide_reg_form and tournament and tournament.icon_player_count">
-        <div id="reg-icon-players-panel"
-             style="margin: -8px 0 18px; padding: 14px 14px 8px; border-radius: 16px;
-                    border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04);
-                    backdrop-filter: blur(8px);">
-            <div style="display:flex; align-items:center; gap:10px; margin: 0 0 10px;">
-                <span style="font-size:1.25rem; width:40px; height:40px; display:inline-flex; align-items:center; justify-content:center;
-                             border-radius:12px; border:1px solid rgba(var(--reg-accent-rgb), .35);
-                             background: rgba(var(--reg-accent-rgb), .12);">👑</span>
-                <div>
-                    <div style="font-family:'Barlow Condensed',sans-serif; font-weight:800; color:#fff; letter-spacing:.03em;">
-                        Icon Players
-                    </div>
-                    <div style="font-size:.75rem; color: rgba(255,255,255,.62);">
-                        Assigned teams &amp; players
-                    </div>
-                </div>
-            </div>
-
-            <div style="display:flex; flex-direction:column; gap:12px;">
-                <t t-foreach="tournament.team_ids" t-as="team" t-key="team.id">
-                    <t t-if="team.key_player_ids">
-                        <div style="display:flex; align-items:flex-start; gap:12px;">
-                            <img t-if="team.logo"
-                                 t-att-src="'/web/image/auction.team/%s/logo' % team.id"
-                                 alt=""
-                                 style="width:44px; height:44px; border-radius:12px; object-fit:cover; border:1px solid rgba(var(--reg-accent-rgb), .22);
-                                        background:#fff;"/>
-                            <div t-else=""
-                                 style="width:44px; height:44px; border-radius:12px; border:1px solid rgba(var(--reg-accent-rgb), .22);
-                                        background: rgba(var(--reg-accent-rgb), .12); display:flex; align-items:center; justify-content:center;
-                                        color: rgba(255,255,255,.85);">
-                                🏟️
-                            </div>
-
-                            <div style="flex:1; min-width:0;">
-                                <div style="color:#fff; font-weight:800; letter-spacing:.02em; font-family:'Barlow Condensed',sans-serif;">
-                                    <t t-esc="team.name"/>
-                                </div>
-                                <div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:8px;">
-                                    <t t-foreach="team.key_player_ids" t-as="p" t-key="p.id">
-                                        <span style="display:inline-flex; align-items:center; gap:6px;
-                                                     padding:6px 10px; border-radius:999px;
-                                                     border:1px solid rgba(var(--reg-accent-rgb), .25);
-                                                     background: rgba(0,0,0,.18); color:#fff; font-size:.78rem;">
-                                            <span t-esc="p.name"/>
-                                            <span style="opacity:.65;">(<t t-esc="p.role or 'Icon'"/> )</span>
-                                        </span>
-                                    </t>
-                                </div>
-                            </div>
-                        </div>
-                    </t>
-                </t>
-            </div>
-        </div>
-    </t>
     <div t-attf-class="reg-layout{{' reg-layout--success' if (success or registration_closed or razorpay_await_payment) else ''}}">
     <div class="reg-main">
 
@@ -628,7 +579,9 @@
                     <t t-esc="current_count"/> registered · <t t-esc="max_registrations - current_count"/> open
                     <t t-if="urgency == 'critical'"> · Hurry, spots are going fast!</t>
                     <t t-elif="urgency == 'warning'"> · Register before it fills up.</t>
+                    <t t-if="tournament and tournament.show_registered_players">
                     <button type="button" class="reg-roster-slots-link" data-reg-roster-open="1">View players</button>
+                    </t>
                 </div>
             </div>
         </t>
@@ -1287,6 +1240,7 @@
 </div><!-- /reg-wrapper -->
 
 <!-- ── Registered players popup ── -->
+<t t-if="tournament and tournament.show_registered_players">
 <div id="regRosterOverlay" class="reg-roster-overlay" aria-hidden="true">
     <div class="reg-roster-dialog" role="dialog" aria-modal="true" aria-labelledby="regRosterTitle">
         <div class="reg-roster-head">
@@ -1308,6 +1262,61 @@
         </div>
     </div>
 </div>
+</t>
+
+<!-- ── Icon players popup (same card layout as registered players) ── -->
+<t t-if="tournament and tournament.show_registration_icon_players and tournament.icon_player_count">
+<div id="regIconsOverlay" class="reg-roster-overlay" aria-hidden="true">
+    <div class="reg-roster-dialog" role="dialog" aria-modal="true" aria-labelledby="regIconsTitle">
+        <div class="reg-roster-head">
+            <div class="reg-roster-head-text">
+                <p class="reg-roster-kicker">Assigned by teams</p>
+                <h2 id="regIconsTitle">Icon Players</h2>
+            </div>
+            <button type="button" class="reg-roster-x" id="regIconsClose" aria-label="Close">&#215;</button>
+        </div>
+        <div class="reg-roster-toolbar">
+            <label class="reg-roster-search" for="regIconsSearch">
+                <span class="reg-roster-search-ic" aria-hidden="true">⌕</span>
+                <input id="regIconsSearch" type="search" placeholder="Search by name, role or team…" autocomplete="off"/>
+            </label>
+        </div>
+        <div class="reg-roster-body" id="regIconsBody">
+            <t t-set="is_football_icons" t-value="tournament.tournament_type == 'football'"/>
+            <div class="reg-roster-grid" id="regIconsGrid">
+                <t t-foreach="tournament.team_ids" t-as="team" t-key="team.id">
+                    <t t-foreach="team.key_player_ids" t-as="p" t-key="p.id">
+                        <t t-set="icon_role" t-value="(p.dominant_position_id.name if is_football_icons and p.dominant_position_id else (p.role or 'Icon'))"/>
+                        <article class="reg-roster-card"
+                                 t-att-data-search="('%s %s %s' % (p.name or '', icon_role or '', team.name or '')).lower()">
+                            <div class="reg-roster-photo-wrap">
+                                <img class="reg-roster-photo"
+                                     t-att-src="'/%s/auction/public/image/auction.team.player/%s/photo?sz=rt' % (db_name, p.id) if db_name else '/web/image/auction.team.player/%s/photo' % p.id"
+                                     alt=""
+                                     loading="lazy"
+                                     onerror="this.onerror=null;this.src='/auction_module/static/img/default_icon.png'"/>
+                            </div>
+                            <div class="reg-roster-info">
+                                <div class="reg-roster-title">
+                                    <h3 class="reg-roster-name"><t t-esc="p.name"/></h3>
+                                    <span class="reg-roster-tier">Icon</span>
+                                </div>
+                                <t t-if="icon_role">
+                                    <div class="reg-roster-main"><t t-esc="icon_role"/></div>
+                                </t>
+                                <div class="reg-roster-chips">
+                                    <span class="reg-roster-chip"><t t-esc="team.name"/></span>
+                                </div>
+                            </div>
+                        </article>
+                    </t>
+                </t>
+            </div>
+            <div class="reg-roster-status" id="regIconsEmpty" hidden="hidden">No matching icon players</div>
+        </div>
+    </div>
+</div>
+</t>
 
 <!-- ── Photo Cropper Modal ── -->
 <div id="cropperModal" class="reg-crop-overlay" aria-hidden="true">
@@ -1637,6 +1646,66 @@
             if (firstSec) firstSec.classList.add('mob-open');
         });
     }
+
+    // ── Icon Players popup (same UX as registered-players CTA) ────────
+    (function () {
+        var openBtn = document.getElementById('regIconsOpen');
+        var overlay = document.getElementById('regIconsOverlay');
+        var closeBtn = document.getElementById('regIconsClose');
+        var searchEl = document.getElementById('regIconsSearch');
+        var gridEl = document.getElementById('regIconsGrid');
+        var emptyEl = document.getElementById('regIconsEmpty');
+        if (!openBtn || !overlay) return;
+        var lockY = 0;
+        var lastFocus = null;
+        function filterIcons() {
+            if (!gridEl) return;
+            var q = (searchEl &amp;&amp; searchEl.value ? searchEl.value : '').trim().toLowerCase();
+            var cards = gridEl.querySelectorAll('.reg-roster-card');
+            var shown = 0;
+            for (var i = 0; i &lt; cards.length; i++) {
+                var hay = cards[i].getAttribute('data-search') || '';
+                var match = !q || hay.indexOf(q) !== -1;
+                cards[i].style.display = match ? '' : 'none';
+                if (match) shown += 1;
+            }
+            if (emptyEl) {
+                if (shown) emptyEl.setAttribute('hidden', 'hidden');
+                else emptyEl.removeAttribute('hidden');
+            }
+            if (gridEl) gridEl.style.display = shown ? '' : 'none';
+        }
+        function openIcons() {
+            lastFocus = document.activeElement;
+            lockY = window.scrollY || window.pageYOffset || 0;
+            overlay.classList.add('open');
+            overlay.setAttribute('aria-hidden', 'false');
+            document.body.style.top = '-' + lockY + 'px';
+            document.body.classList.add('reg-roster-lock');
+            if (searchEl) {
+                searchEl.value = '';
+                filterIcons();
+            }
+            if (closeBtn) closeBtn.focus();
+        }
+        function closeIcons() {
+            overlay.classList.remove('open');
+            overlay.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('reg-roster-lock');
+            document.body.style.top = '';
+            window.scrollTo(0, lockY);
+            if (lastFocus &amp;&amp; lastFocus.focus) lastFocus.focus();
+        }
+        openBtn.addEventListener('click', openIcons);
+        if (closeBtn) closeBtn.addEventListener('click', closeIcons);
+        if (searchEl) searchEl.addEventListener('input', filterIcons);
+        overlay.addEventListener('click', function (ev) {
+            if (ev.target === overlay) closeIcons();
+        });
+        document.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Escape' &amp;&amp; overlay.classList.contains('open')) closeIcons();
+        });
+    })();
 
     // ── Mobile Accordion (≤ 640 px) ───────────────────────────────────
     if (window.innerWidth &lt;= 640) {
@@ -2339,7 +2408,7 @@
 })();
 </script>
 <script src="/auction_module/static/src/js/auction_sse_client.js"></script>
-<script src="/auction_module/static/src/js/player_registration_roster.js?v=1.5.660"></script>
+<script src="/auction_module/static/src/js/player_registration_roster.js?v=1.5.661"></script>
 
 </body>
 </html>

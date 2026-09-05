@@ -542,6 +542,19 @@ class AuctionTournament(models.Model):
              'Registration Capacity slab (slots left / progress). '
              'Turn off to hide that slab from players while still enforcing Max Registrations.',
     )
+    show_registered_players = fields.Boolean(
+        string='Show Players Registered So Far',
+        default=True,
+        help='When enabled, the public registration page shows the '
+             '“Players registered so far” button and popup. On by default.',
+    )
+    show_registration_icon_players = fields.Boolean(
+        string='Show Icon Players',
+        default=False,
+        help='When enabled, the public registration page shows the Icon Players '
+             'button and popup. Off by default — icon assignments are usually '
+             'not relevant during open registration.',
+    )
     registered_player_count = fields.Integer(
         string='Registered Players',
         compute='_compute_player_state_counts',
@@ -937,6 +950,7 @@ class AuctionTournament(models.Model):
         cr = self.env.cr
         self._ensure_show_registration_capacity_column()
         self._ensure_registered_list_privacy_columns()
+        self._ensure_registration_cta_visibility_columns()
         self._ensure_player_address_required_column()
         self._ensure_youtube_url_column()
 
@@ -1004,6 +1018,34 @@ class AuctionTournament(models.Model):
                SET show_registration_capacity = TRUE
              WHERE show_registration_capacity IS NULL
         """)
+
+    def _ensure_registration_cta_visibility_columns(self):
+        """Create registration CTA visibility flags without requiring -u on deploy."""
+        cr = self.env.cr
+        specs = (
+            ('show_registered_players', True),
+            ('show_registration_icon_players', False),
+        )
+        for col, default_on in specs:
+            cr.execute("""
+                SELECT 1
+                  FROM information_schema.columns
+                 WHERE table_name = 'auction_tournament'
+                   AND column_name = %s
+            """, (col,))
+            if cr.fetchone():
+                continue
+            default_sql = 'TRUE' if default_on else 'FALSE'
+            cr.execute("""
+                ALTER TABLE auction_tournament
+                    ADD COLUMN {} boolean
+                    DEFAULT {}
+            """.format(col, default_sql))
+            cr.execute("""
+                UPDATE auction_tournament
+                   SET {} = {}
+                 WHERE {} IS NULL
+            """.format(col, default_sql, col))
 
     def _ensure_registered_list_privacy_columns(self):
         """Create public-roster privacy flags without requiring -u on deploy."""
@@ -1092,6 +1134,7 @@ class AuctionTournament(models.Model):
         # Self-heal on every registry load (restart without -u).
         self._ensure_show_registration_capacity_column()
         self._ensure_registered_list_privacy_columns()
+        self._ensure_registration_cta_visibility_columns()
         self._ensure_player_address_required_column()
         self._ensure_youtube_url_column()
         self._ensure_live_snapshot_seq_column()
@@ -1304,6 +1347,8 @@ class AuctionTournament(models.Model):
         default.setdefault('expose_registered_org_id', False)
         default.setdefault('expose_registered_address', False)
         default.setdefault('player_address_required', False)
+        default.setdefault('show_registered_players', True)
+        default.setdefault('show_registration_icon_players', False)
         new = super().copy(default)
         new._ensure_default_tier()
         return new

@@ -544,10 +544,15 @@
                                                    help="Set the maximum number of players that can register. Set to 0 for unlimited."/>
                                             <field name="show_registration_capacity" widget="boolean_toggle"
                                                    help="Show or hide the Registration Capacity slab on the public player registration form."/>
+                                            <field name="show_registered_players" widget="boolean_toggle"
+                                                   help="Show or hide the “Players registered so far” button and popup on the public registration page. On by default."/>
+                                            <field name="show_registration_icon_players" widget="boolean_toggle"
+                                                   help="Show or hide the Icon Players button and popup on the public registration page. Off by default."/>
                                             <field name="expose_registered_org_id" widget="boolean_toggle"
-                                                   attrs="{'invisible': [('enable_org_id_registration', '=', False)]}"
+                                                   attrs="{'invisible': ['|', ('enable_org_id_registration', '=', False), ('show_registered_players', '=', False)]}"
                                                    help="Show Org ID# on the public registered-players popup. Hidden unless Org ID# is collected on the form."/>
                                             <field name="expose_registered_address" widget="boolean_toggle"
+                                                   attrs="{'invisible': [('show_registered_players', '=', False)]}"
                                                    help="Show player address on the public registered-players popup so friends can recognise each other."/>
                                             <field name="player_address_required" widget="boolean_toggle"
                                                    help="When on, Location / Address is mandatory on /player/register. When off, players may leave it blank."/>
@@ -1211,6 +1216,12 @@
                     <attribute name="readonly">1</attribute>
                 </field>
                 <field name="show_registration_capacity" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+                <field name="show_registered_players" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+                <field name="show_registration_icon_players" position="attributes">
                     <attribute name="readonly">1</attribute>
                 </field>
                 <field name="expose_registered_org_id" position="attributes">

@@ -6196,6 +6196,8 @@ class Auction(http.Controller):
             )
             if not tournament:
                 return request.make_response(empty, headers=headers)
+            if not tournament.show_registered_players:
+                return request.make_response(empty, headers=headers)
             from odoo.addons.auction_module.services.auction_live_snapshot_service import (
                 get_or_rebuild_snapshot,
             )

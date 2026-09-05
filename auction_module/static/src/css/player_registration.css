@@ -2516,6 +2516,16 @@ a.reg-trust-card--cta .reg-trust-tx span {
 /* ═══════════════════════════════════════════════════════════════════
    REGISTERED PLAYERS POPUP
    ═══════════════════════════════════════════════════════════════════ */
+.reg-cta-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0 0 18px;
+}
+.reg-cta-stack .reg-roster-cta {
+    margin-bottom: 0;
+}
+
 body.reg-roster-lock {
     overflow: hidden;
     position: fixed;
@@ -2586,9 +2596,11 @@ body.reg-roster-lock {
 }
 
 @media (max-width: 640px) {
-    /* Avoid duplicate CTA on small screens — we already show “View players”. */
-    .reg-roster-cta--mobile-hide {
-        display: none !important;
+    .reg-cta-stack .reg-roster-cta {
+        padding: 12px 13px;
+    }
+    .reg-cta-stack .reg-roster-cta-copy b {
+        font-size: .95rem;
     }
 }
 
