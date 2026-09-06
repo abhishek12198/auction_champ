@@ -1802,18 +1802,23 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             });
         },
         _elToDataUrl: function (el, bg) {
-            if (!window.html2canvas) {
-                return Promise.reject(new Error('Snapshot library not loaded'));
-            }
             if (!el) {
                 return Promise.resolve(false);
             }
-            return window.html2canvas(el, {
-                scale: 2,
-                backgroundColor: bg || '#0a1628',
-                useCORS: true,
-                allowTaint: true,
-                logging: false,
+            var loader = (window.AcLazyLib && window.AcLazyLib.html2canvas)
+                ? window.AcLazyLib.html2canvas()
+                : Promise.resolve(window.html2canvas);
+            return loader.then(function (html2canvas) {
+                if (!html2canvas) {
+                    throw new Error('Snapshot library not loaded');
+                }
+                return html2canvas(el, {
+                    scale: 2,
+                    backgroundColor: bg || '#0a1628',
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: false,
+                });
             }).then(function (canvas) {
                 return canvas.toDataURL('image/png');
             });

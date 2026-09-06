@@ -5,7 +5,7 @@ import { registry } from "@web/core/registry";
 import { session } from "@web/session";
 
 const { Component, hooks } = owl;
-const { useState, onWillStart, onMounted, onWillUnmount, onPatched } = hooks;
+const { useState, onMounted, onWillUnmount, onPatched } = hooks;
 
 /**
  * Navbar tournament badge. Auction Users with several Organizer Tournaments
@@ -30,10 +30,6 @@ class TournamentSystrayItem extends Component {
             auctionRulesReady: false,
         });
 
-        onWillStart(async () => {
-            await this.loadTournaments();
-        });
-
         const onOutsideClick = (ev) => {
             const root = this.el;
             if (!root || root.contains(ev.target)) {
@@ -43,6 +39,8 @@ class TournamentSystrayItem extends Component {
         };
         const onReposition = () => this._positionMobileMenu();
         onMounted(() => {
+            // Load after shell paints — do not block navbar / first action on this RPC.
+            this.loadTournaments();
             document.addEventListener("click", onOutsideClick);
             window.addEventListener("resize", onReposition);
             this._positionMobileMenu();

@@ -4043,6 +4043,41 @@ class Auction(http.Controller):
 
     @http.route('/auction/player-dashboard/data', type='http', auth='user', website=False, csrf=False)
     def player_dashboard_data(self, **kw):
+        headers = [
+            ('Content-Type', 'application/json; charset=utf-8'),
+            ('Cache-Control', 'no-store'),
+        ]
+        try:
+            return self._player_dashboard_data_payload(**kw)
+        except Exception:
+            _logger.exception('player_dashboard_data failed')
+            return request.make_response(
+                json.dumps({
+                    'error': 'dashboard_failed',
+                    'total': 0,
+                    'state_counts': {'draft': 0, 'auction': 0, 'sold': 0, 'unsold': 0},
+                    'icon_count': 0,
+                    'paid_count': 0,
+                    'unpaid_count': 0,
+                    'draft_players': [],
+                    'daily': [],
+                    'roles': [],
+                    'positions': [],
+                    'tournament_type': 'cricket',
+                    'tiers': [],
+                    'team_player_counts': [],
+                    'icon_players': [],
+                    'tournament_id': None,
+                    'tournament_name': '',
+                    'tournament_logo': '',
+                    'tournaments': [],
+                    'show_tournament_filter': False,
+                    'view_ids': {},
+                }),
+                headers=headers,
+            )
+
+    def _player_dashboard_data_payload(self, **kw):
         env = request.env
         Player    = env['auction.team.player'].sudo()
         AucPlayer = env['auction.auction.player'].sudo()
@@ -4101,25 +4136,31 @@ class Auction(http.Controller):
             ])
             daily.append({'label': day.strftime('%d %b'), 'count': count})
 
-        # ── Role / Playing-position distribution ──────────────────────────────
+        # ── Role / Playing-position / tier / team distributions ───────────────
+        # Keep this as an in-Python pass over the tournament set — read_group on
+        # Char/M2O with empty values has been fragile across DBs and left the UI
+        # stuck on "Loading tournament…".
         all_players = Player.search(t_domain)
         role_counts = {}
         position_counts = {}
+        tier_counts = {}
+        team_counts = {}
         for p in all_players:
             role = (p.role or 'Unknown').strip() or 'Unknown'
             role_counts[role] = role_counts.get(role, 0) + 1
             if is_football:
                 pos = (p.dominant_position_id.name if p.dominant_position_id else 'Unknown').strip() or 'Unknown'
                 position_counts[pos] = position_counts.get(pos, 0) + 1
-        roles = [{'label': k, 'count': v} for k, v in sorted(role_counts.items(), key=lambda x: -x[1])]
-        positions = [{'label': k, 'count': v} for k, v in sorted(position_counts.items(), key=lambda x: -x[1])]
-
-        # ── Tier distribution ─────────────────────────────────────────────────
-        tier_counts = {}
-        for p in all_players:
             tier = p.tier_id.name if p.tier_id else 'No Tier'
             tier_counts[tier] = tier_counts.get(tier, 0) + 1
+            if p.assigned_team_id:
+                tname = p.assigned_team_id.name or 'Unknown'
+                team_counts[tname] = team_counts.get(tname, 0) + 1
+        roles = [{'label': k, 'count': v} for k, v in sorted(role_counts.items(), key=lambda x: -x[1])]
+        positions = [{'label': k, 'count': v} for k, v in sorted(position_counts.items(), key=lambda x: -x[1])]
         tiers = [{'label': k, 'count': v} for k, v in sorted(tier_counts.items(), key=lambda x: -x[1])]
+        team_player_counts = [{'label': k, 'count': v}
+                               for k, v in sorted(team_counts.items(), key=lambda x: -x[1])]
 
         # ── Icon players count ────────────────────────────────────────────────
         icon_count = Player.search_count(t_domain + [('icon_player', '=', True)])
@@ -4128,20 +4169,20 @@ class Auction(http.Controller):
         paid_count   = Player.search_count(t_domain + [('amount_paid', '=', True)])
         unpaid_count = Player.search_count(t_domain + [('amount_paid', '=', False)])
 
-        # ── Players per team (sold players grouped by team) ───────────────────
-        team_counts = {}
-        for p in all_players:
-            if p.assigned_team_id:
-                tname = p.assigned_team_id.name or 'Unknown'
-                team_counts[tname] = team_counts.get(tname, 0) + 1
-        team_player_counts = [{'label': k, 'count': v}
-                               for k, v in sorted(team_counts.items(), key=lambda x: -x[1])]
-
         # ── Icon / Key players with team assignment ───────────────────────────
         icon_players = Player.search(t_domain + [('icon_player', '=', True)], order='assigned_team_id, name')
         icon_list = []
+        icon_points = {}
+        if icon_players:
+            for line in AucPlayer.search_read(
+                [('player_id', 'in', icon_players.ids)],
+                ['player_id', 'points'],
+                order='points desc',
+            ):
+                pid = line['player_id'][0] if line.get('player_id') else False
+                if pid and pid not in icon_points:
+                    icon_points[pid] = line.get('points') or 0
         for p in icon_players:
-            auc_line = AucPlayer.search([('player_id', '=', p.id)], order='points desc', limit=1)
             if is_football:
                 display_role = (p.dominant_position_id.name if p.dominant_position_id else '') or (p.role or '')
             else:
@@ -4153,7 +4194,7 @@ class Auction(http.Controller):
                 'team':      p.assigned_team_id.name if p.assigned_team_id else 'Unassigned',
                 'team_logo': pub_img('auction.team', p.assigned_team_id.id, 'logo')
                              if p.assigned_team_id and p.assigned_team_id.logo else '',
-                'points':    auc_line.points if auc_line else 0,
+                'points':    icon_points.get(p.id, 0),
                 'photo_url': pub_img('auction.team.player', p.id, 'photo') if p.photo else '',
             })
 
@@ -4193,7 +4234,7 @@ class Auction(http.Controller):
         }
         return request.make_response(
             json.dumps(result),
-            headers=[('Content-Type', 'application/json'), ('Cache-Control', 'no-store')],
+            headers=[('Content-Type', 'application/json; charset=utf-8'), ('Cache-Control', 'no-store')],
         )
 
     def _resolve_pd_tournament(self, tournament_id=None):

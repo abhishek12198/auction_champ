@@ -274,18 +274,24 @@
         btn.innerHTML = '⏳ Generating...';
         btn.style.pointerEvents = 'none';
 
-        html2canvas(clone, {
-            scale: 2, backgroundColor: DARK,
-            useCORS: true, allowTaint: true,
-            logging: false, imageTimeout: 0,
-        }).then(function (canvas) {
-            document.body.removeChild(clone);
-            btn.innerHTML = orig; btn.style.pointerEvents = '';
-            var a = document.createElement('a');
-            a.href = canvas.toDataURL('image/png');
-            a.download = 'fixture_schedule.png';
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        }).catch(function (err) {
+        var run = function (html2canvas) {
+            return html2canvas(clone, {
+                scale: 2, backgroundColor: DARK,
+                useCORS: true, allowTaint: true,
+                logging: false, imageTimeout: 0,
+            }).then(function (canvas) {
+                document.body.removeChild(clone);
+                btn.innerHTML = orig; btn.style.pointerEvents = '';
+                var a = document.createElement('a');
+                a.href = canvas.toDataURL('image/png');
+                a.download = 'fixture_schedule.png';
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            });
+        };
+        var loader = (window.AcLazyLib && window.AcLazyLib.html2canvas)
+            ? window.AcLazyLib.html2canvas()
+            : Promise.resolve(window.html2canvas);
+        loader.then(run).catch(function (err) {
             if (document.body.contains(clone)) document.body.removeChild(clone);
             btn.innerHTML = orig; btn.style.pointerEvents = '';
             console.error('Fixture snapshot error:', err);

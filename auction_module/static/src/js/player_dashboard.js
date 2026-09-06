@@ -181,10 +181,24 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
         _loadData: function () {
             var self = this;
             var url = '/auction/player-dashboard/data';
-            fetch(url, { cache: 'no-store' })
-                .then(function (r) { return r.json(); })
-                .then(function (d) { self._render(d); })
-                .catch(function (e) { console.error('Player dashboard load failed', e); });
+            fetch(url, { cache: 'no-store', credentials: 'same-origin' })
+                .then(function (r) {
+                    if (!r.ok) {
+                        throw new Error('HTTP ' + r.status);
+                    }
+                    return r.json();
+                })
+                .then(function (d) {
+                    if (!d || d.error) {
+                        self.$('#pd-tour-name').text('Tournament unavailable');
+                        console.error('Player dashboard payload error', d && d.error);
+                    }
+                    self._render(d || {});
+                })
+                .catch(function (e) {
+                    console.error('Player dashboard load failed', e);
+                    self.$('#pd-tour-name').text('Failed to load tournament');
+                });
         },
 
         _render: function (d) {
@@ -281,6 +295,13 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
             return this.$el.hasClass('pd-light') ? '#444' : 'rgba(255,255,255,.7)';
         },
 
+        _withChart: function (fn) {
+            var ensure = (window.AcLazyLib && window.AcLazyLib.chart)
+                ? window.AcLazyLib.chart()
+                : Promise.resolve(window.Chart);
+            return ensure.then(fn).catch(function () { /* charts optional */ });
+        },
+
         _renderStatePie: function (sc) {
             var data = STATE_KEYS.map(function (k) { return sc[k] || 0; });
             this._drawPie('pd-pie-state', STATE_LABELS, data, STATE_COLORS, 'pd-pie-legend');
@@ -300,69 +321,84 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
 
         _drawPie: function (canvasId, labels, data, colors, legendId, donut) {
             var self = this;
-            var ctx = this.$('#' + canvasId)[0];
-            if (!ctx) return;
-            if (this._charts[canvasId]) { this._charts[canvasId].destroy(); }
-            var isNarrow = typeof window !== 'undefined' && window.innerWidth <= 768;
-            this._charts[canvasId] = new Chart(ctx, {
-                type: donut ? 'doughnut' : 'pie',
-                data: { labels: labels, datasets: [{ data: data, backgroundColor: colors, borderWidth: 2, borderColor: 'transparent' }] },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: !isNarrow,
-                    plugins: { legend: { display: false } },
-                    cutout: donut ? '55%' : 0,
-                },
+            this._withChart(function (Chart) {
+                if (!Chart) return;
+                var ctx = self.$('#' + canvasId)[0];
+                if (!ctx) return;
+                if (self._charts[canvasId]) { self._charts[canvasId].destroy(); }
+                var isNarrow = typeof window !== 'undefined' && window.innerWidth <= 768;
+                self._charts[canvasId] = new Chart(ctx, {
+                    type: donut ? 'doughnut' : 'pie',
+                    data: { labels: labels, datasets: [{ data: data, backgroundColor: colors, borderWidth: 2, borderColor: 'transparent' }] },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: !isNarrow,
+                        plugins: { legend: { display: false } },
+                        cutout: donut ? '55%' : 0,
+                    },
+                });
+                if (legendId) {
+                    var total = data.reduce(function (a, b) { return a + b; }, 0);
+                    var html = labels.map(function (lbl, i) {
+                        var pct = total ? Math.round((data[i] / total) * 100) : 0;
+                        return '<span class="pd-leg-item"><span class="pd-leg-dot" style="background:' + colors[i] + '"></span>' +
+                            lbl + ' <b>' + data[i] + '</b> <small>(' + pct + '%)</small></span>';
+                    }).join('');
+                    self.$('#' + legendId).html(html);
+                }
             });
-            if (legendId) {
-                var total = data.reduce(function (a, b) { return a + b; }, 0);
-                var html = labels.map(function (lbl, i) {
-                    var pct = total ? Math.round((data[i] / total) * 100) : 0;
-                    return '<span class="pd-leg-item"><span class="pd-leg-dot" style="background:' + colors[i] + '"></span>' +
-                        lbl + ' <b>' + data[i] + '</b> <small>(' + pct + '%)</small></span>';
-                }).join('');
-                self.$('#' + legendId).html(html);
-            }
         },
 
         _renderDailyBar: function (daily) {
-            var ctx = this.$('#pd-bar-daily')[0];
-            if (!ctx) return;
-            if (this._charts['pd-bar-daily']) { this._charts['pd-bar-daily'].destroy(); }
-            this._charts['pd-bar-daily'] = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: daily.map(function (d) { return d.label; }),
-                        datasets: [{ label: 'Registrations', data: daily.map(function (d) { return d.count; }),
-                            backgroundColor: BAR_COLOR, borderColor: BAR_BORDER, borderWidth: 1, borderRadius: 6 }] },
-                options: this._barOpts(),
+            var self = this;
+            this._withChart(function (Chart) {
+                if (!Chart) return;
+                var ctx = self.$('#pd-bar-daily')[0];
+                if (!ctx) return;
+                if (self._charts['pd-bar-daily']) { self._charts['pd-bar-daily'].destroy(); }
+                self._charts['pd-bar-daily'] = new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels: daily.map(function (d) { return d.label; }),
+                            datasets: [{ label: 'Registrations', data: daily.map(function (d) { return d.count; }),
+                                backgroundColor: BAR_COLOR, borderColor: BAR_BORDER, borderWidth: 1, borderRadius: 6 }] },
+                    options: self._barOpts(),
+                });
             });
         },
 
         _renderTierBar: function (tiers) {
-            var ctx = this.$('#pd-bar-tier')[0];
-            if (!ctx) return;
-            if (this._charts['pd-bar-tier']) { this._charts['pd-bar-tier'].destroy(); }
-            var colors = tiers.map(function (_, i) { return TIER_PALETTE[i % TIER_PALETTE.length]; });
-            this._charts['pd-bar-tier'] = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: tiers.map(function (t) { return t.label; }),
-                        datasets: [{ label: 'Players', data: tiers.map(function (t) { return t.count; }),
-                            backgroundColor: colors, borderWidth: 1, borderRadius: 6 }] },
-                options: this._barOpts(),
+            var self = this;
+            this._withChart(function (Chart) {
+                if (!Chart) return;
+                var ctx = self.$('#pd-bar-tier')[0];
+                if (!ctx) return;
+                if (self._charts['pd-bar-tier']) { self._charts['pd-bar-tier'].destroy(); }
+                var colors = tiers.map(function (_, i) { return TIER_PALETTE[i % TIER_PALETTE.length]; });
+                self._charts['pd-bar-tier'] = new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels: tiers.map(function (t) { return t.label; }),
+                            datasets: [{ label: 'Players', data: tiers.map(function (t) { return t.count; }),
+                                backgroundColor: colors, borderWidth: 1, borderRadius: 6 }] },
+                    options: self._barOpts(),
+                });
             });
         },
 
         _renderTeamBar: function (teams) {
-            var ctx = this.$('#pd-bar-team')[0];
-            if (!ctx) return;
-            if (this._charts['pd-bar-team']) { this._charts['pd-bar-team'].destroy(); }
-            var colors = teams.map(function (_, i) { return TEAM_PALETTE[i % TEAM_PALETTE.length]; });
-            this._charts['pd-bar-team'] = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: teams.map(function (t) { return t.label; }),
-                        datasets: [{ label: 'Players', data: teams.map(function (t) { return t.count; }),
-                            backgroundColor: colors, borderWidth: 1, borderRadius: 6 }] },
-                options: this._barOpts(),
+            var self = this;
+            this._withChart(function (Chart) {
+                if (!Chart) return;
+                var ctx = self.$('#pd-bar-team')[0];
+                if (!ctx) return;
+                if (self._charts['pd-bar-team']) { self._charts['pd-bar-team'].destroy(); }
+                var colors = teams.map(function (_, i) { return TEAM_PALETTE[i % TEAM_PALETTE.length]; });
+                self._charts['pd-bar-team'] = new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels: teams.map(function (t) { return t.label; }),
+                            datasets: [{ label: 'Players', data: teams.map(function (t) { return t.count; }),
+                                backgroundColor: colors, borderWidth: 1, borderRadius: 6 }] },
+                    options: self._barOpts(),
+                });
             });
         },
 

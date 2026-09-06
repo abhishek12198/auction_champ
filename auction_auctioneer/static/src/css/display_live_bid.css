@@ -27,7 +27,9 @@
 }
 
 .ac-bid-hero{
-    display:flex;
+    /* Hidden until Auctioneer access is confirmed (body.ac-livebid-allowed).
+       Avoids empty "Current Bid / Waiting for opening bid" chrome for non-auctioneers. */
+    display:none;
     flex-direction:column;
     align-items:stretch;
     gap:.45rem;
@@ -40,6 +42,9 @@
         linear-gradient(145deg, color-mix(in srgb, var(--lb-accent) 18%, transparent), transparent 58%),
         color-mix(in srgb, var(--lb-accent) 6%, transparent);
     box-shadow:0 0 22px color-mix(in srgb, var(--lb-accent) 32%, transparent);
+}
+body.ac-livebid-allowed .ac-bid-hero{
+    display:flex;
 }
 .ac-bid-hero-head{
     display:flex;
@@ -423,7 +428,7 @@
     gap: 6px;
     min-width: 0;
     min-height: 26px;
-    max-height: 26px;
+    max-height: none;
 }
 .ac-livebid-logo,
 .ac-livebid-ph {
@@ -448,9 +453,17 @@
     text-transform: uppercase;
     letter-spacing: .01em;
     overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    white-space: normal;
+    /* Wrap only between words — never split "HUNTERS" into HUNTER + S */
+    word-break: normal;
+    overflow-wrap: normal;
+    hyphens: none;
     min-width: 0;
+    cursor: inherit;
 }
 .ac-livebid-leadamt {
     display: inline-flex;
@@ -570,6 +583,9 @@
     margin: 0;
     font: 800 17px/1.15 inherit;
     text-transform: uppercase;
+    word-break: normal;
+    overflow-wrap: normal;
+    hyphens: none;
 }
 .ac-livebid-info-mgr {
     margin: 4px 0 0;
@@ -1021,8 +1037,34 @@ body[data-theme="dark"] .player-profession .ac-livebid-overlay {
 .ac-phone-id { display: none; }
 
 @media (max-width: 820px) {
+    /* No Auctioneer session: collapse Current Bid / Live Bid chrome completely. */
+    body.ac-livebid-off .ac-bid-hero,
+    body.ac-livebid-off #acLiveBidPad,
+    body.ac-livebid-off #acLiveBidLaunch {
+        display: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        max-height: 0 !important;
+        border: 0 !important;
+        overflow: hidden !important;
+        flex: 0 0 0 !important;
+    }
+    body.ac-livebid-off .bb-right-col,
+    body.ac-livebid-off .pt-right-col,
+    body.ac-livebid-off .cr-stats-col,
+    body.ac-livebid-off .lm-info-col,
+    body.ac-livebid-off .sw-info-col,
+    body.ac-livebid-off .hud-info-col,
+    body.ac-livebid-off .auction-single > .col-4,
+    body.ac-livebid-off .auction-single > .col-lg-5,
+    body.ac-livebid-off .player-profession {
+        padding-bottom: 12px !important;
+    }
+
     /* Theme pages lock html/body to 100vh + overflow:hidden. After Current Bid
-       the Live Bid pad and Unsold/Sell/Next sit below that clip. Unlock scroll. */
+       the Live Bid pad and Unsold / Sell / Next sit below that clip. Unlock scroll. */
     html:has(#acLiveBidPad),
     html:has(#acLiveBidPad) body {
         height: auto !important;

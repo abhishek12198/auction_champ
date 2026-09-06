@@ -14,6 +14,7 @@
     var lastHtml = '';
     var busyId = 0;
     var allowed = false;
+    var accessDenied = false;
     var teamsCache = [];
     var playerCache = null;
     var selectedTeam = null;
@@ -99,15 +100,32 @@
     function applyChrome() {
         var pad = padEl();
         var launch = launchEl();
+        var hero = document.getElementById('acBidHero');
         var toggleBtn = document.getElementById('acLiveBidToggle');
         if (!pad) return;
-        if (document.body) document.body.classList.add('ac-showcase');
-        pad.classList.toggle('is-on', allowed);
-        var closed = !allowed || isClosed();
-        var expanded = allowed && !closed && isExpanded();
-        pad.classList.toggle('is-open', allowed && !closed);
+        // Confirmed no Auctioneer access: drop Current Bid + Live Bid so layouts
+        // (especially mobile) reclaim the empty chrome instead of scrolling past it.
+        var hideBidChrome = !!accessDenied || !allowed;
+        if (document.body) {
+            document.body.classList.toggle('ac-showcase', !!allowed && !accessDenied);
+            document.body.classList.toggle('ac-livebid-allowed', !!allowed && !accessDenied);
+            document.body.classList.toggle('ac-livebid-off', !!accessDenied || !allowed);
+        }
+        if (hero) {
+            hero.hidden = hideBidChrome;
+            hero.style.display = hideBidChrome ? 'none' : '';
+        }
+        pad.classList.toggle('is-on', allowed && !accessDenied);
+        var closed = hideBidChrome || isClosed();
+        var expanded = allowed && !accessDenied && !closed && isExpanded();
+        pad.classList.toggle('is-open', allowed && !accessDenied && !closed);
         pad.classList.toggle('is-expanded', expanded);
-        if (launch) launch.classList.toggle('is-on', allowed && closed);
+        pad.hidden = hideBidChrome;
+        if (launch) {
+            launch.classList.toggle('is-on', allowed && !accessDenied && closed);
+            launch.hidden = hideBidChrome;
+            launch.style.display = (allowed && !accessDenied && closed) ? '' : 'none';
+        }
         if (toggleBtn) {
             toggleBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
             toggleBtn.textContent = expanded ? 'Show less' : 'View all teams';
@@ -288,7 +306,8 @@
                 + ' title="' + esc(team.name) + '">'
                 + '<div class="ac-livebid-head">'
                 + logo
-                + '<span class="ac-livebid-name">' + esc(team.name) + '</span>'
+                + '<span class="ac-livebid-name" title="' + esc(team.name) + '">'
+                + esc(team.name) + '</span>'
                 + foot
                 + '</div>'
                 + '<div class="ac-livebid-purse-bar"><div class="ac-livebid-purse-fill' + barMod + '" style="width:' + pct.toFixed(1) + '%"></div></div>'
@@ -310,9 +329,11 @@
         getJson(dataUrl(), function (err, data) {
             if (err || !data || data.error === 'not_auctioneer') {
                 allowed = false;
+                accessDenied = !!(data && data.error === 'not_auctioneer');
                 applyChrome();
                 return;
             }
+            accessDenied = false;
             render(data);
         });
     }

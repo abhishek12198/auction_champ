@@ -39,26 +39,32 @@ document.addEventListener('click', function (ev) {
     btn.innerHTML = '⏳ Generating...';
     btn.style.pointerEvents = 'none';
 
-    html2canvas(clone, {
-        scale        : 2,
-        backgroundColor: '#0d0d2b',
-        useCORS      : true,
-        allowTaint   : true,
-        logging      : false,
-        imageTimeout : 0,
-    }).then(function (canvas) {
-        document.body.removeChild(clone);
-        btn.innerHTML = origText;
-        btn.style.pointerEvents = '';
+    var run = function (html2canvas) {
+        return html2canvas(clone, {
+            scale        : 2,
+            backgroundColor: '#0d0d2b',
+            useCORS      : true,
+            allowTaint   : true,
+            logging      : false,
+            imageTimeout : 0,
+        }).then(function (canvas) {
+            document.body.removeChild(clone);
+            btn.innerHTML = origText;
+            btn.style.pointerEvents = '';
 
-        const link = document.createElement('a');
-        link.href     = canvas.toDataURL('image/png');
-        link.download = 'pool_draw.png';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }).catch(function (err) {
-        document.body.removeChild(clone);
+            const link = document.createElement('a');
+            link.href     = canvas.toDataURL('image/png');
+            link.download = 'pool_draw.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    };
+    var loader = (window.AcLazyLib && window.AcLazyLib.html2canvas)
+        ? window.AcLazyLib.html2canvas()
+        : Promise.resolve(window.html2canvas);
+    loader.then(run).catch(function (err) {
+        if (document.body.contains(clone)) document.body.removeChild(clone);
         btn.innerHTML = origText;
         btn.style.pointerEvents = '';
         console.error('Snapshot error:', err);

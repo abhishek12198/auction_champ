@@ -993,7 +993,7 @@
                 <kanban class="o_auction_tournament_kanban" default_order="tournament_date desc">
                     <field name="id"/>
                     <field name="name"/>
-                    <field name="logo"/>
+                    <field name="logo_card"/>
                     <field name="description"/>
                     <field name="tournament_type"/>
                     <field name="tournament_date"/>
@@ -1003,9 +1003,6 @@
                     <field name="active"/>
                     <field name="live_board_active"/>
                     <field name="registered_player_count"/>
-                    <field name="auction_player_count"/>
-                    <field name="sold_player_count"/>
-                    <field name="unsold_player_count"/>
                     <field name="team_max_points"/>
                     <field name="organizer_uid"/>
                     <field name="tournament_code"/>
@@ -1016,8 +1013,8 @@
                                 <!-- Header: logo + name + type badge -->
                                 <div class="o_atk_header">
                                     <div class="o_atk_logo_wrap">
-                                        <t t-if="record.logo.raw_value">
-                                            <img t-att-src="kanban_image('auction.tournament','logo', record.id.raw_value)"
+                                        <t t-if="record.logo_card.raw_value">
+                                            <img t-att-src="kanban_image('auction.tournament','logo_card', record.id.raw_value)"
                                                  class="o_atk_logo" alt="Logo"/>
                                         </t>
                                         <t t-else="">

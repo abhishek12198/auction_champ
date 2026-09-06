@@ -38,7 +38,7 @@
 
 {
     'name' : 'Auction Champ',
-    'version' : '1.5.675',
+    'version' : '1.5.676',
     'summary': 'Sports Auction module',
     'sequence': 10,
     'icon': '/auction_module/static/description/icon.png',
@@ -159,9 +159,11 @@
     ],
     'assets': {
             'web.assets_backend': [
+                    '/auction_module/static/src/js/ac_lazy_lib.js',
                     '/auction_module/static/src/js/point_unit.js',
                     '/auction_module/static/src/js/ac_points_widget.js',
-                    '/auction_module/static/src/lib/chart.umd.min.js',
+                    # chart.umd + html2canvas are lazy-loaded via AcLazyLib on first use
+                    # (dashboard charts / snapshots) so login does not pay ~400KB up front.
                     '/auction_module/static/src/js/auction_dashboard.js',
                     '/auction_module/static/src/css/auction_dashboard.css',
                     '/auction_module/static/src/js/player_dashboard.js',
@@ -179,7 +181,6 @@
                     '/auction_module/static/src/js/revoke_transactions.js',
                     '/auction_module/static/src/js/set_auction_rules.js',
                     '/auction_module/static/src/css/sticky_header.css',
-                    '/auction_module/static/src/lib/html2canvas.min.js',
                     '/auction_module/static/src/js/sold_sound.js',
                     '/auction_module/static/src/js/sold_toast.js',
                     '/auction_module/static/src/js/screenshot.js',
@@ -222,6 +223,7 @@
                 '/auction_module/static/src/xml/tournament_calendar.xml',
             ],
             'web.assets_frontend': [
+                '/auction_module/static/src/js/ac_lazy_lib.js',
                 '/auction_module/static/src/lib/html2canvas.min.js',
                 '/auction_module/static/src/js/point_unit.js',
                 '/auction_module/static/src/css/auction_live_queue.css',

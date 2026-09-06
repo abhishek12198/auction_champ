@@ -80,51 +80,67 @@
             </div>
         </div>
         <div class="ac-livebid-toast" id="acLiveBidToast"></div>
-        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_live_bid.css?v=43"/>
+        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_live_bid.css?v=48"/>
         <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_showcase.css?v=11"/>
-        <script src="/auction_auctioneer/static/src/js/display_live_bid.js?v=37"></script>
+        <script src="/auction_auctioneer/static/src/js/display_live_bid.js?v=41"></script>
     </template>
 
-    <!-- Under player profile, above Unsold / Sell / Next -->
+    <!-- Under player profile, above Unsold / Sell / Next.
+         Only inject when the session user has Auctioneer — otherwise Current Bid /
+         Live Bid leave empty chrome (especially painful on small screens). -->
     <template id="live_bid_pad_blackberry" inherit_id="auction_module.player_template_blackberry">
         <xpath expr="//div[hasclass('bb-info-panel')]" position="after">
-            <t t-call="auction_auctioneer.live_bid_pad"/>
+            <t t-if="request.env.user.has_group('auction_auctioneer.group_auctioneer')">
+                <t t-call="auction_auctioneer.live_bid_pad"/>
+            </t>
         </xpath>
     </template>
 
     <template id="live_bid_pad_pistah" inherit_id="auction_module.player_template_pistah">
         <xpath expr="//div[hasclass('pt-info-panel')]" position="after">
-            <t t-call="auction_auctioneer.live_bid_pad"/>
+            <t t-if="request.env.user.has_group('auction_auctioneer.group_auctioneer')">
+                <t t-call="auction_auctioneer.live_bid_pad"/>
+            </t>
         </xpath>
     </template>
 
     <template id="live_bid_pad_cherry" inherit_id="auction_module.player_template_cherry">
         <xpath expr="//div[hasclass('hud-actions')]" position="before">
-            <t t-call="auction_auctioneer.live_bid_pad"/>
+            <t t-if="request.env.user.has_group('auction_auctioneer.group_auctioneer')">
+                <t t-call="auction_auctioneer.live_bid_pad"/>
+            </t>
         </xpath>
     </template>
 
     <template id="live_bid_pad_lemon" inherit_id="auction_module.player_template_lemon">
         <xpath expr="//div[hasclass('lm-actions')]" position="before">
-            <t t-call="auction_auctioneer.live_bid_pad"/>
+            <t t-if="request.env.user.has_group('auction_auctioneer.group_auctioneer')">
+                <t t-call="auction_auctioneer.live_bid_pad"/>
+            </t>
         </xpath>
     </template>
 
     <template id="live_bid_pad_strawberry" inherit_id="auction_module.player_template_strawberry">
         <xpath expr="//div[hasclass('sw-actions')]" position="before">
-            <t t-call="auction_auctioneer.live_bid_pad"/>
+            <t t-if="request.env.user.has_group('auction_auctioneer.group_auctioneer')">
+                <t t-call="auction_auctioneer.live_bid_pad"/>
+            </t>
         </xpath>
     </template>
 
     <template id="live_bid_pad_butterscotch" inherit_id="auction_module.player_template_butterscotch">
         <xpath expr="//div[hasclass('hud-actions')]" position="before">
-            <t t-call="auction_auctioneer.live_bid_pad"/>
+            <t t-if="request.env.user.has_group('auction_auctioneer.group_auctioneer')">
+                <t t-call="auction_auctioneer.live_bid_pad"/>
+            </t>
         </xpath>
     </template>
 
     <template id="live_bid_pad_vanilla" inherit_id="auction_module.player_template_new">
         <xpath expr="//div[hasclass('auction-single-buttons')]" position="before">
-            <t t-call="auction_auctioneer.live_bid_pad"/>
+            <t t-if="request.env.user.has_group('auction_auctioneer.group_auctioneer')">
+                <t t-call="auction_auctioneer.live_bid_pad"/>
+            </t>
         </xpath>
     </template>
 

@@ -21,18 +21,27 @@ document.addEventListener('click', function (ev) {
     // Hide button before capture
     btn.style.visibility = 'hidden';
 
-    html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        scrollX: 0,
-        scrollY: -window.scrollY,
-    }).then(canvas => {
-        btn.style.visibility = 'visible';
+    var run = function (html2canvas) {
+        return html2canvas(container, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            scrollX: 0,
+            scrollY: -window.scrollY,
+        }).then(canvas => {
+            btn.style.visibility = 'visible';
 
-        const link = document.createElement('a');
-        link.href = canvas.toDataURL('image/png');
-        link.download = fileName;
-        link.click();
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL('image/png');
+            link.download = fileName;
+            link.click();
+        });
+    };
+    var loader = (window.AcLazyLib && window.AcLazyLib.html2canvas)
+        ? window.AcLazyLib.html2canvas()
+        : Promise.resolve(window.html2canvas);
+    loader.then(run).catch(function (err) {
+        btn.style.visibility = 'visible';
+        console.error('Screenshot failed:', err);
     });
 });

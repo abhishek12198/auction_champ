@@ -155,37 +155,39 @@ odoo.define('auction_module.AuctionDashboard', function (require) {
         },
 
         _renderPie: function (counts) {
-            var ChartClass = window.Chart;
-            if (!ChartClass) return;
+            var self = this;
             var data = PIE_KEYS.map(function (k) { return counts[k] || 0; });
-
-            if (this._chart) {
-                this._chart.data.datasets[0].data = data;
-                this._chart.update();
-                return;
-            }
-
-            var canvas = this.$('#ad-pie-canvas')[0];
-            if (!canvas) return;
-
-            this._chart = new ChartClass(canvas.getContext('2d'), {
-                type: 'doughnut',
-                data: {
-                    labels: PIE_LABELS,
-                    datasets: [{
-                        data: data,
-                        backgroundColor: PIE_COLORS,
-                        borderWidth: 2,
-                        borderColor: 'rgba(255,255,255,.15)',
-                        hoverOffset: 6,
-                    }],
-                },
-                options: {
-                    cutout: '62%',
-                    plugins: { legend: { display: false } },
-                    animation: { duration: 700 },
-                },
-            });
+            var ensure = (window.AcLazyLib && window.AcLazyLib.chart)
+                ? window.AcLazyLib.chart()
+                : Promise.resolve(window.Chart);
+            ensure.then(function (ChartClass) {
+                if (!ChartClass || self._chart === false) return;
+                if (self._chart) {
+                    self._chart.data.datasets[0].data = data;
+                    self._chart.update();
+                    return;
+                }
+                var canvas = self.$('#ad-pie-canvas')[0];
+                if (!canvas) return;
+                self._chart = new ChartClass(canvas.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: PIE_LABELS,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: PIE_COLORS,
+                            borderWidth: 2,
+                            borderColor: 'rgba(255,255,255,.15)',
+                            hoverOffset: 6,
+                        }],
+                    },
+                    options: {
+                        cutout: '62%',
+                        plugins: { legend: { display: false } },
+                        animation: { duration: 700 },
+                    },
+                });
+            }).catch(function () { /* chart optional */ });
         },
 
         _renderLegend: function (counts) {
