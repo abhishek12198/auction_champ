@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_ac_saas_payment" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.ac.saas.payment</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('settings')]" position="inside">
+                <div class="app_settings_block"
+                     data-string="SaaS Upgrades"
+                     string="SaaS Plan Upgrades"
+                     data-key="ac_saas_payment">
+                    <h2>SaaS Plan Upgrades</h2>
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="ac_saas_upgrade_payment_enabled"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="ac_saas_upgrade_payment_enabled"/>
+                                <div class="text-muted">
+                                    When enabled, customers must complete Razorpay payment
+                                    (plan package price) to upgrade. When disabled, they can
+                                    submit a free upgrade request for manual approval.
+                                </div>
+                                <div class="text-muted mt8">
+                                    Requires Razorpay keys under Settings → Razorpay Payment Gateway.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="ac_saas_website_signup_enabled"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="ac_saas_website_signup_enabled"/>
+                                <div class="text-muted">
+                                    Website Plans &amp; Pricing: Get Started → signup form →
+                                    Razorpay → auto-create account and email login details.
+                                    Plans without a package price still show Contact Us.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<!--
+  Modern split login — inherits auction_login_theme.login (do not edit that module).
+  Same navy / blue / gold tokens as the marketing website.
+-->
+<template id="login_modern" inherit_id="auction_login_theme.login" name="AuctionChamp Website Login">
+  <xpath expr="//html" position="replace">
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="theme-color" content="#0d1b2a"/>
+  <title>Sign in — AuctionChamp</title>
+  <link rel="icon" t-att-href="favicon_url or '/auction_module/static/description/favicon.png'" type="image/png"/>
+  <link rel="shortcut icon" t-att-href="favicon_url or '/auction_module/static/description/favicon.png'" type="image/png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_login.css?v=7"/>
+</head>
+<body class="ac-login-body">
+
+  <div class="ac-login-shell">
+
+    <aside class="ac-login-brand" aria-label="AuctionChamp">
+      <div class="ac-login-pitch" aria-hidden="true"/>
+
+      <div class="ac-login-brand-top">
+        <div class="ac-login-mark">
+          <a class="ac-login-home" href="/" title="Back to AuctionChamp website">
+            <img class="ac-login-wordmark"
+                 src="/auction_champ_website/static/img/logo.svg"
+                 alt="AuctionChamp"/>
+          </a>
+        </div>
+
+        <div class="ac-login-kicker">Sports Auction Platform</div>
+
+        <h1>Run auctions with <span>champion</span> control</h1>
+
+        <p class="ac-login-brand-copy">
+          Sign in to manage player registrations, live bidding, teams, fixtures,
+          and tournament operations from one professional workspace.
+        </p>
+
+        <div class="ac-login-points">
+          <div class="ac-login-point">
+            <div class="ac-login-point-ico"><i class="fas fa-gavel"></i></div>
+            <div>
+              <strong>Live auction control</strong>
+              <span>Transparent bidding with live budgets and hammer-ready workflows.</span>
+            </div>
+          </div>
+          <div class="ac-login-point">
+            <div class="ac-login-point-ico"><i class="fas fa-users"></i></div>
+            <div>
+              <strong>Teams &amp; player pools</strong>
+              <span>Organise squads, owners, and registrations without spreadsheet chaos.</span>
+            </div>
+          </div>
+          <div class="ac-login-point">
+            <div class="ac-login-point-ico"><i class="fas fa-chart-line"></i></div>
+            <div>
+              <strong>Tournament operations</strong>
+              <span>Fixtures, points tables, and live updates from a single console.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ac-login-brand-foot">
+        <span>© AuctionChamp. All rights reserved.</span>
+        <a href="/">Back to website</a>
+      </div>
+    </aside>
+
+    <main class="ac-login-panel">
+      <div class="ac-login-card">
+        <div class="ac-login-card-brand">
+          <div class="ac-login-icon" aria-hidden="true">
+            <svg viewBox="0 0 37 37" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M0 2.229C0 0.998 0.998 0 2.229 0H34.771C36.002 0 37 0.998 37 2.229V16.643C36.549 16.638 36.067 16.633 35.553 16.627C34.861 16.620 34.110 16.612 33.295 16.603L23.274 16.489L23.298 13.887L23.318 11.291L23.718 11.201C24.721 10.980 25.327 9.897 25.007 8.913C24.863 8.458 24.419 7.966 24.007 7.784C23.649 7.638 12.479 7.506 12.069 7.645C11.629 7.803 11.156 8.286 10.994 8.767C10.761 9.435 10.907 10.092 11.405 10.599C11.693 10.893 12.164 11.135 12.484 11.153C12.612 11.164 12.628 12.016 12.623 18.260C12.617 25.060 12.609 25.350 12.437 25.344C12.146 25.326 11.661 25.577 11.308 25.933C10.223 27.006 10.729 28.775 12.190 29.022C12.352 29.048 14.969 29.071 17.994 29.063C21.764 29.058 23.602 29.023 23.834 28.951C24.284 28.803 24.816 28.282 24.954 27.854C25.294 26.779 24.645 25.649 23.572 25.480L23.287 25.437L23.311 22.836L23.336 20.234L33.383 20.334C34.770 20.347 35.967 20.359 37 20.368V37H29.868V35.663C29.868 34.924 29.269 34.325 28.530 34.325H8.470C7.731 34.325 7.133 34.924 7.133 35.663V37H0V2.229Z" fill="white"/>
+            </svg>
+          </div>
+        </div>
+        <div class="ac-login-card-head">
+          <h2>Enter the arena</h2>
+          <p>Sign in to run auctions, teams, and tournaments.</p>
+        </div>
+
+        <t t-if="error">
+          <div class="ac-login-alert" role="alert">
+            <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
+            <span t-esc="error"/>
+          </div>
+        </t>
+
+        <form method="post" action="/web/login" id="acLoginForm">
+          <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+          <t t-if="redirect">
+            <input type="hidden" name="redirect" t-att-value="redirect"/>
+          </t>
+
+          <div class="ac-login-field">
+            <label for="ac_login">Email or username</label>
+            <input id="ac_login"
+                   class="ac-login-input"
+                   type="text"
+                   name="login"
+                   t-att-value="login"
+                   placeholder="you@auctionchamp.live"
+                   autocomplete="username"
+                   autofocus="autofocus"
+                   required="required"/>
+          </div>
+
+          <div class="ac-login-field">
+            <label for="ac_password">Password</label>
+            <input id="ac_password"
+                   class="ac-login-input"
+                   type="password"
+                   name="password"
+                   placeholder="Enter your password"
+                   autocomplete="current-password"
+                   required="required"/>
+          </div>
+
+          <button type="submit" class="ac-login-submit">Sign in</button>
+        </form>
+
+        <div class="ac-login-card-foot">
+          Need a demo?
+          <a href="/#contact">Contact AuctionChamp</a>
+          <div class="ac-login-copy">© AuctionChamp. All rights reserved.</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="ac-login-overlay" id="acLoginLoader" aria-hidden="true">
+    <div class="ac-login-spinner" aria-hidden="true"></div>
+    <img class="ac-login-overlay-logo"
+         src="/auction_champ_website/static/img/logo.svg"
+         alt="AuctionChamp"/>
+    <div class="ac-login-overlay-msg" id="acLoginLoaderMsg">Signing you in…</div>
+    <div class="ac-login-overlay-sub">Preparing your workspace</div>
+  </div>
+
+  <div class="ac-login-overlay" id="acLogoutOverlay" aria-hidden="true">
+    <div class="ac-login-spinner" aria-hidden="true"></div>
+    <img class="ac-login-overlay-logo"
+         src="/auction_champ_website/static/img/logo.svg"
+         alt="AuctionChamp"/>
+    <div class="ac-login-overlay-msg" id="acLogoutMsg">Signed out successfully</div>
+    <div class="ac-login-overlay-sub">Returning to sign in</div>
+  </div>
+
+  <script><![CDATA[
+(function () {
+  var form = document.getElementById('acLoginForm');
+  var loader = document.getElementById('acLoginLoader');
+  var loaderMsg = document.getElementById('acLoginLoaderMsg');
+  var msgs = [
+    'Signing you in…',
+    'Loading your workspace…',
+    'Preparing auction tools…',
+    'Almost ready…'
+  ];
+  var idx = 0;
+  if (form && loader) {
+    form.addEventListener('submit', function () {
+      loader.classList.add('is-on');
+      loader.setAttribute('aria-hidden', 'false');
+      setInterval(function () {
+        if (!loaderMsg) return;
+        loaderMsg.classList.add('is-fade');
+        setTimeout(function () {
+          idx = (idx + 1) % msgs.length;
+          loaderMsg.textContent = msgs[idx];
+          loaderMsg.classList.remove('is-fade');
+        }, 220);
+      }, 1300);
+    });
+  }
+
+  if (window.location.search.indexOf('logged_out=1') === -1) return;
+  if (window.history && window.history.replaceState) {
+    window.history.replaceState(null, '', '/web/login');
+  }
+  var overlay = document.getElementById('acLogoutOverlay');
+  var bye = document.getElementById('acLogoutMsg');
+  if (!overlay) return;
+  var goodbye = [
+    'Signed out successfully',
+    'See you next auction',
+    'Your workspace is secure',
+    'Ready when you return'
+  ];
+  var g = 0;
+  overlay.classList.add('is-on');
+  overlay.setAttribute('aria-hidden', 'false');
+  var timer = setInterval(function () {
+    if (!bye) return;
+    bye.classList.add('is-fade');
+    setTimeout(function () {
+      g = (g + 1) % goodbye.length;
+      bye.textContent = goodbye[g];
+      bye.classList.remove('is-fade');
+    }, 220);
+  }, 1300);
+  setTimeout(function () {
+    clearInterval(timer);
+    overlay.classList.add('is-leaving');
+    setTimeout(function () {
+      overlay.classList.remove('is-on', 'is-leaving');
+      overlay.setAttribute('aria-hidden', 'true');
+    }, 360);
+  }, 2800);
+})();
+  ]]></script>
+</body>
+</html>
+  </xpath>
+</template>
+</odoo>

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- SaaS Manager admin group -->
+    <record id="module_category_ac_saas" model="ir.module.category">
+        <field name="name">AuctionChamp SaaS</field>
+        <field name="sequence">25</field>
+    </record>
+
+    <record id="group_saas_manager" model="res.groups">
+        <field name="name">SaaS Manager</field>
+        <field name="category_id" ref="module_category_ac_saas"/>
+        <field name="users" eval="[(4, ref('base.user_admin'))]"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <!-- Account holder: organisers with a SaaS account -->
+    <record id="group_saas_account_user" model="res.groups">
+        <field name="name">SaaS Account User</field>
+        <field name="category_id" ref="module_category_ac_saas"/>
+        <field name="implied_ids" eval="[
+            (4, ref('auction_module.group_auction_group')),
+            (4, ref('auction_module.group_auction_player_dashboard')),
+        ]"/>
+    </record>
+
+    <!-- Account users only see their own SaaS account -->
+    <record id="rule_saas_account_own" model="ir.rule">
+        <field name="name">SaaS Account: own only</field>
+        <field name="model_id" ref="model_ac_saas_account"/>
+        <field name="groups" eval="[(4, ref('group_saas_account_user'))]"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+    </record>
+
+    <record id="rule_saas_account_manager_all" model="ir.rule">
+        <field name="name">SaaS Account: manager all</field>
+        <field name="model_id" ref="model_ac_saas_account"/>
+        <field name="groups" eval="[(4, ref('group_saas_manager'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <!--
+        SaaS-scoped record rules (OR with auction_module rules that use
+        user.tournament_ids). Account ownership is the source of truth so
+        organisers can create teams/players even if tournament_ids is stale.
+    -->
+    <record id="rule_tournament_saas_account" model="ir.rule">
+        <field name="name">Tournament: SaaS account owner</field>
+        <field name="model_id" ref="auction_module.model_auction_tournament"/>
+        <field name="groups" eval="[(4, ref('group_saas_account_user'))]"/>
+        <field name="domain_force">[('saas_user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_team_saas_account" model="ir.rule">
+        <field name="name">Team: SaaS account owner</field>
+        <field name="model_id" ref="auction_module.model_auction_team"/>
+        <field name="groups" eval="[(4, ref('group_saas_account_user'))]"/>
+        <field name="domain_force">[('tournament_id.saas_user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="rule_team_player_saas_account" model="ir.rule">
+        <field name="name">Team Player: SaaS account owner</field>
+        <field name="model_id" ref="auction_module.model_auction_team_player"/>
+        <field name="groups" eval="[(4, ref('group_saas_account_user'))]"/>
+        <field name="domain_force">[('tournament_id.saas_user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="rule_auction_saas_account" model="ir.rule">
+        <field name="name">Auction: SaaS account owner</field>
+        <field name="model_id" ref="auction_module.model_auction_auction"/>
+        <field name="groups" eval="[(4, ref('group_saas_account_user'))]"/>
+        <field name="domain_force">[('tournament_id.saas_user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="rule_history_saas_account" model="ir.rule">
+        <field name="name">Auction History: SaaS account owner</field>
+        <field name="model_id" ref="auction_module.model_auction_history"/>
+        <field name="groups" eval="[(4, ref('group_saas_account_user'))]"/>
+        <field name="domain_force">[('tournament_id.saas_user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_auction_player_saas_account" model="ir.rule">
+        <field name="name">Auction Player: SaaS account owner</field>
+        <field name="model_id" ref="auction_module.model_auction_auction_player"/>
+        <field name="groups" eval="[(4, ref('group_saas_account_user'))]"/>
+        <field name="domain_force">[('auction_id.tournament_id.saas_user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="rule_player_tier_saas_account" model="ir.rule">
+        <field name="name">Player Tier: SaaS account owner</field>
+        <field name="model_id" ref="auction_module.model_auction_player_tier"/>
+        <field name="groups" eval="[(4, ref('group_saas_account_user'))]"/>
+        <field name="domain_force">[('tournament_id.saas_user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="rule_start_auction_saas_account" model="ir.rule">
+        <field name="name">Start Auction: SaaS account owner</field>
+        <field name="model_id" ref="auction_module.model_auction_start_auction"/>
+        <field name="groups" eval="[(4, ref('group_saas_account_user'))]"/>
+        <field name="domain_force">[('tournament_id.saas_user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="rule_bid_slab_saas_account" model="ir.rule">
+        <field name="name">Bid Slab: SaaS account owner</field>
+        <field name="model_id" ref="auction_module.model_auction_auction_bid_slab"/>
+        <field name="groups" eval="[(4, ref('group_saas_account_user'))]"/>
+        <field name="domain_force">[('auction_id.tournament_id.saas_user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="rule_auction_tier_limit_saas_account" model="ir.rule">
+        <field name="name">Auction Tier Limit: SaaS account owner</field>
+        <field name="model_id" ref="auction_module.model_auction_auction_tier_limit"/>
+        <field name="groups" eval="[(4, ref('group_saas_account_user'))]"/>
+        <field name="domain_force">[('auction_id.tournament_id.saas_user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- Upgrade requests: customers see own; managers see all -->
+    <record id="rule_saas_upgrade_request_own" model="ir.rule">
+        <field name="name">Upgrade Request: own account</field>
+        <field name="model_id" ref="model_ac_saas_upgrade_request"/>
+        <field name="groups" eval="[(4, ref('group_saas_account_user'))]"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_saas_upgrade_request_manager" model="ir.rule">
+        <field name="name">Upgrade Request: manager all</field>
+        <field name="model_id" ref="model_ac_saas_upgrade_request"/>
+        <field name="groups" eval="[(4, ref('group_saas_manager'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+</odoo>

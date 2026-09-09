@@ -14,24 +14,42 @@
                 <link rel="preconnect" href="https://fonts.googleapis.com"/>
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
                 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Poppins:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-                <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css"/>
+                <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.22"/>
             </head>
             <body>
                 <nav class="ac-nav scrolled" id="acNav">
                     <div class="ac-nav-inner">
-                        <a href="/" class="ac-nav-logo">
+                        <a href="/" class="ac-nav-logo" aria-label="AuctionChamp">
                             <picture>
                                 <source srcset="/auction_module/static/description/icon.svg" type="image/svg+xml"/>
-                                <img src="/auction_module/static/description/icon.png" alt="AuctionChamp Logo" class="ac-nav-logo-img"/>
+                                <img src="/auction_module/static/description/icon.png" alt="AuctionChamp" class="ac-nav-logo-img"/>
                             </picture>
                         </a>
-                        <ul class="ac-nav-links">
+                        <div class="ac-nav-desktop">
+                            <ul class="ac-nav-links">
+                                <li><a href="/">Home</a></li>
+                                <li><a href="/user-manual" style="color:#f5a623;">User Manual</a></li>
+                                <li><a href="/privacy-policy">Privacy Policy</a></li>
+                                <li><a href="/terms-and-conditions">Terms &amp; Conditions</a></li>
+                            </ul>
+                            <div class="ac-nav-actions">
+                                <t t-call="auction_champ_website.website_nav_auth"/>
+                            </div>
+                        </div>
+                        <button class="ac-nav-toggle" id="acMenuToggle" aria-label="Toggle navigation">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                    <div class="ac-nav-mobile" id="acMobileNav">
+                        <ul class="ac-nav-mobile-links">
                             <li><a href="/">Home</a></li>
-                            <li><a href="/user-manual" style="color:#f5a623;">User Manual</a></li>
+                            <li><a href="/user-manual">User Manual</a></li>
                             <li><a href="/privacy-policy">Privacy Policy</a></li>
                             <li><a href="/terms-and-conditions">Terms &amp; Conditions</a></li>
-                            <li><a href="/web" class="ac-nav-login"><i class="fas fa-right-to-bracket"></i>Login</a></li>
                         </ul>
+                        <div class="ac-nav-mobile-actions">
+                            <t t-call="auction_champ_website.website_nav_auth"/>
+                        </div>
                     </div>
                 </nav>
 
@@ -62,6 +80,7 @@
                 </footer>
 
                 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js" crossorigin="anonymous"></script>
+                <script src="/auction_champ_website/static/src/js/auction_website.js"></script>
                 <script src="/auction_champ_website/static/src/js/user_manual.js?v=1"></script>
             </body>
         </html>

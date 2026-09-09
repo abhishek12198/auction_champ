@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="seq_ac_saas_upgrade_request" model="ir.sequence">
+        <field name="name">SaaS Upgrade Request</field>
+        <field name="code">ac.saas.upgrade.request</field>
+        <field name="prefix">UPG/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="live_bid_pad" name="Display Auction Live Bid Pad">
-        <div class="ac-bid-hero" id="acBidHero" aria-live="polite">
+        <div class="ac-bid-hero" id="acBidHero">
             <div class="ac-bid-hero-head">
                 <span class="ac-bid-hero-pulse" aria-hidden="true"></span>
                 <span class="ac-bid-hero-lbl">Current Bid</span>
@@ -80,9 +80,9 @@
             </div>
         </div>
         <div class="ac-livebid-toast" id="acLiveBidToast"></div>
-        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_live_bid.css?v=48"/>
-        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_showcase.css?v=11"/>
-        <script src="/auction_auctioneer/static/src/js/display_live_bid.js?v=41"></script>
+        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_live_bid.css?v=50"/>
+        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_showcase.css?v=12"/>
+        <script src="/auction_auctioneer/static/src/js/display_live_bid.js?v=43"></script>
     </template>
 
     <!-- Under player profile, above Unsold / Sell / Next.

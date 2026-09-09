@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Admin / manager: upgrade requests -->
+    <record id="view_ac_saas_upgrade_request_tree" model="ir.ui.view">
+        <field name="name">ac.saas.upgrade.request.tree</field>
+        <field name="model">ac.saas.upgrade.request</field>
+        <field name="arch" type="xml">
+            <tree decoration-info="state == 'pending'"
+                  decoration-success="state == 'approved'"
+                  decoration-muted="state in ('rejected', 'cancelled')">
+                <field name="name"/>
+                <field name="date_requested"/>
+                <field name="account_id"/>
+                <field name="user_id"/>
+                <field name="current_plan_id"/>
+                <field name="requested_plan_id"/>
+                <field name="trigger_feature"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_ac_saas_upgrade_request_form" model="ir.ui.view">
+        <field name="name">ac.saas.upgrade.request.form</field>
+        <field name="model">ac.saas.upgrade.request</field>
+        <field name="arch" type="xml">
+            <form string="Upgrade Request">
+                <header>
+                    <button name="action_approve" type="object" string="Approve &amp; upgrade"
+                            class="btn-primary"
+                            attrs="{'invisible': [('state', '!=', 'pending')]}"
+                            groups="ac_saas_manager.group_saas_manager,auction_module.group_auction_group_admin"
+                            confirm="Approve this request and switch the account to the requested plan?"/>
+                    <button name="action_reject" type="object" string="Reject"
+                            attrs="{'invisible': [('state', '!=', 'pending')]}"
+                            groups="ac_saas_manager.group_saas_manager,auction_module.group_auction_group_admin"/>
+                    <button name="action_cancel" type="object" string="Cancel request"
+                            attrs="{'invisible': [('state', '!=', 'pending')]}"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="pending,approved,rejected"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Account">
+                            <field name="account_id" readonly="1"/>
+                            <field name="user_id" readonly="1"/>
+                            <field name="partner_id" readonly="1"/>
+                            <field name="tournament_id" readonly="1"/>
+                            <field name="date_requested" readonly="1"/>
+                        </group>
+                        <group string="Plan change">
+                            <field name="current_plan_id" readonly="1"/>
+                            <field name="requested_plan_id" readonly="1"/>
+                            <field name="trigger_feature" readonly="1"/>
+                            <field name="date_processed" readonly="1"/>
+                            <field name="processed_by_id" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Customer note">
+                        <field name="note" nolabel="1" readonly="1"
+                                 placeholder="No message from customer"/>
+                    </group>
+                    <group string="Internal note"
+                           groups="ac_saas_manager.group_saas_manager,auction_module.group_auction_group_admin">
+                        <field name="admin_note" nolabel="1"
+                                 placeholder="Internal notes for ops…"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_ac_saas_upgrade_request_search" model="ir.ui.view">
+        <field name="name">ac.saas.upgrade.request.search</field>
+        <field name="model">ac.saas.upgrade.request</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="account_id"/>
+                <field name="user_id"/>
+                <field name="requested_plan_id"/>
+                <filter name="pending" string="Pending"
+                        domain="[('state', '=', 'pending')]"/>
+                <filter name="approved" string="Approved"
+                        domain="[('state', '=', 'approved')]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter name="group_state" string="Status"
+                            context="{'group_by': 'state'}"/>
+                    <filter name="group_plan" string="Requested plan"
+                            context="{'group_by': 'requested_plan_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_ac_saas_upgrade_request" model="ir.actions.act_window">
+        <field name="name">Upgrade Requests</field>
+        <field name="res_model">ac.saas.upgrade.request</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_pending': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No upgrade requests yet
+            </p>
+            <p>
+                Customers submit requests from the tournament form when a feature is locked by their plan.
+            </p>
+        </field>
+    </record>
+
+    <!-- Customer wizard -->
+    <record id="view_ac_saas_upgrade_request_wizard_form" model="ir.ui.view">
+        <field name="name">ac.saas.upgrade.request.wizard.form</field>
+        <field name="model">ac.saas.upgrade.request.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Request plan upgrade" class="o_saas_upgrade_wizard">
+                <group>
+                    <group>
+                        <field name="account_id" invisible="1"/>
+                        <field name="current_plan_sequence" invisible="1"/>
+                        <field name="tournament_id" invisible="1"/>
+                        <field name="plan_preview" invisible="1"/>
+                        <field name="current_plan_id"/>
+                        <field name="requested_plan_id"
+                                 options="{'no_create': True, 'no_open': True}"/>
+                        <field name="trigger_feature"/>
+                    </group>
+                </group>
+                <div class="o_saas_unlock_wrap">
+                    <field name="plan_preview_html" nolabel="1" readonly="1"/>
+                </div>
+                <group string="Message (optional)">
+                    <field name="note" nolabel="1"
+                             placeholder="Tell us what you need (e.g. Vanilla theme for finals)…"/>
+                </group>
+                <footer>
+                    <button name="action_submit" type="object" string="Submit request"
+                            class="btn-primary"/>
+                    <button string="Cancel" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

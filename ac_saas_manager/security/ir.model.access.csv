@@ -1,0 +1,15 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ac_saas_plan_manager,ac.saas.plan manager,model_ac_saas_plan,ac_saas_manager.group_saas_manager,1,1,1,1
+access_ac_saas_plan_user,ac.saas.plan user,model_ac_saas_plan,ac_saas_manager.group_saas_account_user,1,0,0,0
+access_ac_saas_account_manager,ac.saas.account manager,model_ac_saas_account,ac_saas_manager.group_saas_manager,1,1,1,1
+access_ac_saas_account_user,ac.saas.account user,model_ac_saas_account,ac_saas_manager.group_saas_account_user,1,0,0,0
+access_ac_saas_plan_admin,ac.saas.plan admin,model_ac_saas_plan,auction_module.group_auction_group_admin,1,1,1,1
+access_ac_saas_account_admin,ac.saas.account admin,model_ac_saas_account,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_tournament_saas_user,auction.tournament saas user,auction_module.model_auction_tournament,ac_saas_manager.group_saas_account_user,1,1,1,0
+access_auction_tournament_point_split_saas_user,auction.tournament.point.split saas user,auction_module.model_auction_tournament_point_split,ac_saas_manager.group_saas_account_user,1,1,1,0
+access_ac_saas_upgrade_request_manager,ac.saas.upgrade.request manager,model_ac_saas_upgrade_request,ac_saas_manager.group_saas_manager,1,1,1,1
+access_ac_saas_upgrade_request_admin,ac.saas.upgrade.request admin,model_ac_saas_upgrade_request,auction_module.group_auction_group_admin,1,1,1,1
+access_ac_saas_upgrade_request_user,ac.saas.upgrade.request user,model_ac_saas_upgrade_request,ac_saas_manager.group_saas_account_user,1,0,0,0
+access_ac_saas_upgrade_wizard_user,ac.saas.upgrade.request.wizard user,model_ac_saas_upgrade_request_wizard,ac_saas_manager.group_saas_account_user,1,1,1,1
+access_ac_saas_upgrade_wizard_manager,ac.saas.upgrade.request.wizard manager,model_ac_saas_upgrade_request_wizard,ac_saas_manager.group_saas_manager,1,1,1,1
+access_ac_saas_upgrade_wizard_admin,ac.saas.upgrade.request.wizard admin,model_ac_saas_upgrade_request_wizard,auction_module.group_auction_group_admin,1,1,1,1

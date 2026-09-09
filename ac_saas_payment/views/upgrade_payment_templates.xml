@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="saas_upgrade_pay" name="SaaS Upgrade Razorpay Checkout">
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Upgrade plan — AuctionChamp</title>
+  <link rel="stylesheet" href="/ac_saas_payment/static/src/css/upgrade_pay.css"/>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body class="ac-upg-body">
+  <header class="ac-upg-header">
+    <div class="ac-upg-header-inner">
+      <a href="/web" title="AuctionChamp">
+        <img class="ac-upg-header-logo"
+             src="/auction_module/static/src/assets/images/logo.svg"
+             alt="AuctionChamp"/>
+      </a>
+      <span class="ac-upg-header-badge">Secure checkout</span>
+    </div>
+  </header>
+
+  <main class="ac-upg-main">
+    <div class="ac-upg-kicker">Plan upgrade</div>
+    <h1 class="ac-upg-title">Complete your upgrade</h1>
+    <p class="ac-upg-sub">Pay securely with Razorpay to activate your new plan instantly.</p>
+
+    <div class="ac-upg-card">
+      <div class="ac-upg-card-top">
+        <div>
+          <div class="ac-upg-card-top-label">Upgrading to</div>
+          <div class="ac-upg-card-top-plan" t-esc="plan.name"/>
+        </div>
+      </div>
+      <div class="ac-upg-card-body">
+        <div class="ac-upg-row">
+          <span class="k">Current plan</span>
+          <span class="v" t-esc="current_plan.name"/>
+        </div>
+        <div class="ac-upg-row">
+          <span class="k">New plan</span>
+          <span class="v" t-esc="plan.name"/>
+        </div>
+        <div class="ac-upg-row">
+          <span class="k">Request</span>
+          <span class="v" t-esc="upgrade_request.name"/>
+        </div>
+
+        <t t-if="show_proration">
+          <div class="ac-upg-row">
+            <span class="k">New plan price</span>
+            <span class="v" t-esc="list_price_label"/>
+          </div>
+          <div class="ac-upg-row">
+            <span class="k">Prorated credit</span>
+            <span class="v" t-esc="credit_label"/>
+          </div>
+        </t>
+
+        <div class="ac-upg-amount">
+          <div class="label">Amount due</div>
+          <div class="value" t-esc="amount_label"/>
+        </div>
+        <p t-if="proration_note" class="ac-upg-hint" style="margin-top:10px;text-align:left;" t-esc="proration_note"/>
+
+        <div class="ac-upg-actions">
+          <button type="button" class="ac-upg-btn ac-upg-btn-primary" id="acSaasPayBtn">
+            <svg class="ac-upg-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+              <rect x="4" y="11" width="16" height="10" rx="2"/>
+              <path d="M8 11V8a4 4 0 018 0v3"/>
+            </svg>
+            Pay with Razorpay
+          </button>
+          <a t-att-href="backend_url or '/web'" class="ac-upg-btn ac-upg-btn-ghost">Back to app</a>
+        </div>
+        <div class="ac-upg-err" id="acSaasPayErr"/>
+        <p class="ac-upg-hint">Checkout opens in a secure overlay. Your plan upgrades automatically after payment.</p>
+        <div class="ac-upg-secure">
+          <span class="ac-upg-secure-dot"/>
+          <span>Encrypted payment via Razorpay</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="ac-upg-footer">
+    <div class="ac-upg-footer-inner">
+      <div class="ac-upg-powered">
+        <span class="ac-upg-powered-label">Powered by</span>
+        <img class="ac-upg-footer-logo"
+             src="/auction_module/static/src/assets/images/logo.svg"
+             alt="AuctionChamp"/>
+      </div>
+      <p class="ac-upg-footer-copy">© AuctionChamp · Professional sports auction platform</p>
+    </div>
+  </footer>
+
+  <script type="application/json" id="ac-saas-rzp-checkout"><t t-raw="razorpay_checkout_json"/></script>
+  <div id="acSaasRzpMeta"
+       t-att-data-verify-url="razorpay_verify_url"
+       t-att-data-auto-open="'1' if razorpay_auto_open else '0'"
+       style="display:none;"/>
+  <script type="text/javascript">
+  //<![CDATA[
+  (function () {
+    var checkoutEl = document.getElementById('ac-saas-rzp-checkout');
+    var btn = document.getElementById('acSaasPayBtn');
+    var err = document.getElementById('acSaasPayErr');
+    var meta = document.getElementById('acSaasRzpMeta');
+    var verifyUrl = (meta && meta.getAttribute('data-verify-url')) || '';
+    var autoOpen = meta && meta.getAttribute('data-auto-open') === '1';
+
+    function showErr(msg) {
+      if (!err) return;
+      err.style.display = 'block';
+      err.textContent = msg || 'Payment failed.';
+    }
+
+    function setBusy(busy) {
+      if (!btn) return;
+      btn.disabled = !!busy;
+      btn.style.opacity = busy ? '0.75' : '';
+    }
+
+    function openCheckout() {
+      var checkout = {};
+      try {
+        checkout = JSON.parse((checkoutEl && checkoutEl.textContent) || '{}');
+      } catch (e) {
+        showErr('Invalid checkout data.');
+        return;
+      }
+      if (!window.Razorpay) {
+        showErr('Razorpay could not load. Check your network and try again.');
+        return;
+      }
+      var options = {
+        key: checkout.key_id,
+        amount: checkout.amount,
+        currency: checkout.currency,
+        name: checkout.name || 'AuctionChamp',
+        description: checkout.description || '',
+        order_id: checkout.order_id,
+        prefill: checkout.prefill || {},
+        theme: { color: '#0d1e3a' },
+        handler: function (response) {
+          setBusy(true);
+          fetch(verifyUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              method: 'call',
+              params: {
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature
+              },
+              id: Date.now()
+            })
+          }).then(function (r) { return r.json(); })
+            .then(function (payload) {
+              var result = (payload && payload.result) || payload || {};
+              if (result.ok) {
+                window.location.href = result.redirect_url || (window.location.pathname + '?done=1');
+              } else {
+                setBusy(false);
+                showErr(result.error || 'Verification failed.');
+              }
+            })
+            .catch(function () {
+              setBusy(false);
+              showErr('Could not verify payment. Please contact support with your payment id.');
+            });
+        },
+        modal: {
+          ondismiss: function () {
+            setBusy(false);
+            showErr('Payment cancelled. You can try again.');
+          }
+        }
+      };
+      var rzp = new window.Razorpay(options);
+      rzp.open();
+    }
+
+    if (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        openCheckout();
+      });
+    }
+    if (autoOpen) {
+      setTimeout(openCheckout, 400);
+    }
+  })();
+  //]]>
+  </script>
+</body>
+</html>
+</template>
+
+<template id="saas_upgrade_pay_done" name="SaaS Upgrade Payment Done">
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Upgrade complete — AuctionChamp</title>
+  <link rel="stylesheet" href="/ac_saas_payment/static/src/css/upgrade_pay.css"/>
+</head>
+<body class="ac-upg-body">
+  <header class="ac-upg-header">
+    <div class="ac-upg-header-inner">
+      <a href="/web" title="AuctionChamp">
+        <img class="ac-upg-header-logo"
+             src="/auction_module/static/src/assets/images/logo.svg"
+             alt="AuctionChamp"/>
+      </a>
+      <span class="ac-upg-header-badge">Payment successful</span>
+    </div>
+  </header>
+
+  <main class="ac-upg-main">
+    <div class="ac-upg-card">
+      <div class="ac-upg-status">
+        <div class="ac-upg-status-icon ok">✓</div>
+        <h1>You're on <t t-esc="plan.name"/>!</h1>
+        <p>Payment received. Return to the app and refresh to use your new plan features.</p>
+        <a href="/web" class="ac-upg-btn ac-upg-btn-primary">Back to AuctionChamp</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="ac-upg-footer">
+    <div class="ac-upg-footer-inner">
+      <div class="ac-upg-powered">
+        <span class="ac-upg-powered-label">Powered by</span>
+        <img class="ac-upg-footer-logo"
+             src="/auction_module/static/src/assets/images/logo.svg"
+             alt="AuctionChamp"/>
+      </div>
+      <p class="ac-upg-footer-copy">© AuctionChamp · Professional sports auction platform</p>
+    </div>
+  </footer>
+</body>
+</html>
+</template>
+
+<template id="saas_upgrade_pay_error" name="SaaS Upgrade Payment Error">
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Upgrade payment — AuctionChamp</title>
+  <link rel="stylesheet" href="/ac_saas_payment/static/src/css/upgrade_pay.css"/>
+</head>
+<body class="ac-upg-body">
+  <header class="ac-upg-header">
+    <div class="ac-upg-header-inner">
+      <a href="/web" title="AuctionChamp">
+        <img class="ac-upg-header-logo"
+             src="/auction_module/static/src/assets/images/logo.svg"
+             alt="AuctionChamp"/>
+      </a>
+        <span class="ac-upg-header-badge">Checkout</span>
+    </div>
+  </header>
+
+  <main class="ac-upg-main">
+    <div class="ac-upg-card">
+      <div class="ac-upg-status">
+        <div class="ac-upg-status-icon err">!</div>
+        <h1>Payment unavailable</h1>
+        <p t-esc="message or 'Something went wrong.'"/>
+        <a href="/web" class="ac-upg-btn ac-upg-btn-primary">Back to AuctionChamp</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="ac-upg-footer">
+    <div class="ac-upg-footer-inner">
+      <div class="ac-upg-powered">
+        <span class="ac-upg-powered-label">Powered by</span>
+        <img class="ac-upg-footer-logo"
+             src="/auction_module/static/src/assets/images/logo.svg"
+             alt="AuctionChamp"/>
+      </div>
+      <p class="ac-upg-footer-copy">© AuctionChamp · Professional sports auction platform</p>
+    </div>
+  </footer>
+</body>
+</html>
+</template>
+
+</odoo>

@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ac_saas_upgrade_payment_user,ac.saas.upgrade.payment user,model_ac_saas_upgrade_payment,ac_saas_manager.group_saas_account_user,1,0,0,0
+access_ac_saas_upgrade_payment_manager,ac.saas.upgrade.payment manager,model_ac_saas_upgrade_payment,ac_saas_manager.group_saas_manager,1,1,1,1
+access_ac_saas_upgrade_payment_admin,ac.saas.upgrade.payment admin,model_ac_saas_upgrade_payment,auction_module.group_auction_group_admin,1,1,1,1
+access_ac_saas_upgrade_payment_public,ac.saas.upgrade.payment public,model_ac_saas_upgrade_payment,base.group_public,1,0,0,0
+access_ac_saas_signup_payment_manager,ac.saas.signup.payment manager,model_ac_saas_signup_payment,ac_saas_manager.group_saas_manager,1,1,1,1
+access_ac_saas_signup_payment_admin,ac.saas.signup.payment admin,model_ac_saas_signup_payment,auction_module.group_auction_group_admin,1,1,1,1
+access_ac_saas_signup_payment_public,ac.saas.signup.payment public,model_ac_saas_signup_payment,base.group_public,1,0,0,0

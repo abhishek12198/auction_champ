@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+    <t t-name="ac_saas_manager.TournamentSystrayItem" owl="1">
+        <div class="o_auction_tournament_systray o_saas_tournament_systray">
+            <a t-if="state.showcaseUrl and !state.accountFrozen"
+               t-att-href="state.showcaseUrl"
+               class="o_nav_entry o_auction_projector_systray_icon o_auction_console_systray_icon"
+               t-on-click="onProjectorClick"
+               title="Player Console"
+               aria-label="Player Console">
+                <svg class="o_auction_projector_systray_svg" xmlns="http://www.w3.org/2000/svg"
+                     viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path fill="currentColor" d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12zM9.5 8.5v7l6-3.5-6-3.5z"/>
+                </svg>
+            </a>
+            <a t-elif="state.tournamentName and !state.accountFrozen and !state.auctionRulesReady"
+               href="#"
+               class="o_nav_entry o_auction_projector_systray_icon o_auction_console_systray_icon o_auction_systray_disabled"
+               t-on-click="onRulesRequiredClick"
+               title="Set Auction Rules first"
+               aria-label="Player Console (locked)">
+                <svg class="o_auction_projector_systray_svg" xmlns="http://www.w3.org/2000/svg"
+                     viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path fill="currentColor" d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12zM9.5 8.5v7l6-3.5-6-3.5z"/>
+                </svg>
+            </a>
+            <a t-if="state.projectorUrl"
+               t-att-href="state.projectorUrl"
+               class="o_nav_entry o_auction_projector_systray_icon"
+               target="_blank"
+               rel="noopener noreferrer"
+               t-on-click="onProjectorClick"
+               title="Open Projector"
+               aria-label="Open Projector">
+                <svg class="o_auction_projector_systray_svg" xmlns="http://www.w3.org/2000/svg"
+                     viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path fill="currentColor" d="M3 3h18a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1m8.126 9H4v7h16v-7h-1.126a4.002 4.002 0 0 1-7.748 0m0-2a4.002 4.002 0 0 1 7.748 0H20V5H4v5zM15 13a2 2 0 1 0 0-4a2 2 0 0 0 0 4m-9 2h2v2H6z"/>
+                </svg>
+            </a>
+            <a t-elif="state.tournamentName and !state.accountFrozen and !state.auctionRulesReady"
+               href="#"
+               class="o_nav_entry o_auction_projector_systray_icon o_auction_systray_disabled"
+               t-on-click="onRulesRequiredClick"
+               title="Set Auction Rules first"
+               aria-label="Open Projector (locked)">
+                <svg class="o_auction_projector_systray_svg" xmlns="http://www.w3.org/2000/svg"
+                     viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path fill="currentColor" d="M3 3h18a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1m8.126 9H4v7h16v-7h-1.126a4.002 4.002 0 0 1-7.748 0m0-2a4.002 4.002 0 0 1 7.748 0H20V5H4v5zM15 13a2 2 0 1 0 0-4a2 2 0 0 0 0 4m-9 2h2v2H6z"/>
+                </svg>
+            </a>
+            <div t-if="state.tournamentName"
+                 class="o_saas_tournament_switcher">
+                <span t-att-class="'o_auction_tournament_badge o_saas_tournament_badge' + (state.expanded ? ' o_expanded' : '')"
+                      t-on-click="onBadgeClick"
+                      t-att-title="state.workingScopeHint || 'Switch tournament'"
+                      role="button"
+                      tabindex="0">
+                    <img t-if="state.tournamentLogo"
+                         t-att-src="state.tournamentLogo"
+                         class="o_auction_tournament_logo"
+                         alt=""/>
+                    <i t-else="" class="fa fa-trophy o_auction_trophy_icon"/>
+                    <span class="o_auction_tournament_name" t-esc="state.tournamentName"/>
+                    <i t-if="state.canSwitch" class="fa fa-caret-down o_saas_tournament_caret"/>
+                </span>
+                <ul t-if="state.expanded and state.tournaments.length"
+                    class="o_saas_tournament_menu">
+                    <li t-foreach="state.tournaments" t-as="t" t-key="t.id"
+                        t-att-class="'o_saas_tournament_option' + (t.active ? ' o_active' : '')"
+                        t-att-data-tournament-id="t.id"
+                        t-on-click="onSelectTournament">
+                        <img t-if="t.logo" t-att-src="t.logo" class="o_saas_tournament_option_logo" alt=""/>
+                        <i t-else="" class="fa fa-trophy o_saas_tournament_option_icon"/>
+                        <span class="o_saas_tournament_option_name" t-esc="t.name"/>
+                        <i t-if="t.active" class="fa fa-check o_saas_tournament_option_check"/>
+                    </li>
+                    <li t-if="state.workingScopeHint" class="o_saas_tournament_scope_hint">
+                        <span t-esc="state.workingScopeHint"/>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Active SaaS plan chip -->
+            <div t-if="state.planName" class="o_saas_plan_switcher">
+                <button type="button"
+                        t-att-class="'o_saas_plan_chip' + (state.planExpanded ? ' o_expanded' : '') + (state.planCanUpgrade ? ' o_can_upgrade' : '')"
+                        t-on-click="onPlanClick"
+                        t-att-title="state.planTitle"
+                        aria-label="Current plan">
+                    <span class="o_saas_plan_chip_label">Plan</span>
+                    <span class="o_saas_plan_chip_name" t-esc="state.planName"/>
+                    <i class="fa fa-caret-down o_saas_plan_chip_caret"/>
+                </button>
+                <div t-if="state.planExpanded"
+                     class="o_saas_plan_menu"
+                     t-on-click="onPlanMenuClick">
+                    <div class="o_saas_plan_menu_head">
+                        <div class="o_saas_plan_menu_kicker">Current plan</div>
+                        <div class="o_saas_plan_menu_title" t-esc="state.planName"/>
+                        <div t-if="state.planAccount" class="o_saas_plan_menu_account" t-esc="state.planAccount"/>
+                        <div t-if="state.planExpiry" class="o_saas_plan_menu_expiry">
+                            <span class="o_saas_plan_menu_expiry_label">Expires</span>
+                            <span class="o_saas_plan_menu_expiry_date" t-esc="state.planExpiry"/>
+                        </div>
+                    </div>
+                    <ul class="o_saas_plan_menu_lines">
+                        <li t-foreach="state.planLines" t-as="line" t-key="line_index" t-esc="line"/>
+                    </ul>
+                    <button t-if="state.canRequestRenewal"
+                            type="button"
+                            class="o_saas_plan_upgrade_btn o_saas_reactivate_btn"
+                            t-on-click="onRequestReactivation"
+                            t-att-disabled="state.reactivating">
+                        Request reactivation
+                    </button>
+                    <button t-elif="state.planCanUpgrade"
+                            type="button"
+                            class="o_saas_plan_upgrade_btn"
+                            t-on-click="onRequestUpgrade"
+                            t-att-disabled="state.upgrading">
+                        Request upgrade
+                    </button>
+                    <div t-else="" class="o_saas_plan_menu_foot">
+                        You are on the highest available plan.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account expiry / freeze warning -->
+            <div t-if="state.expiryWarning"
+                 t-att-class="'o_saas_expiry_warning' + (state.expiryUrgent || state.accountFrozen ? ' o_urgent' : '')"
+                 t-att-title="state.expiryMessage"
+                 role="status">
+                <i class="fa fa-exclamation-triangle"/>
+                <span class="o_saas_expiry_warning_text" t-esc="state.expiryMessage"/>
+                <button t-if="state.canRequestRenewal"
+                        type="button"
+                        class="o_saas_expiry_reactivate_btn"
+                        t-on-click="onRequestReactivation"
+                        t-att-disabled="state.reactivating">
+                    Request reactivation
+                </button>
+            </div>
+        </div>
+    </t>
+</templates>

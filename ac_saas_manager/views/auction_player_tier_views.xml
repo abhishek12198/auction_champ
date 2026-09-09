@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Mystery only when SaaS plan allows it -->
+    <record id="view_auction_player_tier_tree_saas" model="ir.ui.view">
+        <field name="name">auction.player.tier.tree.saas</field>
+        <field name="model">auction.player.tier</field>
+        <field name="inherit_id" ref="auction_module.view_auction_player_tier_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='mystery']" position="before">
+                <field name="saas_allow_mystery" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='mystery']" position="attributes">
+                <attribute name="attrs">{'invisible': [('saas_allow_mystery', '=', False)]}</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_auction_player_tier_form_saas" model="ir.ui.view">
+        <field name="name">auction.player.tier.form.saas</field>
+        <field name="model">auction.player.tier</field>
+        <field name="inherit_id" ref="auction_module.view_auction_player_tier_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='mystery']" position="before">
+                <field name="saas_allow_mystery" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='mystery']" position="attributes">
+                <attribute name="attrs">{'invisible': [('saas_allow_mystery', '=', False)]}</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -306,12 +306,15 @@ input{font-family:inherit}
     display:flex;align-items:center;justify-content:center;
 }
 .oc-status-seal-mark{
-    position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
-    mix-blend-mode:screen;
-    filter:sepia(1) saturate(14) hue-rotate(70deg) brightness(1.05);
-    opacity:.95;pointer-events:none;
+  position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+  mix-blend-mode:screen;
+  filter:sepia(1) saturate(14) hue-rotate(70deg) brightness(1.05);
+  opacity:.95;pointer-events:none;
 }
-.oc-photo-status[data-kind="unsold"] .oc-status-seal-mark{display:none}
+.oc-photo-status[data-kind="unsold"] .oc-status-seal-mark{
+  display:block;
+  filter:sepia(1) saturate(18) hue-rotate(-45deg) brightness(1.02);
+}
 .oc-status-seal-logo{
     position:absolute;z-index:3;
     left:50%;top:46%;transform:translate(-50%,-50%);

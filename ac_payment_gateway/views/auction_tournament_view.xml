@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_auction_tournament_form_razorpay" model="ir.ui.view">
+        <field name="name">auction.tournament.form.razorpay</field>
+        <field name="model">auction.tournament</field>
+        <field name="inherit_id" ref="auction_module.view_auction_tournament_form"/>
+        <field name="arch" type="xml">
+            <!-- Anchor on field name — Odoo forbids @string in inheritance xpath -->
+            <xpath expr="//field[@name='payment_qr_image']/ancestor::group[2]/preceding-sibling::separator[1]" position="before">
+                <separator string="Online Registration Payment (Razorpay)"/>
+                <p class="text-muted o_form_label" style="margin-bottom:12px;">
+                    When <strong>Include Registration Payment</strong> is enabled, registration uses
+                    <strong>Razorpay Checkout</strong> (QR / proof upload is hidden).
+                    When disabled, the classic QR + receipt upload flow is used.
+                </p>
+                <group>
+                    <group>
+                        <field name="registration_payment_enabled"/>
+                        <field name="registration_payment_mode"
+                                 attrs="{'invisible': [('registration_payment_enabled', '=', False)],
+                                         'required': [('registration_payment_enabled', '=', True)]}"/>
+                        <field name="registration_currency_id"
+                                 attrs="{'invisible': [('registration_payment_enabled', '=', False)],
+                                         'required': [('registration_payment_enabled', '=', True)]}"
+                                 options="{'no_create': True}"/>
+                        <field name="registration_fee"
+                                 widget="monetary"
+                                 options="{'currency_field': 'registration_currency_id'}"
+                                 attrs="{'invisible': [('registration_payment_enabled', '=', False)],
+                                         'required': [('registration_payment_enabled', '=', True)]}"/>
+                    </group>
+                    <group>
+                        <div class="alert alert-info" role="alert"
+                             attrs="{'invisible': [('registration_payment_enabled', '=', False)]}">
+                            <p><b>Optional:</b> player registers immediately; can pay after submit.</p>
+                            <p><b>Mandatory:</b> player is created only after successful payment.</p>
+                            <p class="mb-0">Set Razorpay keys in <em>Settings → Razorpay Payment Gateway</em>.</p>
+                        </div>
+                    </group>
+                </group>
+            </xpath>
+
+            <!-- Classic QR / proof config only when Razorpay is OFF -->
+            <xpath expr="//field[@name='payment_qr_image']/ancestor::group[2]/preceding-sibling::separator[1]" position="attributes">
+                <attribute name="attrs">{'invisible': [('registration_payment_enabled', '=', True)]}</attribute>
+            </xpath>
+            <xpath expr="//field[@name='payment_qr_image']/ancestor::group[2]/preceding-sibling::p[1]" position="attributes">
+                <attribute name="attrs">{'invisible': [('registration_payment_enabled', '=', True)]}</attribute>
+            </xpath>
+            <xpath expr="//field[@name='payment_qr_image']/ancestor::group[2]" position="attributes">
+                <attribute name="attrs">{'invisible': [('registration_payment_enabled', '=', True)]}</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

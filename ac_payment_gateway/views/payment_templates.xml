@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!-- Legacy standalone checkout kept as a thin redirect target (controller redirects). -->
+<template id="registration_checkout" name="Registration Razorpay Checkout (legacy)">
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta http-equiv="refresh" content="0;url=/"/>
+  <title>Redirecting…</title>
+</head>
+<body>
+  <p>Redirecting to registration…</p>
+</body>
+</html>
+</template>
+
+<!-- Inherit registration form: themed in-page Razorpay overlay -->
+<template id="player_registration_form_razorpay" inherit_id="auction_module.player_registration_form">
+
+  <!-- When Razorpay is ON, replace classic Payment Proof block.
+       Match by id — h3 text is not exactly "Payment Proof" (may include * / Optional). -->
+  <xpath expr="//div[@id='paymentSection']" position="replace">
+    <t t-if="razorpay_enabled">
+      <div class="reg-section">
+        <div class="reg-section-header">
+          <div class="reg-section-strip"/>
+          <h3>Registration Fee</h3>
+          <span class="reg-section-icon">💳</span>
+          <span class="reg-section-num">05</span>
+        </div>
+        <div class="reg-payment-layout">
+          <div class="reg-payment-left">
+            <div class="reg-payment-instruction">
+              <span class="reg-payment-instruction-icon">₹</span>
+              <span class="reg-payment-instruction-text">
+                Registration fee:
+                <strong t-esc="registration_fee_label or ('{:,.2f}'.format(registration_fee or 0))"/>
+                <t t-if="razorpay_mode == 'mandatory'">
+                  — payment is <strong>mandatory</strong>. Razorpay checkout opens on this page after you submit.
+                </t>
+                <t t-else="">
+                  — payment is <strong>optional</strong>. You can pay after registration or skip for now.
+                </t>
+              </span>
+            </div>
+            <t t-if="tournament and tournament.payment_instruction">
+              <div class="reg-payment-instruction" style="margin-top:10px;">
+                <span class="reg-payment-instruction-icon">💡</span>
+                <span class="reg-payment-instruction-text" t-esc="tournament.payment_instruction"/>
+              </div>
+            </t>
+          </div>
+        </div>
+      </div>
+    </t>
+    <t t-else="">
+      <!-- Classic QR + proof upload (flag OFF) — respect tournament.payment_proof_required -->
+      <t t-set="pay_req" t-value="bool(tournament and tournament.payment_proof_required)"/>
+      <div class="reg-section" id="paymentSection"
+           t-att-data-payment-required="'1' if pay_req else '0'">
+        <div class="reg-section-header">
+          <div class="reg-section-strip"/>
+          <h3>Payment Proof
+            <t t-if="pay_req"><span class="req">*</span></t>
+            <t t-else=""><span class="reg-optional-badge">Optional</span></t>
+          </h3>
+          <span class="reg-section-icon">💳</span>
+          <span class="reg-section-num">05</span>
+        </div>
+        <t t-if="pay_req">
+          <div class="reg-payment-must" id="paymentMustNote">
+            <span class="req">*</span>
+            Payment receipt / screenshot is <strong>mandatory</strong>. Please upload it before submitting.
+          </div>
+        </t>
+        <div class="reg-payment-missed" id="paymentMissedBanner" style="display:none;" role="alert">
+          ⚠️ You missed this required field — upload your payment receipt or screenshot to continue.
+        </div>
+        <div t-attf-class="reg-payment-layout#{' reg-payment-has-qr' if tournament and tournament.payment_qr_image else ''}">
+          <div class="reg-payment-left">
+            <div class="reg-photo-upload" id="paymentUploadBox">
+              <div class="reg-payment-icon" id="paymentPreviewIcon">📎</div>
+              <div class="reg-file-meta">
+                <label for="paymentInput" class="reg-file-btn" id="paymentFileBtn">
+                  <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  Upload Receipt / Screenshot
+                  <t t-if="pay_req"><span class="req">*</span></t>
+                </label>
+                <t t-if="pay_req">
+                  <input type="text" id="paymentProofGate" name="payment_proof_gate"
+                         class="reg-payment-gate" value="" required="required"
+                         tabindex="-1" autocomplete="off" aria-label="Payment proof required"/>
+                </t>
+                <input type="file" id="paymentInput" name="payment_proof"
+                       accept="image/*,application/pdf" class="reg-file-input"
+                       t-att-data-required="'1' if pay_req else '0'"/>
+                <p class="reg-file-hint" id="paymentFileName">
+                  JPG · PNG · PDF &#160;·&#160; Max 5 MB
+                </p>
+                <p class="reg-payment-field-error" id="paymentErrorMsg" style="display:none;">
+                  ⚠️ Payment proof is required. Please upload a receipt or screenshot.
+                </p>
+              </div>
+            </div>
+            <t t-if="tournament and tournament.payment_instruction">
+              <div class="reg-payment-instruction">
+                <span class="reg-payment-instruction-icon">💡</span>
+                <span class="reg-payment-instruction-text" t-esc="tournament.payment_instruction"/>
+              </div>
+            </t>
+          </div>
+          <t t-if="tournament and tournament.payment_qr_image">
+            <div class="reg-payment-right">
+              <div class="reg-payment-qr-wrap">
+                <div class="reg-payment-qr-label">Scan &amp; Pay</div>
+                <div class="reg-payment-qr-frame">
+                  <img t-att-src="'data:image/png;base64,' + tournament.payment_qr_image.decode('utf-8')"
+                       class="reg-payment-qr" alt="Payment QR Code"/>
+                </div>
+                <a t-att-href="'data:image/png;base64,' + tournament.payment_qr_image.decode('utf-8')"
+                   download="payment-qr.png" class="reg-payment-qr-download">⬇ Download QR</a>
+                <p class="reg-payment-qr-hint">Scan to pay, then upload receipt.</p>
+              </div>
+            </div>
+          </t>
+        </div>
+      </div>
+    </t>
+  </xpath>
+
+  <!-- Mandatory await-payment panel (same themed form body, full header width) -->
+  <xpath expr="//t[@t-if='registration_closed']" position="after">
+    <t t-if="razorpay_await_payment">
+      <div class="ac-rzp-await">
+        <div class="ac-rzp-await-inner">
+          <div class="ac-rzp-await-icon" aria-hidden="true">💳</div>
+          <p class="ac-rzp-await-eyebrow">Registration fee</p>
+          <h2 class="ac-rzp-await-title">Complete Your Payment</h2>
+          <p class="ac-rzp-await-copy">
+            Your details are saved. Finish Razorpay checkout to confirm registration
+            <t t-if="razorpay_tx">
+              for <strong t-esc="razorpay_tx.player_name or 'this player'"/>
+            </t>.
+          </p>
+          <t t-if="tournament">
+            <p class="ac-rzp-await-tourn" t-esc="tournament.name"/>
+          </t>
+
+          <div class="ac-rzp-await-card">
+            <div class="ac-rzp-await-amount">
+              <span class="ac-rzp-await-amount-label">Amount due</span>
+              <span class="ac-rzp-await-amount-value"
+                    t-esc="registration_fee_label or ('{:,.2f}'.format(registration_fee or 0))"/>
+            </div>
+            <button type="button" class="ac-rzp-pay-btn" id="acPayBtn">
+              <span class="ac-rzp-pay-btn-ic" aria-hidden="true">🔒</span>
+              <span class="ac-rzp-pay-btn-txt">Pay with Razorpay</span>
+            </button>
+            <p id="acPayErr" class="ac-rzp-await-err" style="display:none;"></p>
+            <p class="ac-rzp-await-hint">
+              Razorpay opens on top of this page. You can dismiss it and tap Pay again anytime.
+            </p>
+            <a t-attf-href="/#{db_name}/#{tournament_slug}/player/register"
+               class="ac-rzp-await-cancel">
+              Cancel and return to form
+            </a>
+          </div>
+        </div>
+      </div>
+    </t>
+  </xpath>
+
+  <!-- Optional: pay CTA on success (in-page, no black screen) -->
+  <xpath expr="//t[@t-if='success']//div[contains(@class,'reg-success-body')]/div[contains(@class,'reg-success-check')]" position="after">
+    <t t-if="payment_just_completed">
+      <p style="margin-top:1rem;color:#16a34a;font-weight:700;">Payment received. Registration confirmed.</p>
+    </t>
+    <t t-if="razorpay_needs_payment and razorpay_pay_token">
+      <div id="acOptionalPay" class="ac-rzp-optional">
+        <p class="ac-rzp-optional-title">
+          Pay registration fee (<t t-esc="registration_fee_label or ('{:,.2f}'.format(registration_fee or 0))"/>) — optional
+        </p>
+        <button type="button" class="ac-rzp-pay-btn" id="acPayBtn">
+          <span class="ac-rzp-pay-btn-ic" aria-hidden="true">🔒</span>
+          <span class="ac-rzp-pay-btn-txt">Pay Now with Razorpay</span>
+        </button>
+        <p id="acPayErr" class="ac-rzp-await-err" style="display:none;"></p>
+        <p class="ac-rzp-await-hint">You can also skip and pay later with the organiser.</p>
+      </div>
+    </t>
+  </xpath>
+
+  <!-- Shared checkout data + Razorpay overlay script (themed page stays visible) -->
+  <xpath expr="//body" position="inside">
+    <t t-if="razorpay_checkout">
+      <script type="application/json" id="acCheckoutData"><t t-raw="razorpay_checkout_json"/></script>
+      <div id="acRzpMeta"
+           t-att-data-verify-url="razorpay_verify_url"
+           t-att-data-auto-open="'1' if razorpay_auto_open else '0'"
+           style="display:none;"></div>
+      <script type="text/javascript">
+      //<![CDATA[
+      (function () {
+        var btn = document.getElementById('acPayBtn');
+        var errEl = document.getElementById('acPayErr');
+        var dataEl = document.getElementById('acCheckoutData');
+        var meta = document.getElementById('acRzpMeta');
+        var verifyUrl = (meta && meta.getAttribute('data-verify-url')) || '';
+        var autoOpen = meta && meta.getAttribute('data-auto-open') === '1';
+        var opening = false;
+
+        function showErr(msg) {
+          if (!errEl) { alert(msg); return; }
+          errEl.style.display = 'block';
+          errEl.textContent = msg;
+        }
+
+        function getCheckout() {
+          try { return JSON.parse((dataEl && dataEl.textContent) || '{}'); }
+          catch (e) { return null; }
+        }
+
+        function loadRazorpay(cb) {
+          if (window.Razorpay) { cb(null); return; }
+          var existing = document.querySelector('script[data-ac-rzp="1"]');
+          if (existing) {
+            existing.addEventListener('load', function () { cb(null); });
+            existing.addEventListener('error', function () { cb(new Error('load failed')); });
+            return;
+          }
+          var s = document.createElement('script');
+          s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          s.async = true;
+          s.setAttribute('data-ac-rzp', '1');
+          s.onload = function () { cb(null); };
+          s.onerror = function () { cb(new Error('load failed')); };
+          document.head.appendChild(s);
+        }
+
+        function setBtn(label, disabled) {
+          if (!btn) return;
+          btn.disabled = !!disabled;
+          var txt = btn.querySelector('.ac-rzp-pay-btn-txt');
+          if (txt) txt.textContent = label;
+          else btn.textContent = label;
+        }
+
+        function verifyPayment(checkout, response) {
+          setBtn('Verifying…', true);
+          fetch(verifyUrl, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              method: 'call',
+              params: {
+                token: checkout.transaction_token,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature
+              }
+            })
+          }).then(function (r) { return r.json(); })
+            .then(function (data) {
+              var res = (data && data.result) ? data.result : data;
+              if (res && res.ok && res.redirect) {
+                window.location.href = res.redirect;
+              } else {
+                alert((res && res.error) || 'Payment verification failed');
+                setBtn(btn.getAttribute('data-label') || 'Pay with Razorpay', false);
+                opening = false;
+              }
+            }).catch(function () {
+              alert('Network error while verifying payment');
+              setBtn(btn.getAttribute('data-label') || 'Pay with Razorpay', false);
+              opening = false;
+            });
+        }
+
+        function openCheckout() {
+          if (!btn || opening) return;
+          var checkout = getCheckout();
+          if (!checkout || !checkout.key_id || !checkout.order_id) {
+            showErr('Payment session is incomplete. Please submit registration again.');
+            return;
+          }
+          opening = true;
+          if (errEl) errEl.style.display = 'none';
+          setBtn('Opening Razorpay…', true);
+
+          loadRazorpay(function (err) {
+            if (err || !window.Razorpay) {
+              showErr('Could not load Razorpay. Allow checkout.razorpay.com, disable ad-block, then retry.');
+              setBtn(btn.getAttribute('data-label') || 'Pay with Razorpay', false);
+              opening = false;
+              return;
+            }
+            try {
+              var rzp = new window.Razorpay({
+                key: checkout.key_id,
+                amount: checkout.amount,
+                currency: checkout.currency || 'INR',
+                name: checkout.name || 'AuctionChamp',
+                description: checkout.description || 'Registration',
+                order_id: checkout.order_id,
+                prefill: checkout.prefill || {},
+                theme: { color: '#1a3a6e' },
+                modal: {
+                  ondismiss: function () {
+                    setBtn(btn.getAttribute('data-label') || 'Pay with Razorpay', false);
+                    opening = false;
+                  }
+                },
+                handler: function (response) {
+                  verifyPayment(checkout, response);
+                }
+              });
+              rzp.on('payment.failed', function (resp) {
+                var msg = (resp && resp.error && (resp.error.description || resp.error.reason)) || 'Payment failed';
+                showErr(msg);
+                setBtn(btn.getAttribute('data-label') || 'Pay with Razorpay', false);
+                opening = false;
+              });
+              rzp.open();
+              setBtn(btn.getAttribute('data-label') || 'Pay with Razorpay', false);
+              opening = false;
+            } catch (e) {
+              showErr((e && e.message) || 'Unable to open Razorpay checkout.');
+              setBtn(btn.getAttribute('data-label') || 'Pay with Razorpay', false);
+              opening = false;
+            }
+          });
+        }
+
+        if (btn) {
+          var initial = (btn.querySelector('.ac-rzp-pay-btn-txt') || btn).textContent || 'Pay with Razorpay';
+          btn.setAttribute('data-label', initial.trim());
+          btn.addEventListener('click', function (ev) {
+            ev.preventDefault();
+            openCheckout();
+          });
+          if (autoOpen) {
+            setTimeout(openCheckout, 350);
+          }
+        }
+      })();
+      //]]>
+      </script>
+    </t>
+  </xpath>
+</template>
+
+</odoo>

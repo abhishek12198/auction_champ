@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_ac_saas_upgrade_payment" model="ir.sequence">
+            <field name="name">SaaS Upgrade Payment</field>
+            <field name="code">ac.saas.upgrade.payment</field>
+            <field name="prefix">SUP</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+        <record id="seq_ac_saas_signup_payment" model="ir.sequence">
+            <field name="name">SaaS Signup Payment</field>
+            <field name="code">ac.saas.signup.payment</field>
+            <field name="prefix">SSN</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+</odoo>

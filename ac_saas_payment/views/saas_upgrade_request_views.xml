@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Upgrade request: payment fields + awaiting_payment state -->
+    <record id="view_ac_saas_upgrade_request_form_payment" model="ir.ui.view">
+        <field name="name">ac.saas.upgrade.request.form.payment</field>
+        <field name="model">ac.saas.upgrade.request</field>
+        <field name="inherit_id" ref="ac_saas_manager.view_ac_saas_upgrade_request_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header/button[@name='action_approve']" position="attributes">
+                <attribute name="attrs">{'invisible': [('state', 'not in', ('pending',))]}</attribute>
+            </xpath>
+            <xpath expr="//header/button[@name='action_reject']" position="attributes">
+                <attribute name="attrs">{'invisible': [('state', '!=', 'pending')]}</attribute>
+            </xpath>
+            <xpath expr="//header/button[@name='action_cancel']" position="attributes">
+                <attribute name="attrs">{'invisible': [('state', 'not in', ('pending', 'awaiting_payment'))]}</attribute>
+            </xpath>
+            <xpath expr="//field[@name='state']" position="attributes">
+                <attribute name="statusbar_visible">awaiting_payment,pending,approved,rejected</attribute>
+            </xpath>
+            <xpath expr="//field[@name='processed_by_id']/.." position="after">
+                <group string="Payment" attrs="{'invisible': [('payment_required', '=', False)]}">
+                    <field name="payment_required" invisible="1"/>
+                    <field name="payment_currency_id" invisible="1"/>
+                    <field name="payment_amount"/>
+                    <field name="razorpay_payment_id"/>
+                    <field name="payment_ids" readonly="1">
+                        <tree>
+                            <field name="name"/>
+                            <field name="amount"/>
+                            <field name="currency_id"/>
+                            <field name="state"/>
+                            <field name="razorpay_order_id"/>
+                            <field name="razorpay_payment_id"/>
+                        </tree>
+                    </field>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_ac_saas_upgrade_request_tree_payment" model="ir.ui.view">
+        <field name="name">ac.saas.upgrade.request.tree.payment</field>
+        <field name="model">ac.saas.upgrade.request</field>
+        <field name="inherit_id" ref="ac_saas_manager.view_ac_saas_upgrade_request_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//tree" position="attributes">
+                <attribute name="decoration-warning">state == 'awaiting_payment'</attribute>
+            </xpath>
+            <xpath expr="//field[@name='trigger_feature']" position="after">
+                <field name="payment_required" optional="show"/>
+                <field name="payment_amount" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Wizard: Pay &amp; upgrade when payment required -->
+    <record id="view_ac_saas_upgrade_request_wizard_form_payment" model="ir.ui.view">
+        <field name="name">ac.saas.upgrade.request.wizard.form.payment</field>
+        <field name="model">ac.saas.upgrade.request.wizard</field>
+        <field name="inherit_id" ref="ac_saas_manager.view_ac_saas_upgrade_request_wizard_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='trigger_feature']" position="after">
+                <field name="payment_required" invisible="1"/>
+                <field name="upgrade_currency_id" invisible="1"/>
+                <field name="upgrade_list_price"
+                         string="New plan price"
+                         attrs="{'invisible': [('payment_required', '=', False)]}"/>
+                <field name="upgrade_credit"
+                         string="Prorated credit"
+                         attrs="{'invisible': [('payment_required', '=', False)]}"/>
+                <field name="upgrade_amount"
+                         string="Amount to pay"
+                         attrs="{'invisible': [('payment_required', '=', False)]}"/>
+                <field name="upgrade_amount_label" invisible="1"/>
+                <field name="upgrade_proration_note"
+                         string="Proration"
+                         attrs="{'invisible': [('payment_required', '=', False)]}"/>
+            </xpath>
+            <xpath expr="//div[hasclass('o_saas_unlock_wrap')]" position="after">
+                <div class="alert alert-info" role="alert"
+                     attrs="{'invisible': [('payment_required', '=', False)]}">
+                    You pay only the prorated difference: new plan price minus unused credit
+                    from your current package (based on remaining validity days).
+                    Same-day upgrades are not charged both full package prices.
+                </div>
+            </xpath>
+            <xpath expr="//button[@name='action_submit']" position="attributes">
+                <attribute name="attrs">{'invisible': [('payment_required', '=', True)]}</attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_submit']" position="after">
+                <button name="action_submit" type="object" string="Pay &amp; upgrade"
+                        class="btn-primary"
+                        attrs="{'invisible': [('payment_required', '=', False)]}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Apply parallel-session flags on upgrade (plan data is noupdate=1). -->
+    <record id="plan_standard" model="ac.saas.plan">
+        <field name="allow_parallel_sessions" eval="False"/>
+    </record>
+    <record id="plan_classic" model="ac.saas.plan">
+        <field name="allow_parallel_sessions" eval="False"/>
+    </record>
+    <record id="plan_pro" model="ac.saas.plan">
+        <field name="allow_parallel_sessions" eval="True"/>
+    </record>
+    <record id="plan_pro_plus" model="ac.saas.plan">
+        <field name="allow_parallel_sessions" eval="True"/>
+    </record>
+</odoo>

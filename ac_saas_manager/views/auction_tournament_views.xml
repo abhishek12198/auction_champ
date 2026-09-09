@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Hide SaaS account field from organisers (set automatically) -->
+    <record id="view_auction_tournament_form_saas" model="ir.ui.view">
+        <field name="name">auction.tournament.form.saas</field>
+        <field name="model">auction.tournament</field>
+        <field name="inherit_id" ref="auction_module.view_auction_tournament_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <group groups="ac_saas_manager.group_saas_manager,auction_module.group_auction_group_admin">
+                    <field name="saas_account_id"/>
+                </group>
+            </xpath>
+
+            <!-- Working tournament (navbar) — banner + switch (no header button; CTA lives in banner) -->
+            <xpath expr="//button[@name='action_deactivate_tournament']" position="attributes">
+                <attribute name="groups">!ac_saas_manager.group_saas_account_user</attribute>
+            </xpath>
+            <xpath expr="//widget[@name='web_ribbon']" position="after">
+                <field name="is_saas_active" invisible="1"/>
+            </xpath>
+            <xpath expr="//div[hasclass('d-flex')][hasclass('align-items-start')]" position="after">
+                <div class="o_saas_working_banner o_saas_working_banner_on"
+                     groups="ac_saas_manager.group_saas_account_user"
+                     attrs="{'invisible': [('is_saas_active', '=', False)]}">
+                    <div class="o_saas_working_banner_mark">WORKING NOW</div>
+                    <field name="saas_active_help" nolabel="1" readonly="1"
+                           class="o_saas_working_banner_body"/>
+                    <div class="o_saas_working_banner_action">
+                        <span class="o_saas_working_banner_current">
+                            <i class="fa fa-check"/> Current in top bar
+                        </span>
+                    </div>
+                </div>
+                <div class="o_saas_working_banner o_saas_working_banner_off"
+                     groups="ac_saas_manager.group_saas_account_user"
+                     attrs="{'invisible': ['|', ('is_saas_active', '=', True), ('active', '=', False)]}">
+                    <div class="o_saas_working_banner_mark o_saas_working_banner_mark_off">NOT WORKING</div>
+                    <field name="saas_active_help" nolabel="1" readonly="1"
+                           class="o_saas_working_banner_body"/>
+                    <div class="o_saas_working_banner_action">
+                        <button name="action_saas_set_active" type="object"
+                                string="Use this tournament"
+                                class="btn btn-sm o_saas_use_tournament_btn"/>
+                    </div>
+                </div>
+            </xpath>
+
+            <!-- Compact plan captions + upgrade CTA -->
+            <xpath expr="//div[hasclass('o_at_callup_picker_wrap')]//field[@name='player_appearance_algorithm']" position="before">
+                <field name="saas_allowed_algorithm_keys" invisible="1"/>
+                <field name="saas_allow_random_mode" invisible="1"/>
+                <field name="saas_can_request_upgrade" invisible="1"/>
+            </xpath>
+            <xpath expr="//div[hasclass('o_at_callup_picker_wrap')]//field[@name='player_appearance_algorithm']" position="attributes">
+                <attribute name="options">{'card_style': 'mode', 'allowed_field': 'saas_allowed_algorithm_keys'}</attribute>
+            </xpath>
+            <xpath expr="//div[hasclass('o_at_callup_picker_wrap')]//field[@name='player_appearance_algorithm']" position="after">
+                <div class="o_saas_plan_caption"
+                     attrs="{'invisible': [('saas_allow_random_mode', '=', True)]}">
+                    <i class="fa fa-lock o_saas_plan_caption_ico" title="Plan limit"/>
+                    <field name="saas_random_upgrade_hint" nolabel="1" readonly="1"/>
+                    <button name="action_saas_request_upgrade" type="object"
+                            string="Request upgrade"
+                            class="btn btn-link o_saas_upgrade_link p-0"
+                            context="{'saas_upgrade_trigger': 'random'}"
+                            attrs="{'invisible': [('saas_can_request_upgrade', '=', False)]}"/>
+                </div>
+            </xpath>
+            <xpath expr="//page[@name='presentation']//field[@name='player_display_template']" position="before">
+                <field name="saas_allowed_theme_keys" invisible="1"/>
+            </xpath>
+            <xpath expr="//page[@name='presentation']//field[@name='player_display_template']" position="attributes">
+                <attribute name="options">{'allowed_field': 'saas_allowed_theme_keys'}</attribute>
+            </xpath>
+            <xpath expr="//page[@name='presentation']//field[@name='player_display_template']" position="after">
+                <field name="saas_theme_restricted" invisible="1"/>
+                <div class="o_saas_plan_caption"
+                     attrs="{'invisible': [('saas_theme_restricted', '=', False)]}">
+                    <i class="fa fa-paint-brush o_saas_plan_caption_ico" title="Plan themes"/>
+                    <field name="saas_theme_upgrade_hint" nolabel="1" readonly="1"/>
+                    <button name="action_saas_request_upgrade" type="object"
+                            string="Request upgrade"
+                            class="btn btn-link o_saas_upgrade_link p-0"
+                            context="{'saas_upgrade_trigger': 'theme'}"
+                            attrs="{'invisible': [('saas_can_request_upgrade', '=', False)]}"/>
+                </div>
+            </xpath>
+            <!-- Cap Max Registrations by SaaS plan (editable field on Presentation tab) -->
+            <xpath expr="//page[@name='presentation']//field[@name='max_registrations']" position="after">
+                <field name="saas_max_players" invisible="1"/>
+                <div class="o_saas_plan_caption"
+                     attrs="{'invisible': [('saas_max_players', '=', 0)]}">
+                    <i class="fa fa-users o_saas_plan_caption_ico" title="Plan registration limit"/>
+                    <field name="saas_max_registrations_hint" nolabel="1" readonly="1"/>
+                    <button name="action_saas_request_upgrade" type="object"
+                            string="Request upgrade"
+                            class="btn btn-link o_saas_upgrade_link p-0"
+                            context="{'saas_upgrade_trigger': 'players'}"
+                            attrs="{'invisible': [('saas_can_request_upgrade', '=', False)]}"/>
+                </div>
+            </xpath>
+
+            <!-- Mystery tier: only when plan allows Mystery players -->
+            <xpath expr="//page[@name='tiers']//tree/field[@name='mystery']" position="before">
+                <field name="saas_allow_mystery" invisible="1"/>
+            </xpath>
+            <xpath expr="//page[@name='tiers']//tree/field[@name='mystery']" position="attributes">
+                <attribute name="attrs">{'invisible': [('saas_allow_mystery', '=', False)]}</attribute>
+            </xpath>
+            <xpath expr="//page[@name='tiers']//form//field[@name='mystery']" position="before">
+                <field name="saas_allow_mystery" invisible="1"/>
+            </xpath>
+            <xpath expr="//page[@name='tiers']//form//field[@name='mystery']" position="attributes">
+                <attribute name="attrs">{'invisible': [('saas_allow_mystery', '=', False)]}</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- List: strong working-tournament column -->
+    <record id="view_auction_tournament_tree_saas" model="ir.ui.view">
+        <field name="name">auction.tournament.tree.saas</field>
+        <field name="model">auction.tournament</field>
+        <field name="inherit_id" ref="auction_module.view_auction_tournament_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//tree" position="attributes">
+                <attribute name="decoration-warning">is_saas_active</attribute>
+                <attribute name="class">o_saas_tournament_tree</attribute>
+            </xpath>
+            <xpath expr="//field[@name='name']" position="before">
+                <field name="is_saas_active" invisible="1"/>
+                <field name="saas_active_label" string="Working tournament"
+                         groups="ac_saas_manager.group_saas_account_user"/>
+            </xpath>
+            <xpath expr="//field[@name='tournament_type']" position="after">
+                <button name="action_saas_set_active" type="object"
+                        string="Use this tournament"
+                        icon="fa-bullseye"
+                        class="btn-danger"
+                        groups="ac_saas_manager.group_saas_account_user"
+                        attrs="{'invisible': [('is_saas_active', '=', True)]}"
+                        help="Make this your working tournament in the top navbar"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Kanban: strong amber working marker + helper -->
+    <record id="view_auction_tournament_kanban_saas" model="ir.ui.view">
+        <field name="name">auction.tournament.kanban.saas</field>
+        <field name="model">auction.tournament</field>
+        <field name="inherit_id" ref="auction_module.view_auction_tournament_kanban"/>
+        <field name="arch" type="xml">
+            <xpath expr="//kanban" position="attributes">
+                <attribute name="class">o_auction_tournament_kanban o_saas_tournament_kanban</attribute>
+            </xpath>
+            <xpath expr="//field[@name='organizer_uid']" position="after">
+                <field name="is_saas_active"/>
+            </xpath>
+            <xpath expr="//div[hasclass('o_atk_badges')]" position="inside">
+                <t t-if="record.is_saas_active.raw_value">
+                    <span class="o_atk_saas_active_badge"
+                          title="Working tournament selected in the top navbar">
+                        <i class="fa fa-bullseye"/> WORKING NOW
+                    </span>
+                </t>
+                <t t-elif="record.active.raw_value">
+                    <span class="o_atk_saas_idle_badge"
+                          title="Not selected in the top navbar">
+                        <i class="fa fa-circle-o"/> NOT WORKING
+                    </span>
+                </t>
+            </xpath>
+            <xpath expr="//div[hasclass('o_atk_stats')]" position="before">
+                <t t-if="record.is_saas_active.raw_value">
+                    <div class="o_atk_saas_help o_atk_saas_help_on o_atk_saas_help_inline"
+                         title="Players, teams and showcase menus use this tournament.">
+                        <span class="o_atk_saas_help_text">In navbar — menus use this one.</span>
+                        <span class="o_atk_saas_active_footer o_atk_saas_help_btn">
+                            <i class="fa fa-bullseye"/> Top bar
+                        </span>
+                    </div>
+                </t>
+                <t t-elif="record.active.raw_value">
+                    <div class="o_atk_saas_help o_atk_saas_help_off o_atk_saas_help_inline"
+                         title="Menus and player lists follow the tournament selected in the top navbar.">
+                        <span class="o_atk_saas_help_text">Not in navbar — switch here.</span>
+                        <button type="object" name="action_saas_set_active"
+                                class="btn btn-sm o_atk_saas_set_active o_atk_saas_set_active_off o_atk_saas_help_btn"
+                                title="Make this your working tournament in the top navbar">
+                            <i class="fa fa-bullseye"/> Use this tournament
+                        </button>
+                    </div>
+                </t>
+            </xpath>
+            <xpath expr="//span[hasclass('o_atk_footer_right')]" position="replace">
+                <span class="o_atk_footer_right">
+                    <i class="fa fa-angle-right" title="Open"/>
+                </span>
+            </xpath>
+            <xpath expr="//div[hasclass('o_atk_card')]" position="attributes">
+                <attribute name="class"/>
+                <attribute name="t-attf-class">o_atk_card oe_kanban_global_click #{record.is_saas_active.raw_value ? 'o_atk_saas_active_card' : (record.active.raw_value ? 'o_atk_saas_idle_card' : '')}</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

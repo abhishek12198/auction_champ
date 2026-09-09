@@ -84,7 +84,16 @@
     function isClosed() {
         try { return sessionStorage.getItem(STORE_CLOSED) === '1'; } catch (e) { return false; }
     }
+    function isMobileLiveBid() {
+        try {
+            return !!(window.matchMedia && window.matchMedia('(max-width: 1024px)').matches);
+        } catch (e) {
+            return false;
+        }
+    }
     function isExpanded() {
+        // Small screens: always show the full team list (page scroll, sticky actions).
+        if (isMobileLiveBid()) return true;
         try {
             var v = sessionStorage.getItem(STORE_EXPANDED);
             if (v === null) return true;
@@ -215,6 +224,44 @@
         if (team.remaining_players != null) return Number(team.remaining_players);
         return null;
     }
+    function scrollPos() {
+        var x = window.scrollX || window.pageXOffset || 0;
+        var y = window.scrollY || window.pageYOffset || 0;
+        return { x: x, y: y };
+    }
+    function restoreScroll(pos) {
+        if (!pos) return;
+        var apply = function () {
+            try { window.scrollTo(pos.x, pos.y); } catch (e) { /* ignore */ }
+        };
+        apply();
+        requestAnimationFrame(function () {
+            apply();
+            requestAnimationFrame(apply);
+        });
+    }
+    function withPreservedScroll(fn) {
+        var pos = scrollPos();
+        var active = document.activeElement;
+        var teamId = active && active.getAttribute
+            ? active.getAttribute('data-team-id')
+            : null;
+        try {
+            fn();
+        } finally {
+            restoreScroll(pos);
+            if (teamId) {
+                var btn = document.querySelector(
+                    '#acLiveBidGrid .ac-livebid-tile[data-team-id="' + teamId + '"]'
+                );
+                if (btn && typeof btn.focus === 'function') {
+                    try { btn.focus({ preventScroll: true }); }
+                    catch (e) { /* ignore */ }
+                }
+            }
+            restoreScroll(pos);
+        }
+    }
     function paintBidHero(lead, logoSrc, amount) {
         var hero = document.getElementById('acBidHero');
         var logo = document.getElementById('acBidHeroLogo');
@@ -222,6 +269,7 @@
         var ptsEl = document.getElementById('acBidHeroPts');
         var lbl = hero && hero.querySelector('.ac-bid-hero-lbl');
         if (!hero) return;
+        var pos = scrollPos();
         var sold = !!(playerCache && playerCache.state === 'sold');
         var on = !!(amount > 0 && (lead || sold));
         hero.classList.toggle('is-on', on);
@@ -245,6 +293,8 @@
             hero.classList.add('is-flash');
         }
         lastHeroKey = key;
+        // Mobile browsers often jump to Current Bid when it updates — keep viewport put.
+        restoreScroll(pos);
     }
     function isSquadFull(team) {
         var left = squadSlotsLeft(team);
@@ -267,61 +317,63 @@
             applyChrome();
             return;
         }
-        allowed = true;
-        applyChrome();
-        var lead = leadTeam(player);
-        var leadLogoSrc = lead ? logoUrl(lead) : '';
-        var leadAmt = player && player.current_bid ? Number(player.current_bid) : 0;
-        paintBidHero(lead, leadLogoSrc, leadAmt);
-        var html = teams.map(function (team) {
-            var leadOn = !!(lead && Number(lead.id) === Number(team.id));
-            var off = !player || !canBid(team);
-            var rem = remaining(team) || 0;
-            var tot = totalPts(team) || 0;
-            var pct = tot > 0 ? Math.max(0, Math.min(100, (rem / tot) * 100)) : 0;
-            var barMod = pct > 50 ? '' : pct > 25 ? ' is-mid' : ' is-low';
-            var cls = 'ac-livebid-tile'
-                + (off ? ' is-off' : '')
-                + (leadOn ? ' is-lead' : '')
-                + (busyId === team.id ? ' is-busy' : '');
-            var logo = logoUrl(team)
-                ? '<img class="ac-livebid-logo" src="' + esc(logoUrl(team)) + '" alt=""/>'
-                : '<span class="ac-livebid-ph">' + esc((team.name || '?').charAt(0)) + '</span>';
-            var left = squadSlotsLeft(team);
-            var squadMax = team.max_players != null ? Number(team.max_players) : 0;
-            var recruited = (left != null && squadMax) ? Math.max(0, squadMax - left) : null;
-            var squadTxt = (recruited != null && squadMax)
-                ? (recruited + '/' + squadMax)
-                : (squadMax ? ('—/' + squadMax) : '');
-            var maxBid = maxCall(team);
-            var foot;
-            if (off && !leadOn) {
-                foot = '<div class="ac-livebid-off" title="' + esc(bidReason(team)) + '">' + esc(bidReason(team) || 'Off') + '</div>';
-            } else if (!leadOn) {
-                foot = '<span class="ac-livebid-chip" data-custom="' + team.id + '" title="Enter custom points">' + fmt(team.next_bid) + '</span>';
-            } else {
-                foot = '<div class="ac-livebid-leadamt">' + fmt(player.current_bid) + '</div>';
+        withPreservedScroll(function () {
+            allowed = true;
+            applyChrome();
+            var lead = leadTeam(player);
+            var leadLogoSrc = lead ? logoUrl(lead) : '';
+            var leadAmt = player && player.current_bid ? Number(player.current_bid) : 0;
+            paintBidHero(lead, leadLogoSrc, leadAmt);
+            var html = teams.map(function (team) {
+                var leadOn = !!(lead && Number(lead.id) === Number(team.id));
+                var off = !player || !canBid(team);
+                var rem = remaining(team) || 0;
+                var tot = totalPts(team) || 0;
+                var pct = tot > 0 ? Math.max(0, Math.min(100, (rem / tot) * 100)) : 0;
+                var barMod = pct > 50 ? '' : pct > 25 ? ' is-mid' : ' is-low';
+                var cls = 'ac-livebid-tile'
+                    + (off ? ' is-off' : '')
+                    + (leadOn ? ' is-lead' : '')
+                    + (busyId === team.id ? ' is-busy' : '');
+                var logo = logoUrl(team)
+                    ? '<img class="ac-livebid-logo" src="' + esc(logoUrl(team)) + '" alt=""/>'
+                    : '<span class="ac-livebid-ph">' + esc((team.name || '?').charAt(0)) + '</span>';
+                var left = squadSlotsLeft(team);
+                var squadMax = team.max_players != null ? Number(team.max_players) : 0;
+                var recruited = (left != null && squadMax) ? Math.max(0, squadMax - left) : null;
+                var squadTxt = (recruited != null && squadMax)
+                    ? (recruited + '/' + squadMax)
+                    : (squadMax ? ('—/' + squadMax) : '');
+                var maxBid = maxCall(team);
+                var foot;
+                if (off && !leadOn) {
+                    foot = '<div class="ac-livebid-off" title="' + esc(bidReason(team)) + '">' + esc(bidReason(team) || 'Off') + '</div>';
+                } else if (!leadOn) {
+                    foot = '<span class="ac-livebid-chip" data-custom="' + team.id + '" title="Enter custom points">' + fmt(team.next_bid) + '</span>';
+                } else {
+                    foot = '<div class="ac-livebid-leadamt">' + fmt(player.current_bid) + '</div>';
+                }
+                return '<button type="button" class="' + cls + '" data-team-id="' + team.id + '"'
+                    + ' title="' + esc(team.name) + '">'
+                    + '<div class="ac-livebid-head">'
+                    + logo
+                    + '<span class="ac-livebid-name" title="' + esc(team.name) + '">'
+                    + esc(team.name) + '</span>'
+                    + foot
+                    + '</div>'
+                    + '<div class="ac-livebid-purse-bar"><div class="ac-livebid-purse-fill' + barMod + '" style="width:' + pct.toFixed(1) + '%"></div></div>'
+                    + '<div class="ac-livebid-meta">'
+                    + '<span class="ac-livebid-purse" title="Purse">' + fmt(rem) + '</span>'
+                    + (squadTxt ? '<span class="ac-livebid-squad" title="Squad">' + esc(squadTxt) + '</span>' : '')
+                    + '<span class="ac-livebid-max" title="Max bid">Max ' + fmt(maxBid) + '</span>'
+                    + '</div>'
+                    + '</button>';
+            }).join('');
+            if (html !== lastHtml) {
+                grid.innerHTML = html;
+                lastHtml = html;
             }
-            return '<button type="button" class="' + cls + '" data-team-id="' + team.id + '"'
-                + ' title="' + esc(team.name) + '">'
-                + '<div class="ac-livebid-head">'
-                + logo
-                + '<span class="ac-livebid-name" title="' + esc(team.name) + '">'
-                + esc(team.name) + '</span>'
-                + foot
-                + '</div>'
-                + '<div class="ac-livebid-purse-bar"><div class="ac-livebid-purse-fill' + barMod + '" style="width:' + pct.toFixed(1) + '%"></div></div>'
-                + '<div class="ac-livebid-meta">'
-                + '<span class="ac-livebid-purse" title="Purse">' + fmt(rem) + '</span>'
-                + (squadTxt ? '<span class="ac-livebid-squad" title="Squad">' + esc(squadTxt) + '</span>' : '')
-                + '<span class="ac-livebid-max" title="Max bid">Max ' + fmt(maxBid) + '</span>'
-                + '</div>'
-                + '</button>';
-        }).join('');
-        if (html !== lastHtml) {
-            grid.innerHTML = html;
-            lastHtml = html;
-        }
+        });
     }
 
     function poll() {

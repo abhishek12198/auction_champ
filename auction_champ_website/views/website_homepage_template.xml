@@ -24,7 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Poppins:wght@400;500;600;700;800&amp;display=swap"
           rel="stylesheet"/>
     <!-- AuctionChamp custom styles -->
-    <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css"/>
+    <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.26"/>
 </head>
 <body>
 
@@ -33,62 +33,50 @@
      ================================================================ -->
 <nav class="ac-nav" id="acNav">
     <div class="ac-nav-inner">
-        <a href="/" class="ac-nav-logo">
+        <a href="/" class="ac-nav-logo" aria-label="AuctionChamp">
             <picture>
                 <source srcset="/auction_module/static/description/icon.svg" type="image/svg+xml"/>
                 <img src="/auction_module/static/description/icon.png"
-                     alt="AuctionChamp Logo"
+                     alt="AuctionChamp"
                      class="ac-nav-logo-img"/>
             </picture>
         </a>
-        <ul class="ac-nav-links">
-            <t t-if="live_tournaments">
-                <li><a href="#live-auctions" class="ac-nav-live-link"><span class="ac-nav-live-dot"></span>Live Auctions</a></li>
-            </t>
-            <li><a href="#features">Features</a></li>
-            <li><a href="#how-it-works">How It Works</a></li>
-            <li><a href="#pricing">Pricing</a></li>
-            <li><a href="#faq">FAQ</a></li>
-            <li><a href="#contact">Contact</a></li>
-            <li>
-                <a href="/web" class="ac-nav-login" title="Go to AuctionChamp backend">
-                    <i class="fas fa-right-to-bracket"></i>
-                    Login
-                </a>
-            </li>
-            <li>
-                <a t-att-href="config.demo_url or '#contact'" class="ac-nav-cta">
-                    Book Demo
-                </a>
-            </li>
-        </ul>
+
+        <div class="ac-nav-desktop">
+            <ul class="ac-nav-links">
+                <t t-if="live_tournaments">
+                    <li><a href="#live-auctions" class="ac-nav-live-link"><span class="ac-nav-live-dot"></span>Live Auctions</a></li>
+                </t>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <div class="ac-nav-actions">
+                <a href="#pricing" class="ac-nav-plan">Choose your plan</a>
+                <t t-call="auction_champ_website.website_nav_auth"/>
+            </div>
+        </div>
+
         <button class="ac-nav-toggle" id="acMenuToggle" aria-label="Toggle navigation">
             <i class="fas fa-bars"></i>
         </button>
     </div>
-    <!-- Mobile drawer (folding menu) -->
+    <!-- Mobile drawer -->
     <div class="ac-nav-mobile" id="acMobileNav">
-        <ul>
+        <ul class="ac-nav-mobile-links">
             <t t-if="live_tournaments">
                 <li><a href="#live-auctions"><span class="ac-nav-live-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ff4757;margin-right:6px;animation:ac-pulse 1.5s ease-in-out infinite;"></span>Live Auctions</a></li>
             </t>
             <li><a href="#features">Features</a></li>
             <li><a href="#how-it-works">How It Works</a></li>
-            <li><a href="#pricing">Pricing</a></li>
             <li><a href="#faq">FAQ</a></li>
             <li><a href="#contact">Contact</a></li>
-            <li>
-                <a href="/web" class="ac-nav-login">
-                    <i class="fas fa-right-to-bracket"></i>
-                    Login
-                </a>
-            </li>
-            <li>
-                <a t-att-href="config.demo_url or '#contact'" class="ac-nav-cta">
-                    Book Demo
-                </a>
-            </li>
         </ul>
+        <div class="ac-nav-mobile-actions">
+            <a href="#pricing" class="ac-nav-plan">Choose your plan</a>
+            <t t-call="auction_champ_website.website_nav_auth"/>
+        </div>
     </div>
 </nav>
 
@@ -97,7 +85,8 @@
      ================================================================ -->
 <section class="ac-hero" id="home">
     <div class="ac-hero-inner">
-        <div class="ac-hero-badge">
+        <!-- Hidden for now — set t-if="True" (or remove t-if) to show again -->
+        <div class="ac-hero-badge" t-if="False">
             🏏 &#160; India's #1 Cricket Auction &amp; Tournament Platform
         </div>
 
@@ -110,14 +99,15 @@
         </p>
 
         <div class="ac-hero-btns">
-            <a t-att-href="config.demo_url or '#contact'" class="ac-btn ac-btn-primary">
-                <i class="fas fa-calendar-check"></i>
-                Request Demo
-            </a>
-            <a t-att-href="config.watch_auction_url or '/auction/showcase'" class="ac-btn ac-btn-outline">
-                <i class="fas fa-play-circle"></i>
-                Watch Live Auction
-            </a>
+            <!-- Placeholder — wire YouTube demo URL later -->
+            <button type="button"
+                    class="ac-btn ac-btn-primary ac-btn-watch-demo"
+                    disabled="disabled"
+                    aria-disabled="true"
+                    title="Demo video coming soon">
+                <i class="fas fa-play"/>
+                Watch Demo
+            </button>
         </div>
 
         <!-- Statistics Strip -->
@@ -411,9 +401,6 @@
                 <li><i class="fas fa-check-circle"></i> Live streaming friendly</li>
                 <li><i class="fas fa-check-circle"></i> Bid history log</li>
             </ul>
-            <a t-att-href="config.watch_auction_url or '/auction/showcase'" class="ac-btn ac-btn-primary">
-                <i class="fas fa-play"></i> Watch Live Demo
-            </a>
         </div>
         <div class="ac-showcase-mockup">
             <i class="fas fa-gavel ac-mockup-icon"></i>
@@ -894,11 +881,7 @@
         <h2>Ready to Run Your Next Cricket Auction<br/>Like a Professional?</h2>
         <p>Join hundreds of tournament organizers across India who trust AuctionChamp.</p>
         <div class="ac-cta-btns">
-            <a t-att-href="config.book_demo_url or '#contact'" class="ac-btn ac-btn-white">
-                <i class="fas fa-calendar-check"></i>
-                Book Free Demo
-            </a>
-            <a t-att-href="config.contact_sales_url or 'mailto:sales@auctionchamp.in'" class="ac-btn ac-btn-outline">
+            <a t-att-href="config.contact_sales_url or 'mailto:sales@auctionchamp.in'" class="ac-btn ac-btn-white">
                 <i class="fas fa-envelope"></i>
                 Contact Sales
             </a>

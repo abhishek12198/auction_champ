@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ac_saas_plan_tree" model="ir.ui.view">
+        <field name="name">ac.saas.plan.tree</field>
+        <field name="model">ac.saas.plan</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="recommended"/>
+                <field name="currency_id" invisible="1"/>
+                <field name="list_price"/>
+                <field name="price_per_tournament"/>
+                <field name="validity_days"/>
+                <field name="show_price_on_website"/>
+                <field name="max_tournaments"/>
+                <field name="max_teams_per_tournament"/>
+                <field name="max_players_per_tournament"/>
+                <field name="allow_random_mode"/>
+                <field name="allow_auctioneer_console"/>
+                <field name="allow_owner_bidding"/>
+                <field name="allow_pool_creator"/>
+                <field name="allow_parallel_sessions"/>
+                <field name="allow_mystery_players"/>
+                <field name="account_count"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_ac_saas_plan_form" model="ir.ui.view">
+        <field name="name">ac.saas.plan.form</field>
+        <field name="model">ac.saas.plan</field>
+        <field name="arch" type="xml">
+            <form string="SaaS Plan">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Plan name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Identity">
+                            <field name="code"/>
+                            <field name="sequence"/>
+                            <field name="recommended"/>
+                            <field name="active"/>
+                            <field name="contact_support"/>
+                        </group>
+                        <group string="Package quotas">
+                            <field name="max_tournaments"/>
+                            <field name="max_teams_per_tournament"/>
+                            <field name="max_players_per_tournament"/>
+                        </group>
+                    </group>
+                    <group string="Package price (one-time purchase)">
+                        <group>
+                            <field name="currency_id"/>
+                            <field name="list_price"/>
+                            <field name="price_per_tournament"/>
+                            <field name="validity_days"/>
+                        </group>
+                        <group>
+                            <field name="price_label"
+                                   placeholder="e.g. Contact us / Custom quote"/>
+                            <field name="show_price_on_website"/>
+                            <p class="text-muted">
+                                One-time package price for the tournament quota above.
+                                Website shows e.g. ₹500 with (₹167 per tournament) and
+                                “Valid for N days”.
+                            </p>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Features">
+                            <field name="allow_random_mode"/>
+                            <field name="allow_auctioneer_console"/>
+                            <field name="allow_owner_bidding"/>
+                            <field name="allow_pool_creator"/>
+                            <field name="allow_parallel_sessions"/>
+                            <field name="allow_mystery_players"/>
+                            <field name="allow_roster_print_settings"/>
+                            <field name="allow_roster_print_auction_screen"/>
+                            <p class="text-muted" colspan="2">
+                                Feature toggles above are the only place to configure
+                                organiser apps (Auctioneer Console, Pool Creator, …).
+                                Matching security groups are granted or revoked automatically
+                                when the plan (or an account’s plan) changes.
+                            </p>
+                        </group>
+                        <group string="Player Cards">
+                            <field name="allowed_player_templates"/>
+                            <p class="text-muted">Comma-separated keys: vanilla, butterscotch, strawberry, cherry, pistah, lemon, blackberry</p>
+                        </group>
+                    </group>
+                    <field name="description" placeholder="Plan description…"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_ac_saas_plan" model="ir.actions.act_window">
+        <field name="name">Plans</field>
+        <field name="res_model">ac.saas.plan</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

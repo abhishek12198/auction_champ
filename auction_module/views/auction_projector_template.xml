@@ -1120,7 +1120,9 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   mix-blend-mode:screen;
   filter:sepia(1) saturate(14) hue-rotate(70deg) brightness(1.05);
   opacity:.95;pointer-events:none}
-.pj-photo-status[data-kind="unsold"] .pj-status-seal-mark{display:none}
+.pj-photo-status[data-kind="unsold"] .pj-status-seal-mark{
+  display:block;
+  filter:sepia(1) saturate(18) hue-rotate(-45deg) brightness(1.02)}
 .pj-status-seal-logo{
   position:absolute;z-index:3;
   left:50%;top:46%;transform:translate(-50%,-50%);

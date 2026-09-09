@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="plan_standard" model="ac.saas.plan">
+        <field name="name">Starter</field>
+        <field name="code">standard</field>
+        <field name="sequence">10</field>
+        <field name="recommended" eval="True"/>
+        <field name="description">Recommended for mini leagues or friendly leagues, pool creator.</field>
+        <field name="list_price">400.0</field>
+        <field name="validity_days">90</field>
+        <field name="show_price_on_website" eval="True"/>
+        <field name="max_tournaments">1</field>
+        <field name="max_teams_per_tournament">8</field>
+        <field name="max_players_per_tournament">100</field>
+        <field name="allow_random_mode" eval="True"/>
+        <field name="allow_auctioneer_console" eval="False"/>
+        <field name="allow_owner_bidding" eval="False"/>
+        <field name="allow_pool_creator" eval="True"/>
+        <field name="allow_roster_print_settings" eval="True"/>
+        <field name="allow_roster_print_auction_screen" eval="False"/>
+        <field name="allow_parallel_sessions" eval="False"/>
+        <field name="allow_mystery_players" eval="False"/>
+        <field name="allowed_player_templates">lemon</field>
+        <field name="contact_support" eval="False"/>
+    </record>
+
+    <record id="plan_classic" model="ac.saas.plan">
+        <field name="name">Classic</field>
+        <field name="code">classic</field>
+        <field name="sequence">20</field>
+        <field name="recommended" eval="False"/>
+        <field name="description">Mini tournaments with auctioneer console and random mode, pool creator.</field>
+        <field name="list_price">600.0</field>
+        <field name="validity_days">180</field>
+        <field name="show_price_on_website" eval="True"/>
+        <field name="max_tournaments">3</field>
+        <field name="max_teams_per_tournament">12</field>
+        <field name="max_players_per_tournament">150</field>
+        <field name="allow_random_mode" eval="True"/>
+        <field name="allow_auctioneer_console" eval="True"/>
+        <field name="allow_owner_bidding" eval="False"/>
+        <field name="allow_pool_creator" eval="True"/>
+        <field name="allow_roster_print_settings" eval="True"/>
+        <field name="allow_roster_print_auction_screen" eval="True"/>
+        <field name="allow_parallel_sessions" eval="False"/>
+        <field name="allow_mystery_players" eval="False"/>
+        <field name="allowed_player_templates">lemon,vanilla</field>
+        <field name="contact_support" eval="False"/>
+    </record>
+
+    <record id="plan_pro" model="ac.saas.plan">
+        <field name="name">Pro</field>
+        <field name="code">pro</field>
+        <field name="sequence">30</field>
+        <field name="recommended" eval="False"/>
+        <field name="description">Premier leagues with owners remote bidding, pool creator, and parallel tournaments across devices.</field>
+        <field name="list_price">700.0</field>
+        <field name="validity_days">210</field>
+        <field name="show_price_on_website" eval="True"/>
+        <field name="max_tournaments">4</field>
+        <field name="max_teams_per_tournament">12</field>
+        <field name="max_players_per_tournament">150</field>
+        <field name="allow_random_mode" eval="True"/>
+        <field name="allow_auctioneer_console" eval="True"/>
+        <field name="allow_owner_bidding" eval="True"/>
+        <field name="allow_pool_creator" eval="True"/>
+        <field name="allow_roster_print_settings" eval="True"/>
+        <field name="allow_roster_print_auction_screen" eval="True"/>
+        <field name="allow_parallel_sessions" eval="True"/>
+        <field name="allow_mystery_players" eval="True"/>
+        <field name="allowed_player_templates">lemon,vanilla,strawberry</field>
+        <field name="contact_support" eval="False"/>
+    </record>
+
+    <record id="plan_pro_plus" model="ac.saas.plan">
+        <field name="name">Champion</field>
+        <field name="code">pro_plus</field>
+        <field name="sequence">40</field>
+        <field name="recommended" eval="False"/>
+        <field name="description">Large premier setups with parallel multi-device tournaments. Beyond this, contact support.</field>
+        <field name="list_price">1000.0</field>
+        <field name="validity_days">365</field>
+        <field name="show_price_on_website" eval="True"/>
+        <field name="max_tournaments">8</field>
+        <field name="max_teams_per_tournament">24</field>
+        <field name="max_players_per_tournament">300</field>
+        <field name="allow_random_mode" eval="True"/>
+        <field name="allow_auctioneer_console" eval="True"/>
+        <field name="allow_owner_bidding" eval="True"/>
+        <field name="allow_pool_creator" eval="True"/>
+        <field name="allow_roster_print_settings" eval="True"/>
+        <field name="allow_roster_print_auction_screen" eval="True"/>
+        <field name="allow_parallel_sessions" eval="True"/>
+        <field name="allow_mystery_players" eval="True"/>
+        <field name="allowed_player_templates">strawberry,cherry,pistah</field>
+        <field name="contact_support" eval="True"/>
+    </record>
+</odoo>

@@ -1,0 +1,543 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!-- Shared chrome snippets via t-call style duplicated for standalone pages -->
+
+<template id="saas_signup_form" name="SaaS Plan Signup Form">
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Get Started — AuctionChamp</title>
+    <t t-call="auction_module.page_head_favicon"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Poppins:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="/ac_saas_payment/static/src/css/signup.css"/>
+</head>
+<body class="ac-su-body">
+  <nav class="ac-su-nav">
+    <div class="ac-su-nav-inner">
+      <a href="/" class="ac-su-nav-brand" title="AuctionChamp">
+        <img class="ac-su-nav-logo"
+             src="/auction_module/static/src/assets/images/logo.svg"
+             alt="AuctionChamp"/>
+      </a>
+      <div class="ac-su-nav-links">
+        <a href="/#pricing">Plans</a>
+        <a href="/web/login" class="ac-su-nav-login">Login</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="ac-su-hero">
+    <div class="ac-su-hero-inner">
+      <div class="ac-su-label">Create your account</div>
+      <h1>Start with <span class="hl" t-esc="plan.name"/></h1>
+      <p>Two details. Secure payment. Instant access emailed to you.</p>
+    </div>
+  </section>
+
+  <main class="ac-su-main">
+    <div class="ac-su-grid">
+      <div class="ac-su-card">
+        <div class="ac-su-card-body">
+          <h2 class="ac-su-card-title">Your details</h2>
+          <p class="ac-su-card-sub">Name, email and contact number are enough to create your account.</p>
+
+          <t t-if="error and not email_error">
+            <div class="ac-su-error" t-esc="error"/>
+          </t>
+
+          <form method="post" t-att-action="'/saas/signup/%s' % plan.id" id="acSuSignupForm">
+            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+            <div class="ac-su-fields">
+              <div class="ac-su-field">
+                <label for="buyer_name">Full name</label>
+                <input type="text" id="buyer_name" name="buyer_name" required="required"
+                       autocomplete="name"
+                       t-att-value="form.get('buyer_name') or ''"
+                       placeholder="e.g. Rahul Sharma"/>
+              </div>
+              <div class="ac-su-field">
+                <label for="buyer_email">Email (used as login)</label>
+                <input type="email" id="buyer_email" name="buyer_email" required="required"
+                       autocomplete="email"
+                       t-att-class="'ac-su-input-error' if email_error else None"
+                       t-att-value="form.get('buyer_email') or ''"
+                       placeholder="you@example.com"/>
+                <p class="ac-su-field-hint ac-su-field-error" id="buyerEmailHint"
+                   t-att-style="'display:block;' if email_error else 'display:none;'"
+                   t-esc="email_error or ''"/>
+              </div>
+              <div class="ac-su-field">
+                <label for="buyer_phone">Contact number</label>
+                <input type="tel" id="buyer_phone" name="buyer_phone" required="required"
+                       autocomplete="tel"
+                       t-att-value="form.get('buyer_phone') or ''"
+                       placeholder="e.g. 9876543210"/>
+              </div>
+            </div>
+            <div class="ac-su-actions">
+              <button type="submit" class="ac-su-btn ac-su-btn-primary" id="acSuSubmitBtn">
+                Continue to payment
+                <i class="fas fa-arrow-right" aria-hidden="true"/>
+              </button>
+              <a href="/#pricing" class="ac-su-btn ac-su-btn-ghost">Choose another plan</a>
+            </div>
+            <p class="ac-su-fine">
+              By continuing you agree to our
+              <a href="/terms-and-conditions">Terms</a> and <a href="/privacy-policy">Privacy Policy</a>.
+              Password is generated and emailed after payment.
+            </p>
+          </form>
+          <script type="text/javascript">
+          //<![CDATA[
+          (function () {
+            var emailInput = document.getElementById('buyer_email');
+            var hint = document.getElementById('buyerEmailHint');
+            var form = document.getElementById('acSuSignupForm');
+            var submitBtn = document.getElementById('acSuSubmitBtn');
+            var emailTaken = false;
+            var timer = null;
+
+            function setHint(msg, isError) {
+              if (!hint) return;
+              if (msg) {
+                hint.style.display = 'block';
+                hint.textContent = msg;
+                hint.className = 'ac-su-field-hint' + (isError ? ' ac-su-field-error' : '');
+              } else {
+                hint.style.display = 'none';
+                hint.textContent = '';
+              }
+              if (emailInput) {
+                emailInput.classList.toggle('ac-su-input-error', !!isError);
+              }
+              if (submitBtn) {
+                submitBtn.disabled = !!isError && emailTaken;
+              }
+            }
+
+            function checkEmail() {
+              var email = (emailInput && emailInput.value || '').trim();
+              if (!email) {
+                emailTaken = false;
+                setHint('', false);
+                return;
+              }
+              fetch('/saas/signup/check_email', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                  jsonrpc: '2.0',
+                  method: 'call',
+                  params: { email: email },
+                  id: Date.now()
+                })
+              }).then(function (r) { return r.json(); })
+                .then(function (payload) {
+                  var result = (payload && payload.result) || {};
+                  emailTaken = !!result.taken;
+                  if (result.message) {
+                    setHint(result.message, !result.ok || result.taken);
+                  } else {
+                    setHint('', false);
+                  }
+                })
+                .catch(function () { /* ignore network blips while typing */ });
+            }
+
+            if (emailInput) {
+              emailInput.addEventListener('input', function () {
+                emailTaken = false;
+                if (submitBtn) submitBtn.disabled = false;
+                clearTimeout(timer);
+                timer = setTimeout(checkEmail, 400);
+              });
+              emailInput.addEventListener('blur', checkEmail);
+            }
+            if (form) {
+              form.addEventListener('submit', function (e) {
+                if (emailTaken) {
+                  e.preventDefault();
+                  setHint('This email is already registered. Please log in or use a different email.', true);
+                }
+              });
+            }
+          })();
+          //]]>
+          </script>
+        </div>
+      </div>
+
+      <aside class="ac-su-plan">
+        <div class="ac-su-plan-top">
+          <div class="ac-su-plan-kicker">Selected plan</div>
+          <h3 class="ac-su-plan-name" t-esc="plan.name"/>
+        </div>
+        <div class="ac-su-plan-body">
+          <div class="ac-su-plan-price" t-esc="amount_label"/>
+          <p t-if="price_validity" class="ac-su-plan-validity" t-esc="price_validity"/>
+          <ul class="ac-su-plan-list">
+            <li><i class="fas fa-check"/><span>Up to <t t-esc="plan.max_tournaments"/> tournaments</span></li>
+            <li><i class="fas fa-check"/><span>Up to <t t-esc="plan.max_teams_per_tournament"/> teams / tournament</span></li>
+            <li><i class="fas fa-check"/><span>Up to <t t-esc="plan.max_players_per_tournament"/> players / tournament</span></li>
+            <li><i class="fas fa-check"/><span>Full auction tools included</span></li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="ac-su-footer">
+    <div class="ac-su-footer-inner">
+      <div class="ac-su-powered">
+        <span class="ac-su-powered-label">Powered by</span>
+        <img class="ac-su-footer-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+      </div>
+      <p class="ac-su-footer-copy">© AuctionChamp · India's cricket auction platform</p>
+    </div>
+  </footer>
+</body>
+</html>
+</template>
+
+<template id="saas_signup_pay" name="SaaS Signup Razorpay Checkout">
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Secure payment — AuctionChamp</title>
+    <t t-call="auction_module.page_head_favicon"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Poppins:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="/ac_saas_payment/static/src/css/signup.css"/>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body class="ac-su-body">
+  <nav class="ac-su-nav">
+    <div class="ac-su-nav-inner">
+      <a href="/" class="ac-su-nav-brand" title="AuctionChamp">
+        <img class="ac-su-nav-logo"
+             src="/auction_module/static/src/assets/images/logo.svg"
+             alt="AuctionChamp"/>
+      </a>
+      <div class="ac-su-nav-links">
+        <a href="/web/login" class="ac-su-nav-login">Login</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="ac-su-hero">
+    <div class="ac-su-hero-inner">
+      <div class="ac-su-label">Secure checkout</div>
+      <h1>Complete your <span class="hl">purchase</span></h1>
+      <p>Pay with Razorpay. Your login details are emailed right after payment.</p>
+    </div>
+  </section>
+
+  <main class="ac-su-main">
+    <div class="ac-su-grid">
+      <div class="ac-su-card">
+        <div class="ac-su-card-body">
+          <h2 class="ac-su-card-title">Order summary</h2>
+          <p class="ac-su-card-sub">Confirm and pay to activate your account.</p>
+
+          <div class="ac-su-row">
+            <span class="k">Name</span>
+            <span class="v" t-esc="payment.buyer_name"/>
+          </div>
+          <div class="ac-su-row">
+            <span class="k">Email / login</span>
+            <span class="v" t-esc="payment.buyer_email"/>
+          </div>
+          <div t-if="payment.buyer_phone" class="ac-su-row">
+            <span class="k">Contact</span>
+            <span class="v" t-esc="payment.buyer_phone"/>
+          </div>
+          <div class="ac-su-row">
+            <span class="k">Plan</span>
+            <span class="v" t-esc="plan.name"/>
+          </div>
+          <div class="ac-su-row">
+            <span class="k">Reference</span>
+            <span class="v" t-esc="payment.name"/>
+          </div>
+
+          <div class="ac-su-amount">
+            <div class="label">Amount due</div>
+            <div class="value" t-esc="amount_label"/>
+          </div>
+
+          <div class="ac-su-actions">
+            <button type="button" class="ac-su-btn ac-su-btn-primary" id="acSaasPayBtn">
+              <i class="fas fa-lock" aria-hidden="true"/>
+              Pay with Razorpay
+            </button>
+            <a t-att-href="home_url or '/'" class="ac-su-btn ac-su-btn-ghost">Cancel</a>
+          </div>
+          <div class="ac-su-error" id="acSaasPayErr" style="display:none;margin-top:14px;"/>
+          <div class="ac-su-secure">
+            <span class="ac-su-secure-dot"/>
+            <span>256-bit encrypted checkout via Razorpay</span>
+          </div>
+        </div>
+      </div>
+
+      <aside class="ac-su-plan">
+        <div class="ac-su-plan-top">
+          <div class="ac-su-plan-kicker">What you get</div>
+          <h3 class="ac-su-plan-name" t-esc="plan.name"/>
+        </div>
+        <div class="ac-su-plan-body">
+          <ul class="ac-su-plan-list">
+            <li><i class="fas fa-check"/><span>Instant SaaS account activation</span></li>
+            <li><i class="fas fa-check"/><span>Login credentials emailed automatically</span></li>
+            <li><i class="fas fa-check"/><span>Up to <t t-esc="plan.max_tournaments"/> tournaments</span></li>
+            <li><i class="fas fa-check"/><span>Full auction management suite</span></li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="ac-su-footer">
+    <div class="ac-su-footer-inner">
+      <div class="ac-su-powered">
+        <span class="ac-su-powered-label">Powered by</span>
+        <img class="ac-su-footer-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+      </div>
+      <p class="ac-su-footer-copy">© AuctionChamp · India's cricket auction platform</p>
+    </div>
+  </footer>
+
+  <script type="application/json" id="ac-saas-rzp-checkout"><t t-raw="razorpay_checkout_json"/></script>
+  <div id="acSaasRzpMeta"
+       t-att-data-verify-url="razorpay_verify_url"
+       t-att-data-auto-open="'1' if razorpay_auto_open else '0'"
+       style="display:none;"/>
+  <script type="text/javascript">
+  //<![CDATA[
+  (function () {
+    var checkoutEl = document.getElementById('ac-saas-rzp-checkout');
+    var btn = document.getElementById('acSaasPayBtn');
+    var err = document.getElementById('acSaasPayErr');
+    var meta = document.getElementById('acSaasRzpMeta');
+    var verifyUrl = (meta && meta.getAttribute('data-verify-url')) || '';
+    var autoOpen = meta && meta.getAttribute('data-auto-open') === '1';
+
+    function showErr(msg) {
+      if (!err) return;
+      err.style.display = 'block';
+      err.textContent = msg || 'Payment failed.';
+    }
+
+    function openCheckout() {
+      var checkout = {};
+      try {
+        checkout = JSON.parse((checkoutEl && checkoutEl.textContent) || '{}');
+      } catch (e) {
+        showErr('Invalid checkout data.');
+        return;
+      }
+      if (!window.Razorpay) {
+        showErr('Razorpay could not load. Check your network and try again.');
+        return;
+      }
+      var options = {
+        key: checkout.key_id,
+        amount: checkout.amount,
+        currency: checkout.currency,
+        name: checkout.name || 'AuctionChamp',
+        description: checkout.description || '',
+        order_id: checkout.order_id,
+        prefill: checkout.prefill || {},
+        theme: { color: '#0d1b2a' },
+        handler: function (response) {
+          fetch(verifyUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              method: 'call',
+              params: {
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature
+              },
+              id: Date.now()
+            })
+          }).then(function (r) { return r.json(); })
+            .then(function (payload) {
+              var result = (payload && payload.result) || payload || {};
+              if (result.ok) {
+                window.location.href = result.redirect_url || '/';
+              } else {
+                showErr(result.error || 'Verification failed.');
+              }
+            })
+            .catch(function () {
+              showErr('Could not verify payment. Contact support with your payment id.');
+            });
+        },
+        modal: {
+          ondismiss: function () {
+            showErr('Payment cancelled. You can try again.');
+          }
+        }
+      };
+      new window.Razorpay(options).open();
+    }
+
+    if (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        openCheckout();
+      });
+    }
+    if (autoOpen) {
+      setTimeout(openCheckout, 400);
+    }
+  })();
+  //]]>
+  </script>
+</body>
+</html>
+</template>
+
+<template id="saas_signup_done" name="SaaS Signup Done">
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Account ready — AuctionChamp</title>
+    <t t-call="auction_module.page_head_favicon"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Poppins:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/ac_saas_payment/static/src/css/signup.css"/>
+</head>
+<body class="ac-su-body">
+  <nav class="ac-su-nav">
+    <div class="ac-su-nav-inner">
+      <a href="/" class="ac-su-nav-brand" title="AuctionChamp">
+        <img class="ac-su-nav-logo"
+             src="/auction_module/static/src/assets/images/logo.svg"
+             alt="AuctionChamp"/>
+      </a>
+      <div class="ac-su-nav-links">
+        <a t-att-href="login_url" class="ac-su-nav-login">Login</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="ac-su-hero">
+    <div class="ac-su-hero-inner">
+      <div class="ac-su-label">Welcome aboard</div>
+      <h1>You're on <span class="hl" t-esc="plan.name"/>!</h1>
+      <p>Payment received. Your account is ready.</p>
+    </div>
+  </section>
+
+  <div class="ac-su-status">
+    <div class="ac-su-status-icon ok">✓</div>
+    <h1>Check your email</h1>
+    <p>
+      Login details were sent to <strong t-esc="login"/>.
+      Use the temporary password from that email to sign in.
+    </p>
+    <div class="ac-su-row">
+      <span class="k">Access</span>
+      <span class="v"><a t-att-href="login_url">Auction Management Panel</a></span>
+    </div>
+    <div class="ac-su-row">
+      <span class="k">Username</span>
+      <span class="v" t-esc="login"/>
+    </div>
+    <div class="ac-su-actions" style="margin-top:22px;">
+      <a t-att-href="login_url" class="ac-su-btn ac-su-btn-primary">Open Auction Management Panel</a>
+      <a href="/" class="ac-su-btn ac-su-btn-ghost">Back to website</a>
+    </div>
+  </div>
+
+  <footer class="ac-su-footer">
+    <div class="ac-su-footer-inner">
+      <div class="ac-su-powered">
+        <span class="ac-su-powered-label">Powered by</span>
+        <img class="ac-su-footer-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+      </div>
+      <p class="ac-su-footer-copy">© AuctionChamp · India's cricket auction platform</p>
+    </div>
+  </footer>
+</body>
+</html>
+</template>
+
+<template id="saas_signup_error" name="SaaS Signup Error">
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Signup — AuctionChamp</title>
+    <t t-call="auction_module.page_head_favicon"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Poppins:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/ac_saas_payment/static/src/css/signup.css"/>
+</head>
+<body class="ac-su-body">
+  <nav class="ac-su-nav">
+    <div class="ac-su-nav-inner">
+      <a href="/" class="ac-su-nav-brand" title="AuctionChamp">
+        <img class="ac-su-nav-logo"
+             src="/auction_module/static/src/assets/images/logo.svg"
+             alt="AuctionChamp"/>
+      </a>
+      <div class="ac-su-nav-links">
+        <a href="/#pricing">Plans</a>
+        <a href="/web/login" class="ac-su-nav-login">Login</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="ac-su-hero">
+    <div class="ac-su-hero-inner">
+      <div class="ac-su-label">Signup</div>
+      <h1>Unable to <span class="hl">continue</span></h1>
+    </div>
+  </section>
+
+  <div class="ac-su-status">
+    <div class="ac-su-status-icon err">!</div>
+    <h1>Something went wrong</h1>
+    <p t-esc="message or 'Please try again or contact support.'"/>
+    <div class="ac-su-actions">
+      <a href="/#pricing" class="ac-su-btn ac-su-btn-primary">Back to pricing</a>
+    </div>
+  </div>
+
+  <footer class="ac-su-footer">
+    <div class="ac-su-footer-inner">
+      <div class="ac-su-powered">
+        <span class="ac-su-powered-label">Powered by</span>
+        <img class="ac-su-footer-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
+</template>
+
+</odoo>

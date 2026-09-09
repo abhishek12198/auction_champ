@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ac_saas_account_tree" model="ir.ui.view">
+        <field name="name">ac.saas.account.tree</field>
+        <field name="model">ac.saas.account</field>
+        <field name="arch" type="xml">
+            <tree decoration-danger="state == 'suspended'"
+                  decoration-muted="state == 'expired' or active == False"
+                  decoration-info="state == 'draft'">
+                <field name="name"/>
+                <field name="user_id"/>
+                <field name="plan_id"/>
+                <field name="state"/>
+                <field name="tournament_count"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_ac_saas_account_form" model="ir.ui.view">
+        <field name="name">ac.saas.account.form</field>
+        <field name="model">ac.saas.account</field>
+        <field name="arch" type="xml">
+            <form string="SaaS Account">
+                <header>
+                    <button name="action_activate" type="object" string="Activate"
+                            class="oe_highlight"
+                            states="draft,expired"
+                            confirm="Activate this account and allow the login user to sign in?"/>
+                    <button name="action_suspend" type="object" string="Suspend"
+                            class="btn-danger"
+                            states="active"
+                            confirm="Suspend this account? The login user will immediately be unable to sign in."/>
+                    <button name="action_reactivate" type="object" string="Reactivate"
+                            class="oe_highlight"
+                            states="suspended"
+                            confirm="Reactivate this account and restore login access for the user?"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,active,suspended,expired"
+                           readonly="1"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_tournaments" type="object"
+                                class="oe_stat_button" icon="fa-trophy">
+                            <field name="tournament_count" widget="statinfo" string="Tournaments"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Account / Organisation name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Login">
+                            <field name="user_id" options="{'no_create_edit': False}"/>
+                            <field name="partner_id" readonly="1"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Subscription">
+                            <field name="plan_id"/>
+                            <field name="allow_parallel_sessions" invisible="1"/>
+                            <field name="disable_parallel_sessions"
+                                   attrs="{'invisible': [('allow_parallel_sessions', '=', False)]}"/>
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                        </group>
+                    </group>
+                    <group string="Plan Limits">
+                        <group>
+                            <field name="max_tournaments"/>
+                            <field name="max_teams_per_tournament"/>
+                            <field name="max_players_per_tournament"/>
+                            <field name="allow_auctioneer_console"/>
+                            <field name="allow_pool_creator"/>
+                        </group>
+                        <group>
+                            <field name="tournament_count"/>
+                            <field name="team_count"/>
+                            <field name="player_count"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Tournaments">
+                            <field name="tournament_ids">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="tournament_type"/>
+                                    <field name="player_display_template"/>
+                                    <field name="player_appearance_algorithm"/>
+                                    <field name="max_registrations"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Notes">
+                            <field name="notes" placeholder="Internal notes…"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Show SaaS account on tournament form (inherit only — no auction_module file edit) -->
+    <record id="view_auction_tournament_form_saas" model="ir.ui.view">
+        <field name="name">auction.tournament.form.saas</field>
+        <field name="model">auction.tournament</field>
+        <field name="inherit_id" ref="auction_module.view_auction_tournament_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='tournament_type']" position="after">
+                <field name="saas_account_id"
+                         groups="ac_saas_manager.group_saas_manager,auction_module.group_auction_group_admin"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_ac_saas_account" model="ir.actions.act_window">
+        <field name="name">Accounts</field>
+        <field name="res_model">ac.saas.account</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

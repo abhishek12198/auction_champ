@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Repair organiser ↔ tournament links after upgrade -->
+    <function model="ac.saas.account" name="_sync_all_user_tournament_links"/>
+    <!-- Grant Player Card Print (and other plan groups) to existing accounts -->
+    <function model="ac.saas.account" name="_sync_all_user_groups"/>
+    <!-- Clamp Max Registrations on SaaS tournaments to plan limits -->
+    <function model="auction.tournament" name="_saas_repair_max_registrations"/>
+</odoo>

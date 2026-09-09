@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Auth cluster for website nav (desktop actions + mobile drawer). -->
+    <template id="website_nav_auth" name="AuctionChamp Website Nav Auth">
+        <t t-set="ac_nav_logged_in"
+           t-value="bool(request.session.uid) and not request.env.user._is_public()"/>
+        <t t-if="ac_nav_logged_in">
+            <a href="/web" class="ac-nav-tool" title="Open AuctionChamp tools">
+                <i class="fas fa-gauge-high"/>
+                <span>Go to Tool</span>
+            </a>
+            <a href="/web/session/logout?redirect=/" class="ac-nav-logout" title="Sign out">
+                Logout
+            </a>
+        </t>
+        <t t-else="">
+            <a href="/web" class="ac-nav-tool" title="Go to AuctionChamp backend">
+                <i class="fas fa-right-to-bracket"/>
+                <span>Login</span>
+            </a>
+        </t>
+    </template>
+</odoo>

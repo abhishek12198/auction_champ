@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ac_payment_tx_user,ac.payment.transaction user,model_ac_payment_transaction,base.group_user,1,0,0,0
+access_ac_payment_tx_manager,ac.payment.transaction manager,model_ac_payment_transaction,base.group_system,1,1,1,1
+access_ac_payment_tx_public,ac.payment.transaction public,model_ac_payment_transaction,base.group_public,1,0,0,0

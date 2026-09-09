@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Window action: SaaS users manage only their own tournaments -->
+    <record id="action_saas_tournament" model="ir.actions.act_window">
+        <field name="name">Tournament(s)</field>
+        <field name="res_model">auction.tournament</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="domain">[('saas_account_id.user_id', '=', uid)]</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Tournament
+            </p>
+            <p>
+                Set up your tournament, add teams and players, then open Player Showcase.
+            </p>
+        </field>
+    </record>
+
+    <!-- Top-level menu (admin Tournament menu is admin-only; SaaS users need their own) -->
+    <menuitem id="menu_saas_tournament"
+              name="Tournament(s)"
+              action="action_saas_tournament"
+              sequence="10"
+              web_icon="auction_module,static/img/tournament_root.png"
+              groups="ac_saas_manager.group_saas_account_user"/>
+    <record id="menu_saas_tournament" model="ir.ui.menu">
+        <field name="parent_id" eval="False"/>
+        <field name="sequence">10</field>
+    </record>
+
+    <menuitem id="menu_ac_saas_root"
+              name="SaaS Manager"
+              sequence="200"
+              web_icon="ac_saas_manager,static/src/img/icon.png"
+              groups="ac_saas_manager.group_saas_manager,auction_module.group_auction_group_admin"/>
+
+    <menuitem id="menu_ac_saas_accounts"
+              name="Accounts"
+              parent="menu_ac_saas_root"
+              action="action_ac_saas_account"
+              sequence="10"/>
+
+    <menuitem id="menu_ac_saas_plans"
+              name="Plans"
+              parent="menu_ac_saas_root"
+              action="action_ac_saas_plan"
+              sequence="20"/>
+
+    <menuitem id="menu_ac_saas_upgrade_requests"
+              name="Upgrade Requests"
+              parent="menu_ac_saas_root"
+              action="action_ac_saas_upgrade_request"
+              sequence="15"/>
+
+    <function model="res.users" name="_auction_reorder_root_menus"/>
+</odoo>
