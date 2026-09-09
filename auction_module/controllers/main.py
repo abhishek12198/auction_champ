@@ -6920,9 +6920,24 @@ def _pj_player_state_counts(tournament, env=None):
     return counts
 
 
+def _pj_has_binary(record, field_name):
+    """True if a Binary field has data — without loading the attachment payload.
+
+    Truth-checking ``record.photo`` / ``.logo`` / snapshots pulls full bytes from
+    ``ir.attachment`` and makes projector + post-action rebuilds feel stuck.
+    ``bin_size`` returns a size placeholder (or False) instead.
+    """
+    if not record:
+        return False
+    try:
+        return bool(record.with_context(bin_size=True)[field_name])
+    except Exception:
+        return False
+
+
 def _pj_player_photo_url(db_name, player, projector_size=True):
     """Public photo URL with write_date cache-buster (+ optional projector resize)."""
-    if not player or not player.photo:
+    if not player or not _pj_has_binary(player, 'photo'):
         return ''
     ver = ''
     if player.write_date:
@@ -7094,8 +7109,9 @@ def _pj_boards(tournament, db_name, env=None):
             pass
         pool_draw_json = getattr(tournament, 'pool_draw_json', None)
         fixture_schedule_json = getattr(tournament, 'fixture_schedule_json', None)
-        pool_snap = getattr(tournament, 'pool_draw_snapshot', None)
-        fix_snap = getattr(tournament, 'fixture_schedule_snapshot', None)
+        # Snapshots are multi-MB PNGs — never truth-check without bin_size.
+        pool_snap = _pj_has_binary(tournament, 'pool_draw_snapshot')
+        fix_snap = _pj_has_binary(tournament, 'fixture_schedule_snapshot')
 
         ver = ''
         if tournament.write_date:
@@ -7262,7 +7278,7 @@ def _pj_teams(tournament, db_name, leading_team_id=None, env=None, player_on_sta
             except Exception:
                 max_call = 0
         logo_url = ''
-        if team.logo:
+        if _pj_has_binary(team, 'logo'):
             logo_url = '/%s/auction/public/image/auction.team/%d/logo' % (db_name, team.id)
         out.append({
             'id': team.id,
@@ -7311,7 +7327,7 @@ def _pj_squad(tournament, db_name, env=None):
     teams_out = []
     for team in tournament.team_ids.sorted('name'):
         logo_url = ''
-        if team.logo:
+        if _pj_has_binary(team, 'logo'):
             logo_url = '/%s/auction/public/image/auction.team/%d/logo' % (db_name, team.id)
 
         auction = auctions_by_team.get(team.id)
@@ -7481,7 +7497,7 @@ def _pj_advertisers(tournament, db_name):
         return []
     out = []
     for ad in tournament.advertiser_ids:
-        if not ad.image:
+        if not _pj_has_binary(ad, 'image'):
             continue
         out.append({
             'id': ad.id,
@@ -7508,7 +7524,7 @@ def _pj_top_purse(tournament, env=None):
     team = best[1]
     db_name = env.cr.dbname
     logo_url = ''
-    if team.logo:
+    if _pj_has_binary(team, 'logo'):
         logo_url = '/%s/auction/public/image/auction.team/%d/logo' % (db_name, team.id)
     return {
         'amount': best[0],
@@ -7529,12 +7545,12 @@ def _pj_recent_bids(tournament, db_name, player=None, env=None):
         return out
 
     def _team_logo(team):
-        if team and team.logo:
+        if team and _pj_has_binary(team, 'logo'):
             return '/%s/auction/public/image/auction.team/%d/logo' % (db_name, team.id)
         return ''
 
     def _player_photo(p):
-        if p and p.photo:
+        if p and _pj_has_binary(p, 'photo'):
             return '/%s/auction/public/image/auction.team.player/%d/photo' % (db_name, p.id)
         return ''
 
@@ -7582,7 +7598,7 @@ def _pj_recent_bids(tournament, db_name, player=None, env=None):
         team = rec.team_id
         name = (p.name or '') if p else ''
         photo = _player_photo(p)
-        if not photo and rec.player_photo:
+        if not photo and _pj_has_binary(rec, 'player_photo'):
             photo = '/%s/auction/public/image/auction.history/%d/player_photo' % (db_name, rec.id)
         if p and p.tier_id and p.tier_id.mystery and not p.mystery_revealed:
             name = '???'

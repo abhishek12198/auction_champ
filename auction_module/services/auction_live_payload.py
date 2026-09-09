@@ -53,6 +53,16 @@ def _write_date_ver(write_date):
         return str(write_date).replace(' ', 'T')
 
 
+def _has_binary(record, field_name):
+    """True if Binary field is set, without loading attachment bytes."""
+    if not record:
+        return False
+    try:
+        return bool(record.with_context(bin_size=True)[field_name])
+    except Exception:
+        return False
+
+
 def _public_img_url(db_name, model, record_id, field, write_date=None, sz=''):
     url = '/%s/auction/public/image/%s/%d/%s' % (db_name, model, record_id, field)
     qs = []
@@ -94,12 +104,12 @@ def build_live_board_payload(env, tournament, db_name):
                 'name': ad.name or '',
                 'image_url': pub_img('auction.advertiser', ad.id, 'image', ad.write_date),
             }
-            for ad in tournament.advertiser_ids if ad.image
+            for ad in tournament.advertiser_ids if _has_binary(ad, 'image')
         ]
         result['tournament'] = {
             'name': tournament.name or '',
             'description': tournament.description or '',
-            'logo_url': pub_img('auction.tournament', tournament.id, 'logo', tournament.write_date) if tournament.logo else '',
+            'logo_url': pub_img('auction.tournament', tournament.id, 'logo', tournament.write_date) if _has_binary(tournament, 'logo') else '',
             'tournament_type': tournament.tournament_type or 'cricket',
             'live_bid_sound': bool(tournament.live_bid_sound),
         }
@@ -145,7 +155,7 @@ def build_live_board_payload(env, tournament, db_name):
                 base_price = base
         # bin_size: do not pull the full binary into the snapshot rebuild.
         # Full photo (no sz=pj): the resized stage URL was hanging on live board.
-        has_photo = bool(current_player.with_context(bin_size=True).photo)
+        has_photo = _has_binary(current_player, 'photo')
         result['current_player'] = {
             'id': current_player.id,
             'name': current_player.name or '',
@@ -178,7 +188,7 @@ def build_live_board_payload(env, tournament, db_name):
                 result['current_player']['current_bid_team'] = {
                     'id': cteam.id,
                     'name': cteam.name or '',
-                    'logo_url': pub_img('auction.team', cteam.id, 'logo', cteam.write_date) if cteam.logo else '',
+                    'logo_url': pub_img('auction.team', cteam.id, 'logo', cteam.write_date) if _has_binary(cteam, 'logo') else '',
                 }
         if (result['current_player']['is_mystery']
                 and not result['current_player']['mystery_revealed']):
@@ -209,7 +219,7 @@ def build_live_board_payload(env, tournament, db_name):
             team = current_player.assigned_team_id
             result['sold_info'] = {
                 'team_name': team.name or '',
-                'team_logo_url': pub_img('auction.team', team.id, 'logo', team.write_date) if team.logo else '',
+                'team_logo_url': pub_img('auction.team', team.id, 'logo', team.write_date) if _has_binary(team, 'logo') else '',
                 'amount': auc_line.points if auc_line else 0,
             }
 
@@ -226,7 +236,7 @@ def build_live_board_payload(env, tournament, db_name):
     recent_history = []
     for rec in history:
         msg = rec.message or ''
-        photo_url = pub_img('auction.history', rec.id, 'player_photo', rec.write_date, 'bs') if rec.player_photo else ''
+        photo_url = pub_img('auction.history', rec.id, 'player_photo', rec.write_date, 'bs') if _has_binary(rec, 'player_photo') else ''
         p = rec.player_id
         must_hide = (
             (p and p.tier_id and p.tier_id.mystery and not p.mystery_revealed)
@@ -241,7 +251,7 @@ def build_live_board_payload(env, tournament, db_name):
             photo_url = '/auction_module/static/img/default_icon.png'
         recent_history.append({
             'message': msg,
-            'team_logo_url': pub_img('auction.team', rec.team_id.id, 'logo', rec.team_id.write_date) if rec.team_id and rec.team_id.logo else '',
+            'team_logo_url': pub_img('auction.team', rec.team_id.id, 'logo', rec.team_id.write_date) if rec.team_id and _has_binary(rec.team_id, 'logo') else '',
             'player_photo_url': photo_url,
             'timestamp': rec.create_date.replace(tzinfo=pytz.utc).astimezone(pytz.timezone('Asia/Kolkata')).strftime('%I:%M %p') if rec.create_date else '',
         })
@@ -254,7 +264,7 @@ def build_live_board_payload(env, tournament, db_name):
     for idx, rec in enumerate(top_sold):
         p = rec.player_id
         name = p.name or '' if p else ''
-        photo = pub_img('auction.team.player', p.id, 'photo', p.write_date, 'bs') if p and p.photo else ''
+        photo = pub_img('auction.team.player', p.id, 'photo', p.write_date, 'bs') if p and _has_binary(p, 'photo') else ''
         role = p.role or '' if p else ''
         if p and p.tier_id and p.tier_id.mystery and not p.mystery_revealed:
             name = '???'
@@ -266,7 +276,7 @@ def build_live_board_payload(env, tournament, db_name):
             'player_photo_url': photo,
             'role': role,
             'team_name': rec.auction_id.team_id.name if rec.auction_id and rec.auction_id.team_id else '',
-            'team_logo_url': pub_img('auction.team', rec.auction_id.team_id.id, 'logo', rec.auction_id.team_id.write_date) if rec.auction_id and rec.auction_id.team_id and rec.auction_id.team_id.logo else '',
+            'team_logo_url': pub_img('auction.team', rec.auction_id.team_id.id, 'logo', rec.auction_id.team_id.write_date) if rec.auction_id and rec.auction_id.team_id and _has_binary(rec.auction_id.team_id, 'logo') else '',
             'points': rec.points,
         })
     result['top_players'] = top_players
@@ -295,7 +305,7 @@ def build_live_board_payload(env, tournament, db_name):
                         pos_code = ''.join(w[0] for w in parts).upper()[:3]
                 entry = {
                     'name': p.name or '',
-                    'photo_url': pub_img('auction.team.player', p.id, 'photo', p.write_date, 'bs') if p.photo else '',
+                    'photo_url': pub_img('auction.team.player', p.id, 'photo', p.write_date, 'bs') if _has_binary(p, 'photo') else '',
                     'role': p.role or '',
                     'position_code': pos_code,
                     'position_name': pos_name,
@@ -313,7 +323,7 @@ def build_live_board_payload(env, tournament, db_name):
             result['teams'].append({
                 'id': team.id,
                 'name': team.name or '',
-                'logo_url': pub_img('auction.team', team.id, 'logo', team.write_date) if team.logo else '',
+                'logo_url': pub_img('auction.team', team.id, 'logo', team.write_date) if _has_binary(team, 'logo') else '',
                 'remaining_points': auc.remaining_points,
                 'manager': team.manager or '',
                 'players': players_payload,
@@ -406,7 +416,7 @@ def build_projector_payload(env, tournament, db_name):
 
     photo = ''
     photo_url = ''
-    if player.photo:
+    if _has_binary(player, 'photo'):
         photo_url = ctrl._pj_player_photo_url(db_name, player)
         photo = ''
     team_logo = ''
@@ -414,7 +424,7 @@ def build_projector_payload(env, tournament, db_name):
     team_name = ''
     if player.assigned_team_id:
         team_name = player.assigned_team_id.name or ''
-        if player.assigned_team_id.logo:
+        if _has_binary(player.assigned_team_id, 'logo'):
             team_logo_url = '/%s/auction/public/image/auction.team/%d/logo' % (
                 db_name, player.assigned_team_id.id)
     sold_points = 0
@@ -483,7 +493,7 @@ def build_projector_payload(env, tournament, db_name):
                 'name': cteam.name or '',
                 'logo_url': (
                     '/%s/auction/public/image/auction.team/%d/logo' % (db_name, cteam.id)
-                    if cteam.logo else ''
+                    if _has_binary(cteam, 'logo') else ''
                 ),
             }
     return {
@@ -675,7 +685,7 @@ def build_balance_player_buckets(env, tournament, db_name=None):
                     _public_img_url(
                         db_name, 'auction.team.player', player.id, 'photo',
                         player.write_date, sz='bs',
-                    ) if player.photo else ''
+                    ) if _has_binary(player, 'photo') else ''
                 )
             ),
             'role': role,
@@ -685,7 +695,7 @@ def build_balance_player_buckets(env, tournament, db_name=None):
             'team_logo_url': (
                 _public_img_url(
                     db_name, 'auction.team', team.id, 'logo', team.write_date,
-                ) if team and team.logo else ''
+                ) if team and _has_binary(team, 'logo') else ''
             ),
             'points': points_by_pid.get(player.id, 0) if player.state == 'sold' else 0,
             'base_price': player.base_price or 0,
