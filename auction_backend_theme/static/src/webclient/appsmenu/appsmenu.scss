@@ -32,11 +32,25 @@
     flex-shrink: 0;
     position: relative;
 
+    .ac-apps-logo-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
     .ac-apps-logo {
         height: 40px;
         width: auto;
         filter: drop-shadow(0 0 12px rgba(253, 206, 51, 0.6));
         margin-bottom: 8px;
+        transition: transform 0.2s ease, filter 0.2s ease;
+    }
+
+    .ac-apps-logo-link:hover .ac-apps-logo {
+        transform: scale(1.04);
+        filter: drop-shadow(0 0 16px rgba(253, 206, 51, 0.85));
     }
 
     .ac-apps-tagline {

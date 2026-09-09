@@ -6,11 +6,23 @@
 
 html {
     font-size: 15px !important;
+    // Match kanban / content canvas so mobile overscroll is not a navy/royal band
+    background-color: #eef0f4;
+}
+
+html.ac-booting {
     background-color: #060e22;
 }
 
 body {
     font-size: 15px;
+}
+
+body.o_web_client {
+    background-color: #eef0f4;
+    min-height: 100%;
+    min-height: 100dvh;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 // Lift bare text that inherits from body but has no explicit font-size set
@@ -19,6 +31,11 @@ body {
 .o_action_manager,
 .o_view_controller {
     font-size: 15px;
+}
+
+.o_action_manager,
+.o_content {
+    background-color: #eef0f4;
 }
 
 // ── Mobile: keep the same 15 px base on all screen sizes ─────────────────────

@@ -6,9 +6,9 @@ import { session } from "@web/session";
 import { useBus, useEffect } from "@web/core/utils/hooks";
 
 /**
- * Keep the branded splash until the first action is on screen.
- * Dismissing in setup() left an empty white body for a frame because Owl
- * patches document.body in place (position: "self") after setup().
+ * Keep the branded splash until the shell has painted, then drop it quickly.
+ * Waiting only on the first heavy action left users staring at the splash while
+ * tournament kanban / dashboard RPCs finished.
  */
 let bootSplashDismissed = false;
 
@@ -38,19 +38,36 @@ function dismissBootSplash() {
 
 patch(WebClient.prototype, "auction_backend_theme.WebClientTitle", {
     setup() {
-        this._super(...arguments);
         const appTitle = session.app_title || "AuctionChamp";
+        this._super(...arguments);
         this.title.setParts({ zopenerp: appTitle });
+        // First action paint — preferred dismiss signal.
         useBus(this.env.bus, "ACTION_MANAGER:UI-UPDATED", (mode) => {
             if (mode === "new") {
                 return;
             }
             requestAnimationFrame(() => dismissBootSplash());
         });
+        // Also dismiss once the navbar/shell is on screen (systray no longer blocks).
         useEffect(
             () => {
-                const timeout = setTimeout(dismissBootSplash, 4000);
-                return () => clearTimeout(timeout);
+                let tries = 0;
+                const tick = () => {
+                    tries += 1;
+                    if (document.querySelector(".o_main_navbar")) {
+                        requestAnimationFrame(() => dismissBootSplash());
+                        return;
+                    }
+                    if (tries < 40) {
+                        setTimeout(tick, 50);
+                    }
+                };
+                const start = setTimeout(tick, 120);
+                const fallback = setTimeout(dismissBootSplash, 2200);
+                return () => {
+                    clearTimeout(start);
+                    clearTimeout(fallback);
+                };
             },
             () => []
         );

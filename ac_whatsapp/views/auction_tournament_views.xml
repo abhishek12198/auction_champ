@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_auction_tournament_form_whatsapp_share" model="ir.ui.view">
+        <field name="name">auction.tournament.form.whatsapp.share</field>
+        <field name="model">auction.tournament</field>
+        <field name="inherit_id" ref="auction_module.view_auction_tournament_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_ac_wa_share_invitation"
+                        type="object"
+                        string="Share on WhatsApp"
+                        class="btn-success"
+                        icon="fa-whatsapp"
+                        attrs="{'invisible': [('active', '=', False)]}"
+                        help="Send tournament poster + registration invite via WhatsApp Business API"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

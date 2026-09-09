@@ -12,6 +12,10 @@ export class AppsBar extends Component {
         }
         return href;
     }
+
+    onWebsiteHomeClick() {
+        window.location.assign("/");
+    }
 }
 
 Object.assign(AppsBar, {

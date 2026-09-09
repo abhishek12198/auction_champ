@@ -74,10 +74,73 @@
                         <span class="o_saas_tournament_option_name" t-esc="t.name"/>
                         <i t-if="t.active" class="fa fa-check o_saas_tournament_option_check"/>
                     </li>
+                    <li t-if="state.hasMoreTournaments or state.tournamentTotal > state.tournaments.length"
+                        class="o_saas_tournament_search_more"
+                        t-on-click="onSearchMoreClick">
+                        <i class="fa fa-search"/>
+                        <span>Search for more…</span>
+                        <span class="o_saas_tournament_search_more_count"
+                              t-esc="state.tournamentTotal"/>
+                    </li>
                     <li t-if="state.workingScopeHint" class="o_saas_tournament_scope_hint">
                         <span t-esc="state.workingScopeHint"/>
                     </li>
                 </ul>
+            </div>
+
+            <!-- Full tournament picker (search + switch) -->
+            <div t-if="state.pickerOpen"
+                 class="o_saas_tournament_picker"
+                 t-on-click="onPickerBackdropClick">
+                <div class="o_saas_tournament_picker_dialog"
+                     role="dialog"
+                     aria-modal="true"
+                     aria-label="Choose tournament"
+                     t-on-click.stop="">
+                    <div class="o_saas_tournament_picker_head">
+                        <div>
+                            <div class="o_saas_tournament_picker_kicker">Tournament switcher</div>
+                            <div class="o_saas_tournament_picker_title">Choose a tournament</div>
+                        </div>
+                        <button type="button"
+                                class="o_saas_tournament_picker_close"
+                                t-on-click="closePicker"
+                                aria-label="Close">
+                            <i class="fa fa-times"/>
+                        </button>
+                    </div>
+                    <div class="o_saas_tournament_picker_search">
+                        <i class="fa fa-search"/>
+                        <input type="search"
+                               class="o_saas_tournament_picker_input"
+                               placeholder="Search tournaments…"
+                               t-att-value="state.pickerQuery"
+                               t-on-input="onPickerQueryInput"
+                               autofocus="autofocus"/>
+                    </div>
+                    <div class="o_saas_tournament_picker_meta">
+                        <t t-if="state.pickerLoading">Searching…</t>
+                        <t t-else="">
+                            <t t-esc="state.pickerTotal"/> tournament(s)
+                        </t>
+                    </div>
+                    <ul class="o_saas_tournament_picker_list">
+                        <li t-if="!state.pickerLoading and !state.pickerResults.length"
+                            class="o_saas_tournament_picker_empty">
+                            No tournaments match your search.
+                        </li>
+                        <li t-foreach="state.pickerResults" t-as="pt" t-key="pt.id"
+                            t-att-class="'o_saas_tournament_picker_row' + (pt.active ? ' o_active' : '')"
+                            t-att-data-tournament-id="pt.id"
+                            t-on-click="onSelectTournament">
+                            <img t-if="pt.logo" t-att-src="pt.logo" class="o_saas_tournament_option_logo" alt=""/>
+                            <i t-else="" class="fa fa-trophy o_saas_tournament_option_icon"/>
+                            <span class="o_saas_tournament_option_name" t-esc="pt.name"/>
+                            <span t-if="pt.active" class="o_saas_tournament_picker_enabled">Enabled</span>
+                            <span t-else="" class="o_saas_tournament_picker_enable">Enable</span>
+                        </li>
+                    </ul>
+                </div>
             </div>
 
             <!-- Active SaaS plan chip -->

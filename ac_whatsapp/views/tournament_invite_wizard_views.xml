@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ac_whatsapp_tournament_invite_wizard" model="ir.ui.view">
+        <field name="name">ac.whatsapp.tournament.invite.wizard.form</field>
+        <field name="model">ac.whatsapp.tournament.invite.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Share on WhatsApp">
+                <sheet>
+                    <div class="oe_title mb-2">
+                        <h3>
+                            <i class="fa fa-whatsapp text-success"/>
+                            &#160;Send tournament invitation
+                        </h3>
+                        <p class="text-muted" style="font-size:13px;">
+                            Sends the <strong>poster as a WhatsApp image</strong> with the
+                            invitation text and <strong>registration link</strong> in the caption
+                            via WhatsApp Business API.
+                        </p>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="tournament_id"/>
+                            <field name="api_configured" invisible="1"/>
+                            <field name="phone_numbers"
+                                     placeholder="9876543210&#10;919876543210"/>
+                        </group>
+                        <group>
+                            <field name="poster_image" widget="image"
+                                     options="{'size': [180, 240]}"/>
+                        </group>
+                    </group>
+
+                    <group string="Message (image caption)">
+                        <field name="caption" nolabel="1"
+                                 placeholder="Invitation text shown under the poster…"/>
+                    </group>
+
+                    <div class="alert alert-warning" role="alert"
+                         attrs="{'invisible': [('api_configured', '=', True)]}">
+                        WhatsApp Business API is not configured yet.
+                        Open <strong>Settings → WhatsApp Business API</strong> and add your
+                        Access Token and Phone Number ID.
+                        You can still use <em>Open WhatsApp Web</em> as a text-only fallback.
+                    </div>
+
+                    <group string="Send result" attrs="{'invisible': [('result_log', '=', False)]}">
+                        <field name="result_log" nolabel="1" readonly="1"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_send_via_api" type="object"
+                            string="Send via WhatsApp API"
+                            class="btn-success"
+                            attrs="{'invisible': [('api_configured', '=', False)]}"/>
+                    <button name="action_open_whatsapp_web" type="object"
+                            string="Open WhatsApp Web (text only)"
+                            class="btn-secondary"/>
+                    <button string="Close" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

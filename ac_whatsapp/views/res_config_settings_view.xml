@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_ac_whatsapp" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.ac.whatsapp</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('settings')]" position="inside">
+                <div class="app_settings_block"
+                     data-string="WhatsApp"
+                     string="WhatsApp"
+                     data-key="ac_whatsapp">
+                    <h2>WhatsApp</h2>
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="ac_whatsapp_provider"/>
+                                <div class="text-muted">
+                                    Use Twilio (recommended) or Meta Cloud API.
+                                </div>
+                                <field name="ac_whatsapp_provider"/>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="ac_whatsapp_default_country_code"/>
+                                <div class="text-muted">
+                                    Prefixed when a 10-digit local number is entered (default 91).
+                                </div>
+                                <field name="ac_whatsapp_default_country_code"/>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="ac_whatsapp_auto_send_registration"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="ac_whatsapp_auto_send_registration"/>
+                                <div class="text-muted">
+                                    After successful player registration, send WhatsApp
+                                    confirmation to the player’s mobile.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 attrs="{'invisible': [('ac_whatsapp_provider', '!=', 'twilio')]}">Twilio</h3>
+                    <div class="row mt16 o_settings_container"
+                         attrs="{'invisible': [('ac_whatsapp_provider', '!=', 'twilio')]}">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="ac_whatsapp_twilio_account_sid"/>
+                                <div class="text-muted">Twilio Console → Account SID (AC…)</div>
+                                <field name="ac_whatsapp_twilio_account_sid"/>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="ac_whatsapp_twilio_auth_token"/>
+                                <div class="text-muted">Twilio Console → Auth Token</div>
+                                <field name="ac_whatsapp_twilio_auth_token" password="True"/>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="ac_whatsapp_twilio_from"/>
+                                <div class="text-muted">
+                                    Sandbox: whatsapp:+14155238886 — or your approved sender.
+                                </div>
+                                <field name="ac_whatsapp_twilio_from" placeholder="whatsapp:+14155238886"/>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="ac_whatsapp_twilio_registration_content_sid"/>
+                                <div class="text-muted">
+                                    Not used for registration confirms (plain text only).
+                                    Leave blank — the sample appointment SID (HX…) adds
+                                    Yes/No buttons and wrong wording.
+                                </div>
+                                <field name="ac_whatsapp_twilio_registration_content_sid"
+                                       placeholder="(leave blank)"/>
+                            </div>
+                        </div>
+                        <div class="col-12 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="ac_whatsapp_twilio_registration_variables"/>
+                                <div class="text-muted">
+                                    Optional JSON slot map. Placeholders:
+                                    {{name}}, {{tournament}}, {{sl_no}}, {{role}}, {{mobile}}, {{email}}, {{card_url}}.
+                                    Leave empty to use {"1": player name, "2": tournament name}.
+                                </div>
+                                <field name="ac_whatsapp_twilio_registration_variables"
+                                       placeholder='{"1":"{{name}}","2":"{{tournament}}"}'/>
+                            </div>
+                        </div>
+                        <div class="col-12 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="ac_whatsapp_twilio_inbound_reply"/>
+                                <div class="text-muted">
+                                    Webhook URL for Twilio Sandbox “WHEN A MESSAGE COMES IN”:
+                                    https://YOUR_DOMAIN/ac_whatsapp/twilio/reply
+                                </div>
+                                <field name="ac_whatsapp_twilio_inbound_reply"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 attrs="{'invisible': [('ac_whatsapp_provider', '!=', 'meta')]}">Meta Cloud API</h3>
+                    <div class="row mt16 o_settings_container"
+                         attrs="{'invisible': [('ac_whatsapp_provider', '!=', 'meta')]}">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="ac_whatsapp_access_token"/>
+                                <field name="ac_whatsapp_access_token" password="True"/>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="ac_whatsapp_phone_number_id"/>
+                                <field name="ac_whatsapp_phone_number_id"/>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="ac_whatsapp_business_account_id"/>
+                                <field name="ac_whatsapp_business_account_id"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-muted mt8">
+                        Install the Twilio SDK on the server: <code>pip install twilio</code>.
+                        Sandbox: join Twilio WhatsApp Sandbox from the player’s phone first.
+                        For production outbound, create/approve a Content Template and set its Content SID.
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -88,29 +88,48 @@ class ResUsers(models.Model):
         return self.env['ac.saas.account']._get_account_for_user(self)
 
     def _saas_switchable_tournaments(self):
-        """Tournaments this login may enable (account-owned, else assigned)."""
+        """Tournaments this login may enable (account-owned, else auction rules).
+
+        SaaS organisers: every tournament on their ``ac.saas.account``.
+        Everyone else (incl. admins): same as ``_auction_switchable_tournaments``
+        so admins see all active tournaments, not only ``tournament_ids``.
+        """
         self.ensure_one()
         Tournament = self.env['auction.tournament'].sudo()
         account = self.get_saas_account()
         if account:
             return Tournament.browse(account.sudo().tournament_ids.ids)
-        return Tournament.browse(self.sudo().tournament_ids.ids)
+        return self._auction_switchable_tournaments()
 
     @api.model
     def get_systray_tournaments(self):
-        """Payload for the navbar tournament switcher badge."""
+        """Payload for the navbar tournament switcher badge.
+
+        The dropdown lists at most 10 tournaments (working tournament first).
+        Use ``search_systray_tournaments`` for the full searchable picker.
+        """
         user = self.env.user
         tournaments = user._saas_switchable_tournaments()
         working = user.get_working_tournament()
         active_id = working.id if working else False
         parallel = user._saas_parallel_sessions_enabled()
         items = user._auction_systray_items(tournaments, active_id)
+        # Keep the working tournament in the short list even if sorted later
+        if active_id:
+            active_items = [i for i in items if i.get('id') == active_id]
+            other_items = [i for i in items if i.get('id') != active_id]
+            items = active_items + other_items
+        total = len(items)
+        limit = 10
+        preview = items[:limit]
         current = next((i for i in items if i['active']), items[0] if items else None)
         account = user.get_saas_account()
         return {
-            'tournaments': items,
+            'tournaments': preview,
+            'tournament_total': total,
+            'has_more_tournaments': total > limit,
             'current': current,
-            'can_switch': len(items) > 1,
+            'can_switch': total > 1,
             'parallel_sessions': parallel,
             'working_scope_hint': user._saas_working_scope_hint(parallel),
             'plan': user._get_systray_plan_info(),
@@ -118,6 +137,41 @@ class ResUsers(models.Model):
             'account_frozen': user._saas_account_is_frozen(),
             'can_request_renewal': user._saas_can_request_renewal(),
             'saas_account_id': account.id if account else False,
+        }
+
+    @api.model
+    def search_systray_tournaments(self, query='', limit=80, offset=0):
+        """Searchable list of tournaments this login may switch to."""
+        user = self.env.user
+        tournaments = user._saas_switchable_tournaments()
+        working = user.get_working_tournament()
+        active_id = working.id if working else False
+        q = (query or '').strip().lower()
+        if q:
+            tournaments = tournaments.filtered(
+                lambda t: q in (t.name or '').lower()
+            )
+        # Stable order: active record flag from DB, then name
+        tournaments = tournaments.sorted(
+            key=lambda t: (not t.active, (t.name or '').lower(), t.id)
+        )
+        total = len(tournaments)
+        try:
+            limit = max(1, min(int(limit or 80), 200))
+        except (TypeError, ValueError):
+            limit = 80
+        try:
+            offset = max(0, int(offset or 0))
+        except (TypeError, ValueError):
+            offset = 0
+        page = tournaments[offset:offset + limit]
+        items = user._auction_systray_items(page, active_id)
+        return {
+            'tournaments': items,
+            'total': total,
+            'offset': offset,
+            'limit': limit,
+            'query': query or '',
         }
 
     def _saas_account_is_frozen(self):

@@ -4,7 +4,10 @@
     <t t-name="auction_backend_theme.AppsBar" owl="1">
         <div class="ac-apps-sidebar-panel">
             <!-- Logo at top of sidebar -->
-            <a href="/web" class="ac-sidebar-logo-wrap" title="Home">
+            <a href="/"
+               class="ac-sidebar-logo-wrap"
+               title="Back to AuctionChamp website"
+               t-on-click.stop.prevent="onWebsiteHomeClick">
                 <img
                     class="ac-sidebar-logo-icon"
                     src="/auction_backend_theme/static/img/logo.svg"

@@ -24,9 +24,16 @@ class SaasTournamentSystrayItem extends Component {
             showcaseUrl: "",
             tournamentId: false,
             tournaments: [],
+            hasMoreTournaments: false,
+            tournamentTotal: 0,
             canSwitch: false,
             expanded: false,
             switching: false,
+            pickerOpen: false,
+            pickerQuery: "",
+            pickerResults: [],
+            pickerLoading: false,
+            pickerTotal: 0,
             auctionRulesReady: false,
             planAccountId: false,
             planName: "",
@@ -53,6 +60,9 @@ class SaasTournamentSystrayItem extends Component {
             if (!root || root.contains(ev.target)) {
                 return;
             }
+            if (this.state.pickerOpen) {
+                return;
+            }
             this.state.expanded = false;
             this.state.planExpanded = false;
         };
@@ -69,6 +79,9 @@ class SaasTournamentSystrayItem extends Component {
         onWillUnmount(() => {
             document.removeEventListener("click", onOutsideClick);
             window.removeEventListener("resize", onReposition);
+            if (this._pickerSearchTimer) {
+                clearTimeout(this._pickerSearchTimer);
+            }
         });
     }
 
@@ -133,6 +146,8 @@ class SaasTournamentSystrayItem extends Component {
         const current = data.current || null;
         const items = data.tournaments || [];
         this.state.tournaments = items;
+        this.state.tournamentTotal = Number(data.tournament_total || items.length || 0);
+        this.state.hasMoreTournaments = Boolean(data.has_more_tournaments);
         this.state.canSwitch = Boolean(data.can_switch) && !Boolean(data.account_frozen);
         this.state.parallelSessions = Boolean(data.parallel_sessions);
         this.state.workingScopeHint = data.working_scope_hint || "";
@@ -308,9 +323,12 @@ class SaasTournamentSystrayItem extends Component {
         if (!tournamentId) {
             return;
         }
-        const item = this.state.tournaments.find((t) => t.id === tournamentId);
-        if (!item || item.active) {
+        const fromMenu = this.state.tournaments.find((t) => t.id === tournamentId);
+        const fromPicker = this.state.pickerResults.find((t) => t.id === tournamentId);
+        const item = fromMenu || fromPicker;
+        if (item && item.active) {
             this.state.expanded = false;
+            this.closePicker();
             return;
         }
         this.state.switching = true;
@@ -321,6 +339,7 @@ class SaasTournamentSystrayItem extends Component {
             ]);
             this.applyPayload(data || {});
             this.state.expanded = false;
+            this.closePicker();
             await this._refreshAfterSwitch();
         } catch (_e) {
             this.state.expanded = false;
@@ -330,6 +349,72 @@ class SaasTournamentSystrayItem extends Component {
             );
         } finally {
             this.state.switching = false;
+        }
+    }
+
+    onSearchMoreClick(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        this.state.expanded = false;
+        this.state.planExpanded = false;
+        this.openPicker();
+    }
+
+    openPicker() {
+        this.state.pickerOpen = true;
+        this.state.pickerQuery = "";
+        this.state.pickerResults = [];
+        this.state.pickerTotal = 0;
+        this._runPickerSearch("");
+    }
+
+    closePicker(ev) {
+        if (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+        }
+        this.state.pickerOpen = false;
+        this.state.pickerQuery = "";
+        this.state.pickerResults = [];
+        this.state.pickerLoading = false;
+    }
+
+    onPickerBackdropClick(ev) {
+        if (ev.target === ev.currentTarget) {
+            this.closePicker();
+        }
+    }
+
+    onPickerQueryInput(ev) {
+        const value = (ev.target && ev.target.value) || "";
+        this.state.pickerQuery = value;
+        if (this._pickerSearchTimer) {
+            clearTimeout(this._pickerSearchTimer);
+        }
+        this._pickerSearchTimer = setTimeout(() => {
+            this._runPickerSearch(value);
+        }, 220);
+    }
+
+    async _runPickerSearch(query) {
+        this.state.pickerLoading = true;
+        try {
+            const data = await this.orm.call("res.users", "search_systray_tournaments", [
+                query || "",
+                80,
+                0,
+            ]);
+            this.state.pickerResults = (data && data.tournaments) || [];
+            this.state.pickerTotal = Number((data && data.total) || 0);
+        } catch (_e) {
+            this.state.pickerResults = [];
+            this.state.pickerTotal = 0;
+            this.notification.add("Could not load tournaments.", {
+                type: "danger",
+                title: "Tournament",
+            });
+        } finally {
+            this.state.pickerLoading = false;
         }
     }
 

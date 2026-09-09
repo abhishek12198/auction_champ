@@ -13,6 +13,13 @@
               name="Auction Backend Theme Fonts">
         <xpath expr="//t[@t-set='head']" position="after">
             <t t-set="head_auction_fonts">
+                <t t-set="ac_app_title" t-value="request.env['ir.config_parameter'].sudo().get_param('auction.backend.title', 'AuctionChamp')"/>
+                <!-- Lock tab title before WebClient JS runs -->
+                <script type="text/javascript">
+                    document.title = <t t-out="json.dumps(ac_app_title)"/>;
+                </script>
+                <link rel="icon" href="/auction_module/static/description/favicon.png" type="image/png"/>
+                <link rel="shortcut icon" href="/auction_module/static/description/favicon.png" type="image/png"/>
                 <!-- Viewport meta: prevents mobile browsers zooming out to desktop width -->
                 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover"/>
                 <!-- Google Fonts CDN — served from Google's global CDN, cached across sites in Chrome/Firefox -->
@@ -32,6 +39,10 @@
                     }
                     body.o_web_client {
                         margin: 0;
+                        background-color: #eef0f4;
+                    }
+                    html.ac-booting,
+                    html.ac-booting body.o_web_client {
                         background-color: #060e22;
                     }
                     #ac-boot-splash {
@@ -237,6 +248,31 @@
                     }, 1400);
                 })();
             </script>
+        </xpath>
+    </template>
+
+    <!-- Primary &lt;title&gt; in web.layout defaults to "Odoo" — override for /web -->
+    <template id="web_layout_branding"
+              inherit_id="web.layout"
+              name="AuctionChamp Web Layout Branding">
+        <xpath expr="//title" position="replace">
+            <title t-esc="title or request.env['ir.config_parameter'].sudo().get_param('auction.backend.title', 'AuctionChamp')"/>
+        </xpath>
+        <xpath expr="//link[@rel='shortcut icon']" position="replace">
+            <link rel="icon"
+                  href="/auction_module/static/description/favicon.png"
+                  type="image/png"/>
+            <link rel="shortcut icon"
+                  href="/auction_module/static/description/favicon.png"
+                  type="image/png"/>
+        </xpath>
+    </template>
+
+    <template id="webclient_bootstrap_title"
+              inherit_id="web.webclient_bootstrap"
+              name="AuctionChamp Webclient Bootstrap Title">
+        <xpath expr="//t[@t-call='web.layout']" position="before">
+            <t t-set="title" t-value="request.env['ir.config_parameter'].sudo().get_param('auction.backend.title', 'AuctionChamp')"/>
         </xpath>
     </template>
 </odoo>

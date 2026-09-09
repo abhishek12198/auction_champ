@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_auction_team_player_form_whatsapp" model="ir.ui.view">
+        <field name="name">auction.team.player.form.whatsapp</field>
+        <field name="model">auction.team.player</field>
+        <field name="inherit_id" ref="auction_module.view_auction_team_player_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='address']" position="before">
+                <field name="email" placeholder="player@email.com"/>
+                <field name="card_access_token" groups="base.group_no_one"/>
+                <field name="registration_confirm_sent" groups="base.group_no_one"/>
+                <field name="registration_whatsapp_sent" groups="base.group_no_one"/>
+            </xpath>
+            <xpath expr="//header" position="inside">
+                <button name="action_ac_wa_send_registration_email" type="object"
+                        string="Email card PDF"
+                        class="btn-secondary"
+                        attrs="{'invisible': [('email', '=', False)]}"
+                        help="Send registration confirmation email with player-card PDF"/>
+                <button name="action_ac_wa_send_registration_whatsapp" type="object"
+                        string="Send WhatsApp confirm"
+                        class="btn-secondary"
+                        attrs="{'invisible': [('contact', '=', False)]}"
+                        help="Send registration confirmation WhatsApp with player-card download link"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

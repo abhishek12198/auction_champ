@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ac_wa_tournament_invite_user,ac.whatsapp.tournament.invite.wizard user,model_ac_whatsapp_tournament_invite_wizard,auction_module.group_auction_group,1,1,1,1
+access_ac_wa_tournament_invite_admin,ac.whatsapp.tournament.invite.wizard admin,model_ac_whatsapp_tournament_invite_wizard,auction_module.group_auction_group_admin,1,1,1,1

@@ -38,7 +38,7 @@
 
 {
     'name': 'Auction Sports Backend Theme',
-    'version': '15.0.1.0.9',
+    'version': '15.0.1.0.15',
     'summary': 'Sporty backend theme for the Auction Champ application',
     'icon': '/auction_backend_theme/static/description/icon.png',
     'description': """
@@ -73,6 +73,7 @@
         ],
         # ── 4. Backend assets: SCSS, JS ───────────────────────────────────────
         'web.assets_backend': [
+            'auction_backend_theme/static/src/webclient/title_service.js',
             'auction_backend_theme/static/src/global.scss',
             'auction_backend_theme/static/src/webclient/**/*.scss',
             'auction_backend_theme/static/src/webclient/**/*.js',

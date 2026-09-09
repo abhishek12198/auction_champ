@@ -17,6 +17,7 @@ patch(NavBar, "auction_backend_theme.NavBar", {
 });
 
 // Expose SaaS account expiry warning (set by ac_saas_manager session_info)
+// + force full navigation to marketing website from the logo
 patch(NavBar.prototype, "auction_backend_theme.NavBar.saasExpiry", {
     setup() {
         this._super(...arguments);
@@ -25,5 +26,12 @@ patch(NavBar.prototype, "auction_backend_theme.NavBar.saasExpiry", {
         if (this.saasAccountFrozen) {
             document.body.classList.add("o_saas_account_frozen");
         }
+    },
+    /**
+     * Leave the backend SPA and open the public website root.
+     * Plain href="/" is often intercepted by the webclient router on mobile.
+     */
+    onWebsiteHomeClick() {
+        window.location.assign("/");
     },
 });

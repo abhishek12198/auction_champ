@@ -122,7 +122,15 @@
         grid-template-columns: minmax($o-navbar-height, max-content) max-content auto minmax($o-navbar-height, max-content);
 
         .o_menu_brand  { display: none; }
-        .ac-navbar-logo { display: none; }
+        // Keep wordmark tappable on mobile so users can return to the website
+        .ac-navbar-logo {
+            display: inline-flex;
+            padding: 0 8px;
+
+            .ac-navbar-logo-img {
+                height: 20px;
+            }
+        }
 
         .o_menu_sections {
             width: $o-navbar-height;

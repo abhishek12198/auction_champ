@@ -34,11 +34,16 @@
 
                 <!-- ── Drawer header: logo + tagline ── -->
                 <div class="ac-apps-header">
-                    <img
-                        class="ac-apps-logo"
-                        src="/auction_backend_theme/static/img/logo.svg"
-                        alt="Auction Champ"
-                    />
+                    <a class="ac-apps-logo-link"
+                       href="/"
+                       title="Back to AuctionChamp website"
+                       t-on-click.stop.prevent="onWebsiteHomeClick">
+                        <img
+                            class="ac-apps-logo"
+                            src="/auction_backend_theme/static/img/logo.svg"
+                            alt="Auction Champ"
+                        />
+                    </a>
                     <p class="ac-apps-tagline">Premier Sports Auction Platform</p>
                 </div>
 
@@ -121,7 +126,10 @@
             </AppsMenu>
 
             <!-- ── Auction Champ Wordmark Logo (inline in navbar) ── -->
-            <a class="ac-navbar-logo" href="/web" title="Auction Champ Home">
+            <a class="ac-navbar-logo"
+               href="/"
+               title="Back to AuctionChamp website"
+               t-on-click.stop.prevent="onWebsiteHomeClick">
                 <img
                     src="/auction_backend_theme/static/img/logo.svg"
                     alt="Auction Champ"
