@@ -2900,7 +2900,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   }
 
   var _pjPollInFlight = false;
-  var _pjPollIdle = 2000;
+  var _pjPollIdle = 800;
   var _pjPollBurst = 400;
   var _pjBurstUntil = 0;
   var _pjLastFp = '';

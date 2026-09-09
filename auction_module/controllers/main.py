@@ -3596,8 +3596,10 @@ class Auction(http.Controller):
                 except Exception:
                     _logger.debug('public image sz=%s resize fallback failed', sz, exc_info=True)
         elif model == 'auction.team.player' and field == 'photo' and binary and sz in ('pj', 'bs'):
-            size = (96, 96) if sz == 'bs' else (720, 1000)
-            quality = 70 if sz == 'bs' else 82
+            # pj: keep stage cards light — heavy 720×1000 resize blocked the worker
+            # and made the next player look 3–4s late on a single Odoo process.
+            size = (96, 96) if sz == 'bs' else (480, 640)
+            quality = 70 if sz == 'bs' else 78
             try:
                 binary = image_process(
                     binary, size=size, quality=quality, output_format='JPEG',

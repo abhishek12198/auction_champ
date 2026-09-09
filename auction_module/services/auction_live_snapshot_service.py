@@ -129,6 +129,9 @@ def rebuild_tournament_snapshots(env, tournament_id, snapshot_seq, snapshot_type
 
     Called from postcommit (new cursor) or from a poll cache-miss rebuild.
     Never raises: Redis/build errors are logged.
+
+    Projector (``pj``) is built and published first so the gateway / projector
+    can pick up sold / next-player state without waiting for heavier ``lb``/``bal``.
     """
     try:
         tournament = env['auction.tournament'].sudo().browse(int(tournament_id))
@@ -137,15 +140,20 @@ def rebuild_tournament_snapshots(env, tournament_id, snapshot_seq, snapshot_type
         if snapshot_seq is None:
             snapshot_seq = _pg_seq(tournament)
         kinds = set(snapshot_types or ('lb', 'pj', 'bal', 'reg'))
-        snapshots = {}
-        for kind in ('lb', 'pj', 'bal', 'reg'):
+        wrote_any = False
+        for kind in ('pj', 'lb', 'bal', 'reg'):
             if kind not in kinds:
                 continue
-            snapshots[kind] = _build_kind(env, tournament, kind, snapshot_seq)
-        if not snapshots:
-            return False
-        write_snapshots_to_redis(env, tournament.id, snapshot_seq, snapshots)
-        return True
+            payload = _build_kind(env, tournament, kind, snapshot_seq)
+            if payload is None:
+                continue
+            # Publish each kind as soon as it is ready (empty keys are skipped in CAS).
+            if write_snapshots_to_redis(
+                env, tournament.id, snapshot_seq, {kind: payload},
+            ):
+                wrote_any = True
+            _tertiary_cache_put(kind, tournament, payload)
+        return wrote_any
     except Exception:
         _logger.warning(
             'auction snapshot rebuild failed tid=%s seq=%s',
