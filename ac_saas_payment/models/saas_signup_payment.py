@@ -364,49 +364,32 @@ class AcSaasSignupPayment(models.Model):
         }
 
     def _login_url(self):
-        base = self.env['ir.config_parameter'].sudo().get_param('web.base.url') or ''
-        return '%s/web/login' % base.rstrip('/')
+        return self.env['ac.saas.account']._saas_login_url()
 
     def _send_credentials_email(self, password):
+        """Delegate to ac_saas_manager so credential mail lives on the account."""
         self.ensure_one()
         if self.credentials_sent or not self.buyer_email:
             return
-        if 'mail.mail' not in self.env:
-            return
-        login_url = self._login_url()
-        plan = self.plan_id
         account = self.account_id
-        body = _(
-            '<p>Hi %(name)s,</p>'
-            '<p>Welcome to <strong>AuctionChamp</strong>! '
-            'Your payment was received and your account is ready.</p>'
-            '<ul>'
-            '<li>Plan: <strong>%(plan)s</strong></li>'
-            '<li>Account: %(account)s</li>'
-            '<li>Valid until: %(end)s</li>'
-            '<li>Login: <a href="%(url)s">Auction Management Panel</a></li>'
-            '<li>Username (email): <strong>%(login)s</strong></li>'
-            '<li>Temporary password: <strong>%(password)s</strong></li>'
-            '</ul>'
-            '<p>Please log in and change your password after first login.</p>'
-            '<p>— AuctionChamp Team</p>'
-        ) % {
-            'name': self.buyer_name,
-            'plan': plan.name,
-            'account': account.name if account else '',
-            'end': account.date_end or '—',
-            'url': login_url,
-            'login': self.buyer_email,
-            'password': password,
-        }
-        mail = self.env['mail.mail'].sudo().create({
-            'subject': _('Your AuctionChamp account — %(plan)s') % {'plan': plan.name},
-            'body_html': body,
-            'email_to': self.buyer_email,
-            'auto_delete': True,
-        })
-        mail.send()
-        self.credentials_sent = True
+        if not account:
+            _logger.warning(
+                'Signup %s has no SaaS account; credentials email skipped',
+                self.name,
+            )
+            return
+        ok = account.action_send_credentials_email(
+            password=password,
+            email_to=self.buyer_email,
+        )
+        if ok:
+            self.credentials_sent = True
+        else:
+            _logger.warning(
+                'Credentials email failed for signup %s (%s); '
+                'account is provisioned — use Email login credentials on the SaaS account',
+                self.name, self.buyer_email,
+            )
 
     def _notify_managers_new_signup(self):
         if 'mail.mail' not in self.env:
@@ -439,13 +422,20 @@ class AcSaasSignupPayment(models.Model):
                 'rzp': rec.razorpay_payment_id or '—',
             }
             for partner in partners:
-                mail = self.env['mail.mail'].sudo().create({
-                    'subject': _('New SaaS signup: %(plan)s — %(email)s') % {
-                        'plan': rec.plan_id.name,
-                        'email': rec.buyer_email,
-                    },
-                    'body_html': body,
-                    'email_to': partner.email,
-                    'auto_delete': True,
-                })
-                mail.send()
+                try:
+                    mail = self.env['mail.mail'].sudo().create({
+                        'subject': _('New SaaS signup: %(plan)s — %(email)s') % {
+                            'plan': rec.plan_id.name,
+                            'email': rec.buyer_email,
+                        },
+                        'body_html': body,
+                        'email_from': self.env['ac.saas.account']._saas_email_from(),
+                        'email_to': partner.email,
+                        'auto_delete': True,
+                    })
+                    mail.sudo().send()
+                except Exception:
+                    _logger.exception(
+                        'Failed to notify SaaS manager %s about signup %s',
+                        partner.email, rec.name,
+                    )

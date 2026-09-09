@@ -8,7 +8,7 @@
 ##############################################################################
 {
     'name': 'AuctionChamp SaaS Manager',
-    'version': '1.0.77',
+    'version': '1.0.87',
     'summary': 'Single-DB SaaS plans and account limits for AuctionChamp',
     'sequence': 5,
     'description': """
@@ -21,6 +21,7 @@ Overlay module (does not modify auction_module source).
 * Enforces tournament / team / player caps and feature gates
 * In-app plan upgrade requests (manual approve)
 * Navbar tournament switcher (shared or per-browser parallel mode by plan)
+* After paid signup: email login credentials from the SaaS account
 * All logic lives in ac_saas_manager via model inheritance
     """,
     'category': 'Auction/SaaS',

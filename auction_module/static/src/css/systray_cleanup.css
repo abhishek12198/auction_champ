@@ -1,0 +1,61 @@
+/* Hide mail Messaging (live chat) + Activities from the navbar.
+   User Preferences (web.user_menu) stays available. */
+
+.o_main_navbar .o_menu_systray .o_MessagingMenu,
+.o_main_navbar .o_menu_systray .o_mail_systray_item,
+.o_main_navbar .o_menu_systray .o_RtcActivityNotice {
+    display: none !important;
+}
+
+/* Mobile: keep User Preferences inside the right edge of the frame */
+@media (max-width: 767px) {
+    .o_main_navbar .o_menu_systray {
+        display: flex !important;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: nowrap;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+        gap: 2px;
+        margin-left: auto;
+        padding-right: 2px;
+        box-sizing: border-box;
+    }
+
+    .o_main_navbar .o_menu_systray > * {
+        flex: 0 0 auto;
+        min-width: 0;
+    }
+
+    /* User menu always last and never squeezed off-screen */
+    .o_main_navbar .o_menu_systray .o_user_menu {
+        order: 999;
+        flex: 0 0 auto;
+        margin-left: 2px;
+        margin-right: 0;
+        max-width: 44px;
+    }
+
+    .o_main_navbar .o_menu_systray .o_user_menu > .dropdown-toggle {
+        min-width: 40px;
+        min-height: 40px;
+        padding: 0 6px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .o_main_navbar .o_menu_systray .o_user_menu .oe_topbar_name,
+    .o_main_navbar .o_menu_systray .o_user_menu .o_user_menu_name {
+        display: none !important;
+    }
+
+    /* Let auction / plan chips shrink so the avatar fits */
+    .o_main_navbar .o_menu_systray .o_saas_tournament_systray,
+    .o_main_navbar .o_menu_systray .o_auction_tournament_systray {
+        min-width: 0;
+        max-width: calc(100% - 48px);
+        overflow: hidden;
+    }
+}

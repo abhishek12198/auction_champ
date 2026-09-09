@@ -376,11 +376,22 @@
 }
 
 /* Active SaaS plan chip (navbar) */
+.o_saas_tournament_systray,
+.o_auction_tournament_systray {
+    overflow: visible;
+}
+
+@media (min-width: 768px) {
+    .o_main_navbar .o_menu_systray {
+        overflow: visible;
+    }
+}
 .o_saas_plan_switcher {
     position: relative;
     display: inline-flex;
     align-items: center;
     margin-left: 8px;
+    overflow: visible;
 }
 
 .o_saas_plan_chip {
@@ -431,14 +442,43 @@
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
+    left: auto;
     width: min(320px, 92vw);
     padding: 16px 16px 14px;
     background: #132a4d;
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 12px;
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
-    z-index: 10050;
+    z-index: 1050;
     color: #fff;
+    box-sizing: border-box;
+}
+
+.o_saas_plan_menu_head_row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.o_saas_plan_menu_close {
+    display: none;
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    margin: -4px -6px 0 0;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.o_saas_plan_menu_close:hover {
+    background: rgba(255, 255, 255, 0.16);
 }
 
 .o_saas_plan_menu_kicker {
@@ -555,14 +595,124 @@
     line-height: 1.35;
 }
 
+.o_saas_plan_sheet_backdrop {
+    display: none;
+}
+
 @media (max-width: 767px) {
+    .o_saas_plan_switcher {
+        margin-left: 4px;
+    }
+
+    .o_saas_plan_chip {
+        height: 28px;
+        padding: 0 8px;
+        gap: 4px;
+        font-size: 11px;
+        max-width: 38vw;
+    }
+
     .o_saas_plan_chip_label {
         display: none;
     }
 
+    .o_saas_plan_chip_name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
+    .o_saas_plan_sheet_backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 11055;
+        background: rgba(6, 14, 34, 0.55);
+        -webkit-tap-highlight-color: transparent;
+    }
+
     .o_saas_plan_menu {
-        right: 0;
-        left: auto;
+        /* Centered overlay over the current screen */
+        position: fixed !important;
+        left: 50% !important;
+        right: auto !important;
+        top: 50% !important;
+        bottom: auto !important;
+        width: min(340px, calc(100vw - 24px)) !important;
+        max-width: calc(100vw - 24px) !important;
+        max-height: min(80vh, 520px) !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        padding: 14px 14px 12px !important;
+        border-radius: 14px !important;
+        box-sizing: border-box !important;
+        z-index: 11060 !important;
+        transform: translate(-50%, -50%) !important;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55) !important;
+    }
+
+    .o_saas_plan_menu_close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .o_saas_plan_menu_kicker {
+        font-size: 10px;
+        margin-bottom: 0;
+    }
+
+    .o_saas_plan_menu_title {
+        font-size: 17px;
+        word-break: break-word;
+        padding-right: 4px;
+    }
+
+    .o_saas_plan_menu_account {
+        font-size: 12px;
+        white-space: normal;
+    }
+
+    .o_saas_plan_menu_expiry {
+        margin-top: 8px;
+        padding: 7px 10px;
+        font-size: 12px;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .o_saas_plan_menu_expiry_label {
+        font-size: 10px;
+    }
+
+    .o_saas_plan_menu_expiry_date {
+        font-size: 13px;
+        word-break: break-word;
+    }
+
+    .o_saas_plan_menu_lines {
+        margin-top: 10px;
+        padding-top: 8px;
+    }
+
+    .o_saas_plan_menu_lines li {
+        padding: 4px 0 4px 12px;
+        font-size: 12px;
+        line-height: 1.35;
+        word-break: break-word;
+    }
+
+    .o_saas_plan_upgrade_btn {
+        margin-top: 10px;
+        padding: 9px 12px;
+        font-size: 13px;
+    }
+
+    .o_saas_plan_menu_foot {
+        margin-top: 10px;
+        padding-top: 8px;
+        font-size: 12px;
     }
 }
 
@@ -731,6 +881,177 @@
 @media (max-width: 576px) {
     .o_saas_unlock_grid {
         grid-template-columns: 1fr;
+    }
+}
+
+/* Upgrade wizard dialog — centered full-width cover on phones */
+@media (max-width: 767px) {
+    .modal:has(.o_saas_upgrade_wizard),
+    .o_dialog:has(.o_saas_upgrade_wizard),
+    .o_technical_modal:has(.o_saas_upgrade_wizard) {
+        padding: 0 !important;
+    }
+
+    .modal:has(.o_saas_upgrade_wizard) .modal-dialog,
+    .o_dialog:has(.o_saas_upgrade_wizard) .modal-dialog,
+    .o_technical_modal:has(.o_saas_upgrade_wizard) .modal-dialog,
+    .modal-dialog:has(.o_saas_upgrade_wizard) {
+        position: fixed !important;
+        left: 50% !important;
+        right: auto !important;
+        top: 50% !important;
+        bottom: auto !important;
+        margin: 0 !important;
+        width: calc(100vw - 16px) !important;
+        max-width: calc(100vw - 16px) !important;
+        min-width: 0 !important;
+        transform: translate(-50%, -50%) !important;
+        box-sizing: border-box !important;
+    }
+
+    .modal:has(.o_saas_upgrade_wizard) .modal-content,
+    .o_dialog:has(.o_saas_upgrade_wizard) .modal-content,
+    .o_technical_modal:has(.o_saas_upgrade_wizard) .modal-content,
+    .modal-dialog:has(.o_saas_upgrade_wizard) .modal-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: calc(100dvh - 16px);
+        max-height: calc(100vh - 16px);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        border-radius: 12px;
+        box-sizing: border-box;
+    }
+
+    .modal:has(.o_saas_upgrade_wizard) .modal-header,
+    .o_dialog:has(.o_saas_upgrade_wizard) .modal-header,
+    .o_technical_modal:has(.o_saas_upgrade_wizard) .modal-header {
+        padding: 10px 12px;
+        flex-shrink: 0;
+    }
+
+    .modal:has(.o_saas_upgrade_wizard) .modal-header .modal-title,
+    .o_dialog:has(.o_saas_upgrade_wizard) .modal-header .modal-title,
+    .o_technical_modal:has(.o_saas_upgrade_wizard) .modal-header .modal-title {
+        font-size: 15px;
+        line-height: 1.3;
+    }
+
+    .modal:has(.o_saas_upgrade_wizard) .modal-body,
+    .o_dialog:has(.o_saas_upgrade_wizard) .modal-body,
+    .o_technical_modal:has(.o_saas_upgrade_wizard) .modal-body {
+        padding: 10px 12px !important;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        max-height: calc(100dvh - 7.5rem);
+        max-height: calc(100vh - 7.5rem);
+        flex: 1 1 auto;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .modal:has(.o_saas_upgrade_wizard) .modal-footer,
+    .o_dialog:has(.o_saas_upgrade_wizard) .modal-footer,
+    .o_technical_modal:has(.o_saas_upgrade_wizard) .modal-footer {
+        padding: 8px 12px;
+        flex-wrap: wrap;
+        gap: 6px;
+        flex-shrink: 0;
+        justify-content: stretch;
+    }
+
+    .modal:has(.o_saas_upgrade_wizard) .modal-footer .btn,
+    .o_dialog:has(.o_saas_upgrade_wizard) .modal-footer .btn,
+    .o_technical_modal:has(.o_saas_upgrade_wizard) .modal-footer .btn {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .o_saas_upgrade_wizard {
+        max-width: 100%;
+        width: 100%;
+        overflow-x: hidden;
+        box-sizing: border-box;
+    }
+
+    .o_saas_upgrade_wizard .o_group,
+    .o_saas_upgrade_wizard .o_inner_group,
+    .o_saas_upgrade_wizard .o_form_view,
+    .o_saas_upgrade_wizard .o_form_sheet,
+    .o_saas_upgrade_wizard .o_form_sheet_bg {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        float: none !important;
+        box-sizing: border-box !important;
+    }
+
+    .o_saas_upgrade_wizard .o_td_label,
+    .o_saas_upgrade_wizard td {
+        white-space: normal !important;
+    }
+
+    .o_saas_upgrade_wizard .o_saas_unlock_wrap {
+        margin: 2px 0 10px;
+    }
+
+    .o_saas_unlock_panel {
+        padding: 10px;
+        border-radius: 10px;
+    }
+
+    .o_saas_unlock_title {
+        font-size: 11px;
+        margin-bottom: 8px;
+    }
+
+    .o_saas_unlock_grid {
+        grid-template-columns: 1fr !important;
+        gap: 6px;
+    }
+
+    .o_saas_unlock_card {
+        min-height: 44px;
+        padding: 8px 10px;
+        gap: 8px;
+    }
+
+    .o_saas_unlock_card_icon {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+
+    .o_saas_unlock_card_label {
+        font-size: 10px;
+    }
+
+    .o_saas_unlock_card_value {
+        font-size: 13px;
+        word-break: break-word;
+    }
+
+    .o_saas_unlock_themes {
+        margin-top: 10px;
+        padding-top: 8px;
+    }
+
+    .o_saas_theme_chip {
+        min-width: 0;
+        min-height: 30px;
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+
+    .o_saas_upgrade_wizard textarea,
+    .o_saas_upgrade_wizard .o_field_text textarea {
+        min-height: 64px !important;
+        max-width: 100%;
+        width: 100% !important;
+        box-sizing: border-box;
     }
 }
 

@@ -37,6 +37,10 @@
                             class="oe_highlight"
                             states="suspended"
                             confirm="Reactivate this account and restore login access for the user?"/>
+                    <button name="action_email_login_credentials" type="object"
+                            string="Email login credentials"
+                            states="active,expired"
+                            confirm="Generate a new temporary password and email it to the login user?"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,active,suspended,expired"
                            readonly="1"/>

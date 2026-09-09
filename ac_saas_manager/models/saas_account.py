@@ -4,8 +4,16 @@
 #  AuctionChamp SaaS Manager — One account = one login
 #
 ##############################################################################
+import logging
+import secrets
+import string
+from email.utils import make_msgid
+
 from odoo import api, fields, models, _
 from odoo.exceptions import AccessError, UserError, ValidationError
+from odoo.tools import formataddr
+
+_logger = logging.getLogger(__name__)
 
 
 class AcSaasAccount(models.Model):
@@ -459,6 +467,8 @@ class AcSaasAccount(models.Model):
             'default_requested_plan_id': suggested.id,
             'default_trigger_feature': trigger_feature or 'other',
             'default_tournament_id': tournament_id or False,
+            # Odoo ActionDialog reads dialog_size from context (not flags).
+            'dialog_size': 'medium',
         }
         return {
             'type': 'ir.actions.act_window',
@@ -468,6 +478,220 @@ class AcSaasAccount(models.Model):
             'views': [(False, 'form')],
             'target': 'new',
             'context': ctx,
+        }
+
+    @api.model
+    def _saas_login_url(self):
+        base = self.env['ir.config_parameter'].sudo().get_param('web.base.url') or ''
+        return '%s/web/login' % base.rstrip('/')
+
+    @api.model
+    def _saas_mail_server(self):
+        return self.env['ir.mail_server'].sudo().search([], order='sequence,id', limit=1)
+
+    @api.model
+    def _saas_from_is_unroutable(self, email_from):
+        """True when From would bounce (laptop host, missing domain)."""
+        raw = (email_from or '').strip()
+        if not raw or '@' not in raw:
+            return True
+        domain = raw.rsplit('@', 1)[-1].strip('> ').lower()
+        if not domain or '.' not in domain:
+            return True
+        if 'localhost' in domain or domain.endswith('.local') or domain.endswith('.lan'):
+            return True
+        return False
+
+    @api.model
+    def _saas_sender_address(self):
+        """Bare mailbox used as SMTP From (must match the outgoing server login)."""
+        server = self._saas_mail_server()
+        smtp_user = (server.smtp_user or '').strip() if server else ''
+        if smtp_user and '@' in smtp_user and not self._saas_from_is_unroutable(smtp_user):
+            return smtp_user
+        from_filter = (getattr(server, 'from_filter', None) or '').strip() if server else ''
+        if from_filter and '@' in from_filter and not self._saas_from_is_unroutable(from_filter):
+            return from_filter.split(',')[0].strip()
+
+        ICP = self.env['ir.config_parameter'].sudo()
+        default_from = (ICP.get_param('mail.default.from') or '').strip()
+        catchall = (ICP.get_param('mail.catchall.domain') or '').strip()
+        if default_from and '@' in default_from and not self._saas_from_is_unroutable(default_from):
+            return default_from
+        if default_from and catchall:
+            combined = '%s@%s' % (default_from, catchall)
+            if not self._saas_from_is_unroutable(combined):
+                return combined
+
+        company = self.env.company.sudo()
+        if company.email and '@' in company.email and not self._saas_from_is_unroutable(company.email):
+            return company.email.strip()
+
+        return 'noreply@auctionchamp.live'
+
+    @api.model
+    def _saas_mail_domain(self):
+        addr = self._saas_sender_address()
+        return addr.rsplit('@', 1)[-1].strip().lower()
+
+    @api.model
+    def _saas_message_id(self):
+        return make_msgid(domain=self._saas_mail_domain())
+
+    @api.model
+    def _saas_message_id_is_unroutable(self, message_id):
+        raw = (message_id or '').strip()
+        if not raw or '@' not in raw:
+            return True
+        host = raw.rsplit('@', 1)[-1].rstrip('>').lower()
+        return self._saas_from_is_unroutable('noreply@%s' % host)
+
+    @api.model
+    def _saas_email_from(self):
+        """From header: AuctionChamp <smtp-mailbox@domain>."""
+        addr = self._saas_sender_address()
+        try:
+            return formataddr(('AuctionChamp', addr))
+        except Exception:
+            return addr
+
+    @api.model
+    def _saas_ensure_mail_default_from(self):
+        """So Odoo does not fall back to a laptop hostname for later mails."""
+        ICP = self.env['ir.config_parameter'].sudo()
+        current = (ICP.get_param('mail.default.from') or '').strip()
+        if current and not self._saas_from_is_unroutable(current):
+            return
+        ICP.set_param('mail.default.from', self._saas_sender_address())
+
+    @api.model
+    def _generate_temp_password(self, length=12):
+        alphabet = string.ascii_letters + string.digits
+        chars = [
+            secrets.choice(string.ascii_uppercase),
+            secrets.choice(string.ascii_lowercase),
+            secrets.choice(string.digits),
+        ]
+        chars += [secrets.choice(alphabet) for _ in range(max(0, length - 3))]
+        secrets.SystemRandom().shuffle(chars)
+        return ''.join(chars)
+
+    def action_send_credentials_email(self, password=None, email_to=None):
+        """Email login credentials after paid signup (or admin resend).
+
+        Called from website Get Started → Razorpay provision. Safe to call
+        multiple times with an explicit ``password``; without one, generates
+        a new temporary password and updates the login user.
+        """
+        self.ensure_one()
+        if 'mail.mail' not in self.env:
+            _logger.warning(
+                'mail module missing; cannot email credentials for SaaS account %s',
+                self.id,
+            )
+            return False
+
+        user = self.user_id.sudo().with_context(active_test=False)
+        email = (email_to or user.email or user.login or '').strip()
+        if not email:
+            _logger.warning(
+                'No email on SaaS account %s (%s); credentials not sent',
+                self.id, self.name,
+            )
+            return False
+
+        plain = password
+        if not plain:
+            plain = self._generate_temp_password()
+            user.with_context(no_reset_password=True).write({'password': plain})
+
+        login_url = self._saas_login_url()
+        body = _(
+            '<p>Hi %(name)s,</p>'
+            '<p>Welcome to <strong>AuctionChamp</strong>! '
+            'Your payment was received and your account is ready.</p>'
+            '<ul>'
+            '<li>Plan: <strong>%(plan)s</strong></li>'
+            '<li>Account: %(account)s</li>'
+            '<li>Valid until: %(end)s</li>'
+            '<li>Login: <a href="%(url)s">Auction Management Panel</a></li>'
+            '<li>Username (email): <strong>%(login)s</strong></li>'
+            '<li>Temporary password: <strong>%(password)s</strong></li>'
+            '</ul>'
+            '<p>Please log in and change your password after first login.</p>'
+            '<p>— AuctionChamp Team</p>'
+        ) % {
+            'name': user.name or self.name,
+            'plan': self.plan_id.name,
+            'account': self.name,
+            'end': self.date_end or '—',
+            'url': login_url,
+            'login': user.login or email,
+            'password': plain,
+        }
+        try:
+            mail_server = self._saas_mail_server()
+            self._saas_ensure_mail_default_from()
+            mail = self.env['mail.mail'].sudo().create({
+                'subject': _('Your AuctionChamp account — %(plan)s') % {
+                    'plan': self.plan_id.name,
+                },
+                'body_html': body,
+                'email_from': self._saas_email_from(),
+                'reply_to': self._saas_sender_address(),
+                'email_to': email,
+                'message_id': self._saas_message_id(),
+                'mail_server_id': mail_server.id if mail_server else False,
+                'auto_delete': False,
+            })
+            mail.sudo().send()
+            if mail.exists() and mail.state == 'exception':
+                _logger.error(
+                    'SaaS credentials mail exception for account %s to %s: %s',
+                    self.id, email, mail.failure_reason or mail.state,
+                )
+                return False
+            _logger.info(
+                'SaaS credentials mailed account=%s to=%s from=%s message_id=%s state=%s',
+                self.id,
+                email,
+                mail.email_from if mail.exists() else '',
+                mail.message_id if mail.exists() else '',
+                mail.state if mail.exists() else 'gone',
+            )
+        except Exception:
+            _logger.exception(
+                'Failed to email SaaS credentials for account %s to %s',
+                self.id, email,
+            )
+            return False
+        return True
+
+    def action_email_login_credentials(self):
+        """Manager button: reset temp password and email login details."""
+        self.ensure_one()
+        if not self.user_id:
+            raise UserError(_('This account has no login user.'))
+        ok = self.action_send_credentials_email()
+        if not ok:
+            raise UserError(_(
+                'Could not deliver the credentials email. '
+                'Open Settings → Technical → Email → Emails, open the '
+                '"Delivery Failed" row, and read Failure Reason. '
+                'From must be the same mailbox as the outgoing SMTP user '
+                '(Gmail/Office 365 reject a different From).'
+            ))
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Credentials sent'),
+                'message': _(
+                    'A temporary password was generated and emailed to %s.'
+                ) % (self.user_id.email or self.user_id.login),
+                'type': 'success',
+                'sticky': False,
+            },
         }
 
     @api.model_create_multi

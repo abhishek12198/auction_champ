@@ -5,7 +5,7 @@ import { registry } from "@web/core/registry";
 import { session } from "@web/session";
 
 const { Component, hooks } = owl;
-const { useState, onMounted, onWillUnmount, onPatched } = hooks;
+const { useState, onMounted, onWillUnmount, onPatched, onWillPatch } = hooks;
 
 /**
  * Replaces auction_module tournament badge with a switcher over all
@@ -57,16 +57,28 @@ class SaasTournamentSystrayItem extends Component {
         // Bubble phase so button handlers run before "outside click" closes menus
         const onOutsideClick = (ev) => {
             const root = this.el;
-            if (!root || root.contains(ev.target)) {
+            const planMenu = document.body.querySelector(".o_saas_plan_menu[data-saas-plan-portal='1']");
+            const planBackdrop = document.body.querySelector(".o_saas_plan_sheet_backdrop[data-saas-plan-portal='1']");
+            const inRoot = root && root.contains(ev.target);
+            const inPlan =
+                (planMenu && planMenu.contains(ev.target)) ||
+                (planBackdrop && planBackdrop.contains(ev.target));
+            if (inRoot || inPlan) {
                 return;
             }
             if (this.state.pickerOpen) {
                 return;
             }
+            if (this.state.planExpanded) {
+                this._restorePlanPortal();
+            }
             this.state.expanded = false;
             this.state.planExpanded = false;
         };
-        const onReposition = () => this._positionMobileMenu();
+        const onReposition = () => {
+            this._syncPlanPortal();
+            this._positionMobileMenu();
+        };
         onMounted(() => {
             // Load after shell paints — do not block navbar / first action on this RPC.
             this.loadTournaments();
@@ -75,8 +87,18 @@ class SaasTournamentSystrayItem extends Component {
             this._applyFrozenUi();
             this._positionMobileMenu();
         });
-        onPatched(() => this._positionMobileMenu());
+        onWillPatch(() => {
+            // Restore portaled nodes before OWL removes them on close.
+            if (!this.state.planExpanded) {
+                this._restorePlanPortal();
+            }
+        });
+        onPatched(() => {
+            this._syncPlanPortal();
+            this._positionMobileMenu();
+        });
         onWillUnmount(() => {
+            this._restorePlanPortal();
             document.removeEventListener("click", onOutsideClick);
             window.removeEventListener("resize", onReposition);
             if (this._pickerSearchTimer) {
@@ -85,34 +107,159 @@ class SaasTournamentSystrayItem extends Component {
         });
     }
 
-    _positionMobileMenu() {
-        const menu = this.el && this.el.querySelector(".o_saas_tournament_menu");
+    _isMobilePlanOverlay() {
+        return typeof window !== "undefined" && window.innerWidth <= 767;
+    }
+
+    _planPortalNodes() {
+        const backdrop =
+            (this.el && this.el.querySelector(".o_saas_plan_sheet_backdrop")) ||
+            document.body.querySelector(".o_saas_plan_sheet_backdrop[data-saas-plan-portal='1']");
+        const menu =
+            (this.el && this.el.querySelector(".o_saas_plan_menu")) ||
+            document.body.querySelector(".o_saas_plan_menu[data-saas-plan-portal='1']");
+        return { backdrop, menu };
+    }
+
+    _restorePlanPortal() {
+        const slot = this._planPortalSlot;
+        const { backdrop, menu } = this._planPortalNodes();
+        if (slot && slot.isConnected) {
+            if (menu && menu.parentElement === document.body) {
+                slot.appendChild(menu);
+            }
+            if (backdrop && backdrop.parentElement === document.body) {
+                slot.appendChild(backdrop);
+            }
+        }
+        if (menu) {
+            menu.removeAttribute("data-saas-plan-portal");
+            this._clearInlineMenuStyles(menu);
+        }
+        if (backdrop) {
+            backdrop.removeAttribute("data-saas-plan-portal");
+            backdrop.style.display = "";
+            backdrop.style.position = "";
+            backdrop.style.inset = "";
+            backdrop.style.zIndex = "";
+        }
+        this._planPortalSlot = null;
+    }
+
+    _syncPlanPortal() {
+        // Desktop / tablet: keep the menu under the plan chip (normal dropdown).
+        if (!this._isMobilePlanOverlay()) {
+            this._restorePlanPortal();
+            return;
+        }
+        if (!this.state.planExpanded) {
+            this._restorePlanPortal();
+            return;
+        }
+        const { backdrop, menu } = this._planPortalNodes();
         if (!menu) {
             return;
         }
-        if (window.innerWidth > 767) {
-            menu.style.position = "";
-            menu.style.top = "";
-            menu.style.left = "";
-            menu.style.right = "";
-            menu.style.width = "";
-            menu.style.minWidth = "";
-            menu.style.maxWidth = "";
-            menu.style.transform = "";
+        // Phone only: move out of the navbar so position:fixed is viewport-relative.
+        if (!this._planPortalSlot) {
+            this._planPortalSlot = menu.parentElement;
+        }
+        menu.setAttribute("data-saas-plan-portal", "1");
+        if (menu.parentElement !== document.body) {
+            document.body.appendChild(menu);
+        }
+        if (backdrop) {
+            backdrop.setAttribute("data-saas-plan-portal", "1");
+            if (backdrop.parentElement !== document.body) {
+                document.body.appendChild(backdrop);
+            }
+        }
+    }
+
+    _positionMobileMenu() {
+        this._positionMobileDropdown(".o_saas_tournament_menu", ".o_saas_tournament_badge, .o_auction_tournament_badge");
+        this._positionMobilePlanOverlay();
+    }
+
+    _clearInlineMenuStyles(menu) {
+        if (!menu) {
+            return;
+        }
+        [
+            "position", "top", "left", "right", "bottom", "width",
+            "minWidth", "maxWidth", "maxHeight", "overflowY", "transform", "zIndex",
+        ].forEach((prop) => {
+            menu.style[prop] = "";
+        });
+    }
+
+    _positionMobileDropdown(menuSelector, anchorSelector) {
+        const menu = this.el && this.el.querySelector(menuSelector);
+        if (!menu) {
+            return;
+        }
+        if (!this._isMobilePlanOverlay()) {
+            this._clearInlineMenuStyles(menu);
             return;
         }
         const navbar = document.querySelector(".o_main_navbar");
-        const badge = this.el.querySelector(".o_saas_tournament_badge, .o_auction_tournament_badge");
+        const anchor = this.el.querySelector(anchorSelector);
         const navBottom = navbar ? navbar.getBoundingClientRect().bottom : 46;
-        const badgeBottom = badge ? badge.getBoundingClientRect().bottom : navBottom;
+        const anchorBottom = anchor ? anchor.getBoundingClientRect().bottom : navBottom;
         menu.style.position = "fixed";
-        menu.style.top = `${Math.round(Math.max(navBottom, badgeBottom) + 8)}px`;
-        menu.style.left = "12px";
-        menu.style.right = "12px";
+        menu.style.top = `${Math.round(Math.max(navBottom, anchorBottom) + 8)}px`;
+        menu.style.left = "10px";
+        menu.style.right = "10px";
+        menu.style.bottom = "auto";
         menu.style.width = "auto";
         menu.style.minWidth = "0";
         menu.style.maxWidth = "none";
+        menu.style.maxHeight = "min(65vh, 380px)";
+        menu.style.overflowY = "auto";
         menu.style.transform = "none";
+        menu.style.zIndex = "11050";
+    }
+
+    _positionMobilePlanOverlay() {
+        const menu =
+            document.body.querySelector(".o_saas_plan_menu[data-saas-plan-portal='1']") ||
+            (this.el && this.el.querySelector(".o_saas_plan_menu"));
+        const backdrop =
+            document.body.querySelector(".o_saas_plan_sheet_backdrop[data-saas-plan-portal='1']") ||
+            (this.el && this.el.querySelector(".o_saas_plan_sheet_backdrop"));
+        if (!menu) {
+            return;
+        }
+        // Laptop / tablet: CSS dropdown under the chip — no fixed overlay styles.
+        if (!this._isMobilePlanOverlay()) {
+            this._clearInlineMenuStyles(menu);
+            if (backdrop) {
+                backdrop.style.display = "";
+                backdrop.style.position = "";
+                backdrop.style.inset = "";
+                backdrop.style.zIndex = "";
+            }
+            return;
+        }
+        if (backdrop) {
+            backdrop.style.display = "block";
+            backdrop.style.position = "fixed";
+            backdrop.style.inset = "0";
+            backdrop.style.zIndex = "11055";
+        }
+        // Phone: viewport-centered overlay (menu is portaled to document.body).
+        menu.style.position = "fixed";
+        menu.style.left = "50%";
+        menu.style.right = "auto";
+        menu.style.top = "50%";
+        menu.style.bottom = "auto";
+        menu.style.width = "min(340px, calc(100vw - 24px))";
+        menu.style.minWidth = "0";
+        menu.style.maxWidth = "calc(100vw - 24px)";
+        menu.style.maxHeight = "min(80vh, 520px)";
+        menu.style.overflowY = "auto";
+        menu.style.transform = "translate(-50%, -50%)";
+        menu.style.zIndex = "11060";
     }
 
     _applyFrozenUi() {
@@ -217,6 +364,9 @@ class SaasTournamentSystrayItem extends Component {
         if (!this.state.canSwitch || this.state.switching) {
             return;
         }
+        if (this.state.planExpanded) {
+            this._restorePlanPortal();
+        }
         this.state.planExpanded = false;
         this.state.expanded = !this.state.expanded;
     }
@@ -225,7 +375,19 @@ class SaasTournamentSystrayItem extends Component {
         ev.preventDefault();
         ev.stopPropagation();
         this.state.expanded = false;
-        this.state.planExpanded = !this.state.planExpanded;
+        if (this.state.planExpanded) {
+            this._restorePlanPortal();
+            this.state.planExpanded = false;
+            return;
+        }
+        this.state.planExpanded = true;
+    }
+
+    onPlanBackdropClick(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        this._restorePlanPortal();
+        this.state.planExpanded = false;
     }
 
     onPlanMenuClick(ev) {

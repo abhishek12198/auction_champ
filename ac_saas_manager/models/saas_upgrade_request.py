@@ -229,6 +229,7 @@ class AcSaasUpgradeRequest(models.Model):
                         'plan': rec.requested_plan_id.name,
                     },
                     'body_html': body,
+                    'email_from': self.env['ac.saas.account']._saas_email_from(),
                     'email_to': partner.email,
                     'auto_delete': True,
                 })
@@ -271,6 +272,7 @@ class AcSaasUpgradeRequest(models.Model):
             mail = Mail.sudo().create({
                 'subject': subject,
                 'body_html': body,
+                'email_from': self.env['ac.saas.account']._saas_email_from(),
                 'email_to': email,
                 'auto_delete': True,
             })

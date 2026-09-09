@@ -155,10 +155,24 @@
                     <i class="fa fa-caret-down o_saas_plan_chip_caret"/>
                 </button>
                 <div t-if="state.planExpanded"
+                     class="o_saas_plan_sheet_backdrop"
+                     t-on-click="onPlanBackdropClick"/>
+                <div t-if="state.planExpanded"
                      class="o_saas_plan_menu"
+                     role="dialog"
+                     aria-label="Current plan"
                      t-on-click="onPlanMenuClick">
                     <div class="o_saas_plan_menu_head">
-                        <div class="o_saas_plan_menu_kicker">Current plan</div>
+                        <div class="o_saas_plan_menu_head_row">
+                            <div class="o_saas_plan_menu_kicker">Current plan</div>
+                            <button type="button"
+                                    class="o_saas_plan_menu_close"
+                                    t-on-click="onPlanBackdropClick"
+                                    aria-label="Close plan details"
+                                    title="Close">
+                                <i class="fa fa-times"/>
+                            </button>
+                        </div>
                         <div class="o_saas_plan_menu_title" t-esc="state.planName"/>
                         <div t-if="state.planAccount" class="o_saas_plan_menu_account" t-esc="state.planAccount"/>
                         <div t-if="state.planExpiry" class="o_saas_plan_menu_expiry">

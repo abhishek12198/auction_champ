@@ -197,8 +197,9 @@ class AuctionTeamPlayer(models.Model):
                     'type': 'binary',
                     'datas': base64.b64encode(pdf_content),
                     'mimetype': 'application/pdf',
-                    'res_model': player._name,
-                    'res_id': player.id,
+                    # Do not bind to the player: that makes mail.message inherit
+                    # tournament/SaaS record rules and can block attachment read
+                    # during send for non-superuser admins.
                 })
                 body = _(
                     '<p>Hi %(name)s,</p>'

@@ -150,6 +150,7 @@ class AcSaasUpgradeRequest(models.Model):
                         'plan': rec.requested_plan_id.name,
                     },
                     'body_html': body,
+                    'email_from': self.env['ac.saas.account']._saas_email_from(),
                     'email_to': partner.email,
                     'auto_delete': True,
                 })
