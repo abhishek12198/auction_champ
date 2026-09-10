@@ -80,6 +80,18 @@ class AcSaasUpgradeRequestWizard(models.TransientModel):
         period_days = 0
         remaining_days = 0
 
+        if self.trigger_feature == 'renewal':
+            period_days = max(1, int((plan.validity_days if plan else 0) or 365))
+            return {
+                'target': target,
+                'current_price': current_price,
+                'credit': 0.0,
+                'amount': round(target, 2),
+                'period_days': period_days,
+                'remaining_days': 0,
+                'ratio': 0.0,
+            }
+
         if account and account.date_start and account.date_end:
             period_days = max(1, (account.date_end - account.date_start).days)
             remaining_days = max(0, (account.date_end - today).days)
@@ -119,6 +131,7 @@ class AcSaasUpgradeRequestWizard(models.TransientModel):
         'account_id',
         'account_id.date_start',
         'account_id.date_end',
+        'trigger_feature',
     )
     def _compute_payment_required(self):
         setting_on = self._saas_upgrade_payment_setting_on()
@@ -140,15 +153,21 @@ class AcSaasUpgradeRequestWizard(models.TransientModel):
                     currency.symbol or currency.name or '',
                     '{:,.2f}'.format(details['amount']),
                 )
-                wiz.upgrade_proration_note = _(
-                    'Prorated: %(new)s new plan − %(credit)s unused credit '
-                    '(%(days)s of %(period)s days remaining on current package).'
-                ) % {
-                    'new': '{:,.2f}'.format(details['target']),
-                    'credit': '{:,.2f}'.format(details['credit']),
-                    'days': details['remaining_days'],
-                    'period': details['period_days'],
-                }
+                if wiz.trigger_feature == 'renewal':
+                    wiz.upgrade_proration_note = _(
+                        'Full package price for a new %(days)s-day term. '
+                        'Unused days are not credited on renewal.'
+                    ) % {'days': details['period_days']}
+                else:
+                    wiz.upgrade_proration_note = _(
+                        'Prorated: %(new)s new plan − %(credit)s unused credit '
+                        '(%(days)s of %(period)s days remaining on current package).'
+                    ) % {
+                        'new': '{:,.2f}'.format(details['target']),
+                        'credit': '{:,.2f}'.format(details['credit']),
+                        'days': details['remaining_days'],
+                        'period': details['period_days'],
+                    }
             elif wiz.payment_required:
                 wiz.upgrade_amount_label = _('Price not set')
                 wiz.upgrade_proration_note = False

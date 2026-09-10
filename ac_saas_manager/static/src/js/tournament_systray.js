@@ -348,7 +348,7 @@ class SaasTournamentSystrayItem extends Component {
         } else if (this.state.accountFrozen) {
             this.state.expiryWarning = true;
             this.state.expiryMessage =
-                "Your account has expired and is frozen. Request reactivation to continue.";
+                "Your account has expired and is frozen. Renew your plan to continue.";
             this.state.expiryUrgent = true;
         } else {
             this.state.expiryWarning = false;
@@ -446,7 +446,7 @@ class SaasTournamentSystrayItem extends Component {
         }
         if (!this.state.planAccountId) {
             this.notification.add("No SaaS account found for this login.", {
-                title: "Reactivation",
+                title: "Renew plan",
                 type: "danger",
             });
             return;
@@ -465,9 +465,9 @@ class SaasTournamentSystrayItem extends Component {
             const msg =
                 (e && e.data && e.data.message) ||
                 (e && e.message) ||
-                "Could not submit the reactivation request.";
+                "Could not start plan renewal.";
             this.notification.add(String(msg), {
-                title: "Reactivation",
+                title: "Renew plan",
                 type: "danger",
             });
         } finally {

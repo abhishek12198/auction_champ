@@ -202,22 +202,22 @@ class ResUsers(models.Model):
         if frozen or days_left < 0:
             message = _(
                 'Your account has expired. It is frozen — you cannot change data. '
-                'Please request reactivation to continue using it further.'
+                'Renew your plan to continue using it further.'
             )
             days_left = min(days_left, -1)
         elif days_left == 0:
             message = _(
-                'Your account is expiring today. Please renew / reactivate '
+                'Your account is expiring today. Renew your plan '
                 'to continue using it further.'
             )
         elif days_left == 1:
             message = _(
-                'Your account is expiring in 1 day. Please renew / reactivate '
+                'Your account is expiring in 1 day. Renew your plan '
                 'to continue using it further.'
             )
         else:
             message = _(
-                'Your account is expiring in %(days)s days. Please renew / reactivate '
+                'Your account is expiring in %(days)s days. Renew your plan '
                 'to continue using it further.'
             ) % {'days': days_left}
         return {
@@ -268,8 +268,13 @@ class ResUsers(models.Model):
         if plan.allow_parallel_sessions and account.disable_parallel_sessions:
             parallel_line += ' ' + _('(disabled for this account)')
         expiry_display = self._format_saas_expiry_date(account.date_end)
+        used = account._tournament_count_for_quota()
+        limit = account._effective_tournament_limit()
         lines = [
-            _('Tournaments: up to %s') % plan.max_tournaments,
+            _('Tournaments: %(used)s of %(limit)s') % {
+                'used': used,
+                'limit': limit,
+            },
             _('Teams / tournament: up to %s') % plan.max_teams_per_tournament,
             _('Players / tournament: up to %s') % plan.max_players_per_tournament,
             _('Random mode: %s') % (_('Yes') if plan.allow_random_mode else _('No')),

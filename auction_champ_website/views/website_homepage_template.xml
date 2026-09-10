@@ -47,6 +47,7 @@
                 <t t-if="live_tournaments">
                     <li><a href="#live-auctions" class="ac-nav-live-link"><span class="ac-nav-live-dot"></span>Live Auctions</a></li>
                 </t>
+                <li><a href="/calendar">Calendar</a></li>
                 <li><a href="#features">Features</a></li>
                 <li><a href="#how-it-works">How It Works</a></li>
                 <li><a href="#faq">FAQ</a></li>
@@ -68,6 +69,7 @@
             <t t-if="live_tournaments">
                 <li><a href="#live-auctions"><span class="ac-nav-live-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ff4757;margin-right:6px;animation:ac-pulse 1.5s ease-in-out infinite;"></span>Live Auctions</a></li>
             </t>
+            <li><a href="/calendar">Calendar</a></li>
             <li><a href="#features">Features</a></li>
             <li><a href="#how-it-works">How It Works</a></li>
             <li><a href="#faq">FAQ</a></li>
@@ -87,15 +89,15 @@
     <div class="ac-hero-inner">
         <!-- Hidden for now — set t-if="True" (or remove t-if) to show again -->
         <div class="ac-hero-badge" t-if="False">
-            🏏 &#160; India's #1 Cricket Auction &amp; Tournament Platform
+            🏏 &#160; India's #1 Premier Sports Auction &amp; Tournament Platform
         </div>
 
         <h1>
-            <t t-esc="config.hero_headline or 'India\'s Complete Cricket Auction &amp; Tournament Management Platform'"/>
+            <t t-esc="config.hero_headline or 'India\'s Complete Premier Sports Auction &amp; Tournament Management Platform'"/>
         </h1>
 
         <p class="ac-hero-sub">
-            <t t-esc="config.hero_subheading or 'Manage Player Registrations, Cricket Auctions, Teams, Fixtures, Points Tables, Live Updates and Tournament Operations from one powerful platform.'"/>
+            <t t-esc="config.hero_subheading or 'Manage Player Registrations, Premier Sports Auctions, Teams, Fixtures, Points Tables, Live Updates and Tournament Operations from one powerful platform.'"/>
         </p>
 
         <div class="ac-hero-btns">
@@ -259,7 +261,7 @@
             <div class="ac-feature-card">
                 <span class="ac-feature-num">04</span>
                 <div class="ac-feature-icon"><i class="fas fa-gavel"></i></div>
-                <h3>Cricket Auction Engine</h3>
+                <h3>Premier Sports Auction Engine</h3>
                 <p>The flagship AuctionChamp feature — a complete live bidding system.</p>
                 <ul class="ac-feature-list">
                     <li>Live Auction Dashboard</li>
@@ -387,7 +389,7 @@
     <div class="ac-showcase-inner">
         <div class="ac-showcase-content">
             <span class="ac-label">Live in Action</span>
-            <h2>Experience the Excitement of <span class="hl">Live Cricket Auctions</span></h2>
+            <h2>Experience the Excitement of <span class="hl">Live Premier Sports Auctions</span></h2>
             <p>
                 AuctionChamp's auction engine brings the IPL-style bidding experience to your local
                 tournament. Real-time bids, live display screens, and automatic budget validation make
@@ -878,7 +880,7 @@
      ================================================================ -->
 <section class="ac-cta-section" id="contact">
     <div class="ac-container">
-        <h2>Ready to Run Your Next Cricket Auction<br/>Like a Professional?</h2>
+        <h2>Ready to Run Your Next Premier Sports Auction<br/>Like a Professional?</h2>
         <p>Join hundreds of tournament organizers across India who trust AuctionChamp.</p>
         <div class="ac-cta-btns">
             <a t-att-href="config.contact_sales_url or 'mailto:sales@auctionchamp.in'" class="ac-btn ac-btn-white">
@@ -906,7 +908,7 @@
                 </picture>
             </h3>
             <p>
-                <t t-esc="config.about_us_text or 'AuctionChamp is India\'s leading cricket auction and tournament management platform, trusted by hundreds of organizers across the country.'"/>
+                <t t-esc="config.about_us_text or 'AuctionChamp is India\'s leading premier sports auction and tournament management platform, trusted by hundreds of organizers across the country.'"/>
             </p>
             <div class="ac-footer-socials">
                 <t t-if="config.social_facebook">
@@ -936,6 +938,7 @@
         <div class="ac-footer-col">
             <h4>Platform</h4>
             <ul>
+                <li><a href="/calendar">Calendar</a></li>
                 <li><a href="#features">Features</a></li>
                 <li><a href="#pricing">Pricing</a></li>
                 <li><a href="#how-it-works">How It Works</a></li>
@@ -984,7 +987,7 @@
     <!-- Bottom bar -->
     <div class="ac-footer-bottom">
         <span class="ac-footer-tagline">
-            "<t t-esc="config.footer_tagline or 'Powering the Future of Cricket Auctions &amp; Tournament Management'"/>"
+            "<t t-esc="config.footer_tagline or 'Powering the Future of Premier Sports Auctions &amp; Tournament Management'"/>"
         </span>
         <span class="ac-footer-copyright">
             © <t t-esc="current_year"/> AuctionChamp. All rights reserved.

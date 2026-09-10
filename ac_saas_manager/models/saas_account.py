@@ -7,6 +7,7 @@
 import logging
 import secrets
 import string
+from datetime import timedelta
 from email.utils import make_msgid
 
 from odoo import api, fields, models, _
@@ -70,8 +71,11 @@ class AcSaasAccount(models.Model):
     team_count = fields.Integer(compute='_compute_usage')
     player_count = fields.Integer(compute='_compute_usage')
 
-    # Mirrored plan limits (for UI)
-    max_tournaments = fields.Integer(related='plan_id.max_tournaments', readonly=True)
+    # Effective create cap (plan quota × packages purchased, including renewals)
+    max_tournaments = fields.Integer(
+        compute='_compute_max_tournaments',
+        string='Max tournaments',
+    )
     max_teams_per_tournament = fields.Integer(
         related='plan_id.max_teams_per_tournament', readonly=True)
     max_players_per_tournament = fields.Integer(
@@ -104,6 +108,11 @@ class AcSaasAccount(models.Model):
          'Each login user can belong to only one SaaS account.'),
     ]
 
+    @api.depends('plan_id', 'plan_id.max_tournaments')
+    def _compute_max_tournaments(self):
+        for acc in self:
+            acc.max_tournaments = acc._effective_tournament_limit()
+
     @api.depends('tournament_ids', 'tournament_ids.team_ids', 'plan_id')
     def _compute_usage(self):
         Player = self.env['auction.team.player'].sudo()
@@ -135,7 +144,7 @@ class AcSaasAccount(models.Model):
         if self.state != 'active' or not self.active:
             raise AccessError(_(
                 'Your AuctionChamp account "%(name)s" is %(state)s. '
-                'Please request reactivation to continue.'
+                'Renew your plan to continue.'
             ) % {
                 'name': self.name,
                 'state': dict(self._fields['state'].selection).get(self.state, self.state),
@@ -184,7 +193,7 @@ class AcSaasAccount(models.Model):
                 raise AccessError(_(
                     'Your AuctionChamp account "%(name)s" has expired and is frozen. '
                     'You cannot %(op)s until it is renewed. '
-                    'Use "Request reactivation" to ask support to restore access.'
+                    'Use "Renew plan" in the top bar to pay and restore access.'
                 ) % {'name': acc.name, 'op': operation})
 
     @api.model
@@ -267,8 +276,8 @@ class AcSaasAccount(models.Model):
         self._sync_expiry_from_date()
         return self._is_frozen() or self.state == 'expired' or self._is_nearing_expiry(10)
 
-    def action_request_reactivation(self):
-        """Customer action: request renewal during the 10-day window or after expiry."""
+    def _assert_can_request_renewal(self):
+        """Raise if this login cannot start a same-plan renewal."""
         self.ensure_one()
         if (
             self.user_id != self.env.user
@@ -285,6 +294,87 @@ class AcSaasAccount(models.Model):
                 'or after the account has expired (account "%s").'
             ) % self.name)
 
+    def _vals_for_renewed_term(self, plan=None):
+        """Start a new package term from the purchase date.
+
+        ``date_start`` is today (payment / approval day).
+        ``date_end`` is today plus the plan's validity (usually 365 days).
+        Leftover days from the previous term are not carried forward.
+        """
+        self.ensure_one()
+        plan = plan or self.plan_id
+        today = fields.Date.context_today(self)
+        validity = int((plan.validity_days if plan else 0) or 365)
+        return {
+            'state': 'active',
+            'active': True,
+            'plan_id': plan.id if plan else False,
+            'date_start': today,
+            'date_end': today + timedelta(days=validity),
+        }
+
+    def _approved_renewal_count(self):
+        """How many extra packages were added after the original signup."""
+        self.ensure_one()
+        if not isinstance(self.id, int):
+            return 0
+        domain = [
+            ('account_id', '=', self.id),
+            ('state', '=', 'approved'),
+            ('trigger_feature', '=', 'renewal'),
+        ]
+        # Same-plan paid/approved rows that were not tagged as renewal still count.
+        if self.plan_id:
+            domain = [
+                ('account_id', '=', self.id),
+                ('state', '=', 'approved'),
+                '|',
+                ('trigger_feature', '=', 'renewal'),
+                '&',
+                ('current_plan_id', '=', self.plan_id.id),
+                ('requested_plan_id', '=', self.plan_id.id),
+            ]
+        return self.env['ac.saas.upgrade.request'].sudo().search_count(domain)
+
+    def _effective_tournament_limit(self):
+        """Total tournaments this account may create.
+
+        Signup grants one package (``plan.max_tournaments``). Each approved
+        renewal buys another package of the same size, so an existing
+        tournament from a previous purchase does not block the new one.
+        """
+        self.ensure_one()
+        plan_max = int(self.plan_id.max_tournaments or 0) if self.plan_id else 0
+        if not plan_max:
+            return 0
+        return plan_max * (1 + self._approved_renewal_count())
+
+    def _tournament_count_for_quota(self):
+        self.ensure_one()
+        return self.env['auction.tournament'].sudo().search_count([
+            ('saas_account_id', '=', self.id),
+        ])
+
+    def _renewal_customer_note(self):
+        self.ensure_one()
+        today = fields.Date.context_today(self)
+        if self.date_end:
+            days_left = (self.date_end - today).days
+            if self._is_frozen() or days_left < 0:
+                return _(
+                    'Account expired on %(date)s — please renew / reactivate.'
+                ) % {'date': self.date_end}
+            return _(
+                'Account is expiring on %(date)s (%(days)s day(s) left) — '
+                'please renew / reactivate.'
+            ) % {'date': self.date_end, 'days': days_left}
+        return _('Please renew / reactivate this account.')
+
+    def action_request_reactivation(self):
+        """Customer action: request renewal during the 10-day window or after expiry."""
+        self.ensure_one()
+        self._assert_can_request_renewal()
+
         Request = self.env['ac.saas.upgrade.request'].sudo()
         pending = Request.search([
             ('account_id', '=', self.id),
@@ -297,20 +387,7 @@ class AcSaasAccount(models.Model):
                 'We will confirm it shortly.'
             ) % {'ref': pending.name})
 
-        today = fields.Date.context_today(self)
-        if self.date_end:
-            days_left = (self.date_end - today).days
-            if self._is_frozen() or days_left < 0:
-                note = _(
-                    'Account expired on %(date)s — please renew / reactivate.'
-                ) % {'date': self.date_end}
-            else:
-                note = _(
-                    'Account is expiring on %(date)s (%(days)s day(s) left) — '
-                    'please renew / reactivate.'
-                ) % {'date': self.date_end, 'days': days_left}
-        else:
-            note = _('Please renew / reactivate this account.')
+        note = self._renewal_customer_note()
 
         request = Request.create({
             'account_id': self.id,
@@ -369,16 +446,17 @@ class AcSaasAccount(models.Model):
     def assert_can_create_tournament(self):
         self.ensure_one()
         plan = self.get_plan()
-        current = self.env['auction.tournament'].sudo().search_count([
-            ('saas_account_id', '=', self.id),
-        ])
-        if current >= plan.max_tournaments:
+        current = self._tournament_count_for_quota()
+        limit = self._effective_tournament_limit()
+        if current >= limit:
             raise ValidationError(_(
-                'Your %(plan)s plan allows up to %(max)s tournament(s). '
-                'You already have %(cur)s. Upgrade your plan or contact support.'
+                'Your %(plan)s plan allows %(max)s tournament(s) for the packages '
+                'you have purchased (%(pkg)s per package). You already have %(cur)s. '
+                'Renew the same plan to add another %(pkg)s, or upgrade to a higher plan.'
             ) % {
                 'plan': plan.name,
-                'max': plan.max_tournaments,
+                'max': limit,
+                'pkg': plan.max_tournaments,
                 'cur': current,
             })
 

@@ -3528,7 +3528,7 @@ class Auction(http.Controller):
     # Whitelist of models and fields that public users may fetch images from.
     _PUBLIC_IMAGE_FIELDS = {
         'auction.team.player': ['photo'],
-        'auction.team':        ['logo'],
+        'auction.team':        ['logo', 'owner_photo'],
         'auction.tournament':  [
             'logo', 'poster_image', 'social_share_image',
             'pool_draw_snapshot', 'fixture_schedule_snapshot',
@@ -3569,20 +3569,92 @@ class Auction(http.Controller):
             return 'image/svg+xml'
         return 'image/jpeg'
 
+    def _public_image_raw_bytes(self, binary):
+        """Decode an Odoo Binary value to image bytes without raising."""
+        if not binary:
+            return b''
+        if isinstance(binary, memoryview):
+            binary = binary.tobytes()
+        if isinstance(binary, (bytes, bytearray)):
+            raw = bytes(binary)
+            if raw[:3] == b'\xff\xd8\xff' or raw[:8] == b'\x89PNG\r\n\x1a\n':
+                return raw
+            if raw[:6] in (b'GIF87a', b'GIF89a') or raw[:2] == b'BM':
+                return raw
+            if raw[:4] == b'RIFF' and raw[8:12] == b'WEBP':
+                return raw
+            try:
+                decoded = base64.b64decode(raw, validate=False)
+                return decoded or raw
+            except Exception:
+                return raw
+        if isinstance(binary, str):
+            try:
+                return base64.b64decode(binary)
+            except Exception:
+                return b''
+        return b''
+
     def _public_image_bytes(self, binary, model, field, **kw):
         """Decode binary image; optionally downscale player photos.
 
         ``sz=pj`` — projector stage card. ``sz=bs`` — Bid Summary thumbnail.
         ``sz=reg`` / ``sz=rt`` — registration roster square thumbnail
         (EXIF-correct, upper-center crop — not face-zoom).
+        ``sz=sq`` — public View Squads thumbnail (face-centered, or saved poster crop).
         """
         sz = (kw.get('sz') or '').lower()
+        if model == 'auction.team.player' and field == 'photo' and binary and sz == 'sq':
+            try:
+                from io import BytesIO
+                im = self._sp_open_image(binary)
+                cropped = None
+                crop_override = kw.get('crop_override')
+                if im is not None and crop_override and isinstance(crop_override, dict):
+                    try:
+                        from PIL import Image
+                        w, h = im.size
+                        cl = max(0.0, min(1.0, float(crop_override.get('l', 0))))
+                        ct = max(0.0, min(1.0, float(crop_override.get('t', 0))))
+                        csw = max(0.05, min(1.0, float(crop_override.get('sw', 1))))
+                        csh = max(0.05, min(1.0, float(crop_override.get('sh', 1))))
+                        cl = min(cl, 1.0 - csw)
+                        ct = min(ct, 1.0 - csh)
+                        left = max(0, min(w - 1, int(round(cl * w))))
+                        top = max(0, min(h - 1, int(round(ct * h))))
+                        right = max(left + 1, min(w, int(round((cl + csw) * w))))
+                        bottom = max(top + 1, min(h, int(round((ct + csh) * h))))
+                        side = min(right - left, bottom - top, w - left, h - top)
+                        if side >= 8:
+                            cropped = im.crop(
+                                (left, top, left + side, top + side)
+                            ).resize((384, 384), Image.LANCZOS)
+                    except Exception:
+                        cropped = None
+                if cropped is None and im is not None:
+                    try:
+                        cropped = self._sp_face_fill_crop(im, out_w=384, out_h=384)
+                    except Exception:
+                        cropped = None
+                if cropped is None and im is not None:
+                    try:
+                        cropped = self._sp_roster_thumb_crop(im, out_w=384, out_h=384)
+                    except Exception:
+                        cropped = None
+                if cropped is not None:
+                    buf = BytesIO()
+                    cropped.convert('RGB').save(buf, format='JPEG', quality=88, optimize=True)
+                    return buf.getvalue()
+            except Exception:
+                _logger.warning('public image sz=sq face crop failed', exc_info=True)
+            return self._public_image_raw_bytes(binary)
         if model == 'auction.team.player' and field == 'photo' and binary and sz in ('reg', 'rt'):
             try:
                 from PIL import Image
                 from io import BytesIO
-                raw = base64.b64decode(binary)
-                im = Image.open(BytesIO(raw))
+                im = self._sp_open_image(binary)
+                if im is None:
+                    raise ValueError('unreadable player photo')
                 cropped = self._sp_roster_thumb_crop(im, out_w=384, out_h=384)
                 buf = BytesIO()
                 cropped.convert('RGB').save(buf, format='JPEG', quality=88, optimize=True)
@@ -3606,7 +3678,7 @@ class Auction(http.Controller):
                 ) or binary
             except Exception:
                 _logger.debug('public image sz=%s resize failed', sz, exc_info=True)
-        return base64.b64decode(binary)
+        return self._public_image_raw_bytes(binary)
 
     def _public_image_headers(self, image_bytes, etag=None, immutable=False):
         headers = [
@@ -3637,10 +3709,10 @@ class Auction(http.Controller):
         except (TypeError, ValueError):
             return request.not_found()
         sz = (kw.get('sz') or '').lower()
-        if sz not in ('pj', 'bs', 'reg', 'rt'):
+        if sz not in ('pj', 'bs', 'reg', 'rt', 'sq'):
             sz = ''
 
-        Model = request.env[model].sudo()
+        Model = request.env[model].sudo().with_context(active_test=False)
         table = Model._table
         request.env.cr.execute(
             'SELECT write_date FROM "%s" WHERE id = %%s' % table,
@@ -3668,7 +3740,7 @@ class Auction(http.Controller):
             return resp
 
         cache_key = None
-        if sz in ('pj', 'bs', 'reg', 'rt'):
+        if sz in ('pj', 'bs', 'reg', 'rt', 'sq'):
             cache_key = (request.env.cr.dbname, model, record_id, field, sz, etag)
             hit = _public_img_cache_get(cache_key)
             if hit:
@@ -3677,8 +3749,39 @@ class Auction(http.Controller):
         record = Model.browse(record_id)
         binary = getattr(record, field, None)
         if not binary:
+            try:
+                request.env.cr.execute(
+                    'SELECT "%s" FROM "%s" WHERE id = %%s' % (field, table),
+                    (record_id,),
+                )
+                raw_row = request.env.cr.fetchone()
+                binary = raw_row[0] if raw_row else None
+            except Exception:
+                binary = None
+        if not binary:
             return request.not_found()
-        image_bytes = self._public_image_bytes(binary, model, field, sz=sz)
+        crop_override = None
+        if sz == 'sq' and model == 'auction.team.player' and field == 'photo':
+            raw_crop = (getattr(record, 'squad_poster_crop', None) or '').strip()
+            if raw_crop:
+                try:
+                    parsed = json.loads(raw_crop)
+                    if isinstance(parsed, dict):
+                        crop_override = parsed
+                except Exception:
+                    crop_override = None
+        try:
+            image_bytes = self._public_image_bytes(
+                binary, model, field, sz=sz, crop_override=crop_override,
+            )
+        except Exception:
+            _logger.warning(
+                'public image failed %s/%s/%s sz=%s', model, record_id, field, sz,
+                exc_info=True,
+            )
+            image_bytes = self._public_image_raw_bytes(binary)
+        if not image_bytes:
+            return request.not_found()
         if cache_key:
             _public_img_cache_put(cache_key, image_bytes)
         return self._public_image_response(image_bytes, etag=etag, immutable=immutable)
@@ -4399,23 +4502,17 @@ class Auction(http.Controller):
     def _sp_open_image(self, binary):
         """Decode an Odoo binary/base64 field into a PIL RGB image."""
         from io import BytesIO
-        from PIL import Image
-        if not binary:
+        from PIL import Image, ImageOps
+        raw = self._public_image_raw_bytes(binary)
+        if not raw:
             return None
-        raw = binary
-        if isinstance(raw, str):
-            raw = base64.b64decode(raw)
-        elif isinstance(raw, bytes):
-            # Odoo may store raw bytes or base64 bytes
-            try:
-                return Image.open(BytesIO(raw)).convert('RGB')
-            except Exception:
-                try:
-                    raw = base64.b64decode(raw)
-                except Exception:
-                    return None
         try:
-            return Image.open(BytesIO(raw)).convert('RGB')
+            im = Image.open(BytesIO(raw))
+            try:
+                im = ImageOps.exif_transpose(im)
+            except Exception:
+                pass
+            return im.convert('RGB')
         except Exception:
             return None
 
@@ -4804,6 +4901,9 @@ class Auction(http.Controller):
 
         src = im.convert('RGB')
         left, top, side = self._sp_face_crop_box(src)
+        side = max(1, min(side, src.size[0], src.size[1]))
+        left = max(0, min(left, src.size[0] - side))
+        top = max(0, min(top, src.size[1] - side))
         cropped = src.crop((left, top, left + side, top + side))
         return cropped.resize((out_w, out_h), Image.LANCZOS)
 

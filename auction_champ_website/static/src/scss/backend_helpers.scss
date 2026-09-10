@@ -1,0 +1,5 @@
+// Accent / link / selection blue = website --ac-blue.
+// Do not override $ac-navy / $ac-navy-dark (backend chrome).
+
+$ac-blue:    #1565c0;
+$link-color: lighten($ac-blue, 20%);

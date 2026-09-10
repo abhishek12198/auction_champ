@@ -6,7 +6,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Upgrade plan — AuctionChamp</title>
+  <title><t t-if="is_renewal">Renew plan</t><t t-else="">Upgrade plan</t> — AuctionChamp</title>
   <link rel="stylesheet" href="/ac_saas_payment/static/src/css/upgrade_pay.css"/>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
@@ -23,24 +23,27 @@
   </header>
 
   <main class="ac-upg-main">
-    <div class="ac-upg-kicker">Plan upgrade</div>
-    <h1 class="ac-upg-title">Complete your upgrade</h1>
-    <p class="ac-upg-sub">Pay securely with Razorpay to activate your new plan instantly.</p>
+    <div class="ac-upg-kicker"><t t-if="is_renewal">Plan renewal</t><t t-else="">Plan upgrade</t></div>
+    <h1 class="ac-upg-title"><t t-if="is_renewal">Renew your plan</t><t t-else="">Complete your upgrade</t></h1>
+    <p class="ac-upg-sub">
+      <t t-if="is_renewal">Pay securely with Razorpay to start a new term on the same plan and create tournaments again.</t>
+      <t t-else="">Pay securely with Razorpay to activate your new plan instantly.</t>
+    </p>
 
     <div class="ac-upg-card">
       <div class="ac-upg-card-top">
         <div>
-          <div class="ac-upg-card-top-label">Upgrading to</div>
+          <div class="ac-upg-card-top-label"><t t-if="is_renewal">Renewing</t><t t-else="">Upgrading to</t></div>
           <div class="ac-upg-card-top-plan" t-esc="plan.name"/>
         </div>
       </div>
       <div class="ac-upg-card-body">
-        <div class="ac-upg-row">
+        <div t-if="not is_renewal" class="ac-upg-row">
           <span class="k">Current plan</span>
           <span class="v" t-esc="current_plan.name"/>
         </div>
         <div class="ac-upg-row">
-          <span class="k">New plan</span>
+          <span class="k"><t t-if="is_renewal">Plan</t><t t-else="">New plan</t></span>
           <span class="v" t-esc="plan.name"/>
         </div>
         <div class="ac-upg-row">
@@ -76,7 +79,10 @@
           <a t-att-href="backend_url or '/web'" class="ac-upg-btn ac-upg-btn-ghost">Back to app</a>
         </div>
         <div class="ac-upg-err" id="acSaasPayErr"/>
-        <p class="ac-upg-hint">Checkout opens in a secure overlay. Your plan upgrades automatically after payment.</p>
+        <p class="ac-upg-hint">
+          <t t-if="is_renewal">Checkout opens in a secure overlay. Your plan renews automatically after payment.</t>
+          <t t-else="">Checkout opens in a secure overlay. Your plan upgrades automatically after payment.</t>
+        </p>
         <div class="ac-upg-secure">
           <span class="ac-upg-secure-dot"/>
           <span>Encrypted payment via Razorpay</span>
@@ -211,7 +217,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Upgrade complete — AuctionChamp</title>
+  <title><t t-if="is_renewal">Plan renewed</t><t t-else="">Upgrade complete</t> — AuctionChamp</title>
   <link rel="stylesheet" href="/ac_saas_payment/static/src/css/upgrade_pay.css"/>
 </head>
 <body class="ac-upg-body">
@@ -230,8 +236,14 @@
     <div class="ac-upg-card">
       <div class="ac-upg-status">
         <div class="ac-upg-status-icon ok">✓</div>
-        <h1>You're on <t t-esc="plan.name"/>!</h1>
-        <p>Payment received. Return to the app and refresh to use your new plan features.</p>
+        <h1>
+          <t t-if="is_renewal">You're back on <t t-esc="plan.name"/>!</t>
+          <t t-else="">You're on <t t-esc="plan.name"/>!</t>
+        </h1>
+        <p>
+          <t t-if="is_renewal">Payment received. Return to the app and refresh to create tournaments for this new term.</t>
+          <t t-else="">Payment received. Return to the app and refresh to use your new plan features.</t>
+        </p>
         <a href="/web" class="ac-upg-btn ac-upg-btn-primary">Back to AuctionChamp</a>
       </div>
     </div>

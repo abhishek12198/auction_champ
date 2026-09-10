@@ -67,7 +67,7 @@ class AcSaasPlan(models.Model):
     # ── Quotas ────────────────────────────────────────────────────────────
     max_tournaments = fields.Integer(
         required=True,
-        help='Maximum tournaments this account may create.',
+        help='Maximum tournaments granted each time this package is purchased or renewed.',
     )
     max_teams_per_tournament = fields.Integer(
         required=True,

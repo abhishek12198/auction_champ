@@ -127,7 +127,11 @@ class AcSaasUpgradePayment(models.Model):
             'currency': (self.currency_id.name or 'INR').upper(),
             'receipt': (self.name or 'SUP')[:40],
             'notes': {
-                'purpose': 'saas_upgrade',
+                'purpose': (
+                    'saas_renewal'
+                    if self.upgrade_request_id.trigger_feature == 'renewal'
+                    else 'saas_upgrade'
+                ),
                 'upgrade_request_id': str(self.upgrade_request_id.id),
                 'account_id': str(self.account_id.id),
                 'plan_id': str(self.plan_id.id),
@@ -165,7 +169,7 @@ class AcSaasUpgradePayment(models.Model):
             'amount': amount_subunit,
             'currency': (self.currency_id.name or 'INR').upper(),
             'name': 'AuctionChamp',
-            'description': 'Plan upgrade — %s' % (self.plan_id.name or self.name),
+            'description': self._checkout_description(),
             'prefill': {
                 'name': user.name or '',
                 'email': user.email or '',
@@ -173,6 +177,13 @@ class AcSaasUpgradePayment(models.Model):
             },
             'transaction_token': self.access_token,
         }
+
+    def _checkout_description(self):
+        self.ensure_one()
+        plan_name = self.plan_id.name or self.name
+        if self.upgrade_request_id.trigger_feature == 'renewal':
+            return 'Plan renewal — %s' % plan_name
+        return 'Plan upgrade — %s' % plan_name
 
     def _verify_signature(self, order_id, payment_id, signature):
         _key_id, key_secret = self._razorpay_credentials()

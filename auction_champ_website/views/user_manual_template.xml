@@ -74,7 +74,7 @@
 
                 <footer class="ac-footer" style="padding-top:36px;">
                     <div class="ac-footer-bottom" style="border-top:none; padding-top:0;">
-                        <span class="ac-footer-tagline">"Powering the Future of Cricket Auctions &amp; Tournament Management"</span>
+                        <span class="ac-footer-tagline">"Powering the Future of Premier Sports Auctions &amp; Tournament Management"</span>
                         <span class="ac-footer-copyright">&#169; <t t-esc="current_year"/> AuctionChamp. All rights reserved.</span>
                     </div>
                 </footer>

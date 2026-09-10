@@ -1,0 +1,45 @@
+/* Website lighter blue as the backend PRIMARY accent.
+   Navbar / sidebar stay the theme navy. */
+
+.o_web_client {
+    --ac-blue: #1565c0;
+    --ac-blue-light: #1976d2;
+    --bs-primary: #1565c0;
+    --bs-primary-rgb: 21, 101, 192;
+    --primary: #1565c0;
+}
+
+.o_web_client .badge.bg-primary,
+.o_web_client .badge-primary {
+    background-color: #1565c0 !important;
+}
+
+.o_web_client .text-primary {
+    color: #1565c0 !important;
+}
+
+.o_web_client .bg-primary:not(.btn):not(.o_main_navbar):not(.ac-apps-sidebar-panel) {
+    background-color: #1565c0 !important;
+}
+
+.o_web_client .btn-link,
+.o_web_client .o_form_uri {
+    color: #1565c0;
+}
+
+.o_web_client .o_searchview_facet {
+    background: rgba(21, 101, 192, 0.45) !important;
+    border-color: rgba(21, 101, 192, 0.65) !important;
+}
+
+.o_web_client input[type="checkbox"],
+.o_web_client input[type="radio"] {
+    accent-color: #1565c0;
+}
+
+.o_web_client .o_field_widget input:focus,
+.o_web_client .o_field_widget select:focus,
+.o_web_client .o_field_widget textarea:focus {
+    border-color: #1565c0 !important;
+    box-shadow: 0 0 0 2px rgba(21, 101, 192, 0.2) !important;
+}

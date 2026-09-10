@@ -38,7 +38,8 @@
 
 import json
 import logging
-from datetime import date
+from collections import defaultdict
+from datetime import date, timedelta
 
 from odoo import http, fields
 from odoo.http import request
@@ -231,6 +232,233 @@ class AuctionChampHomepage(Website):
 
         return result
 
+    def _calendar_public_domain(self):
+        """Include archived tournaments; Odoo would otherwise hide active=False."""
+        return [
+            '|', '|', '|',
+            ('website_calendar_visible', '=', True),
+            ('live_board_active', '=', True),
+            ('registration_open', '=', True),
+            ('active', '=', False),
+        ]
+
+    def _parse_calendar_month(self, month_str, today):
+        try:
+            year, month = [int(p) for p in (month_str or '').split('-')[:2]]
+            if 1 <= month <= 12 and 2000 <= year <= 2100:
+                return year, month
+        except (TypeError, ValueError):
+            pass
+        return today.year, today.month
+
+    def _calendar_event_card(self, tournament, db_name, type_labels):
+        def pub_img(model, record_id, field):
+            return '/auction/public/image/%s/%d/%s' % (model, record_id, field)
+
+        date_display = ''
+        if hasattr(tournament, 'format_tournament_dates'):
+            date_display = tournament.format_tournament_dates()
+        if not date_display and tournament.tournament_date_display:
+            date_display = tournament.tournament_date_display
+        completed = self._calendar_tournament_is_completed(tournament)
+        return {
+            'id': tournament.id,
+            'name': tournament.name or '',
+            'sport': type_labels.get(tournament.tournament_type, tournament.tournament_type or ''),
+            'date_display': date_display or 'Dates to be announced',
+            'venue': (tournament.venue or '').strip() or 'Venue to be announced',
+            'logo_url': (
+                pub_img('auction.tournament', tournament.id, 'logo')
+                if tournament.logo else ''
+            ),
+            'is_live': bool(tournament.live_board_active),
+            'is_archived': not bool(tournament.active),
+            'is_completed': completed,
+            'live_url': (
+                '/{}/{}/auction/live-board'.format(db_name, tournament.slug)
+                if tournament.live_board_active and tournament.slug else ''
+            ),
+            'register_url': (
+                tournament.registration_url
+                if tournament.registration_open and tournament.registration_url
+                else ''
+            ),
+            'squad_url': '/calendar/squad/%s' % tournament.id if completed else '',
+        }
+
+    def _calendar_tournament_is_completed(self, tournament):
+        """Archived, declared complete, or last tournament day already passed."""
+        if not tournament.active:
+            return True
+        if getattr(tournament, 'auction_declared_complete', False):
+            return True
+        dates = self._tournament_calendar_dates(tournament)
+        today = fields.Date.context_today(tournament)
+        return bool(dates and dates[-1] < today)
+
+    def _calendar_tournament_visible(self, tournament):
+        if not tournament or not tournament.exists():
+            return False
+        return bool(
+            tournament.website_calendar_visible
+            or tournament.live_board_active
+            or tournament.registration_open
+            or not tournament.active
+        )
+
+    def _get_public_squad_data(self, tournament):
+        env = request.env
+        db_name = env.cr.dbname
+        # Completed/archived tournaments deactivate teams and players.
+        Team = env['auction.team'].sudo().with_context(active_test=False)
+        Player = env['auction.team.player'].sudo().with_context(active_test=False)
+        teams = Team.search(
+            [('tournament_id', '=', tournament.id)],
+            order='name asc',
+        )
+        # Every player still assigned to a team — not only sold/icon.
+        players = Player.search([
+            ('tournament_id', '=', tournament.id),
+            ('assigned_team_id', '!=', False),
+        ], order='icon_player desc, sl_no asc, name asc')
+        by_team = {}
+        extra_teams = Team.browse()
+        for player in players:
+            team = player.assigned_team_id
+            team_id = team.id
+            if not team_id:
+                continue
+            by_team.setdefault(team_id, []).append(player)
+            if team_id not in teams.ids:
+                extra_teams |= team
+        if extra_teams:
+            teams |= extra_teams
+
+        def pub_img(model, record_id, field, sz=''):
+            url = '/%s/auction/public/image/%s/%d/%s' % (
+                db_name, model, record_id, field,
+            )
+            qs = ['v=3']
+            if sz:
+                qs.insert(0, 'sz=%s' % sz)
+            return '%s?%s' % (url, '&'.join(qs))
+
+        blocks = []
+        for team in teams.sorted(lambda t: (t.name or '').lower()):
+            owner_name = (team.manager or '').strip()
+            team_players = []
+            for player in by_team.get(team.id, []):
+                team_players.append({
+                    'id': player.id,
+                    'name': (player.name or '').upper(),
+                    'photo_url': pub_img('auction.team.player', player.id, 'photo'),
+                    'is_icon': bool(player.icon_player),
+                })
+            blocks.append({
+                'id': team.id,
+                'name': team.name or 'Team',
+                'logo_url': pub_img('auction.team', team.id, 'logo'),
+                'owner_name': owner_name,
+                'owner_photo_url': (
+                    pub_img('auction.team', team.id, 'owner_photo')
+                    if owner_name else ''
+                ),
+                'players': team_players,
+            })
+        return blocks
+
+    def _tournament_calendar_dates(self, tournament):
+        dates = sorted(d for d in tournament.tournament_date_ids.mapped('date') if d)
+        if not dates and hasattr(tournament, '_parse_tournament_dates_char'):
+            dates = tournament._parse_tournament_dates_char() or []
+        if not dates and tournament.tournament_date:
+            dates = [tournament.tournament_date]
+        return dates
+
+    def _get_calendar_month_data(self, month=None):
+        """Month grid: each tournament date is a cell, not a stacked card list."""
+        env = request.env
+        db_name = env.cr.dbname
+        today = fields.Date.context_today(env['auction.tournament'])
+        year, month_n = self._parse_calendar_month(month, today)
+        first = date(year, month_n, 1)
+        if month_n == 12:
+            nxt = date(year + 1, 1, 1)
+        else:
+            nxt = date(year, month_n + 1, 1)
+        prev = first - timedelta(days=1)
+        prev_key = prev.strftime('%Y-%m')
+        next_key = nxt.strftime('%Y-%m')
+
+        start = first - timedelta(days=first.weekday())  # Monday
+        type_labels = dict(
+            env['auction.tournament']._fields['tournament_type'].selection or []
+        )
+        tournaments = env['auction.tournament'].sudo().with_context(
+            active_test=False,
+        ).search(
+            self._calendar_public_domain(),
+            order='tournament_date asc, name asc',
+        )
+
+        by_day = defaultdict(list)
+        tbd = []
+        seen_tbd = set()
+        for tournament in tournaments:
+            card = self._calendar_event_card(tournament, db_name, type_labels)
+            dates = self._tournament_calendar_dates(tournament)
+            if not dates:
+                if tournament.id not in seen_tbd:
+                    seen_tbd.add(tournament.id)
+                    tbd.append(card)
+                continue
+            for day in dates:
+                by_day[fields.Date.to_string(day)].append(card)
+
+        weeks = []
+        cur = start
+        for _week in range(6):
+            week = []
+            for _dow in range(7):
+                iso = fields.Date.to_string(cur)
+                events = by_day.get(iso, [])
+                week.append({
+                    'iso': iso,
+                    'num': cur.day,
+                    'label': cur.strftime('%d %B %Y'),
+                    'in_month': cur.month == month_n,
+                    'is_today': cur == today,
+                    'events': events,
+                    'extra': max(0, len(events) - 2),
+                    'preview': events[:2],
+                })
+                cur += timedelta(days=1)
+            weeks.append(week)
+
+        selected_iso = fields.Date.to_string(today) if today.year == year and today.month == month_n else ''
+        if not selected_iso:
+            for week in weeks:
+                for cell in week:
+                    if cell['in_month'] and cell['events']:
+                        selected_iso = cell['iso']
+                        break
+                if selected_iso:
+                    break
+
+        return {
+            'month_label': first.strftime('%B %Y'),
+            'prev_url': '/calendar?month=%s' % prev_key,
+            'next_url': '/calendar?month=%s' % next_key,
+            'today_url': '/calendar?month=%s' % today.strftime('%Y-%m'),
+            'weeks': weeks,
+            'selected_iso': selected_iso,
+            'tbd': tbd,
+            'month_event_count': sum(
+                1 for days in by_day
+                if days.startswith('%04d-%02d' % (year, month_n))
+            ),
+        }
+
     @http.route('/', type='http', auth='public', website=True, sitemap=True)
     def index(self, **kw):
         try:
@@ -273,6 +501,56 @@ class AuctionChampHomepage(Website):
         """Render public AuctionChamp user manual page."""
         return request.render('auction_champ_website.user_manual_page', {
             'current_year': date.today().year,
+        })
+
+    @http.route(
+        '/calendar/squad/<int:tournament_id>',
+        type='http', auth='public', website=True, sitemap=False,
+    )
+    def calendar_squad(self, tournament_id, **kw):
+        """Public squad board for a completed tournament."""
+        tournament = request.env['auction.tournament'].sudo().with_context(
+            active_test=False,
+        ).browse(tournament_id)
+        if (
+            not self._calendar_tournament_visible(tournament)
+            or not self._calendar_tournament_is_completed(tournament)
+        ):
+            return request.not_found()
+        type_labels = dict(
+            tournament._fields['tournament_type'].selection or []
+        )
+        return request.render('auction_champ_website.calendar_squad_page', {
+            'current_year': date.today().year,
+            'tournament_name': tournament.name or 'Tournament',
+            'sport': type_labels.get(tournament.tournament_type, ''),
+            'date_display': (
+                tournament.format_tournament_dates()
+                or tournament.tournament_date_display
+                or ''
+            ),
+            'venue': (tournament.venue or '').strip(),
+            'logo_url': (
+                '/auction/public/image/auction.tournament/%d/logo' % tournament.id
+                if tournament.logo else ''
+            ),
+            'teams': self._get_public_squad_data(tournament),
+        })
+
+    @http.route('/calendar', type='http', auth='public', website=True, sitemap=True)
+    def calendar(self, month=None, **kw):
+        """Public month-grid calendar: tournaments sit on their dates."""
+        data = self._get_calendar_month_data(month=month)
+        return request.render('auction_champ_website.calendar_page', {
+            'current_year': date.today().year,
+            'month_label': data['month_label'],
+            'prev_url': data['prev_url'],
+            'next_url': data['next_url'],
+            'today_url': data['today_url'],
+            'weeks': data['weeks'],
+            'selected_iso': data['selected_iso'],
+            'tbd': data['tbd'],
+            'month_event_count': data['month_event_count'],
         })
 
     @http.route('/auction/live-tournaments/data', type='http', auth='public', website=True, csrf=False)

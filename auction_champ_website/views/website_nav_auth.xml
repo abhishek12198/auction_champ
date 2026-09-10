@@ -5,9 +5,9 @@
         <t t-set="ac_nav_logged_in"
            t-value="bool(request.session.uid) and not request.env.user._is_public()"/>
         <t t-if="ac_nav_logged_in">
-            <a href="/web" class="ac-nav-tool" title="Open AuctionChamp tools">
+            <a href="/web" class="ac-nav-tool" title="Go to My Account">
                 <i class="fas fa-gauge-high"/>
-                <span>Go to Tool</span>
+                <span>Go to My Account</span>
             </a>
             <a href="/web/session/logout?redirect=/" class="ac-nav-logout" title="Sign out">
                 Logout

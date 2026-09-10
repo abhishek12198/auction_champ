@@ -73,7 +73,7 @@ PAGE_COPY = {
     ),
     'tournament_register': (
         'Register Your Tournament',
-        'Create and run your cricket auction on Auction Champ.',
+        'Create and run your premier sports auction on Auction Champ.',
     ),
     'website_home': (
         '',
@@ -217,7 +217,7 @@ def _page_copy(page_key, name, season):
     if page_key in ('website_home', 'home', 'tournament_register') and not tournament_bound(page_key):
         title = ('%s%s%s' % (SITE_NAME, TITLE_SEP, suffix)) if suffix else SITE_NAME
         if page_key == 'website_home':
-            title = 'Auction Champ - Cricket Auction & Tournament Management'
+            title = 'Auction Champ - Premier Sports Auction & Tournament Management'
         return title, description
     if suffix:
         title = '%s%s%s' % (name, TITLE_SEP, suffix)

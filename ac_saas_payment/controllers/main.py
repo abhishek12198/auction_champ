@@ -45,7 +45,7 @@ class SaasUpgradePaymentController(http.Controller):
             'amount': payment._amount_to_razorpay_subunit(),
             'currency': (payment.currency_id.name or 'INR').upper(),
             'name': 'AuctionChamp',
-            'description': 'Plan upgrade — %s' % (payment.plan_id.name or payment.name),
+            'description': payment._checkout_description(),
             'prefill': {
                 'name': user.name or '',
                 'email': user.email or '',
@@ -74,11 +74,12 @@ class SaasUpgradePaymentController(http.Controller):
                 'payment': payment,
                 'upgrade_request': req,
                 'plan': req.requested_plan_id,
+                'is_renewal': req.trigger_feature == 'renewal',
             })
 
         if req.state != 'awaiting_payment' or payment.state in ('cancelled', 'failed'):
             return request.render('ac_saas_payment.saas_upgrade_pay_error', {
-                'message': _('This upgrade payment is no longer available.'),
+                'message': _('This payment is no longer available.'),
                 'payment': payment,
             })
 
@@ -99,15 +100,17 @@ class SaasUpgradePaymentController(http.Controller):
         def _money(val):
             return ('%s %s' % (sym, '{:,.2f}'.format(val or 0))).strip()
 
+        is_renewal = req.trigger_feature == 'renewal'
         return request.render('ac_saas_payment.saas_upgrade_pay', {
             'payment': payment,
             'upgrade_request': req,
             'plan': req.requested_plan_id,
             'current_plan': req.current_plan_id,
+            'is_renewal': is_renewal,
             'amount_label': _money(payment.amount),
             'list_price_label': _money(payment.list_price_amount),
             'credit_label': _money(payment.credit_amount),
-            'show_proration': bool(payment.list_price_amount or payment.credit_amount),
+            'show_proration': bool(payment.credit_amount),
             'proration_note': payment.proration_note or '',
             'razorpay_checkout': checkout,
             'razorpay_checkout_json': json.dumps(checkout or {}).replace('<', '\\u003c'),

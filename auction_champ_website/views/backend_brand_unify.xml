@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Splash accent uses website primary blue. Navy chrome is unchanged. -->
+    <template id="webclient_website_brand_colors"
+              inherit_id="auction_backend_theme.webclient_google_fonts"
+              name="AuctionChamp Website Backend Primary Blue">
+        <xpath expr="//style[@id='ac-boot-critical']" position="after">
+            <style id="ac-boot-website-brand">
+                #ac-boot-splash .ac-spin-ring-inner {
+                    border-bottom-color: #1565c0;
+                    border-left-color: rgba(21,101,192,0.55);
+                }
+                #ac-boot-splash .ac-spin-icon {
+                    background: linear-gradient(135deg, #1a3f96 0%, #1565c0 60%, #1976d2 100%);
+                }
+            </style>
+        </xpath>
+    </template>
+</odoo>

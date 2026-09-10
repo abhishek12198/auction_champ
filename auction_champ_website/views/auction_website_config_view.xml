@@ -21,7 +21,7 @@
                         <!-- Tab 1 — Hero -->
                         <page string="Hero Section" name="hero">
                             <group string="Headline &amp; Sub-heading">
-                                <field name="hero_headline" placeholder="India's Complete Cricket Auction &amp; Tournament Management Platform"/>
+                                <field name="hero_headline" placeholder="India's Complete Premier Sports Auction &amp; Tournament Management Platform"/>
                                 <field name="hero_subheading" placeholder="Manage Player Registrations..."/>
                             </group>
                             <group string="CTA Button URLs">
@@ -90,7 +90,7 @@
                         <page string="Footer" name="footer">
                             <group string="Footer Text">
                                 <field name="about_us_text"/>
-                                <field name="footer_tagline" placeholder="Powering the Future of Cricket Auctions..."/>
+                                <field name="footer_tagline" placeholder="Powering the Future of Premier Sports Auctions..."/>
                             </group>
                         </page>
 

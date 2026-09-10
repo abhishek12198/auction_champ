@@ -38,8 +38,8 @@
 
 {
     'name': 'AuctionChamp Website',
-    'version': '1.0.26',
-    'summary': 'Responsive marketing website for AuctionChamp cricket auction platform',
+    'version': '1.0.41',
+    'summary': 'Responsive marketing website for AuctionChamp premier sports auction platform',
     'sequence': 15,
     'description': """
 AuctionChamp Website
@@ -49,26 +49,48 @@ auction and tournament management platform. Includes a configurable landing page
 with hero, features, testimonials, pricing, FAQ, and footer sections.
 
 Also restyles /web/login (via inherit of auction_login_theme) to match the
-website navy / blue / gold palette.
+website navy / blue / gold palette, and sets the backend primary accent
+to the website blue (#1565c0) without restyling navbar navy.
 
 The website configurator is accessible under Auction Settings > Configuration.
     """,
     'category': 'Auction/Website',
-    'depends': ['auction_module', 'ac_saas_manager', 'web', 'website', 'auction_login_theme'],
+    'depends': [
+        'auction_module',
+        'ac_saas_manager',
+        'web',
+        'website',
+        'auction_login_theme',
+        'auction_backend_theme',
+    ],
     'data': [
         'security/ir.model.access.csv',
         'data/website_default_data.xml',
         'views/website_nav_auth.xml',
         'views/website_homepage_template.xml',
+        'views/calendar_template.xml',
+        'views/auction_tournament_views.xml',
         'views/website_login_template.xml',
         'views/privacy_policy_template.xml',
         'views/terms_conditions_template.xml',
         'views/user_manual_template.xml',
         'views/web_favicon.xml',
+        'views/backend_brand_unify.xml',
         'views/auction_website_config_view.xml',
         'views/auction_website_faq_view.xml',
         'views/menu.xml',
     ],
+    'assets': {
+        'web._assets_primary_variables': [
+            'auction_champ_website/static/src/scss/backend_primary_variables.scss',
+        ],
+        'web._assets_backend_helpers': [
+            'auction_champ_website/static/src/scss/backend_helpers.scss',
+        ],
+        'web.assets_backend': [
+            'auction_champ_website/static/src/css/backend_brand.css',
+        ],
+    },
     'installable': True,
     'application': False,
     'license': 'LGPL-3',

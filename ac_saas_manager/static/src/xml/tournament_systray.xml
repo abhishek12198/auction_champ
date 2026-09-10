@@ -188,7 +188,7 @@
                             class="o_saas_plan_upgrade_btn o_saas_reactivate_btn"
                             t-on-click="onRequestReactivation"
                             t-att-disabled="state.reactivating">
-                        Request reactivation
+                        Renew plan
                     </button>
                     <button t-elif="state.planCanUpgrade"
                             type="button"
@@ -215,7 +215,7 @@
                         class="o_saas_expiry_reactivate_btn"
                         t-on-click="onRequestReactivation"
                         t-att-disabled="state.reactivating">
-                    Request reactivation
+                    Renew plan
                 </button>
             </div>
         </div>

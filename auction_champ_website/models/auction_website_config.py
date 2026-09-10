@@ -47,12 +47,12 @@ class AuctionWebsiteConfig(models.Model):
     # ── Hero ──────────────────────────────────────────────────────────────
     hero_headline = fields.Char(
         string='Hero Headline',
-        default="India's Complete Cricket Auction & Tournament Management Platform",
+        default="India's Complete Premier Sports Auction & Tournament Management Platform",
     )
     hero_subheading = fields.Text(
         string='Hero Sub-heading',
         default=(
-            "Manage Player Registrations, Cricket Auctions, Teams, Fixtures, "
+            "Manage Player Registrations, Premier Sports Auctions, Teams, Fixtures, "
             "Points Tables, Live Updates and Tournament Operations from one "
             "powerful platform."
         ),
@@ -119,16 +119,39 @@ class AuctionWebsiteConfig(models.Model):
     # ── Footer ────────────────────────────────────────────────────────────
     footer_tagline = fields.Char(
         string='Footer Tagline',
-        default='Powering the Future of Cricket Auctions & Tournament Management',
+        default='Powering the Future of Premier Sports Auctions & Tournament Management',
     )
     about_us_text = fields.Text(
         string='About Us Text',
         default=(
-            "AuctionChamp is India's leading cricket auction and tournament "
+            "AuctionChamp is India's leading premier sports auction and tournament "
             "management platform, trusted by hundreds of organizers across "
             "the country."
         ),
     )
+
+    def _rebrand_cricket_auction_copy(self):
+        """Replace stored website copy that still says Cricket Auction."""
+        replacements = (
+            ('Cricket Auctions', 'Premier Sports Auctions'),
+            ('cricket auctions', 'premier sports auctions'),
+            ('Cricket Auction', 'Premier Sports Auction'),
+            ('cricket auction', 'premier sports auction'),
+        )
+        fields_list = (
+            'hero_headline', 'hero_subheading', 'footer_tagline', 'about_us_text',
+        )
+        for rec in self:
+            vals = {}
+            for fname in fields_list:
+                val = rec[fname] or ''
+                new = val
+                for old, repl in replacements:
+                    new = new.replace(old, repl)
+                if new != val:
+                    vals[fname] = new
+            if vals:
+                rec.write(vals)
 
     @api.model
     def get_singleton(self):
@@ -136,6 +159,7 @@ class AuctionWebsiteConfig(models.Model):
         record = self.search([], limit=1)
         if not record:
             record = self.create({})
+        record._rebrand_cricket_auction_copy()
         return record
 
     @staticmethod

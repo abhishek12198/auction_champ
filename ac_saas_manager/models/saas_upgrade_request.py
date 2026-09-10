@@ -4,8 +4,6 @@
 #  AuctionChamp SaaS Manager — Plan upgrade requests (manual ops)
 #
 ##############################################################################
-from datetime import timedelta
-
 from odoo import api, fields, models, _
 from odoo.exceptions import AccessError, UserError, ValidationError
 
@@ -138,16 +136,10 @@ class AcSaasUpgradeRequest(models.Model):
             if rec.state != 'pending':
                 raise UserError(_('Only pending requests can be approved.'))
             account = rec.account_id.sudo()
-            vals = {'plan_id': rec.requested_plan_id.id}
-            # Renewal / expired: restore access and extend end date by 1 year
             if rec.trigger_feature == 'renewal' or account.state == 'expired' or account._is_frozen():
-                today = fields.Date.context_today(self)
-                vals.update({
-                    'state': 'active',
-                    'active': True,
-                })
-                base = account.date_end if account.date_end and account.date_end > today else today
-                vals['date_end'] = base + timedelta(days=365)
+                vals = account._vals_for_renewed_term(plan=rec.requested_plan_id)
+            else:
+                vals = {'plan_id': rec.requested_plan_id.id}
             account.with_context(saas_skip_freeze=True).write(vals)
             rec.write({
                 'state': 'approved',
@@ -244,19 +236,32 @@ class AcSaasUpgradeRequest(models.Model):
             if not email:
                 continue
             if approved:
-                subject = _('Your AuctionChamp plan is now %(plan)s') % {
-                    'plan': rec.requested_plan_id.name,
-                }
-                body = _(
-                    '<p>Hi %(name)s,</p>'
-                    '<p>Your upgrade request <strong>%(ref)s</strong> was approved.</p>'
-                    '<p>Your account is now on the <strong>%(plan)s</strong> plan. '
-                    'New features are available after you refresh the app.</p>'
-                ) % {
-                    'name': rec.user_id.name,
-                    'ref': rec.name,
-                    'plan': rec.requested_plan_id.name,
-                }
+                if rec.trigger_feature == 'renewal':
+                    subject = _('Your AuctionChamp plan has been renewed')
+                    body = _(
+                        '<p>Hi %(name)s,</p>'
+                        '<p>Your plan renewal <strong>%(ref)s</strong> is complete.</p>'
+                        '<p>Your account is active again on the <strong>%(plan)s</strong> plan. '
+                        'You can create tournaments for this new term after you refresh the app.</p>'
+                    ) % {
+                        'name': rec.user_id.name,
+                        'ref': rec.name,
+                        'plan': rec.requested_plan_id.name,
+                    }
+                else:
+                    subject = _('Your AuctionChamp plan is now %(plan)s') % {
+                        'plan': rec.requested_plan_id.name,
+                    }
+                    body = _(
+                        '<p>Hi %(name)s,</p>'
+                        '<p>Your upgrade request <strong>%(ref)s</strong> was approved.</p>'
+                        '<p>Your account is now on the <strong>%(plan)s</strong> plan. '
+                        'New features are available after you refresh the app.</p>'
+                    ) % {
+                        'name': rec.user_id.name,
+                        'ref': rec.name,
+                        'plan': rec.requested_plan_id.name,
+                    }
             else:
                 subject = _('Update on your AuctionChamp upgrade request')
                 body = _(

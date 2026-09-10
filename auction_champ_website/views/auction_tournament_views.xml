@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_auction_tournament_form_calendar" model="ir.ui.view">
+        <field name="name">auction.tournament.form.website.calendar</field>
+        <field name="model">auction.tournament</field>
+        <field name="inherit_id" ref="auction_module.view_auction_tournament_form"/>
+        <field name="arch" type="xml">
+            <field name="venue" position="before">
+                <field name="website_calendar_visible"/>
+            </field>
+        </field>
+    </record>
+</odoo>

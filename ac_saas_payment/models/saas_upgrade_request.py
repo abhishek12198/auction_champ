@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from datetime import timedelta
-
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
@@ -89,16 +87,10 @@ class AcSaasUpgradeRequest(models.Model):
             raise UserError(_('This upgrade request cannot be completed from payment.'))
 
         account = self.account_id.sudo()
-        vals = {'plan_id': self.requested_plan_id.id}
         if self.trigger_feature == 'renewal' or account.state == 'expired' or account._is_frozen():
-            today = fields.Date.context_today(self)
-            vals.update({
-                'state': 'active',
-                'active': True,
-            })
-            base = account.date_end if account.date_end and account.date_end > today else today
-            validity = self.requested_plan_id.validity_days or 365
-            vals['date_end'] = base + timedelta(days=int(validity))
+            vals = account._vals_for_renewed_term(plan=self.requested_plan_id)
+        else:
+            vals = {'plan_id': self.requested_plan_id.id}
         account.with_context(saas_skip_freeze=True).write(vals)
         note = self.admin_note or ''
         pay_note = ''

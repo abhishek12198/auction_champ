@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="calendar_event_card" name="Calendar event card">
+        <article class="ac-cal-card">
+            <div class="ac-cal-logo-wrap">
+                <t t-if="ev['logo_url']">
+                    <img t-att-src="ev['logo_url']" t-att-alt="ev['name']" class="ac-cal-logo"/>
+                </t>
+                <t t-else="">
+                    <div class="ac-cal-logo ac-cal-logo-ph"><i class="fas fa-trophy"/></div>
+                </t>
+            </div>
+            <div class="ac-cal-body">
+                <div class="ac-cal-meta">
+                    <span class="ac-cal-sport" t-esc="ev['sport']"/>
+                    <t t-if="ev['is_live']"><span class="ac-cal-live">Live</span></t>
+                    <t t-if="ev.get('is_archived')"><span class="ac-cal-archived">Archived</span></t>
+                    <t t-if="ev.get('is_completed') and not ev.get('is_archived')">
+                        <span class="ac-cal-completed">Completed</span>
+                    </t>
+                </div>
+                <h3 t-esc="ev['name']"/>
+                <p class="ac-cal-dates"><i class="fas fa-calendar-day"/><span t-esc="ev['date_display']"/></p>
+                <p class="ac-cal-venue"><i class="fas fa-map-marker-alt"/><span t-esc="ev['venue']"/></p>
+                <div class="ac-cal-actions">
+                    <t t-if="ev['register_url']">
+                        <a t-att-href="ev['register_url']" class="ac-cal-cta"
+                           target="_blank" rel="noopener noreferrer">Register</a>
+                    </t>
+                    <t t-if="ev.get('squad_url')">
+                        <a t-att-href="ev['squad_url']" class="ac-cal-cta ac-cal-cta-squad"
+                           target="_blank" rel="noopener noreferrer">View Squads</a>
+                    </t>
+                    <t t-if="ev['live_url']">
+                        <a t-att-href="ev['live_url']" class="ac-cal-cta ac-cal-cta-live"
+                           target="_blank" rel="noopener noreferrer">Watch Live</a>
+                    </t>
+                </div>
+            </div>
+        </article>
+    </template>
+
+    <template id="calendar_page" name="AuctionChamp Tournament Calendar">
+        <html lang="en">
+            <head>
+                <meta charset="UTF-8"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+                <t t-call="auction_module.social_preview_head">
+                    <t t-set="og_page_key" t-value="'website_home'"/>
+                    <t t-set="og_record" t-value="None"/>
+                </t>
+                <title>Tournament Calendar — AuctionChamp</title>
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" crossorigin="anonymous"/>
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous"/>
+                <link rel="preconnect" href="https://fonts.googleapis.com"/>
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
+                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Poppins:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+                <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.39"/>
+            </head>
+            <body>
+                <nav class="ac-nav scrolled" id="acNav">
+                    <div class="ac-nav-inner">
+                        <a href="/" class="ac-nav-logo" aria-label="AuctionChamp">
+                            <picture>
+                                <source srcset="/auction_module/static/description/icon.svg" type="image/svg+xml"/>
+                                <img src="/auction_module/static/description/icon.png" alt="AuctionChamp" class="ac-nav-logo-img"/>
+                            </picture>
+                        </a>
+                        <div class="ac-nav-desktop">
+                            <ul class="ac-nav-links">
+                                <li><a href="/">Home</a></li>
+                                <li><a href="/calendar" style="color:#f5a623;">Calendar</a></li>
+                            </ul>
+                            <div class="ac-nav-actions">
+                                <t t-call="auction_champ_website.website_nav_auth"/>
+                            </div>
+                        </div>
+                        <button class="ac-nav-toggle" id="acMenuToggle" aria-label="Toggle navigation">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                    <div class="ac-nav-mobile" id="acMobileNav">
+                        <ul class="ac-nav-mobile-links">
+                            <li><a href="/">Home</a></li>
+                            <li><a href="/calendar">Calendar</a></li>
+                        </ul>
+                        <div class="ac-nav-mobile-actions">
+                            <t t-call="auction_champ_website.website_nav_auth"/>
+                        </div>
+                    </div>
+                </nav>
+
+                <section class="ac-cal-hero">
+                    <div class="ac-cal-hero-inner">
+                        <span class="ac-label">Schedule</span>
+                        <h1>Tournament Calendar</h1>
+                        <p>One month at a time. Click a date for logo, venue, and details.</p>
+                    </div>
+                </section>
+
+                <section class="ac-cal-section">
+                    <div class="ac-cal-wrap">
+                        <div class="ac-cal-toolbar">
+                            <a t-att-href="prev_url" class="ac-cal-nav" aria-label="Previous month">
+                                <i class="fas fa-chevron-left"/>
+                            </a>
+                            <h2 class="ac-cal-month-title" t-esc="month_label"/>
+                            <a t-att-href="next_url" class="ac-cal-nav" aria-label="Next month">
+                                <i class="fas fa-chevron-right"/>
+                            </a>
+                            <a t-att-href="today_url" class="ac-cal-today">Today</a>
+                        </div>
+
+                        <div class="ac-cal-board">
+                            <div class="ac-cal-weekdays">
+                                <span>Mon</span><span>Tue</span><span>Wed</span>
+                                <span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                            </div>
+                            <div class="ac-cal-month-grid">
+                                <t t-foreach="weeks" t-as="week">
+                                    <t t-foreach="week" t-as="cell">
+                                        <button type="button"
+                                                t-att-class="'ac-cal-cell'
+                                                    + (' in-month' if cell['in_month'] else ' out-month')
+                                                    + (' is-today' if cell['is_today'] else '')
+                                                    + (' has-events' if cell['events'] else '')
+                                                    + (' is-selected' if cell['iso'] == selected_iso else '')"
+                                                t-att-data-day="cell['iso']">
+                                            <span class="ac-cal-cell-num" t-esc="cell['num']"/>
+                                            <t t-foreach="cell['preview']" t-as="ev">
+                                                <span class="ac-cal-chip">
+                                                    <t t-if="ev['logo_url']">
+                                                        <img t-att-src="ev['logo_url']" t-att-alt="ev['name']"/>
+                                                    </t>
+                                                    <span t-esc="ev['name']"/>
+                                                </span>
+                                            </t>
+                                            <t t-if="cell['extra']">
+                                                <span class="ac-cal-more">+<t t-esc="cell['extra']"/> more</span>
+                                            </t>
+                                        </button>
+                                    </t>
+                                </t>
+                            </div>
+                        </div>
+
+                        <div class="ac-cal-detail" id="acCalDetail">
+                            <t t-foreach="weeks" t-as="week">
+                                <t t-foreach="week" t-as="cell">
+                                    <div t-att-id="'ac-cal-day-' + cell['iso']"
+                                         t-att-class="'ac-cal-day-panel' + (' is-open' if cell['iso'] == selected_iso else '')"
+                                         t-att-data-day="cell['iso']">
+                                        <t t-if="cell['events']">
+                                            <h3 class="ac-cal-detail-title">
+                                                <t t-esc="cell['label']"/>
+                                                <span> — <t t-esc="len(cell['events'])"/> tournament<t t-if="len(cell['events']) != 1">s</t></span>
+                                            </h3>
+                                            <div class="ac-cal-detail-grid">
+                                                <t t-foreach="cell['events']" t-as="ev">
+                                                    <t t-call="auction_champ_website.calendar_event_card"/>
+                                                </t>
+                                            </div>
+                                        </t>
+                                        <t t-elif="cell['iso'] == selected_iso">
+                                            <p class="ac-cal-detail-empty">No tournaments on this date. Click another day, or browse months.</p>
+                                        </t>
+                                    </div>
+                                </t>
+                            </t>
+                        </div>
+
+                        <t t-if="tbd">
+                            <div class="ac-cal-tbd">
+                                <h3>Dates to be announced</h3>
+                                <div class="ac-cal-detail-grid">
+                                    <t t-foreach="tbd" t-as="ev">
+                                        <t t-call="auction_champ_website.calendar_event_card"/>
+                                    </t>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </section>
+
+                <footer class="ac-footer" style="padding-top:36px;">
+                    <div class="ac-footer-bottom" style="border-top:none; padding-top:0;">
+                        <span class="ac-footer-tagline">"Powering the Future of Premier Sports Auctions &amp; Tournament Management"</span>
+                        <span class="ac-footer-copyright">&#169; <t t-esc="current_year"/> AuctionChamp. All rights reserved.</span>
+                    </div>
+                </footer>
+                <script src="/auction_champ_website/static/src/js/auction_website.js"></script>
+                <script src="/auction_champ_website/static/src/js/calendar.js?v=1.0.33"></script>
+            </body>
+        </html>
+    </template>
+
+    <template id="calendar_squad_page" name="AuctionChamp Tournament Squads">
+        <html lang="en">
+            <head>
+                <meta charset="UTF-8"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+                <t t-call="auction_module.social_preview_head">
+                    <t t-set="og_page_key" t-value="'website_home'"/>
+                    <t t-set="og_record" t-value="None"/>
+                </t>
+                <title t-esc="tournament_name + ' — Squads'"/>
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" crossorigin="anonymous"/>
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous"/>
+                <link rel="preconnect" href="https://fonts.googleapis.com"/>
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
+                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Poppins:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+                <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.39"/>
+            </head>
+            <body>
+                <nav class="ac-nav scrolled" id="acNav">
+                    <div class="ac-nav-inner">
+                        <a href="/" class="ac-nav-logo" aria-label="AuctionChamp">
+                            <picture>
+                                <source srcset="/auction_module/static/description/icon.svg" type="image/svg+xml"/>
+                                <img src="/auction_module/static/description/icon.png" alt="AuctionChamp" class="ac-nav-logo-img"/>
+                            </picture>
+                        </a>
+                        <div class="ac-nav-desktop">
+                            <ul class="ac-nav-links">
+                                <li><a href="/">Home</a></li>
+                                <li><a href="/calendar" style="color:#f5a623;">Calendar</a></li>
+                            </ul>
+                            <div class="ac-nav-actions">
+                                <t t-call="auction_champ_website.website_nav_auth"/>
+                            </div>
+                        </div>
+                        <button class="ac-nav-toggle" id="acMenuToggle" aria-label="Toggle navigation">
+                            <i class="fas fa-bars"/>
+                        </button>
+                    </div>
+                    <div class="ac-nav-mobile" id="acMobileNav">
+                        <ul class="ac-nav-mobile-links">
+                            <li><a href="/">Home</a></li>
+                            <li><a href="/calendar">Calendar</a></li>
+                        </ul>
+                        <div class="ac-nav-mobile-actions">
+                            <t t-call="auction_champ_website.website_nav_auth"/>
+                        </div>
+                    </div>
+                </nav>
+
+                <section class="ac-cal-hero ac-squad-hero">
+                    <div class="ac-cal-hero-inner ac-squad-hero-inner">
+                        <a href="/calendar" class="ac-squad-back"><i class="fas fa-arrow-left"/> Calendar</a>
+                        <div class="ac-squad-tourney">
+                            <t t-if="logo_url">
+                                <img t-att-src="logo_url" t-att-alt="tournament_name" class="ac-squad-tourney-logo"/>
+                            </t>
+                            <t t-else="">
+                                <div class="ac-squad-tourney-logo ac-squad-ph"><i class="fas fa-trophy"/></div>
+                            </t>
+                            <div>
+                                <span class="ac-label">Squads</span>
+                                <h1 t-esc="tournament_name"/>
+                                <p>
+                                    <t t-if="sport"><span t-esc="sport"/></t>
+                                    <t t-if="date_display">
+                                        <t t-if="sport"> · </t>
+                                        <span t-esc="date_display"/>
+                                    </t>
+                                    <t t-if="venue">
+                                        <t t-if="sport or date_display"> · </t>
+                                        <span t-esc="venue"/>
+                                    </t>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ac-cal-section ac-squad-section">
+                    <div class="ac-squad-wrap">
+                        <t t-if="not teams">
+                            <p class="ac-cal-detail-empty">No teams have been added for this tournament yet.</p>
+                        </t>
+                        <t t-foreach="teams" t-as="team">
+                            <article class="ac-squad-team">
+                                <header class="ac-squad-team-head">
+                                    <img t-att-src="team['logo_url']" t-att-alt="team['name']" class="ac-squad-team-logo"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"/>
+                                    <div class="ac-squad-team-logo ac-squad-ph" style="display:none;"><i class="fas fa-shield-alt"/></div>
+                                    <div class="ac-squad-team-meta">
+                                        <h2 t-esc="team['name']"/>
+                                        <t t-if="team['owner_name'] or team['owner_photo_url']">
+                                            <div class="ac-squad-owner">
+                                                <img t-att-src="team['owner_photo_url']"
+                                                     t-att-alt="team['owner_name'] or 'Owner'"
+                                                     class="ac-squad-owner-photo"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"/>
+                                                <div class="ac-squad-owner-photo ac-squad-ph" style="display:none;"><i class="fas fa-user"/></div>
+                                                <div>
+                                                    <span class="ac-squad-owner-label">Owner</span>
+                                                    <span class="ac-squad-owner-name" t-esc="team['owner_name'] or '—'"/>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </div>
+                                    <span class="ac-squad-count">
+                                        <t t-esc="len(team['players'])"/>
+                                        player<t t-if="len(team['players']) != 1">s</t>
+                                    </span>
+                                </header>
+                                <t t-if="team['players']">
+                                    <div class="ac-squad-players">
+                                        <t t-foreach="team['players']" t-as="player">
+                                            <div t-att-class="'ac-squad-player' + (' is-icon' if player['is_icon'] else '')">
+                                                <img t-att-src="player['photo_url']"
+                                                     t-att-alt="player['name']"
+                                                     class="ac-squad-player-photo"
+                                                     loading="lazy"
+                                                     onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';"/>
+                                                <div class="ac-squad-player-photo ac-squad-ph" style="display:none;">
+                                                    <i class="fas fa-user"/>
+                                                </div>
+                                                <span class="ac-squad-player-name" t-esc="player['name']"/>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <p class="ac-squad-empty">No players assigned yet.</p>
+                                </t>
+                            </article>
+                        </t>
+                    </div>
+                </section>
+
+                <footer class="ac-footer" style="padding-top:36px;">
+                    <div class="ac-footer-bottom" style="border-top:none; padding-top:0;">
+                        <span class="ac-footer-tagline">"Powering the Future of Premier Sports Auctions &amp; Tournament Management"</span>
+                        <span class="ac-footer-copyright">&#169; <t t-esc="current_year"/> AuctionChamp. All rights reserved.</span>
+                    </div>
+                </footer>
+                <script src="/auction_champ_website/static/src/js/auction_website.js"></script>
+            </body>
+        </html>
+    </template>
+</odoo>

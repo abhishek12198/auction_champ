@@ -60,8 +60,8 @@ def _frozen_account_page():
         '<p>Your AuctionChamp account has expired and is frozen. '
         'Player Showcase and other auction actions are unavailable until the account '
         'is renewed.</p>'
-        '<p>Go back to AuctionChamp and use <strong>Request reactivation</strong> '
-        'to ask support to restore access.</p>'
+        '<p>Go back to AuctionChamp and use <strong>Renew plan</strong> '
+        'in the top bar to pay and restore access.</p>'
         '<p><a href="%s">&#8592; Back to AuctionChamp</a></p>'
         '</body></html>' % auction_backend_home_url(),
         [('Content-Type', 'text/html; charset=utf-8')],
