@@ -1133,12 +1133,20 @@ class AuctionTournament(models.Model):
     def _register_hook(self):
         super()._register_hook()
         # Self-heal on every registry load (restart without -u).
-        self._ensure_show_registration_capacity_column()
-        self._ensure_registered_list_privacy_columns()
-        self._ensure_registration_cta_visibility_columns()
-        self._ensure_player_address_required_column()
-        self._ensure_youtube_url_column()
-        self._ensure_live_snapshot_seq_column()
+        # Savepoint so a prior hook's swallowed SQL error cannot 500 the registry.
+        try:
+            with self.env.cr.savepoint():
+                self._ensure_show_registration_capacity_column()
+                self._ensure_registered_list_privacy_columns()
+                self._ensure_registration_cta_visibility_columns()
+                self._ensure_player_address_required_column()
+                self._ensure_youtube_url_column()
+                self._ensure_live_snapshot_seq_column()
+        except Exception:
+            _logger.warning(
+                'auction.tournament schema self-heal skipped (transaction already aborted?)',
+                exc_info=True,
+            )
 
     def set_dice_state(self, state, number=0):
         """Broadcast dice state to the projector.

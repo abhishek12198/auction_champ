@@ -36,12 +36,15 @@
 #
 ##############################################################################
 
+import logging
 import secrets
 import string
 from datetime import timedelta
 
 from odoo import api, models, fields, _
 from odoo.exceptions import AccessError, UserError
+
+_logger = logging.getLogger(__name__)
 
 _AUCTION_PW_LETTERS = string.ascii_letters
 _AUCTION_PW_DIGITS = string.digits
@@ -176,14 +179,48 @@ class ResUsers(models.Model):
         self.search([('share', '=', False)])._auction_sync_home_action()
         return True
 
+    def _ensure_res_users_auction_columns(self):
+        """Add user-form columns on restart so ORM search does not abort the TX."""
+        cr = self.env.cr
+        specs = (
+            ('auction_user_template_id', 'INTEGER'),
+            ('auction_temp_password', 'VARCHAR'),
+            ('auction_temp_password_until', 'TIMESTAMP WITHOUT TIME ZONE'),
+        )
+        for col, coltype in specs:
+            cr.execute("""
+                SELECT 1
+                  FROM information_schema.columns
+                 WHERE table_name = 'res_users'
+                   AND column_name = %s
+            """, (col,))
+            if cr.fetchone():
+                continue
+            cr.execute(
+                'ALTER TABLE res_users ADD COLUMN %s %s' % (col, coltype)
+            )
+
     def _register_hook(self):
         super()._register_hook()
         # Clear forced Home Actions on restart (no -u required) so menu clicks work.
+        # Each step uses its own savepoint: a SQL error (missing column before -u)
+        # must not abort the registry transaction or every HTTP request 500s.
         try:
-            self.search([('share', '=', False)])._auction_sync_home_action()
+            with self.env.cr.savepoint():
+                self._ensure_res_users_auction_columns()
         except Exception:
-            # Avoid blocking registry load if refs are missing mid-upgrade
-            pass
+            _logger.warning(
+                'Could not add auction columns on res_users',
+                exc_info=True,
+            )
+        try:
+            with self.env.cr.savepoint():
+                self.search([('share', '=', False)])._auction_sync_home_action()
+        except Exception:
+            _logger.warning(
+                'Could not sync auction home actions on registry load',
+                exc_info=True,
+            )
 
     @api.model
     def _auction_reorder_root_menus(self):
