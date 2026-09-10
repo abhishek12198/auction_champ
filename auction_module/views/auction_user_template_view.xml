@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_auction_user_template_tree" model="ir.ui.view">
+        <field name="name">auction.user.template.tree</field>
+        <field name="model">auction.user.template</field>
+        <field name="arch" type="xml">
+            <tree string="User Templates">
+                <field name="name"/>
+                <field name="group_ids" widget="many2many_tags"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_auction_user_template_form" model="ir.ui.view">
+        <field name="name">auction.user.template.form</field>
+        <field name="model">auction.user.template</field>
+        <field name="arch" type="xml">
+            <form string="User Template">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" placeholder="e.g. Organiser, Payment Tracker"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="Auction Access">
+                        <field name="group_ids" widget="many2many_checkboxes" nolabel="1"
+                               domain="[('category_id.name', '=', 'Auction')]"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_auction_user_template" model="ir.actions.act_window">
+        <field name="name">User Templates</field>
+        <field name="res_model">auction.user.template</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create a user template</p>
+            <p>Name the role pack and tick the Auction groups. Select this template on a user to assign those groups.</p>
+        </field>
+    </record>
+</odoo>

@@ -449,7 +449,7 @@ class AuctionTeamPlayer(models.Model):
         compute='_compute_kanban_other_attrs_html',
         sanitize=False,
         help='Pre-rendered Other Attribute tiles for the player kanban card.')
-    photo = fields.Binary("Photo", default=_get_default_player_photo)
+    photo = fields.Binary("Photo", default=_get_default_player_photo, prefetch=False)
     squad_poster_crop = fields.Char(
         string="Squad Poster Crop",
         help="JSON crop window {l,t,sw,sh} for squad poster pan/zoom. "
@@ -464,6 +464,7 @@ class AuctionTeamPlayer(models.Model):
         string='Photo (Card Print)',
         compute='_compute_photo_card',
         store=True,
+        prefetch=False,
         help='Resized & compressed JPEG for PDF card printing. Reduces PDF size and generation time.',
     )
     photo_url = fields.Char("Photo URL")
@@ -1780,6 +1781,7 @@ class AuctionTeamPlayer(models.Model):
             on_stage.sudo().write({'is_on_stage': False})
         if random_player:
             random_player.sudo().write({'is_on_stage': True, 'mystery_revealed': False})
+            random_player._warm_projector_thumbs()
             if tournament:
                 try:
                     tournament.action_dismiss_projector_board()
@@ -1804,6 +1806,25 @@ class AuctionTeamPlayer(models.Model):
                 })
 
         return random_player
+
+    def _warm_projector_thumbs(self):
+        """Fill this worker's sz=pj cache from stored photo_card (no original decode)."""
+        for player in self:
+            try:
+                from odoo.addons.auction_module.controllers import main as pj_img
+                tournament = player.tournament_id
+                nxt = self.search([
+                    ('tournament_id', '=', tournament.id),
+                    ('icon_player', '=', False),
+                    ('state', '=', 'auction'),
+                    ('id', '!=', player.id),
+                ], order='sl_no asc, name asc', limit=2) if tournament else self.browse()
+                pj_img.warm_pj_stage_photos(self.env, player | nxt)
+            except Exception:
+                _logger.debug(
+                    'projector thumb warm failed player=%s', player.id, exc_info=True,
+                )
+        return True
 
     def action_set_on_stage(self):
         """Mark this player as the current on-stage player for the live board.
@@ -1833,6 +1854,7 @@ class AuctionTeamPlayer(models.Model):
             # tenants; freeze for *this* tournament is still enforced below via
             # normal write when the account itself is expired.
             player.sudo().write(vals)
+            player._warm_projector_thumbs()
             # Opening a player ends the dice broadcast so the projector can
             # switch to the card immediately (no wait for client idle timeout).
             if tournament and tournament.dice_state and tournament.dice_state != 'idle':

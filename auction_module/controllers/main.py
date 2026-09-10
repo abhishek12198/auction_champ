@@ -100,6 +100,64 @@ def _public_img_cache_put(key, val):
             _PUBLIC_IMG_CACHE.popitem(last=False)
 
 
+def _pj_photo_etag(model, record_id, field, write_date, sz):
+    return hashlib.md5(
+        ('%s:%s:%s:%s:%s' % (model, record_id, field, write_date or '', sz)).encode('utf-8')
+    ).hexdigest()
+
+
+def _binary_field_to_bytes(binary):
+    """Decode an Odoo Binary value to raw image bytes (no resize)."""
+    if not binary:
+        return b''
+    if isinstance(binary, memoryview):
+        binary = binary.tobytes()
+    if isinstance(binary, (bytes, bytearray)):
+        raw = bytes(binary)
+        if raw[:3] == b'\xff\xd8\xff' or raw[:8] == b'\x89PNG\r\n\x1a\n':
+            return raw
+        if raw[:6] in (b'GIF87a', b'GIF89a') or raw[:2] == b'BM':
+            return raw
+        if raw[:4] == b'RIFF' and raw[8:12] == b'WEBP':
+            return raw
+        try:
+            return base64.b64decode(raw, validate=False) or raw
+        except Exception:
+            return raw
+    if isinstance(binary, str):
+        try:
+            return base64.b64decode(binary)
+        except Exception:
+            return b''
+    return b''
+
+
+def warm_pj_stage_photo(env, player):
+    """Put this player's stored card JPEG into the in-worker sz=pj cache.
+
+    Uses ``photo_card`` only — never decodes the original phone photo on the
+    auctioneer write path.
+    """
+    if not player or not player.id:
+        return
+    try:
+        raw = _binary_field_to_bytes(player.photo_card)
+        if not raw or len(raw) < 32:
+            return
+        etag = _pj_photo_etag(
+            'auction.team.player', player.id, 'photo', player.write_date, 'pj',
+        )
+        cache_key = (env.cr.dbname, 'auction.team.player', player.id, 'photo', 'pj', etag)
+        _public_img_cache_put(cache_key, raw)
+    except Exception:
+        _logger.debug('warm pj stage photo failed player=%s', player.id, exc_info=True)
+
+
+def warm_pj_stage_photos(env, players):
+    for player in players:
+        warm_pj_stage_photo(env, player)
+
+
 def _http_response(data, headers=None, cookies=None, status=200):
     """Odoo 15 HttpRequest.make_response() is (data, headers, cookies) only."""
     resp = request.make_response(data, headers=headers, cookies=cookies)
@@ -3721,9 +3779,7 @@ class Auction(http.Controller):
         row = request.env.cr.fetchone()
         if not row:
             return request.not_found()
-        etag = hashlib.md5(
-            ('%s:%s:%s:%s:%s' % (model, record_id, field, row[0] or '', sz)).encode('utf-8')
-        ).hexdigest()
+        etag = _pj_photo_etag(model, record_id, field, row[0], sz)
         inm = (request.httprequest.headers.get('If-None-Match') or '')
         inm = inm.replace('W/', '').replace('"', '').strip()
         immutable = bool(kw.get('v') or sz)
@@ -3747,7 +3803,21 @@ class Auction(http.Controller):
                 return self._public_image_response(hit, etag=etag, immutable=True)
 
         record = Model.browse(record_id)
-        binary = getattr(record, field, None)
+        binary = None
+        used_card = False
+        # Stage cards: prefer the stored print-card JPEG so the first projector
+        # hit does not decode a multi-MB original (that resize used to stall
+        # the single worker for 3–4s and starve /data + attributes).
+        if sz == 'pj' and model == 'auction.team.player' and field == 'photo':
+            try:
+                card = record.photo_card
+            except Exception:
+                card = None
+            if card:
+                binary = card
+                used_card = True
+        if not binary:
+            binary = getattr(record, field, None)
         if not binary:
             try:
                 request.env.cr.execute(
@@ -3771,9 +3841,18 @@ class Auction(http.Controller):
                 except Exception:
                     crop_override = None
         try:
-            image_bytes = self._public_image_bytes(
-                binary, model, field, sz=sz, crop_override=crop_override,
-            )
+            if used_card:
+                image_bytes = self._public_image_raw_bytes(binary)
+                if not image_bytes or len(image_bytes) < 32:
+                    used_card = False
+                    binary = getattr(record, field, None)
+                    image_bytes = self._public_image_bytes(
+                        binary, model, field, sz=sz, crop_override=crop_override,
+                    ) if binary else b''
+            else:
+                image_bytes = self._public_image_bytes(
+                    binary, model, field, sz=sz, crop_override=crop_override,
+                )
         except Exception:
             _logger.warning(
                 'public image failed %s/%s/%s sz=%s', model, record_id, field, sz,
@@ -4210,21 +4289,34 @@ class Auction(http.Controller):
         tournament_type = (user_tournament.tournament_type if user_tournament else 'cricket') or 'cricket'
         is_football = tournament_type == 'football'
 
-        # ── Last 10 draft players ─────────────────────────────────────────────
-        last_draft = Player.search(t_domain + [('state', '=', 'draft')], order='create_date desc', limit=10)
+        # ── Last 10 draft players (never read photo binaries) ────────────────
+        last_draft = Player.search_read(
+            t_domain + [('state', '=', 'draft')],
+            ['name', 'role', 'tier_id', 'base_price', 'create_date', 'dominant_position_id'],
+            order='create_date desc',
+            limit=10,
+        )
+        draft_ids = [row['id'] for row in last_draft]
+        draft_photo_ids = set(Player.search([
+            ('id', 'in', draft_ids or [0]),
+            ('photo', '!=', False),
+        ]).ids) if draft_ids else set()
         draft_players = []
         for p in last_draft:
             if is_football:
-                display_role = (p.dominant_position_id.name if p.dominant_position_id else '') or (p.role or '')
+                pos = p.get('dominant_position_id')
+                display_role = (pos[1] if pos else '') or (p.get('role') or '')
             else:
-                display_role = p.role or ''
+                display_role = p.get('role') or ''
+            tier = p.get('tier_id')
+            create_date = p.get('create_date')
             draft_players.append({
-                'name':        p.name or '',
+                'name':        p.get('name') or '',
                 'role':        display_role,
-                'tier':        p.tier_id.name if p.tier_id else '',
-                'base_price':  p.base_price or 0,
-                'photo_url':   pub_img('auction.team.player', p.id, 'photo') if p.photo else '',
-                'create_date': p.create_date.strftime('%d %b %Y') if p.create_date else '',
+                'tier':        tier[1] if tier else '',
+                'base_price':  p.get('base_price') or 0,
+                'photo_url':   pub_img('auction.team.player', p['id'], 'photo') if p['id'] in draft_photo_ids else '',
+                'create_date': create_date.strftime('%d %b %Y') if create_date else '',
             })
 
         # ── Last 5 days daily registrations ──────────────────────────────────
@@ -4241,26 +4333,28 @@ class Auction(http.Controller):
             ])
             daily.append({'label': day.strftime('%d %b'), 'count': count})
 
-        # ── Role / Playing-position / tier / team distributions ───────────────
-        # Keep this as an in-Python pass over the tournament set — read_group on
-        # Char/M2O with empty values has been fragile across DBs and left the UI
-        # stuck on "Loading tournament…".
-        all_players = Player.search(t_domain)
+        # ── Role / position / tier / team — column read only, never photos ───
+        agg_fields = ['role', 'tier_id', 'assigned_team_id']
+        if is_football:
+            agg_fields.append('dominant_position_id')
+        all_rows = Player.search_read(t_domain, agg_fields)
         role_counts = {}
         position_counts = {}
         tier_counts = {}
         team_counts = {}
-        for p in all_players:
-            role = (p.role or 'Unknown').strip() or 'Unknown'
+        for p in all_rows:
+            role = ((p.get('role') or 'Unknown').strip() or 'Unknown')
             role_counts[role] = role_counts.get(role, 0) + 1
             if is_football:
-                pos = (p.dominant_position_id.name if p.dominant_position_id else 'Unknown').strip() or 'Unknown'
-                position_counts[pos] = position_counts.get(pos, 0) + 1
-            tier = p.tier_id.name if p.tier_id else 'No Tier'
-            tier_counts[tier] = tier_counts.get(tier, 0) + 1
-            if p.assigned_team_id:
-                tname = p.assigned_team_id.name or 'Unknown'
-                team_counts[tname] = team_counts.get(tname, 0) + 1
+                pos = p.get('dominant_position_id')
+                pos_name = (pos[1] if pos else 'Unknown').strip() or 'Unknown'
+                position_counts[pos_name] = position_counts.get(pos_name, 0) + 1
+            tier = p.get('tier_id')
+            tier_name = tier[1] if tier else 'No Tier'
+            tier_counts[tier_name] = tier_counts.get(tier_name, 0) + 1
+            team = p.get('assigned_team_id')
+            if team:
+                team_counts[team[1] or 'Unknown'] = team_counts.get(team[1] or 'Unknown', 0) + 1
         roles = [{'label': k, 'count': v} for k, v in sorted(role_counts.items(), key=lambda x: -x[1])]
         positions = [{'label': k, 'count': v} for k, v in sorted(position_counts.items(), key=lambda x: -x[1])]
         tiers = [{'label': k, 'count': v} for k, v in sorted(tier_counts.items(), key=lambda x: -x[1])]
@@ -4275,32 +4369,56 @@ class Auction(http.Controller):
         unpaid_count = Player.search_count(t_domain + [('amount_paid', '=', False)])
 
         # ── Icon / Key players with team assignment ───────────────────────────
-        icon_players = Player.search(t_domain + [('icon_player', '=', True)], order='assigned_team_id, name')
+        icon_rows = Player.search_read(
+            t_domain + [('icon_player', '=', True)],
+            ['name', 'role', 'tier_id', 'assigned_team_id', 'dominant_position_id'],
+            order='assigned_team_id, name',
+        )
+        icon_ids = [row['id'] for row in icon_rows]
+        icon_photo_ids = set(Player.search([
+            ('id', 'in', icon_ids or [0]),
+            ('photo', '!=', False),
+        ]).ids) if icon_ids else set()
+        team_logo_ids = set()
+        team_ids = [
+            row['assigned_team_id'][0]
+            for row in icon_rows
+            if row.get('assigned_team_id')
+        ]
+        if team_ids:
+            team_logo_ids = set(env['auction.team'].sudo().search([
+                ('id', 'in', team_ids),
+                ('logo', '!=', False),
+            ]).ids)
         icon_list = []
         icon_points = {}
-        if icon_players:
+        if icon_ids:
             for line in AucPlayer.search_read(
-                [('player_id', 'in', icon_players.ids)],
+                [('player_id', 'in', icon_ids)],
                 ['player_id', 'points'],
                 order='points desc',
             ):
                 pid = line['player_id'][0] if line.get('player_id') else False
                 if pid and pid not in icon_points:
                     icon_points[pid] = line.get('points') or 0
-        for p in icon_players:
+        for p in icon_rows:
             if is_football:
-                display_role = (p.dominant_position_id.name if p.dominant_position_id else '') or (p.role or '')
+                pos = p.get('dominant_position_id')
+                display_role = (pos[1] if pos else '') or (p.get('role') or '')
             else:
-                display_role = p.role or ''
+                display_role = p.get('role') or ''
+            team = p.get('assigned_team_id')
+            team_id = team[0] if team else False
+            tier = p.get('tier_id')
             icon_list.append({
-                'name':      p.name or '',
+                'name':      p.get('name') or '',
                 'role':      display_role,
-                'tier':      p.tier_id.name if p.tier_id else '',
-                'team':      p.assigned_team_id.name if p.assigned_team_id else 'Unassigned',
-                'team_logo': pub_img('auction.team', p.assigned_team_id.id, 'logo')
-                             if p.assigned_team_id and p.assigned_team_id.logo else '',
-                'points':    icon_points.get(p.id, 0),
-                'photo_url': pub_img('auction.team.player', p.id, 'photo') if p.photo else '',
+                'tier':      tier[1] if tier else '',
+                'team':      team[1] if team else 'Unassigned',
+                'team_logo': pub_img('auction.team', team_id, 'logo')
+                             if team_id and team_id in team_logo_ids else '',
+                'points':    icon_points.get(p['id'], 0),
+                'photo_url': pub_img('auction.team.player', p['id'], 'photo') if p['id'] in icon_photo_ids else '',
             })
 
         # ── Resolve view IDs ─────────────────────────────────────────────────
@@ -7052,10 +7170,33 @@ def _pj_player_photo_url(db_name, player, projector_size=True):
     url = '/%s/auction/public/image/auction.team.player/%d/photo?v=%s' % (
         db_name, player.id, ver,
     )
-    # sz=pj → smaller JPEG for the live stage card; remaining/squad use full photo
+    # sz=pj → stored card JPEG (or a light resize) for stage + remaining thumbs
     if projector_size:
         url += '&sz=pj'
     return url
+
+
+def _pj_next_photo_urls(tournament, db_name, current_player=None, env=None):
+    """Next 1–2 In-Auction stage photo URLs for a quiet browser prefetch."""
+    env = env or request.env
+    if not tournament:
+        return []
+    domain = [
+        ('tournament_id', '=', tournament.id),
+        ('icon_player', '=', False),
+        ('state', '=', 'auction'),
+    ]
+    if current_player:
+        domain.append(('id', '!=', current_player.id))
+    nxt = env['auction.team.player'].sudo().search(
+        domain, order='sl_no asc, name asc', limit=2,
+    )
+    urls = []
+    for player in nxt:
+        url = _pj_player_photo_url(db_name, player, projector_size=True)
+        if url:
+            urls.append(url)
+    return urls
 
 
 def _pj_progress(tournament, current_player=None, env=None):
@@ -7554,8 +7695,8 @@ def _pj_remaining_players(tournament, db_name, env=None):
             other_attributes = []
             use_other_attributes = False
         else:
-            # Full photo (no sz=pj) so remaining-player cards stay sharp/reliable
-            photo_url = _pj_player_photo_url(db_name, p, projector_size=False)
+            # sz=pj thumbs — remaining cards are small; full originals stall the worker
+            photo_url = _pj_player_photo_url(db_name, p, projector_size=True)
             name = p.name or ''
             sl_no = int(p.sl_no or 0)
             tier_name = (p.tier_id.name if p.tier_id else '') or ''

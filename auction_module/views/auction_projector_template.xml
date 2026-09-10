@@ -2927,6 +2927,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   }
   function applyProjectorResult(result) {
       result = result || {};
+      scheduleNextPhotoWarm(result);
       var p = result.player;
       if (window.acLiveBidTick) {
         window.acLiveBidTick.maybePlay(!!result.live_bid_sound, p);
@@ -3053,65 +3054,32 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   tickClock();
   setInterval(tickClock, 15000);
 
-  /* Warm browser cache for remaining auction photos so next player appears instantly.
-     Stage cards use sz=pj; remaining board uses full photos — preload BOTH. */
+  /* After the current card is on screen, prefetch only the next 1–2 sz=pj
+     thumbs. Do NOT hit /remaining or pull every leftover original — that
+     used to stall the first projector paint on a single Odoo worker. */
   var _pjPreloadedUrls = Object.create(null);
-  var _pjPreloadBusy = false;
-  function pjStagePhotoUrl(url) {
-    if (!url) return '';
-    if (url.indexOf('sz=pj') >= 0) return url;
-    return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'sz=pj';
+  var _pjWarmTimer = null;
+  function preloadStagePhotos(urls) {
+    if (!urls || !urls.length) return;
+    var n = Math.min(urls.length, 2);
+    for (var i = 0; i < n; i++) {
+      var u = urls[i];
+      if (!u || _pjPreloadedUrls[u]) continue;
+      _pjPreloadedUrls[u] = 1;
+      var im = new Image();
+      im.decoding = 'async';
+      im.src = u;
+    }
   }
-  function preloadRemainingPhotos() {
-    if (_pjPreloadBusy || !window.PJ_REMAIN_URL) return;
-    _pjPreloadBusy = true;
-    fetch(window.PJ_REMAIN_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({jsonrpc: '2.0', method: 'call', params: {}}),
-      cache: 'no-store'
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(json) {
-      var data = json.result || {};
-      var players = data.players || [];
-      var queue = [];
-      for (var i = 0; i < players.length; i++) {
-        var url = players[i] && players[i].photo_url;
-        if (!url) continue;
-        var stageUrl = pjStagePhotoUrl(url);
-        if (!_pjPreloadedUrls[stageUrl]) {
-          _pjPreloadedUrls[stageUrl] = 1;
-          queue.push(stageUrl);
-        }
-        if (!_pjPreloadedUrls[url]) {
-          _pjPreloadedUrls[url] = 1;
-          queue.push(url);
-        }
-      }
-      var idx = 0;
-      var active = 0;
-      var maxParallel = 3;
-      function pump() {
-        while (active < maxParallel && idx < queue.length) {
-          (function(u) {
-            active++;
-            var im = new Image();
-            im.decoding = 'async';
-            var done = function() { active--; pump(); };
-            im.onload = done;
-            im.onerror = done;
-            im.src = u;
-          })(queue[idx++]);
-        }
-      }
-      pump();
-    })
-    .catch(function() {})
-    .then(function() { _pjPreloadBusy = false; });
+  function scheduleNextPhotoWarm(result) {
+    var urls = (result && result.next_photo_urls) || [];
+    if (!urls.length) return;
+    if (_pjWarmTimer) clearTimeout(_pjWarmTimer);
+    _pjWarmTimer = setTimeout(function () {
+      _pjWarmTimer = null;
+      preloadStagePhotos(urls);
+    }, 800);
   }
-  preloadRemainingPhotos();
-  setInterval(preloadRemainingPhotos, 20000);
 
   window.pjSponScroll = function(){};
   /* Sponsors stay centered and stationary — no marquee */

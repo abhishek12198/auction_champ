@@ -121,11 +121,12 @@ class AuctionTournament(models.Model):
         string="Auction Venue",
         help="Venue / arena name for the auction day. Shown on the projector screen.",
     )
-    logo = fields.Binary('Logo')
+    logo = fields.Binary('Logo', prefetch=False)
     logo_card = fields.Binary(
         string='Logo (Card Print)',
         compute='_compute_logo_card',
         store=True,
+        prefetch=False,
         help='Small JPEG logo for player-card PDFs to keep bulk prints light.',
     )
     active = fields.Boolean(default=True)

@@ -36,8 +36,17 @@
 #
 ##############################################################################
 
+import secrets
+import string
+from datetime import timedelta
+
 from odoo import api, models, fields, _
 from odoo.exceptions import AccessError, UserError
+
+_AUCTION_PW_LETTERS = string.ascii_letters
+_AUCTION_PW_DIGITS = string.digits
+_AUCTION_PW_SPECIAL = '!@#$%&*?'
+_AUCTION_PW_ALPHABET = _AUCTION_PW_LETTERS + _AUCTION_PW_DIGITS + _AUCTION_PW_SPECIAL
 
 
 class ResUsers(models.Model):
@@ -64,6 +73,43 @@ class ResUsers(models.Model):
         'auction.team',
         string='Team',
         help='The team this user manages (Owner role only).',
+    )
+    auction_user_template_id = fields.Many2one(
+        'auction.user.template',
+        string='User Template',
+        ondelete='set null',
+        help='Applies the Auction access groups defined on this template.',
+    )
+    auction_access_group_ids = fields.Many2many(
+        'res.groups',
+        string='Auction Access',
+        compute='_compute_auction_access_group_ids',
+        inverse='_inverse_auction_access_group_ids',
+        domain=lambda self: self._auction_access_group_domain(),
+        help='AuctionChamp roles only. Internal User is always granted for login.',
+    )
+    auction_temp_password = fields.Char(
+        string='Temporary Password',
+        copy=False,
+        groups='auction_module.group_auction_group_admin',
+    )
+    auction_temp_password_until = fields.Datetime(
+        string='Show Password Until',
+        copy=False,
+        groups='auction_module.group_auction_group_admin',
+    )
+    auction_temp_password_shown = fields.Char(
+        string='Password',
+        compute='_compute_auction_temp_password_shown',
+        groups='auction_module.group_auction_group_admin',
+    )
+    auction_temp_password_visible = fields.Boolean(
+        compute='_compute_auction_temp_password_shown',
+        groups='auction_module.group_auction_group_admin',
+    )
+    auction_temp_password_hint = fields.Char(
+        compute='_compute_auction_temp_password_shown',
+        groups='auction_module.group_auction_group_admin',
     )
 
     @api.model
@@ -168,6 +214,11 @@ class ResUsers(models.Model):
 
     def write(self, vals):
         res = super().write(vals)
+        if (
+            'auction_user_template_id' in vals
+            and not self.env.context.get('skip_auction_template_groups')
+        ):
+            self.filtered('auction_user_template_id')._auction_apply_user_template_groups()
         if self.env.context.get('skip_tournament_sync'):
             return res
         # Keep Active Tournament and Organizers M2M in sync so record rules
@@ -192,8 +243,122 @@ class ResUsers(models.Model):
             self._auction_sync_home_action()
         return res
 
+    @api.model
+    def _auction_category_id(self):
+        categ = self.env.ref('auction_module.auction_categ', raise_if_not_found=False)
+        return categ.id if categ else False
+
+    @api.model
+    def _auction_access_group_domain(self):
+        categ_id = self._auction_category_id()
+        return [('category_id', '=', categ_id)] if categ_id else [('id', '=', 0)]
+
+    @api.model
+    def _generate_auction_temp_password(self):
+        """10 characters: letters, digits, and a special character."""
+        while True:
+            chars = [secrets.choice(_AUCTION_PW_ALPHABET) for _ in range(10)]
+            password = ''.join(chars)
+            if (
+                any(c in _AUCTION_PW_LETTERS for c in password)
+                and any(c in _AUCTION_PW_DIGITS for c in password)
+                and any(c in _AUCTION_PW_SPECIAL for c in password)
+            ):
+                return password
+
+    @api.depends('groups_id')
+    def _compute_auction_access_group_ids(self):
+        categ_id = self._auction_category_id()
+        for user in self:
+            user.auction_access_group_ids = user.groups_id.filtered(
+                lambda g: g.category_id.id == categ_id
+            ) if categ_id else self.env['res.groups']
+
+    def _inverse_auction_access_group_ids(self):
+        categ_id = self._auction_category_id()
+        user_group = self.env.ref('base.group_user')
+        for user in self:
+            keep = user.groups_id.filtered(
+                lambda g: not categ_id or g.category_id.id != categ_id
+            )
+            user.groups_id = keep | user.auction_access_group_ids | user_group
+
+    @api.depends('auction_temp_password', 'auction_temp_password_until')
+    def _compute_auction_temp_password_shown(self):
+        now = fields.Datetime.now()
+        for user in self:
+            raw = user.auction_temp_password
+            until = user.auction_temp_password_until
+            if raw and until and until > now:
+                user.auction_temp_password_shown = raw
+                user.auction_temp_password_visible = True
+                local_until = fields.Datetime.context_timestamp(user, until)
+                user.auction_temp_password_hint = _(
+                    'Copy this password and store it. It is hidden after %s.'
+                ) % local_until.strftime('%H:%M')
+            else:
+                user.auction_temp_password_shown = False
+                user.auction_temp_password_visible = False
+                user.auction_temp_password_hint = False
+
+    def action_auction_generate_password(self):
+        """Issue a new 10-character password and show it for 10 minutes."""
+        self.ensure_one()
+        if not self.env.user.has_group('auction_module.group_auction_group_admin'):
+            raise AccessError(_('Only Auction Administrators can generate passwords.'))
+        password = self._generate_auction_temp_password()
+        self.sudo().with_context(
+            skip_tournament_sync=True,
+            skip_home_action_sync=True,
+        ).write({
+            'password': password,
+            'auction_temp_password': password,
+            'auction_temp_password_until': fields.Datetime.now() + timedelta(minutes=10),
+        })
+        return True
+
+    @api.onchange('auction_user_template_id')
+    def _onchange_auction_user_template_id(self):
+        if self.auction_user_template_id:
+            self.auction_access_group_ids = self.auction_user_template_id.group_ids
+
+    def _auction_apply_user_template_groups(self):
+        """Replace Auction roles with the groups on the selected template."""
+        for user in self:
+            tmpl = user.auction_user_template_id
+            if not tmpl:
+                continue
+            user.with_context(skip_auction_template_groups=True).auction_access_group_ids = (
+                tmpl.group_ids
+            )
+
+    @api.onchange('login')
+    def _onchange_auction_login_email(self):
+        if self.login and not self.email:
+            self.email = self.login
+
     @api.model_create_multi
     def create(self, vals_list):
+        simple = bool(self.env.context.get('auction_simple_user'))
+        until = fields.Datetime.now() + timedelta(minutes=10)
+        user_gid = self.env.ref('base.group_user').id
+        default_auc = self.env.ref(
+            'auction_module.group_auction_group', raise_if_not_found=False,
+        )
+        for vals in vals_list:
+            if not vals.get('email') and vals.get('login'):
+                vals['email'] = vals['login']
+            if simple:
+                if not vals.get('password'):
+                    password = self._generate_auction_temp_password()
+                    vals['password'] = password
+                    vals['auction_temp_password'] = password
+                    vals['auction_temp_password_until'] = until
+                commands = list(vals.get('groups_id') or [])
+                commands.append((4, user_gid))
+                if default_auc and not vals.get('auction_access_group_ids') and not vals.get('auction_user_template_id'):
+                    commands.append((4, default_auc.id))
+                vals['groups_id'] = commands
         users = super().create(vals_list)
         sync_ctx = dict(self.env.context, skip_tournament_sync=True)
         for user in users:
@@ -204,6 +369,8 @@ class ResUsers(models.Model):
                 updates['tournament_id'] = user.tournament_ids[:1].id
             if updates:
                 user.with_context(**sync_ctx).sudo().write(updates)
+            if user.auction_user_template_id:
+                user._auction_apply_user_template_groups()
         if not self.env.context.get('skip_home_action_sync'):
             users._auction_sync_home_action()
         return users

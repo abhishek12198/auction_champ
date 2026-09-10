@@ -55,5 +55,114 @@
             </field>
         </record>
 
+        <!-- Admin-only simple user manager (Auction Settings → Configuration → Users) -->
+        <record id="view_auction_user_tree" model="ir.ui.view">
+            <field name="name">res.users.auction.simple.tree</field>
+            <field name="model">res.users</field>
+            <field name="priority">99</field>
+            <field name="arch" type="xml">
+                <tree string="Users" decoration-muted="active == False">
+                    <field name="name"/>
+                    <field name="login"/>
+                    <field name="auction_user_template_id"/>
+                    <field name="tournament_id"/>
+                    <field name="auction_access_group_ids" widget="many2many_tags"/>
+                    <field name="active"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_auction_user_form" model="ir.ui.view">
+            <field name="name">res.users.auction.simple.form</field>
+            <field name="model">res.users</field>
+            <field name="priority">99</field>
+            <field name="arch" type="xml">
+                <form string="User">
+                    <header>
+                        <button name="action_auction_generate_password" type="object"
+                                string="Generate new password"
+                                class="btn-secondary"
+                                confirm="Replace this user's password and show the new one for 10 minutes?"
+                                attrs="{'invisible': [('id', '=', False)]}"/>
+                    </header>
+                    <sheet>
+                        <div class="o_auction_temp_pw_banner"
+                             attrs="{'invisible': [('auction_temp_password_visible', '=', False)]}">
+                            <div class="o_auction_temp_pw_title">Temporary password — copy it now</div>
+                            <field name="auction_temp_password_visible" invisible="1"/>
+                            <field name="auction_temp_password_shown" widget="CopyClipboardChar"
+                                   nolabel="1" readonly="1"/>
+                            <field name="auction_temp_password_hint" nolabel="1" readonly="1"
+                                   class="o_auction_temp_pw_hint"/>
+                        </div>
+                        <group>
+                            <group string="Login">
+                                <field name="name" placeholder="Full name"/>
+                                <field name="login" string="Email / Login" placeholder="user@example.com"/>
+                                <field name="email" invisible="1"/>
+                                <field name="auction_user_template_id"
+                                       placeholder="Select a template…"
+                                       options="{'no_quick_create': True}"/>
+                                <field name="active"/>
+                            </group>
+                            <group string="Tournament">
+                                <field name="tournament_id" string="Active Tournament"/>
+                                <field name="tournament_ids" widget="many2many_tags"
+                                       string="Organizer Tournaments"/>
+                                <field name="team_id"/>
+                            </group>
+                        </group>
+                        <group string="Auction Access">
+                            <field name="auction_access_group_ids" widget="many2many_checkboxes"
+                                   nolabel="1"
+                                   domain="[('category_id.name', '=', 'Auction')]"
+                                   attrs="{'readonly': [('auction_user_template_id', '!=', False)]}"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_auction_user_search" model="ir.ui.view">
+            <field name="name">res.users.auction.simple.search</field>
+            <field name="model">res.users</field>
+            <field name="priority">99</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <field name="login"/>
+                    <field name="auction_user_template_id"/>
+                    <field name="tournament_id"/>
+                    <filter name="active" string="Active" domain="[('active', '=', True)]"/>
+                    <filter name="inactive" string="Archived" domain="[('active', '=', False)]"/>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_auction_users" model="ir.actions.act_window">
+            <field name="name">Users</field>
+            <field name="res_model">res.users</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('share', '=', False)]</field>
+            <field name="context">{'auction_simple_user': 1, 'search_default_active': 1}</field>
+            <field name="search_view_id" ref="view_auction_user_search"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">Create an auction user</p>
+                <p>Set a name, login email, tournament, and Auction access. A 10-character password is generated on save and stays visible for 10 minutes so you can copy it.</p>
+            </field>
+        </record>
+        <record id="action_auction_users_tree" model="ir.actions.act_window.view">
+            <field name="sequence">1</field>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="view_auction_user_tree"/>
+            <field name="act_window_id" ref="action_auction_users"/>
+        </record>
+        <record id="action_auction_users_form" model="ir.actions.act_window.view">
+            <field name="sequence">2</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_auction_user_form"/>
+            <field name="act_window_id" ref="action_auction_users"/>
+        </record>
+
     </data>
 </odoo>

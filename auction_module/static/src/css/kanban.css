@@ -1147,8 +1147,8 @@
 .o_atk_header {
     display: flex;
     align-items: flex-start;
-    gap: 14px;
-    padding: 16px 16px 12px;
+    gap: 10px;
+    padding: 10px 12px 8px;
     background: linear-gradient(135deg, #1a3a6b 0%, #2252b5 100%);
 }
 
@@ -1156,24 +1156,24 @@
     flex-shrink: 0;
 }
 .o_atk_logo {
-    width: 64px;
-    height: 64px;
-    border-radius: 10px;
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
     object-fit: cover;
     border: 2px solid rgba(255,255,255,0.5);
     background: #fff;
 }
 .o_atk_logo_placeholder {
-    width: 64px;
-    height: 64px;
-    border-radius: 10px;
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
     background: rgba(255,255,255,0.15);
     border: 2px solid rgba(255,255,255,0.3);
     display: flex;
     align-items: center;
     justify-content: center;
     color: rgba(255,255,255,0.7);
-    font-size: 28px;
+    font-size: 22px;
 }
 
 .o_atk_title_block {
@@ -1219,7 +1219,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 5px;
-    margin-top: 7px;
+    margin-top: 4px;
 }
 
 /* type badge */
@@ -1275,7 +1275,7 @@
     display: flex;
     align-items: center;
     gap: 0;
-    padding: 10px 14px;
+    padding: 6px 12px;
     background: #f5f8ff;
     border-bottom: 1px solid #e0e7f0;
 }
@@ -1307,7 +1307,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 14px;
+    padding: 5px 12px;
     font-size: 12px;
     color: #555;
     border-bottom: 1px solid #f0f0f0;
@@ -1325,7 +1325,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 14px;
+    padding: 5px 12px;
     background: #fafbfd;
 }
 .o_atk_organizer {

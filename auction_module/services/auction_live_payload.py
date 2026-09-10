@@ -397,6 +397,9 @@ def build_projector_payload(env, tournament, db_name):
             'boards': boards,
             'stamp_expires_at': _stamp_iso(tournament),
             'stamp_state': (tournament.stamp_state if tournament else None) or None,
+            'next_photo_urls': ctrl._pj_next_photo_urls(
+                tournament, db_name, on_stage, env=env,
+            ),
         }
 
     if dice_state == 'rolling':
@@ -511,6 +514,9 @@ def build_projector_payload(env, tournament, db_name):
         'boards': boards,
         'stamp_expires_at': _stamp_iso(tournament),
         'stamp_state': (tournament.stamp_state if tournament else None) or None,
+        'next_photo_urls': ctrl._pj_next_photo_urls(
+            tournament, db_name, player, env=env,
+        ),
     }
 
 

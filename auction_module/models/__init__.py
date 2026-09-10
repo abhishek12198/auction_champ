@@ -47,6 +47,7 @@ from . import auction_advertiser
 from . import auction_team
 from . import auction_history
 from . import res_users
+from . import auction_user_template
 from . import auction_auction
 from . import auction_player_tier
 from . import auction_player_attributes

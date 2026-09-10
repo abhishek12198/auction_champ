@@ -169,6 +169,20 @@
           groups="auction_module.group_auction_group"
           sequence="4"/>
 
+        <menuitem id="menu_action_auction_users"
+          name="Users"
+          parent="menu_action_auction_conf"
+          action="action_auction_users"
+          sequence="1"
+          groups="auction_module.group_auction_group_admin"/>
+
+        <menuitem id="menu_action_auction_user_template"
+          name="User Templates"
+          parent="menu_action_auction_conf"
+          action="action_auction_user_template"
+          sequence="2"
+          groups="auction_module.group_auction_group_admin"/>
+
         <menuitem id="menu_action_auction_point_unit"
           name="Player Value Units"
           parent="menu_action_auction_conf"

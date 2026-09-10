@@ -993,7 +993,6 @@
                 <kanban class="o_auction_tournament_kanban" default_order="tournament_date desc">
                     <field name="id"/>
                     <field name="name"/>
-                    <field name="logo_card"/>
                     <field name="description"/>
                     <field name="tournament_type"/>
                     <field name="tournament_date"/>
@@ -1013,15 +1012,12 @@
                                 <!-- Header: logo + name + type badge -->
                                 <div class="o_atk_header">
                                     <div class="o_atk_logo_wrap">
-                                        <t t-if="record.logo_card.raw_value">
-                                            <img t-att-src="kanban_image('auction.tournament','logo_card', record.id.raw_value)"
-                                                 class="o_atk_logo" alt="Logo"/>
-                                        </t>
-                                        <t t-else="">
-                                            <div class="o_atk_logo_placeholder">
-                                                <i class="fa fa-trophy" title="Tournament"/>
-                                            </div>
-                                        </t>
+                                        <img t-att-src="kanban_image('auction.tournament','logo_card', record.id.raw_value)"
+                                             class="o_atk_logo" alt="Logo"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"/>
+                                        <div class="o_atk_logo_placeholder" style="display:none;">
+                                            <i class="fa fa-trophy" title="Tournament"/>
+                                        </div>
                                     </div>
                                     <div class="o_atk_title_block">
                                         <div class="o_atk_name" t-esc="record.name.value"/>
@@ -1029,7 +1025,7 @@
                                              class="o_atk_code"
                                              t-att-title="record.tournament_code.value"
                                              t-esc="record.tournament_code.value"/>
-                                        <div class="o_atk_desc" t-esc="record.description.value"/>
+                                        <div t-if="record.description.raw_value" class="o_atk_desc" t-esc="record.description.value"/>
                                         <div class="o_atk_badges">
                                             <span t-attf-class="o_atk_type_badge o_atk_type_#{record.tournament_type.raw_value}">
                                                 <i t-attf-class="fa fa-#{record.tournament_type.raw_value == 'cricket' ? 'dot-circle-o' : 'futbol-o'}"/>

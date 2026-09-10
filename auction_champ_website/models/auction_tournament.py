@@ -10,5 +10,6 @@ class AuctionTournament(models.Model):
         default=False,
         help='When enabled, this tournament is listed on the public /calendar page '
              '(logo, dates, and venue), including after it is archived. '
-             'Live or open-registration tournaments also appear even if this is off.',
+             'When disabled, it is hidden from the calendar even if it is live, '
+             'open for registration, or archived.',
     )

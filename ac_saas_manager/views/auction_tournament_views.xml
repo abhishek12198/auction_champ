@@ -6,10 +6,10 @@
         <field name="model">auction.tournament</field>
         <field name="inherit_id" ref="auction_module.view_auction_tournament_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//sheet" position="inside">
-                <group groups="ac_saas_manager.group_saas_manager,auction_module.group_auction_group_admin">
-                    <field name="saas_account_id"/>
-                </group>
+            <xpath expr="//field[@name='tournament_type']" position="after">
+                <field name="saas_account_id"
+                       groups="ac_saas_manager.group_saas_manager,auction_module.group_auction_group_admin"
+                       options="{'no_create': True}"/>
             </xpath>
 
             <!-- Working tournament (navbar) — banner + switch (no header button; CTA lives in banner) -->
@@ -129,7 +129,7 @@
             </xpath>
             <xpath expr="//field[@name='name']" position="before">
                 <field name="is_saas_active" invisible="1"/>
-                <field name="saas_active_label" string="Working tournament"
+                <field name="saas_active_label" string="Navbar"
                          groups="ac_saas_manager.group_saas_account_user"/>
             </xpath>
             <xpath expr="//field[@name='tournament_type']" position="after">
@@ -156,41 +156,16 @@
             <xpath expr="//field[@name='organizer_uid']" position="after">
                 <field name="is_saas_active"/>
             </xpath>
-            <xpath expr="//div[hasclass('o_atk_badges')]" position="inside">
-                <t t-if="record.is_saas_active.raw_value">
-                    <span class="o_atk_saas_active_badge"
-                          title="Working tournament selected in the top navbar">
-                        <i class="fa fa-bullseye"/> WORKING NOW
-                    </span>
-                </t>
-                <t t-elif="record.active.raw_value">
-                    <span class="o_atk_saas_idle_badge"
-                          title="Not selected in the top navbar">
-                        <i class="fa fa-circle-o"/> NOT WORKING
-                    </span>
-                </t>
-            </xpath>
-            <xpath expr="//div[hasclass('o_atk_stats')]" position="before">
-                <t t-if="record.is_saas_active.raw_value">
-                    <div class="o_atk_saas_help o_atk_saas_help_on o_atk_saas_help_inline"
-                         title="Players, teams and showcase menus use this tournament.">
-                        <span class="o_atk_saas_help_text">In navbar — menus use this one.</span>
-                        <span class="o_atk_saas_active_footer o_atk_saas_help_btn">
-                            <i class="fa fa-bullseye"/> Top bar
-                        </span>
-                    </div>
-                </t>
-                <t t-elif="record.active.raw_value">
-                    <div class="o_atk_saas_help o_atk_saas_help_off o_atk_saas_help_inline"
-                         title="Menus and player lists follow the tournament selected in the top navbar.">
-                        <span class="o_atk_saas_help_text">Not in navbar — switch here.</span>
-                        <button type="object" name="action_saas_set_active"
-                                class="btn btn-sm o_atk_saas_set_active o_atk_saas_set_active_off o_atk_saas_help_btn"
-                                title="Make this your working tournament in the top navbar">
-                            <i class="fa fa-bullseye"/> Use this tournament
-                        </button>
-                    </div>
-                </t>
+            <xpath expr="//div[hasclass('o_atk_name')]" position="replace">
+                <div class="o_atk_name">
+                    <t t-if="record.is_saas_active.raw_value">
+                        <span class="o_atk_saas_active_dot"
+                              title="Active Tournament — selected in the top navbar"
+                              role="img"
+                              aria-label="Active Tournament"/>
+                    </t>
+                    <span class="o_atk_name_text" t-esc="record.name.value"/>
+                </div>
             </xpath>
             <xpath expr="//span[hasclass('o_atk_footer_right')]" position="replace">
                 <span class="o_atk_footer_right">
@@ -199,7 +174,7 @@
             </xpath>
             <xpath expr="//div[hasclass('o_atk_card')]" position="attributes">
                 <attribute name="class"/>
-                <attribute name="t-attf-class">o_atk_card oe_kanban_global_click #{record.is_saas_active.raw_value ? 'o_atk_saas_active_card' : (record.active.raw_value ? 'o_atk_saas_idle_card' : '')}</attribute>
+                <attribute name="t-attf-class">o_atk_card oe_kanban_global_click #{record.is_saas_active.raw_value ? 'o_atk_saas_active_card' : ''}</attribute>
             </xpath>
         </field>
     </record>

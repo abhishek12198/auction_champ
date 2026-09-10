@@ -234,14 +234,23 @@ class AuctionChampHomepage(Website):
         return result
 
     def _calendar_public_domain(self):
-        """Include archived tournaments; Odoo would otherwise hide active=False."""
+        """Tournaments with Show on Website Calendar, including archived.
+
+        Naming ``active`` in the domain stops Odoo from injecting
+        ``active=True`` if ``active_test=False`` is lost on the public env.
+        """
         return [
-            '|', '|', '|',
             ('website_calendar_visible', '=', True),
-            ('live_board_active', '=', True),
-            ('registration_open', '=', True),
+            '|',
+            ('active', '=', True),
             ('active', '=', False),
         ]
+
+    def _calendar_tournament_env(self):
+        return request.env['auction.tournament'].sudo().with_context(
+            active_test=False,
+            auction_skip_tournament_security=True,
+        )
 
     def _parse_calendar_month(self, month_str, today):
         try:
@@ -291,18 +300,42 @@ class AuctionChampHomepage(Website):
         }
 
     def _calendar_tournament_is_completed(self, tournament):
-        """Archived, declared complete, or last tournament day already passed."""
+        """Badge only: archived, declared complete, or last tournament day passed."""
         if not tournament.active:
             return True
-        if getattr(tournament, 'auction_declared_complete', False):
+        if self._calendar_auction_is_complete(tournament):
             return True
         dates = self._tournament_calendar_dates(tournament)
         today = fields.Date.context_today(tournament)
         return bool(dates and dates[-1] < today)
 
+    def _calendar_auction_is_complete(self, tournament):
+        """True when the auction itself is finished. Archive status is ignored."""
+        if not tournament:
+            return False
+        if getattr(tournament, 'auction_declared_complete', False):
+            return True
+        Player = request.env['auction.team.player'].sudo().with_context(
+            active_test=False,
+        )
+        domain = [
+            ('tournament_id', '=', tournament.id),
+            ('icon_player', '=', False),
+        ]
+        leftover = Player.search_count(
+            domain + [('state', 'in', ('draft', 'auction', 'unsold'))]
+        )
+        if leftover:
+            return False
+        return bool(Player.search_count(domain + [('state', '=', 'sold')]))
+
     def _calendar_squads_visible(self, tournament):
-        """View Squads only after completion, and only for the last 3 months."""
-        if not self._calendar_tournament_is_completed(tournament):
+        """View Squads after the auction is finished, for the last 3 months.
+
+        Archived and live (non-archived) tournaments both qualify. Calendar
+        dates only gate the 3-month window, not whether the auction is done.
+        """
+        if not self._calendar_auction_is_complete(tournament):
             return False
         dates = self._tournament_calendar_dates(tournament)
         if not dates:
@@ -310,24 +343,11 @@ class AuctionChampHomepage(Website):
         today = fields.Date.context_today(tournament)
         cutoff = today - relativedelta(months=3)
         return dates[-1] >= cutoff
-        """Archived, declared complete, or last tournament day already passed."""
-        if not tournament.active:
-            return True
-        if getattr(tournament, 'auction_declared_complete', False):
-            return True
-        dates = self._tournament_calendar_dates(tournament)
-        today = fields.Date.context_today(tournament)
-        return bool(dates and dates[-1] < today)
 
     def _calendar_tournament_visible(self, tournament):
         if not tournament or not tournament.exists():
             return False
-        return bool(
-            tournament.website_calendar_visible
-            or tournament.live_board_active
-            or tournament.registration_open
-            or not tournament.active
-        )
+        return bool(tournament.website_calendar_visible)
 
     def _get_public_squad_data(self, tournament):
         env = request.env
@@ -391,7 +411,14 @@ class AuctionChampHomepage(Website):
         return blocks
 
     def _tournament_calendar_dates(self, tournament):
-        dates = sorted(d for d in tournament.tournament_date_ids.mapped('date') if d)
+        DateLine = request.env['auction.tournament.date'].sudo().with_context(
+            active_test=False,
+            auction_skip_tournament_security=True,
+        )
+        dates = sorted(
+            d for d in DateLine.search([('tournament_id', '=', tournament.id)]).mapped('date')
+            if d
+        )
         if not dates and hasattr(tournament, '_parse_tournament_dates_char'):
             dates = tournament._parse_tournament_dates_char() or []
         if not dates and tournament.tournament_date:
@@ -417,9 +444,7 @@ class AuctionChampHomepage(Website):
         type_labels = dict(
             env['auction.tournament']._fields['tournament_type'].selection or []
         )
-        tournaments = env['auction.tournament'].sudo().with_context(
-            active_test=False,
-        ).search(
+        tournaments = self._calendar_tournament_env().search(
             self._calendar_public_domain(),
             order='tournament_date asc, name asc',
         )
@@ -532,9 +557,7 @@ class AuctionChampHomepage(Website):
     )
     def calendar_squad(self, tournament_id, **kw):
         """Public squad board for a completed tournament."""
-        tournament = request.env['auction.tournament'].sudo().with_context(
-            active_test=False,
-        ).browse(tournament_id)
+        tournament = self._calendar_tournament_env().browse(tournament_id)
         if (
             not self._calendar_tournament_visible(tournament)
             or not self._calendar_squads_visible(tournament)

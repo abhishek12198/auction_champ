@@ -89,7 +89,7 @@ class AuctionTournament(models.Model):
         for tournament in self:
             is_active = bool(active_id and tournament.id == active_id)
             tournament.is_saas_active = is_active
-            tournament.saas_active_label = _('WORKING NOW') if is_active else _('NOT WORKING')
+            tournament.saas_active_label = _('Active Tournament') if is_active else ''
             if is_active:
                 if parallel:
                     tournament.saas_active_help = _(

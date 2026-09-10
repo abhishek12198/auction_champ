@@ -1651,9 +1651,12 @@ ul   { list-style: none; }
     z-index: 1;
 }
 .ac-cal-cell-num {
-    width: 26px; height: 26px; border-radius: 50%;
+    width: 40px; height: 40px; border-radius: 10px;
     display: inline-flex; align-items: center; justify-content: center;
-    font-size: 0.82rem; font-weight: 800; color: var(--ac-navy);
+    font-family: 'Teko', 'Oswald', sans-serif;
+    font-size: 1.7rem; font-weight: 600; line-height: 1;
+    letter-spacing: 0.04em;
+    color: var(--ac-navy);
 }
 
 .ac-cal-chip {
@@ -1689,6 +1692,7 @@ ul   { list-style: none; }
     border: 1px solid var(--ac-border);
     box-shadow: var(--ac-shadow);
     overflow: hidden;
+    min-width: 0;
 }
 .ac-cal-logo-wrap { display: flex; justify-content: center; padding: 18px 16px 0; }
 .ac-cal-logo {
@@ -1700,7 +1704,7 @@ ul   { list-style: none; }
     display: flex; align-items: center; justify-content: center;
     color: var(--ac-blue); font-size: 2.2rem; background: #e8eef8;
 }
-.ac-cal-body { padding: 14px 18px 20px; }
+.ac-cal-body { padding: 14px 18px 20px; min-width: 0; }
 .ac-cal-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
 .ac-cal-sport {
     font-size: 0.72rem; font-weight: 800; text-transform: uppercase;
@@ -1714,8 +1718,12 @@ ul   { list-style: none; }
 .ac-cal-archived { background: #64748b; }
 .ac-cal-completed { background: var(--ac-green); }
 .ac-cal-body h3 {
-    font-size: 1.15rem; font-weight: 800; color: var(--ac-navy);
-    margin: 0 0 10px; line-height: 1.3;
+    font-size: 0.72rem; font-weight: 700; color: var(--ac-navy);
+    margin: 0 0 10px; line-height: 1.25;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .ac-cal-dates, .ac-cal-venue {
     display: flex; align-items: flex-start; gap: 8px;
@@ -1824,7 +1832,10 @@ img.ac-squad-player-photo,
 
 @media (max-width: 800px) {
     .ac-cal-chip span { display: none; }
-    .ac-cal-cell { min-height: 72px; padding: 4px; }
+    .ac-cal-cell { min-height: 78px; padding: 4px; }
+    .ac-cal-cell-num {
+        width: 34px; height: 34px; font-size: 1.45rem;
+    }
     .ac-cal-weekdays span { font-size: 0.65rem; }
     .ac-cal-logo { width: 96px; height: 96px; }
 }

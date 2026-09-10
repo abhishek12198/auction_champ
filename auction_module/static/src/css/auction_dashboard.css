@@ -1003,3 +1003,31 @@
 .o_tourn_player_stats {
     position: relative;
 }
+
+.o_auction_temp_pw_banner {
+    margin: 0 0 16px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 2px solid #c9a227;
+    background: #fff8e1;
+}
+.o_auction_temp_pw_title {
+    font-weight: 800;
+    color: #1a3a6b;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-size: 12px;
+}
+.o_auction_temp_pw_banner .o_field_copy {
+    font-size: 18px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-weight: 700;
+    color: #1a3a6b;
+}
+.o_auction_temp_pw_hint {
+    display: block;
+    margin-top: 4px;
+    color: #6d4c00;
+    font-size: 12px;
+}

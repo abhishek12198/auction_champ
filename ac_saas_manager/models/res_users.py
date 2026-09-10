@@ -113,19 +113,17 @@ class ResUsers(models.Model):
         working = user.get_working_tournament()
         active_id = working.id if working else False
         parallel = user._saas_parallel_sessions_enabled()
-        items = user._auction_systray_items(tournaments, active_id)
-        # Keep the working tournament in the short list even if sorted later
-        if active_id:
-            active_items = [i for i in items if i.get('id') == active_id]
-            other_items = [i for i in items if i.get('id') != active_id]
-            items = active_items + other_items
-        total = len(items)
+        ids = list(tournaments.ids)
+        if active_id and active_id in ids:
+            ids = [active_id] + [i for i in ids if i != active_id]
+        total = len(ids)
         limit = 10
-        preview = items[:limit]
+        preview = tournaments.browse(ids[:limit])
+        items = user._auction_systray_items(preview, active_id)
         current = next((i for i in items if i['active']), items[0] if items else None)
         account = user.get_saas_account()
         return {
-            'tournaments': preview,
+            'tournaments': items,
             'tournament_total': total,
             'has_more_tournaments': total > limit,
             'current': current,
