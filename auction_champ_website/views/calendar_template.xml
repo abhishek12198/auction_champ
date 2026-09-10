@@ -23,10 +23,6 @@
                 <p class="ac-cal-dates"><i class="fas fa-calendar-day"/><span t-esc="ev['date_display']"/></p>
                 <p class="ac-cal-venue"><i class="fas fa-map-marker-alt"/><span t-esc="ev['venue']"/></p>
                 <div class="ac-cal-actions">
-                    <t t-if="ev['register_url']">
-                        <a t-att-href="ev['register_url']" class="ac-cal-cta"
-                           target="_blank" rel="noopener noreferrer">Register</a>
-                    </t>
                     <t t-if="ev.get('squad_url')">
                         <a t-att-href="ev['squad_url']" class="ac-cal-cta ac-cal-cta-squad"
                            target="_blank" rel="noopener noreferrer">View Squads</a>
@@ -55,7 +51,7 @@
                 <link rel="preconnect" href="https://fonts.googleapis.com"/>
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
                 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Poppins:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-                <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.39"/>
+                <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.43"/>
             </head>
             <body>
                 <nav class="ac-nav scrolled" id="acNav">
@@ -209,7 +205,7 @@
                 <link rel="preconnect" href="https://fonts.googleapis.com"/>
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
                 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Poppins:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-                <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.39"/>
+                <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.43"/>
             </head>
             <body>
                 <nav class="ac-nav scrolled" id="acNav">

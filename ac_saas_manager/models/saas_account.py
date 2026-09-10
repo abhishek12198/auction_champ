@@ -71,10 +71,12 @@ class AcSaasAccount(models.Model):
     team_count = fields.Integer(compute='_compute_usage')
     player_count = fields.Integer(compute='_compute_usage')
 
-    # Effective create cap (plan quota × packages purchased, including renewals)
-    max_tournaments = fields.Integer(
-        compute='_compute_max_tournaments',
-        string='Max tournaments',
+    # Plan quota (related). Create cap after renewals is tournament_create_limit.
+    max_tournaments = fields.Integer(related='plan_id.max_tournaments', readonly=True)
+    tournament_create_limit = fields.Integer(
+        compute='_compute_tournament_create_limit',
+        string='Tournament slots',
+        help='Tournaments this account may create (plan quota × packages purchased).',
     )
     max_teams_per_tournament = fields.Integer(
         related='plan_id.max_teams_per_tournament', readonly=True)
@@ -109,9 +111,9 @@ class AcSaasAccount(models.Model):
     ]
 
     @api.depends('plan_id', 'plan_id.max_tournaments')
-    def _compute_max_tournaments(self):
+    def _compute_tournament_create_limit(self):
         for acc in self:
-            acc.max_tournaments = acc._effective_tournament_limit()
+            acc.tournament_create_limit = acc._effective_tournament_limit()
 
     @api.depends('tournament_ids', 'tournament_ids.team_ids', 'plan_id')
     def _compute_usage(self):

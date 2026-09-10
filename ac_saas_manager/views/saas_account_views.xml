@@ -73,6 +73,7 @@
                     <group string="Plan Limits">
                         <group>
                             <field name="max_tournaments"/>
+                            <field name="tournament_create_limit"/>
                             <field name="max_teams_per_tournament"/>
                             <field name="max_players_per_tournament"/>
                             <field name="allow_auctioneer_console"/>

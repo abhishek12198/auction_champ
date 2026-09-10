@@ -24,7 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Poppins:wght@400;500;600;700;800&amp;display=swap"
           rel="stylesheet"/>
     <!-- AuctionChamp custom styles -->
-    <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.26"/>
+    <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.43"/>
 </head>
 <body>
 

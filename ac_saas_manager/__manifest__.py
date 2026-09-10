@@ -8,7 +8,7 @@
 ##############################################################################
 {
     'name': 'AuctionChamp SaaS Manager',
-    'version': '1.0.91',
+    'version': '1.0.92',
     'summary': 'Single-DB SaaS plans and account limits for AuctionChamp',
     'sequence': 5,
     'description': """

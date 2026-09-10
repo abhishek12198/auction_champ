@@ -40,6 +40,7 @@ import json
 import logging
 from collections import defaultdict
 from datetime import date, timedelta
+from dateutil.relativedelta import relativedelta
 
 from odoo import http, fields
 from odoo.http import request
@@ -283,10 +284,32 @@ class AuctionChampHomepage(Website):
                 if tournament.registration_open and tournament.registration_url
                 else ''
             ),
-            'squad_url': '/calendar/squad/%s' % tournament.id if completed else '',
+            'squad_url': (
+                '/calendar/squad/%s' % tournament.id
+                if self._calendar_squads_visible(tournament) else ''
+            ),
         }
 
     def _calendar_tournament_is_completed(self, tournament):
+        """Archived, declared complete, or last tournament day already passed."""
+        if not tournament.active:
+            return True
+        if getattr(tournament, 'auction_declared_complete', False):
+            return True
+        dates = self._tournament_calendar_dates(tournament)
+        today = fields.Date.context_today(tournament)
+        return bool(dates and dates[-1] < today)
+
+    def _calendar_squads_visible(self, tournament):
+        """View Squads only after completion, and only for the last 3 months."""
+        if not self._calendar_tournament_is_completed(tournament):
+            return False
+        dates = self._tournament_calendar_dates(tournament)
+        if not dates:
+            return False
+        today = fields.Date.context_today(tournament)
+        cutoff = today - relativedelta(months=3)
+        return dates[-1] >= cutoff
         """Archived, declared complete, or last tournament day already passed."""
         if not tournament.active:
             return True
@@ -514,7 +537,7 @@ class AuctionChampHomepage(Website):
         ).browse(tournament_id)
         if (
             not self._calendar_tournament_visible(tournament)
-            or not self._calendar_tournament_is_completed(tournament)
+            or not self._calendar_squads_visible(tournament)
         ):
             return request.not_found()
         type_labels = dict(
