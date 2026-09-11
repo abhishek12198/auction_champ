@@ -40,8 +40,6 @@ import base64
 
 from odoo import api, models, fields, _
 from odoo.exceptions import UserError, ValidationError
-from odoo.tools import html_escape
-from odoo.tools.image import image_data_uri
 
 import werkzeug
 import werkzeug.exceptions
@@ -70,7 +68,6 @@ class StartAuction(models.TransientModel):
         readonly=True,
     )
     team_count = fields.Integer(compute='_compute_team_count')
-    preview_html = fields.Html(compute='_compute_preview_html', sanitize=False)
 
     @api.model
     def default_get(self, fields_list):
@@ -113,97 +110,16 @@ class StartAuction(models.TransientModel):
         for rec in self:
             rec.team_count = len(rec.team_ids)
 
-    def _sar_preview_chip(self, icon, text, kind):
-        return (
-            '<span class="sar-preview-chip sar-chip-%s">'
-            '<i class="fa %s"/> %s</span>'
-        ) % (kind, icon, html_escape(text))
-
-    def _sar_preview_snap(self, amount):
-        try:
-            amount = int(amount or 0)
-        except (TypeError, ValueError):
-            amount = 0
-        slabs = self.auction_bid_slab_ids.sorted('from_amount', reverse=True)
-        for slab in slabs:
-            if amount < slab.from_amount:
-                continue
-            base = slab.from_amount or 0
-            inc = slab.increment or 0
-            if inc <= 0:
-                return min(amount, slab.to_amount or amount)
-            snapped = base + ((amount - base) // inc) * inc
-            snapped = min(snapped, amount)
-            if slab.to_amount:
-                snapped = min(snapped, slab.to_amount)
-            return snapped
-        return amount
-
-    @api.depends(
-        'max_points', 'max_players', 'base_point', 'team_ids',
-        'tier_limit_ids.base_point', 'tier_limit_ids.max_players',
-        'tier_limit_ids.max_call', 'tier_limit_ids.tier_id',
-        'auction_bid_slab_ids.from_amount', 'auction_bid_slab_ids.to_amount',
-        'auction_bid_slab_ids.increment',
-    )
-    def _compute_preview_html(self):
-        for rec in self:
-            chips = []
-            n_teams = len(rec.team_ids)
-            chips.append(rec._sar_preview_chip(
-                'fa-shield',
-                '%s team%s' % (n_teams, '' if n_teams == 1 else 's'),
-                'ok' if n_teams >= 2 else 'warn',
-            ))
-            n_slabs = len(rec.auction_bid_slab_ids)
-            chips.append(rec._sar_preview_chip(
-                'fa-list-ol',
-                '%s slab%s' % (n_slabs, '' if n_slabs == 1 else 's'),
-                'ok' if n_slabs else 'muted',
-            ))
-            n_tiers = len(rec.tier_limit_ids)
-            if n_tiers:
-                chips.append(rec._sar_preview_chip(
-                    'fa-th-large',
-                    '%s tier%s' % (n_tiers, '' if n_tiers == 1 else 's'),
-                    'ok',
-                ))
-            purse = rec.max_points or 0
-            squad = rec.max_players or 0
-            global_base = rec.base_point or 0
-            if purse > 0 and squad > 1:
-                slots = squad - 1
-                tier_bases = []
-                for tl in rec.tier_limit_ids:
-                    bid = tl.base_point if tl.base_point > 0 else global_base
-                    avail = max(tl.max_players or 0, 0)
-                    if avail:
-                        tier_bases.append((bid, avail))
-                if tier_bases:
-                    tier_bases.sort(key=lambda x: x[0])
-                    reserve = 0
-                    left = slots
-                    for bid, avail in tier_bases:
-                        take = min(avail, left)
-                        reserve += take * bid
-                        left -= take
-                        if left <= 0:
-                            break
-                    if left > 0:
-                        fallback = min(b for b, _a in tier_bases)
-                        reserve += left * fallback
-                else:
-                    reserve = slots * global_base
-                safe = max(purse - reserve, 0)
-                snapped = rec._sar_preview_snap(safe)
-                chips.append(rec._sar_preview_chip(
-                    'fa-calculator',
-                    'Budget-safe max ≈ %s' % snapped,
-                    'ok' if snapped > 0 else 'warn',
-                ))
-            rec.preview_html = '<div class="sar-preview">%s</div>' % ''.join(chips)
+    def _chain_slab_from_amounts(self):
+        """Fill each slab's From from the previous Until when it was left empty."""
+        prev = 0
+        for line in self.auction_bid_slab_ids:
+            if prev and not line.from_amount:
+                line.from_amount = prev
+            prev = line.to_amount or line.from_amount or 0
 
     def button_start_auction(self):
+        self._chain_slab_from_amounts()
         auction_obj = self.env['auction.auction']
         auction_list = []
         if self.max_points <= 0:

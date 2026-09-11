@@ -37,20 +37,29 @@
             </field>
         </record>
 
-        <!-- Extend the simplified user preferences popup (self-edit) for owners -->
+        <!-- Slim "Change My Preferences": labeled photo, name, phone, password -->
         <record id="view_users_simple_auction_form_inherit" model="ir.ui.view">
             <field name="name">res.users.auction.simple.form</field>
             <field name="model">res.users</field>
             <field name="inherit_id" ref="base.view_users_form_simple_modif"/>
             <field name="arch" type="xml">
-                <xpath expr="//notebook" position="inside">
-                    <page string="AuctionChamp"
-                          groups="auction_module.group_auction_owner">
-                        <group>
-                            <field name="team_id" string="My Team" readonly="1"/>
-                            <field name="tournament_id" string="Tournament" readonly="1"/>
-                        </group>
-                    </page>
+                <field name="image_1920" position="replace"/>
+                <xpath expr="//h1" position="replace">
+                    <field name="image_1920" widget="image" readonly="0"
+                           class="oe_right oe_avatar" nolabel="1"
+                           options="{&quot;preview_image&quot;: &quot;avatar_128&quot;}"/>
+                    <group>
+                        <field name="name" readonly="0" string="Name"/>
+                        <field name="phone" widget="phone" readonly="0" string="Phone"/>
+                        <div colspan="2">
+                            <div class="o_form_label">Password</div>
+                            <button name="preference_change_password" type="object"
+                                    string="Change Password" class="btn btn-secondary"/>
+                        </div>
+                    </group>
+                </xpath>
+                <xpath expr="//notebook" position="attributes">
+                    <attribute name="invisible">1</attribute>
                 </xpath>
             </field>
         </record>

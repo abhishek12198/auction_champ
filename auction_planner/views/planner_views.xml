@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         LIST VIEW
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="auction_planner_list_view" model="ir.ui.view">
+        <field name="name">auction.planner.list</field>
+        <field name="model">auction.planner</field>
+        <field name="arch" type="xml">
+            <tree string="Auction Planners" decoration-success="remaining_balance &gt; 0"
+                  decoration-danger="remaining_balance &lt; 0">
+                <field name="name"/>
+                <field name="total_purse"/>
+                <field name="total_used"/>
+                <field name="remaining_balance"/>
+                <field name="max_next_call"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         FORM VIEW
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="auction_planner_form_view" model="ir.ui.view">
+        <field name="name">auction.planner.form</field>
+        <field name="model">auction.planner</field>
+        <field name="arch" type="xml">
+            <form string="Auction Planner">
+
+                <header>
+                    <button name="action_export_excel"
+                            string="⬇ Export to Excel"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-file-excel-o"/>
+                </header>
+
+                <sheet>
+
+                    <!-- ── Stat boxes (display-only) ─────────────────── -->
+                    <div class="oe_button_box" name="button_box">
+
+                        <div class="oe_stat_button" style="cursor:default;">
+                            <i class="fa fa-fw fa-money o_button_icon"/>
+                            <div class="o_stat_info">
+                                <field name="total_used" widget="integer"
+                                       class="o_stat_value"/>
+                                <span class="o_stat_text">Total Used</span>
+                            </div>
+                        </div>
+
+                        <div class="oe_stat_button" style="cursor:default;">
+                            <i class="fa fa-fw fa-balance-scale o_button_icon"/>
+                            <div class="o_stat_info">
+                                <field name="remaining_balance" widget="integer"
+                                       class="o_stat_value"/>
+                                <span class="o_stat_text">Remaining</span>
+                            </div>
+                        </div>
+
+                        <div class="oe_stat_button" style="cursor:default;">
+                            <i class="fa fa-fw fa-arrow-up o_button_icon"/>
+                            <div class="o_stat_info">
+                                <field name="max_next_call" widget="integer"
+                                       class="o_stat_value"/>
+                                <span class="o_stat_text">Max Next Call</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- ── Title ─────────────────────────────────────── -->
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Plan Name…"/>
+                        </h1>
+                    </div>
+
+                    <!-- ── Total Purse ────────────────────────────────── -->
+                    <group>
+                        <group>
+                            <field name="total_purse"/>
+                        </group>
+                    </group>
+
+                    <!-- ── Tabs: Slabs | Players ──────────────────────── -->
+                    <notebook>
+
+                        <page string="Bid Slabs" name="slabs">
+                            <field name="slab_ids" nolabel="1">
+                                <tree editable="bottom" string="Bid Slabs">
+                                    <field name="from_amount" string="From Amount"/>
+                                    <field name="to_amount"   string="To Amount"/>
+                                    <field name="increment"   string="Increment"/>
+                                </tree>
+                            </field>
+                            <p class="text-muted" style="margin-top:8px;">
+                                <i class="fa fa-info-circle"/> Slabs define the bid increment rules.
+                                Add rows in ascending order of <b>From Amount</b>.
+                                The highest matching slab determines the increment for the remaining balance.
+                            </p>
+                        </page>
+
+                        <page string="Players" name="players">
+                            <field name="player_ids" nolabel="1">
+                                <tree editable="bottom" string="Players">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="player_name" string="Player Name"/>
+                                    <field name="points"      string="Points"/>
+                                </tree>
+                            </field>
+                        </page>
+
+                    </notebook>
+
+                    <!-- ── Summary box ────────────────────────────────── -->
+                    <div style="margin-top:16px;">
+                        <div style="background:#f0f4fa;border:1px solid #c9d8ee;
+                                    border-radius:8px;padding:16px 20px;
+                                    display:inline-block;min-width:340px;">
+                            <h4 style="margin-top:0;color:#1f4e79;border-bottom:1px solid #c9d8ee;
+                                       padding-bottom:6px;margin-bottom:10px;">
+                                Summary
+                            </h4>
+                            <table style="width:100%;border-collapse:collapse;">
+                                <tr>
+                                    <td style="padding:4px 8px;color:#555;font-weight:600;">Total Purse</td>
+                                    <td style="padding:4px 8px;text-align:right;font-weight:700;color:#1f4e79;">
+                                        <field name="total_purse" widget="integer" readonly="1"/>
+                                    </td>
+                                </tr>
+                                <tr style="background:#fff;">
+                                    <td style="padding:4px 8px;color:#555;font-weight:600;">Total Used</td>
+                                    <td style="padding:4px 8px;text-align:right;font-weight:700;color:#c05000;">
+                                        <field name="total_used" widget="integer" readonly="1"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:4px 8px;color:#555;font-weight:600;">Remaining Balance</td>
+                                    <td style="padding:4px 8px;text-align:right;font-weight:700;color:#276221;">
+                                        <field name="remaining_balance" widget="integer" readonly="1"/>
+                                    </td>
+                                </tr>
+                                <tr style="background:#fff;">
+                                    <td style="padding:4px 8px;color:#555;font-weight:600;">Max Next Call</td>
+                                    <td style="padding:4px 8px;text-align:right;font-weight:700;color:#7b3f00;">
+                                        <field name="max_next_call" widget="integer" readonly="1"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         ACTION
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="action_auction_planner" model="ir.actions.act_window">
+        <field name="name">Auction Planner</field>
+        <field name="res_model">auction.planner</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Auction Plan!
+            </p>
+            <p>Set your purse, define bid slabs, add players and track spending in real time.</p>
+        </field>
+    </record>
+
+</odoo>

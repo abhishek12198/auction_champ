@@ -6,11 +6,11 @@
         <field name="model">auction.tournament</field>
         <field name="inherit_id" ref="auction_module.view_auction_tournament_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='tournament_type']" position="after">
+            <field name="tournament_dates" position="before">
                 <field name="saas_account_id"
                        groups="ac_saas_manager.group_saas_manager,auction_module.group_auction_group_admin"
                        options="{'no_create': True}"/>
-            </xpath>
+            </field>
 
             <!-- Working tournament (navbar) — banner + switch (no header button; CTA lives in banner) -->
             <xpath expr="//button[@name='action_deactivate_tournament']" position="attributes">

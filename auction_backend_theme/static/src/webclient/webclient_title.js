@@ -16,8 +16,15 @@ function dismissBootSplash() {
     if (bootSplashDismissed) {
         return;
     }
-    bootSplashDismissed = true;
     const el = document.getElementById("ac-boot-splash");
+    if (el && el.getAttribute("data-done") === "1") {
+        bootSplashDismissed = true;
+        return;
+    }
+    bootSplashDismissed = true;
+    if (el) {
+        el.setAttribute("data-done", "1");
+    }
     const finish = () => {
         if (el) {
             el.remove();
@@ -42,10 +49,7 @@ patch(WebClient.prototype, "auction_backend_theme.WebClientTitle", {
         this._super(...arguments);
         this.title.setParts({ zopenerp: appTitle });
         // First action paint — preferred dismiss signal.
-        useBus(this.env.bus, "ACTION_MANAGER:UI-UPDATED", (mode) => {
-            if (mode === "new") {
-                return;
-            }
+        useBus(this.env.bus, "ACTION_MANAGER:UI-UPDATED", () => {
             requestAnimationFrame(() => dismissBootSplash());
         });
         // Also dismiss once the navbar/shell is on screen (systray no longer blocks).

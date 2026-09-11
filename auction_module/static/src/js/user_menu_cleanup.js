@@ -1,19 +1,16 @@
 /** @odoo-module **/
 
 /**
- * AuctionChamp: keep only Log out in the user menu for now.
- * Other stock Odoo entries (Documentation, Support, Shortcuts, Preferences, …)
- * are removed. New AuctionChamp items can still be registered later.
+ * AuctionChamp: keep Preferences and Log out in the user menu.
+ * Other stock Odoo entries (Documentation, Support, Shortcuts, …) are removed.
  */
 import { registry } from "@web/core/registry";
 
-const KEEP = new Set(["log_out"]);
+const KEEP = new Set(["profile", "separator", "log_out"]);
 const HIDE = new Set([
     "documentation",
     "support",
     "shortcuts",
-    "separator",
-    "profile",
     "odoo_account",
 ]);
 

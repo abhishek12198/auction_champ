@@ -55,7 +55,7 @@
                         </div>
                     </div>
 
-                    <field name="preview_html" widget="sar_html" nolabel="1" readonly="1"/>
+                    <div class="sar-preview-host"/>
 
                     <div class="sar-section">
                         <div class="sar-section-head">
@@ -72,27 +72,22 @@
                             <kanban class="sar-team-kanban" create="0" edit="0" delete="1">
                                 <field name="name"/>
                                 <field name="logo"/>
-                                <field name="tournament_id"/>
-                                <field name="manager"/>
-                                <field name="key_player_ids"/>
                                 <field name="id"/>
                                 <templates>
                                     <t t-name="kanban-box">
                                         <div class="sar-team-chip">
                                             <div class="sar-team-logo">
-                                                <img alt="Team"
-                                                     t-att-src="kanban_image('auction.team', 'logo', record.id.raw_value)"/>
+                                                <t t-if="record.logo.raw_value">
+                                                    <img alt="Team"
+                                                         t-att-src="kanban_image('auction.team', 'logo', record.id.raw_value)"/>
+                                                </t>
+                                                <i t-else="" class="fa fa-shield"/>
                                             </div>
                                             <div class="sar-team-meta">
-                                                <div class="sar-team-name" t-esc="record.name.raw_value"/>
-                                                <div class="sar-team-owner" t-if="record.manager.raw_value">
-                                                    <t t-esc="record.manager.raw_value"/>
-                                                </div>
-                                                <div class="sar-team-owner" t-if="!record.manager.raw_value">No owner set</div>
+                                                <div class="sar-team-name"
+                                                     t-att-title="record.name.raw_value"
+                                                     t-esc="record.name.raw_value"/>
                                             </div>
-                                            <t t-if="record.key_player_ids.value">
-                                                <span class="sar-team-icon-badge" title="Icon player"><i class="fa fa-star"/></span>
-                                            </t>
                                             <a type="delete" class="sar-team-remove" title="Remove team">
                                                 <i class="fa fa-times"/>
                                             </a>

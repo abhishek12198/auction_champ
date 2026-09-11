@@ -177,7 +177,7 @@ class AuctionTournament(models.Model):
         [
             ('cricket', 'Cricket'),
             ('football', 'Football'),
-            ('kabaddi', 'Kabaddi (Coming Soon)'),
+            ('kabaddi', 'Kabaddi'),
         ],
         default='cricket',
         string='Game / Sport',

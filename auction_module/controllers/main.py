@@ -4261,6 +4261,14 @@ class Auction(http.Controller):
                 headers=headers,
             )
 
+    def _pd_read_group_counts(self, Player, domain, groupby_field):
+        """Map groupby value → count without loading player rows."""
+        groups = Player.read_group(domain, [groupby_field], [groupby_field], lazy=False)
+        out = {}
+        for g in groups:
+            out[g.get(groupby_field)] = g.get('__count') or 0
+        return out
+
     def _player_dashboard_data_payload(self, **kw):
         env = request.env
         Player    = env['auction.team.player'].sudo()
@@ -4281,9 +4289,12 @@ class Auction(http.Controller):
             # No accessible tournament → show nothing (do not leak all data)
             t_domain = [('id', '=', False)]
 
-        # ── State counts ──────────────────────────────────────────────────────
+        # ── Aggregates (read_group — never load every player row) ─────────────
         states = ['draft', 'auction', 'sold', 'unsold']
-        state_counts = {s: Player.search_count(t_domain + [('state', '=', s)]) for s in states}
+        state_counts = {s: 0 for s in states}
+        for key, n in self._pd_read_group_counts(Player, t_domain, 'state').items():
+            if key in state_counts:
+                state_counts[key] = n
         total = sum(state_counts.values())
 
         tournament_type = (user_tournament.tournament_type if user_tournament else 'cricket') or 'cricket'
@@ -4322,51 +4333,75 @@ class Auction(http.Controller):
         # ── Last 5 days daily registrations ──────────────────────────────────
         tz = pytz.timezone('Asia/Kolkata')
         today_local = datetime.now(tz).date()
-        daily = []
+        day_labels = []
+        day_keys = {}
         for i in range(4, -1, -1):
             day = today_local - timedelta(days=i)
-            day_start_utc = tz.localize(datetime(day.year, day.month, day.day, 0, 0, 0)).astimezone(pytz.utc).replace(tzinfo=None)
-            day_end_utc   = tz.localize(datetime(day.year, day.month, day.day, 23, 59, 59)).astimezone(pytz.utc).replace(tzinfo=None)
-            count = Player.search_count(t_domain + [
-                ('create_date', '>=', fields.Datetime.to_string(day_start_utc)),
-                ('create_date', '<=', fields.Datetime.to_string(day_end_utc)),
-            ])
-            daily.append({'label': day.strftime('%d %b'), 'count': count})
+            day_labels.append(day)
+            day_keys[day.isoformat()] = day.strftime('%d %b')
+        range_start = tz.localize(datetime(
+            day_labels[0].year, day_labels[0].month, day_labels[0].day, 0, 0, 0,
+        )).astimezone(pytz.utc).replace(tzinfo=None)
+        daily_counts = {day.strftime('%d %b'): 0 for day in day_labels}
+        try:
+            day_groups = Player.read_group(
+                t_domain + [('create_date', '>=', fields.Datetime.to_string(range_start))],
+                ['create_date'],
+                ['create_date:day'],
+                lazy=False,
+            )
+            for g in day_groups:
+                raw = g.get('create_date:day') or g.get('create_date')
+                iso = ''
+                if hasattr(raw, 'strftime'):
+                    iso = raw.strftime('%Y-%m-%d')
+                elif isinstance(raw, str) and len(raw) >= 10:
+                    iso = raw[:10]
+                label = day_keys.get(iso)
+                if label:
+                    daily_counts[label] += g.get('__count') or 0
+        except Exception:
+            _logger.debug('player dashboard daily read_group fallback', exc_info=True)
+        daily = [{'label': day.strftime('%d %b'), 'count': daily_counts[day.strftime('%d %b')]}
+                 for day in day_labels]
 
-        # ── Role / position / tier / team — column read only, never photos ───
-        agg_fields = ['role', 'tier_id', 'assigned_team_id']
-        if is_football:
-            agg_fields.append('dominant_position_id')
-        all_rows = Player.search_read(t_domain, agg_fields)
+        # ── Role / position / tier / team via read_group ─────────────────────
         role_counts = {}
+        for key, n in self._pd_read_group_counts(Player, t_domain, 'role').items():
+            role = ((key or 'Unknown').strip() or 'Unknown')
+            role_counts[role] = role_counts.get(role, 0) + n
         position_counts = {}
+        if is_football:
+            for key, n in self._pd_read_group_counts(Player, t_domain, 'dominant_position_id').items():
+                pos_name = (key[1] if key else 'Unknown')
+                pos_name = (pos_name or 'Unknown').strip() or 'Unknown'
+                position_counts[pos_name] = position_counts.get(pos_name, 0) + n
         tier_counts = {}
+        for key, n in self._pd_read_group_counts(Player, t_domain, 'tier_id').items():
+            tier_name = key[1] if key else 'No Tier'
+            tier_counts[tier_name] = tier_counts.get(tier_name, 0) + n
         team_counts = {}
-        for p in all_rows:
-            role = ((p.get('role') or 'Unknown').strip() or 'Unknown')
-            role_counts[role] = role_counts.get(role, 0) + 1
-            if is_football:
-                pos = p.get('dominant_position_id')
-                pos_name = (pos[1] if pos else 'Unknown').strip() or 'Unknown'
-                position_counts[pos_name] = position_counts.get(pos_name, 0) + 1
-            tier = p.get('tier_id')
-            tier_name = tier[1] if tier else 'No Tier'
-            tier_counts[tier_name] = tier_counts.get(tier_name, 0) + 1
-            team = p.get('assigned_team_id')
-            if team:
-                team_counts[team[1] or 'Unknown'] = team_counts.get(team[1] or 'Unknown', 0) + 1
+        for key, n in self._pd_read_group_counts(Player, t_domain, 'assigned_team_id').items():
+            if not key:
+                continue
+            team_counts[key[1] or 'Unknown'] = team_counts.get(key[1] or 'Unknown', 0) + n
         roles = [{'label': k, 'count': v} for k, v in sorted(role_counts.items(), key=lambda x: -x[1])]
         positions = [{'label': k, 'count': v} for k, v in sorted(position_counts.items(), key=lambda x: -x[1])]
         tiers = [{'label': k, 'count': v} for k, v in sorted(tier_counts.items(), key=lambda x: -x[1])]
         team_player_counts = [{'label': k, 'count': v}
                                for k, v in sorted(team_counts.items(), key=lambda x: -x[1])]
 
-        # ── Icon players count ────────────────────────────────────────────────
-        icon_count = Player.search_count(t_domain + [('icon_player', '=', True)])
-
-        # ── Amount paid / unpaid ──────────────────────────────────────────────
-        paid_count   = Player.search_count(t_domain + [('amount_paid', '=', True)])
-        unpaid_count = Player.search_count(t_domain + [('amount_paid', '=', False)])
+        # ── Icon / paid flags ─────────────────────────────────────────────────
+        icon_count = 0
+        for key, n in self._pd_read_group_counts(Player, t_domain, 'icon_player').items():
+            if key:
+                icon_count += n
+        paid_count = unpaid_count = 0
+        for key, n in self._pd_read_group_counts(Player, t_domain, 'amount_paid').items():
+            if key:
+                paid_count += n
+            else:
+                unpaid_count += n
 
         # ── Icon / Key players with team assignment ───────────────────────────
         icon_rows = Player.search_read(
@@ -4446,7 +4481,10 @@ class Auction(http.Controller):
             'tournament_name':   user_tournament.name if user_tournament else '',
             'tournament_logo':   (
                 pub_img('auction.tournament', user_tournament.id, 'logo')
-                if user_tournament and user_tournament.logo else ''
+                if user_tournament and env['auction.tournament'].sudo().search_count([
+                    ('id', '=', user_tournament.id),
+                    ('logo', '!=', False),
+                ]) else ''
             ),
             'tournaments': tournament_choices,
             'show_tournament_filter': show_tournament_filter,

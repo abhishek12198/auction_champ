@@ -1,0 +1,100 @@
+/* ── Squad Template Radio ─────────────────────────────────────── */
+.sq-template-radio .o_radio_input {
+    margin-right: 8px;
+}
+.sq-template-radio .o_radio_item {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 20px;
+    margin-bottom: 10px;
+    padding: 6px 12px 6px 8px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    font-weight: 500;
+}
+.sq-template-radio .o_radio_item:hover {
+    border-color: #875a7b;
+    background: #f7f0fb;
+}
+/* Color dot before each template name for visual distinction */
+.sq-template-radio .o_radio_item:nth-child(1)::before { content:''; display:inline-block; width:12px; height:12px; border-radius:50%; background:#FFD700; margin-right:6px; flex-shrink:0; }
+.sq-template-radio .o_radio_item:nth-child(2)::before { content:''; display:inline-block; width:12px; height:12px; border-radius:50%; background:#7c3aed; margin-right:6px; flex-shrink:0; }
+.sq-template-radio .o_radio_item:nth-child(3)::before { content:''; display:inline-block; width:12px; height:12px; border-radius:50%; background:#00d4aa; margin-right:6px; flex-shrink:0; }
+.sq-template-radio .o_radio_item:nth-child(4)::before { content:''; display:inline-block; width:12px; height:12px; border-radius:50%; background:#1b4d3e; margin-right:6px; flex-shrink:0; }
+.sq-template-radio .o_radio_item:nth-child(5)::before { content:''; display:inline-block; width:12px; height:12px; border-radius:50%; background:#1a1a1a; margin-right:6px; flex-shrink:0; }
+/* ── Player Kanban Cards ──────────────────────────────────────── */
+.sq-player-kanban-field .o_kanban_view {
+    background: #f0f0f0;
+    border-radius: 10px;
+    padding: 12px;
+}
+/* Portrait card: narrow width, tall height */
+.sq-player-card {
+    width: 150px !important;
+    min-height: 220px !important;
+    padding: 0 0 10px !important;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border-radius: 8px !important;
+    background: #fff !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,.12) !important;
+    position: relative;
+    margin: 6px !important;
+    overflow: hidden !important;
+}
+/* Square photo fills the top 60% of the card */
+.sq-card-photo-wrap {
+    position: relative;
+    width: 150px;
+    height: 140px;
+    border-radius: 0;               /* square top */
+    overflow: hidden;
+    background: #e0e0e0;
+    border: none;
+    border-bottom: 3px solid #875a7b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-bottom: 8px;
+}
+.sq-card-photo { width:100%; height:100%; object-fit:contain; object-position:center center; }
+.sq-card-photo-placeholder {
+    color: #bbb;
+    display:flex; align-items:center; justify-content:center;
+    width:100%; height:100%;
+    font-size: 64px;
+}
+.sq-captain-badge, .sq-vc-badge {
+    position: absolute; top: 6px; left: 6px;
+    width: 24px; height: 24px; border-radius: 4px;
+    font-size: 9px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2;
+    box-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+.sq-captain-badge { background:#FFD700; color:#333; }
+.sq-vc-badge { background:#c0c0c0; color:#333; }
+.sq-jersey-no {
+    position: absolute; bottom: 6px; right: 6px;
+    background: rgba(135,90,123,.85); color: #fff;
+    border-radius: 4px;
+    min-width: 24px; height: 22px;
+    padding: 0 5px;
+    font-size: 10px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+}
+.sq-card-info { width: 100%; padding: 0 6px; }
+.sq-card-name { font-size: 12px; font-weight: 700; color: #222; line-height: 1.3; }
+.sq-card-role { font-size: 10px; color: #777; margin: 2px 0; }
+.sq-card-cat {
+    font-size: 9px; font-weight: 700;
+    background: #875a7b; color: #fff;
+    border-radius: 3px; padding: 2px 6px;
+    display: inline-block; margin-top: 4px;
+    text-transform: uppercase; letter-spacing: .5px;
+}

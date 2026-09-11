@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         Squad Print Player – form dialog (used by kanban "Add / Edit")
+    ═══════════════════════════════════════════════════════════════════ -->
+    <record id="view_squad_player_form" model="ir.ui.view">
+        <field name="name">squad.print.player.form</field>
+        <field name="model">squad.print.player</field>
+        <field name="arch" type="xml">
+            <form string="Squad Player">
+                <sheet>
+                    <field name="photo" widget="image"
+                           class="oe_avatar"
+                           options="{'preview_image': 'photo'}"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="Player Name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Details">
+                            <field name="jersey_no"/>
+                            <field name="role" placeholder="e.g. Batsman, Bowler, All-rounder"/>
+                            <field name="category_id"/>
+                            <field name="nationality" placeholder="e.g. India, Australia"/>
+                        </group>
+                        <group string="Flags">
+                            <field name="is_captain"/>
+                            <field name="is_vc"/>
+                            <field name="sequence"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         Squad Print Player – kanban card (embedded inside squad form)
+    ═══════════════════════════════════════════════════════════════════ -->
+    <record id="view_squad_player_kanban" model="ir.ui.view">
+        <field name="name">squad.print.player.kanban</field>
+        <field name="model">squad.print.player</field>
+        <field name="arch" type="xml">
+            <kanban class="sq-player-kanban" quick_create="false">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="role"/>
+                <field name="photo"/>
+                <field name="category_id"/>
+                <field name="jersey_no"/>
+                <field name="is_captain"/>
+                <field name="is_vc"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click sq-player-card">
+                            <!-- Photo -->
+                            <div class="sq-card-photo-wrap">
+                                <t t-if="record.photo &amp;&amp; record.photo.raw_value &amp;&amp; record.id &amp;&amp; record.id.raw_value">
+                                    <img t-att-src="kanban_image('squad.print.player', 'photo', record.id.raw_value)"
+                                         class="sq-card-photo" alt=""/>
+                                </t>
+                                <t t-else="">
+                                    <div class="sq-card-photo-placeholder">
+                                        <i class="fa fa-user-circle-o fa-3x"/>
+                                    </div>
+                                </t>
+                                <!-- Captain / VC badge -->
+                                <t t-if="record.is_captain &amp;&amp; record.is_captain.raw_value">
+                                    <span class="sq-captain-badge" title="Captain">C</span>
+                                </t>
+                                <t t-elif="record.is_vc &amp;&amp; record.is_vc.raw_value">
+                                    <span class="sq-vc-badge" title="Vice Captain">VC</span>
+                                </t>
+                                <!-- Jersey number -->
+                                <t t-if="record.jersey_no &amp;&amp; record.jersey_no.value">
+                                    <span class="sq-jersey-no"
+                                          t-esc="record.jersey_no.value"/>
+                                </t>
+                            </div>
+                            <!-- Info -->
+                            <div class="sq-card-info">
+                                <div class="sq-card-name"
+                                     t-esc="(record.name &amp;&amp; record.name.value) || ''"/>
+                                <div class="sq-card-role"
+                                     t-esc="(record.role &amp;&amp; record.role.value) || ''"/>
+                                <t t-if="record.category_id &amp;&amp; record.category_id.value">
+                                    <span class="sq-card-cat"
+                                          t-esc="record.category_id.value"/>
+                                </t>
+                            </div>
+                            <!-- Kebab menu (stops click propagation to avoid double-open) -->
+                            <div class="o_dropdown_kanban dropdown">
+                                <a class="dropdown-toggle o-no-caret btn"
+                                   data-bs-toggle="dropdown" data-toggle="dropdown"
+                                   href="#" role="button"
+                                   onclick="event.stopPropagation()">
+                                    <span class="fa fa-ellipsis-v"/>
+                                </a>
+                                <div class="dropdown-menu" role="menu">
+                                    <a role="menuitem" type="edit"
+                                       class="dropdown-item">Edit</a>
+                                    <a role="menuitem" type="delete"
+                                       class="dropdown-item">Delete</a>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         Squad Print – main form
+    ═══════════════════════════════════════════════════════════════════ -->
+    <record id="view_squad_print_form" model="ir.ui.view">
+        <field name="name">squad.print.form</field>
+        <field name="model">squad.print</field>
+        <field name="arch" type="xml">
+            <form string="Squad Print Designer">
+                <header>
+                    <button name="action_preview" string="Preview &amp; Download"
+                            type="object" class="btn-primary"
+                            icon="fa-eye"
+                            attrs="{'invisible': [('id','=',False)]}"/>
+                </header>
+                <sheet>
+                    <!-- Stat button -->
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object"
+                                name="action_preview" icon="fa-eye"
+                                attrs="{'invisible': [('id','=',False)]}">
+                            <field name="player_count" widget="statinfo"
+                                   string="Players"/>
+                        </button>
+                    </div>
+
+                    <div class="oe_title">
+                        <label for="team_name"/>
+                        <h1>
+                            <field name="team_name"
+                                   placeholder="Team Name (e.g. Mumbai Indians)"/>
+                        </h1>
+                        <field name="name" class="o_field_char"
+                               placeholder="Tournament / Title (e.g. IPL 2025)"/>
+                    </div>
+
+                    <group>
+                        <!-- Left: identity -->
+                        <group string="Team Identity">
+                            <field name="season" placeholder="e.g. 2025"/>
+                            <field name="tagline" placeholder="Team motto or tagline"/>
+                            <field name="team_color_primary"
+                                   placeholder="#003087 (Primary hex color)"/>
+                            <field name="team_color_secondary"
+                                   placeholder="#FFD700 (Secondary hex color)"/>
+                        </group>
+                        <!-- Right: logo -->
+                        <group string="Team Logo">
+                            <field name="team_logo" widget="image"
+                                   class="oe_avatar"
+                                   options="{'preview_image': 'team_logo',
+                                             'size': [128, 128]}"/>
+                        </group>
+                    </group>
+
+                    <!-- Template selector -->
+                    <group string="Print Template">
+                        <field name="template" widget="radio"
+                               class="sq-template-radio"/>
+                    </group>
+
+                    <!-- Players kanban -->
+                    <separator string="Squad Players"/>
+                    <field name="player_ids" mode="kanban"
+                           class="sq-player-kanban-field"
+                           context="{'default_squad_id': active_id}">
+                        <kanban class="sq-player-kanban" quick_create="false">
+                            <field name="id"/>
+                            <field name="name"/>
+                            <field name="role"/>
+                            <field name="photo"/>
+                            <field name="category_id"/>
+                            <field name="jersey_no"/>
+                            <field name="is_captain"/>
+                            <field name="is_vc"/>
+                            <templates>
+                                <t t-name="kanban-box">
+                                    <div class="oe_kanban_card oe_kanban_global_click sq-player-card">
+                                        <!-- Photo -->
+                                        <div class="sq-card-photo-wrap">
+                                            <t t-if="record.photo &amp;&amp; record.photo.raw_value &amp;&amp; record.id &amp;&amp; record.id.raw_value">
+                                                <img t-att-src="kanban_image('squad.print.player', 'photo', record.id.raw_value)"
+                                                     class="sq-card-photo" alt=""/>
+                                            </t>
+                                            <t t-else="">
+                                                <div class="sq-card-photo-placeholder">
+                                                    <i class="fa fa-user-circle-o fa-3x"/>
+                                                </div>
+                                            </t>
+                                            <t t-if="record.is_captain &amp;&amp; record.is_captain.raw_value">
+                                                <span class="sq-captain-badge" title="Captain">C</span>
+                                            </t>
+                                            <t t-elif="record.is_vc &amp;&amp; record.is_vc.raw_value">
+                                                <span class="sq-vc-badge" title="Vice Captain">VC</span>
+                                            </t>
+                                            <t t-if="record.jersey_no &amp;&amp; record.jersey_no.value">
+                                                <span class="sq-jersey-no"
+                                                      t-esc="record.jersey_no.value"/>
+                                            </t>
+                                        </div>
+                                        <!-- Info -->
+                                        <div class="sq-card-info">
+                                            <div class="sq-card-name"
+                                                 t-esc="(record.name &amp;&amp; record.name.value) || ''"/>
+                                            <div class="sq-card-role"
+                                                 t-esc="(record.role &amp;&amp; record.role.value) || ''"/>
+                                            <t t-if="record.category_id &amp;&amp; record.category_id.value">
+                                                <span class="sq-card-cat"
+                                                      t-esc="record.category_id.value"/>
+                                            </t>
+                                        </div>
+                                        <!-- Kebab menu -->
+                                        <div class="o_dropdown_kanban dropdown">
+                                            <a class="dropdown-toggle o-no-caret btn"
+                                               data-bs-toggle="dropdown" data-toggle="dropdown"
+                                               href="#" role="button"
+                                               onclick="event.stopPropagation()">
+                                                <span class="fa fa-ellipsis-v"/>
+                                            </a>
+                                            <div class="dropdown-menu" role="menu">
+                                                <a role="menuitem" type="edit"
+                                                   class="dropdown-item">Edit</a>
+                                                <a role="menuitem" type="delete"
+                                                   class="dropdown-item">Delete</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </t>
+                            </templates>
+                        </kanban>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         Squad Print – list view
+    ═══════════════════════════════════════════════════════════════════ -->
+    <record id="view_squad_print_list" model="ir.ui.view">
+        <field name="name">squad.print.list</field>
+        <field name="model">squad.print</field>
+        <field name="arch" type="xml">
+            <tree string="Squad Designs">
+                <field name="name"/>
+                <field name="team_name"/>
+                <field name="season"/>
+                <field name="template"/>
+                <field name="player_count" string="Players"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ── Actions ──────────────────────────────────────────────────── -->
+    <record id="action_squad_print" model="ir.actions.act_window">
+        <field name="name">Squad Designs</field>
+        <field name="res_model">squad.print</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Squad Card!
+            </p>
+            <p>Design professional squad cards for your team and export them as PNG or JPEG.</p>
+        </field>
+    </record>
+
+</odoo>

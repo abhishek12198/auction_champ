@@ -38,8 +38,10 @@ class ResUsersSession(models.Model):
         self.ensure_one()
         user = self.sudo()
         allowed = user._saas_switchable_tournaments()
-        if not allowed:
+        allowed_ids = set(allowed.ids)
+        if not allowed_ids:
             return self.env['auction.tournament']
+        Tournament = self.env['auction.tournament'].sudo()
 
         if user._saas_parallel_sessions_enabled():
             session = user._saas_http_session()
@@ -50,17 +52,17 @@ class ResUsersSession(models.Model):
                         tid = int(raw)
                     except (TypeError, ValueError):
                         tid = False
-                    if tid:
-                        hit = allowed.filtered(lambda t: t.id == tid)
-                        if hit:
-                            return hit
-                if user.tournament_id and user.tournament_id in allowed:
-                    user._saas_seed_session_tournament(user.tournament_id.id)
-                    return user.tournament_id
+                    if tid and tid in allowed_ids:
+                        return Tournament.browse(tid)
+                current_id = user.tournament_id.id
+                if current_id and current_id in allowed_ids:
+                    user._saas_seed_session_tournament(current_id)
+                    return Tournament.browse(current_id)
 
-        if user.tournament_id and user.tournament_id in allowed:
-            return user.tournament_id
-        return allowed[:1]
+        current_id = user.tournament_id.id
+        if current_id and current_id in allowed_ids:
+            return Tournament.browse(current_id)
+        return Tournament.browse(allowed.ids[:1])
 
     def get_working_tournament_id(self):
         t = self.get_working_tournament()

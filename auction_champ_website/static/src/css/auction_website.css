@@ -1718,7 +1718,7 @@ ul   { list-style: none; }
 .ac-cal-archived { background: #64748b; }
 .ac-cal-completed { background: var(--ac-green); }
 .ac-cal-body h3 {
-    font-size: 0.72rem; font-weight: 700; color: var(--ac-navy);
+    font-size: 0.82rem; font-weight: 700; color: var(--ac-navy);
     margin: 0 0 10px; line-height: 1.25;
     letter-spacing: -0.02em;
     white-space: nowrap;
@@ -1728,7 +1728,7 @@ ul   { list-style: none; }
 .ac-cal-dates, .ac-cal-venue {
     display: flex; align-items: flex-start; gap: 8px;
     margin: 0 0 8px; color: var(--ac-text-soft);
-    font-size: 0.92rem; line-height: 1.45;
+    font-size: 0.82rem; line-height: 1.45;
 }
 .ac-cal-dates i, .ac-cal-venue i { color: var(--ac-blue); width: 16px; margin-top: 3px; }
 .ac-cal-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }

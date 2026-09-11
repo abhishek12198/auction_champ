@@ -219,12 +219,32 @@
                 (function () {
                     var root = document.documentElement;
                     root.classList.add('ac-booting');
-                    // Owl mounts onto body with position "self" and replaces body
-                    // children. Park the splash on the html element so it survives that patch.
                     var splash = document.getElementById('ac-boot-splash');
                     if (splash &amp;&amp; splash.parentNode !== root) {
                         root.appendChild(splash);
                     }
+                    function dismissSplash() {
+                        var el = document.getElementById('ac-boot-splash');
+                        if (!el || el.getAttribute('data-done') === '1') { return; }
+                        el.setAttribute('data-done', '1');
+                        el.classList.add('ac-boot-gone');
+                        setTimeout(function () {
+                            if (el.parentNode) { el.parentNode.removeChild(el); }
+                            root.classList.remove('ac-booting');
+                        }, 200);
+                    }
+                    // Never hold the branded splash more than ~4s after /web HTML arrives.
+                    setTimeout(dismissSplash, 4000);
+                    var tries = 0;
+                    var tick = setInterval(function () {
+                        tries += 1;
+                        if (document.querySelector('.o_main_navbar, .o_action_manager')) {
+                            clearInterval(tick);
+                            dismissSplash();
+                        } else if (tries &gt; 80) {
+                            clearInterval(tick);
+                        }
+                    }, 50);
                     var messages = [
                         'Entering the Arena...',
                         'Loading the Squad...',
@@ -239,6 +259,7 @@
                     var msgEl = document.getElementById('ac-boot-msg');
                     if (!msgEl) { return; }
                     setInterval(function () {
+                        if (!document.getElementById('ac-boot-splash')) { return; }
                         msgEl.classList.add('ac-fade');
                         setTimeout(function () {
                             idx = (idx + 1) % messages.length;

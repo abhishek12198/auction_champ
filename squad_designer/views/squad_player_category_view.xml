@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Player Category list ─────────────────────────────────────── -->
+    <record id="view_squad_player_category_list" model="ir.ui.view">
+        <field name="name">squad.player.category.list</field>
+        <field name="model">squad.player.category</field>
+        <field name="arch" type="xml">
+            <tree string="Player Categories" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="color" placeholder="#1a73e8"/>
+                <field name="active" optional="hide"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ── Player Category form ─────────────────────────────────────── -->
+    <record id="view_squad_player_category_form" model="ir.ui.view">
+        <field name="name">squad.player.category.form</field>
+        <field name="model">squad.player.category</field>
+        <field name="arch" type="xml">
+            <form string="Player Category">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="code"/>
+                        <field name="color" placeholder="#1a73e8 (hex color code)"/>
+                        <field name="sequence"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Action ───────────────────────────────────────────────────── -->
+    <record id="action_squad_player_category" model="ir.actions.act_window">
+        <field name="name">Player Categories</field>
+        <field name="res_model">squad.player.category</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+</odoo>

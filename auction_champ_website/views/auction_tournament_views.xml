@@ -5,9 +5,10 @@
         <field name="model">auction.tournament</field>
         <field name="inherit_id" ref="auction_module.view_auction_tournament_form"/>
         <field name="arch" type="xml">
-            <field name="venue" position="before">
-                <field name="website_calendar_visible"/>
-            </field>
+            <xpath expr="//page[@name='presentation']//field[@name='live_board_code_protected']" position="before">
+                <field name="website_calendar_visible" widget="boolean_toggle"
+                       help="When on, this tournament is listed on the public /calendar page (logo, dates, venue), including after it is archived. When off, it stays hidden even if it is live or open for registration."/>
+            </xpath>
         </field>
     </record>
 </odoo>

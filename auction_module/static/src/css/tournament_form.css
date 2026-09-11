@@ -1,3 +1,11 @@
+.o_form_view .o_at_info_venue_section .o_group.o_inner_group {
+    min-width: 0;
+}
+.o_form_view .o_at_info_venue_section textarea {
+    min-height: 72px;
+    max-height: 110px;
+}
+
 /* Tournament form — card theme tag beside title */
 .o_form_view .o_at_tournament_title_row {
     gap: 8px 12px;

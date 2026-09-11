@@ -423,3 +423,167 @@
     color: #ffffff;
     box-shadow: 0 0 18px rgba(59,130,246,.45);
 }
+
+/* Sport picker — compact Cricket / Football / Kabaddi tiles */
+.o_form_view .o_at_sport_section {
+    margin: 0 0 0.55rem;
+}
+.o_form_view .o_at_sport_section .o_horizontal_separator {
+    margin: 4px 0 6px;
+}
+.o_form_view .o_at_sport_picker_wrap {
+    width: 100%;
+    margin: 0;
+}
+.o_form_view .o_at_sport_picker_wrap .o_field_widget {
+    width: 100%;
+}
+.o_form_view .o_at_sport_section .o_field_selection_card_sport {
+    max-width: 360px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+}
+.o_form_view .o_at_sport_picker_wrap .o_sel_card {
+    border-radius: 8px;
+}
+.o_form_view .o_field_selection_card_sport .o_sel_card_swatch {
+    position: relative;
+    min-height: 36px;
+    overflow: hidden;
+}
+.o_form_view .o_at_sport_picker_wrap .o_sel_card_body {
+    padding: 4px 6px;
+    gap: 4px;
+    min-height: 0;
+}
+.o_form_view .o_at_sport_picker_wrap .o_sel_card_name {
+    font-size: 11px;
+}
+.o_form_view .o_at_sport_picker_wrap .o_sel_card_check,
+.o_form_view .o_at_sport_picker_wrap .o_sel_card_lock {
+    font-size: 12px;
+}
+.o_form_view .o_at_sport_picker_wrap .o_sel_card_lock_label {
+    font-size: 8px;
+    letter-spacing: 0.04em;
+}
+.o_form_view .o_at_sport_picker_wrap .o_sel_card_swatch_icon {
+    font-size: 14px;
+}
+.o_form_view .o_sport_swatch_cricket {
+    background:
+        linear-gradient(180deg, rgba(255,255,255,.08), transparent 40%),
+        repeating-linear-gradient(
+            90deg,
+            rgba(255,255,255,.06) 0 2px,
+            transparent 2px 14px
+        ),
+        linear-gradient(160deg, #14532d 0%, #166534 45%, #052e16 100%);
+}
+.o_form_view .o_sport_wickets {
+    position: absolute;
+    left: 8px;
+    bottom: 6px;
+    width: 16px;
+    height: 22px;
+    background:
+        linear-gradient(#f8fafc, #f8fafc) left / 3px 100% no-repeat,
+        linear-gradient(#f8fafc, #f8fafc) center / 3px 100% no-repeat,
+        linear-gradient(#f8fafc, #f8fafc) right / 3px 100% no-repeat,
+        linear-gradient(#e2e8f0, #e2e8f0) top / 100% 3px no-repeat;
+    opacity: 0.92;
+}
+.o_form_view .o_sport_ball_cricket {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    margin-top: -9px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 32% 30%, #fecaca, transparent 42%),
+        linear-gradient(135deg, #ef4444 0%, #991b1b 100%);
+    box-shadow: 0 2px 4px rgba(0,0,0,.3);
+}
+.o_form_view .o_sport_ball_cricket::after {
+    content: '';
+    position: absolute;
+    inset: 2px 8px;
+    border-left: 1px dotted rgba(255,255,255,.85);
+    border-right: 1px dotted rgba(255,255,255,.85);
+}
+.o_form_view .o_sport_swatch_football {
+    background:
+        radial-gradient(circle at 50% 120%, rgba(255,255,255,.12), transparent 50%),
+        linear-gradient(160deg, #14532d 0%, #15803d 50%, #052e16 100%);
+}
+.o_form_view .o_sport_pitch_line {
+    position: absolute;
+    inset: 6px 8px;
+    border: 1px solid rgba(255,255,255,.35);
+    border-radius: 3px;
+}
+.o_form_view .o_sport_pitch_line::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    margin: -5px 0 0 -5px;
+    border: 1px solid rgba(255,255,255,.4);
+    border-radius: 50%;
+}
+.o_form_view .o_sport_ball_football {
+    position: relative;
+    z-index: 1;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    box-shadow:
+        0 0 0 1px #e2e8f0 inset,
+        0 2px 5px rgba(0,0,0,.35);
+    background-image:
+        radial-gradient(circle at 50% 22%, #111827 0 3px, transparent 4px),
+        radial-gradient(circle at 22% 68%, #111827 0 3px, transparent 4px),
+        radial-gradient(circle at 78% 68%, #111827 0 3px, transparent 4px),
+        linear-gradient(180deg, #f8fafc, #cbd5e1);
+}
+.o_form_view .o_sport_swatch_kabaddi {
+    background: linear-gradient(160deg, #64748b 0%, #334155 100%);
+    color: #e2e8f0;
+}
+.o_form_view .o_sport_coming_banner {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: #0f172a;
+    color: #fbbf24;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.o_form_view .o_sel_card_coming_soon .o_sel_card_lock_label {
+    color: #d97706;
+}
+.o_form_view .o_at_info_venue_section {
+    margin-bottom: 0.75rem;
+}
+.o_form_view .o_at_info_venue_section .o_horizontal_separator {
+    margin: 4px 0 6px;
+}
+.o_form_view .o_at_info_venue_section .o_group {
+    margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+    .o_form_view .o_at_sport_section .o_field_selection_card_sport {
+        max-width: 100%;
+    }
+}

@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_squad_print,squad.print user,model_squad_print,base.group_user,1,1,1,1
+access_squad_print_player,squad.print.player user,model_squad_print_player,base.group_user,1,1,1,1
+access_squad_player_category,squad.player.category user,model_squad_player_category,base.group_user,1,1,1,0
+access_squad_player_category_mgr,squad.player.category manager,model_squad_player_category,base.group_system,1,1,1,1

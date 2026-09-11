@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Root menu item -->
+    <menuitem id="menu_squad_designer_root"
+              name="Squad Designer"
+              sequence="90"/>
+
+    <!-- Main section -->
+    <menuitem id="menu_squad_designs"
+              name="Squad Designs"
+              parent="menu_squad_designer_root"
+              action="action_squad_print"
+              sequence="10"/>
+
+    <!-- Configuration sub-section -->
+    <menuitem id="menu_squad_config"
+              name="Configuration"
+              parent="menu_squad_designer_root"
+              sequence="90"/>
+
+    <menuitem id="menu_squad_player_categories"
+              name="Player Categories"
+              parent="menu_squad_config"
+              action="action_squad_player_category"
+              sequence="10"/>
+
+</odoo>

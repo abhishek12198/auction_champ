@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_auction_planner,auction.planner access,model_auction_planner,,1,1,1,1
+access_auction_planner_slab,auction.planner.slab access,model_auction_planner_slab,,1,1,1,1
+access_auction_planner_player,auction.planner.player access,model_auction_planner_player,,1,1,1,1

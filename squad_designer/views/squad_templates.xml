@@ -1,0 +1,698 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!-- ═════════════════════════════════════════════════════════════════════
+     SHARED: Download toolbar + html2canvas
+     t-call this from the <body> of every squad template.
+═════════════════════════════════════════════════════════════════════════ -->
+<template id="squad_tmpl_dl_bar" name="Squad Download Bar">
+<style><![CDATA[
+.sq-dl-bar{position:fixed;top:0;left:0;right:0;z-index:10000;
+    display:flex;align-items:center;justify-content:space-between;
+    background:rgba(15,15,15,.92);backdrop-filter:blur(8px);
+    padding:8px 20px;border-bottom:1px solid rgba(255,255,255,.1);}
+.sq-dl-title{color:#fff;font-family:Arial,sans-serif;font-size:13px;font-weight:600;letter-spacing:.5px;}
+.sq-dl-note{color:rgba(255,255,255,.5);font-family:Arial,sans-serif;font-size:11px;margin-left:12px;}
+.sq-dl-actions{display:flex;gap:8px;align-items:center;}
+.sq-dl-btn{border:none;border-radius:6px;padding:7px 16px;font-size:12px;font-weight:700;
+    cursor:pointer;letter-spacing:.5px;transition:opacity .15s;}
+.sq-dl-btn:hover{opacity:.85;}
+.sq-dl-btn:disabled{opacity:.5;cursor:wait;}
+.sq-dl-png{background:#22c55e;color:#fff;}
+.sq-dl-jpg{background:#3b82f6;color:#fff;}
+.sq-dl-print{background:#6b7280;color:#fff;}
+@media print{.sq-dl-bar{display:none!important;}}
+]]></style>
+<div class="sq-dl-bar">
+    <div style="display:flex;align-items:center;">
+        <span class="sq-dl-title">&#127951; Squad Designer &#8212; Preview</span>
+        <span class="sq-dl-note">Right-click the card for browser Save-As, or use the buttons below.</span>
+    </div>
+    <div class="sq-dl-actions">
+        <button class="sq-dl-btn sq-dl-png" onclick="sqDownload('png',this)">&#11015; Download PNG</button>
+        <button class="sq-dl-btn sq-dl-jpg" onclick="sqDownload('jpeg',this)">&#11015; Download JPEG</button>
+        <button class="sq-dl-btn sq-dl-print" onclick="window.print()">&#128424; Print</button>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>//<![CDATA[
+function sqDownload(fmt, btn) {
+    var area = document.getElementById('sqArea');
+    if (!area) { alert('Print area not found.'); return; }
+    var orig = btn.textContent; btn.textContent = '⏳ Rendering…'; btn.disabled = true;
+    var opts = { scale: 2, useCORS: true, allowTaint: false,
+                 backgroundColor: null, logging: false };
+    if (typeof html2canvas === 'undefined') {
+        btn.textContent = orig; btn.disabled = false;
+        alert('Download library not loaded. Please check your internet connection or use Print instead.');
+        return;
+    }
+    html2canvas(area, opts).then(function(canvas) {
+        var link = document.createElement('a');
+        var name = (area.dataset.team || 'squad').replace(/\s+/g,'_');
+        link.download = name + '_squad.' + fmt;
+        link.href = canvas.toDataURL(fmt === 'jpeg' ? 'image/jpeg' : 'image/png', 0.96);
+        link.click();
+        btn.textContent = orig; btn.disabled = false;
+    }).catch(function(e) {
+        console.error(e);
+        btn.textContent = orig; btn.disabled = false;
+        alert('Rendering failed. Try Print instead.');
+    });
+}
+]]></script>
+</template>
+
+
+<!-- ═════════════════════════════════════════════════════════════════════
+     TEMPLATE 1 — IPL Classic  (Dark Navy + Gold)
+═════════════════════════════════════════════════════════════════════════ -->
+<template id="squad_tmpl_ipl_classic" name="Squad Template: IPL Classic">
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+    <t t-call="auction_module.page_head_favicon"/>
+<title><t t-out="squad.team_name"/> – Squad Card</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Rajdhani:wght@400;600;700&amp;family=Montserrat:wght@700;900&amp;display=swap" rel="stylesheet"/>
+<style><![CDATA[
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#070d1a;display:flex;flex-direction:column;align-items:center;padding-top:60px;font-family:'Rajdhani',Arial,sans-serif;}
+#sqArea{
+    width:1080px;min-height:1350px;position:relative;overflow:hidden;
+    background:radial-gradient(ellipse 80% 60% at 0% 0%,#1a3564 0%,#0d1b2e 55%),
+               linear-gradient(160deg,#0e1d38 0%,#0a1220 100%);
+    color:#fff;padding-bottom:32px;}
+/* Gold top-right decoration */
+#sqArea::before{content:'';position:absolute;top:-80px;right:-80px;width:420px;height:420px;
+    border:3px solid rgba(255,215,0,.12);border-radius:50%;pointer-events:none;}
+#sqArea::after{content:'';position:absolute;top:-40px;right:-40px;width:280px;height:280px;
+    border:3px solid rgba(255,215,0,.08);border-radius:50%;pointer-events:none;}
+/* Header */
+.ipl-header{display:flex;align-items:center;padding:24px 24px 18px;
+    border-bottom:2px solid rgba(255,215,0,.25);}
+.ipl-logo-wrap{width:80px;height:80px;flex-shrink:0;margin-right:18px;
+    display:flex;align-items:center;justify-content:center;}
+.ipl-logo{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(255,215,0,.4));}
+.ipl-logo-ph{width:80px;height:80px;border-radius:50%;border:2px solid rgba(255,215,0,.4);
+    display:flex;align-items:center;justify-content:center;
+    font-size:36px;color:rgba(255,215,0,.5);}
+.ipl-titles{flex:1;}
+.ipl-team{font-family:'Bebas Neue','Impact',sans-serif;font-size:42px;
+    color:#FFD700;letter-spacing:3px;line-height:1;
+    text-shadow:0 0 30px rgba(255,215,0,.4);}
+.ipl-tourn{font-size:16px;font-weight:600;color:rgba(255,255,255,.55);
+    letter-spacing:8px;text-transform:uppercase;margin-top:6px;}
+.ipl-tagline{font-size:13px;color:rgba(255,215,0,.55);font-style:italic;margin-top:4px;}
+.ipl-season-box{flex-shrink:0;text-align:center;
+    background:rgba(255,215,0,.08);border:1.5px solid rgba(255,215,0,.35);
+    border-radius:10px;padding:10px 18px;}
+.ipl-season-yr{font-family:'Bebas Neue','Impact',sans-serif;font-size:34px;
+    color:#FFD700;line-height:1;}
+.ipl-season-lbl{font-size:10px;color:rgba(255,255,255,.45);letter-spacing:5px;text-transform:uppercase;}
+/* Players */
+.ipl-players{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:20px 24px 28px;}
+.ipl-card{display:flex;flex-direction:column;align-items:stretch;padding:0 0 12px;
+    background:rgba(255,255,255,.035);border:1px solid rgba(255,215,0,.13);
+    border-radius:10px;position:relative;overflow:hidden;}
+.ipl-card-photo{width:100%;height:160px;border-radius:0;border:none;
+    border-bottom:3px solid #FFD700;
+    overflow:hidden;flex-shrink:0;background:rgba(255,255,255,.06);
+    display:flex;align-items:center;justify-content:center;margin-bottom:8px;position:relative;}
+
+.ipl-photo-ph{color:rgba(255,255,255,.15);font-size:44px;line-height:1;}
+.ipl-badge{position:absolute;top:-3px;left:-3px;width:22px;height:22px;border-radius:50%;
+    font-size:8px;font-weight:900;display:flex;align-items:center;justify-content:center;
+    background:#FFD700;color:#0d1b2e;}
+.ipl-vc-badge{background:#c0c0c0;color:#333;}
+.ipl-jno{position:absolute;bottom:-3px;right:-3px;background:#0d6efd;color:#fff;
+    width:22px;height:22px;border-radius:50%;font-size:9px;font-weight:900;
+    display:flex;align-items:center;justify-content:center;}
+.ipl-card-name{font-size:13px;font-weight:700;color:#fff;text-align:center;
+    text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;line-height:1.2;padding:0 6px;}
+.ipl-card-role{font-size:11px;color:rgba(255,215,0,.7);text-align:center;margin-bottom:5px;padding:0 6px;}
+.ipl-card-cat{font-size:9px;font-weight:700;letter-spacing:1.5px;
+    padding:2px 8px;border-radius:3px;text-transform:uppercase;
+    background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);}
+/* Footer */
+.ipl-footer{text-align:center;padding:10px;font-size:10px;color:rgba(255,255,255,.2);
+    letter-spacing:2px;text-transform:uppercase;}
+]]></style>
+</head>
+<body>
+<t t-call="squad_designer.squad_tmpl_dl_bar"/>
+<div id="sqArea" t-att-data-team="squad.team_name">
+    <!-- Header -->
+    <div class="ipl-header">
+        <div class="ipl-logo-wrap">
+            <t t-if="squad.team_logo">
+                <img class="ipl-logo" t-attf-src="/web/image/squad.print/#{squad.id}/team_logo"
+                     crossorigin="anonymous" alt="logo"/>
+            </t>
+            <t t-else=""><div class="ipl-logo-ph">&#127942;</div></t>
+        </div>
+        <div class="ipl-titles">
+            <div class="ipl-team"><t t-out="squad.team_name or 'TEAM NAME'"/></div>
+            <div class="ipl-tourn"><t t-out="squad.name or ''"/></div>
+            <t t-if="squad.tagline">
+                <div class="ipl-tagline">"<t t-out="squad.tagline"/>"</div>
+            </t>
+        </div>
+        <div class="ipl-season-box">
+            <div class="ipl-season-yr"><t t-out="squad.season or '2025'"/></div>
+            <div class="ipl-season-lbl">Season</div>
+        </div>
+    </div>
+    <!-- Players grid -->
+    <div class="ipl-players">
+        <t t-foreach="squad.player_ids" t-as="p">
+            <div class="ipl-card">
+                <div class="ipl-card-photo"
+                     t-attf-style="background-image:url(/web/image/squad.print.player/#{p.id}/photo);background-size:contain;background-repeat:no-repeat;background-position:center center;">
+                    <t t-if="not p.photo"><div class="ipl-photo-ph">&#128100;</div></t>
+                    <t t-if="p.is_captain"><div class="ipl-badge">C</div></t>
+                    <t t-elif="p.is_vc"><div class="ipl-badge ipl-vc-badge">VC</div></t>
+                    <t t-if="p.jersey_no"><div class="ipl-jno"><t t-out="p.jersey_no"/></div></t>
+                </div>
+                <div class="ipl-card-name"><t t-out="p.name"/></div>
+                <div class="ipl-card-role"><t t-out="p.role or ''"/></div>
+                <t t-if="p.category_id">
+                    <div class="ipl-card-cat"
+                         t-attf-style="background:#{p.category_id.color or '#444'};color:#fff;">
+                        <t t-out="p.category_id.code or p.category_id.name"/>
+                    </div>
+                </t>
+            </div>
+        </t>
+    </div>
+    <div class="ipl-footer">Squad Designer &#8226; <t t-out="squad.team_name"/> &#8226; <t t-out="squad.season or ''"/></div>
+</div>
+</body>
+</html>
+</template>
+
+
+<!-- ═════════════════════════════════════════════════════════════════════
+     TEMPLATE 2 — Modern Gradient  (Purple + Neon / Glassmorphism)
+═════════════════════════════════════════════════════════════════════════ -->
+<template id="squad_tmpl_modern_gradient" name="Squad Template: Modern Gradient">
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+    <t t-call="auction_module.page_head_favicon"/>
+<title><t t-out="squad.team_name"/> – Squad Card</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Montserrat:wght@400;700;900&amp;display=swap" rel="stylesheet"/>
+<style><![CDATA[
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#100820;display:flex;flex-direction:column;align-items:center;
+     padding-top:60px;font-family:'Montserrat',Arial,sans-serif;}
+#sqArea{
+    width:1080px;min-height:1350px;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#1a0534 0%,#0e1f4b 45%,#0a2e4a 100%);
+    color:#fff;padding-bottom:32px;}
+/* Geometric decorations */
+#sqArea::before{content:'';position:absolute;top:-120px;right:-120px;width:500px;height:500px;
+    background:linear-gradient(135deg,rgba(124,58,237,.18),transparent);
+    border-radius:50%;pointer-events:none;}
+#sqArea::after{content:'';position:absolute;bottom:-80px;left:-80px;width:360px;height:360px;
+    background:linear-gradient(315deg,rgba(236,72,153,.12),transparent);
+    border-radius:50%;pointer-events:none;}
+/* Header */
+.mg-header{display:flex;align-items:center;padding:24px 24px 18px;
+    border-bottom:1px solid rgba(255,255,255,.08);position:relative;}
+.mg-logo-wrap{width:84px;height:84px;border-radius:50%;overflow:hidden;flex-shrink:0;
+    background:rgba(255,255,255,.06);
+    border:2px solid transparent;
+    background-clip:padding-box;
+    box-shadow:0 0 0 2px rgba(124,58,237,.6),0 0 24px rgba(124,58,237,.3);
+    display:flex;align-items:center;justify-content:center;margin-right:20px;}
+.mg-logo{width:100%;height:100%;object-fit:contain;}
+.mg-logo-ph{font-size:48px;color:rgba(255,255,255,.3);}
+.mg-titles{flex:1;}
+.mg-team{font-family:'Bebas Neue','Impact',sans-serif;font-size:44px;line-height:1;
+    background:linear-gradient(90deg,#a78bfa,#f472b6);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;letter-spacing:2px;}
+.mg-tourn{font-size:13px;font-weight:700;color:rgba(255,255,255,.45);
+    letter-spacing:7px;text-transform:uppercase;margin-top:6px;}
+.mg-tagline{font-size:12px;font-style:italic;color:rgba(167,139,250,.6);margin-top:4px;}
+.mg-badge{flex-shrink:0;background:linear-gradient(135deg,rgba(124,58,237,.3),rgba(236,72,153,.2));
+    border:1px solid rgba(124,58,237,.4);border-radius:12px;padding:10px 18px;text-align:center;
+    backdrop-filter:blur(10px);}
+.mg-badge-yr{font-family:'Bebas Neue',sans-serif;font-size:32px;
+    background:linear-gradient(90deg,#a78bfa,#f472b6);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.mg-badge-lbl{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:4px;text-transform:uppercase;}
+/* Players – 4 columns wider glass cards */
+.mg-players{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:20px 24px 24px;}
+.mg-card{display:flex;flex-direction:column;align-items:stretch;padding:0 0 14px;
+    background:rgba(255,255,255,.05);backdrop-filter:blur(6px);
+    border:1px solid rgba(255,255,255,.12);border-radius:14px;position:relative;
+    overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.3);}
+.mg-card-photo{width:100%;height:160px;border-radius:0;overflow:hidden;flex-shrink:0;
+    background:rgba(255,255,255,.06);margin-bottom:12px;position:relative;
+    border-bottom:3px solid rgba(167,139,250,.7);
+    display:flex;align-items:center;justify-content:center;}
+
+.mg-photo-ph{color:rgba(255,255,255,.15);font-size:50px;}
+.mg-cbadge{position:absolute;top:-4px;left:-4px;width:24px;height:24px;border-radius:50%;
+    font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#a78bfa,#f472b6);color:#fff;}
+.mg-jno{position:absolute;bottom:-4px;right:-4px;background:rgba(236,72,153,.9);color:#fff;
+    width:22px;height:22px;border-radius:50%;font-size:9px;font-weight:900;
+    display:flex;align-items:center;justify-content:center;}
+.mg-card-name{font-size:13px;font-weight:900;color:#fff;text-align:center;
+    text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;padding:0 8px;}
+.mg-card-role{font-size:11px;color:rgba(167,139,250,.8);text-align:center;margin-bottom:6px;padding:0 8px;}
+.mg-card-cat{font-size:9px;font-weight:700;letter-spacing:1px;
+    padding:2px 10px;border-radius:20px;text-transform:uppercase;
+    background:rgba(124,58,237,.4);border:1px solid rgba(167,139,250,.3);color:rgba(255,255,255,.8);}
+.mg-footer{text-align:center;padding:8px;font-size:10px;color:rgba(255,255,255,.18);
+    letter-spacing:2px;text-transform:uppercase;}
+]]></style>
+</head>
+<body>
+<t t-call="squad_designer.squad_tmpl_dl_bar"/>
+<div id="sqArea" t-att-data-team="squad.team_name">
+    <div class="mg-header">
+        <div class="mg-logo-wrap">
+            <t t-if="squad.team_logo">
+                <img class="mg-logo" t-attf-src="/web/image/squad.print/#{squad.id}/team_logo"
+                     crossorigin="anonymous" alt="logo"/>
+            </t>
+            <t t-else=""><div class="mg-logo-ph">&#127942;</div></t>
+        </div>
+        <div class="mg-titles">
+            <div class="mg-team"><t t-out="squad.team_name or 'TEAM NAME'"/></div>
+            <div class="mg-tourn"><t t-out="squad.name or ''"/></div>
+            <t t-if="squad.tagline">
+                <div class="mg-tagline">"<t t-out="squad.tagline"/>"</div>
+            </t>
+        </div>
+        <div class="mg-badge">
+            <div class="mg-badge-yr"><t t-out="squad.season or '2025'"/></div>
+            <div class="mg-badge-lbl">Season</div>
+        </div>
+    </div>
+    <div class="mg-players">
+        <t t-foreach="squad.player_ids" t-as="p">
+            <div class="mg-card">
+                <div class="mg-card-photo"
+                     t-attf-style="background-image:url(/web/image/squad.print.player/#{p.id}/photo);background-size:contain;background-repeat:no-repeat;background-position:center center;">
+                    <t t-if="not p.photo"><div class="mg-photo-ph">&#128100;</div></t>
+                    <t t-if="p.is_captain"><div class="mg-cbadge">C</div></t>
+                    <t t-if="p.jersey_no"><div class="mg-jno"><t t-out="p.jersey_no"/></div></t>
+                </div>
+                <div class="mg-card-name"><t t-out="p.name"/></div>
+                <div class="mg-card-role"><t t-out="p.role or ''"/></div>
+                <t t-if="p.category_id">
+                    <div class="mg-card-cat"><t t-out="p.category_id.code or p.category_id.name"/></div>
+                </t>
+            </div>
+        </t>
+    </div>
+    <div class="mg-footer">Squad Designer &#8226; <t t-out="squad.team_name"/></div>
+</div>
+</body>
+</html>
+</template>
+
+
+<!-- ═════════════════════════════════════════════════════════════════════
+     TEMPLATE 3 — Big Bash Bold  (Black + Teal, Angular)
+═════════════════════════════════════════════════════════════════════════ -->
+<template id="squad_tmpl_bbl_bold" name="Squad Template: Big Bash Bold">
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+    <t t-call="auction_module.page_head_favicon"/>
+<title><t t-out="squad.team_name"/> – Squad Card</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Rajdhani:wght@700&amp;display=swap" rel="stylesheet"/>
+<style><![CDATA[
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#030303;display:flex;flex-direction:column;align-items:center;
+     padding-top:60px;font-family:'Rajdhani',Arial,sans-serif;}
+#sqArea{
+    width:1080px;min-height:1350px;position:relative;overflow:hidden;
+    background:#080808;color:#fff;padding-bottom:32px;}
+/* Top teal diagonal stripe */
+#sqArea::before{content:'';position:absolute;top:0;left:0;right:0;height:8px;
+    background:linear-gradient(90deg,#00d4aa,#00b4d8,#00d4aa);pointer-events:none;}
+/* Bottom stripe */
+#sqArea::after{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;
+    background:linear-gradient(90deg,#00d4aa,#00b4d8,#00d4aa);pointer-events:none;}
+/* Diagonal background element */
+.bbl-diag{position:absolute;top:-40px;right:-60px;width:500px;height:500px;
+    background:linear-gradient(135deg,rgba(0,212,170,.06) 0%,transparent 60%);
+    transform:rotate(15deg);pointer-events:none;}
+/* Header */
+.bbl-header{display:flex;align-items:center;padding:18px 24px 16px;margin-top:8px;
+    border-bottom:3px solid #00d4aa;}
+.bbl-logo-wrap{width:80px;height:80px;flex-shrink:0;margin-right:18px;
+    display:flex;align-items:center;justify-content:center;}
+.bbl-logo{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 10px rgba(0,212,170,.5));}
+.bbl-logo-ph{font-size:48px;color:rgba(0,212,170,.5);}
+.bbl-titles{flex:1;}
+.bbl-team{font-family:'Bebas Neue','Impact',sans-serif;font-size:48px;line-height:1;
+    color:#00d4aa;letter-spacing:3px;text-shadow:0 0 30px rgba(0,212,170,.4);}
+.bbl-tourn{font-size:14px;font-weight:700;color:rgba(255,255,255,.45);
+    letter-spacing:7px;text-transform:uppercase;margin-top:5px;}
+.bbl-tagline{font-size:13px;color:rgba(0,212,170,.55);margin-top:3px;}
+.bbl-yr-box{flex-shrink:0;border:2px solid #00d4aa;border-radius:4px;
+    padding:10px 18px;text-align:center;}
+.bbl-yr{font-family:'Bebas Neue',sans-serif;font-size:32px;color:#00d4aa;line-height:1;}
+.bbl-yr-lbl{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:4px;text-transform:uppercase;}
+/* Players 5-column with bold style */
+.bbl-players{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:18px 24px 28px;}
+.bbl-card{display:flex;flex-direction:column;align-items:stretch;padding:0 0 10px;
+    background:#111;border-left:3px solid #00d4aa;border-radius:0 6px 6px 0;
+    position:relative;overflow:hidden;}
+.bbl-card-photo{width:100%;height:155px;overflow:hidden;flex-shrink:0;
+    background:#1a1a1a;margin-bottom:8px;position:relative;
+    border-bottom:3px solid #00d4aa;
+    display:flex;align-items:center;justify-content:center;}
+
+.bbl-photo-ph{color:rgba(255,255,255,.1);font-size:42px;}
+.bbl-cbadge{position:absolute;top:4px;right:4px;background:#00d4aa;color:#000;
+    font-size:9px;font-weight:900;padding:2px 5px;border-radius:2px;}
+.bbl-jno{position:absolute;bottom:4px;left:4px;background:rgba(0,212,170,.15);
+    color:#00d4aa;border:1px solid #00d4aa;
+    font-size:11px;font-weight:900;padding:1px 5px;border-radius:2px;}
+.bbl-card-name{font-size:13px;font-weight:700;color:#fff;text-align:center;
+    text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;padding:0 6px;}
+.bbl-card-role{font-size:11px;color:#00d4aa;text-align:center;margin-bottom:4px;padding:0 6px;}
+.bbl-card-cat{font-size:9px;font-weight:700;letter-spacing:1px;
+    padding:2px 8px;border-radius:2px;text-transform:uppercase;
+    background:rgba(0,212,170,.15);border:1px solid rgba(0,212,170,.3);color:rgba(255,255,255,.7);}
+.bbl-footer{text-align:center;padding:8px;font-size:10px;color:rgba(255,255,255,.18);
+    letter-spacing:2px;text-transform:uppercase;}
+]]></style>
+</head>
+<body>
+<t t-call="squad_designer.squad_tmpl_dl_bar"/>
+<div id="sqArea" t-att-data-team="squad.team_name">
+    <div class="bbl-diag"></div>
+    <div class="bbl-header">
+        <div class="bbl-logo-wrap">
+            <t t-if="squad.team_logo">
+                <img class="bbl-logo" t-attf-src="/web/image/squad.print/#{squad.id}/team_logo"
+                     crossorigin="anonymous" alt="logo"/>
+            </t>
+            <t t-else=""><div class="bbl-logo-ph">&#127942;</div></t>
+        </div>
+        <div class="bbl-titles">
+            <div class="bbl-team"><t t-out="squad.team_name or 'TEAM NAME'"/></div>
+            <div class="bbl-tourn"><t t-out="squad.name or ''"/></div>
+            <t t-if="squad.tagline">
+                <div class="bbl-tagline"><t t-out="squad.tagline"/></div>
+            </t>
+        </div>
+        <div class="bbl-yr-box">
+            <div class="bbl-yr"><t t-out="squad.season or '2025'"/></div>
+            <div class="bbl-yr-lbl">Season</div>
+        </div>
+    </div>
+    <div class="bbl-players">
+        <t t-foreach="squad.player_ids" t-as="p">
+            <div class="bbl-card">
+                <div class="bbl-card-photo"
+                     t-attf-style="background-image:url(/web/image/squad.print.player/#{p.id}/photo);background-size:contain;background-repeat:no-repeat;background-position:center center;">
+                    <t t-if="not p.photo"><div class="bbl-photo-ph">&#128100;</div></t>
+                    <t t-if="p.is_captain or p.is_vc">
+                        <div class="bbl-cbadge"><t t-out="'C' if p.is_captain else 'VC'"/></div>
+                    </t>
+                    <t t-if="p.jersey_no">
+                        <div class="bbl-jno">#<t t-out="p.jersey_no"/></div>
+                    </t>
+                </div>
+                <div class="bbl-card-name"><t t-out="p.name"/></div>
+                <div class="bbl-card-role"><t t-out="p.role or ''"/></div>
+                <t t-if="p.category_id">
+                    <div class="bbl-card-cat"><t t-out="p.category_id.code or p.category_id.name"/></div>
+                </t>
+            </div>
+        </t>
+    </div>
+    <div class="bbl-footer">Squad Designer &#8226; <t t-out="squad.team_name"/></div>
+</div>
+</body>
+</html>
+</template>
+
+
+<!-- ═════════════════════════════════════════════════════════════════════
+     TEMPLATE 4 — Test Classic  (Deep Green + Gold, Elegant)
+═════════════════════════════════════════════════════════════════════════ -->
+<template id="squad_tmpl_test_classic" name="Squad Template: Test Classic">
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title><t t-out="squad.team_name"/> – Squad Card</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&amp;family=Lato:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<style><![CDATA[
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0f2d1f;display:flex;flex-direction:column;align-items:center;
+     padding-top:60px;font-family:'Lato',Georgia,serif;}
+#sqArea{
+    width:1080px;min-height:1350px;position:relative;overflow:hidden;
+    background:linear-gradient(160deg,#1b4d3e 0%,#143d31 60%,#0f2d1f 100%);
+    color:#f5f0e8;padding-bottom:32px;
+    border:6px solid #c5a028;outline:2px solid rgba(197,160,40,.3);}
+/* Corner ornaments */
+.tc-corner{position:absolute;width:60px;height:60px;border-color:#c5a028;border-style:solid;}
+.tc-corner.tl{top:6px;left:6px;border-width:3px 0 0 3px;}
+.tc-corner.tr{top:6px;right:6px;border-width:3px 3px 0 0;}
+.tc-corner.bl{bottom:6px;left:6px;border-width:0 0 3px 3px;}
+.tc-corner.br{bottom:6px;right:6px;border-width:0 3px 3px 0;}
+/* Header */
+.tc-header{display:flex;align-items:center;padding:24px 24px 20px;
+    border-bottom:2px solid rgba(197,160,40,.4);}
+.tc-logo-wrap{width:84px;height:84px;flex-shrink:0;margin-right:22px;
+    border-radius:50%;border:3px solid #c5a028;overflow:hidden;
+    background:rgba(197,160,40,.08);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 20px rgba(197,160,40,.25);}
+.tc-logo{width:100%;height:100%;object-fit:contain;}
+.tc-logo-ph{font-size:48px;color:rgba(197,160,40,.5);}
+.tc-titles{flex:1;}
+.tc-team{font-family:'Playfair Display',Georgia,serif;font-size:38px;font-weight:900;
+    color:#f5e6b0;line-height:1;letter-spacing:1px;
+    text-shadow:0 2px 8px rgba(0,0,0,.5);}
+.tc-tourn{font-size:14px;font-weight:700;color:rgba(245,240,232,.5);
+    letter-spacing:6px;text-transform:uppercase;margin-top:6px;}
+.tc-tagline{font-family:'Playfair Display',serif;font-size:13px;font-style:italic;
+    color:rgba(197,160,40,.65);margin-top:4px;}
+.tc-yr-box{flex-shrink:0;text-align:center;
+    background:rgba(197,160,40,.1);border:1.5px solid rgba(197,160,40,.45);
+    border-radius:6px;padding:10px 18px;}
+.tc-yr{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;
+    color:#c5a028;line-height:1;}
+.tc-yr-lbl{font-size:9px;color:rgba(245,240,232,.4);letter-spacing:5px;text-transform:uppercase;}
+/* Players – 5 col elegant cards */
+.tc-players{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:20px 24px 28px;}
+.tc-card{display:flex;flex-direction:column;align-items:stretch;padding:0 0 10px;
+    background:rgba(245,240,232,.06);border:1px solid rgba(197,160,40,.2);
+    border-radius:6px;position:relative;overflow:hidden;}
+.tc-card-photo{width:100%;height:155px;border-radius:0;overflow:hidden;flex-shrink:0;
+    background:rgba(245,240,232,.07);margin-bottom:8px;position:relative;
+    border-bottom:2px solid #c5a028;
+    display:flex;align-items:center;justify-content:center;}
+
+.tc-photo-ph{color:rgba(245,240,232,.15);font-size:42px;}
+.tc-cbadge{position:absolute;top:-3px;left:-3px;width:22px;height:22px;border-radius:50%;
+    font-size:8px;font-weight:900;display:flex;align-items:center;justify-content:center;
+    background:#c5a028;color:#0f2d1f;}
+.tc-jno{position:absolute;bottom:-3px;right:-3px;background:rgba(27,77,62,.9);
+    border:1px solid #c5a028;color:#c5a028;
+    width:22px;height:22px;border-radius:50%;font-size:9px;font-weight:900;
+    display:flex;align-items:center;justify-content:center;}
+.tc-card-name{font-family:'Lato',serif;font-size:12px;font-weight:700;color:#f5e6b0;
+    text-align:center;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px;padding:0 6px;}
+.tc-card-role{font-size:11px;color:rgba(197,160,40,.7);text-align:center;margin-bottom:5px;padding:0 6px;}
+.tc-card-cat{font-size:9px;font-weight:700;letter-spacing:1px;
+    padding:2px 8px;border-radius:3px;text-transform:uppercase;
+    background:rgba(197,160,40,.15);border:1px solid rgba(197,160,40,.3);
+    color:rgba(245,240,232,.7);}
+.tc-footer{text-align:center;padding:8px;font-size:10px;color:rgba(245,240,232,.2);
+    letter-spacing:2px;text-transform:uppercase;font-family:'Lato',serif;}
+]]></style>
+</head>
+<body>
+<t t-call="squad_designer.squad_tmpl_dl_bar"/>
+<div id="sqArea" t-att-data-team="squad.team_name">
+    <div class="tc-corner tl"></div><div class="tc-corner tr"></div>
+    <div class="tc-corner bl"></div><div class="tc-corner br"></div>
+    <div class="tc-header">
+        <div class="tc-logo-wrap">
+            <t t-if="squad.team_logo">
+                <img class="tc-logo" t-attf-src="/web/image/squad.print/#{squad.id}/team_logo"
+                     crossorigin="anonymous" alt="logo"/>
+            </t>
+            <t t-else=""><div class="tc-logo-ph">&#127942;</div></t>
+        </div>
+        <div class="tc-titles">
+            <div class="tc-team"><t t-out="squad.team_name or 'TEAM NAME'"/></div>
+            <div class="tc-tourn"><t t-out="squad.name or ''"/></div>
+            <t t-if="squad.tagline">
+                <div class="tc-tagline">"<t t-out="squad.tagline"/>"</div>
+            </t>
+        </div>
+        <div class="tc-yr-box">
+            <div class="tc-yr"><t t-out="squad.season or '2025'"/></div>
+            <div class="tc-yr-lbl">Season</div>
+        </div>
+    </div>
+    <div class="tc-players">
+        <t t-foreach="squad.player_ids" t-as="p">
+            <div class="tc-card">
+                <div class="tc-card-photo"
+                     t-attf-style="background-image:url(/web/image/squad.print.player/#{p.id}/photo);background-size:contain;background-repeat:no-repeat;background-position:center center;">
+                    <t t-if="not p.photo"><div class="tc-photo-ph">&#128100;</div></t>
+                    <t t-if="p.is_captain"><div class="tc-cbadge">C</div></t>
+                    <t t-if="p.jersey_no"><div class="tc-jno"><t t-out="p.jersey_no"/></div></t>
+                </div>
+                <div class="tc-card-name"><t t-out="p.name"/></div>
+                <div class="tc-card-role"><t t-out="p.role or ''"/></div>
+                <t t-if="p.category_id">
+                    <div class="tc-card-cat"
+                         t-attf-style="background:rgba(0,0,0,.2);border-color:#{p.category_id.color or '#c5a028'}40;color:#{p.category_id.color or '#c5a028'};">
+                        <t t-out="p.category_id.code or p.category_id.name"/>
+                    </div>
+                </t>
+            </div>
+        </t>
+    </div>
+    <div class="tc-footer">Squad Designer &#8226; <t t-out="squad.team_name"/> &#8226; <t t-out="squad.season or ''"/></div>
+</div>
+</body>
+</html>
+</template>
+
+
+<!-- ═════════════════════════════════════════════════════════════════════
+     TEMPLATE 5 — Minimalist Pro  (White + Team Color accent, Print-ready)
+═════════════════════════════════════════════════════════════════════════ -->
+<template id="squad_tmpl_minimalist_pro" name="Squad Template: Minimalist Pro">
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title><t t-out="squad.team_name"/> – Squad Card</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&amp;display=swap" rel="stylesheet"/>
+<style><![CDATA[
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#e8e8e8;display:flex;flex-direction:column;align-items:center;
+     padding-top:60px;font-family:'Inter',Arial,sans-serif;}
+#sqArea{
+    width:1080px;min-height:1350px;position:relative;overflow:hidden;
+    background:#ffffff;color:#1a1a1a;padding-bottom:32px;
+    box-shadow:0 8px 40px rgba(0,0,0,.15);}
+/* Top color bar (uses inline style for team primary color) */
+.mp-topbar{height:10px;background:var(--primary,#003087);}
+/* Header */
+.mp-header{display:flex;align-items:center;padding:24px 24px 18px;
+    border-bottom:1.5px solid #e8e8e8;}
+.mp-logo-wrap{width:80px;height:80px;flex-shrink:0;margin-right:20px;
+    border-radius:10px;overflow:hidden;border:2px solid #e8e8e8;
+    display:flex;align-items:center;justify-content:center;background:#f5f5f5;}
+.mp-logo{width:100%;height:100%;object-fit:contain;}
+.mp-logo-ph{font-size:48px;color:#ccc;}
+.mp-titles{flex:1;}
+.mp-team{font-size:34px;font-weight:900;color:#1a1a1a;line-height:1;letter-spacing:-1px;}
+.mp-tourn{font-size:14px;font-weight:600;color:#888;letter-spacing:4px;
+    text-transform:uppercase;margin-top:6px;}
+.mp-tagline{font-size:13px;color:#aaa;font-style:italic;margin-top:4px;}
+.mp-yr-box{flex-shrink:0;text-align:right;}
+.mp-yr{font-size:32px;font-weight:900;color:var(--primary,#003087);line-height:1;}
+.mp-yr-lbl{font-size:10px;color:#aaa;letter-spacing:4px;text-transform:uppercase;}
+/* Players – 5 cols clean */
+.mp-players{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:18px 24px 22px;}
+.mp-card{display:flex;flex-direction:column;align-items:stretch;padding:0 0 10px;
+    background:#fff;border:1.5px solid #efefef;border-radius:8px;position:relative;
+    overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.mp-card-photo{width:100%;height:155px;border-radius:0;overflow:hidden;flex-shrink:0;
+    background:#f5f5f5;margin-bottom:8px;position:relative;
+    border-bottom:3px solid var(--primary,#003087);
+    display:flex;align-items:center;justify-content:center;}
+
+.mp-photo-ph{color:#ccc;font-size:42px;}
+.mp-cbadge{position:absolute;top:-3px;left:-3px;width:22px;height:22px;border-radius:50%;
+    font-size:8px;font-weight:900;display:flex;align-items:center;justify-content:center;
+    background:var(--primary,#003087);color:#fff;}
+.mp-jno{position:absolute;bottom:-3px;right:-3px;background:var(--secondary,#FFD700);
+    color:#333;border:none;
+    width:22px;height:22px;border-radius:50%;font-size:9px;font-weight:900;
+    display:flex;align-items:center;justify-content:center;}
+.mp-card-name{font-size:12px;font-weight:700;color:#1a1a1a;text-align:center;
+    text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;padding:0 6px;}
+.mp-card-role{font-size:11px;color:#888;text-align:center;margin-bottom:5px;padding:0 6px;}
+.mp-card-cat{font-size:9px;font-weight:600;letter-spacing:1px;
+    padding:2px 8px;border-radius:20px;text-transform:uppercase;
+    color:#fff;background:var(--primary,#003087);}
+.mp-footer{text-align:center;padding:10px;font-size:10px;color:#bbb;
+    letter-spacing:2px;text-transform:uppercase;border-top:1px solid #efefef;margin:0 24px;}
+]]></style>
+</head>
+<body>
+<t t-call="squad_designer.squad_tmpl_dl_bar"/>
+<div id="sqArea"
+     t-att-data-team="squad.team_name"
+     t-attf-style="--primary:#{squad.team_color_primary or '#003087'};--secondary:#{squad.team_color_secondary or '#FFD700'};">
+    <div class="mp-topbar"
+         t-attf-style="background:#{squad.team_color_primary or '#003087'};"></div>
+    <div class="mp-header">
+        <div class="mp-logo-wrap">
+            <t t-if="squad.team_logo">
+                <img class="mp-logo" t-attf-src="/web/image/squad.print/#{squad.id}/team_logo"
+                     crossorigin="anonymous" alt="logo"/>
+            </t>
+            <t t-else=""><div class="mp-logo-ph">&#127942;</div></t>
+        </div>
+        <div class="mp-titles">
+            <div class="mp-team"><t t-out="squad.team_name or 'TEAM NAME'"/></div>
+            <div class="mp-tourn"><t t-out="squad.name or ''"/></div>
+            <t t-if="squad.tagline">
+                <div class="mp-tagline">"<t t-out="squad.tagline"/>"</div>
+            </t>
+        </div>
+        <div class="mp-yr-box">
+            <div class="mp-yr"
+                 t-attf-style="color:#{squad.team_color_primary or '#003087'};">
+                <t t-out="squad.season or '2025'"/>
+            </div>
+            <div class="mp-yr-lbl">Season</div>
+        </div>
+    </div>
+    <div class="mp-players">
+        <t t-foreach="squad.player_ids" t-as="p">
+            <div class="mp-card">
+                <div class="mp-card-photo"
+                     t-attf-style="border-color:#{squad.team_color_primary or '#003087'};background-image:url(/web/image/squad.print.player/#{p.id}/photo);background-size:contain;background-repeat:no-repeat;background-position:center center;">
+                    <t t-if="not p.photo"><div class="mp-photo-ph">&#128100;</div></t>
+                    <t t-if="p.is_captain">
+                        <div class="mp-cbadge"
+                             t-attf-style="background:#{squad.team_color_primary or '#003087'};">C</div>
+                    </t>
+                    <t t-if="p.jersey_no">
+                        <div class="mp-jno"
+                             t-attf-style="background:#{squad.team_color_secondary or '#FFD700'};color:#333;">
+                            <t t-out="p.jersey_no"/>
+                        </div>
+                    </t>
+                </div>
+                <div class="mp-card-name"><t t-out="p.name"/></div>
+                <div class="mp-card-role"><t t-out="p.role or ''"/></div>
+                <t t-if="p.category_id">
+                    <div class="mp-card-cat"
+                         t-attf-style="background:#{p.category_id.color or squad.team_color_primary or '#003087'};">
+                        <t t-out="p.category_id.code or p.category_id.name"/>
+                    </div>
+                </t>
+            </div>
+        </t>
+    </div>
+    <div class="mp-footer"><t t-out="squad.team_name"/> &#8226; Squad Designer</div>
+</div>
+</body>
+</html>
+</template>
+
+</odoo>

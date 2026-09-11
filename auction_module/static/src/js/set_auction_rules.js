@@ -2,6 +2,7 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
     'use strict';
 
     var AbstractField = require('web.AbstractField');
+    var BasicModel = require('web.BasicModel');
     var fieldRegistry = require('web.field_registry');
     var FormRenderer = require('web.FormRenderer');
     var ListRenderer = require('web.ListRenderer');
@@ -25,6 +26,71 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
         }
         return n.toLocaleString();
     }
+
+    function sarEsc(s) {
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function sarRelRecords(value) {
+        if (!value) {
+            return [];
+        }
+        if (_.isArray(value.data)) {
+            return value.data;
+        }
+        if (_.isArray(value)) {
+            return value;
+        }
+        return [];
+    }
+
+    function sarInt(val) {
+        var n = parseInt(val, 10);
+        return isNaN(n) ? 0 : n;
+    }
+
+    /**
+     * Skip the first onchange RPC for bid slabs. New lines only have integers,
+     * and From is filled from context — waiting on /onchange was the delay
+     * after Enter.
+     */
+    BasicModel.include({
+        generateDefaultValues: function (recordID, options) {
+            var self = this;
+            return Promise.resolve(this._super.apply(this, arguments)).then(function () {
+                var record = self.localData[recordID];
+                if (!record || record.model !== 'auction.bid.slab') {
+                    return;
+                }
+                var ctx = record.context || {};
+                try {
+                    if (record.getContext) {
+                        ctx = _.extend({}, ctx, record.getContext() || {});
+                    }
+                } catch (e) {
+                    ctx = record.context || {};
+                }
+                var fromAmount = sarInt(ctx.default_from_amount);
+                if (!fromAmount) {
+                    return;
+                }
+                record._changes = record._changes || {};
+                record._changes.from_amount = fromAmount;
+                record.data.from_amount = fromAmount;
+            });
+        },
+
+        _performOnChange: function (record, fields, options) {
+            if (record && record.model === 'auction.bid.slab' && options && options.firstOnChange) {
+                return Promise.resolve();
+            }
+            return this._super.apply(this, arguments);
+        },
+    });
 
     /**
      * Visual helpers for Set Auction Rules: stepper buttons on the three
@@ -57,6 +123,134 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
             }
             this._sarBindSteppers($root);
             this._sarPlaceTeamAdd($root);
+            this._sarRenderPreview();
+        },
+
+        confirmChange: function () {
+            var self = this;
+            return this._super.apply(this, arguments).then(function (resetWidgets) {
+                if (self._sarRoot().length) {
+                    self._sarRenderPreview();
+                    self._sarPlaceTeamAdd(self._sarRoot());
+                }
+                return resetWidgets;
+            });
+        },
+
+        _sarPreviewChip: function (icon, text, kind) {
+            return (
+                '<span class="sar-preview-chip sar-chip-' + kind + '">' +
+                '<i class="fa ' + icon + '"/> ' + sarEsc(text) + '</span>'
+            );
+        },
+
+        _sarPreviewSnap: function (amount, slabs) {
+            amount = sarInt(amount);
+            var sorted = _.sortBy(slabs, function (slab) {
+                return -sarInt(slab.data && slab.data.from_amount);
+            });
+            var i;
+            var slab;
+            var from;
+            var inc;
+            var snapped;
+            for (i = 0; i < sorted.length; i++) {
+                slab = sorted[i];
+                from = sarInt(slab.data && slab.data.from_amount);
+                if (amount < from) {
+                    continue;
+                }
+                inc = sarInt(slab.data && slab.data.increment);
+                if (inc <= 0) {
+                    return Math.min(amount, sarInt(slab.data && slab.data.to_amount) || amount);
+                }
+                snapped = from + Math.floor((amount - from) / inc) * inc;
+                snapped = Math.min(snapped, amount);
+                if (slab.data && slab.data.to_amount) {
+                    snapped = Math.min(snapped, sarInt(slab.data.to_amount));
+                }
+                return snapped;
+            }
+            return amount;
+        },
+
+        _sarRenderPreview: function () {
+            var $root = this._sarRoot();
+            if (!$root.length) {
+                return;
+            }
+            var $host = $root.find('.sar-preview-host').first();
+            if (!$host.length) {
+                return;
+            }
+            var data = this.state && this.state.data;
+            if (!data) {
+                return;
+            }
+            var teams = sarRelRecords(data.team_ids);
+            var slabs = sarRelRecords(data.auction_bid_slab_ids);
+            var tiers = sarRelRecords(data.tier_limit_ids);
+            var nTeams = data.team_ids && data.team_ids.count ? data.team_ids.count : teams.length;
+            var chips = [];
+            chips.push(this._sarPreviewChip(
+                'fa-shield',
+                nTeams + ' team' + (nTeams === 1 ? '' : 's'),
+                nTeams >= 2 ? 'ok' : 'warn'
+            ));
+            chips.push(this._sarPreviewChip(
+                'fa-list-ol',
+                slabs.length + ' slab' + (slabs.length === 1 ? '' : 's'),
+                slabs.length ? 'ok' : 'muted'
+            ));
+            if (tiers.length) {
+                chips.push(this._sarPreviewChip(
+                    'fa-th-large',
+                    tiers.length + ' tier' + (tiers.length === 1 ? '' : 's'),
+                    'ok'
+                ));
+            }
+            var purse = sarInt(data.max_points);
+            var squad = sarInt(data.max_players);
+            var globalBase = sarInt(data.base_point);
+            if (purse > 0 && squad > 1) {
+                var slots = squad - 1;
+                var tierBases = [];
+                _.each(tiers, function (tl) {
+                    var bid = sarInt(tl.data && tl.data.base_point);
+                    if (bid <= 0) {
+                        bid = globalBase;
+                    }
+                    var avail = Math.max(sarInt(tl.data && tl.data.max_players), 0);
+                    if (avail) {
+                        tierBases.push([bid, avail]);
+                    }
+                });
+                var reserve = 0;
+                var left = slots;
+                if (tierBases.length) {
+                    tierBases.sort(function (a, b) { return a[0] - b[0]; });
+                    _.each(tierBases, function (pair) {
+                        if (left <= 0) {
+                            return;
+                        }
+                        var take = Math.min(pair[1], left);
+                        reserve += take * pair[0];
+                        left -= take;
+                    });
+                    if (left > 0) {
+                        reserve += left * tierBases[0][0];
+                    }
+                } else {
+                    reserve = slots * globalBase;
+                }
+                var snapped = this._sarPreviewSnap(Math.max(purse - reserve, 0), slabs);
+                chips.push(this._sarPreviewChip(
+                    'fa-calculator',
+                    'Budget-safe max ≈ ' + snapped,
+                    snapped > 0 ? 'ok' : 'warn'
+                ));
+            }
+            $host.html('<div class="sar-preview">' + chips.join('') + '</div>');
         },
 
         _sarPlaceTeamAdd: function ($root) {
@@ -152,6 +346,46 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
                 options = _.extend({}, options, { forceCreate: true });
             }
             return this._super.apply(this, arguments);
+        },
+
+        trigger_up: function (name, info) {
+            if (name === 'add_record' && this._sarListKind() === 'slabs') {
+                info = info || {};
+                info.context = this._sarNextSlabContext(info.context);
+            }
+            return this._super.apply(this, arguments);
+        },
+
+        _sarPrevSlabTo: function () {
+            var data = this.state && this.state.data;
+            if (!data || !data.length) {
+                return 0;
+            }
+            var prev = data[data.length - 1];
+            return sarInt(prev && prev.data && prev.data.to_amount);
+        },
+
+        _sarNextSlabContext: function (existing) {
+            var extra = { default_from_amount: this._sarPrevSlabTo() };
+            if (!existing) {
+                return [extra];
+            }
+            if (_.isArray(existing)) {
+                if (!existing.length) {
+                    return [extra];
+                }
+                return _.map(existing, function (ctx) {
+                    if (_.isString(ctx)) {
+                        try {
+                            ctx = JSON.parse(ctx);
+                        } catch (e) {
+                            ctx = {};
+                        }
+                    }
+                    return _.extend({}, ctx || {}, extra);
+                });
+            }
+            return [_.extend({}, existing, extra)];
         },
 
         _sarListKind: function () {
@@ -295,32 +529,7 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
                 }
                 self._sarRefreshSlabRow($row);
             });
-            this._sarPrefillLastSlabFrom($rows);
             this._sarLabelAdd(this.$el, 'Add another slab');
-        },
-
-        _sarPrefillLastSlabFrom: function ($rows) {
-            if (this._sarPrefilling || !$rows || $rows.length < 2) {
-                return;
-            }
-            var $last = $rows.last();
-            if (
-                this._sarNum($last, 'from_amount') ||
-                this._sarNum($last, 'to_amount') ||
-                this._sarNum($last, 'increment')
-            ) {
-                return;
-            }
-            var prevTo = this._sarNum($rows.eq($rows.length - 2), 'to_amount');
-            if (!prevTo) {
-                return;
-            }
-            var self = this;
-            this._sarPrefilling = true;
-            this._sarSetField($last, 'from_amount', prevTo);
-            _.defer(function () {
-                self._sarPrefilling = false;
-            });
         },
 
         _sarRefreshSlabRow: function ($row) {

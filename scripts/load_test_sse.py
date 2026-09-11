@@ -33,9 +33,13 @@ def event_url(base, db, slug, kind):
         return '%s/%s/%s/auction/live-board/events' % (base, db, slug)
     if kind == 'pj':
         return '%s/%s/auction/projector/%s/events' % (base, db, slug)
+    if kind == 'yt':
+        return '%s/%s/auction/yt-overlay/%s/events' % (base, db, slug)
     if kind == 'bal':
         return '%s/%s/%s/auction/show/team/balance/events' % (base, db, slug)
-    raise ValueError('kind must be lb|pj|bal')
+    if kind == 'reg':
+        return '%s/%s/%s/player/register/events' % (base, db, slug)
+    raise ValueError('kind must be lb|pj|yt|bal|reg')
 
 
 def percentile(values, p):
@@ -134,7 +138,7 @@ def main():
     ap.add_argument('--base', default='http://127.0.0.1:8090')
     ap.add_argument('--db', required=True)
     ap.add_argument('--slug', required=True)
-    ap.add_argument('--kind', choices=('lb', 'pj', 'bal'), default='lb')
+    ap.add_argument('--kind', choices=('lb', 'pj', 'yt', 'bal', 'reg'), default='lb')
     args = ap.parse_args()
     asyncio.run(run(args))
 

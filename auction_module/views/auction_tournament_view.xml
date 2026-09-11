@@ -249,36 +249,40 @@
                             </div>
                         </div>
 
-                        <!-- ── Core Settings: 2-column grid ── -->
-                        <group>
-                            <group string="Tournament Info">
-                                <field name="tournament_type" widget="radio" options="{'horizontal': True}"/>
-                                <div class="alert alert-warning" role="alert" colspan="2"
-                                     style="margin:0 0 12px;border-radius:8px;"
-                                     attrs="{'invisible': [('tournament_type', '!=', 'kabaddi')]}">
-                                    <strong>Kabaddi is coming soon.</strong>
-                                    Please go back and select <b>Cricket</b> or <b>Football</b> —
-                                    Kabaddi tournaments will be available in a future update.
-                                    You cannot save while Kabaddi is selected.
-                                </div>
-                                <field name="tournament_dates" widget="date_tags"
-                                       placeholder="Pick tournament dates"/>
-                                <field name="tournament_date_ids" invisible="1"/>
-                                <field name="tournament_date" invisible="1"/>
-                                <field name="tournament_date_display" invisible="1"/>
-                                <field name="organizer_uid"/>
-                                <field name="organizer_uids" widget="many2many_tags"
-                                       options="{'color_field': 'color'}"/>
-                                <field name="organizer_name"/>
-                                <field name="organizer_contact"/>
+                        <!-- Sport picker — same card UI as Card Theme / Call-Up Mode -->
+                        <div class="o_at_presentation_section o_at_sport_section">
+                            <separator string="Sport"/>
+                            <div class="o_at_sport_picker_wrap">
+                                <field name="tournament_type"
+                                       widget="selection_card"
+                                       nolabel="1"
+                                       options="{'card_style': 'sport', 'coming_soon': 'kabaddi'}"/>
+                            </div>
+                        </div>
+
+                        <div class="o_at_presentation_section o_at_info_venue_section">
+                            <separator string="Tournament Info &amp; Venue"/>
+                            <group>
+                                <group string="Tournament Info">
+                                    <field name="tournament_dates" widget="date_tags"
+                                           placeholder="Pick tournament dates"/>
+                                    <field name="tournament_date_ids" invisible="1"/>
+                                    <field name="tournament_date" invisible="1"/>
+                                    <field name="tournament_date_display" invisible="1"/>
+                                    <field name="organizer_uid"/>
+                                    <field name="organizer_uids" widget="many2many_tags"
+                                           options="{'color_field': 'color'}"/>
+                                    <field name="organizer_name"/>
+                                    <field name="organizer_contact"/>
+                                </group>
+                                <group string="Venue">
+                                    <field name="venue"
+                                           placeholder="Match venue name, address, city…"/>
+                                    <field name="auction_date"/>
+                                    <field name="auction_venue" placeholder="e.g. Auction Arena, City Stadium Hall"/>
+                                </group>
                             </group>
-                            <group string="Venue">
-                                <field name="venue"
-                                       placeholder="Venue name, address, city…"/>
-                                <field name="auction_date"/>
-                                <field name="auction_venue" placeholder="e.g. Auction Arena, City Stadium Hall"/>
-                            </group>
-                        </group>
+                        </div>
 
                         <!-- Player Call-Up Mode (Lucky Dip / Roll Call) -->
                         <div class="o_at_presentation_section o_at_callup_section">

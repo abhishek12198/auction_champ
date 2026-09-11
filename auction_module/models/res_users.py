@@ -77,6 +77,14 @@ class ResUsers(models.Model):
         string='Team',
         help='The team this user manages (Owner role only).',
     )
+
+    @property
+    def SELF_READABLE_FIELDS(self):
+        return super().SELF_READABLE_FIELDS + ['phone']
+
+    @property
+    def SELF_WRITEABLE_FIELDS(self):
+        return super().SELF_WRITEABLE_FIELDS + ['phone']
     auction_user_template_id = fields.Many2one(
         'auction.user.template',
         string='User Template',
@@ -200,6 +208,25 @@ class ResUsers(models.Model):
                 'ALTER TABLE res_users ADD COLUMN %s %s' % (col, coltype)
             )
 
+    @api.model
+    def _auction_clear_forced_home_actions_fast(self):
+        """Clear forced Home Actions with one UPDATE — never browse all users."""
+        try:
+            admin_action = self.env.ref('auction_module.action_auction_tournament')
+            dash_action = self.env.ref('auction_module.action_player_dashboard_client')
+            showcase_action = self.env.ref('auction_module.action_launch_auction')
+        except ValueError:
+            return
+        ids = tuple({admin_action.id, dash_action.id, showcase_action.id})
+        self.env.cr.execute(
+            """
+            UPDATE res_users
+               SET action_id = NULL
+             WHERE action_id IN %s
+            """,
+            (ids,),
+        )
+
     def _register_hook(self):
         super()._register_hook()
         # Clear forced Home Actions on restart (no -u required) so menu clicks work.
@@ -215,7 +242,7 @@ class ResUsers(models.Model):
             )
         try:
             with self.env.cr.savepoint():
-                self.search([('share', '=', False)])._auction_sync_home_action()
+                self._auction_clear_forced_home_actions_fast()
         except Exception:
             _logger.warning(
                 'Could not sync auction home actions on registry load',
@@ -504,13 +531,20 @@ class ResUsers(models.Model):
     def get_working_tournament(self):
         """Tournament used for menus, creates, and the navbar badge."""
         self.ensure_one()
-        allowed = self._auction_switchable_tournaments()
-        if self.tournament_id and self.tournament_id.exists():
-            if self.tournament_id in allowed:
-                return self.tournament_id
+        Tournament = self.env['auction.tournament'].sudo()
+        current = self.sudo().tournament_id
+        if current:
             if self._auction_is_admin_user():
-                return self.tournament_id
-        return allowed[:1]
+                return current
+            allowed_ids = set(self.sudo().tournament_ids.ids)
+            if current.id in allowed_ids:
+                return current
+        if self._auction_is_admin_user():
+            return Tournament.search(
+                [('active', '=', True)], order='name asc, id asc', limit=1,
+            )
+        ids = list(self.sudo().tournament_ids.ids)
+        return Tournament.browse(ids[:1])
 
     def get_working_tournament_id(self):
         tournament = self.get_working_tournament()

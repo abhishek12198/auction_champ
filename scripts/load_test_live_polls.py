@@ -40,6 +40,7 @@ def urls(base, db, slug):
         'lb': '%s/%s/%s/auction/live-board/data' % (base, db, slug),
         'pj': '%s/%s/auction/projector/%s/data' % (base, db, slug),
         'bal': '%s/%s/%s/auction/show/team/balance/json' % (base, db, slug),
+        'reg': '%s/%s/%s/player/register/players' % (base, db, slug),
     }
 
 
@@ -150,7 +151,7 @@ def main(argv=None):
     p.add_argument('--duration', type=float, default=10.0)
     p.add_argument('--run', action='store_true')
     p.add_argument('--burst', action='store_true')
-    p.add_argument('--only', choices=('lb', 'pj', 'bal', 'all'), default='all')
+    p.add_argument('--only', choices=('lb', 'pj', 'bal', 'reg', 'all'), default='all')
     args = p.parse_args(argv)
     print_plan(args.base, args.db, args.slug)
     if not args.run:
@@ -180,6 +181,10 @@ def main(argv=None):
             if args.only in ('all', 'bal'):
                 out.append(await run_wave(
                     'bid-summary', u['bal'], v, args.duration, 8.0,
+                ))
+            if args.only in ('all', 'reg'):
+                out.append(await run_wave(
+                    'register-roster', u['reg'], v, args.duration, 12.0,
                 ))
         return out
 
