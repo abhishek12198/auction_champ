@@ -180,31 +180,27 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
         // ── Data load ────────────────────────────────────────────────────────
         _loadData: function () {
             var self = this;
-            var url = '/auction/player-dashboard/data';
-            fetch(url, { cache: 'no-store', credentials: 'same-origin' })
-                .then(function (r) {
-                    if (!r.ok) {
-                        throw new Error('HTTP ' + r.status);
-                    }
-                    return r.json();
-                })
-                .then(function (d) {
-                    if (!d || d.error) {
-                        self.$('#pd-tour-name').text('Tournament unavailable');
-                        console.error('Player dashboard payload error', d && d.error);
-                    }
-                    self._render(d || {});
-                })
-                .catch(function (e) {
-                    console.error('Player dashboard load failed', e);
+            return this._rpc({
+                model: 'auction.team.player',
+                method: 'get_player_dashboard_data',
+                args: [this._tournamentId || false],
+            }).then(function (d) {
+                if (!d || d.error) {
+                    console.error('Player dashboard payload error', d && d.error);
+                }
+                self._render(d || {});
+            }).catch(function (e) {
+                console.error('Player dashboard load failed', e);
+                if (!self._tournamentId) {
                     self.$('#pd-tour-name').text('Failed to load tournament');
-                });
+                }
+            });
         },
 
         _render: function (d) {
             // cache resolved view IDs for stat card navigation
             this._viewIds = d.view_ids || {};
-            this._tournamentId = d.tournament_id || null;
+            this._tournamentId = d.tournament_id || this._tournamentId || null;
             this._tournaments = d.tournaments || [];
             this._showTournamentFilter = false;
             this._paintTournamentFilter();
@@ -214,7 +210,7 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
 
             var tourName = (d.tournament_name || '').trim();
             var tourLogo = (d.tournament_logo || '').trim();
-            this.$('#pd-tour-name').text(tourName || 'All Players');
+            this.$('#pd-tour-name').text(tourName || (this._tournamentId ? 'Active Tournament' : 'No tournament selected'));
             this.$('#pd-sub').text('Registration Analytics');
             if (tourLogo) {
                 this.$('#pd-hdr-logo').html(

@@ -95,10 +95,13 @@ class AuctionTournamentSecurityMixin(models.AbstractModel):
           other records → Active Tournament (plus the tournament form in context).
         - Everyone else: union of Active Tournament and Organizer M2M.
         """
-        user = self.env.user
+        user = self.env.user.sudo().with_context(active_test=False)
         tids = set(user.tournament_ids.ids)
         if user.tournament_id:
             tids.add(user.tournament_id.id)
+        working = self.env.user.get_working_tournament()
+        if working:
+            tids.add(working.id)
         if not tids:
             return []
 
@@ -109,8 +112,7 @@ class AuctionTournamentSecurityMixin(models.AbstractModel):
             return list(tids)
 
         allowed = set()
-        working = user.get_working_tournament()
-        if working and working.id in tids:
+        if working:
             allowed.add(working.id)
         form_tid = self._auction_form_tournament_id()
         if form_tid in tids:

@@ -529,26 +529,32 @@ class ResUsers(models.Model):
         return items
 
     def get_working_tournament(self):
-        """Tournament used for menus, creates, and the navbar badge."""
+        """Navbar Active Tournament — source of truth for menus and dashboards.
+
+        Read assignments with ``active_test=False`` so an archived tournament
+        the user selected in the navbar is not treated as empty.
+        """
         self.ensure_one()
-        Tournament = self.env['auction.tournament'].sudo()
-        current = self.sudo().tournament_id
+        Tournament = self.env['auction.tournament'].sudo().with_context(active_test=False)
+        user = self.sudo().with_context(active_test=False)
+        current = user.tournament_id
         if current:
-            if self._auction_is_admin_user():
-                return current
-            allowed_ids = set(self.sudo().tournament_ids.ids)
-            if current.id in allowed_ids:
-                return current
+            return Tournament.browse(current.id)
         if self._auction_is_admin_user():
-            return Tournament.search(
+            return self.env['auction.tournament'].sudo().search(
                 [('active', '=', True)], order='name asc, id asc', limit=1,
             )
-        ids = list(self.sudo().tournament_ids.ids)
+        ids = list(user.tournament_ids.ids)
         return Tournament.browse(ids[:1])
 
     def get_working_tournament_id(self):
         tournament = self.get_working_tournament()
         return tournament.id if tournament else False
+
+    @api.model
+    def get_session_working_tournament_id(self):
+        """Navbar Active Tournament id for the logged-in user (Player Dashboard)."""
+        return self.env.user.get_working_tournament_id()
 
     def _auction_systray_item(self, tournament, active_id):
         items = self._auction_systray_items(tournament, active_id)

@@ -4253,35 +4253,50 @@ class Auction(http.Controller):
             ('Content-Type', 'application/json; charset=utf-8'),
             ('Cache-Control', 'no-store'),
         ]
+        fallback = {
+            'error': 'dashboard_failed',
+            'total': 0,
+            'state_counts': {'draft': 0, 'auction': 0, 'sold': 0, 'unsold': 0},
+            'icon_count': 0,
+            'paid_count': 0,
+            'unpaid_count': 0,
+            'draft_players': [],
+            'daily': [],
+            'roles': [],
+            'positions': [],
+            'tournament_type': 'cricket',
+            'tiers': [],
+            'team_player_counts': [],
+            'icon_players': [],
+            'tournament_id': None,
+            'tournament_name': '',
+            'tournament_logo': '',
+            'tournaments': [],
+            'show_tournament_filter': False,
+            'view_ids': {},
+        }
         try:
-            return self._player_dashboard_data_payload(**kw)
+            tour = self._resolve_pd_tournament(kw.get('tournament_id'))
+            if tour:
+                fallback['tournament_id'] = tour.id
+                fallback['tournament_name'] = tour.name or ''
+                fallback['tournament_type'] = tour.tournament_type or 'cricket'
         except Exception:
-            _logger.exception('player_dashboard_data failed')
+            _logger.exception('player_dashboard tournament resolve failed')
+        try:
+            data = request.env['auction.team.player'].get_player_dashboard_data(
+                kw.get('tournament_id'),
+            )
+            if data.get('tournament_id'):
+                fallback['tournament_id'] = data['tournament_id']
+                fallback['tournament_name'] = data.get('tournament_name') or ''
             return request.make_response(
-                json.dumps({
-                    'error': 'dashboard_failed',
-                    'total': 0,
-                    'state_counts': {'draft': 0, 'auction': 0, 'sold': 0, 'unsold': 0},
-                    'icon_count': 0,
-                    'paid_count': 0,
-                    'unpaid_count': 0,
-                    'draft_players': [],
-                    'daily': [],
-                    'roles': [],
-                    'positions': [],
-                    'tournament_type': 'cricket',
-                    'tiers': [],
-                    'team_player_counts': [],
-                    'icon_players': [],
-                    'tournament_id': None,
-                    'tournament_name': '',
-                    'tournament_logo': '',
-                    'tournaments': [],
-                    'show_tournament_filter': False,
-                    'view_ids': {},
-                }),
+                json.dumps(data, default=str),
                 headers=headers,
             )
+        except Exception:
+            _logger.exception('player_dashboard_data failed')
+            return request.make_response(json.dumps(fallback), headers=headers)
 
     def _pd_read_group_counts(self, Player, domain, groupby_field):
         """Map groupby value → count without loading player rows."""
@@ -4293,17 +4308,18 @@ class Auction(http.Controller):
 
     def _player_dashboard_data_payload(self, **kw):
         env = request.env
-        Player    = env['auction.team.player'].sudo()
-        AucPlayer = env['auction.auction.player'].sudo()
+        skip_ctx = {'auction_skip_tournament_security': True}
+        Player    = env['auction.team.player'].sudo().with_context(**skip_ctx)
+        AucPlayer = env['auction.auction.player'].sudo().with_context(**skip_ctx)
 
         def pub_img(model, rec_id, field):
             return '/auction/public/image/%s/%d/%s' % (model, rec_id, field)
 
-        # ── Tournament scope (same dropdown rules as Payment Tracker) ─────────
+        # ── Tournament scope: navbar Active Tournament ───────────────────────
         tournament_choices, show_tournament_filter, _is_saas = (
             self._pm_tournament_filter_meta()
         )
-        user_tournament = self._resolve_pd_tournament()
+        user_tournament = self._resolve_pd_tournament(kw.get('tournament_id'))
 
         if user_tournament:
             t_domain = [('tournament_id', '=', user_tournament.id)]
@@ -4521,26 +4537,30 @@ class Auction(http.Controller):
         )
 
     def _resolve_pd_tournament(self, tournament_id=None):
-        """Player Dashboard follows the navbar / Active Tournament only."""
+        """Player Dashboard follows the navbar Active Tournament."""
         env = request.env
-        user = env.user.sudo()
-        is_admin = user.has_group('auction_module.group_auction_group_admin')
+        Tournament = env['auction.tournament'].sudo().with_context(active_test=False)
+        user = env.user.sudo().with_context(active_test=False)
 
-        tournament = False
+        if tournament_id:
+            try:
+                tid = int(tournament_id)
+            except (TypeError, ValueError):
+                tid = 0
+            if tid:
+                rec = Tournament.browse(tid).exists()
+                if rec:
+                    return rec
+
+        tournament = Tournament.browse()
         get_working = getattr(user, 'get_working_tournament', None)
         if callable(get_working):
             try:
                 tournament = get_working()
             except Exception:
-                tournament = False
+                tournament = Tournament.browse()
         if not tournament:
             tournament = user.tournament_id or user.tournament_ids[:1]
-        if not tournament and is_admin:
-            tournament = env['auction.tournament'].sudo().search(
-                [('active', '=', True)], order='name asc, id asc', limit=1,
-            )
-        if tournament and not self._pm_user_can_access_tournament(tournament):
-            return env['auction.tournament']
         return tournament
 
     # ── Squad Poster (franchise 2:3 · 1024×1536) ──────────────────────────────

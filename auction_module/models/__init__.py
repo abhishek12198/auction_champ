@@ -52,6 +52,7 @@ from . import auction_auction
 from . import auction_player_tier
 from . import auction_player_attributes
 from . import auction_team_player
+from . import player_dashboard
 from . import auction_team_player_deleted
 from . import ir_actions_report
 from . import mail_mail
