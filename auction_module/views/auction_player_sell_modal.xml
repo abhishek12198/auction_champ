@@ -1196,10 +1196,32 @@
     return smWaitForImg(document.getElementById('loadImage'), 2500).then(smHideSoldUi);
   }
 
+  function smQueueIsEmptyDoc(doc) {
+    if (!doc || !doc.body) return true;
+    if (doc.body.getAttribute('data-auction-queue') === 'empty') return true;
+    return !doc.body.getAttribute('data-player-id');
+  }
+
+  function smPreloadStagePhotoFromHtml(html) {
+    if (!html) return;
+    try {
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      var img = doc.getElementById('loadImage');
+      var src = img && img.getAttribute('src');
+      if (!src) return;
+      var pre = new Image();
+      pre.src = src;
+    } catch (e) { /* ignore */ }
+  }
+
+  function smGoEmptyQueueScreen() {
+    smHideSoldUi();
+    window.location.replace(window.location.href.split('?')[0]);
+  }
+
   window.smSkipToNext = function() {
     if (smBreakPaused) return;
     if (smCountdownTimer) { clearInterval(smCountdownTimer); smCountdownTimer = null; }
-    smAdvanceFn = null;
     // Mystery players stay on stage until revealed — do not advance yet.
     var isMystery = (document.body.getAttribute('data-is-mystery') === '1')
       || !!window.AUCTION_IS_MYSTERY;
@@ -1208,6 +1230,10 @@
       window.acMysteryMarkSold(window._acMysteryPendingSold || null);
       window._acMysteryPendingSold = null;
       smHideSoldUi();
+      return;
+    }
+    if (smAdvanceFn) {
+      smAdvanceFn();
       return;
     }
     // Keep sold overlay up until the next player's photo is ready, so the
@@ -1518,14 +1544,29 @@
     // On cloud the fetch takes 300-800ms; doing it during the 5-second sold
     // animation means the HTML is ready the instant the countdown hits zero.
     // Skipped for mystery — we remain on the same player until reveal.
+    // Last player: skip the heavy empty-queue page; navigate after the overlay.
     var _preFetchedHtml = null;
     var _preFetchDone   = false;
+    var _queueEmpty     = parseInt(result.queue_remaining, 10) === 0;
     var _preFetchId     = document.body.getAttribute('data-player-id');
-    if (!isMystery && _preFetchId) {
+    if (!isMystery && _preFetchId && !_queueEmpty) {
       var _prefetchUrl = window.location.href.split('?')[0] + '?exclude=' + _preFetchId + '&preview=1';
       fetch(_prefetchUrl, { cache: 'no-store' })
         .then(function(r) { return r.ok ? r.text() : null; })
-        .then(function(html) { _preFetchedHtml = html; _preFetchDone = true; })
+        .then(function(html) {
+          _preFetchedHtml = html;
+          _preFetchDone = true;
+          if (html) {
+            try {
+              var preDoc = new DOMParser().parseFromString(html, 'text/html');
+              if (smQueueIsEmptyDoc(preDoc)) {
+                _queueEmpty = true;
+              } else {
+                smPreloadStagePhotoFromHtml(html);
+              }
+            } catch (e) { /* ignore */ }
+          }
+        })
         .catch(function()    { _preFetchDone = true; });
     } else {
       _preFetchDone = true;
@@ -1549,9 +1590,17 @@
         smHideSoldUi();
         return;
       }
+      if (_queueEmpty) {
+        smGoEmptyQueueScreen();
+        return;
+      }
       if (_preFetchedHtml) {
         var parser     = new DOMParser();
         var newDoc     = parser.parseFromString(_preFetchedHtml, 'text/html');
+        if (smQueueIsEmptyDoc(newDoc)) {
+          smGoEmptyQueueScreen();
+          return;
+        }
         var newId      = newDoc.body ? newDoc.body.getAttribute('data-player-id') : null;
         var zone       = document.querySelector('[data-player-zone]');
         var newZone    = newDoc.querySelector('[data-player-zone]');
@@ -1576,7 +1625,13 @@
       // Fallback: pre-fetch failed or same player — swap under the overlay first
       if (typeof changeImage === 'function') {
         Promise.resolve(changeImage(true))
-          .then(smHideSoldUiAfterStageReady)
+          .then(function() {
+            if (!document.body.getAttribute('data-player-id')) {
+              smGoEmptyQueueScreen();
+              return;
+            }
+            return smHideSoldUiAfterStageReady();
+          })
           .catch(function() {
             smHideSoldUi();
             window.location.reload();
@@ -1611,13 +1666,17 @@
         clearInterval(smCountdownTimer);
         smCountdownTimer = null;
         if (smBreakPaused) return;
-        // Keep sold overlay visible until smAdvance swaps the next player in.
-        if (_preFetchDone) {
+        if (_queueEmpty || _preFetchDone) {
           smAdvance();
         } else {
+          var _waitMs = 0;
           var _waitId = setInterval(function() {
             if (smBreakPaused) { clearInterval(_waitId); return; }
-            if (_preFetchDone) { clearInterval(_waitId); smAdvance(); }
+            _waitMs += 50;
+            if (_preFetchDone || _queueEmpty || _waitMs >= 400) {
+              clearInterval(_waitId);
+              smAdvance();
+            }
           }, 50);
         }
       }

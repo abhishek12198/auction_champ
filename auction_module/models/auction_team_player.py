@@ -950,6 +950,13 @@ class AuctionTeamPlayer(models.Model):
             player.name, auction.team_id.name, player._history_value(final_point)
         )
         self.env.user.notify_success(message=notify_msg, title='CONGRATULATIONS!')
+        queue_remaining = 0
+        if player.tournament_id:
+            queue_remaining = self.search_count([
+                ('tournament_id', '=', player.tournament_id.id),
+                ('state', '=', 'auction'),
+                ('icon_player', '=', False),
+            ])
         return {
             'success': True,
             'message': notify_msg,
@@ -960,6 +967,7 @@ class AuctionTeamPlayer(models.Model):
             'final_point': final_point,
             'display_seconds': player.tournament_id.sold_display_seconds if player.tournament_id else 5,
             'tournament_id': player.tournament_id.id if player.tournament_id else False,
+            'queue_remaining': queue_remaining,
         }
 
     @api.model

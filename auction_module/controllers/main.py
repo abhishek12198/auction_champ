@@ -1577,6 +1577,17 @@ class Auction(http.Controller):
             return False
         return all((auc.remaining_players_count or 0) <= 0 for auc in auctions)
 
+    def _display_auction_queue_empty_preview(self):
+        """Tiny HTML for preview=1 when nobody is left In Auction.
+
+        Prefetch during the sold countdown must not render the full Resume /
+        Thank You page — that work belongs on the real navigation after the
+        overlay duration.
+        """
+        return (
+            '<!DOCTYPE html><html><body data-auction-queue="empty"></body></html>'
+        )
+
     def _render_auction_resume(self, tournament, db_name, theme, auction_ids,
                                draft_players, unsold_players, auction_players,
                                draft_count, unsold_count, sold_count, auction_count,
@@ -1680,6 +1691,11 @@ class Auction(http.Controller):
             # All squads full but players still In Auction → resume screen with
             # bulk-unsold action (do not keep presenting unbuyable players).
             if tournament_id and all_squads_full and auction_queue_count > 0:
+                if preview:
+                    return request.make_response(
+                        self._display_auction_queue_empty_preview(),
+                        [('Content-Type', 'text/html; charset=utf-8')],
+                    )
                 theme = tournament_id.player_display_template or 'vanilla'
                 Player = PlayerActive.with_context(active_test=False)
                 t_domain = [('tournament_id', '=', tournament_id.id)]
@@ -1799,6 +1815,12 @@ class Auction(http.Controller):
                         return request.make_response(
                             html, [('Content-Type', 'text/html; charset=utf-8')]
                         )
+
+                if preview:
+                    return request.make_response(
+                        self._display_auction_queue_empty_preview(),
+                        [('Content-Type', 'text/html; charset=utf-8')],
+                    )
 
                 def _thank_you_html():
                     teams_payload = []
