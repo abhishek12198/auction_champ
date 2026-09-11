@@ -394,7 +394,12 @@
                                         attrs="{'invisible': [('active', '=', False)]}"/>
 
                                 <separator string="Teams"/>
-                                <field name="team_ids" widget="many2many">
+                                <p class="text-muted">
+                                    Create teams for this tournament. Each team starts empty here —
+                                    they are not shared with other tournaments.
+                                </p>
+                                <field name="team_ids" nolabel="1"
+                                       context="{'default_tournament_id': active_id}">
                                     <kanban class="o_kanban_mobile">
                                         <field name="name"/>
                                         <field name="logo"/>
@@ -417,6 +422,19 @@
                                             </t>
                                         </templates>
                                     </kanban>
+                                    <form string="Team">
+                                        <sheet>
+                                            <field name="logo" widget="image" class="oe_avatar"/>
+                                            <div class="oe_title">
+                                                <label class="o_form_label" for="name"/>
+                                                <h1><field name="name" placeholder="Team Name…"/></h1>
+                                                <h4 style="color:#888;font-weight:400;margin-top:4px;">
+                                                    <field name="manager" placeholder="Owner name" required="1"/>
+                                                </h4>
+                                            </div>
+                                            <field name="tournament_id" invisible="1"/>
+                                        </sheet>
+                                    </form>
                                 </field>
 
                                 <separator string="Tiers"/>

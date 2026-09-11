@@ -173,13 +173,20 @@ class StartAuction(models.TransientModel):
         if auction_list:
             auction_obj.create(auction_list)
         self.env.user.notify_success('Auction process initiated successfully for the selected teams!')
+        tid = tournament_id.id if tournament_id else False
         return {
-            'name': _('Players in Auction'),
-            'view_mode': 'tree,form',
-            'domain': [('state', '=', 'auction')],
-            'res_model': 'auction.team.player',
+            'name': _('Auction List'),
             'type': 'ir.actions.act_window',
-            'context': {'create': False},
+            'res_model': 'auction.auction',
+            'view_mode': 'kanban,tree,form',
+            'views': [(False, 'kanban'), (False, 'tree'), (False, 'form')],
+            'search_view_id': self.env.ref('auction_module.view_auction_auction_search').id,
+            'domain': [('tournament_id', '=', tid)] if tid else [],
+            'context': {
+                'default_tournament_id': tid,
+                'create': False,
+            },
+            'target': 'current',
         }
 
 class AuctionBidSlab(models.TransientModel):
