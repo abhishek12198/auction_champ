@@ -324,10 +324,7 @@
             <field name="model_id" ref="auction_module.model_auction_tournament"/>
             <field name="state">code</field>
             <field name="code">
-tournament = False
-get_working = getattr(env.user, 'get_working_tournament', None)
-if callable(get_working):
-    tournament = get_working()
+tournament = env.user.get_working_tournament()
 if not tournament:
     tournament = env.user.tournament_id
 if tournament:
