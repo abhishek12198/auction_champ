@@ -119,16 +119,20 @@
 @include media-breakpoint-down(sm) {
     .o_main_navbar {
         grid-template-areas: "apps brand systray sections";
-        grid-template-columns: minmax($o-navbar-height, max-content) max-content auto minmax($o-navbar-height, max-content);
+        grid-template-columns: minmax($o-navbar-height, max-content) max-content minmax(0, 1fr) minmax($o-navbar-height, max-content);
 
         .o_menu_brand  { display: none; }
-        // Keep wordmark tappable on mobile so users can return to the website
         .ac-navbar-logo {
-            display: inline-flex;
-            padding: 0 8px;
+            display: inline-flex !important;
+            grid-area: brand;
+            align-items: center;
+            padding: 0 4px;
+            max-width: 88px;
 
             .ac-navbar-logo-img {
-                height: 20px;
+                height: 18px;
+                width: auto;
+                max-width: 84px;
             }
         }
 
@@ -140,19 +144,62 @@
         }
         .o_menu_systray {
             margin-left: auto;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: nowrap;
+            min-width: 0;
+            gap: 8px;
+            padding-right: 4px;
+            overflow: hidden;
 
-            // Ensure systray icons have a minimum 44px tap target on mobile
+            > * {
+                flex: 0 1 auto;
+                min-width: 0;
+            }
+
             > * > .dropdown-toggle {
-                min-width: 44px;
+                min-width: 36px;
                 min-height: 44px;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                padding: 0 10px;
+                padding: 0 4px !important;
             }
+
+            // Leftover space only — do not also subtract the avatar width
+            .o_saas_tournament_systray,
+            .o_auction_tournament_systray {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                min-width: 0;
+                max-width: none;
+                flex: 1 1 0%;
+                overflow: hidden;
+            }
+
+            .o_saas_plan_switcher {
+                min-width: 0;
+                flex: 1 1 auto;
+                margin: 0;
+                overflow: hidden;
+            }
+
+            .o_saas_plan_chip {
+                max-width: 100%;
+            }
+        }
+        .o_user_menu {
+            flex: 0 0 auto !important;
+            margin: 0 0 0 2px;
+            position: relative;
+            z-index: auto;
         }
         .o_user_menu > .dropdown-toggle {
             white-space: nowrap;
+            min-width: 36px !important;
+            padding: 0 4px !important;
             &::before, &::after { content: normal; }
             .oe_topbar_name { display: none; }
         }

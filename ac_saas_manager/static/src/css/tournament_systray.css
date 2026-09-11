@@ -600,8 +600,21 @@
 }
 
 @media (max-width: 767px) {
+    .o_saas_tournament_systray,
+    .o_auction_tournament_systray {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+        overflow: hidden;
+    }
+
     .o_saas_plan_switcher {
-        margin-left: 4px;
+        margin-left: 0;
+        margin-right: 0;
+        min-width: 0;
+        flex: 1 1 auto;
+        overflow: hidden;
     }
 
     .o_saas_plan_chip {
@@ -609,7 +622,9 @@
         padding: 0 8px;
         gap: 4px;
         font-size: 11px;
-        max-width: 38vw;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
     }
 
     .o_saas_plan_chip_label {

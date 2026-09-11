@@ -24,23 +24,25 @@
     }
 
     .o_main_navbar .o_menu_systray > * {
-        flex: 0 0 auto;
+        flex: 0 1 auto;
         min-width: 0;
     }
 
-    /* User menu always last and never squeezed off-screen */
+    /* User menu last: intrinsic width only, never stacked over the plan chip */
     .o_main_navbar .o_menu_systray .o_user_menu {
         order: 999;
-        flex: 0 0 auto;
-        margin-left: 2px;
+        flex: 0 0 auto !important;
+        margin-left: 0;
         margin-right: 0;
-        max-width: 44px;
+        max-width: none;
+        position: relative;
+        z-index: auto;
     }
 
     .o_main_navbar .o_menu_systray .o_user_menu > .dropdown-toggle {
-        min-width: 40px;
+        min-width: 36px !important;
         min-height: 40px;
-        padding: 0 6px !important;
+        padding: 0 4px !important;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -51,11 +53,14 @@
         display: none !important;
     }
 
-    /* Let auction / plan chips shrink so the avatar fits */
     .o_main_navbar .o_menu_systray .o_saas_tournament_systray,
     .o_main_navbar .o_menu_systray .o_auction_tournament_systray {
-        min-width: 0;
-        max-width: calc(100% - 48px);
+        min-width: 0 !important;
+        max-width: none !important;
+        flex: 1 1 0% !important;
         overflow: hidden;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
     }
 }

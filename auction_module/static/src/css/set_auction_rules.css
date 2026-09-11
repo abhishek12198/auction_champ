@@ -5,7 +5,7 @@
 
 .o_dialog .modal-dialog:has(.o_sar_wizard),
 .modal-dialog:has(.o_sar_wizard) {
-    max-width: 1080px;
+    max-width: 1160px;
     width: 94vw;
 }
 
@@ -367,9 +367,10 @@
 .o_sar_wizard .sar-team-field .o_kanban_renderer,
 .o_sar_wizard .sar-team-field .o_kanban_ungrouped {
     display: grid !important;
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    align-items: stretch !important;
-    gap: 10px !important;
+    grid-template-columns: repeat(8, 118px) !important;
+    justify-content: start !important;
+    align-items: start !important;
+    gap: 8px !important;
     padding: 0 !important;
     background: transparent !important;
     width: 100% !important;
@@ -388,9 +389,9 @@
 }
 .o_sar_wizard .sar-team-field .o_kanban_view.o_kanban_ungrouped .o_kanban_record,
 .o_sar_wizard .sar-team-field .o_kanban_record {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: none !important;
+    width: 118px !important;
+    min-width: 118px !important;
+    max-width: 118px !important;
     flex: none !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -422,52 +423,74 @@
 }
 .o_sar_wizard .sar-team-chip {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    min-width: 0;
-    max-width: none;
-    min-height: 56px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    width: 118px;
+    min-width: 118px;
+    max-width: 118px;
     box-sizing: border-box;
-    background: linear-gradient(180deg, #ffffff 0%, #f7f9fd 100%);
-    border: 1.5px solid #d7e1f0;
-    border-radius: 12px;
-    padding: 8px 10px 8px 8px;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    background: #f7f9fd;
+    border: 1.5px solid #cfd9ea;
+    border-radius: 14px;
+    padding: 6px 6px 8px;
+    position: relative;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .o_sar_wizard .sar-team-chip:hover {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     border-color: #2e6da4;
-    box-shadow: 0 8px 18px rgba(30, 77, 140, 0.14);
+    box-shadow: 0 8px 18px rgba(30, 77, 140, 0.12);
 }
 .o_sar_wizard .sar-team-logo {
-    width: 40px;
-    height: 40px;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    max-width: none;
     border-radius: 10px;
-    background: #eef3fb;
+    background:
+        radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.08), transparent 42%),
+        linear-gradient(160deg, #1a2744 0%, #12203a 58%, #16345f 100%);
+    border: 1px solid #1e3a66;
+    box-shadow: none;
     overflow: hidden;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 6px;
+    box-sizing: border-box;
+}
+.o_sar_wizard .sar-team-chip:hover .sar-team-logo {
+    border-color: #fbbf24;
+    box-shadow: none;
 }
 .o_sar_wizard .sar-team-logo img {
     width: 100%;
     height: 100%;
     object-fit: contain;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
 }
 .o_sar_wizard .sar-team-logo .fa {
-    color: #1e5fa8;
-    font-size: 1.05rem;
+    color: #fbbf24;
+    font-size: 1.25rem;
 }
-.o_sar_wizard .sar-team-meta { min-width: 0; flex: 1; }
+.o_sar_wizard .sar-team-meta {
+    min-width: 0;
+    flex: none;
+    width: 100%;
+}
 .o_sar_wizard .sar-team-name {
-    font-size: 0.82rem;
+    font-size: 0.72rem;
     font-weight: 800;
     color: #12203a;
-    white-space: nowrap;
+    text-align: center;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
+    min-height: 0;
 }
 .o_sar_wizard .sar-team-owner {
     font-size: 0.68rem;
@@ -489,6 +512,10 @@
     font-size: 0.7rem;
 }
 .o_sar_wizard .sar-team-remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 2;
     flex-shrink: 0;
     width: 22px;
     height: 22px;
@@ -496,10 +523,10 @@
     display: inline-flex !important;
     align-items: center;
     justify-content: center;
-    margin-left: 2px;
-    background: #eef2f7 !important;
-    color: #64748b !important;
-    border: 0 !important;
+    margin: 0;
+    background: rgba(18, 32, 58, 0.72) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
     font-size: 0.7rem;
     line-height: 1;
     text-decoration: none !important;
@@ -508,8 +535,9 @@
 }
 .o_sar_wizard .sar-team-remove:hover,
 .o_sar_wizard .sar-team-chip:hover .sar-team-remove {
-    background: #fee2e2 !important;
-    color: #b91c1c !important;
+    background: #b91c1c !important;
+    color: #fff !important;
+    border-color: #fecaca !important;
     text-decoration: none !important;
 }
 
@@ -936,7 +964,7 @@
 @media (max-width: 900px) {
     .o_sar_wizard .sar-team-field .o_kanban_renderer,
     .o_sar_wizard .sar-team-field .o_kanban_ungrouped {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        grid-template-columns: repeat(4, 118px) !important;
     }
 }
 @media (max-width: 780px) {
@@ -954,6 +982,6 @@
 @media (max-width: 520px) {
     .o_sar_wizard .sar-team-field .o_kanban_renderer,
     .o_sar_wizard .sar-team-field .o_kanban_ungrouped {
-        grid-template-columns: 1fr !important;
+        grid-template-columns: repeat(2, 118px) !important;
     }
 }
