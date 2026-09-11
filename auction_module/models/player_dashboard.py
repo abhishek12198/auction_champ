@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
+import logging
 from datetime import datetime, timedelta
 
 import pytz
 
 from odoo import api, fields, models
+
+_logger = logging.getLogger(__name__)
 
 
 class AuctionTeamPlayerDashboard(models.Model):
@@ -57,8 +60,17 @@ class AuctionTeamPlayerDashboard(models.Model):
 
         def group_counts(domain, groupby_field):
             out = {}
-            for g in Player.read_group(domain, [groupby_field], [groupby_field], lazy=False):
-                out[g.get(groupby_field)] = g.get('__count') or 0
+            try:
+                with Player.env.cr.savepoint():
+                    groups = Player.read_group(
+                        domain, [groupby_field], [groupby_field], lazy=False,
+                    )
+                for g in groups:
+                    out[g.get(groupby_field)] = g.get('__count') or 0
+            except Exception:
+                _logger.exception(
+                    'player dashboard group_counts failed for %s', groupby_field,
+                )
             return out
 
         t_domain = (
@@ -117,14 +129,13 @@ class AuctionTeamPlayerDashboard(models.Model):
         )).astimezone(pytz.utc).replace(tzinfo=None)
         daily_counts = {day.strftime('%d %b'): 0 for day in day_labels}
         try:
-            day_groups = Player.read_group(
-                t_domain + [('create_date', '>=', fields.Datetime.to_string(range_start))],
-                ['create_date'],
-                ['create_date:day'],
-                lazy=False,
-            )
-            for g in day_groups:
-                raw = g.get('create_date:day') or g.get('create_date')
+            with Player.env.cr.savepoint():
+                rows = Player.search_read(
+                    t_domain + [('create_date', '>=', fields.Datetime.to_string(range_start))],
+                    ['create_date'],
+                )
+            for row in rows:
+                raw = row.get('create_date')
                 iso = ''
                 if hasattr(raw, 'strftime'):
                     iso = raw.strftime('%Y-%m-%d')
@@ -132,9 +143,9 @@ class AuctionTeamPlayerDashboard(models.Model):
                     iso = raw[:10]
                 label = day_keys.get(iso)
                 if label:
-                    daily_counts[label] += g.get('__count') or 0
+                    daily_counts[label] += 1
         except Exception:
-            pass
+            _logger.exception('player dashboard daily counts failed')
         daily = [{'label': day.strftime('%d %b'), 'count': daily_counts[day.strftime('%d %b')]}
                  for day in day_labels]
 
