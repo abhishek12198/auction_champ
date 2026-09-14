@@ -404,6 +404,7 @@
                                         <field name="name"/>
                                         <field name="logo"/>
                                         <field name="manager"/>
+                                        <field name="owner_photo"/>
                                         <field name="id"/>
                                         <templates>
                                             <t t-name="kanban-box">
@@ -432,6 +433,13 @@
                                                     <field name="manager" placeholder="Owner name" required="1"/>
                                                 </h4>
                                             </div>
+                                            <group>
+                                                <group string="Owner">
+                                                    <field name="owner_photo" widget="image"
+                                                           options="{'size': [128, 128]}"
+                                                           help="Used on the Squad Poster as TEAM OWNER with the owner name."/>
+                                                </group>
+                                            </group>
                                             <field name="tournament_id" invisible="1"/>
                                         </sheet>
                                     </form>
