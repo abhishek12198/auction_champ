@@ -51,7 +51,7 @@
                 <link rel="preconnect" href="https://fonts.googleapis.com"/>
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
                 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Poppins:wght@400;500;600;700;800&amp;family=Teko:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
-                <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.53"/>
+                <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.56"/>
             </head>
             <body>
                 <nav class="ac-nav scrolled" id="acNav">
@@ -104,6 +104,16 @@
                                 <i class="fas fa-chevron-right"/>
                             </a>
                             <a t-att-href="today_url" class="ac-cal-today">Today</a>
+                            <button type="button"
+                                    id="acCalDistrictBtn"
+                                    class="ac-cal-district-btn"
+                                    t-att-data-district="district_id or 'all'"
+                                    aria-haspopup="dialog"
+                                    aria-controls="acCalDistrictModal">
+                                <i class="fas fa-map-marker-alt" aria-hidden="true"/>
+                                <span id="acCalDistrictLabel" t-esc="district_label or 'All districts'"/>
+                                <i class="fas fa-chevron-down" aria-hidden="true"/>
+                            </button>
                         </div>
 
                         <div class="ac-cal-board">
@@ -183,8 +193,49 @@
                         <span class="ac-footer-copyright">&#169; <t t-esc="current_year"/> AuctionChamp. All rights reserved.</span>
                     </div>
                 </footer>
+                <div id="acCalDistrictModal" class="ac-cal-modal" hidden="hidden" aria-hidden="true">
+                    <div class="ac-cal-modal-backdrop" data-ac-cal-modal-close="1"></div>
+                    <div class="ac-cal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="acCalDistrictModalTitle">
+                        <div class="ac-cal-modal-head">
+                            <h3 id="acCalDistrictModalTitle">Select district</h3>
+                            <button type="button" class="ac-cal-modal-x" data-ac-cal-modal-close="1" aria-label="Close">
+                                <i class="fas fa-times"/>
+                            </button>
+                        </div>
+                        <div class="ac-cal-modal-body">
+                            <label class="ac-cal-modal-search">
+                                <i class="fas fa-search" aria-hidden="true"/>
+                                <input type="search" id="acCalDistrictSearch" placeholder="Search district" autocomplete="off"/>
+                            </label>
+                            <div class="ac-cal-district-list" id="acCalDistrictList" role="listbox" aria-label="Districts">
+                                <button type="button"
+                                        t-att-class="'ac-cal-district-option' + ('' if district_id else ' is-active')"
+                                        data-district="all"
+                                        data-name="All districts"
+                                        role="option"
+                                        t-att-aria-selected="'false' if district_id else 'true'">
+                                    All districts
+                                </button>
+                                <t t-foreach="districts or []" t-as="dist">
+                                    <button type="button"
+                                            t-att-class="'ac-cal-district-option' + (' is-active' if dist.get('selected') else '')"
+                                            t-att-data-district="dist['id']"
+                                            t-att-data-name="dist['name']"
+                                            role="option"
+                                            t-att-aria-selected="'true' if dist.get('selected') else 'false'">
+                                        <t t-esc="dist['name']"/>
+                                    </button>
+                                </t>
+                            </div>
+                        </div>
+                        <div class="ac-cal-modal-foot">
+                            <button type="button" class="ac-cal-modal-cancel" data-ac-cal-modal-close="1">Cancel</button>
+                            <button type="button" class="ac-cal-modal-submit" id="acCalDistrictSubmit">Show district</button>
+                        </div>
+                    </div>
+                </div>
                 <script src="/auction_champ_website/static/src/js/auction_website.js"></script>
-                <script src="/auction_champ_website/static/src/js/calendar.js?v=1.0.33"></script>
+                <script src="/auction_champ_website/static/src/js/calendar.js?v=1.0.56"></script>
             </body>
         </html>
     </template>

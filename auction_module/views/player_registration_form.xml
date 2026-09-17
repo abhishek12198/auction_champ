@@ -19,7 +19,7 @@
           rel="stylesheet"/>
 
     <!-- Registration form CSS -->
-    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.663"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.731"/>
 
     <!-- ── Per-theme CSS custom properties ────────────────────── -->
     <style>
@@ -167,7 +167,7 @@
                     </svg>
                     <span>
                         <span class="reg-meta-label">Venue</span>
-                        <span class="reg-meta-val" t-esc="tournament.venue"/>
+                        <span class="reg-meta-val" t-esc="tournament.get_venue_label()"/>
                     </span>
                 </div>
             </t>
@@ -946,7 +946,11 @@
                         <div id="mobileHint" class="reg-mobile-hint">Enter 10 digits (without country code)</div>
                         <!-- hidden field that holds the combined value submitted -->
                         <input type="hidden" id="contactFull" name="contact"/>
-                        <div id="mobileWarning" class="reg-mobile-warning" style="display:none;" role="status">
+                        <div id="mobileWarning"
+                             t-attf-class="reg-mobile-warning#{' is-blocking' if tournament and tournament.player_contact_unique else ''}"
+                             t-att-data-unique-contact="'1' if tournament and tournament.player_contact_unique else None"
+                             style="display:none;"
+                             role="alert">
                             ⚠️ This mobile is already registered in this tournament. You can still continue.
                         </div>
                     </div>
@@ -2017,6 +2021,11 @@
     var hintEl   = document.getElementById('mobileHint');
     if (!codeEl || !numEl || !fullEl) return;
 
+    var uniqueContact = !!(warnEl &amp;&amp; warnEl.getAttribute('data-unique-contact') === '1');
+    var dupBlocked = false;
+    var dupCheckSeq = 0;
+    var defaultDupMsg = warnEl ? warnEl.textContent : '';
+
     function selectedOption() {
         return codeEl.options[codeEl.selectedIndex] || null;
     }
@@ -2076,6 +2085,7 @@
         if (v.length > rules.max) v = v.slice(0, rules.max);
         this.value = v;
         syncFull();
+        if (dupBlocked) hideDupWarn();
     });
 
     // Sync hidden field whenever code or number changes
@@ -2112,6 +2122,7 @@
         var dbName  = parts[regIdx - 2];
         var slug    = parts[regIdx - 1];
         var url     = '/' + dbName + '/' + slug + '/player/check_mobile';
+        var seq     = ++dupCheckSeq;
         fetch(url, {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -2120,24 +2131,74 @@
         })
         .then(function (r) { return r.json(); })
         .then(function (data) {
+            if (seq !== dupCheckSeq) return;
             var result = data &amp;&amp; data.result;
-            if (result &amp;&amp; result.duplicate) showDupWarn();
+            if (result &amp;&amp; result.duplicate) showDupWarn(result);
             else hideDupWarn();
         })
-        .catch(function () { hideDupWarn(); });
+        .catch(function () {
+            if (seq !== dupCheckSeq) return;
+            hideDupWarn();
+        });
     }
 
-    function showDupWarn() {
-        if (warnEl) warnEl.style.display = 'block';
+    function showDupWarn(result) {
+        if (!warnEl) return;
+        dupBlocked = uniqueContact;
+        if (uniqueContact) {
+            var msg = (result &amp;&amp; result.message) || '';
+            if (!msg) {
+                var name = (result &amp;&amp; result.player_name) || 'another player';
+                msg = 'This phone number has been registered already in the name of "' + name + '". Please contact the tournament organizer for more details.';
+            }
+            warnEl.textContent = '⚠️ ' + msg;
+            warnEl.setAttribute('data-blocked', '1');
+        } else if (defaultDupMsg) {
+            warnEl.textContent = defaultDupMsg;
+        }
+        warnEl.style.display = 'block';
     }
     function hideDupWarn() {
-        if (warnEl) warnEl.style.display = 'none';
+        dupBlocked = false;
+        dupCheckSeq += 1;
+        if (warnEl) {
+            warnEl.style.display = 'none';
+            warnEl.removeAttribute('data-blocked');
+            if (defaultDupMsg) warnEl.textContent = defaultDupMsg;
+        }
     }
+    window.regHideMobileWarning = hideDupWarn;
 
     // On form submit — sync combined value (HTML pattern uses active country length)
     var form = document.querySelector('form');
     if (form) {
-        form.addEventListener('submit', function () { syncFull(); }, true);
+        form.addEventListener('submit', function (ev) {
+            syncFull();
+            if (uniqueContact &amp;&amp; (dupBlocked || (warnEl &amp;&amp; warnEl.getAttribute('data-blocked') === '1'))) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                if (warnEl) {
+                    try { warnEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) { /* */ }
+                }
+            }
+        }, true);
+        form.addEventListener('reset', function () {
+            window.setTimeout(function () {
+                hideDupWarn();
+                syncFull();
+                applyCountryRules();
+                var statusEl = document.getElementById('returningStatus');
+                if (statusEl) {
+                    statusEl.hidden = true;
+                    statusEl.textContent = '';
+                    statusEl.classList.remove('is-error', 'is-ok');
+                }
+                var foundBanner = document.getElementById('returningFoundBanner');
+                if (foundBanner) foundBanner.hidden = true;
+                var panel = document.getElementById('returningPlayerPanel');
+                if (panel) panel.classList.remove('has-found');
+            }, 0);
+        });
     }
 
     applyCountryRules();
@@ -2315,6 +2376,12 @@
         setStatus('');
         if (lookupNum) lookupNum.value = '';
         setExpanded(false);
+        if (window.regHideMobileWarning) window.regHideMobileWarning();
+        var warnEl = document.getElementById('mobileWarning');
+        if (warnEl) {
+            warnEl.style.display = 'none';
+            warnEl.removeAttribute('data-blocked');
+        }
     }
 
     function doLookup() {
@@ -2351,7 +2418,21 @@
                     if (warnEl) warnEl.style.display = 'block';
                 }
             } else if (result &amp;&amp; result.duplicate_this_tournament) {
-                setStatus('This mobile is already used here. You can still continue.', true);
+                var uniqueBlocked = !!(result.unique);
+                var msg = result.message
+                    || (uniqueBlocked
+                        ? 'This phone number has been registered already. Please contact the tournament organizer for more details.'
+                        : 'This mobile is already used here. You can still continue.');
+                setStatus(msg, true);
+                var warnEl = document.getElementById('mobileWarning');
+                if (warnEl) {
+                    if (uniqueBlocked) {
+                        warnEl.textContent = '⚠️ ' + msg;
+                        warnEl.classList.add('is-blocking');
+                        warnEl.setAttribute('data-blocked', '1');
+                    }
+                    warnEl.style.display = 'block';
+                }
             } else {
                 setStatus('No match found. Continue as a new entry.', true);
             }

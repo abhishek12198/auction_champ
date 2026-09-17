@@ -24,7 +24,7 @@
                                     font-family:Arial,Helvetica,sans-serif;">
                             <t t-esc="doc.tournament_id.description"/>
                             <span style="margin:0 5px;">|</span>
-                            <t t-esc="doc.tournament_id.venue"/>
+                            <t t-esc="doc.tournament_id.get_venue_label()"/>
                         </div>
                         <div style="color:#E8A020; font-size:12px; font-weight:bold;
                                     letter-spacing:3px; margin-top:8px; text-transform:uppercase;

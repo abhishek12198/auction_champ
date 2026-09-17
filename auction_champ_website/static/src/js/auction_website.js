@@ -193,4 +193,54 @@
         setInterval(refreshLiveTournaments, 8000);
     }
 
+    /* ── How to Start video modal ── */
+    var howBtn = document.getElementById('acHowToStartBtn');
+    var howModal = document.getElementById('acHowToStartModal');
+    var howFrame = document.getElementById('acHowToStartFrame');
+
+    function howToStartEmbedSrc(id) {
+        return 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id)
+            + '?autoplay=1&rel=0&modestbranding=1&playsinline=1';
+    }
+
+    function closeHowToStart() {
+        if (!howModal) return;
+        howModal.hidden = true;
+        howModal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('ac-video-modal-open');
+        if (howFrame) {
+            howFrame.src = '';
+        }
+        if (howBtn) {
+            howBtn.focus();
+        }
+    }
+
+    function openHowToStart() {
+        if (!howModal || !howFrame || !howBtn) return;
+        var id = howBtn.getAttribute('data-embed') || '';
+        if (!id) return;
+        howFrame.src = howToStartEmbedSrc(id);
+        howModal.hidden = false;
+        howModal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('ac-video-modal-open');
+    }
+
+    if (howBtn && howModal) {
+        howBtn.addEventListener('click', function (ev) {
+            ev.preventDefault();
+            openHowToStart();
+        });
+        howModal.addEventListener('click', function (ev) {
+            if (ev.target && ev.target.getAttribute('data-ac-video-close')) {
+                closeHowToStart();
+            }
+        });
+        document.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Escape' && howModal && !howModal.hidden) {
+                closeHowToStart();
+            }
+        });
+    }
+
 })();

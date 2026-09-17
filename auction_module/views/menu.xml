@@ -289,6 +289,13 @@
           groups="auction_module.group_auction_group"
           sequence="3"/>
 
+        <menuitem id="menu_action_auction_location"
+          name="City / Location Master"
+          parent="menu_action_auction_conf"
+          action="action_auction_location"
+          groups="auction_module.group_auction_group_admin"
+          sequence="4"/>
+
 
         <!--<menuitem id="menu_action_auction_reporting"
           name="Reporting"

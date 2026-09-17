@@ -563,6 +563,11 @@ body.reg-page::before {
     line-height: 1.45;
     font-weight: 500;
 }
+.reg-mobile-warning.is-blocking {
+    background: #fef2f2;
+    border-color: #ef4444;
+    color: #991b1b;
+}
 /* Returning player optional lookup — compact collapsible */
 .reg-returning {
     margin: 0 0 12px;

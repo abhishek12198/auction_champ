@@ -112,7 +112,20 @@ class AuctionTournament(models.Model):
              'Recomputed automatically when the tournament name changes.',
     )
     description = fields.Char(string="Short Description", required=True)
-    venue = fields.Text("Venue")
+    venue = fields.Many2one(
+        'auction.location',
+        string='Venue',
+        ondelete='restrict',
+        index=True,
+        help='City / location from the Location Master.',
+    )
+
+    def get_venue_label(self):
+        """Display name of the Venue location (empty if unset)."""
+        self.ensure_one()
+        if not self.venue:
+            return ''
+        return (self.venue.complete_name or self.venue.name or '').strip()
     auction_date = fields.Date(
         string="Auction Date",
         help="Date of the player auction. Shown on the projector screen.",
@@ -297,6 +310,13 @@ class AuctionTournament(models.Model):
         default=False,
         help="When enabled, Location / Address is mandatory on /player/register. "
              "When disabled, the field stays optional.",
+    )
+    player_contact_unique = fields.Boolean(
+        string="Unique Mobile on Registration",
+        default=False,
+        help="When enabled, each mobile number may register only once on "
+             "/player/register. A second attempt is blocked and names the "
+             "player already registered with that number.",
     )
     payment_instruction = fields.Text(
         string='Payment Instructions',
@@ -850,14 +870,20 @@ class AuctionTournament(models.Model):
     def _tournament_dates_to_char(self, dates):
         return ','.join(fields.Date.to_string(d) for d in sorted(d for d in dates if d))
 
-    def format_tournament_dates(self, fmt='%d %b %Y', joiner=' & '):
-        """Return a human-readable label for one or more tournament dates."""
+    def _iter_tournament_dates(self):
+        """Sorted unique tournament dates from lines, CSV, or the single date."""
         self.ensure_one()
         dates = sorted(d for d in self.tournament_date_ids.mapped('date') if d)
         if not dates:
             dates = self._parse_tournament_dates_char()
         if not dates and self.tournament_date:
             dates = [self.tournament_date]
+        return dates
+
+    def format_tournament_dates(self, fmt='%d %b %Y', joiner=' & '):
+        """Return a human-readable label for one or more tournament dates."""
+        self.ensure_one()
+        dates = self._iter_tournament_dates()
         if not dates:
             return ''
         if len(dates) == 1:
@@ -869,6 +895,65 @@ class AuctionTournament(models.Model):
                 return '{} – {}'.format(first.strftime('%d'), last.strftime(fmt))
             return '{} – {}'.format(first.strftime(fmt), last.strftime(fmt))
         return joiner.join(d.strftime(fmt) for d in dates)
+
+    def format_player_card_dates(self):
+        """Compact date line for player-card footers (fits 5–10 dates)."""
+        self.ensure_one()
+        dates = self._iter_tournament_dates()
+        if not dates:
+            return ''
+        if len(dates) == 1:
+            return dates[0].strftime('%d %b %Y')
+        consecutive = all((dates[i] - dates[i - 1]).days == 1 for i in range(1, len(dates)))
+        if consecutive:
+            first, last = dates[0], dates[-1]
+            if first.year == last.year and first.month == last.month:
+                return '{}–{}'.format(first.strftime('%d'), last.strftime('%d %b %Y'))
+            if first.year == last.year:
+                return '{} – {}'.format(first.strftime('%d %b'), last.strftime('%d %b %Y'))
+            return '{} – {}'.format(first.strftime('%d %b %Y'), last.strftime('%d %b %Y'))
+
+        groups = []
+        current = [dates[0]]
+        for date_val in dates[1:]:
+            prev = current[-1]
+            if date_val.year == prev.year and date_val.month == prev.month:
+                current.append(date_val)
+            else:
+                groups.append(current)
+                current = [date_val]
+        groups.append(current)
+
+        def _day_runs(month_dates):
+            runs = []
+            start = prev = month_dates[0]
+            for date_val in month_dates[1:]:
+                if (date_val - prev).days == 1:
+                    prev = date_val
+                    continue
+                runs.append((start, prev))
+                start = prev = date_val
+            runs.append((start, prev))
+            bits = []
+            for first, last in runs:
+                if first == last:
+                    bits.append(first.strftime('%d'))
+                else:
+                    bits.append('{}–{}'.format(first.strftime('%d'), last.strftime('%d')))
+            return ', '.join(bits)
+
+        years = {group[0].year for group in groups}
+        parts = []
+        for group in groups:
+            days = _day_runs(group)
+            month = group[0].strftime('%b')
+            if len(years) == 1:
+                parts.append('{} {}'.format(days, month))
+            else:
+                parts.append('{} {} {}'.format(days, month, group[0].year))
+        if len(years) == 1:
+            return '{} {}'.format(' · '.join(parts), dates[0].strftime('%Y'))
+        return ' · '.join(parts)
 
     def _sync_tournament_date_from_lines(self):
         """Keep tournament_date + tournament_dates in sync with date lines."""
@@ -953,6 +1038,7 @@ class AuctionTournament(models.Model):
         self._ensure_registered_list_privacy_columns()
         self._ensure_registration_cta_visibility_columns()
         self._ensure_player_address_required_column()
+        self._ensure_player_contact_unique_column()
         self._ensure_youtube_url_column()
 
         # Migrate legacy single tournament_date values into date lines + char.
@@ -1092,6 +1178,28 @@ class AuctionTournament(models.Model):
              WHERE player_address_required IS NULL
         """)
 
+    def _ensure_player_contact_unique_column(self):
+        """Create player_contact_unique without requiring -u on deploy."""
+        cr = self.env.cr
+        cr.execute("""
+            SELECT 1
+              FROM information_schema.columns
+             WHERE table_name = 'auction_tournament'
+               AND column_name = 'player_contact_unique'
+        """)
+        if cr.fetchone():
+            return
+        cr.execute("""
+            ALTER TABLE auction_tournament
+                ADD COLUMN player_contact_unique boolean
+                DEFAULT FALSE
+        """)
+        cr.execute("""
+            UPDATE auction_tournament
+               SET player_contact_unique = FALSE
+             WHERE player_contact_unique IS NULL
+        """)
+
     def _ensure_youtube_url_column(self):
         """Create youtube_url without requiring -u on deploy."""
         cr = self.env.cr
@@ -1140,6 +1248,7 @@ class AuctionTournament(models.Model):
                 self._ensure_registered_list_privacy_columns()
                 self._ensure_registration_cta_visibility_columns()
                 self._ensure_player_address_required_column()
+                self._ensure_player_contact_unique_column()
                 self._ensure_youtube_url_column()
                 self._ensure_live_snapshot_seq_column()
         except Exception:
@@ -1356,6 +1465,7 @@ class AuctionTournament(models.Model):
         default.setdefault('expose_registered_org_id', False)
         default.setdefault('expose_registered_address', False)
         default.setdefault('player_address_required', False)
+        default.setdefault('player_contact_unique', False)
         default.setdefault('show_registered_players', True)
         default.setdefault('show_registration_icon_players', False)
         new = super().copy(default)
@@ -1453,6 +1563,8 @@ class AuctionTournament(models.Model):
         if (not self.env.su
                 and not self.env.user.has_group('auction_module.group_auction_group_admin')):
             _ALLOWED = {
+                # tournament venue (city / location + auction hall)
+                'venue', 'auction_date', 'auction_venue',
                 # team balance & payment config
                 'team_max_points', 'payment_qr_image', 'payment_instruction',
                 'payment_proof_required',
@@ -1474,6 +1586,7 @@ class AuctionTournament(models.Model):
                 'live_bid_sound',
                 # registration toggle
                 'registration_open',
+                'player_contact_unique',
                 # dice / player-selector
                 'dice_state', 'dice_result',
             }
@@ -1999,8 +2112,8 @@ class AuctionTournament(models.Model):
         if date_label:
             lines.append('📅 *Date:* {}'.format(date_label))
 
-        if self.venue:
-            venue_text = self.venue.strip()
+        venue_text = self.get_venue_label()
+        if venue_text:
             lines.append('📍 *Venue:*\n{}'.format(venue_text))
 
         if self.registration_url:

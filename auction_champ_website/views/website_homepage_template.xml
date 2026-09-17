@@ -24,7 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Poppins:wght@400;500;600;700;800&amp;display=swap"
           rel="stylesheet"/>
     <!-- AuctionChamp custom styles -->
-    <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.43"/>
+    <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.57"/>
 </head>
 <body>
 
@@ -101,14 +101,16 @@
         </p>
 
         <div class="ac-hero-btns">
-            <!-- Placeholder — wire YouTube demo URL later -->
+            <t t-set="how_to_start_id" t-value="config.how_to_start_embed_id() if config else ''"/>
             <button type="button"
+                    id="acHowToStartBtn"
                     class="ac-btn ac-btn-primary ac-btn-watch-demo"
-                    disabled="disabled"
-                    aria-disabled="true"
-                    title="Demo video coming soon">
+                    t-att-data-embed="how_to_start_id or None"
+                    t-att-disabled="None if how_to_start_id else 'disabled'"
+                    t-att-aria-disabled="'false' if how_to_start_id else 'true'"
+                    t-att-title="'How to start with AuctionChamp' if how_to_start_id else 'How to Start video coming soon'">
                 <i class="fas fa-play"/>
-                Watch Demo
+                How to Start
             </button>
         </div>
 
@@ -995,10 +997,28 @@
     </div>
 </footer>
 
+<div id="acHowToStartModal" class="ac-video-modal" hidden="hidden" aria-hidden="true">
+    <div class="ac-video-modal-backdrop" data-ac-video-close="1"></div>
+    <div class="ac-video-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="acHowToStartTitle">
+        <div class="ac-video-modal-head">
+            <h3 id="acHowToStartTitle">How to Start</h3>
+            <button type="button" class="ac-video-modal-x" data-ac-video-close="1" aria-label="Close">
+                <i class="fas fa-times"/>
+            </button>
+        </div>
+        <div class="ac-video-modal-frame">
+            <iframe id="acHowToStartFrame"
+                    title="How to Start"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen="allowfullscreen"></iframe>
+        </div>
+    </div>
+</div>
+
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         crossorigin="anonymous"></script>
-<script src="/auction_champ_website/static/src/js/auction_website.js"></script>
+<script src="/auction_champ_website/static/src/js/auction_website.js?v=1.0.57"></script>
 
 </body>
 </html>

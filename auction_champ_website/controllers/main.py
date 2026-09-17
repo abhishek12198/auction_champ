@@ -40,6 +40,7 @@ import json
 import logging
 from collections import defaultdict
 from datetime import date, timedelta
+from urllib.parse import urlencode
 from dateutil.relativedelta import relativedelta
 
 from odoo import http, fields
@@ -276,7 +277,7 @@ class AuctionChampHomepage(Website):
             'name': tournament.name or '',
             'sport': type_labels.get(tournament.tournament_type, tournament.tournament_type or ''),
             'date_display': date_display or 'Dates to be announced',
-            'venue': (tournament.venue or '').strip() or 'Venue to be announced',
+            'venue': tournament.get_venue_label() or 'Venue to be announced',
             'logo_url': (
                 pub_img('auction.tournament', tournament.id, 'logo')
                 if tournament.logo else ''
@@ -425,7 +426,115 @@ class AuctionChampHomepage(Website):
             dates = [tournament.tournament_date]
         return dates
 
-    def _get_calendar_month_data(self, month=None):
+    def _calendar_query(self, month=None, district_id=None, extra=None):
+        params = {}
+        if month:
+            params['month'] = month
+        if district_id:
+            params['district'] = district_id
+        elif district_id == 0:
+            params['district'] = 'all'
+        if extra:
+            params.update(extra)
+        qs = urlencode(params)
+        return '/calendar?%s' % qs if qs else '/calendar'
+
+    def _calendar_client_ip(self):
+        req = request.httprequest
+        forwarded = (req.headers.get('X-Forwarded-For') or '').split(',')[0].strip()
+        return forwarded or (req.remote_addr or '')
+
+    def _calendar_ip_is_private(self, ip):
+        if not ip:
+            return True
+        if ip in ('127.0.0.1', '::1', 'localhost'):
+            return True
+        if ip.startswith('10.') or ip.startswith('192.168.') or ip.startswith('127.'):
+            return True
+        if ip.startswith('172.'):
+            try:
+                second = int(ip.split('.')[1])
+            except (IndexError, ValueError):
+                return False
+            return 16 <= second <= 31
+        return False
+
+    def _calendar_fetch_json(self, url, timeout=2.5, headers=None):
+        try:
+            import urllib.request
+            req = urllib.request.Request(url, headers=headers or {})
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                raw = resp.read().decode('utf-8', errors='replace')
+            return json.loads(raw or '{}')
+        except Exception:
+            _logger.debug('calendar geo lookup failed for %s', url, exc_info=True)
+            return {}
+
+    def _calendar_geo_names_from_ip(self, ip):
+        if self._calendar_ip_is_private(ip):
+            return []
+        data = self._calendar_fetch_json(
+            'http://ip-api.com/json/%s?fields=status,city,district,regionName,country' % ip,
+        )
+        if data.get('status') == 'success':
+            return [
+                data.get('district') or '',
+                data.get('city') or '',
+                data.get('regionName') or '',
+                data.get('country') or '',
+            ]
+        data = self._calendar_fetch_json('https://ipwho.is/%s' % ip)
+        if data.get('success'):
+            return [
+                ((data.get('city') or '')),
+                ((data.get('region') or '')),
+                ((data.get('country') or '')),
+            ]
+        return []
+
+    def _calendar_geo_names_from_latlng(self, lat, lng):
+        url = (
+            'https://nominatim.openstreetmap.org/reverse?lat=%s&lon=%s'
+            '&format=json&addressdetails=1' % (lat, lng)
+        )
+        data = self._calendar_fetch_json(url, headers={
+            'User-Agent': 'AuctionChampCalendar/1.0',
+            'Accept': 'application/json',
+        })
+        addr = data.get('address') or {}
+        return [
+            addr.get('city') or '',
+            addr.get('town') or '',
+            addr.get('village') or '',
+            addr.get('municipality') or '',
+            addr.get('county') or '',
+            addr.get('state_district') or '',
+            addr.get('district') or '',
+            addr.get('state') or '',
+            addr.get('country') or '',
+        ]
+
+    def _calendar_match_district(self, names):
+        Location = request.env['auction.location'].sudo()
+        return Location.match_geo_to_district(names)
+
+    def _calendar_district_from_ip(self):
+        return self._calendar_match_district(
+            self._calendar_geo_names_from_ip(self._calendar_client_ip())
+        )
+
+    def _calendar_district_choices(self, selected_id):
+        Location = request.env['auction.location'].sudo()
+        rows = []
+        for loc in Location.calendar_districts():
+            rows.append({
+                'id': loc.id,
+                'name': loc.name or loc.complete_name or ('Location #%s' % loc.id),
+                'selected': bool(selected_id and loc.id == selected_id),
+            })
+        return rows
+
+    def _get_calendar_month_data(self, month=None, district_id=None):
         """Month grid: each tournament date is a cell, not a stacked card list."""
         env = request.env
         db_name = env.cr.dbname
@@ -448,6 +557,13 @@ class AuctionChampHomepage(Website):
             self._calendar_public_domain(),
             order='tournament_date asc, name asc',
         )
+        if district_id:
+            district = env['auction.location'].sudo().browse(int(district_id)).exists()
+            if district:
+                loc_ids = district.calendar_location_ids()
+                tournaments = tournaments.filtered(
+                    lambda t: t.venue and t.venue.id in loc_ids
+                )
 
         by_day = defaultdict(list)
         tbd = []
@@ -493,17 +609,25 @@ class AuctionChampHomepage(Website):
                 if selected_iso:
                     break
 
+        district_key = district_id or 0
+        districts = self._calendar_district_choices(district_id)
         return {
             'month_label': first.strftime('%B %Y'),
-            'prev_url': '/calendar?month=%s' % prev_key,
-            'next_url': '/calendar?month=%s' % next_key,
-            'today_url': '/calendar?month=%s' % today.strftime('%Y-%m'),
+            'prev_url': self._calendar_query(prev_key, district_key),
+            'next_url': self._calendar_query(next_key, district_key),
+            'today_url': self._calendar_query(today.strftime('%Y-%m'), district_key),
             'weeks': weeks,
             'selected_iso': selected_iso,
             'tbd': tbd,
             'month_event_count': sum(
                 1 for days in by_day
                 if days.startswith('%04d-%02d' % (year, month_n))
+            ),
+            'district_id': district_id or False,
+            'districts': districts,
+            'district_label': next(
+                (row['name'] for row in districts if row.get('selected')),
+                'All districts',
             ),
         }
 
@@ -575,7 +699,7 @@ class AuctionChampHomepage(Website):
                 or tournament.tournament_date_display
                 or ''
             ),
-            'venue': (tournament.venue or '').strip(),
+            'venue': tournament.get_venue_label(),
             'logo_url': (
                 '/auction/public/image/auction.tournament/%d/logo' % tournament.id
                 if tournament.logo else ''
@@ -584,9 +708,22 @@ class AuctionChampHomepage(Website):
         })
 
     @http.route('/calendar', type='http', auth='public', website=True, sitemap=True)
-    def calendar(self, month=None, **kw):
+    def calendar(self, month=None, district=None, **kw):
         """Public month-grid calendar: tournaments sit on their dates."""
-        data = self._get_calendar_month_data(month=month)
+        if district is None:
+            geo = self._calendar_district_from_ip()
+            if geo:
+                return request.redirect(
+                    self._calendar_query(month, geo.id, extra={'geo': 'ip'}),
+                    code=302,
+                )
+        district_id = False
+        if district and str(district).lower() not in ('all', '0', ''):
+            try:
+                district_id = int(district)
+            except (TypeError, ValueError):
+                district_id = False
+        data = self._get_calendar_month_data(month=month, district_id=district_id)
         return request.render('auction_champ_website.calendar_page', {
             'current_year': date.today().year,
             'month_label': data['month_label'],
@@ -597,7 +734,33 @@ class AuctionChampHomepage(Website):
             'selected_iso': data['selected_iso'],
             'tbd': data['tbd'],
             'month_event_count': data['month_event_count'],
+            'districts': data['districts'],
+            'district_id': data['district_id'],
+            'district_label': data['district_label'],
+            'calendar_month': month or '',
         })
+
+    @http.route('/calendar/locate', type='http', auth='public', website=True, csrf=False)
+    def calendar_locate(self, lat=None, lng=None, **kw):
+        """Match browser GPS coordinates to a City / Location district."""
+        district_id = False
+        try:
+            lat_f = float(lat)
+            lng_f = float(lng)
+        except (TypeError, ValueError):
+            lat_f = lng_f = None
+        if lat_f is not None and lng_f is not None:
+            district = self._calendar_match_district(
+                self._calendar_geo_names_from_latlng(lat_f, lng_f)
+            )
+            district_id = district.id if district else False
+        return request.make_response(
+            json.dumps({'district_id': district_id}),
+            headers=[
+                ('Content-Type', 'application/json'),
+                ('Cache-Control', 'no-store'),
+            ],
+        )
 
     @http.route('/auction/live-tournaments/data', type='http', auth='public', website=True, csrf=False)
     def live_tournaments_data(self, **kw):

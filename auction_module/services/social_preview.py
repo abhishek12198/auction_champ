@@ -256,7 +256,8 @@ def og_image_url(tournament, db_name=None):
 def _tournament_venue_label(tournament):
     if not tournament:
         return ''
-    venue = _safe_text(getattr(tournament, 'venue', '') or '')
+    getter = getattr(tournament, 'get_venue_label', None)
+    venue = getter() if callable(getter) else _safe_text(getattr(tournament, 'venue', '') or '')
     if not venue:
         return ''
     venue = ' '.join(venue.split())

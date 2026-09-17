@@ -27,6 +27,8 @@
                             <group string="CTA Button URLs">
                                 <field name="demo_url" placeholder="#contact  or  /contact"/>
                                 <field name="watch_auction_url" placeholder="/auction/showcase"/>
+                                <field name="how_to_start_url"
+                                       placeholder="https://www.youtube.com/watch?v=…"/>
                             </group>
                         </page>
 

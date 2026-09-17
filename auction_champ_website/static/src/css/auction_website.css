@@ -415,6 +415,45 @@ ul   { list-style: none; }
     box-shadow: none !important;
     pointer-events: none;
 }
+
+body.ac-video-modal-open { overflow: hidden; }
+.ac-video-modal {
+    position: fixed; inset: 0; z-index: 1300;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+}
+.ac-video-modal[hidden] { display: none !important; }
+.ac-video-modal-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(13,27,42,.72);
+}
+.ac-video-modal-dialog {
+    position: relative; z-index: 1;
+    width: min(920px, 100%);
+    background: #0d1b2a; border-radius: 16px;
+    box-shadow: var(--ac-shadow-lg);
+    overflow: hidden;
+}
+.ac-video-modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.ac-video-modal-head h3 {
+    margin: 0; font-size: 1.1rem; font-weight: 800; color: #fff;
+}
+.ac-video-modal-x {
+    width: 36px; height: 36px; border: 0; border-radius: 10px;
+    background: rgba(255,255,255,.12); color: #fff; cursor: pointer;
+}
+.ac-video-modal-frame {
+    position: relative; width: 100%; padding-top: 56.25%;
+    background: #000;
+}
+.ac-video-modal-frame iframe {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    border: 0;
+}
 .ac-btn-outline {
     background: transparent;
     color: #fff;
@@ -1604,6 +1643,96 @@ ul   { list-style: none; }
     padding: 8px 14px; border-radius: 999px;
     background: var(--ac-navy); color: #fff; font-weight: 700; font-size: 0.85rem;
 }
+.ac-cal-district-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    max-width: 280px; margin-left: 8px;
+    padding: 8px 14px; border-radius: 999px;
+    border: 1px solid var(--ac-border); background: #fff;
+    color: var(--ac-navy); font-weight: 700; font-size: 0.9rem;
+    cursor: pointer; line-height: 1.2;
+}
+.ac-cal-district-btn #acCalDistrictLabel {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ac-cal-district-btn .fa-map-marker-alt { color: var(--ac-blue); }
+.ac-cal-district-btn .fa-chevron-down { font-size: 0.72rem; color: var(--ac-text-light); }
+.ac-cal-district-btn:hover,
+.ac-cal-district-btn:focus {
+    border-color: var(--ac-blue); outline: none;
+    box-shadow: 0 0 0 3px rgba(21,101,192,.12);
+}
+
+body.ac-cal-modal-open { overflow: hidden; }
+.ac-cal-modal {
+    position: fixed; inset: 0; z-index: 1200;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+}
+.ac-cal-modal[hidden] { display: none !important; }
+.ac-cal-modal-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(13,27,42,.55);
+}
+.ac-cal-modal-dialog {
+    position: relative; z-index: 1;
+    width: min(440px, 100%);
+    max-height: min(86vh, 640px);
+    display: flex; flex-direction: column;
+    background: #fff; border-radius: 18px;
+    box-shadow: var(--ac-shadow-lg);
+    overflow: hidden;
+}
+.ac-cal-modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--ac-border);
+}
+.ac-cal-modal-head h3 {
+    margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--ac-navy);
+}
+.ac-cal-modal-x {
+    width: 36px; height: 36px; border: 0; border-radius: 10px;
+    background: #f1f5f9; color: var(--ac-navy); cursor: pointer;
+}
+.ac-cal-modal-body { padding: 14px 18px; min-height: 0; display: flex; flex-direction: column; gap: 12px; }
+.ac-cal-modal-search {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border: 1px solid var(--ac-border);
+    border-radius: 10px; background: #f8fafc; color: var(--ac-text-light);
+}
+.ac-cal-modal-search input {
+    border: 0; outline: none; background: transparent;
+    width: 100%; font-size: 0.95rem; color: var(--ac-navy);
+}
+.ac-cal-district-list {
+    overflow: auto; max-height: 340px;
+    display: flex; flex-direction: column; gap: 6px;
+}
+.ac-cal-district-option {
+    width: 100%; text-align: left;
+    padding: 10px 12px; border-radius: 10px;
+    border: 1px solid transparent; background: #f8fafc;
+    color: var(--ac-navy); font-weight: 600; font-size: 0.92rem;
+    cursor: pointer;
+}
+.ac-cal-district-option:hover { background: #eef4fc; }
+.ac-cal-district-option.is-active {
+    border-color: var(--ac-blue); background: #e8f1fb; color: var(--ac-blue);
+}
+.ac-cal-modal-foot {
+    display: flex; justify-content: flex-end; gap: 10px;
+    padding: 12px 18px 16px; border-top: 1px solid var(--ac-border);
+}
+.ac-cal-modal-cancel,
+.ac-cal-modal-submit {
+    padding: 9px 16px; border-radius: 10px; font-weight: 700; cursor: pointer;
+}
+.ac-cal-modal-cancel {
+    border: 1px solid var(--ac-border); background: #fff; color: var(--ac-navy);
+}
+.ac-cal-modal-submit {
+    border: 0; background: var(--ac-navy); color: #fff;
+}
 
 .ac-cal-board {
     background: #fff;
@@ -1838,4 +1967,5 @@ img.ac-squad-player-photo,
     }
     .ac-cal-weekdays span { font-size: 0.65rem; }
     .ac-cal-logo { width: 96px; height: 96px; }
+    .ac-cal-district-btn { width: 100%; max-width: none; margin-left: 0; justify-content: center; }
 }

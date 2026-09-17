@@ -36,7 +36,14 @@
 #
 ##############################################################################
 
+import re
+
 from odoo import api, models, fields
+
+_YOUTUBE_ID_RE = re.compile(
+    r'(?:youtu\.be/|youtube(?:-nocookie)?\.com/(?:watch\?(?:.*&)?v=|embed/|live/|shorts/))'
+    r'([A-Za-z0-9_-]{11})'
+)
 
 
 class AuctionWebsiteConfig(models.Model):
@@ -61,6 +68,11 @@ class AuctionWebsiteConfig(models.Model):
         string='Request Demo URL',
         default='#contact',
         help='URL for the "Request Demo" button in the hero section.',
+    )
+    how_to_start_url = fields.Char(
+        string='How to Start video URL',
+        help='YouTube link for the homepage “How to Start” button '
+             '(watch, youtu.be, Shorts, or embed URL).',
     )
     watch_auction_url = fields.Char(
         string='Watch Live Auction URL',
@@ -152,6 +164,17 @@ class AuctionWebsiteConfig(models.Model):
                     vals[fname] = new
             if vals:
                 rec.write(vals)
+
+    def how_to_start_embed_id(self):
+        """11-character YouTube id for the homepage How to Start modal."""
+        self.ensure_one()
+        raw = (self.how_to_start_url or '').strip()
+        if not raw:
+            return ''
+        if re.fullmatch(r'[A-Za-z0-9_-]{11}', raw):
+            return raw
+        match = _YOUTUBE_ID_RE.search(raw)
+        return match.group(1) if match else ''
 
     @api.model
     def get_singleton(self):

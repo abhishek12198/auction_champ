@@ -298,6 +298,22 @@
                     </div>
                 </div>
 
+                <!-- Unique mobile -->
+                <div class="tr-toggle-row" style="margin-bottom:10px;">
+                    <label class="tr-toggle">
+                        <input type="checkbox" name="player_contact_unique" value="1" id="contactUniqueToggle"/>
+                        <span class="tr-toggle-track"/>
+                    </label>
+                    <div class="tr-toggle-text">
+                        <strong>Unique Mobile on Player Registration</strong>
+                        <span>
+                            When on, each mobile number may register only once.
+                            A second attempt is blocked and names the player already
+                            registered with that number.
+                        </span>
+                    </div>
+                </div>
+
                 <!-- Contact unmask is only available in Tournament Master after privacy agreement -->
                 <div class="tr-toggle-row" style="margin-bottom:10px; opacity:.75;">
                     <label class="tr-toggle" style="pointer-events:none;">

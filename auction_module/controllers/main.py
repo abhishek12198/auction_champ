@@ -5769,7 +5769,7 @@ class Auction(http.Controller):
         organizer_name = ''
         if tournament:
             tournament_name = (tournament.name or '').strip() or 'Tournament'
-            venue = (tournament.auction_venue or tournament.venue or '').strip()
+            venue = (tournament.auction_venue or '').strip() or tournament.get_venue_label()
             if tournament.auction_date:
                 try:
                     date_label = tournament.auction_date.strftime('%d %b %Y')
@@ -6450,13 +6450,25 @@ class Auction(http.Controller):
             )
             if not tournament:
                 return {'duplicate': False}
+            unique = bool(tournament.player_contact_unique)
+            if unique:
+                existing = _find_tournament_contact_player(request.env, tournament, mobile)
+                if existing:
+                    return {
+                        'duplicate': True,
+                        'unique': True,
+                        'player_name': existing.name or '',
+                        'message': _duplicate_contact_message(existing),
+                        'count': 1,
+                    }
+                return {'duplicate': False, 'unique': True, 'count': 0}
             mobile = _normalize_registration_contact(mobile)
             count = request.env['auction.team.player'].sudo().search_count([
                 ('tournament_id', '=', tournament.id),
                 ('contact', 'in', _registration_contact_variants(mobile)),
                 ('state', '=', 'draft'),
             ])
-            return {'duplicate': count > 0, 'count': count}
+            return {'duplicate': count > 0, 'unique': False, 'count': count}
 
     @http.route('/<string:db_name>/<string:tournament_slug>/player/lookup_profile',
                 type='json', auth='none', website=False, csrf=False, methods=['POST'])
@@ -6482,6 +6494,18 @@ class Auction(http.Controller):
                 return empty
 
             Player = request.env['auction.team.player'].sudo()
+            if tournament.player_contact_unique:
+                existing = _find_tournament_contact_player(request.env, tournament, mobile)
+                if existing:
+                    return {
+                        'found': False,
+                        'duplicate_this_tournament': True,
+                        'unique': True,
+                        'player_name': existing.name or '',
+                        'message': _duplicate_contact_message(existing),
+                        'count': 1,
+                    }
+
             candidates = Player.search(
                 [('contact', 'in', variants)],
                 order='write_date desc, id desc',
@@ -6844,7 +6868,7 @@ class Auction(http.Controller):
                 'description': _str('description') or 'Season 1',
                 'tournament_type': _str('tournament_type') or 'cricket',
                 'player_display_template': _str('player_display_template') or 'vanilla',
-                'venue': _str('venue'),
+                'venue': False,
                 'organizer_name': _str('organizer_name'),
                 'organizer_contact': _str('organizer_contact'),
                 'whatsapp_group_link': _str('whatsapp_group_link'),
@@ -6852,9 +6876,19 @@ class Auction(http.Controller):
                 'payment_instruction': _str('payment_instruction'),
                 'enable_jersey_section': bool(post.get('enable_jersey_section')),
                 'player_address_required': bool(post.get('player_address_required')),
+                'player_contact_unique': bool(post.get('player_contact_unique')),
                 # Contact unmask requires privacy agreement in Tournament Master — never enable from public form.
                 'expose_player_contact': False,
             }
+            venue_name = _str('venue')
+            if venue_name:
+                loc = request.env['auction.location'].sudo().search([
+                    '|',
+                    ('name', '=ilike', venue_name),
+                    ('complete_name', '=ilike', venue_name),
+                ], limit=1)
+                if loc:
+                    vals['venue'] = loc.id
 
             # Dates — support multiple days for multi-day tournaments
             from odoo.fields import Date
@@ -8021,6 +8055,25 @@ def _registration_contact_variants(mobile):
     return list(variants)
 
 
+def _find_tournament_contact_player(env, tournament, mobile):
+    """Return the first player in this tournament matching the mobile number."""
+    variants = _registration_contact_variants(mobile)
+    if not tournament or not variants:
+        return env['auction.team.player'].browse()
+    return env['auction.team.player'].sudo().search([
+        ('tournament_id', '=', tournament.id),
+        ('contact', 'in', variants),
+    ], order='id asc', limit=1)
+
+
+def _duplicate_contact_message(player):
+    name = (player.name or '').strip() or 'another player'
+    return (
+        'This phone number has been registered already in the name of "%s". '
+        'Please contact the tournament organizer for more details.'
+    ) % name
+
+
 def _split_registration_contact(contact):
     """Split stored contact into (country_code, national_number)."""
     contact = _normalize_registration_contact(contact)
@@ -8113,6 +8166,10 @@ def _build_player_vals_from_post(request, tournament):
         tier_id = int(raw_tier)
 
     contact = _normalize_registration_contact(post.get('contact') or '')
+    if tournament and tournament.player_contact_unique and contact:
+        existing = _find_tournament_contact_player(request.env, tournament, contact)
+        if existing:
+            raise ValueError(_duplicate_contact_message(existing))
 
     # Photo upload — mandatory unless reusing a verified prior registration photo
     photo_data = False

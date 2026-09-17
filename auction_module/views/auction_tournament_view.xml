@@ -277,7 +277,7 @@
                                 </group>
                                 <group string="Venue">
                                     <field name="venue"
-                                           placeholder="Match venue name, address, city…"/>
+                                           placeholder="Select or create city / location"/>
                                     <field name="auction_date"/>
                                     <field name="auction_venue" placeholder="e.g. Auction Arena, City Stadium Hall"/>
                                 </group>
@@ -586,6 +586,8 @@
                                                    help="Show player address on the public registered-players popup so friends can recognise each other."/>
                                             <field name="player_address_required" widget="boolean_toggle"
                                                    help="When on, Location / Address is mandatory on /player/register. When off, players may leave it blank."/>
+                                            <field name="player_contact_unique" widget="boolean_toggle"
+                                                   help="When on, each mobile number may register only once on /player/register. A second attempt is blocked and shows the name already registered with that number."/>
                                         </group>
                                         <group string="How it works">
                                             <div class="o_at_presentation_help" colspan="2">

@@ -313,7 +313,7 @@
         <div class="wc-waiting-msg">Please wait while players are prepared for the auction</div>
         <div class="wc-badges">
           <t t-if="tournament and tournament.venue">
-            <span class="wc-badge">📍 <t t-esc="tournament.venue"/></span>
+            <span class="wc-badge">📍 <t t-esc="tournament.get_venue_label()"/></span>
           </t>
           <t t-if="tournament and tournament.tournament_type">
             <span class="wc-badge">

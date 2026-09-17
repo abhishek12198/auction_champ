@@ -629,7 +629,7 @@
       <div class="ty-badges">
         <span class="ty-badge">✅ Auction Complete</span>
         <t t-if="tournament and tournament.venue">
-          <span class="ty-badge">📍 <t t-esc="tournament.venue"/></span>
+          <span class="ty-badge">📍 <t t-esc="tournament.get_venue_label()"/></span>
         </t>
       </div>
     </section>

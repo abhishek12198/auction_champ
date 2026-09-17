@@ -71,7 +71,7 @@ class TestLiveSnapshotOdoo(TransactionCase):
         if hasattr(self.env.cr, '_auction_live_dirty'):
             self.env.cr._auction_live_dirty.clear()
             self.env.cr._auction_live_seqs.clear()
-        t.write({'venue': 'No snapshot please'})
+        t.write({'organizer_name': 'No snapshot please'})
         dirty = getattr(self.env.cr, '_auction_live_dirty', {}) or {}
         self.assertNotIn(t.id, dirty)
 
