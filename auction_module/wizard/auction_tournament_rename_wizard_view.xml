@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_auction_tournament_rename_wizard_form" model="ir.ui.view">
+        <field name="name">auction.tournament.rename.wizard.form</field>
+        <field name="model">auction.tournament.rename.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Update Tournament Name" class="o_dt_wizard o_rn_wizard">
+                <field name="tournament_id" invisible="1"/>
+                <field name="slug_changes" invisible="1"/>
+                <field name="done" invisible="1"/>
+
+                <div attrs="{'invisible': [('done', '=', True)]}">
+                    <div class="dt-hero">
+                        <div class="dt-hero-icon"><i class="fa fa-link"/></div>
+                        <div class="dt-hero-copy">
+                            <div class="dt-hero-kicker">Public URLs follow the tournament name</div>
+                            <div class="dt-hero-title">Update Tournament Name</div>
+                            <div class="dt-hero-sub">
+                                Changing the name updates the URL slug. Old registration, live board,
+                                projector and OBS links will stop working unless you share the new URLs.
+                            </div>
+                        </div>
+                    </div>
+
+                    <group>
+                        <group string="Name">
+                            <field name="old_name"/>
+                            <field name="new_name" placeholder="Enter the new tournament name"/>
+                        </group>
+                        <group string="URL slug">
+                            <field name="old_slug"/>
+                            <field name="new_slug"/>
+                        </group>
+                    </group>
+
+                    <div class="dt-list-wrap">
+                        <div class="dt-list-title">These public URLs will be affected</div>
+                        <field name="impact_html" nolabel="1" readonly="1"/>
+                    </div>
+
+                    <div class="dt-warn">
+                        <div class="dt-warn-copy">
+                            <div class="dt-warn-title">Old links will break</div>
+                            <div class="dt-warn-text">
+                                Update WhatsApp / social posts, printed QR codes, projector browsers
+                                and OBS browser sources with the new URLs after you confirm.
+                            </div>
+                        </div>
+                        <div class="dt-consent">
+                            <field name="accept_impact" nolabel="1"/>
+                            <span>I understand the public URLs will change and I will share the new links.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rn-done" attrs="{'invisible': [('done', '=', False)]}">
+                    <div class="dt-hero rn-done-hero">
+                        <div class="dt-hero-icon"><i class="fa fa-check"/></div>
+                        <div class="dt-hero-copy">
+                            <div class="dt-hero-kicker">Name updated</div>
+                            <div class="dt-hero-title">Tournament renamed</div>
+                            <div class="dt-hero-sub">
+                                The new public URLs use slug
+                                <strong><field name="confirmed_slug" readonly="1" nolabel="1"/></strong>
+                                for
+                                <strong><field name="confirmed_name" readonly="1" nolabel="1"/></strong>.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dt-list-wrap">
+                        <div class="dt-list-title">New URLs</div>
+                        <field name="result_html" nolabel="1" readonly="1"/>
+                    </div>
+
+                    <div class="rn-helper-note">
+                        Open the <strong>Helper Links</strong> tab on this tournament to copy
+                        the new registration, live board, projector and OBS URLs.
+                    </div>
+                </div>
+
+                <footer>
+                    <button name="action_confirm"
+                            type="object"
+                            string="Update"
+                            class="btn-primary"
+                            attrs="{'invisible': ['|', ('done', '=', True), ('accept_impact', '=', False)]}"/>
+                    <button string="Cancel"
+                            class="btn-secondary"
+                            special="cancel"
+                            attrs="{'invisible': ['|', ('done', '=', True), ('accept_impact', '=', True)]}"/>
+                    <button string="Close"
+                            class="btn-primary"
+                            special="cancel"
+                            attrs="{'invisible': [('done', '=', False)]}"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

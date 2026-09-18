@@ -15,6 +15,29 @@
 .o_form_view .o_at_tournament_title_main {
     min-width: 0;
 }
+.o_form_view .o_at_tournament_title_main h1 {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    flex-wrap: nowrap;
+    width: auto;
+    max-width: 100%;
+}
+.o_form_view .o_at_tournament_title_main h1 .o_field_widget,
+.o_form_view .o_at_tournament_title_main h1 .o_field_widget input {
+    display: inline-block !important;
+    flex: 0 1 auto;
+    width: auto !important;
+    max-width: 100%;
+}
+.o_form_view .o_at_rename_tournament_btn {
+    flex: 0 0 auto;
+    margin: 0 !important;
+    align-self: center;
+    font-weight: 600;
+    white-space: nowrap;
+}
 
 .o_form_view .o_at_tournament_theme_tag {
     display: inline-flex;
@@ -162,6 +185,15 @@
         linear-gradient(135deg, #0b3260 0%, #1860a3 48%, #2780c2 100%) !important;
 }
 
+.o_form_view .o_at_export_players {
+    background:
+        linear-gradient(135deg, #134e4a 0%, #0f766e 48%, #2dd4bf 100%) !important;
+}
+.o_form_view .o_at_export_players:hover {
+    background:
+        linear-gradient(135deg, #115e59 0%, #0d9488 48%, #14b8a6 100%) !important;
+}
+
 .o_form_view .o_at_upload_teams {
     background:
         linear-gradient(135deg, #7a4d08 0%, #c07800 45%, #e0a020 100%) !important;
@@ -172,15 +204,60 @@
         linear-gradient(135deg, #6a4206 0%, #ad6b00 45%, #d09218 100%) !important;
 }
 
+.o_form_view .o_at_tier_actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 14px;
+}
+.o_form_view .o_at_tier_actions .o_at_upload_btn {
+    margin: 0 !important;
+}
+.o_form_view .o_at_set_rules {
+    background:
+        linear-gradient(135deg, #0d3a6e 0%, #1a6bb5 48%, #2f8fd4 100%) !important;
+}
+.o_form_view .o_at_set_rules:hover {
+    background:
+        linear-gradient(135deg, #0b3260 0%, #1860a3 48%, #2780c2 100%) !important;
+}
+.o_form_view .o_at_view_rules {
+    background:
+        linear-gradient(135deg, #312e81 0%, #4f46e5 48%, #818cf8 100%) !important;
+}
+.o_form_view .o_at_view_rules:hover {
+    background:
+        linear-gradient(135deg, #1e1b4b 0%, #4338ca 48%, #6366f1 100%) !important;
+}
+
 .o_form_view .o_at_player_categorization {
     background:
         linear-gradient(135deg, #0f5c4c 0%, #148f75 48%, #1db894 100%) !important;
-    margin-left: 10px !important;
 }
 
 .o_form_view .o_at_player_categorization:hover {
     background:
         linear-gradient(135deg, #0d5043 0%, #117a65 48%, #19a484 100%) !important;
+}
+
+.o_form_view .o_at_player_actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 14px;
+}
+.o_form_view .o_at_player_actions .o_at_upload_btn {
+    margin: 0 !important;
+}
+.o_form_view .o_at_remove_duplicates {
+    background:
+        linear-gradient(135deg, #7f1d1d 0%, #b91c1c 48%, #ef4444 100%) !important;
+}
+.o_form_view .o_at_remove_duplicates:hover {
+    background:
+        linear-gradient(135deg, #6b1515 0%, #991b1b 48%, #dc2626 100%) !important;
 }
 
 /* Tournament calendar event: logo + name */

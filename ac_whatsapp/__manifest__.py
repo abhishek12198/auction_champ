@@ -6,7 +6,7 @@
 ##############################################################################
 {
     'name': 'AuctionChamp WhatsApp',
-    'version': '1.4.2',
+    'version': '1.4.3',
     'summary': 'Twilio / Meta WhatsApp for invites and registration confirmation',
     'sequence': 17,
     'description': """

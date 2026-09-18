@@ -6,7 +6,7 @@
 #
 ##############################################################################
 from odoo import api, fields, models, _
-from odoo.exceptions import AccessError, ValidationError
+from odoo.exceptions import AccessError, UserError, ValidationError
 
 
 class AuctionTournament(models.Model):
@@ -82,6 +82,22 @@ class AuctionTournament(models.Model):
         string='Navbar help',
         compute='_compute_is_saas_active',
     )
+    saas_name_locked = fields.Boolean(
+        string='Name locked',
+        compute='_compute_saas_name_locked',
+        help='After create, SaaS users must rename via the Update Tournament Name wizard.',
+    )
+
+    @api.depends('name')
+    def _compute_saas_name_locked(self):
+        user = self.env.user
+        lock_user = (
+            user.has_group('ac_saas_manager.group_saas_account_user')
+            and not user.has_group('auction_module.group_auction_group_admin')
+            and not user.has_group('ac_saas_manager.group_saas_manager')
+        )
+        for rec in self:
+            rec.saas_name_locked = bool(lock_user and rec._origin.id)
 
     def _compute_is_saas_active(self):
         active_id = self.env.user.get_working_tournament_id()
@@ -557,6 +573,16 @@ class AuctionTournament(models.Model):
         # SaaS organisers (all plans) own their tournaments. auction_module.write()
         # blocks non-admins from fields like team_ids — bypass after ownership check.
         if account and not self.env.su:
+            if 'name' in vals and not self.env.context.get('auction_rename_via_wizard'):
+                new_name = vals.get('name')
+                for tournament in self:
+                    if tournament._origin.id and new_name != tournament.name:
+                        raise UserError(_(
+                            'The tournament name cannot be changed directly because '
+                            'public URLs (player registration, live board, projector) '
+                            'are derived from it. Use the “Update Tournament Name” '
+                            'button next to the name.'
+                        ))
             if 'active' in vals and not vals.get('active'):
                 self._saas_assert_can_archive_or_delete()
             for tournament in self:

@@ -98,7 +98,11 @@ class ResUsers(models.Model):
         Tournament = self.env['auction.tournament'].sudo()
         account = self.get_saas_account()
         if account:
-            return Tournament.search([('saas_account_id', '=', account.id)])
+            Tournament = Tournament.with_context(active_test=False)
+            recs = Tournament.search([('saas_account_id', '=', account.id)])
+            if not recs:
+                recs = account.sudo().with_context(active_test=False).tournament_ids
+            return recs
         return self._auction_switchable_tournaments()
 
     @api.model

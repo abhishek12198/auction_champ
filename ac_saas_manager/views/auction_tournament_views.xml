@@ -18,32 +18,34 @@
             </xpath>
             <xpath expr="//widget[@name='web_ribbon']" position="after">
                 <field name="is_saas_active" invisible="1"/>
+                <field name="saas_name_locked" invisible="1"/>
             </xpath>
-            <xpath expr="//div[hasclass('d-flex')][hasclass('align-items-start')]" position="after">
-                <div class="o_saas_working_banner o_saas_working_banner_on"
-                     groups="ac_saas_manager.group_saas_account_user"
-                     attrs="{'invisible': [('is_saas_active', '=', False)]}">
-                    <div class="o_saas_working_banner_mark">WORKING NOW</div>
-                    <field name="saas_active_help" nolabel="1" readonly="1"
-                           class="o_saas_working_banner_body"/>
-                    <div class="o_saas_working_banner_action">
-                        <span class="o_saas_working_banner_current">
-                            <i class="fa fa-check"/> Current in top bar
-                        </span>
-                    </div>
-                </div>
-                <div class="o_saas_working_banner o_saas_working_banner_off"
-                     groups="ac_saas_manager.group_saas_account_user"
-                     attrs="{'invisible': ['|', ('is_saas_active', '=', True), ('active', '=', False)]}">
-                    <div class="o_saas_working_banner_mark o_saas_working_banner_mark_off">NOT WORKING</div>
-                    <field name="saas_active_help" nolabel="1" readonly="1"
-                           class="o_saas_working_banner_body"/>
-                    <div class="o_saas_working_banner_action">
-                        <button name="action_saas_set_active" type="object"
-                                string="Use this tournament"
-                                class="btn btn-sm o_saas_use_tournament_btn"/>
-                    </div>
-                </div>
+            <xpath expr="//div[hasclass('o_at_tournament_title_main')]/h1/field[@name='name']" position="after">
+                <button name="action_open_rename_wizard"
+                        type="object"
+                        string="Update"
+                        class="btn-secondary btn-sm o_at_rename_tournament_btn"
+                        groups="ac_saas_manager.group_saas_account_user"
+                        attrs="{'invisible': [('saas_name_locked', '=', False)]}"
+                        help="Change the name and review the public URLs that will change."/>
+            </xpath>
+            <xpath expr="//div[hasclass('o_at_tournament_title_main')]//field[@name='name']" position="attributes">
+                <attribute name="attrs">{'readonly': [('saas_name_locked', '=', True)]}</attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_open_rename_wizard']" position="after">
+                <span class="o_saas_active_chip"
+                      groups="ac_saas_manager.group_saas_account_user"
+                      attrs="{'invisible': [('is_saas_active', '=', False)]}"
+                      title="Selected in the top navbar">
+                    <span class="o_saas_active_chip_dot"/> Active
+                </span>
+                <button name="action_saas_set_active"
+                        type="object"
+                        string="Use this tournament"
+                        class="btn-secondary btn-sm o_saas_use_tournament_chip"
+                        groups="ac_saas_manager.group_saas_account_user"
+                        attrs="{'invisible': ['|', '|', ('is_saas_active', '=', True), ('saas_name_locked', '=', False), ('active', '=', False)]}"
+                        help="Select this tournament in the top navbar"/>
             </xpath>
 
             <!-- Compact plan captions + upgrade CTA -->

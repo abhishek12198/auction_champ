@@ -832,6 +832,58 @@ class AuctionTournament(models.Model):
             else:
                 rec.bid_summary_url = False
 
+    def get_slug_url_catalog(self, slug=None):
+        """Public URLs derived from a tournament slug (registration, live, projector)."""
+        self.ensure_one()
+        slug = (slug if slug is not None else self.slug or '').strip()
+        base = (self.env['ir.config_parameter'].sudo().get_param('web.base.url', '') or '').rstrip('/')
+        db_name = self.env.cr.dbname
+        if not slug:
+            return []
+        prefix = '{}/{}/{}'.format(base, db_name, slug)
+        return [
+            {
+                'name': _('Player Registration'),
+                'url': '{}/player/register'.format(prefix),
+                'detail': _('Players use this link (and any QR / WhatsApp share) to register.'),
+            },
+            {
+                'name': _('Organiser Registration'),
+                'url': '{}/player/register/admin'.format(prefix),
+                'detail': _('Organiser registration page unlocked with the tournament code.'),
+            },
+            {
+                'name': _('Live Board'),
+                'url': '{}/auction/live-board'.format(prefix),
+                'detail': _('Public live auction board shared with spectators.'),
+            },
+            {
+                'name': _('Projector'),
+                'url': '{}/{}/auction/projector/{}/'.format(base, db_name, slug),
+                'detail': _('Audience projector screen. Update venue browsers after rename.'),
+            },
+            {
+                'name': _('Watch (YouTube)'),
+                'url': '{}/auction/watch'.format(prefix),
+                'detail': _('Public watch page with stream overlay.'),
+            },
+            {
+                'name': _('YouTube Overlay (OBS)'),
+                'url': '{}/{}/auction/yt-overlay/{}/'.format(base, db_name, slug),
+                'detail': _('OBS browser source. Must be updated in OBS after rename.'),
+            },
+            {
+                'name': _('Bid Summary'),
+                'url': '{}/auction/show/team/balance'.format(prefix),
+                'detail': _('Team purse / bid summary screen.'),
+            },
+            {
+                'name': _('Payment Tracker'),
+                'url': '{}/auction/payment-marker'.format(prefix),
+                'detail': _('Payment marker / tracker page.'),
+            },
+        ]
+
     @api.depends('auction_rule_ids')
     def _compute_has_auction_rules(self):
         for rec in self:
@@ -1890,6 +1942,21 @@ class AuctionTournament(models.Model):
             'target': 'new',
             'context': {
                 'default_tournament_id': self.id,
+            },
+        }
+
+    def action_open_rename_wizard(self):
+        """Open the name-change wizard that previews public URL impact."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Update Tournament Name'),
+            'res_model': 'auction.tournament.rename.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_tournament_id': self.id,
+                'default_new_name': self.name or '',
             },
         }
 

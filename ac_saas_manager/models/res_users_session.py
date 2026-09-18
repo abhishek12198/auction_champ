@@ -34,35 +34,40 @@ class ResUsersSession(models.Model):
         session[AC_WORKING_TOURNAMENT_SESSION_KEY] = int(tournament_id)
 
     def get_working_tournament(self):
-        """Tournament used for menus, creates, and navbar scope for this request."""
+        """Navbar Active Tournament for this request (session or profile)."""
         self.ensure_one()
-        user = self.sudo()
-        allowed = user._saas_switchable_tournaments()
-        allowed_ids = set(allowed.ids)
-        if not allowed_ids:
-            return self.env['auction.tournament']
-        Tournament = self.env['auction.tournament'].sudo()
+        user = self.sudo().with_context(active_test=False)
+        Tournament = self.env['auction.tournament'].sudo().with_context(active_test=False)
 
+        preferred = []
         if user._saas_parallel_sessions_enabled():
             session = user._saas_http_session()
             if session is not None:
                 raw = session.get(AC_WORKING_TOURNAMENT_SESSION_KEY)
                 if raw:
                     try:
-                        tid = int(raw)
+                        preferred.append(int(raw))
                     except (TypeError, ValueError):
-                        tid = False
-                    if tid and tid in allowed_ids:
-                        return Tournament.browse(tid)
-                current_id = user.tournament_id.id
-                if current_id and current_id in allowed_ids:
-                    user._saas_seed_session_tournament(current_id)
-                    return Tournament.browse(current_id)
+                        pass
+        if user.tournament_id:
+            preferred.append(user.tournament_id.id)
 
-        current_id = user.tournament_id.id
-        if current_id and current_id in allowed_ids:
-            return Tournament.browse(current_id)
-        return Tournament.browse(allowed.ids[:1])
+        seen = set()
+        for tid in preferred:
+            if not tid or tid in seen:
+                continue
+            seen.add(tid)
+            rec = Tournament.browse(tid).exists()
+            if rec:
+                if user._saas_parallel_sessions_enabled():
+                    user._saas_seed_session_tournament(rec.id)
+                return rec
+
+        allowed = user._saas_switchable_tournaments()
+        if allowed:
+            return Tournament.browse(allowed.ids[:1])
+        ids = list(user.tournament_ids.ids)
+        return Tournament.browse(ids[:1]) if ids else Tournament.browse()
 
     def get_working_tournament_id(self):
         t = self.get_working_tournament()

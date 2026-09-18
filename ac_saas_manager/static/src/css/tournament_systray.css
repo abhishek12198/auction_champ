@@ -1106,6 +1106,38 @@
     50% { box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.12); }
 }
 
+.o_form_view .o_saas_active_chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #dcfce7;
+    border: 1px solid #86efac;
+    color: #166534;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+.o_form_view .o_saas_active_chip_dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.28);
+    animation: o_atk_saas_active_pulse 1.6s ease-in-out infinite;
+}
+.o_form_view .o_saas_use_tournament_chip {
+    flex: 0 0 auto;
+    margin: 0 !important;
+    white-space: nowrap;
+}
+
 /* Form banners — one row: badge | message | action */
 .o_form_view .o_saas_working_banner {
     display: flex;

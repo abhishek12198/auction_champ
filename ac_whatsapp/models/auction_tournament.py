@@ -41,8 +41,9 @@ class AuctionTournament(models.Model):
         if date_label:
             lines.extend(['', '📅 Date: {}'.format(date_label)])
 
-        if self.venue:
-            lines.extend(['', '📍 Venue: {}'.format(self.venue.strip())])
+        venue_text = self.get_venue_label() if hasattr(self, 'get_venue_label') else ''
+        if venue_text:
+            lines.extend(['', '📍 Venue: {}'.format(venue_text)])
 
         reg_url = (self.registration_url or '').strip()
         if reg_url:

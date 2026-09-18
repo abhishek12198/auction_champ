@@ -31,7 +31,7 @@ class AuctionTournamentSecurityMixin(models.AbstractModel):
 
         allowed = set()
         working = self.env.user.get_working_tournament()
-        if working and working.id in all_ids:
+        if working:
             allowed.add(working.id)
 
         # When editing a tournament form, O2M lines must still load for that record

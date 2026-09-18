@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
-from odoo import api, fields, models
+import logging
+
+from odoo import api, fields, models, tools
 from odoo.exceptions import ValidationError
+
+_logger = logging.getLogger(__name__)
 
 
 class AuctionLocation(models.Model):
@@ -45,6 +49,33 @@ class AuctionLocation(models.Model):
         string='Child Locations',
     )
     active = fields.Boolean(default=True)
+
+    @api.model
+    def _auto_init(self):
+        """Skip CREATE TABLE when auction_location already exists.
+
+        Odoo only looks in current_schema(). If that is not public, it tries
+        CREATE TABLE again and Postgres fails on the existing composite type
+        (pg_type_typname_nsp_index) instead of 'relation already exists'.
+        """
+        cr = self._cr
+        cr.execute("SET search_path TO public")
+        cr.execute("SAVEPOINT ac_location_auto_init")
+        try:
+            super()._auto_init()
+            cr.execute("RELEASE SAVEPOINT ac_location_auto_init")
+        except Exception as e:
+            cr.execute("ROLLBACK TO SAVEPOINT ac_location_auto_init")
+            if 'pg_type_typname_nsp_index' not in str(e):
+                raise
+            if not tools.table_exists(cr, self._table):
+                raise
+            _logger.warning(
+                "auction.location table already exists; continuing schema "
+                "update without CREATE TABLE (%s)",
+                e,
+            )
+            super()._auto_init()
 
     def name_get(self):
         return [(rec.id, rec.complete_name or rec.name or '') for rec in self]

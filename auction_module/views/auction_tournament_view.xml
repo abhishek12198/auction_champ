@@ -42,21 +42,6 @@
             <field name="arch" type="xml">
                 <form string="Tournament">
                     <header>
-                        <button name="action_set_auction_rules"
-                                type="object"
-                                string="Set Auction Rules"
-                                class="btn-primary"
-                                attrs="{'invisible': ['|', ('active', '=', False), ('has_auction_rules', '=', True)]}"/>
-                        <button name="action_view_auction_rules"
-                                type="object"
-                                string="Auction Rules"
-                                class="btn-secondary"/>
-                        <button name="action_remove_duplicates"
-                                type="object"
-                                string="Remove Duplicates"
-                                class="btn-secondary"
-                                attrs="{'invisible': [('active', '=', False)]}"
-                                help="Find and remove duplicate players, then resequence"/>
                     </header>
                     <sheet>
                         <field name="active" invisible="1"/>
@@ -151,13 +136,6 @@
                                         of <field name="max_registrations" nolabel="1" style="display:inline"/> max
                                     </span>
                                 </div>
-                            </button>
-                            <button class="oe_stat_button" type="object"
-                                    name="action_view_deleted_players"
-                                    icon="fa-trash"
-                                    help="View deleted players for this tournament and restore them if needed">
-                                <field name="deleted_player_count" widget="statinfo"
-                                       string="Deleted"/>
                             </button>
                             <button class="oe_stat_button" type="object"
                                     name="action_view_auction_history"
@@ -306,19 +284,34 @@
 
                             <!-- Tab 1: Players -->
                             <page string="Players" name="teams">
-
-                                <button name="action_upload_players"
-                                        type="object"
-                                        string="Upload Players"
-                                        icon="fa-cloud-upload"
-                                        class="o_at_upload_btn o_at_upload_players"
-                                        attrs="{'invisible': [('active', '=', False)]}"/>
-                                <button name="action_open_player_categorization"
-                                        type="object"
-                                        string="Player Categorization"
-                                        icon="fa-th-large"
-                                        class="o_at_upload_btn o_at_player_categorization"
-                                        attrs="{'invisible': [('active', '=', False)]}"/>
+                                <div class="o_at_player_actions">
+                                    <button name="action_upload_players"
+                                            type="object"
+                                            string="Upload Players"
+                                            icon="fa-cloud-upload"
+                                            class="o_at_upload_btn o_at_upload_players"
+                                            attrs="{'invisible': [('active', '=', False)]}"/>
+                                    <button name="action_export_sold_unsold"
+                                            type="object"
+                                            string="Export Players"
+                                            icon="fa-download"
+                                            class="o_at_upload_btn o_at_export_players"
+                                            attrs="{'invisible': [('active', '=', False)]}"
+                                            help="Export registered, sold, unsold or jersey players to Excel"/>
+                                    <button name="action_open_player_categorization"
+                                            type="object"
+                                            string="Player Categorization"
+                                            icon="fa-th-large"
+                                            class="o_at_upload_btn o_at_player_categorization"
+                                            attrs="{'invisible': [('active', '=', False)]}"/>
+                                    <button name="action_remove_duplicates"
+                                            type="object"
+                                            string="Remove Duplicates"
+                                            icon="fa-clone"
+                                            class="o_at_upload_btn o_at_remove_duplicates"
+                                            attrs="{'invisible': [('active', '=', False)]}"
+                                            help="Find and remove duplicate players, then resequence"/>
+                                </div>
 
                                 <!-- ── Player State Stat Buttons ── -->
                                 <div class="o_tourn_player_stats">
@@ -386,12 +379,26 @@
 
                             <!-- Teams & Tiers -->
                             <page string="Teams &amp; Tiers" name="tiers">
-                                <button name="action_upload_teams"
-                                        type="object"
-                                        string="Upload Teams &amp; Tiers"
-                                        icon="fa-sitemap"
-                                        class="o_at_upload_btn o_at_upload_teams"
-                                        attrs="{'invisible': [('active', '=', False)]}"/>
+                                <div class="o_at_tier_actions">
+                                    <button name="action_set_auction_rules"
+                                            type="object"
+                                            string="Set Auction Rules"
+                                            icon="fa-gavel"
+                                            class="o_at_upload_btn o_at_set_rules"
+                                            attrs="{'invisible': ['|', ('active', '=', False), ('has_auction_rules', '=', True)]}"/>
+                                    <button name="action_view_auction_rules"
+                                            type="object"
+                                            string="Auction Rules"
+                                            icon="fa-list-alt"
+                                            class="o_at_upload_btn o_at_view_rules"
+                                            attrs="{'invisible': [('active', '=', False)]}"/>
+                                    <button name="action_upload_teams"
+                                            type="object"
+                                            string="Upload Teams &amp; Tiers"
+                                            icon="fa-sitemap"
+                                            class="o_at_upload_btn o_at_upload_teams"
+                                            attrs="{'invisible': [('active', '=', False)]}"/>
+                                </div>
 
                                 <separator string="Teams"/>
                                 <p class="text-muted">
