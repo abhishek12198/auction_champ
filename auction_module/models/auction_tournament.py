@@ -207,7 +207,7 @@ class AuctionTournament(models.Model):
         ('strawberry', 'Strawberry'),
         ('cherry', 'Cherry'),
         ('pistah', 'Pistah'),
-        ('blackberry', 'Blackberry'),
+        ('blueberry', 'Blueberry'),
     ], string='Theme'
               '', default='lemon', required=True)
     sold_display_seconds = fields.Integer(
@@ -665,6 +665,11 @@ class AuctionTournament(models.Model):
         help='Public share link for outsiders to watch the auction live '
              '(/…/auction/live-board). Board must be Live; optional Tournament Code gate applies.',
     )
+    has_teams = fields.Boolean(
+        string='Has Teams',
+        compute='_compute_has_teams',
+        help='True when this tournament has at least one team.',
+    )
     has_auction_rules = fields.Boolean(
         string='Auction Rules Set',
         compute='_compute_has_auction_rules',
@@ -884,10 +889,28 @@ class AuctionTournament(models.Model):
             },
         ]
 
+    @api.depends('team_ids')
+    def _compute_has_teams(self):
+        for rec in self:
+            rec.has_teams = bool(rec.team_ids)
+
     @api.depends('auction_rule_ids')
     def _compute_has_auction_rules(self):
+        Auction = self.env['auction.auction'].sudo()
+        counts = {}
+        ids = [rec.id for rec in self if rec.id]
+        if ids:
+            grouped = Auction.read_group(
+                [('tournament_id', 'in', ids), ('active', '=', True)],
+                ['tournament_id'],
+                ['tournament_id'],
+            )
+            counts = {
+                row['tournament_id'][0]: row['tournament_id_count']
+                for row in grouped if row.get('tournament_id')
+            }
         for rec in self:
-            rec.has_auction_rules = bool(rec.auction_rule_ids)
+            rec.has_auction_rules = bool(counts.get(rec.id))
 
     def has_auction_rules_ready(self):
         """True when this tournament has at least one auction.auction rule row."""
@@ -1812,6 +1835,10 @@ class AuctionTournament(models.Model):
     def action_set_auction_rules(self):
         """Open the Auction Rules wizard scoped to this tournament."""
         self.ensure_one()
+        if not self.team_ids:
+            raise UserError(_(
+                'Add at least one team to this tournament before setting auction rules.'
+            ))
         if self.has_auction_rules:
             raise UserError(_(
                 'Auction rules are already set for this tournament. '
@@ -1829,6 +1856,10 @@ class AuctionTournament(models.Model):
     def action_view_auction_rules(self):
         """Open the auction (team rule) records belonging to this tournament."""
         self.ensure_one()
+        if not self.team_ids:
+            raise UserError(_(
+                'Add at least one team to this tournament before viewing auction rules.'
+            ))
         return {
             'type': 'ir.actions.act_window',
             'name': _('Auction Rules — %s') % self.name,

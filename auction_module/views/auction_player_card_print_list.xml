@@ -197,7 +197,7 @@
                     <t t-call="auction_module.report_player_card_lemon_page"/>
                 </page>
             </t>
-            <t t-elif="doc.tournament_id.player_display_template == 'blackberry'">
+            <t t-elif="doc.tournament_id.player_display_template in ('blackberry', 'blueberry')">
                 <page t-call="web.basic_layout">
                     <t t-call="auction_module.report_player_card_blackberry_page"/>
                 </page>

@@ -68,7 +68,7 @@
                 --reg-section-title:#4a0000;
             }
         </t>
-        <t t-elif="theme == 'blackberry'">
+        <t t-elif="theme == 'blackberry' or theme == 'blueberry'">
             :root {
                 --reg-primary:      #050a14;
                 --reg-primary-mid:  #1e3a8a;

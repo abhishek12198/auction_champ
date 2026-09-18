@@ -160,15 +160,17 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   box-shadow:0 0 8px var(--accent);animation:mq-pulse 1.5s infinite}
 @keyframes mq-pulse{0%,100%{box-shadow:0 0 6px var(--accent);opacity:1}50%{box-shadow:0 0 18px var(--accent);opacity:.6}}
 .mq-icon-btn{background:transparent;border:1px solid var(--div);border-radius:6px;
-  padding:5px 10px;color:var(--tx-d);cursor:pointer;font-size:13px;transition:all .2s;white-space:nowrap}
+  padding:5px 10px;color:var(--tx-d);cursor:pointer;font-size:13px;transition:all .2s;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:5px}
+.mq-icon-btn svg{width:12px;height:12px;flex-shrink:0}
 .mq-icon-btn:hover{border-color:var(--accent);color:var(--accent)}
 .mq-icon-btn.bid{border-color:var(--accent);color:var(--accent);font-weight:600}
 .mq-icon-btn.bid:hover{background:var(--accent);color:var(--badge-tx)}
 .mq-icon-btn.break-on{
-  border-color:#ffc107;color:#ffc107;background:rgba(255,193,7,.14);
-  box-shadow:0 0 12px rgba(255,193,7,.25);font-weight:700
+  border-color:var(--accent);color:var(--accent);background:var(--accent-glow);
+  box-shadow:0 0 12px var(--accent-glow);font-weight:700
 }
-.mq-icon-btn.break-on:hover{border-color:#ffda6a;color:#ffda6a;background:rgba(255,193,7,.22)}
+.mq-icon-btn.break-on:hover{border-color:var(--accent2);color:var(--accent2);background:var(--accent-glow)}
 
 /* ═══ STATS ══════════════════════════════════════════════════════════ */
 .mq-stats{position:relative;z-index:10;display:flex;background:var(--bg-s);border-bottom:1px solid var(--div)}
@@ -933,6 +935,27 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .sm-badge.tier-full { opacity: .4; cursor: not-allowed; }
 .sm-no-teams { color: var(--tx-d); font-size: .85rem; padding: 4px 0; }
 
+.sm-steps {
+  margin: 10px 24px 2px;
+  padding: 8px 12px 8px 26px;
+  list-style: decimal;
+  font-size: .68rem;
+  line-height: 1.45;
+  color: var(--tx-d);
+  font-weight: 600;
+  letter-spacing: .01em;
+  background: rgba(0,0,0,.04);
+  border-radius: 8px;
+}
+.sm-steps li { margin: 0 0 2px; }
+.sm-steps li:last-child { margin-bottom: 0; }
+.sm-steps .sm-step-current { color: var(--sm-primary); font-weight: 700; }
+
+.sm-points-section.is-locked {
+  opacity: .42;
+  pointer-events: none;
+  filter: grayscale(.12);
+}
 .sm-points-wrap { display: flex; align-items: center; gap: 12px; }
 .sm-pts-btn {
   width: 44px; height: 44px; border-radius: 50%;
@@ -942,6 +965,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   color: var(--sm-primary); transition: all .18s;
 }
 .sm-pts-btn:hover { border-color: var(--sm-primary); background: var(--sm-primary-light); }
+.sm-pts-btn:disabled,
+.sm-preset-btn:disabled,
+#sellPoints:disabled {
+  cursor: not-allowed;
+  opacity: .7;
+}
 #sellPoints {
   flex: 1; text-align: center; font-size: 1.6rem; font-weight: 800;
   border: 2px solid var(--div); border-radius: 10px;
@@ -1474,7 +1503,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   <div class="mq-hc">&#9917; Player Queue</div>
   <div class="mq-hr">
     <span class="mq-live-dot"></span>
-    <button type="button" class="mq-icon-btn" id="breakBtn" onclick="toggleBreakTime()" title="Break Time">&#9208; Pause</button>
+    <button type="button" class="mq-icon-btn" id="breakBtn" onclick="toggleBreakTime()" title="Break Time"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg> Pause</button>
     <button class="mq-icon-btn" onclick="window.open(window.AUCTION_PROJECTOR_URL,'_blank')" title="Open Projector View">&#127916; Projector</button>
     <button class="mq-icon-btn bid" onclick="openBidSummary()">&#9776; Bid Summary</button>
     <button class="mq-icon-btn" onclick="toggleFS()" id="fsBtn">&#x26F6;</button>
@@ -1712,6 +1741,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       </div>
 
       <div class="sm-form-scroll">
+      <ol class="sm-steps" id="smSellSteps">
+        <li class="sm-step-current">Select the Team</li>
+        <li>Input or use + &#8722; for entering the value</li>
+        <li>Click on Sell Player, or select Cancel</li>
+      </ol>
       <!-- Player → Team strip -->
       <div class="sm-transfer-row">
         <img class="sm-avatar" id="smPlayerAvatar" src="" alt="Player"/>
@@ -1736,12 +1770,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       </div>
 
       <!-- Points input -->
-      <div class="sm-section" style="padding-top:12px;">
+      <div class="sm-section sm-points-section is-locked" id="smPointsSection" style="padding-top:12px;">
         <span class="sm-section-label">Selling <t t-esc="tournament.get_point_unit().name if tournament else 'Points'"/></span>
         <div class="sm-points-wrap">
-          <button class="sm-pts-btn" onclick="smAdjustPoints(-1)">&#8722;</button>
-          <input type="number" id="sellPoints" value="0" min="0"/>
-          <button class="sm-pts-btn" onclick="smAdjustPoints(1)">&#43;</button>
+          <button type="button" class="sm-pts-btn" onclick="smAdjustPoints(-1)" disabled="disabled">&#8722;</button>
+          <input type="number" id="sellPoints" value="0" min="0" disabled="disabled"/>
+          <button type="button" class="sm-pts-btn" onclick="smAdjustPoints(1)" disabled="disabled">&#43;</button>
         </div>
         <div class="sm-presets" id="smPresets"></div>
       </div>
@@ -2754,6 +2788,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     document.getElementById('smBtnSell').textContent         = 'Sell Player';
     document.getElementById('sellPoints').value              = 0;
     document.getElementById('smPresets').innerHTML           = '';
+    smSetPointsLock2(true);
     var sellModal = document.getElementById('sellModal');
     parkModalInFullscreen(sellModal);
     sellModal.classList.add('open');
@@ -2817,6 +2852,24 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     });
   }
 
+  function smSetPointsLock2(locked) {
+    var section = document.getElementById('smPointsSection');
+    if (section) section.classList.toggle('is-locked', !!locked);
+    var input = document.getElementById('sellPoints');
+    if (input) {
+      input.disabled = !!locked;
+      input.readOnly = !!locked;
+    }
+    var controls = document.querySelectorAll('#smPointsSection .sm-pts-btn, #smPointsSection .sm-preset-btn');
+    for (var i = 0; i < controls.length; i++) controls[i].disabled = !!locked;
+    var steps = document.getElementById('smSellSteps');
+    if (steps) {
+      var items = steps.querySelectorAll('li');
+      for (var j = 0; j < items.length; j++) items[j].classList.remove('sm-step-current');
+      if (items.length) items[locked ? 0 : 1].classList.add('sm-step-current');
+    }
+  }
+
   function smSelectTeam2(team) {
     smSelTeam = team;
     document.querySelectorAll('.sm-badge').forEach(function(b) {
@@ -2845,6 +2898,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     inp.value = team.effective_base_point;
     inp.min   = team.effective_base_point;
     inp.max   = team.max_call;
+    smSetPointsLock2(false);
     smRenderPresets2(team);
     document.getElementById('sellError').style.display = 'none';
     document.getElementById('smBtnSell').disabled = false;
@@ -3472,10 +3526,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     var on = !!window.AUCTION_BREAK_TIME;
     btn.classList.toggle('break-on', on);
     if (on) {
-      btn.innerHTML = '&#9654; Resume';
+      btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg> Resume';
       btn.title = 'Break Time is ON — click to resume the live board';
     } else {
-      btn.innerHTML = '&#9208; Pause';
+      btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg> Pause';
       btn.title = 'Break Time — show break screen on the live board';
     }
   }

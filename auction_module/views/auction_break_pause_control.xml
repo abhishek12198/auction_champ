@@ -6,22 +6,37 @@
     .ac-break-btn{
       display:inline-flex;align-items:center;justify-content:center;gap:5px;
       height:34px;padding:0 12px;border-radius:8px;cursor:pointer;
-      font:inherit;font-size:.72rem;font-weight:800;letter-spacing:.06em;
+      font-family:var(--hud-font-ui, inherit);
+      font-size:.72rem;font-weight:800;letter-spacing:.06em;
       text-transform:uppercase;line-height:1;white-space:nowrap;
-      background:rgba(0,0,0,.35);border:1.5px solid rgba(255,215,0,.45);
-      color:#FFD700;backdrop-filter:blur(4px);
+      background:rgba(var(--accent-rgb, 255, 215, 0), .12);
+      border:1.5px solid rgba(var(--accent-rgb, 255, 215, 0), .45);
+      color:var(--gold, #FFD700);
+      backdrop-filter:blur(4px);
       transition:background .2s,border-color .2s,color .2s,box-shadow .2s;
     }
-    .ac-break-btn:hover{box-shadow:0 0 12px rgba(255,215,0,.35)}
+    .ac-break-btn:hover{
+      background:rgba(var(--accent-rgb, 255, 215, 0), .22);
+      border-color:rgba(var(--accent-rgb, 255, 215, 0), .7);
+      box-shadow:0 0 12px rgba(var(--accent-rgb, 255, 215, 0), .35);
+    }
+    .ac-break-btn svg{width:12px;height:12px;flex-shrink:0}
     .ac-break-btn:disabled{opacity:.55;cursor:wait}
     .ac-break-btn.break-on{
-      border-color:rgba(46,204,113,.55);color:#2ecc71;
-      background:rgba(46,204,113,.12);
+      background:var(--gold, #FFD700);
+      border-color:var(--gold, #FFD700);
+      color:var(--ink-on-accent, #070B14);
+      box-shadow:0 0 16px rgba(var(--accent-rgb, 255, 215, 0), .55);
     }
-    .ac-break-btn.break-on:hover{box-shadow:0 0 12px rgba(46,204,113,.35)}
+    .ac-break-btn.break-on:hover{
+      background:var(--amber, #FF9F1C);
+      border-color:var(--amber, #FF9F1C);
+      box-shadow:0 0 18px rgba(var(--accent-rgb, 255, 215, 0), .65);
+    }
     .ac-break-btn-fixed{
       height:38px;padding:0 14px;font-size:.7rem;
-      background:rgba(0,20,50,.75);border-color:rgba(255,215,0,.5);
+      background:rgba(var(--navy-rgb, 0, 20, 50), .75);
+      border-color:rgba(var(--accent-rgb, 255, 215, 0), .5);
     }
 
     /* Mobile / tablet: sticky bottom auction actions + no-scroll viewport fit */
@@ -30,7 +45,7 @@
       /* Fullscreen is desktop/projector-oriented — hide on phones and tablets */
       #fs-btn{display:none !important}
 
-      /* Fit page on small screens; allow scroll when photo + attrs need it */
+      /* Fit page on small screens */
       html{
         height:auto !important;
         overflow-x:hidden !important;
@@ -45,11 +60,63 @@
         overscroll-behavior:auto;
         display:block !important;
       }
+      /* HUD (no live-bid pad): pin header + player; scroll attributes */
+      html:not(:has(#acLiveBidPad)),
+      html:not(:has(#acLiveBidPad)) body{
+        height:100dvh !important;
+        max-height:100dvh !important;
+        overflow:hidden !important;
+      }
+      html:not(:has(#acLiveBidPad)) body{
+        display:flex !important;
+        flex-direction:column !important;
+        min-height:0 !important;
+      }
+      html:not(:has(#acLiveBidPad)) .hud-header{
+        position:relative;
+        top:0;
+        z-index:40;
+        flex:0 0 auto !important;
+      }
+      html:not(:has(#acLiveBidPad)) .hud-arena{
+        flex:1 1 auto !important;
+        min-height:0 !important;
+        height:auto !important;
+        overflow:hidden !important;
+      }
+      html:not(:has(#acLiveBidPad)) .hud-photo-col{
+        flex:0 0 auto !important;
+      }
+      html:not(:has(#acLiveBidPad)) .hud-info-col{
+        flex:1 1 auto !important;
+        min-height:0 !important;
+        overflow:hidden !important;
+      }
+      html:not(:has(#acLiveBidPad)) .hud-tier-strip{
+        flex:0 0 auto !important;
+      }
+      html:not(:has(#acLiveBidPad)) .hud-stats{
+        flex:1 1 auto !important;
+        min-height:0 !important;
+        overflow-x:hidden !important;
+        overflow-y:auto !important;
+        -webkit-overflow-scrolling:touch;
+        overscroll-behavior:contain;
+      }
+      html:not(:has(#acLiveBidPad)) .hud-footer{
+        flex:0 0 auto;
+      }
       body.ac-sell-modal-open{
         overflow:auto !important;
         height:auto !important;
         max-height:none !important;
         display:block !important;
+      }
+      html:not(:has(#acLiveBidPad)) body.ac-sell-modal-open{
+        overflow:hidden !important;
+        height:100dvh !important;
+        max-height:100dvh !important;
+        display:flex !important;
       }
       /* Headers keep natural height */
       .hud-header,
@@ -143,6 +210,13 @@
       #ac-mobile-ctrl-bar > button svg{
         width:12px;height:12px;flex-shrink:0;
       }
+      .ac-break-btn,
+      .ac-break-btn-fixed,
+      #ac-break-btn.ac-break-btn-fixed{
+        height:26px;padding:0 8px;font-size:.62rem;
+        letter-spacing:.04em;border-radius:6px;gap:3px;
+      }
+      .ac-break-btn svg{width:10px;height:10px}
 
       /* Stage shells: stacked column; natural height (Butterscotch-style) */
       .hud-arena,
@@ -388,16 +462,18 @@
       })
     }).then(function (r) { return r.json(); });
   }
+  var AC_ICON_PAUSE = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
+  var AC_ICON_PLAY = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
   function acSyncBreakBtn() {
     var btn = document.getElementById('ac-break-btn');
     if (!btn) return;
     var on = acBreakOn();
     btn.classList.toggle('break-on', on);
     if (on) {
-      btn.innerHTML = '&#9654; Resume';
+      btn.innerHTML = AC_ICON_PLAY + ' Resume';
       btn.title = 'Break Time is ON — click to resume live board and projector';
     } else {
-      btn.innerHTML = '&#9208; Pause';
+      btn.innerHTML = AC_ICON_PAUSE + ' Pause';
       btn.title = 'Break Time — show break screen on live board and projector';
     }
   }

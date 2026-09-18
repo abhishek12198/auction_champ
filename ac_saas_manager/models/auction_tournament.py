@@ -166,7 +166,7 @@ class AuctionTournament(models.Model):
             # Theme restriction: plan lists a subset of themes
             all_keys = {
                 'lemon', 'vanilla', 'butterscotch', 'strawberry', 'cherry', 'pistah',
-                'blackberry',
+                'blueberry', 'blackberry',
             }
             allowed = plan.get_allowed_templates() if plan else []
             restricted = bool(plan and allowed and set(allowed) < all_keys)

@@ -89,8 +89,16 @@ class StartAuction(models.TransientModel):
             tier_domain.append(('tournament_id', '=', tournament.id))
         tiers = self.env['auction.player.tier'].search(tier_domain)
         if tiers and 'tier_limit_ids' in fields_list:
+            single = len(tiers) == 1
+            max_players = res.get('max_players') or 0
+            base_point = res.get('base_point') or 0
             res['tier_limit_ids'] = [
-                (0, 0, {'tier_id': tier.id, 'max_players': 1, 'base_point': 0, 'max_call': 0})
+                (0, 0, {
+                    'tier_id': tier.id,
+                    'max_players': max_players if single and max_players else 1,
+                    'base_point': base_point if single and base_point else 0,
+                    'max_call': 0,
+                })
                 for tier in tiers
             ]
         return res
@@ -104,6 +112,34 @@ class StartAuction(models.TransientModel):
     def onchange_base_point(self):
         if self.base_point < 0:
             self.base_point = 0
+        self._apply_single_tier_defaults()
+        self._apply_first_slab_from()
+
+    @api.onchange('max_players')
+    def onchange_max_players(self):
+        self._apply_single_tier_defaults()
+
+    @api.onchange('auction_bid_slab_ids')
+    def onchange_first_slab_from(self):
+        self._apply_first_slab_from()
+
+    def _apply_single_tier_defaults(self):
+        """One tier = squad size and global base, so the line does not stay at 1 / 0."""
+        if len(self.tier_limit_ids) != 1:
+            return
+        line = self.tier_limit_ids[0]
+        if self.max_players > 0:
+            line.max_players = self.max_players
+        if self.base_point > 0:
+            line.base_point = self.base_point
+
+    def _apply_first_slab_from(self):
+        """First slab From starts at the global base when the user left it empty."""
+        if not self.auction_bid_slab_ids or self.base_point <= 0:
+            return
+        first = self.auction_bid_slab_ids[0]
+        if not first.from_amount:
+            first.from_amount = self.base_point
 
     @api.depends('team_ids')
     def _compute_team_count(self):

@@ -418,6 +418,7 @@
     }
 }
 
+.o_form_view .o_sel_card_blueberry .o_sel_card_swatch,
 .o_form_view .o_sel_card_blackberry .o_sel_card_swatch {
     background: linear-gradient(135deg, #050a14 0%, #1e3a8a 45%, #3b82f6 100%);
     color: #ffffff;

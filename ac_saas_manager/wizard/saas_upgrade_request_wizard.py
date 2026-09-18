@@ -109,8 +109,14 @@ class AcSaasUpgradeRequestWizard(models.TransientModel):
                 'fg': '#1B3A0A',
                 'border': '#6FA032',
             },
+            'blueberry': {
+                'label': _('Blueberry'),
+                'bg': '#1E3A8A',
+                'fg': '#FFFFFF',
+                'border': '#3B82F6',
+            },
             'blackberry': {
-                'label': _('Blackberry'),
+                'label': _('Blueberry'),
                 'bg': '#1E3A8A',
                 'fg': '#FFFFFF',
                 'border': '#3B82F6',

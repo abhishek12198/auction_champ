@@ -68,6 +68,23 @@ from odoo.tools.image import image_process
 
 _logger = logging.getLogger(__name__)
 
+DISPLAY_AUCTION_TEMPLATES = {
+    'vanilla': 'auction_module.player_template_new',
+    'butterscotch': 'auction_module.player_template_butterscotch',
+    'strawberry': 'auction_module.player_template_strawberry',
+    'cherry': 'auction_module.player_template_cherry',
+    'pistah': 'auction_module.player_template_pistah',
+    'lemon': 'auction_module.player_template_lemon',
+    'blueberry': 'auction_module.player_template_blueberry',
+    'blackberry': 'auction_module.player_template_blueberry',
+}
+
+
+def normalize_card_theme(theme):
+    if theme == 'blackberry':
+        return 'blueberry'
+    return theme or 'vanilla'
+
 # Process-local snapshot of projector / live-board JSON. Two concurrent
 # auctions each get their own key (db + tournament). Unchanged polls skip
 # the 20–40 ORM queries that were melting the VPS.
@@ -864,16 +881,8 @@ class Auction(http.Controller):
         auction_ids = request.env['auction.auction'].sudo().search(
             [('tournament_id', '=', tournament.id)] if tournament else [])
 
-        template_map = {
-            'vanilla':      'auction_module.player_template_new',
-            'butterscotch': 'auction_module.player_template_butterscotch',
-            'strawberry':   'auction_module.player_template_strawberry',
-            'cherry':       'auction_module.player_template_cherry',
-            'pistah':       'auction_module.player_template_pistah',
-            'lemon':        'auction_module.player_template_lemon',
-            'blackberry':   'auction_module.player_template_blackberry',
-        }
-        template_ref = template_map.get(theme, 'auction_module.player_template_new')
+        template_ref = DISPLAY_AUCTION_TEMPLATES.get(
+            normalize_card_theme(theme), 'auction_module.player_template_new')
         if tournament and tournament.tournament_type == 'football':
             template_ref = 'auction_module.player_template_football'
         return request.render(template_ref, {
@@ -902,7 +911,8 @@ class Auction(http.Controller):
             'pistah':       '#6BBF4E',
             'lemon':        '#E8C200',
             'blackberry':   '#3B82F6',
-        }.get(theme, '#b71c1c')
+            'blueberry':    '#3B82F6',
+        }.get(normalize_card_theme(theme), '#b71c1c')
 
         _unsold_text = '#090912' if theme in ('butterscotch', 'lemon') else '#fff'
 
@@ -1266,6 +1276,7 @@ class Auction(http.Controller):
         balance_template_map = {
             'pistah': 'auction_module.auction_details_show_pistah',
             'blackberry': 'auction_module.auction_details_show_blackberry',
+            'blueberry': 'auction_module.auction_details_show_blackberry',
         }
         template_ref = balance_template_map.get(theme, 'auction_module.auction_details_show')
         q = request.httprequest.args
@@ -1750,17 +1761,9 @@ class Auction(http.Controller):
                     commit_stage=not preview,
                 )
             if player:
-                template_map = {
-                    'vanilla':       'auction_module.player_template_new',
-                    'butterscotch':  'auction_module.player_template_butterscotch',
-                    'strawberry':    'auction_module.player_template_strawberry',
-                    'cherry':        'auction_module.player_template_cherry',
-                    'pistah':        'auction_module.player_template_pistah',
-                    'blackberry':    'auction_module.player_template_blackberry',
-                    'lemon':         'auction_module.player_template_lemon',
-                }
                 chosen = tournament_id.player_display_template if tournament_id else 'vanilla'
-                template_ref = template_map.get(chosen, 'auction_module.player_template_new')
+                template_ref = DISPLAY_AUCTION_TEMPLATES.get(
+                    normalize_card_theme(chosen), 'auction_module.player_template_new')
                 # Always use the themed presentation (Sold / Unsold / Next Player).
                 # Football attributes are already rendered inside those themes —
                 # do not swap to player_template_football (card-only, no controls).
@@ -1790,18 +1793,10 @@ class Auction(http.Controller):
                         commit_stage=not preview,
                     )
                     if player:
-                        _theme_map = {
-                            'vanilla':       'auction_module.player_template_new',
-                            'butterscotch':  'auction_module.player_template_butterscotch',
-                            'strawberry':    'auction_module.player_template_strawberry',
-                            'cherry':        'auction_module.player_template_cherry',
-                            'pistah':        'auction_module.player_template_pistah',
-                            'blackberry':    'auction_module.player_template_blackberry',
-                            'lemon':         'auction_module.player_template_lemon',
-                        }
                         _picked = tournament_id.player_display_template if tournament_id else 'vanilla'
                         html = request.render(
-                            _theme_map.get(_picked, 'auction_module.player_template_new'),
+                            DISPLAY_AUCTION_TEMPLATES.get(
+                                normalize_card_theme(_picked), 'auction_module.player_template_new'),
                             {
                                 'player': player,
                                 'tournament': tournament_id,
@@ -2449,6 +2444,7 @@ class Auction(http.Controller):
         players_template_map = {
             'pistah': 'auction_module.auction_team_players_template_pistah',
             'blackberry': 'auction_module.auction_team_players_template_blackberry',
+            'blueberry': 'auction_module.auction_team_players_template_blackberry',
         }
         template_ref = players_template_map.get(theme, 'auction_module.auction_team_players_template')
         resolved_slug = tournament_slug or (tournament.slug if tournament else '')
@@ -6611,6 +6607,7 @@ class Auction(http.Controller):
                     'pistah':       'auction_module.action_report_player_card_pistah',
                     'lemon':        'auction_module.action_report_player_card_lemon',
                     'blackberry':   'auction_module.action_report_player_card_blackberry',
+                    'blueberry':    'auction_module.action_report_player_card_blackberry',
                 }
                 report_ref = report_map.get(theme, 'auction_module.action_report_player_card')
 
@@ -6680,6 +6677,7 @@ class Auction(http.Controller):
                     'pistah':       'auction_module.action_report_player_card_pistah',
                     'lemon':        'auction_module.action_report_player_card_lemon',
                     'blackberry':   'auction_module.action_report_player_card_blackberry',
+                    'blueberry':    'auction_module.action_report_player_card_blackberry',
                 }
                 report_ref = report_map.get(theme, 'auction_module.action_report_player_card')
 
@@ -7269,8 +7267,15 @@ def _pj_has_binary(record, field_name):
         return False
 
 
-def _pj_player_photo_url(db_name, player, projector_size=True):
-    """Public photo URL with write_date cache-buster (+ optional projector resize)."""
+def _pj_player_photo_url(db_name, player, projector_size=False):
+    """Public photo URL with write_date cache-buster.
+
+    Stage / hero photos omit ``sz=pj``. That flag served the 264×300 print-card
+    JPEG, which looks muddy when blown up on a projector. Stored player photos
+    are already capped at 1600×2200.
+
+    ``projector_size=True`` is only for remaining-player thumbs.
+    """
     if not player or not _pj_has_binary(player, 'photo'):
         return ''
     ver = ''
@@ -7284,7 +7289,7 @@ def _pj_player_photo_url(db_name, player, projector_size=True):
     url = '/%s/auction/public/image/auction.team.player/%d/photo?v=%s' % (
         db_name, player.id, ver,
     )
-    # sz=pj → stored card JPEG (or a light resize) for stage + remaining thumbs
+    # sz=pj → stored 264×300 card JPEG for small remaining thumbs only
     if projector_size:
         url += '&sz=pj'
     return url
@@ -7307,7 +7312,7 @@ def _pj_next_photo_urls(tournament, db_name, current_player=None, env=None):
     )
     urls = []
     for player in nxt:
-        url = _pj_player_photo_url(db_name, player, projector_size=True)
+        url = _pj_player_photo_url(db_name, player, projector_size=False)
         if url:
             urls.append(url)
     return urls

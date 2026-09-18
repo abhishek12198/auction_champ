@@ -104,11 +104,12 @@
                             <div class="sar-section-titles">
                                 <div class="sar-section-title">Bid slabs</div>
                                 <div class="sar-section-sub">
-                                    Each band starts where the last one ended. Set Until and Increment — From is filled for you.
+                                    First From uses the global base. Use Budget-safe max to fill Until. The next From follows the previous Until.
                                 </div>
                             </div>
                         </div>
-                        <field name="auction_bid_slab_ids" nolabel="1" class="sar-table sar-slabs">
+                        <field name="auction_bid_slab_ids" nolabel="1" class="sar-table sar-slabs"
+                               context="{'default_from_amount': base_point}">
                             <tree editable="bottom">
                                 <field name="from_amount" string="From" widget="ac_points"/>
                                 <field name="to_amount" string="Until" widget="ac_points"/>
@@ -123,7 +124,7 @@
                             <div class="sar-section-titles">
                                 <div class="sar-section-title">Tier limits</div>
                                 <div class="sar-section-sub">
-                                    Max players, base, and max call per tier. Base 0 uses global base. Max call 0 means no cap.
+                                    One tier fills Max / team from Max players and Base from Global base. Base 0 uses global. Max call 0 means no cap.
                                 </div>
                             </div>
                         </div>

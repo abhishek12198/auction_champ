@@ -71,6 +71,11 @@
     background: rgba(31,26,10,.12);
     border-color: rgba(31,26,10,.45);
   }
+  #sellModal[data-theme="lemon"] .sm-steps {
+    color: rgba(31,26,10,.58);
+    background: rgba(31,26,10,.05);
+  }
+  #sellModal[data-theme="lemon"] .sm-steps .sm-step-current { color: #6E5A00; }
   #sellModal[data-theme="lemon"] .sm-pause-btn {
     background: rgba(201,164,0,.16);
     border-color: rgba(110,90,0,.45);
@@ -80,6 +85,12 @@
     background: rgba(201,164,0,.28);
     border-color: #6E5A00;
     box-shadow: 0 0 12px rgba(110,90,0,.2);
+  }
+  #sellModal[data-theme="lemon"] #smSoldScreen.sm-break-on .sm-pause-btn {
+    background: #C9A400;
+    border-color: #6E5A00;
+    color: #1F1A0A;
+    box-shadow: 0 0 14px rgba(110,90,0,.28);
   }
   #sellModal[data-theme="lemon"] .sm-break-banner {
     background: rgba(201,164,0,.14);
@@ -148,6 +159,7 @@
   }
 
 
+  #sellModal[data-theme="blueberry"],
   #sellModal[data-theme="blackberry"] {
     --sm-header-bg:       linear-gradient(135deg,#050a14 0%,#0d1830 100%);
     --sm-header-stripe:   #3B82F6;
@@ -332,7 +344,28 @@
   .sm-badge.tier-full { opacity: .4; cursor: not-allowed; }
   .sm-no-teams { color: #94a3b8; font-size: .85rem; padding: 4px 0; }
 
+  .sm-steps {
+    margin: 10px 24px 2px;
+    padding: 8px 12px 8px 26px;
+    list-style: decimal;
+    font-size: .68rem;
+    line-height: 1.45;
+    color: #64748b;
+    font-weight: 600;
+    letter-spacing: .01em;
+    background: rgba(0,0,0,.03);
+    border-radius: 8px;
+  }
+  .sm-steps li { margin: 0 0 2px; }
+  .sm-steps li:last-child { margin-bottom: 0; }
+  .sm-steps .sm-step-current { color: var(--sm-primary); font-weight: 700; }
+
   /* ── Points ──────────────────────────────────────────────── */
+  .sm-points-section.is-locked {
+    opacity: .42;
+    pointer-events: none;
+    filter: grayscale(.12);
+  }
   .sm-points-wrap { display: flex; align-items: center; gap: 12px; }
   .sm-pts-btn {
     width: 44px; height: 44px; border-radius: 50%;
@@ -342,6 +375,12 @@
     color: var(--sm-primary); transition: all .18s;
   }
   .sm-pts-btn:hover { border-color: var(--sm-primary); background: var(--sm-primary-light); }
+  .sm-pts-btn:disabled,
+  .sm-preset-btn:disabled,
+  #sellPoints:disabled {
+    cursor: not-allowed;
+    opacity: .7;
+  }
   #sellPoints {
     flex: 1; text-align: center; font-size: 1.6rem; font-weight: 800;
     border: 2px solid rgba(0,0,0,.12); border-radius: 10px;
@@ -598,26 +637,39 @@
   .sm-pause-btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     padding: 10px 28px; border-radius: 50px;
-    background: rgba(255,193,7,.16); border: 2px solid rgba(255,193,7,.55);
-    color: #FFD700; font-weight: 800; font-size: .88rem;
+    background: var(--sm-accent-dim, rgba(255,193,7,.16));
+    border: 2px solid var(--sm-accent, #FFD700);
+    color: var(--sm-accent, #FFD700); font-weight: 800; font-size: .88rem;
     cursor: pointer; font-family: var(--sm-font); letter-spacing: .5px;
-    transition: background .2s, border-color .2s, box-shadow .2s;
+    transition: background .2s, border-color .2s, color .2s, box-shadow .2s;
   }
   .sm-pause-btn:hover {
-    background: rgba(255,193,7,.28); border-color: #FFD700;
-    box-shadow: 0 0 16px rgba(255,193,7,.35);
+    background: var(--sm-accent-dim, rgba(255,193,7,.28));
+    border-color: var(--sm-accent, #FFD700);
+    box-shadow: 0 0 16px var(--sm-accent-dim, rgba(255,193,7,.35));
+    filter: brightness(1.08);
   }
+  .sm-pause-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
   .sm-pause-btn:disabled { opacity: .55; cursor: wait; }
+  #smSoldScreen.sm-break-on .sm-pause-btn {
+    background: var(--sm-primary, #d4820a);
+    border-color: var(--sm-accent, #FFD700);
+    color: #fff;
+    box-shadow: 0 0 18px var(--sm-accent-dim, rgba(255,193,7,.4));
+  }
   #smSoldScreen.sm-break-on .sm-countdown-wrap { opacity: .55; }
   #smSoldScreen.sm-break-on .sm-progress-bar { transition: none !important; }
   .sm-break-banner {
     display: none; width: calc(100% - 56px); margin: 0 auto 12px;
     padding: 10px 14px; border-radius: 12px; text-align: center;
-    background: rgba(255,193,7,.12); border: 1px solid rgba(255,193,7,.45);
-    color: #FFD700; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+    background: var(--sm-accent-dim, rgba(255,193,7,.12));
+    border: 1px solid var(--sm-accent, #FFD700);
+    color: var(--sm-accent, #FFD700); font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
     font-size: .72rem;
+    align-items: center; justify-content: center; gap: 8px;
   }
-  #smSoldScreen.sm-break-on .sm-break-banner { display: block; }
+  .sm-break-banner svg { width: 13px; height: 13px; flex-shrink: 0; }
+  #smSoldScreen.sm-break-on .sm-break-banner { display: flex; }
   #smSoldScreen.sm-break-on #smSkipBtn { display: none; }
 
   /* ── Mobile / small screens: sheet layout, pinned header &amp; actions ── */
@@ -727,6 +779,12 @@
       <!-- Scrollable body -->
       <div class="sm-form-scroll">
 
+      <ol class="sm-steps" id="smSellSteps">
+        <li class="sm-step-current">Select the Team</li>
+        <li>Input or use + &#8722; for entering the value</li>
+        <li>Click on Sell Player, or select Cancel</li>
+      </ol>
+
       <!-- Player → Team strip -->
       <div class="sm-transfer-row">
         <img class="sm-avatar" id="smPlayerAvatar"
@@ -754,12 +812,12 @@
       </div>
 
       <!-- Points input -->
-      <div class="sm-section" style="padding-top:12px;">
+      <div class="sm-section sm-points-section is-locked" id="smPointsSection" style="padding-top:12px;">
         <span class="sm-section-label">Selling <t t-esc="(tournament or player.tournament_id).get_point_unit().name if (tournament or (player and player.tournament_id)) else 'Points'"/></span>
         <div class="sm-points-wrap">
-          <button class="sm-pts-btn" onclick="smAdjustPoints(-1)">&#8722;</button>
-          <input type="number" id="sellPoints" value="0" min="0" />
-          <button class="sm-pts-btn" onclick="smAdjustPoints(1)">&#43;</button>
+          <button type="button" class="sm-pts-btn" onclick="smAdjustPoints(-1)" disabled="disabled">&#8722;</button>
+          <input type="number" id="sellPoints" value="0" min="0" disabled="disabled"/>
+          <button type="button" class="sm-pts-btn" onclick="smAdjustPoints(1)" disabled="disabled">&#43;</button>
         </div>
         <!-- Quick-select preset buttons (set in tournament settings) -->
         <t t-set="raw_presets" t-value="player.tournament_id.preset_points or ''"/>
@@ -858,9 +916,9 @@
           <div class="sm-progress-bar" id="smProgressBar"></div>
         </div>
       </div>
-      <div class="sm-break-banner" id="smBreakBanner">&#9208; Break Time — Auction paused</div>
+      <div class="sm-break-banner" id="smBreakBanner"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg> Break Time — Auction paused</div>
       <div class="sm-sold-actions">
-        <button type="button" class="sm-pause-btn" id="smPauseBtn" onclick="smToggleBreakPause()" title="Pause auction — show Break Time on projector &amp; live board">&#9208; Pause</button>
+        <button type="button" class="sm-pause-btn" id="smPauseBtn" onclick="smToggleBreakPause()" title="Pause auction — show Break Time on projector &amp; live board"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg> Pause</button>
         <button type="button" class="sm-skip-btn" id="smSkipBtn" onclick="smSkipToNext()">&#9654; Next Player Now</button>
       </div>
 
@@ -910,13 +968,15 @@
     var sold = document.getElementById('smSoldScreen');
     var pauseBtn = document.getElementById('smPauseBtn');
     var label = document.getElementById('smCountdownLabel');
+    var iconPause = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
+    var iconPlay = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
     if (sold) sold.classList.toggle('sm-break-on', smBreakPaused);
     if (pauseBtn) {
       if (smBreakPaused) {
-        pauseBtn.innerHTML = '&#9654; Resume';
+        pauseBtn.innerHTML = iconPlay + ' Resume';
         pauseBtn.title = 'Resume auction — hide Break Time on projector &amp; live board';
       } else {
-        pauseBtn.innerHTML = '&#9208; Pause';
+        pauseBtn.innerHTML = iconPause + ' Pause';
         pauseBtn.title = 'Pause auction — show Break Time on projector &amp; live board';
       }
     }
@@ -1139,6 +1199,7 @@
     document.getElementById('smBtnSell').disabled = true;
     document.getElementById('smBtnSell').textContent = 'Sell Player';
     document.getElementById('sellPoints').value = 0;
+    smSetPointsLock(true);
     smSetSellModalOpen(true);
     smLoadTeams(smPlayerId);
   };
@@ -1318,6 +1379,24 @@
     });
   }
 
+  function smSetPointsLock(locked) {
+    var section = document.getElementById('smPointsSection');
+    if (section) section.classList.toggle('is-locked', !!locked);
+    var input = document.getElementById('sellPoints');
+    if (input) {
+      input.disabled = !!locked;
+      input.readOnly = !!locked;
+    }
+    var controls = document.querySelectorAll('#smPointsSection .sm-pts-btn, #smPointsSection .sm-preset-btn');
+    for (var i = 0; i < controls.length; i++) controls[i].disabled = !!locked;
+    var steps = document.getElementById('smSellSteps');
+    if (steps) {
+      var items = steps.querySelectorAll('li');
+      for (var j = 0; j < items.length; j++) items[j].classList.remove('sm-step-current');
+      if (items.length) items[locked ? 0 : 1].classList.add('sm-step-current');
+    }
+  }
+
   /* ── Select team ─────────────────────────────────────────────── */
   function smSelectTeam(team) {
     smSelectedTeam = team;
@@ -1347,6 +1426,7 @@
     input.value = team.effective_base_point;
     input.min   = team.effective_base_point;
     input.max   = team.max_call;
+    smSetPointsLock(false);
     smClearPresetActive();
     document.getElementById('smBtnSell').disabled = false;
     smHideError();
@@ -1366,7 +1446,9 @@
 
   /* ── Set preset point value ──────────────────────────────────── */
   window.smSetPoints = function(val, btn) {
+    if (!smSelectedTeam) return;
     var input = document.getElementById('sellPoints');
+    if (!input || input.disabled) return;
     input.value = val;
     // Highlight active preset button
     smClearPresetActive();

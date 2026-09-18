@@ -53,6 +53,81 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
         return isNaN(n) ? 0 : n;
     }
 
+    function sarSnapToSlabs(amount, slabs) {
+        amount = sarInt(amount);
+        var sorted = _.sortBy(slabs, function (slab) {
+            return -sarInt(slab.data && slab.data.from_amount);
+        });
+        var i;
+        var slab;
+        var from;
+        var inc;
+        var snapped;
+        for (i = 0; i < sorted.length; i++) {
+            slab = sorted[i];
+            from = sarInt(slab.data && slab.data.from_amount);
+            if (amount < from) {
+                continue;
+            }
+            inc = sarInt(slab.data && slab.data.increment);
+            if (inc <= 0) {
+                return Math.min(amount, sarInt(slab.data && slab.data.to_amount) || amount);
+            }
+            snapped = from + Math.floor((amount - from) / inc) * inc;
+            snapped = Math.min(snapped, amount);
+            if (slab.data && slab.data.to_amount) {
+                snapped = Math.min(snapped, sarInt(slab.data.to_amount));
+            }
+            return snapped;
+        }
+        return amount;
+    }
+
+    function sarBudgetSafeMax(data) {
+        if (!data) {
+            return 0;
+        }
+        var purse = sarInt(data.max_points);
+        var squad = sarInt(data.max_players);
+        var globalBase = sarInt(data.base_point);
+        if (purse <= 0) {
+            return 0;
+        }
+        var slabs = sarRelRecords(data.auction_bid_slab_ids);
+        var tiers = sarRelRecords(data.tier_limit_ids);
+        var slots = Math.max(squad - 1, 0);
+        var tierBases = [];
+        _.each(tiers, function (tl) {
+            var bid = sarInt(tl.data && tl.data.base_point);
+            if (bid <= 0) {
+                bid = globalBase;
+            }
+            var avail = Math.max(sarInt(tl.data && tl.data.max_players), 0);
+            if (avail) {
+                tierBases.push([bid, avail]);
+            }
+        });
+        var reserve = 0;
+        var left = slots;
+        if (tierBases.length) {
+            tierBases.sort(function (a, b) { return a[0] - b[0]; });
+            _.each(tierBases, function (pair) {
+                if (left <= 0) {
+                    return;
+                }
+                var take = Math.min(pair[1], left);
+                reserve += take * pair[0];
+                left -= take;
+            });
+            if (left > 0) {
+                reserve += left * tierBases[0][0];
+            }
+        } else {
+            reserve = slots * globalBase;
+        }
+        return sarSnapToSlabs(Math.max(purse - reserve, 0), slabs);
+    }
+
     /**
      * Skip the first onchange RPC for bid slabs. New lines only have integers,
      * and From is filled from context — waiting on /onchange was the delay
@@ -132,8 +207,22 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
                 if (self._sarRoot().length) {
                     self._sarRenderPreview();
                     self._sarPlaceTeamAdd(self._sarRoot());
+                    self._sarRefreshSafeMaxBtns();
                 }
                 return resetWidgets;
+            });
+        },
+
+        _sarRefreshSafeMaxBtns: function () {
+            var $root = this._sarRoot();
+            var safe = sarBudgetSafeMax(this.state && this.state.data);
+            $root.find('.sar-safe-max-btn').each(function () {
+                var $btn = $(this);
+                $btn.toggleClass('is-ready', safe > 0);
+                $btn.attr('title', safe > 0
+                    ? 'Fill Until with budget-safe max (' + sarFmt(safe) + ')'
+                    : 'Enter purse, max players, and base first');
+                $btn.text(safe > 0 ? 'Budget-safe max · ' + sarFmt(safe) : 'Budget-safe max');
             });
         },
 
@@ -142,36 +231,6 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
                 '<span class="sar-preview-chip sar-chip-' + kind + '">' +
                 '<i class="fa ' + icon + '"/> ' + sarEsc(text) + '</span>'
             );
-        },
-
-        _sarPreviewSnap: function (amount, slabs) {
-            amount = sarInt(amount);
-            var sorted = _.sortBy(slabs, function (slab) {
-                return -sarInt(slab.data && slab.data.from_amount);
-            });
-            var i;
-            var slab;
-            var from;
-            var inc;
-            var snapped;
-            for (i = 0; i < sorted.length; i++) {
-                slab = sorted[i];
-                from = sarInt(slab.data && slab.data.from_amount);
-                if (amount < from) {
-                    continue;
-                }
-                inc = sarInt(slab.data && slab.data.increment);
-                if (inc <= 0) {
-                    return Math.min(amount, sarInt(slab.data && slab.data.to_amount) || amount);
-                }
-                snapped = from + Math.floor((amount - from) / inc) * inc;
-                snapped = Math.min(snapped, amount);
-                if (slab.data && slab.data.to_amount) {
-                    snapped = Math.min(snapped, sarInt(slab.data.to_amount));
-                }
-                return snapped;
-            }
-            return amount;
         },
 
         _sarRenderPreview: function () {
@@ -209,44 +268,11 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
                     'ok'
                 ));
             }
-            var purse = sarInt(data.max_points);
-            var squad = sarInt(data.max_players);
-            var globalBase = sarInt(data.base_point);
-            if (purse > 0 && squad > 1) {
-                var slots = squad - 1;
-                var tierBases = [];
-                _.each(tiers, function (tl) {
-                    var bid = sarInt(tl.data && tl.data.base_point);
-                    if (bid <= 0) {
-                        bid = globalBase;
-                    }
-                    var avail = Math.max(sarInt(tl.data && tl.data.max_players), 0);
-                    if (avail) {
-                        tierBases.push([bid, avail]);
-                    }
-                });
-                var reserve = 0;
-                var left = slots;
-                if (tierBases.length) {
-                    tierBases.sort(function (a, b) { return a[0] - b[0]; });
-                    _.each(tierBases, function (pair) {
-                        if (left <= 0) {
-                            return;
-                        }
-                        var take = Math.min(pair[1], left);
-                        reserve += take * pair[0];
-                        left -= take;
-                    });
-                    if (left > 0) {
-                        reserve += left * tierBases[0][0];
-                    }
-                } else {
-                    reserve = slots * globalBase;
-                }
-                var snapped = this._sarPreviewSnap(Math.max(purse - reserve, 0), slabs);
+            var snapped = sarBudgetSafeMax(data);
+            if (sarInt(data.max_points) > 0) {
                 chips.push(this._sarPreviewChip(
                     'fa-calculator',
-                    'Budget-safe max ≈ ' + snapped,
+                    'Budget-safe max ≈ ' + sarFmt(snapped),
                     snapped > 0 ? 'ok' : 'warn'
                 ));
             }
@@ -356,13 +382,37 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
             return this._super.apply(this, arguments);
         },
 
+        _sarWizardData: function () {
+            var field = this.getParent && this.getParent();
+            if (field && field.record && field.record.model === 'auction.start.auction') {
+                return field.record.data;
+            }
+            var widget = this;
+            while (widget) {
+                if (widget.state && widget.state.model === 'auction.start.auction') {
+                    return widget.state.data;
+                }
+                widget = widget.getParent ? widget.getParent() : null;
+            }
+            return null;
+        },
+
+        _sarWizardBase: function () {
+            var data = this._sarWizardData();
+            return sarInt(data && data.base_point);
+        },
+
+        _sarBudgetSafeMax: function () {
+            return sarBudgetSafeMax(this._sarWizardData());
+        },
+
         _sarPrevSlabTo: function () {
             var data = this.state && this.state.data;
-            if (!data || !data.length) {
-                return 0;
+            if (data && data.length) {
+                var prev = data[data.length - 1];
+                return sarInt(prev && prev.data && prev.data.to_amount);
             }
-            var prev = data[data.length - 1];
-            return sarInt(prev && prev.data && prev.data.to_amount);
+            return this._sarWizardBase();
         },
 
         _sarNextSlabContext: function (existing) {
@@ -504,12 +554,17 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
                     $from.removeClass('sar-locked');
                     $from.find('input').prop('readonly', false);
                     self._sarAddStepper($from, 50, 'from_amount');
+                    var base = self._sarWizardBase();
+                    if (base && !self._sarNum($row, 'from_amount')) {
+                        self._sarSetField($row, 'from_amount', base);
+                    }
                 } else {
                     $from.addClass('sar-locked');
                     $from.find('input').prop('readonly', true);
                     $from.find('.sar-cell-step').remove();
                 }
                 self._sarAddStepper($to, 100, 'to_amount');
+                self._sarAddSafeMaxBtn($to, $row);
                 self._sarAddStepper($inc, 25, 'increment');
 
                 if (!$inc.find('.sar-slab-chips').length) {
@@ -530,6 +585,32 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
                 self._sarRefreshSlabRow($row);
             });
             this._sarLabelAdd(this.$el, 'Add another slab');
+        },
+
+        _sarAddSafeMaxBtn: function ($to, $row) {
+            var self = this;
+            if (!$to.length) {
+                return;
+            }
+            var $btn = $to.find('.sar-safe-max-btn');
+            if (!$btn.length) {
+                $btn = $('<button type="button" class="sar-safe-max-btn" tabindex="-1"/>');
+                $btn.on('click', function (ev) {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    var safe = self._sarBudgetSafeMax();
+                    if (safe > 0) {
+                        self._sarSetField($row, 'to_amount', safe);
+                    }
+                });
+                $to.append($btn);
+            }
+            var safe = this._sarBudgetSafeMax();
+            $btn.toggleClass('is-ready', safe > 0);
+            $btn.attr('title', safe > 0
+                ? 'Fill Until with budget-safe max (' + sarFmt(safe) + ')'
+                : 'Enter purse, max players, and base first');
+            $btn.text(safe > 0 ? 'Budget-safe max · ' + sarFmt(safe) : 'Budget-safe max');
         },
 
         _sarRefreshSlabRow: function ($row) {

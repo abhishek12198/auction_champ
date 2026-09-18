@@ -837,14 +837,8 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   object-fit:contain;object-position:center bottom;display:block;
   position:relative;z-index:2;flex:1 1 auto;min-width:0;min-height:0;
   transform-origin:center bottom;
-  filter:
-    drop-shadow(0 1px 1px rgba(0,0,0,.35))
-    drop-shadow(0 10px 18px rgba(0,0,0,.45))
-    drop-shadow(0 28px 42px rgba(0,0,0,.4))
-    drop-shadow(0 0 22px var(--glow));
-  animation:
-    pjHeroIn .65s cubic-bezier(.2,.8,.25,1) both,
-    pjHeroFloat 4.8s ease-in-out .7s infinite}
+  image-rendering:auto;
+  animation:pjHeroIn .65s cubic-bezier(.2,.8,.25,1) both}
 .pj-photo.is-wait{
   opacity:0 !important;
   visibility:hidden !important;
@@ -1035,11 +1029,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   --pj-sold-a:#008C3A; --pj-sold-b:#1B9E55; --pj-sold-c:#00B85A;
   --pj-unsold-a:#8E0000; --pj-unsold-b:#A31515; --pj-unsold-c:#B71C1C}
 .pj-photo-side.is-status-freeze .pj-photo{
-  filter:saturate(.92) brightness(.97)
-    drop-shadow(0 1px 1px rgba(0,0,0,.35))
-    drop-shadow(0 10px 18px rgba(0,0,0,.45))
-    drop-shadow(0 28px 42px rgba(0,0,0,.4))
-    drop-shadow(0 0 18px var(--glow));
+  filter:saturate(.92) brightness(.97);
   transition:filter .25s ease}
 .pj-photo-side.is-sold-glow{
   animation:pjStatusGlowSold .85s ease-out both}

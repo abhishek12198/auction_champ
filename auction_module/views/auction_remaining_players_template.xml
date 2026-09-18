@@ -141,6 +141,7 @@
 
 
         /* blackberry */
+        body.rp-theme-blueberry,
         body.rp-theme-blackberry {
           --rp-primary:      #3B82F6;
           --rp-primary-dk:   #1E3A8A;

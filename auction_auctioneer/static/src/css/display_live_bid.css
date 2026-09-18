@@ -1182,7 +1182,7 @@ body[data-theme="dark"] .player-profession .ac-livebid-overlay {
         right: 0 !important;
         z-index: 90 !important;
         margin: 0 !important;
-        background: inherit !important;
+        background: var(--navy-card, var(--bg-card, #fffdf4)) !important;
         border-top: 1px solid var(--lb-line, rgba(255,255,255,.12));
         box-shadow: 0 -8px 24px rgba(0,0,0,.28);
     }

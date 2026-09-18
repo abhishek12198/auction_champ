@@ -274,14 +274,15 @@
           margin: 0 auto;
         }
         .bs2-table-wrap {
-          overflow-x: auto;
+          overflow-x: hidden;
           padding-bottom: 4px;
         }
         .bs2-table {
           width: 100%;
           border-collapse: separate;
           border-spacing: 0 6px;
-          min-width: 1140px;
+          min-width: 0;
+          table-layout: fixed;
         }
         .bs2-table thead th {
           padding: 8px 12px;
@@ -898,6 +899,56 @@
           text-transform: uppercase;
           white-space: nowrap;
         }
+        #list-section .bs2-table-wrap { overflow-x: hidden; }
+        #list-section .bs2-table { min-width: 0; table-layout: fixed; width: 100%; }
+        #list-section .bs2-table thead th {
+          font-size: .72rem; letter-spacing: .12em; padding: 8px 8px;
+        }
+        #list-section .bs2-row td { padding: 10px 8px; }
+        #list-section .bs2-table th:nth-child(4),
+        #list-section .bs2-table td:nth-child(4) { min-width: 0; }
+        #list-section .bs2-team-logo,
+        #list-section .bs2-logo-fallback {
+          width: 46px; height: 46px; border-radius: 12px;
+        }
+        #list-section .bs2-team-name {
+          font-size: 1.1rem; letter-spacing: .06em;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        #list-section .bs2-manager { font-size: .76rem; letter-spacing: .08em; }
+        #list-section .bs2-purse-value { font-size: clamp(1.15rem, 1.7vw, 1.7rem); }
+        #list-section .bs2-pct-label { font-size: .7rem; letter-spacing: .1em; }
+        #list-section .bs2-needed-chip {
+          min-width: 0; padding: 8px 10px; border-radius: 14px;
+        }
+        #list-section .bs2-players-number,
+        #list-section .bs2-squad-wrap .bs2-squad-value { font-size: 1.45rem; }
+        #list-section .bs2-maxbid { min-width: 0; padding: 6px 8px 7px; border-radius: 11px; }
+        #list-section .bs2-maxbid .bs2-maxcall-value {
+          font-size: clamp(1rem, 10cqw, 1.45rem);
+        }
+        #list-section .bs2-badge {
+          min-width: 0; padding: 6px 10px; font-size: .68rem; letter-spacing: .08em;
+        }
+        #list-section .bs2-chip-label,
+        #list-section .bs2-maxbid-lbl,
+        #list-section .bs2-maxbid-hint { font-size: .55rem; }
+        #list-section .bs2-access-actions { gap: 6px; }
+        #list-section .bs2-engage { height: 36px; padding: 0 14px; font-size: .72rem; }
+        #list-section .bs2-table th,
+        #list-section .bs2-table td { overflow: hidden; }
+        #list-section .bs2-team-cell { gap: 10px; }
+        #list-section .bs2-table th:last-child,
+        #list-section .bs2-table td:last-child {
+          width: 3.5rem;
+          max-width: 3.5rem;
+          padding-left: 4px;
+          padding-right: 8px;
+        }
+        #list-section .bs2-table thead th:last-child {
+          font-size: 0;
+          letter-spacing: 0;
+        }
         .comfortable { background:rgba(22,163,74,.12); color:#60a5fa; border:1.5px solid rgba(22,163,74,.35); }
         .healthy     { background:rgba(20,184,166,.12); color:#2dd4bf; border:1.5px solid rgba(20,184,166,.35); }
         .balanced    { background:rgba(202,138,4,.12); color:#fde047; border:1.5px solid rgba(202,138,4,.35); }
@@ -1218,8 +1269,8 @@
         </div>
         <div class="bs2-hdr-side bs2-right">
           <div class="bs2-view-toggle" role="tablist" aria-label="View toggle">
-            <button type="button" id="btn-list" class="bs2-toggle-btn active" aria-pressed="true">LIST</button>
-            <button type="button" id="btn-grid" class="bs2-toggle-btn" aria-pressed="false">GRID</button>
+            <button type="button" id="btn-grid" class="bs2-toggle-btn active" aria-pressed="true">GRID</button>
+            <button type="button" id="btn-list" class="bs2-toggle-btn" aria-pressed="false">LIST</button>
           </div>
           <div class="bs2-v-divider"></div>
           <button type="button" class="bs2-fs-btn" id="fs-btn" aria-label="Toggle fullscreen"><span class="bs2-fs-ico">⛶</span><span class="bs2-fs-tx">FULL</span></button>
@@ -1231,7 +1282,7 @@
       <main class="bs2-main">
         <div class="bs2-tracker">
         <div class="bs2-tracker-teams" id="tracker-teams">
-        <div class="bs2-panel" id="list-section">
+        <div class="bs2-panel" id="list-section" style="display:none">
           <div class="bs2-table-wrap">
             <table class="bs2-table">
               <thead>
@@ -1242,7 +1293,7 @@
                   <th>Max Bid</th>
                   <th>Squad</th>
                   <th>Status</th>
-                  <th>View</th>
+                  <th class="bs2-access-hd" aria-label="View"></th>
                 </tr>
               </thead>
               <tbody>
@@ -1323,7 +1374,7 @@
           </div>
         </div>
 
-        <div class="bs2-panel" id="grid-section" style="display:none">
+        <div class="bs2-panel" id="grid-section">
           <div class="bs2-grid">
             <t t-foreach="teams" t-as="team">
               <t t-set="purse_pct" t-value="int(team.remaining_points * 100 // team.total_point) if team.total_point else 0"/>
@@ -1958,7 +2009,7 @@
           });
           window.addEventListener('beforeunload', stopPolling);
           document.addEventListener('DOMContentLoaded', function () {
-            setView(isCompactScreen() ? 'grid' : 'list');
+            setView('grid');
             syncFullscreenButton();
             if (window.AuctionChampSSE && window.AuctionChampSSE.enabled(document.documentElement)) {
               window.AuctionChampSSE.bind({

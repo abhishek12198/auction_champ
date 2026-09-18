@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="player_template_hud" name="Player Auction – Shared HUD">
+    <t t-set="hud_theme" t-value="hud_theme or 'butterscotch'"/>
+    <t t-set="hud_edition" t-value="hud_edition or 'Auction Edition'"/>
+    <t t-set="hud_light" t-value="hud_light or False"/>
+    <html lang="en"
+          t-att-data-theme="hud_theme"
+          t-att-class="'hud-light' if hud_light else None"
+          t-att-data-balance-url="('/' + db_name + '/' + tournament.slug + '/auction/show/team/balance') if db_name and tournament and tournament.slug else ''"
+          t-att-data-rp-url="('/' + db_name + '/' + tournament.slug + '/auction/display_auction/remaining-players?theme=' + hud_theme) if db_name and tournament and tournament.slug else ''">
+  <head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
+    <t t-call="auction_module.social_preview_head">
+        <t t-set="og_page_key" t-value="'display_auction'"/>
+        <t t-set="og_record" t-value="tournament"/>
+    </t>
+    <link rel="stylesheet" href="/auction_module/static/src/css/no_mobile_zoom.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
+    <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;700&amp;family=Barlow:wght@400;500;600;700&amp;family=Barlow+Condensed:wght@400;500;600;700&amp;family=Bebas+Neue&amp;family=Exo+2:wght@400;600;700&amp;family=Orbitron:wght@400;600;700;900&amp;family=Oswald:wght@400;500;600;700&amp;family=Rajdhani:wght@500;600;700&amp;family=Saira+Condensed:wght@600;700;800&amp;family=Teko:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/display_hud_themes.css?v=6"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/display_hud.css?v=6"/>
+    <t t-call="auction_module.player_mystery_critical_css"/>
+  </head>
+
+<t t-call="auction_module.point_unit_bootstrap">
+  <t t-set="pu_tournament" t-value="tournament or (player.tournament_id if player else None)"/>
+</t>
+
+  <body t-att-data-player-id="player.id"
+        t-att-data-next-countdown="tournament.next_player_countdown if tournament else 5"
+        t-att-data-is-mystery="'1' if player.tier_id and player.tier_id.mystery else '0'"
+        t-att-data-tournament-id="tournament.id if tournament else ''"
+        t-att-data-break-time="'1' if tournament and tournament.break_time_active else '0'">
+
+    <header class="hud-header">
+      <a href="/web" class="hud-brand">
+        <img class="ac-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
+        <div class="hud-brand-text">
+          <div class="hud-brand-sub"><t t-esc="hud_edition"/></div>
+        </div>
+      </a>
+      <div class="hud-logo-center">
+        <t t-if="player.tournament_id and player.tournament_id.logo">
+          <img class="tourn-logo" t-att-src="image_data_uri(player.tournament_id.logo)" alt="Tournament Logo"/>
+        </t>
+        <div class="hud-tourn-info">
+          <div class="hud-tourn-name"><t t-esc="player.tournament_id.name"/></div>
+          <div class="hud-tourn-desc"><t t-esc="player.tournament_id.description"/></div>
+        </div>
+      </div>
+      <div class="hud-tourn-logo">
+        <div class="hud-header-controls">
+          <button type="button" class="hud-hdr-drawer-btn" onclick="toggleRemainingPlayers()">Players Left</button>
+          <button type="button" class="hud-hdr-drawer-btn" onclick="toggleBidSummary()">Bid Summary</button>
+          <button type="button" id="ac-break-btn" class="ac-break-btn" onclick="acToggleBreakTime()" title="Break Time"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg> Pause</button>
+          <button id="fs-btn" onclick="toggleFullscreen()" title="Fullscreen" class="bs-ctrl-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="hud-arena" data-player-zone="">
+      <div class="hud-photo-col">
+        <div class="hud-photo-col-accent"></div>
+        <div class="hud-serial-watermark"><t t-esc="player.sl_no"/></div>
+        <img class="hud-photo-img"
+             t-att-src="image_data_uri(player.photo)"
+             alt="Player Photo"
+             id="loadImage"/>
+        <div class="hud-serial-badge">
+          <span class="hud-serial-label">No.</span>
+          <span class="hud-serial-number"><t t-esc="player.sl_no"/></span>
+        </div>
+        <div class="hud-photo-overlay">
+          <div class="hud-player-name" data-sm-name=""><t t-esc="player.name.upper()"/></div>
+          <div class="hud-overlay-badges">
+            <t t-if="(player.dominant_position_id.name if player.tournament_type == 'football' else player.role)">
+              <div class="hud-role-tag" data-sm-role=""><t t-esc="player.dominant_position_id.name if player.tournament_type == 'football' else player.role"/></div>
+            </t>
+            <t t-if="player.effective_base_price">
+              <div class="hud-base-badge">
+                <span class="hud-base-badge-lbl">Base Price</span>
+                <span class="hud-base-badge-val"><t t-esc="(tournament or player.tournament_id).format_points(player.effective_base_price or 0) if (tournament or (player and player.tournament_id)) else '{:,}'.format(int(player.effective_base_price or 0))"/></span>
+              </div>
+            </t>
+          </div>
+        </div>
+      </div>
+
+      <div class="hud-info-col">
+        <div class="hud-tier-strip">
+          <t t-if="player.tier_id">
+            <span class="hud-tier-hex"
+                  t-att-style="('background:' + player.tier_id.color + ';') if player.tier_id.color else None">
+              <t t-esc="player.tier_id.name"/>
+            </span>
+          </t>
+          <t t-else="">
+            <span class="hud-tier-label-dim">Auction Tier</span>
+          </t>
+        </div>
+
+        <div class="hud-stats">
+          <div class="hud-stats-heading">Player Profile</div>
+          <t t-call="auction_module.football_attr_layout_css"/>
+          <t t-if="player.tournament_type != 'football'">
+            <div class="hud-attr-grid ac-fb-grid">
+              <t t-if="player.batting_style">
+                <div class="hud-stat-row">
+                  <span class="hud-stat-key">Batting</span>
+                  <span class="hud-stat-val"><t t-esc="player.batting_style"/></span>
+                </div>
+              </t>
+              <t t-if="player.bowling_style">
+                <div class="hud-stat-row">
+                  <span class="hud-stat-key">Bowling</span>
+                  <span class="hud-stat-val"><t t-esc="player.bowling_style"/></span>
+                </div>
+              </t>
+              <t t-if="player.address">
+                <div class="hud-stat-row ac-fb-span-2">
+                  <span class="hud-stat-key">Location</span>
+                  <span class="hud-stat-val"><t t-esc="player.address"/></span>
+                </div>
+              </t>
+            </div>
+          </t>
+          <t t-else="">
+            <div class="ac-fb-grid">
+              <t t-if="player.dominant_position_id">
+                <div class="hud-stat-row"><span class="hud-stat-key">Position</span><span class="hud-stat-val"><t t-esc="player.dominant_position_id.name"/></span></div>
+              </t>
+              <t t-if="player.preferred_foot">
+                <div class="hud-stat-row"><span class="hud-stat-key">Preferred Foot</span><span class="hud-stat-val"><t t-esc="player.preferred_foot.capitalize()"/></span></div>
+              </t>
+              <t t-if="player.use_other_attributes">
+                <t t-foreach="player.other_attribute_ids.filtered('value')" t-as="oattr">
+                  <div class="hud-stat-row"><span class="hud-stat-key"><t t-esc="oattr.label"/></span><span class="hud-stat-val"><t t-esc="oattr.value or '—'"/></span></div>
+                </t>
+              </t>
+              <t t-else="">
+                <t t-if="player.secondary_position_ids">
+                  <div class="hud-stat-row"><span class="hud-stat-key">Secondary</span><span class="hud-stat-val"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span></div>
+                </t>
+                <t t-if="player.age">
+                  <div class="hud-stat-row"><span class="hud-stat-key">Age</span><span class="hud-stat-val"><t t-esc="player.age"/></span></div>
+                </t>
+                <t t-if="player.work_rate">
+                  <div class="hud-stat-row"><span class="hud-stat-key">Work Rate</span><span class="hud-stat-val"><t t-esc="player.work_rate.capitalize()"/></span></div>
+                </t>
+                <t t-if="player.height">
+                  <div class="hud-stat-row"><span class="hud-stat-key">Height</span><span class="hud-stat-val"><t t-esc="player.height"/></span></div>
+                </t>
+                <t t-if="player.weight">
+                  <div class="hud-stat-row"><span class="hud-stat-key">Weight</span><span class="hud-stat-val"><t t-esc="player.weight"/></span></div>
+                </t>
+              </t>
+              <t t-if="player.address">
+                <div class="hud-stat-row ac-fb-span-2"><span class="hud-stat-key">Location</span><span class="hud-stat-val"><t t-esc="player.address"/></span></div>
+              </t>
+              <t t-call="auction_module.football_tag_chips"/>
+            </div>
+          </t>
+        </div>
+
+        <div class="hud-actions">
+          <button class="hud-btn hud-btn-unsold" onclick="setPlayerUnsold()">Set Unsold</button>
+          <button class="hud-btn hud-btn-sell" onclick="openSellModal()">Sell to Team</button>
+        </div>
+
+        <div class="hud-next-bar">
+          <button class="hud-next-btn" onclick="changeImage()">
+            Next Player
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 18L14.5 12 6 6V18ZM16 6V18H18V6H16Z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="hud-footer">
+      <span class="hud-footer-lbl">Powered by</span>
+      <img class="hud-footer-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+    </footer>
+
+    <script>
+      function hudToken(name, fallback) {
+        var v = getComputedStyle(document.documentElement).getPropertyValue(name);
+        return (v &amp;&amp; v.trim()) ? v.trim() : fallback;
+      }
+      async function changeImage(skipOverlay) {
+        var currentPlayerId = document.body.getAttribute('data-player-id');
+        var countSecs = Math.max(1, parseInt(document.body.getAttribute('data-next-countdown') || '5'));
+        var overlay = document.getElementById('ac-next-overlay');
+        var countEl = document.getElementById('ac-next-count');
+        var mainDiv = document.getElementById('ac-next-main');
+        var lastDiv = document.getElementById('ac-next-last');
+        var html;
+        try {
+          var fetchUrl = window.location.href.split('?')[0] + '?exclude=' + currentPlayerId + '&amp;preview=1';
+          var r = await fetch(fetchUrl, {cache: 'no-store'});
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          html = await r.text();
+        } catch(e) {
+          console.error('Next player load failed:', e);
+          window.location.reload();
+          return;
+        }
+        var parser = new DOMParser();
+        var newDoc = parser.parseFromString(html, 'text/html');
+        if (!newDoc.body || !newDoc.body.getAttribute('data-player-id')) {
+          window.location.replace(window.location.href);
+          return;
+        }
+        var newPlayerId = newDoc.body.getAttribute('data-player-id');
+        if (newPlayerId === currentPlayerId) {
+          if (mainDiv) mainDiv.style.display = 'none';
+          if (lastDiv) lastDiv.style.display = 'block';
+          if (overlay) {
+            overlay.style.display = 'flex';
+            requestAnimationFrame(function() {
+              requestAnimationFrame(function() { overlay.style.opacity = '1'; });
+            });
+          }
+          return;
+        }
+        var zone    = document.querySelector('[data-player-zone]');
+        var newZone = newDoc.querySelector('[data-player-zone]');
+        if (skipOverlay || !overlay) {
+          if (newPlayerId) document.body.setAttribute('data-player-id', newPlayerId);
+          var _mf = (newDoc.body &amp;&amp; newDoc.body.getAttribute('data-is-mystery')) || '0';
+          document.body.setAttribute('data-is-mystery', _mf);
+          document.body.removeAttribute('data-mystery-revealed');
+          if (zone &amp;&amp; newZone) { zone.innerHTML = newZone.innerHTML; }
+          if (typeof window.acMysteryApplyFromBody === 'function') { window.acMysteryApplyFromBody(); }
+          if (typeof window.acCommitPlayerOnStage === 'function') {
+            await window.acCommitPlayerOnStage(newPlayerId);
+          }
+          return;
+        }
+        if (mainDiv) mainDiv.style.display = 'flex';
+        if (lastDiv) lastDiv.style.display = 'none';
+        overlay.style.display = 'flex';
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() { overlay.style.opacity = '1'; });
+        });
+        if (countEl) countEl.textContent = countSecs;
+        await new Promise(function(resolve) {
+          var remaining = countSecs;
+          var tick = setInterval(function() {
+            remaining--;
+            if (remaining &lt;= 0) { clearInterval(tick); resolve(); }
+            else if (countEl) {
+              countEl.textContent = remaining;
+              countEl.classList.remove('ac-count-pop');
+              void countEl.offsetWidth;
+              countEl.classList.add('ac-count-pop');
+            }
+          }, 1000);
+        });
+        if (newPlayerId) document.body.setAttribute('data-player-id', newPlayerId);
+        var _mf2 = (newDoc.body &amp;&amp; newDoc.body.getAttribute('data-is-mystery')) || '0';
+        document.body.setAttribute('data-is-mystery', _mf2);
+        document.body.removeAttribute('data-mystery-revealed');
+        if (zone &amp;&amp; newZone) { zone.innerHTML = newZone.innerHTML; }
+        if (typeof window.acMysteryApplyFromBody === 'function') { window.acMysteryApplyFromBody(); }
+        if (typeof window.acCommitPlayerOnStage === 'function') {
+          await window.acCommitPlayerOnStage(newPlayerId);
+        }
+        overlay.style.opacity = '0';
+        setTimeout(function() { overlay.style.display = 'none'; }, 400);
+      }
+      function closeNextOverlay() {
+        var ov = document.getElementById('ac-next-overlay');
+        if (!ov) return;
+        ov.style.opacity = '0';
+        setTimeout(function() { ov.style.display = 'none'; }, 400);
+      }
+      document.addEventListener('keydown', function(event) {
+        if (event.code === 'Space') {
+          event.preventDefault();
+          changeImage();
+        }
+      });
+      function setPlayerUnsold() {
+        document.getElementById('unsoldConfirmModal').style.display = 'flex';
+      }
+      document.addEventListener('DOMContentLoaded', function() {
+        var cancel = document.getElementById('unsoldModalCancel');
+        var confirm = document.getElementById('unsoldModalConfirm');
+        if (cancel) cancel.addEventListener('click', function() {
+          document.getElementById('unsoldConfirmModal').style.display = 'none';
+        });
+        if (confirm) confirm.addEventListener('click', function() {
+          document.getElementById('unsoldConfirmModal').style.display = 'none';
+          var playerId = parseInt(document.body.getAttribute('data-player-id'));
+          if (!playerId) {
+            showUnsoldToast('Error: Player ID not found', true);
+            return;
+          }
+          fetch('/web/dataset/call_kw', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              jsonrpc: '2.0', method: 'call',
+              params: {model: 'auction.team.player', method: 'action_unsold', args: [[playerId]], kwargs: {}}
+            })
+          }).then(function(response) { return response.json(); }).then(function(result) {
+            if (result.error) {
+              showUnsoldToast('Failed to mark player as unsold', true);
+            } else {
+              var secs = (result.result &amp;&amp; result.result.display_seconds > 0) ? result.result.display_seconds : 5;
+              showUnsoldStamp(secs, hudToken('--gold', '#F5C842'), hudToken('--ink-on-accent', '#090912'));
+            }
+          }).catch(function() {
+            showUnsoldToast('Failed to mark player as unsold', true);
+          });
+        });
+      });
+      function showUnsoldToast(message, isError) {
+        var toast = document.getElementById('unsoldToast');
+        toast.textContent = message;
+        toast.style.background = isError ? '#8B0000' : '#1b5e20';
+        toast.style.display = 'block';
+        setTimeout(function() { toast.style.display = 'none'; }, 3500);
+      }
+      function showUnsoldStamp(displaySeconds, stampColor, stampText) {
+        if (!document.getElementById('_unsoldStampCSS')) {
+          var s = document.createElement('style');
+          s.id = '_unsoldStampCSS';
+          s.textContent = '@keyframes _unsoldDrop{0%{transform:rotate(-22deg) scale(2.4);opacity:0}100%{transform:rotate(-22deg) scale(1);opacity:.92}}@keyframes _unsoldFadeIn{from{opacity:0}to{opacity:1}}';
+          document.head.appendChild(s);
+        }
+        var img = document.getElementById('loadImage');
+        var r = img.getBoundingClientRect();
+        var ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;z-index:9500;top:'+r.top+'px;left:'+r.left+'px;width:'+r.width+'px;height:'+r.height+'px;background:rgba(0,0,0,0.48);display:flex;align-items:center;justify-content:center;animation:_unsoldFadeIn .35s ease;pointer-events:none;';
+        var stamp = document.createElement('div');
+        stamp.style.cssText = 'background:'+stampColor+';color:'+stampText+';font-size:clamp(1.8rem,5vw,3.2rem);font-weight:900;letter-spacing:6px;padding:8px 36px;border:5px solid rgba(255,255,255,0.85);border-radius:6px;box-shadow:0 0 0 3px '+stampColor+',0 8px 40px rgba(0,0,0,.5);opacity:0;animation:_unsoldDrop .5s cubic-bezier(.34,1.3,.64,1) .15s forwards;';
+        stamp.textContent = 'UNSOLD';
+        var barWrap = document.createElement('div');
+        barWrap.style.cssText = 'position:absolute;bottom:12px;left:16px;right:16px;';
+        var barTrack = document.createElement('div');
+        barTrack.style.cssText = 'background:rgba(255,255,255,0.25);border-radius:4px;height:6px;overflow:hidden;';
+        var bar = document.createElement('div');
+        bar.style.cssText = 'height:100%;width:100%;background:'+stampColor+';border-radius:4px;transition:width '+displaySeconds+'s linear;';
+        barTrack.appendChild(bar);
+        barWrap.appendChild(barTrack);
+        ov.appendChild(stamp);
+        ov.appendChild(barWrap);
+        document.body.appendChild(ov);
+        requestAnimationFrame(function() { requestAnimationFrame(function() { bar.style.width = '0%'; }); });
+        setTimeout(function() { if (ov.parentNode) ov.parentNode.removeChild(ov); changeImage(true); }, displaySeconds * 1000);
+      }
+      function resolveAuctionPanelUrl(kind) {
+        var el = document.documentElement;
+        var url = (kind === 'rp' ? el.dataset.rpUrl : el.dataset.balanceUrl) || '';
+        if (url.indexOf('//') === 0) { url = ''; }
+        if (url) { return url; }
+        var parts = (location.pathname || '').split('/').filter(Boolean);
+        var db = parts[0] || '';
+        var slug = '';
+        if (parts[1] === 'auction' &amp;&amp; (parts[2] === 'display_auction' || parts[2] === 'player_selector') &amp;&amp; parts[3]) {
+          slug = parts[3];
+        }
+        if (!db || !slug) { return ''; }
+        if (kind === 'rp') {
+          return '/' + db + '/' + slug + '/auction/display_auction/remaining-players?theme=' + encodeURIComponent(el.dataset.theme || 'vanilla');
+        }
+        return '/' + db + '/' + slug + '/auction/show/team/balance';
+      }
+      function openBidSummary() {
+        var frame = document.getElementById('bidSummaryFrame');
+        var url = resolveAuctionPanelUrl('balance');
+        if (frame &amp;&amp; url) {
+          var cur = frame.getAttribute('src') || '';
+          if (!cur || cur === 'about:blank') { frame.src = url; }
+          else {
+            try {
+              if (frame.contentWindow &amp;&amp; typeof frame.contentWindow.refreshBalance === 'function') {
+                frame.contentWindow.refreshBalance();
+              }
+            } catch (e) {}
+          }
+        }
+        document.getElementById('bidSummaryDrawer').style.right = '0';
+        document.getElementById('bidSummaryOverlay').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+      }
+      function closeBidSummary() {
+        document.getElementById('bidSummaryDrawer').style.right = '-1150px';
+        document.getElementById('bidSummaryOverlay').style.display = 'none';
+        document.body.style.overflow = '';
+      }
+      function toggleBidSummary() {
+        var r = document.getElementById('bidSummaryDrawer').style.right;
+        if (r === '0px' || r === '0') { closeBidSummary(); } else { openBidSummary(); }
+      }
+      function openRemainingPlayers() {
+        document.getElementById('rpFrame').src = resolveAuctionPanelUrl('rp');
+        document.getElementById('rpDrawer').style.right = '0';
+        document.getElementById('rpOverlay').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+      }
+      function closeRemainingPlayers() {
+        document.getElementById('rpDrawer').style.right = '-900px';
+        document.getElementById('rpOverlay').style.display = 'none';
+        document.body.style.overflow = '';
+      }
+      function toggleRemainingPlayers() {
+        var r = document.getElementById('rpDrawer').style.right;
+        if (r === '0px' || r === '0') { closeRemainingPlayers(); } else { openRemainingPlayers(); }
+      }
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(function(e) { console.warn(e); });
+        } else {
+          document.exitFullscreen();
+        }
+      }
+      document.addEventListener('fullscreenchange', function() {
+        var btn = document.getElementById('fs-btn');
+        if (!btn) return;
+        if (document.fullscreenElement) {
+          sessionStorage.setItem('auction_fullscreen', '1');
+          btn.title = 'Exit Fullscreen';
+        } else {
+          sessionStorage.removeItem('auction_fullscreen');
+          btn.title = 'Enter Fullscreen';
+        }
+      });
+      if (sessionStorage.getItem('auction_fullscreen') === '1') {
+        document.documentElement.requestFullscreen().catch(function(e) { console.warn(e); });
+      }
+    </script>
+
+    <div id="bidSummaryDrawer" class="hud-drawer">
+      <div class="hud-drawer-head">
+        <span class="hud-drawer-title">Auction Bid Summary</span>
+        <button type="button" class="hud-drawer-x" onclick="closeBidSummary()">&#x2715;</button>
+      </div>
+      <iframe id="bidSummaryFrame" class="hud-drawer-frame" title="Bid Summary"></iframe>
+    </div>
+    <div id="bidSummaryOverlay" class="hud-drawer-overlay" onclick="closeBidSummary()"></div>
+    <div id="rpDrawer" class="hud-drawer hud-drawer-rp">
+      <div class="hud-drawer-head">
+        <span class="hud-drawer-title">Players Left</span>
+        <button type="button" class="hud-drawer-x" onclick="closeRemainingPlayers()">&#x2715;</button>
+      </div>
+      <iframe id="rpFrame" class="hud-drawer-frame" title="Remaining Players"></iframe>
+    </div>
+    <div id="rpOverlay" class="hud-drawer-overlay" onclick="closeRemainingPlayers()"></div>
+    <div id="unsoldConfirmModal" class="hud-modal-back">
+      <div class="hud-modal-card">
+        <div class="hud-modal-ico">⚠️</div>
+        <h5>Set Player as Unsold?</h5>
+        <p>This will set the player to Unsold. You can bring them back to Auction later.</p>
+        <div class="hud-modal-actions">
+          <button type="button" id="unsoldModalCancel" class="hud-modal-cancel">Cancel</button>
+          <button type="button" id="unsoldModalConfirm" class="hud-modal-ok">Confirm</button>
+        </div>
+      </div>
+    </div>
+    <div id="unsoldToast" style="display:none; position:fixed; bottom:28px; left:50%; transform:translateX(-50%); z-index:10001; color:#fff; padding:12px 28px; border-radius:8px; font-size:0.95rem; font-weight:600;"></div>
+    <div id="ac-next-overlay">
+      <div id="ac-next-main">
+        <p class="hud-next-kicker">Next player out of the deck is</p>
+        <div id="ac-next-count">5</div>
+        <p class="hud-next-ready">Get ready…</p>
+      </div>
+      <div id="ac-next-last">
+        <div style="font-size:3.5rem;margin-bottom:20px;">🏁</div>
+        <p class="hud-next-kicker">End of Deck</p>
+        <p style="font-size:1.6rem;font-weight:800;margin:12px 0 10px;">This is the last player<br/>in the auction!</p>
+        <p class="hud-next-ready" style="margin-bottom:28px;">Sell or set this player as unsold to wrap up.</p>
+        <button type="button" class="hud-modal-ok" onclick="closeNextOverlay()">Got it</button>
+      </div>
+    </div>
+
+    <t t-call="auction_module.player_break_pause_assets"/>
+    <t t-call="auction_module.player_mystery_controls"/>
+    <t t-call="auction_module.player_sell_modal"/>
+  </body>
+</html>
+</template>
+</odoo>

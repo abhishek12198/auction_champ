@@ -994,6 +994,7 @@ input[type="file"].tr-file-hidden { display: none; }
     .tr-theme-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
+.swatch-blueberry,
 .swatch-blackberry {
   background: linear-gradient(135deg, #050a14 0%, #1e3a8a 50%, #3b82f6 100%);
   box-shadow: 0 0 14px rgba(59,130,246,.45);

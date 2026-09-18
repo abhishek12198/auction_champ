@@ -1,0 +1,211 @@
+@font-face {
+    font-family: 'Baseball Club Solid';
+    src: url('/auction_module/static/src/assets/fonts/BaseballClubSolid.otf') format('opentype');
+    font-weight: normal; font-style: normal; font-display: swap;
+}
+@font-face {
+    font-family: 'Light Sport';
+    src: url('/auction_module/static/src/assets/fonts/Light%20Sport%20DEMO.otf') format('opentype');
+    font-weight: normal; font-style: normal; font-display: swap;
+}
+@font-face {
+    font-family: 'Varsity Team';
+    src: url('/auction_module/static/src/assets/fonts/VarsityTeam-Bold.otf') format('opentype');
+    font-weight: normal; font-style: normal; font-display: swap;
+}
+@font-face {
+    font-family: 'Atlanta College';
+    src: url('/auction_module/static/src/assets/fonts/Atlanta-College.ttf') format('truetype');
+    font-weight: normal; font-style: normal; font-display: swap;
+}
+
+/* Dark HUD defaults (Butterscotch) */
+html {
+    --gold: #F5C842;
+    --gold-dark: #C8960C;
+    --amber: #FF9F1C;
+    --gold-glow: rgba(245, 200, 66, 0.28);
+    --accent-rgb: 245, 200, 66;
+    --navy: #070B14;
+    --navy-card: #0C1120;
+    --navy-rgb: 7, 11, 20;
+    --photo-bg: #050810;
+    --border: rgba(245, 200, 66, 0.22);
+    --border-hot: rgba(245, 200, 66, 0.55);
+    --dim: rgba(255, 255, 255, 0.48);
+    --white: #ffffff;
+    --ink-on-accent: #070B14;
+    --badge-hi: #fff8dc;
+    --stat-bg: rgba(255, 255, 255, 0.03);
+    --ghost-bg: rgba(255, 255, 255, 0.06);
+    --ghost-border: rgba(255, 255, 255, 0.18);
+    --ghost-ink: rgba(255, 255, 255, 0.72);
+    --ghost-bg-hot: rgba(255, 255, 255, 0.11);
+    --ghost-border-hot: rgba(255, 255, 255, 0.38);
+    --drawer-bg: rgba(9, 9, 18, 0.99);
+    --overlay-bg: rgba(10, 8, 0, 0.90);
+    --overlay-muted: rgba(255, 240, 180, 0.75);
+    --overlay-faint: rgba(255, 240, 180, 0.4);
+    --hud-font-ui: 'Barlow Condensed', sans-serif;
+    --hud-font-label: 'Oswald', sans-serif;
+    --hud-font-display: 'Baseball Club Solid', 'Oswald', sans-serif;
+}
+
+html[data-theme="butterscotch"] { /* defaults */ }
+
+html[data-theme="cherry"] {
+    --gold: #E11D48;
+    --gold-dark: #9F1239;
+    --amber: #FB7185;
+    --gold-glow: rgba(225, 29, 72, 0.28);
+    --accent-rgb: 225, 29, 72;
+    --navy: #070104;
+    --navy-card: #12060A;
+    --navy-rgb: 7, 1, 4;
+    --photo-bg: #0a0306;
+    --border: rgba(225, 29, 72, 0.22);
+    --border-hot: rgba(225, 29, 72, 0.55);
+    --badge-hi: #ffe4e8;
+    --ink-on-accent: #1a0408;
+    --overlay-bg: rgba(12, 2, 6, 0.92);
+    --overlay-muted: rgba(255, 210, 220, 0.75);
+    --overlay-faint: rgba(255, 210, 220, 0.4);
+    --hud-font-ui: 'Barlow Condensed', sans-serif;
+    --hud-font-label: 'Oswald', sans-serif;
+    --hud-font-display: 'Baseball Club Solid', 'Oswald', sans-serif;
+}
+
+html[data-theme="vanilla"] {
+    --gold: #C4B8A0;
+    --gold-dark: #8A7D62;
+    --amber: #8AA6D4;
+    --gold-glow: rgba(196, 184, 160, 0.28);
+    --accent-rgb: 196, 184, 160;
+    --navy: #0D1524;
+    --navy-card: #142036;
+    --navy-rgb: 13, 21, 36;
+    --photo-bg: #0A101C;
+    --border: rgba(196, 184, 160, 0.24);
+    --border-hot: rgba(138, 166, 212, 0.55);
+    --badge-hi: #f4efe4;
+    --ink-on-accent: #121820;
+    --overlay-bg: rgba(8, 12, 22, 0.92);
+    --overlay-muted: rgba(220, 228, 240, 0.75);
+    --overlay-faint: rgba(220, 228, 240, 0.4);
+    --hud-font-ui: 'Rajdhani', sans-serif;
+    --hud-font-label: 'Oswald', sans-serif;
+    --hud-font-display: 'Varsity Team', 'Bebas Neue', 'Oswald', sans-serif;
+}
+
+html[data-theme="pistah"] {
+    --gold: #6BBF4E;
+    --gold-dark: #2E7D32;
+    --amber: #A8E063;
+    --gold-glow: rgba(107, 191, 78, 0.32);
+    --accent-rgb: 107, 191, 78;
+    --navy: #060E08;
+    --navy-card: #0B1A0E;
+    --navy-rgb: 6, 14, 8;
+    --photo-bg: #040A06;
+    --border: rgba(107, 191, 78, 0.28);
+    --border-hot: rgba(168, 224, 99, 0.55);
+    --badge-hi: #e8f5e9;
+    --ink-on-accent: #061208;
+    --overlay-bg: rgba(4, 12, 6, 0.92);
+    --overlay-muted: rgba(200, 240, 190, 0.75);
+    --overlay-faint: rgba(200, 240, 190, 0.4);
+    --hud-font-ui: 'Exo 2', sans-serif;
+    --hud-font-label: 'Orbitron', sans-serif;
+    --hud-font-display: 'Atlanta College', 'Orbitron', sans-serif;
+    --hud-font-name: 'Teko', 'Oswald', sans-serif;
+}
+
+html[data-theme="blueberry"],
+html[data-theme="blackberry"] {
+    --gold: #3B82F6;
+    --gold-dark: #1E3A8A;
+    --amber: #93C5FD;
+    --gold-glow: rgba(59, 130, 246, 0.36);
+    --accent-rgb: 59, 130, 246;
+    --navy: #050A14;
+    --navy-card: #0A1220;
+    --navy-rgb: 5, 10, 20;
+    --photo-bg: #040814;
+    --border: rgba(59, 130, 246, 0.30);
+    --border-hot: rgba(147, 197, 253, 0.55);
+    --badge-hi: #dbeafe;
+    --ink-on-accent: #050A14;
+    --overlay-bg: rgba(4, 8, 18, 0.92);
+    --overlay-muted: rgba(190, 220, 255, 0.75);
+    --overlay-faint: rgba(190, 220, 255, 0.4);
+    --hud-font-ui: 'Exo 2', sans-serif;
+    --hud-font-label: 'Orbitron', sans-serif;
+    --hud-font-display: 'Atlanta College', 'Orbitron', sans-serif;
+    --hud-font-name: 'Saira Condensed', 'Oswald', sans-serif;
+}
+
+/* Light HUD — same chrome, parchment / berry paper */
+html.hud-light {
+    --navy: #FDF8EF;
+    --navy-card: #FFFFFF;
+    --navy-rgb: 253, 248, 239;
+    --white: #1A1000;
+    --dim: rgba(26, 16, 0, 0.50);
+    --stat-bg: rgba(26, 16, 0, 0.04);
+    --ghost-bg: rgba(26, 16, 0, 0.06);
+    --ghost-border: rgba(26, 16, 0, 0.20);
+    --ghost-ink: rgba(26, 16, 0, 0.72);
+    --ghost-bg-hot: rgba(26, 16, 0, 0.12);
+    --ghost-border-hot: rgba(26, 16, 0, 0.36);
+    --drawer-bg: #fffdf8;
+    --overlay-bg: rgba(253, 248, 239, 0.94);
+    --photo-bg: #2A220E;
+}
+
+html[data-theme="lemon"] {
+    --gold: #C9A400;
+    --gold-dark: #8F7400;
+    --amber: #D9B820;
+    --gold-glow: rgba(140, 110, 0, 0.22);
+    --accent-rgb: 201, 164, 0;
+    --border: rgba(120, 95, 0, 0.32);
+    --border-hot: rgba(143, 116, 0, 0.55);
+    --badge-hi: #F4ECD0;
+    --ink-on-accent: #1A1608;
+    --overlay-muted: rgba(80, 60, 0, 0.75);
+    --overlay-faint: rgba(80, 60, 0, 0.45);
+    --hud-font-ui: 'Barlow', sans-serif;
+    --hud-font-label: 'Antonio', sans-serif;
+    --hud-font-display: 'Light Sport', 'Antonio', sans-serif;
+}
+
+html[data-theme="strawberry"] {
+    --gold: #C2185B;
+    --gold-dark: #880E4F;
+    --amber: #E91E63;
+    --gold-glow: rgba(194, 24, 91, 0.22);
+    --accent-rgb: 194, 24, 91;
+    --navy: #FFF0F5;
+    --navy-card: #FFFFFF;
+    --navy-rgb: 255, 240, 245;
+    --white: #1A0A12;
+    --dim: rgba(26, 10, 18, 0.48);
+    --border: rgba(194, 24, 91, 0.22);
+    --border-hot: rgba(233, 30, 99, 0.50);
+    --badge-hi: #FCE4EC;
+    --ink-on-accent: #1A0A12;
+    --stat-bg: rgba(194, 24, 91, 0.04);
+    --ghost-bg: rgba(26, 10, 18, 0.06);
+    --ghost-border: rgba(26, 10, 18, 0.18);
+    --ghost-ink: rgba(26, 10, 18, 0.70);
+    --ghost-bg-hot: rgba(194, 24, 91, 0.10);
+    --ghost-border-hot: rgba(194, 24, 91, 0.36);
+    --drawer-bg: #fff7fa;
+    --overlay-bg: rgba(255, 240, 245, 0.94);
+    --overlay-muted: rgba(90, 32, 64, 0.75);
+    --overlay-faint: rgba(90, 32, 64, 0.45);
+    --photo-bg: #3A1020;
+    --hud-font-ui: 'Barlow', sans-serif;
+    --hud-font-label: 'Antonio', sans-serif;
+    --hud-font-display: 'Light Sport', 'Antonio', sans-serif;
+}

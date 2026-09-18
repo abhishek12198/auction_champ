@@ -257,7 +257,8 @@ class ResUsers(models.Model):
             'strawberry': _('Strawberry'),
             'cherry': _('Cherry'),
             'pistah': _('Pistah'),
-            'blackberry': _('Blackberry'),
+            'blueberry': _('Blueberry'),
+            'blackberry': _('Blueberry'),
         }
         theme_names = [theme_labels.get(k, k.title()) for k in themes]
         higher = self.env['ac.saas.plan'].sudo().search_count([

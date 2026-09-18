@@ -46,6 +46,7 @@
                     <sheet>
                         <field name="active" invisible="1"/>
                         <field name="has_auction_rules" invisible="1"/>
+                        <field name="has_teams" invisible="1"/>
                         <field name="slug" invisible="1"/>
                         <field name="registration_open" invisible="1"/>
                         <field name="live_board_active" invisible="1"/>
@@ -207,9 +208,9 @@
                                               attrs="{'invisible': [('player_display_template', '!=', 'pistah')]}">
                                             <i class="fa fa-paint-brush" title="Card theme"/> Pistah
                                         </span>
-                                        <span class="o_at_tournament_theme_tag o_at_theme_blackberry"
-                                              attrs="{'invisible': [('player_display_template', '!=', 'blackberry')]}">
-                                            <i class="fa fa-paint-brush" title="Card theme"/> Blackberry
+                                        <span class="o_at_tournament_theme_tag o_at_theme_blueberry"
+                                              attrs="{'invisible': [('player_display_template', '!=', 'blueberry')]}">
+                                            <i class="fa fa-paint-brush" title="Card theme"/> Blueberry
                                         </span>
                                     </div>
                                 </div>
@@ -385,13 +386,34 @@
                                             string="Set Auction Rules"
                                             icon="fa-gavel"
                                             class="o_at_upload_btn o_at_set_rules"
-                                            attrs="{'invisible': ['|', ('active', '=', False), ('has_auction_rules', '=', True)]}"/>
+                                            attrs="{'invisible': ['|', '|', ('active', '=', False), ('has_teams', '=', False), ('has_auction_rules', '=', True)]}"/>
+                                    <button name="action_set_auction_rules"
+                                            type="object"
+                                            string="Set Auction Rules"
+                                            icon="fa-gavel"
+                                            class="o_at_upload_btn o_at_set_rules o_at_btn_deactivated"
+                                            title="Add teams before setting auction rules"
+                                            attrs="{'invisible': ['|', ('active', '=', False), ('has_teams', '=', True)]}"/>
                                     <button name="action_view_auction_rules"
                                             type="object"
                                             string="Auction Rules"
                                             icon="fa-list-alt"
                                             class="o_at_upload_btn o_at_view_rules"
-                                            attrs="{'invisible': [('active', '=', False)]}"/>
+                                            attrs="{'invisible': ['|', '|', ('active', '=', False), ('has_teams', '=', False), ('has_auction_rules', '=', False)]}"/>
+                                    <button name="action_view_auction_rules"
+                                            type="object"
+                                            string="Auction Rules"
+                                            icon="fa-list-alt"
+                                            class="o_at_upload_btn o_at_view_rules o_at_btn_deactivated"
+                                            title="Add teams before viewing auction rules"
+                                            attrs="{'invisible': ['|', ('active', '=', False), ('has_teams', '=', True)]}"/>
+                                    <button name="action_view_auction_rules"
+                                            type="object"
+                                            string="Auction Rules"
+                                            icon="fa-list-alt"
+                                            class="o_at_upload_btn o_at_view_rules o_at_btn_deactivated"
+                                            title="Set auction rules first"
+                                            attrs="{'invisible': ['|', '|', ('active', '=', False), ('has_teams', '=', False), ('has_auction_rules', '=', True)]}"/>
                                     <button name="action_upload_teams"
                                             type="object"
                                             string="Upload Teams &amp; Tiers"

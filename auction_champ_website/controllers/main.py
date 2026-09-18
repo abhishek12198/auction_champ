@@ -70,7 +70,8 @@ class AuctionChampHomepage(Website):
             'strawberry': 'Strawberry',
             'cherry': 'Cherry',
             'pistah': 'Pistah',
-            'blackberry': 'Blackberry',
+            'blueberry': 'Blueberry',
+            'blackberry': 'Blueberry',
         }
         plans = request.env['ac.saas.plan'].sudo().search(
             [('active', '=', True)],

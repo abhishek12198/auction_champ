@@ -177,7 +177,14 @@ class AcSaasPlan(models.Model):
         raw = (self.allowed_player_templates or '').strip()
         if not raw:
             return []
-        return [t.strip() for t in raw.split(',') if t.strip()]
+        keys = []
+        for raw_key in raw.split(','):
+            key = raw_key.strip()
+            if key == 'blackberry':
+                key = 'blueberry'
+            if key:
+                keys.append(key)
+        return keys
 
     def get_website_price_display(self):
         """Return package price display bits for public pricing cards.
@@ -331,7 +338,8 @@ class AcSaasPlan(models.Model):
             'strawberry': _('Strawberry'),
             'cherry': _('Cherry'),
             'pistah': _('Pistah'),
-            'blackberry': _('Blackberry'),
+            'blueberry': _('Blueberry'),
+            'blackberry': _('Blueberry'),
         }
         included = ', '.join(labels.get(k, k.title()) for k in allowed)
         return _('%(plan)s plan · included: %(themes)s') % {

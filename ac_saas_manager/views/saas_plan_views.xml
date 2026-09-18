@@ -89,7 +89,7 @@
                         </group>
                         <group string="Player Cards">
                             <field name="allowed_player_templates"/>
-                            <p class="text-muted">Comma-separated keys: vanilla, butterscotch, strawberry, cherry, pistah, lemon, blackberry</p>
+                            <p class="text-muted">Comma-separated keys: vanilla, butterscotch, strawberry, cherry, pistah, lemon, blueberry</p>
                         </group>
                     </group>
                     <field name="description" placeholder="Plan description…"/>

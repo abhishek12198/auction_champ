@@ -89,6 +89,7 @@
     color: #d4e157;
     border-color: rgba(212, 225, 87, 0.5);
 }
+.o_form_view .o_at_theme_blueberry,
 .o_form_view .o_at_theme_blackberry {
     background: linear-gradient(135deg, #050a14 0%, #1e3a8a 100%);
     color: #ffffff;
@@ -105,6 +106,9 @@
 }
 
 /* ── Upload action buttons (Players / Teams & Tiers tabs) ── */
+.o_form_view .o_at_upload_btn.o_invisible_modifier {
+    display: none !important;
+}
 .o_form_view .o_at_upload_btn {
     position: relative;
     display: inline-flex !important;
@@ -229,6 +233,25 @@
 .o_form_view .o_at_view_rules:hover {
     background:
         linear-gradient(135deg, #1e1b4b 0%, #4338ca 48%, #6366f1 100%) !important;
+}
+.o_form_view .o_at_view_rules_idle,
+.o_form_view .o_at_btn_deactivated {
+    background:
+        linear-gradient(135deg, #94a3b8 0%, #64748b 55%, #475569 100%) !important;
+    box-shadow: none !important;
+    filter: grayscale(0.15);
+    opacity: 0.62;
+    cursor: not-allowed !important;
+    pointer-events: none;
+    transform: none !important;
+}
+.o_form_view .o_at_view_rules_idle:hover,
+.o_form_view .o_at_btn_deactivated:hover {
+    background:
+        linear-gradient(135deg, #94a3b8 0%, #64748b 55%, #475569 100%) !important;
+    filter: grayscale(0.15);
+    transform: none !important;
+    box-shadow: none !important;
 }
 
 .o_form_view .o_at_player_categorization {
