@@ -19,9 +19,9 @@
                         <div class="rt-hero-kicker">Reset auction activity</div>
                         <div class="rt-hero-title">Restore Transactions</div>
                         <div class="rt-hero-sub">
-                            Restore this tournament’s auction state. Tick what you want to reverse —
-                            sold and unsold players return to <strong>In Auction</strong>.
-                            Untick anything you want to keep.
+                            Restore this tournament’s auction state. Tick what you want to reverse.
+                            Choose whether restored players go to <strong>In Auction</strong> or
+                            <strong>Draft</strong>. Untick anything you want to keep.
                         </div>
                     </div>
                     <div class="rt-hero-tourn">
@@ -60,11 +60,11 @@
                     </div>
 
                     <div class="rt-card rt-card-sold"
-                         title="Recall all sold players back to In Auction. Team assignments and sale amounts for those players are reversed.">
+                         title="Recall all sold players. Team assignments and sale amounts for those players are reversed.">
                         <div class="rt-card-icon"><i class="fa fa-gavel"/></div>
                         <div class="rt-card-copy">
                             <div class="rt-card-title">Restore Sold Players?</div>
-                            <div class="rt-card-sub">Recall sold players back to auction</div>
+                            <div class="rt-card-sub">Recall sold players and reverse their sale</div>
                         </div>
                         <span class="rt-count">
                             <field name="sold_count" readonly="1" nolabel="1"/>
@@ -74,11 +74,11 @@
                     </div>
 
                     <div class="rt-card rt-card-unsold"
-                         title="Bring all unsold players back to In Auction so they can be called again.">
+                         title="Bring all unsold players back so they can be called again.">
                         <div class="rt-card-icon"><i class="fa fa-refresh"/></div>
                         <div class="rt-card-copy">
                             <div class="rt-card-title">Restore Unsold Players</div>
-                            <div class="rt-card-sub">Bring unsold players back into auction</div>
+                            <div class="rt-card-sub">Bring unsold players back into the pool</div>
                         </div>
                         <span class="rt-count">
                             <field name="unsold_count" readonly="1" nolabel="1"/>
@@ -86,6 +86,24 @@
                         </span>
                         <field name="revoke_unsold" nolabel="1"/>
                     </div>
+                </div>
+
+                <div class="rt-dest"
+                     attrs="{'invisible': [('revoke_sold', '=', False), ('revoke_unsold', '=', False)]}">
+                    <div class="rt-dest-kicker">Step 2 — pick one</div>
+                    <div class="rt-dest-title">Where should those restored players go?</div>
+                    <div class="rt-dest-hint">
+                        Switch this if you want restored sold / unsold players in Draft instead of the live queue.
+                    </div>
+                    <div class="rt-toggle" role="radiogroup" aria-label="Where restored players go">
+                        <div class="rt-toggle-btn is-on" data-value="auction" role="button">
+                            <i class="fa fa-gavel"/> In Auction
+                        </div>
+                        <div class="rt-toggle-btn" data-value="draft" role="button">
+                            <i class="fa fa-list-alt"/> Draft
+                        </div>
+                    </div>
+                    <field name="restore_to" widget="radio" class="rt-dest-field"/>
                 </div>
 
                 <div class="rt-warn">

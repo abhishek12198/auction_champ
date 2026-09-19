@@ -408,7 +408,10 @@ class AuctionPlayer(models.Model):
             if hasattr(player_obj, '_clear_live_bid'):
                 player_obj._clear_live_bid()
             player.player_id.assigned_team_id = False
-            player.player_id.state = 'auction'
+            restore_state = context.get('restore_to_state') or 'auction'
+            if restore_state not in ('draft', 'auction'):
+                restore_state = 'auction'
+            player.player_id.state = restore_state
 
             player.unlink()
             if not context.get('mass_update', False):

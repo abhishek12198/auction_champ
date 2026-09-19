@@ -70,7 +70,17 @@ class AuctionRevokeTransactionsWizard(models.TransientModel):
     revoke_unsold = fields.Boolean(
         string='Restore Unsold Players',
         default=True,
-        help='Bring all unsold players back to In Auction so they can be called again.',
+        help='Bring all unsold players back so they can be called again.',
+    )
+    restore_to = fields.Selection(
+        [
+            ('auction', 'In Auction'),
+            ('draft', 'Draft'),
+        ],
+        string='Where should restored players go?',
+        default='auction',
+        required=True,
+        help='Pick one destination for sold and unsold players you ticked above.',
     )
     accept_warning = fields.Boolean(
         string='I understand this cannot be undone',
@@ -122,18 +132,27 @@ class AuctionRevokeTransactionsWizard(models.TransientModel):
 
         tournament = self.tournament_id
         parts = []
+        target = self.restore_to if self.restore_to in ('draft', 'auction') else 'auction'
+        dest_label = _('Draft') if target == 'draft' else _('In Auction')
+        restore_ctx = {'mass_update': True, 'restore_to_state': target}
 
         if self.revoke_sold:
             sold = self._players('sold')
             if sold:
-                sold.with_context(mass_update=True).action_recall_auction_sold()
-            parts.append(_('%s sold player(s) recalled') % len(sold))
+                sold.with_context(**restore_ctx).action_recall_auction_sold()
+            parts.append(_('%s sold player(s) recalled to %s') % (len(sold), dest_label))
 
         if self.revoke_unsold:
             unsold = self._players('unsold')
             if unsold:
-                unsold.with_context(mass_update=True).action_auction()
-            parts.append(_('%s unsold player(s) reopened') % len(unsold))
+                if target == 'draft':
+                    for player in unsold:
+                        if hasattr(player, '_clear_live_bid'):
+                            player._clear_live_bid()
+                    unsold.write({'state': 'draft', 'is_on_stage': False})
+                else:
+                    unsold.with_context(**restore_ctx).action_auction()
+            parts.append(_('%s unsold player(s) moved to %s') % (len(unsold), dest_label))
 
         if self.clear_stage:
             tournament.action_clear_stage()

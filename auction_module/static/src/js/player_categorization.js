@@ -44,6 +44,11 @@ odoo.define('auction_module.PlayerCategorization', function (require) {
             this.tournamentId = params.tournament_id || ctx.tournament_id || false;
             this.fromUserSettings = !!(ctx.from_user_settings || params.from_user_settings);
             this.settingsScreen = ctx.settings_screen || params.settings_screen || 'players';
+            if (action) {
+                action.name = action.display_name || action.name || 'Player Categorization';
+                action.display_name = action.name;
+            }
+            this._setTitle((action && (action.display_name || action.name)) || 'Player Categorization');
             this.data = null;
             this.search = '';
             this.selectedIds = {};
@@ -54,6 +59,15 @@ odoo.define('auction_module.PlayerCategorization', function (require) {
             this._pendingIconDrop = null;
             this._selectedTeamId = null;
             this._skipNextRowClick = false;
+        },
+
+        on_attach_callback: function () {
+            this._super.apply(this, arguments);
+            var title = this.getTitle() || 'Player Categorization';
+            this._setTitle(title);
+            if (this.updateControlPanel) {
+                this.updateControlPanel({title: title});
+            }
         },
 
         start: function () {

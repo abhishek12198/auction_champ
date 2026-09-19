@@ -42,6 +42,25 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
         _tournaments: [],
         _showTournamentFilter: false,
 
+        init: function (parent, action) {
+            this._super.apply(this, arguments);
+            var title = (action && (action.display_name || action.name)) || 'Player Dashboard';
+            if (action) {
+                action.name = title;
+                action.display_name = title;
+            }
+            this._setTitle(title);
+        },
+
+        on_attach_callback: function () {
+            this._super.apply(this, arguments);
+            var title = this.getTitle() || 'Player Dashboard';
+            this._setTitle(title);
+            if (this.updateControlPanel) {
+                this.updateControlPanel({title: title});
+            }
+        },
+
         start: function () {
             this.$el.addClass('o_player_dashboard');
             this.$el.html(this._buildLayout());

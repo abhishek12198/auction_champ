@@ -543,8 +543,7 @@
     align-items: center;
     gap: 10px;
 }
-.o_tournament_settings_user .tsu-team img,
-.o_tournament_settings_user .tsu-team-ph {
+.o_tournament_settings_user .tsu-team img {
     width: 40px;
     height: 40px;
     border-radius: 10px;
@@ -553,12 +552,8 @@
     border: 1px solid var(--tsu-line);
     flex-shrink: 0;
 }
-.o_tournament_settings_user .tsu-team-ph {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    color: var(--tsu-gold-soft);
+.o_tournament_settings_user .tsu-team-owner {
+    border-radius: 50%;
 }
 .o_tournament_settings_user .tsu-list {
     list-style: none;

@@ -1823,7 +1823,12 @@ class AuctionTournament(models.Model):
             'type': 'ir.actions.act_window',
             'name': _('Deleted Players — %s') % self.name,
             'res_model': 'auction.team.player.deleted',
-            'view_mode': 'tree,form',
+            'view_mode': 'kanban,tree,form',
+            'views': [
+                (self.env.ref('auction_module.view_auction_team_player_deleted_kanban').id, 'kanban'),
+                (self.env.ref('auction_module.view_auction_team_player_deleted_tree').id, 'tree'),
+                (self.env.ref('auction_module.view_auction_team_player_deleted_form').id, 'form'),
+            ],
             'domain': [('tournament_id', '=', self.id)],
             'context': {
                 'default_tournament_id': self.id,
@@ -2877,6 +2882,7 @@ class AuctionTournament(models.Model):
         'action_share_whatsapp',
         'action_open_rename_wizard',
         'action_user_settings_teams',
+        'action_user_settings_team_auction',
         'action_user_settings_add_team',
         'action_user_settings_tiers',
         'action_user_settings_advertisers',
@@ -2919,6 +2925,42 @@ class AuctionTournament(models.Model):
             'view_mode': 'kanban,tree,form',
             'domain': [('tournament_id', '=', self.id)],
             'context': {'default_tournament_id': self.id},
+        }
+
+    def action_user_settings_team_auction(self):
+        """Open the team's auction.auction form (signed players + squad actions)."""
+        self.ensure_one()
+        team_id = self.env.context.get('settings_team_id')
+        try:
+            team_id = int(team_id)
+        except (TypeError, ValueError):
+            team_id = 0
+        if not team_id:
+            raise UserError(_('Select a team.'))
+        auction = self.env['auction.auction'].sudo().with_context(
+            auction_skip_tournament_security=True,
+        ).search([
+            ('tournament_id', '=', self.id),
+            ('team_id', '=', team_id),
+        ], limit=1)
+        if not auction:
+            raise UserError(_(
+                'Set Auction Rules first to open this team squad.'
+            ))
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Signed Players — %s') % (auction.team_id.name or auction.display_name),
+            'res_model': 'auction.auction',
+            'res_id': auction.id,
+            'view_mode': 'form',
+            'views': [
+                (self.env.ref('auction_module.view_auction_auction_form').id, 'form'),
+            ],
+            'target': 'current',
+            'context': {
+                'default_tournament_id': self.id,
+                'form_view_initial_mode': 'readonly',
+            },
         }
 
     def action_user_settings_add_team(self):
@@ -2967,16 +3009,25 @@ class AuctionTournament(models.Model):
 
     @api.model
     def get_user_settings_payload(self, tournament_id=None):
-        """Payload for the dashboard Tournament Settings client page."""
+        """Payload for the dashboard Tournament Settings client page.
+
+        Always follow the navbar working tournament when the user can switch,
+        so a tournament change is reflected here instead of a stale open-id.
+        """
         rec = self.browse()
-        if tournament_id:
+        getter = getattr(self.env.user, 'get_working_tournament', None)
+        if callable(getter):
+            try:
+                rec = getter()
+            except Exception:
+                rec = self.browse()
+        if not rec:
+            rec = self.env.user.tournament_id
+        if not rec and tournament_id:
             try:
                 rec = self.browse(int(tournament_id)).exists()
             except (TypeError, ValueError):
                 rec = self.browse()
-        if not rec:
-            getter = getattr(self.env.user, 'get_working_tournament', None)
-            rec = getter() if callable(getter) else self.env.user.tournament_id
         if not rec:
             return {'ok': False, 'error': _('No tournament found for this user.')}
 
@@ -3020,13 +3071,25 @@ class AuctionTournament(models.Model):
                 })
 
         team_recs = rec._tournament_team_records()
+        Auction = self.env['auction.auction'].sudo().with_context(
+            auction_skip_tournament_security=True,
+        )
+        auctions = Auction.search([('tournament_id', '=', rec.id)])
+        auctions.mapped('player_ids')
+        auction_by_team = {
+            auction.team_id.id: auction for auction in auctions if auction.team_id
+        }
         teams = []
         for team in team_recs:
+            auction = auction_by_team.get(team.id)
             teams.append({
                 'id': team.id,
                 'name': team.name or '',
                 'manager': team.manager or '',
                 'logo_url': self._user_settings_img(team, 'logo'),
+                'owner_photo_url': self._user_settings_img(team, 'owner_photo'),
+                'auction_id': auction.id if auction else False,
+                'squad_count': len(auction.player_ids) if auction else 0,
             })
         team_count = len(team_recs)
         tiers = []

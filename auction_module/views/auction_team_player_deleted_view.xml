@@ -64,6 +64,200 @@
             </field>
         </record>
 
+        <record id="view_auction_team_player_deleted_kanban" model="ir.ui.view">
+            <field name="name">auction.team.player.deleted.kanban</field>
+            <field name="model">auction.team.player.deleted</field>
+            <field name="arch" type="xml">
+                <kanban default_order="deleted_date desc, id desc"
+                        class="o_pk2_kanban" limit="40"
+                        create="0" edit="0" delete="0">
+                    <field name="original_sl_no"/>
+                    <field name="id"/>
+                    <field name="name"/>
+                    <field name="contact"/>
+                    <field name="role"/>
+                    <field name="batting_style"/>
+                    <field name="bowling_style"/>
+                    <field name="tournament_type"/>
+                    <field name="dominant_position_id"/>
+                    <field name="preferred_foot"/>
+                    <field name="age"/>
+                    <field name="use_other_attributes"/>
+                    <field name="kanban_other_attrs_html"/>
+                    <field name="icon_player"/>
+                    <field name="amount_paid"/>
+                    <field name="tournament_id"/>
+                    <field name="tournament_color"/>
+                    <field name="state_at_delete"/>
+                    <field name="tier_id"/>
+                    <field name="tier_color"/>
+                    <field name="blood_group"/>
+                    <field name="assigned_team_id"/>
+                    <field name="is_restored"/>
+                    <field name="deleted_date"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div t-attf-class="oe_kanban_global_click pk2-card #{record.is_restored.raw_value ? 'is-restored' : ''}"
+                                 t-att-style="'--pk2-tourn: ' + (record.tournament_color.raw_value || '#4f46e5') + '; --pk2-tier: ' + (record.tier_color.raw_value || '#fdce33')">
+
+                                <div class="pk2-photo-zone">
+                                    <img class="pk2-photo-img"
+                                         t-att-src="kanban_image('auction.team.player.deleted', 'photo', record.id.raw_value)"
+                                         loading="lazy"
+                                         alt="Player"
+                                         onerror="this.style.display='none'"/>
+                                    <div class="pk2-photo-fallback">
+                                        <i class="fa fa-user" title="Player Photo Fallback"/>
+                                    </div>
+
+                                    <button class="pk2-view-photo"
+                                            t-att-data-src="kanban_image('auction.team.player.deleted', 'photo', record.id.raw_value)"
+                                            t-att-data-name="record.name.raw_value"
+                                            onclick="event.stopPropagation(); window._pk2ShowPhoto &amp;&amp; window._pk2ShowPhoto(this);"
+                                            title="View full photo">
+                                        <i class="fa fa-eye"/>
+                                    </button>
+
+                                    <t t-if="record.is_restored.raw_value">
+                                        <span class="pk2-state-badge pk2-s-sold">Restored</span>
+                                    </t>
+                                    <t t-else="">
+                                        <span t-attf-class="pk2-state-badge pk2-s-#{record.state_at_delete.raw_value}"
+                                              t-esc="record.state_at_delete.value"/>
+                                    </t>
+
+                                    <t t-if="record.icon_player.raw_value">
+                                        <span class="pk2-icon-star">⭐</span>
+                                    </t>
+
+                                    <div class="pk2-photo-overlay">
+                                        <div class="pk2-name text-uppercase" t-esc="record.name.raw_value"/>
+                                        <div class="pk2-sub">
+                                            <t t-if="record.original_sl_no.raw_value">
+                                                #<t t-esc="record.original_sl_no.raw_value"/>
+                                                <t t-if="record.tier_id.raw_value"> · <t t-esc="record.tier_id.value"/></t>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="pk2-badges">
+                                    <t t-if="record.tier_id.raw_value">
+                                        <span class="pk2-badge pk2-b-tier"
+                                              t-att-style="'background:' + (record.tier_color.raw_value || '#2252b5')"
+                                              t-esc="record.tier_id.value"/>
+                                    </t>
+                                    <t t-if="record.tournament_type.raw_value == 'football'">
+                                        <t t-if="record.dominant_position_id.raw_value">
+                                            <span class="pk2-badge pk2-b-role" t-esc="record.dominant_position_id.value"/>
+                                        </t>
+                                    </t>
+                                    <t t-else="">
+                                        <t t-if="record.role.raw_value">
+                                            <span class="pk2-badge pk2-b-role" t-esc="record.role.raw_value"/>
+                                        </t>
+                                    </t>
+                                </div>
+
+                                <div class="pk2-info">
+                                    <t t-if="record.tournament_id.raw_value">
+                                        <div class="pk2-info-row pk2-tournament">
+                                            <span class="pk2-tourn-dot"
+                                                  t-att-style="'background:' + (record.tournament_color.raw_value || '#4f46e5')"/>
+                                            <span t-esc="record.tournament_id.value"/>
+                                        </div>
+                                    </t>
+                                    <t t-if="record.assigned_team_id.raw_value">
+                                        <div class="pk2-info-row pk2-team">
+                                            <i class="fa fa-shield" title="Team"/>
+                                            <span t-esc="record.assigned_team_id.value"/>
+                                            <t t-if="record.amount_paid.raw_value">
+                                                <b style="margin-left:auto;color:#16a34a;flex-shrink:0;">₹<t t-esc="record.amount_paid.raw_value"/></b>
+                                            </t>
+                                        </div>
+                                    </t>
+                                    <t t-if="record.deleted_date.raw_value">
+                                        <div class="pk2-info-row">
+                                            <i class="fa fa-trash" title="Deleted On"/>
+                                            <span t-esc="record.deleted_date.value"/>
+                                        </div>
+                                    </t>
+                                </div>
+
+                                <t t-if="record.tournament_type.raw_value == 'football'">
+                                    <t t-if="record.dominant_position_id.raw_value or record.preferred_foot.raw_value or (!record.use_other_attributes.raw_value and record.age.raw_value) or record.blood_group.raw_value or record.kanban_other_attrs_html.raw_value">
+                                        <div class="pk2-stats">
+                                            <t t-if="record.dominant_position_id.raw_value">
+                                                <div class="pk2-stat">
+                                                    <div class="pk2-stat-label">Pos</div>
+                                                    <div class="pk2-stat-value" t-esc="record.dominant_position_id.value"/>
+                                                </div>
+                                            </t>
+                                            <t t-if="record.preferred_foot.raw_value">
+                                                <div class="pk2-stat">
+                                                    <div class="pk2-stat-label">Foot</div>
+                                                    <div class="pk2-stat-value" t-esc="record.preferred_foot.value"/>
+                                                </div>
+                                            </t>
+                                            <t t-if="!record.use_other_attributes.raw_value and record.age.raw_value">
+                                                <div class="pk2-stat">
+                                                    <div class="pk2-stat-label">Age</div>
+                                                    <div class="pk2-stat-value" t-esc="record.age.raw_value"/>
+                                                </div>
+                                            </t>
+                                            <t t-if="record.use_other_attributes.raw_value and record.kanban_other_attrs_html.raw_value">
+                                                <t t-raw="record.kanban_other_attrs_html.raw_value"/>
+                                            </t>
+                                            <t t-if="record.blood_group.raw_value">
+                                                <div class="pk2-stat">
+                                                    <div class="pk2-stat-label">Blood</div>
+                                                    <div class="pk2-stat-value" t-esc="record.blood_group.raw_value"/>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </t>
+                                </t>
+                                <t t-else="">
+                                    <t t-if="record.batting_style.raw_value or record.bowling_style.raw_value or record.blood_group.raw_value">
+                                        <div class="pk2-stats">
+                                            <t t-if="record.batting_style.raw_value">
+                                                <div class="pk2-stat">
+                                                    <div class="pk2-stat-label">Bat</div>
+                                                    <div class="pk2-stat-value" t-esc="record.batting_style.raw_value"/>
+                                                </div>
+                                            </t>
+                                            <t t-if="record.bowling_style.raw_value">
+                                                <div class="pk2-stat">
+                                                    <div class="pk2-stat-label">Bowl</div>
+                                                    <div class="pk2-stat-value" t-esc="record.bowling_style.raw_value"/>
+                                                </div>
+                                            </t>
+                                            <t t-if="record.blood_group.raw_value">
+                                                <div class="pk2-stat">
+                                                    <div class="pk2-stat-label">Blood</div>
+                                                    <div class="pk2-stat-value" t-esc="record.blood_group.raw_value"/>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </t>
+                                </t>
+
+                                <div class="pk2-actions">
+                                    <button name="action_restore_player"
+                                            type="object"
+                                            class="pk2-btn pk2-btn-recall"
+                                            title="Restore Player"
+                                            attrs="{'invisible': [('is_restored', '=', True)]}">
+                                        <i class="fa fa-undo"/> Restore
+                                    </button>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
         <record id="view_auction_team_player_deleted_form" model="ir.ui.view">
             <field name="name">auction.team.player.deleted.form</field>
             <field name="model">auction.team.player.deleted</field>
@@ -140,7 +334,7 @@
             <field name="name">Restore Selected</field>
             <field name="model_id" ref="model_auction_team_player_deleted"/>
             <field name="binding_model_id" ref="model_auction_team_player_deleted"/>
-            <field name="binding_view_types">list</field>
+            <field name="binding_view_types">list,kanban</field>
             <field name="state">code</field>
             <field name="code">
 if not records:
@@ -152,7 +346,7 @@ action = records.action_restore_player()
         <record id="action_auction_team_player_deleted" model="ir.actions.act_window">
             <field name="name">Deleted Players</field>
             <field name="res_model">auction.team.player.deleted</field>
-            <field name="view_mode">tree,form</field>
+            <field name="view_mode">kanban,tree,form</field>
             <field name="search_view_id" ref="view_auction_team_player_deleted_search"/>
             <field name="context">{'search_default_to_restore': 1}</field>
             <field name="help" type="html">
@@ -166,6 +360,25 @@ action = records.action_restore_player()
                     next serial number for that tournament.
                 </p>
             </field>
+        </record>
+
+        <record id="action_auction_team_player_deleted_kanban" model="ir.actions.act_window.view">
+            <field name="sequence" eval="1"/>
+            <field name="view_mode">kanban</field>
+            <field name="view_id" ref="view_auction_team_player_deleted_kanban"/>
+            <field name="act_window_id" ref="action_auction_team_player_deleted"/>
+        </record>
+        <record id="action_auction_team_player_deleted_tree" model="ir.actions.act_window.view">
+            <field name="sequence" eval="2"/>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="view_auction_team_player_deleted_tree"/>
+            <field name="act_window_id" ref="action_auction_team_player_deleted"/>
+        </record>
+        <record id="action_auction_team_player_deleted_form" model="ir.actions.act_window.view">
+            <field name="sequence" eval="3"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_auction_team_player_deleted_form"/>
+            <field name="act_window_id" ref="action_auction_team_player_deleted"/>
         </record>
 
     </data>

@@ -1984,7 +1984,10 @@ class AuctionTeamPlayer(models.Model):
         tournaments = (recalled | self).mapped('tournament_id')
         self._reopen_live_after_recall(tournaments)
         if context.get('mass_update', False):
-            message =  'Selected players brought back to auction successfully!. The player will be available in the auction'
+            if context.get('restore_to_state') == 'draft':
+                message = 'Selected players restored to Draft successfully.'
+            else:
+                message = 'Selected players brought back to auction successfully!. The player will be available in the auction'
             self.env.user.notify_success(message)
 
     def action_auction(self):

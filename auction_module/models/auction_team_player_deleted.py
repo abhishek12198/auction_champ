@@ -213,6 +213,81 @@ class AuctionTeamPlayerDeleted(models.Model):
              'tournament (draft / in auction / sold / unsold), otherwise next.',
     )
 
+    # Kanban display — same card fields as auction.team.player master.
+    tournament_type = fields.Selection(
+        related='tournament_id.tournament_type',
+        string='Tournament Type',
+    )
+    tournament_color = fields.Char(
+        related='tournament_id.kanban_color',
+        string='Tournament Color',
+    )
+    tier_color = fields.Selection(
+        related='tier_id.color',
+        string='Tier Color',
+    )
+    batting_style = fields.Char(
+        string='Batting Style', compute='_compute_kanban_snapshot',
+    )
+    bowling_style = fields.Char(
+        string='Bowling Style', compute='_compute_kanban_snapshot',
+    )
+    dominant_position_id = fields.Many2one(
+        'auction.player.position', string='Playing Position',
+        compute='_compute_kanban_snapshot',
+    )
+    preferred_foot = fields.Selection(
+        [('left', 'Left'), ('right', 'Right'), ('both', 'Both')],
+        string='Preferred Foot', compute='_compute_kanban_snapshot',
+    )
+    age = fields.Integer(string='Age', compute='_compute_kanban_snapshot')
+    blood_group = fields.Char(
+        string='Blood Group', compute='_compute_kanban_snapshot',
+    )
+    use_other_attributes = fields.Boolean(
+        string='Use Other Attributes', compute='_compute_kanban_snapshot',
+    )
+    kanban_other_attrs_html = fields.Html(
+        string='Other Attributes (Kanban)',
+        compute='_compute_kanban_snapshot',
+        sanitize=False,
+    )
+
+    @api.depends('snapshot_json', 'tournament_id', 'tournament_id.tournament_type')
+    def _compute_kanban_snapshot(self):
+        """Decode stored player snapshot so the recycle-bin kanban matches live cards."""
+        for rec in self:
+            snapshot = rec._load_snapshot()
+            rec.batting_style = snapshot.get('batting_style') or False
+            rec.bowling_style = snapshot.get('bowling_style') or False
+            rec.age = snapshot.get('age') or 0
+            rec.blood_group = snapshot.get('blood_group') or False
+            foot = snapshot.get('preferred_foot')
+            rec.preferred_foot = foot if foot in ('left', 'right', 'both') else False
+            rec.dominant_position_id = rec._existing_id(
+                'auction.player.position', snapshot.get('dominant_position_id'),
+            )
+            attrs = snapshot.get('other_attribute_ids') or []
+            parts = []
+            use_other = False
+            for attr in attrs:
+                label = (attr.get('label') or '').strip()
+                value = (attr.get('value') or '').strip()
+                if not label or not value:
+                    continue
+                use_other = True
+                parts.append(
+                    '<div class="pk2-stat">'
+                    '<div class="pk2-stat-label">%s</div>'
+                    '<div class="pk2-stat-value">%s</div>'
+                    '</div>' % (html_escape(label), html_escape(value))
+                )
+            rec.use_other_attributes = use_other
+            if rec.tournament_id.tournament_type == 'football' and parts:
+                rec.kanban_other_attrs_html = ''.join(parts)
+            else:
+                rec.kanban_other_attrs_html = False
+
     @api.model
     def _build_snapshot(self, player):
         """JSON-safe copy of stored player fields (binaries stored separately)."""

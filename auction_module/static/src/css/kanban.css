@@ -384,6 +384,9 @@
   box-shadow: 0 10px 32px rgba(0,0,0,0.16), 0 0 0 1.5px rgba(34,82,181,.22);
   transform: translateY(-3px);
 }
+.pk2-card.is-restored {
+  opacity: 0.72;
+}
 
 /* ── Photo zone (hero, full-width) ── */
 .pk2-photo-zone {

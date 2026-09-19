@@ -47,6 +47,7 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
             'change .tsu-date-wrap input[type="date"]': '_onDateFill',
             'change .tsu-file': '_onFile',
             'click .tsu-card.is-edit': '_onEditCard',
+            'click .tsu-team-card': '_onTeamToggle',
         },
 
         init: function (parent, action) {
@@ -59,14 +60,106 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
             this.data = null;
             this.dirty = {};
             this.moreOpen = false;
+            this._ensureActionName(action, 'Tournament Settings');
+            this._setTitle((action && (action.display_name || action.name)) || 'Tournament Settings');
         },
 
         start: function () {
             this.$el.addClass('o_tournament_settings_user');
+            core.bus.on('auction_working_tournament_changed', this, this._onWorkingTournamentChanged);
             var self = this;
             return this._super.apply(this, arguments).then(function () {
                 return self._load();
             });
+        },
+
+        destroy: function () {
+            core.bus.off('auction_working_tournament_changed', this, this._onWorkingTournamentChanged);
+            this._super.apply(this, arguments);
+        },
+
+        on_attach_callback: function () {
+            this._super.apply(this, arguments);
+            this._publishTitle();
+            this._syncWorkingTournament();
+        },
+
+        _onWorkingTournamentChanged: function (tournamentId) {
+            if (this.isDestroyed && this.isDestroyed()) {
+                return;
+            }
+            var nextId = tournamentId || null;
+            if (nextId && this.data && this.data.id === nextId) {
+                return;
+            }
+            this.tournamentId = nextId;
+            this.dirty = {};
+            this._load();
+        },
+
+        _syncWorkingTournament: function () {
+            var self = this;
+            this._rpc({
+                model: 'res.users',
+                method: 'get_session_working_tournament_id',
+                args: [],
+            }).then(function (workingId) {
+                if (self.isDestroyed && self.isDestroyed()) {
+                    return;
+                }
+                if (workingId && self.data && self.data.id && workingId !== self.data.id) {
+                    self.tournamentId = workingId;
+                    self.dirty = {};
+                    return self._load();
+                }
+            });
+        },
+
+        _publishTitle: function () {
+            var title = this.getTitle() || 'Tournament Settings';
+            this._setTitle(title);
+            if (this.updateControlPanel) {
+                this.updateControlPanel({title: title});
+            }
+        },
+
+        _ensureActionName: function (action, fallback) {
+            if (!action || typeof action !== 'object') {
+                return action;
+            }
+            var title = action.display_name || action.name;
+            if (!title || title === 'undefined' || title === 'Undefined') {
+                title = fallback || this._fallbackActionName(action);
+            }
+            action.name = title;
+            action.display_name = title;
+            return action;
+        },
+
+        _fallbackActionName: function (action) {
+            var model = action && action.res_model;
+            if (model === 'auction.auction' && action.res_id) {
+                return 'Signed Players';
+            }
+            if (model === 'auction.auction') {
+                return 'Auction Rules';
+            }
+            if (model === 'auction.team.player.deleted') {
+                return 'Deleted Players';
+            }
+            if (model === 'auction.team.player') {
+                return 'Players';
+            }
+            if (model === 'auction.team') {
+                return 'Auction Teams';
+            }
+            if (model === 'auction.player.tier') {
+                return 'Tiers';
+            }
+            if (action && action.type === 'ir.actions.client') {
+                return 'Tournament Settings';
+            }
+            return 'Tournament Settings';
         },
 
         _notify: function (type, message) {
@@ -80,14 +173,16 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
             return this._rpc({
                 model: 'auction.tournament',
                 method: 'get_user_settings_payload',
-                args: [this.tournamentId],
+                args: [false],
             }).then(function (data) {
                 self.data = data || {};
                 if (self.data.id) {
                     self.tournamentId = self.data.id;
+                    self.screen = self._readRememberedScreen() || self.screen || 'today';
                 }
                 self.dirty = {};
                 self._render();
+                self._publishTitle();
             }, function () {
                 self.data = {ok: false, error: 'Could not load tournament settings.'};
                 self._render();
@@ -251,6 +346,17 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
             return extra;
         },
 
+        _bidSummaryOpenOpts: function (d, extra) {
+            extra = extra || {};
+            var stopped = !d.live_board_active;
+            extra.action = extra.action || 'action_open_bid_summary';
+            extra.icon = extra.icon || 'fa-bar-chart';
+            extra.locked = stopped;
+            extra.disabled = stopped;
+            extra.title = stopped ? 'Turn on Live board first' : (extra.title || '');
+            return extra;
+        },
+
         _card: function (opts) {
             var cls = 'tsu-card' +
                 (opts.gold ? ' is-gold' : '') +
@@ -284,7 +390,7 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                         : this._btn('Copy Registration Link', {screen: 'register', icon: 'fa-link'})),
                     this._btn('Remove Duplicates', {action: 'action_remove_duplicates', icon: 'fa-clone', cls: 'tsu-btn-danger'}),
                     this._btn('Restore Transactions', {action: 'action_open_revoke_transactions', icon: 'fa-undo', cls: 'tsu-btn-gold'}),
-                    this._btn('Bid Summary', {action: 'action_open_bid_summary', icon: 'fa-bar-chart'}),
+                    this._btn('Bid Summary', this._bidSummaryOpenOpts(d)),
                     this._btn('Live Board', this._liveBoardOpenOpts(d)),
                 ].join('')),
                 '<div class="tsu-grid tsu-grid-3">',
@@ -402,14 +508,25 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
         _teamsHtml: function (d) {
             var self = this;
             var teamCards = (d.teams || []).map(function (team) {
-                var mark = (team.name || '?').slice(0, 1).toUpperCase();
-                var logo = team.logo_url
-                    ? '<img src="' + esc(team.logo_url) + '" alt=""/>'
-                    : '<div class="tsu-team-ph">' + esc(mark) + '</div>';
-                return '<div class="tsu-card is-click" data-action="action_user_settings_teams">' +
-                    '<div class="tsu-team">' + logo +
+                var marks = '';
+                if (team.logo_url) {
+                    marks += '<img class="tsu-team-logo" src="' + esc(team.logo_url) + '" alt=""/>';
+                }
+                if (team.owner_photo_url) {
+                    marks += '<img class="tsu-team-owner" src="' + esc(team.owner_photo_url) + '" alt=""/>';
+                }
+                var hint = team.manager || '';
+                if (team.squad_count) {
+                    hint = (hint ? hint + ' · ' : '') + team.squad_count +
+                        (team.squad_count === 1 ? ' player' : ' players');
+                } else if (!team.auction_id) {
+                    hint = (hint ? hint + ' · ' : '') + 'Set Auction Rules first';
+                }
+                return '<div class="tsu-card tsu-team-card is-click" data-team-id="' + team.id + '">' +
+                    '<div class="tsu-team">' + marks +
                     '<div><div class="tsu-v">' + esc(team.name) + '</div>' +
-                    '<div class="tsu-hint">' + esc(team.manager || 'No manager') + ' · logo</div></div></div></div>';
+                    (hint ? '<div class="tsu-hint">' + esc(hint) + '</div>' : '') +
+                    '</div></div></div>';
             }).join('');
             if (!teamCards) {
                 teamCards = this._card({hint: 'No teams yet. Upload or add a team.'});
@@ -670,14 +787,14 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                         title: 'Projector is for larger screens',
                     }),
                     this._btn('Live Board', this._liveBoardOpenOpts(d)),
-                    this._btn('Bid Summary', {action: 'action_open_bid_summary', icon: 'fa-bar-chart'}),
+                    this._btn('Bid Summary', this._bidSummaryOpenOpts(d)),
                     this._btn('YouTube overlay', {action: 'action_open_youtube_overlay', icon: 'fa-youtube-play'}),
                     this._btn('YouTube watch', {action: 'action_open_youtube_watch', icon: 'fa-play-circle'}),
                 ].join('')),
                 '<div class="tsu-grid tsu-grid-2">',
                     this._linkCard('Projector', u.projector, 'action_open_projector_link', '', '', 'tsu-mobile-disable'),
                     this._linkCard('Public live board', u.live_board, 'action_open_live_board', '', '', '', this._liveBoardOpenOpts(d)),
-                    this._linkCard('Bid Summary', u.bid_summary, 'action_open_bid_summary'),
+                    this._linkCard('Bid Summary', u.bid_summary, 'action_open_bid_summary', '', '', '', this._bidSummaryOpenOpts(d)),
                     this._linkCard('YouTube overlay', u.youtube_overlay, 'action_open_youtube_overlay'),
                 '</div>',
                 '<div class="tsu-card tsu-field is-edit"><label>YouTube stream URL</label>' +
@@ -910,6 +1027,17 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
             }
         },
 
+        _onTeamToggle: function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            var raw = ev.currentTarget.getAttribute('data-team-id');
+            var teamId = raw ? parseInt(raw, 10) : 0;
+            if (!teamId) {
+                return;
+            }
+            this._call('action_user_settings_team_auction', {settings_team_id: teamId});
+        },
+
         _onAction: function (ev) {
             var name = ev.currentTarget.getAttribute('data-action');
             if (!name) return;
@@ -926,6 +1054,7 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
             if (!action || typeof action !== 'object') {
                 return action;
             }
+            this._ensureActionName(action);
             if (action.type !== 'ir.actions.act_window') {
                 if (action.type === 'ir.actions.client' && !Array.isArray(action.views)) {
                     action.views = [];
@@ -938,9 +1067,11 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                 }
                 return action;
             }
-            var fallback = action.res_model === 'auction.team.player'
-                ? 'kanban,list,form'
-                : 'list,form';
+            var isPlayerList = (
+                action.res_model === 'auction.team.player'
+                || action.res_model === 'auction.team.player.deleted'
+            ) && !action.res_id;
+            var fallback = isPlayerList ? 'kanban,list,form' : 'list,form';
             if (!Array.isArray(action.views) || !action.views.length) {
                 action.views = String(action.view_mode || fallback).split(',').map(function (mode) {
                     return [false, mode.trim()];
@@ -954,7 +1085,7 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                 action.view_mode = String(action.view_mode).replace(/\btree\b/g, 'list');
             }
             // Player lists: same as dashboard / Draft menu — kanban, list, then form.
-            if (action.res_model === 'auction.team.player' && !action.res_id) {
+            if (isPlayerList) {
                 var kanban = null;
                 var rest = [];
                 action.views.forEach(function (view) {
@@ -975,14 +1106,18 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
             return action;
         },
 
-        _call: function (name) {
+        _call: function (name, extraContext) {
             var self = this;
             if (!this.data || !this.data.id) return;
-            return this._rpc({
+            var rpc = {
                 model: 'auction.tournament',
                 method: 'call_user_settings_action',
                 args: [[this.data.id], name],
-            }).then(function (action) {
+            };
+            if (extraContext) {
+                rpc.context = extraContext;
+            }
+            return this._rpc(rpc).then(function (action) {
                 if (action && action.type) {
                     action.context = Object.assign({}, action.context || {}, {
                         from_user_settings: true,

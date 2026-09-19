@@ -3,6 +3,7 @@
 import { useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
 import { session } from "@web/session";
+import core from "web.core";
 
 const { Component, hooks } = owl;
 const { useState, onMounted, onWillUnmount, onPatched } = hooks;
@@ -159,6 +160,7 @@ class TournamentSystrayItem extends Component {
             ]);
             this.applyPayload(data || {});
             this.state.expanded = false;
+            core.bus.trigger("auction_working_tournament_changed", tournamentId);
             await this._refreshAfterSwitch();
         } catch (_e) {
             this.state.expanded = false;
@@ -173,13 +175,29 @@ class TournamentSystrayItem extends Component {
 
     async _refreshAfterSwitch() {
         const hash = (window.location.hash || "").replace(/^#/, "");
-        let actionId = 0;
+        let actionKey = "";
         hash.split("&").forEach((part) => {
             const bits = part.split("=");
             if (bits[0] === "action") {
-                actionId = parseInt(bits[1], 10) || 0;
+                actionKey = decodeURIComponent(bits[1] || "");
             }
         });
+        const isSettings = actionKey === "auction_module.tournament_settings_user"
+            || actionKey === "tournament_settings_user";
+        if (isSettings && this.action) {
+            try {
+                await this.action.doAction({
+                    type: "ir.actions.client",
+                    tag: "auction_module.tournament_settings_user",
+                    name: "Tournament Settings",
+                    target: "current",
+                }, { clearBreadcrumbs: true });
+                return;
+            } catch (_e) {
+                // Fall through to a full reload if settings cannot remount.
+            }
+        }
+        const actionId = parseInt(actionKey, 10) || 0;
         if (actionId && this.action) {
             try {
                 await this.action.doAction(actionId, {
