@@ -18,8 +18,7 @@
                 <script type="text/javascript">
                     document.title = <t t-out="json.dumps(ac_app_title)"/>;
                 </script>
-                <link rel="icon" href="/auction_module/static/description/favicon.png" type="image/png"/>
-                <link rel="shortcut icon" href="/auction_module/static/description/favicon.png" type="image/png"/>
+                <t t-call="auction_module.page_head_favicon"/>
                 <!-- Viewport meta: prevents mobile browsers zooming out to desktop width -->
                 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover"/>
                 <!-- Google Fonts CDN — served from Google's global CDN, cached across sites in Chrome/Firefox -->
@@ -279,13 +278,8 @@
         <xpath expr="//title" position="replace">
             <title t-esc="title or request.env['ir.config_parameter'].sudo().get_param('auction.backend.title', 'AuctionChamp')"/>
         </xpath>
-        <xpath expr="//link[@rel='shortcut icon']" position="replace">
-            <link rel="icon"
-                  href="/auction_module/static/description/favicon.png"
-                  type="image/png"/>
-            <link rel="shortcut icon"
-                  href="/auction_module/static/description/favicon.png"
-                  type="image/png"/>
+        <xpath expr="//title" position="after">
+            <t t-call="auction_module.page_head_favicon"/>
         </xpath>
     </template>
 

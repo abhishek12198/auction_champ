@@ -1,13 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!--
-      Gavel-only favicon (matches browser tabs). Uses company favicon from
-      Settings when custom; else static favicon.png — not the wordmark icon.png.
+      Match backend tabs. After login, Odoo start.js sets every icon link to
+      /web/image/res.company/{id}/favicon — use that same URL here.
     -->
     <template id="page_head_favicon" name="Page Head Favicon">
-        <t t-set="fav_url" t-value="request.env['auction.tournament'].get_brand_favicon_absolute_url(favicon_db_name or db_name)"/>
-        <link rel="icon" t-att-href="fav_url" type="image/png" sizes="128x128"/>
-        <link rel="shortcut icon" t-att-href="fav_url" type="image/png"/>
+        <t t-set="fav_url" t-value="request.env['auction.tournament'].get_brand_favicon_url(favicon_db_name or db_name)"/>
+        <link rel="icon" id="ac-tab-favicon" t-att-href="fav_url" type="image/x-icon"/>
+        <link rel="shortcut icon" t-att-href="fav_url" type="image/x-icon"/>
         <link rel="apple-touch-icon" t-att-href="fav_url"/>
+        <script type="text/javascript">
+            (function () {
+                var el = document.getElementById("ac-tab-favicon");
+                var href = el ? el.getAttribute("href") : "";
+                if (!href) { return; }
+                var nodes = document.querySelectorAll("link[rel*='icon']");
+                var i;
+                for (i = 0; i &lt; nodes.length; i++) {
+                    nodes[i].setAttribute("href", href);
+                }
+            })();
+        </script>
     </template>
 </odoo>

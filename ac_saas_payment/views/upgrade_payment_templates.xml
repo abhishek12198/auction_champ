@@ -7,6 +7,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title><t t-if="is_renewal">Renew plan</t><t t-else="">Upgrade plan</t> — AuctionChamp</title>
+  <t t-call="auction_module.page_head_favicon"/>
   <link rel="stylesheet" href="/ac_saas_payment/static/src/css/upgrade_pay.css"/>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
@@ -218,6 +219,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title><t t-if="is_renewal">Plan renewed</t><t t-else="">Upgrade complete</t> — AuctionChamp</title>
+  <t t-call="auction_module.page_head_favicon"/>
   <link rel="stylesheet" href="/ac_saas_payment/static/src/css/upgrade_pay.css"/>
 </head>
 <body class="ac-upg-body">
@@ -270,6 +272,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Upgrade payment — AuctionChamp</title>
+  <t t-call="auction_module.page_head_favicon"/>
   <link rel="stylesheet" href="/ac_saas_payment/static/src/css/upgrade_pay.css"/>
 </head>
 <body class="ac-upg-body">

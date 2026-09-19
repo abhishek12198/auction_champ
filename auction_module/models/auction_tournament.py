@@ -2813,13 +2813,22 @@ class AuctionTournament(models.Model):
 
     @api.model
     def get_brand_favicon_url(self, db_name=None):
-        """QWeb favicon — gavel mark, same as backend browser tab."""
+        """Same tab icon the backend WebClient sets after login.
+
+        Odoo ``web/static/src/start.js`` overwrites every ``link[rel*=icon]``
+        to ``/web/image/res.company/{id}/favicon``. Frontend pages must use
+        that same URL or the tab will not match.
+        """
         from odoo.addons.auction_module.services import social_preview as seo
         try:
-            return seo.brand_favicon_url(self.env, db_name=db_name)
+            company = self.env.company if self.env.company else self.env['res.company']
+            if not company or not company.id:
+                company = self.env['res.company'].sudo().search([], limit=1)
+            if company and company.id:
+                return '/web/image/res.company/%s/favicon' % company.id
         except Exception:
             _logger.exception('get_brand_favicon_url failed')
-            return seo.DEFAULT_FAVICON
+        return seo.DEFAULT_FAVICON
 
     @api.model
     def get_brand_favicon_absolute_url(self, db_name=None):

@@ -8,7 +8,7 @@
 ##############################################################################
 {
     'name': 'AuctionChamp Payment Gateway',
-    'version': '1.0.12',
+    'version': '1.0.13',
     'summary': 'Razorpay integration for player registration payments',
     'sequence': 16,
     'description': """

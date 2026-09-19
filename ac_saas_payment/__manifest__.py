@@ -8,7 +8,7 @@
 ##############################################################################
 {
     'name': 'AuctionChamp SaaS Payment',
-    'version': '1.1.8',
+    'version': '1.1.9',
     'summary': 'Razorpay for SaaS upgrades and website plan signup',
     'sequence': 17,
     'description': """

@@ -12,8 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="theme-color" content="#0d1b2a"/>
   <title>Sign in — AuctionChamp</title>
-  <link rel="icon" t-att-href="favicon_url or '/auction_module/static/description/favicon.png'" type="image/png"/>
-  <link rel="shortcut icon" t-att-href="favicon_url or '/auction_module/static/description/favicon.png'" type="image/png"/>
+  <t t-call="auction_module.page_head_favicon"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>

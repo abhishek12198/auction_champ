@@ -36,6 +36,7 @@
                 <meta charset="UTF-8"/>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
                 <title>Auction Player Template</title>
+                <t t-call="auction_module.page_head_favicon"/>
                 <style>
                     body {
                         font-family: Arial, sans-serif;

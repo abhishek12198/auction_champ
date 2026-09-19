@@ -8,6 +8,7 @@
   <meta charset="UTF-8"/>
   <meta http-equiv="refresh" content="0;url=/"/>
   <title>Redirecting…</title>
+  <t t-call="auction_module.page_head_favicon"/>
 </head>
 <body>
   <p>Redirecting to registration…</p>
