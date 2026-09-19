@@ -1050,8 +1050,9 @@ class AuctionTournament(models.Model):
 
     def _sync_date_lines_from_dates_char(self):
         """Rebuild date lines from the tournament_dates Char field."""
-        DateLine = self.env['auction.tournament.date'].with_context(
-            skip_tournament_date_sync=True
+        DateLine = self.env['auction.tournament.date'].sudo().with_context(
+            skip_tournament_date_sync=True,
+            auction_skip_tournament_security=True,
         )
         for rec in self:
             wanted = set(rec._parse_tournament_dates_char())
@@ -1640,6 +1641,7 @@ class AuctionTournament(models.Model):
             _ALLOWED = {
                 # tournament venue (city / location + auction hall)
                 'venue', 'auction_date', 'auction_venue',
+                'tournament_dates', 'tournament_date',
                 # team balance & payment config
                 'team_max_points', 'payment_qr_image', 'payment_instruction',
                 'payment_proof_required',
@@ -1659,9 +1661,15 @@ class AuctionTournament(models.Model):
                 # live-board controls
                 'live_board_active', 'break_time_active', 'live_board_code_protected',
                 'live_bid_sound',
+                # dashboard / public tournament mark
+                'logo',
                 # registration toggle
                 'registration_open',
                 'player_contact_unique',
+                # dashboard settings timings / jersey / unit
+                'sold_display_seconds', 'next_player_countdown',
+                'enable_jersey_section', 'point_unit_id',
+                'whatsapp_group_link',
                 # dice / player-selector
                 'dice_state', 'dice_result',
             }
@@ -1832,10 +1840,29 @@ class AuctionTournament(models.Model):
             raise UserError(_('There are no deleted players waiting to restore.'))
         return pending.with_context(restore_from_tournament=True).action_restore_player()
 
+    def _tournament_team_count(self):
+        """Team count that is not emptied by navbar / record-rule scope."""
+        self.ensure_one()
+        ctx = {'auction_skip_tournament_security': True}
+        if not self.active:
+            ctx['active_test'] = False
+        return self.env['auction.team'].sudo().with_context(**ctx).search_count([
+            ('tournament_id', '=', self.id),
+        ])
+
+    def _tournament_team_records(self):
+        self.ensure_one()
+        ctx = {'auction_skip_tournament_security': True}
+        if not self.active:
+            ctx['active_test'] = False
+        return self.env['auction.team'].sudo().with_context(**ctx).search([
+            ('tournament_id', '=', self.id),
+        ])
+
     def action_set_auction_rules(self):
         """Open the Auction Rules wizard scoped to this tournament."""
         self.ensure_one()
-        if not self.team_ids:
+        if not self.team_ids and not self._tournament_team_count():
             raise UserError(_(
                 'Add at least one team to this tournament before setting auction rules.'
             ))
@@ -1849,14 +1876,20 @@ class AuctionTournament(models.Model):
             'name': _('Set Auction Rules — %s') % self.name,
             'res_model': 'auction.start.auction',
             'view_mode': 'form',
+            'views': [[False, 'form']],
             'target': 'new',
-            'context': {'default_tournament_id': self.id},
+            'context': {
+                'default_tournament_id': self.id,
+                'active_model': 'auction.tournament',
+                'active_id': self.id,
+                'active_ids': [self.id],
+            },
         }
 
     def action_view_auction_rules(self):
         """Open the auction (team rule) records belonging to this tournament."""
         self.ensure_one()
-        if not self.team_ids:
+        if not self.team_ids and not self._tournament_team_count():
             raise UserError(_(
                 'Add at least one team to this tournament before viewing auction rules.'
             ))
@@ -2256,6 +2289,18 @@ class AuctionTournament(models.Model):
             'type': 'ir.actions.act_window',
             'name': 'Upload Teams & Tiers',
             'res_model': 'auction.team.upload.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_tournament_id': self.id},
+        }
+
+    def action_print_player_cards(self):
+        """Open the player-card print wizard for this tournament."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Print Player Cards'),
+            'res_model': 'auction.player.card.wizard',
             'view_mode': 'form',
             'target': 'new',
             'context': {'default_tournament_id': self.id},
@@ -2785,3 +2830,350 @@ class AuctionTournament(models.Model):
         except Exception:
             _logger.exception('get_brand_favicon_absolute_url failed')
             return seo.DEFAULT_FAVICON
+
+    # ── Dashboard Tournament Settings (user page, not admin form) ─────────
+
+    _USER_SETTINGS_ACTIONS = {
+        'action_toggle_registration',
+        'action_toggle_live_board',
+        'action_toggle_live_board_code_protected',
+        'action_register_player',
+        'action_upload_players',
+        'action_export_sold_unsold',
+        'action_print_player_cards',
+        'action_open_player_categorization',
+        'action_remove_duplicates',
+        'action_view_registered_players',
+        'action_view_auction_players',
+        'action_view_sold_players',
+        'action_view_icon_players',
+        'action_view_unsold_players',
+        'action_view_jersey_players',
+        'action_view_deleted_players',
+        'action_set_auction_rules',
+        'action_view_auction_rules',
+        'action_upload_teams',
+        'action_open_expose_contact_privacy_wizard',
+        'action_remask_player_contact',
+        'action_open_registration_link',
+        'action_open_admin_registration_link',
+        'action_open_payment_tracker',
+        'action_open_projector_link',
+        'action_open_youtube_overlay',
+        'action_open_youtube_watch',
+        'action_open_live_board',
+        'action_open_bid_summary',
+        'action_open_revoke_transactions',
+        'action_open_pool_generator',
+        'action_share_whatsapp',
+        'action_open_rename_wizard',
+        'action_user_settings_teams',
+        'action_user_settings_add_team',
+        'action_user_settings_tiers',
+        'action_user_settings_advertisers',
+        'action_user_settings_attributes',
+    }
+
+    _USER_SETTINGS_WRITE = {
+        'logo',
+        'venue', 'auction_date', 'auction_venue',
+        'tournament_dates', 'tournament_date',
+        'payment_qr_image', 'payment_instruction', 'payment_proof_required',
+        'poster_image', 'social_share_image', 'youtube_url',
+        'registration_open', 'live_board_active', 'live_board_code_protected',
+        'live_bid_sound',
+        'sold_display_seconds', 'next_player_countdown',
+        'enable_jersey_section', 'point_unit_id',
+        'whatsapp_group_link',
+    }
+
+    def _user_settings_img(self, rec, field):
+        if not rec or not rec.id:
+            return False
+        Model = rec.env[rec._name].sudo().with_context(
+            auction_skip_tournament_security=True,
+            active_test=False,
+        )
+        if not Model.search_count([('id', '=', rec.id), (field, '!=', False)]):
+            return False
+        unique = ''
+        if rec.write_date:
+            unique = '?unique=%s' % int(rec.write_date.timestamp())
+        return '/auction/public/image/%s/%s/%s%s' % (rec._name, rec.id, field, unique)
+
+    def action_user_settings_teams(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Auction Teams — %s') % (self.name or ''),
+            'res_model': 'auction.team',
+            'view_mode': 'kanban,tree,form',
+            'domain': [('tournament_id', '=', self.id)],
+            'context': {'default_tournament_id': self.id},
+        }
+
+    def action_user_settings_add_team(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Add Team'),
+            'res_model': 'auction.team',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_tournament_id': self.id},
+        }
+
+    def action_user_settings_tiers(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Tiers — %s') % (self.name or ''),
+            'res_model': 'auction.player.tier',
+            'view_mode': 'tree,form',
+            'domain': [('tournament_id', '=', self.id)],
+            'context': {'default_tournament_id': self.id},
+        }
+
+    def action_user_settings_advertisers(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Advertisers — %s') % (self.name or ''),
+            'res_model': 'auction.advertiser',
+            'view_mode': 'tree,form',
+            'domain': [('tournament_id', '=', self.id)],
+            'context': {'default_tournament_id': self.id},
+        }
+
+    def action_user_settings_attributes(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Football extra labels — %s') % (self.name or ''),
+            'res_model': 'auction.tournament.attribute.label',
+            'view_mode': 'tree,form',
+            'domain': [('tournament_id', '=', self.id)],
+            'context': {'default_tournament_id': self.id},
+        }
+
+    @api.model
+    def get_user_settings_payload(self, tournament_id=None):
+        """Payload for the dashboard Tournament Settings client page."""
+        rec = self.browse()
+        if tournament_id:
+            try:
+                rec = self.browse(int(tournament_id)).exists()
+            except (TypeError, ValueError):
+                rec = self.browse()
+        if not rec:
+            getter = getattr(self.env.user, 'get_working_tournament', None)
+            rec = getter() if callable(getter) else self.env.user.tournament_id
+        if not rec:
+            return {'ok': False, 'error': _('No tournament found for this user.')}
+
+        rec.ensure_one()
+        rec = rec.with_context(
+            default_tournament_id=rec.id,
+            active_model='auction.tournament',
+            active_id=rec.id,
+            active_ids=[rec.id],
+        )
+        rec.check_access_rights('read')
+        rec.check_access_rule('read')
+        can_write = True
+        try:
+            rec.check_access_rights('write')
+            rec.check_access_rule('write')
+        except Exception:
+            can_write = False
+
+        algo = dict(rec._fields['player_appearance_algorithm'].selection).get(
+            rec.player_appearance_algorithm or '', rec.player_appearance_algorithm or ''
+        )
+        theme = dict(rec._fields['player_display_template'].selection).get(
+            rec.player_display_template or '', rec.player_display_template or ''
+        )
+        sport = dict(rec._fields['tournament_type'].selection).get(
+            rec.tournament_type or '', rec.tournament_type or ''
+        )
+        organizers = []
+        if rec.organizer_uid:
+            organizers.append(rec.organizer_uid.name)
+        organizers.extend([u.name for u in rec.organizer_uids if u.name not in organizers])
+
+        locations = []
+        Location = self.env['auction.location']
+        if Location.check_access_rights('read', raise_exception=False):
+            for loc in Location.search([], limit=200):
+                locations.append({
+                    'id': loc.id,
+                    'name': (getattr(loc, 'complete_name', None) or loc.name or '').strip(),
+                })
+
+        team_recs = rec._tournament_team_records()
+        teams = []
+        for team in team_recs:
+            teams.append({
+                'id': team.id,
+                'name': team.name or '',
+                'manager': team.manager or '',
+                'logo_url': self._user_settings_img(team, 'logo'),
+            })
+        team_count = len(team_recs)
+        tiers = []
+        tier_recs = self.env['auction.player.tier'].sudo().with_context(
+            auction_skip_tournament_security=True,
+        ).search([('tournament_id', '=', rec.id)])
+        for tier in tier_recs.sorted(lambda t: t.sequence or 0):
+            tiers.append({
+                'id': tier.id,
+                'name': tier.name or '',
+                'sequence': tier.sequence,
+                'color': tier.color or '#3498db',
+                'icon': bool(tier.is_an_icon_tier),
+                'mystery': bool(tier.mystery),
+            })
+        advertisers = []
+        for ad in rec.advertiser_ids:
+            advertisers.append({
+                'id': ad.id,
+                'name': ad.name or '',
+                'active': bool(ad.active),
+            })
+
+        jersey_count = 0
+        if rec.enable_jersey_section:
+            jersey_count = self.env['auction.team.player'].search_count([
+                ('tournament_id', '=', rec.id),
+                ('state', 'not in', ['draft', 'unsold']),
+            ])
+
+        point_unit = ''
+        point_unit_id = False
+        if rec.point_unit_id:
+            point_unit_id = rec.point_unit_id.id
+            point_unit = rec.point_unit_id.name or getattr(rec.point_unit_id, 'symbol', '') or ''
+        point_units = []
+        for unit in self.env['auction.point.unit'].sudo().search([]):
+            point_units.append({
+                'id': unit.id,
+                'name': unit.name or '',
+                'symbol': unit.symbol or '',
+            })
+
+        return {
+            'ok': True,
+            'can_write': can_write,
+            'id': rec.id,
+            'name': rec.name or '',
+            'code': rec.tournament_code or '',
+            'description': rec.description or '',
+            'sport': sport,
+            'sport_key': rec.tournament_type or '',
+            'theme': theme,
+            'theme_key': rec.player_display_template or '',
+            'logo_url': self._user_settings_img(rec, 'logo'),
+            'registration_open': bool(rec.registration_open),
+            'live_board_active': bool(rec.live_board_active),
+            'live_board_code_protected': bool(rec.live_board_code_protected),
+            'live_bid_sound': bool(rec.live_bid_sound),
+            'has_teams': bool(team_count),
+            'has_auction_rules': bool(rec.has_auction_rules),
+            'has_poster': bool(rec.poster_image),
+            'has_payment_qr': bool(rec.payment_qr_image),
+            'registered': rec.registered_player_count or 0,
+            'max_registrations': rec.max_registrations or 0,
+            'auction_players': rec.auction_player_count or 0,
+            'sold': rec.sold_player_count or 0,
+            'icon': rec.icon_player_count or 0,
+            'unsold': rec.unsold_player_count or 0,
+            'deleted': rec.deleted_player_count or 0,
+            'jersey': jersey_count,
+            'team_count': team_count,
+            'enable_jersey': bool(rec.enable_jersey_section),
+            'appearance': algo,
+            'sold_seconds': rec.sold_display_seconds or 0,
+            'next_countdown': rec.next_player_countdown or 0,
+            'preset_points': rec.preset_points or '',
+            'point_unit': point_unit,
+            'point_unit_id': point_unit_id,
+            'point_units': point_units,
+            'enable_org_id': bool(rec.enable_org_id_registration),
+            'show_capacity': bool(rec.show_registration_capacity),
+            'show_registered': bool(rec.show_registered_players),
+            'show_icon_reg': bool(rec.show_registration_icon_players),
+            'expose_org_id': bool(rec.expose_registered_org_id),
+            'expose_address': bool(rec.expose_registered_address),
+            'address_required': bool(rec.player_address_required),
+            'expose_contact': bool(rec.expose_player_contact),
+            'dates': [fields.Date.to_string(d) for d in rec._iter_tournament_dates()],
+            'dates_display': rec.format_tournament_dates() or '',
+            'venue_id': rec.venue.id if rec.venue else False,
+            'venue_name': rec.get_venue_label() if rec.venue else '',
+            'auction_date': rec.auction_date.isoformat() if rec.auction_date else '',
+            'auction_venue': rec.auction_venue or '',
+            'organizers': organizers,
+            'organizer_contact': rec.organizer_contact or '',
+            'payment_instruction': rec.payment_instruction or '',
+            'payment_proof_required': bool(rec.payment_proof_required),
+            'poster_url': self._user_settings_img(rec, 'poster_image'),
+            'social_url': self._user_settings_img(rec, 'social_share_image'),
+            'payment_qr_url': self._user_settings_img(rec, 'payment_qr_image'),
+            'youtube_url': rec.youtube_url or '',
+            'whatsapp_group_link': rec.whatsapp_group_link or '',
+            'urls': {
+                'registration': rec.registration_url or '',
+                'whatsapp': rec.whatsapp_group_link or '',
+                'admin_registration': rec.admin_registration_url or '',
+                'payment': rec.payment_tracker_url or '',
+                'projector': rec.projector_url or '',
+                'live_board': rec.live_board_url or '',
+                'bid_summary': rec.bid_summary_url or '',
+                'youtube_overlay': rec.youtube_overlay_url or '',
+                'youtube_watch': rec.youtube_watch_url or '',
+            },
+            'teams': teams,
+            'tiers': tiers,
+            'advertisers': advertisers,
+            'locations': locations,
+            'show_pools': self.env.user.has_group(
+                'auction_module.group_auction_pool_generator'
+            ),
+            'show_football_attrs': rec.tournament_type == 'football',
+        }
+
+    def save_user_settings(self, vals):
+        """Save dashboard-user writable fields only."""
+        self.ensure_one()
+        if not isinstance(vals, dict):
+            raise UserError(_('Invalid settings payload.'))
+        write_vals = {}
+        for key, value in vals.items():
+            if key not in self._USER_SETTINGS_WRITE:
+                continue
+            write_vals[key] = value
+        if write_vals:
+            self.write(write_vals)
+        return self.get_user_settings_payload(self.id)
+
+    def call_user_settings_action(self, action_name):
+        """Run an allow-listed tournament action from the settings page."""
+        self.ensure_one()
+        if action_name not in self._USER_SETTINGS_ACTIONS:
+            raise UserError(_('Unknown settings action.'))
+        rec = self.with_context(
+            default_tournament_id=self.id,
+            active_model='auction.tournament',
+            active_id=self.id,
+            active_ids=[self.id],
+        )
+        action = getattr(rec, action_name)()
+        if isinstance(action, dict):
+            ctx = dict(action.get('context') or {})
+            ctx['from_user_settings'] = True
+            action['context'] = ctx
+            if action.get('type') == 'ir.actions.client':
+                params = dict(action.get('params') or {})
+                params['from_user_settings'] = True
+                action['params'] = params
+        return action

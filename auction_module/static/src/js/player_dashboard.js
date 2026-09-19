@@ -529,7 +529,14 @@ odoo.define('auction_module.PlayerDashboard', function (require) {
         _onRefresh: function () { this._loadData(); },
 
         _onTournamentSettings: function () {
-            this.do_action('auction_module.action_tournament_settings_user');
+            this.do_action({
+                type: 'ir.actions.client',
+                tag: 'auction_module.tournament_settings_user',
+                name: 'Tournament Settings',
+                target: 'current',
+                context: {tournament_id: this._tournamentId},
+                params: {tournament_id: this._tournamentId},
+            });
         },
 
         _fmt: function (n) {

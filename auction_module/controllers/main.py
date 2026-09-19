@@ -1224,23 +1224,7 @@ class Auction(http.Controller):
             ('team_id.tournament_id', '=', tournament.id),
         ])
 
-    def _bid_summary_auction_started(self, tournament):
-        """True once bidding has begun (sold / in-auction players or history)."""
-        env = request.env
-        Player = env['auction.team.player'].sudo()
-        player_domain = [
-            ('tournament_id', '=', tournament.id),
-            ('icon_player', '=', False),
-        ]
-        if Player.search_count(
-            player_domain + [('state', 'in', ('sold', 'auction'))]
-        ):
-            return True
-        return bool(env['auction.history'].sudo().search_count([
-            ('tournament_id', '=', tournament.id),
-        ]))
-
-    def _render_bid_summary_unavailable(self, db_name, tournament, reason='not_started'):
+    def _render_bid_summary_unavailable(self, db_name, tournament, reason='no_rules'):
         theme = tournament.player_display_template or 'vanilla'
         company = request.env['res.company'].sudo().search([], limit=1)
         return request.render('auction_module.bid_summary_unavailable', {
@@ -1257,10 +1241,6 @@ class Auction(http.Controller):
         if not auctions:
             return self._render_bid_summary_unavailable(
                 db_name, tournament, reason='no_rules',
-            )
-        if not self._bid_summary_auction_started(tournament):
-            return self._render_bid_summary_unavailable(
-                db_name, tournament, reason='not_started',
             )
         # Prefetch relations used by the balance page / max_call compute so
         # QWeb does not trigger per-team SQL while rendering list+grid+mobile.

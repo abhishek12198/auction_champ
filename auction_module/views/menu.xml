@@ -326,6 +326,11 @@
              to open the current user's tournament in a restricted form view.
              (menu entry removed; access is via the dashboard button only)
         -->
+        <record id="action_tournament_settings_user_client" model="ir.actions.client">
+            <field name="name">Tournament Settings</field>
+            <field name="tag">auction_module.tournament_settings_user</field>
+        </record>
+
         <record id="action_tournament_settings_user" model="ir.actions.server">
             <field name="name">Tournament Settings</field>
             <field name="model_id" ref="auction_module.model_auction_tournament"/>
@@ -335,15 +340,13 @@ tournament = env.user.get_working_tournament()
 if not tournament:
     tournament = env.user.tournament_id
 if tournament:
-    view_id = env.ref('auction_module.view_auction_tournament_user_form').id
     action = {
-        'type': 'ir.actions.act_window',
-        'res_model': 'auction.tournament',
-        'res_id': tournament.id,
-        'view_mode': 'form',
-        'views': [(view_id, 'form')],
+        'type': 'ir.actions.client',
+        'tag': 'auction_module.tournament_settings_user',
+        'name': 'Tournament Settings',
         'target': 'current',
-        'flags': {'mode': 'edit'},
+        'context': {'tournament_id': tournament.id},
+        'params': {'tournament_id': tournament.id},
     }
             </field>
         </record>

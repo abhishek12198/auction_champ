@@ -42,6 +42,8 @@ odoo.define('auction_module.PlayerCategorization', function (require) {
             var ctx = (action && action.context) || {};
             var params = (action && action.params) || {};
             this.tournamentId = params.tournament_id || ctx.tournament_id || false;
+            this.fromUserSettings = !!(ctx.from_user_settings || params.from_user_settings);
+            this.settingsScreen = ctx.settings_screen || params.settings_screen || 'players';
             this.data = null;
             this.search = '';
             this.selectedIds = {};
@@ -431,9 +433,10 @@ odoo.define('auction_module.PlayerCategorization', function (require) {
             var html = '';
             html += '<div class="pcat-shell" tabindex="0">';
             html += '<nav class="pcat-breadcrumb" aria-label="Breadcrumb">';
-            html += '<a href="#" class="pcat-crumb-tournament" title="Back to tournament">' +
+            html += '<a href="#" class="pcat-crumb-tournament" title="' +
+                esc(this._backTitle()) + '">' +
                 '<i class="fa fa-arrow-left"></i> ' +
-                esc(t.name || 'Tournament') + '</a>';
+                esc(this._backLabel(t)) + '</a>';
             html += '<span class="pcat-crumb-sep">/</span>';
             html += '<span class="pcat-crumb-current">Player Categorization</span>';
             html += '</nav>';
@@ -1051,9 +1054,55 @@ odoo.define('auction_module.PlayerCategorization', function (require) {
             this._focusShell();
         },
 
-        _onBackToTournament: function (ev) {
-            ev.preventDefault();
+        _backLabel: function (tournament) {
+            if (this.fromUserSettings) {
+                return 'Tournament Settings';
+            }
+            return (tournament && tournament.name) || 'Tournament';
+        },
+
+        _backTitle: function () {
+            return this.fromUserSettings
+                ? 'Back to Tournament Settings'
+                : 'Back to tournament';
+        },
+
+        _controllerStack: function () {
+            var widget = this;
+            while (widget) {
+                if (widget.controllerStack && widget.controllerStack.length) {
+                    return widget.controllerStack;
+                }
+                widget = widget.getParent ? widget.getParent() : null;
+            }
+            return null;
+        },
+
+        _canHistoryBack: function () {
+            var stack = this._controllerStack();
+            return !!(stack && stack.length > 1);
+        },
+
+        _fallbackBack: function () {
+            if (this.fromUserSettings) {
+                this.do_action({
+                    type: 'ir.actions.client',
+                    tag: 'auction_module.tournament_settings_user',
+                    name: 'Tournament Settings',
+                    target: 'current',
+                    context: {
+                        tournament_id: this.tournamentId,
+                        settings_screen: this.settingsScreen || 'players',
+                    },
+                    params: {
+                        tournament_id: this.tournamentId,
+                        settings_screen: this.settingsScreen || 'players',
+                    },
+                });
+                return;
+            }
             if (!this.tournamentId) {
+                this.trigger_up('history_back');
                 return;
             }
             this.do_action({
@@ -1068,6 +1117,15 @@ odoo.define('auction_module.PlayerCategorization', function (require) {
                     active_id: this.tournamentId,
                 },
             });
+        },
+
+        _onBackToTournament: function (ev) {
+            ev.preventDefault();
+            if (this._canHistoryBack()) {
+                this.trigger_up('history_back');
+                return;
+            }
+            this._fallbackBack();
         },
 
         _swapTier: function (tierId, direction) {

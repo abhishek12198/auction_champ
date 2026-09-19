@@ -1,0 +1,689 @@
+/* Tournament Settings — white / blue surfaces, gold buttons (pool generator). */
+
+.o_tournament_settings_user {
+    --tsu-navy: #12243f;
+    --tsu-chrome: #1a3358;
+    --tsu-page: #f4f7fb;
+    --tsu-card: #ffffff;
+    --tsu-locked: #eef3f9;
+    --tsu-line: rgba(18, 36, 63, 0.12);
+    --tsu-gold: #e8b84a;
+    --tsu-gold-deep: #c9952a;
+    --tsu-gold-soft: #b8860b;
+    --tsu-ink: #1a1408;
+    --tsu-text: #12243f;
+    --tsu-dim: #5a7194;
+    --tsu-blue: #2456a8;
+    --tsu-teal: #0f766e;
+    --tsu-label: 12px;
+    --tsu-sub: 10px;
+    --tsu-title: 1.35rem;
+    position: relative;
+    width: 100%;
+    min-height: calc(100vh - 46px);
+    background:
+        radial-gradient(ellipse 80% 50% at 12% -8%, rgba(64, 120, 200, 0.12), transparent 55%),
+        radial-gradient(ellipse 55% 40% at 90% 0%, rgba(232, 184, 74, 0.08), transparent 50%),
+        var(--tsu-page);
+    color: var(--tsu-text);
+    font-family: 'Segoe UI', sans-serif;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+.o_tournament_settings_user * {
+    box-sizing: border-box;
+}
+.o_tournament_settings_user .tsu-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 8px 14px;
+    background: linear-gradient(180deg, #1a3358 0%, #12243f 100%);
+    border-bottom: 1px solid rgba(160, 200, 255, 0.35);
+    box-shadow: 0 2px 12px rgba(18, 36, 63, 0.18);
+    flex-shrink: 0;
+}
+.o_tournament_settings_user .tsu-top-crumb {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--tsu-sub);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #f0d089;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.o_tournament_settings_user .tsu-crumb-dash {
+    color: #d7e6ff;
+    text-decoration: underline;
+    cursor: pointer;
+}
+.o_tournament_settings_user .tsu-crumb-dash:hover {
+    color: #fff;
+}
+.o_tournament_settings_user .tsu-top button,
+.o_tournament_settings_user .tsu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid #163d7a;
+    border-radius: 4px;
+    font-family: inherit;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    padding: 8px 12px;
+    min-height: 34px;
+    font-size: var(--tsu-label);
+    line-height: 1.2;
+    background: linear-gradient(180deg, #3d74c8 0%, #2456a8 52%, #1a4080 100%);
+    color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 1px 3px rgba(18, 36, 63, 0.18);
+}
+.o_tournament_settings_user .tsu-btn.is-disabled,
+.o_tournament_settings_user .tsu-btn[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+.o_tournament_settings_user .tsu-btn .fa {
+    font-size: 1em;
+    width: 1em;
+    text-align: center;
+}
+.o_tournament_settings_user .tsu-btn-ghost,
+.o_tournament_settings_user .tsu-top .tsu-btn-ghost,
+.o_tournament_settings_user .tsu-top .tsu-save,
+.o_tournament_settings_user .tsu-btn-blue,
+.o_tournament_settings_user .tsu-btn-teal,
+.o_tournament_settings_user .tsu-btn-locked,
+.o_tournament_settings_user .tsu-btn-restore {
+    background: linear-gradient(180deg, #3d74c8 0%, #2456a8 52%, #1a4080 100%);
+    color: #fff;
+    border: 1px solid #163d7a;
+}
+.o_tournament_settings_user .tsu-btn.tsu-btn-danger {
+    background: linear-gradient(180deg, #e35d5d 0%, #c62828 52%, #9b1c1c 100%);
+    color: #fff;
+    border: 1px solid #8a1818;
+}
+.o_tournament_settings_user .tsu-btn.tsu-btn-gold {
+    background: linear-gradient(180deg, #f3d06a 0%, #e8b84a 52%, #c9952a 100%);
+    color: #1a1408;
+    border: 1px solid #b8860b;
+}
+.o_tournament_settings_user .tsu-btn.tsu-btn-green {
+    background: linear-gradient(180deg, #3cb87a 0%, #2e8b57 52%, #1f6b42 100%);
+    color: #fff;
+    border: 1px solid #1a5a38;
+}
+.o_tournament_settings_user .tsu-more-close {
+    width: 100%;
+    margin-top: 8px;
+}
+.o_tournament_settings_user .tsu-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+.o_tournament_settings_user .tsu-nav {
+    width: 200px;
+    flex-shrink: 0;
+    padding: 12px 10px;
+    border-right: 1px solid var(--tsu-line);
+    background: #fff;
+    overflow-y: auto;
+}
+.o_tournament_settings_user .tsu-nav-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    margin: 0 0 6px;
+    padding: 10px 12px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    background: var(--tsu-locked);
+    color: var(--tsu-dim);
+    font-family: inherit;
+    font-size: var(--tsu-label);
+    font-weight: 700;
+    cursor: pointer;
+}
+.o_tournament_settings_user .tsu-nav-btn.is-active {
+    background: linear-gradient(180deg, #3d74c8 0%, #2456a8 52%, #1a4080 100%);
+    color: #fff;
+    border-color: #163d7a;
+}
+.o_tournament_settings_user .tsu-main {
+    flex: 1;
+    min-width: 0;
+    padding: 16px;
+    overflow-y: auto;
+    padding-bottom: 80px;
+}
+.o_tournament_settings_user .tsu-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0 0 14px;
+}
+.o_tournament_settings_user .tsu-brand-text {
+    min-width: 0;
+    flex: 1;
+}
+.o_tournament_settings_user .tsu-brand .tsu-h {
+    margin: 0 0 2px;
+}
+.o_tournament_settings_user .tsu-brand .tsu-sub {
+    margin: 0;
+}
+.o_tournament_settings_user .tsu-tour-logo-wrap {
+    position: relative;
+    flex-shrink: 0;
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid rgba(232, 184, 74, 0.45);
+    box-shadow: 0 2px 8px rgba(18, 36, 63, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+}
+.o_tournament_settings_user .tsu-tour-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    background: #fff;
+}
+.o_tournament_settings_user .tsu-tour-logo-ph {
+    font-size: 1.55rem;
+    line-height: 1;
+}
+.o_tournament_settings_user .tsu-logo-file {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+.o_tournament_settings_user .tsu-page-head {
+    margin: 0 0 14px;
+}
+.o_tournament_settings_user .tsu-page-head .tsu-h {
+    margin: 0 0 2px;
+}
+.o_tournament_settings_user .tsu-page-head .tsu-sub {
+    margin: 0 0 10px;
+}
+.o_tournament_settings_user .tsu-page-head .tsu-actions {
+    margin: 0;
+}
+.o_tournament_settings_user .tsu-h {
+    margin: 0 0 4px;
+    font-size: var(--tsu-title);
+    font-weight: 800;
+    color: var(--tsu-navy);
+}
+.o_tournament_settings_user .tsu-sub {
+    margin: 0 0 14px;
+    font-size: var(--tsu-sub);
+    color: var(--tsu-dim);
+}
+.o_tournament_settings_user .tsu-grid {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.o_tournament_settings_user .tsu-grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.o_tournament_settings_user .tsu-grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.o_tournament_settings_user .tsu-grid-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.o_tournament_settings_user .tsu-grid-7 {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+.o_tournament_settings_user .tsu-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 12px;
+}
+.o_tournament_settings_user .tsu-card {
+    background: var(--tsu-card);
+    border: 1px solid var(--tsu-line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    min-width: 0;
+    box-shadow: 0 4px 16px rgba(18, 36, 63, 0.06);
+}
+.o_tournament_settings_user .tsu-card.is-gold {
+    background: linear-gradient(135deg, #e8b84a, #c9952a);
+    color: var(--tsu-ink);
+    border-color: transparent;
+}
+.o_tournament_settings_user .tsu-card.is-gold .tsu-k,
+.o_tournament_settings_user .tsu-card.is-gold .tsu-v,
+.o_tournament_settings_user .tsu-card.is-gold .tsu-hint {
+    color: var(--tsu-ink);
+}
+.o_tournament_settings_user .tsu-card.is-locked {
+    background: var(--tsu-locked);
+}
+.o_tournament_settings_user .tsu-card.is-edit {
+    background: #fff8e8;
+    border-color: rgba(201, 149, 42, 0.38);
+    box-shadow: inset 3px 0 0 #e8b84a, 0 4px 16px rgba(18, 36, 63, 0.06);
+    cursor: pointer;
+}
+.o_tournament_settings_user .tsu-card.is-click {
+    cursor: pointer;
+}
+.o_tournament_settings_user .tsu-k {
+    display: block;
+    font-size: var(--tsu-sub);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--tsu-dim);
+    margin-bottom: 4px;
+}
+.o_tournament_settings_user .tsu-v {
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1.15;
+    word-break: break-word;
+    color: var(--tsu-navy);
+}
+.o_tournament_settings_user .tsu-hint {
+    font-size: var(--tsu-sub);
+    color: var(--tsu-dim);
+    margin-top: 4px;
+}
+.o_tournament_settings_user .tsu-switch {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.o_tournament_settings_user .tsu-switch-ui {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.o_tournament_settings_user .tsu-switch-ui input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.o_tournament_settings_user .tsu-switch-track {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: #c5d0e0;
+    border: 1px solid var(--tsu-line);
+    border-radius: 999px;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.o_tournament_settings_user .tsu-switch-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(18, 36, 63, 0.2);
+    transition: left 0.15s ease;
+}
+.o_tournament_settings_user .tsu-switch-ui input:checked + .tsu-switch-track {
+    background: var(--tsu-gold);
+    border-color: var(--tsu-gold-deep);
+}
+.o_tournament_settings_user .tsu-switch-ui input:checked + .tsu-switch-track .tsu-switch-knob {
+    left: 24px;
+    background: var(--tsu-ink);
+}
+.o_tournament_settings_user .tsu-field label {
+    display: block;
+    font-size: var(--tsu-sub);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--tsu-dim);
+    margin-bottom: 6px;
+}
+.o_tournament_settings_user .tsu-field input,
+.o_tournament_settings_user .tsu-field select,
+.o_tournament_settings_user .tsu-field textarea {
+    width: 100%;
+    background: #fff;
+    color: var(--tsu-text);
+    border: 1px solid var(--tsu-line);
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: var(--tsu-label);
+}
+.o_tournament_settings_user .tsu-field textarea {
+    min-height: 72px;
+    resize: vertical;
+}
+.o_tournament_settings_user .tsu-card.is-edit .tsu-input,
+.o_tournament_settings_user .tsu-card.is-edit .tsu-edit-input {
+    background: transparent;
+    border-color: transparent;
+    color: var(--tsu-navy);
+    font-weight: 800;
+    font-size: 1.15rem;
+    line-height: 1.3;
+    padding: 2px 0;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: none;
+}
+.o_tournament_settings_user .tsu-card.is-edit select.tsu-edit-input,
+.o_tournament_settings_user .tsu-card.is-edit select.tsu-input {
+    -webkit-appearance: none;
+    appearance: none;
+}
+.o_tournament_settings_user .tsu-card.is-edit .tsu-input:focus,
+.o_tournament_settings_user .tsu-card.is-edit .tsu-edit-input:focus {
+    background: #fff;
+    border-color: #e8b84a;
+    box-shadow: 0 0 0 2px rgba(232, 184, 74, 0.28);
+    padding: 6px 8px;
+    cursor: text;
+    outline: none;
+    -webkit-appearance: menulist;
+    appearance: menulist;
+}
+.o_tournament_settings_user .tsu-edit-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+.o_tournament_settings_user .tsu-edit-row .tsu-edit-input {
+    flex: 0 1 88px;
+    min-width: 64px;
+    width: auto;
+}
+.o_tournament_settings_user .tsu-edit-suffix {
+    font-size: var(--tsu-label);
+    font-weight: 700;
+    color: var(--tsu-dim);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.o_tournament_settings_user .tsu-card.is-edit input[type="number"]::-webkit-inner-spin-button,
+.o_tournament_settings_user .tsu-card.is-edit input[type="number"]::-webkit-outer-spin-button {
+    opacity: 0;
+}
+.o_tournament_settings_user .tsu-card.is-edit input[type="number"]:focus::-webkit-inner-spin-button,
+.o_tournament_settings_user .tsu-card.is-edit input[type="number"]:focus::-webkit-outer-spin-button {
+    opacity: 1;
+}
+.o_tournament_settings_user .tsu-tier-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+.o_tournament_settings_user .tsu-tier-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: var(--tsu-label);
+    font-weight: 800;
+    line-height: 1.2;
+    box-shadow: inset 0 0 0 1px rgba(18, 36, 63, 0.12);
+}
+.o_tournament_settings_user .tsu-tier-pill .fa {
+    font-size: 0.95em;
+}
+.o_tournament_settings_user .tsu-date-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 36px;
+    margin-bottom: 8px;
+}
+.o_tournament_settings_user .tsu-date-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: #e8eef8;
+    color: var(--tsu-navy);
+    font-size: var(--tsu-label);
+    font-weight: 700;
+}
+.o_tournament_settings_user .tsu-date-remove {
+    border: 0;
+    background: transparent;
+    color: var(--tsu-navy);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+    min-height: 0;
+}
+.o_tournament_settings_user .tsu-date-wrap {
+    position: relative;
+    display: block;
+}
+.o_tournament_settings_user .tsu-date-wrap input[type="date"] {
+    text-transform: uppercase;
+}
+.o_tournament_settings_user .tsu-date-wrap:not(.is-filled) input[type="date"] {
+    color: transparent;
+}
+.o_tournament_settings_user .tsu-date-wrap:not(.is-filled) input[type="date"]:focus {
+    color: var(--tsu-text);
+}
+.o_tournament_settings_user .tsu-date-ph {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--tsu-dim);
+    font-size: var(--tsu-label);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+.o_tournament_settings_user .tsu-date-wrap.is-filled .tsu-date-ph,
+.o_tournament_settings_user .tsu-date-wrap input[type="date"]:focus + .tsu-date-ph {
+    display: none;
+}
+.o_tournament_settings_user .tsu-url {
+    font-size: var(--tsu-sub);
+    color: var(--tsu-dim);
+    word-break: break-all;
+    margin: 6px 0;
+}
+.o_tournament_settings_user .tsu-drop {
+    min-height: 88px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+}
+.o_tournament_settings_user .tsu-drop img {
+    max-height: 88px;
+    max-width: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+}
+.o_tournament_settings_user .tsu-team {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.o_tournament_settings_user .tsu-team img,
+.o_tournament_settings_user .tsu-team-ph {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    object-fit: cover;
+    background: var(--tsu-locked);
+    border: 1px solid var(--tsu-line);
+    flex-shrink: 0;
+}
+.o_tournament_settings_user .tsu-team-ph {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: var(--tsu-gold-soft);
+}
+.o_tournament_settings_user .tsu-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.o_tournament_settings_user .tsu-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--tsu-line);
+    font-size: var(--tsu-label);
+    font-weight: 700;
+}
+.o_tournament_settings_user .tsu-bottom {
+    display: none;
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    border-top: 1px solid var(--tsu-line);
+    padding: 8px;
+    gap: 6px;
+}
+.o_tournament_settings_user .tsu-bottom button {
+    flex: 1;
+    padding: 8px 4px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    background: var(--tsu-locked);
+    color: var(--tsu-dim);
+    font-family: inherit;
+    font-size: 9px;
+    font-weight: 800;
+    cursor: pointer;
+}
+.o_tournament_settings_user .tsu-bottom button.is-active {
+    background: linear-gradient(180deg, #3d74c8 0%, #2456a8 52%, #1a4080 100%);
+    color: #fff;
+    border-color: #163d7a;
+}
+.o_tournament_settings_user .tsu-more {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(18, 36, 63, 0.45);
+    z-index: 20;
+    padding: 24px 16px 80px;
+}
+.o_tournament_settings_user .tsu-more.is-open {
+    display: block;
+}
+.o_tournament_settings_user .tsu-more-sheet {
+    background: #fff;
+    border: 1px solid var(--tsu-line);
+    border-radius: 14px;
+    padding: 12px;
+}
+.o_tournament_settings_user .tsu-empty {
+    padding: 48px 16px;
+    text-align: center;
+    color: var(--tsu-dim);
+}
+
+@media (max-width: 1100px) {
+    .o_tournament_settings_user {
+        --tsu-label: 11px;
+        --tsu-sub: 9px;
+        --tsu-title: 1.15rem;
+    }
+    .o_tournament_settings_user .tsu-nav {
+        width: 168px;
+    }
+    .o_tournament_settings_user .tsu-grid-7 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .o_tournament_settings_user {
+        --tsu-label: 9px;
+        --tsu-sub: 8px;
+        --tsu-title: 1rem;
+    }
+    .o_tournament_settings_user .tsu-nav {
+        display: none;
+    }
+    .o_tournament_settings_user .tsu-top-crumb {
+        font-size: 8px;
+    }
+    .o_tournament_settings_user .tsu-grid-3,
+    .o_tournament_settings_user .tsu-grid-2,
+    .o_tournament_settings_user .tsu-grid-4,
+    .o_tournament_settings_user .tsu-grid-7 {
+        grid-template-columns: 1fr 1fr;
+    }
+    .o_tournament_settings_user .tsu-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .o_tournament_settings_user .tsu-actions .tsu-btn {
+        width: 100%;
+        min-width: 0;
+    }
+    .o_tournament_settings_user .tsu-bottom {
+        display: flex;
+    }
+    .o_tournament_settings_user .tsu-main {
+        padding: 10px 10px 12px;
+    }
+    .o_tournament_settings_user .tsu-tour-logo-wrap {
+        width: 48px;
+        height: 48px;
+    }
+    .o_tournament_settings_user .tsu-tour-logo-ph {
+        font-size: 1.15rem;
+    }
+    .o_tournament_settings_user .tsu-mobile-disable {
+        opacity: 0.4;
+        pointer-events: none;
+        cursor: not-allowed;
+    }
+}
+
+@media (max-width: 420px) {
+    .o_tournament_settings_user .tsu-grid-3,
+    .o_tournament_settings_user .tsu-grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
