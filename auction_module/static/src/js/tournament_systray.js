@@ -228,8 +228,11 @@ class TournamentSystrayItem extends Component {
 
 TournamentSystrayItem.template = "auction_module.TournamentSystrayItem";
 
-registry.category("systray").add(
-    "auction.tournament_systray",
-    { Component: TournamentSystrayItem },
-    { sequence: 51 }
-);
+const systray = registry.category("systray");
+if (!systray.contains("auction.tournament_systray")) {
+    systray.add(
+        "auction.tournament_systray",
+        { Component: TournamentSystrayItem },
+        { sequence: 51 }
+    );
+}
