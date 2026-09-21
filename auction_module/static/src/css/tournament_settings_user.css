@@ -462,6 +462,76 @@
 .o_tournament_settings_user .tsu-tier-pill .fa {
     font-size: 0.95em;
 }
+.o_tournament_settings_user .tsu-tier-reg-grid {
+    margin-top: 8px;
+}
+.o_tournament_settings_user .tsu-tier-reg-card .tsu-url {
+    margin-top: 6px;
+    word-break: break-all;
+}
+.o_tournament_settings_user .tsu-tier-edit-grid {
+    margin-top: 8px;
+}
+.o_tournament_settings_user .tsu-tier-edit-card {
+    text-align: left;
+}
+.o_tournament_settings_user .tsu-tier-edit-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.o_tournament_settings_user .tsu-tier-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 1px rgba(18, 36, 63, 0.2);
+}
+.o_tournament_settings_user .tsu-tier-edit-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+}
+.o_tournament_settings_user .tsu-tier-edit-flags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 10px;
+}
+.o_tournament_settings_user .tsu-tier-flag {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-width: 140px;
+    flex: 1 1 140px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--tsu-locked);
+    box-shadow: inset 0 0 0 1px var(--tsu-line);
+}
+.o_tournament_settings_user .tsu-tier-flag-label {
+    font-size: var(--tsu-label);
+    font-weight: 800;
+    color: var(--tsu-text);
+}
+.o_tournament_settings_user .tsu-tier-flag .tsu-switch-ui {
+    width: 42px;
+    height: 24px;
+}
+.o_tournament_settings_user .tsu-tier-flag .tsu-switch-knob {
+    width: 18px;
+    height: 18px;
+}
+.o_tournament_settings_user .tsu-tier-flag .tsu-switch-ui input:checked + .tsu-switch-track .tsu-switch-knob {
+    left: 20px;
+}
+.o_tournament_settings_user .tsu-tier-edit-card .tsu-url {
+    word-break: break-all;
+    font-size: 11px;
+}
 .o_tournament_settings_user .tsu-date-box {
     display: flex;
     flex-wrap: wrap;
@@ -676,9 +746,8 @@
     }
 }
 
-@media (max-width: 420px) {
-    .o_tournament_settings_user .tsu-grid-3,
-    .o_tournament_settings_user .tsu-grid-2 {
+@media (max-width: 720px) {
+    .o_tournament_settings_user .tsu-tier-edit-row {
         grid-template-columns: 1fr;
     }
 }

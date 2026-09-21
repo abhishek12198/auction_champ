@@ -606,12 +606,35 @@ class Auction(http.Controller):
         self._reg_admin_grant(tournament)
         return True
 
-    def _reg_path(self, db_name, tournament_slug, admin=False):
+    def _reg_path(self, db_name, tournament_slug, admin=False, tier_slug=None):
         base = '/%s/%s/player/register' % (db_name, tournament_slug)
-        return base + '/admin' if admin else base
+        if admin:
+            return base + '/admin'
+        if tier_slug:
+            return '%s/%s' % (base, tier_slug)
+        return base
 
-    def _reg_capacity(self, tournament):
-        """Return max_reg, current draft count, slots_left, is_full."""
+    def _reg_capacity(self, tournament, tier=None):
+        """Return max_reg, current draft count, slots_left, is_full.
+
+        When *tier* is set, capacity is scoped to that tier's max_registrations
+        and draft players in the tier. Overall tournament capacity is still
+        enforced separately by callers on POST.
+        """
+        if tier:
+            max_reg = tier.max_registrations or 0
+            current_count = 0
+            slots_left = None
+            if max_reg > 0:
+                current_count = request.env['auction.team.player'].sudo().search_count([
+                    ('tournament_id', '=', tournament.id),
+                    ('tier_id', '=', tier.id),
+                    ('state', '=', 'draft'),
+                ])
+                slots_left = max(0, max_reg - current_count)
+            is_full = bool(max_reg > 0 and current_count >= max_reg)
+            return max_reg, current_count, slots_left, is_full
+
         max_reg = tournament.max_registrations or 0
         if hasattr(tournament, '_saas_effective_max_registrations'):
             max_reg = tournament._saas_effective_max_registrations()
@@ -625,6 +648,56 @@ class Auction(http.Controller):
             slots_left = max(0, max_reg - current_count)
         is_full = bool(max_reg > 0 and current_count >= max_reg)
         return max_reg, current_count, slots_left, is_full
+
+    def _reg_resolve_locked_tier(self, tournament, tier_slug):
+        """Resolve a public registration tier slug, or return False if invalid."""
+        if not tier_slug:
+            return None
+        slug = (tier_slug or '').strip().lower()
+        from odoo.addons.auction_module.models.auction_player_tier import (
+            _REGISTRATION_SLUG_RESERVED,
+        )
+        if slug in _REGISTRATION_SLUG_RESERVED:
+            return False
+        tier = request.env['auction.player.tier'].sudo().search([
+            ('tournament_id', '=', tournament.id),
+            ('registration_slug', '=', slug),
+            ('is_an_icon_tier', '=', False),
+            ('mystery', '=', False),
+        ], limit=1)
+        return tier if tier else False
+
+    def _reg_tier_color_style(self, tier):
+        """Return color / ink / rgb for painting the locked-tier registration form."""
+        if not tier:
+            return {
+                'color': '',
+                'ink': '#ffffff',
+                'rgb': '52,152,219',
+            }
+        raw = (tier.color or '#3498db').strip()
+        if not raw.startswith('#'):
+            raw = '#' + raw
+        hex6 = raw[1:]
+        if len(hex6) == 3:
+            hex6 = ''.join(c * 2 for c in hex6)
+        if len(hex6) != 6:
+            hex6 = '3498db'
+            raw = '#3498db'
+        try:
+            r = int(hex6[0:2], 16)
+            g = int(hex6[2:4], 16)
+            b = int(hex6[4:6], 16)
+        except ValueError:
+            r, g, b = 52, 152, 219
+            raw = '#3498db'
+        # Dark ink on light tiers (e.g. white / yellow)
+        ink = '#12243f' if ((r * 299) + (g * 587) + (b * 114)) / 1000 > 170 else '#ffffff'
+        return {
+            'color': raw,
+            'ink': ink,
+            'rgb': '%s,%s,%s' % (r, g, b),
+        }
 
     def _reg_football_lookups(self, tournament):
         football_positions = request.env['auction.player.position'].sudo().browse()
@@ -6236,7 +6309,35 @@ class Auction(http.Controller):
         """
         return self._player_register_core(db_name, tournament_slug, admin=True, **kw)
 
-    def _player_register_core(self, db_name, tournament_slug, admin=False, **kw):
+    @http.route(
+        '/<string:db_name>/<string:tournament_slug>/player/register/<string:tier_slug>',
+        type='http', auth='none', website=False, methods=['GET', 'POST'], csrf=False,
+    )
+    def player_register_tier(self, db_name, tournament_slug, tier_slug, **kw):
+        """Public registration locked to one regular (non-icon, non-mystery) tier."""
+        return self._player_register_core(
+            db_name, tournament_slug, admin=False, tier_slug=tier_slug, **kw
+        )
+
+    @http.route(
+        '/<string:tournament_slug>/player/register/<string:tier_slug>',
+        type='http', auth='none', website=False, methods=['GET'], csrf=False,
+    )
+    def player_register_tier_slug_legacy(self, tournament_slug, tier_slug, **kw):
+        """Redirect old /<slug>/player/register/<tier> to the db-prefixed URL."""
+        from odoo.http import db_monodb, db_list
+        db_name = db_monodb(request.httprequest)
+        if not db_name:
+            dbs = db_list(force=True, httprequest=request.httprequest)
+            if dbs:
+                db_name = dbs[0]
+            else:
+                return self._not_found()
+        return werkzeug.utils.redirect(
+            '/%s/%s/player/register/%s' % (db_name, tournament_slug, tier_slug), 301,
+        )
+
+    def _player_register_core(self, db_name, tournament_slug, admin=False, tier_slug=None, **kw):
         with self._with_db(db_name) as ok:
             if not ok:
                 return self._not_found()
@@ -6247,10 +6348,33 @@ class Auction(http.Controller):
             if not tournament:
                 return self._not_found()
 
+            locked_tier = False
+            if tier_slug:
+                locked_tier = self._reg_resolve_locked_tier(tournament, tier_slug)
+                if not locked_tier:
+                    return self._not_found()
+
             theme = tournament.player_display_template or 'vanilla'
-            register_path = self._reg_path(db_name, tournament_slug, admin=admin)
+            register_path = self._reg_path(
+                db_name, tournament_slug, admin=admin,
+                tier_slug=(locked_tier.registration_slug if locked_tier else None),
+            )
             football_positions, football_styles, football_strengths = self._reg_football_lookups(tournament)
-            max_reg, current_count, slots_left, is_full = self._reg_capacity(tournament)
+            # Overall tournament capacity (always)
+            overall_max, overall_count, overall_left, overall_full = self._reg_capacity(tournament)
+            # Display/capacity for this form (tier-scoped when locked)
+            if locked_tier:
+                max_reg, current_count, slots_left, tier_full = self._reg_capacity(
+                    tournament, tier=locked_tier,
+                )
+                # Unlimited tier: still show overall capacity on the form
+                if max_reg <= 0:
+                    max_reg, current_count, slots_left, _ov = self._reg_capacity(tournament)
+                is_full = bool(overall_full or tier_full)
+            else:
+                max_reg, current_count, slots_left, is_full = (
+                    overall_max, overall_count, overall_left, overall_full,
+                )
             roster_count = self._reg_roster_count(tournament)
             sse_enabled = request.env['ir.config_parameter'].sudo().get_param(
                 'auction.sse.enabled', 'False'
@@ -6278,7 +6402,7 @@ class Auction(http.Controller):
             #  - admin:  closed only when allotment full (can register while public is closed)
             public_closed = (not tournament.registration_open) and not admin
             if public_closed or is_full:
-                if is_full and tournament.registration_open:
+                if overall_full and tournament.registration_open:
                     try:
                         tournament.sudo().write({'registration_open': False})
                     except Exception:
@@ -6290,6 +6414,9 @@ class Auction(http.Controller):
                     [('is_an_icon_tier', '=', False), ('tournament_id', '=', tournament.id)],
                     order='name asc'
                 )
+                if locked_tier:
+                    tiers_all = locked_tier
+                tier_style = self._reg_tier_color_style(locked_tier)
                 html = request.render('auction_module.player_registration_form', {
                     'tournament': tournament,
                     'tiers': tiers_all,
@@ -6308,14 +6435,22 @@ class Auction(http.Controller):
                     'register_path': register_path,
                     'roster_count': roster_count,
                     'sse_enabled': sse_enabled,
+                    'locked_tier': locked_tier,
+                    'locked_tier_color': tier_style['color'],
+                    'locked_tier_ink': tier_style['ink'],
+                    'locked_tier_rgb': tier_style['rgb'],
                 }, lazy=False)
                 return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
-            tiers = request.env['auction.player.tier'].sudo().search(
-                [('is_an_icon_tier', '=', False), ('tournament_id', '=', tournament.id)],
-                order='name asc'
-            )
+            if locked_tier:
+                tiers = locked_tier
+            else:
+                tiers = request.env['auction.player.tier'].sudo().search(
+                    [('is_an_icon_tier', '=', False), ('tournament_id', '=', tournament.id)],
+                    order='name asc'
+                )
 
+            tier_style = self._reg_tier_color_style(locked_tier)
             base_ctx = {
                 'tournament': tournament,
                 'tiers': tiers,
@@ -6333,6 +6468,10 @@ class Auction(http.Controller):
                 'register_path': register_path,
                 'roster_count': roster_count,
                 'sse_enabled': sse_enabled,
+                'locked_tier': locked_tier,
+                'locked_tier_color': tier_style['color'],
+                'locked_tier_ink': tier_style['ink'],
+                'locked_tier_rgb': tier_style['rgb'],
             }
 
             if request.httprequest.method == 'POST':
@@ -6341,9 +6480,15 @@ class Auction(http.Controller):
                     return werkzeug.utils.redirect(register_path, 303)
                 try:
                     # Re-check capacity under race before create
-                    _mr, _cc, _sl, full_now = self._reg_capacity(tournament)
-                    if full_now:
+                    _om, _oc, _ol, overall_full_now = self._reg_capacity(tournament)
+                    if overall_full_now:
                         return werkzeug.utils.redirect(register_path, 303)
+                    if locked_tier:
+                        _tm, _tc, _tl, tier_full_now = self._reg_capacity(
+                            tournament, tier=locked_tier,
+                        )
+                        if tier_full_now:
+                            return werkzeug.utils.redirect(register_path, 303)
 
                     pay_resp = self._registration_payment_post(
                         db_name, tournament_slug, tournament, dict(base_ctx)
@@ -6351,7 +6496,25 @@ class Auction(http.Controller):
                     if pay_resp is not None:
                         return pay_resp
 
-                    vals = _build_player_vals_from_post(request, tournament)
+                    vals = _build_player_vals_from_post(
+                        request, tournament, locked_tier=locked_tier,
+                    )
+                    # Enforce per-tier capacity even on the general register form
+                    post_tier = locked_tier
+                    if not post_tier and vals.get('tier_id'):
+                        post_tier = request.env['auction.player.tier'].sudo().browse(
+                            vals['tier_id']
+                        ).exists()
+                    if post_tier and post_tier.is_registration_eligible():
+                        _tm2, _tc2, _tl2, tier_full_post = self._reg_capacity(
+                            tournament, tier=post_tier,
+                        )
+                        if tier_full_post:
+                            raise ValueError(
+                                'Registration for the "%s" category is full. '
+                                'Please choose another category or contact the organiser.'
+                                % (post_tier.name or 'selected')
+                            )
                     player = request.env['auction.team.player'].sudo().create(vals)
                     try:
                         self._registration_after_create(player, db_name)
@@ -6361,7 +6524,7 @@ class Auction(http.Controller):
                             player.id,
                         )
                     # Close public registration when allotment hits max
-                    _mr2, _cc2, _sl2, full_after = self._reg_capacity(tournament)
+                    _om2, _oc2, _ol2, full_after = self._reg_capacity(tournament)
                     if full_after and tournament.registration_open:
                         try:
                             tournament.sudo().write({'registration_open': False})
@@ -8143,8 +8306,12 @@ def _registration_profile_payload(player, tournament, db_name):
     return profile
 
 
-def _build_player_vals_from_post(request, tournament):
-    """Extract and validate POST form data into a dict for auction.team.player.create()."""
+def _build_player_vals_from_post(request, tournament, locked_tier=None):
+    """Extract and validate POST form data into a dict for auction.team.player.create().
+
+    When *locked_tier* is set (tier-specific registration URL), the player is
+    always assigned to that tier regardless of any posted tier_id.
+    """
     post = request.httprequest.form
     files = request.httprequest.files
 
@@ -8159,10 +8326,13 @@ def _build_player_vals_from_post(request, tournament):
     )
     sl_no = (last.sl_no + 1) if last else 1
 
-    tier_id = False
-    raw_tier = post.get('tier_id')
-    if raw_tier and raw_tier.isdigit():
-        tier_id = int(raw_tier)
+    if locked_tier:
+        tier_id = locked_tier.id
+    else:
+        tier_id = False
+        raw_tier = post.get('tier_id')
+        if raw_tier and raw_tier.isdigit():
+            tier_id = int(raw_tier)
 
     contact = _normalize_registration_contact(post.get('contact') or '')
     if tournament and tournament.player_contact_unique and contact:

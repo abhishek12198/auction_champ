@@ -478,16 +478,24 @@
                                 <p class="text-muted">
                                     Manage player tiers for this tournament. A DEFAULT tier is
                                     created automatically. Add more tiers as needed and assign
-                                    them to players.
+                                    them to players. Use the Register URL column to copy each
+                                    category link without opening the row.
                                 </p>
                                 <field name="tier_ids" nolabel="1" context="{'default_tournament_id': active_id}">
-                                    <tree editable="bottom">
+                                    <tree editable="bottom" create="1" delete="1">
                                         <field name="sequence" widget="handle"/>
                                         <field name="name" required="1"/>
-                                        <field name="description"/>
+                                        <field name="registration_url" string="Register URL"
+                                                widget="CopyClipboardChar"
+                                                attrs="{'invisible': ['|', ('is_an_icon_tier', '=', True), ('mystery', '=', True)]}"/>
+                                        <field name="max_registrations" string="Max Reg"
+                                                attrs="{'invisible': ['|', ('is_an_icon_tier', '=', True), ('mystery', '=', True)]}"/>
                                         <field name="color" widget="selection_badge"/>
-                                        <field name="is_an_icon_tier"/>
+                                        <field name="description" optional="hide"/>
+                                        <field name="is_an_icon_tier" string="Icon"/>
                                         <field name="mystery"/>
+                                        <field name="registration_slug" string="Slug" optional="hide"
+                                                attrs="{'invisible': ['|', ('is_an_icon_tier', '=', True), ('mystery', '=', True)]}"/>
                                     </tree>
                                     <form>
                                         <group>
@@ -497,6 +505,12 @@
                                             <field name="color" widget="selection_badge"/>
                                             <field name="is_an_icon_tier"/>
                                             <field name="mystery"/>
+                                            <field name="max_registrations"
+                                                    attrs="{'invisible': ['|', ('is_an_icon_tier', '=', True), ('mystery', '=', True)]}"/>
+                                            <field name="registration_slug" readonly="1"
+                                                    attrs="{'invisible': ['|', ('is_an_icon_tier', '=', True), ('mystery', '=', True)]}"/>
+                                            <field name="registration_url" widget="CopyClipboardChar" readonly="1"
+                                                    attrs="{'invisible': ['|', ('is_an_icon_tier', '=', True), ('mystery', '=', True)]}"/>
                                             <field name="tournament_id" invisible="1"/>
                                         </group>
                                     </form>

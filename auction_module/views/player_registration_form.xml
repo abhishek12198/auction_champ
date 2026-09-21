@@ -103,7 +103,12 @@
         </t>
     </style>
 </head>
-<body class="reg-page">
+<t t-set="locked_tier" t-value="locked_tier or False"/>
+<t t-set="locked_tier_color" t-value="locked_tier_color or ''"/>
+<t t-set="locked_tier_ink" t-value="locked_tier_ink or '#ffffff'"/>
+<t t-set="locked_tier_rgb" t-value="locked_tier_rgb or '52,152,219'"/>
+<body t-att-class="'reg-page' + (' reg-page--tier-locked' if locked_tier else '')"
+      t-att-style="('--tier-color:%s;--tier-ink:%s;--tier-rgb:%s;' % (locked_tier_color, locked_tier_ink, locked_tier_rgb)) if locked_tier and locked_tier_color else None">
 <div class="reg-wrapper">
     <t t-set="hide_reg_form" t-value="success or registration_closed or razorpay_await_payment"/>
     <t t-set="reg_path" t-value="register_path or ('/' + db_name + '/' + tournament_slug + '/player/register')"/>
@@ -131,9 +136,29 @@
                     t-esc="tournament.name if tournament else 'Auction Tournament'"/>
                 <p class="reg-tournament-desc"
                    t-esc="tournament.description if tournament and tournament.description else 'Join the auction pool and secure your spot.'"/>
-                <span class="reg-page-label">Player Registration</span>
+                <t t-if="not locked_tier">
+                    <span class="reg-page-label">Player Registration</span>
+                </t>
             </div>
         </div>
+
+        <!-- Tier tags: full-width under logo row so they stay left-aligned on mobile -->
+        <t t-if="locked_tier">
+            <div class="reg-tier-tags">
+                <span class="reg-page-label reg-page-label--tier">
+                    <span class="reg-tier-color-swatch" aria-hidden="true"/>
+                    <t t-esc="locked_tier.name"/> Registration
+                </span>
+                <div class="reg-tier-only-banner">
+                    <span class="reg-tier-color-swatch" aria-hidden="true"/>
+                    <span class="reg-tier-only-text">
+                        This form is only for
+                        <strong t-esc="locked_tier.name"/>
+                        category players.
+                    </span>
+                </div>
+            </div>
+        </t>
 
         <div class="reg-hero-copy">
             <p class="reg-hero-sub">
@@ -553,7 +578,12 @@
 
                 <div class="reg-slots-top">
                     <div>
-                        <div class="reg-slots-label">Registration Capacity</div>
+                        <div class="reg-slots-label">
+                            <t t-if="locked_tier and locked_tier.max_registrations">
+                                <t t-esc="locked_tier.name"/> Capacity
+                            </t>
+                            <t t-else="">Registration Capacity</t>
+                        </div>
                         <div class="reg-slots-count">
                             <t t-esc="slots_left"/>
                             <span> / <t t-esc="max_registrations"/> slots left</span>
@@ -889,13 +919,23 @@
                 <div class="reg-grid" style="margin-top:16px">
                     <div>
                         <label class="reg-label" for="playerTier">Player Tier <span class="req">*</span></label>
-                        <select id="playerTier" name="tier_id" class="reg-select" required="required">
-                            <t t-foreach="tiers" t-as="tier">
-                                <option t-att-value="tier.id"
-                                        t-att-selected="'selected' if tier_index == 0 else None"
-                                        t-esc="tier.name"/>
-                            </t>
-                        </select>
+                        <t t-if="locked_tier">
+                            <input type="hidden" name="tier_id" t-att-value="locked_tier.id"/>
+                            <div class="reg-tier-locked-field">
+                                <span class="reg-tier-color-swatch" aria-hidden="true"/>
+                                <input type="text" id="playerTier" class="reg-input" readonly="readonly"
+                                       t-att-value="locked_tier.name"/>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <select id="playerTier" name="tier_id" class="reg-select" required="required">
+                                <t t-foreach="tiers" t-as="tier">
+                                    <option t-att-value="tier.id"
+                                            t-att-selected="'selected' if tier_index == 0 else None"
+                                            t-esc="tier.name"/>
+                                </t>
+                            </select>
+                        </t>
                     </div>
 
                     <div>

@@ -327,6 +327,7 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
             if (opts.action) attrs += ' data-action="' + esc(opts.action) + '"';
             if (opts.copy) attrs += ' data-copy="' + esc(opts.copy) + '"';
             if (opts.screen) attrs += ' data-screen="' + esc(opts.screen) + '"';
+            if (opts.tierId) attrs += ' data-tier-id="' + esc(opts.tierId) + '"';
             if (opts.locked) attrs += ' data-locked="1"';
             if (opts.title) attrs += ' title="' + esc(opts.title) + '"';
             if (opts.disabled) attrs += ' disabled="disabled"';
@@ -505,8 +506,139 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
             ].join('');
         },
 
-        _teamsHtml: function (d) {
+        _tierEditVal: function (tier, key, fallback) {
+            var edits = (this.dirty && this.dirty.tier_edits) || {};
+            var row = edits[tier.id] || edits[String(tier.id)];
+            if (row && row[key] !== undefined) {
+                return row[key];
+            }
+            if (fallback !== undefined) {
+                return fallback;
+            }
+            return tier[key];
+        },
+
+        _setTierEdit: function (tierId, key, value) {
+            if (!this.dirty.tier_edits) {
+                this.dirty.tier_edits = {};
+            }
+            if (!this.dirty.tier_edits[tierId]) {
+                this.dirty.tier_edits[tierId] = {};
+            }
+            this.dirty.tier_edits[tierId][key] = value;
+            if (key === 'max_registrations') {
+                if (!this.dirty.tier_registration_limits) {
+                    this.dirty.tier_registration_limits = {};
+                }
+                this.dirty.tier_registration_limits[tierId] = value;
+            }
+        },
+
+        _tierEditorHtml: function (d) {
             var self = this;
+            var colorOpts = d.tier_color_options || [];
+            var cards = (d.tiers || []).map(function (tier) {
+                var name = self._tierEditVal(tier, 'name', tier.name || '');
+                var desc = self._tierEditVal(tier, 'description', tier.description || '');
+                var color = self._tierEditVal(tier, 'color', tier.color || '#3498db');
+                var maxVal = self._tierEditVal(tier, 'max_registrations', tier.max_registrations || 0);
+                var isIcon = !!self._tierEditVal(tier, 'is_an_icon_tier', !!tier.icon);
+                var isMystery = !!self._tierEditVal(tier, 'mystery', !!tier.mystery);
+                var allowReg = !isIcon && !isMystery;
+                var url = tier.registration_url || '';
+                var colorSelect = '<select class="tsu-input tsu-edit-input" data-field="tier_color" data-tier-id="' +
+                    tier.id + '">';
+                colorOpts.forEach(function (opt) {
+                    colorSelect += '<option value="' + esc(opt.value) + '"' +
+                        (String(opt.value) === String(color) ? ' selected' : '') + '>' +
+                        esc(opt.label || opt.value) + '</option>';
+                });
+                colorSelect += '</select>';
+                return '<div class="tsu-card tsu-tier-edit-card is-edit" style="border-left:4px solid ' +
+                    esc(color) + '">' +
+                    '<div class="tsu-tier-edit-head">' +
+                        '<span class="tsu-tier-swatch" style="background:' + esc(color) + '"></span>' +
+                        '<span class="tsu-k">' + esc(name || 'Tier') + '</span>' +
+                        (isIcon ? '<span class="tsu-hint"><i class="fa fa-star"></i> Icon</span>' : '') +
+                        (isMystery ? '<span class="tsu-hint"><i class="fa fa-user-secret"></i> Mystery</span>' : '') +
+                    '</div>' +
+                    '<label class="tsu-hint" style="display:block;margin:8px 0 2px">Name</label>' +
+                    '<input type="text" class="tsu-input tsu-edit-input" data-field="tier_name" data-tier-id="' +
+                    tier.id + '" value="' + esc(name) + '"/>' +
+                    '<label class="tsu-hint" style="display:block;margin:8px 0 2px">Description</label>' +
+                    '<input type="text" class="tsu-input tsu-edit-input" data-field="tier_description" data-tier-id="' +
+                    tier.id + '" value="' + esc(desc) + '" placeholder="Optional"/>' +
+                    '<div class="tsu-tier-edit-row">' +
+                        '<div><label class="tsu-hint" style="display:block;margin:0 0 2px">Color</label>' +
+                        colorSelect + '</div>' +
+                        (allowReg
+                            ? '<div><label class="tsu-hint" style="display:block;margin:0 0 2px">Max registrations</label>' +
+                              '<input type="number" min="0" class="tsu-input tsu-edit-input" data-field="tier_max_registrations" data-tier-id="' +
+                              tier.id + '" value="' + esc(maxVal) + '"/></div>'
+                            : '<div><label class="tsu-hint" style="display:block;margin:0 0 2px">Max registrations</label>' +
+                              '<div class="tsu-hint">N/A for Icon / Mystery</div></div>') +
+                    '</div>' +
+                    '<div class="tsu-tier-edit-flags">' +
+                        '<div class="tsu-tier-flag">' +
+                            '<span class="tsu-tier-flag-label">Icon tier</span>' +
+                            '<label class="tsu-switch-ui">' +
+                                '<input type="checkbox" class="tsu-toggle" data-field="tier_is_an_icon_tier" data-tier-id="' +
+                                tier.id + '"' + (isIcon ? ' checked' : '') + '/>' +
+                                '<span class="tsu-switch-track"><span class="tsu-switch-knob"></span></span>' +
+                            '</label>' +
+                        '</div>' +
+                        '<div class="tsu-tier-flag">' +
+                            '<span class="tsu-tier-flag-label">Mystery</span>' +
+                            '<label class="tsu-switch-ui">' +
+                                '<input type="checkbox" class="tsu-toggle" data-field="tier_mystery" data-tier-id="' +
+                                tier.id + '"' + (isMystery ? ' checked' : '') + '/>' +
+                                '<span class="tsu-switch-track"><span class="tsu-switch-knob"></span></span>' +
+                            '</label>' +
+                        '</div>' +
+                    '</div>' +
+                    (allowReg && url
+                        ? '<div class="tsu-url" style="margin-top:8px">' + esc(url) + '</div>'
+                        : '') +
+                    '<div class="tsu-actions" style="margin-top:8px">' +
+                        (allowReg && url
+                            ? self._btn('Copy Register URL', {copy: url, icon: 'fa-link'})
+                            : '') +
+                        self._btn('View Players', {
+                            action: 'action_user_settings_tier_players',
+                            tierId: tier.id,
+                            icon: 'fa-users',
+                        }) +
+                    '</div>' +
+                    (!allowReg
+                        ? '<div class="tsu-hint" style="margin-top:6px">Icon / Mystery tiers have no public register URL.</div>'
+                        : (!url
+                            ? '<div class="tsu-hint" style="margin-top:6px">Save after naming the tier to get a register URL.</div>'
+                            : '')) +
+                    '<div class="tsu-hint" style="margin-top:6px">' +
+                    esc(tier.registered_count || 0) + ' draft players in this tier</div>' +
+                    '</div>';
+            }).join('');
+            if (!cards) {
+                return this._card({
+                    k: 'Tiers',
+                    hint: 'No tiers yet. Open the full list to add one.',
+                    body: '<div class="tsu-actions">' +
+                        this._btn('Open tier list', {action: 'action_user_settings_tiers', icon: 'fa-list'}) +
+                        '</div>',
+                });
+            }
+            return this._card({
+                k: 'Tiers',
+                hint: 'Edit name, color, flags, and max here. Copy each category URL. Save when done. Limits must add up to Max Registrations (' +
+                    (d.max_registrations || '—') + ') when every regular tier has a limit.',
+                body: '<div class="tsu-grid tsu-grid-2 tsu-tier-edit-grid">' + cards + '</div>' +
+                    '<div class="tsu-actions" style="margin-top:10px">' +
+                    this._btn('Open full tier list', {action: 'action_user_settings_tiers', icon: 'fa-external-link'}) +
+                    '</div>',
+            });
+        },
+
+        _teamsHtml: function (d) {
             var teamCards = (d.teams || []).map(function (team) {
                 var marks = '';
                 if (team.logo_url) {
@@ -531,19 +663,6 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
             if (!teamCards) {
                 teamCards = this._card({hint: 'No teams yet. Upload or add a team.'});
             }
-            var tierPills = (d.tiers || []).map(function (tier) {
-                var bg = tier.color || '#3498db';
-                var marks = '';
-                if (tier.icon) {
-                    marks += '<i class="fa fa-star" title="Icon tier"></i>';
-                }
-                if (tier.mystery) {
-                    marks += '<i class="fa fa-user-secret" title="Mystery tier"></i>';
-                }
-                return '<span class="tsu-tier-pill" style="background:' + esc(bg) +
-                    ';color:' + self._pillInk(bg) + '">' +
-                    marks + '<span>' + esc(tier.name || 'Tier') + '</span></span>';
-            }).join('');
             return [
                 this._pageHead('Auction Team and Rules', 'Teams, tiers, and Start Auction together', [
                     d.has_auction_rules
@@ -561,12 +680,7 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                         : '',
                 ].join('')),
                 '<div class="tsu-grid tsu-grid-3">' + teamCards + '</div>',
-                this._card({
-                    k: 'Tiers',
-                    hint: tierPills ? '' : 'No tiers yet',
-                    action: 'action_user_settings_tiers',
-                    body: tierPills ? '<div class="tsu-tier-pills">' + tierPills + '</div>' : '',
-                }),
+                this._tierEditorHtml(d),
             ].join('');
         },
 
@@ -625,8 +739,38 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
         },
 
         _registerHtml: function (d) {
+            var self = this;
             var u = d.urls || {};
             var wa = this._fieldVal('whatsapp_group_link', d.whatsapp_group_link || u.whatsapp || '');
+            var tierLimits = (this.dirty.tier_registration_limits) || {};
+            var tierCards = (d.tiers || []).filter(function (tier) {
+                return !!tier.allow_registration;
+            }).map(function (tier) {
+                var maxVal = tierLimits[tier.id] !== undefined
+                    ? tierLimits[tier.id]
+                    : (tier.max_registrations || 0);
+                var count = tier.registered_count || 0;
+                var url = tier.registration_url || '';
+                return '<div class="tsu-card tsu-tier-reg-card">' +
+                    '<span class="tsu-k">' + esc(tier.name || 'Tier') + '</span>' +
+                    '<div class="tsu-hint">' + esc(count) + ' draft · max ' +
+                    (maxVal ? esc(maxVal) : 'unlimited') + '</div>' +
+                    (url ? '<div class="tsu-url">' + esc(url) + '</div>' : '') +
+                    '<div class="tsu-edit-row" style="margin-top:8px">' +
+                        '<label class="tsu-hint" style="margin:0;min-width:auto">Max</label>' +
+                        '<input type="number" min="0" class="tsu-input tsu-edit-input"' +
+                        ' data-field="tier_max_registrations" data-tier-id="' + tier.id + '"' +
+                        ' value="' + esc(maxVal) + '"/>' +
+                    '</div>' +
+                    '<div class="tsu-actions" style="margin-top:8px">' +
+                        (url ? self._btn('Copy URL', {copy: url, icon: 'fa-link'}) : '') +
+                        self._btn('View Players', {
+                            action: 'action_user_settings_tier_players',
+                            tierId: tier.id,
+                            icon: 'fa-users',
+                        }) +
+                    '</div></div>';
+            }).join('');
             return [
                 this._pageHead('Registration', 'Copy cards instead of raw URL fields', [
                     u.registration
@@ -651,6 +795,14 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                     this._linkCard('Admin add-player form', u.admin_registration, 'action_open_admin_registration_link'),
                     this._linkCard('Payment tracker', u.payment, 'action_open_payment_tracker'),
                 '</div>',
+                (tierCards
+                    ? this._card({
+                        k: 'Category registration links',
+                        hint: 'One URL per regular tier. Limits must add up to Max Registrations (' +
+                            (d.max_registrations || '—') + ') when any limit is set. Save after editing.',
+                        body: '<div class="tsu-grid tsu-grid-2 tsu-tier-reg-grid">' + tierCards + '</div>',
+                    })
+                    : ''),
                 '<div class="tsu-grid tsu-grid-2">',
                     this._card({locked: true, k: 'Public form flags', hint:
                         'Max ' + (d.max_registrations || '—') +
@@ -950,12 +1102,47 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
             var field = ev.currentTarget.getAttribute('data-field');
             if (!field) return;
             var val = ev.currentTarget.value;
+            var tierId = parseInt(ev.currentTarget.getAttribute('data-tier-id'), 10);
+            if (field.indexOf('tier_') === 0 && tierId) {
+                if (ev.currentTarget.type === 'checkbox') {
+                    var flagKey = field === 'tier_is_an_icon_tier' ? 'is_an_icon_tier'
+                        : (field === 'tier_mystery' ? 'mystery' : field.replace(/^tier_/, ''));
+                    this._setTierEdit(tierId, flagKey, ev.currentTarget.checked);
+                    this._render();
+                    return;
+                }
+                if (field === 'tier_max_registrations') {
+                    this._setTierEdit(tierId, 'max_registrations',
+                        val === '' ? 0 : parseInt(val, 10) || 0);
+                    return;
+                }
+                if (field === 'tier_name') {
+                    this._setTierEdit(tierId, 'name', val);
+                    return;
+                }
+                if (field === 'tier_description') {
+                    this._setTierEdit(tierId, 'description', val);
+                    return;
+                }
+                if (field === 'tier_color') {
+                    this._setTierEdit(tierId, 'color', val);
+                    this._render();
+                    return;
+                }
+            }
             if (ev.currentTarget.type === 'checkbox') {
                 this.dirty[field] = ev.currentTarget.checked;
             } else if (field === 'venue' || field === 'point_unit_id') {
                 this.dirty[field] = val ? parseInt(val, 10) : false;
             } else if (field === 'sold_display_seconds' || field === 'next_player_countdown') {
                 this.dirty[field] = val === '' ? 0 : parseInt(val, 10) || 0;
+            } else if (field === 'tier_max_registrations') {
+                if (!tierId) return;
+                if (!this.dirty.tier_registration_limits) {
+                    this.dirty.tier_registration_limits = {};
+                }
+                this.dirty.tier_registration_limits[tierId] =
+                    val === '' ? 0 : parseInt(val, 10) || 0;
             } else if (field === 'enable_jersey_section') {
                 this.dirty[field] = val === '1' || val === 'true';
             } else {
@@ -996,10 +1183,48 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                 this._notify('info', 'Nothing to save');
                 return;
             }
+            var payload = Object.assign({}, this.dirty);
+            // Always send every regular-tier max together so the sum check
+            // sees the full picture (not one tier at a time).
+            if (payload.tier_registration_limits) {
+                var merged = {};
+                (this.data.tiers || []).forEach(function (tier) {
+                    if (!tier.allow_registration) return;
+                    if (payload.tier_registration_limits[tier.id] !== undefined) {
+                        merged[tier.id] = payload.tier_registration_limits[tier.id];
+                    } else if (payload.tier_registration_limits[String(tier.id)] !== undefined) {
+                        merged[tier.id] = payload.tier_registration_limits[String(tier.id)];
+                    } else {
+                        merged[tier.id] = tier.max_registrations || 0;
+                    }
+                });
+                payload.tier_registration_limits = merged;
+            }
+            if (payload.tier_edits) {
+                var editMerged = {};
+                var dirtyEdits = payload.tier_edits;
+                (this.data.tiers || []).forEach(function (tier) {
+                    var patch = dirtyEdits[tier.id] || dirtyEdits[String(tier.id)] || {};
+                    if (!Object.keys(patch).length) {
+                        return;
+                    }
+                    editMerged[tier.id] = Object.assign({
+                        name: tier.name || '',
+                        description: tier.description || '',
+                        color: tier.color || '#3498db',
+                        max_registrations: tier.max_registrations || 0,
+                        is_an_icon_tier: !!tier.icon,
+                        mystery: !!tier.mystery,
+                    }, patch);
+                });
+                payload.tier_edits = editMerged;
+                // Prefer full tier edits over max-only payload
+                delete payload.tier_registration_limits;
+            }
             this._rpc({
                 model: 'auction.tournament',
                 method: 'save_user_settings',
-                args: [[this.data.id], this.dirty],
+                args: [[this.data.id], payload],
             }).then(function (data) {
                 self.data = data;
                 self.dirty = {};
@@ -1012,6 +1237,14 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
 
         _onToggle: function (ev) {
             var field = ev.currentTarget.getAttribute('data-field');
+            var tierId = parseInt(ev.currentTarget.getAttribute('data-tier-id'), 10);
+            if (field && field.indexOf('tier_') === 0 && tierId) {
+                var flagKey = field === 'tier_is_an_icon_tier' ? 'is_an_icon_tier'
+                    : (field === 'tier_mystery' ? 'mystery' : field.replace(/^tier_/, ''));
+                this._setTierEdit(tierId, flagKey, ev.currentTarget.checked);
+                this._render();
+                return;
+            }
             var map = {
                 registration_open: 'action_toggle_registration',
                 live_board_active: 'action_toggle_live_board',
@@ -1047,7 +1280,12 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                 this._notify('warning', ev.currentTarget.getAttribute('title') || 'Add teams first');
                 return;
             }
-            this._call(name);
+            var extra = {};
+            var tierId = parseInt(ev.currentTarget.getAttribute('data-tier-id'), 10);
+            if (tierId) {
+                extra.settings_tier_id = tierId;
+            }
+            this._call(name, Object.keys(extra).length ? extra : undefined);
         },
 
         _prepareAction: function (action) {

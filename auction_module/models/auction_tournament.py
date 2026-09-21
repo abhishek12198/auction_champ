@@ -554,7 +554,9 @@ class AuctionTournament(models.Model):
         string='Max Registrations',
         default=0,
         help='Maximum number of players that can self-register (draft state). '
-             'Set to 0 for unlimited. Registration closes automatically when this limit is reached.',
+             'Set to 0 for unlimited. Registration closes automatically when this limit is reached. '
+             'When any regular (non-icon, non-mystery) tier has its own Max Registrations set, '
+             'those tier limits must sum exactly to this tournament maximum.',
     )
     show_registration_capacity = fields.Boolean(
         string='Show Registration Capacity',
@@ -2885,6 +2887,7 @@ class AuctionTournament(models.Model):
         'action_user_settings_team_auction',
         'action_user_settings_add_team',
         'action_user_settings_tiers',
+        'action_user_settings_tier_players',
         'action_user_settings_advertisers',
         'action_user_settings_attributes',
     }
@@ -2961,6 +2964,45 @@ class AuctionTournament(models.Model):
                 'default_tournament_id': self.id,
                 'form_view_initial_mode': 'readonly',
             },
+        }
+
+    def action_user_settings_tier_players(self):
+        """Open players belonging to one tier (from Tournament Settings)."""
+        self.ensure_one()
+        tier_id = self.env.context.get('settings_tier_id')
+        try:
+            tier_id = int(tier_id)
+        except (TypeError, ValueError):
+            tier_id = 0
+        if not tier_id:
+            raise UserError(_('Select a tier.'))
+        tier = self.env['auction.player.tier'].sudo().with_context(
+            auction_skip_tournament_security=True,
+        ).browse(tier_id).exists()
+        if not tier or tier.tournament_id.id != self.id:
+            raise UserError(_('Select a tier from this tournament.'))
+        ctx = {
+            'default_tournament_id': self.id,
+            'default_tier_id': tier.id,
+            'search_default_tier_id': tier.id,
+        }
+        if not self.active:
+            ctx['active_test'] = False
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Players — %s') % (tier.name or _('Tier')),
+            'res_model': 'auction.team.player',
+            'view_mode': 'kanban,tree,form',
+            'views': [
+                (self.env.ref('auction_module.view_auction_team_player_kanban').id, 'kanban'),
+                (self.env.ref('auction_module.view_auction_team_player_tree').id, 'tree'),
+                (self.env.ref('auction_module.view_auction_team_player_form').id, 'form'),
+            ],
+            'domain': [
+                ('tournament_id', '=', self.id),
+                ('tier_id', '=', tier.id),
+            ],
+            'context': ctx,
         }
 
     def action_user_settings_add_team(self):
@@ -3097,14 +3139,27 @@ class AuctionTournament(models.Model):
             auction_skip_tournament_security=True,
         ).search([('tournament_id', '=', rec.id)])
         for tier in tier_recs.sorted(lambda t: t.sequence or 0):
+            allow_reg = (
+                not bool(tier.is_an_icon_tier) and not bool(tier.mystery)
+            )
             tiers.append({
                 'id': tier.id,
                 'name': tier.name or '',
+                'description': tier.description or '',
                 'sequence': tier.sequence,
                 'color': tier.color or '#3498db',
                 'icon': bool(tier.is_an_icon_tier),
                 'mystery': bool(tier.mystery),
+                'allow_registration': allow_reg,
+                'registration_slug': tier.registration_slug or '',
+                'registration_url': tier.registration_url or '',
+                'max_registrations': tier.max_registrations or 0,
+                'registered_count': tier.registered_count or 0,
             })
+        tier_color_options = [
+            {'value': value, 'label': label}
+            for value, label in self.env['auction.player.tier']._fields['color'].selection
+        ]
         advertisers = []
         for ad in rec.advertiser_ids:
             advertisers.append({
@@ -3206,6 +3261,7 @@ class AuctionTournament(models.Model):
             },
             'teams': teams,
             'tiers': tiers,
+            'tier_color_options': tier_color_options,
             'advertisers': advertisers,
             'locations': locations,
             'show_pools': self.env.user.has_group(
@@ -3214,18 +3270,173 @@ class AuctionTournament(models.Model):
             'show_football_attrs': rec.tournament_type == 'football',
         }
 
+    def _regular_registration_tiers(self):
+        """Non-icon, non-mystery tiers that can have dedicated register URLs."""
+        self.ensure_one()
+        return self.tier_ids.filtered(
+            lambda t: not t.is_an_icon_tier and not t.mystery
+        )
+
+    def _tier_registration_limits_breakdown(self, regular):
+        """Human-readable 'Name: N' list for validation messages."""
+        parts = []
+        for tier in regular.sorted(lambda t: (t.sequence or 0, t.id)):
+            parts.append('%s: %s' % (tier.name or 'Tier', tier.max_registrations or 0))
+        return ', '.join(parts) if parts else '(none)'
+
+    def _check_tier_registration_limits_sum(self):
+        """Enforce per-tier max vs tournament max for regular categories.
+
+        - Always block when the sum exceeds the tournament max.
+        - Require an exact match only when every regular tier has a limit > 0
+          (so mid-edit / one-tier-at-a-time saves with remaining zeros are OK).
+        - Skip entirely when context ``skip_tier_registration_limit_check`` is set
+          (batch updates apply all values first, then check once).
+        """
+        if self.env.context.get('skip_tier_registration_limit_check'):
+            return
+        require_exact = self.env.context.get(
+            'require_tier_registration_limit_exact', False,
+        )
+        for tournament in self:
+            max_reg = tournament.max_registrations or 0
+            if max_reg <= 0:
+                continue
+            regular = tournament._regular_registration_tiers()
+            if not regular:
+                continue
+            total = sum(regular.mapped('max_registrations'))
+            if total <= 0:
+                continue
+            breakdown = tournament._tier_registration_limits_breakdown(regular)
+            if total > max_reg:
+                raise ValidationError(_(
+                    'Per-tier Max Registrations for regular categories '
+                    '(%(breakdown)s) add up to %(sum)s, which exceeds the '
+                    'tournament Max Registrations (%(max)s). '
+                    'Icon and Mystery tiers are excluded.'
+                ) % {
+                    'max': max_reg,
+                    'sum': total,
+                    'breakdown': breakdown,
+                })
+            has_unset = any((t.max_registrations or 0) <= 0 for t in regular)
+            if has_unset and not require_exact:
+                # Still configuring — do not require a full sum yet.
+                continue
+            if total != max_reg:
+                raise ValidationError(_(
+                    'Per-tier Max Registrations for regular categories must add up '
+                    'to the tournament Max Registrations (%(max)s). '
+                    'Current sum is %(sum)s (%(breakdown)s). '
+                    'Icon and Mystery tiers are excluded.'
+                ) % {
+                    'max': max_reg,
+                    'sum': total,
+                    'breakdown': breakdown,
+                })
+
+    @api.constrains('max_registrations')
+    def _constrain_tier_registration_limits_sum(self):
+        self._check_tier_registration_limits_sum()
+
+    def _save_user_settings_tier_limits(self, limits):
+        """Update max_registrations on regular tiers from the settings page."""
+        self.ensure_one()
+        if not isinstance(limits, dict):
+            return
+        Tier = self.env['auction.player.tier'].sudo().with_context(
+            auction_skip_tournament_security=True,
+            skip_tier_registration_limit_check=True,
+        )
+        wrote = False
+        for raw_id, raw_max in limits.items():
+            try:
+                tier_id = int(raw_id)
+                max_reg = int(raw_max or 0)
+            except (TypeError, ValueError):
+                continue
+            tier = Tier.browse(tier_id).exists()
+            if not tier or tier.tournament_id.id != self.id:
+                continue
+            if tier.is_an_icon_tier or tier.mystery:
+                continue
+            tier.write({'max_registrations': max(0, max_reg)})
+            wrote = True
+        if wrote:
+            # Soft check after batch: exact sum only when every regular tier
+            # already has a limit > 0 (over-allocation always blocked).
+            self._check_tier_registration_limits_sum()
+
+    def _save_user_settings_tiers(self, edits):
+        """Update tier attributes from Tournament Settings (Teams page)."""
+        self.ensure_one()
+        if not isinstance(edits, dict):
+            return
+        Tier = self.env['auction.player.tier'].sudo().with_context(
+            auction_skip_tournament_security=True,
+            skip_tier_registration_limit_check=True,
+        )
+        allowed_colors = {
+            value for value, _label in Tier._fields['color'].selection
+        }
+        wrote = False
+        for raw_id, raw_vals in edits.items():
+            try:
+                tier_id = int(raw_id)
+            except (TypeError, ValueError):
+                continue
+            if not isinstance(raw_vals, dict):
+                continue
+            tier = Tier.browse(tier_id).exists()
+            if not tier or tier.tournament_id.id != self.id:
+                continue
+            write_vals = {}
+            if 'name' in raw_vals:
+                name = (raw_vals.get('name') or '').strip()
+                if name:
+                    write_vals['name'] = name
+            if 'description' in raw_vals:
+                write_vals['description'] = (raw_vals.get('description') or '').strip() or False
+            if 'color' in raw_vals:
+                color = raw_vals.get('color') or '#3498db'
+                if color in allowed_colors:
+                    write_vals['color'] = color
+            if 'max_registrations' in raw_vals:
+                try:
+                    write_vals['max_registrations'] = max(0, int(raw_vals.get('max_registrations') or 0))
+                except (TypeError, ValueError):
+                    pass
+            if 'is_an_icon_tier' in raw_vals:
+                write_vals['is_an_icon_tier'] = bool(raw_vals.get('is_an_icon_tier'))
+            if 'mystery' in raw_vals:
+                write_vals['mystery'] = bool(raw_vals.get('mystery'))
+            if write_vals:
+                tier.write(write_vals)
+                wrote = True
+        if wrote:
+            self._check_tier_registration_limits_sum()
+
     def save_user_settings(self, vals):
         """Save dashboard-user writable fields only."""
         self.ensure_one()
         if not isinstance(vals, dict):
             raise UserError(_('Invalid settings payload.'))
+        tier_limits = vals.get('tier_registration_limits')
+        tier_edits = vals.get('tier_edits')
         write_vals = {}
         for key, value in vals.items():
+            if key in ('tier_registration_limits', 'tier_edits'):
+                continue
             if key not in self._USER_SETTINGS_WRITE:
                 continue
             write_vals[key] = value
         if write_vals:
             self.write(write_vals)
+        if tier_edits is not None:
+            self._save_user_settings_tiers(tier_edits)
+        elif tier_limits is not None:
+            self._save_user_settings_tier_limits(tier_limits)
         return self.get_user_settings_payload(self.id)
 
     def call_user_settings_action(self, action_name):

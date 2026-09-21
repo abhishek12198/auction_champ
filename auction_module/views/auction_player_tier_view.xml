@@ -23,12 +23,18 @@
             <field name="name">auction.player.tier.tree</field>
             <field name="model">auction.player.tier</field>
             <field name="arch" type="xml">
-                <tree string="Player Tier">
+                <tree string="Player Tier" editable="bottom">
                     <field name="sequence" widget="handle"/>
                     <field name="name"/>
-                    <field name="description"/>
+                    <field name="registration_url" string="Register URL" widget="CopyClipboardChar"
+                            attrs="{'invisible': ['|', ('is_an_icon_tier', '=', True), ('mystery', '=', True)]}"/>
+                    <field name="max_registrations" string="Max Reg"
+                            attrs="{'invisible': ['|', ('is_an_icon_tier', '=', True), ('mystery', '=', True)]}"/>
                     <field name="color"/>
+                    <field name="description" optional="hide"/>
                     <field name="mystery"/>
+                    <field name="is_an_icon_tier" string="Icon"/>
+                    <field name="registration_slug" string="Slug" optional="hide"/>
                     <field name="tournament_id"
                            groups="auction_module.group_auction_group_admin"/>
                 </tree>
@@ -54,6 +60,13 @@
                             <field name="color" widget="selection_badge"/>
                             <field name="tournament_id"
                                    groups="auction_module.group_auction_group_admin"/>
+                        </group>
+                        <group string="Tier Registration"
+                               attrs="{'invisible': ['|', ('is_an_icon_tier', '=', True), ('mystery', '=', True)]}">
+                            <field name="registration_slug" readonly="1"/>
+                            <field name="max_registrations"/>
+                            <field name="registered_count" readonly="1"/>
+                            <field name="registration_url" widget="CopyClipboardChar" readonly="1"/>
                         </group>
                     </group>
                 </form>

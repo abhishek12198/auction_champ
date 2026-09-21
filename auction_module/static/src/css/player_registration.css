@@ -159,6 +159,7 @@ body.reg-page::before {
 .reg-page-label {
     display: inline-flex;
     align-items: center;
+    gap: 8px;
     margin-top: 12px;
     padding: 5px 12px;
     border-radius: 999px;
@@ -170,6 +171,139 @@ body.reg-page::before {
     font-weight: 700;
     letter-spacing: .14em;
     text-transform: uppercase;
+}
+.reg-page-label .reg-tier-color-swatch {
+    width: 10px;
+    height: 10px;
+}
+
+/* Tier category tags — own row under logo+title so they stay left-aligned */
+.reg-tier-tags {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 12px;
+    width: 100%;
+    max-width: 100%;
+    text-align: left;
+    position: relative;
+    z-index: 1;
+}
+
+.reg-tier-only-banner {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(var(--reg-accent-rgb), 0.45);
+    background: rgba(var(--reg-accent-rgb), 0.14);
+    color: #fff;
+    font-family: 'Poppins', sans-serif;
+    font-size: .82rem;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: .01em;
+    max-width: 100%;
+    width: auto;
+    text-align: left;
+    box-sizing: border-box;
+}
+.reg-tier-only-banner strong {
+    color: var(--reg-accent);
+    font-weight: 700;
+}
+.reg-tier-only-text {
+    flex: 0 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+}
+.reg-tier-color-swatch {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--tier-color, var(--reg-accent));
+    border: 2px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+.reg-tier-locked-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 2px 2px 2px 12px;
+    border-radius: 10px;
+    border: 2px solid var(--tier-color, var(--reg-accent));
+    background: rgba(var(--tier-rgb, var(--reg-accent-rgb)), 0.12);
+}
+.reg-tier-locked-field .reg-input {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    opacity: 1;
+    cursor: default;
+    font-weight: 700;
+    color: inherit;
+}
+.reg-tier-locked-field .reg-tier-color-swatch {
+    width: 18px;
+    height: 18px;
+    border-color: rgba(255, 255, 255, 0.7);
+}
+
+/* Locked tier URL: paint banner / label / field with that tier's color */
+.reg-page--tier-locked {
+    --tier-color: #3498db;
+    --tier-ink: #ffffff;
+    --tier-rgb: 52, 152, 219;
+}
+.reg-page--tier-locked .reg-header-card {
+    box-shadow: inset 0 4px 0 0 var(--tier-color);
+}
+.reg-page--tier-locked .reg-page-label {
+    border-color: var(--tier-color);
+    background: rgba(var(--tier-rgb), 0.22);
+    color: var(--tier-color);
+}
+.reg-page--tier-locked .reg-page-label .reg-tier-color-swatch {
+    background: var(--tier-color);
+    border-color: rgba(255, 255, 255, 0.35);
+}
+.reg-page--tier-locked .reg-tier-only-banner {
+    border-color: var(--tier-color);
+    background: var(--tier-color);
+    color: var(--tier-ink);
+}
+.reg-page--tier-locked .reg-tier-only-banner strong {
+    color: var(--tier-ink);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+.reg-page--tier-locked .reg-tier-color-swatch {
+    background: var(--tier-ink);
+    border-color: rgba(0, 0, 0, 0.15);
+    box-shadow: none;
+}
+.reg-page--tier-locked .reg-tier-locked-field {
+    border-color: var(--tier-color);
+    background: rgba(var(--tier-rgb), 0.14);
+    color: #1a2333;
+}
+.reg-page--tier-locked .reg-tier-locked-field .reg-tier-color-swatch {
+    background: var(--tier-color);
+    border-color: rgba(255, 255, 255, 0.85);
+}
+.reg-page--tier-locked .reg-slots-card {
+    border-color: rgba(var(--tier-rgb), 0.45);
+}
+.reg-page--tier-locked .reg-slots-card::before {
+    background: linear-gradient(90deg, var(--tier-color), rgba(var(--tier-rgb), 0.25));
 }
 
 /* Tournament logo — larger now that app logo is gone */
@@ -1682,6 +1816,19 @@ input[type="file"].reg-file-input { display: none; }
     .reg-btn               { width: 100%; justify-content: center; padding: 14px; }
     .reg-alert             { padding: 14px 16px; }
     .reg-section-num       { font-size: 3.8rem; }
+    .reg-tier-only-banner {
+        font-size: .58rem;
+        padding: 4px 6px;
+        gap: 4px;
+    }
+    .reg-page-label--tier {
+        font-size: .58rem;
+        padding: 3px 7px;
+    }
+    .reg-tier-only-banner .reg-tier-color-swatch {
+        width: 7px;
+        height: 7px;
+    }
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1721,6 +1868,43 @@ input[type="file"].reg-file-input { display: none; }
         color: rgba(255,255,255,.88);
     }
     .reg-page-label { margin-top: 10px; font-size: .7rem; padding: 4px 10px; }
+    .reg-tier-tags {
+        align-items: flex-start;
+        gap: 6px;
+        margin-top: 10px;
+        width: 100%;
+    }
+    .reg-page-label--tier {
+        margin-top: 0;
+        font-size: .62rem;
+        padding: 3px 8px;
+        letter-spacing: .08em;
+        max-width: 100%;
+    }
+    .reg-tier-only-banner {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 5px 8px;
+        gap: 5px;
+        font-size: .62rem;
+        line-height: 1.15;
+        letter-spacing: 0;
+        justify-content: flex-start;
+        text-align: left;
+        border-radius: 8px;
+    }
+    .reg-tier-only-banner .reg-tier-color-swatch {
+        width: 8px;
+        height: 8px;
+        border-width: 1px;
+    }
+    .reg-tier-only-text {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: inherit;
+    }
     .reg-tournament-logo-wrap { flex: 0 0 auto; width: 64px; height: 64px; border-radius: 12px; }
     .reg-tournament-logo-wrap img,
     .reg-tournament-logo-wrap .reg-tournament-logo-placeholder {
