@@ -46,6 +46,12 @@ from dateutil.relativedelta import relativedelta
 from odoo import http, fields
 from odoo.http import request
 from odoo.addons.website.controllers.main import Website
+from odoo.addons.web.controllers.main import ensure_db
+from odoo.addons.auction_login_theme.controllers.main import (
+    AuctionLoginController,
+    _safe_post_login_redirect,
+    _session_user_is_logged_in,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -778,3 +784,14 @@ class AuctionChampHomepage(Website):
                 json.dumps([]),
                 headers=[('Content-Type', 'application/json')]
             )
+
+
+class AuctionChampWebsiteLogin(AuctionLoginController):
+    """Website layer: logged-in visitors hitting /web/login go straight to /web."""
+
+    @http.route('/web/login', type='http', auth='none', sitemap=False)
+    def web_login(self, redirect=None, **kw):
+        ensure_db()
+        if request.httprequest.method == 'GET' and _session_user_is_logged_in():
+            return request.redirect(_safe_post_login_redirect(redirect))
+        return super().web_login(redirect=redirect, **kw)

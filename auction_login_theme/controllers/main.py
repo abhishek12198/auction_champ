@@ -37,9 +37,26 @@
 ##############################################################################
 
 from odoo import http
-from odoo.addons.web.controllers.main import Home, Session
+from odoo.addons.web.controllers.main import Home, Session, ensure_db
 from odoo.addons.website.controllers.main import Website
 from odoo.http import request
+
+
+def _safe_post_login_redirect(redirect=None):
+    """Return a same-site path to open after an already-authenticated visit."""
+    dest = (redirect or '').strip() or '/web'
+    if not dest.startswith('/') or dest.startswith('//'):
+        return '/web'
+    return dest
+
+
+def _session_user_is_logged_in():
+    """True when the browser session belongs to a real (non-public) user."""
+    uid = request.session.uid
+    if not uid:
+        return False
+    user = request.env['res.users'].sudo().browse(uid)
+    return bool(user.exists() and not user._is_public())
 
 
 class AuctionRootRedirect(Website):
@@ -55,7 +72,12 @@ class AuctionLoginController(Home):
 
     @http.route('/web/login', type='http', auth='none', sitemap=False)
     def web_login(self, redirect=None, **kw):
-        # Parent handles: ensure_db, CSRF, session auth, success redirect, error state
+        ensure_db()
+        # Already signed in → skip the login form and go to the backend.
+        if request.httprequest.method == 'GET' and _session_user_is_logged_in():
+            return request.redirect(_safe_post_login_redirect(redirect))
+
+        # Parent handles: CSRF, session auth, success redirect, error state
         response = super().web_login(redirect=redirect, **kw)
         # Only swap on GET / failed-POST — success returns a werkzeug redirect (no .template)
         if hasattr(response, 'template') and response.template == 'web.login':
