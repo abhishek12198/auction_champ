@@ -38,7 +38,7 @@
 
 {
     'name': 'Squad Print Designer',
-    'version': '1.0.0',
+    'version': '1.0.1',
     'summary': 'Design & export professional cricket squad cards',
     'description': (
         'Create IPL / Big Bash style squad print cards with 5 professional templates. '

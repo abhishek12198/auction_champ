@@ -1090,15 +1090,16 @@ class Auction(http.Controller):
                 'message': str(exc) or 'Could not put player on stage',
             }
 
-        # Public image URLs (same as projector) — never embed multi-MB base64 in JSON
+        # Fast cached stage JPEG (sz=pj) — same path as projector thumbs.
+        # Warm the worker cache so the drawer img request is a cache hit.
         db = getattr(request, 'db', None) or getattr(request.session, 'db', None) or ''
-        photo_url = ''
-        if player.photo:
-            if db:
-                photo_url = '/%s/auction/public/image/auction.team.player/%d/photo' % (
-                    db, player.id)
-            else:
-                photo_url = '/web/image/auction.team.player/%d/photo' % player.id
+        try:
+            warm_pj_stage_photo(request.env, player)
+        except Exception:
+            _logger.debug('warm drawer photo failed player=%s', player_id, exc_info=True)
+        photo_url = _pj_player_photo_url(db, player, projector_size=True) if db else ''
+        if not photo_url and _pj_has_binary(player, 'photo'):
+            photo_url = '/web/image/auction.team.player/%d/photo' % player.id
 
         result = {
             'id': player.id,
@@ -1127,7 +1128,7 @@ class Auction(http.Controller):
 
         if player.state == 'sold' and player.assigned_team_id:
             result['team_name'] = player.assigned_team_id.name or ''
-            if player.assigned_team_id.logo:
+            if _pj_has_binary(player.assigned_team_id, 'logo'):
                 if db:
                     result['team_logo_url'] = (
                         '/%s/auction/public/image/auction.team/%d/logo' % (

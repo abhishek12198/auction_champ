@@ -2201,6 +2201,124 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     return wrap;
   }
 
+  /* Cached stage JPEG — matches projector sz=pj (fast, worker-cached). */
+  function playerPhotoUrl(playerId) {
+    if (!playerId || !window.AUCTION_IMG_URL) return '';
+    var base = window.AUCTION_IMG_URL('auction.team.player', playerId, 'photo');
+    return base + (base.indexOf('?') >= 0 ? '&' : '?') + 'sz=pj';
+  }
+
+  function findCachedPlayer(playerId) {
+    var id = parseInt(playerId, 10);
+    for (var i = 0; i < (_allPlayers || []).length; i++) {
+      if (_allPlayers[i].id === id) return _allPlayers[i];
+    }
+    return null;
+  }
+
+  function refreshHeaderStats() {
+    var total = (_allPlayers || []).length;
+    var soldCount = 0, unsoldCount = 0;
+    (_allPlayers || []).forEach(function(p) {
+      if (p.state === 'sold') soldCount++;
+      else if (p.state === 'unsold') unsoldCount++;
+    });
+    var remaining = total - soldCount - unsoldCount;
+    var sStat = document.getElementById('sStat');
+    var rStat = document.getElementById('rStat');
+    var sdStat = document.getElementById('soldStat');
+    if (sStat) sStat.textContent = total;
+    if (rStat) rStat.textContent = remaining;
+    if (sdStat) sdStat.textContent = soldCount;
+  }
+
+  /* Instant sold/unsold stamp on the slot — do not wait for loadGrid / drawer close. */
+  function markSlotState(playerId, newState, meta) {
+    meta = meta || {};
+    var id = parseInt(playerId, 10);
+    if (!id || !newState) return;
+    var cached = findCachedPlayer(id);
+    if (cached) {
+      cached.state = newState;
+      if (meta.team_name) cached.team_name = meta.team_name;
+      if (meta.team_id) cached.team_id = meta.team_id;
+    }
+    var btn = document.querySelector(
+      '#auction_grid .mq-btn[data-id="' + id + '"], #auction_grid_mystery .mq-btn[data-id="' + id + '"]'
+    );
+    if (btn) {
+      btn.classList.remove('sold', 'unsold');
+      var oldStamp = btn.querySelector('.mq-slot-stamp');
+      if (oldStamp) oldStamp.remove();
+      var oldLogo = btn.querySelector('.mq-sold-logo');
+      if (oldLogo) oldLogo.remove();
+      if (newState === 'sold') {
+        btn.classList.add('sold');
+        if (meta.team_id && window.AUCTION_IMG_URL) {
+          var logoOverlay = document.createElement('img');
+          logoOverlay.className = 'mq-sold-logo';
+          logoOverlay.src = window.AUCTION_IMG_URL('auction.team', meta.team_id, 'logo');
+          logoOverlay.alt = meta.team_name || '';
+          btn.appendChild(logoOverlay);
+        }
+        btn.appendChild(mqSlotStamp('sold'));
+      } else if (newState === 'unsold') {
+        btn.classList.add('unsold');
+        btn.appendChild(mqSlotStamp('unsold'));
+      } else {
+        /* brought back / auction again */
+      }
+    }
+    refreshHeaderStats();
+    applyGridFilters();
+    refreshReopenAvailability();
+  }
+
+  function prefetchPlayerPhoto(playerId) {
+    if (!playerId) return;
+    var src = playerPhotoUrl(playerId);
+    if (!src) return;
+    var img = new Image();
+    img.decoding = 'async';
+    img.src = src;
+  }
+
+  function paintDrawerPhotoShell(playerId, cached) {
+    var body = document.getElementById('pcBody');
+    if (!body) return;
+    var mysteryHidden = !!(cached && cached.is_mystery && !cached.mystery_revealed);
+    var serial = mysteryHidden ? '??' : ('00' + String((cached && cached.serial) || 0)).slice(-2);
+    var name = mysteryHidden ? 'Mystery Player?' : ((cached && cached.name) || 'Loading\u2026');
+    var photoInner;
+    if (mysteryHidden) {
+      photoInner =
+        '<img class="pc-photo" src="/auction_module/static/img/default_icon.png" alt="Mystery" style="filter:grayscale(1) brightness(0.72);object-fit:cover;"/>';
+    } else {
+      var src = playerPhotoUrl(playerId);
+      photoInner =
+        '<img class="pc-hero-blur" src="' + escHtml(src) + '" alt="" aria-hidden="true"/>' +
+        '<img class="pc-photo" src="' + escHtml(src) + '" alt=""/>';
+      currentPlayerPhoto = src;
+      prefetchPlayerPhoto(playerId);
+    }
+    body.innerHTML =
+      '<div class="pc-stage">' +
+        '<div class="pc-hero" style="position:relative">' +
+          '<div class="pc-onair"><span class="pc-onair-dot"></span>On Stage</div>' +
+          '<div class="pc-serial-watermark">' + (mysteryHidden ? '' : ('#' + escHtml(serial))) + '</div>' +
+          photoInner +
+          '<div class="pc-lower">' +
+            (mysteryHidden ? '' : '<div class="pc-lower-serial">#' + escHtml(serial) + '</div>') +
+            '<div class="pc-lower-name">' + escHtml(name) + '</div>' +
+            '<div class="pc-lower-band"></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="pc-info">' +
+          '<div class="pc-loading" style="padding:24px 8px">Loading player&#8230;</div>' +
+        '</div>' +
+      '</div>';
+  }
+
   function makePlayerBtn(p) {
     var btn = document.createElement('button');
     btn.type = 'button';
@@ -2229,6 +2347,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       btn.appendChild(mqSlotStamp('unsold'));
     }
     btn.onclick = function() { openPlayerDrawer(p.id); };
+    /* Warm photo cache on hover/touch so drawer opens with image already decoded */
+    if (p.state !== 'sold' && p.state !== 'unsold' && !p.is_mystery) {
+      btn.addEventListener('pointerenter', function() { prefetchPlayerPhoto(p.id); }, { once: true });
+      btn.addEventListener('touchstart', function() { prefetchPlayerPhoto(p.id); }, { once: true, passive: true });
+    }
     return btn;
   }
 
@@ -2330,10 +2453,24 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     var overlay = document.getElementById('playerDrawer');
     var body    = document.getElementById('pcBody');
     var actions = document.getElementById('pcActions');
-    if (body) body.innerHTML = '<div class="pc-loading">Loading player&#8230;</div>';
     if (actions) actions.style.display = 'none';
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
+
+    /* Paint photo immediately from cache / sz=pj URL — don't wait for RPC */
+    var cached = findCachedPlayer(playerId);
+    paintDrawerPhotoShell(playerId, cached);
+    if (cached) {
+      currentPlayerName = (cached.is_mystery && !cached.mystery_revealed)
+        ? 'Mystery Player?' : (cached.name || '');
+      currentPlayerSerial = cached.serial || '';
+      currentPlayerIsMystery = !!cached.is_mystery;
+      currentPlayerMysteryRevealed = !!cached.mystery_revealed;
+      currentPlayerState = cached.state || '';
+      if (!(cached.is_mystery && !cached.mystery_revealed)) {
+        currentPlayerPhoto = playerPhotoUrl(playerId);
+      }
+    }
 
     /* Single call: read all player data + set on stage atomically.
        Replaces 2–4 sequential/parallel callKw round-trips.
@@ -2352,7 +2489,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       currentPlayerName      = p.name || '';
       currentPlayerState     = p.state || '';
       currentPlayerRole      = p.role || '';
-      currentPlayerPhoto     = p.photo_url || '';
+      currentPlayerPhoto     = p.photo_url || playerPhotoUrl(playerId) || '';
       currentPlayerSerial    = p.sl_no || '';
       currentPlayerTierName  = p.tier_id ? p.tier_id[1] : '';
       currentPlayerTierColor = p.tier_color || '#3498db';
@@ -2360,6 +2497,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       currentPlayerMysteryRevealed = !!p.mystery_revealed;
       currentPlayerRealName  = (p.is_mystery && !p.mystery_revealed) ? '' : (p.name || '');
       _mysteryAwaitingReveal = !!(p.is_mystery && !p.mystery_revealed && p.state === 'sold');
+
+      /* Prefer already-decoded sz=pj URL so the img does not reload full size */
+      if (currentPlayerPhoto && !p.is_mystery) {
+        p.photo_url = currentPlayerPhoto;
+      }
 
       renderPlayerCard(p, body);
 
@@ -2504,7 +2646,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         '</div>';
     } else if (p.photo_url) {
       photoInner = '<img class="pc-hero-blur" src="' + escHtml(p.photo_url) + '" alt="" aria-hidden="true"/>' +
-        '<img class="pc-photo" src="' + escHtml(p.photo_url) + '" alt="' + escHtml(p.name) + '"/>';
+        '<img class="pc-photo" src="' + escHtml(p.photo_url) + '" alt="' + escHtml(p.name) + '" decoding="async"/>';
+    } else if (p.id) {
+      var fallbackSrc = playerPhotoUrl(p.id);
+      photoInner = '<img class="pc-hero-blur" src="' + escHtml(fallbackSrc) + '" alt="" aria-hidden="true"/>' +
+        '<img class="pc-photo" src="' + escHtml(fallbackSrc) + '" alt="' + escHtml(p.name) + '" decoding="async"/>';
     } else {
       photoInner = '<div class="pc-photo-ph">&#9917;</div>';
     }
@@ -2786,7 +2932,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   window.doUnsold = function() {
     closeUnsoldConfirm();
     if (!currentPlayerId) return;
-    callKw('auction.team.player', 'action_unsold', [[currentPlayerId]]).then(function(res) {
+    var pid = currentPlayerId;
+    callKw('auction.team.player', 'action_unsold', [[pid]]).then(function(res) {
+      /* Affix slot stamp immediately — do not wait for stamp ceremony / loadGrid */
+      markSlotState(pid, 'unsold');
       var result = res.result || {};
       var secs   = result.display_seconds > 0 ? result.display_seconds : 5;
       showStamp('UNSOLD', secs, function() { closePlayerDrawer(true); });
@@ -2812,10 +2961,15 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   window.doBringBack = function() {
     closeUnsoldConfirm();
     if (!currentPlayerId) return;
-    callKw('auction.team.player', 'action_auction', [[currentPlayerId]]).then(function() {
+    var pid = currentPlayerId;
+    markSlotState(pid, 'auction');
+    callKw('auction.team.player', 'action_auction', [[pid]]).then(function() {
       closePlayerDrawer(false);
       loadGrid();
-    }).catch(function() { closePlayerDrawer(); });
+    }).catch(function() {
+      markSlotState(pid, 'unsold');
+      closePlayerDrawer();
+    });
   };
 
   /* ── Sell flow (Premium — mirrors Random mode) ─────────── */
@@ -2840,7 +2994,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         av.style.filter = 'grayscale(1) brightness(0.72)';
         av.style.visibility = 'visible';
       } else {
-        av.src = window.AUCTION_IMG_URL('auction.team.player', smPid, 'photo');
+        av.src = playerPhotoUrl(smPid);
         av.style.filter = '';
         av.style.visibility = 'visible';
       }
@@ -3051,6 +3205,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         errEl.textContent = msg; errEl.style.display = 'block';
         btn.disabled = false; btn.textContent = 'Sell Player'; return;
       }
+      /* Affix sold stamp on the slot immediately — don't wait for countdown / loadGrid */
+      markSlotState(smPid, 'sold', {
+        team_id: data.team_id || (smSelTeam && smSelTeam.team_id),
+        team_name: data.team_name || (smSelTeam && smSelTeam.team_name) || ''
+      });
       smShowSoldScreen2(data);
       if (data.player_name) currentPlayerRealName = data.player_name;
     }).catch(function() {
@@ -3075,7 +3234,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       soldPhoto.alt = 'Mystery Player?';
       if (mysteryNameEl) { mysteryNameEl.style.display = ''; mysteryNameEl.textContent = 'Mystery Player?'; }
     } else {
-      soldPhoto.src = window.AUCTION_IMG_URL('auction.team.player', smPid, 'photo');
+      soldPhoto.src = playerPhotoUrl(smPid) || window.AUCTION_IMG_URL('auction.team.player', smPid, 'photo');
       soldPhoto.style.filter = '';
       if (mysteryNameEl) mysteryNameEl.style.display = 'none';
     }
@@ -4078,6 +4237,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   /* ── Init ──────────────────────────────────────────────── */
   window._auctionReloadGrid = loadGrid;
   document.addEventListener('DOMContentLoaded', function() {
+    /* Preload stamp artwork so first sold/unsold affix is instant */
+    try {
+      var _stampPre = new Image();
+      _stampPre.src = '/auction_module/static/img/sold_overlay_gray.png';
+    } catch (e) {}
     wireFilterControls();
     setTimeout(loadGrid,   100);
     setTimeout(loadTicker, 200);
