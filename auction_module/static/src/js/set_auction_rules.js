@@ -53,36 +53,6 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
         return isNaN(n) ? 0 : n;
     }
 
-    function sarSnapToSlabs(amount, slabs) {
-        amount = sarInt(amount);
-        var sorted = _.sortBy(slabs, function (slab) {
-            return -sarInt(slab.data && slab.data.from_amount);
-        });
-        var i;
-        var slab;
-        var from;
-        var inc;
-        var snapped;
-        for (i = 0; i < sorted.length; i++) {
-            slab = sorted[i];
-            from = sarInt(slab.data && slab.data.from_amount);
-            if (amount < from) {
-                continue;
-            }
-            inc = sarInt(slab.data && slab.data.increment);
-            if (inc <= 0) {
-                return Math.min(amount, sarInt(slab.data && slab.data.to_amount) || amount);
-            }
-            snapped = from + Math.floor((amount - from) / inc) * inc;
-            snapped = Math.min(snapped, amount);
-            if (slab.data && slab.data.to_amount) {
-                snapped = Math.min(snapped, sarInt(slab.data.to_amount));
-            }
-            return snapped;
-        }
-        return amount;
-    }
-
     function sarBudgetSafeMax(data) {
         if (!data) {
             return 0;
@@ -93,7 +63,6 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
         if (purse <= 0) {
             return 0;
         }
-        var slabs = sarRelRecords(data.auction_bid_slab_ids);
         var tiers = sarRelRecords(data.tier_limit_ids);
         var slots = Math.max(squad - 1, 0);
         var tierBases = [];
@@ -125,7 +94,10 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
         } else {
             reserve = slots * globalBase;
         }
-        return sarSnapToSlabs(Math.max(purse - reserve, 0), slabs);
+        // Raw purse − reserve only (same idea as auction._get_budget_safe_max).
+        // Do NOT snap through in-progress slabs — that caps Budget-safe at the
+        // first incomplete Until and poisons the next slab's From.
+        return Math.max(purse - reserve, 0);
     }
 
     /**
@@ -409,8 +381,16 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
         _sarPrevSlabTo: function () {
             var data = this.state && this.state.data;
             if (data && data.length) {
-                var prev = data[data.length - 1];
-                return sarInt(prev && prev.data && prev.data.to_amount);
+                var i;
+                var prev;
+                var to;
+                for (i = data.length - 1; i >= 0; i--) {
+                    prev = data[i];
+                    to = sarInt(prev && prev.data && prev.data.to_amount);
+                    if (to > 0) {
+                        return to;
+                    }
+                }
             }
             return this._sarWizardBase();
         },
