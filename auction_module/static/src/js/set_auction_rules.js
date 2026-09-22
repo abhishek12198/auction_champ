@@ -348,8 +348,11 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
 
         trigger_up: function (name, info) {
             if (name === 'add_record' && this._sarListKind() === 'slabs') {
-                info = info || {};
+                // Must pass a new info object into _super — mutating a local
+                // `info = info || {}` does not update arguments when info was undefined.
+                info = _.extend({}, info || {});
                 info.context = this._sarNextSlabContext(info.context);
+                return this._super.call(this, name, info);
             }
             return this._super.apply(this, arguments);
         },
@@ -378,18 +381,27 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
             return sarBudgetSafeMax(this._sarWizardData());
         },
 
+        _sarSlabRows: function () {
+            // Prefer the live x2many value on the parent field (up to date after
+            // unselectRow). ListRenderer this.state can still be one paint behind.
+            var parent = this.getParent && this.getParent();
+            if (parent && parent.value && parent.value.data && parent.value.data.length) {
+                return parent.value.data;
+            }
+            if (this.state && this.state.data && this.state.data.length) {
+                return this.state.data;
+            }
+            return [];
+        },
+
         _sarPrevSlabTo: function () {
-            var data = this.state && this.state.data;
-            if (data && data.length) {
-                var i;
-                var prev;
-                var to;
-                for (i = data.length - 1; i >= 0; i--) {
-                    prev = data[i];
-                    to = sarInt(prev && prev.data && prev.data.to_amount);
-                    if (to > 0) {
-                        return to;
-                    }
+            var rows = this._sarSlabRows();
+            var i;
+            var to;
+            for (i = rows.length - 1; i >= 0; i--) {
+                to = sarInt(rows[i] && rows[i].data && rows[i].data.to_amount);
+                if (to > 0) {
+                    return to;
                 }
             }
             return this._sarWizardBase();
@@ -542,6 +554,12 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
                     $from.addClass('sar-locked');
                     $from.find('input').prop('readonly', true);
                     $from.find('.sar-cell-step').remove();
+                    // Keep From locked to previous Until (covers missed/stale default context).
+                    var prevTo = self._sarNum($rows.eq(idx - 1), 'to_amount');
+                    var curFrom = self._sarNum($row, 'from_amount');
+                    if (prevTo > 0 && curFrom !== prevTo) {
+                        self._sarSetField($row, 'from_amount', prevTo);
+                    }
                 }
                 self._sarAddStepper($to, 100, 'to_amount');
                 self._sarAddSafeMaxBtn($to, $row);

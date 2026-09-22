@@ -122,6 +122,7 @@ class StartAuction(models.TransientModel):
     @api.onchange('auction_bid_slab_ids')
     def onchange_first_slab_from(self):
         self._apply_first_slab_from()
+        self._chain_slab_from_amounts()
 
     def _apply_single_tier_defaults(self):
         """One tier = squad size and global base, so the line does not stay at 1 / 0."""
@@ -147,12 +148,16 @@ class StartAuction(models.TransientModel):
             rec.team_count = len(rec.team_ids)
 
     def _chain_slab_from_amounts(self):
-        """Fill each slab's From from the previous Until when it was left empty."""
-        prev = 0
-        for line in self.auction_bid_slab_ids:
-            if prev and not line.from_amount:
-                line.from_amount = prev
-            prev = line.to_amount or line.from_amount or 0
+        """Each slab's From must equal the previous Until (rows after the first)."""
+        prev_to = 0
+        for index, line in enumerate(self.auction_bid_slab_ids):
+            if index == 0:
+                if not line.from_amount and self.base_point:
+                    line.from_amount = self.base_point
+            elif prev_to:
+                # Always chain — From is locked in the wizard for row 2+.
+                line.from_amount = prev_to
+            prev_to = line.to_amount or 0
 
     def button_start_auction(self):
         self._chain_slab_from_amounts()
