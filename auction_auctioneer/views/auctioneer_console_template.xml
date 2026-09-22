@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Exo+2:wght@500;600;700;800;900&amp;family=Barlow+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="/auction_auctioneer/static/src/css/auctioneer_console.css?v=1.4.16"/>
+    <link rel="stylesheet" href="/auction_auctioneer/static/src/css/auctioneer_console.css?v=1.4.74"/>
 </head>
 <body class="ac-body" id="acBody" t-att-data-sport="tournament.tournament_type if tournament else 'cricket'">
 
@@ -341,7 +341,7 @@ window.acToggleTheme = function() {
     document.getElementById('acThemeIcon').textContent = next === 'dark' ? '☀' : '🌙';
 };
 </script>
-<script src="/auction_auctioneer/static/src/js/auctioneer_console.js?v=1.4.16"></script>
+<script src="/auction_auctioneer/static/src/js/auctioneer_console.js?v=1.4.74"></script>
 </body>
 </html>
 </template>

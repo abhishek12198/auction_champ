@@ -15,7 +15,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Barlow+Condensed:wght@400;500;600;700&amp;family=Orbitron:wght@600;700;900&amp;family=Rajdhani:wght@400;500;600;700&amp;family=Nunito:wght@600;700;800&amp;family=Teko:wght@600;700&amp;display=swap" rel="stylesheet"/>
   <t t-call-assets="web.assets_common" t-js="false"/>
-  <t t-call-assets="web.assets_frontend" t-js="false"/>
+  <!-- Do NOT load web.assets_frontend here: it bundles auctioneer_console.css
+       which resets all `button { background:none }` and breaks slot colors
+       on production asset bundles. Live-bid CSS/JS load via their own tags. -->
   <style>
 /* ═══ THEMES ══════════════════════════════════════════════════════════ */
 [data-theme="vanilla"]{
@@ -316,10 +318,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .mq-btn.mystery{border-color:rgba(201,162,39,.55);background:rgba(201,162,39,.12);color:#e8c547}
 .mq-btn.mystery:hover{background:rgba(201,162,39,.22);color:#f5d76e;box-shadow:0 0 12px rgba(201,162,39,.25)}
 .mq-btn.mystery .mq-num{font-size:1.35em;letter-spacing:0}
-.mq-btn{width:100%;aspect-ratio:1;background:var(--btn-bg);border:1.5px solid var(--btn-bd);
-  border-radius:10px;color:var(--btn-tx);font-family:var(--hf);font-size:1.3rem;font-weight:700;
+.mq-btn{width:100%;aspect-ratio:1;background:var(--btn-bg,#1a3560);border:1.5px solid var(--btn-bd,#5b7eb8);
+  border-radius:10px;color:var(--btn-tx,#eef2f8);font-family:var(--hf,'Orbitron',sans-serif);font-size:1.3rem;font-weight:700;
   cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  letter-spacing:1px;position:relative;overflow:hidden}
+  letter-spacing:1px;position:relative;overflow:hidden;
+  appearance:none;-webkit-appearance:none;box-shadow:none}
 .mq-btn::before{content:'';position:absolute;inset:0;
   background:radial-gradient(circle at 50% 0%,var(--accent-glow) 0%,transparent 70%);opacity:0;transition:opacity .2s}
 .mq-btn:hover{background:var(--btn-hbg);color:var(--btn-htx);
@@ -2349,7 +2352,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       currentPlayerName      = p.name || '';
       currentPlayerState     = p.state || '';
       currentPlayerRole      = p.role || '';
-      currentPlayerPhoto     = p.photo || '';
+      currentPlayerPhoto     = p.photo_url || '';
       currentPlayerSerial    = p.sl_no || '';
       currentPlayerTierName  = p.tier_id ? p.tier_id[1] : '';
       currentPlayerTierColor = p.tier_color || '#3498db';
@@ -2499,9 +2502,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           '<div class="pc-mystery-lock-title">PLAYER LOCKED</div>' +
           '<div class="pc-mystery-lock-sub">Requires Winning Bid</div>' +
         '</div>';
-    } else if (p.photo) {
-      photoInner = '<img class="pc-hero-blur" src="data:image/png;base64,' + p.photo + '" alt="" aria-hidden="true"/>' +
-        '<img class="pc-photo" src="data:image/png;base64,' + p.photo + '" alt="' + escHtml(p.name) + '"/>';
+    } else if (p.photo_url) {
+      photoInner = '<img class="pc-hero-blur" src="' + escHtml(p.photo_url) + '" alt="" aria-hidden="true"/>' +
+        '<img class="pc-photo" src="' + escHtml(p.photo_url) + '" alt="' + escHtml(p.name) + '"/>';
     } else {
       photoInner = '<div class="pc-photo-ph">&#9917;</div>';
     }
@@ -2520,8 +2523,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
     var stateBanner = '';
     if (p.state === 'sold') {
-      var logoHtml = p.team_logo
-        ? '<img class="sb-logo" src="data:image/png;base64,' + p.team_logo + '" alt=""/>'
+      var logoHtml = p.team_logo_url
+        ? '<img class="sb-logo" src="' + escHtml(p.team_logo_url) + '" alt=""/>'
         : '';
       var ptsHtml = p.sold_points
         ? '<span class="sb-pts">' + (window.fmtUnit ? window.fmtUnit(p.sold_points) : (p.sold_points + ' pts')) + '</span>'
@@ -3290,7 +3293,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         photoEl.innerHTML = '<img class="ss-photo" src="/auction_module/static/img/default_icon.png" alt="Mystery" style="filter:grayscale(1) brightness(0.72);border:3px solid ' + currentPlayerTierColor + '"/>';
       } else {
         photoEl.innerHTML = currentPlayerPhoto
-          ? '<img class="ss-photo" src="data:image/png;base64,' + currentPlayerPhoto
+          ? '<img class="ss-photo" src="' + currentPlayerPhoto
               + '" alt="player" style="border:3px solid ' + currentPlayerTierColor + '"/>'
           : '<div class="ss-photo-ph">&#128100;</div>';
       }

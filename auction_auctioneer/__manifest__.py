@@ -38,7 +38,7 @@
 
 {
     'name': 'Auction Auctioneer Console',
-    'version': '1.4.73',
+    'version': '1.4.74',
     'summary': 'Live bidding console for the Auctioneer',
     'description': """
         Provides a dedicated Auctioneer Console – a full-screen web app (no Odoo
@@ -65,12 +65,6 @@
         'views/display_live_bid.xml',
         'views/menu.xml',
     ],
-    'assets': {
-        'web.assets_frontend': [
-            '/auction_auctioneer/static/src/css/auctioneer_console.css',
-            '/auction_auctioneer/static/src/js/auctioneer_console.js',
-        ],
-    },
     'installable': True,
     'application': False,
     'license': 'LGPL-3',

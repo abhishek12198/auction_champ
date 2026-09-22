@@ -1090,9 +1090,15 @@ class Auction(http.Controller):
                 'message': str(exc) or 'Could not put player on stage',
             }
 
-        photo = ''
+        # Public image URLs (same as projector) — never embed multi-MB base64 in JSON
+        db = getattr(request, 'db', None) or getattr(request.session, 'db', None) or ''
+        photo_url = ''
         if player.photo:
-            photo = player.photo.decode('utf-8') if isinstance(player.photo, bytes) else player.photo
+            if db:
+                photo_url = '/%s/auction/public/image/auction.team.player/%d/photo' % (
+                    db, player.id)
+            else:
+                photo_url = '/web/image/auction.team.player/%d/photo' % player.id
 
         result = {
             'id': player.id,
@@ -1103,12 +1109,14 @@ class Auction(http.Controller):
             'bowling_style': player.bowling_style or '',
             'contact': player.contact or '',
             'masked_contact': player.masked_contact or '',
-            'photo': photo,
+            'photo': '',
+            'photo_url': photo_url,
             'state': player.state or '',
             'tier_id': [player.tier_id.id, player.tier_id.name] if player.tier_id else False,
             'tier_color': player.tier_color or '',
             'assigned_team_id': [player.assigned_team_id.id, player.assigned_team_id.name] if player.assigned_team_id else False,
             'team_logo': '',
+            'team_logo_url': '',
             'team_name': '',
             'sold_points': 0,
             'base_price': int(player.effective_base_price or player.base_price or 0),
@@ -1120,8 +1128,13 @@ class Auction(http.Controller):
         if player.state == 'sold' and player.assigned_team_id:
             result['team_name'] = player.assigned_team_id.name or ''
             if player.assigned_team_id.logo:
-                logo = player.assigned_team_id.logo
-                result['team_logo'] = logo.decode('utf-8') if isinstance(logo, bytes) else logo
+                if db:
+                    result['team_logo_url'] = (
+                        '/%s/auction/public/image/auction.team/%d/logo' % (
+                            db, player.assigned_team_id.id))
+                else:
+                    result['team_logo_url'] = (
+                        '/web/image/auction.team/%d/logo' % player.assigned_team_id.id)
             auction_line = request.env['auction.auction.player'].sudo().search(
                 [('player_id', '=', player_id)], limit=1)
             result['sold_points'] = auction_line.points if auction_line else 0
@@ -1135,6 +1148,7 @@ class Auction(http.Controller):
                 'role': '???',
                 'sl_no': 0,
                 'photo': '',
+                'photo_url': '',
                 'batting_style': '',
                 'bowling_style': '',
                 'contact': '',
