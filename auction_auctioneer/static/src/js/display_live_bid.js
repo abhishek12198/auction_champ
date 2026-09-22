@@ -82,6 +82,10 @@
         return m ? decodeURIComponent(m[1]) : '';
     }
     function isClosed() {
+        /* Roll Call mobile: keep pad open so all teams are reachable while scrolling. */
+        try {
+            if (document.getElementById('playerDrawer') && isMobileLiveBid()) return false;
+        } catch (e) { /* ignore */ }
         try { return sessionStorage.getItem(STORE_CLOSED) === '1'; } catch (e) { return false; }
     }
     function isMobileLiveBid() {
@@ -115,8 +119,15 @@
         // Confirmed no Auctioneer access: drop Current Bid + Live Bid so layouts
         // (especially mobile) reclaim the empty chrome instead of scrolling past it.
         var hideBidChrome = !!accessDenied || !allowed;
+        var isRollCall = !!document.getElementById('playerDrawer');
         if (document.body) {
-            document.body.classList.toggle('ac-showcase', !!allowed && !accessDenied);
+            /* ac-showcase styles the Auctioneer Console strip — never apply to
+               Roll Call body or the number-slot layout breaks. */
+            if (!isRollCall) {
+                document.body.classList.toggle('ac-showcase', !!allowed && !accessDenied);
+            } else {
+                document.body.classList.remove('ac-showcase');
+            }
             document.body.classList.toggle('ac-livebid-allowed', !!allowed && !accessDenied);
             document.body.classList.toggle('ac-livebid-off', !!accessDenied || !allowed);
         }
@@ -743,6 +754,21 @@
         window.changeImage._acLiveBid = true;
     }
 
+    /* Roll Call: refresh after a number-slot opens (player_quick_data sets on stage). */
+    function wrapOpenPlayerDrawer() {
+        if (typeof window.openPlayerDrawer !== 'function' || window.openPlayerDrawer._acLiveBid) return;
+        var orig = window.openPlayerDrawer;
+        window.openPlayerDrawer = function () {
+            var ret = orig.apply(this, arguments);
+            Promise.resolve(ret).then(function () {
+                setTimeout(refreshPad, 120);
+                setTimeout(refreshPad, 450);
+            });
+            return ret;
+        };
+        window.openPlayerDrawer._acLiveBid = true;
+    }
+
     function projectorSseUrl() {
         var path = location.pathname || '';
         var m = path.match(/^\/([^/]+)\/auction\/display_auction\/([^/]+)/);
@@ -753,6 +779,7 @@
         if (!pollTimer) {
             pollTimer = setInterval(function () {
                 wrapChangeImage();
+                wrapOpenPlayerDrawer();
                 poll();
             }, 2500);
         }
@@ -795,5 +822,14 @@
     refreshPad();
     watchZone();
     wrapChangeImage();
+    wrapOpenPlayerDrawer();
+    /* openPlayerDrawer is defined later in the Roll Call page script */
+    var drawerWrapTries = 0;
+    (function retryWrapDrawer() {
+        wrapOpenPlayerDrawer();
+        if (window.openPlayerDrawer && window.openPlayerDrawer._acLiveBid) return;
+        if (drawerWrapTries++ > 40) return;
+        setTimeout(retryWrapDrawer, 150);
+    })();
     startBidSse();
 })();

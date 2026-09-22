@@ -80,9 +80,11 @@
             </div>
         </div>
         <div class="ac-livebid-toast" id="acLiveBidToast"></div>
-        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_live_bid.css?v=51"/>
-        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_showcase.css?v=12"/>
-        <script src="/auction_auctioneer/static/src/js/display_live_bid.js?v=43"></script>
+        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_live_bid.css?v=54"/>
+        <t t-if="not ac_livebid_rollcall">
+            <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_showcase.css?v=13"/>
+        </t>
+        <script src="/auction_auctioneer/static/src/js/display_live_bid.js?v=46"></script>
     </template>
 
     <!-- Under player profile, above Unsold / Sell / Next.
@@ -95,6 +97,19 @@
         <xpath expr="//div[hasclass('hud-actions')]" position="before">
             <t t-if="request.env.user.has_group('auction_auctioneer.group_auctioneer')">
                 <t t-call="auction_auctioneer.live_bid_pad"/>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- Roll Call: live bid only inside the player drawer — do not load
+         display_showcase.css (that file restyles Lucky Dip / slot pages). -->
+    <template id="live_bid_pad_rollcall" inherit_id="auction_module.player_sequence_selector">
+        <xpath expr="//div[@id='pcBody']" position="after">
+            <t t-if="request.env.user.has_group('auction_auctioneer.group_auctioneer')">
+                <div class="pc-livebid-wrap" id="pcLiveBidWrap" data-player-zone="1">
+                    <t t-set="ac_livebid_rollcall" t-value="True"/>
+                    <t t-call="auction_auctioneer.live_bid_pad"/>
+                </div>
             </t>
         </xpath>
     </template>

@@ -461,9 +461,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   display:flex;flex-direction:column;background:var(--bg)}
 #pcPanel:fullscreen .pc-ph,#pcPanel:-webkit-full-screen .pc-ph,#pcPanel:-moz-full-screen .pc-ph{display:none}
 #pcPanel:fullscreen .pc-body,#pcPanel:-webkit-full-screen .pc-body,#pcPanel:-moz-full-screen .pc-body{flex:1;min-height:0;height:auto}
+#pcPanel:fullscreen .pc-scroll,#pcPanel:-webkit-full-screen .pc-scroll,#pcPanel:-moz-full-screen .pc-scroll{
+  flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 #pcPanel:fullscreen .pc-actions,#pcPanel:-webkit-full-screen .pc-actions,#pcPanel:-moz-full-screen .pc-actions{
   display:flex!important;flex-shrink:0;position:relative;z-index:20}
 .pc-body{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.pc-scroll{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
 
 /* ═══ BROADCAST PLAYER STAGE (deck drawer) ═══════════════════════════ */
 .pc-stage{flex:1;display:grid;grid-template-columns:minmax(280px,1.05fr) minmax(300px,1fr);
@@ -1321,28 +1324,37 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   .pc-logo{height:28px}
   .pc-close{font-size:1.6rem;width:36px;height:36px}
 
-  /* Drawer body — stack vertically, hero on top */
-  .pc-body{overflow-y:auto;-webkit-overflow-scrolling:touch}
+  /* Drawer body — stack vertically, hero on top; scroll middle, sticky actions */
+  .pc-scroll{
+    flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    display:block;
+  }
+  .pc-body{overflow:visible;flex:none;display:block;min-height:0}
   .pc-stage{grid-template-columns:1fr;min-height:auto}
-  .pc-hero{min-height:220px;height:42vh;max-height:320px}
+  .pc-hero{min-height:120px;height:26vh;max-height:180px}
   .pc-photo{object-fit:cover}
-  .pc-serial-watermark{font-size:6rem}
-  .pc-lower{padding:18px 14px 14px}
-  .pc-lower-name{font-size:1.7rem;letter-spacing:1px}
-  .pc-lower-role{font-size:.78rem;letter-spacing:.18em}
+  .pc-serial-watermark{font-size:4.5rem}
+  .pc-lower{padding:14px 12px 12px}
+  .pc-lower-name{font-size:1.35rem;letter-spacing:1px}
+  .pc-lower-role{font-size:.72rem;letter-spacing:.16em}
 
   /* Info panel */
-  .pc-info{padding:14px 14px 8px}
-  .pc-base-val{font-size:1.45rem}
+  .pc-info{padding:12px 14px 8px}
+  .pc-base-val{font-size:1.25rem}
   .pc-tier-badge,.pc-role-badge,.pc-key-badge{font-size:.7rem;padding:4px 12px}
   .pc-attrs{grid-template-columns:1fr 1fr;gap:8px}
-  .pc-attr{padding:8px 10px;min-height:62px}
+  .pc-attr{padding:8px 10px;min-height:56px}
   .pc-attr-label{font-size:.58rem}
   .pc-attr-val{font-size:.9rem}
   .pc-state-banner{font-size:.75rem;padding:6px 10px;margin-top:8px}
 
-  /* Action buttons — premium themed CTAs */
-  .pc-actions{padding:12px 12px max(14px, env(safe-area-inset-bottom));gap:10px;flex-wrap:wrap}
+  /* Action buttons — fixed footer outside scroll area */
+  .pc-actions{
+    position:relative;bottom:auto;z-index:40;flex-shrink:0;
+    padding:10px 12px max(12px, env(safe-area-inset-bottom));gap:10px;flex-wrap:wrap;
+    background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.28)),var(--bg-p);
+    box-shadow:0 -10px 28px rgba(0,0,0,.4);
+  }
   .pc-action-btn{
     flex:1 1 42%;min-height:54px;padding:10px 12px;border-radius:14px;gap:10px
   }
@@ -1593,8 +1605,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         <button class="pc-close" onclick="closePlayerDrawer()">&#215;</button>
       </div>
     </div>
-    <div class="pc-body" id="pcBody">
-      <div class="pc-loading">Loading&#8230;</div>
+    <div class="pc-scroll" id="pcScroll">
+      <div class="pc-body" id="pcBody">
+        <div class="pc-loading">Loading&#8230;</div>
+      </div>
     </div>
     <div class="pc-actions" id="pcActions" style="display:none">
       <button class="pc-action-btn unsold-btn" id="btnUnsold" onclick="openUnsoldConfirm()">

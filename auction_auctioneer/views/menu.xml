@@ -2,6 +2,7 @@
 <odoo>
 <data>
     <!-- Standalone Auctioneer Console app menu removed.
-         Live bidding now runs on display_auction, gated by group_auctioneer. -->
+         Live bidding runs on display_auction and Roll Call (player_selector)
+         player drawer, gated by group_auctioneer. -->
 </data>
 </odoo>

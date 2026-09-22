@@ -1064,9 +1064,10 @@ body[data-theme="dark"] .player-profession .ac-livebid-overlay {
     }
 
     /* Theme pages lock html/body to 100vh + overflow:hidden. After Current Bid
-       the Live Bid pad and Unsold / Sell / Next sit below that clip. Unlock scroll. */
-    html:has(#acLiveBidPad),
-    html:has(#acLiveBidPad) body {
+       the Live Bid pad and Unsold / Sell / Next sit below that clip. Unlock scroll.
+       Skip Roll Call (#playerDrawer) — slot grid must keep its own layout. */
+    html:has(#acLiveBidPad):not(:has(#playerDrawer)),
+    html:has(#acLiveBidPad):not(:has(#playerDrawer)) body {
         height: auto !important;
         max-height: none !important;
         min-height: 100% !important;
@@ -1336,5 +1337,42 @@ body[data-theme="dark"] .player-profession .ac-livebid-overlay {
     .hud-actions,
     .hud-next-bar {
         flex-shrink: 0 !important;
+    }
+}
+
+/* ── Roll Call (manual) player drawer — bid chrome only, no page layout ─ */
+#pcLiveBidWrap {
+    flex-shrink: 0;
+    width: 100%;
+    min-height: 0;
+}
+#pcLiveBidWrap .ac-livebid-launch,
+#pcLiveBidWrap #acLiveBidPad,
+#pcLiveBidWrap .ac-bid-hero,
+#pcLiveBidWrap .ac-livebid-overlay,
+#pcLiveBidWrap .ac-livebid-toast {
+    --lb-accent: var(--accent, #3B82F6);
+    --lb-bright: var(--accent2, var(--accent, #8aa6d4));
+    --lb-text: var(--tx, #fff);
+    --lb-muted: var(--tx-d, rgba(255, 255, 255, 0.55));
+    --lb-line: var(--div, rgba(255, 255, 255, 0.12));
+}
+
+/* Mobile drawer: smaller photo already in selector CSS; keep full team grid
+   in the scroll region above the sticky Sell / Unsold footer. */
+@media (max-width: 1024px) {
+    #pcLiveBidWrap #acLiveBidPad.is-on.is-open {
+        display: flex !important;
+        overflow: visible !important;
+        max-height: none !important;
+    }
+    #pcLiveBidWrap #acLiveBidPad .ac-livebid-grid,
+    #pcLiveBidWrap #acLiveBidPad.is-expanded .ac-livebid-grid {
+        display: grid !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    #pcLiveBidWrap #acLiveBidToggle {
+        display: none !important;
     }
 }

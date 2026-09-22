@@ -227,8 +227,9 @@ body:has(#acLiveBidPad) .hud-stats-heading {
 
 /* ── Phone ─────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
-    html:has(#acLiveBidPad),
-    body:has(#acLiveBidPad) {
+    /* Lucky Dip only — do not rewrite Roll Call (#playerDrawer) page scroll. */
+    html:has(#acLiveBidPad):not(:has(#playerDrawer)),
+    body:has(#acLiveBidPad):not(:has(#playerDrawer)) {
         height: auto !important;
         max-height: none !important;
         overflow-x: hidden !important;
