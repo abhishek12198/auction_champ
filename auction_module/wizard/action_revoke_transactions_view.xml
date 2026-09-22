@@ -46,11 +46,11 @@
                     </div>
 
                     <div class="rt-card rt-card-history"
-                         title="Permanently delete this tournament’s auction history records. Those entries cannot be recovered.">
+                         title="Permanently delete this tournament’s auction history and reset any live bids on players to default.">
                         <div class="rt-card-icon"><i class="fa fa-book"/></div>
                         <div class="rt-card-copy">
                             <div class="rt-card-title">Clear History</div>
-                            <div class="rt-card-sub">Permanently delete this tournament's auction history</div>
+                            <div class="rt-card-sub">Delete auction history and reset all player bids to default</div>
                         </div>
                         <span class="rt-count">
                             <field name="history_count" readonly="1" nolabel="1"/>

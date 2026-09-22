@@ -1979,16 +1979,18 @@ class AuctionTeamPlayer(models.Model):
                 player._clear_live_bid()
                 auction_player = self.env['auction.auction.player'].search([('player_id', '=', player.id)])
                 if auction_player:
-                    auction_player.action_recall_to_auction()
+                    auction_player.with_context(**context).action_recall_to_auction()
                     recalled |= player
         tournaments = (recalled | self).mapped('tournament_id')
-        self._reopen_live_after_recall(tournaments)
+        if not context.get('skip_reopen_live'):
+            self._reopen_live_after_recall(tournaments)
         if context.get('mass_update', False):
             if context.get('restore_to_state') == 'draft':
                 message = 'Selected players restored to Draft successfully.'
             else:
                 message = 'Selected players brought back to auction successfully!. The player will be available in the auction'
-            self.env.user.notify_success(message)
+            if hasattr(self.env.user, 'notify_success') and not context.get('revoke_wizard'):
+                self.env.user.notify_success(message)
 
     def action_auction(self):
         """Move draft/unsold players into In Auction (manual or mass reopen)."""
@@ -2008,13 +2010,16 @@ class AuctionTeamPlayer(models.Model):
                     except Exception:
                         pass
         tournaments = opened.mapped('tournament_id')
-        self._reopen_live_after_recall(tournaments)
+        if not context.get('skip_reopen_live'):
+            self._reopen_live_after_recall(tournaments)
         if opened and (context.get('mass_update', False) or len(opened) > 1):
-            message = 'Selected players brought to auction successfully!'
-            try:
-                self.env.user.notify_success(message)
-            except Exception:
-                pass
+            if not context.get('revoke_wizard') and hasattr(self.env.user, 'notify_success'):
+                try:
+                    self.env.user.notify_success(
+                        'Selected players brought to auction successfully!'
+                    )
+                except Exception:
+                    pass
         return {'success': True, 'opened': len(opened)}
 
     def action_revoke_key_player(self):

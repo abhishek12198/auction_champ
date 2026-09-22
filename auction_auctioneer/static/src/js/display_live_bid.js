@@ -236,14 +236,25 @@
         return null;
     }
     function scrollPos() {
-        var x = window.scrollX || window.pageXOffset || 0;
-        var y = window.scrollY || window.pageYOffset || 0;
-        return { x: x, y: y };
+        var sc = document.getElementById('pcScroll');
+        return {
+            x: window.scrollX || window.pageXOffset || 0,
+            y: window.scrollY || window.pageYOffset || 0,
+            sx: sc ? sc.scrollLeft : 0,
+            sy: sc ? sc.scrollTop : 0,
+        };
     }
     function restoreScroll(pos) {
         if (!pos) return;
         var apply = function () {
             try { window.scrollTo(pos.x, pos.y); } catch (e) { /* ignore */ }
+            var sc = document.getElementById('pcScroll');
+            if (sc && pos.sy != null) {
+                try {
+                    sc.scrollLeft = pos.sx || 0;
+                    sc.scrollTop = pos.sy;
+                } catch (e2) { /* ignore */ }
+            }
         };
         apply();
         requestAnimationFrame(function () {
@@ -360,7 +371,13 @@
                 if (off && !leadOn) {
                     foot = '<div class="ac-livebid-off" title="' + esc(bidReason(team)) + '">' + esc(bidReason(team) || 'Off') + '</div>';
                 } else if (!leadOn) {
-                    foot = '<span class="ac-livebid-chip" data-custom="' + team.id + '" title="Enter custom points">' + fmt(team.next_bid) + '</span>';
+                    /* Mobile: amount is display-only — tap the team tile to bid next.
+                       Opening custom here steals focus/scroll away from the team box. */
+                    if (isMobileLiveBid()) {
+                        foot = '<span class="ac-livebid-chip" title="Tap team to bid">' + fmt(team.next_bid) + '</span>';
+                    } else {
+                        foot = '<span class="ac-livebid-chip" data-custom="' + team.id + '" title="Enter custom points">' + fmt(team.next_bid) + '</span>';
+                    }
                 } else {
                     foot = '<div class="ac-livebid-leadamt">' + fmt(player.current_bid) + '</div>';
                 }
@@ -695,6 +712,23 @@
         }
         var chip = ev.target.closest('#acLiveBidGrid [data-custom]');
         if (chip) {
+            /* On small screens keep the tap on the team tile (quick next bid). */
+            if (isMobileLiveBid()) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                var chipTeamId = parseInt(chip.getAttribute('data-custom'), 10);
+                var chipTeam = teamsCache.filter(function (t) { return t.id === chipTeamId; })[0];
+                if (chipTeam && canBid(chipTeam)) {
+                    busyId = chipTeamId;
+                    placeBid(chipTeam, chipTeam.next_bid, function (err, result) {
+                        busyId = 0;
+                        if (err || !result) { toast(err || 'Bid failed', true); poll(); return; }
+                        toast(fmt(result.current_bid) + ' — ' + (result.team_name || ''));
+                        poll();
+                    });
+                }
+                return;
+            }
             ev.preventDefault();
             ev.stopPropagation();
             openCustom(parseInt(chip.getAttribute('data-custom'), 10));

@@ -1375,4 +1375,9 @@ body[data-theme="dark"] .player-profession .ac-livebid-overlay {
     #pcLiveBidWrap #acLiveBidToggle {
         display: none !important;
     }
+    /* Stop Current Bid updates from yanking the drawer scroll */
+    #pcLiveBidWrap .ac-bid-hero,
+    #pcLiveBidWrap .ac-bid-hero-pts {
+        overflow-anchor: none;
+    }
 }

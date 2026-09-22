@@ -135,7 +135,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .mq-header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
   background:linear-gradient(90deg,transparent,var(--accent) 30%,var(--accent2) 50%,var(--accent) 70%,transparent);
   box-shadow:0 0 10px var(--accent-glow)}
-.mq-hl{display:flex;align-items:center;gap:12px}
+.mq-hl{display:flex;align-items:center;gap:12px;min-width:0;flex:1}
 .mq-brand-link{display:flex;align-items:center;flex-shrink:0;text-decoration:none;line-height:0}
 .mq-ac-logo{height:28px;width:auto;max-width:150px;object-fit:contain;display:block;
   filter:drop-shadow(0 1px 3px rgba(0,0,0,.35))}
@@ -148,14 +148,16 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
          drop-shadow(0 1px 2px rgba(0,0,0,.12));
 }
 .mq-hl-sep{width:1px;height:28px;background:var(--div);flex-shrink:0}
-.mq-logo{width:44px;height:44px;border-radius:50%;border:2px solid var(--accent);object-fit:contain;background:var(--bg-c)}
+.mq-logo{width:44px;height:44px;border-radius:50%;border:2px solid var(--accent);object-fit:contain;background:var(--bg-c);flex-shrink:0}
 .mq-logo-ph{width:44px;height:44px;border-radius:50%;border:2px solid var(--accent);background:var(--bg-c);
-  display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--accent)}
-.mq-tname{font-family:var(--hf);font-size:.95rem;font-weight:700;letter-spacing:1px}
+  display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--accent);flex-shrink:0}
+.mq-hl-titles{min-width:0;flex:1;overflow:hidden}
+.mq-tname{font-family:var(--hf);font-size:.95rem;font-weight:700;letter-spacing:1px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mq-tsub{font-size:.62rem;color:var(--tx-d);letter-spacing:2px;text-transform:uppercase}
 .mq-hc{font-family:var(--hf);font-size:1rem;font-weight:700;letter-spacing:4px;
   text-transform:uppercase;color:var(--accent);text-shadow:0 0 12px var(--accent-glow)}
-.mq-hr{display:flex;align-items:center;gap:8px}
+.mq-hr{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .mq-live-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);
   box-shadow:0 0 8px var(--accent);animation:mq-pulse 1.5s infinite}
 @keyframes mq-pulse{0%,100%{box-shadow:0 0 6px var(--accent);opacity:1}50%{box-shadow:0 0 18px var(--accent);opacity:.6}}
@@ -326,34 +328,50 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .mq-num{font-size:inherit;font-weight:700;line-height:1;position:relative;z-index:1}
 .mq-lbl{font-size:0.48rem;font-weight:700;letter-spacing:1.5px;line-height:1;position:relative;z-index:1;
   text-transform:uppercase;opacity:.95}
-/* SOLD — gold */
+/* SOLD — gold tile + green AuctionChamp stamp (same asset as projector) */
 .mq-btn.sold{background:rgba(218,165,32,.18);border:1.5px solid #DAA520;color:#DAA520;cursor:pointer}
 .mq-btn.sold::before{display:none}
 .mq-btn.sold:hover{transform:translateY(-2px);box-shadow:0 0 12px rgba(218,165,32,.3);background:rgba(218,165,32,.26);color:#DAA520}
-/* UNSOLD — crimson */
+/* UNSOLD — crimson tile + red stamp (same asset as projector) */
 .mq-btn.unsold{background:rgba(220,20,60,.18);border:1.5px solid #DC143C;color:#DC143C;cursor:pointer}
 .mq-btn.unsold::before{display:none}
 .mq-btn.unsold:hover{transform:none;box-shadow:none;background:rgba(220,20,60,.18);color:#DC143C}
-/* Prohibited icon — full overlay on every unsold button, all themes */
-.mq-btn.unsold::after{
-  content:'';position:absolute;inset:0;
-  border-radius:8px;
-  border:2px solid currentColor;
-  background:linear-gradient(
-    135deg,
-    transparent calc(50% - 1.2px),
-    currentColor calc(50% - 1.2px),
-    currentColor calc(50% + 1.2px),
-    transparent calc(50% + 1.2px)
-  );
-  z-index:2;opacity:.35;pointer-events:none;
+.mq-btn.sold::after,
+.mq-btn.unsold::after{display:none !important;content:none}
+.mq-btn.sold .mq-num,
+.mq-btn.unsold .mq-num{position:relative;z-index:1;opacity:.22;font-size:.85em}
+
+/* Slot stamps — projector sold_overlay_gray.png, green / red tint, fit in cell */
+.mq-slot-stamp{
+  position:absolute;inset:3%;z-index:3;pointer-events:none;
+  display:flex;align-items:center;justify-content:center;
+  transform:rotate(-12deg);
 }
-/* Deck stamp overlay (UNSOLD red / SOLD with logo) */
-/* Sold — subtle team logo centered behind number */
+.mq-slot-stamp-mark{
+  width:100%;height:100%;object-fit:contain;display:block;
+  opacity:.96;pointer-events:none;
+}
+.mq-slot-stamp--sold .mq-slot-stamp-mark{
+  /* Match projector sold seal — green AuctionChamp mark */
+  filter:sepia(1) saturate(14) hue-rotate(70deg) brightness(1.05);
+  mix-blend-mode:screen;
+}
+.mq-slot-stamp--unsold .mq-slot-stamp-mark{
+  /* Match projector unsold seal — red mark */
+  filter:sepia(1) saturate(18) hue-rotate(-45deg) brightness(1.02);
+  mix-blend-mode:screen;
+}
+[data-theme="lemon"] .mq-slot-stamp--sold .mq-slot-stamp-mark,
+[data-theme="strawberry"] .mq-slot-stamp--sold .mq-slot-stamp-mark,
+[data-theme="lemon"] .mq-slot-stamp--unsold .mq-slot-stamp-mark,
+[data-theme="strawberry"] .mq-slot-stamp--unsold .mq-slot-stamp-mark{
+  mix-blend-mode:multiply;opacity:.88;
+}
+/* Legacy team-logo wash (kept if present) sits under stamp */
 .mq-sold-logo{position:absolute;inset:0;width:100%;height:100%;
-  object-fit:contain;border-radius:8px;opacity:.22;pointer-events:none;
-  transition:opacity .2s;padding:4px}
-.mq-btn.sold:hover .mq-sold-logo{opacity:.42}
+  object-fit:contain;border-radius:8px;opacity:.12;pointer-events:none;
+  transition:opacity .2s;padding:4px;z-index:2}
+.mq-btn.sold:hover .mq-sold-logo{opacity:.2}
 .mq-empty{text-align:center;padding:60px 20px;color:var(--tx-d)}
 .mq-empty-icon{font-size:2.8rem;margin-bottom:10px}
 /* Legend */
@@ -1178,7 +1196,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   .sm-transfer-row{ padding: 10px 14px; gap: 8px; }
   .sm-avatar,.sm-team-logo,.sm-team-logo-placeholder{ width:44px; height:44px; }
   .sm-section{ padding: 10px 14px 4px; }
-  .sm-team-badges{ max-height:min(22vh,140px); overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  /* Match Lucky Dip — room for all eligible team tags (was 22vh/140px ≈ 5 tags) */
+  .sm-section-teams{ display:flex; flex-direction:column; }
+  .sm-team-badges{
+    max-height:min(42vh,360px); overflow-y:auto; -webkit-overflow-scrolling:touch;
+    align-content:flex-start; padding-bottom:2px;
+  }
+  .sm-badge{ padding:8px 14px; font-size:.8rem; min-height:40px; }
   .sm-pts-btn{ width:42px; height:42px; }
   #sellPoints{ font-size:1.25rem; padding:8px 10px; }
   .sm-footer{
@@ -1272,15 +1296,25 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 /* ── Mobile (≤ 640px) — primary breakpoint ───────────────────────── */
 @media(max-width:640px){
   /* Header */
-  .mq-header{padding:0 10px;height:56px}
+  .mq-header{padding:0 8px;height:52px;gap:6px}
   .mq-hc{display:none}
-  .mq-ac-logo{height:22px;max-width:110px}
-  .mq-hl{gap:8px}
-  .mq-hl-sep{height:22px}
-  .mq-logo,.mq-logo-ph{width:36px;height:36px}
-  .mq-tname{font-size:.78rem}
+  .mq-ac-logo{height:18px;max-width:72px}
+  .mq-hl{gap:6px;min-width:0;flex:1 1 auto}
+  .mq-hl-sep{height:18px}
+  .mq-logo,.mq-logo-ph{width:28px;height:28px}
+  .mq-hl-titles{min-width:0;flex:1}
+  .mq-tname{
+    font-size:.72rem;letter-spacing:.5px;line-height:1.25;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+  }
   .mq-tsub{display:none}
-  .mq-icon-btn{padding:4px 8px;font-size:11px}
+  .mq-hr{gap:4px;flex-shrink:0}
+  .mq-live-dot{display:none}
+  .mq-btn-projector,
+  .mq-btn-bidsum,
+  .mq-btn-fs{display:none !important}
+  .mq-icon-btn{padding:5px 9px;font-size:11px;gap:3px}
+  .mq-icon-btn svg{width:11px;height:11px}
 
   /* Stats bar */
   .mq-stats{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -1299,6 +1333,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   .mq-wrap{padding:0 10px 110px}
   .mq-grid{grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:7px}
   .mq-btn{border-radius:8px;font-size:1.1rem}
+  .mq-slot-stamp{inset:2%}
+  .mq-btn.sold .mq-num,
+  .mq-btn.unsold .mq-num{font-size:.75em}
   .mq-lbl{font-size:.42rem}
 
   /* Phone: compact floating dice */
@@ -1331,8 +1368,16 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   }
   .pc-body{overflow:visible;flex:none;display:block;min-height:0}
   .pc-stage{grid-template-columns:1fr;min-height:auto}
-  .pc-hero{min-height:120px;height:26vh;max-height:180px}
-  .pc-photo{object-fit:cover}
+  /* Show full player photo (contain) — avoid cropping head/body */
+  .pc-hero{
+    min-height:0;height:auto;max-height:min(42vh,280px);
+    aspect-ratio:3 / 4;width:100%;
+    background:#0a0a0a;
+  }
+  .pc-photo{
+    object-fit:contain;object-position:center center;
+  }
+  .pc-hero-blur{opacity:.55;object-fit:cover}
   .pc-serial-watermark{font-size:4.5rem}
   .pc-lower{padding:14px 12px 12px}
   .pc-lower-name{font-size:1.35rem;letter-spacing:1px}
@@ -1342,8 +1387,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   .pc-info{padding:12px 14px 8px}
   .pc-base-val{font-size:1.25rem}
   .pc-tier-badge,.pc-role-badge,.pc-key-badge{font-size:.7rem;padding:4px 12px}
-  .pc-attrs{grid-template-columns:1fr 1fr;gap:8px}
-  .pc-attr{padding:8px 10px;min-height:56px}
+  .pc-attrs{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .pc-attr{padding:8px 10px;min-height:56px;min-width:0}
   .pc-attr-label{font-size:.58rem}
   .pc-attr-val{font-size:.9rem}
   .pc-state-banner{font-size:.75rem;padding:6px 10px;margin-top:8px}
@@ -1400,7 +1445,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 @media(max-width:380px){
   .mq-grid{grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:5px}
   .mq-btn{font-size:.95rem}
-  .pc-attrs{grid-template-columns:1fr}
+  .pc-attrs{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .pc-attr{padding:7px 8px;min-height:52px}
+  .pc-attr-label{font-size:.52rem;letter-spacing:1.2px}
+  .pc-attr-val{font-size:.82rem}
   .pc-action-btn{min-height:52px}
   .pc-btn-label{font-size:.68rem}
   .pc-btn-sub{display:none}
@@ -1507,7 +1555,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       <img class="mq-logo" t-att-src="'/'+(db_name or '')+'/auction/public/image/auction.tournament/'+str(tournament.id)+'/logo'" alt="Tournament logo"/>
     </t>
     <t t-else=""><div class="mq-logo-ph">&#9733;</div></t>
-    <div>
+    <div class="mq-hl-titles">
       <div class="mq-tname"><t t-if="tournament"><t t-esc="tournament.name"/></t><t t-else="">Auction Champ</t></div>
       <div class="mq-tsub">Manual Auction Console</div>
     </div>
@@ -1515,10 +1563,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   <div class="mq-hc">&#9917; Player Queue</div>
   <div class="mq-hr">
     <span class="mq-live-dot"></span>
+    <button class="mq-icon-btn bid mq-btn-bidsum" onclick="openBidSummary()">&#9776; Bid Summary</button>
+    <button type="button" class="mq-icon-btn mq-btn-projector" onclick="window.open(window.AUCTION_PROJECTOR_URL,'_blank')" title="Open Projector View">&#127916; Projector</button>
+    <button class="mq-icon-btn mq-btn-fs" onclick="toggleFS()" id="fsBtn" title="Fullscreen">&#x26F6;</button>
     <button type="button" class="mq-icon-btn" id="breakBtn" onclick="toggleBreakTime()" title="Break Time"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg> Pause</button>
-    <button class="mq-icon-btn" onclick="window.open(window.AUCTION_PROJECTOR_URL,'_blank')" title="Open Projector View">&#127916; Projector</button>
-    <button class="mq-icon-btn bid" onclick="openBidSummary()">&#9776; Bid Summary</button>
-    <button class="mq-icon-btn" onclick="toggleFS()" id="fsBtn">&#x26F6;</button>
   </div>
 </header>
 
@@ -1776,7 +1824,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       </div>
 
       <!-- Team selector -->
-      <div class="sm-section">
+      <div class="sm-section sm-section-teams">
         <span class="sm-section-label">Select Team</span>
         <div id="smTeamBadges" class="sm-team-badges">
           <span class="sm-no-teams">Loading teams&#8230;</span>
@@ -2138,6 +2186,18 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   }
 
   /* ── Grid ──────────────────────────────────────────────── */
+  function mqSlotStamp(kind) {
+    var wrap = document.createElement('span');
+    wrap.className = 'mq-slot-stamp mq-slot-stamp--' + kind;
+    wrap.setAttribute('aria-hidden', 'true');
+    var mark = document.createElement('img');
+    mark.className = 'mq-slot-stamp-mark';
+    mark.src = '/auction_module/static/img/sold_overlay_gray.png';
+    mark.alt = '';
+    wrap.appendChild(mark);
+    return wrap;
+  }
+
   function makePlayerBtn(p) {
     var btn = document.createElement('button');
     btn.type = 'button';
@@ -2160,8 +2220,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         logoOverlay.alt = p.team_name || '';
         btn.appendChild(logoOverlay);
       }
+      btn.appendChild(mqSlotStamp('sold'));
     } else if (p.state === 'unsold') {
       btn.classList.add('unsold');
+      btn.appendChild(mqSlotStamp('unsold'));
     }
     btn.onclick = function() { openPlayerDrawer(p.id); };
     return btn;

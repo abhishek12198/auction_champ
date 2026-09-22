@@ -58,7 +58,8 @@ class AuctionRevokeTransactionsWizard(models.TransientModel):
     clear_history = fields.Boolean(
         string='Clear History',
         default=True,
-        help='Permanently delete this tournament’s auction history records. '
+        help='Permanently delete this tournament’s auction history records and reset '
+             'any live bids on players (current bid / leading team) back to default. '
              'Those entries cannot be recovered.',
     )
     revoke_sold = fields.Boolean(
@@ -121,6 +122,79 @@ class AuctionRevokeTransactionsWizard(models.TransientModel):
             ('state', '=', state),
         ])
 
+    def _clear_tournament_live_bids(self, tournament):
+        """Reset live bids on this tournament's players to default (0 / no team).
+
+        Returns how many players had a non-default bid cleared. Never raises —
+        bid reset must not roll back sold/unsold/history restore.
+        """
+        self.ensure_one()
+        Player = self.env['auction.team.player'].sudo()
+        if 'current_bid' not in Player._fields:
+            return 0
+        tid = tournament.id
+        if not tid:
+            return 0
+        domain = [('tournament_id', '=', tid)]
+        if 'current_bid_team_id' in Player._fields:
+            domain = [
+                ('tournament_id', '=', tid),
+                '|',
+                ('current_bid', '>', 0),
+                ('current_bid_team_id', '!=', False),
+            ]
+        else:
+            domain = [
+                ('tournament_id', '=', tid),
+                ('current_bid', '>', 0),
+            ]
+        try:
+            to_clear = Player.search(domain)
+        except Exception:
+            return 0
+        if not to_clear:
+            return 0
+        count = len(to_clear)
+        try:
+            to_clear.with_context(
+                auction_skip_live_snapshot=True,
+                mass_update=True,
+            )._clear_live_bid()
+        except Exception:
+            # Last resort: direct SQL so restore still completes
+            try:
+                cr = self.env.cr
+                if 'current_bid_team_id' in Player._fields:
+                    cr.execute(
+                        """
+                        UPDATE auction_team_player
+                           SET current_bid = 0,
+                               current_bid_team_id = NULL
+                         WHERE tournament_id = %s
+                           AND (COALESCE(current_bid, 0) > 0
+                                OR current_bid_team_id IS NOT NULL)
+                        """,
+                        (tid,),
+                    )
+                else:
+                    cr.execute(
+                        """
+                        UPDATE auction_team_player
+                           SET current_bid = 0
+                         WHERE tournament_id = %s
+                           AND COALESCE(current_bid, 0) > 0
+                        """,
+                        (tid,),
+                    )
+                to_clear.invalidate_cache(
+                    ['current_bid', 'current_bid_team_id']
+                    if 'current_bid_team_id' in Player._fields
+                    else ['current_bid']
+                )
+            except Exception:
+                return 0
+        return count
+
     def action_apply(self):
         self.ensure_one()
         if not self.accept_warning:
@@ -134,7 +208,14 @@ class AuctionRevokeTransactionsWizard(models.TransientModel):
         parts = []
         target = self.restore_to if self.restore_to in ('draft', 'auction') else 'auction'
         dest_label = _('Draft') if target == 'draft' else _('In Auction')
-        restore_ctx = {'mass_update': True, 'restore_to_state': target}
+        # skip_reopen_live: do not put a random player on stage mid-restore;
+        # clear_stage (when ticked) handles the projector / live board.
+        restore_ctx = {
+            'mass_update': True,
+            'restore_to_state': target,
+            'skip_reopen_live': True,
+            'revoke_wizard': True,
+        }
 
         if self.revoke_sold:
             sold = self._players('sold')
@@ -146,9 +227,8 @@ class AuctionRevokeTransactionsWizard(models.TransientModel):
             unsold = self._players('unsold')
             if unsold:
                 if target == 'draft':
-                    for player in unsold:
-                        if hasattr(player, '_clear_live_bid'):
-                            player._clear_live_bid()
+                    if hasattr(unsold, '_clear_live_bid'):
+                        unsold._clear_live_bid()
                     unsold.write({'state': 'draft', 'is_on_stage': False})
                 else:
                     unsold.with_context(**restore_ctx).action_auction()
@@ -163,9 +243,22 @@ class AuctionRevokeTransactionsWizard(models.TransientModel):
             })
             parts.append(_('%s on-stage player(s) cleared') % self.stage_count)
 
+        # Re-open live auction UI state without putting a random player on stage
+        # (skip_reopen_live above). Clear Thank You / complete + leftover stamp.
+        if self.revoke_sold or self.revoke_unsold or self.clear_stage or self.clear_history:
+            tournament.sudo().write({
+                'auction_declared_complete': False,
+                'stamp_player_id': False,
+                'stamp_state': False,
+                'stamp_expires_at': False,
+            })
+
         if self.clear_history:
+            history_n = self.history_count
             tournament.with_context(revoke_wizard=True).action_clear_auction_history()
-            parts.append(_('%s history record(s) deleted') % self.history_count)
+            bid_cleared = self._clear_tournament_live_bids(tournament)
+            parts.append(_('%s history record(s) deleted') % history_n)
+            parts.append(_('%s player bid(s) reset to default') % bid_cleared)
 
         message = _('Restore complete: %s.') % ', '.join(parts)
         if hasattr(self.env.user, 'notify_success'):
