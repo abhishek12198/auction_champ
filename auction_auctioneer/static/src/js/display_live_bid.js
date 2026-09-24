@@ -370,16 +370,19 @@
                 var foot;
                 if (off && !leadOn) {
                     foot = '<div class="ac-livebid-off" title="' + esc(bidReason(team)) + '">' + esc(bidReason(team) || 'Off') + '</div>';
-                } else if (!leadOn) {
+                } else if (leadOn) {
+                    /* Leading team: show current bid — tap opens custom points editor
+                       (same as other teams' chip), not a dead display-only amount. */
+                    var leadPts = player.current_bid || team.next_bid || 0;
+                    foot = '<span class="ac-livebid-chip ac-livebid-chip--lead" data-custom="'
+                        + team.id + '" data-lead-custom="1" title="Edit custom points">'
+                        + fmt(leadPts) + '</span>';
+                } else if (isMobileLiveBid()) {
                     /* Mobile: amount is display-only — tap the team tile to bid next.
                        Opening custom here steals focus/scroll away from the team box. */
-                    if (isMobileLiveBid()) {
-                        foot = '<span class="ac-livebid-chip" title="Tap team to bid">' + fmt(team.next_bid) + '</span>';
-                    } else {
-                        foot = '<span class="ac-livebid-chip" data-custom="' + team.id + '" title="Enter custom points">' + fmt(team.next_bid) + '</span>';
-                    }
+                    foot = '<span class="ac-livebid-chip" title="Tap team to bid">' + fmt(team.next_bid) + '</span>';
                 } else {
-                    foot = '<div class="ac-livebid-leadamt">' + fmt(player.current_bid) + '</div>';
+                    foot = '<span class="ac-livebid-chip" data-custom="' + team.id + '" title="Enter custom points">' + fmt(team.next_bid) + '</span>';
                 }
                 return '<button type="button" class="' + cls + '" data-team-id="' + team.id + '"'
                     + ' title="' + esc(team.name) + '">'
@@ -454,7 +457,12 @@
         var modal = modalEl();
         var team = teamsCache.filter(function (t) { return t.id === teamId; })[0];
         var player = playerCache;
-        if (!modal || !team || !player || !canBid(team)) return;
+        if (!modal || !team || !player) return;
+        var lead = leadTeam(player);
+        var isLead = !!(lead && Number(lead.id) === Number(team.id));
+        /* Leading team may edit its own current bid even if can_bid is false
+           (e.g. next slab would exceed max — they can still lower/correct). */
+        if (!canBid(team) && !isLead) return;
         selectedTeam = team;
         var logo = document.getElementById('acLbModalLogo');
         if (logo) {
@@ -470,12 +478,18 @@
         if (meta) meta.textContent = 'Remaining ' + fmt(remaining(team)) + ' · Max ' + fmt(maxCall(team));
         if (baseEl) baseEl.textContent = fmt(team.effective_base);
         if (maxEl) maxEl.textContent = fmt(maxCall(team));
-        if (input) input.value = team.next_bid || '';
-        validateCustom(team, team.next_bid || 0);
+        var initial = isLead && player.current_bid
+            ? Number(player.current_bid)
+            : Number(team.next_bid || 0);
+        if (input) input.value = initial || '';
+        validateCustom(team, initial || 0);
         var presets = document.getElementById('acLbPresets');
         if (presets) {
             var vals = presetBids(team);
-            var cur = Number(team.next_bid || 0);
+            if (isLead && initial && vals.indexOf(initial) === -1) {
+                vals = [initial].concat(vals);
+            }
+            var cur = initial || Number(team.next_bid || 0);
             presets.innerHTML = vals.map(function (v) {
                 return '<button type="button" class="ac-livebid-preset' + (v === cur ? ' is-on' : '') + '" data-preset="' + v + '">' + fmt(v) + '</button>';
             }).join('');
@@ -712,8 +726,11 @@
         }
         var chip = ev.target.closest('#acLiveBidGrid [data-custom]');
         if (chip) {
-            /* On small screens keep the tap on the team tile (quick next bid). */
-            if (isMobileLiveBid()) {
+            var leadCustom = chip.getAttribute('data-lead-custom') === '1';
+            /* On small screens keep the tap on the team tile (quick next bid),
+               except the highlighted/leading team's points chip — that opens
+               the custom editor so the auctioneer can correct the live amount. */
+            if (isMobileLiveBid() && !leadCustom) {
                 ev.preventDefault();
                 ev.stopPropagation();
                 var chipTeamId = parseInt(chip.getAttribute('data-custom'), 10);

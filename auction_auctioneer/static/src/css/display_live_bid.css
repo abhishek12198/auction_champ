@@ -409,6 +409,18 @@ body.ac-livebid-allowed .ac-bid-hero{
     box-shadow: 0 0 12px color-mix(in srgb, var(--lb-accent) 70%, transparent);
     animation: acLiveBidPtsFlash 1.15s ease-in-out infinite;
 }
+.ac-livebid-tile.is-lead .ac-livebid-chip--lead {
+    background: var(--lb-bright);
+    color: var(--lb-ink);
+    font-size: 13px;
+    min-width: 54px;
+    box-shadow: 0 0 12px color-mix(in srgb, var(--lb-accent) 70%, transparent);
+    animation: acLiveBidPtsFlash 1.15s ease-in-out infinite;
+    cursor: pointer;
+}
+.ac-livebid-tile.is-lead .ac-livebid-chip--lead:hover {
+    filter: brightness(1.1);
+}
 .ac-livebid-tile {
     -webkit-user-select: none;
     user-select: none;
