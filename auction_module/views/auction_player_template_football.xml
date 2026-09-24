@@ -19,7 +19,7 @@
             'lemon':        {'bg1':'#E8DDB8','bg2':'#F0E6C4','bg3':'#DDD0A0','panel':'#F7F1DC','accent':'#C9A400','accent2':'#8F7400','accentD':'#6E5A00','ink':'#1F1A0A','sub':'#5C4A14','txt':'#1F1A0A','line':'rgba(143,116,0,.35)','glow':'rgba(143,116,0,.25)','chipbg':'rgba(201,164,0,.12)'},
         }"/>
         <t t-set="pal" t-value="fbc_themes.get((t.player_display_template if t else False) or 'vanilla', fbc_themes['vanilla'])"/>
-        <div class="fbc-scope" t-attf-style="--fbc-navy:{{ pal['bg1'] }};--fbc-navy2:{{ pal['bg2'] }};--fbc-bg3:{{ pal['bg3'] }};--fbc-panel:{{ pal['panel'] }};--fbc-gold:{{ pal['accent'] }};--fbc-gold2:{{ pal['accent2'] }};--fbc-goldD:{{ pal['accentD'] }};--fbc-ink:{{ pal['ink'] }};--fbc-sub:{{ pal['sub'] }};--fbc-txt:{{ pal['txt'] }};--fbc-line:{{ pal['line'] }};--fbc-glow:{{ pal['glow'] }};--fbc-chipbg:{{ pal['chipbg'] }};">
+        <div class="fbc-scope" t-att-data-sport="player.tournament_type or 'football'" t-attf-style="--fbc-navy:{{ pal['bg1'] }};--fbc-navy2:{{ pal['bg2'] }};--fbc-bg3:{{ pal['bg3'] }};--fbc-panel:{{ pal['panel'] }};--fbc-gold:{{ pal['accent'] }};--fbc-gold2:{{ pal['accent2'] }};--fbc-goldD:{{ pal['accentD'] }};--fbc-ink:{{ pal['ink'] }};--fbc-sub:{{ pal['sub'] }};--fbc-txt:{{ pal['txt'] }};--fbc-line:{{ pal['line'] }};--fbc-glow:{{ pal['glow'] }};--fbc-chipbg:{{ pal['chipbg'] }};">
             <style>
                 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Oswald:wght@400;500;600;700&amp;family=Barlow:wght@400;500;600;700&amp;display=swap');
                 @font-face{font-family:'Varsity Team';src:url('/auction_module/static/src/assets/fonts/VarsityTeam-Bold.otf') format('opentype');font-weight:normal;font-style:normal;font-display:swap;}
@@ -97,10 +97,10 @@
                 .fbc-ic{flex:0 0 26px;height:26px;display:flex;align-items:center;justify-content:center;
                     font-size:1.15rem;color:var(--fbc-gold);filter:saturate(1.1);}
                 .fbc-cell-body{min-width:0;}
-                .fbc-lbl{font-family:'Oswald',sans-serif;font-size:.6rem;letter-spacing:.16em;color:var(--fbc-sub);font-weight:600;text-transform:uppercase;line-height:1.1;}
+                .fbc-lbl{font-family:'Oswald',sans-serif;font-size:.6rem;letter-spacing:.16em;color:var(--fbc-sub);font-weight:600;text-transform:uppercase;line-height:1.15;margin-bottom:3px;}
                 .fbc-val{font-size:clamp(.8rem,1.5vw,1.02rem);font-weight:600;color:#fff;text-transform:uppercase;
-                    letter-spacing:.02em;line-height:1.15;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-                .fbc-val-sub{font-family:'Oswald',sans-serif;font-size:.6rem;letter-spacing:.08em;color:var(--fbc-sub);font-weight:500;text-transform:uppercase;margin-top:1px;}
+                    letter-spacing:.02em;line-height:1.2;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+                .fbc-val-sub{font-family:'Oswald',sans-serif;font-size:.6rem;letter-spacing:.08em;color:var(--fbc-sub);font-weight:500;text-transform:uppercase;margin-top:2px;}
 
                 .fbc-sec{display:flex;align-items:flex-start;gap:11px;padding:9px 0 4px;border-bottom:1px solid var(--fbc-line);}
                 .fbc-sec:last-child{border-bottom:none;}
@@ -118,11 +118,22 @@
                 .fbc-foot span{font-family:'Oswald',sans-serif;font-size:clamp(.6rem,1.3vw,.82rem);font-weight:700;letter-spacing:.18em;text-transform:uppercase;}
                 .fbc-foot img{height:18px;vertical-align:middle;}
 
+                /* Badminton: denser 2-up attrs (match football density, keep 2 cols on phones) */
+                .fbc-scope[data-sport="badminton"] .fbc-lbl{font-size:.48rem;letter-spacing:.1em;margin-bottom:4px;}
+                .fbc-scope[data-sport="badminton"] .fbc-val{font-size:clamp(.68rem,1.2vw,.86rem);margin-top:4px;}
+                .fbc-scope[data-sport="badminton"] .fbc-cell{padding:5px 0;gap:7px;}
+                .fbc-scope[data-sport="badminton"] .fbc-grid{column-gap:14px;row-gap:0;}
+                .fbc-scope[data-sport="badminton"] .fbc-ic{font-size:.85rem;width:1.1rem;}
+                .fbc-scope[data-sport="badminton"] .fbc-chip{font-size:clamp(.55rem,1vw,.7rem);padding:3px 8px;}
+                .fbc-scope[data-sport="badminton"] .fbc-sec{padding:6px 0 2px;}
+                .fbc-scope[data-sport="badminton"] .fbc-chips{margin-top:5px;}
+
                 @media (max-width:640px){
                     .fbc-card{aspect-ratio:auto;}
                     .fbc-body{flex-direction:column;height:auto;}
                     .fbc-photo{flex:none;height:280px;}
                     .fbc-grid{padding-right:0;grid-template-columns:1fr;}
+                    .fbc-scope[data-sport="badminton"] .fbc-grid{grid-template-columns:1fr 1fr !important;}
                     .fbc-slno{top:auto;bottom:8px;}
                 }
             </style>
@@ -136,7 +147,7 @@
                             <t t-if="t and t.logo">
                                 <img t-att-src="image_data_uri(t.logo)" alt="logo"/>
                             </t>
-                            <t t-else=""><span>⚽</span></t>
+                            <t t-else=""><span><t t-esc="'🏸' if player.tournament_type == 'badminton' else '⚽'"/></span></t>
                         </div>
                         <div class="fbc-head-titles">
                             <h1><t t-esc="(t.name if t else '') or 'Football Auction'"/></h1>
@@ -153,7 +164,7 @@
                             <t t-if="player.photo">
                                 <img class="fbc-pimg" t-att-src="image_data_uri(player.photo)" alt="player"/>
                             </t>
-                            <t t-else=""><div class="fbc-ph">⚽</div></t>
+                            <t t-else=""><div class="fbc-ph"><t t-esc="'🏸' if player.tournament_type == 'badminton' else '⚽'"/></div></t>
 
                             <div class="fbc-cardno">
                                 <small>Card</small>
@@ -162,7 +173,8 @@
 
                             <div class="fbc-name-band">
                                 <h2 data-sm-name=""><t t-esc="(player.name or '').upper()"/></h2>
-                                <span data-sm-role=""><t t-esc="(player.dominant_position_id.name if player.dominant_position_id else (player.role or ''))"/></span>
+                                <t t-set="fbc_role" t-value="(player.dominant_position_id.name if player.tournament_type == 'football' and player.dominant_position_id else (player.badminton_card_labels()['category'] if player.tournament_type == 'badminton' else (player.role or '')))"/>
+                                <span data-sm-role=""><t t-esc="fbc_role"/></span>
                             </div>
                         </div>
 
@@ -173,6 +185,81 @@
                                 <small>Sl No</small>
                             </div>
 
+                            <t t-if="player.tournament_type == 'badminton'">
+                            <t t-set="bm" t-value="player.badminton_card_labels()"/>
+                            <div class="fbc-grid">
+                                <div class="fbc-cell">
+                                    <div class="fbc-ic">📅</div>
+                                    <div class="fbc-cell-body">
+                                        <div class="fbc-lbl">Age</div>
+                                        <div class="fbc-val"><t t-esc="('%s Years' % bm['age']) if bm.get('age') else '—'"/></div>
+                                    </div>
+                                </div>
+                                <div class="fbc-cell">
+                                    <div class="fbc-ic">🏸</div>
+                                    <div class="fbc-cell-body">
+                                        <div class="fbc-lbl">Category</div>
+                                        <div class="fbc-val"><t t-esc="bm.get('category') or '—'"/></div>
+                                    </div>
+                                </div>
+                                <div class="fbc-cell">
+                                    <div class="fbc-ic">✋</div>
+                                    <div class="fbc-cell-body">
+                                        <div class="fbc-lbl">Hand</div>
+                                        <div class="fbc-val"><t t-esc="bm.get('hand') or '—'"/></div>
+                                    </div>
+                                </div>
+                                <div class="fbc-cell">
+                                    <div class="fbc-ic">🎯</div>
+                                    <div class="fbc-cell-body">
+                                        <div class="fbc-lbl">Style</div>
+                                        <div class="fbc-val"><t t-esc="bm.get('style') or '—'"/></div>
+                                    </div>
+                                </div>
+                                <div class="fbc-cell">
+                                    <div class="fbc-ic">⭐</div>
+                                    <div class="fbc-cell-body">
+                                        <div class="fbc-lbl">Level</div>
+                                        <div class="fbc-val"><t t-esc="bm.get('level') or '—'"/></div>
+                                    </div>
+                                </div>
+                                <div class="fbc-cell">
+                                    <div class="fbc-ic">🏷️</div>
+                                    <div class="fbc-cell-body">
+                                        <div class="fbc-lbl">Tier</div>
+                                        <div class="fbc-val"><t t-esc="player.tier_id.name if player.tier_id else '—'"/></div>
+                                    </div>
+                                </div>
+                                <div class="fbc-cell">
+                                    <div class="fbc-ic">📱</div>
+                                    <div class="fbc-cell-body">
+                                        <div class="fbc-lbl">Mobile</div>
+                                        <div class="fbc-val" style="text-transform:none;"><t t-esc="player.masked_contact or '—'"/></div>
+                                    </div>
+                                </div>
+                                <div class="fbc-cell">
+                                    <div class="fbc-ic">📍</div>
+                                    <div class="fbc-cell-body">
+                                        <div class="fbc-lbl">Location</div>
+                                        <div class="fbc-val"><t t-esc="player.address or '—'"/></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <t t-if="bm.get('strengths')">
+                                <div class="fbc-sec">
+                                    <div class="fbc-ic">💪</div>
+                                    <div class="fbc-sec-main">
+                                        <div class="fbc-lbl">Strengths</div>
+                                        <div class="fbc-chips">
+                                            <t t-foreach="bm['strengths']" t-as="strg">
+                                                <span class="fbc-chip"><t t-esc="strg.get('name')"/></span>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+                            </t>
+                            <t t-else="">
                             <div class="fbc-grid">
                                 <!-- Position -->
                                 <div class="fbc-cell">
@@ -278,6 +365,7 @@
                                         <div class="fbc-loc-val"><t t-esc="player.address"/></div>
                                     </div>
                                 </div>
+                            </t>
                             </t>
                         </div>
                     </div>

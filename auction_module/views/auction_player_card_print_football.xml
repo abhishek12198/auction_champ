@@ -17,7 +17,7 @@
         <t t-set="title_font" t-value="pal.get('titleFont', 'Varsity Team')"/>
         <html lang="en">
             <head>
-                <title>Football Player Card</title>
+                <title>Player Card</title>
                 <style>@font-face{font-family:'Varsity Team';src:url('/auction_module/static/src/assets/fonts/VarsityTeam-Bold.otf') format('opentype');font-weight:normal;font-style:normal;}@font-face{font-family:'Atlanta College';src:url('/auction_module/static/src/assets/fonts/Atlanta-College.ttf') format('truetype');font-weight:normal;font-style:normal;} html,body{margin:0;}</style>
             </head>
             <body t-attf-style="margin:0; padding:10px; font-family:'Barlow',sans-serif; background-color:{{ pal['baseDark'] }}; background-image:-webkit-radial-gradient(14% -10%, circle, rgba({{ pal['brandGlow'] }},0.42) 0%, rgba({{ pal['brandGlow'] }},0) 40%), -webkit-radial-gradient(86% -10%, circle, rgba({{ pal['brandGlow'] }},0.38) 0%, rgba({{ pal['brandGlow'] }},0) 40%), -webkit-radial-gradient(50% 125%, circle, rgba({{ pal['accentGlow'] }},0.15) 0%, rgba({{ pal['accentGlow'] }},0) 52%), -webkit-linear-gradient(top, {{ pal['panel'] }} 0%, {{ pal['baseDark'] }} 52%, {{ pal['baseDark'] }} 100%);">
@@ -72,7 +72,13 @@
                                     <div style="padding:10px 74px 7px 22px;">
                                         <div t-attf-style="color:{{ pal['txt'] }}; font-family:'{{ title_font }}','Bebas Neue',sans-serif; font-size:1.85rem; line-height:0.98; letter-spacing:1px; text-transform:uppercase; text-shadow:0 3px 9px rgba(0,0,0,0.5); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" t-esc="doc.name.upper()"/>
                                         <div style="margin-top:4px;">
-                                            <t t-if="doc.dominant_position_id or doc.role">
+                                            <t t-if="doc.tournament_id.tournament_type == 'badminton'">
+                                                <t t-set="bm_badge" t-value="doc.badminton_card_labels().get('category') or doc.role"/>
+                                                <t t-if="bm_badge">
+                                                    <span t-attf-style="display:inline-block; color:{{ pal['ink'] }}; background-color:{{ pal['accent'] }}; background-image:-webkit-linear-gradient(left,{{ pal['accent'] }},{{ pal['accentD'] }}); font-family:'Oswald',sans-serif; font-size:0.72rem; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; padding:2px 12px; border-radius:4px; white-space:nowrap;"><t t-esc="bm_badge"/></span>
+                                                </t>
+                                            </t>
+                                            <t t-elif="doc.dominant_position_id or doc.role">
                                                 <span t-attf-style="display:inline-block; color:{{ pal['ink'] }}; background-color:{{ pal['accent'] }}; background-image:-webkit-linear-gradient(left,{{ pal['accent'] }},{{ pal['accentD'] }}); font-family:'Oswald',sans-serif; font-size:0.72rem; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; padding:2px 12px; border-radius:4px; white-space:nowrap;"><t t-esc="doc.dominant_position_id.name if doc.dominant_position_id else doc.role"/></span>
                                             </t>
                                         </div>
@@ -81,17 +87,72 @@
                                             <tr><td t-attf-style="height:2px; padding:0; background-color:{{ pal['accent'] }}; background-image:-webkit-linear-gradient(left,{{ pal['accent'] }} 0%,rgba({{ pal['accentGlow'] }},0) 82%);"></td></tr>
                                         </table>
 
-                                        <t t-set="lblcss" t-value="'color:' + pal['muted'] + ';font-family:Oswald,sans-serif;font-size:0.54rem;font-weight:500;letter-spacing:0.7px;text-transform:uppercase;line-height:1.1;margin-bottom:1px;'"/>
-                                        <t t-set="valcss" t-value="'color:' + pal['txt'] + ';font-family:Barlow,sans-serif;font-size:0.8rem;font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'"/>
-                                        <t t-set="bloodcss" t-value="'color:' + pal['blood'] + ';font-family:Barlow,sans-serif;font-size:0.8rem;font-weight:700;line-height:1.2;'"/>
-                                        <t t-set="tdL" t-value="'width:50%;vertical-align:top;padding:3px 12px 3px 0;border-bottom:1px solid rgba(' + pal['accentGlow'] + ',0.14);'"/>
-                                        <t t-set="tdR" t-value="'width:50%;vertical-align:top;padding:3px 0 3px 14px;border-bottom:1px solid rgba(' + pal['accentGlow'] + ',0.14);'"/>
-                                        <t t-set="tdLchip" t-value="'width:50%;vertical-align:top;padding:4px 12px 3px 0;border-bottom:1px solid rgba(' + pal['accentGlow'] + ',0.14);'"/>
-                                        <t t-set="tdRchip" t-value="'width:50%;vertical-align:top;padding:4px 0 3px 14px;border-bottom:1px solid rgba(' + pal['accentGlow'] + ',0.14);'"/>
-                                        <t t-set="chiplbl" t-value="'color:' + pal['accent'] + ';font-family:Oswald,sans-serif;font-size:0.56rem;font-weight:500;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:2px;'"/>
+                                        <t t-set="lblcss" t-value="'color:' + pal['muted'] + ';font-family:Oswald,sans-serif;font-size:0.54rem;font-weight:500;letter-spacing:0.7px;text-transform:uppercase;line-height:1.15;margin-bottom:4px;'"/>
+                                        <t t-set="valcss" t-value="'color:' + pal['txt'] + ';font-family:Barlow,sans-serif;font-size:0.8rem;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-top:1px;'"/>
+                                        <t t-set="bloodcss" t-value="'color:' + pal['blood'] + ';font-family:Barlow,sans-serif;font-size:0.8rem;font-weight:700;line-height:1.25;'"/>
+                                        <t t-set="tdL" t-value="'width:50%;vertical-align:top;padding:5px 14px 5px 0;border-bottom:1px solid rgba(' + pal['accentGlow'] + ',0.14);'"/>
+                                        <t t-set="tdR" t-value="'width:50%;vertical-align:top;padding:5px 0 5px 16px;border-bottom:1px solid rgba(' + pal['accentGlow'] + ',0.14);'"/>
+                                        <t t-set="tdLchip" t-value="'width:50%;vertical-align:top;padding:6px 14px 5px 0;border-bottom:1px solid rgba(' + pal['accentGlow'] + ',0.14);'"/>
+                                        <t t-set="tdRchip" t-value="'width:50%;vertical-align:top;padding:6px 0 5px 16px;border-bottom:1px solid rgba(' + pal['accentGlow'] + ',0.14);'"/>
+                                        <t t-set="chiplbl" t-value="'color:' + pal['accent'] + ';font-family:Oswald,sans-serif;font-size:0.56rem;font-weight:500;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:4px;'"/>
                                         <t t-set="chipcss" t-value="'display:inline-block;border:1px solid ' + pal['accent'] + ';border-radius:6px;padding:1px 6px;color:' + pal['accent'] + ';background:rgba(' + pal['accentGlow'] + ',0.08);font-family:Oswald,sans-serif;font-size:0.55rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:0 3px 2px 0;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;'"/>
 
                                         <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin-top:2px;">
+                                            <t t-if="doc.tournament_id.tournament_type == 'badminton'">
+                                            <t t-set="bm" t-value="doc.badminton_card_labels()"/>
+                                            <tr>
+                                                <td t-att-style="tdL">
+                                                    <div t-att-style="lblcss">Age</div>
+                                                    <div t-att-style="valcss"><t t-esc="(str(bm.get('age')) + ' Years') if bm.get('age') else '—'"/></div>
+                                                </td>
+                                                <td t-att-style="tdR">
+                                                    <div t-att-style="lblcss">Category</div>
+                                                    <div t-att-style="valcss"><t t-esc="bm.get('category') or '—'"/></div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td t-att-style="tdL">
+                                                    <div t-att-style="lblcss">Hand</div>
+                                                    <div t-att-style="valcss"><t t-esc="bm.get('hand') or '—'"/></div>
+                                                </td>
+                                                <td t-att-style="tdR">
+                                                    <div t-att-style="lblcss">Style</div>
+                                                    <div t-att-style="valcss"><t t-esc="bm.get('style') or '—'"/></div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td t-att-style="tdL">
+                                                    <div t-att-style="lblcss">Level</div>
+                                                    <div t-att-style="valcss"><t t-esc="bm.get('level') or '—'"/></div>
+                                                </td>
+                                                <td t-att-style="tdR">
+                                                    <div t-att-style="lblcss">Tier</div>
+                                                    <div t-att-style="valcss"><t t-esc="doc.tier_id.name or '—'"/></div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td t-att-style="tdLchip" colspan="2">
+                                                    <div t-att-style="chiplbl">Strengths</div>
+                                                    <div>
+                                                        <t t-foreach="bm.get('strengths') or []" t-as="strg">
+                                                            <span t-att-style="chipcss"><t t-esc="strg.get('name')"/></span>
+                                                        </t>
+                                                        <t t-if="not bm.get('strengths')"><span t-att-style="valcss">—</span></t>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td t-att-style="tdL">
+                                                    <div t-att-style="lblcss">Mobile</div>
+                                                    <div t-att-style="valcss"><t t-esc="doc.masked_contact or '—'"/></div>
+                                                </td>
+                                                <td t-att-style="tdR">
+                                                    <div t-att-style="lblcss">Location</div>
+                                                    <div t-att-style="valcss"><t t-esc="doc.address or '—'"/></div>
+                                                </td>
+                                            </tr>
+                                            </t>
+                                            <t t-else="">
                                             <tr>
                                                 <td t-att-style="tdL">
                                                     <div t-att-style="lblcss">Tier</div>
@@ -167,6 +228,7 @@
                                                     <div t-att-style="bloodcss"><t t-esc="doc.blood_group or '—'"/></div>
                                                 </td>
                                             </tr>
+                                            </t>
                                         </table>
                                     </div>
                                 </div>

@@ -78,8 +78,9 @@
         <div class="hud-photo-overlay">
           <div class="hud-player-name" data-sm-name=""><t t-esc="player.name.upper()"/></div>
           <div class="hud-overlay-badges">
-            <t t-if="(player.dominant_position_id.name if player.tournament_type == 'football' else player.role)">
-              <div class="hud-role-tag" data-sm-role=""><t t-esc="player.dominant_position_id.name if player.tournament_type == 'football' else player.role"/></div>
+            <t t-set="hud_role_label" t-value="(player.dominant_position_id.name if player.tournament_type == 'football' and player.dominant_position_id else (player.badminton_card_labels()['category'] if player.tournament_type == 'badminton' else (player.role or '')))"/>
+            <t t-if="hud_role_label">
+              <div class="hud-role-tag" data-sm-role=""><t t-esc="hud_role_label"/></div>
             </t>
             <t t-if="player.effective_base_price">
               <div class="hud-base-badge">
@@ -107,29 +108,7 @@
         <div class="hud-stats">
           <div class="hud-stats-heading">Player Profile</div>
           <t t-call="auction_module.football_attr_layout_css"/>
-          <t t-if="player.tournament_type != 'football'">
-            <div class="hud-attr-grid ac-fb-grid">
-              <t t-if="player.batting_style">
-                <div class="hud-stat-row">
-                  <span class="hud-stat-key">Batting</span>
-                  <span class="hud-stat-val"><t t-esc="player.batting_style"/></span>
-                </div>
-              </t>
-              <t t-if="player.bowling_style">
-                <div class="hud-stat-row">
-                  <span class="hud-stat-key">Bowling</span>
-                  <span class="hud-stat-val"><t t-esc="player.bowling_style"/></span>
-                </div>
-              </t>
-              <t t-if="player.address">
-                <div class="hud-stat-row ac-fb-span-2">
-                  <span class="hud-stat-key">Location</span>
-                  <span class="hud-stat-val"><t t-esc="player.address"/></span>
-                </div>
-              </t>
-            </div>
-          </t>
-          <t t-else="">
+          <t t-if="player.tournament_type == 'football'">
             <div class="ac-fb-grid">
               <t t-if="player.dominant_position_id">
                 <div class="hud-stat-row"><span class="hud-stat-key">Position</span><span class="hud-stat-val"><t t-esc="player.dominant_position_id.name"/></span></div>
@@ -163,6 +142,54 @@
                 <div class="hud-stat-row ac-fb-span-2"><span class="hud-stat-key">Location</span><span class="hud-stat-val"><t t-esc="player.address"/></span></div>
               </t>
               <t t-call="auction_module.football_tag_chips"/>
+            </div>
+          </t>
+          <t t-elif="player.tournament_type == 'badminton'">
+            <t t-set="bm" t-value="player.badminton_card_labels()"/>
+            <!-- Always show full registration profile — 2 attrs/row, compact like football -->
+            <style>
+              .hud-stats .ac-bm-grid .hud-stat-row{padding:7px 9px !important;gap:5px !important;}
+              .hud-stats .ac-bm-grid .hud-stat-key{font-size:.52rem !important;letter-spacing:1px !important;margin-bottom:2px !important;}
+              .hud-stats .ac-bm-grid .hud-stat-val{font-size:.88rem !important;line-height:1.2 !important;margin-top:2px !important;}
+            </style>
+            <div class="ac-fb-grid ac-bm-grid">
+              <div class="hud-stat-row"><span class="hud-stat-key">Age</span><span class="hud-stat-val"><t t-esc="bm['age'] or '—'"/></span></div>
+              <div class="hud-stat-row"><span class="hud-stat-key">Category</span><span class="hud-stat-val"><t t-esc="bm['category'] or '—'"/></span></div>
+              <div class="hud-stat-row"><span class="hud-stat-key">Hand</span><span class="hud-stat-val"><t t-esc="bm['hand'] or '—'"/></span></div>
+              <div class="hud-stat-row"><span class="hud-stat-key">Style</span><span class="hud-stat-val"><t t-esc="bm['style'] or '—'"/></span></div>
+              <div class="hud-stat-row"><span class="hud-stat-key">Level</span><span class="hud-stat-val"><t t-esc="bm['level'] or '—'"/></span></div>
+              <div class="hud-stat-row"><span class="hud-stat-key">Tier</span><span class="hud-stat-val"><t t-esc="player.tier_id.name if player.tier_id else '—'"/></span></div>
+              <div class="hud-stat-row"><span class="hud-stat-key">Mobile</span><span class="hud-stat-val"><t t-esc="player.masked_contact or '—'"/></span></div>
+              <div class="hud-stat-row"><span class="hud-stat-key">Location</span><span class="hud-stat-val"><t t-esc="player.address or '—'"/></span></div>
+              <t t-if="bm.get('strengths')">
+                <div class="ac-fb-chip-row ac-fb-span-2" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;">
+                  <t t-foreach="bm['strengths']" t-as="strg">
+                    <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(120,144,180,0.18);border:1px solid rgba(120,144,180,0.45);border-radius:999px;padding:4px 10px;font-size:0.68rem;font-weight:600;letter-spacing:0.3px;color:inherit;"><t t-esc="strg.get('icon')"/> <t t-esc="strg.get('name')"/></span>
+                  </t>
+                </div>
+              </t>
+            </div>
+          </t>
+          <t t-else="">
+            <div class="hud-attr-grid ac-fb-grid">
+              <t t-if="player.batting_style">
+                <div class="hud-stat-row">
+                  <span class="hud-stat-key">Batting</span>
+                  <span class="hud-stat-val"><t t-esc="player.batting_style"/></span>
+                </div>
+              </t>
+              <t t-if="player.bowling_style">
+                <div class="hud-stat-row">
+                  <span class="hud-stat-key">Bowling</span>
+                  <span class="hud-stat-val"><t t-esc="player.bowling_style"/></span>
+                </div>
+              </t>
+              <t t-if="player.address">
+                <div class="hud-stat-row ac-fb-span-2">
+                  <span class="hud-stat-key">Location</span>
+                  <span class="hud-stat-val"><t t-esc="player.address"/></span>
+                </div>
+              </t>
             </div>
           </t>
         </div>

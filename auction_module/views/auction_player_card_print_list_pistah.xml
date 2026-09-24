@@ -168,7 +168,7 @@
     <!-- ── Pistah dispatcher: one page per player doc ── -->
     <template id="report_player_card_list_pistah">
         <t t-foreach="docs" t-as="doc">
-            <t t-if="doc.tournament_id.tournament_type == 'football'">
+            <t t-if="doc.tournament_id.tournament_type in ('football', 'badminton')">
                 <page t-call="web.basic_layout">
                     <t t-call="auction_module.report_player_card_football_page"/>
                 </page>

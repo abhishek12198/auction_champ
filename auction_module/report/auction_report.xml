@@ -104,11 +104,12 @@
             <field name="groups_id" eval="[(4, ref('auction_module.group_auction_player_card_print'))]"/>
         </record>
 
-        <!-- Football reuses the cricket landscape paperformat so both sports
-             print one card per page on the same sheet size. The football QWeb
-             template is theme-aware internally, so one action covers all themes. -->
+        <!-- Football/Badminton reuses the cricket landscape paperformat so all
+             sports print one card per page on the same sheet size. The QWeb
+             template is theme/sport-aware internally. Report name stays
+             "Player Card" (same download convention as cricket). -->
         <record id="action_report_player_card_football" model="ir.actions.report">
-            <field name="name">Player Card (Football)</field>
+            <field name="name">Player Card</field>
             <field name="model">auction.team.player</field>
             <field name="report_type">qweb-pdf</field>
             <field name="report_name">auction_module.report_player_card_football_list</field>

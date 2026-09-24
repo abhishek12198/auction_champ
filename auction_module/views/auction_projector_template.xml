@@ -2491,11 +2491,14 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 
     var roleEl = document.getElementById('pjRole');
     var isFootball = (p.tournament_type === 'football') || (window.PJ_SPORT === 'football');
+    var isBadminton = (p.tournament_type === 'badminton') || (window.PJ_SPORT === 'badminton');
     if (roleEl) {
       if (mysteryHidden) {
         roleEl.style.display = 'none';
       } else {
-        var roleTxt = isFootball ? (p.dominant_position || '') : (p.role || '');
+        var roleTxt = isFootball
+          ? (p.dominant_position || '')
+          : (isBadminton ? (p.badminton_category || p.role || '') : (p.role || ''));
         if (roleTxt) { roleEl.textContent = roleTxt; roleEl.style.display = 'inline-flex'; }
         else roleEl.style.display = 'none';
       }
@@ -2526,6 +2529,16 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       if (!(p.use_other_attributes && p.other_attributes && p.other_attributes.length)) {
         statsEl.insertAdjacentHTML('beforeend', chips(p.playing_styles) + chips(p.strengths));
       }
+    } else if (isBadminton) {
+      statsHtml += stat('Age', p.age ? String(p.age) : '—', ICO.chron);
+      statsHtml += stat('Category', p.badminton_category || p.role || '—', ICO.user);
+      statsHtml += stat('Hand', p.preferred_hand || p.preferred_foot || '—', ICO.foot);
+      statsHtml += stat('Style', p.badminton_style || '—', ICO.bolt);
+      statsHtml += stat('Level', p.skill_level || '—', ICO.tag);
+      if (p.tier_name) statsHtml += stat('Tier', p.tier_name, ICO.tag);
+      statsHtml += stat('Location', p.location || '—', ICO.tag);
+      statsEl.innerHTML = statsHtml;
+      statsEl.insertAdjacentHTML('beforeend', chips(p.strengths));
     } else {
       // Cricket — label is Role (not Position); show full profile attrs
       if (p.role) statsHtml += stat('Role', p.role, ICO.user);

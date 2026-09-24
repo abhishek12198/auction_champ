@@ -705,12 +705,24 @@ class Auction(http.Controller):
         football_strengths = request.env['auction.player.strength'].sudo().browse()
         if tournament.tournament_type == 'football':
             football_positions = request.env['auction.player.position'].sudo().search(
-                [('active', '=', True)], order='sequence asc, name asc')
+                [('active', '=', True), ('sport', '=', 'football')],
+                order='sequence asc, name asc')
             football_styles = request.env['auction.player.style'].sudo().search(
-                [('active', '=', True)], order='sequence asc, name asc')
+                [('active', '=', True), ('sport', '=', 'football')],
+                order='sequence asc, name asc')
             football_strengths = request.env['auction.player.strength'].sudo().search(
-                [('active', '=', True)], order='sequence asc, name asc')
+                [('active', '=', True), ('sport', '=', 'football')],
+                order='sequence asc, name asc')
         return football_positions, football_styles, football_strengths
+
+    def _reg_badminton_lookups(self, tournament):
+        """Badminton strengths (and optional styles) — never mix with football masters."""
+        strengths = request.env['auction.player.strength'].sudo().browse()
+        if tournament and tournament.tournament_type == 'badminton':
+            strengths = request.env['auction.player.strength'].sudo().search(
+                [('active', '=', True), ('sport', '=', 'badminton')],
+                order='sequence asc, name asc')
+        return strengths
 
     def _reg_roster_count(self, tournament):
         from odoo.addons.auction_module.services import auction_live_payload as payload_svc
@@ -956,7 +968,7 @@ class Auction(http.Controller):
 
         template_ref = DISPLAY_AUCTION_TEMPLATES.get(
             normalize_card_theme(theme), 'auction_module.player_template_new')
-        if tournament and tournament.tournament_type == 'football':
+        if tournament and tournament.tournament_type in ('football', 'badminton'):
             template_ref = 'auction_module.player_template_football'
         return request.render(template_ref, {
             'player':      player,
@@ -1169,6 +1181,10 @@ class Auction(http.Controller):
                 'other_attributes': [],
                 'playing_styles': [],
                 'strengths': [],
+                'badminton_category': '',
+                'badminton_style': '',
+                'skill_level': '',
+                'preferred_hand': '',
             })
             # Keep tier name hidden while locked (base price stays)
             if result.get('tier_id'):
@@ -6375,6 +6391,7 @@ class Auction(http.Controller):
                 tier_slug=(locked_tier.registration_slug if locked_tier else None),
             )
             football_positions, football_styles, football_strengths = self._reg_football_lookups(tournament)
+            badminton_strengths = self._reg_badminton_lookups(tournament)
             # Overall tournament capacity (always)
             overall_max, overall_count, overall_left, overall_full = self._reg_capacity(tournament)
             # Display/capacity for this form (tier-scoped when locked)
@@ -6445,6 +6462,7 @@ class Auction(http.Controller):
                     'positions': football_positions,
                     'styles': football_styles,
                     'strengths': football_strengths,
+                    'badminton_strengths': badminton_strengths,
                     'payment_proof_required': bool(tournament.payment_proof_required),
                     'admin_registration': admin,
                     'register_path': register_path,
@@ -6478,6 +6496,7 @@ class Auction(http.Controller):
                 'positions': football_positions,
                 'styles': football_styles,
                 'strengths': football_strengths,
+                'badminton_strengths': badminton_strengths,
                 'payment_proof_required': bool(tournament.payment_proof_required),
                 'admin_registration': admin,
                 'register_path': register_path,
@@ -6768,7 +6787,7 @@ class Auction(http.Controller):
             tournament = player.tournament_id
             theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
 
-            if tournament and tournament.tournament_type == 'football':
+            if tournament and tournament.tournament_type in ('football', 'badminton'):
                 report_ref = 'auction_module.action_report_player_card_football'
             else:
                 report_map = {
@@ -6838,7 +6857,7 @@ class Auction(http.Controller):
 
             theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
 
-            if tournament and tournament.tournament_type == 'football':
+            if tournament and tournament.tournament_type in ('football', 'badminton'):
                 report_ref = 'auction_module.action_report_player_card_football'
             else:
                 report_map = {
@@ -6893,7 +6912,13 @@ class Auction(http.Controller):
                     status=503,
                 )
 
-            filename = 'PlayerCard_%s.pdf' % (player.name or player_id)
+            # Same basename convention as cricket Print: Tournament [desc] Player.pdf
+            try:
+                filename = report.get_download_filename([player.id], 'pdf')
+            except Exception:
+                filename = 'Player Card.pdf'
+            if not filename.lower().endswith('.pdf'):
+                filename = '%s.pdf' % filename
             _logger.info(
                 'Player card PDF ready player_id=%s size=%.0fKB in %.2fs',
                 player_id,
@@ -8155,22 +8180,53 @@ def _football_display_payload(player):
     """Return JSON-serializable sport attributes for projector / selector JS.
 
     Always returns a stable key set so clients can branch on ``tournament_type``
-    without KeyErrors. Football-only fields are empty for cricket.
+    without KeyErrors. Football-only / badminton-only fields are empty for cricket.
+    Cricket and football return shapes are unchanged; badminton adds its own keys.
     """
-    is_football = bool(player.tournament_id and player.tournament_id.tournament_type == 'football')
+    sport = (
+        player.tournament_id.tournament_type if player.tournament_id else 'cricket'
+    ) or 'cricket'
+    is_football = sport == 'football'
+    is_badminton = sport == 'badminton'
     foot_map = {'left': 'Left', 'right': 'Right', 'both': 'Both'}
     rate_map = {'low': 'Low', 'medium': 'Medium', 'high': 'High'}
+    cat_map = dict(player._fields['badminton_category'].selection or [])
+    style_map = dict(player._fields['badminton_style'].selection or [])
+    level_map = dict(player._fields['skill_level'].selection or [])
     shared = {
-        'tournament_type': (
-            player.tournament_id.tournament_type if player.tournament_id else 'cricket'
-        ),
+        'tournament_type': sport,
         'blood_group': player.blood_group or '',
         'mobile': player.masked_contact or '',
         'location': player.address or '',
         'age': player.age or '',
         'height': player.height or '',
         'weight': player.weight or '',
+        # Badminton keys always present (empty for other sports)
+        'badminton_category': '',
+        'badminton_style': '',
+        'skill_level': '',
+        'preferred_hand': '',
     }
+    if is_badminton:
+        hand = foot_map.get(player.preferred_foot, '') if player.preferred_foot in ('left', 'right') else foot_map.get(player.preferred_foot, '')
+        return {
+            **shared,
+            'tournament_type': 'badminton',
+            'dominant_position': '',
+            'dominant_position_code': '',
+            'secondary_positions': [],
+            'preferred_foot': hand,  # reused field; UIs label as Hand for badminton
+            'preferred_hand': hand,
+            'work_rate': '',
+            'playing_styles': [],
+            'strengths': [{'name': s.name, 'icon': s.icon or ''} for s in player.strength_ids],
+            'other_attributes': [],
+            'use_other_attributes': False,
+            'badminton_category': cat_map.get(player.badminton_category, ''),
+            'badminton_style': style_map.get(player.badminton_style, ''),
+            'skill_level': level_map.get(player.skill_level, ''),
+            'age': player.age or '',
+        }
     if not is_football:
         return {
             **shared,
@@ -8395,7 +8451,9 @@ def _build_player_vals_from_post(request, tournament, locked_tier=None):
     if tournament and tournament.player_address_required and not address:
         raise ValueError("Location / Address is required.")
 
-    is_football = bool(tournament and tournament.tournament_type == 'football')
+    sport = (tournament.tournament_type if tournament else 'cricket') or 'cricket'
+    is_football = sport == 'football'
+    is_badminton = sport == 'badminton'
 
     vals = {
         'sl_no':         sl_no,
@@ -8448,8 +8506,48 @@ def _build_player_vals_from_post(request, tournament, locked_tier=None):
             vals['age'] = int(raw_age)
         vals['height'] = (post.get('height') or '').strip()
         vals['weight'] = (post.get('weight') or '').strip()
+    elif is_badminton:
+        # ── Badminton profile (isolated from cricket / football) ────────────
+        cat = (post.get('badminton_category') or '').strip()
+        if not cat:
+            raise ValueError('Category is required.')
+        vals['badminton_category'] = cat
+        # Keep role in sync so generic UIs that only show role still work
+        cat_labels = dict(Player._fields['badminton_category'].selection or [])
+        vals['role'] = cat_labels.get(cat, cat)
+
+        hand = (post.get('preferred_foot') or post.get('preferred_hand') or '').strip()
+        if hand not in ('left', 'right'):
+            raise ValueError('Hand (Left/Right) is required.')
+        vals['preferred_foot'] = hand
+
+        style = (post.get('badminton_style') or '').strip()
+        if not style:
+            raise ValueError('Style is required.')
+        vals['badminton_style'] = style
+
+        level = (post.get('skill_level') or '').strip()
+        if not level:
+            raise ValueError('Level is required.')
+        vals['skill_level'] = level
+
+        raw_age = post.get('age')
+        if raw_age and raw_age.isdigit():
+            vals['age'] = int(raw_age)
+
+        strength_ids = [int(v) for v in post.getlist('strength_ids') if v.isdigit()]
+        if strength_ids:
+            # Only allow badminton-scoped strength masters
+            Strength = request.env['auction.player.strength'].sudo()
+            valid = Strength.search([
+                ('id', 'in', strength_ids),
+                ('sport', '=', 'badminton'),
+                ('active', '=', True),
+            ]).ids
+            if valid:
+                vals['strength_ids'] = [(6, 0, valid)]
     else:
-        # ── Cricket profile ─────────────────────────────────────────────────
+        # ── Cricket / other non-football sports ─────────────────────────────
         vals['role'] = post.get('role') or ''
         vals['batting_style'] = post.get('batting_style') or 'Right Handed'
         vals['bowling_style'] = post.get('bowling_style') or 'Right Arm'

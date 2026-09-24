@@ -755,19 +755,20 @@
             </div>
 
             <!-- ══════════════════════════════════════
-                 02 · SPORT PROFILE (Cricket / Football)
+                 02 · SPORT PROFILE (Cricket / Football / Badminton)
                  ══════════════════════════════════════ -->
             <t t-set="is_football" t-value="tournament.tournament_type == 'football'"/>
+            <t t-set="is_badminton" t-value="tournament.tournament_type == 'badminton'"/>
             <div class="reg-section">
                 <div class="reg-section-header">
                     <div class="reg-section-strip"/>
-                    <h3><t t-esc="'Football Profile' if is_football else 'Cricket Profile'"/></h3>
-                    <span class="reg-section-icon"><t t-esc="'⚽' if is_football else '🏏'"/></span>
+                    <h3><t t-esc="'Football Profile' if is_football else ('Badminton Profile' if is_badminton else 'Cricket Profile')"/></h3>
+                    <span class="reg-section-icon"><t t-esc="'⚽' if is_football else ('🏸' if is_badminton else '🏏')"/></span>
                     <span class="reg-section-num">02</span>
                 </div>
 
-                <!-- ───────── CRICKET-ONLY ───────── -->
-                <t t-if="not is_football">
+                <!-- ───────── CRICKET-ONLY (not football / badminton) ───────── -->
+                <t t-if="not is_football and not is_badminton">
                     <!-- Role — big sporty card selector -->
                     <div style="margin-bottom:16px">
                         <label class="reg-label">Role <span class="req">*</span></label>
@@ -907,6 +908,73 @@
                                 <input type="checkbox" class="reg-chip-option" name="strength_ids"
                                        t-att-id="'strg_%s' % strg.id" t-att-value="strg.id"/>
                                 <label class="reg-chip-label" t-att-for="'strg_%s' % strg.id">
+                                    <span class="reg-chip-icon"><t t-esc="strg.icon"/></span>
+                                    <span class="reg-chip-text"><t t-esc="strg.name"/></span>
+                                </label>
+                            </t>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- ───────── BADMINTON-ONLY ───────── -->
+                <t t-if="is_badminton">
+                    <div class="reg-grid">
+                        <div>
+                            <label class="reg-label" for="bmCategory">Category <span class="req">*</span></label>
+                            <select id="bmCategory" name="badminton_category" class="reg-select" required="required">
+                                <option value="">— Select —</option>
+                                <option value="mens_singles">Men's Singles</option>
+                                <option value="mens_doubles">Men's Doubles</option>
+                                <option value="womens_singles">Women's Singles</option>
+                                <option value="womens_doubles">Women's Doubles</option>
+                                <option value="mixed_doubles">Mixed Doubles</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="reg-label" for="bmHand">Hand <span class="req">*</span></label>
+                            <select id="bmHand" name="preferred_foot" class="reg-select" required="required">
+                                <option value="">— Select —</option>
+                                <option value="right">Right</option>
+                                <option value="left">Left</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="reg-label" for="bmStyle">Style <span class="req">*</span></label>
+                            <select id="bmStyle" name="badminton_style" class="reg-select" required="required">
+                                <option value="">— Select —</option>
+                                <option value="attacking">Attacking</option>
+                                <option value="defensive">Defensive</option>
+                                <option value="all_round">All-round</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="reg-label" for="bmLevel">Level <span class="req">*</span></label>
+                            <select id="bmLevel" name="skill_level" class="reg-select" required="required">
+                                <option value="">— Select —</option>
+                                <option value="beginner">Beginner</option>
+                                <option value="intermediate">Intermediate</option>
+                                <option value="advanced">Advanced</option>
+                                <option value="professional">Professional</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="reg-label" for="bmAge">Age</label>
+                            <input type="number" id="bmAge" name="age" class="reg-input"
+                                   placeholder="e.g. 27" min="0" max="99"/>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:16px">
+                        <label class="reg-label">Strengths <span class="reg-opt">(pick any that apply)</span></label>
+                        <div class="reg-chip-group">
+                            <t t-foreach="badminton_strengths or []" t-as="strg">
+                                <input type="checkbox" class="reg-chip-option" name="strength_ids"
+                                       t-att-id="'bm_strg_%s' % strg.id" t-att-value="strg.id"/>
+                                <label class="reg-chip-label" t-att-for="'bm_strg_%s' % strg.id">
                                     <span class="reg-chip-icon"><t t-esc="strg.icon"/></span>
                                     <span class="reg-chip-text"><t t-esc="strg.name"/></span>
                                 </label>

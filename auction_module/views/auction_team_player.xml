@@ -542,7 +542,7 @@
                                 </group>
                             </div>
 
-                            <div class="atp-card" attrs="{'invisible': [('tournament_type', '=', 'football')]}">
+                            <div class="atp-card" attrs="{'invisible': ['|', ('tournament_type', '=', 'football'), ('tournament_type', '=', 'badminton')]}">
                                 <div class="atp-card-head">
                                     <i class="fa fa-dot-circle-o"/> Playing style
                                 </div>
@@ -566,6 +566,21 @@
                                     <field name="weight"/>
                                 </group>
                             </div>
+
+                            <div class="atp-card" attrs="{'invisible': [('tournament_type', '!=', 'badminton')]}">
+                                <div class="atp-card-head">
+                                    <i class="fa fa-trophy"/> Badminton profile
+                                </div>
+                                <group>
+                                    <field name="badminton_category"/>
+                                    <field name="preferred_foot" string="Hand"/>
+                                    <field name="badminton_style"/>
+                                    <field name="skill_level"/>
+                                    <field name="age"/>
+                                    <field name="strength_ids" widget="many2many_tags"
+                                             domain="[('sport', '=', 'badminton')]"/>
+                                </group>
+                            </div>
                         </div>
 
                         <notebook>
@@ -574,11 +589,13 @@
                                 <group>
                                     <group string="Playing Style (self-declared)">
                                         <field name="playing_style_ids" nolabel="1"
-                                               widget="many2many_tags"/>
+                                               widget="many2many_tags"
+                                               domain="[('sport', '=', 'football')]"/>
                                     </group>
                                     <group string="Strengths (self-declared)">
                                         <field name="strength_ids" nolabel="1"
-                                               widget="many2many_tags"/>
+                                               widget="many2many_tags"
+                                               domain="[('sport', '=', 'football')]"/>
                                     </group>
                                 </group>
                                 <group string="Other Attributes"

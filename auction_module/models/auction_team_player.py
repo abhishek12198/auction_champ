@@ -422,7 +422,8 @@ class AuctionTeamPlayer(models.Model):
         'player_id', 'position_id', string='Secondary Position(s)')
     preferred_foot = fields.Selection(
         [('left', 'Left'), ('right', 'Right'), ('both', 'Both')],
-        string='Preferred Foot')
+        string='Preferred Foot',
+        help='Football: preferred foot. Badminton: playing hand (Left/Right).')
     age = fields.Integer(string='Age')
     height = fields.Char(string='Height', help='e.g. 180 cm')
     weight = fields.Char(string='Weight', help='e.g. 75 kg')
@@ -435,6 +436,57 @@ class AuctionTeamPlayer(models.Model):
     work_rate = fields.Selection(
         [('low', 'Low'), ('medium', 'Medium'), ('high', 'High')],
         string='Work Rate')
+    # ── Badminton profile (shown when tournament_type == 'badminton') ────────
+    badminton_category = fields.Selection(
+        [
+            ('mens_singles', "Men's Singles"),
+            ('mens_doubles', "Men's Doubles"),
+            ('womens_singles', "Women's Singles"),
+            ('womens_doubles', "Women's Doubles"),
+            ('mixed_doubles', 'Mixed Doubles'),
+        ],
+        string='Category',
+        help='Badminton event category (e.g. Men\'s Doubles).',
+    )
+    badminton_style = fields.Selection(
+        [
+            ('attacking', 'Attacking'),
+            ('defensive', 'Defensive'),
+            ('all_round', 'All-round'),
+        ],
+        string='Style',
+        help='Badminton playing style.',
+    )
+    skill_level = fields.Selection(
+        [
+            ('beginner', 'Beginner'),
+            ('intermediate', 'Intermediate'),
+            ('advanced', 'Advanced'),
+            ('professional', 'Professional'),
+        ],
+        string='Level',
+        help='Badminton skill level.',
+    )
+
+    def badminton_card_labels(self):
+        """Human labels for badminton profile — used by HUD / PDF / stage cards."""
+        self.ensure_one()
+        cat_map = dict(self._fields['badminton_category'].selection or [])
+        style_map = dict(self._fields['badminton_style'].selection or [])
+        level_map = dict(self._fields['skill_level'].selection or [])
+        hand_map = {'left': 'Left', 'right': 'Right', 'both': 'Both'}
+        return {
+            'category': cat_map.get(self.badminton_category, '') if self.badminton_category else '',
+            'style': style_map.get(self.badminton_style, '') if self.badminton_style else '',
+            'level': level_map.get(self.skill_level, '') if self.skill_level else '',
+            'hand': hand_map.get(self.preferred_foot, '') if self.preferred_foot else '',
+            'age': self.age or '',
+            'strengths': [
+                {'name': s.name, 'icon': s.icon or ''}
+                for s in self.strength_ids
+            ],
+        }
+
     other_attribute_ids = fields.One2many(
         'auction.player.other.attribute', 'player_id',
         string='Other Attributes',
@@ -1032,7 +1084,7 @@ class AuctionTeamPlayer(models.Model):
             tournament._compute_logo_card()
             tournament.flush(['logo_card'])
         # Football has its own card format/paperformat (theme-aware internally)
-        if tournament and tournament.tournament_type == 'football':
+        if tournament and tournament.tournament_type in ('football', 'badminton'):
             return self.env.ref('auction_module.action_report_player_card_football').report_action(self)
         template = tournament.player_display_template if tournament else 'vanilla'
         report_map = {
@@ -1238,6 +1290,7 @@ class AuctionTeamPlayer(models.Model):
         tournament = player.tournament_id
         team = player.assigned_team_id
         is_football = bool(tournament and tournament.tournament_type == 'football')
+        is_badminton = bool(tournament and tournament.tournament_type == 'badminton')
         theme = (tournament.player_display_template if tournament else False) or 'vanilla'
         pal = dict(self._CARD_THEMES.get(theme, self._CARD_THEMES['vanilla']))
 
@@ -1254,6 +1307,9 @@ class AuctionTeamPlayer(models.Model):
         if is_football:
             badge = (player.dominant_position_id.name if player.dominant_position_id
                      else (player.role or 'PLAYER'))
+        elif is_badminton:
+            cat_map = dict(player._fields['badminton_category'].selection or [])
+            badge = cat_map.get(player.badminton_category) or player.role or 'PLAYER'
         else:
             badge = player.role or 'PLAYER'
 
@@ -1315,6 +1371,27 @@ class AuctionTeamPlayer(models.Model):
                 rows.append(('height', 'Height', player.height))
             else:
                 rows.append(('nation', 'Nationality', 'India'))
+        elif is_badminton:
+            cat_map = dict(player._fields['badminton_category'].selection or [])
+            style_map = dict(player._fields['badminton_style'].selection or [])
+            level_map = dict(player._fields['skill_level'].selection or [])
+            hand_map = {'left': 'Left', 'right': 'Right', 'both': 'Both'}
+            rows.append((
+                'category', 'Category',
+                cat_map.get(player.badminton_category) or player.role or '—',
+            ))
+            rows.append((
+                'foot', 'Hand',
+                hand_map.get(player.preferred_foot, '—') if player.preferred_foot else '—',
+            ))
+            rows.append((
+                'bat', 'Style',
+                style_map.get(player.badminton_style) or '—',
+            ))
+            rows.append((
+                'ball', 'Level',
+                level_map.get(player.skill_level) or '—',
+            ))
         else:
             bat = (player.batting_style or '').strip() or '—'
             bowl = (player.bowling_style or '').strip() or '—'
@@ -1721,6 +1798,11 @@ class AuctionTeamPlayer(models.Model):
             image_base64 = self.get_base64_from_url(vals.get('photo_url', False))
             if image_base64:
                 vals.update({'photo': image_base64})
+        # Keep role label in sync with badminton category for generic displays
+        if 'badminton_category' in vals and vals.get('badminton_category'):
+            cat_map = dict(self._fields['badminton_category'].selection or [])
+            vals = dict(vals)
+            vals['role'] = cat_map.get(vals['badminton_category'], vals['badminton_category'])
         res = super(AuctionTeamPlayer, self).write(vals)
         if 'tournament_id' in vals:
             self._sync_other_attributes_from_tournament()

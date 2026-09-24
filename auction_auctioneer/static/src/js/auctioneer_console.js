@@ -149,8 +149,15 @@
         return t === 'football';
     }
 
+    function isBadminton(p) {
+        var t = (p && p.tournament_type) || state.tournamentType || 'cricket';
+        return t === 'badminton';
+    }
+
     function sportIcon() {
-        return isFootball() ? '⚽' : '🏏';
+        if (isFootball()) return '⚽';
+        if (isBadminton()) return '🏸';
+        return '🏏';
     }
 
     function attrChip(label, value) {
@@ -177,6 +184,12 @@
                     chips.push(attrChip('Secondary', p.secondary_positions.join(', ')));
                 }
             }
+        } else if (isBadminton(p)) {
+            chips.push(attrChip('Age', p.age));
+            chips.push(attrChip('Category', p.badminton_category || p.role));
+            chips.push(attrChip('Hand', p.preferred_hand || p.preferred_foot));
+            chips.push(attrChip('Style', p.badminton_style));
+            chips.push(attrChip('Level', p.skill_level));
         } else {
             chips.push(attrChip('Role', p.role));
             chips.push(attrChip('Bat', p.batting_style));
@@ -195,6 +208,15 @@
             }
             return [p.dominant_position || p.dominant_position_code, p.preferred_foot, p.age ? ('Age ' + p.age) : '']
                 .filter(Boolean).join(' · ');
+        }
+        if (isBadminton(p)) {
+            return [
+                p.badminton_category || p.role,
+                p.preferred_hand || p.preferred_foot,
+                p.badminton_style,
+                p.skill_level,
+                p.age ? ('Age ' + p.age) : ''
+            ].filter(Boolean).join(' · ');
         }
         return [p.role, p.batting_style, p.bowling_style].filter(Boolean).join(' · ');
     }

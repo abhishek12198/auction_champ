@@ -3691,7 +3691,9 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       : (p.name || '—');
     const subRole = (p.tournament_type === 'football')
       ? (p.dominant_position || p.role || '')
-      : (p.role || '');
+      : (p.tournament_type === 'badminton'
+          ? (p.badminton_category || p.role || '')
+          : (p.role || ''));
     document.getElementById('lb-psub').textContent  =
       mysteryHidden ? '' : [subRole, p.tier_name].filter(Boolean).join(' · ');
 
@@ -3720,6 +3722,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
 
     // Badges
     const isFootball = (p.tournament_type === 'football');
+    const isBadminton = (p.tournament_type === 'badminton');
     let badgesHtml = '';
     if (p.tier_name && !mysteryHidden) {
       badgesHtml += `<span class="lb-badge lb-b-tier" style="background:${p.tier_color || '#2252b5'}">${p.tier_name}</span>`;
@@ -3729,6 +3732,9 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
         if (p.dominant_position) {
           badgesHtml += `<span class="lb-badge lb-b-role">${lbEsc(p.dominant_position)}</span>`;
         }
+      } else if (isBadminton) {
+        const cat = p.badminton_category || p.role;
+        if (cat) badgesHtml += `<span class="lb-badge lb-b-role">${lbEsc(cat)}</span>`;
       } else if (p.role) {
         badgesHtml += `<span class="lb-badge lb-b-role">${p.role}</span>`;
       }
@@ -3771,6 +3777,18 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       } else {
         statsRow.style.display = 'none';
       }
+    } else if (isBadminton) {
+      let r1 = '';
+      r1 += lbStat('Age', p.age ? String(p.age) : '—');
+      r1 += lbStat('Category', p.badminton_category || p.role || '—');
+      r1 += lbStat('Hand', p.preferred_hand || p.preferred_foot || '—');
+      r1 += lbStat('Style', p.badminton_style || '—');
+      r1 += lbStat('Level', p.skill_level || '—');
+      let sh = r1;
+      const bChips = lbChips(p.strengths);
+      if (bChips) sh += (sh ? '<div class="lb-stat-break"></div>' : '') + bChips;
+      statsRow.style.display = 'flex';
+      statsRow.innerHTML = sh;
     } else if (p.batting_style || p.bowling_style) {
       statsRow.style.display = 'flex';
       statsRow.innerHTML =

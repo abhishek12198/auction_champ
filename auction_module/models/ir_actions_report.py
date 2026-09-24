@@ -144,7 +144,7 @@ class IrActionsReport(models.Model):
         if self.report_name in generic_card_reports and res_ids:
             players = self.env['auction.team.player'].browse(res_ids).exists()
             if players and all(
-                p.tournament_id.tournament_type == 'football' for p in players
+                p.tournament_id.tournament_type in ('football', 'badminton') for p in players
             ):
                 football = self.env.ref(
                     'auction_module.action_report_player_card_football',

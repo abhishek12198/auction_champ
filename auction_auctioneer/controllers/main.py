@@ -348,7 +348,13 @@ class AuctionAuctioneerController(http.Controller):
                 ),
                 'secondary_positions': [] if mystery_hidden else (fb.get('secondary_positions') or []),
                 'preferred_foot': '' if mystery_hidden else (fb.get('preferred_foot') or ''),
+                'preferred_hand': '' if mystery_hidden else (fb.get('preferred_hand') or ''),
                 'age': '' if mystery_hidden else (fb.get('age') or ''),
+                'badminton_category': '' if mystery_hidden else (fb.get('badminton_category') or ''),
+                'badminton_style': '' if mystery_hidden else (fb.get('badminton_style') or ''),
+                'skill_level': '' if mystery_hidden else (fb.get('skill_level') or ''),
+                'strengths': [] if mystery_hidden else (fb.get('strengths') or []),
+                'playing_styles': [] if mystery_hidden else (fb.get('playing_styles') or []),
                 'other_attributes': [] if mystery_hidden else (fb.get('other_attributes') or []),
                 'use_other_attributes': (
                     False if mystery_hidden else bool(fb.get('use_other_attributes'))

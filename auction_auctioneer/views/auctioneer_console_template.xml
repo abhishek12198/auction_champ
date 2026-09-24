@@ -24,8 +24,9 @@
         </t>
         <t t-else="">
             <div class="ac-nav__logo-placeholder">
-                <span t-if="tournament and tournament.tournament_type == 'football'">⚽</span>
-                <span t-else="">🏏</span>
+                <t t-if="tournament and tournament.tournament_type == 'football'">⚽</t>
+                <t t-elif="tournament and tournament.tournament_type == 'badminton'">🏸</t>
+                <t t-else="">🏏</t>
             </div>
         </t>
         <div class="ac-nav__info">
@@ -102,6 +103,7 @@
         <div class="ac-stage-empty" id="acPlayerEmpty">
             <div class="ac-stage-empty__mark" id="acEmptyIcon">
                 <t t-if="tournament and tournament.tournament_type == 'football'">⚽</t>
+                <t t-elif="tournament and tournament.tournament_type == 'badminton'">🏸</t>
                 <t t-else="">🏏</t>
             </div>
             <h3 class="ac-stage-empty__title">Awaiting Player</h3>
@@ -341,7 +343,7 @@ window.acToggleTheme = function() {
     document.getElementById('acThemeIcon').textContent = next === 'dark' ? '☀' : '🌙';
 };
 </script>
-<script src="/auction_auctioneer/static/src/js/auctioneer_console.js?v=1.4.74"></script>
+<script src="/auction_auctioneer/static/src/js/auctioneer_console.js?v=1.4.75"></script>
 </body>
 </html>
 </template>

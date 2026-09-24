@@ -48,28 +48,40 @@ class AuctionPlayerPosition(models.Model):
     code = fields.Char(string='Code', help='Short code, e.g. GK, CB, ST.')
     sequence = fields.Integer(default=10)
     active = fields.Boolean(default=True)
+    sport = fields.Selection(
+        [('football', 'Football'), ('badminton', 'Badminton')],
+        string='Sport', default='football', required=True, index=True,
+    )
 
 
 class AuctionPlayerStyle(models.Model):
     _name = 'auction.player.style'
-    _description = 'Football Playing Style'
+    _description = 'Player Playing Style'
     _order = 'sequence, id'
 
     name = fields.Char(string='Playing Style', required=True)
     icon = fields.Char(string='Icon', help='Emoji/icon shown on the chip.')
     sequence = fields.Integer(default=10)
     active = fields.Boolean(default=True)
+    sport = fields.Selection(
+        [('football', 'Football'), ('badminton', 'Badminton')],
+        string='Sport', default='football', required=True, index=True,
+    )
 
 
 class AuctionPlayerStrength(models.Model):
     _name = 'auction.player.strength'
-    _description = 'Football Player Strength'
+    _description = 'Player Strength'
     _order = 'sequence, id'
 
     name = fields.Char(string='Strength', required=True)
     icon = fields.Char(string='Icon', help='Emoji/icon shown on the chip.')
     sequence = fields.Integer(default=10)
     active = fields.Boolean(default=True)
+    sport = fields.Selection(
+        [('football', 'Football'), ('badminton', 'Badminton')],
+        string='Sport', default='football', required=True, index=True,
+    )
 
 
 class AuctionPlayerOtherAttribute(models.Model):

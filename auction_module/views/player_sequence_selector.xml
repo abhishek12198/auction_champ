@@ -2622,10 +2622,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     var tierColor = p.tier_color || '#3498db';
     var tierGlow  = tierColor + '55';
     var isFootball = (p.tournament_type === 'football');
+    var isBadminton = (p.tournament_type === 'badminton');
     var mysteryHidden = !!(p.is_mystery && !p.mystery_revealed);
     var roleText = mysteryHidden
       ? ''
-      : (isFootball ? (p.dominant_position || p.role || '') : (p.role || ''));
+      : (isFootball
+          ? (p.dominant_position || p.role || '')
+          : (isBadminton ? (p.badminton_category || p.role || '') : (p.role || '')));
     var serial = mysteryHidden ? '??' : ('00' + String(p.sl_no || 0)).slice(-2);
     var displayName = mysteryHidden ? 'Mystery Player?' : (p.name || '');
     var photoInner;
@@ -2725,6 +2728,17 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         if (p.location) attrsHtml += attr('Location', p.location);
         if (p.mobile) attrsHtml += attr('Contact', p.mobile);
         attrsHtml += pcChips(p.playing_styles) + pcChips(p.strengths);
+      } else if (isBadminton) {
+        /* Full /player/register profile — always 2-up like football card */
+        attrsHtml += attr('Age', p.age ? String(p.age) : '—');
+        attrsHtml += attr('Category', p.badminton_category || p.role || '—');
+        attrsHtml += attr('Hand', p.preferred_hand || p.preferred_foot || '—');
+        attrsHtml += attr('Style', p.badminton_style || '—');
+        attrsHtml += attr('Level', p.skill_level || '—');
+        attrsHtml += attr('Tier', (p.tier_id && p.tier_id[1]) ? p.tier_id[1] : '—');
+        attrsHtml += attr('Mobile', p.mobile || p.masked_contact || '—');
+        attrsHtml += attr('Location', p.location || '—');
+        attrsHtml += pcChips(p.strengths);
       } else {
         // Cricket — Role (not Position); richer profile like themed cards
         if (p.role) attrsHtml += attr('Role', p.role);
