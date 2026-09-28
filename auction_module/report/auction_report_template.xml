@@ -2,81 +2,85 @@
 <odoo>
 
     <!-- ─────────────────────────────────────────────────────────────
+         Theme-aware roster PDF (Vanilla, Butterscotch, Strawberry, …)
+         Compact layout: one team per A4 page (≤20 players).
+         ───────────────────────────────────────────────────────────── -->
+
+    <!-- ─────────────────────────────────────────────────────────────
          SHARED PAGE HEADER  (called by both Roster and Template)
          ───────────────────────────────────────────────────────────── -->
     <template id="report_auction_page_header" name="Auction Roster Page Header">
         <t t-name="auction_module.report_auction_page_header">
-            <!-- Dark navy masthead -->
-            <table style="width:100%; border-collapse:collapse; background-color:#0F2447;">
+            <t t-set="pal" t-value="env['auction.point.unit'].report_roster_theme_palette(doc.tournament_id.player_display_template)"/>
+            <!-- Themed masthead — larger logos & title for print visibility -->
+            <table t-attf-style="width:100%; border-collapse:collapse; background-color:{{ pal['primary'] }};">
                 <tr>
-                    <td style="width:88px; padding:14px 14px 10px 14px; vertical-align:middle;">
+                    <td style="width:96px; padding:14px 14px; vertical-align:middle;">
                         <img t-att-src="image_data_uri(doc.tournament_id.logo)"
                              alt="Tournament Logo"
-                             style="height:64px; width:64px; display:block;"/>
+                             style="height:72px; width:72px; display:block;"/>
                     </td>
-                    <td style="text-align:center; padding:10px 8px; vertical-align:middle;">
-                        <div style="color:#FFFFFF; font-size:19px; font-weight:bold;
+                    <td style="text-align:center; padding:12px 10px; vertical-align:middle;">
+                        <div t-attf-style="color:{{ pal['on_primary'] }}; font-size:22px; font-weight:bold;
                                     letter-spacing:2px; font-family:Georgia,'Times New Roman',serif;
-                                    text-transform:uppercase;">
+                                    text-transform:uppercase; line-height:1.15;">
                             <t t-esc="doc.tournament_id.name"/>
                         </div>
-                        <div style="color:#A8C0E0; font-size:10px; margin-top:3px;
+                        <div t-attf-style="color:{{ pal['muted_on_primary'] }}; font-size:11px; margin-top:5px;
                                     font-family:Arial,Helvetica,sans-serif;">
                             <t t-esc="doc.tournament_id.description"/>
-                            <span style="margin:0 5px;">|</span>
+                            <span style="margin:0 6px;">|</span>
                             <t t-esc="doc.tournament_id.get_venue_label()"/>
                         </div>
-                        <div style="color:#E8A020; font-size:12px; font-weight:bold;
+                        <div t-attf-style="color:{{ pal['on_primary'] }}; font-size:13px; font-weight:bold;
                                     letter-spacing:3px; margin-top:8px; text-transform:uppercase;
                                     font-family:Arial,Helvetica,sans-serif;">
                             <t t-esc="subtitle"/>
                         </div>
                     </td>
-                    <td style="width:88px; padding:14px 14px 10px 14px; vertical-align:middle; text-align:right;">
+                    <td style="width:96px; padding:14px 14px; vertical-align:middle; text-align:right;">
                         <img t-att-src="image_data_uri(doc.team_id.logo)"
                              alt="Team Logo"
-                             style="height:64px; width:64px; display:block; margin-left:auto;"/>
+                             style="height:72px; width:72px; display:block; margin-left:auto;"/>
                     </td>
                 </tr>
             </table>
-            <!-- Gold accent bar -->
-            <div style="height:4px; background-color:#E8A020;"></div>
 
             <!-- Team info cards -->
-            <table style="width:100%; border-collapse:collapse; margin-top:10px;">
+            <table style="width:100%; border-collapse:collapse; margin-top:8px;">
                 <tr>
-                    <td style="padding:8px 12px; border:1px solid #C8D8F0;
-                                background-color:#EBF3FF; vertical-align:top;">
-                        <div style="font-size:8px; color:#7A8DA8; text-transform:uppercase;
+                    <td t-attf-style="padding:8px 10px; border:1px solid {{ pal['card_border'] }};
+                                background-color:{{ pal['card_bg'] }}; vertical-align:top;">
+                        <div t-attf-style="font-size:8px; color:{{ pal['subtle'] }}; text-transform:uppercase;
                                     letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Team</div>
-                        <div style="font-size:13px; font-weight:bold; color:#0F2447;
+                        <div t-attf-style="font-size:13px; font-weight:bold; color:{{ pal['ink'] }};
                                     font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
                             <t t-esc="doc.team_id.name"/>
                         </div>
                     </td>
-                    <td style="padding:8px 12px; border:1px solid #C8D8F0;
-                                background-color:#EBF3FF; vertical-align:top;">
-                        <div style="font-size:8px; color:#7A8DA8; text-transform:uppercase;
+                    <td t-attf-style="padding:8px 10px; border:1px solid {{ pal['card_border'] }};
+                                background-color:{{ pal['card_bg'] }}; vertical-align:top;">
+                        <div t-attf-style="font-size:8px; color:{{ pal['subtle'] }}; text-transform:uppercase;
                                     letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Team Owner</div>
-                        <div style="font-size:13px; font-weight:bold; color:#0F2447;
+                        <div t-attf-style="font-size:13px; font-weight:bold; color:{{ pal['ink'] }};
                                     font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
                             <t t-esc="doc.manager"/>
                         </div>
                     </td>
-                    <td style="padding:8px 12px; border:1px solid #C8D8F0;
-                                background-color:#EBF3FF; vertical-align:top;">
-                        <div style="font-size:8px; color:#7A8DA8; text-transform:uppercase;
+                    <td t-attf-style="padding:8px 10px; border:1px solid {{ pal['card_border'] }};
+                                background-color:{{ pal['card_bg'] }}; vertical-align:top;">
+                        <div t-attf-style="font-size:8px; color:{{ pal['subtle'] }}; text-transform:uppercase;
                                     letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Icon Players</div>
-                        <div style="font-size:13px; font-weight:bold; color:#0F2447;
+                        <div t-attf-style="font-size:13px; font-weight:bold; color:{{ pal['ink'] }};
                                     font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
                             <t t-esc="', '.join([p.name for p in doc.team_id.key_player_ids]) or ''"/>
                         </div>
                     </td>
-                    <td style="padding:8px 12px; border:1px solid #C8D8F0;
-                                background-color:#EBF3FF; vertical-align:top; white-space:nowrap;">
-                        <div style="font-size:8px; color:#7A8DA8; text-transform:uppercase;
+                    <td t-attf-style="padding:8px 10px; border:1px solid {{ pal['card_border'] }};
+                                background-color:{{ pal['card_bg'] }}; vertical-align:top; white-space:nowrap;">
+                        <div t-attf-style="font-size:8px; color:{{ pal['subtle'] }}; text-transform:uppercase;
                                     letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Squad Size</div>
-                        <div style="font-size:13px; font-weight:bold; color:#0F2447;
+                        <div t-attf-style="font-size:13px; font-weight:bold; color:{{ pal['ink'] }};
                                     font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
                             <t t-esc="doc.max_players"/> Players
                         </div>
@@ -87,55 +91,54 @@
     </template>
 
 
-
-
     <!-- ─────────────────────────────────────────────────────────────
          SHARED TIER LIMITS + BID SLAB TABLES
          ───────────────────────────────────────────────────────────── -->
     <template id="report_auction_tier_slab" name="Auction Tier and Slab Tables">
         <t t-name="auction_module.report_auction_tier_slab">
-            <table style="width:100%; border-collapse:collapse; margin-top:14px;">
+            <t t-set="pal" t-value="env['auction.point.unit'].report_roster_theme_palette(doc.tournament_id.player_display_template)"/>
+            <table style="width:100%; border-collapse:collapse; margin-top:8px;">
                 <tr>
                     <!-- LEFT: Tier Limits -->
-                    <td style="width:50%; padding-right:7px; vertical-align:top;">
-                        <div style="font-size:9px; font-weight:bold; text-transform:uppercase;
-                                    letter-spacing:1px; color:#0F2447; margin-bottom:4px;
+                    <td style="width:50%; padding-right:5px; vertical-align:top;">
+                        <div t-attf-style="font-size:8px; font-weight:bold; text-transform:uppercase;
+                                    letter-spacing:1px; color:{{ pal['ink'] }}; margin-bottom:3px;
                                     font-family:Arial,Helvetica,sans-serif;">
                             Tier Limits
                         </div>
                         <table style="width:100%; border-collapse:collapse;">
                             <thead>
-                                <tr style="background-color:#1A3A6A;">
-                                    <th style="color:#FFFFFF; padding:6px 8px; font-size:9px;
+                                <tr t-attf-style="background-color:{{ pal['primary'] }};">
+                                    <th t-attf-style="color:{{ pal['on_primary'] }}; padding:4px 6px; font-size:8px;
                                                text-transform:uppercase; letter-spacing:1px;
-                                               border:1px solid #0F2447; text-align:left;
+                                               border:1px solid {{ pal['primary_dark'] }}; text-align:left;
                                                font-family:Arial,Helvetica,sans-serif;">Tier</th>
-                                    <th style="color:#FFFFFF; padding:6px 8px; font-size:9px;
+                                    <th t-attf-style="color:{{ pal['on_primary'] }}; padding:4px 6px; font-size:8px;
                                                text-transform:uppercase; letter-spacing:1px;
-                                               border:1px solid #0F2447; text-align:center;
+                                               border:1px solid {{ pal['primary_dark'] }}; text-align:center;
                                                font-family:Arial,Helvetica,sans-serif;">Max Players</th>
-                                    <th style="color:#FFFFFF; padding:6px 8px; font-size:9px;
+                                    <th t-attf-style="color:{{ pal['on_primary'] }}; padding:4px 6px; font-size:8px;
                                                text-transform:uppercase; letter-spacing:1px;
-                                               border:1px solid #0F2447; text-align:center;
+                                               border:1px solid {{ pal['primary_dark'] }}; text-align:center;
                                                font-family:Arial,Helvetica,sans-serif;">Base <t t-esc="doc.tournament_id.get_point_unit().name"/></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <t t-foreach="doc.tier_limit_ids" t-as="tl">
-                                    <tr t-att-style="'background-color:%s;' % ('#F4F8FF' if tl_index % 2 == 0 else '#FFFFFF')">
-                                        <td style="padding:5px 8px; border:1px solid #D0DCF0;
-                                                   font-size:11px; font-weight:bold;
+                                    <tr t-att-style="'background-color:%s;' % (pal['row_alt'] if tl_index % 2 == 0 else '#FFFFFF')">
+                                        <td t-attf-style="padding:3px 6px; border:1px solid {{ pal['card_border'] }};
+                                                   font-size:10px; font-weight:bold;
                                                    font-family:Arial,Helvetica,sans-serif;">
-                                            <span t-att-style="'display:inline-block; width:8px; height:8px; background-color:%s; margin-right:5px; vertical-align:middle;' % (tl.tier_id.color or '#3498db')"></span>
+                                            <span t-att-style="'display:inline-block; width:7px; height:7px; background-color:%s; margin-right:4px; vertical-align:middle;' % (tl.tier_id.color or pal['primary'])"></span>
                                             <t t-esc="tl.tier_id.name"/>
                                         </td>
-                                        <td style="padding:5px 8px; border:1px solid #D0DCF0;
-                                                   font-size:11px; text-align:center; color:#0F2447;
+                                        <td t-attf-style="padding:3px 6px; border:1px solid {{ pal['card_border'] }};
+                                                   font-size:10px; text-align:center; color:{{ pal['ink'] }};
                                                    font-family:Arial,Helvetica,sans-serif;">
                                             <t t-esc="tl.max_players"/>
                                         </td>
-                                        <td style="padding:5px 8px; border:1px solid #D0DCF0;
-                                                   font-size:11px; text-align:center; color:#0F2447;
+                                        <td t-attf-style="padding:3px 6px; border:1px solid {{ pal['card_border'] }};
+                                                   font-size:10px; text-align:center; color:{{ pal['ink'] }};
                                                    font-weight:bold; font-family:Arial,Helvetica,sans-serif;">
                                             <span class="ac-unit-val"><t t-raw="doc.tournament_id.format_points_pdf(tl.base_point or doc.base_point)"/></span>
                                         </td>
@@ -143,10 +146,10 @@
                                 </t>
                                 <t t-if="not doc.tier_limit_ids">
                                     <tr>
-                                        <td colspan="3" style="padding:8px; border:1px solid #D0DCF0;
-                                                               text-align:center; font-size:10px;
-                                                               color:#9AAFC8; font-style:italic;
-                                                               font-family:Arial,Helvetica,sans-serif;">
+                                        <td t-attf-style="padding:6px; border:1px solid {{ pal['card_border'] }};
+                                                               text-align:center; font-size:9px;
+                                                               color:{{ pal['subtle'] }}; font-style:italic;
+                                                               font-family:Arial,Helvetica,sans-serif;" colspan="3">
                                             No tier limits configured
                                         </td>
                                     </tr>
@@ -156,44 +159,44 @@
                     </td>
 
                     <!-- RIGHT: Bid Slab -->
-                    <td style="width:50%; padding-left:7px; vertical-align:top;">
-                        <div style="font-size:9px; font-weight:bold; text-transform:uppercase;
-                                    letter-spacing:1px; color:#0F2447; margin-bottom:4px;
+                    <td style="width:50%; padding-left:5px; vertical-align:top;">
+                        <div t-attf-style="font-size:8px; font-weight:bold; text-transform:uppercase;
+                                    letter-spacing:1px; color:{{ pal['ink'] }}; margin-bottom:3px;
                                     font-family:Arial,Helvetica,sans-serif;">
                             Bid Slab
                         </div>
                         <table style="width:100%; border-collapse:collapse;">
                             <thead>
-                                <tr style="background-color:#1A3A6A;">
-                                    <th style="color:#FFFFFF; padding:6px 8px; font-size:9px;
+                                <tr t-attf-style="background-color:{{ pal['primary'] }};">
+                                    <th t-attf-style="color:{{ pal['on_primary'] }}; padding:4px 6px; font-size:8px;
                                                text-transform:uppercase; letter-spacing:1px;
-                                               border:1px solid #0F2447; text-align:center;
+                                               border:1px solid {{ pal['primary_dark'] }}; text-align:center;
                                                font-family:Arial,Helvetica,sans-serif;">From</th>
-                                    <th style="color:#FFFFFF; padding:6px 8px; font-size:9px;
+                                    <th t-attf-style="color:{{ pal['on_primary'] }}; padding:4px 6px; font-size:8px;
                                                text-transform:uppercase; letter-spacing:1px;
-                                               border:1px solid #0F2447; text-align:center;
+                                               border:1px solid {{ pal['primary_dark'] }}; text-align:center;
                                                font-family:Arial,Helvetica,sans-serif;">To</th>
-                                    <th style="color:#FFFFFF; padding:6px 8px; font-size:9px;
+                                    <th t-attf-style="color:{{ pal['on_primary'] }}; padding:4px 6px; font-size:8px;
                                                text-transform:uppercase; letter-spacing:1px;
-                                               border:1px solid #0F2447; text-align:center;
+                                               border:1px solid {{ pal['primary_dark'] }}; text-align:center;
                                                font-family:Arial,Helvetica,sans-serif;">Increment</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <t t-foreach="doc.auction_bid_slab_ids.sorted('from_amount')" t-as="slab">
-                                    <tr t-att-style="'background-color:%s;' % ('#F4F8FF' if slab_index % 2 == 0 else '#FFFFFF')">
-                                        <td style="padding:5px 8px; border:1px solid #D0DCF0;
-                                                   font-size:11px; text-align:center; color:#3A4A5E;
+                                    <tr t-att-style="'background-color:%s;' % (pal['row_alt'] if slab_index % 2 == 0 else '#FFFFFF')">
+                                        <td t-attf-style="padding:3px 6px; border:1px solid {{ pal['card_border'] }};
+                                                   font-size:10px; text-align:center; color:{{ pal['body'] }};
                                                    font-family:Arial,Helvetica,sans-serif;">
                                             <t t-esc="slab.from_amount"/>
                                         </td>
-                                        <td style="padding:5px 8px; border:1px solid #D0DCF0;
-                                                   font-size:11px; text-align:center; color:#3A4A5E;
+                                        <td t-attf-style="padding:3px 6px; border:1px solid {{ pal['card_border'] }};
+                                                   font-size:10px; text-align:center; color:{{ pal['body'] }};
                                                    font-family:Arial,Helvetica,sans-serif;">
                                             <t t-esc="slab.to_amount"/>
                                         </td>
-                                        <td style="padding:5px 8px; border:1px solid #D0DCF0;
-                                                   font-size:11px; text-align:center; color:#E8A020;
+                                        <td t-attf-style="padding:3px 6px; border:1px solid {{ pal['card_border'] }};
+                                                   font-size:10px; text-align:center; color:{{ pal['primary'] }};
                                                    font-weight:bold; font-family:Arial,Helvetica,sans-serif;">
                                             +<t t-esc="slab.increment"/>
                                         </td>
@@ -201,10 +204,10 @@
                                 </t>
                                 <t t-if="not doc.auction_bid_slab_ids">
                                     <tr>
-                                        <td colspan="3" style="padding:8px; border:1px solid #D0DCF0;
-                                                               text-align:center; font-size:10px;
-                                                               color:#9AAFC8; font-style:italic;
-                                                               font-family:Arial,Helvetica,sans-serif;">
+                                        <td t-attf-style="padding:6px; border:1px solid {{ pal['card_border'] }};
+                                                               text-align:center; font-size:9px;
+                                                               color:{{ pal['subtle'] }}; font-style:italic;
+                                                               font-family:Arial,Helvetica,sans-serif;" colspan="3">
                                             No bid slabs configured
                                         </td>
                                     </tr>
@@ -219,30 +222,38 @@
 
 
     <!-- ─────────────────────────────────────────────────────────────
-         SHARED PAGE FOOTER  (pinned to bottom via position:fixed)
+         SHARED PAGE FOOTER  (in-flow — avoid position:fixed empty pages)
          ───────────────────────────────────────────────────────────── -->
     <template id="report_auction_page_footer" name="Auction Roster Page Footer">
         <t t-name="auction_module.report_auction_page_footer">
-            <div style="position:fixed; bottom:0; left:0; right:0;">
-                <!-- Gold accent stripe -->
-                <div style="height:3px; background-color:#E8A020;"></div>
-                <!-- Navy footer body -->
-                <div style="background-color:#0F2447; padding:8px 16px; text-align:center;">
-                    <span style="color:#6A90C0; font-size:8px;
-                                  font-family:Arial,Helvetica,sans-serif; text-transform:uppercase;">
-                        Powered by
-                    </span>
-                    <span style="color:#FFFFFF; font-size:10px; font-weight:bold; margin:0 8px;
-                                  font-family:Arial,Helvetica,sans-serif; text-transform:uppercase;">
+            <t t-set="pal" t-value="env['auction.point.unit'].report_roster_theme_palette(doc.tournament_id.player_display_template)"/>
+            <t t-set="ac_brand_logo" t-value="env['auction.point.unit'].report_brand_logo_data_uri(bool(pal.get('brand_dark')))"/>
+            <div t-attf-style="margin-top:10px; background-color:{{ pal['primary'] }}; padding:5px 12px; text-align:center;">
+                <span t-attf-style="color:{{ pal['muted_on_primary'] }}; font-size:7px;
+                              font-family:Arial,Helvetica,sans-serif; text-transform:uppercase;
+                              vertical-align:middle;">
+                    Powered by
+                </span>
+                <t t-if="ac_brand_logo">
+                    <img t-att-src="ac_brand_logo"
+                         alt="AuctionChamp"
+                         style="height:14px; width:auto; display:inline-block;
+                                vertical-align:middle; margin:0 6px;"/>
+                </t>
+                <t t-else="">
+                    <span t-attf-style="color:{{ pal['on_primary'] }}; font-size:9px; font-weight:bold; margin:0 6px;
+                                  font-family:Arial,Helvetica,sans-serif; text-transform:uppercase;
+                                  vertical-align:middle;">
                         AuctionChamp
                     </span>
-                    <span style="color:#2A5A9A; font-size:10px;
-                                  font-family:Arial,Helvetica,sans-serif; margin:0 6px;">|</span>
-                    <span style="color:#7AAAD8; font-size:8px;
-                                  font-family:Arial,Helvetica,sans-serif;">
-                        <t t-esc="doc.tournament_id.name"/>
-                    </span>
-                </div>
+                </t>
+                <span t-attf-style="color:{{ pal['muted_on_primary'] }}; font-size:9px;
+                              font-family:Arial,Helvetica,sans-serif; margin:0 5px;
+                              vertical-align:middle;">|</span>
+                <span t-attf-style="color:{{ pal['muted_on_primary'] }}; font-size:7px;
+                              font-family:Arial,Helvetica,sans-serif; vertical-align:middle;">
+                    <t t-esc="doc.tournament_id.name"/>
+                </span>
             </div>
         </t>
     </template>
@@ -257,68 +268,67 @@
                 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
                 <style type="text/css"><t t-raw="env['auction.point.unit'].report_unicode_font_css()"/></style>
                 <t t-foreach="docs" t-as="doc">
-                    <div class="page" style="font-family:Arial,Helvetica,sans-serif;
-                                             color:#1A1A2E; padding:0;
-                                             page-break-after: always;
-                                             page-break-inside: avoid;">
+                    <t t-set="pal" t-value="env['auction.point.unit'].report_roster_theme_palette(doc.tournament_id.player_display_template)"/>
+                    <div class="page" t-att-style="'font-family:Arial,Helvetica,sans-serif; color:#1A1A2E; padding:0; page-break-after: %s;' % ('always' if not doc_last else 'auto')">
 
                         <!-- Header -->
                         <t t-set="subtitle">Team Squad Roster</t>
                         <t t-call="auction_module.report_auction_page_header"/>
-                        <table style="width:100%; border-collapse:collapse; margin-top:12px;">
+                        <table style="width:100%; border-collapse:collapse; margin-top:8px;">
                             <thead>
-                                <tr style="background-color:#1A3A6A;">
-                                    <th colspan="2" style="color:#FFFFFF; padding:9px 8px; font-size:10px;
+                                <tr t-attf-style="background-color:{{ pal['primary'] }};">
+                                    <th t-attf-style="color:{{ pal['on_primary'] }}; padding:6px 6px; font-size:9px;
                                                text-transform:uppercase; letter-spacing:1px;
-                                               border:1px solid #0F2447; text-align:left;
-                                               font-family:Arial,Helvetica,sans-serif;">Player</th>
-                                    <th style="color:#FFFFFF; padding:9px 8px; font-size:10px;
+                                               border:1px solid {{ pal['primary_dark'] }}; text-align:left;
+                                               font-family:Arial,Helvetica,sans-serif;" colspan="2">Player</th>
+                                    <th t-attf-style="color:{{ pal['on_primary'] }}; padding:6px 6px; font-size:9px;
                                                text-transform:uppercase; letter-spacing:1px;
-                                               border:1px solid #0F2447; text-align:left;
+                                               border:1px solid {{ pal['primary_dark'] }}; text-align:left;
                                                font-family:Arial,Helvetica,sans-serif;">Mobile</th>
-                                    <th style="color:#FFFFFF; padding:9px 8px; font-size:10px;
+                                    <th t-attf-style="color:{{ pal['on_primary'] }}; padding:6px 6px; font-size:9px;
                                                text-transform:uppercase; letter-spacing:1px;
-                                               border:1px solid #0F2447; text-align:center;
+                                               border:1px solid {{ pal['primary_dark'] }}; text-align:center;
                                                font-family:Arial,Helvetica,sans-serif;"><t t-esc="doc.tournament_id.get_point_unit().name"/></th>
-                                    <th style="color:#FFFFFF; padding:9px 8px; font-size:10px;
+                                    <th t-attf-style="color:{{ pal['on_primary'] }}; padding:6px 6px; font-size:9px;
                                                text-transform:uppercase; letter-spacing:1px;
-                                               border:1px solid #0F2447; text-align:center;
+                                               border:1px solid {{ pal['primary_dark'] }}; text-align:center;
                                                font-family:Arial,Helvetica,sans-serif;">Role</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                <t t-set="rm" t-value="env['auction.point.unit'].report_roster_row_metrics(len(doc.player_ids))"/>
                                 <t t-foreach="doc.player_ids" t-as="player">
-                                    <tr t-att-style="'background-color:%s;' % ('#F4F8FF' if player_index % 2 == 0 else '#FFFFFF')">
-                                        <td style="padding:5px 4px; border-top:1px solid #D0DCF0;
-                                                   border-bottom:1px solid #D0DCF0;
-                                                   border-left:1px solid #D0DCF0; border-right:0;
-                                                   width:44px; text-align:center;">
+                                    <tr t-att-style="'height:%spx; background-color:%s;' % (rm['row_h'], pal['row_alt'] if player_index % 2 == 0 else '#FFFFFF')">
+                                        <td t-attf-style="padding:{{ rm['pad_y'] }}px 3px; border-top:1px solid {{ pal['card_border'] }};
+                                                   border-bottom:1px solid {{ pal['card_border'] }};
+                                                   border-left:1px solid {{ pal['card_border'] }}; border-right:0;
+                                                   width:{{ rm['photo_cell_w'] }}px; text-align:center; vertical-align:middle;">
                                             <img t-att-src="image_data_uri(player.player_id.photo)"
                                                  alt="Photo"
-                                                 style="height:38px; width:38px; display:block; margin:0 auto;"/>
+                                                 t-attf-style="height:{{ rm['photo'] }}px; width:{{ rm['photo'] }}px; display:block; margin:0 auto;"/>
                                         </td>
-                                        <td style="padding:7px 8px; border-top:1px solid #D0DCF0;
-                                                   border-bottom:1px solid #D0DCF0;
-                                                   border-right:1px solid #D0DCF0; border-left:0;
-                                                   font-size:12px; font-weight:bold; color:#0F2447;
-                                                   text-transform:uppercase; letter-spacing:0.5px;
+                                        <td t-attf-style="padding:{{ rm['pad_y'] }}px {{ rm['pad_x'] }}px; border-top:1px solid {{ pal['card_border'] }};
+                                                   border-bottom:1px solid {{ pal['card_border'] }};
+                                                   border-right:1px solid {{ pal['card_border'] }}; border-left:0;
+                                                   font-size:{{ rm['font_name'] }}px; font-weight:bold; color:{{ pal['ink'] }};
+                                                   text-transform:uppercase; letter-spacing:0.4px; vertical-align:middle;
                                                    font-family:Arial,Helvetica,sans-serif;">
                                             <t t-esc="player.player_id.name"/>
                                         </td>
-                                        <td style="padding:7px 8px; border:1px solid #D0DCF0;
-                                                   font-size:11px; color:#3A4A5E;
+                                        <td t-attf-style="padding:{{ rm['pad_y'] }}px {{ rm['pad_x'] }}px; border:1px solid {{ pal['card_border'] }};
+                                                   font-size:{{ rm['font_cell'] }}px; color:{{ pal['body'] }}; vertical-align:middle;
                                                    font-family:Arial,Helvetica,sans-serif;">
                                             <t t-esc="player.contact"/>
                                         </td>
-                                        <td style="padding:7px 8px; border:1px solid #D0DCF0;
-                                                   text-align:center; font-size:13px; font-weight:bold;
-                                                   color:#0F2447;">
+                                        <td t-attf-style="padding:{{ rm['pad_y'] }}px {{ rm['pad_x'] }}px; border:1px solid {{ pal['card_border'] }};
+                                                   text-align:center; font-size:{{ rm['font_points'] }}px; font-weight:bold;
+                                                   color:{{ pal['ink'] }}; vertical-align:middle;">
                                             <span class="ac-unit-val"><t t-raw="doc.tournament_id.format_points_pdf(player.points)"/></span>
                                         </td>
-                                        <td style="padding:7px 8px; border:1px solid #D0DCF0;
-                                                   text-align:center; font-size:10px;
-                                                   text-transform:uppercase; letter-spacing:1px;
-                                                   color:#5A6A7E; font-family:Arial,Helvetica,sans-serif;">
+                                        <td t-attf-style="padding:{{ rm['pad_y'] }}px {{ rm['pad_x'] }}px; border:1px solid {{ pal['card_border'] }};
+                                                   text-align:center; font-size:{{ rm['font_role'] }}px;
+                                                   text-transform:uppercase; letter-spacing:1px; vertical-align:middle;
+                                                   color:{{ pal['subtle'] }}; font-family:Arial,Helvetica,sans-serif;">
                                             <t t-esc="player.player_id.role"/>
                                         </td>
                                     </tr>
@@ -327,50 +337,50 @@
                         </table>
 
                         <!-- Summary stats -->
-                        <table style="width:100%; border-collapse:collapse; margin-top:14px;">
+                        <table style="width:100%; border-collapse:collapse; margin-top:8px;">
                             <tr>
-                                <td style="padding:8px 12px; border:1px solid #C8D8F0;
-                                           background-color:#0F2447; text-align:center;">
-                                    <div style="font-size:8px; color:#A8C0E0; text-transform:uppercase;
+                                <td t-attf-style="padding:5px 8px; border:1px solid {{ pal['primary_dark'] }};
+                                           background-color:{{ pal['primary'] }}; text-align:center;">
+                                    <div t-attf-style="font-size:7px; color:{{ pal['muted_on_primary'] }}; text-transform:uppercase;
                                                 letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Total Budget</div>
-                                    <div style="font-size:16px; font-weight:bold; color:#FFFFFF;
-                                                font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
+                                    <div t-attf-style="font-size:14px; font-weight:bold; color:{{ pal['on_primary'] }};
+                                                font-family:Georgia,'Times New Roman',serif; margin-top:1px;">
                                         <span class="ac-unit-val"><t t-raw="doc.tournament_id.format_points_pdf(doc.total_point)"/></span>
                                     </div>
                                 </td>
-                                <td style="padding:8px 12px; border:1px solid #C8D8F0;
-                                           background-color:#0F2447; text-align:center;">
-                                    <div style="font-size:8px; color:#A8C0E0; text-transform:uppercase;
+                                <td t-attf-style="padding:5px 8px; border:1px solid {{ pal['primary_dark'] }};
+                                           background-color:{{ pal['primary'] }}; text-align:center;">
+                                    <div t-attf-style="font-size:7px; color:{{ pal['muted_on_primary'] }}; text-transform:uppercase;
                                                 letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Spent</div>
-                                    <div style="font-size:16px; font-weight:bold; color:#E8A020;
-                                                font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
+                                    <div t-attf-style="font-size:14px; font-weight:bold; color:{{ pal['on_primary'] }};
+                                                font-family:Georgia,'Times New Roman',serif; margin-top:1px;">
                                         <span class="ac-unit-val"><t t-raw="doc.tournament_id.format_points_pdf(doc.total_point - doc.remaining_points)"/></span>
                                     </div>
                                 </td>
-                                <td style="padding:8px 12px; border:1px solid #C8D8F0;
-                                           background-color:#0F2447; text-align:center;">
-                                    <div style="font-size:8px; color:#A8C0E0; text-transform:uppercase;
+                                <td t-attf-style="padding:5px 8px; border:1px solid {{ pal['primary_dark'] }};
+                                           background-color:{{ pal['primary'] }}; text-align:center;">
+                                    <div t-attf-style="font-size:7px; color:{{ pal['muted_on_primary'] }}; text-transform:uppercase;
                                                 letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Remaining Budget</div>
-                                    <div style="font-size:16px; font-weight:bold; color:#6AE085;
-                                                font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
+                                    <div t-attf-style="font-size:14px; font-weight:bold; color:{{ pal['remaining'] }};
+                                                font-family:Georgia,'Times New Roman',serif; margin-top:1px;">
                                         <span class="ac-unit-val"><t t-raw="doc.tournament_id.format_points_pdf(doc.remaining_points)"/></span>
                                     </div>
                                 </td>
-                                <td style="padding:8px 12px; border:1px solid #C8D8F0;
-                                           background-color:#0F2447; text-align:center;">
-                                    <div style="font-size:8px; color:#A8C0E0; text-transform:uppercase;
+                                <td t-attf-style="padding:5px 8px; border:1px solid {{ pal['primary_dark'] }};
+                                           background-color:{{ pal['primary'] }}; text-align:center;">
+                                    <div t-attf-style="font-size:7px; color:{{ pal['muted_on_primary'] }}; text-transform:uppercase;
                                                 letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Players</div>
-                                    <div style="font-size:16px; font-weight:bold; color:#FFFFFF;
-                                                font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
+                                    <div t-attf-style="font-size:14px; font-weight:bold; color:{{ pal['on_primary'] }};
+                                                font-family:Georgia,'Times New Roman',serif; margin-top:1px;">
                                         <t t-esc="doc.max_players - doc.remaining_players_count"/> / <t t-esc="doc.max_players"/>
                                     </div>
                                 </td>
-                                <td style="padding:8px 12px; border:1px solid #C8D8F0;
-                                           background-color:#0F2447; text-align:center;">
-                                    <div style="font-size:8px; color:#A8C0E0; text-transform:uppercase;
+                                <td t-attf-style="padding:5px 8px; border:1px solid {{ pal['primary_dark'] }};
+                                           background-color:{{ pal['primary'] }}; text-align:center;">
+                                    <div t-attf-style="font-size:7px; color:{{ pal['muted_on_primary'] }}; text-transform:uppercase;
                                                 letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Base <t t-esc="doc.tournament_id.get_point_unit().name"/></div>
-                                    <div style="font-size:16px; font-weight:bold; color:#FFFFFF;
-                                                font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
+                                    <div t-attf-style="font-size:14px; font-weight:bold; color:{{ pal['on_primary'] }};
+                                                font-family:Georgia,'Times New Roman',serif; margin-top:1px;">
                                         <span class="ac-unit-val"><t t-raw="doc.tournament_id.format_points_pdf(doc.base_point)"/></span>
                                     </div>
                                 </td>
@@ -398,19 +408,17 @@
                 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
                 <style type="text/css"><t t-raw="env['auction.point.unit'].report_unicode_font_css()"/></style>
                 <t t-foreach="docs" t-as="doc">
-                    <div class="page" style="font-family:Arial,Helvetica,sans-serif;
-                                             color:#1A1A2E; padding:0;
-                                             page-break-after: always;
-                                             page-break-inside: avoid;">
+                    <t t-set="pal" t-value="env['auction.point.unit'].report_roster_theme_palette(doc.tournament_id.player_display_template)"/>
+                    <div class="page" t-att-style="'font-family:Arial,Helvetica,sans-serif; color:#1A1A2E; padding:0; page-break-after: %s;' % ('always' if not doc_last else 'auto')">
 
                         <!-- Header -->
                         <t t-set="subtitle">Squad Template</t>
                         <t t-call="auction_module.report_auction_page_header"/>
 
                         <!-- Instruction note -->
-                        <div style="margin-top:10px; margin-bottom:6px; padding:6px 10px;
-                                    border-left:3px solid #E8A020; background-color:#FAFCFF;">
-                            <span style="font-size:9px; color:#7A8DA8; font-style:italic;
+                        <div t-attf-style="margin-top:6px; margin-bottom:4px; padding:4px 8px;
+                                    border-left:3px solid {{ pal['primary'] }}; background-color:{{ pal['card_bg'] }};">
+                            <span t-attf-style="font-size:8px; color:{{ pal['subtle'] }}; font-style:italic;
                                          font-family:Arial,Helvetica,sans-serif;">
                                 Fill in player details below after the auction. Each row represents one squad slot.
                             </span>
@@ -418,98 +426,99 @@
 
                         <!-- Blank player table -->
                         <t t-set="row_range" t-value="list(range(1, doc.max_players + 1))"/>
-                        <table style="width:100%; border-collapse:collapse; margin-top:4px;">
+                        <table style="width:100%; border-collapse:collapse; margin-top:2px;">
                             <thead>
-                                <tr style="background-color:#1A3A6A;">
-                                    <th style="color:#FFFFFF; padding:9px 6px; font-size:10px;
+                                <tr t-attf-style="background-color:{{ pal['primary'] }};">
+                                    <th t-attf-style="color:{{ pal['on_primary'] }}; padding:6px 4px; font-size:9px;
                                                text-transform:uppercase; letter-spacing:1px;
-                                               border:1px solid #0F2447; text-align:center;
-                                               width:32px; font-family:Arial,Helvetica,sans-serif;">#</th>
-                                    <th style="color:#FFFFFF; padding:9px 8px; font-size:10px;
+                                               border:1px solid {{ pal['primary_dark'] }}; text-align:center;
+                                               width:28px; font-family:Arial,Helvetica,sans-serif;">#</th>
+                                    <th t-attf-style="color:{{ pal['on_primary'] }}; padding:6px 6px; font-size:9px;
                                                text-transform:uppercase; letter-spacing:1px;
-                                               border:1px solid #0F2447; text-align:left;
+                                               border:1px solid {{ pal['primary_dark'] }}; text-align:left;
                                                font-family:Arial,Helvetica,sans-serif;">Player Name</th>
-                                    <th style="color:#FFFFFF; padding:9px 8px; font-size:10px;
+                                    <th t-attf-style="color:{{ pal['on_primary'] }}; padding:6px 6px; font-size:9px;
                                                text-transform:uppercase; letter-spacing:1px;
-                                               border:1px solid #0F2447; text-align:left;
+                                               border:1px solid {{ pal['primary_dark'] }}; text-align:left;
                                                font-family:Arial,Helvetica,sans-serif;">Mobile Number</th>
-                                    <th style="color:#FFFFFF; padding:9px 8px; font-size:10px;
+                                    <th t-attf-style="color:{{ pal['on_primary'] }}; padding:6px 6px; font-size:9px;
                                                text-transform:uppercase; letter-spacing:1px;
-                                               border:1px solid #0F2447; text-align:center;
+                                               border:1px solid {{ pal['primary_dark'] }}; text-align:center;
                                                font-family:Arial,Helvetica,sans-serif;"><t t-esc="doc.tournament_id.get_point_unit().name"/></th>
-                                    <th style="color:#FFFFFF; padding:9px 8px; font-size:10px;
+                                    <th t-attf-style="color:{{ pal['on_primary'] }}; padding:6px 6px; font-size:9px;
                                                text-transform:uppercase; letter-spacing:1px;
-                                               border:1px solid #0F2447; text-align:center;
+                                               border:1px solid {{ pal['primary_dark'] }}; text-align:center;
                                                font-family:Arial,Helvetica,sans-serif;">Role</th>
-                                    <th style="color:#FFFFFF; padding:9px 8px; font-size:10px;
+                                    <th t-attf-style="color:{{ pal['on_primary'] }}; padding:6px 6px; font-size:9px;
                                                text-transform:uppercase; letter-spacing:1px;
-                                               border:1px solid #0F2447; text-align:center;
+                                               border:1px solid {{ pal['primary_dark'] }}; text-align:center;
                                                font-family:Arial,Helvetica,sans-serif;">Signature</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                <t t-set="rm" t-value="env['auction.point.unit'].report_roster_row_metrics(doc.max_players)"/>
                                 <t t-foreach="row_range" t-as="i">
-                                    <tr t-att-style="'height:38px; background-color:%s;' % ('#F4F8FF' if i % 2 == 0 else '#FFFFFF')">
-                                        <td style="padding:4px 6px; border:1px dashed #B0C4DE;
-                                                   text-align:center; font-size:11px; color:#B0C4DE;
-                                                   font-family:Arial,Helvetica,sans-serif;">
+                                    <tr t-att-style="'height:%spx; background-color:%s;' % (rm['row_h'], pal['row_alt'] if i % 2 == 0 else '#FFFFFF')">
+                                        <td t-attf-style="padding:{{ rm['pad_y'] }}px 4px; border:1px dashed {{ pal['card_border'] }};
+                                                   text-align:center; font-size:{{ rm['font_cell'] }}px; color:{{ pal['subtle'] }};
+                                                   vertical-align:middle; font-family:Arial,Helvetica,sans-serif;">
                                             <t t-esc="i"/>
                                         </td>
-                                        <td style="padding:4px 8px; border:1px dashed #B0C4DE;"></td>
-                                        <td style="padding:4px 8px; border:1px dashed #B0C4DE;"></td>
-                                        <td style="padding:4px 8px; border:1px dashed #B0C4DE;"></td>
-                                        <td style="padding:4px 8px; border:1px dashed #B0C4DE;"></td>
-                                        <td style="padding:4px 8px; border:1px dashed #B0C4DE;"></td>
+                                        <td t-attf-style="padding:{{ rm['pad_y'] }}px {{ rm['pad_x'] }}px; border:1px dashed {{ pal['card_border'] }};"></td>
+                                        <td t-attf-style="padding:{{ rm['pad_y'] }}px {{ rm['pad_x'] }}px; border:1px dashed {{ pal['card_border'] }};"></td>
+                                        <td t-attf-style="padding:{{ rm['pad_y'] }}px {{ rm['pad_x'] }}px; border:1px dashed {{ pal['card_border'] }};"></td>
+                                        <td t-attf-style="padding:{{ rm['pad_y'] }}px {{ rm['pad_x'] }}px; border:1px dashed {{ pal['card_border'] }};"></td>
+                                        <td t-attf-style="padding:{{ rm['pad_y'] }}px {{ rm['pad_x'] }}px; border:1px dashed {{ pal['card_border'] }};"></td>
                                     </tr>
                                 </t>
                             </tbody>
                         </table>
 
                         <!-- Budget summary for template -->
-                        <table style="width:100%; border-collapse:collapse; margin-top:14px;">
+                        <table style="width:100%; border-collapse:collapse; margin-top:8px;">
                             <tr>
-                                <td style="padding:8px 12px; border:1px solid #C8D8F0;
-                                           background-color:#EBF3FF; text-align:center;">
-                                    <div style="font-size:8px; color:#7A8DA8; text-transform:uppercase;
+                                <td t-attf-style="padding:5px 8px; border:1px solid {{ pal['card_border'] }};
+                                           background-color:{{ pal['card_bg'] }}; text-align:center;">
+                                    <div t-attf-style="font-size:7px; color:{{ pal['subtle'] }}; text-transform:uppercase;
                                                 letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Total Budget</div>
-                                    <div style="font-size:16px; font-weight:bold; color:#0F2447;
-                                                font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
+                                    <div t-attf-style="font-size:14px; font-weight:bold; color:{{ pal['ink'] }};
+                                                font-family:Georgia,'Times New Roman',serif; margin-top:1px;">
                                         <t t-esc="doc.total_point"/>
                                     </div>
                                 </td>
-                                <td style="padding:8px 12px; border:1px solid #C8D8F0;
-                                           background-color:#EBF3FF; text-align:center;">
-                                    <div style="font-size:8px; color:#7A8DA8; text-transform:uppercase;
+                                <td t-attf-style="padding:5px 8px; border:1px solid {{ pal['card_border'] }};
+                                           background-color:{{ pal['card_bg'] }}; text-align:center;">
+                                    <div t-attf-style="font-size:7px; color:{{ pal['subtle'] }}; text-transform:uppercase;
                                                 letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Max Players</div>
-                                    <div style="font-size:16px; font-weight:bold; color:#0F2447;
-                                                font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
+                                    <div t-attf-style="font-size:14px; font-weight:bold; color:{{ pal['ink'] }};
+                                                font-family:Georgia,'Times New Roman',serif; margin-top:1px;">
                                         <t t-esc="doc.max_players"/>
                                     </div>
                                 </td>
-                                <td style="padding:8px 12px; border:1px solid #C8D8F0;
-                                           background-color:#EBF3FF; text-align:center;">
-                                    <div style="font-size:8px; color:#7A8DA8; text-transform:uppercase;
+                                <td t-attf-style="padding:5px 8px; border:1px solid {{ pal['card_border'] }};
+                                           background-color:{{ pal['card_bg'] }}; text-align:center;">
+                                    <div t-attf-style="font-size:7px; color:{{ pal['subtle'] }}; text-transform:uppercase;
                                                 letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Base <t t-esc="doc.tournament_id.get_point_unit().name"/> / Player</div>
-                                    <div style="font-size:16px; font-weight:bold; color:#0F2447;
-                                                font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
+                                    <div t-attf-style="font-size:14px; font-weight:bold; color:{{ pal['ink'] }};
+                                                font-family:Georgia,'Times New Roman',serif; margin-top:1px;">
                                         <span class="ac-unit-val"><t t-raw="doc.tournament_id.format_points_pdf(doc.base_point)"/></span>
                                     </div>
                                 </td>
-                                <td style="padding:8px 12px; border:1px solid #C8D8F0;
-                                           background-color:#EBF3FF; text-align:center;">
-                                    <div style="font-size:8px; color:#7A8DA8; text-transform:uppercase;
+                                <td t-attf-style="padding:5px 8px; border:1px solid {{ pal['card_border'] }};
+                                           background-color:{{ pal['card_bg'] }}; text-align:center;">
+                                    <div t-attf-style="font-size:7px; color:{{ pal['subtle'] }}; text-transform:uppercase;
                                                 letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;"><t t-esc="doc.tournament_id.get_point_unit().name"/> Spent</div>
-                                    <div style="font-size:16px; font-weight:bold; color:#9AAFC8;
-                                                font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
+                                    <div t-attf-style="font-size:14px; font-weight:bold; color:{{ pal['subtle'] }};
+                                                font-family:Georgia,'Times New Roman',serif; margin-top:1px;">
                                         ___________
                                     </div>
                                 </td>
-                                <td style="padding:8px 12px; border:1px solid #C8D8F0;
-                                           background-color:#EBF3FF; text-align:center;">
-                                    <div style="font-size:8px; color:#7A8DA8; text-transform:uppercase;
+                                <td t-attf-style="padding:5px 8px; border:1px solid {{ pal['card_border'] }};
+                                           background-color:{{ pal['card_bg'] }}; text-align:center;">
+                                    <div t-attf-style="font-size:7px; color:{{ pal['subtle'] }}; text-transform:uppercase;
                                                 letter-spacing:1px; font-family:Arial,Helvetica,sans-serif;">Balance</div>
-                                    <div style="font-size:16px; font-weight:bold; color:#9AAFC8;
-                                                font-family:Georgia,'Times New Roman',serif; margin-top:2px;">
+                                    <div t-attf-style="font-size:14px; font-weight:bold; color:{{ pal['subtle'] }};
+                                                font-family:Georgia,'Times New Roman',serif; margin-top:1px;">
                                         ___________
                                     </div>
                                 </td>

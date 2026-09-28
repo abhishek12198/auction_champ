@@ -76,12 +76,13 @@
             <field name="default" eval="False" />
             <field name="format">A4</field>
             <field name="orientation">Portrait</field>
-            <field name="margin_top">8</field>
-            <field name="margin_bottom">20</field>
-            <field name="margin_left">12</field>
-            <field name="margin_right">12</field>
+            <!-- Tight margins so one team (≤20 players) fits on a single A4 page -->
+            <field name="margin_top">6</field>
+            <field name="margin_bottom">8</field>
+            <field name="margin_left">10</field>
+            <field name="margin_right">10</field>
             <field name="header_line" eval="False" />
-            <field name="header_spacing">3</field>
+            <field name="header_spacing">0</field>
             <field name="dpi">96</field>
         </record>
 

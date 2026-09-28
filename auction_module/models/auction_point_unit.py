@@ -140,6 +140,192 @@ class AuctionPointUnit(models.Model):
         )
         return Markup(''.join(chunks))
 
+    @api.model
+    def report_brand_logo_data_uri(self, dark=False):
+        """AuctionChamp logo as PNG data URI for PDF (wkhtmltopdf-safe).
+
+        Uses the same brand asset as projector / registration pages
+        (``static/src/assets/images/logo.svg``), rasterized so PDF engines
+        that do not render SVG still show the authentic mark.
+
+        :param dark: when True, use navy logo (for light theme footers like Lemon).
+        """
+        import base64
+        import logging
+
+        _logger = logging.getLogger(__name__)
+        try:
+            from odoo.modules.module import get_resource_path
+            if dark:
+                path = get_resource_path(
+                    'auction_module', 'static', 'img', 'logo_navy.svg')
+            else:
+                path = get_resource_path(
+                    'auction_module', 'static', 'src', 'assets', 'images', 'logo.svg')
+            if not path:
+                return ''
+            with open(path, 'rb') as svg_file:
+                svg_bytes = svg_file.read()
+            try:
+                import cairosvg
+                png_bytes = cairosvg.svg2png(bytestring=svg_bytes, output_width=482)
+            except Exception:
+                # Fallback: embed SVG directly if cairosvg is unavailable
+                return 'data:image/svg+xml;base64,' + base64.b64encode(svg_bytes).decode('ascii')
+            return 'data:image/png;base64,' + base64.b64encode(png_bytes).decode('ascii')
+        except Exception:
+            _logger.debug('Could not load AuctionChamp brand logo for PDF', exc_info=True)
+            return ''
+
+    @api.model
+    def report_roster_theme_palette(self, theme=None):
+        """PDF roster color palette keyed by tournament ``player_display_template``.
+
+        Returns a flat dict of hex colors for QWeb headers / tables / footer.
+        Unknown themes fall back to Vanilla.
+        """
+        theme = (theme or 'vanilla').strip().lower()
+        if theme == 'blackberry':
+            theme = 'blueberry'
+        palettes = {
+            'vanilla': {
+                'primary': '#5B7EB8',
+                'primary_dark': '#3D5F94',
+                'on_primary': '#FFFFFF',
+                'muted_on_primary': '#E8EEFA',
+                'ink': '#1A3560',
+                'card_bg': '#F0F4FC',
+                'card_border': '#C5D4F0',
+                'row_alt': '#F4F7FC',
+                'subtle': '#7A8DA8',
+                'body': '#3A4A5E',
+                'remaining': '#B8F0C8',
+                'brand_dark': False,
+            },
+            'butterscotch': {
+                'primary': '#B3801F',
+                'primary_dark': '#7C531A',
+                'on_primary': '#FFFFFF',
+                'muted_on_primary': '#FFF7E6',
+                'ink': '#241809',
+                'card_bg': '#FFF8E8',
+                'card_border': '#E8D4A0',
+                'row_alt': '#FFFBF0',
+                'subtle': '#9A7A40',
+                'body': '#5A4020',
+                'remaining': '#D4F0B8',
+                'brand_dark': False,
+            },
+            'strawberry': {
+                'primary': '#C2185B',
+                'primary_dark': '#880E4F',
+                'on_primary': '#FFFFFF',
+                'muted_on_primary': '#FFD6E8',
+                'ink': '#1A0A12',
+                'card_bg': '#FFF5F9',
+                'card_border': '#F8BBD0',
+                'row_alt': '#FFF0F5',
+                'subtle': '#9D174D',
+                'body': '#5A3048',
+                'remaining': '#C8F0D0',
+                'brand_dark': False,
+            },
+            'cherry': {
+                'primary': '#DC143C',
+                'primary_dark': '#9A0F22',
+                'on_primary': '#FFFFFF',
+                'muted_on_primary': '#FFECEC',
+                'ink': '#180405',
+                'card_bg': '#FFF5F6',
+                'card_border': '#E0A0A8',
+                'row_alt': '#FFF0F2',
+                'subtle': '#9A5060',
+                'body': '#5A3038',
+                'remaining': '#C8F0D0',
+                'brand_dark': False,
+            },
+            'pistah': {
+                'primary': '#2F7D32',
+                'primary_dark': '#1C4D2A',
+                'on_primary': '#FFFFFF',
+                'muted_on_primary': '#ECFCE8',
+                'ink': '#06140A',
+                'card_bg': '#F2FAF0',
+                'card_border': '#A7D1A0',
+                'row_alt': '#F6FCF4',
+                'subtle': '#5A8A55',
+                'body': '#3A5A40',
+                'remaining': '#C8F0B8',
+                'brand_dark': False,
+            },
+            'lemon': {
+                'primary': '#C9A400',
+                'primary_dark': '#8F7400',
+                'on_primary': '#1F1A0A',
+                'muted_on_primary': '#3D3210',
+                'ink': '#1F1A0A',
+                'card_bg': '#FBF6E8',
+                'card_border': '#E8DDB8',
+                'row_alt': '#FFFDF5',
+                'subtle': '#6E5A00',
+                'body': '#5C4A14',
+                'remaining': '#2F7D32',
+                'brand_dark': True,
+            },
+            'blueberry': {
+                'primary': '#2563EB',
+                'primary_dark': '#1E3A8A',
+                'on_primary': '#FFFFFF',
+                'muted_on_primary': '#DBEAFE',
+                'ink': '#050A14',
+                'card_bg': '#EFF6FF',
+                'card_border': '#93C5FD',
+                'row_alt': '#F5F9FF',
+                'subtle': '#64748B',
+                'body': '#334155',
+                'remaining': '#B8F0C8',
+                'brand_dark': False,
+            },
+        }
+        return dict(palettes.get(theme) or palettes['vanilla'])
+
+    @api.model
+    def report_roster_row_metrics(self, row_count):
+        """Dynamic row sizing so the player table fills one A4 page.
+
+        Fewer players → taller rows / larger photos.
+        More players (up to ~20) → tighter rows so content stays on one page.
+        """
+        n = max(int(row_count or 1), 1)
+        # Keep headroom for the larger masthead + in-flow footer on one A4 page.
+        budget_px = 600
+        row_h = int(budget_px / n)
+        # Clamp: stay readable at 20 players, expand for smaller squads
+        row_h = max(22, min(64, row_h))
+
+        photo = max(18, min(56, row_h - 10))
+        pad_y = max(2, min(18, (row_h - photo) // 2))
+        pad_x = 6 if row_h >= 36 else 4
+
+        if row_h >= 52:
+            font_name, font_cell, font_role, font_points = 14, 12, 11, 15
+        elif row_h >= 40:
+            font_name, font_cell, font_role, font_points = 12, 10, 9, 13
+        else:
+            font_name, font_cell, font_role, font_points = 10, 9, 8, 11
+
+        return {
+            'row_h': row_h,
+            'photo': photo,
+            'pad_y': pad_y,
+            'pad_x': pad_x,
+            'font_name': font_name,
+            'font_cell': font_cell,
+            'font_role': font_role,
+            'font_points': font_points,
+            'photo_cell_w': photo + 8,
+        }
+
     def to_js_dict(self):
         """Payload for frontend formatters."""
         self.ensure_one()
