@@ -24,10 +24,11 @@
                         </div>
                     </div>
 
-                    <!-- Team selector -->
+                    <!-- Team selector — tournament teams only -->
                     <div class="asp-section">
                         <div class="asp-section-label">
                             <i class="fa fa-shield" title="Team"/> Select Team
+                            <span class="asp-section-hint">This tournament only</span>
                         </div>
                         <field name="team_selection" widget="selection_badge"/>
                         <field name="team_id" invisible="1" required="0"
@@ -35,43 +36,75 @@
                         <field name="team_auction_id" invisible="1"/>
                     </div>
 
-                    <!-- Team info card: appears when a team with auction is selected -->
+                    <!-- Team info card -->
                     <div class="asp-info-card" attrs="{'invisible': [('team_auction_id', '=', False)]}">
                         <div class="asp-team-row">
                             <div class="asp-team-logo-wrap">
-                                <field name="team_logo" widget="image" readonly="1"/>
+                                <field name="team_logo_html" nolabel="1" readonly="1"/>
                             </div>
                             <div class="asp-team-details">
                                 <div class="asp-team-name">
                                     <field name="team_name" readonly="1"/>
                                 </div>
                                 <div class="asp-stat-row">
-                                    <div class="asp-stat-chip">
-                                        <i class="fa fa-bolt" title="Points"/>
+                                    <div class="asp-stat-chip asp-stat-purse">
+                                        <i class="fa fa-money" title="Purse"/>
                                         <field name="points_remaining" readonly="1" force_save="1"/>
-                                        <span>pts left</span>
+                                        <span>purse left</span>
                                     </div>
                                     <div class="asp-stat-chip">
                                         <i class="fa fa-users" title="Slots"/>
                                         <field name="players_remaining" readonly="1" force_save="1"/>
                                         <span>slots</span>
                                     </div>
+                                    <div class="asp-stat-chip asp-stat-max">
+                                        <i class="fa fa-arrow-up" title="Max bid"/>
+                                        <field name="max_bid" readonly="1"/>
+                                        <span>max bid</span>
+                                    </div>
+                                    <div class="asp-stat-chip asp-stat-base">
+                                        <i class="fa fa-flag" title="Base"/>
+                                        <field name="effective_base" readonly="1"/>
+                                        <span>base</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        <div class="asp-tier-block" attrs="{'invisible': [('tier_summary_html', '=', False)]}">
+                            <div class="asp-tier-label">Tier slots</div>
+                            <field name="tier_summary_html" nolabel="1" readonly="1"/>
+                        </div>
+
                         <div class="asp-suggestion" attrs="{'invisible': [('suggestion', '=', False)]}">
                             <field name="suggestion" readonly="1" nolabel="1"/>
                         </div>
                     </div>
 
-                    <!-- Points input -->
-                    <div class="asp-section">
+                    <!-- Points input — enabled only after a team is selected -->
+                    <div class="asp-section asp-points-section">
                         <div class="asp-section-label">
-                            <i class="fa fa-money" title="Points"/> Selling Points
+                            Selling Points
                         </div>
-                        <div class="asp-points-card">
-                            <i class="fa fa-trophy asp-points-icon" title="Points"/>
-                            <field name="final_point" class="asp-points-input"/>
+                        <div class="asp-points-box">
+                            <div class="asp-points-row">
+                                <field name="final_point" nolabel="1"
+                                       attrs="{'readonly': [('team_id', '=', False)]}"/>
+                                <div class="asp-points-unit">
+                                    <field name="point_unit_label" readonly="1" nolabel="1"/>
+                                </div>
+                            </div>
+                            <div class="asp-points-locked-hint"
+                                 attrs="{'invisible': [('team_id', '!=', False)]}">
+                                Select a team to enter points
+                            </div>
+                        </div>
+                        <div class="asp-preset-wrap" attrs="{'invisible': ['|', ('team_id', '=', False), ('preset_html', '=', False)]}">
+                            <div class="asp-preset-caption">Quick select</div>
+                            <field name="preset_html" nolabel="1" readonly="1"/>
+                        </div>
+                        <div class="asp-points-hint" attrs="{'invisible': ['|', ('team_id', '=', False), ('points_hint', '=', False)]}">
+                            <field name="points_hint" readonly="1" nolabel="1"/>
                         </div>
                     </div>
 
@@ -91,7 +124,6 @@
             <field name="res_model">auction.sell.player</field>
             <field name="view_mode">form</field>
             <field name="target">new</field>
-
         </record>
 
     </data>

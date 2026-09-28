@@ -183,6 +183,7 @@
                     '/auction_module/static/src/js/dropdown_fix.js',
                     '/auction_module/static/src/js/center_toast.js',
                     '/auction_module/static/src/css/wizard_style.css',
+                    '/auction_module/static/src/js/sell_player_presets.js',
                     '/auction_module/static/src/css/set_auction_rules.css',
                     '/auction_module/static/src/css/ac_points.css',
                     '/auction_module/static/src/css/revoke_transactions.css',

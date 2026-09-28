@@ -80,13 +80,24 @@
             text-transform: uppercase;
         }
 
-        .btn-close,
-        .close {
-            color: #ffffff !important;
-            text-shadow: none;
-            // invert the dark SVG icon to white; force full opacity (Bootstrap defaults to 0.5)
+        .btn-close {
+            // Bootstrap 5 SVG icon — invert dark glyph to white
             filter: invert(1) brightness(2);
             opacity: 1 !important;
+        }
+
+        .close {
+            // Bootstrap 4 text "×" — color only (invert would turn white → black)
+            color: #ffffff !important;
+            text-shadow: none !important;
+            opacity: 1 !important;
+            filter: none !important;
+
+            &:hover,
+            &:focus {
+                color: #ffffff !important;
+                opacity: 0.85 !important;
+            }
         }
     }
 
@@ -112,11 +123,22 @@
         color: #ffffff !important;
     }
 
-    .btn-close,
-    .close {
-        color: #ffffff !important;
+    .btn-close {
         filter: invert(1) brightness(2);
         opacity: 1 !important;
+    }
+
+    .close {
+        color: #ffffff !important;
+        text-shadow: none !important;
+        opacity: 1 !important;
+        filter: none !important;
+
+        &:hover,
+        &:focus {
+            color: #ffffff !important;
+            opacity: 0.85 !important;
+        }
     }
 }
 
