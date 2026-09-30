@@ -53,6 +53,13 @@ class AuctionTournament(models.Model):
         help='Set each time the auctioneer activates the countdown. '
              'Owner consoles detect the change and play the mallet animation.',
     )
+    owner_bid_timer_seconds = fields.Integer(
+        string='Owner Bid Window (seconds)',
+        default=0,
+        help='Seconds the other owners have to raise after someone bids. '
+             '0 turns the window off. Each new bid gives the other owners this full time again. '
+             'If nobody raises in time, bidding closes for every owner except the one who bid last.',
+    )
 
     # ── Bid Revoke settings ───────────────────────────────────────────────
     revoke_enabled = fields.Boolean(

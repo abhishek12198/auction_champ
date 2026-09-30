@@ -332,6 +332,9 @@
         if (!pad || !grid) return;
         var player = data.current_player || null;
         var teams = (data.teams || []).filter(function (t) { return !isSquadFull(t); });
+        teams.sort(function (a, b) {
+            return String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' });
+        });
         teamsCache = teams;
         playerCache = player;
         if (!teams.length) {

@@ -495,6 +495,7 @@ class ResUsers(models.Model):
         """Navbar rows: name / slug / logo URL only — no binary or URL computes."""
         rows = tournaments.sudo().read(['id', 'name', 'slug', 'active'], load=False)
         rows.sort(key=lambda r: (
+            0 if active_id and r['id'] == active_id else 1,
             not r.get('active'),
             (r.get('name') or '').lower(),
             r['id'],

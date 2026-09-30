@@ -10,6 +10,9 @@
                        help="Number of mallet strikes shown on owner consoles when Enable Counter is clicked."/>
             </xpath>
             <xpath expr="//field[@name='hammer_count']" position="after">
+                <field name="owner_bid_timer_seconds"
+                       string="Owner Bid Window (seconds)"
+                       help="Seconds the other owners have to raise after someone bids. 0 turns the window off. Each new bid gives them this full time again. If nobody raises, bidding closes for every owner except the last bidder."/>
                 <separator string="Bid Revoke"/>
                 <field name="revoke_enabled" string="Enable Bid Revoke"
                        help="Allow owners to revoke (undo) their last bid. Can be toggled off mid-auction to immediately disable."/>

@@ -24,6 +24,7 @@
         nextBusy: false,
         callBusy: false,
         revealBusy: false,
+        ownerBidTimer: null,
     };
 
     /* ── Config ─────────────────────────────────────────────────────────── */
@@ -564,6 +565,53 @@
     };
 
     /* Player panel */
+    function paintOwnerBidTimer() {
+        var el = document.getElementById('acOwnerBidTimer');
+        if (!el) return;
+        var t = state.ownerBidTimer;
+        if (!t || !t.enabled || (!t.running && !t.frozen)) {
+            el.style.display = 'none';
+            el.textContent = '';
+            return;
+        }
+        el.style.display = '';
+        var left = t.frozen ? 0 : Math.max(0, (t.remainUntil - Date.now()) / 1000);
+        if (left <= 0) {
+            t.frozen = true;
+            t.running = false;
+            el.className = 'ac-owner-bid-timer is-frozen';
+            el.textContent = 'Time up — last bid stands. Mark Sold or Unsold';
+            return;
+        }
+        var hasBid = state.currentPlayer && (state.currentPlayer.current_bid || 0) > 0;
+        el.className = 'ac-owner-bid-timer' + (left <= 5 ? ' is-urgent' : '');
+        el.textContent = hasBid
+            ? ('Other owners have ' + Math.ceil(left) + 's to raise')
+            : ('Owners have ' + Math.ceil(left) + 's to bid');
+    }
+
+    function syncOwnerBidTimer(timer) {
+        timer = timer || {};
+        if (!timer.enabled) {
+            state.ownerBidTimer = {enabled: false};
+        } else if (timer.frozen) {
+            state.ownerBidTimer = {enabled: true, frozen: true, running: false};
+        } else if (timer.running) {
+            state.ownerBidTimer = {
+                enabled: true,
+                frozen: false,
+                running: true,
+                remainUntil: Date.now() + Math.max(0, (timer.remaining || 0) * 1000),
+            };
+        } else {
+            state.ownerBidTimer = {enabled: true, frozen: false, running: false};
+        }
+        paintOwnerBidTimer();
+        if (!state._ownerBidTimerTick) {
+            state._ownerBidTimerTick = setInterval(paintOwnerBidTimer, 250);
+        }
+    }
+
     function renderPlayer(p) {
         var empty = document.getElementById('acPlayerEmpty');
         var card  = document.getElementById('acPlayerCard');
@@ -670,6 +718,7 @@
         document.getElementById('acFinalizeBtn').style.display  = hasBid ? '' : 'none';
         var unsoldBtn = document.getElementById('acUnsoldBtn');
         if (unsoldBtn) unsoldBtn.style.display = canUnsold ? '' : 'none';
+        syncOwnerBidTimer(p && p.bid_timer);
         var revealBtn = document.getElementById('acRevealBtn');
         if (revealBtn) {
             revealBtn.style.display = awaiting ? '' : 'none';

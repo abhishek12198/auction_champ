@@ -362,6 +362,11 @@ class AuctionAuctioneerController(http.Controller):
                 'is_mystery': is_mystery,
                 'mystery_revealed': mystery_revealed,
                 'awaiting_reveal': awaiting_reveal,
+                'bid_timer': (
+                    current_player.get_owner_bid_timer_state()
+                    if hasattr(current_player, 'get_owner_bid_timer_state')
+                    else {'enabled': False, 'seconds': 0, 'remaining': 0, 'frozen': False, 'running': False}
+                ),
             }
 
         # ── Teams (strictly scoped to this tournament) ────────────────────
@@ -475,6 +480,8 @@ class AuctionAuctioneerController(http.Controller):
                     {'from_amount': s.from_amount, 'increment': s.increment}
                     for s in auc.auction_bid_slab_ids.sorted('from_amount', reverse=True)
                 ]
+
+        result['teams'].sort(key=lambda t: ((t.get('name') or '').lower(), t.get('id') or 0))
 
         # ── Showcase pool (manual number pad / random remaining count) ─────
         pool = []
@@ -772,6 +779,10 @@ class AuctionAuctioneerController(http.Controller):
             'current_bid': bid_amount,
             'current_bid_team_id': int(team_id),
         })
+        # Display auction and Roll Call both post here. Restart the owner window
+        # back to the full tournament seconds; do not add onto the time left.
+        if hasattr(player, '_restart_owner_bid_window'):
+            player._restart_owner_bid_window()
 
         return {
             'success': True,

@@ -110,9 +110,10 @@ class AuctionPlayerTier(models.Model):
     max_registrations = fields.Integer(
         string='Max Registrations',
         default=0,
-        help='Maximum draft players that can self-register into this tier via its '
-             'dedicated registration URL. Set to 0 for unlimited (until the '
-             'tournament Max Registrations cap is hit). '
+        help='Maximum live players (draft, auction, sold, unsold) that can occupy '
+             'this tier via its dedicated registration URL. Deleted players do not '
+             'count. Set to 0 for unlimited (until the tournament Max Registrations '
+             'cap is hit). '
              'When tournament Max Registrations is set and any regular tier has a '
              'limit, the sum of regular-tier limits must equal the tournament max. '
              'Not used for Icon or Mystery tiers.',
@@ -124,9 +125,10 @@ class AuctionPlayerTier(models.Model):
              '(regular tiers only; blank for Icon / Mystery).',
     )
     registered_count = fields.Integer(
-        string='Registered (Draft)',
+        string='Registered',
         compute='_compute_registered_count',
-        help='Draft players currently registered under this tier.',
+        help='Live players in this tier (draft, auction, sold, unsold). '
+             'Deleted recycle-bin players are not counted.',
     )
     allow_tier_registration = fields.Boolean(
         string='Allows Tier Registration Link',
@@ -316,7 +318,7 @@ class AuctionPlayerTier(models.Model):
                 continue
             rec.registered_count = Player.search_count([
                 ('tier_id', '=', rec.id),
-                ('state', '=', 'draft'),
+                ('state', 'in', ('draft', 'auction', 'sold', 'unsold')),
             ])
 
     def is_registration_eligible(self):

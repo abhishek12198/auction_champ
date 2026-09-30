@@ -153,9 +153,14 @@ class ResUsers(models.Model):
             tournaments = tournaments.filtered(
                 lambda t: q in (t.name or '').lower()
             )
-        # Stable order: active record flag from DB, then name
+        # Working tournament first, then name. Archived records stay after.
         tournaments = tournaments.sorted(
-            key=lambda t: (not t.active, (t.name or '').lower(), t.id)
+            key=lambda t: (
+                0 if active_id and t.id == active_id else 1,
+                not t.active,
+                (t.name or '').lower(),
+                t.id,
+            )
         )
         total = len(tournaments)
         try:

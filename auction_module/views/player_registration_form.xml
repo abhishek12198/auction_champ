@@ -1139,6 +1139,19 @@
                             <option value="XXXL">XXXL — Triple XL</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="reg-label" for="trackSize">Track Size <span class="reg-opt">(optional)</span></label>
+                        <select id="trackSize" name="track_size" class="reg-select">
+                            <option value="">— Select Size —</option>
+                            <option value="S">S</option>
+                            <option value="M">M</option>
+                            <option value="L">L</option>
+                            <option value="XL">XL</option>
+                            <option value="XXL">XXL</option>
+                            <option value="XXXL">XXXL</option>
+                            <option value="4XL">4XL</option>
+                        </select>
+                    </div>
                 </div>
             </div>
             </t>
@@ -2430,6 +2443,7 @@
         setVal('jerseyName', profile.jersy_name || '');
         setVal('jerseyNumber', profile.jersy_number || '');
         setSelect('jerseySize', profile.jersy_size || '');
+        setSelect('trackSize', profile.track_size || '');
 
         var codeEl = document.getElementById('countryCode');
         var numEl = document.getElementById('mobileNumber');

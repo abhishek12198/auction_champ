@@ -85,6 +85,7 @@ def _slugify(text):
 class AuctionTournament(models.Model):
     _name = 'auction.tournament'
     _description = 'Tournament'
+    _order = 'name asc, id asc'
     _inherit = [
         'auction.image.compress.mixin',
         'auction.tournament.security.mixin',
@@ -120,6 +121,47 @@ class AuctionTournament(models.Model):
         help='City / location from the Location Master.',
     )
 
+    @api.model
+    def _auction_name_list_order(self, order):
+        """True when the list is using the default name order (or none)."""
+        if not order:
+            return True
+        norm = ' '.join(str(order).replace(',', ' ').split()).lower()
+        return norm in ('name', 'name asc', 'name asc id', 'name asc id asc')
+
+    @api.model
+    def search_read(self, domain=None, fields=None, offset=0, limit=None, order=None):
+        """Active tournament first, then the rest by name.
+
+        Only the master list (search_read) is reordered. Record searches used
+        by live pages keep their own order.
+        """
+        if (
+            self.env.context.get('auction_skip_active_pin')
+            or not self._auction_name_list_order(order)
+        ):
+            return super().search_read(
+                domain=domain, fields=fields, offset=offset, limit=limit, order=order,
+            )
+        rows = super().search_read(
+            domain=domain, fields=fields, offset=0, limit=None, order='name asc, id asc',
+        )
+        working_id = self.env.user.tournament_id.id or 0
+
+        def _key(row):
+            return (
+                0 if working_id and row.get('id') == working_id else 1,
+                (row.get('name') or '').lower(),
+                row.get('id') or 0,
+            )
+
+        rows.sort(key=_key)
+        if offset:
+            rows = rows[int(offset):]
+        if limit:
+            rows = rows[:int(limit)]
+        return rows
+
     def get_venue_label(self):
         """Display name of the Venue location (empty if unset)."""
         self.ensure_one()
@@ -143,6 +185,13 @@ class AuctionTournament(models.Model):
         help='Small JPEG logo for player-card PDFs to keep bulk prints light.',
     )
     active = fields.Boolean(default=True)
+    subscription_paid = fields.Boolean(
+        string='Subscription Paid',
+        default=False,
+        copy=False,
+        help='Admin flag: whether the organizer has paid the tournament subscription. '
+             'Shown read-only in Tournament Settings for organizers.',
+    )
     player_appearance_algorithm = fields.Selection(
         [
             ('random', 'Lucky Dip'),
@@ -554,7 +603,8 @@ class AuctionTournament(models.Model):
     max_registrations = fields.Integer(
         string='Max Registrations',
         default=0,
-        help='Maximum number of players that can self-register (draft state). '
+        help='Maximum number of live players (draft, auction, sold, unsold). '
+             'Deleted recycle-bin players do not count. '
              'Set to 0 for unlimited. Registration closes automatically when this limit is reached. '
              'When any regular (non-icon, non-mystery) tier has its own Max Registrations set, '
              'those tier limits must sum exactly to this tournament maximum.',
@@ -1671,6 +1721,7 @@ class AuctionTournament(models.Model):
                 'player_contact_unique',
                 # dashboard settings timings / jersey / unit
                 'sold_display_seconds', 'next_player_countdown',
+                'owner_bid_timer_seconds',
                 'enable_jersey_section', 'point_unit_id',
                 'whatsapp_group_link',
                 # dice / player-selector
@@ -2902,6 +2953,7 @@ class AuctionTournament(models.Model):
         'registration_open', 'live_board_active', 'live_board_code_protected',
         'live_bid_sound',
         'sold_display_seconds', 'next_player_countdown',
+        'owner_bid_timer_seconds',
         'enable_jersey_section', 'point_unit_id',
         'whatsapp_group_link',
     }
@@ -3205,6 +3257,7 @@ class AuctionTournament(models.Model):
             'live_board_active': bool(rec.live_board_active),
             'live_board_code_protected': bool(rec.live_board_code_protected),
             'live_bid_sound': bool(rec.live_bid_sound),
+            'subscription_paid': bool(rec.subscription_paid),
             'has_teams': bool(team_count),
             'has_auction_rules': bool(rec.has_auction_rules),
             'has_poster': bool(rec.poster_image),
@@ -3222,6 +3275,7 @@ class AuctionTournament(models.Model):
             'appearance': algo,
             'sold_seconds': rec.sold_display_seconds or 0,
             'next_countdown': rec.next_player_countdown or 0,
+            'owner_bid_timer_seconds': int(getattr(rec, 'owner_bid_timer_seconds', 0) or 0),
             'preset_points': rec.preset_points or '',
             'point_unit': point_unit,
             'point_unit_id': point_unit_id,

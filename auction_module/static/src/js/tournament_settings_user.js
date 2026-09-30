@@ -286,7 +286,9 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                     this._logoHtml(d),
                     '<div class="tsu-brand-text">',
                         '<h2 class="tsu-h">' + esc(d.name) + '</h2>',
-                        '<p class="tsu-sub">' + esc(d.sport) + ' · ' + esc(d.code) + ' · name is locked</p>',
+                        '<p class="tsu-sub">' + esc(d.sport) + ' · ' + esc(d.code) +
+                            ' · ' + (d.subscription_paid ? 'Subscription paid' : 'Subscription unpaid') +
+                            ' · name is locked</p>',
                         '<div class="tsu-hint">Tap the logo to replace it, then Save</div>',
                     '</div>',
                 '</div>',
@@ -394,7 +396,7 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                     this._btn('Bid Summary', this._bidSummaryOpenOpts(d)),
                     this._btn('Live Board', this._liveBoardOpenOpts(d)),
                 ].join('')),
-                '<div class="tsu-grid tsu-grid-3">',
+                '<div class="tsu-grid tsu-grid-4">',
                     this._card({
                         k: 'Registered players',
                         v: esc(cap),
@@ -413,6 +415,13 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                         gold: !d.has_auction_rules,
                         hint: d.has_auction_rules ? 'Open current rules' : (hasTeams ? 'Set purse and max players' : 'Add teams first'),
                         action: d.has_auction_rules ? 'action_view_auction_rules' : 'action_set_auction_rules',
+                    }),
+                    this._card({
+                        k: 'Subscription',
+                        v: d.subscription_paid
+                            ? '<span class="tsu-status is-paid">Paid</span>'
+                            : '<span class="tsu-status is-unpaid">Unpaid</span>',
+                        hint: 'Set by AuctionChamp admin — read only',
                     }),
                 '</div>',
                 '<div class="tsu-grid tsu-grid-3">',
@@ -615,7 +624,7 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                             ? '<div class="tsu-hint" style="margin-top:6px">Save after naming the tier to get a register URL.</div>'
                             : '')) +
                     '<div class="tsu-hint" style="margin-top:6px">' +
-                    esc(tier.registered_count || 0) + ' draft players in this tier</div>' +
+                    esc(tier.registered_count || 0) + ' players in this tier</div>' +
                     '</div>';
             }).join('');
             if (!cards) {
@@ -817,8 +826,19 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                         k: 'Player phone numbers',
                         v: d.expose_contact ? 'Unmasked' : 'Masked',
                         hint: d.expose_contact
-                            ? 'Numbers are visible. Tap Mask Contacts to hide them.'
-                            : 'Numbers are hidden. Tap Unmask Contacts to show them.',
+                            ? 'Numbers are visible on cards and presentation.'
+                            : 'Numbers are hidden by default. Unmask after accepting the privacy policy.',
+                        body: '<div class="tsu-actions" style="margin-top:10px">' +
+                            (d.expose_contact
+                                ? this._btn('Mask Contacts', {
+                                    action: 'action_remask_player_contact',
+                                    icon: 'fa-eye-slash',
+                                })
+                                : this._btn('Unmask Contacts', {
+                                    action: 'action_open_expose_contact_privacy_wizard',
+                                    icon: 'fa-eye',
+                                })) +
+                            '</div>',
                     }),
                 '</div>',
             ].join('');
@@ -952,6 +972,13 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                 '<div class="tsu-card tsu-field is-edit"><label>YouTube stream URL</label>' +
                     '<input type="url" class="tsu-input tsu-edit-input" data-field="youtube_url" value="' + esc(d.youtube_url) + '"/></div>',
                 this._switchCard('Sound on live bids', 'live_bid_sound', d.live_bid_sound, d.live_bid_sound ? 'On' : 'Off', 'Same live bid sound toggle'),
+                this._editNumber(
+                    'Owner bid window',
+                    'owner_bid_timer_seconds',
+                    this._fieldVal('owner_bid_timer_seconds', d.owner_bid_timer_seconds || 0),
+                    'seconds',
+                    '0 = off. After another owner bids, the rest have this many seconds to raise. If they do not, only the last bid stays open.'
+                ),
             ].join('');
         },
 

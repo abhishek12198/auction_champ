@@ -79,13 +79,15 @@
             <field name="sequence">30</field>
         </record>
 
+        <!-- Admin-only: organisers use Tournament Settings / Player Dashboard instead -->
         <menuitem id="menu_action_auction_root"
           name="Auction Settings"
           sequence="60" web_icon="auction_module,static/src/description/auctions_settings.png"
-          groups="auction_module.group_auction_group"/>
+          groups="auction_module.group_auction_group_admin"/>
         <record id="menu_action_auction_root" model="ir.ui.menu">
             <field name="parent_id" eval="False"/>
             <field name="sequence">60</field>
+            <field name="groups_id" eval="[(6, 0, [ref('auction_module.group_auction_group_admin')])]"/>
         </record>
 
         <menuitem id="menu_action_auction_auction"

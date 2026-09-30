@@ -237,10 +237,10 @@ def auction_backend_home_url(tournament=None):
         )
         if url:
             return url
-    # Auction organiser → Auction Settings (window actions, not URL actions)
+    # Auction organiser → Player Dashboard (Tournament Settings lives there)
     url = _auction_web_menu_action_href(
-        'auction_module.menu_action_auction_root',
-        'auction_module.action_auction_auction',
+        'auction_module.menu_action_player_dashboard',
+        'auction_module.action_player_dashboard_client',
     )
     if url:
         return url
@@ -615,12 +615,17 @@ class Auction(http.Controller):
         return base
 
     def _reg_capacity(self, tournament, tier=None):
-        """Return max_reg, current draft count, slots_left, is_full.
+        """Return max_reg, current player count, slots_left, is_full.
+
+        Capacity counts live players in draft / auction / sold / unsold.
+        Deleted (recycle-bin) players are not in ``auction.team.player`` and
+        are therefore excluded.
 
         When *tier* is set, capacity is scoped to that tier's max_registrations
-        and draft players in the tier. Overall tournament capacity is still
+        and live players in the tier. Overall tournament capacity is still
         enforced separately by callers on POST.
         """
+        live_states = ('draft', 'auction', 'sold', 'unsold')
         if tier:
             max_reg = tier.max_registrations or 0
             current_count = 0
@@ -629,7 +634,7 @@ class Auction(http.Controller):
                 current_count = request.env['auction.team.player'].sudo().search_count([
                     ('tournament_id', '=', tournament.id),
                     ('tier_id', '=', tier.id),
-                    ('state', '=', 'draft'),
+                    ('state', 'in', live_states),
                 ])
                 slots_left = max(0, max_reg - current_count)
             is_full = bool(max_reg > 0 and current_count >= max_reg)
@@ -643,7 +648,7 @@ class Auction(http.Controller):
         if max_reg > 0:
             current_count = request.env['auction.team.player'].sudo().search_count([
                 ('tournament_id', '=', tournament.id),
-                ('state', '=', 'draft'),
+                ('state', 'in', live_states),
             ])
             slots_left = max(0, max_reg - current_count)
         is_full = bool(max_reg > 0 and current_count >= max_reg)
@@ -6335,8 +6340,9 @@ class Auction(http.Controller):
     def player_register_admin(self, db_name, tournament_slug, **kw):
         """Organiser registration: unlock once with tournament code, ignore public open flag.
 
-        Stays available while draft count is below max_registrations. When the
-        allotment is full, both public and admin URLs show squad complete.
+        Stays available while live player count (draft/auction/sold/unsold) is
+        below max_registrations. When the allotment is full, both public and
+        admin URLs show squad complete.
         """
         return self._player_register_core(db_name, tournament_slug, admin=True, **kw)
 
@@ -8371,6 +8377,7 @@ def _registration_profile_payload(player, tournament, db_name):
         'jersy_name': player.jersy_name or '',
         'jersy_number': player.jersy_number or '',
         'jersy_size': player.jersy_size or '',
+        'track_size': player.track_size or '',
     }
     if 'email' in player._fields:
         profile['email'] = player.email or ''
@@ -8564,5 +8571,8 @@ def _build_player_vals_from_post(request, tournament, locked_tier=None):
         vals['jersy_size']   = (post.get('jersy_size') or '').strip()
         if not vals['jersy_size']:
             raise ValueError("Jersey size is required. Please select a jersey size.")
+        track_size = (post.get('track_size') or '').strip().upper()
+        allowed_track = {'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '4XL'}
+        vals['track_size'] = track_size if track_size in allowed_track else False
 
     return vals

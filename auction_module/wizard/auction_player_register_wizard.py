@@ -85,6 +85,18 @@ class AuctionPlayerRegisterWizard(models.TransientModel):
     jersy_name = fields.Char(string='Name on Jersey')
     jersy_number = fields.Char(string='Jersey Number')
     jersy_size = fields.Char(string='Jersey Size')
+    track_size = fields.Selection(
+        [
+            ('S', 'S'),
+            ('M', 'M'),
+            ('L', 'L'),
+            ('XL', 'XL'),
+            ('XXL', 'XXL'),
+            ('XXXL', 'XXXL'),
+            ('4XL', '4XL'),
+        ],
+        string='Track Size',
+    )
     amount_paid = fields.Boolean(string='Payment Received', default=True)
 
     @api.model
@@ -135,6 +147,7 @@ class AuctionPlayerRegisterWizard(models.TransientModel):
                 'jersy_name': self.jersy_name or False,
                 'jersy_number': self.jersy_number or False,
                 'jersy_size': self.jersy_size or False,
+                'track_size': self.track_size or False,
             })
         if self.tournament_type == 'football':
             vals.update({

@@ -84,7 +84,7 @@
         <t t-if="not ac_livebid_rollcall">
             <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_showcase.css?v=13"/>
         </t>
-        <script src="/auction_auctioneer/static/src/js/display_live_bid.js?v=48"></script>
+        <script src="/auction_auctioneer/static/src/js/display_live_bid.js?v=49"></script>
     </template>
 
     <!-- Under player profile, above Unsold / Sell / Next.

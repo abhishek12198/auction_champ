@@ -13,6 +13,9 @@ const S = {
     pendingBid: null,
     pollTimer: null,
     revoke: null, // { feature_on, remaining, max, used, can_revoke }
+    bidTimer: null,
+    _bidTimerTick: null,
+    _bidTimerFroze: false,
     // Track last known bid to detect rival changes between polls
     _lastBid: { playerId: null, bid: 0, teamId: null },
     _counterTs: null,   // last-seen counter_started_at; null = not yet initialised
@@ -66,6 +69,7 @@ function applyPointUnit(unit) {
     if (el) el.textContent = String(unitName()).toUpperCase();
 }
 function show(id, v) { const e=$(id); if(e) e.style.display = v?'':'none'; }
+function up(v) { return v ? String(v).toUpperCase() : ''; }
 function txt(id, v)  { const e=$(id); if(e) e.textContent = v||'—'; }
 function src(id, v)  { const e=$(id); if(e) e.src = v||''; }
 
@@ -206,38 +210,199 @@ function flashRivalBid(player) {
     if (navigator.vibrate) navigator.vibrate([80, 60, 80]);
 }
 
+function paintSoldCard(p) {
+    var card = $('ocSoldCard');
+    if (!card) return;
+    var sold = !!(p && p.state === 'sold');
+    var unsold = !!(p && p.state === 'unsold');
+    if (!sold && !unsold) {
+        card.style.display = 'none';
+        return;
+    }
+    card.style.display = 'block';
+    card.className = 'oc-sold-card ' + (sold ? 'is-sold' : 'is-unsold');
+    txt('ocSoldLabel', sold ? 'SOLD TO' : 'UNSOLD');
+    var team = sold ? (p.sold_team || p.current_bid_team || {}) : {};
+    txt('ocSoldTeam', sold ? (team.name || '—') : '');
+    var logo = $('ocSoldLogo');
+    if (logo) {
+        if (sold && team.logo_url) {
+            logo.src = team.logo_url;
+            logo.style.display = '';
+        } else {
+            logo.style.display = 'none';
+        }
+    }
+    var amount = sold ? (Number(p.sold_points) || Number(p.current_bid) || 0) : 0;
+    txt('ocSoldAmount', amount ? fmtU(amount) : '');
+}
+
+function syncStageChrome() {
+    var closed = !!(S.player && (S.player.state === 'sold' || S.player.state === 'unsold'));
+    var box = $('ocCurrentBidBox');
+    var raise = $('ocRaiseBtn');
+    var timer = $('ocBidTimer');
+    var lead = $('ocLeadingTeam');
+    if (box) box.style.display = closed ? 'none' : '';
+    if (raise) raise.style.display = closed ? 'none' : '';
+    if (closed && timer) timer.style.display = 'none';
+    if (closed && lead) lead.style.display = 'none';
+    paintSoldCard(S.player);
+}
+
+// ── Player entrance shutter (same idea as the projector curtains) ──
+var _ocShownPid = null;
+var _ocPhotoReq = 0;
+var _ocCurtain = { shut: false, ready: null, t1: null, t2: null, t3: null };
+
+function ocReducedMotion() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function clearCurtainTimers() {
+    ['t1', 't2', 't3'].forEach(function (k) {
+        if (_ocCurtain[k]) { clearTimeout(_ocCurtain[k]); _ocCurtain[k] = null; }
+    });
+}
+
+function beginStageCurtain(instant) {
+    var el = $('ocStageCurtain');
+    if (!el || ocReducedMotion()) {
+        _ocCurtain.shut = true;
+        return;
+    }
+    clearCurtainTimers();
+    _ocCurtain.ready = null;
+    el.classList.remove('is-open');
+    el.classList.add('is-run');
+    if (instant) {
+        el.classList.add('is-instant', 'is-shut');
+        _ocCurtain.shut = true;
+        return;
+    }
+    _ocCurtain.shut = false;
+    el.classList.remove('is-instant');
+    void el.offsetWidth;
+    el.classList.add('is-shut');
+    _ocCurtain.t1 = setTimeout(function () {
+        _ocCurtain.shut = true;
+        if (_ocCurtain.ready) {
+            var fn = _ocCurtain.ready;
+            _ocCurtain.ready = null;
+            fn();
+        }
+    }, 450);
+}
+
+function finishStageCurtain(onShut) {
+    var el = $('ocStageCurtain');
+    function swapThenOpen() {
+        if (onShut) onShut();
+        if (!el || ocReducedMotion()) return;
+        el.classList.remove('is-instant');
+        _ocCurtain.t2 = setTimeout(function () {
+            el.classList.remove('is-shut');
+            el.classList.add('is-open');
+            _ocCurtain.t3 = setTimeout(function () {
+                el.classList.remove('is-run', 'is-open', 'is-instant');
+                _ocCurtain.shut = false;
+            }, 560);
+        }, 140);
+    }
+    if (!el || ocReducedMotion()) {
+        if (onShut) onShut();
+        return;
+    }
+    if (_ocCurtain.shut) swapThenOpen();
+    else _ocCurtain.ready = swapThenOpen;
+}
+
+function applyPlayerPhoto(p) {
+    var img = $('ocPlayerPhoto');
+    if (!img) return;
+    var next = (p && p.photo_url) || '';
+    if ((img.getAttribute('src') || '') === next) return;
+    if (next) img.src = next;
+    else img.removeAttribute('src');
+}
+
 // ── Render: player showcase ────────────────────────────────────────────
 function renderPlayer(p) {
     if (!p) {
         show('ocWaiting', true); show('ocPlayerWrap', false);
         hideSoldOverlay();
+        paintSoldCard(null);
         return;
     }
-    show('ocWaiting', false); show('ocPlayerWrap', true);
+    var nextId = p.id;
+    var changed = !!(_ocShownPid && nextId && String(nextId) !== String(_ocShownPid));
+    var wrap = $('ocPlayerWrap');
+    var wasHidden = !wrap || wrap.style.display === 'none';
 
+    function reveal() {
+        show('ocWaiting', false);
+        show('ocPlayerWrap', true);
+        paintPlayerFace(p);
+    }
+
+    if (!changed) {
+        _ocShownPid = nextId || _ocShownPid;
+        reveal();
+        return;
+    }
+    _ocShownPid = nextId;
+    if (wasHidden) beginStageCurtain(true);
+    else beginStageCurtain(false);
+    show('ocWaiting', false);
+    show('ocPlayerWrap', true);
+
+    var req = ++_ocPhotoReq;
+    var started = false;
+    function go() {
+        if (req !== _ocPhotoReq || started) return;
+        started = true;
+        finishStageCurtain(reveal);
+    }
+    var nextSrc = p.photo_url || '';
+    if (!nextSrc) { go(); return; }
+    var pre = new Image();
+    pre.onload = go;
+    pre.onerror = go;
+    pre.src = nextSrc;
+    if (pre.complete) go();
+}
+
+function paintPlayerFace(p) {
     // Show SOLD/UNSOLD overlay based on player state; hide for all other states
     if (p.state === 'sold') {
-        showSoldOverlay(p.current_bid_team || null);
+        var buyer = p.sold_team || p.current_bid_team || {};
+        showSoldOverlay({
+            name: buyer.name,
+            logo_url: buyer.logo_url,
+            sold_points: p.sold_points || p.current_bid || 0,
+        });
+        closeOwnerBids();
     } else if (p.state === 'unsold') {
         showUnsoldOverlay();
+        closeOwnerBids();
     } else {
         hideSoldOverlay();
         hideUnsoldOverlay();
     }
 
-    src('ocPlayerPhoto', p.photo_url);
-    txt('ocPlayerName', p.name);
-    txt('ocPlayerRole', p.role || '—');
+    applyPlayerPhoto(p);
+    txt('ocPlayerName', up(p.name));
+    txt('ocPlayerRole', up(p.role) || '—');
 
     const styleEl = $('ocPlayerStyle');
     if (styleEl) {
-        const parts = [p.batting_style, p.bowling_style].filter(Boolean);
+        const parts = [p.batting_style, p.bowling_style].filter(Boolean).map(up);
         styleEl.textContent = parts.join(' · ');
         styleEl.style.display = parts.length ? '' : 'none';
     }
 
     const pill = $('ocTierPill');
-    if (pill) { pill.textContent = p.tier_name || '—'; pill.style.background = p.tier_color || ''; }
+    if (pill) { pill.textContent = up(p.tier_name) || '—'; pill.style.background = p.tier_color || ''; }
 
     const ring = $('ocPhotoRing');
     if (ring) ring.style.background = p.tier_color ? `conic-gradient(${p.tier_color},#fff3,${p.tier_color})` : '';
@@ -247,20 +412,79 @@ function renderPlayer(p) {
     paintBaseMaxCall(S.myTeam, S.teams);
     txt('ocCurrentBid', p.current_bid ? fmtU(p.current_bid) : 'No bids yet');
 
-    const hasLeader = p.current_bid_team && p.current_bid_team.name;
+    const hasLeader = stageOpen(p) && p.current_bid_team && p.current_bid_team.name;
     show('ocLeadingTeam', !!hasLeader);
     if (hasLeader) {
         src('ocLeadingLogo', p.current_bid_team.logo_url);
         txt('ocLeadingName', p.current_bid_team.name);
     }
+    syncStageChrome();
 }
 
 // ── Render: bid panel ──────────────────────────────────────────────────
+function stageOpen(player) {
+    return !!(player && player.state === 'auction');
+}
+
+function closeOwnerBids() {
+    if (S.myTeam) {
+        S.myTeam.can_bid = false;
+        S.myTeam.is_leading = false;
+        S.myTeam.can_bid_reason = 'Waiting for the next player';
+    }
+    if (S.bidTimer) {
+        S.bidTimer.running = false;
+        S.bidTimer.frozen = false;
+    }
+    renderBidPanel(S.myTeam, S.player);
+    renderRevoke();
+    paintBidTimer();
+}
+
+function paintHeaderPurse(myTeam) {
+    const purse = $('ocHeaderPurse');
+    const squad = $('ocHeaderSquad');
+    if (purse) {
+        purse.textContent = myTeam
+            ? (fmt(myTeam.remaining_points) + ' left')
+            : '—';
+    }
+    if (squad) {
+        if (!myTeam) squad.textContent = '—';
+        else {
+            var max = myTeam.max_players ? myTeam.max_players : '—';
+            squad.textContent = (myTeam.player_count || 0) + ' / ' + max;
+        }
+    }
+}
+
 function renderBidPanel(myTeam, player) {
+    paintHeaderPurse(myTeam);
     if (!myTeam || !player) {
         renderQuickBidBox(false, 'No player on stage');
         show('ocLeadWarn', false);
         ocCloseCustomBid();
+        syncStageChrome();
+        return;
+    }
+
+    if (!stageOpen(player)) {
+        show('ocLeadWarn', false);
+        ocCloseCustomBid();
+        const closedInput = $('ocBidInput');
+        const closedBtn = $('ocBidCta');
+        const closedReason = $('ocBidReason');
+        if (closedInput) { closedInput.disabled = true; closedInput.value = ''; }
+        if (closedBtn) closedBtn.disabled = true;
+        if (closedReason) {
+            closedReason.textContent = 'Waiting for the next player';
+            closedReason.className = 'oc-bid-reason oc-reason-err';
+        }
+        renderPresets([], myTeam);
+        renderQuickBidBox(false, 'Waiting for the next player', false);
+        const revokeBtn = $('ocRevokeBtn');
+        if (revokeBtn) revokeBtn.disabled = true;
+        syncStageChrome();
         return;
     }
 
@@ -281,7 +505,16 @@ function renderBidPanel(myTeam, player) {
     const bidBtn  = $('ocBidCta');
     const reasonEl = $('ocBidReason');
 
-    if (!myTeam.can_bid) {
+    if (ownerBidFrozen() && !myTeam.is_leading) {
+        if (input) { input.disabled = true; input.value = ''; }
+        if (bidBtn) bidBtn.disabled = true;
+        if (reasonEl) {
+            reasonEl.textContent = 'Time up — only the last bid stays open';
+            reasonEl.className = 'oc-bid-reason oc-reason-err';
+        }
+        renderPresets(slabPresetBids(myTeam), myTeam);
+        renderQuickBidBox(false, 'Time up — only the last bid stays open', false);
+    } else if (!myTeam.can_bid) {
         if (input) { input.disabled = true; input.value = ''; }
         if (bidBtn) bidBtn.disabled = true;
         if (reasonEl) { reasonEl.textContent = '🚫 '+( myTeam.can_bid_reason || 'Cannot bid'); reasonEl.className='oc-bid-reason oc-reason-err'; }
@@ -314,6 +547,46 @@ function renderBidPanel(myTeam, player) {
         renderPresets(slabPresetBids(myTeam), myTeam);
         renderQuickBidBox(true, myTeam.next_bid || myTeam.effective_base || 1);
     }
+    syncStageChrome();
+}
+
+function isPurseOrSquadBlock(reason) {
+    return /squad full|tier slot|budget|purse|max call|no budget/i.test(String(reason || ''));
+}
+
+function paintRaiseButton(mode, detail) {
+    const raise = $('ocRaiseBtn');
+    const main = $('ocRaiseMain');
+    const sub = $('ocRaiseSub');
+    if (!raise || !main) return;
+    raise.classList.remove('is-quiet', 'is-locked', 'is-blocked');
+    if (sub) {
+        sub.textContent = '';
+        sub.hidden = true;
+    }
+    if (mode === 'bid') {
+        raise.disabled = false;
+        main.textContent = 'Bid ' + fmtU(detail);
+        return;
+    }
+    raise.disabled = true;
+    if (mode === 'lead') {
+        raise.classList.add('is-quiet');
+        main.textContent = 'Your bid stands';
+        return;
+    }
+    if (mode === 'limit') {
+        raise.classList.add('is-locked', 'is-blocked');
+        var max = Number(S.myTeam && S.myTeam.max_call) || 0;
+        main.innerHTML = 'Max call <span class="oc-raise-max">' + esc(max > 0 ? fmtU(max) : '—') + '</span>';
+        if (sub) {
+            sub.hidden = false;
+            sub.textContent = "You're not able to bid this player because of " + (detail || 'a limit');
+        }
+        return;
+    }
+    raise.classList.add('is-locked');
+    main.textContent = detail || 'Cannot bid';
 }
 
 // ── Quick-bid box: update Current Bid box clickability ────────────────
@@ -323,34 +596,236 @@ function renderBidPanel(myTeam, player) {
 function renderQuickBidBox(canBid, nextBidOrReason, isLeading) {
     const box  = $('ocCurrentBidBox');
     const hint = $('ocQbHint');
-    if (!box) return;
-    if (canBid) {
-        box.classList.add('oc-qb-active');
-        box.classList.remove('oc-qb-disabled', 'oc-qb-leading');
-        if (hint) {
-            hint.textContent = ocIsTouchUi()
-                ? 'Tap to bid · Hold to edit'
-                : 'Click to bid · Double-click to edit';
+    if (box) {
+        if (canBid) {
+            box.classList.add('oc-qb-active');
+            box.classList.remove('oc-qb-disabled', 'oc-qb-leading');
+            if (hint) {
+                hint.textContent = ocIsTouchUi()
+                    ? 'Double-tap or hold the button for a custom bid'
+                    : 'Double-click the button for a custom bid';
+            }
+        } else if (isLeading) {
+            box.classList.add('oc-qb-leading');
+            box.classList.remove('oc-qb-active', 'oc-qb-disabled');
+            if (hint) hint.textContent = '';
+        } else {
+            box.classList.add('oc-qb-disabled');
+            box.classList.remove('oc-qb-active', 'oc-qb-leading');
+            if (hint) hint.textContent = '';
         }
+    }
+    if (canBid) {
+        paintRaiseButton('bid', nextBidOrReason);
     } else if (isLeading) {
-        box.classList.add('oc-qb-leading');
-        box.classList.remove('oc-qb-active', 'oc-qb-disabled');
-        if (hint) hint.textContent = 'You have the current bid';
+        paintRaiseButton('lead');
+    } else if (isPurseOrSquadBlock(nextBidOrReason)) {
+        paintRaiseButton('limit', nextBidOrReason);
     } else {
-        box.classList.add('oc-qb-disabled');
-        box.classList.remove('oc-qb-active', 'oc-qb-leading');
-        if (hint) hint.textContent = '🚫 ' + (nextBidOrReason || 'Cannot bid');
+        paintRaiseButton('locked', nextBidOrReason);
     }
 }
 
 // ── Quick Bid: one-tap bid at next slab value ─────────────────────────
+function ownerBidFrozen() {
+    const t = S.bidTimer;
+    if (!t || !t.enabled) return false;
+    if (t.frozen) return true;
+    if (!t.running) return false;
+    return (t.remainUntil - Date.now()) <= 0;
+}
+
+var OC_CLOCK_CIRC = 2 * Math.PI * 15.5;
+var _ocAudio = null;
+var _clockBeepKey = '';
+
+function ocAudioCtx() {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    if (!_ocAudio) _ocAudio = new AC();
+    if (_ocAudio.state === 'suspended') {
+        try { _ocAudio.resume(); } catch (e) {}
+    }
+    return _ocAudio;
+}
+
+function unlockClockSound() {
+    ocAudioCtx();
+}
+
+['click', 'touchstart', 'keydown'].forEach(function (ev) {
+    document.addEventListener(ev, unlockClockSound, { once: true, capture: true });
+});
+
+function playCriticalTick(shown) {
+    var c = ocAudioCtx();
+    if (!c || c.state !== 'running') return;
+    try {
+        var t = c.currentTime;
+        var urgent = shown <= 1;
+        var freq = urgent ? 1240 : (shown <= 2 ? 980 : 820);
+        var osc = c.createOscillator();
+        var g = c.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, t);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(urgent ? 0.16 : 0.1, t + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + (urgent ? 0.16 : 0.09));
+        osc.connect(g);
+        g.connect(c.destination);
+        osc.start(t);
+        osc.stop(t + 0.2);
+    } catch (e) {}
+}
+
+function clockBeep(blink, shown, playerId) {
+    if (!blink) {
+        _clockBeepKey = '';
+        return;
+    }
+    var key = String(playerId || 0) + ':' + shown;
+    if (key === _clockBeepKey) return;
+    var c = ocAudioCtx();
+    if (!c || c.state !== 'running') return;
+    _clockBeepKey = key;
+    playCriticalTick(shown);
+}
+
+function paintClock(left, total, blink) {
+    const clock = $('ocClock');
+    const num = $('ocClockNum');
+    const arc = $('ocClockArc');
+    const hand = $('ocClockHand');
+    if (!clock) return;
+    clock.hidden = false;
+    clock.classList.toggle('is-blink', !!blink);
+    var shown = Math.ceil(left);
+    if (num && num.textContent !== String(shown)) num.textContent = shown;
+    var span = total > 0 ? total : left;
+    var gone = span > 0 ? Math.min(1, Math.max(0, 1 - (left / span))) : 1;
+    if (arc) {
+        arc.style.strokeDasharray = String(OC_CLOCK_CIRC);
+        arc.style.strokeDashoffset = String(OC_CLOCK_CIRC * gone);
+    }
+    if (hand) hand.setAttribute('transform', 'rotate(' + (gone * 360) + ' 18 18)');
+}
+
+function hideClock() {
+    const clock = $('ocClock');
+    if (!clock) return;
+    clock.hidden = true;
+    clock.classList.remove('is-blink');
+}
+
+function paintBidTimer() {
+    const el = $('ocBidTimer');
+    const msg = $('ocClockMsg');
+    if (!el) return;
+    function say(text) { if (msg) msg.textContent = text || ''; }
+    if (S.player && !stageOpen(S.player)) {
+        el.style.display = 'none';
+        hideClock();
+        clockBeep(false);
+        syncStageChrome();
+        return;
+    }
+    const t = S.bidTimer;
+    if (!t || !t.enabled) {
+        el.style.display = 'none';
+        hideClock();
+        clockBeep(false);
+        say('');
+        return;
+    }
+    el.style.display = '';
+    const leading = !!(S.myTeam && S.myTeam.is_leading);
+    if (!t.running && !t.frozen) {
+        el.className = 'oc-bid-timer is-idle';
+        hideClock();
+        clockBeep(false);
+        say('Waiting for the player');
+        return;
+    }
+    const left = t.frozen ? 0 : Math.max(0, (t.remainUntil - Date.now()) / 1000);
+    if (left <= 0) {
+        t.frozen = true;
+        t.running = false;
+        hideClock();
+        clockBeep(false);
+        if (leading) {
+            el.className = 'oc-bid-timer is-held';
+            say('Your bid stands. Other owners are closed.');
+        } else {
+            el.className = 'oc-bid-timer is-frozen';
+            say('Time up. You can no longer bid.');
+        }
+        if (!S._bidTimerFroze && S.myTeam && S.player && !leading) {
+            S._bidTimerFroze = true;
+            S.myTeam.can_bid = false;
+            S.myTeam.can_bid_reason = 'Time up — only the last bid stays open';
+            renderBidPanel(S.myTeam, S.player);
+            renderRevoke();
+        }
+        return;
+    }
+    S._bidTimerFroze = false;
+    var total = t.seconds || left;
+    var warnAt = Math.max(1, Math.round(total * 0.25));
+    var shown = Math.ceil(left);
+    var blink = shown <= warnAt;
+    paintClock(left, total, blink);
+    clockBeep(blink, shown, S.player && S.player.id);
+    if (leading) {
+        el.className = 'oc-bid-timer is-held';
+        say('Others can still raise');
+        return;
+    }
+    el.className = 'oc-bid-timer is-running';
+    say('');
+}
+
+function syncBidTimer(timer) {
+    timer = timer || {};
+    if (!timer.enabled) {
+        S.bidTimer = {enabled: false, frozen: false, running: false, seconds: 0};
+        S._bidTimerFroze = false;
+    } else if (timer.frozen) {
+        S.bidTimer = {enabled: true, frozen: true, running: false, seconds: timer.seconds || 0};
+    } else if (timer.running) {
+        S.bidTimer = {
+            enabled: true,
+            frozen: false,
+            running: true,
+            seconds: timer.seconds || 0,
+            remainUntil: Date.now() + Math.max(0, (timer.remaining || 0) * 1000),
+        };
+        S._bidTimerFroze = false;
+    } else {
+        S.bidTimer = {enabled: true, frozen: false, running: false, seconds: timer.seconds || 0};
+        S._bidTimerFroze = false;
+    }
+    paintBidTimer();
+    if (!S._bidTimerTick) {
+        S._bidTimerTick = setInterval(paintBidTimer, 250);
+    }
+}
+
 window.ocQuickBid = function() {
     const { myTeam, player } = S;
+    if (!stageOpen(player)) return;
+    if (ownerBidFrozen() && !(myTeam && myTeam.is_leading)) {
+        toast('Time is up. Only the last bid stays open.', 'err');
+        paintBidTimer();
+        return;
+    }
     if (!myTeam || !player || !myTeam.can_bid) return;
 
     const bidAmount = myTeam.next_bid || myTeam.effective_base || 1;
     const box = $('ocCurrentBidBox');
+    const raise = $('ocRaiseBtn');
+    let placed = false;
     if (box) box.classList.add('oc-qb-placing');
+    if (raise) raise.disabled = true;
 
     fetch('/auction/owner/place-bid', {
         method:  'POST',
@@ -363,6 +838,7 @@ window.ocQuickBid = function() {
     .then(resp => {
         const res = resp.result || resp;
         if (res.success) {
+            placed = true;
             toast('⚡ Quick Bid: ' + fmtU(bidAmount) + '!', 'ok');
             fetchData();
         } else {
@@ -370,7 +846,10 @@ window.ocQuickBid = function() {
         }
     })
     .catch(() => toast('Network error. Please retry.', 'err'))
-    .finally(() => { if (box) box.classList.remove('oc-qb-placing'); });
+    .finally(() => {
+        if (box) box.classList.remove('oc-qb-placing');
+        if (!placed && S.myTeam && S.player) renderBidPanel(S.myTeam, S.player);
+    });
 };
 
 // ── Render revoke button ────────────────────────────────────────────────
@@ -387,7 +866,7 @@ function renderRevoke() {
     }
 
     wrap.style.display = 'flex';
-    const canRevoke = rv.can_revoke && rv.remaining > 0;
+    const canRevoke = rv.can_revoke && rv.remaining > 0 && !ownerBidFrozen();
     if (btn) btn.disabled = !canRevoke;
     if (hint) {
         if (rv.remaining <= 0) {
@@ -419,7 +898,7 @@ function slabPresetBids(myTeam) {
 }
 
 window.ocOpenCustomBid = function () {
-    if (!S.player || !S.myTeam || S.myTeam.is_leading) return;
+    if (!stageOpen(S.player) || !S.myTeam || S.myTeam.is_leading) return;
     renderBidPanel(S.myTeam, S.player);
     var ov = $('ocCustomBidOverlay');
     if (ov) ov.style.display = 'flex';
@@ -436,78 +915,79 @@ function ocIsTouchUi() {
     );
 }
 
-var _bidTapTimer = null;
-var _bidHoldTimer = null;
-var _bidHoldFired = false;
-var _bidPtrType = 'mouse';
-var _bidStartX = 0;
-var _bidStartY = 0;
-
-function bindCurrentBidBox() {
-    var box = $('ocCurrentBidBox');
-    if (!box || box._ocBound) return;
-    box._ocBound = true;
+function bindBidGestures(el) {
+    if (!el || el._ocBound) return;
+    el._ocBound = true;
+    var holdTimer = null;
+    var holdFired = false;
+    var tapTimer = null;
+    var startX = 0;
+    var startY = 0;
+    var downAt = 0;
 
     function clearHold() {
-        if (_bidHoldTimer) { clearTimeout(_bidHoldTimer); _bidHoldTimer = null; }
+        if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
     }
     function isTouchPtr(ev) {
         return ev.pointerType === 'touch' || (ev.pointerType !== 'mouse' && ocIsTouchUi());
     }
+    function canGesture() {
+        return stageOpen(S.player) && S.myTeam && S.myTeam.can_bid && !S.myTeam.is_leading;
+    }
+    function openCustom() {
+        if (!canGesture()) return;
+        ocOpenCustomBid();
+    }
 
-    box.addEventListener('pointerdown', function (ev) {
+    el.addEventListener('pointerdown', function (ev) {
         if (ev.button && ev.button !== 0) return;
-        _bidPtrType = ev.pointerType || 'mouse';
-        _bidHoldFired = false;
-        _bidStartX = ev.clientX;
-        _bidStartY = ev.clientY;
-        if (!isTouchPtr(ev) || (S.myTeam && S.myTeam.is_leading)) return;
+        if (el.disabled) return;
+        holdFired = false;
+        downAt = Date.now();
+        startX = ev.clientX;
+        startY = ev.clientY;
+        if (!isTouchPtr(ev) || !canGesture()) return;
         clearHold();
-        _bidHoldTimer = setTimeout(function () {
-            _bidHoldTimer = null;
-            _bidHoldFired = true;
+        holdTimer = setTimeout(function () {
+            holdTimer = null;
+            holdFired = true;
             if (navigator.vibrate) {
                 try { navigator.vibrate(12); } catch (e) {}
             }
-            ocOpenCustomBid();
-        }, 480);
+            openCustom();
+        }, 450);
     });
-    box.addEventListener('pointermove', function (ev) {
-        if (!_bidHoldTimer) return;
-        if (Math.abs(ev.clientX - _bidStartX) > 12 || Math.abs(ev.clientY - _bidStartY) > 12) {
-            clearHold();
-        }
+    el.addEventListener('pointermove', function (ev) {
+        if (!holdTimer) return;
+        if (Math.abs(ev.clientX - startX) > 14 || Math.abs(ev.clientY - startY) > 14) clearHold();
     });
-    box.addEventListener('pointerup', clearHold);
-    box.addEventListener('pointercancel', function () {
+    el.addEventListener('pointerup', clearHold);
+    el.addEventListener('pointercancel', function () {
+        var elapsed = Date.now() - downAt;
         clearHold();
-        _bidHoldFired = false;
-    });
-    box.addEventListener('contextmenu', function (ev) {
-        if (_bidPtrType === 'touch' || ocIsTouchUi()) {
-            ev.preventDefault();
+        if (!holdFired && elapsed >= 400 && canGesture()) {
+            holdFired = true;
+            if (navigator.vibrate) {
+                try { navigator.vibrate(12); } catch (e) {}
+            }
+            openCustom();
         }
     });
-    box.addEventListener('click', function (e) {
-        e.preventDefault();
-        if (_bidHoldFired) {
-            _bidHoldFired = false;
+    el.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
+    el.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        if (holdFired) { holdFired = false; return; }
+        if (el.disabled || !canGesture()) return;
+        if (tapTimer) {
+            clearTimeout(tapTimer);
+            tapTimer = null;
+            openCustom();
             return;
         }
-        if (_bidPtrType === 'touch' || ocIsTouchUi()) {
-            ocQuickBid();
-            return;
-        }
-        if (_bidTapTimer) {
-            clearTimeout(_bidTapTimer);
-            _bidTapTimer = null;
-            ocOpenCustomBid();
-            return;
-        }
-        _bidTapTimer = setTimeout(function () {
-            _bidTapTimer = null;
-            ocQuickBid();
-        }, 280);
+        tapTimer = setTimeout(function () {
+            tapTimer = null;
+            window.ocQuickBid();
+        }, 300);
     });
 }
 
@@ -643,10 +1123,10 @@ function renderMySquad() {
 <div class="oc-squad-row">
   <img class="oc-squad-photo" src="${esc(p.photo_url)}" alt=""/>
   <div class="oc-squad-info">
-    <div class="oc-squad-name">${esc(p.name)}</div>
+    <div class="oc-squad-name">${esc(up(p.name))}</div>
     <div class="oc-squad-chips">
-      ${p.role ? `<span class="oc-squad-role">${esc(p.role)}</span>` : ''}
-      ${p.tier_name ? `<span class="oc-squad-tier" style="border-color:${esc(p.tier_color)};color:${esc(p.tier_color)}">${esc(p.tier_name)}</span>` : ''}
+      ${p.role ? `<span class="oc-squad-role">${esc(up(p.role))}</span>` : ''}
+      ${p.tier_name ? `<span class="oc-squad-tier" style="border-color:${esc(p.tier_color)};color:${esc(p.tier_color)}">${esc(up(p.tier_name))}</span>` : ''}
     </div>
   </div>
   <div class="oc-squad-pts">${fmtU(p.points)}</div>
@@ -677,10 +1157,10 @@ window.ocOpenSquadSheet = function(team) {
 <div class="oc-squad-row">
   <img class="oc-squad-photo" src="${esc(p.photo_url)}" alt=""/>
   <div class="oc-squad-info">
-    <div class="oc-squad-name">${esc(p.name)}</div>
+    <div class="oc-squad-name">${esc(up(p.name))}</div>
     <div class="oc-squad-chips">
-      ${p.role?`<span class="oc-squad-role">${esc(p.role)}</span>`:''}
-      ${p.tier_name?`<span class="oc-squad-tier" style="border-color:${esc(p.tier_color)};color:${esc(p.tier_color)}">${esc(p.tier_name)}</span>`:''}
+      ${p.role?`<span class="oc-squad-role">${esc(up(p.role))}</span>`:''}
+      ${p.tier_name?`<span class="oc-squad-tier" style="border-color:${esc(p.tier_color)};color:${esc(p.tier_color)}">${esc(up(p.tier_name))}</span>`:''}
     </div>
   </div>
   <div class="oc-squad-pts">${fmtU(p.points)}</div>
@@ -746,6 +1226,7 @@ window.ocChangeBid = function(delta) {
 
 // Set bid input directly from a preset button
 window.ocSetPreset = function(amount) {
+    if (!stageOpen(S.player)) return;
     const input = $('ocBidInput');
     if (input && !input.disabled) input.value = amount;
 };
@@ -753,6 +1234,12 @@ window.ocSetPreset = function(amount) {
 // ── Bid confirm ────────────────────────────────────────────────────────
 window.ocOpenBidConfirm = function() {
     const { myTeam, player } = S;
+    if (!stageOpen(player)) return;
+    if (ownerBidFrozen() && !(myTeam && myTeam.is_leading)) {
+        toast('Time is up. Only the last bid stays open.', 'err');
+        paintBidTimer();
+        return;
+    }
     if (!myTeam || !player) return;
     const input = $('ocBidInput');
     const amount = parseInt((input&&input.value)||'0', 10);
@@ -763,7 +1250,7 @@ window.ocOpenBidConfirm = function() {
         toast('Exceeds your max call of '+fmtU(myTeam.max_call), 'err'); return;
     }
     S.pendingBid = { playerId: player.id, teamId: myTeam.id, amount };
-    txt('ocConfirmPlayer', player.name);
+    txt('ocConfirmPlayer', up(player.name));
     txt('ocConfirmTeam', myTeam.name);
     txt('ocConfirmPts', fmt(amount));
     const ov = $('ocBidOverlay');
@@ -806,6 +1293,11 @@ window.ocSubmitBid = function() {
 // ── Revoke last bid ────────────────────────────────────────────────────
 window.ocRevokeBid = function() {
     const { myTeam, player, revoke } = S;
+    if (!stageOpen(player)) return;
+    if (ownerBidFrozen()) {
+        toast('Time is up. Only the last bid stays open.', 'err');
+        return;
+    }
     if (!myTeam || !player) return;
     if (!revoke || !revoke.can_revoke || revoke.remaining <= 0) {
         toast('Revoke not available', 'err'); return;
@@ -940,6 +1432,7 @@ function fetchData() {
         S.slabs   = data.slabs || [];
         S.presets = data.presets || [];
         S.revoke  = data.revoke  || null;
+        syncBidTimer((incoming && incoming.bid_timer) || null);
 
         handleCounter(data.counter || null);
 
@@ -963,6 +1456,8 @@ window.addEventListener('storage', e => {
         try {
             const soldData = e.newValue ? JSON.parse(e.newValue) : null;
             if (soldData) showSoldOverlay(soldData);
+            if (S.player) S.player.state = 'sold';
+            closeOwnerBids();
         } catch (_) {}
         // Rapid-poll burst to detect the next player quickly (same pattern as live-board)
         fetchData();
@@ -1008,10 +1503,10 @@ window.ocSquadSnapshot = function(mode, btn) {
         ? p => `
 <div style="background:#111520;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;">
   ${imgEl(p.photo_url, 68, `border-radius:50%;border:2.5px solid ${ac};`)}
-  <div style="font-size:.86rem;font-weight:700;color:#e8edf8;line-height:1.25;">${esc(p.name)}</div>
+  <div style="font-size:.86rem;font-weight:700;color:#e8edf8;line-height:1.25;">${esc(up(p.name))}</div>
   <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center;">
-    ${p.role      ? `<span style="${chipStyle(acl, 'rgba(255,255,255,.08)')}">${esc(p.role)}</span>`       : ''}
-    ${p.tier_name ? `<span style="${chipStyle(p.tier_color || acl, 'transparent')}border:1px solid ${esc(p.tier_color || ac)};">${esc(p.tier_name)}</span>` : ''}
+    ${p.role      ? `<span style="${chipStyle(acl, 'rgba(255,255,255,.08)')}">${esc(up(p.role))}</span>`       : ''}
+    ${p.tier_name ? `<span style="${chipStyle(p.tier_color || acl, 'transparent')}border:1px solid ${esc(p.tier_color || ac)};">${esc(up(p.tier_name))}</span>` : ''}
   </div>
   <div style="font-size:.95rem;font-weight:800;color:${acl};">${window.fmtUnit?window.fmtUnit(p.points):fmtN(p.points)+' pts'}</div>
 </div>`
@@ -1019,10 +1514,10 @@ window.ocSquadSnapshot = function(mode, btn) {
 <div style="background:#111520;border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:10px 13px;display:flex;align-items:center;gap:12px;">
   ${imgEl(p.photo_url, 44, `border-radius:50%;border:2px solid ${ac};flex-shrink:0;`)}
   <div style="flex:1;min-width:0;">
-    <div style="font-size:.86rem;font-weight:700;color:#e8edf8;">${esc(p.name)}</div>
+    <div style="font-size:.86rem;font-weight:700;color:#e8edf8;">${esc(up(p.name))}</div>
     <div style="display:flex;gap:5px;margin-top:4px;flex-wrap:wrap;">
-      ${p.role      ? `<span style="${chipStyle(acl, 'rgba(255,255,255,.08)')}">${esc(p.role)}</span>`       : ''}
-      ${p.tier_name ? `<span style="${chipStyle(p.tier_color || acl, 'transparent')}border:1px solid ${esc(p.tier_color || ac)};">${esc(p.tier_name)}</span>` : ''}
+      ${p.role      ? `<span style="${chipStyle(acl, 'rgba(255,255,255,.08)')}">${esc(up(p.role))}</span>`       : ''}
+      ${p.tier_name ? `<span style="${chipStyle(p.tier_color || acl, 'transparent')}border:1px solid ${esc(p.tier_color || ac)};">${esc(up(p.tier_name))}</span>` : ''}
     </div>
   </div>
   <div style="font-size:.86rem;font-weight:800;color:${acl};flex-shrink:0;">${window.fmtUnit?window.fmtUnit(p.points):fmtN(p.points)+' pts'}</div>
@@ -1126,8 +1621,21 @@ function startOwnerSse(data) {
     es.onerror = function () { startHttpPoll(); };
 }
 
+window.ocAskLogout = function () {
+    show('ocLogoutOverlay', true);
+};
+window.ocCancelLogout = function () {
+    show('ocLogoutOverlay', false);
+};
+window.ocConfirmLogout = function () {
+    window.location.href = '/web/session/logout?redirect=/web/login';
+};
+
 document.addEventListener('DOMContentLoaded', () => {
-    bindCurrentBidBox();
+    var logoutBtn = $('ocLogoutBtn');
+    if (logoutBtn) logoutBtn.addEventListener('click', window.ocAskLogout);
+    bindBidGestures($('ocRaiseBtn'));
+    bindBidGestures($('ocCurrentBidBox'));
     fetchData();
     startOwnerSse();
     window._auctionOcFetch = fetchData;

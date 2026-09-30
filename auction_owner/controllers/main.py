@@ -174,6 +174,9 @@ class AuctionOwnerController(http.Controller):
         if not player:
             can_bid = False
             can_bid_reason = 'No player on stage'
+        elif player.state != 'auction':
+            can_bid = False
+            can_bid_reason = 'Waiting for the next player'
         elif auc.remaining_players_count <= 0:
             can_bid = False
             can_bid_reason = 'Squad full'
@@ -197,6 +200,18 @@ class AuctionOwnerController(http.Controller):
                 player.current_bid_team_id.id == team.id:
             can_bid = False
             can_bid_reason = 'You have the current bid — wait for a rival'
+
+        bid_timer = (
+            player.get_owner_bid_timer_state()
+            if player and hasattr(player, 'get_owner_bid_timer_state')
+            else {'frozen': False}
+        )
+        is_leading_bid = bool(
+            player and player.current_bid_team_id and player.current_bid_team_id.id == team.id
+        )
+        if bid_timer.get('frozen') and not is_leading_bid:
+            can_bid = False
+            can_bid_reason = 'Time up — only the last bid stays open'
 
         if can_bid and player and player.tier_id and auc.tier_limit_ids:
             tl = auc.tier_limit_ids.filtered(lambda l: l.tier_id.id == player.tier_id.id)
@@ -318,6 +333,19 @@ class AuctionOwnerController(http.Controller):
                     'name': t.name or '',
                     'logo_url': self._pub_img('auction.team', t.id, 'logo') if t.logo else '',
                 }
+            sold_team = None
+            sold_points = 0
+            if current_player.state == 'sold':
+                buyer = current_player.assigned_team_id or current_player.current_bid_team_id
+                if buyer:
+                    sold_team = {
+                        'id': buyer.id,
+                        'name': buyer.name or '',
+                        'logo_url': self._pub_img('auction.team', buyer.id, 'logo') if buyer.logo else '',
+                    }
+                sale = env['auction.auction.player'].sudo().search(
+                    [('player_id', '=', current_player.id)], order='id desc', limit=1)
+                sold_points = int(sale.points or 0) if sale else int(current_player.current_bid or 0)
 
             result['current_player'] = {
                 'id': current_player.id,
@@ -331,8 +359,11 @@ class AuctionOwnerController(http.Controller):
                 'base_price': base_price,
                 'current_bid': current_player.current_bid or 0,
                 'current_bid_team': current_bid_team,
+                'sold_team': sold_team,
+                'sold_points': sold_points,
                 'batting_style': current_player.batting_style or '',
                 'bowling_style': current_player.bowling_style or '',
+                'bid_timer': current_player.get_owner_bid_timer_state(),
             }
 
         # ── Teams ─────────────────────────────────────────────────────────
@@ -510,6 +541,8 @@ class AuctionOwnerController(http.Controller):
         player = env['auction.team.player'].sudo().browse(int(player_id))
         if not player.exists() or not player.is_on_stage:
             return {'success': False, 'error': 'Player is not currently on stage.'}
+        if player.state != 'auction':
+            return {'success': False, 'error': 'This player is closed. Waiting for the next player.'}
 
         # Tournament isolation: player must belong to the user's assigned tournament
         tournament = self._resolve_tournament()
@@ -518,6 +551,18 @@ class AuctionOwnerController(http.Controller):
 
         if player.current_bid_team_id and player.current_bid_team_id.id == int(team_id):
             return {'success': False, 'error': 'You already have the highest bid. Wait for another team to bid.'}
+
+        # Lock the player row so two owners cannot both pass an expiring window.
+        env.cr.execute(
+            'SELECT id FROM auction_team_player WHERE id = %s FOR UPDATE',
+            (player.id,),
+        )
+        player.invalidate_cache()
+        if player._owner_bid_window_closed(player):
+            return {
+                'success': False,
+                'error': 'Time is up. Only the last bid stays open.',
+            }
 
         auction = env['auction.auction'].sudo().search(
             [('team_id', '=', int(team_id))], limit=1
@@ -577,6 +622,7 @@ class AuctionOwnerController(http.Controller):
             'current_bid': bid_amount,
             'current_bid_team_id': int(team_id),
         })
+        player._restart_owner_bid_window()
 
         # Log this bid so it can be restored on a revoke
         env['auction.bid.log'].sudo().create({
@@ -606,9 +652,22 @@ class AuctionOwnerController(http.Controller):
         player = env['auction.team.player'].sudo().browse(int(player_id))
         if not player.exists() or not player.is_on_stage:
             return {'success': False, 'error': 'Player is not currently on stage.'}
+        if player.state != 'auction':
+            return {'success': False, 'error': 'This player is closed. Waiting for the next player.'}
 
         if not player.current_bid_team_id or player.current_bid_team_id.id != int(team_id):
             return {'success': False, 'error': 'You are not the current leader — can only revoke your own bid.'}
+
+        env.cr.execute(
+            'SELECT id FROM auction_team_player WHERE id = %s FOR UPDATE',
+            (player.id,),
+        )
+        player.invalidate_cache()
+        if player._owner_bid_window_closed(player):
+            return {
+                'success': False,
+                'error': 'Time is up. Only the last bid stays open.',
+            }
 
         tournament = player.tournament_id
         if not tournament.revoke_enabled:
@@ -639,10 +698,15 @@ class AuctionOwnerController(http.Controller):
                 'current_bid': prev_log.bid_amount,
                 'current_bid_team_id': prev_log.team_id.id,
             })
+            player._restart_owner_bid_window()
             prev_team_name = prev_log.team_id.name
             new_bid = prev_log.bid_amount
         else:
-            player.sudo().write({'current_bid': 0, 'current_bid_team_id': False})
+            player.sudo().write({
+                'current_bid': 0,
+                'current_bid_team_id': False,
+                'owner_bid_deadline': False,
+            })
             prev_team_name = None
             new_bid = 0
 

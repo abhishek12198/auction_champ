@@ -128,23 +128,33 @@
 }
 .o_tournament_settings_user .tsu-body {
     display: flex;
+    flex-direction: column;
     flex: 1;
     min-height: 0;
 }
 .o_tournament_settings_user .tsu-nav {
-    width: 200px;
     flex-shrink: 0;
-    padding: 12px 10px;
-    border-right: 1px solid var(--tsu-line);
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 6px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--tsu-line);
     background: #fff;
-    overflow-y: auto;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
 }
 .o_tournament_settings_user .tsu-nav-btn {
-    display: block;
-    width: 100%;
-    text-align: left;
-    margin: 0 0 6px;
-    padding: 10px 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: auto;
+    text-align: center;
+    margin: 0;
+    padding: 9px 14px;
     border-radius: 4px;
     border: 1px solid transparent;
     background: var(--tsu-locked);
@@ -152,6 +162,7 @@
     font-family: inherit;
     font-size: var(--tsu-label);
     font-weight: 700;
+    white-space: nowrap;
     cursor: pointer;
 }
 .o_tournament_settings_user .tsu-nav-btn.is-active {
@@ -279,6 +290,18 @@
 .o_tournament_settings_user .tsu-card.is-gold .tsu-v,
 .o_tournament_settings_user .tsu-card.is-gold .tsu-hint {
     color: var(--tsu-ink);
+}
+.o_tournament_settings_user .tsu-status {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+.o_tournament_settings_user .tsu-status.is-paid {
+    color: #047857;
+}
+.o_tournament_settings_user .tsu-status.is-unpaid {
+    color: #b45309;
 }
 .o_tournament_settings_user .tsu-card.is-locked {
     background: var(--tsu-locked);
@@ -691,8 +714,8 @@
         --tsu-sub: 9px;
         --tsu-title: 1.15rem;
     }
-    .o_tournament_settings_user .tsu-nav {
-        width: 168px;
+    .o_tournament_settings_user .tsu-nav-btn {
+        padding: 8px 11px;
     }
     .o_tournament_settings_user .tsu-grid-7 {
         grid-template-columns: repeat(4, minmax(0, 1fr));

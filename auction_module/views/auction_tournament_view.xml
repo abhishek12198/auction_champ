@@ -15,11 +15,17 @@
                     <field name="auction_date"/>
                     <filter string="Has Auction Date" name="filter_has_auction_date"
                             domain="[('auction_date', '!=', False)]"/>
+                    <filter string="Subscription Paid" name="filter_subscription_paid"
+                            domain="[('subscription_paid', '=', True)]"/>
+                    <filter string="Subscription Unpaid" name="filter_subscription_unpaid"
+                            domain="[('subscription_paid', '=', False)]"/>
                     <group expand="0" string="Group By">
                         <filter string="Auction Date" name="groupby_auction_date"
                                 context="{'group_by': 'auction_date'}"/>
                         <filter string="Sport" name="groupby_tournament_type"
                                 context="{'group_by': 'tournament_type'}"/>
+                        <filter string="Subscription" name="groupby_subscription_paid"
+                                context="{'group_by': 'subscription_paid'}"/>
                     </group>
                 </search>
             </field>
@@ -29,9 +35,10 @@
             <field name="name">auction.tournament.tree</field>
             <field name="model">auction.tournament</field>
             <field name="arch" type="xml">
-                <tree string="Team">
+                <tree string="Team" default_order="name asc">
                     <field name="name"/>
                     <field name="tournament_type"/>
+                    <field name="subscription_paid" widget="boolean_toggle"/>
                 </tree>
             </field>
         </record>
@@ -248,6 +255,8 @@
                                     <field name="tournament_date_ids" invisible="1"/>
                                     <field name="tournament_date" invisible="1"/>
                                     <field name="tournament_date_display" invisible="1"/>
+                                    <field name="subscription_paid"
+                                           widget="boolean_toggle"/>
                                     <field name="organizer_uid"/>
                                     <field name="organizer_uids" widget="many2many_tags"
                                            options="{'color_field': 'color'}"/>
@@ -1065,7 +1074,7 @@
             <field name="name">auction.tournament.kanban</field>
             <field name="model">auction.tournament</field>
             <field name="arch" type="xml">
-                <kanban class="o_auction_tournament_kanban" default_order="tournament_date desc">
+                <kanban class="o_auction_tournament_kanban" default_order="name asc">
                     <field name="id"/>
                     <field name="name"/>
                     <field name="description"/>
@@ -1076,6 +1085,7 @@
                     <field name="venue"/>
                     <field name="active"/>
                     <field name="live_board_active"/>
+                    <field name="subscription_paid"/>
                     <field name="registered_player_count"/>
                     <field name="team_max_points"/>
                     <field name="organizer_uid"/>
@@ -1110,6 +1120,12 @@
                                                 <span class="o_atk_live_badge">
                                                     <i class="fa fa-circle o_atk_live_dot"/> LIVE
                                                 </span>
+                                            </t>
+                                            <t t-if="record.subscription_paid.raw_value">
+                                                <span class="o_atk_paid_badge">Paid</span>
+                                            </t>
+                                            <t t-else="">
+                                                <span class="o_atk_unpaid_badge">Unpaid</span>
                                             </t>
                                             <t t-if="!record.active.raw_value">
                                                 <span class="o_atk_archived_badge">Archived</span>
@@ -1249,6 +1265,11 @@
 
                 <!-- Make Organizer readonly -->
                 <field name="organizer_uid" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+
+                <!-- Subscription paid is admin-managed; organisers see it read-only -->
+                <field name="subscription_paid" position="attributes">
                     <attribute name="readonly">1</attribute>
                 </field>
 

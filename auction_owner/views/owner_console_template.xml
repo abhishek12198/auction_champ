@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="/auction_owner/static/src/css/owner_console.css?v=8"/>
+    <link rel="stylesheet" href="/auction_owner/static/src/css/owner_console.css?v=21"/>
 </head>
 <body class="oc-body"
       t-att-data-theme="tournament.player_display_template if tournament else 'vanilla'"
@@ -19,37 +19,44 @@
 
 <!-- ═══════ HEADER ════════════════════════════════════════════════════ -->
 <header class="oc-header">
-    <div class="oc-header-brand">
-        <t t-if="tournament and tournament.logo">
-            <img class="oc-header-logo"
-                 t-att-src="'/auction/public/image/auction.tournament/%d/logo' % tournament.id"
-                 alt="logo"/>
-        </t>
-        <div class="oc-header-titles">
-            <span class="oc-header-label">OWNER CONSOLE</span>
-            <span class="oc-header-tourn">
-                <t t-if="tournament"><t t-esc="tournament.name"/></t>
-                <t t-else="">No Active Tournament</t>
-            </span>
-        </div>
-    </div>
-    <div class="oc-header-right">
-        <!-- User menu with logout dropdown -->
-        <div class="oc-user-menu" id="ocUserMenu">
-            <button class="oc-user-btn" id="ocUserBtn" onclick="ocToggleUserMenu(event)">
-                <span class="oc-header-owner" id="ocOwnerLabel"><t t-esc="user.name"/></span>
-                <span class="oc-user-caret">&#x25BE;</span>
-            </button>
-            <div class="oc-user-dropdown" id="ocUserDropdown">
-                <a class="oc-user-dd-item" href="/web/session/logout?redirect=/web/login">
-                    <span class="oc-user-dd-icon">&#x1F6AA;</span> Logout
-                </a>
+    <div class="oc-header-top">
+        <div class="oc-header-brand">
+            <t t-if="tournament and tournament.logo">
+                <img class="oc-header-logo"
+                     t-att-src="'/auction/public/image/auction.tournament/%d/logo' % tournament.id"
+                     alt="Tournament logo"/>
+            </t>
+            <div class="oc-header-titles">
+                <span class="oc-header-tourn">
+                    <t t-if="tournament"><t t-esc="tournament.name"/></t>
+                    <t t-else="">No Active Tournament</t>
+                </span>
+                <span class="oc-header-desc" t-if="tournament and tournament.description" t-esc="tournament.description"/>
             </div>
         </div>
-        <div class="oc-live-badge" id="ocLiveBadge">
-            <span class="oc-live-dot"></span>
-            <span>LIVE</span>
+        <div class="oc-header-right">
+            <div class="oc-live-badge" id="ocLiveBadge">
+                <span class="oc-live-dot"></span>
+                <span>LIVE</span>
+            </div>
+            <button type="button" class="oc-logout" id="ocLogoutBtn">Log out</button>
         </div>
+    </div>
+    <div class="oc-header-stats">
+        <span class="oc-header-stat" title="Purse left">
+            <svg class="oc-header-ico" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="currentColor" d="M12 3a4 4 0 0 0-4 4H6.2A2.2 2.2 0 0 0 4 9.2V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9.2A2.2 2.2 0 0 0 17.8 7H16a4 4 0 0 0-4-4zm-2 4a2 2 0 1 1 4 0h-4z"/>
+                <circle cx="12" cy="14" r="1.4" fill="#12243f"/>
+            </svg>
+            <span id="ocHeaderPurse">—</span>
+        </span>
+        <span class="oc-header-stat" title="Squad">
+            <svg class="oc-header-ico" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="8" r="3.1" fill="currentColor"/>
+                <path fill="currentColor" d="M6.2 19.4c.7-3.3 3-5 5.8-5s5.1 1.7 5.8 5c.2.8-.4 1.6-1.2 1.6H7.4c-.8 0-1.4-.8-1.2-1.6z"/>
+            </svg>
+            <span id="ocHeaderSquad">—</span>
+        </span>
     </div>
 </header>
 
@@ -71,12 +78,8 @@
 
     <!-- ──────── TAB: LIVE ─────────────────────────────────────────── -->
     <section id="ocTabLive" class="oc-tab-pane oc-tab-active">
-
-        <div class="oc-panel-hdr">
-            <span class="oc-panel-hdr-icon">&#x26A1;</span>
-            <span class="oc-panel-hdr-title">Live Auction</span>
-        </div>
-
+        <div class="oc-live-layout">
+        <div class="oc-live-bid">
         <!-- Player Showcase -->
         <div class="oc-showcase-card" id="ocShowcaseCard">
 
@@ -89,6 +92,15 @@
 
             <!-- Active player -->
             <div class="oc-player-wrap" id="ocPlayerWrap" style="display:none">
+                <div class="oc-stage-curtain" id="ocStageCurtain" aria-hidden="true">
+                    <div class="oc-curtain oc-curtain-l"></div>
+                    <div class="oc-curtain oc-curtain-r"></div>
+                    <div class="oc-curtain-crest">
+                        <img class="oc-curtain-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
+                        <p class="oc-curtain-teaser">Next player on stage is..</p>
+                    </div>
+                </div>
+                <div class="oc-player-head">
                 <div class="oc-player-photo-col">
                     <div class="oc-player-photo-frame">
                     <div class="oc-player-photo-ring" id="ocPhotoRing">
@@ -121,30 +133,52 @@
                             </div>
                         </div>
                     </div>
-                    <div class="oc-tier-pill" id="ocTierPill">—</div>
-                    <div class="oc-sl-no" id="ocSlNo">#—</div>
                 </div>
-                <div class="oc-player-info-col">
-                    <h2 class="oc-player-name" id="ocPlayerName">—</h2>
+                <div class="oc-player-id">
+                    <div class="oc-name-row">
+                        <h2 class="oc-player-name" id="ocPlayerName">—</h2>
+                        <div class="oc-sl-no" id="ocSlNo">#—</div>
+                        <div class="oc-tier-pill" id="ocTierPill">—</div>
+                    </div>
                     <div class="oc-player-chips">
                         <span class="oc-chip oc-chip-role" id="ocPlayerRole">—</span>
                         <span class="oc-chip oc-chip-style" id="ocPlayerStyle"></span>
                     </div>
-                    <div class="oc-bid-display">
-                        <div class="oc-bid-box oc-bid-box-base">
-                            <div class="oc-bid-box-lbl">BASE PRICE</div>
-                            <div class="oc-bid-box-val" id="ocBasePrice">—</div>
-                            <div class="oc-maxcall-sub" id="ocBaseMaxCall" title="Your max call vs other teams">
-                                <span class="oc-maxcall-sub-lbl">Max call</span>
-                                <span class="oc-maxcall-sub-val" id="ocBaseMaxCallVal">—</span>
-                            </div>
-                        </div>
-                        <div class="oc-bid-box oc-bid-box-current" id="ocCurrentBidBox">
-                            <div class="oc-bid-box-lbl">CURRENT BID</div>
-                            <div class="oc-bid-box-val oc-bid-live" id="ocCurrentBid">—</div>
-                            <div class="oc-qb-hint" id="ocQbHint"></div>
-                        </div>
+                </div>
+                </div>
+                <div class="oc-player-info-col">
+                    <div class="oc-meta-line">
+                        <span>Base <strong id="ocBasePrice">—</strong></span>
+                        <span id="ocBaseMaxCall">Max <strong id="ocBaseMaxCallVal">—</strong></span>
                     </div>
+                    <div class="oc-sold-card" id="ocSoldCard" style="display:none">
+                        <div class="oc-sold-label" id="ocSoldLabel">SOLD TO</div>
+                        <div class="oc-sold-team">
+                            <img class="oc-sold-logo" id="ocSoldLogo" alt="" style="display:none"/>
+                            <div class="oc-sold-team-name" id="ocSoldTeam"></div>
+                        </div>
+                        <div class="oc-sold-amount" id="ocSoldAmount"></div>
+                    </div>
+                    <div class="oc-bid-timer" id="ocBidTimer" style="display:none">
+                        <div class="oc-clock" id="ocClock" hidden="hidden">
+                            <svg class="oc-clock-svg" viewBox="0 0 36 36" aria-hidden="true">
+                                <circle class="oc-clock-track" cx="18" cy="18" r="15.5"></circle>
+                                <circle class="oc-clock-arc" id="ocClockArc" cx="18" cy="18" r="15.5"></circle>
+                                <line class="oc-clock-hand" id="ocClockHand" x1="18" y1="18" x2="18" y2="8"></line>
+                            </svg>
+                            <span class="oc-clock-num" id="ocClockNum">0</span>
+                        </div>
+                        <div class="oc-clock-msg" id="ocClockMsg" aria-live="polite"></div>
+                    </div>
+                    <div class="oc-bid-box oc-bid-box-current" id="ocCurrentBidBox">
+                        <div class="oc-bid-box-lbl">Current bid</div>
+                        <div class="oc-bid-box-val oc-bid-live" id="ocCurrentBid">—</div>
+                        <div class="oc-qb-hint" id="ocQbHint"></div>
+                    </div>
+                    <button type="button" class="oc-raise is-locked" id="ocRaiseBtn">
+                        <span class="oc-raise-main" id="ocRaiseMain">Waiting for a player</span>
+                        <span class="oc-raise-sub" id="ocRaiseSub" hidden="hidden"></span>
+                    </button>
                     <div class="oc-lead-warn" id="ocLeadWarn" style="display:none">You have the current bid</div>
                     <div class="oc-leading-team" id="ocLeadingTeam" style="display:none">
                         <img class="oc-leading-logo" id="ocLeadingLogo" src="" alt=""/>
@@ -166,17 +200,15 @@
             </div>
         </div>
 
-        <!-- ── Teams Auction Status (always visible on Live) ────────── -->
-        <div class="oc-section" id="ocTeamsSection">
+        </div>
+        <aside class="oc-live-side" id="ocTeamsSection">
             <div class="oc-section-header">
-                <span class="oc-section-title">&#x1F4CA; Teams Auction Status</span>
+                <span class="oc-section-title">Teams</span>
                 <span class="oc-section-hint">Tap a team to view their squad</span>
             </div>
-            <div class="oc-teams-strip" id="ocTeamsStrip">
-                <!-- rendered by JS -->
-            </div>
+            <div class="oc-teams-strip" id="ocTeamsStrip"></div>
+        </aside>
         </div>
-
     </section>
 
     <!-- ──────── TAB: TEAMS ────────────────────────────────────────── -->
@@ -306,6 +338,20 @@
     </div>
 </div>
 
+<!-- ═══════ LOG OUT CONFIRM ═════════════════════════════════════════ -->
+<div class="oc-overlay" id="ocLogoutOverlay" style="display:none" onclick="ocCancelLogout()">
+    <div class="oc-modal" onclick="event.stopPropagation()">
+        <div class="oc-modal-head">
+            <div class="oc-modal-title">Log out?</div>
+        </div>
+        <div class="oc-modal-body">Leave the owner console and sign out of this account?</div>
+        <div class="oc-modal-foot">
+            <button type="button" class="oc-btn-cancel" onclick="ocCancelLogout()">Stay</button>
+            <button type="button" class="oc-btn-logout" onclick="ocConfirmLogout()">Log out</button>
+        </div>
+    </div>
+</div>
+
 <!-- ═══════ TOAST ═════════════════════════════════════════════════════ -->
 <div class="oc-toast" id="ocToast"></div>
 
@@ -313,13 +359,13 @@
 <t t-call="auction_module.point_unit_bootstrap">
     <t t-set="pu_tournament" t-value="tournament"/>
 </t>
-<script src="/auction_owner/static/src/js/owner_console.js?v=11"></script>
+<script src="/auction_owner/static/src/js/owner_console.js?v=24"></script>
 
 <!-- Squad snapshot button styles -->
 <style>
 .oc-squad-snap-wrap{display:flex;align-items:center;gap:6px;margin-left:auto}
-.oc-squad-snap-btn{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);color:var(--txt2);border-radius:8px;padding:5px 11px;font-size:.72rem;font-weight:600;cursor:pointer;transition:background .18s,border-color .18s,color .18s;white-space:nowrap}
-.oc-squad-snap-btn:hover{background:rgba(255,255,255,0.12);border-color:var(--c40);color:var(--c-l)}
+.oc-squad-snap-btn{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid #d5e0ee;color:#1a3358;border-radius:8px;padding:5px 11px;font-size:.72rem;font-weight:600;cursor:pointer;white-space:nowrap}
+.oc-squad-snap-btn:hover{border-color:#1565c0;color:#1565c0}
 .oc-squad-snap-btn:disabled{opacity:.45;cursor:not-allowed}
 .oc-squad-snap-btn svg{flex-shrink:0}
 </style>

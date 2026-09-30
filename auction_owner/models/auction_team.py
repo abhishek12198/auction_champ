@@ -36,6 +36,7 @@
 #
 ##############################################################################
 
+import re
 import secrets
 import string
 import logging
@@ -71,6 +72,28 @@ class AuctionTeamOwnerUser(models.Model):
         chars = string.ascii_letters + string.digits + '!@#$%'
         return ''.join(secrets.choice(chars) for _ in range(length))
 
+    @staticmethod
+    def _owner_login_slug(text, separator='_'):
+        value = (text or '').strip().lower()
+        value = re.sub(r'[^a-z0-9]+', separator, value).strip(separator)
+        return value
+
+    def _owner_login_base(self, team):
+        """Login stem: tournament unique code + team name."""
+        tournament = team.tournament_id
+        code = self._owner_login_slug(
+            tournament.tournament_code if tournament else '',
+            separator='',
+        )
+        if not code:
+            raise UserError(
+                _('Team "%s" has no tournament unique code. '
+                  'Set the tournament code before creating the owner user.')
+                % (team.name or '')
+            )
+        team_slug = self._owner_login_slug(team.name) or 'team'
+        return '%s_%s' % (code, team_slug)
+
     def action_create_owner_user(self):
         owner_group = self.env.ref('auction_owner.group_auction_owner')
         internal_group = self.env.ref('base.group_user')
@@ -99,8 +122,8 @@ class AuctionTeamOwnerUser(models.Model):
                 team.write({'owner_password': password})
                 results.append(_('"%s": password reset (login: %s)') % (team.name, team.owner_user_id.login))
             else:
-                # Build a unique login: team_name lowercased, spaces → underscores
-                base_login = team.name.lower().replace(' ', '_')
+                # Login: tournament unique code + team name (e.g. ac123456789012_mumbai_indians)
+                base_login = self._owner_login_base(team)
                 login = base_login
                 counter = 1
                 while self.env['res.users'].sudo().search([('login', '=', login)], limit=1):

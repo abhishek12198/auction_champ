@@ -33,6 +33,7 @@ WATCHED_FIELDS = {
         # BID must refresh Live Board Redis/SSE (not only auctioneer Odoo inject).
         'current_bid': frozenset(('lb', 'pj')),
         'current_bid_team_id': frozenset(('lb', 'pj')),
+        'owner_bid_deadline': frozenset(('pj',)),
         'mystery_revealed': frozenset(('lb', 'pj', 'bal')),
         'assigned_team_id': frozenset(('lb', 'pj', 'bal')),
         'photo': frozenset(('lb', 'pj', 'reg')),

@@ -38,7 +38,7 @@
 
 {
     'name': 'Auction Owner Console',
-    'version': '1.0.18',
+    'version': '1.0.34',
     'summary': 'Mobile-friendly owner dashboard for live auction tracking and bidding',
     'depends': ['auction_module', 'auction_auctioneer'],
     'data': [

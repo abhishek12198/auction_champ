@@ -114,10 +114,10 @@ html[data-theme="pistah"] {
     --overlay-bg: rgba(4, 12, 6, 0.92);
     --overlay-muted: rgba(200, 240, 190, 0.75);
     --overlay-faint: rgba(200, 240, 190, 0.4);
-    --hud-font-ui: 'Exo 2', sans-serif;
-    --hud-font-label: 'Orbitron', sans-serif;
-    --hud-font-display: 'Atlanta College', 'Orbitron', sans-serif;
-    --hud-font-name: 'Teko', 'Oswald', sans-serif;
+    --hud-font-ui: 'Barlow Condensed', sans-serif;
+    --hud-font-label: 'Oswald', sans-serif;
+    --hud-font-display: 'Oswald', sans-serif;
+    --hud-font-name: 'Oswald', sans-serif;
 }
 
 html[data-theme="blueberry"],
@@ -138,10 +138,29 @@ html[data-theme="blackberry"] {
     --overlay-bg: rgba(4, 8, 18, 0.92);
     --overlay-muted: rgba(190, 220, 255, 0.75);
     --overlay-faint: rgba(190, 220, 255, 0.4);
+}
+html[data-theme="blackberry"] {
     --hud-font-ui: 'Exo 2', sans-serif;
     --hud-font-label: 'Orbitron', sans-serif;
     --hud-font-display: 'Atlanta College', 'Orbitron', sans-serif;
     --hud-font-name: 'Saira Condensed', 'Oswald', sans-serif;
+}
+html[data-theme="blueberry"] {
+    --hud-font-ui: 'Barlow Condensed', sans-serif;
+    --hud-font-label: 'Oswald', sans-serif;
+    --hud-font-display: 'Oswald', sans-serif;
+    --hud-font-name: 'Oswald', sans-serif;
+}
+html[data-theme="pistah"] .hud-serial-number,
+html[data-theme="pistah"] .hud-base-badge-val,
+html[data-theme="pistah"] .hud-stat-val,
+html[data-theme="pistah"] #ac-next-count,
+html[data-theme="blueberry"] .hud-serial-number,
+html[data-theme="blueberry"] .hud-base-badge-val,
+html[data-theme="blueberry"] .hud-stat-val,
+html[data-theme="blueberry"] #ac-next-count {
+    font-variant-numeric: lining-nums tabular-nums;
+    letter-spacing: 0.02em;
 }
 
 /* Light HUD — same chrome, parchment / berry paper */

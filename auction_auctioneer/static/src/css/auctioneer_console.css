@@ -938,6 +938,28 @@ html, body { min-height: 100%; }
     text-overflow: ellipsis;
 }
 
+.ac-owner-bid-timer {
+    margin: 0 0 0.55rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    font-variant-numeric: tabular-nums;
+    background: rgba(245, 197, 24, 0.14);
+    color: #f5c518;
+    border: 1px solid rgba(245, 197, 24, 0.4);
+}
+.ac-owner-bid-timer.is-urgent {
+    background: rgba(239, 68, 68, 0.16);
+    color: #fecaca;
+    border-color: rgba(239, 68, 68, 0.55);
+}
+.ac-owner-bid-timer.is-frozen {
+    background: rgba(239, 68, 68, 0.24);
+    color: #fff;
+    border-color: #ef4444;
+}
 .ac-player-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;

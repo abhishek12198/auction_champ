@@ -388,11 +388,11 @@ class AuctionTeamPlayer(models.Model):
         # Auto-close registration when the max limit is reached
         tournament = player.tournament_id
         if tournament and tournament.registration_open and tournament.max_registrations > 0:
-            draft_count = self.search_count([
+            live_count = self.search_count([
                 ('tournament_id', '=', tournament.id),
-                ('state', '=', 'draft'),
+                ('state', 'in', ('draft', 'auction', 'sold', 'unsold')),
             ])
-            if draft_count >= tournament.max_registrations:
+            if live_count >= tournament.max_registrations:
                 tournament.sudo().write({'registration_open': False})
         return player
 
@@ -566,6 +566,19 @@ class AuctionTeamPlayer(models.Model):
     jersy_size = fields.Char('Jersy Size')
     jersy_number = fields.Char("Number in Jersy")
     jersy_name = fields.Char("Name in Jersy")
+    track_size = fields.Selection(
+        [
+            ('S', 'S'),
+            ('M', 'M'),
+            ('L', 'L'),
+            ('XL', 'XL'),
+            ('XXL', 'XXL'),
+            ('XXXL', 'XXXL'),
+            ('4XL', '4XL'),
+        ],
+        string='Track Size',
+        help='Optional track size collected with jersey details.',
+    )
     blood_group = fields.Char("Blood Group")
     p_type =   fields.Char("Type")
     payment_proof = fields.Binary("Payment Proof", attachment=True, help="Uploaded payment screenshot/receipt from registration form.")
@@ -881,6 +894,7 @@ class AuctionTeamPlayer(models.Model):
                 'preset_points': tournament_preset_points,
                 'slabs': effective_slabs,
             })
+        teams.sort(key=lambda t: ((t.get('team_name') or '').lower(), t.get('team_id') or 0))
         return {
             'teams': teams,
             'current_bid': int(player.current_bid or 0),
@@ -1808,11 +1822,45 @@ class AuctionTeamPlayer(models.Model):
             self._sync_other_attributes_from_tournament()
         return res
 
+    @api.model
+    def _resequence_tournament_players(self, tournament_ids):
+        """Renumber ``sl_no`` to contiguous 1..n per tournament (current order).
+
+        Called after player delete so organisers do not need a manual Resequence.
+        Two-pass write avoids transient serial collisions.
+        """
+        ids = [int(t) for t in (tournament_ids or []) if t]
+        if not ids:
+            return
+        Player = self.env['auction.team.player'].sudo()
+        for tid in set(ids):
+            players = Player.search(
+                [('tournament_id', '=', tid)],
+                order='sl_no asc, id asc',
+            )
+            if not players:
+                continue
+            offset = 100000
+            for i, player in enumerate(players, start=1):
+                if player.sl_no != offset + i:
+                    player.sl_no = offset + i
+            for i, player in enumerate(players, start=1):
+                if player.sl_no != i:
+                    player.sl_no = i
+
     def unlink(self):
-        """Delete the live player after copying it to the tournament recycle bin."""
+        """Delete the live player after copying it to the tournament recycle bin.
+
+        Remaining players in each affected tournament are resequenced to 1..n
+        automatically (preserve relative order by previous serial).
+        """
         if self and not self.env.context.get('skip_player_delete_archive'):
             self.env['auction.team.player.deleted'].sudo()._archive_players(self)
-        return super(AuctionTeamPlayer, self).unlink()
+        tournament_ids = self.mapped('tournament_id').ids
+        res = super(AuctionTeamPlayer, self).unlink()
+        if tournament_ids and not self.env.context.get('skip_player_sl_resequence'):
+            self._resequence_tournament_players(tournament_ids)
+        return res
 
     def get_icon_players(self, team_id):
         players_domain = [('icon_player', '=', True), ('assigned_team_id', '=', team_id)]

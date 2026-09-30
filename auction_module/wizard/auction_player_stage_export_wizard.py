@@ -51,6 +51,7 @@ _TEAM_HEADER_COLORS = [
 ]
 
 _JERSEY_SIZES = ('XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL')
+_TRACK_SIZES = ('S', 'M', 'L', 'XL', 'XXL', 'XXXL', '4XL')
 _JERSEY_NAME_MAX = 20
 _JERSEY_NUMBER_MAX = 4
 _IMPORT_SHEET_NAME = 'Jersey Export'
@@ -205,7 +206,7 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
         if not self.import_file:
             raise UserError(_(
                 'Please upload the Jersey Export Excel file after editing '
-                'only the Jersey Name / Number / Size columns.'
+                'only the Jersey Name / Number / Size and Track Size columns.'
             ))
 
         try:
@@ -228,7 +229,8 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
         name_col = header_map.get('jersey name')
         number_col = header_map.get('jersey number')
         size_col = header_map.get('jersey size')
-        if name_col is None and number_col is None and size_col is None:
+        track_col = header_map.get('track size')
+        if name_col is None and number_col is None and size_col is None and track_col is None:
             raise UserError(_(
                 'Could not find Jersey Name / Jersey Number / Jersey Size columns.'
             ))
@@ -271,6 +273,10 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
                     self._cell_str(ws.cell(row=row_idx, column=size_col + 1).value)
                     if size_col is not None else (player.jersy_size or '')
                 )
+                j_track = self._normalize_track_size(
+                    self._cell_str(ws.cell(row=row_idx, column=track_col + 1).value)
+                    if track_col is not None else (player.track_size or '')
+                )
             except UserError as exc:
                 errors.append('Row %d (%s): %s' % (
                     row_idx, player.name or player_id, exc.args[0] if exc.args else exc))
@@ -283,6 +289,8 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
                 vals['jersy_number'] = j_number or False
             if (player.jersy_size or '') != j_size:
                 vals['jersy_size'] = j_size or False
+            if (player.track_size or '') != j_track:
+                vals['track_size'] = j_track or False
 
             if vals:
                 player.write(vals)
@@ -395,22 +403,22 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
         if include_player_id:
             headers.append(_PLAYER_ID_HEADER)
         return headers + self._common_headers() + self._sport_headers() + [
-            'Jersey Name', 'Jersey Number', 'Jersey Size', 'Team', 'Status',
+            'Jersey Name', 'Jersey Number', 'Jersey Size', 'Track Size', 'Team', 'Status',
         ]
 
     def _jersey_editable_headers(self):
-        return {'Jersey Name', 'Jersey Number', 'Jersey Size'}
+        return {'Jersey Name', 'Jersey Number', 'Jersey Size', 'Track Size'}
 
     def _stage_headers(self, stage):
         base = self._common_headers() + self._sport_headers()
         if stage == 'sold':
             return base + ['Sold To', 'Sold Points', 'Base Point', 'Tier',
-                           'Jersey Name', 'Jersey Number', 'Jersey Size']
+                           'Jersey Name', 'Jersey Number', 'Jersey Size', 'Track Size']
         if stage == 'draft':
             return base + ['Status', 'Tier', 'Base Point',
-                           'Jersey Name', 'Jersey Number', 'Jersey Size']
+                           'Jersey Name', 'Jersey Number', 'Jersey Size', 'Track Size']
         return base + ['Status', 'Tier', 'Base Point',
-                       'Jersey Name', 'Jersey Number', 'Jersey Size']
+                       'Jersey Name', 'Jersey Number', 'Jersey Size', 'Track Size']
 
     def _sold_points_map(self, players):
         if not players:
@@ -457,6 +465,7 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
             (player.jersy_name or '').upper(),
             player.jersy_number or '',
             player.jersy_size or '',
+            player.track_size or '',
         ]
 
     def _state_label(self, state):
@@ -554,6 +563,25 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
             raise UserError(_(
                 'Jersey Size must be one of: %s'
             ) % ', '.join(_JERSEY_SIZES))
+        return size
+
+    def _normalize_track_size(self, value):
+        size = (value or '').strip().upper().replace(' ', '')
+        if not size:
+            return ''
+        size = size.split('—')[0].split('-')[0].strip()
+        aliases = {
+            '2XL': 'XXL',
+            '3XL': 'XXXL',
+            'SMALL': 'S',
+            'MEDIUM': 'M',
+            'LARGE': 'L',
+        }
+        size = aliases.get(size, size)
+        if size not in _TRACK_SIZES:
+            raise UserError(_(
+                'Track Size must be one of: %s'
+            ) % ', '.join(_TRACK_SIZES))
         return size
 
     def _find_jersey_import_sheet(self, wb):
@@ -681,7 +709,7 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
 
         rows = [
             (4, 'HOW TO USE', section_fill, True),
-            (5, '1. On "%s", edit only the yellow columns: Jersey Name, Jersey Number, Jersey Size.'
+            (5, '1. On "%s", edit only the yellow columns: Jersey Name, Jersey Number, Jersey Size, Track Size.'
                % _IMPORT_SHEET_NAME, None, False),
             (6, '2. Do not change Player ID (needed to match players on import).', None, False),
             (7, '3. Other columns (name, mobile, attributes, team, status) are ignored on import.', None, False),
@@ -743,6 +771,23 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
             value='Type the Code exactly (e.g. XL). Leave blank only if size is unknown.',
         ).fill = tip_fill
 
+        track_title = note_row + 2
+        ws.merge_cells(start_row=track_title, start_column=1, end_row=track_title, end_column=2)
+        track_head = ws.cell(row=track_title, column=1, value='TRACK SIZE — optional. Type exactly one of these codes')
+        track_head.fill = section_fill
+        track_head.font = Font(color='FFFFFF', bold=True, size=11)
+        ws.row_dimensions[track_title].height = 20
+        code_row = track_title + 1
+        ws.cell(row=code_row, column=1, value=', '.join(_TRACK_SIZES)).font = Font(bold=True, size=11)
+        ws.cell(row=code_row, column=1).fill = ok_fill
+        ws.merge_cells(start_row=code_row, start_column=1, end_row=code_row, end_column=2)
+        blank_row = code_row + 1
+        ws.merge_cells(start_row=blank_row, start_column=1, end_row=blank_row, end_column=2)
+        ws.cell(
+            row=blank_row, column=1,
+            value='Leave Track Size blank if the player did not choose one.',
+        ).fill = tip_fill
+
         ws.column_dimensions['A'].width = 72
         ws.column_dimensions['B'].width = 22
 
@@ -760,7 +805,7 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
         banner = ws.cell(
             row=1, column=1,
             value=(
-                'EDIT YELLOW COLUMNS ONLY — Jersey Name / Number / Size  ·  '
+                'EDIT YELLOW COLUMNS ONLY — Jersey Name / Number / Size / Track Size  ·  '
                 'ICON (★) players first, then Sold  ·  Draft / In Auction / Unsold excluded  ·  '
                 'Size codes → Guidelines sheet  ·  Other columns ignored on import'
             ),

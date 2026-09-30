@@ -628,6 +628,7 @@
                                         <field name="jersy_name"   string="Name on Jersey"/>
                                         <field name="jersy_number" string="Jersey Number"/>
                                         <field name="jersy_size"   string="Jersey Size"/>
+                                        <field name="track_size"   string="Track Size"/>
                                     </group>
                                     <group string="Admin">
                                         <field name="payment_url" string="Payment Proof URL"
