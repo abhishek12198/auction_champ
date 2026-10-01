@@ -38,7 +38,7 @@
 
 {
     'name' : 'Auction Champ',
-    'version' : '1.5.846',
+    'version' : '1.5.854',
     'summary': 'Sports Auction module',
     'sequence': 10,
     'icon': '/auction_module/static/description/icon.png',
@@ -183,6 +183,7 @@
                     '/auction_module/static/src/js/dropdown_fix.js',
                     '/auction_module/static/src/js/center_toast.js',
                     '/auction_module/static/src/css/wizard_style.css',
+                    '/auction_module/static/src/css/remove_duplicates.css',
                     '/auction_module/static/src/js/sell_player_presets.js',
                     '/auction_module/static/src/css/set_auction_rules.css',
                     '/auction_module/static/src/css/ac_points.css',

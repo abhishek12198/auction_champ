@@ -1782,6 +1782,39 @@ class AuctionTournament(models.Model):
         for rec in self:
             rec.registration_open = not rec.registration_open
 
+    def _auto_open_registration_if_under_limit(self):
+        """Re-open registration when live players are back under Max Registrations.
+
+        Same rule as the Remove duplicates wizard: if registration is closed
+        and the live count is no longer at the tournament limit, turn it back
+        on. Live players are draft, auction, sold, and unsold. A limit of 0
+        means unlimited, so a closed registration is opened.
+        """
+        Player = self.env['auction.team.player'].sudo()
+        live_states = ('draft', 'auction', 'sold', 'unsold')
+        for tournament in self:
+            if not tournament or tournament.registration_open:
+                continue
+            max_reg = int(tournament.max_registrations or 0)
+            if hasattr(tournament, '_saas_effective_max_registrations'):
+                max_reg = int(tournament._saas_effective_max_registrations() or 0)
+            if max_reg > 0:
+                current = Player.search_count([
+                    ('tournament_id', '=', tournament.id),
+                    ('state', 'in', live_states),
+                ])
+                if current >= max_reg:
+                    continue
+            tournament.sudo().write({'registration_open': True})
+            user = self.env.user
+            if user and not user._is_public() and hasattr(user, 'notify_info'):
+                url = tournament.registration_url or ''
+                user.notify_info(
+                    message='Registration auto-opened.%s' % (
+                        ' URL: %s' % url if url else ''),
+                    title='Registration Open ✓',
+                )
+
     def _player_state_action(self, state, label):
         """Generic helper — returns an act_window filtered by player state."""
         self.ensure_one()

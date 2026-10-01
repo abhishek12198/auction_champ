@@ -6,7 +6,7 @@
         <field name="name">auction.remove.duplicates.wizard.form</field>
         <field name="model">auction.remove.duplicates.wizard</field>
         <field name="arch" type="xml">
-            <form string="Remove Duplicate Players" class="custom_wizard_popup">
+            <form string="Remove Duplicate Players" class="custom_wizard_popup o_dup_wizard">
 
                 <!-- ═══════════════════════════════════════════════════════
                      STEP 1 — Configure
@@ -133,8 +133,8 @@
                                 duplicate(s) selected for removal
                             </div>
                             <div style="color:rgba(255,255,255,.6);font-size:.8rem;margin-top:.2rem;">
-                                Uncheck "Remove?" on any row you want to keep.
-                                After removal, all sequence numbers will be reissued from 1.
+                                Choose Remove on the player to delete. The other one stays.
+                                Turn Include off to leave both. After removal, serial numbers start again from 1.
                             </div>
                         </div>
                     </div>
@@ -149,18 +149,88 @@
                         </div>
                     </div>
 
-                    <field name="line_ids" nolabel="1"
+                    <field name="line_ids" nolabel="1" mode="kanban"
                            attrs="{'invisible': [('duplicate_count', '=', 0)]}">
-                        <tree editable="bottom" decoration-danger="should_remove == True"
-                              decoration-muted="should_remove == False">
-                            <field name="player_sl_no" string="Sl No" optional="show"/>
-                            <field name="player_name" string="Duplicate Name" readonly="1"/>
-                            <field name="player_contact" string="Mobile" readonly="1" optional="show"/>
-                            <field name="player_state" string="State" readonly="1"/>
-                            <field name="match_reason" string="Reason" readonly="1"/>
-                            <field name="keep_player_id" string="Will Keep" readonly="1"/>
-                            <field name="should_remove" string="Remove?"/>
-                        </tree>
+                        <kanban create="0" delete="0" records_draggable="0" class="o_dup_kanban">
+                            <field name="player_res_id"/>
+                            <field name="player_sl_no"/>
+                            <field name="player_name"/>
+                            <field name="player_contact"/>
+                            <field name="player_state"/>
+                            <field name="keep_res_id"/>
+                            <field name="keep_player_sl_no"/>
+                            <field name="keep_player_name"/>
+                            <field name="keep_player_contact"/>
+                            <field name="keep_player_state"/>
+                            <field name="match_reason"/>
+                            <field name="should_remove"/>
+                            <field name="remove_original"/>
+                            <templates>
+                                <t t-name="kanban-box">
+                                    <div t-attf-class="o_dup_row {{ record.should_remove.raw_value ? 'is-on' : 'is-off' }} {{ record.remove_original.raw_value ? 'is-flip' : '' }}">
+                                        <div t-attf-class="o_dup_person is-left {{ record.remove_original.raw_value ? 'is-saved' : 'is-chosen' }}">
+                                            <div class="o_dup_photo">
+                                                <img t-if="record.player_res_id.raw_value"
+                                                     t-att-src="kanban_image('auction.team.player', 'photo', record.player_res_id.raw_value)"
+                                                     alt=""
+                                                     onerror="this.style.display='none'"/>
+                                                <div class="o_dup_photo_ph">No photo</div>
+                                            </div>
+                                            <div class="o_dup_facts">
+                                                <div class="o_dup_line1">
+                                                    <span class="o_dup_sl">#<field name="player_sl_no"/></span>
+                                                    <button name="action_flip_choice" type="object" class="o_dup_choice" title="Switch who is removed">
+                                                        <span class="o_dup_role">
+                                                            <t t-if="record.remove_original.raw_value">Will keep</t>
+                                                            <t t-else="">Remove</t>
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                                <div class="o_dup_name"><field name="player_name"/></div>
+                                                <div class="o_dup_meta">
+                                                    <field name="player_state"/>
+                                                    <span class="o_dup_dot"> · </span>
+                                                    <field name="player_contact"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="o_dup_reason"><field name="match_reason"/></div>
+                                        <div t-attf-class="o_dup_person is-right {{ record.remove_original.raw_value ? 'is-chosen' : 'is-saved' }}">
+                                            <div class="o_dup_photo">
+                                                <img t-if="record.keep_res_id.raw_value"
+                                                     t-att-src="kanban_image('auction.team.player', 'photo', record.keep_res_id.raw_value)"
+                                                     alt=""
+                                                     onerror="this.style.display='none'"/>
+                                                <div class="o_dup_photo_ph">No photo</div>
+                                            </div>
+                                            <div class="o_dup_facts">
+                                                <div class="o_dup_line1">
+                                                    <span class="o_dup_sl">#<field name="keep_player_sl_no"/></span>
+                                                    <button name="action_flip_choice" type="object" class="o_dup_choice" title="Switch who is removed">
+                                                        <span class="o_dup_role">
+                                                            <t t-if="record.remove_original.raw_value">Remove</t>
+                                                            <t t-else="">Will keep</t>
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                                <div class="o_dup_name"><field name="keep_player_name"/></div>
+                                                <div class="o_dup_meta">
+                                                    <field name="keep_player_state"/>
+                                                    <span class="o_dup_dot"> · </span>
+                                                    <field name="keep_player_contact"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="o_dup_switch">
+                                            <span class="o_dup_switch_lbl">Include</span>
+                                            <button name="action_toggle_remove" type="object" class="o_dup_toggle" title="Remove this duplicate">
+                                                <span class="o_dup_knob"/>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </t>
+                            </templates>
+                        </kanban>
                     </field>
 
                 </div>

@@ -1860,6 +1860,7 @@ class AuctionTeamPlayer(models.Model):
         res = super(AuctionTeamPlayer, self).unlink()
         if tournament_ids and not self.env.context.get('skip_player_sl_resequence'):
             self._resequence_tournament_players(tournament_ids)
+            self.env['auction.tournament'].browse(tournament_ids)._auto_open_registration_if_under_limit()
         return res
 
     def get_icon_players(self, team_id):

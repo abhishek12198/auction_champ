@@ -50,12 +50,52 @@ class AuctionRemoveDuplicateLine(models.TransientModel):
     wizard_id = fields.Many2one('auction.remove.duplicates.wizard', ondelete='cascade')
     player_id = fields.Many2one('auction.team.player', string='Duplicate (Remove)', readonly=True)
     keep_player_id = fields.Many2one('auction.team.player', string='Original (Keep)', readonly=True)
+    player_res_id = fields.Integer(related='player_id.id', string='Player ID', store=False)
     player_sl_no = fields.Integer(related='player_id.sl_no', string='Sl No', store=False)
+    player_photo = fields.Binary(related='player_id.photo', string='Photo', store=False)
     player_name = fields.Char(related='player_id.name', string='Name', store=False)
     player_contact = fields.Char(related='player_id.contact', string='Mobile', store=False)
     player_state = fields.Selection(related='player_id.state', string='State', store=False)
+    keep_res_id = fields.Integer(related='keep_player_id.id', string='Kept Player ID', store=False)
+    keep_player_sl_no = fields.Integer(related='keep_player_id.sl_no', string='Kept Sl No', store=False)
+    keep_player_photo = fields.Binary(related='keep_player_id.photo', string='Kept Photo', store=False)
+    keep_player_name = fields.Char(related='keep_player_id.name', string='Kept Name', store=False)
+    keep_player_contact = fields.Char(related='keep_player_id.contact', string='Kept Mobile', store=False)
+    keep_player_state = fields.Selection(related='keep_player_id.state', string='Kept State', store=False)
     match_reason = fields.Char(string='Reason', readonly=True)
     should_remove = fields.Boolean(string='Remove?', default=True)
+    remove_original = fields.Boolean(
+        string='Remove the kept player',
+        default=False,
+        help='When set, the player on the right is deleted and the one on the left stays.',
+    )
+
+    def _reopen_wizard(self):
+        wizard = self.wizard_id
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Remove Duplicate Players',
+            'res_model': wizard._name,
+            'res_id': wizard.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
+
+    def action_toggle_remove(self):
+        """Include or skip this pair, then reopen the preview."""
+        self.ensure_one()
+        self.should_remove = not self.should_remove
+        return self._reopen_wizard()
+
+    def action_flip_choice(self):
+        """Swap which player is removed and which one stays."""
+        self.ensure_one()
+        self.remove_original = not self.remove_original
+        return self._reopen_wizard()
+
+    def _player_to_delete(self):
+        self.ensure_one()
+        return self.keep_player_id if self.remove_original else self.player_id
 
 
 class AuctionRemoveSerialLine(models.TransientModel):
@@ -280,24 +320,7 @@ class AuctionRemoveDuplicatesWizard(models.TransientModel):
 
     def _auto_open_registration(self):
         """Open registration if it's closed and slots are still available."""
-        t = self.tournament_id
-        if not t or t.registration_open:
-            return
-        max_reg = t.max_registrations or 0
-        if max_reg:
-            current = self.env['auction.team.player'].search_count([
-                ('tournament_id', '=', t.id),
-                ('state', '=', 'draft'),
-            ])
-            if current >= max_reg:
-                return
-        t.registration_open = True
-        url = t.registration_url or ''
-        self.env.user.notify_info(
-            message='Registration auto-opened.%s' % (
-                ' URL: %s' % url if url else ''),
-            title='Registration Open ✓',
-        )
+        self.tournament_id._auto_open_registration_if_under_limit()
 
     def _resequence_remaining(self):
         """Renumber serials: Draft first (current order), then Icon players, then the rest."""
@@ -404,9 +427,11 @@ class AuctionRemoveDuplicatesWizard(models.TransientModel):
     def action_remove_and_resequence(self):
         lines_to_remove = self.line_ids.filtered('should_remove')
         if not lines_to_remove:
-            raise UserError('No duplicates are selected for removal. Check the "Remove?" column.')
+            raise UserError('No duplicates are selected for removal. Turn Include on for a row first.')
 
-        players_to_delete = lines_to_remove.mapped('player_id')
+        players_to_delete = self.env['auction.team.player']
+        for line in lines_to_remove:
+            players_to_delete |= line._player_to_delete()
         count = len(players_to_delete)
         players_to_delete.unlink()
 
