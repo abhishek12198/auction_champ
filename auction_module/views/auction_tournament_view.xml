@@ -242,7 +242,7 @@
                                 <field name="tournament_type"
                                        widget="selection_card"
                                        nolabel="1"
-                                       options="{'card_style': 'sport', 'coming_soon': 'kabaddi'}"/>
+                                       options="{'card_style': 'sport'}"/>
                             </div>
                         </div>
 
@@ -777,6 +777,7 @@
                                         <group string="Share URL">
                                             <field name="projector_url" widget="CopyClipboardChar"
                                                    readonly="1" string="Projector URL"/>
+                                            <field name="projector_screen_idle_min"/>
                                         </group>
                                         <group string="How it works">
                                             <div class="o_at_helper_side" colspan="2">
@@ -872,6 +873,7 @@
                                         <group string="Share URL">
                                             <field name="live_board_url" widget="CopyClipboardChar"
                                                    readonly="1" string="Live Board URL"/>
+                                            <field name="live_board_screen_idle_min"/>
                                         </group>
                                         <group string="How it works">
                                             <div class="o_at_helper_side" colspan="2">
@@ -900,6 +902,7 @@
                                         <group string="Share URL">
                                             <field name="bid_summary_url" widget="CopyClipboardChar"
                                                    readonly="1" string="Bid Summary URL"/>
+                                            <field name="bid_summary_screen_idle_min"/>
                                         </group>
                                         <group string="How it works">
                                             <div class="o_at_helper_side" colspan="2">

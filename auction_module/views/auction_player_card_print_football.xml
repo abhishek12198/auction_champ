@@ -34,7 +34,9 @@
                                     </div>
                                 </td>
                                 <td style="vertical-align:middle; padding:11px 0;">
-                                    <div t-attf-style="color:{{ pal['txt'] }}; font-family:'{{ title_font }}','Bebas Neue',sans-serif; font-size:1.7rem; letter-spacing:1.4px; text-transform:uppercase; line-height:1; text-shadow:0 2px 6px rgba(0,0,0,0.45); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:34ch;" t-esc="doc.tournament_id.name"/>
+                                    <t t-set="tour_name_size" t-value="'1.32rem' if doc.tournament_id.tournament_type == 'kabaddi' else '1.7rem'"/>
+                                    <t t-set="tour_name_max" t-value="'100%' if doc.tournament_id.tournament_type == 'kabaddi' else '34ch'"/>
+                                    <div t-attf-style="color:{{ pal['txt'] }}; font-family:'{{ title_font }}','Bebas Neue',sans-serif; font-size:{{ tour_name_size }}; letter-spacing:1.4px; text-transform:uppercase; line-height:1; text-shadow:0 2px 6px rgba(0,0,0,0.45); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:{{ tour_name_max }};" t-esc="doc.tournament_id.name"/>
                                     <div t-attf-style="color:{{ pal['accent'] }}; font-size:0.68rem; font-weight:600; margin-top:3px; letter-spacing:2px; text-transform:uppercase;" t-esc="doc.tournament_id.description"/>
                                 </td>
                                 <td style="vertical-align:middle; text-align:right; padding:11px 20px; white-space:nowrap;">
@@ -72,7 +74,12 @@
                                     <div style="padding:10px 74px 7px 22px;">
                                         <div t-attf-style="color:{{ pal['txt'] }}; font-family:'{{ title_font }}','Bebas Neue',sans-serif; font-size:1.85rem; line-height:0.98; letter-spacing:1px; text-transform:uppercase; text-shadow:0 3px 9px rgba(0,0,0,0.5); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" t-esc="doc.name.upper()"/>
                                         <div style="margin-top:4px;">
-                                            <t t-if="doc.tournament_id.tournament_type == 'badminton'">
+                                            <t t-if="doc.tournament_id.tournament_type == 'kabaddi'">
+                                                <t t-if="doc.tier_id">
+                                                    <span t-attf-style="display:inline-block; color:{{ pal['ink'] }}; background-color:{{ pal['accent'] }}; background-image:-webkit-linear-gradient(left,{{ pal['accent'] }},{{ pal['accentD'] }}); font-family:'Oswald',sans-serif; font-size:0.72rem; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; padding:2px 12px; border-radius:4px; white-space:nowrap;"><t t-esc="doc.tier_id.name"/></span>
+                                                </t>
+                                            </t>
+                                            <t t-elif="doc.tournament_id.tournament_type == 'badminton'">
                                                 <t t-set="bm_badge" t-value="doc.badminton_card_labels().get('category') or doc.role"/>
                                                 <t t-if="bm_badge">
                                                     <span t-attf-style="display:inline-block; color:{{ pal['ink'] }}; background-color:{{ pal['accent'] }}; background-image:-webkit-linear-gradient(left,{{ pal['accent'] }},{{ pal['accentD'] }}); font-family:'Oswald',sans-serif; font-size:0.72rem; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; padding:2px 12px; border-radius:4px; white-space:nowrap;"><t t-esc="bm_badge"/></span>
@@ -83,9 +90,11 @@
                                             </t>
                                         </div>
 
+                                        <t t-if="doc.tournament_id.tournament_type != 'kabaddi'">
                                         <table style="width:100%; border-collapse:collapse; margin:7px 0 3px;">
                                             <tr><td t-attf-style="height:2px; padding:0; background-color:{{ pal['accent'] }}; background-image:-webkit-linear-gradient(left,{{ pal['accent'] }} 0%,rgba({{ pal['accentGlow'] }},0) 82%);"></td></tr>
                                         </table>
+                                        </t>
 
                                         <t t-set="lblcss" t-value="'color:' + pal['muted'] + ';font-family:Oswald,sans-serif;font-size:0.54rem;font-weight:500;letter-spacing:0.7px;text-transform:uppercase;line-height:1.15;margin-bottom:4px;'"/>
                                         <t t-set="valcss" t-value="'color:' + pal['txt'] + ';font-family:Barlow,sans-serif;font-size:0.8rem;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-top:1px;'"/>
@@ -98,7 +107,21 @@
                                         <t t-set="chipcss" t-value="'display:inline-block;border:1px solid ' + pal['accent'] + ';border-radius:6px;padding:1px 6px;color:' + pal['accent'] + ';background:rgba(' + pal['accentGlow'] + ',0.08);font-family:Oswald,sans-serif;font-size:0.55rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:0 3px 2px 0;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;'"/>
 
                                         <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin-top:2px;">
-                                            <t t-if="doc.tournament_id.tournament_type == 'badminton'">
+                                            <t t-if="doc.tournament_id.tournament_type == 'kabaddi'">
+                                            <tr>
+                                                <td colspan="2" t-attf-style="vertical-align:middle; padding:22px 8px 18px 0; border-bottom:1px solid rgba({{ pal['accentGlow'] }},0.14);">
+                                                    <div t-attf-style="color:{{ pal['muted'] }}; font-family:Oswald,sans-serif; font-size:0.95rem; font-weight:600; letter-spacing:1.4px; text-transform:uppercase; line-height:1.15; margin-bottom:8px;">Role</div>
+                                                    <div t-attf-style="color:{{ pal['txt'] }}; font-family:'{{ title_font }}','Bebas Neue',sans-serif; font-size:2.15rem; font-weight:700; line-height:1.05; letter-spacing:0.6px; text-transform:uppercase;"><t t-esc="doc.kabaddi_role_label() or '—'"/></div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2" style="vertical-align:middle; padding:20px 8px 8px 0;">
+                                                    <div t-attf-style="color:{{ pal['muted'] }}; font-family:Oswald,sans-serif; font-size:0.95rem; font-weight:600; letter-spacing:1.4px; text-transform:uppercase; line-height:1.15; margin-bottom:8px;">Previous Club / Current Club</div>
+                                                    <div t-attf-style="color:{{ pal['txt'] }}; font-family:'{{ title_font }}','Bebas Neue',sans-serif; font-size:1.85rem; font-weight:700; line-height:1.1; letter-spacing:0.4px; text-transform:uppercase; white-space:normal;"><t t-esc="doc.current_team or '—'"/></div>
+                                                </td>
+                                            </tr>
+                                            </t>
+                                            <t t-elif="doc.tournament_id.tournament_type == 'badminton'">
                                             <t t-set="bm" t-value="doc.badminton_card_labels()"/>
                                             <tr>
                                                 <td t-att-style="tdL">

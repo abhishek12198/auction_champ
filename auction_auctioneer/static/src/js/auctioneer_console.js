@@ -155,9 +155,15 @@
         return t === 'badminton';
     }
 
+    function isKabaddi(p) {
+        var t = (p && p.tournament_type) || state.tournamentType || 'cricket';
+        return t === 'kabaddi';
+    }
+
     function sportIcon() {
         if (isFootball()) return '⚽';
         if (isBadminton()) return '🏸';
+        if (isKabaddi()) return '🤼';
         return '🏏';
     }
 
@@ -191,6 +197,9 @@
             chips.push(attrChip('Hand', p.preferred_hand || p.preferred_foot));
             chips.push(attrChip('Style', p.badminton_style));
             chips.push(attrChip('Level', p.skill_level));
+        } else if (isKabaddi(p)) {
+            chips.push(attrChip('Role', p.kabaddi_role || p.role));
+            chips.push(attrChip('Previous Club / Current Club', p.previous_club));
         } else {
             chips.push(attrChip('Role', p.role));
             chips.push(attrChip('Bat', p.batting_style));
@@ -218,6 +227,9 @@
                 p.skill_level,
                 p.age ? ('Age ' + p.age) : ''
             ].filter(Boolean).join(' · ');
+        }
+        if (isKabaddi(p)) {
+            return [p.kabaddi_role || p.role, p.previous_club].filter(Boolean).join(' · ');
         }
         return [p.role, p.batting_style, p.bowling_style].filter(Boolean).join(' · ');
     }

@@ -47,7 +47,9 @@ WATCHED_FIELDS = {
         'blood_group': frozenset(('lb', 'pj')),
         'address': frozenset(('lb', 'pj', 'reg')),
         'org_id': frozenset(('reg',)),
-        'current_team': frozenset(('reg',)),
+        # Club is shown on the kabaddi projector and live board.
+        'current_team': frozenset(('lb', 'pj', 'reg')),
+        'kabaddi_role': frozenset(('lb', 'pj', 'reg')),
         'age': frozenset(('lb', 'pj', 'bal', 'reg')),
         'height': frozenset(('lb', 'pj', 'reg')),
         'weight': frozenset(('lb', 'pj', 'reg')),

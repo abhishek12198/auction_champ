@@ -78,7 +78,7 @@
         <div class="hud-photo-overlay">
           <div class="hud-player-name" data-sm-name=""><t t-esc="player.name.upper()"/></div>
           <div class="hud-overlay-badges">
-            <t t-set="hud_role_label" t-value="(player.dominant_position_id.name if player.tournament_type == 'football' and player.dominant_position_id else (player.badminton_card_labels()['category'] if player.tournament_type == 'badminton' else (player.role or '')))"/>
+            <t t-set="hud_role_label" t-value="(player.kabaddi_role_label() if player.tournament_type == 'kabaddi' else (player.dominant_position_id.name if player.tournament_type == 'football' and player.dominant_position_id else (player.badminton_card_labels()['category'] if player.tournament_type == 'badminton' else (player.role or ''))))"/>
             <t t-if="hud_role_label">
               <div class="hud-role-tag" data-sm-role=""><t t-esc="hud_role_label"/></div>
             </t>
@@ -168,6 +168,12 @@
                   </t>
                 </div>
               </t>
+            </div>
+          </t>
+          <t t-elif="player.tournament_type == 'kabaddi'">
+            <div class="ac-fb-grid">
+              <div class="hud-stat-row"><span class="hud-stat-key">Role</span><span class="hud-stat-val"><t t-esc="player.kabaddi_role_label() or '—'"/></span></div>
+              <div class="hud-stat-row ac-fb-span-2"><span class="hud-stat-key">Previous Club / Current Club</span><span class="hud-stat-val"><t t-esc="player.current_team or '—'"/></span></div>
             </div>
           </t>
           <t t-else="">

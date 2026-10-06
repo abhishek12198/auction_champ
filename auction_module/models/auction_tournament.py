@@ -745,6 +745,24 @@ class AuctionTournament(models.Model):
         help='Public live bid summary / team balance dashboard '
              '(/…/auction/show/team/balance).',
     )
+    projector_screen_idle_min = fields.Integer(
+        string='Projector screen idle (minutes)',
+        default=0,
+        help='Minutes with no touch, click, or key before the projector screen '
+             'goes dark. 0 keeps the screen awake.',
+    )
+    live_board_screen_idle_min = fields.Integer(
+        string='Live board screen idle (minutes)',
+        default=1,
+        help='Minutes with no touch, click, or key before the live board screen '
+             'goes dark. 0 keeps the screen awake.',
+    )
+    bid_summary_screen_idle_min = fields.Integer(
+        string='Bid summary screen idle (minutes)',
+        default=1,
+        help='Minutes with no touch, click, or key before the bid summary screen '
+             'goes dark. 0 keeps the screen awake.',
+    )
     dice_state = fields.Selection(
         [('idle', 'Idle'), ('rolling', 'Rolling'), ('result', 'Result')],
         string='Dice State', default='idle',
@@ -1437,27 +1455,8 @@ class AuctionTournament(models.Model):
         return False
 
     def _assert_tournament_type_available(self, tournament_type):
-        """Kabaddi is listed but not yet supported — force Cricket/Football."""
-        if tournament_type == 'kabaddi':
-            raise UserError(
-                'Kabaddi is coming soon!\n\n'
-                'Please go back and select Cricket or Football. '
-                'Kabaddi tournaments will be available in a future update.'
-            )
-
-    @api.onchange('tournament_type')
-    def _onchange_tournament_type_coming_soon(self):
-        if self.tournament_type == 'kabaddi':
-            return {
-                'warning': {
-                    'title': 'Kabaddi — Coming Soon',
-                    'message': (
-                        'Kabaddi support is coming soon.\n\n'
-                        'Please switch back to Cricket or Football to continue '
-                        'creating or editing this tournament.'
-                    ),
-                }
-            }
+        """Kept so create/write callers stay valid. Kabaddi is a supported sport."""
+        return
 
     # Effective date shown on the public privacy policy page — bump when policy text changes.
     CONTACT_UNMASK_PRIVACY_POLICY_VERSION = '21 July 2026'
@@ -1722,6 +1721,8 @@ class AuctionTournament(models.Model):
                 # dashboard settings timings / jersey / unit
                 'sold_display_seconds', 'next_player_countdown',
                 'owner_bid_timer_seconds',
+                'projector_screen_idle_min', 'live_board_screen_idle_min',
+                'bid_summary_screen_idle_min',
                 'enable_jersey_section', 'point_unit_id',
                 'whatsapp_group_link',
                 # dice / player-selector
@@ -3371,6 +3372,23 @@ class AuctionTournament(models.Model):
         for tier in regular.sorted(lambda t: (t.sequence or 0, t.id)):
             parts.append('%s: %s' % (tier.name or 'Tier', tier.max_registrations or 0))
         return ', '.join(parts) if parts else '(none)'
+
+    @api.constrains(
+        'projector_screen_idle_min',
+        'live_board_screen_idle_min',
+        'bid_summary_screen_idle_min',
+    )
+    def _check_screen_idle_minutes(self):
+        for rec in self:
+            for fname in (
+                'projector_screen_idle_min',
+                'live_board_screen_idle_min',
+                'bid_summary_screen_idle_min',
+            ):
+                if (rec[fname] or 0) < 0:
+                    raise ValidationError(_(
+                        'Screen idle minutes cannot be negative. Use 0 to keep the screen awake.'
+                    ))
 
     def _check_tier_registration_limits_sum(self):
         """Enforce per-tier max vs tournament max for regular categories.

@@ -219,10 +219,12 @@
       t-att-data-sport="(tournament.tournament_type if tournament else 'cricket') or 'cricket'"
       t-att-data-live-data-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/live-board/data'"
       t-att-data-sse-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/live-board/events'"
-      t-att-data-sse-enabled="'1' if sse_enabled else '0'">
+      t-att-data-sse-enabled="'1' if sse_enabled else '0'"
+      t-att-data-screen-idle="str(tournament.live_board_screen_idle_min if tournament else 1)">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<script src="/auction_module/static/src/js/screen_idle.js?v=1"></script>
 <t t-call="auction_module.social_preview_head">
     <t t-set="og_page_key" t-value="'live_board'"/>
     <t t-set="og_record" t-value="tournament"/>
@@ -3691,9 +3693,11 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       : (p.name || '—');
     const subRole = (p.tournament_type === 'football')
       ? (p.dominant_position || p.role || '')
-      : (p.tournament_type === 'badminton'
-          ? (p.badminton_category || p.role || '')
-          : (p.role || ''));
+      : (p.tournament_type === 'kabaddi'
+          ? (p.kabaddi_role || p.role || '')
+          : (p.tournament_type === 'badminton'
+              ? (p.badminton_category || p.role || '')
+              : (p.role || '')));
     document.getElementById('lb-psub').textContent  =
       mysteryHidden ? '' : [subRole, p.tier_name].filter(Boolean).join(' · ');
 
@@ -3723,6 +3727,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     // Badges
     const isFootball = (p.tournament_type === 'football');
     const isBadminton = (p.tournament_type === 'badminton');
+    const isKabaddi = (p.tournament_type === 'kabaddi');
     let badgesHtml = '';
     if (p.tier_name && !mysteryHidden) {
       badgesHtml += `<span class="lb-badge lb-b-tier" style="background:${p.tier_color || '#2252b5'}">${p.tier_name}</span>`;
@@ -3735,6 +3740,9 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       } else if (isBadminton) {
         const cat = p.badminton_category || p.role;
         if (cat) badgesHtml += `<span class="lb-badge lb-b-role">${lbEsc(cat)}</span>`;
+      } else if (isKabaddi) {
+        const kbRole = p.kabaddi_role || p.role;
+        if (kbRole) badgesHtml += `<span class="lb-badge lb-b-role">${lbEsc(kbRole)}</span>`;
       } else if (p.role) {
         badgesHtml += `<span class="lb-badge lb-b-role">${p.role}</span>`;
       }
@@ -3789,6 +3797,16 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       if (bChips) sh += (sh ? '<div class="lb-stat-break"></div>' : '') + bChips;
       statsRow.style.display = 'flex';
       statsRow.innerHTML = sh;
+    } else if (isKabaddi) {
+      let r1 = '';
+      if (p.kabaddi_role || p.role) r1 += lbStat('Role', p.kabaddi_role || p.role);
+      if (p.previous_club || p.current_team) r1 += lbStat('Club', p.previous_club || p.current_team);
+      if (r1) {
+        statsRow.style.display = 'flex';
+        statsRow.innerHTML = r1;
+      } else {
+        statsRow.style.display = 'none';
+      }
     } else if (p.batting_style || p.bowling_style) {
       statsRow.style.display = 'flex';
       statsRow.innerHTML =
@@ -4338,10 +4356,12 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
      ══════════════════════════════════════════════════════════════════════ -->
 <template id="live_board_offline_template" name="Live Board Offline">
 <t t-set="theme_val" t-value="theme or 'vanilla'"/>
-<html t-att-data-theme="theme_val">
+<html t-att-data-theme="theme_val"
+      t-att-data-screen-idle="str(tournament.live_board_screen_idle_min if tournament else 1)">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script src="/auction_module/static/src/js/screen_idle.js?v=1"></script>
   <t t-call="auction_module.social_preview_head">
       <t t-set="og_page_key" t-value="'live_board_offline'"/>
       <t t-set="og_record" t-value="tournament"/>

@@ -185,6 +185,14 @@ def _snapshot_schema_ok(kind, payload):
             return False
         if 'count' not in payload:
             return False
+    if kind in ('pj', 'lb'):
+        player = payload.get('player') if kind == 'pj' else payload.get('current_player')
+        if (
+            isinstance(player, dict)
+            and player.get('tournament_type') == 'kabaddi'
+            and 'previous_club' not in player
+        ):
+            return False
     return True
 
 

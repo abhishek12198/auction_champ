@@ -505,6 +505,13 @@
                     <span class="rp-stat-label">Role</span>
                     <span class="rp-stat-value"><t t-esc="osp.role or '—'"/></span>
                   </div>
+                  <t t-if="tournament and tournament.tournament_type == 'kabaddi'">
+                    <div class="rp-stat">
+                      <span class="rp-stat-label">Club</span>
+                      <span class="rp-stat-value"><t t-esc="osp.current_team or '—'"/></span>
+                    </div>
+                  </t>
+                  <t t-else="">
                   <div class="rp-stat">
                     <span class="rp-stat-label">Bat</span>
                     <span class="rp-stat-value"><t t-esc="osp.batting_style or '—'"/></span>
@@ -513,6 +520,7 @@
                     <span class="rp-stat-label">Bowl</span>
                     <span class="rp-stat-value"><t t-esc="osp.bowling_style or '—'"/></span>
                   </div>
+                  </t>
                 </div>
               </div>
             </div>
@@ -541,6 +549,13 @@
                       <span class="rp-stat-label">Role</span>
                       <span class="rp-stat-value"><t t-esc="player.role or '—'"/></span>
                     </div>
+                    <t t-if="tournament and tournament.tournament_type == 'kabaddi'">
+                      <div class="rp-stat">
+                        <span class="rp-stat-label">Club</span>
+                        <span class="rp-stat-value"><t t-esc="player.current_team or '—'"/></span>
+                      </div>
+                    </t>
+                    <t t-else="">
                     <div class="rp-stat">
                       <span class="rp-stat-label">Bat</span>
                       <span class="rp-stat-value"><t t-esc="player.batting_style or '—'"/></span>
@@ -549,6 +564,7 @@
                       <span class="rp-stat-label">Bowl</span>
                       <span class="rp-stat-value"><t t-esc="player.bowling_style or '—'"/></span>
                     </div>
+                    </t>
                   </div>
                 </div>
               </t>

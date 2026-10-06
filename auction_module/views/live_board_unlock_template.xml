@@ -2,10 +2,12 @@
 <odoo>
 <template id="live_board_unlock_template" name="Live Board — Enter Tournament Code">
   <t t-set="theme" t-value="(theme or (tournament.player_display_template if tournament else None) or 'vanilla')"/>
-  <html lang="en" t-att-data-theme="theme">
+  <html lang="en" t-att-data-theme="theme"
+        t-att-data-screen-idle="str(tournament.live_board_screen_idle_min if tournament else 1)">
     <head>
       <meta charset="utf-8"/>
       <meta name="viewport" content="width=device-width, initial-scale=1"/>
+      <script src="/auction_module/static/src/js/screen_idle.js?v=1"></script>
       <t t-call="auction_module.social_preview_head">
           <t t-set="og_page_key" t-value="'live_board_unlock'"/>
           <t t-set="og_record" t-value="tournament"/>

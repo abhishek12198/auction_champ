@@ -26,6 +26,7 @@
             <div class="ac-nav__logo-placeholder">
                 <t t-if="tournament and tournament.tournament_type == 'football'">⚽</t>
                 <t t-elif="tournament and tournament.tournament_type == 'badminton'">🏸</t>
+                <t t-elif="tournament and tournament.tournament_type == 'kabaddi'">🤼</t>
                 <t t-else="">🏏</t>
             </div>
         </t>
@@ -104,6 +105,7 @@
             <div class="ac-stage-empty__mark" id="acEmptyIcon">
                 <t t-if="tournament and tournament.tournament_type == 'football'">⚽</t>
                 <t t-elif="tournament and tournament.tournament_type == 'badminton'">🏸</t>
+                <t t-elif="tournament and tournament.tournament_type == 'kabaddi'">🤼</t>
                 <t t-else="">🏏</t>
             </div>
             <h3 class="ac-stage-empty__title">Awaiting Player</h3>

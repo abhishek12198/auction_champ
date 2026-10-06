@@ -12,11 +12,19 @@
                         <field name="tournament_id"/>
                     </group>
                     <group string="1. Download Template">
-                        <div colspan="2" class="text-muted">
+                        <div colspan="2" class="text-muted"
+                             attrs="{'invisible': [('tournament_type', '=', 'kabaddi')]}">
                             Download the Excel for this tournament. The file has three sheets:
                             <b>Players</b> (data), <b>Field Guide</b> (column type: free text / selection / Many2one / Many2many),
                             and <b>Reference Lists</b> (exact allowed values from master data and this tournament's tiers).
                             Fill Players using those lists so Tier, Positions, Styles, Strengths, Preferred Foot, and Work Rate match.
+                            Photos ZIP optional: 1.jpg, 2.png … matching Excel row order.
+                        </div>
+                        <div colspan="2" class="text-muted"
+                             attrs="{'invisible': [('tournament_type', '!=', 'kabaddi')]}">
+                            Download the Excel for this Kabaddi tournament. The file has three sheets:
+                            <b>Players</b> (data), <b>Field Guide</b>, and <b>Reference Lists</b>.
+                            Role must be Defender, Rider, or AllRounder. Previous Club / Current Club is free text.
                             Photos ZIP optional: 1.jpg, 2.png … matching Excel row order.
                         </div>
                         <button name="action_download_template"

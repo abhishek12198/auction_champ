@@ -143,10 +143,25 @@ odoo.define('auction_module.SelectionCardWidget', function (require) {
                     $('<span class="o_sport_pitch_line" aria-hidden="true"/>'),
                     $('<span class="o_sport_ball o_sport_ball_football" aria-hidden="true"/>')
                 );
-            } else {
+            } else if (value === 'badminton') {
+                $swatch.append(
+                    $('<span class="o_sport_court" aria-hidden="true"/>'),
+                    $('<span class="o_sport_shuttle" aria-hidden="true"/>')
+                );
+            } else if (value === 'kabaddi') {
+                $swatch.append(
+                    $('<span class="o_sport_mat" aria-hidden="true"/>'),
+                    $('<span class="o_sport_raider o_sport_raider_l" aria-hidden="true"/>'),
+                    $('<span class="o_sport_raider o_sport_raider_r" aria-hidden="true"/>')
+                );
+            } else if (this._getComingSoonValues().indexOf(value) !== -1) {
                 $swatch.append(
                     $('<span class="o_sel_card_swatch_icon fa"/>').addClass(this._iconForValue(value)),
                     $('<span class="o_sport_coming_banner"/>').text('Coming Soon')
+                );
+            } else {
+                $swatch.append(
+                    $('<span class="o_sel_card_swatch_icon fa"/>').addClass(this._iconForValue(value))
                 );
             }
             return $swatch;

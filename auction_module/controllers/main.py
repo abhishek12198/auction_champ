@@ -973,7 +973,7 @@ class Auction(http.Controller):
 
         template_ref = DISPLAY_AUCTION_TEMPLATES.get(
             normalize_card_theme(theme), 'auction_module.player_template_new')
-        if tournament and tournament.tournament_type in ('football', 'badminton'):
+        if tournament and tournament.tournament_type in ('football', 'badminton', 'kabaddi'):
             template_ref = 'auction_module.player_template_football'
         return request.render(template_ref, {
             'player':      player,
@@ -1190,6 +1190,8 @@ class Auction(http.Controller):
                 'badminton_style': '',
                 'skill_level': '',
                 'preferred_hand': '',
+                'kabaddi_role': '',
+                'previous_club': '',
             })
             # Keep tier name hidden while locked (base price stays)
             if result.get('tier_id'):
@@ -2497,6 +2499,7 @@ class Auction(http.Controller):
         team_players = request.env['auction.auction.player'].sudo().search(auction_domain)
 
         theme = (tournament.player_display_template if tournament else None) or 'vanilla'
+        is_kabaddi_team = bool(tournament and tournament.tournament_type == 'kabaddi')
         icon_players = request.env['auction.team.player'].sudo().get_icon_players(team_id)
         if icon_players:
             for icon in icon_players:
@@ -2505,8 +2508,9 @@ class Auction(http.Controller):
                     'photo': icon.photo,
                     'point': 'ICON',
                     'role': icon.role,
-                    'batting_style': icon.batting_style,
-                    'bowling_style': icon.bowling_style,
+                    'batting_style': '' if is_kabaddi_team else icon.batting_style,
+                    'bowling_style': '' if is_kabaddi_team else icon.bowling_style,
+                    'current_team': (icon.current_team or '') if is_kabaddi_team else '',
                     'contact': icon.contact,
                     'p_type': icon.p_type,
                     'tier_color': icon.tier_id.color if icon.tier_id else '#01cfff',
@@ -2521,8 +2525,9 @@ class Auction(http.Controller):
                     'photo': player.player_id.photo,
                     'point': player.points,
                     'role': player.player_id.role,
-                    'batting_style': player.player_id.batting_style,
-                    'bowling_style': player.player_id.bowling_style,
+                    'batting_style': '' if is_kabaddi_team else player.player_id.batting_style,
+                    'bowling_style': '' if is_kabaddi_team else player.player_id.bowling_style,
+                    'current_team': (player.player_id.current_team or '') if is_kabaddi_team else '',
                     'contact': player.player_id.contact,
                     'p_type': player.player_id.p_type,
                     'tier_color': player.player_id.tier_id.color if player.player_id.tier_id else '#01cfff',
@@ -6793,7 +6798,7 @@ class Auction(http.Controller):
             tournament = player.tournament_id
             theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
 
-            if tournament and tournament.tournament_type in ('football', 'badminton'):
+            if tournament and tournament.tournament_type in ('football', 'badminton', 'kabaddi'):
                 report_ref = 'auction_module.action_report_player_card_football'
             else:
                 report_map = {
@@ -6863,7 +6868,7 @@ class Auction(http.Controller):
 
             theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
 
-            if tournament and tournament.tournament_type in ('football', 'badminton'):
+            if tournament and tournament.tournament_type in ('football', 'badminton', 'kabaddi'):
                 report_ref = 'auction_module.action_report_player_card_football'
             else:
                 report_map = {
@@ -8041,8 +8046,10 @@ def _pj_remaining_players(tournament, db_name, env=None):
             'tier_name': tier_name,
             'tier_color': (p.tier_id.color if p.tier_id else '') or '#888',
             'role': role,
-            'batting_style': batting,
-            'bowling_style': bowling,
+            'batting_style': '' if sport == 'kabaddi' else batting,
+            'bowling_style': '' if sport == 'kabaddi' else bowling,
+            'kabaddi_role': '' if mystery_hidden else (fb.get('kabaddi_role') or ''),
+            'previous_club': '' if mystery_hidden else (fb.get('previous_club') or ''),
             'dominant_position': dominant_position,
             'preferred_foot': preferred_foot,
             'age': age,
@@ -8187,13 +8194,14 @@ def _football_display_payload(player):
 
     Always returns a stable key set so clients can branch on ``tournament_type``
     without KeyErrors. Football-only / badminton-only fields are empty for cricket.
-    Cricket and football return shapes are unchanged; badminton adds its own keys.
+    Cricket and football return shapes are unchanged; badminton and kabaddi add keys.
     """
     sport = (
         player.tournament_id.tournament_type if player.tournament_id else 'cricket'
     ) or 'cricket'
     is_football = sport == 'football'
     is_badminton = sport == 'badminton'
+    is_kabaddi = sport == 'kabaddi'
     foot_map = {'left': 'Left', 'right': 'Right', 'both': 'Both'}
     rate_map = {'low': 'Low', 'medium': 'Medium', 'high': 'High'}
     cat_map = dict(player._fields['badminton_category'].selection or [])
@@ -8212,7 +8220,29 @@ def _football_display_payload(player):
         'badminton_style': '',
         'skill_level': '',
         'preferred_hand': '',
+        # Kabaddi keys always present (empty for other sports)
+        'kabaddi_role': '',
+        'previous_club': '',
     }
+    if is_kabaddi:
+        return {
+            **shared,
+            'tournament_type': 'kabaddi',
+            'dominant_position': '',
+            'dominant_position_code': '',
+            'secondary_positions': [],
+            'preferred_foot': '',
+            'work_rate': '',
+            'playing_styles': [],
+            'strengths': [],
+            'other_attributes': [],
+            'use_other_attributes': False,
+            'age': '',
+            'height': '',
+            'weight': '',
+            'kabaddi_role': player.kabaddi_role_label(),
+            'previous_club': player.current_team or '',
+        }
     if is_badminton:
         hand = foot_map.get(player.preferred_foot, '') if player.preferred_foot in ('left', 'right') else foot_map.get(player.preferred_foot, '')
         return {
@@ -8363,6 +8393,7 @@ def _registration_profile_payload(player, tournament, db_name):
         'tier_id': tier_id or False,
         'tier_name': tier_name,
         'role': player.role or '',
+        'kabaddi_role': player.kabaddi_role or '',
         'batting_style': player.batting_style or '',
         'bowling_style': player.bowling_style or '',
         'dominant_position_id': player.dominant_position_id.id if player.dominant_position_id else False,
@@ -8461,6 +8492,7 @@ def _build_player_vals_from_post(request, tournament, locked_tier=None):
     sport = (tournament.tournament_type if tournament else 'cricket') or 'cricket'
     is_football = sport == 'football'
     is_badminton = sport == 'badminton'
+    is_kabaddi = sport == 'kabaddi'
 
     vals = {
         'sl_no':         sl_no,
@@ -8553,6 +8585,13 @@ def _build_player_vals_from_post(request, tournament, locked_tier=None):
             ]).ids
             if valid:
                 vals['strength_ids'] = [(6, 0, valid)]
+    elif is_kabaddi:
+        role_key = (post.get('kabaddi_role') or '').strip()
+        role_labels = dict(Player._fields['kabaddi_role'].selection or [])
+        if role_key not in role_labels:
+            raise ValueError('Role is required.')
+        vals['kabaddi_role'] = role_key
+        vals['role'] = role_labels[role_key]
     else:
         # ── Cricket / other non-football sports ─────────────────────────────
         vals['role'] = post.get('role') or ''

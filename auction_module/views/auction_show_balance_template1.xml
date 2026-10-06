@@ -8,10 +8,12 @@
         t-att-data-sse-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/show/team/balance/events'"
         t-att-data-sse-enabled="'1' if sse_enabled else '0'"
         t-att-data-squad-json-base="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/team/'"
-        t-att-data-players-json-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/show/team/balance/players.json'">
+        t-att-data-players-json-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/show/team/balance/players.json'"
+        t-att-data-screen-idle="str(tournament.bid_summary_screen_idle_min if tournament else 1)">
     <head>
       <meta charset="UTF-8"/>
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <script src="/auction_module/static/src/js/screen_idle.js?v=1"></script>
       <t t-call="auction_module.social_preview_head">
           <t t-set="og_page_key" t-value="'bid_summary'"/>
           <t t-set="og_record" t-value="tournament"/>

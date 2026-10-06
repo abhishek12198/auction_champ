@@ -38,6 +38,7 @@
                     <field name="name"/>
                     <field name="contact"/>
                     <field name="role"/>
+                    <field name="current_team"/>
                     <field name="batting_style"/>
                     <field name="bowling_style"/>
                     <field name="tournament_type"/>
@@ -173,6 +174,24 @@
                                                 <div class="pk2-stat">
                                                     <div class="pk2-stat-label">Blood</div>
                                                     <div class="pk2-stat-value" t-esc="record.blood_group.raw_value"/>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </t>
+                                </t>
+                                <t t-elif="record.tournament_type.raw_value == 'kabaddi'">
+                                    <t t-if="record.role.raw_value or record.current_team.raw_value">
+                                        <div class="pk2-stats">
+                                            <t t-if="record.role.raw_value">
+                                                <div class="pk2-stat">
+                                                    <div class="pk2-stat-label">Role</div>
+                                                    <div class="pk2-stat-value" t-esc="record.role.raw_value"/>
+                                                </div>
+                                            </t>
+                                            <t t-if="record.current_team.raw_value">
+                                                <div class="pk2-stat">
+                                                    <div class="pk2-stat-label">Club</div>
+                                                    <div class="pk2-stat-value" t-esc="record.current_team.raw_value"/>
                                                 </div>
                                             </t>
                                         </div>
@@ -495,7 +514,10 @@
                                     </h1>
                                 </div>
                                 <div class="atp-hero-sub">
-                                    <field name="role" placeholder="Role (e.g. All-Rounder)"/>
+                                    <field name="role" placeholder="Role (e.g. All-Rounder)"
+                                           attrs="{'invisible': [('tournament_type', '=', 'kabaddi')]}"/>
+                                    <field name="kabaddi_role"
+                                           attrs="{'invisible': [('tournament_type', '!=', 'kabaddi')], 'required': [('tournament_type', '=', 'kabaddi')]}"/>
                                 </div>
                                 <div class="atp-hero-meta">
                                     <div class="atp-meta-item">
@@ -542,7 +564,7 @@
                                 </group>
                             </div>
 
-                            <div class="atp-card" attrs="{'invisible': ['|', ('tournament_type', '=', 'football'), ('tournament_type', '=', 'badminton')]}">
+                            <div class="atp-card" attrs="{'invisible': ['|', '|', ('tournament_type', '=', 'football'), ('tournament_type', '=', 'badminton'), ('tournament_type', '=', 'kabaddi')]}">
                                 <div class="atp-card-head">
                                     <i class="fa fa-dot-circle-o"/> Playing style
                                 </div>
@@ -564,6 +586,16 @@
                                     <field name="age"/>
                                     <field name="height"/>
                                     <field name="weight"/>
+                                </group>
+                            </div>
+
+                            <div class="atp-card" attrs="{'invisible': [('tournament_type', '!=', 'kabaddi')]}">
+                                <div class="atp-card-head">
+                                    <i class="fa fa-users"/> Kabaddi profile
+                                </div>
+                                <group>
+                                    <field name="kabaddi_role"/>
+                                    <field name="current_team" string="Previous Club / Current Club"/>
                                 </group>
                             </div>
 

@@ -187,7 +187,7 @@
             if (player.age) {
                 html += chip('Age ' + player.age);
             }
-        } else {
+        } else if (sport !== 'kabaddi') {
             html += chip(player.batting_style);
             html += chip(player.bowling_style);
         }

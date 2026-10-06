@@ -2623,12 +2623,15 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     var tierGlow  = tierColor + '55';
     var isFootball = (p.tournament_type === 'football');
     var isBadminton = (p.tournament_type === 'badminton');
+    var isKabaddi = (p.tournament_type === 'kabaddi');
     var mysteryHidden = !!(p.is_mystery && !p.mystery_revealed);
     var roleText = mysteryHidden
       ? ''
       : (isFootball
           ? (p.dominant_position || p.role || '')
-          : (isBadminton ? (p.badminton_category || p.role || '') : (p.role || '')));
+          : (isKabaddi
+              ? (p.kabaddi_role || p.role || '')
+              : (isBadminton ? (p.badminton_category || p.role || '') : (p.role || ''))));
     var serial = mysteryHidden ? '??' : ('00' + String(p.sl_no || 0)).slice(-2);
     var displayName = mysteryHidden ? 'Mystery Player?' : (p.name || '');
     var photoInner;
@@ -2739,6 +2742,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         attrsHtml += attr('Mobile', p.mobile || p.masked_contact || '—');
         attrsHtml += attr('Location', p.location || '—');
         attrsHtml += pcChips(p.strengths);
+      } else if (isKabaddi) {
+        if (p.kabaddi_role || p.role) attrsHtml += attr('Role', p.kabaddi_role || p.role);
+        if (p.previous_club) attrsHtml += attr('Previous Club / Current Club', p.previous_club);
       } else {
         // Cricket — Role (not Position); richer profile like themed cards
         if (p.role) attrsHtml += attr('Role', p.role);

@@ -118,6 +118,26 @@
                 .fbc-foot span{font-family:'Oswald',sans-serif;font-size:clamp(.6rem,1.3vw,.82rem);font-weight:700;letter-spacing:.18em;text-transform:uppercase;}
                 .fbc-foot img{height:18px;vertical-align:middle;}
 
+                /* Kabaddi: slightly smaller tournament title so longer names fit the header */
+                .fbc-scope[data-sport="kabaddi"] .fbc-head-titles h1{
+                    font-size:clamp(.82rem,2vw,1.42rem);letter-spacing:.01em;}
+
+                /* Kabaddi: only Role then Club, stacked, large type filling the info panel */
+                .fbc-scope[data-sport="kabaddi"] .fbc-info{display:flex;flex-direction:column;}
+                .fbc-scope[data-sport="kabaddi"] .fbc-grid{
+                    flex:1;display:flex;flex-direction:column;grid-template-columns:1fr;
+                    height:100%;min-height:0;row-gap:0;column-gap:0;padding-right:78px;}
+                .fbc-scope[data-sport="kabaddi"] .fbc-cell{
+                    flex:1;align-items:center;padding:8px 0;gap:14px;}
+                .fbc-scope[data-sport="kabaddi"] .fbc-ic{font-size:1.85rem;flex-basis:40px;height:40px;}
+                .fbc-scope[data-sport="kabaddi"] .fbc-cell-body{display:flex;flex-direction:column;justify-content:center;}
+                .fbc-scope[data-sport="kabaddi"] .fbc-lbl{
+                    font-size:clamp(.9rem,1.7vw,1.15rem);letter-spacing:.12em;margin-bottom:8px;}
+                .fbc-scope[data-sport="kabaddi"] .fbc-val{
+                    color:var(--fbc-txt);
+                    font-size:clamp(1.7rem,3.4vw,2.55rem);font-weight:700;line-height:1.05;margin-top:0;
+                    white-space:normal;}
+
                 /* Badminton: denser 2-up attrs (match football density, keep 2 cols on phones) */
                 .fbc-scope[data-sport="badminton"] .fbc-lbl{font-size:.48rem;letter-spacing:.1em;margin-bottom:4px;}
                 .fbc-scope[data-sport="badminton"] .fbc-val{font-size:clamp(.68rem,1.2vw,.86rem);margin-top:4px;}
@@ -133,6 +153,7 @@
                     .fbc-body{flex-direction:column;height:auto;}
                     .fbc-photo{flex:none;height:280px;}
                     .fbc-grid{padding-right:0;grid-template-columns:1fr;}
+                    .fbc-scope[data-sport="kabaddi"] .fbc-grid{padding-right:0;}
                     .fbc-scope[data-sport="badminton"] .fbc-grid{grid-template-columns:1fr 1fr !important;}
                     .fbc-slno{top:auto;bottom:8px;}
                 }
@@ -147,7 +168,7 @@
                             <t t-if="t and t.logo">
                                 <img t-att-src="image_data_uri(t.logo)" alt="logo"/>
                             </t>
-                            <t t-else=""><span><t t-esc="'🏸' if player.tournament_type == 'badminton' else '⚽'"/></span></t>
+                            <t t-else=""><span><t t-esc="'🏸' if player.tournament_type == 'badminton' else ('🤼' if player.tournament_type == 'kabaddi' else '⚽')"/></span></t>
                         </div>
                         <div class="fbc-head-titles">
                             <h1><t t-esc="(t.name if t else '') or 'Football Auction'"/></h1>
@@ -164,7 +185,7 @@
                             <t t-if="player.photo">
                                 <img class="fbc-pimg" t-att-src="image_data_uri(player.photo)" alt="player"/>
                             </t>
-                            <t t-else=""><div class="fbc-ph"><t t-esc="'🏸' if player.tournament_type == 'badminton' else '⚽'"/></div></t>
+                            <t t-else=""><div class="fbc-ph"><t t-esc="'🏸' if player.tournament_type == 'badminton' else ('🤼' if player.tournament_type == 'kabaddi' else '⚽')"/></div></t>
 
                             <div class="fbc-cardno">
                                 <small>Card</small>
@@ -173,8 +194,15 @@
 
                             <div class="fbc-name-band">
                                 <h2 data-sm-name=""><t t-esc="(player.name or '').upper()"/></h2>
-                                <t t-set="fbc_role" t-value="(player.dominant_position_id.name if player.tournament_type == 'football' and player.dominant_position_id else (player.badminton_card_labels()['category'] if player.tournament_type == 'badminton' else (player.role or '')))"/>
-                                <span data-sm-role=""><t t-esc="fbc_role"/></span>
+                                <t t-if="player.tournament_type == 'kabaddi'">
+                                    <t t-if="player.tier_id">
+                                        <span data-sm-role=""><t t-esc="player.tier_id.name"/></span>
+                                    </t>
+                                </t>
+                                <t t-else="">
+                                    <t t-set="fbc_role" t-value="(player.dominant_position_id.name if player.tournament_type == 'football' and player.dominant_position_id else (player.badminton_card_labels()['category'] if player.tournament_type == 'badminton' else (player.role or '')))"/>
+                                    <span data-sm-role=""><t t-esc="fbc_role"/></span>
+                                </t>
                             </div>
                         </div>
 
@@ -185,7 +213,25 @@
                                 <small>Sl No</small>
                             </div>
 
-                            <t t-if="player.tournament_type == 'badminton'">
+                            <t t-if="player.tournament_type == 'kabaddi'">
+                            <div class="fbc-grid">
+                                <div class="fbc-cell">
+                                    <div class="fbc-ic">🤼</div>
+                                    <div class="fbc-cell-body">
+                                        <div class="fbc-lbl">Role</div>
+                                        <div class="fbc-val"><t t-esc="player.kabaddi_role_label() or '—'"/></div>
+                                    </div>
+                                </div>
+                                <div class="fbc-cell">
+                                    <div class="fbc-ic">🏷️</div>
+                                    <div class="fbc-cell-body">
+                                        <div class="fbc-lbl">Previous Club / Current Club</div>
+                                        <div class="fbc-val"><t t-esc="player.current_team or '—'"/></div>
+                                    </div>
+                                </div>
+                            </div>
+                            </t>
+                            <t t-elif="player.tournament_type == 'badminton'">
                             <t t-set="bm" t-value="player.badminton_card_labels()"/>
                             <div class="fbc-grid">
                                 <div class="fbc-cell">

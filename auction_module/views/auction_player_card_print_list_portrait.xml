@@ -106,7 +106,9 @@
                 <div class="pc-pfn"><t t-out="name_first"/></div>
             </t>
             <div class="pc-pln"><t t-out="name_last"/></div>
-            <div class="pc-role"><t t-out="badge"/></div>
+            <t t-if="badge">
+                <div class="pc-role"><t t-out="badge"/></div>
+            </t>
         </div>
     </div>
 

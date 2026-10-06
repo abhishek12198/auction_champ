@@ -143,6 +143,13 @@
             if (p.preferred_foot) {
                 bits.push(p.preferred_foot);
             }
+        } else if (p.tournament_type === 'kabaddi') {
+            if (p.kabaddi_role || p.role) {
+                bits.push(p.kabaddi_role || p.role);
+            }
+            if (p.previous_club) {
+                bits.push(p.previous_club);
+            }
         } else {
             if (p.role) {
                 bits.push(p.role);

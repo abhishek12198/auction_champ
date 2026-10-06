@@ -119,14 +119,33 @@ class AuctionPlayerUploadWizard(models.TransientModel):
             'Jersey Size',
         ]
 
+    def _kabaddi_columns(self):
+        return [
+            'Serial No',
+            'Name',
+            'Contact',
+            'Role',
+            'Previous Club / Current Club',
+            'Blood Group',
+            'Location',
+            'Tier',
+            'Base Price',
+            'Jersey Name',
+            'Jersey Number',
+            'Jersey Size',
+        ]
+
     def _excel_columns(self):
         self.ensure_one()
-        if self.tournament_id.tournament_type == 'football':
+        sport = self.tournament_id.tournament_type
+        if sport == 'football':
             cols = list(self._football_base_columns())
             for lab in self.tournament_id.other_attribute_label_ids.sorted('sequence'):
                 if lab.label and lab.label not in cols:
                     cols.append(lab.label)
             return cols
+        if sport == 'kabaddi':
+            return list(self._kabaddi_columns())
         return list(self._cricket_columns())
 
     def action_download_template(self):
@@ -160,7 +179,8 @@ class AuctionPlayerUploadWizard(models.TransientModel):
         sample['Serial No'] = '1'
         sample['Name'] = 'Sample Player'
         sample['Contact'] = '9876543210'
-        if self.tournament_id.tournament_type == 'football':
+        sport = self.tournament_id.tournament_type
+        if sport == 'football':
             sample['Playing Position'] = 'CB'
             sample['Secondary Positions'] = 'CB, RB'
             sample['Preferred Foot'] = 'Left'
@@ -171,6 +191,9 @@ class AuctionPlayerUploadWizard(models.TransientModel):
             for lab in self.tournament_id.other_attribute_label_ids:
                 if lab.label in sample:
                     sample[lab.label] = 'Example'
+        elif sport == 'kabaddi':
+            sample['Role'] = 'Rider'
+            sample['Previous Club / Current Club'] = 'City Club'
         else:
             sample['Role'] = 'Batsman'
             sample['Batting Style'] = 'Right Handed Batter'
@@ -396,6 +419,24 @@ class AuctionPlayerUploadWizard(models.TransientModel):
                 ])
             return common_start + mid + common_end
 
+        if self.tournament_id.tournament_type == 'kabaddi':
+            mid = [
+                [
+                    'Role',
+                    'Selection',
+                    'Exactly one of Defender, Rider, or AllRounder.',
+                    'Allowed only: Defender | Rider | AllRounder. '
+                    'Matching is case-insensitive. All Rounder is accepted as AllRounder.',
+                ],
+                [
+                    'Previous Club / Current Club',
+                    'Free text',
+                    'Club the player comes from or currently plays for.',
+                    'One club name. Example: City Club.',
+                ],
+            ]
+            return common_start + mid + common_end
+
         mid = [
             [
                 'Role',
@@ -568,6 +609,16 @@ class AuctionPlayerUploadWizard(models.TransientModel):
                     ]
                     for lab in labels
                 ] if labels else [],
+            )
+        elif self.tournament_id.tournament_type == 'kabaddi':
+            row = section_title(row, 'KABADDI — Role / Previous Club / Current Club')
+            row = write_table(
+                row,
+                ['Column', 'Type', 'Allowed values'],
+                [
+                    ['Role', 'Selection', 'Defender | Rider | AllRounder'],
+                    ['Previous Club / Current Club', 'Free text', 'Club name, e.g. City Club'],
+                ],
             )
         else:
             row = section_title(row, 'CRICKET — Role / Batting Style / Bowling Style')
@@ -908,6 +959,26 @@ class AuctionPlayerUploadWizard(models.TransientModel):
                 }))
             if attr_commands:
                 vals['other_attribute_ids'] = attr_commands
+        elif tournament.tournament_type == 'kabaddi':
+            role = cell(['role'])
+            labels = {
+                'defender': 'defender',
+                'rider': 'rider',
+                'allrounder': 'all_rounder',
+            }
+            raw_role = (role or '').strip().lower().replace(' ', '').replace('-', '')
+            role_key = labels.get(raw_role)
+            if role_key:
+                vals['kabaddi_role'] = role_key
+            club = cell([
+                'previous club / current club',
+                'previous club',
+                'current club',
+                'club',
+                'current team',
+            ])
+            if club:
+                vals['current_team'] = club
         else:
             role = cell(['role'])
             if role:

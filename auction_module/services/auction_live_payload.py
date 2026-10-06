@@ -161,6 +161,7 @@ def build_live_board_payload(env, tournament, db_name):
             'name': current_player.name or '',
             'photo_url': pub_img('auction.team.player', current_player.id, 'photo', current_player.write_date) if has_photo else '',
             'role': current_player.role or '',
+            'current_team': current_player.current_team or '',
             'tier_name': current_player.tier_id.name if current_player.tier_id else '',
             'tier_color': current_player.tier_color or '#2252b5',
             'state': current_player.state,
@@ -209,6 +210,9 @@ def build_live_board_payload(env, tournament, db_name):
                 'other_attributes': [],
                 'playing_styles': [],
                 'strengths': [],
+                'kabaddi_role': '',
+                'previous_club': '',
+                'current_team': '',
                 'current_bid': 0,
                 'current_bid_team': None,
             })
@@ -442,6 +446,7 @@ def build_projector_payload(env, tournament, db_name):
         'sl_no': player.sl_no or '',
         'name': player.name or '',
         'role': player.role or '',
+        'current_team': player.current_team or '',
         'batting_style': player.batting_style or '',
         'bowling_style': player.bowling_style or '',
         'photo': photo,
@@ -483,6 +488,9 @@ def build_projector_payload(env, tournament, db_name):
             'other_attributes': [],
             'playing_styles': [],
             'strengths': [],
+            'kabaddi_role': '',
+            'previous_club': '',
+            'current_team': '',
         })
     leading_team_id = None
     if player.assigned_team_id and (state_override or player.state) == 'sold':
@@ -849,6 +857,10 @@ def _serialize_registered_player(player, db_name, is_football, show_org, show_ad
                 if (a.label or '').strip() and (a.value or '').strip()
             ],
         })
+    elif player.tournament_id and player.tournament_id.tournament_type == 'kabaddi':
+        data.update({
+            'role': (player.kabaddi_role_label() or player.role or '').strip(),
+        })
     else:
         data.update({
             'role': (player.role or '').strip(),
@@ -866,6 +878,7 @@ def build_register_roster_payload(env, tournament, db_name):
             'show_address': False, 'filters': [], 'players': [],
         }
     is_football = tournament.tournament_type == 'football'
+    is_kabaddi = tournament.tournament_type == 'kabaddi'
     show_org = bool(
         tournament.enable_org_id_registration and tournament.expose_registered_org_id
     )
@@ -895,13 +908,17 @@ def build_register_roster_payload(env, tournament, db_name):
             if pos and pos.name and pos.name not in seen:
                 seen.append(pos.name)
                 filters.append(pos.name)
+    elif is_kabaddi:
+        for role in ('Defender', 'Rider', 'AllRounder'):
+            if any((p.role or '') == role for p in players):
+                filters.append(role)
     else:
         for role in ('Batter', 'Bowler', 'Allrounder'):
             if any((p.role or '') == role for p in players):
                 filters.append(role)
     return {
         'count': len(items),
-        'sport': 'football' if is_football else 'cricket',
+        'sport': 'football' if is_football else ('kabaddi' if is_kabaddi else 'cricket'),
         'show_org_id': show_org,
         'show_address': show_address,
         'filters': filters,

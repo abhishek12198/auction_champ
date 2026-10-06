@@ -391,6 +391,11 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
                 if lab.label and lab.label not in cols:
                     cols.append(lab.label)
             return cols
+        if t.tournament_type == 'kabaddi':
+            return [
+                'Role',
+                'Previous Club / Current Club',
+            ]
         return [
             'Role',
             'Batting Style',
@@ -453,6 +458,11 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
                     continue
                 vals.append(attr_map.get(lab.label.strip().lower(), ''))
             return vals
+        if t.tournament_type == 'kabaddi':
+            return [
+                player.kabaddi_role_label() or '',
+                player.current_team or '',
+            ]
         return [
             player.role or '',
             player.batting_style or '',

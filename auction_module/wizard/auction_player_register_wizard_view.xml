@@ -23,7 +23,8 @@
                             </h1>
                         </div>
                         <div class="atp-hero-sub">
-                            <field name="role" placeholder="Role (e.g. All-Rounder)"/>
+                            <field name="role" placeholder="Role (e.g. All-Rounder)"
+                                   attrs="{'invisible': [('tournament_type', '=', 'kabaddi')]}"/>
                         </div>
                         <div class="atp-hero-meta">
                             <div class="atp-meta-item">
@@ -62,13 +63,22 @@
                         </group>
                     </div>
 
-                    <div class="atp-card" attrs="{'invisible': [('tournament_type', '=', 'football')]}">
+                    <div class="atp-card" attrs="{'invisible': ['|', ('tournament_type', '=', 'football'), ('tournament_type', '=', 'kabaddi')]}">
                         <div class="atp-card-head">
                             <i class="fa fa-dot-circle-o"/> Playing style
                         </div>
                         <group>
                             <field name="batting_style"/>
                             <field name="bowling_style"/>
+                        </group>
+                    </div>
+
+                    <div class="atp-card" attrs="{'invisible': [('tournament_type', '!=', 'kabaddi')]}">
+                        <div class="atp-card-head">
+                            <i class="fa fa-users"/> Kabaddi profile
+                        </div>
+                        <group>
+                            <field name="kabaddi_role"/>
                         </group>
                     </div>
 

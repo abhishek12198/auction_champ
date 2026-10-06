@@ -41,6 +41,14 @@ class AuctionPlayerRegisterWizard(models.TransientModel):
     org_id = fields.Char(string='Org ID#')
     address = fields.Text(string='Address')
     role = fields.Char(string='Role')
+    kabaddi_role = fields.Selection(
+        [
+            ('defender', 'Defender'),
+            ('rider', 'Rider'),
+            ('all_rounder', 'AllRounder'),
+        ],
+        string='Role',
+    )
     tier_id = fields.Many2one(
         'auction.player.tier', string='Tier',
         domain="[('tournament_id', '=', tournament_id)]",
@@ -160,6 +168,12 @@ class AuctionPlayerRegisterWizard(models.TransientModel):
                 'playing_style_ids': [(6, 0, self.playing_style_ids.ids)],
                 'strength_ids': [(6, 0, self.strength_ids.ids)],
                 'work_rate': self.work_rate or False,
+            })
+        elif self.tournament_type == 'kabaddi':
+            labels = dict(Player._fields['kabaddi_role'].selection or [])
+            vals.update({
+                'kabaddi_role': self.kabaddi_role or False,
+                'role': labels.get(self.kabaddi_role) or False,
             })
         else:
             vals.update({

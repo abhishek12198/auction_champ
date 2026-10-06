@@ -759,16 +759,17 @@
                  ══════════════════════════════════════ -->
             <t t-set="is_football" t-value="tournament.tournament_type == 'football'"/>
             <t t-set="is_badminton" t-value="tournament.tournament_type == 'badminton'"/>
+            <t t-set="is_kabaddi" t-value="tournament.tournament_type == 'kabaddi'"/>
             <div class="reg-section">
                 <div class="reg-section-header">
                     <div class="reg-section-strip"/>
-                    <h3><t t-esc="'Football Profile' if is_football else ('Badminton Profile' if is_badminton else 'Cricket Profile')"/></h3>
-                    <span class="reg-section-icon"><t t-esc="'⚽' if is_football else ('🏸' if is_badminton else '🏏')"/></span>
+                    <h3><t t-esc="'Football Profile' if is_football else ('Badminton Profile' if is_badminton else ('Kabaddi Profile' if is_kabaddi else 'Cricket Profile'))"/></h3>
+                    <span class="reg-section-icon"><t t-esc="'⚽' if is_football else ('🏸' if is_badminton else ('🤼' if is_kabaddi else '🏏'))"/></span>
                     <span class="reg-section-num">02</span>
                 </div>
 
-                <!-- ───────── CRICKET-ONLY (not football / badminton) ───────── -->
-                <t t-if="not is_football and not is_badminton">
+                <!-- ───────── CRICKET-ONLY (not football / badminton / kabaddi) ───────── -->
+                <t t-if="not is_football and not is_badminton and not is_kabaddi">
                     <!-- Role — big sporty card selector -->
                     <div style="margin-bottom:16px">
                         <label class="reg-label">Role <span class="req">*</span></label>
@@ -983,6 +984,35 @@
                     </div>
                 </t>
 
+                <!-- ───────── KABADDI-ONLY ───────── -->
+                <t t-if="is_kabaddi">
+                    <div style="margin-bottom:16px">
+                        <label class="reg-label">Role <span class="req">*</span></label>
+                        <div class="reg-role-group">
+                            <input type="radio" class="reg-role-option" name="kabaddi_role"
+                                   id="kbDefender" value="defender" required="required"/>
+                            <label class="reg-role-label" for="kbDefender">
+                                <span class="reg-role-icon">🛡️</span>
+                                <span class="reg-role-text">Defender</span>
+                            </label>
+
+                            <input type="radio" class="reg-role-option" name="kabaddi_role"
+                                   id="kbRider" value="rider"/>
+                            <label class="reg-role-label" for="kbRider">
+                                <span class="reg-role-icon">⚡</span>
+                                <span class="reg-role-text">Rider</span>
+                            </label>
+
+                            <input type="radio" class="reg-role-option" name="kabaddi_role"
+                                   id="kbAllRounder" value="all_rounder"/>
+                            <label class="reg-role-label" for="kbAllRounder">
+                                <span class="reg-role-icon">⭐</span>
+                                <span class="reg-role-text">AllRounder</span>
+                            </label>
+                        </div>
+                    </div>
+                </t>
+
                 <!-- ───────── COMMON: Tier + Current Club ───────── -->
                 <div class="reg-grid" style="margin-top:16px">
                     <div>
@@ -1007,7 +1037,7 @@
                     </div>
 
                     <div>
-                        <label class="reg-label" for="currentTeam">Previous Club / Team</label>
+                        <label class="reg-label" for="currentTeam"><t t-if="is_kabaddi">Previous Club / Current Club</t><t t-else="">Previous Club / Team</t></label>
                         <input type="text" id="currentTeam" name="current_team" class="reg-input"
                                placeholder="e.g. Chennai Warriors" maxlength="128"/>
                     </div>
@@ -2427,6 +2457,7 @@
         if (profile.tier_id) setSelect('playerTier', profile.tier_id);
 
         setRadio('role', profile.role || '');
+        setRadio('kabaddi_role', profile.kabaddi_role || '');
         setSelect('battingStyle', profile.batting_style || '');
         setSelect('bowlingStyle', profile.bowling_style || '');
 

@@ -862,6 +862,14 @@
           </t>
         </div>
       </t>
+      <t t-if="tournament and tournament.tournament_type == 'kabaddi' and player.get('current_team')">
+        <div class="tp-stats">
+          <div class="tp-stat">
+            <p class="tp-stat-label">Club</p>
+            <p class="tp-stat-value"><t t-esc="player.get('current_team')"/></p>
+          </div>
+        </div>
+      </t>
 
     </div>
 

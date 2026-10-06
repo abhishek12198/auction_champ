@@ -828,6 +828,14 @@
           </t>
         </div>
       </t>
+      <t t-if="tournament and tournament.tournament_type == 'kabaddi' and player.get('current_team')">
+        <div class="or-stats">
+          <div class="or-stat">
+            <p class="or-stat-label">Club</p>
+            <p class="or-stat-value"><t t-esc="player.get('current_team')"/></p>
+          </div>
+        </div>
+      </t>
 
     </div>
 

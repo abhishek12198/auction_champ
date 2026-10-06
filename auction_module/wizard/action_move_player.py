@@ -110,6 +110,7 @@ class AuctionMovePlayer(models.TransientModel):
         if not player:
             return attrs
         is_football = bool(tournament and tournament.tournament_type == 'football')
+        is_kabaddi = bool(tournament and tournament.tournament_type == 'kabaddi')
         if is_football:
             if player.dominant_position_id:
                 attrs.append({'label': 'Position', 'value': player.dominant_position_id.name})
@@ -129,6 +130,11 @@ class AuctionMovePlayer(models.TransientModel):
                     value = (attr.value or '').strip()
                     if label and value:
                         attrs.append({'label': label, 'value': value})
+        elif is_kabaddi:
+            if player.role:
+                attrs.append({'label': 'Role', 'value': player.kabaddi_role_label() or player.role})
+            if player.current_team:
+                attrs.append({'label': 'Club', 'value': player.current_team})
         else:
             if player.role:
                 attrs.append({'label': 'Role', 'value': player.role})

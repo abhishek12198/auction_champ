@@ -467,6 +467,31 @@ class AuctionTeamPlayer(models.Model):
         string='Level',
         help='Badminton skill level.',
     )
+    # ── Kabaddi profile (shown when tournament_type == 'kabaddi') ────────────
+    kabaddi_role = fields.Selection(
+        [
+            ('defender', 'Defender'),
+            ('rider', 'Rider'),
+            ('all_rounder', 'AllRounder'),
+        ],
+        string='Role',
+        help='Kabaddi role. The human label is copied onto role for generic displays.',
+    )
+
+    def kabaddi_role_label(self):
+        """Human kabaddi role — Defender, Rider, or AllRounder."""
+        self.ensure_one()
+        labels = dict(self._fields['kabaddi_role'].selection or [])
+        return labels.get(self.kabaddi_role, '') or (self.role or '')
+
+    def _apply_kabaddi_role_label(self, vals):
+        """Copy the kabaddi role label onto ``role`` when that selection is written."""
+        if not vals.get('kabaddi_role'):
+            return vals
+        labels = dict(self._fields['kabaddi_role'].selection or [])
+        vals = dict(vals)
+        vals['role'] = labels.get(vals['kabaddi_role'], vals['kabaddi_role'])
+        return vals
 
     def badminton_card_labels(self):
         """Human labels for badminton profile — used by HUD / PDF / stage cards."""
@@ -1098,7 +1123,7 @@ class AuctionTeamPlayer(models.Model):
             tournament._compute_logo_card()
             tournament.flush(['logo_card'])
         # Football has its own card format/paperformat (theme-aware internally)
-        if tournament and tournament.tournament_type in ('football', 'badminton'):
+        if tournament and tournament.tournament_type in ('football', 'badminton', 'kabaddi'):
             return self.env.ref('auction_module.action_report_player_card_football').report_action(self)
         template = tournament.player_display_template if tournament else 'vanilla'
         report_map = {
@@ -1305,6 +1330,7 @@ class AuctionTeamPlayer(models.Model):
         team = player.assigned_team_id
         is_football = bool(tournament and tournament.tournament_type == 'football')
         is_badminton = bool(tournament and tournament.tournament_type == 'badminton')
+        is_kabaddi = bool(tournament and tournament.tournament_type == 'kabaddi')
         theme = (tournament.player_display_template if tournament else False) or 'vanilla'
         pal = dict(self._CARD_THEMES.get(theme, self._CARD_THEMES['vanilla']))
 
@@ -1324,6 +1350,8 @@ class AuctionTeamPlayer(models.Model):
         elif is_badminton:
             cat_map = dict(player._fields['badminton_category'].selection or [])
             badge = cat_map.get(player.badminton_category) or player.role or 'PLAYER'
+        elif is_kabaddi:
+            badge = player.tier_id.name if player.tier_id else ''
         else:
             badge = player.role or 'PLAYER'
 
@@ -1406,6 +1434,9 @@ class AuctionTeamPlayer(models.Model):
                 'ball', 'Level',
                 level_map.get(player.skill_level) or '—',
             ))
+        elif is_kabaddi:
+            rows.append(('role', 'Role', player.kabaddi_role_label() or '—'))
+            rows.append(('team', 'Club', player.current_team or '—'))
         else:
             bat = (player.batting_style or '').strip() or '—'
             bowl = (player.bowling_style or '').strip() or '—'
@@ -1413,7 +1444,8 @@ class AuctionTeamPlayer(models.Model):
             rows.append(('ball', 'Bowling Style', bowl))
             rows.append(('nation', 'Nationality', 'India'))
 
-        rows.append(('age', 'Age', ('%d Years' % player.age) if player.age else '—'))
+        if not is_kabaddi:
+            rows.append(('age', 'Age', ('%d Years' % player.age) if player.age else '—'))
         rows.append(('price', price_label, price_display))
         team_name = (team.name if team else (player.current_team or '')) or 'Unassigned'
         rows.append(('team', 'Team', team_name))
@@ -1803,6 +1835,7 @@ class AuctionTeamPlayer(models.Model):
 
         if not vals.get('payment_url', False):
             vals.update({'amount_paid': False})
+        vals = self._apply_kabaddi_role_label(vals)
         player = super(AuctionTeamPlayer, self).create(vals)
         player._sync_other_attributes_from_tournament()
         return player
@@ -1817,6 +1850,7 @@ class AuctionTeamPlayer(models.Model):
             cat_map = dict(self._fields['badminton_category'].selection or [])
             vals = dict(vals)
             vals['role'] = cat_map.get(vals['badminton_category'], vals['badminton_category'])
+        vals = self._apply_kabaddi_role_label(vals)
         res = super(AuctionTeamPlayer, self).write(vals)
         if 'tournament_id' in vals:
             self._sync_other_attributes_from_tournament()

@@ -551,10 +551,90 @@
         radial-gradient(circle at 78% 68%, #111827 0 3px, transparent 4px),
         linear-gradient(180deg, #f8fafc, #cbd5e1);
 }
-.o_form_view .o_sport_swatch_kabaddi {
-    background: linear-gradient(160deg, #64748b 0%, #334155 100%);
-    color: #e2e8f0;
+.o_form_view .o_sport_swatch_badminton {
+    background:
+        linear-gradient(180deg, rgba(255,255,255,.08), transparent 42%),
+        linear-gradient(160deg, #0e7490 0%, #155e75 48%, #083344 100%);
 }
+.o_form_view .o_sport_court {
+    position: absolute;
+    inset: 7px 8px;
+    border: 1px solid rgba(255,255,255,.4);
+    border-radius: 2px;
+}
+.o_form_view .o_sport_court::before,
+.o_form_view .o_sport_court::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: rgba(255,255,255,.45);
+}
+.o_form_view .o_sport_court::before { top: 33%; }
+.o_form_view .o_sport_court::after { top: 66%; }
+.o_form_view .o_sport_shuttle {
+    position: absolute;
+    right: 7px;
+    top: 6px;
+    width: 14px;
+    height: 18px;
+    z-index: 1;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,.35));
+}
+.o_form_view .o_sport_shuttle::before {
+    content: '';
+    position: absolute;
+    left: 1px;
+    top: 0;
+    width: 12px;
+    height: 12px;
+    background: linear-gradient(180deg, #ffffff, #e2e8f0);
+    clip-path: polygon(8% 0, 92% 0, 50% 100%);
+}
+.o_form_view .o_sport_shuttle::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    bottom: 0;
+    width: 6px;
+    height: 7px;
+    border-radius: 2px 2px 4px 4px;
+    background: #f8fafc;
+}
+.o_form_view .o_sport_swatch_kabaddi {
+    background:
+        linear-gradient(180deg, rgba(255,255,255,.12), transparent 42%),
+        linear-gradient(160deg, #ea580c 0%, #c2410c 48%, #7c2d12 100%);
+}
+.o_form_view .o_sport_mat {
+    position: absolute;
+    inset: 8px 7px;
+    border: 1px solid rgba(255,255,255,.55);
+    border-radius: 3px;
+}
+.o_form_view .o_sport_mat::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: rgba(255,255,255,.75);
+}
+.o_form_view .o_sport_raider {
+    position: absolute;
+    z-index: 1;
+    width: 8px;
+    height: 8px;
+    margin-top: -4px;
+    top: 50%;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,.35);
+}
+.o_form_view .o_sport_raider_l { left: 11px; }
+.o_form_view .o_sport_raider_r { right: 11px; }
 .o_form_view .o_sport_coming_banner {
     position: absolute;
     left: 50%;
