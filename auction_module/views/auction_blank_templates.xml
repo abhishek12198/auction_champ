@@ -231,6 +231,7 @@
 </t>
 <script src="/auction_module/static/src/js/auction_sse_client.js"></script>
 <script src="/auction_module/static/src/js/live_bid_tick.js?v=2"></script>
+<script src="/auction_module/static/src/js/sold_coin_sound.js?v=2"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin"/>
@@ -425,6 +426,14 @@ img { display: block; }
 .lb-hdr-right {
   display: flex; align-items: center; gap: 18px; flex-shrink: 0;
 }
+.lb-coin-btn{
+  width:2.1rem;height:2.1rem;border-radius:.4rem;border:1px solid var(--lb-card-border);
+  background:transparent;color:var(--lb-text);display:inline-flex;align-items:center;justify-content:center;
+  padding:0;cursor:pointer;flex-shrink:0}
+.lb-coin-btn svg{width:1.05rem;height:1.05rem;fill:currentColor;display:block}
+.lb-coin-btn[hidden]{display:none !important}
+.lb-coin-btn.is-muted{opacity:.4}
+.lb-coin-btn.is-blocked{box-shadow:0 0 0 2px var(--lb-accent)}
 .lb-clock { font-size: .88rem; font-weight: 600; color: var(--lb-sub); font-variant-numeric: tabular-nums; }
 
 /* ── MAIN GRID ────────────────────────────────────────────────────── */
@@ -2931,6 +2940,11 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     <div class="lb-hdr-status">Live Player Auction</div>
   </div>
   <div class="lb-hdr-right">
+    <button type="button" class="lb-coin-btn" id="lbCoinBtn" hidden="hidden" title="Sold coin sound" aria-label="Sold coin sound" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 10v4h3l4 3V7L7 10H4zm10.5 2a3.5 3.5 0 0 0-1.5-2.87v5.74A3.5 3.5 0 0 0 14.5 12zM13 5.1v1.8a6 6 0 0 1 0 10.2v1.8a8 8 0 0 0 0-13.8z"/>
+      </svg>
+    </button>
     <div class="lb-powered">
       <span class="lb-powered-by">Powered by</span>
       <img class="lb-powered-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
@@ -4135,6 +4149,14 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
           window.acLiveBidTick.maybePlay(
             !!(data.live_bid_sound || (data.tournament && data.tournament.live_bid_sound)),
             p
+          );
+        }
+        if (window.acSoldCoin) {
+          var soldAmt = (data.sold_info && data.sold_info.amount) || (p && p.sold_points) || 0;
+          window.acSoldCoin.maybePlay(
+            !!(data.sold_coin_sound || (data.tournament && data.tournament.sold_coin_sound)),
+            p,
+            soldAmt
           );
         }
         const newId    = p ? p.id    : null;

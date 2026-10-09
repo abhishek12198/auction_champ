@@ -14,6 +14,7 @@
       <meta charset="UTF-8"/>
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
       <script src="/auction_module/static/src/js/screen_idle.js?v=1"></script>
+      <script src="/auction_module/static/src/js/balance_purse_tick.js?v=1"></script>
       <t t-call="auction_module.social_preview_head">
           <t t-set="og_page_key" t-value="'bid_summary'"/>
           <t t-set="og_record" t-value="tournament"/>
@@ -1757,7 +1758,11 @@
               return;
             }
             if (element.textContent.trim() !== nextText) {
-              element.textContent = nextText;
+              if (window.acPurseTick && /points/i.test(id || '')) {
+                window.acPurseTick(element, value, nextText);
+              } else {
+                element.textContent = nextText;
+              }
               flashUpdate(element);
             }
           }

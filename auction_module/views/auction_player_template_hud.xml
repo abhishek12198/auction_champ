@@ -17,6 +17,7 @@
         <t t-set="og_record" t-value="tournament"/>
     </t>
     <link rel="stylesheet" href="/auction_module/static/src/css/no_mobile_zoom.css"/>
+    <script src="/auction_module/static/src/js/screen_fit.js?v=4"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
     <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;700&amp;family=Barlow:wght@400;500;600;700&amp;family=Barlow+Condensed:wght@400;500;600;700&amp;family=Bebas+Neue&amp;family=Exo+2:wght@400;600;700&amp;family=Orbitron:wght@400;600;700;900&amp;family=Oswald:wght@400;500;600;700&amp;family=Rajdhani:wght@500;600;700&amp;family=Saira+Condensed:wght@600;700;800&amp;family=Teko:wght@500;600;700&amp;display=swap" rel="stylesheet"/>

@@ -663,6 +663,8 @@
                                                    widget="boolean_toggle"/>
                                             <field name="live_bid_sound"
                                                    widget="boolean_toggle"/>
+                                            <field name="sold_coin_sound"
+                                                   widget="boolean_toggle"/>
                                         </group>
                                         <group string="Code gate">
                                             <div class="o_at_presentation_help" colspan="2">

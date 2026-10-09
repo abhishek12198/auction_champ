@@ -14,7 +14,7 @@ body:has(#acLiveBidPad) {
     body:has(#acLiveBidPad) .cr-arena .cr-stage {
         display: grid !important;
         grid-template-columns: minmax(280px, 0.95fr) minmax(340px, 1.05fr) !important;
-        height: calc(100vh - 72px - 40px) !important;
+        height: calc(100dvh - 84px - 42px) !important;
         overflow: hidden !important;
         gap: 0 !important;
     }
@@ -103,6 +103,33 @@ body:has(#acLiveBidPad) {
     body:has(#acLiveBidPad) .hud-next-bar .hud-next-btn {
         width: 100% !important;
         height: 42px !important;
+    }
+}
+
+@media (min-width: 1025px) and (max-height: 860px) {
+    body:has(#acLiveBidPad) .bb-info-panel,
+    body:has(#acLiveBidPad) .pt-info-panel,
+    body:has(#acLiveBidPad) .lm-stats-wrap,
+    body:has(#acLiveBidPad) .sw-stats-wrap,
+    body:has(#acLiveBidPad) .hud-stats,
+    body:has(#acLiveBidPad) .player-profession,
+    body:has(#acLiveBidPad) .cr-stats-col .ac-fb-grid {
+        min-height: 0 !important;
+        max-height: 34% !important;
+    }
+    body:has(#acLiveBidPad) #acLiveBidPad.is-on.is-open {
+        min-height: 0 !important;
+    }
+    body:has(#acLiveBidPad) .bb-actions,
+    body:has(#acLiveBidPad) .pt-actions,
+    body:has(#acLiveBidPad) .hud-actions,
+    body:has(#acLiveBidPad) .lm-actions,
+    body:has(#acLiveBidPad) .sw-actions,
+    body:has(#acLiveBidPad) .cr-actions,
+    body:has(#acLiveBidPad) .auction-single-buttons {
+        min-height: 0 !important;
+        padding-top: 6px !important;
+        padding-bottom: 6px !important;
     }
 }
 
@@ -291,5 +318,22 @@ body:has(#acLiveBidPad) .hud-stats-heading {
         flex: 0 0 auto !important;
         max-height: none !important;
         overflow: visible !important;
+    }
+}
+
+/* After the desktop locks above: short laptops keep the action buttons in view. */
+@media (min-width: 1025px) and (max-height: 860px) {
+    body:has(#acLiveBidPad) .bb-info-panel,
+    body:has(#acLiveBidPad) .pt-info-panel,
+    body:has(#acLiveBidPad) .lm-stats-wrap,
+    body:has(#acLiveBidPad) .sw-stats-wrap,
+    body:has(#acLiveBidPad) .hud-stats,
+    body:has(#acLiveBidPad) .player-profession,
+    body:has(#acLiveBidPad) .cr-stats-col .ac-fb-grid {
+        min-height: 0 !important;
+        max-height: 34% !important;
+    }
+    body:has(#acLiveBidPad) #acLiveBidPad.is-on.is-open {
+        min-height: 0 !important;
     }
 }

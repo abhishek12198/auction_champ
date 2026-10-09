@@ -442,6 +442,12 @@ class AuctionTournament(models.Model):
         help='When enabled, the public Live Board and Projector play a coin clink '
              'each time a team updates the live bid on the player on stage.',
     )
+    sold_coin_sound = fields.Boolean(
+        string='Sold Coin Sound',
+        default=True,
+        help='When enabled, the Projector and Live Board play a short coin sound '
+             'once when a player is confirmed sold and the winning bid is saved.',
+    )
     pool_draw_json = fields.Text(
         string='Saved Pool Draw',
         copy=False,
@@ -1712,7 +1718,7 @@ class AuctionTournament(models.Model):
                 'stamp_player_id', 'stamp_state', 'stamp_expires_at',
                 # live-board controls
                 'live_board_active', 'break_time_active', 'live_board_code_protected',
-                'live_bid_sound',
+                'live_bid_sound', 'sold_coin_sound',
                 # dashboard / public tournament mark
                 'logo',
                 # registration toggle
@@ -2985,7 +2991,7 @@ class AuctionTournament(models.Model):
         'payment_qr_image', 'payment_instruction', 'payment_proof_required',
         'poster_image', 'social_share_image', 'youtube_url',
         'registration_open', 'live_board_active', 'live_board_code_protected',
-        'live_bid_sound',
+        'live_bid_sound', 'sold_coin_sound',
         'sold_display_seconds', 'next_player_countdown',
         'owner_bid_timer_seconds',
         'enable_jersey_section', 'point_unit_id',
@@ -3291,6 +3297,7 @@ class AuctionTournament(models.Model):
             'live_board_active': bool(rec.live_board_active),
             'live_board_code_protected': bool(rec.live_board_code_protected),
             'live_bid_sound': bool(rec.live_bid_sound),
+            'sold_coin_sound': bool(rec.sold_coin_sound),
             'subscription_paid': bool(rec.subscription_paid),
             'has_teams': bool(team_count),
             'has_auction_rules': bool(rec.has_auction_rules),

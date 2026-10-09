@@ -11,7 +11,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Exo+2:wght@500;600;700;800;900&amp;family=Barlow+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="/auction_auctioneer/static/src/css/auctioneer_console.css?v=1.4.78"/>
+    <link rel="stylesheet" href="/auction_auctioneer/static/src/css/auctioneer_console.css?v=1.4.80"/>
+    <script src="/auction_module/static/src/js/screen_fit.js?v=4"></script>
 </head>
 <body class="ac-body" id="acBody" t-att-data-sport="tournament.tournament_type if tournament else 'cricket'">
 

@@ -112,8 +112,10 @@ def build_live_board_payload(env, tournament, db_name):
             'logo_url': pub_img('auction.tournament', tournament.id, 'logo', tournament.write_date) if _has_binary(tournament, 'logo') else '',
             'tournament_type': tournament.tournament_type or 'cricket',
             'live_bid_sound': bool(tournament.live_bid_sound),
+            'sold_coin_sound': bool(tournament.sold_coin_sound),
         }
         result['live_bid_sound'] = bool(tournament.live_bid_sound)
+        result['sold_coin_sound'] = bool(tournament.sold_coin_sound)
         result['tournament_type'] = tournament.tournament_type or 'cricket'
 
     stamp_player = None
@@ -397,6 +399,7 @@ def build_projector_payload(env, tournament, db_name):
             'auction_meta': ctrl._pj_auction_meta(tournament),
             'break_time': bool(tournament and tournament.break_time_active),
             'live_bid_sound': bool(tournament and tournament.live_bid_sound),
+            'sold_coin_sound': bool(tournament and tournament.sold_coin_sound),
             'advertisers': ctrl._pj_advertisers(tournament, db_name),
             'boards': boards,
             'stamp_expires_at': _stamp_iso(tournament),
@@ -518,6 +521,7 @@ def build_projector_payload(env, tournament, db_name):
         'auction_meta': ctrl._pj_auction_meta(tournament),
         'break_time': bool(tournament and tournament.break_time_active),
         'live_bid_sound': bool(tournament and tournament.live_bid_sound),
+        'sold_coin_sound': bool(tournament and tournament.sold_coin_sound),
         'advertisers': ctrl._pj_advertisers(tournament, db_name),
         'boards': boards,
         'stamp_expires_at': _stamp_iso(tournament),

@@ -80,9 +80,9 @@
             </div>
         </div>
         <div class="ac-livebid-toast" id="acLiveBidToast"></div>
-        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_live_bid.css?v=56"/>
+        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_live_bid.css?v=57"/>
         <t t-if="not ac_livebid_rollcall">
-            <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_showcase.css?v=13"/>
+            <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_showcase.css?v=14"/>
         </t>
         <script src="/auction_auctioneer/static/src/js/display_live_bid.js?v=49"></script>
     </template>
