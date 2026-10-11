@@ -588,12 +588,31 @@
     function clearHoldTimer() {
         if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
     }
+    /* Long press / right click on a team tile.
+       Mobile: open the custom points editor straight away (the small points
+       chip is hard to hit). If this team cannot be edited (cannot bid and is
+       not the leader) fall back to the team info card. Desktop: team info. */
+    function openHoldAction(teamId) {
+        if (isMobileLiveBid()) {
+            var team = teamsCache.filter(function (t) { return Number(t.id) === Number(teamId); })[0];
+            if (team) {
+                var lead = leadTeam(playerCache);
+                var isLead = !!(lead && Number(lead.id) === Number(team.id));
+                if (playerCache && (canBid(team) || isLead)) {
+                    closeTeamInfo();
+                    openCustom(team.id);
+                    return;
+                }
+            }
+        }
+        openTeamInfo(teamId);
+    }
     function startHold(teamId) {
         clearHoldTimer();
         holdTimer = setTimeout(function () {
             holdTimer = null;
             holdFired = true;
-            openTeamInfo(teamId);
+            openHoldAction(teamId);
             setTimeout(function () { holdFired = false; }, 700);
         }, 480);
     }
@@ -631,7 +650,7 @@
         if (!tile) return;
         ev.preventDefault();
         holdFired = true;
-        openTeamInfo(parseInt(tile.getAttribute('data-team-id'), 10));
+        openHoldAction(parseInt(tile.getAttribute('data-team-id'), 10));
         setTimeout(function () { holdFired = false; }, 700);
     });
 

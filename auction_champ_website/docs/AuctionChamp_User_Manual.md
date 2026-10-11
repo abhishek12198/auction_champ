@@ -28,9 +28,8 @@ The software, user interface, workflows, designs, source code, logos, trademarks
 
 ## How to Use This Manual
 
-- **📷 Screenshot placeholders** appear throughout. To show an image on the `/user-manual` web page, save the PNG with the suggested filename under **both**:
-  - `docs/screenshots/` (source / checklist)
-  - `auction_champ_website/static/src/docs/screenshots/` (what the website actually serves)
+- **📷 Screenshot placeholders** appear throughout. To show an image on the `/user-manual` page, save the PNG with the suggested filename under:
+  - `auction_champ_website/docs/screenshots/` (served only to logged-in users)
   The page auto-replaces matching placeholders with the image; no markdown edit is required.
 - Callouts:
   - **Note** — Important information

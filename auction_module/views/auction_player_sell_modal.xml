@@ -892,7 +892,6 @@
             </svg>
             <div class="sm-status-seal-core">
               <img class="sm-status-seal-mark" src="/auction_module/static/img/sold_overlay_gray.png" alt=""/>
-              <img class="sm-status-seal-logo" id="smStatusSealLogo" src="" alt=""/>
               <div class="sm-status-seal-pts" id="smStatusSealPts"></div>
             </div>
           </div>
@@ -901,7 +900,6 @@
 
       <!-- Team info -->
       <div class="sm-sold-info">
-        <img id="smSoldTeamLogo" class="sm-sold-team-logo" src="" alt="Team" />
         <div class="sm-sold-text">
           <div class="sm-sold-label">Sold To</div>
           <div class="sm-sold-team-name" id="smSoldTeamName"></div>
@@ -1598,7 +1596,6 @@
         pre.src = photoUrl;
       }
     }
-    document.getElementById('smSoldTeamLogo').src  = '/web/image/auction.team/' + result.team_id + '/logo';
     document.getElementById('smSoldTeamName').textContent = result.team_name;
     var ptsTxt = window.fmtUnit
       ? window.fmtUnit(result.final_point)

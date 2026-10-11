@@ -5,6 +5,7 @@
             <head>
                 <meta charset="UTF-8"/>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+                <meta name="robots" content="noindex, nofollow"/>
                 <t t-call="auction_module.social_preview_head">
                     <t t-set="og_page_key" t-value="'website_manual'"/>
                     <t t-set="og_record" t-value="None"/>
@@ -28,7 +29,6 @@
                         <div class="ac-nav-desktop">
                             <ul class="ac-nav-links">
                                 <li><a href="/">Home</a></li>
-                                <li><a href="/user-manual" style="color:#f5a623;">User Manual</a></li>
                                 <li><a href="/privacy-policy">Privacy Policy</a></li>
                                 <li><a href="/terms-and-conditions">Terms &amp; Conditions</a></li>
                             </ul>
@@ -43,7 +43,6 @@
                     <div class="ac-nav-mobile" id="acMobileNav">
                         <ul class="ac-nav-mobile-links">
                             <li><a href="/">Home</a></li>
-                            <li><a href="/user-manual">User Manual</a></li>
                             <li><a href="/privacy-policy">Privacy Policy</a></li>
                             <li><a href="/terms-and-conditions">Terms &amp; Conditions</a></li>
                         </ul>
@@ -81,7 +80,7 @@
 
                 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js" crossorigin="anonymous"></script>
                 <script src="/auction_champ_website/static/src/js/auction_website.js"></script>
-                <script src="/auction_champ_website/static/src/js/user_manual.js?v=1"></script>
+                <script src="/auction_champ_website/static/src/js/user_manual.js?v=2"></script>
             </body>
         </html>
     </template>

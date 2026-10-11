@@ -1902,7 +1902,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
             </svg>
             <div class="sm-status-seal-core">
               <img class="sm-status-seal-mark" src="/auction_module/static/img/sold_overlay_gray.png" alt=""/>
-              <img class="sm-status-seal-logo" id="smStatusSealLogo" src="" alt=""/>
               <div class="sm-status-seal-pts" id="smStatusSealPts"></div>
             </div>
           </div>
@@ -1910,7 +1909,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       </div>
       <div class="sm-sold-info">
         <div class="sm-mystery-name" id="smSoldMysteryName" style="display:none">Mystery Player?</div>
-        <img id="smSoldTeamLogo" class="sm-sold-team-logo" src="" alt="Team"/>
         <div class="sm-sold-text">
           <div class="sm-sold-label">Sold To</div>
           <div class="sm-sold-team-name" id="smSoldTeamName"></div>
@@ -2261,13 +2259,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       if (oldLogo) oldLogo.remove();
       if (newState === 'sold') {
         btn.classList.add('sold');
-        if (meta.team_id && window.AUCTION_IMG_URL) {
-          var logoOverlay = document.createElement('img');
-          logoOverlay.className = 'mq-sold-logo';
-          logoOverlay.src = window.AUCTION_IMG_URL('auction.team', meta.team_id, 'logo');
-          logoOverlay.alt = meta.team_name || '';
-          btn.appendChild(logoOverlay);
-        }
         btn.appendChild(mqSlotStamp('sold'));
       } else if (newState === 'unsold') {
         btn.classList.add('unsold');
@@ -2341,13 +2332,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     btn.appendChild(numSpan);
     if (p.state === 'sold') {
       btn.classList.add('sold');
-      if (p.team_logo) {
-        var logoOverlay = document.createElement('img');
-        logoOverlay.className = 'mq-sold-logo';
-        logoOverlay.src = 'data:image/png;base64,' + p.team_logo;
-        logoOverlay.alt = p.team_name || '';
-        btn.appendChild(logoOverlay);
-      }
       btn.appendChild(mqSlotStamp('sold'));
     } else if (p.state === 'unsold') {
       btn.classList.add('unsold');
@@ -3265,7 +3249,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       soldPhoto.style.filter = '';
       if (mysteryNameEl) mysteryNameEl.style.display = 'none';
     }
-    document.getElementById('smSoldTeamLogo').src       = window.AUCTION_IMG_URL('auction.team', data.team_id, 'logo');
     document.getElementById('smSoldTeamName').textContent = data.team_name;
     var ptsTxt = window.fmtUnit
       ? window.fmtUnit(data.final_point)

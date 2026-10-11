@@ -235,7 +235,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin"/>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Oswald:wght@400;500;600;700&amp;family=Rajdhani:wght@400;500;600;700&amp;family=Teko:wght@500;600&amp;display=swap"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Oswald:wght@400;500;600;700&amp;family=Rajdhani:wght@400;500;600;700&amp;family=Teko:wght@500;600&amp;family=Barlow+Condensed:wght@500;600;700;800&amp;family=Barlow+Semi+Condensed:wght@400;500;600;700&amp;display=swap"/>
 <style>
 /* ── THEME VARIABLES ─────────────────────────────────────────────── */
 :root {
@@ -2907,60 +2907,483 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
   .lb-status-seal{width:min(48%, 6.75rem);}
 }
 </style>
+
+<style id="lbx-ipl">
+/* ══════════════════════════════════════════════════════════════════════
+   LIVE BOARD — IPL BROADCAST LAYOUT  (classes prefixed lbx-)
+   Self-contained: does not rely on the legacy .lb-* layout rules above.
+   All sizes derive from --u (viewport scale, design = 1920x1080); text has
+   a readable minimum so it never becomes tiny on small laptops.
+   ══════════════════════════════════════════════════════════════════════ */
+html[data-theme] body.lbx{
+  --x-bg:#050d1d;--x-bg2:#0a1a33;--x-panel:rgba(14,30,58,.92);--x-line:rgba(120,160,230,.22);
+  --x-tx:#f4f7fc;--x-tx2:rgba(244,247,252,.64);--x-muted:rgba(244,247,252,.42);
+  --x-gold:#f2c94c;--x-blue:#3b82f6;--x-live:#ef233c;--x-ok:#22c55e;--x-no:#e5484d;
+  --x-cond:'Barlow Condensed','Oswald','Rajdhani',sans-serif;
+  --x-ui:'Barlow Semi Condensed','Rajdhani',system-ui,sans-serif;
+  --u:calc(100vw/1500);
+  font-family:var(--x-ui);color:var(--x-tx);min-height:100vh;overflow-x:hidden;
+  background:
+    radial-gradient(1200px 600px at 30% 0%,rgba(59,130,246,.22),transparent 60%),
+    radial-gradient(900px 500px at 100% 40%,rgba(242,201,76,.08),transparent 60%),
+    linear-gradient(180deg,var(--x-bg2),var(--x-bg));
+  background-attachment:fixed;
+  display:flex;flex-direction:column;padding-bottom:0;
+}
+html[data-theme] body.lbx::before{display:none}
+body.lbx .lbx-hero>*,body.lbx .lbx-player>*,body.lbx .lbx-mid,body.lbx .lbx-right>*,body.lbx .lbx-band>*,body.lbx .lbx-main>*{min-width:0}
+
+/* ── header ─────────────────────────────────────────────────────────── */
+.lbx-hdr{height:calc(var(--u)*76);min-height:52px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+  padding:0 calc(var(--u)*28);border-bottom:1px solid var(--x-line);position:relative;z-index:100;
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(5,13,29,.6))}
+.lbx-hdr::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;
+  background:linear-gradient(90deg,transparent,var(--x-gold),transparent)}
+.lbx-hdr-left{display:flex;align-items:center;gap:calc(var(--u)*16);flex:1 1 0;max-width:calc(50% - calc(var(--u)*210))}
+.lbx-t-logo{flex:none;width:calc(var(--u)*56);height:calc(var(--u)*56);min-width:36px;min-height:36px;border-radius:calc(var(--u)*12);overflow:hidden;
+  border:1px solid var(--x-line);background:rgba(255,255,255,.06);display:grid;place-items:center;font-size:max(10px,calc(var(--u)*26))}
+.lbx-t-logo img{width:100%;height:100%;object-fit:cover}
+.lbx-t-txt{min-width:0}
+.lbx-t-name{font:800 max(10px,calc(var(--u)*32))/1 var(--x-cond);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbx-t-desc{font:600 max(10px,calc(var(--u)*15))/1 var(--x-ui);color:var(--x-gold);letter-spacing:.2em;text-transform:uppercase;margin-top:calc(var(--u)*6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbx-t-desc:empty{display:none}
+.lbx-hdr-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:calc(var(--u)*14);white-space:nowrap}
+.lbx-live{background:var(--x-live);padding:calc(var(--u)*6) calc(var(--u)*16) calc(var(--u)*6) calc(var(--u)*12);border-radius:calc(var(--u)*6);font:800 max(10px,calc(var(--u)*22))/1.15 var(--x-cond);letter-spacing:.14em;
+  display:flex;align-items:center;gap:calc(var(--u)*9);box-shadow:0 0 22px rgba(239,35,60,.55);color:#fff;text-transform:uppercase}
+.lbx-live-dot{width:calc(var(--u)*11);height:calc(var(--u)*11);min-width:7px;min-height:7px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.3);animation:lbxBlink 1.4s ease-in-out infinite}
+@keyframes lbxBlink{0%,100%{opacity:1}50%{opacity:.35}}
+body.lb-thankyou-active .lbx-live{background:#16a34a;box-shadow:0 0 22px rgba(22,163,74,.5)}
+.lbx-hdr-status{font:700 max(10px,calc(var(--u)*26))/1 var(--x-cond);letter-spacing:.22em;text-transform:uppercase}
+.lbx-hdr-right{display:flex;align-items:center;justify-content:flex-end;gap:calc(var(--u)*22);flex:1 1 0}
+.lbx-clock{font:700 max(10px,calc(var(--u)*26))/1 var(--x-cond);letter-spacing:.08em;font-variant-numeric:tabular-nums}
+html[data-theme] body.lbx .lb-coin-btn{width:calc(var(--u)*42);height:calc(var(--u)*42);min-width:30px;min-height:30px;border-radius:50%;border:1px solid var(--x-line);color:var(--x-tx);background:rgba(255,255,255,.04)}
+.lbx-powered{display:flex;align-items:center;gap:calc(var(--u)*10);font:600 max(10px,calc(var(--u)*12))/1 var(--x-ui);letter-spacing:.2em;color:var(--x-muted);text-transform:uppercase}
+.lbx-powered img{height:calc(var(--u)*34);min-height:18px;width:auto}
+
+/* ── main frame ─────────────────────────────────────────────────────── */
+.lbx-main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:calc(var(--u)*16);padding:calc(var(--u)*16) calc(var(--u)*28) 0;width:100%}
+.lbx-card{background:var(--x-panel);border:1px solid var(--x-line);border-radius:calc(var(--u)*18);position:relative}
+.lbx-hero{flex:1 1 0;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) calc(var(--u)*600);grid-template-rows:minmax(0,1fr);gap:calc(var(--u)*20)}
+.lbx-player{display:grid;grid-template-columns:calc(var(--u)*450) minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:calc(var(--u)*20);min-height:0;transition:opacity .3s}
+
+/* photo */
+html[data-theme] body.lbx .lbx-photo.lb-photo-wrap{position:relative;width:auto;height:100%;min-height:0;aspect-ratio:auto;max-height:none;
+  border-radius:calc(var(--u)*18);border:1px solid var(--x-line);overflow:hidden;
+  background:radial-gradient(120% 90% at 50% 0%,rgba(59,130,246,.28),transparent 60%),#0a1830}
+html[data-theme] body.lbx .lbx-photo.lb-photo-wrap::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
+  background:linear-gradient(180deg,transparent 55%,rgba(5,13,29,.92))}
+html[data-theme] body.lbx #lb-player-img{width:100%;height:100%;object-fit:cover;object-position:50% 12%}
+html[data-theme] body.lbx .lbx-photo .lb-photo-placeholder{font-size:max(10px,calc(var(--u)*110))}
+html[data-theme] body.lbx .lbx-photo .lb-sl-overlay{z-index:5;left:calc(var(--u)*16);top:calc(var(--u)*14);border:0;border-radius:calc(var(--u)*8);padding:calc(var(--u)*2) calc(var(--u)*18);
+  background:var(--x-gold);color:#101828;font:800 max(10px,calc(var(--u)*40))/1.15 var(--x-cond);letter-spacing:0;box-shadow:0 6px 18px rgba(0,0,0,.4);backdrop-filter:none}
+.lbx-sl-of{font-size:.38em;font-weight:700;letter-spacing:.1em;margin-left:.4em}
+.lbx-sl-of:empty{display:none}
+html[data-theme] body.lbx .lbx-photo .lb-state-overlay{z-index:5;right:calc(var(--u)*16);top:calc(var(--u)*18);border-radius:calc(var(--u)*6);padding:calc(var(--u)*5) calc(var(--u)*12);
+  font:800 max(10px,calc(var(--u)*18))/1.2 var(--x-cond);letter-spacing:.2em;animation:none;box-shadow:none;backdrop-filter:none}
+html[data-theme] body.lbx .lbx-photo .lb-state-auction{background:rgba(239,35,60,.92);color:#fff}
+html[data-theme] body.lbx .lbx-photo .lb-state-sold{background:var(--x-ok);color:#052e16}
+html[data-theme] body.lbx .lbx-photo .lb-state-unsold{background:var(--x-no);color:#fff}
+html[data-theme] body.lbx .lbx-photo .lb-mystery-lock{z-index:6}
+/* signature SOLD / UNSOLD seal (legacy .lb-photo-status) scaled to the new photo */
+html[data-theme] body.lbx .lbx-photo .lb-photo-status{border-radius:inherit}
+html[data-theme] body.lbx .lbx-photo .lb-status-seal{width:min(82%,calc(var(--u)*380));top:52%}
+html[data-theme] body.lbx .lbx-photo .lb-status-seal-pts{font-size:clamp(11px,calc(var(--u)*34),40px)}
+
+/* player info */
+.lbx-mid{display:flex;flex-direction:column;justify-content:center;gap:calc(var(--u)*16);min-height:0;padding:calc(var(--u)*6) calc(var(--u)*8);overflow:hidden}
+.lbx-id{display:flex;flex-direction:column;gap:calc(var(--u)*16);min-width:0}
+.lbx-kicker{font:700 max(10px,calc(var(--u)*22))/1 var(--x-cond);letter-spacing:.3em;color:var(--x-gold);text-transform:uppercase;display:flex;align-items:center;gap:calc(var(--u)*14)}
+.lbx-kicker::before{content:"";width:calc(var(--u)*46);height:3px;background:var(--x-gold)}
+.lbx-kicker:empty{display:none}
+html[data-theme] body.lbx .lbx-pname{font:800 calc(var(--u)*112)/.92 var(--x-cond);text-transform:uppercase;letter-spacing:.01em;text-shadow:none;
+  display:block;overflow-wrap:normal;word-break:normal}
+html[data-theme] body.lbx .lbx-pname.lb-idle-wait{font:800 calc(var(--u)*70)/1 var(--x-cond);display:block;color:var(--x-tx);letter-spacing:.02em}
+.lbx-pname .lbx-pn-last{display:block;color:var(--x-gold)}
+.lbx-psub{font:600 max(10px,calc(var(--u)*20))/1.2 var(--x-ui);letter-spacing:.16em;color:var(--x-tx2);text-transform:uppercase}
+.lbx-psub{display:none}
+.lbx-badges{display:flex;flex-wrap:wrap;gap:calc(var(--u)*12)}
+.lbx-badges:empty{display:none}
+html[data-theme] body.lbx .lbx-badges .lb-badge{font:700 max(10px,calc(var(--u)*20))/1.2 var(--x-cond);letter-spacing:.14em;text-transform:uppercase;padding:calc(var(--u)*7) calc(var(--u)*16);border-radius:999px;
+  border:1px solid var(--x-line);background:rgba(255,255,255,.06);box-shadow:none;color:var(--x-tx)}
+html[data-theme] body.lbx .lbx-badges .lb-b-role{background:rgba(59,130,246,.2);border-color:rgba(59,130,246,.6)}
+html[data-theme] body.lbx .lbx-badges .lb-b-icon{background:rgba(242,201,76,.16)!important;border-color:rgba(242,201,76,.6);color:var(--x-gold)!important}
+.lbx-attrs{display:flex;flex-direction:column;gap:calc(var(--u)*16)}
+html[data-theme] body.lbx .lbx-stats{display:flex;flex-wrap:wrap;gap:calc(var(--u)*12);margin:0;padding:0;background:none;border:0}
+html[data-theme] body.lbx .lbx-stats .lb-stat-chip{flex:1 1 calc(var(--u)*150);min-width:0;min-height:0;padding:calc(var(--u)*12) calc(var(--u)*16);border-radius:calc(var(--u)*12);
+  background:rgba(255,255,255,.05);border:1px solid var(--x-line);display:block;text-align:left}
+html[data-theme] body.lbx .lbx-stats .lb-stat-lbl{display:block;font:600 max(10px,calc(var(--u)*14))/1.1 var(--x-ui);letter-spacing:.2em;color:var(--x-muted);text-transform:uppercase;margin:0 0 calc(var(--u)*4)}
+html[data-theme] body.lbx .lbx-stats .lb-stat-val{font:700 max(10px,calc(var(--u)*27))/1.1 var(--x-cond);letter-spacing:.03em;color:var(--x-tx);white-space:normal}
+html[data-theme] body.lbx .lbx-stats .lb-tag-chip{font:700 max(10px,calc(var(--u)*18))/1.2 var(--x-cond);padding:calc(var(--u)*6) calc(var(--u)*14);border-radius:999px;background:rgba(59,130,246,.18);border:1px solid rgba(59,130,246,.5);color:var(--x-tx);letter-spacing:.08em;text-transform:uppercase}
+.lbx-stats .lb-stat-break{flex-basis:100%;height:0}
+html[data-theme] body.lbx .lbx-base{display:flex;align-items:center;gap:calc(var(--u)*18);padding:calc(var(--u)*14) calc(var(--u)*22);border-radius:calc(var(--u)*14);width:max-content;max-width:100%;
+  border:1px solid rgba(242,201,76,.5);background:linear-gradient(90deg,rgba(242,201,76,.16),transparent)}
+html[data-theme] body.lbx .lbx-base-lbl{font:600 max(10px,calc(var(--u)*16))/1 var(--x-ui);letter-spacing:.24em;color:var(--x-tx2);text-transform:uppercase}
+html[data-theme] body.lbx .lbx-base-val{font:800 max(10px,calc(var(--u)*46))/1 var(--x-cond);color:var(--x-gold);text-shadow:none}
+
+body.lbx .lbx-pname .lb-idle-copy,body.lbx .lbx-wait .lb-idle-copy{white-space:normal;overflow:visible;text-overflow:clip}
+body.lbx .lbx-pname .lb-dots,body.lbx .lbx-wait .lb-dots{display:inline-flex}
+
+/* right column — bid + stats */
+.lbx-right{display:flex;flex-direction:column;justify-content:flex-start;gap:calc(var(--u)*12);min-height:0;overflow:hidden}
+.lbx-status{display:flex;flex-direction:column;min-width:0}
+.lbx-bid{padding:calc(var(--u)*14) calc(var(--u)*24) calc(var(--u)*16);border-radius:calc(var(--u)*16);overflow:hidden;position:relative;
+  border:2px solid var(--x-gold);background:linear-gradient(160deg,rgba(242,201,76,.2),rgba(14,30,58,.95) 60%);
+  box-shadow:0 0 50px rgba(242,201,76,.28),inset 0 0 40px rgba(242,201,76,.06)}
+.lbx-bid::after{content:"";position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;opacity:0;
+  box-shadow:0 0 0 2px var(--x-gold),0 0 38px rgba(242,201,76,.65);animation:lbxGlow 2.4s ease-in-out infinite}
+@keyframes lbxGlow{0%,100%{opacity:0}50%{opacity:.9}}
+.lbx-bid-top{display:flex;justify-content:space-between;align-items:center;gap:calc(var(--u)*12);font:700 max(10px,calc(var(--u)*19))/1 var(--x-cond);letter-spacing:.3em;color:var(--x-gold);text-transform:uppercase}
+.lbx-bid-top em{font-style:normal;font-size:max(10px,calc(var(--u)*16));color:#fff;background:var(--x-live);padding:calc(var(--u)*4) calc(var(--u)*10);border-radius:calc(var(--u)*5);letter-spacing:.18em;white-space:nowrap}
+.lbx-bid-amt{font:800 calc(var(--u)*100)/1 var(--x-cond);color:#fff;letter-spacing:.01em;margin-top:calc(var(--u)*4);white-space:nowrap;text-shadow:0 0 36px rgba(242,201,76,.5);font-variant-numeric:tabular-nums}
+.lbx-bid-amt.is-text{font-size:calc(var(--u)*72);letter-spacing:.06em}
+.lbx-lead{margin-top:calc(var(--u)*8);display:flex;align-items:center;gap:calc(var(--u)*14);padding:calc(var(--u)*8) calc(var(--u)*14);border-radius:calc(var(--u)*12);background:rgba(0,0,0,.28);border:1px solid var(--x-line)}
+.lbx-lead img,.lbx-lead .lbx-lead-ph{flex:none;width:calc(var(--u)*48);height:calc(var(--u)*48);min-width:30px;min-height:30px;border-radius:50%;object-fit:cover;border:2px solid var(--x-gold);background:#0c1d3a;display:grid;place-items:center;font-size:max(10px,calc(var(--u)*26))}
+.lbx-lead>div{min-width:0;flex:1}
+.lbx-lead small{display:block;font:600 max(10px,calc(var(--u)*14))/1.1 var(--x-ui);letter-spacing:.26em;color:var(--x-muted);text-transform:uppercase}
+.lbx-lead strong{display:block;font:800 max(10px,calc(var(--u)*32))/1.05 var(--x-cond);letter-spacing:.04em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* sold */
+.lbx-bid.is-sold{border-color:var(--x-ok);background:linear-gradient(160deg,rgba(34,197,94,.3),rgba(14,30,58,.95) 62%);box-shadow:0 0 60px rgba(34,197,94,.35)}
+.lbx-bid.is-sold::after{display:none}
+.lbx-bid.is-sold .lbx-bid-top{color:#7dffb0}
+.lbx-bid.is-sold .lbx-bid-top em{background:var(--x-ok);color:#052e16}
+.lbx-bid.is-sold .lbx-bid-amt{text-shadow:0 0 36px rgba(34,197,94,.55)}
+.lbx-bid.is-sold .lbx-lead{border-color:rgba(34,197,94,.6);background:rgba(34,197,94,.14)}
+/* unsold */
+.lbx-bid.is-unsold{border-color:var(--x-no);background:linear-gradient(160deg,rgba(229,72,77,.28),rgba(14,30,58,.95) 62%);box-shadow:0 0 50px rgba(229,72,77,.3)}
+.lbx-bid.is-unsold::after{display:none}
+.lbx-bid.is-unsold .lbx-bid-top{color:#ff9b9e}
+.lbx-bid.is-unsold .lbx-bid-top em{background:var(--x-no)}
+.lbx-bid.is-unsold .lbx-bid-amt{text-shadow:0 0 36px rgba(229,72,77,.5)}
+.lbx-bid.is-unsold .lbx-lead{border-color:rgba(229,72,77,.5);background:rgba(229,72,77,.12)}
+/* waiting / accepting bids */
+.lbx-wait{display:flex;align-items:center;justify-content:center;gap:calc(var(--u)*16);padding:calc(var(--u)*24) calc(var(--u)*24);text-align:center;border-radius:calc(var(--u)*18);
+  background:var(--x-panel);border:1px solid var(--x-line);font:700 max(10px,calc(var(--u)*26))/1.15 var(--x-cond);letter-spacing:.14em;text-transform:uppercase;color:var(--x-tx2)}
+.lbx-wait-live{border:2px solid var(--x-gold);box-shadow:0 0 40px rgba(242,201,76,.22);color:var(--x-gold)}
+.lbx-spin{flex:none;width:calc(var(--u)*38);height:calc(var(--u)*38);min-width:22px;min-height:22px;border-radius:50%;border:3px solid rgba(255,255,255,.14);border-top-color:var(--x-gold);animation:lbxSpin 1s linear infinite}
+@keyframes lbxSpin{to{transform:rotate(360deg)}}
+.lbx-wait .lb-dots span{color:var(--x-gold)}
+
+/* auction stats */
+.lbx-stats-card{display:flex;flex-direction:column;gap:calc(var(--u)*12);flex:0 1 auto;min-height:0}
+.lbx-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:calc(var(--u)*12)}
+.lbx-tile{padding:calc(var(--u)*9) calc(var(--u)*6);text-align:center;border-radius:calc(var(--u)*14);background:var(--x-panel);border:1px solid var(--x-line)}
+.lbx-tile b{display:block;font:800 max(10px,calc(var(--u)*42))/1 var(--x-cond);font-variant-numeric:tabular-nums}
+.lbx-tile span{display:block;font:600 max(10px,calc(var(--u)*14))/1.15 var(--x-ui);letter-spacing:.2em;color:var(--x-tx2);text-transform:uppercase;margin-top:calc(var(--u)*4)}
+.lbx-tile.a b{color:var(--x-blue)}.lbx-tile.s b{color:var(--x-ok)}.lbx-tile.u b{color:var(--x-no)}.lbx-tile.t b{color:var(--x-gold)}
+.lbx-prog{flex:0 1 auto;display:flex;flex-direction:column;justify-content:center;padding:calc(var(--u)*10) calc(var(--u)*20);min-height:0}
+.lbx-prog-row{display:flex;justify-content:space-between;gap:calc(var(--u)*12);font:600 max(10px,calc(var(--u)*15))/1 var(--x-ui);letter-spacing:.2em;color:var(--x-tx2);text-transform:uppercase;margin-bottom:calc(var(--u)*7)}
+.lbx-prog-bar{height:calc(var(--u)*12);min-height:6px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;display:flex}
+.lbx-prog-bar i{display:block;height:100%;transition:width .6s}
+.lbx-prog-bar .ok{background:var(--x-ok)}.lbx-prog-bar .no{background:var(--x-no)}.lbx-prog-bar .live{background:var(--x-blue)}
+
+/* band: feed + top buys */
+.lbx-tabs{display:none}
+.lbx-band{flex:0 0 calc(var(--u)*222);display:grid;grid-template-columns:1fr 1fr;gap:calc(var(--u)*20);min-height:0}
+.lbx-pn{padding:calc(var(--u)*14) calc(var(--u)*20);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.lbx-pn h3{font:700 max(10px,calc(var(--u)*22))/1 var(--x-cond);letter-spacing:.26em;text-transform:uppercase;display:flex;align-items:center;gap:calc(var(--u)*12);margin-bottom:calc(var(--u)*10);flex:none}
+.lbx-pn h3::before{content:"";width:6px;height:calc(var(--u)*22);min-height:14px;background:var(--x-gold);border-radius:3px}
+.lbx-pn h3 em{margin-left:auto;font:600 max(10px,calc(var(--u)*13))/1 var(--x-ui);letter-spacing:.2em;color:var(--x-muted);font-style:normal}
+.lbx-feed{display:flex;flex-direction:column;gap:calc(var(--u)*7);min-height:0;overflow:hidden}
+.lbx-fi{display:flex;align-items:center;gap:calc(var(--u)*14);padding:calc(var(--u)*5) calc(var(--u)*12);border-radius:calc(var(--u)*10);background:rgba(255,255,255,.04);border-left:4px solid var(--x-ok);flex:none}
+.lbx-fi.un{border-left-color:var(--x-no)}
+.lbx-fi:first-child{background:linear-gradient(90deg,rgba(34,197,94,.22),rgba(255,255,255,.04));animation:lbxIn .5s ease}
+.lbx-fi.un:first-child{background:linear-gradient(90deg,rgba(229,72,77,.2),rgba(255,255,255,.04))}
+@keyframes lbxIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.lbx-fi-av{flex:none;width:calc(var(--u)*34);height:calc(var(--u)*34);min-width:26px;min-height:26px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.08);display:grid;place-items:center;font-size:max(10px,calc(var(--u)*16))}
+.lbx-fi-av img{width:100%;height:100%;object-fit:cover}
+.lbx-fi-msg{flex:1;font:600 max(10px,calc(var(--u)*20))/1.1 var(--x-cond);letter-spacing:.05em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lbx-fi-msg small{font-size:.8em;color:var(--x-tx2);font-weight:500;letter-spacing:.1em}
+.lbx-fi-amt{flex:none;font:800 max(10px,calc(var(--u)*26))/1 var(--x-cond);color:var(--x-gold)}
+.lbx-fi-time{flex:none;font:500 max(10px,calc(var(--u)*13))/1 var(--x-ui);color:var(--x-muted);min-width:calc(var(--u)*64);text-align:right}
+.lbx-empty{font:500 max(10px,calc(var(--u)*16))/1.3 var(--x-ui);color:var(--x-muted);letter-spacing:.1em;padding:calc(var(--u)*10) 0}
+.lbx-top{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:calc(var(--u)*12);flex:1 1 0;min-height:0}
+.lbx-tp{border-radius:calc(var(--u)*12);border:1px solid var(--x-line);background:rgba(255,255,255,.04);padding:calc(var(--u)*10) calc(var(--u)*14);display:flex;gap:calc(var(--u)*12);align-items:center;position:relative;overflow:hidden;min-height:0}
+.lbx-tp.r1{border-color:rgba(242,201,76,.7);background:linear-gradient(160deg,rgba(242,201,76,.22),rgba(255,255,255,.03))}
+.lbx-tp-rk{position:absolute;right:calc(var(--u)*10);top:calc(var(--u)*2);font:800 max(10px,calc(var(--u)*52))/1 var(--x-cond);color:rgba(255,255,255,.1)}
+.lbx-tp-av{flex:none;width:calc(var(--u)*62);height:calc(var(--u)*76);min-width:40px;min-height:48px;border-radius:calc(var(--u)*10);overflow:hidden;background:rgba(255,255,255,.08);display:grid;place-items:center;font-size:max(10px,calc(var(--u)*24))}
+.lbx-tp-av img{width:100%;height:100%;object-fit:cover;object-position:50% 15%}
+.lbx-tp-info{min-width:0;flex:1}
+.lbx-tp-nm{font:800 max(10px,calc(var(--u)*22))/1.05 var(--x-cond);letter-spacing:.03em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lbx-tp-rl{font:500 max(10px,calc(var(--u)*13))/1.2 var(--x-ui);letter-spacing:.16em;color:var(--x-muted);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbx-tp-pt{font:800 max(10px,calc(var(--u)*28))/1.1 var(--x-cond);color:var(--x-gold);margin-top:calc(var(--u)*2);white-space:nowrap}
+.lbx-tp-tm{display:flex;align-items:center;gap:calc(var(--u)*6);font:600 max(10px,calc(var(--u)*13))/1 var(--x-ui);color:var(--x-tx2);text-transform:uppercase;white-space:nowrap}
+.lbx-tp-tm img{width:calc(var(--u)*18);height:calc(var(--u)*18);min-width:14px;min-height:14px;border-radius:50%;object-fit:cover}
+.lbx-tp-tm span{overflow:hidden;text-overflow:ellipsis}
+.lbx-feed .lbx-fi:nth-child(n+4),.lbx-top .lbx-tp:nth-child(n+4){display:none}
+
+/* teams strip */
+.lbx-teams{flex:0 0 calc(var(--u)*92);display:flex;align-items:center;gap:calc(var(--u)*18);padding:calc(var(--u)*10) calc(var(--u)*20);overflow:hidden}
+.lbx-teams-lab{flex:none;width:calc(var(--u)*210);font:700 max(10px,calc(var(--u)*19))/1.1 var(--x-cond);letter-spacing:.2em;text-transform:uppercase;color:var(--x-gold)}
+.lbx-teams-lab small{display:block;font:500 max(10px,calc(var(--u)*13))/1 var(--x-ui);color:var(--x-muted);letter-spacing:.2em;margin-top:calc(var(--u)*4)}
+.lbx-teams-grid{flex:1;display:flex;gap:calc(var(--u)*12);overflow-x:auto;scrollbar-width:none;min-width:0}
+.lbx-teams-grid::-webkit-scrollbar{display:none}
+.lbx-team{flex:1 0 calc(var(--u)*170);display:flex;align-items:center;gap:calc(var(--u)*10);padding:calc(var(--u)*8) calc(var(--u)*12);border-radius:calc(var(--u)*14);background:rgba(255,255,255,.05);border:1px solid var(--x-line);
+  cursor:pointer;transition:border-color .2s,box-shadow .2s,background .2s}
+.lbx-team:hover,.lbx-team:focus{border-color:var(--x-gold);outline:none}
+.lbx-team-logo{flex:none;width:calc(var(--u)*46);height:calc(var(--u)*46);min-width:30px;min-height:30px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.08);font-size:max(10px,calc(var(--u)*20))}
+.lbx-team-logo img{width:100%;height:100%;object-fit:cover}
+.lbx-team-txt{min-width:0}
+.lbx-team-name{font:700 max(10px,calc(var(--u)*18))/1.05 var(--x-cond);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbx-team-pts{font:500 max(10px,calc(var(--u)*13))/1.2 var(--x-ui);color:var(--x-tx2);letter-spacing:.1em;white-space:nowrap}
+.lbx-team.is-lead{border-color:var(--x-gold);background:rgba(242,201,76,.16);box-shadow:0 0 20px rgba(242,201,76,.3)}
+.lbx-team.is-lead.is-sold{border-color:var(--x-ok);background:rgba(34,197,94,.16);box-shadow:0 0 20px rgba(34,197,94,.3)}
+
+/* many teams: wrap into 2-3 rows instead of hiding them */
+.lbx-main:has(.lbx-teams[data-rows="2"]) .lbx-prog,.lbx-main:has(.lbx-teams[data-rows="3"]) .lbx-prog{display:none}
+.lbx-teams[data-rows="2"],.lbx-teams[data-rows="3"]{flex:0 0 auto;height:auto}
+.lbx-teams[data-rows="2"] .lbx-teams-grid,.lbx-teams[data-rows="3"] .lbx-teams-grid{flex-wrap:wrap;overflow:visible}
+.lbx-teams[data-rows="2"] .lbx-team,.lbx-teams[data-rows="3"] .lbx-team{flex:1 0 calc(14.28% - calc(var(--u)*12));padding:calc(var(--u)*5) calc(var(--u)*10)}
+.lbx-teams[data-rows="2"] .lbx-team-logo,.lbx-teams[data-rows="3"] .lbx-team-logo{width:calc(var(--u)*38);height:calc(var(--u)*38);min-width:26px;min-height:26px}
+
+/* footer: ticker + sponsors */
+.lbx-foot{flex:0 0 auto;height:calc(var(--u)*58);min-height:34px;margin-top:calc(var(--u)*14);display:flex;border-top:1px solid var(--x-line);background:rgba(0,0,0,.4);position:relative;overflow:hidden}
+.lbx-ticker{flex:1 1 0;display:flex;align-items:stretch;overflow:hidden;white-space:nowrap}
+.lbx-ticker-lab{flex:none;display:grid;place-items:center;padding:0 calc(var(--u)*22);background:var(--x-live);font:800 max(10px,calc(var(--u)*20))/1 var(--x-cond);letter-spacing:.2em;color:#fff;text-transform:uppercase;z-index:2}
+.lbx-ticker-view{flex:1;overflow:hidden;display:flex;align-items:center}
+.lbx-ticker-track{display:inline-flex;align-items:center;animation:lbxTicker 40s linear infinite;will-change:transform}
+.lbx-ticker-item{display:inline-flex;align-items:center;gap:calc(var(--u)*12);padding:0 calc(var(--u)*28);font:600 max(10px,calc(var(--u)*20))/1 var(--x-cond);letter-spacing:.1em;text-transform:uppercase;color:var(--x-tx2)}
+.lbx-ticker-item::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--x-gold);flex:none}
+@keyframes lbxTicker{to{transform:translateX(-50%)}}
+.lbx-spon{flex:0 0 calc(var(--u)*700);display:flex;align-items:center;gap:calc(var(--u)*18);padding:0 calc(var(--u)*20);border-left:1px solid var(--x-line);overflow:hidden}
+.lbx-spon-lab{flex:none;width:calc(var(--u)*90);font:600 max(10px,calc(var(--u)*13))/1.2 var(--x-ui);letter-spacing:.24em;color:var(--x-muted);text-transform:uppercase}
+.lbx-spon-view{flex:1;overflow:hidden;display:flex}
+.lbx-spon-track{display:flex;align-items:center;gap:calc(var(--u)*16);width:max-content;padding-right:calc(var(--u)*16)}
+.lbx-spon-track.is-scroll{animation:lbxSpon 26s linear infinite;will-change:transform}
+.lbx-spon-view:not(.is-scroll){justify-content:center}
+@keyframes lbxSpon{to{transform:translateX(-50%)}}
+.lbx-spon-card{flex:none;height:calc(var(--u)*36);min-height:24px;padding:0 calc(var(--u)*14);border-radius:calc(var(--u)*8);background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center}
+.lbx-spon-card img{height:80%;width:auto;max-width:calc(var(--u)*150);object-fit:contain}
+.lbx-spon-card span{font:800 max(10px,calc(var(--u)*15))/1 var(--x-cond);letter-spacing:.12em;color:#223;white-space:nowrap}
+
+/* ── FIT-TO-SCREEN (TV / desktop): whole board on one screen, no scroll ── */
+@media (min-width:1200px) and (min-height:560px){
+  html[data-theme] body.lbx{--u:min(calc(100vw/1920),calc(100vh/1080));height:100vh;overflow:hidden}
+}
+@media (min-width:1200px) and (max-height:559px){
+  html[data-theme] body.lbx{--u:calc(100vw/1920)}
+  .lbx-hero{min-height:calc(var(--u)*560)}
+}
+
+/* ── TABLET / SMALL LAPTOP: stacked hero, page scrolls ─────────────── */
+@media (max-width:1199px){
+  html[data-theme] body.lbx{--u:calc(100vw/1500);height:auto}
+  .lbx-main{gap:16px;padding:16px 20px 0}
+  .lbx-hero{flex:0 0 auto;min-height:0;grid-template-columns:1fr;grid-template-rows:none;gap:16px}
+  .lbx-player{grid-template-rows:none}
+  .lbx-mid{overflow:visible}
+  .lbx-player{grid-template-columns:minmax(0,40%) minmax(0,1fr);gap:20px}
+  html[data-theme] body.lbx .lbx-photo.lb-photo-wrap{min-height:360px;height:auto}
+  .lbx-right{display:grid;grid-template-columns:1.15fr 1fr;align-items:start;overflow:visible}
+  .lbx-main:has(.lbx-teams[data-rows]) .lbx-prog{display:flex}
+  .lbx-band{flex:none;grid-template-columns:1fr}
+  .lbx-feed .lbx-fi:nth-child(n+4),.lbx-top .lbx-tp:nth-child(n+4){display:flex}
+  .lbx-top{grid-template-columns:repeat(3,minmax(0,1fr));flex:0 0 auto;min-height:auto}
+  .lbx-teams{flex:none;flex-direction:column;align-items:stretch}
+  .lbx-teams-lab{width:auto}
+  .lbx-teams-grid{flex-wrap:wrap;overflow:visible}
+  .lbx-team{flex:1 1 200px}
+  .lbx-foot{height:auto;flex-direction:column;margin-top:16px}
+  .lbx-ticker{height:40px}
+  .lbx-spon{flex:none;padding:8px 20px}
+  .lbx-hdr{height:64px}
+}
+
+/* ── PHONE ─────────────────────────────────────────────────────────── */
+@media (max-width:900px){
+  html[data-theme] body.lbx{padding-bottom:36px}
+  .lbx-hdr{height:54px;padding:0 12px;gap:8px}
+  .lbx-hdr-left{max-width:none;flex:1 1 auto;gap:9px}
+  .lbx-t-logo{width:34px;height:34px;border-radius:8px}
+  .lbx-t-name{font-size:17px;letter-spacing:.03em}
+  .lbx-t-desc{font-size:11px;margin-top:3px;letter-spacing:.16em}
+  .lbx-hdr-center{position:static;transform:none;order:2;gap:0}
+  .lbx-hdr-status,.lbx-powered{display:none}
+  .lbx-hdr-right{flex:none;gap:8px;order:3}
+  .lbx-clock{display:none}
+  .lbx-live{font-size:14px;padding:4px 10px 4px 8px;gap:6px;border-radius:5px}
+  .lbx-live-dot{width:7px;height:7px}
+  html[data-theme] body.lbx .lb-coin-btn{width:30px;height:30px}
+
+  .lbx-main{gap:10px;padding:12px 14px 0}
+  .lbx-hero{display:grid;grid-template-columns:112px minmax(0,1fr);grid-template-rows:none;column-gap:12px;row-gap:8px}
+  .lbx-player,.lbx-mid,.lbx-attrs,.lbx-right,.lbx-stats-card{display:contents}
+  html[data-theme] body.lbx .lbx-photo.lb-photo-wrap{grid-column:1;grid-row:1;width:112px;height:150px;min-height:0;border-radius:12px}
+  .lbx-id{grid-column:2;grid-row:1;align-self:center;gap:6px}
+  html[data-theme] body.lbx .lbx-stats{grid-column:1/-1;grid-row:2;gap:7px}
+  .lbx-status{grid-column:1/-1;grid-row:3}
+  html[data-theme] body.lbx .lbx-base{grid-column:1/-1;grid-row:4;width:auto;justify-content:space-between;padding:5px 12px;border-radius:10px}
+  .lbx-tiles{grid-column:1/-1;grid-row:5;gap:6px}
+  .lbx-prog{grid-column:1/-1;grid-row:6;padding:7px 12px}
+
+  html[data-theme] body.lbx .lbx-photo .lb-sl-overlay{left:6px;top:6px;padding:0 9px;border-radius:6px;font-size:22px}
+  html[data-theme] body.lbx .lbx-photo .lb-state-overlay{right:auto;left:0;top:auto;bottom:0;width:100%;text-align:center;border-radius:0;font-size:12px;padding:3px 0}
+  html[data-theme] body.lbx .lbx-photo .lb-status-seal{width:92%}
+  html[data-theme] body.lbx .lbx-photo .lb-status-seal-pts{font-size:13px}
+  .lbx-kicker{font-size:13px;letter-spacing:.28em;gap:8px}
+  .lbx-kicker::before{width:22px;height:2px}
+  html[data-theme] body.lbx .lbx-pname{font-size:42px;line-height:.92}
+  html[data-theme] body.lbx .lbx-pname.lb-idle-wait{font-size:30px;line-height:1.05}
+  .lbx-psub{font-size:12px}
+  html[data-theme] body.lbx .lbx-badges .lb-badge{font-size:12px;padding:3px 9px;letter-spacing:.1em}
+  html[data-theme] body.lbx .lbx-stats .lb-stat-chip{flex:1 1 calc(25% - 7px);padding:6px 8px;border-radius:9px}
+  html[data-theme] body.lbx .lbx-stats .lb-stat-lbl{font-size:9px;letter-spacing:.14em;margin-bottom:1px}
+  html[data-theme] body.lbx .lbx-stats .lb-stat-val{font-size:15px}
+  html[data-theme] body.lbx .lbx-stats .lb-tag-chip{font-size:12px;padding:3px 9px}
+  html[data-theme] body.lbx .lbx-base-lbl{font-size:12px;letter-spacing:.22em}
+  html[data-theme] body.lbx .lbx-base-val{font-size:24px}
+
+  .lbx-bid{padding:9px 14px 11px;border-radius:14px}
+  .lbx-bid-top{font-size:12px;letter-spacing:.26em;gap:8px}
+  .lbx-bid-top em{font-size:10px;padding:2px 7px;letter-spacing:.12em}
+  .lbx-bid-amt{font-size:52px;margin-top:1px}
+  .lbx-bid-amt.is-text{font-size:40px}
+  .lbx-lead{margin-top:6px;gap:9px;padding:5px 9px;border-radius:9px}
+  .lbx-lead img,.lbx-lead .lbx-lead-ph{width:30px;height:30px;min-width:30px;min-height:30px;font-size:14px}
+  .lbx-lead small{font-size:9px;letter-spacing:.2em}
+  .lbx-lead strong{font-size:19px}
+  .lbx-wait{padding:14px 14px;font-size:16px;gap:10px;border-radius:14px}
+  .lbx-spin{width:22px;height:22px}
+  .lbx-tile{padding:5px 2px;border-radius:10px}
+  .lbx-tile b{font-size:22px}
+  .lbx-tile span{font-size:8px;letter-spacing:.12em;margin-top:1px}
+  .lbx-prog-row{font-size:10px;margin-bottom:5px}
+
+  .lbx-tabs{display:flex;padding:3px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid var(--x-line);margin-top:2px}
+  .lbx-tabs button{flex:1;appearance:none;border:0;background:transparent;color:var(--x-tx2);padding:8px 0;border-radius:9px;
+    font:700 14px/1 var(--x-cond);letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+  .lbx-tabs button.on{background:var(--x-gold);color:#101828}
+  .lbx-band{display:block}
+  .lbx-pn{padding:0;background:none;border:0;border-radius:0;overflow:visible}
+  .lbx-pn h3{display:none}
+  .lbx-main[data-tab="feed"] .lbx-pn--top,.lbx-main[data-tab="top"] .lbx-pn--feed,
+  .lbx-main[data-tab="feed"] .lbx-teams,.lbx-main[data-tab="top"] .lbx-teams,
+  .lbx-main[data-tab="teams"] .lbx-band{display:none !important}
+  .lbx-feed{gap:6px}
+  .lbx-fi{gap:10px;padding:6px 10px}
+  .lbx-fi-av{width:30px;height:30px}
+  .lbx-fi-msg{font-size:15px;white-space:normal;line-height:1.1}
+  .lbx-fi-amt{font-size:20px}
+  .lbx-fi-time{display:none}
+  .lbx-top{display:flex;flex-direction:column;gap:6px;flex:0 0 auto;min-height:auto}
+  .lbx-tp{flex:none}
+  .lbx-tp{padding:8px 12px}
+  .lbx-tp-av{width:42px;height:52px}
+  .lbx-tp-nm{font-size:18px}
+  .lbx-tp-pt{font-size:22px}
+  .lbx-tp-rk{font-size:40px}
+  .lbx-teams{flex:none;display:block;padding:0;background:none;border:0;border-radius:0}
+  .lbx-teams-lab{display:none}
+  .lbx-teams-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;overflow:visible}
+  .lbx-team{flex:none;padding:8px 10px;gap:9px;border-radius:12px;background:var(--x-panel)}
+  .lbx-team-logo{width:38px;height:38px}
+  .lbx-team-name{font-size:15px}
+  .lbx-team-pts{font-size:11px}
+
+  .lbx-foot{margin-top:12px;height:auto;flex-direction:column;background:none;border-top:0}
+  .lbx-spon{order:1;flex:none;padding:8px 14px;border:1px solid var(--x-line);border-radius:12px;background:var(--x-panel);margin:0 14px;gap:10px}
+  .lbx-spon-lab{width:auto;font-size:10px;letter-spacing:.2em;max-width:60px}
+  .lbx-spon-card{height:28px;padding:0 10px}
+  .lbx-ticker{order:2;position:fixed;left:0;right:0;bottom:0;height:34px;background:rgba(0,0,0,.82);border-top:1px solid var(--x-line);z-index:200}
+  .lbx-ticker-lab{padding:0 12px;font-size:13px;letter-spacing:.16em}
+  .lbx-ticker-item{font-size:13px;padding:0 18px;gap:8px}
+}
+@media (max-width:360px){
+  .lbx-hero{grid-template-columns:96px minmax(0,1fr)}
+  html[data-theme] body.lbx .lbx-photo.lb-photo-wrap{width:96px;height:130px}
+  html[data-theme] body.lbx .lbx-pname{font-size:36px}
+  .lbx-bid-amt{font-size:46px}
+}
+@media (prefers-reduced-motion:reduce){
+  .lbx-ticker-track,.lbx-spon-track.is-scroll,.lbx-bid::after,.lbx-live-dot{animation:none}
+}
+
+/* ── BREAK / STAND-BY SCREEN ───────────────────────────────────────── */
+html[data-theme] body.lbx #lb-break-overlay{background:radial-gradient(ellipse 150% 90% at 50% -5%,#0e2a5e 0%,#060e22 48%,#02050c 100%);padding:0 0 calc(var(--u)*40)}
+.lbx-brk-glow{position:absolute;top:-25%;left:50%;transform:translateX(-50%);width:min(1400px,140vw);height:min(800px,80vh);border-radius:50%;
+  background:radial-gradient(ellipse,rgba(242,201,76,.14) 0%,transparent 65%);pointer-events:none}
+.lbx-brk-bar{position:absolute;left:0;right:0;height:4px;background:linear-gradient(90deg,transparent,var(--x-gold) 20%,var(--x-gold) 80%,transparent);box-shadow:0 0 20px rgba(242,201,76,.6)}
+.lbx-brk-bar--top{top:0}.lbx-brk-bar--bot{bottom:0}
+.lbx-brk-content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*22);padding:0 calc(var(--u)*40);width:100%;max-width:96vw;flex:1 1 auto;justify-content:center}
+html[data-theme] body.lbx #lb-brk-logo img{width:auto;height:calc(var(--u)*240);max-width:80vw;object-fit:contain;border:0;padding:0;background:none;border-radius:calc(var(--u)*18);filter:drop-shadow(0 0 30px rgba(242,201,76,.35))}
+html[data-theme] body.lbx #lb-brk-logo .lb-brk-logo-ph{font-size:calc(var(--u)*160);opacity:.5}
+.lbx-brk-name{font:800 calc(var(--u)*104)/1 var(--x-cond);letter-spacing:.03em;text-transform:uppercase;text-align:center;max-width:92vw;text-wrap:balance}
+.lbx-brk-name:empty{display:none}
+.lbx-brk-badge{display:inline-flex;align-items:center;gap:calc(var(--u)*12);padding:calc(var(--u)*8) calc(var(--u)*24);border-radius:99px;border:1.5px solid rgba(242,201,76,.5);background:rgba(242,201,76,.1);
+  font:800 max(10px,calc(var(--u)*22))/1 var(--x-cond);letter-spacing:.34em;text-transform:uppercase;color:var(--x-gold)}
+.lbx-brk-dot{width:calc(var(--u)*10);height:calc(var(--u)*10);min-width:7px;min-height:7px;border-radius:50%;background:var(--x-gold);animation:lbxBlink 1.4s ease-in-out infinite}
+.lbx-brk-msg{font:700 calc(var(--u)*52)/1.15 var(--x-cond);letter-spacing:.12em;text-transform:uppercase;color:var(--x-gold);text-align:center;max-width:90vw;text-wrap:balance;
+  text-shadow:0 0 30px rgba(242,201,76,.4)}
+.lbx-brk-timer{font:600 max(10px,calc(var(--u)*15))/1 var(--x-ui);letter-spacing:.24em;text-transform:uppercase;color:var(--x-muted)}
+.lbx-brk-ads{position:relative;z-index:1;width:100%;flex:none;padding:0 calc(var(--u)*40)}
+.lbx-brk-ads-lab{font:700 max(10px,calc(var(--u)*15))/1 var(--x-ui);letter-spacing:.3em;text-transform:uppercase;color:var(--x-muted);text-align:center;margin-bottom:calc(var(--u)*14)}
+.lbx-brk-spon-view{overflow:hidden;width:100%}
+.lbx-brk-spon-track{display:flex;align-items:center;gap:calc(var(--u)*28);width:max-content;padding-right:calc(var(--u)*28);animation:lbxSpon 30s linear infinite;will-change:transform}
+.lbx-brk-spon-track .lbx-spon-card{height:calc(var(--u)*96);min-height:44px;padding:0 calc(var(--u)*26);border-radius:calc(var(--u)*14)}
+.lbx-brk-spon-track .lbx-spon-card img{max-width:calc(var(--u)*260)}
+.lbx-brk-spon-track .lbx-spon-card span{font-size:max(10px,calc(var(--u)*26))}
+@media (max-width:900px){
+  html[data-theme] body.lbx #lb-break-overlay{padding-bottom:20px}
+  .lbx-brk-content{gap:14px;padding:0 18px}
+  html[data-theme] body.lbx #lb-brk-logo img{height:120px}
+  .lbx-brk-name{font-size:38px}
+  .lbx-brk-badge{font-size:14px;padding:5px 16px;letter-spacing:.28em}
+  .lbx-brk-msg{font-size:24px;letter-spacing:.08em}
+  .lbx-brk-ads{padding:0 14px}
+  .lbx-brk-spon-track{gap:14px}
+  .lbx-brk-spon-track .lbx-spon-card{height:54px;padding:0 14px}
+  .lbx-brk-spon-track .lbx-spon-card img{max-width:130px}
+}
+@media (prefers-reduced-motion:reduce){.lbx-brk-spon-track,.lbx-brk-dot{animation:none}}
+</style>
 </head>
-<body>
+<body class="lbx">
 <t t-call="auction_module.point_unit_bootstrap">
   <t t-set="pu_tournament" t-value="tournament"/>
 </t>
 
-
 <!-- HEADER -->
-<header class="lb-header">
-  <div class="lb-hdr-left">
+<header class="lbx-hdr">
+  <div class="lbx-hdr-left">
     <t t-if="tournament and tournament.logo">
-      <div class="lb-t-logo">
+      <div class="lbx-t-logo">
         <img t-att-src="'/%s/auction/public/image/auction.tournament/%d/logo' % (db_name, tournament.id)" alt="Logo"/>
       </div>
     </t>
     <t t-else="">
-      <div class="lb-t-logo" style="font-size:1.4rem;">🏆</div>
+      <div class="lbx-t-logo">🏆</div>
     </t>
-    <div>
-      <div class="lb-t-name" id="hdr-t-name">
-        <t t-if="tournament"><t t-esc="tournament.name"/></t>
-        <t t-else="">Live Auction Board</t>
-      </div>
-      <div class="lb-t-desc" id="hdr-t-desc">
-        <t t-if="tournament and tournament.description"><t t-esc="tournament.description"/></t>
-      </div>
+    <div class="lbx-t-txt">
+      <div class="lbx-t-name" id="hdr-t-name"><t t-if="tournament"><t t-esc="tournament.name"/></t><t t-else="">Live Auction Board</t></div>
+      <div class="lbx-t-desc" id="hdr-t-desc"><t t-if="tournament and tournament.description"><t t-esc="tournament.description"/></t></div>
     </div>
   </div>
-  <div class="lb-hdr-center">
-    <div class="lb-live-badge"><span class="lb-live-dot"></span> LIVE</div>
-    <div class="lb-hdr-status">Live Player Auction</div>
+  <div class="lbx-hdr-center">
+    <div class="lbx-live" id="lbx-live"><span class="lbx-live-dot"></span> LIVE</div>
+    <div class="lbx-hdr-status">Player Auction</div>
   </div>
-  <div class="lb-hdr-right">
+  <div class="lbx-hdr-right">
     <button type="button" class="lb-coin-btn" id="lbCoinBtn" hidden="hidden" title="Sold coin sound" aria-label="Sold coin sound" aria-pressed="false">
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path d="M4 10v4h3l4 3V7L7 10H4zm10.5 2a3.5 3.5 0 0 0-1.5-2.87v5.74A3.5 3.5 0 0 0 14.5 12zM13 5.1v1.8a6 6 0 0 1 0 10.2v1.8a8 8 0 0 0 0-13.8z"/>
       </svg>
     </button>
-    <div class="lb-powered">
-      <span class="lb-powered-by">Powered by</span>
-      <img class="lb-powered-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+    <div class="lbx-clock" id="lb-clock">--:--:--</div>
+    <div class="lbx-powered">
+      <span>Powered by</span>
+      <img src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
     </div>
-    <div class="lb-clock" id="lb-clock">--:--:--</div>
   </div>
 </header>
 
 <!-- MAIN CONTENT (populated by JS) -->
-<main class="lb-main" id="lb-main">
-  <!-- Left: Player Panel -->
-  <section class="lb-player-panel" id="lb-player-panel">
-    <div class="lb-photo-wrap">
-      <div class="lb-photo-placeholder" id="lb-photo-ph">👤</div>
-      <img id="lb-player-img" alt="Player" style="display:none;position:absolute;top:0;left:0;"/>
-      <div class="lb-mystery-lock" id="lb-mystery-lock" style="display:none" aria-hidden="true">
+<main class="lbx-main" id="lb-main" data-tab="feed">
+  <section class="lbx-hero">
+    <!-- Player: photo + identity -->
+    <div class="lbx-player" id="lb-player-panel">
+      <div class="lb-photo-wrap lbx-photo">
+        <div class="lb-photo-placeholder" id="lb-photo-ph">👤</div>
+        <img id="lb-player-img" alt="Player" style="display:none;position:absolute;top:0;left:0;"/>
+        <div class="lb-mystery-lock" id="lb-mystery-lock" style="display:none" aria-hidden="true">
         <div class="lb-mystery-lock-ico">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M7 11V8a5 5 0 0 1 10 0v3" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
@@ -2972,9 +3395,9 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
         <div class="lb-mystery-lock-title">PLAYER LOCKED</div>
         <div class="lb-mystery-lock-sub">Requires Winning Bid</div>
       </div>
-      <div class="lb-sl-overlay" id="lb-sl-overlay" style="display:none;">#<span id="lb-sl-num">--</span></div>
-      <div class="lb-state-overlay lb-state-auction" id="lb-state-overlay" style="display:none;">LIVE</div>
-      <!-- Projector-style SOLD / UNSOLD circular seal -->
+        <div class="lb-sl-overlay" id="lb-sl-overlay" style="display:none;">#<span id="lb-sl-num">--</span><small class="lbx-sl-of" id="lb-sl-of"></small></div>
+        <div class="lb-state-overlay lb-state-auction" id="lb-state-overlay" style="display:none;">LIVE</div>
+        <!-- Projector-style SOLD / UNSOLD circular seal -->
       <div class="lb-photo-status" id="lbPhotoStatus" data-kind="sold" aria-live="polite">
         <div class="lb-status-glow" aria-hidden="true"></div>
         <div class="lb-status-seal" id="lbStatusSeal" aria-hidden="true">
@@ -2995,113 +3418,116 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
           </svg>
           <div class="lb-status-seal-core">
             <img class="lb-status-seal-mark" src="/auction_module/static/img/sold_overlay_gray.png" alt=""/>
-            <img class="lb-status-seal-logo" id="lbStatusSealLogo" src="" alt=""/>
             <div class="lb-status-seal-pts" id="lbStatusSealPts"></div>
           </div>
         </div>
       </div>
-      <div class="lb-photo-gradient"></div>
-      <div class="lb-photo-name">
-        <div class="lb-player-name-big lb-idle-wait" id="lb-pname"><span class="lb-idle-copy">Waiting for next player</span><span class="lb-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span><span>.</span></span></div>
-        <div class="lb-player-sub" id="lb-psub"></div>
       </div>
-    </div>
-    <div class="lb-player-meta">
-      <div class="lb-badges-row" id="lb-badges-row"></div>
-      <div class="lb-stats-row" id="lb-stats-row" style="display:none;">
-        <div class="lb-stat-chip" id="lb-bat-chip">
-          <div class="lb-stat-lbl">Batting</div>
-          <div class="lb-stat-val" id="lb-bat-val">—</div>
+      <div class="lbx-mid">
+        <div class="lbx-id">
+          <div class="lbx-kicker" id="lb-kicker"></div>
+          <div class="lbx-pname lb-idle-wait" id="lb-pname"><span class="lb-idle-copy">Waiting for next player</span><span class="lb-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span><span>.</span></span></div>
+          <div class="lbx-psub" id="lb-psub"></div>
+          <div class="lbx-badges" id="lb-badges-row"></div>
         </div>
-        <div class="lb-stat-chip" id="lb-bowl-chip">
-          <div class="lb-stat-lbl">Bowling</div>
-          <div class="lb-stat-val" id="lb-bowl-val">—</div>
+        <div class="lbx-attrs">
+          <div class="lbx-stats" id="lb-stats-row" style="display:none;"></div>
+          <div class="lbx-base" id="lb-base-row" style="display:none;">
+            <div class="lbx-base-lbl">Base Price</div>
+            <div class="lbx-base-val" id="lb-base-val">—</div>
+          </div>
         </div>
-      </div>
-      <div class="lb-base-row" id="lb-base-row" style="display:none;">
-        <div class="lb-base-lbl">Base Price</div>
-        <div class="lb-base-val" id="lb-base-val">—</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Center: Bid status -->
-  <section class="lb-center-col" id="lb-center-col">
-    <!-- Status card -->
-    <div class="lb-status-card" id="lb-status-card">
-      <div class="lb-status-waiting">
-        <div class="lb-auction-spinner"></div>
-        <div class="lb-auction-pulse"><span class="lb-idle-copy">Waiting for next player</span><span class="lb-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span><span>.</span></span></div>
       </div>
     </div>
 
-    <!-- Tournament stats -->
-    <div class="lb-stats-card" id="lb-stats-card" style="display:none;">
-      <div class="lb-section-title"><i class="fa fa-chart-simple"></i> Auction Statistics</div>
-      <div class="lb-stats-grid">
-        <div class="lb-stat-tile lb-stat-inauction">
-          <div class="lb-stat-tile-num" id="lb-stat-inauction">0</div>
-          <div class="lb-stat-tile-lbl">In Auction</div>
+    <!-- Bid card + auction statistics -->
+    <div class="lbx-right" id="lb-center-col">
+      <div class="lbx-status" id="lb-status-card">
+        <div class="lbx-wait"><div class="lbx-spin"></div><div><span class="lb-idle-copy">Waiting for next player</span><span class="lb-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span><span>.</span></span></div></div>
+      </div>
+      <div class="lbx-stats-card" id="lb-stats-card" style="display:none;">
+        <div class="lbx-tiles">
+          <div class="lbx-tile a"><b id="lb-stat-inauction">0</b><span>In Auction</span></div>
+          <div class="lbx-tile s"><b id="lb-stat-sold">0</b><span>Sold</span></div>
+          <div class="lbx-tile u"><b id="lb-stat-unsold">0</b><span>Unsold</span></div>
+          <div class="lbx-tile t"><b id="lb-stat-total">0</b><span>Total Players</span></div>
         </div>
-        <div class="lb-stat-tile lb-stat-sold">
-          <div class="lb-stat-tile-num" id="lb-stat-sold">0</div>
-          <div class="lb-stat-tile-lbl">Sold</div>
-        </div>
-        <div class="lb-stat-tile lb-stat-unsold">
-          <div class="lb-stat-tile-num" id="lb-stat-unsold">0</div>
-          <div class="lb-stat-tile-lbl">Unsold</div>
-        </div>
-        <div class="lb-stat-tile lb-stat-total">
-          <div class="lb-stat-tile-num" id="lb-stat-total">0</div>
-          <div class="lb-stat-tile-lbl">Total Players</div>
+        <div class="lbx-card lbx-prog">
+          <div class="lbx-prog-row"><span>Auction progress</span><span id="lbx-prog-txt"></span></div>
+          <div class="lbx-prog-bar"><i class="ok" id="lbx-prog-ok" style="width:0"></i><i class="no" id="lbx-prog-no" style="width:0"></i><i class="live" id="lbx-prog-live" style="width:0"></i></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Right: History + MVP -->
-  <section class="lb-side-col" id="lb-side-col">
-    <!-- History card -->
-    <div class="lb-history-card">
-      <div class="lb-section-title"><i class="fa fa-history"></i> Recent Transactions</div>
-      <div id="lb-history-list">
-        <div class="lb-history-empty">No transactions yet</div>
-      </div>
-    </div>
+  <!-- Phone-only tab switch (feed / top buys / teams) -->
+  <nav class="lbx-tabs" id="lbx-tabs" aria-label="Board sections">
+    <button type="button" data-tab="feed" class="on">Feed</button>
+    <button type="button" data-tab="top">Top Buys</button>
+    <button type="button" data-tab="teams">Teams</button>
+  </nav>
 
-    <!-- MVP / Top Buys card -->
-    <div class="lb-mvp-card">
-      <div class="lb-section-title"><i class="fa fa-trophy"></i> Top Buys &amp; MVP Board</div>
-      <div id="lb-mvp-list">
-        <div class="lb-mvp-empty">No sold players yet</div>
-      </div>
+  <section class="lbx-band">
+    <div class="lbx-card lbx-pn lbx-pn--feed">
+      <h3>Recent Transactions<em>Latest first</em></h3>
+      <div class="lbx-feed" id="lb-history-list"><div class="lbx-empty">No transactions yet</div></div>
     </div>
+    <div class="lbx-card lbx-pn lbx-pn--top">
+      <h3>Top Buys &amp; MVP Board<em>Highest points</em></h3>
+      <div class="lbx-top" id="lb-mvp-list"><div class="lbx-empty">No sold players yet</div></div>
+    </div>
+  </section>
 
+  <!-- Participating teams strip -->
+  <section class="lbx-card lbx-teams" id="lb-teams-card" style="display:none;">
+    <div class="lbx-teams-lab">Participating Teams<small>Hover for squad</small></div>
+    <div class="lbx-teams-grid" id="lb-teams-grid"></div>
   </section>
 </main>
 
-<!-- Participating teams — full-width broadcast strip -->
-<section class="lb-teams-card" id="lb-teams-card" style="display:none;">
-  <div class="lb-section-title"><i class="fa fa-shield-halved"></i> Participating Teams</div>
-  <div class="lb-teams-grid" id="lb-teams-grid"></div>
-</section>
-
-<div class="lb-footer" id="lb-footer">
-  <div class="lb-ticker">
-    <div class="lb-ticker-track">
-      <span class="lb-ticker-item"><span class="lb-ticker-dot"></span><t t-if="tournament"><t t-esc="tournament.name"/></t><t t-else="">Live Auction Board</t></span>
-      <span class="lb-ticker-item">LIVE AUCTION IN PROGRESS</span>
-      <span class="lb-ticker-item">Bids update in real time</span>
-      <span class="lb-ticker-item">Next player announced automatically</span>
-      <span class="lb-ticker-item">Powered by AuctionChamp</span>
-      <span class="lb-ticker-item"><span class="lb-ticker-dot"></span><t t-if="tournament"><t t-esc="tournament.name"/></t><t t-else="">Live Auction Board</t></span>
-      <span class="lb-ticker-item">LIVE AUCTION IN PROGRESS</span>
-      <span class="lb-ticker-item">Bids update in real time</span>
-      <span class="lb-ticker-item">Next player announced automatically</span>
-      <span class="lb-ticker-item">Powered by AuctionChamp</span>
+<!-- FOOTER: updates ticker + sponsors -->
+<footer class="lbx-foot" id="lb-footer">
+  <div class="lbx-ticker">
+    <div class="lbx-ticker-lab">Updates</div>
+    <div class="lbx-ticker-view">
+      <div class="lbx-ticker-track" id="lbx-ticker-track">
+        <span class="lbx-ticker-item"><t t-if="tournament"><t t-esc="tournament.name"/></t><t t-else="">Live Auction Board</t></span>
+        <span class="lbx-ticker-item">Live auction in progress</span>
+        <span class="lbx-ticker-item">Bids update in real time</span>
+        <span class="lbx-ticker-item">Next player announced automatically</span>
+        <span class="lbx-ticker-item">Powered by AuctionChamp</span>
+        <span class="lbx-ticker-item"><t t-if="tournament"><t t-esc="tournament.name"/></t><t t-else="">Live Auction Board</t></span>
+        <span class="lbx-ticker-item">Live auction in progress</span>
+        <span class="lbx-ticker-item">Bids update in real time</span>
+        <span class="lbx-ticker-item">Next player announced automatically</span>
+        <span class="lbx-ticker-item">Powered by AuctionChamp</span>
+      </div>
     </div>
   </div>
-</div>
+  <!-- Sponsors — only when the tournament has advertisers configured -->
+  <t t-set="lb_ads" t-value="tournament.advertiser_ids if tournament else []"/>
+  <t t-if="lb_ads">
+  <div class="lbx-spon" id="lb-sponsor-strip">
+    <div class="lbx-spon-lab">Our Sponsors</div>
+    <div class="lbx-spon-view" id="lbx-spon-view">
+      <div class="lbx-spon-track" id="lb-sponsor-track">
+        <t t-foreach="lb_ads" t-as="ad">
+          <div class="lbx-spon-card">
+            <t t-if="ad.image">
+              <img t-att-src="'/%s/auction/public/image/auction.advertiser/%d/image' % (db_name, ad.id)"
+                   t-att-alt="ad.name" t-att-title="ad.name"/>
+            </t>
+            <t t-else="">
+              <span><t t-esc="ad.name"/></span>
+            </t>
+          </div>
+        </t>
+      </div>
+    </div>
+  </div>
+  <script>document.body.classList.add('lb-has-sponsors');</script>
+  </t>
+</footer>
 
 <script><![CDATA[
 (function(){
@@ -3158,15 +3584,126 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     return p.role ? lbEsc(p.role) : '';
   }
 
+
+  // ── IPL layout helpers ────────────────────────────────────────
+  function fmtParts(n) {
+    var sym = (window.pointUnitSymbol && window.pointUnitSymbol()) || 'pts';
+    return { num: Number(n || 0).toLocaleString('en-US'), sym: String(sym).toUpperCase() };
+  }
+  function lbxSet(el, html) {
+    if (!el || el._lbxH === html) return;
+    el._lbxH = html;
+    el.innerHTML = html;
+  }
+  function lbxFitAmount() {
+    var el = document.querySelector('.lbx-bid-amt');
+    if (!el) return;
+    el.style.fontSize = '';
+    var cw = el.clientWidth, sw = el.scrollWidth;
+    if (cw && sw > cw) {
+      var fs = parseFloat(getComputedStyle(el).fontSize) || 0;
+      if (fs) el.style.fontSize = Math.floor(fs * cw / sw * 0.97) + 'px';
+    }
+  }
+  window.addEventListener('resize', lbxFitAmount);
+
+  // Sponsors scroll right-to-left only when they overflow the strip
+  function lbxFitSponsors() {
+    var view = document.getElementById('lbx-spon-view');
+    var track = document.getElementById('lb-sponsor-track');
+    if (!view || !track) return;
+    if (track.getAttribute('data-dup') === '1') return;
+    view.classList.remove('is-scroll'); track.classList.remove('is-scroll');
+    if (track.scrollWidth > view.clientWidth + 2 && track.children.length) {
+      track.innerHTML += track.innerHTML;
+      track.setAttribute('data-dup', '1');
+      view.classList.add('is-scroll'); track.classList.add('is-scroll');
+    }
+  }
+  window.addEventListener('load', lbxFitSponsors);
+
+  // Updates ticker: latest sales first, then the standing messages
+  var _lbxTickerBase = null;
+  function lbxBuildTicker(history) {
+    var track = document.getElementById('lbx-ticker-track');
+    if (!track) return;
+    if (!_lbxTickerBase) {
+      var tn = (document.getElementById('hdr-t-name') || {}).textContent || 'Live Auction Board';
+      _lbxTickerBase = [tn.trim(), 'Live auction in progress', 'Bids update in real time',
+        'Next player announced automatically', 'Powered by AuctionChamp'];
+    }
+    var items = [];
+    (history || []).slice(0, 6).forEach(function(h) {
+      if (h && h.message) items.push(String(h.message).replace(/\s+/g, ' '));
+    });
+    items = items.concat(_lbxTickerBase);
+    var html = items.map(function(t) { return '<span class="lbx-ticker-item">' + lbEsc(t) + '</span>'; }).join('');
+    track.innerHTML = html + html;
+    track.style.animationDuration = Math.max(30, Math.round(track.scrollWidth / 2 / 70)) + 's';
+  }
+
+  // Highlight the leading / winning team in the teams strip
+  var _lbxLead = null;
+  function lbxMarkLeadTeam(name, sold) {
+    _lbxLead = name ? { name: String(name).trim().toLowerCase(), sold: !!sold } : null;
+    var chips = document.querySelectorAll('#lb-teams-grid .lbx-team');
+    for (var i = 0; i < chips.length; i++) {
+      var hit = _lbxLead && (chips[i].getAttribute('data-name') || '') === _lbxLead.name;
+      chips[i].classList.toggle('is-lead', !!hit);
+      chips[i].classList.toggle('is-sold', !!(hit && _lbxLead.sold));
+    }
+  }
+
+  // Player name: first name white, surname gold (two lines)
+  function lbxNameHtml(name) {
+    var words = String(name || '—').trim().split(/\s+/);
+    if (words.length < 2) return lbEsc(words[0] || '—');
+    return lbEsc(words.slice(0, -1).join(' ')) + '<span class="lbx-pn-last">' + lbEsc(words[words.length - 1]) + '</span>';
+  }
+
+  // Long names: shrink until the identity block fits
+  function lbxFitName() {
+    var el = document.getElementById('lb-pname');
+    var mid = document.querySelector('.lbx-mid');
+    if (!el || !mid) return;
+    el.style.fontSize = '';
+    var n = 0;
+    while (n++ < 16 && (mid.scrollHeight > mid.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1)) {
+      var fs = parseFloat(getComputedStyle(el).fontSize) || 0;
+      if (fs <= 20) break;
+      el.style.fontSize = (fs * 0.92) + 'px';
+    }
+  }
+  window.addEventListener('resize', lbxFitName);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(lbxFitName);
+  if (window.MutationObserver) {
+    var _fitMo = new MutationObserver(lbxFitName);
+    ['lb-pname', 'lb-badges-row'].forEach(function(id) {
+      var n = document.getElementById(id);
+      if (n) _fitMo.observe(n, { childList: true, subtree: true, characterData: true });
+    });
+    ['lb-stats-row', 'lb-base-row'].forEach(function(id) {
+      var n = document.getElementById(id);
+      if (n) _fitMo.observe(n, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
+    });
+  }
+
+  // Phone tab switch
+  document.addEventListener('click', function(e) {
+    var b = e.target && e.target.closest ? e.target.closest('#lbx-tabs button') : null;
+    if (!b) return;
+    var main = document.getElementById('lb-main');
+    if (main) main.setAttribute('data-tab', b.getAttribute('data-tab'));
+    var all = document.querySelectorAll('#lbx-tabs button');
+    for (var i = 0; i < all.length; i++) all[i].classList.toggle('on', all[i] === b);
+  });
+
   // ── Break time + advertiser state ─────────────────────────────
   var _breakActive   = false;
   var _breakStartTs  = null;
   var _breakClockId  = null;
   var _adList        = [];
   var _adSig         = '';
-  var _adBrkTimerId  = null;
-  var _adPairIndex   = 0;
-  var _adPairCount   = 0;
 
   function startBreakClock() {
     if (_breakClockId) return;
@@ -3188,55 +3725,11 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     }).join('||');
   }
 
-  function adCellHtml(ad) {
-    if (!ad) return '<div class="lb-brk-ad-cell" aria-hidden="true"></div>';
+  function lbxAdCardHtml(ad) {
     var inner = ad.image_url
-      ? '<img src="' + ad.image_url + '" alt="' + (ad.name || '') + '" onerror="this.style.display=\'none\'">'
-      : '<span class="lb-brk-ad-name">' + (ad.name || '') + '</span>';
-    return '<div class="lb-brk-ad-cell">' + inner + '</div>';
-  }
-
-  function goToAdPair(idx) {
-    if (_adPairCount < 1) return;
-    _adPairIndex = ((idx % _adPairCount) + _adPairCount) % _adPairCount;
-    var track = document.getElementById('lb-brk-ads-track');
-    var vp = document.getElementById('lb-brk-ads-viewport');
-    var w = vp ? vp.clientWidth : 0;
-    if (track && w) {
-      track.style.transform = 'translateX(-' + (_adPairIndex * w) + 'px)';
-    }
-    var dots = document.querySelectorAll('#lb-brk-ad-dots .lb-brk-ad-dot');
-    for (var i = 0; i < dots.length; i++) {
-      dots[i].classList.toggle('active', i === _adPairIndex);
-    }
-  }
-
-  function advanceAdPair() {
-    if (_adPairCount < 2) return;
-    goToAdPair(_adPairIndex + 1);
-  }
-
-  function startAdPairTimer() {
-    if (_adBrkTimerId) { clearInterval(_adBrkTimerId); _adBrkTimerId = null; }
-    if (_adPairCount > 1) {
-      _adBrkTimerId = setInterval(advanceAdPair, 2000);
-    }
-  }
-
-  function buildAdPairs(list) {
-    var n = (list || []).length;
-    if (!n) return [];
-    if (n === 1) return [{ a: list[0], b: null, solo: true }];
-    var pairs = [];
-    for (var i = 0; i < n; i += 2) {
-      if (i + 1 < n) {
-        pairs.push({ a: list[i], b: list[i + 1], solo: false });
-      } else {
-        /* Odd leftover: pair last with first (round-robin), never show a lone slot */
-        pairs.push({ a: list[i], b: list[0], solo: false });
-      }
-    }
-    return pairs;
+      ? '<img src="' + lbEsc(ad.image_url) + '" alt="' + lbEsc(ad.name || '') + '" title="' + lbEsc(ad.name || '') + '" onerror="this.style.display=\'none\'">'
+      : '<span>' + lbEsc(ad.name || '') + '</span>';
+    return '<div class="lbx-spon-card">' + inner + '</div>';
   }
 
   function updateAds(ads) {
@@ -3245,54 +3738,30 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     var changed = sig !== _adSig;
     _adList = next;
     _adSig = sig;
+    var hasAds = _adList.length > 0;
 
     if (changed) {
-      var brkAds  = document.getElementById('lb-brk-ads');
+      var cards = _adList.map(lbxAdCardHtml).join('');
+      // Break screen: sponsor logos scroll right to left (CSS transform only)
+      var brkAds = document.getElementById('lb-brk-ads');
       var brkTrack = document.getElementById('lb-brk-ads-track');
-      var brkDots  = document.getElementById('lb-brk-ad-dots');
       if (brkTrack) {
-        var pairs = buildAdPairs(_adList);
-        _adPairCount = pairs.length;
-        brkTrack.innerHTML = pairs.map(function(pair) {
-          if (pair.solo) {
-            return '<div class="lb-brk-ad-pair lb-brk-ad-pair-solo">' + adCellHtml(pair.a) + '</div>';
-          }
-          return '<div class="lb-brk-ad-pair">' + adCellHtml(pair.a) + adCellHtml(pair.b) + '</div>';
-        }).join('');
-        _adPairIndex = 0;
-        // Apply after layout so viewport width is correct
-        requestAnimationFrame(function() { goToAdPair(0); });
+        var half = new Array(Math.max(1, Math.ceil(8 / Math.max(1, _adList.length))) + 1).join(cards);
+        brkTrack.innerHTML = hasAds ? half + half : '';
       }
-      if (brkDots) {
-        brkDots.innerHTML = '';
-        for (var d = 0; d < _adPairCount; d++) {
-          brkDots.innerHTML += '<div class="lb-brk-ad-dot' + (d === 0 ? ' active' : '') + '"></div>';
-        }
-        brkDots.style.display = _adPairCount > 1 ? '' : 'none';
+      if (brkAds) brkAds.style.display = hasAds ? '' : 'none';
+      // Footer sponsor strip
+      var stripTrack = document.getElementById('lb-sponsor-track');
+      if (stripTrack && hasAds) {
+        stripTrack.removeAttribute('data-dup');
+        stripTrack.innerHTML = cards;
+        lbxFitSponsors();
       }
-      if (brkAds) brkAds.style.display = _adList.length ? '' : 'none';
-      startAdPairTimer();
     }
-
-    // Regular sponsor strip — hide entirely when no advertisers configured
     var strip = document.getElementById('lb-sponsor-strip');
-    var stripTrack = document.getElementById('lb-sponsor-track');
-    var hasAds = _adList.length > 0;
-    if (changed && stripTrack && hasAds) {
-      stripTrack.innerHTML = _adList.map(function(ad) {
-        var inner = ad.image_url
-          ? '<img class="lb-spon-logo" src="' + ad.image_url + '" alt="' + (ad.name||'') + '" title="' + (ad.name||'') + '" onerror="this.style.display=\'none\'">'
-          : '<span class="lb-spon-name">' + (ad.name||'') + '</span>';
-        return '<div class="lb-spon-item"><div class="lb-spon-card">' + inner + '</div></div>';
-      }).join('');
-    }
     if (strip) strip.style.display = hasAds ? '' : 'none';
     document.body.classList.toggle('lb-has-sponsors', hasAds);
   }
-
-  window.addEventListener('resize', function() {
-    if (_adPairCount) goToAdPair(_adPairIndex);
-  });
 
   var _lbTyConfettiBuilt = false;
   var _lbTyPhase = '';
@@ -3351,7 +3820,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       phase = 'waiting';
     }
     var overlay = document.getElementById('lb-thankyou-overlay');
-    var liveBadge = document.querySelector('.lb-live-badge');
+    var liveBadge = document.querySelector('.lbx-live');
     var entering = phase === 'completed' && _lbTyPhase !== 'completed';
 
     if (!overlay) {
@@ -3390,7 +3859,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
         }
       }
 
-      if (liveBadge) liveBadge.innerHTML = '<span class="lb-live-dot"></span> COMPLETE';
+      if (liveBadge) liveBadge.innerHTML = '<span class="lbx-live-dot"></span> COMPLETE';
 
       buildLbTyConfetti();
       if (entering) replayLbTyCeremony();
@@ -3399,7 +3868,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       overlay.classList.remove('active');
       overlay.setAttribute('aria-hidden', 'true');
       if (liveBadge && _lbTyPhase === 'completed') {
-        liveBadge.innerHTML = '<span class="lb-live-dot"></span> LIVE';
+        liveBadge.innerHTML = '<span class="lbx-live-dot"></span> LIVE';
       }
     }
     _lbTyPhase = phase;
@@ -3422,12 +3891,10 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
           logoEl.innerHTML = '<img src="' + tournamentData.logo_url + '" alt="" onerror="this.innerHTML=\'<span class=lb-brk-logo-ph>&#127942;</span>\'">';
           logoEl.dataset.set = '1';
         }
+        var brkName = document.getElementById('lbx-brk-name');
+        if (brkName && tournamentData && tournamentData.name) brkName.textContent = tournamentData.name;
         overlay.classList.add('active');
         startBreakClock();
-        requestAnimationFrame(function() {
-          if (_adPairCount) goToAdPair(_adPairIndex);
-          startAdPairTimer();
-        });
       }
     } else {
       if (_breakActive) {
@@ -3435,7 +3902,6 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
         _breakStartTs = null;
         overlay.classList.remove('active');
         stopBreakClock();
-        if (_adBrkTimerId) { clearInterval(_adBrkTimerId); _adBrkTimerId = null; }
         var timerEl = document.getElementById('lb-brk-timer');
         if (timerEl) timerEl.textContent = '\u25cf Break in progress';
       }
@@ -3639,6 +4105,18 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
   function hideLbPhotoStatus() {
     var overlay = document.getElementById('lbPhotoStatus');
     if (overlay) overlay.classList.remove('lb-status-show');
+    var rb = document.getElementById('lbxRibbon');
+    if (rb) rb.classList.remove('is-on');
+  }
+  function showLbxRibbon(kind) {
+    var rb = document.getElementById('lbxRibbon');
+    if (!rb) return;
+    if (rb.classList.contains('is-on') && rb.getAttribute('data-kind') === kind) return;
+    rb.setAttribute('data-kind', kind);
+    rb.textContent = kind === 'sold' ? 'SOLD' : 'UNSOLD';
+    rb.classList.remove('is-on');
+    void rb.offsetWidth;
+    rb.classList.add('is-on');
   }
   function showLbPhotoStatus(kind, soldInfo) {
     var overlay = document.getElementById('lbPhotoStatus');
@@ -3678,16 +4156,17 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     rememberWaitPhase(waitPhase);
     var pnameEl = document.getElementById('lb-pname');
     if (!p) {
-      pnameEl.innerHTML = idleLineHtml(idleHeadline(_lbWaitPhase), idleShowDots(_lbWaitPhase));
+      lbxSet(pnameEl, idleLineHtml(idleHeadline(_lbWaitPhase), idleShowDots(_lbWaitPhase)));
       pnameEl.classList.add('lb-idle-wait');
       document.getElementById('lb-psub').textContent = '';
+      var kIdle = document.getElementById('lb-kicker'); if (kIdle) kIdle.textContent = '';
       lbApplyPlayerPhoto(null);
       document.getElementById('lb-sl-overlay').style.display = 'none';
       document.getElementById('lb-state-overlay').style.display = 'none';
       hideLbPhotoStatus();
       var lockClear = document.getElementById('lb-mystery-lock');
       if (lockClear) lockClear.style.display = 'none';
-      document.getElementById('lb-badges-row').innerHTML = '';
+      lbxSet(document.getElementById('lb-badges-row'), '');
       document.getElementById('lb-stats-row').style.display = 'none';
       document.getElementById('lb-base-row').style.display = 'none';
       return;
@@ -3702,9 +4181,9 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     const mysteryLock = document.getElementById('lb-mystery-lock');
 
     // Name + sub — Mystery Player? only; no role ??? / small ?
-    pnameEl.textContent = mysteryHidden
-      ? 'Mystery Player?'
-      : (p.name || '—');
+    lbxSet(pnameEl, lbxNameHtml(mysteryHidden ? 'Mystery Player?' : (p.name || '—')));
+    var kEl = document.getElementById('lb-kicker');
+    if (kEl) kEl.textContent = (p.state === 'sold' || p.state === 'unsold') ? 'Auction Result' : 'Now Auctioning';
     const subRole = (p.tournament_type === 'football')
       ? (p.dominant_position || p.role || '')
       : (p.tournament_type === 'kabaddi'
@@ -3724,7 +4203,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     const stEl = document.getElementById('lb-state-overlay');
     stEl.style.display = '';
     stEl.className = 'lb-state-overlay lb-state-' + (p.state || 'auction');
-    stEl.textContent = p.state === 'sold' ? 'SOLD' : p.state === 'unsold' ? 'UNSOLD' : 'LIVE';
+    stEl.textContent = p.state === 'sold' ? 'SOLD' : p.state === 'unsold' ? 'UNSOLD' : '\u25cf LIVE NOW';
 
     // Projector-style SOLD / UNSOLD seal on the player photo
     if (p.state === 'sold' && soldInfo) {
@@ -3764,13 +4243,13 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     if (p.icon_player && !mysteryHidden) {
       badgesHtml += `<span class="lb-badge lb-b-icon">⭐ Icon</span>`;
     }
-    document.getElementById('lb-badges-row').innerHTML = badgesHtml;
+    lbxSet(document.getElementById('lb-badges-row'), badgesHtml);
 
     // Stats row — hide identity attributes while mystery is locked
     const statsRow = document.getElementById('lb-stats-row');
     if (mysteryHidden) {
       statsRow.style.display = 'none';
-      statsRow.innerHTML = '';
+      lbxSet(statsRow, '');
     } else if (isFootball) {
       let r1 = '';
       if (p.preferred_foot) r1 += lbStat('Foot', p.preferred_foot);
@@ -3795,7 +4274,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       }
       if (sh) {
         statsRow.style.display = 'flex';
-        statsRow.innerHTML = sh;
+        lbxSet(statsRow, sh);
       } else {
         statsRow.style.display = 'none';
       }
@@ -3810,24 +4289,23 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       const bChips = lbChips(p.strengths);
       if (bChips) sh += (sh ? '<div class="lb-stat-break"></div>' : '') + bChips;
       statsRow.style.display = 'flex';
-      statsRow.innerHTML = sh;
+      lbxSet(statsRow, sh);
     } else if (isKabaddi) {
       let r1 = '';
       if (p.kabaddi_role || p.role) r1 += lbStat('Role', p.kabaddi_role || p.role);
       if (p.previous_club || p.current_team) r1 += lbStat('Club', p.previous_club || p.current_team);
       if (r1) {
         statsRow.style.display = 'flex';
-        statsRow.innerHTML = r1;
+        lbxSet(statsRow, r1);
       } else {
         statsRow.style.display = 'none';
       }
     } else if (p.batting_style || p.bowling_style) {
       statsRow.style.display = 'flex';
-      statsRow.innerHTML =
-        '<div class="lb-stat-chip"><div class="lb-stat-lbl">Batting</div>' +
+      lbxSet(statsRow, '<div class="lb-stat-chip"><div class="lb-stat-lbl">Batting</div>' +
         '<div class="lb-stat-val">' + lbEsc(p.batting_style || '—') + '</div></div>' +
         '<div class="lb-stat-chip"><div class="lb-stat-lbl">Bowling</div>' +
-        '<div class="lb-stat-val">' + lbEsc(p.bowling_style || '—') + '</div></div>';
+        '<div class="lb-stat-val">' + lbEsc(p.bowling_style || '—') + '</div></div>');
     } else {
       statsRow.style.display = 'none';
     }
@@ -3835,81 +4313,65 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     // Base price
     if (p.base_price) {
       document.getElementById('lb-base-row').style.display = '';
-      document.getElementById('lb-base-val').textContent = fmtPts(p.base_price);
+      var _bv = document.getElementById('lb-base-val'), _bt = fmtPts(p.base_price); if (_bv.textContent !== _bt) _bv.textContent = _bt;
     } else {
       document.getElementById('lb-base-row').style.display = 'none';
     }
   }
 
   // ── Render Status Card ─────────────────────────────────────────
+  function lbxWaitHtml(inner, live) {
+    return '<div class="lbx-wait' + (live ? ' lbx-wait-live' : '') + '"><div class="lbx-spin"></div><div>' + inner + '</div></div>';
+  }
   function renderStatus(currentPlayer, soldInfo, waitPhase) {
     rememberWaitPhase(waitPhase);
     const card = document.getElementById('lb-status-card');
+    let html, lead = null, leadSold = false;
+    const idleHtml = lbxWaitHtml(idleLineHtml(idleHeadline(_lbWaitPhase), idleShowDots(_lbWaitPhase)), false);
 
     if (!currentPlayer) {
-      card.innerHTML = `<div class="lb-status-waiting">
-        <div class="lb-auction-spinner"></div>
-        <div class="lb-auction-pulse">${idleLineHtml(idleHeadline(_lbWaitPhase), idleShowDots(_lbWaitPhase))}</div>
-      </div>`;
-      return;
-    }
-
-    if (currentPlayer.state === 'sold' && soldInfo) {
-      const logoHtml = soldInfo.team_logo_url
-        ? `<img src="${soldInfo.team_logo_url}" alt="logo" onerror="this.parentElement.innerHTML='🏆'">`
-        : '🏆';
-      card.innerHTML = `<div class="lb-status-sold">
-        <div class="lb-status-label">🏆 Sold!</div>
-        <div class="lb-sold-amount">${fmtPts(soldInfo.amount)}</div>
-        <div class="lb-sold-team">
-          <div class="lb-sold-team-logo">${logoHtml}</div>
-          <div>
-            <div class="lb-sold-team-name">${soldInfo.team_name}</div>
-          </div>
-        </div>
-      </div>`;
+      html = idleHtml;
+    } else if (currentPlayer.state === 'sold' && soldInfo) {
+      const f = fmtParts(soldInfo.amount);
+      html = '<div class="lbx-bid is-sold">' +
+        '<div class="lbx-bid-top"><span>Sold For \u00b7 ' + lbEsc(f.sym) + '</span><em>Hammer Down</em></div>' +
+        '<div class="lbx-bid-amt">' + f.num + '</div>' +
+        '<div class="lbx-lead"><div><small>Sold to</small><strong>' + lbEsc(soldInfo.team_name || '') + '</strong></div></div>' +
+        '</div>';
+      lead = soldInfo.team_name; leadSold = true;
     } else if (currentPlayer.state === 'auction') {
       const bid = (currentPlayer.current_bid > 0) ? currentPlayer.current_bid : 0;
       const bidTeam = currentPlayer.current_bid_team || null;
-      let bidSection;
       if (bid > 0) {
-        const logoHtml = bidTeam && bidTeam.logo_url
-          ? `<img class="lb-live-bid-logo" src="${bidTeam.logo_url}" alt="" onerror="this.outerHTML='<div class=\\'lb-live-bid-logo-ph\\'>🏏</div>'">`
-          : `<div class="lb-live-bid-logo-ph">🏏</div>`;
-        const nameHtml = bidTeam
-          ? `<div class="lb-live-bid-meta">
-              <div class="lb-live-bid-name">${lbEsc(bidTeam.name || 'Leading team')}</div>
-              <div class="lb-live-bid-tag">Leading Bid</div>
-            </div>`
-          : `<div class="lb-live-bid-meta">
-              <div class="lb-live-bid-name">Leading Bid</div>
-              <div class="lb-live-bid-tag">Current offer</div>
-            </div>`;
-        bidSection = `<div class="lb-live-bid">
-          <div class="lb-live-bid-pts">
-            <span class="lb-live-bid-pts-lbl">Current Bid</span>
-            ${fmtPts(bid)}
-          </div>
-          <div class="lb-live-bid-team">${logoHtml}${nameHtml}</div>
-        </div>`;
+        const f = fmtParts(bid);
+        const logo = bidTeam && bidTeam.logo_url
+          ? '<img src="' + lbEsc(bidTeam.logo_url) + '" alt="" onerror="this.outerHTML=\'<span class=lbx-lead-ph>\\ud83d\\udee1</span>\'">'
+          : '<span class="lbx-lead-ph">\ud83d\udee1</span>';
+        html = '<div class="lbx-bid is-live">' +
+          '<div class="lbx-bid-top"><span>Current Bid \u00b7 ' + lbEsc(f.sym) + '</span><em>Bidding Open</em></div>' +
+          '<div class="lbx-bid-amt">' + f.num + '</div>' +
+          '<div class="lbx-lead">' + logo + '<div><small>Highest bidder</small><strong>' +
+          lbEsc(bidTeam ? (bidTeam.name || 'Leading team') : 'Leading bid') + '</strong></div></div>' +
+          '</div>';
+        lead = bidTeam ? bidTeam.name : null;
       } else {
-        bidSection = `<div class="lb-live-bid-waiting">
-          <div class="lb-auction-spinner"></div>
-          <div class="lb-live-bid-wait-txt">
-            <span class="lb-idle-copy">Accepting bids from teams</span>${idleDotsHtml()}
-          </div>
-        </div>`;
+        html = lbxWaitHtml('<span class="lb-idle-copy">Accepting bids from teams</span>' + idleDotsHtml(), true);
       }
-      card.innerHTML = `<div class="lb-status-auction">
-        <div class="lb-status-label">🎯 In Auction — Bidding in Progress</div>
-        ${bidSection}
-      </div>`;
+    } else if (currentPlayer.state === 'unsold') {
+      html = '<div class="lbx-bid is-unsold">' +
+        '<div class="lbx-bid-top"><span>Auction Result</span><em>No Bid</em></div>' +
+        '<div class="lbx-bid-amt is-text">UNSOLD</div>' +
+        '<div class="lbx-lead"><div><small>Result</small><strong>No team picked this player</strong></div></div>' +
+        '</div>';
     } else {
-      card.innerHTML = `<div class="lb-status-waiting">
-        <div class="lb-auction-spinner"></div>
-        <div class="lb-auction-pulse">${idleLineHtml(idleHeadline(_lbWaitPhase), idleShowDots(_lbWaitPhase))}</div>
-      </div>`;
+      html = idleHtml;
     }
+    if (card._lbxHtml !== html) {
+      card._lbxHtml = html;
+      card.innerHTML = html;
+      lbxFitAmount();
+    }
+    lbxMarkLeadTeam(lead, leadSold);
   }
 
   // ── Render History ─────────────────────────────────────────────
@@ -3925,19 +4387,31 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     var fp = JSON.stringify(history || []);
     if (fp === _fpHistory) return;
     _fpHistory = fp;
+    lbxBuildTicker(history);
     if (!history || !history.length) {
-      list.innerHTML = '<div class="lb-history-empty">No transactions yet</div>';
+      list.innerHTML = '<div class="lbx-empty">No transactions yet</div>';
       return;
     }
     list.innerHTML = history.map(h => {
-      const avatarHtml = h.team_logo_url
-        ? `<img src="${h.team_logo_url}" alt="" onerror="this.parentElement.innerHTML='🏅'">`
-        : '<span class="lb-history-avatar-ph">🏅</span>';
-      return `<div class="lb-history-item">
-        <div class="lb-history-avatar">${avatarHtml}</div>
-        <div class="lb-history-msg">${formatHistoryMsg(h.message)}</div>
-        <div class="lb-history-time">${h.timestamp || ''}</div>
-      </div>`;
+      const raw = String(h.message || '');
+      const unsold = /unsold/i.test(raw);
+      const msg = formatHistoryMsg(raw);
+      let main = msg, amt = '';
+      const mAmt = /^(.*)\sfor\s(\S.*)$/.exec(msg);
+      if (mAmt && !unsold) { main = mAmt[1]; amt = mAmt[2]; }
+      const mTeam = /^(.*?)\s+sold to\s+(.*)$/.exec(main);
+      const msgHtml = mTeam
+        ? lbEsc(mTeam[1]) + ' <small>\u2014 sold to ' + lbEsc(mTeam[2]) + '</small>'
+        : lbEsc(main);
+      const avatar = h.team_logo_url
+        ? '<img src="' + lbEsc(h.team_logo_url) + '" alt="" onerror="this.parentElement.textContent=\'\\ud83c\\udfc5\'">'
+        : '\ud83c\udfc5';
+      return '<div class="lbx-fi' + (unsold ? ' un' : '') + '">' +
+        '<div class="lbx-fi-av">' + avatar + '</div>' +
+        '<div class="lbx-fi-msg">' + msgHtml + '</div>' +
+        (amt ? '<div class="lbx-fi-amt">' + lbEsc(amt) + '</div>' : '') +
+        '<div class="lbx-fi-time">' + lbEsc(h.timestamp || '') + '</div>' +
+        '</div>';
     }).join('');
   }
 
@@ -3948,39 +4422,27 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     if (fp === _fpMvp) return;
     _fpMvp = fp;
     if (!topPlayers || !topPlayers.length) {
-      list.innerHTML = '<div class="lb-mvp-empty">No sold players yet</div>';
+      list.innerHTML = '<div class="lbx-empty">No sold players yet</div>';
       return;
     }
-    const medals = ['👑', '🥈', '🥉'];
-    const rankClasses = ['lb-mvp-rank-gold', 'lb-mvp-rank-silver', 'lb-mvp-rank-bronze', 'lb-mvp-rank-num', 'lb-mvp-rank-num'];
+    const medals = ['\ud83d\udc51', '\ud83e\udd48', '\ud83e\udd49'];
     list.innerHTML = topPlayers.map((p, idx) => {
-      const isMvp = idx === 0;
-      const rankIcon  = medals[idx] !== undefined ? medals[idx] : String(p.rank);
-      const rankClass = rankClasses[idx] || 'lb-mvp-rank-num';
-      const avatarHtml = p.player_photo_url
-        ? `<img src="${p.player_photo_url}" alt="" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=lb-mvp-avatar-ph>👤</span>'">`
-        : '<span class="lb-mvp-avatar-ph">👤</span>';
-      const teamLogoHtml = p.team_logo_url
-        ? `<div class="lb-mvp-team-logo"><img src="${p.team_logo_url}" alt=""></div>`
+      const av = p.player_photo_url
+        ? '<img src="' + lbEsc(p.player_photo_url) + '" alt="" onerror="this.style.display=\'none\'">'
+        : '\ud83d\udc64';
+      const tm = p.team_name
+        ? '<div class="lbx-tp-tm">' + (p.team_logo_url ? '<img src="' + lbEsc(p.team_logo_url) + '" alt="">' : '') +
+          '<span>' + lbEsc(p.team_name) + '</span></div>'
         : '';
-      return `<div class="lb-mvp-item${isMvp ? ' lb-mvp-item-1' : ''}">
-        <div class="lb-mvp-rank ${rankClass}">${rankIcon}</div>
-        <div class="lb-mvp-avatar">
-          <div class="lb-mvp-avatar-inner">${avatarHtml}</div>
-          ${isMvp ? '<div class="lb-mvp-crown">👑</div>' : ''}
-        </div>
-        <div class="lb-mvp-info">
-          <div class="lb-mvp-name">${p.player_name || '—'}</div>
-          <div class="lb-mvp-sub">${p.role || ''}</div>
-        </div>
-        <div class="lb-mvp-right">
-          <div class="lb-mvp-pts">${fmtPts(p.points)}</div>
-          <div class="lb-mvp-team">
-            ${teamLogoHtml}
-            <span class="lb-mvp-team-name">${p.team_name || ''}</span>
-          </div>
-        </div>
-      </div>`;
+      return '<div class="lbx-tp' + (idx === 0 ? ' r1' : '') + '">' +
+        '<div class="lbx-tp-rk">' + (p.rank || (idx + 1)) + '</div>' +
+        '<div class="lbx-tp-av">' + av + '</div>' +
+        '<div class="lbx-tp-info">' +
+          '<div class="lbx-tp-nm">' + (medals[idx] ? medals[idx] + ' ' : '') + lbEsc(p.player_name || '—') + '</div>' +
+          '<div class="lbx-tp-rl">' + lbEsc(p.role || '') + '</div>' +
+          '<div class="lbx-tp-pt">' + fmtParts(p.points).num + '</div>' +
+          tm +
+        '</div></div>';
     }).join('');
   }
 
@@ -3994,22 +4456,23 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     if (!teams || !teams.length) { card.style.display = 'none'; return; }
     card.style.display = '';
     _teamsData = teams;
+    card.setAttribute('data-rows', teams.length > 7 ? String(Math.min(3, Math.ceil(teams.length / 7))) : '1');
     grid.innerHTML = teams.map(function(t, idx) {
       const logoHtml = t.logo_url
-        ? `<img src="${t.logo_url}" alt="" onerror="this.parentElement.innerHTML='🛡'">`
-        : '<span class="lb-team-chip-logo-ph">🛡</span>';
-      return `<div class="lb-team-chip" data-team-idx="${idx}" tabindex="0" role="button" aria-label="View ${t.name} squad">
-        <div class="lb-team-chip-logo">${logoHtml}</div>
-        <div>
-          <div class="lb-team-chip-name">${t.name}</div>
-          <div class="lb-team-chip-pts">${fmtPts(t.remaining_points)} left</div>
-        </div>
-      </div>`;
+        ? '<img src="' + lbEsc(t.logo_url) + '" alt="" onerror="this.parentElement.textContent=\'\\ud83d\\udee1\'">'
+        : '\ud83d\udee1';
+      return '<div class="lbx-team" data-team-idx="' + idx + '" data-name="' + lbEsc(String(t.name || '').trim().toLowerCase()) +
+        '" tabindex="0" role="button" aria-label="View ' + lbEsc(t.name) + ' squad">' +
+        '<div class="lbx-team-logo">' + logoHtml + '</div>' +
+        '<div class="lbx-team-txt">' +
+          '<div class="lbx-team-name">' + lbEsc(t.name) + '</div>' +
+          '<div class="lbx-team-pts">' + fmtPts(t.remaining_points) + ' left</div>' +
+        '</div></div>';
     }).join('');
 
     // Attach interaction events to each chip
     const isTouch = window.matchMedia('(pointer: coarse)').matches;
-    Array.from(grid.querySelectorAll('.lb-team-chip')).forEach(function(chip) {
+    Array.from(grid.querySelectorAll('.lbx-team')).forEach(function(chip) {
       var idx = parseInt(chip.dataset.teamIdx, 10);
       if (!isTouch) {
         // Desktop: hover shows floating popup
@@ -4021,6 +4484,7 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
       // Click / tap always opens the modal (works on both touch and desktop)
       chip.addEventListener('click', function() { openTeamModal(idx); });
     });
+    if (_lbxLead) lbxMarkLeadTeam(_lbxLead.name, _lbxLead.sold);
   }
 
   // ── Build squad table rows (used in popup) ─────────────────────
@@ -4130,6 +4594,17 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     setStat('lb-stat-sold',      stats.sold);
     setStat('lb-stat-unsold',    stats.unsold);
     setStat('lb-stat-total',     stats.total);
+    var total = Number(stats.total) || 0;
+    var sold = Number(stats.sold) || 0, unsold = Number(stats.unsold) || 0, live = Number(stats.in_auction) || 0;
+    var pct = function(n) { return total ? Math.min(100, (n / total) * 100).toFixed(2) + '%' : '0'; };
+    var ok = document.getElementById('lbx-prog-ok'), no = document.getElementById('lbx-prog-no'), lv = document.getElementById('lbx-prog-live');
+    if (ok) ok.style.width = pct(sold);
+    if (no) no.style.width = pct(unsold);
+    if (lv) lv.style.width = pct(live);
+    var tx = document.getElementById('lbx-prog-txt');
+    if (tx) tx.textContent = (sold + unsold) + ' / ' + total + ' players';
+    var of = document.getElementById('lb-sl-of');
+    if (of) of.textContent = total ? 'OF ' + total : '';
   }
 
   // ── Polling ────────────────────────────────────────────────────
@@ -4232,35 +4707,24 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
 })();
 ]]></script>
 
-<!-- BREAK TIME OVERLAY (IPL-style) -->
+<!-- BREAK TIME — stand-by screen (logo, name, message, scrolling sponsors) -->
 <div id="lb-break-overlay">
-  <div class="lb-brk-glow"></div>
-  <div class="lb-brk-scan"></div>
-  <div class="lb-brk-bar lb-brk-bar-top"></div>
-  <div class="lb-brk-bar lb-brk-bar-bot"></div>
-  <div class="lb-brk-content">
-    <div id="lb-brk-logo"><span class="lb-brk-logo-ph">&#127942;</span></div>
-    <div class="lb-brk-badge"><span class="lb-brk-dot"></span>Break Time</div>
-    <div class="lb-brk-headline">
-      <span class="lb-brk-hl1">We&#x2019;ll Be</span>
-      <span class="lb-brk-hl2">Right Back</span>
+  <div class="lbx-brk-glow"></div>
+  <div class="lbx-brk-bar lbx-brk-bar--top"></div>
+  <div class="lbx-brk-bar lbx-brk-bar--bot"></div>
+  <div class="lbx-brk-content">
+    <div id="lb-brk-logo" t-att-data-set="'1' if (tournament and tournament.logo) else None">
+      <t t-if="tournament and tournament.logo"><img t-att-src="'/%s/auction/public/image/auction.tournament/%d/logo' % (db_name, tournament.id)" alt=""/></t>
+      <t t-else=""><span class="lb-brk-logo-ph">&#127942;</span></t>
     </div>
-    <div class="lb-brk-divider"></div>
-    <div class="lb-brk-sub">The auction resumes shortly</div>
-    <div class="lb-brk-rings">
-      <div class="lb-brk-ring"></div>
-      <div class="lb-brk-ring"></div>
-      <div class="lb-brk-ring"></div>
-      <div class="lb-brk-icon">&#127955;</div>
-    </div>
-    <div class="lb-brk-timer" id="lb-brk-timer">&#9679; Break in progress</div>
-    <div class="lb-brk-ads" id="lb-brk-ads" style="display:none;">
-      <div class="lb-brk-ads-label">Our Sponsors</div>
-      <div class="lb-brk-ads-viewport">
-        <div class="lb-brk-ads-track" id="lb-brk-ads-track"></div>
-      </div>
-      <div class="lb-brk-ad-dots" id="lb-brk-ad-dots"></div>
-    </div>
+    <div class="lbx-brk-name" id="lbx-brk-name"><t t-if="tournament"><t t-esc="tournament.name"/></t></div>
+    <div class="lbx-brk-badge"><span class="lbx-brk-dot"></span>Break Time</div>
+    <div class="lbx-brk-msg">After a short break we will start the auction</div>
+    <div class="lbx-brk-timer" id="lb-brk-timer">&#9679; Break in progress</div>
+  </div>
+  <div class="lbx-brk-ads" id="lb-brk-ads" style="display:none;">
+    <div class="lbx-brk-ads-lab">Our Sponsors</div>
+    <div class="lbx-brk-spon-view"><div class="lbx-brk-spon-track" id="lb-brk-ads-track"></div></div>
   </div>
 </div>
 
@@ -4307,35 +4771,6 @@ html[data-theme] .lb-side-col > *,html[data-theme] .lb-teams-card{
     </div>
   </div>
 </div>
-
-<!-- SPONSOR STRIP — only when tournament has advertisers configured -->
-<t t-set="lb_ads" t-value="tournament.advertiser_ids if tournament else []"/>
-<t t-if="lb_ads">
-<div class="lb-sponsor-strip" id="lb-sponsor-strip">
-  <div class="lb-spon-head"><span class="lb-spon-label">Our Sponsors</span></div>
-  <div class="lb-spon-row">
-    <div class="lb-spon-viewport">
-      <div class="lb-spon-track" id="lb-sponsor-track">
-        <t t-foreach="lb_ads" t-as="ad">
-          <div class="lb-spon-item">
-            <div class="lb-spon-card">
-              <t t-if="ad.image">
-                <img class="lb-spon-logo"
-                     t-att-src="'/%s/auction/public/image/auction.advertiser/%d/image' % (db_name, ad.id)"
-                     t-att-alt="ad.name" t-att-title="ad.name"/>
-              </t>
-              <t t-else="">
-                <span class="lb-spon-name"><t t-esc="ad.name"/></span>
-              </t>
-            </div>
-          </div>
-        </t>
-      </div>
-    </div>
-  </div>
-</div>
-<script>document.body.classList.add('lb-has-sponsors');</script>
-</t>
 
 <!-- FLOATING SQUAD POPUP (desktop hover) -->
 <div id="lb-team-floating-popup">

@@ -443,7 +443,14 @@ def release_rebuild_lock(env, tournament_id):
 
 
 def wait_for_snapshot(env, tournament_id, kind, expected_seq, attempts=4, delay=0.05):
-    """Brief wait for another worker's rebuild. Returns payload or None."""
+    """Brief wait for another worker's rebuild. Returns payload or None.
+
+    Only waits when Redis is actually reachable. If it is not (package
+    missing, server down, cooldown after a failure) nobody can fill the key,
+    so sleeping would just add attempts*delay (200 ms) to every poll.
+    """
+    if get_client(env, ping=False) is None:
+        return None
     for _ in range(max(1, attempts)):
         stored = get_seq(env, tournament_id)
         if stored is not None and int(stored) >= int(expected_seq):

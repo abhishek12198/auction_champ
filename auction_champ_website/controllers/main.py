@@ -38,6 +38,8 @@
 
 import json
 import logging
+import mimetypes
+import os
 from collections import defaultdict
 from datetime import date, timedelta
 from urllib.parse import urlencode
@@ -675,12 +677,50 @@ class AuctionChampHomepage(Website):
             'current_year': date.today().year,
         })
 
-    @http.route('/user-manual', type='http', auth='public', website=True, sitemap=True)
+    @http.route('/user-manual', type='http', auth='user', website=True, sitemap=False)
     def user_manual(self, **kw):
-        """Render public AuctionChamp user manual page."""
+        """User manual is available only after login."""
         return request.render('auction_champ_website.user_manual_page', {
             'current_year': date.today().year,
         })
+
+    @http.route('/user-manual/document', type='http', auth='user', sitemap=False)
+    def user_manual_document(self, **kw):
+        """Serve the manual source only to an authenticated session."""
+        module_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        path = os.path.join(module_dir, 'docs', 'AuctionChamp_User_Manual.md')
+        try:
+            with open(path, 'r', encoding='utf-8') as manual_file:
+                content = manual_file.read()
+        except OSError:
+            return request.not_found()
+        return request.make_response(content, headers=[
+            ('Content-Type', 'text/plain; charset=utf-8'),
+            ('Cache-Control', 'private, no-store'),
+            ('X-Robots-Tag', 'noindex, nofollow'),
+        ])
+
+    @http.route(
+        '/user-manual/screenshot/<string:filename>',
+        type='http', auth='user', sitemap=False,
+    )
+    def user_manual_screenshot(self, filename, **kw):
+        """Serve a manual figure only to an authenticated session."""
+        safe_name = os.path.basename(filename)
+        if not safe_name or safe_name != filename:
+            return request.not_found()
+        module_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        path = os.path.join(module_dir, 'docs', 'screenshots', safe_name)
+        if not os.path.isfile(path):
+            return request.not_found()
+        mime = mimetypes.guess_type(safe_name)[0] or 'application/octet-stream'
+        with open(path, 'rb') as image_file:
+            data = image_file.read()
+        return request.make_response(data, headers=[
+            ('Content-Type', mime),
+            ('Cache-Control', 'private, no-store'),
+            ('X-Robots-Tag', 'noindex, nofollow'),
+        ])
 
     @http.route(
         '/calendar/squad/<int:tournament_id>',

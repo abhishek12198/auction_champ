@@ -2,65 +2,73 @@
 <odoo>
 <!--
     Extends the projector template to show the auctioneer's live leading bid
-    (current_bid / current_bid_team), aligned with the projector's navy/gold
-    broadcast design (same visual language as Base Price).
+    (current_bid / current_bid_team) as the right-hand broadcast panel:
+    Current bid, Highest bidder, Bidding status. Sold lots show Sold for / Sold to.
 -->
 <template
     id="projector_live_bid_ext"
     inherit_id="auction_module.projector_template"
     name="Projector – Live Bid Display">
 
-    <xpath expr="//div[@id='pjBase']" position="after">
+    <xpath expr="//aside[@id='pjAside']/div[1]" position="before">
         <div class="pj-live-bid" id="pjLiveBid" style="display:none" aria-live="polite">
             <div class="pj-live-bid__head">
-                <span class="pj-live-bid__pulse" aria-hidden="true"></span>
                 <span class="pj-live-bid__label" id="pjLiveBidLabel">Current Bid</span>
                 <span class="pj-live-bid__amount" id="pjLiveBidVal">0</span>
                 <span class="pj-live-bid__unit" id="pjLiveBidUnit" style="display:none;"/>
             </div>
-            <div class="pj-live-bid__team" id="pjLiveBidTeam" style="display:none">
-                <img class="pj-live-bid__logo" id="pjLiveBidLogo" src="" alt=""/>
-                <div class="pj-live-bid__team-name" id="pjLiveBidName"></div>
+            <div class="pj-live-bid__sec">
+                <div class="pj-live-bid__sub" id="pjLiveBidSub">Highest Bidder</div>
+                <div class="pj-live-bid__team" id="pjLiveBidTeam" style="display:none">
+                    <img class="pj-live-bid__logo" id="pjLiveBidLogo" src="" alt=""/>
+                    <div class="pj-live-bid__team-name" id="pjLiveBidName"></div>
+                </div>
+                <div class="pj-live-bid__waiting" id="pjLiveBidWaiting" style="display:none">
+                    <span class="pj-live-bid__wait-dot" aria-hidden="true"></span>
+                    <span>Waiting for opening bid</span>
+                </div>
+                <div class="pj-live-bid__note" id="pjLiveBidNote"></div>
             </div>
-            <div class="pj-live-bid__waiting" id="pjLiveBidWaiting" style="display:none">
-                <span class="pj-live-bid__wait-dot" aria-hidden="true"></span>
-                <span>Waiting for opening bid</span>
-            </div>
+            <div class="pj-live-bid__rule"></div>
+            <!-- Teams row (moved here by script), directly under the bid block. -->
+            <div class="pj-live-bid__mid" id="pjLiveBidMid"></div>
+            <!-- Sponsors: only when the tournament has them; three logos per row. -->
+            <t t-set="pj_panel_ads" t-value="tournament.advertiser_ids if tournament else []"/>
+            <t t-if="pj_panel_ads">
+                <div class="pj-live-bid__spons" id="pjPanelSponsors">
+                    <div class="pj-live-bid__rule"></div>
+                    <div class="pj-live-bid__sub">Our Sponsors</div>
+                    <div class="pj-live-bid__spon-grid">
+                        <t t-foreach="pj_panel_ads" t-as="ad">
+                            <div class="pj-live-bid__spon">
+                                <img t-att-src="'/'+(db_name or '')+'/auction/public/image/auction.advertiser/' + str(ad.id) + '/image'"
+                                     t-att-alt="ad.name" t-att-title="ad.name"/>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </t>
         </div>
     </xpath>
 
     <xpath expr="//body" position="inside">
         <style type="text/css"><![CDATA[
-/* Live bid: theme colors while bidding; green once SOLD */
+/* Live bid panel: theme colours while bidding; green accent once SOLD */
 .pj-live-bid{
   --lb-accent: var(--gold);
-  --lb-accent2: var(--gold2);
-  --lb-soft: var(--gold-soft);
-  --lb-glow: var(--glow);
   --lb-line: var(--line);
   display:none;
   flex-direction:column;
+  justify-content:flex-start;
   align-items:stretch;
-  gap:.55rem;
-  margin-top:.45rem;
-  padding:.85rem 1rem .95rem;
-  min-height:7.4rem;
-  border-radius:.95rem;
-  border:2px solid var(--lb-accent);
-  background:
-    linear-gradient(145deg, var(--lb-soft), transparent 58%),
-    var(--card);
-  box-shadow:0 0 22px var(--lb-glow), inset 0 0 14px var(--lb-soft);
+  flex:1 1 auto;
+  min-height:0;
+  padding:clamp(1rem,3vh,2.2rem) clamp(1.1rem,2vw,2rem);
   width:100%;
-  max-width:100%;
-  flex-shrink:0;
   animation:pjLiveBidIn .35s ease-out;
 }
 .pj-live-bid.is-sold{
   --lb-accent: var(--ok);
-  --lb-accent2: #7dffa8;
-  --lb-soft: rgba(46,204,113,.18);
-  --lb-glow: rgba(46,204,113,.38);
   --lb-line: rgba(46,204,113,.45);
 }
 @keyframes pjLiveBidIn{
@@ -72,81 +80,103 @@
 }
 @keyframes pjLiveBidFlash{
   0%{transform:scale(1); filter:brightness(1.35)}
-  35%{transform:scale(1.06); color:#fff}
+  35%{transform:scale(1.05); color:#fff}
   100%{transform:scale(1)}
 }
 .pj-live-bid__head{
   display:flex;
-  align-items:center;
+  flex-direction:column;
+  align-items:flex-start;
   justify-content:center;
-  gap:.55rem;
+  gap:clamp(.3rem,1vh,.7rem);
   min-width:0;
 }
-.pj-live-bid__pulse{
-  width:.5rem;
-  height:.45rem;
-  border-radius:50%;
-  background:var(--lb-accent);
-  box-shadow:0 0 8px var(--lb-glow);
-  animation:pjPulse 1.2s ease-in-out infinite;
-  flex-shrink:0;
+/* Highlighted bid card: framed, glowing, pulsing while bidding is live */
+.pj-live-bid.is-unsold{--lb-accent:var(--danger);--lb-line:rgba(229,57,74,.4)}
+.pj-live-bid__head{
+  padding:clamp(.8rem,2.2vh,1.5rem) clamp(.9rem,1.5vw,1.5rem) clamp(.9rem,2.4vh,1.6rem);
+  border:2px solid var(--lb-accent);
+  border-radius:.7rem;
+  background:linear-gradient(135deg,var(--gold-soft),rgba(0,0,0,.28));
+  box-shadow:0 0 1.4rem -.3rem var(--lb-accent), inset 0 0 1.8rem -1.1rem var(--lb-accent);
+  position:relative;
 }
-.pj-live-bid__label{
-  font-weight:800;
-  letter-spacing:.18em;
+/* Pulse by fading a static glow layer (opacity only: no per-frame repaint) */
+.pj-live-bid__head::after{
+  content:"";position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;
+  box-shadow:0 0 2.4rem .1rem var(--lb-accent);opacity:0;
+}
+.pj-live-bid:not(.is-sold):not(.is-unsold):not(.is-waiting) .pj-live-bid__head::after{
+  animation:pjLiveBidGlow 1.8s ease-in-out infinite;
+}
+@keyframes pjLiveBidGlow{0%,100%{opacity:0}50%{opacity:.9}}
+.pj-live-bid:not(.is-sold):not(.is-unsold):not(.is-waiting) .pj-live-bid__label::before{
+  content:"";display:inline-block;width:.6em;height:.6em;border-radius:50%;
+  background:var(--danger);margin-right:.55em;vertical-align:.08em;
+  animation:pjPulse 1.2s ease-in-out infinite;
+}
+.pj-live-bid__label{color:var(--lb-accent)}
+.pj-live-bid__mid{
+  flex:0 0 auto;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;
+  overflow:hidden;
+}
+.pj-live-bid__mid .pj-aside-sec{display:flex !important;gap:clamp(.5rem,1.4vh,.9rem)}
+.pj-live-bid__mid .pj-team-chip{width:clamp(2.6rem,6.4vh,3.8rem);height:clamp(2.6rem,6.4vh,3.8rem)}
+.pj-live-bid__label,
+.pj-live-bid__sub{
+  font-family:var(--pj-font-ui);
+  font-weight:700;
+  letter-spacing:.14em;
   text-transform:uppercase;
-  font-size:clamp(.78rem,1.3vw,1.05rem);
-  color:var(--lb-accent);
-  flex-shrink:0;
+  font-size:clamp(.95rem,2.8vh,1.7rem);
+  color:var(--tx);
 }
 .pj-live-bid__amount{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(2.15rem,4.2vw,3.35rem);
-  line-height:.9;
-  color:var(--lb-accent2);
-  text-shadow:0 0 18px var(--lb-glow);
-  font-variant-numeric:tabular-nums;
-  letter-spacing:.02em;
-  margin-left:.15rem;
+  font-family:var(--pj-font-hero);
+  font-weight:var(--pj-hero-w);
+  font-size:min(13vh,7vw);
+  line-height:.95;
+  color:var(--gold);
+  letter-spacing:.015em;
+  white-space:nowrap;
 }
+.pj-live-bid.is-sold .pj-live-bid__amount{color:var(--lb-accent)}
 .pj-live-bid__unit{
   font-weight:800;
   letter-spacing:.14em;
   font-size:clamp(.7rem,1.1vw,.95rem);
   color:var(--lb-accent);
-  padding-bottom:.12rem;
+}
+.pj-live-bid__rule{height:1px;background:var(--lb-line);flex-shrink:0;margin:clamp(.5rem,1.6vh,1.1rem) 0}
+.pj-live-bid__sec{
+  display:flex;
+  flex-direction:column;
+  gap:clamp(.4rem,1.2vh,.8rem);
+  min-width:0;
+  margin-top:clamp(.5rem,1.6vh,1rem);
 }
 .pj-live-bid__team{
   display:flex;
   align-items:center;
-  justify-content:center;
-  gap:.75rem;
+  gap:clamp(.6rem,1vw,1.1rem);
   min-width:0;
   width:100%;
-  min-height:3.6rem;
-  padding:.45rem .75rem;
-  border-radius:.75rem;
-  background:linear-gradient(90deg, var(--lb-soft), transparent);
-  border:1.5px solid var(--lb-line);
-  box-shadow:inset 0 0 16px var(--lb-soft), 0 0 14px var(--lb-glow);
-}
-[data-mode="light"] .pj-live-bid__amount{
-  text-shadow:none;
 }
 .pj-live-bid__logo{
-  width:3.8rem;
-  height:3.8rem;
-  border-radius:50%;
+  width:clamp(3.2rem,10vh,6rem);
+  height:clamp(3.2rem,10vh,6rem);
   object-fit:contain;
-  background:rgba(255,255,255,.12);
-  border:2px solid var(--lb-accent);
   flex-shrink:0;
-  padding:.18rem;
 }
 .pj-live-bid__team-name{
-  font-weight:900;
-  font-size:clamp(1.2rem,2.3vw,1.85rem);
-  letter-spacing:.06em;
+  font-family:var(--pj-font-hero);
+  font-weight:var(--pj-hero-w);
+  font-size:min(7vh,3.8vw);
+  letter-spacing:.03em;
   text-transform:uppercase;
   white-space:normal;
   overflow:hidden;
@@ -154,45 +184,58 @@
   -webkit-line-clamp:2;
   -webkit-box-orient:vertical;
   max-width:100%;
-  color:#fff;
-  line-height:1.12;
+  color:var(--gold);
+  line-height:.98;
   text-align:left;
-  text-shadow:0 1px 8px rgba(0,0,0,.35);
 }
-[data-mode="light"] .pj-live-bid__team-name{ color:#102418; text-shadow:none; }
 .pj-live-bid__waiting{
   display:none;
   align-items:center;
-  justify-content:center;
-  gap:.45rem;
-  padding:.45rem 0 .1rem;
-  font-size:clamp(.78rem,1.2vw,1rem);
+  gap:.55rem;
+  font-family:var(--pj-font-ui);
+  font-size:clamp(.85rem,2.2vh,1.3rem);
   font-weight:700;
-  letter-spacing:.06em;
+  letter-spacing:.08em;
   text-transform:uppercase;
   color:var(--tx2);
 }
-.pj-live-bid__wait-dot{
-  width:.45rem;
-  height:.45rem;
+.pj-live-bid__wait-dot,
+.pj-live-bid__dots i{
+  width:.55rem;
+  height:.55rem;
   border-radius:50%;
-  background:var(--lb-accent);
-  opacity:.7;
-  animation:pjPulse 1.2s ease-in-out infinite;
+  background:var(--danger);
+  display:block;
   flex-shrink:0;
+  animation:pjPulse 1.2s ease-in-out infinite;
 }
-.pj-live-bid.is-waiting{
-  border-color:var(--line);
-  background:var(--card);
-  box-shadow:none;
-  min-height:0;
+/* Sponsors: logo only, square tiles, three per row, pinned to the bottom */
+.pj-live-bid__spons{flex:0 0 auto;display:flex;flex-direction:column;gap:clamp(.4rem,1.2vh,.8rem);min-width:0;margin-top:auto}
+.pj-live-bid__spon-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:clamp(.4rem,1.2vh,.8rem) clamp(.4rem,.8vw,.8rem);
+  max-height:46vh;
+  overflow:hidden;
 }
-.pj-live-bid.is-waiting .pj-live-bid__label{color:var(--tx2)}
-.pj-live-bid.is-waiting .pj-live-bid__amount,
-.pj-live-bid.is-waiting .pj-live-bid__unit,
+.pj-live-bid__spon{
+  aspect-ratio:1/1;
+  max-height:14.5vh;
+  width:100%;
+  justify-self:center;
+  display:flex;align-items:center;justify-content:center;
+  padding:0;border:none;background:none;
+}
+.pj-live-bid__spon img{width:100%;height:100%;object-fit:contain}
+.pj-live-bid__note{display:none;font-family:var(--pj-font-ui);font-weight:600;letter-spacing:.04em;
+  font-size:clamp(1rem,2.8vh,1.7rem);line-height:1.3;color:var(--tx)}
+.pj-live-bid.is-unsold .pj-live-bid__amount{color:var(--danger)}
+.pj-live-bid.is-unsold .pj-live-bid__sub,
+.pj-live-bid.is-unsold .pj-live-bid__team,
+.pj-live-bid.is-unsold .pj-live-bid__waiting{display:none !important}
+.pj-live-bid.is-unsold .pj-live-bid__note{display:block}
 .pj-live-bid.is-waiting .pj-live-bid__team{display:none !important}
-.pj-live-bid.is-waiting .pj-live-bid__waiting{display:inline-flex}
-.pj-live-bid.is-waiting .pj-live-bid__pulse{background:var(--tx2); box-shadow:none}
+.pj-live-bid.is-waiting .pj-live-bid__waiting{display:flex}
         ]]></style>
 
         <script type="text/javascript"><![CDATA[
@@ -201,6 +244,13 @@
 
     var _lastBid = null;
     var _lastTeamId = null;
+
+    // Park the Teams row in the free middle slot (ids unchanged, so updates keep working).
+    (function parkTeams() {
+        var mid = document.getElementById('pjLiveBidMid');
+        var sec = document.querySelector('#pjAside > .pj-aside-sec');
+        if (mid && sec) mid.appendChild(sec);
+    })();
 
     function fmtPts(n) {
         if (window.fmtUnit) {
@@ -222,12 +272,34 @@
             }
         }
     }
+    // Shrink the amount until it fits inside the highlighted card (no clipping on big numbers).
+    function fitAmount(el) {
+        var box = el.parentNode;
+        if (!box) return;
+        el.style.fontSize = '';
+        var cs = getComputedStyle(box);
+        var avail = box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        var size = parseFloat(getComputedStyle(el).fontSize);
+        var guard = 40;
+        while (avail > 0 && el.scrollWidth > avail && size > 24 && guard-- > 0) {
+            size *= 0.94;
+            el.style.fontSize = size + 'px';
+        }
+    }
+    window.addEventListener('resize', function () {
+        var el = document.getElementById('pjLiveBidVal');
+        if (el && /\d/.test(el.textContent)) fitAmount(el);
+    });
+    function setText(id, txt) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = txt;
+    }
 
     function hideLiveBid() {
         var root = document.getElementById('pjLiveBid');
         if (root) {
             root.style.display = 'none';
-            root.classList.remove('is-sold', 'is-waiting', 'is-updated');
+            root.classList.remove('is-sold', 'is-waiting', 'is-unsold', 'is-updated');
         }
         _lastBid = null;
         _lastTeamId = null;
@@ -247,10 +319,27 @@
         var root = document.getElementById('pjLiveBid');
         if (!root) return;
 
-        if (!p || p.state === 'unsold') {
+        if (!p) {
             hideLiveBid();
             return;
         }
+
+        // Unsold / withdrawn: keep the panel (with Teams and Sponsors) and explain the result.
+        if (p.state === 'unsold' || p.state === 'withdrawn') {
+            root.style.display = 'flex';
+            syncLiveBidUnit();
+            root.classList.remove('is-sold', 'is-waiting', 'is-updated');
+            root.classList.add('is-unsold');
+            setText('pjLiveBidLabel', 'Current Bid');
+            setText('pjLiveBidVal', p.state === 'unsold' ? 'UNSOLD' : 'WITHDRAWN');
+            setText('pjLiveBidNote', p.state === 'unsold'
+                ? 'No bids were placed. This player can be brought back to the auction later.'
+                : 'This player has been withdrawn and can be brought back to the auction later.');
+            _lastBid = null;
+            _lastTeamId = null;
+            return;
+        }
+        root.classList.remove('is-unsold');
 
         var sold = p.state === 'sold';
         var bid = sold
@@ -263,19 +352,29 @@
         var valEl = document.getElementById('pjLiveBidVal');
         var nameEl = document.getElementById('pjLiveBidName');
         var logoEl = document.getElementById('pjLiveBidLogo');
-        var labelEl = document.getElementById('pjLiveBidLabel');
-
-        if (!sold && bid <= 0) {
-            hideLiveBid();
-            return;
-        }
 
         root.style.display = 'flex';
         syncLiveBidUnit();
         root.classList.toggle('is-sold', sold);
+
+        // No opening bid yet: keep the panel, show a waiting line (no invented number).
+        if (!sold && bid <= 0) {
+            root.classList.add('is-waiting');
+            setText('pjLiveBidLabel', 'Current Bid');
+            setText('pjLiveBidSub', 'Highest Bidder');
+            if (valEl) valEl.textContent = '\u2014';
+            var waitEl = document.getElementById('pjLiveBidWaiting');
+            if (waitEl) waitEl.style.display = '';
+            if (teamEl) teamEl.style.display = 'none';
+            _lastBid = null;
+            _lastTeamId = null;
+            return;
+        }
+
         root.classList.remove('is-waiting');
-        if (labelEl) labelEl.textContent = sold ? 'SOLD' : 'Current Bid';
-        if (valEl) valEl.textContent = fmtPts(bid);
+        setText('pjLiveBidLabel', sold ? 'Sold For' : 'Current Bid');
+        setText('pjLiveBidSub', sold ? 'Sold To' : 'Highest Bidder');
+        if (valEl) { valEl.textContent = fmtPts(bid); fitAmount(valEl); }
         flashIfChanged(root, bid, team && team.id ? team.id : (sold ? 'sold' : null));
 
         if (team && (team.name || team.logo_url) && teamEl) {
@@ -287,7 +386,7 @@
                     logoSrc = 'data:image/jpeg;base64,' + p.team_logo;
                 }
                 if (logoSrc) {
-                    logoEl.src = logoSrc;
+                    if (logoEl.getAttribute('src') !== logoSrc) logoEl.src = logoSrc;
                     logoEl.style.display = '';
                 } else {
                     logoEl.removeAttribute('src');

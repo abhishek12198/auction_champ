@@ -285,11 +285,6 @@
                     </t>
                     <t t-if="player.assigned_team_id">
                       <div class="ps-stamp-team">
-                        <t t-if="player.assigned_team_id.logo">
-                          <div class="ps-stamp-team-logo">
-                            <img t-att-src="image_data_uri(player.assigned_team_id.logo)" alt=""/>
-                          </div>
-                        </t>
                         <div class="ps-stamp-team-name"><t t-esc="player.assigned_team_id.name"/></div>
                       </div>
                     </t>

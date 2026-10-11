@@ -1,9 +1,9 @@
-/* AuctionChamp public User Manual page renderer */
+/* AuctionChamp User Manual page renderer (logged-in users only) */
 (function () {
     'use strict';
 
-    var MANUAL_URL = '/auction_champ_website/static/src/docs/AuctionChamp_User_Manual.md';
-    var SCREENSHOT_BASE = '/auction_champ_website/static/src/docs/screenshots/';
+    var MANUAL_URL = '/user-manual/document';
+    var SCREENSHOT_BASE = '/user-manual/screenshot/';
 
     function slugify(text) {
         return String(text || '')

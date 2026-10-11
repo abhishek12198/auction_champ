@@ -127,7 +127,6 @@
                                 </svg>
                                 <div class="oc-status-seal-core">
                                     <img class="oc-status-seal-mark" src="/auction_module/static/img/sold_overlay_gray.png" alt=""/>
-                                    <img class="oc-status-seal-logo" id="ocStatusSealLogo" src="" alt=""/>
                                     <div class="oc-status-seal-pts" id="ocStatusSealPts"></div>
                                 </div>
                             </div>
