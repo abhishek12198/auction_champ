@@ -408,8 +408,8 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 .pj-pd-icon-info{flex:0 0 auto;padding:.45rem .4rem .5rem;text-align:center;
   background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.55))}
 .pj-pd-icon-name{font-size:clamp(.85rem,1.85vh,1.15rem);font-weight:800;letter-spacing:.04em;
-  text-transform:uppercase;color:#fff;line-height:1.15;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  text-transform:uppercase;color:#fff;line-height:1.1;
+  white-space:normal;overflow-wrap:anywhere}
 .pj-pd-icon-role{margin-top:.2rem;font-size:clamp(.68rem,1.4vh,.88rem);font-weight:700;
   letter-spacing:.12em;text-transform:uppercase;color:#ffd700;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -438,8 +438,8 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
 .pj-pd-sq-info{min-width:0;flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;gap:.18rem}
 .pj-pd-pname{font-size:clamp(.92rem,2.05vh,1.28rem);font-weight:800;letter-spacing:.03em;
-  text-transform:uppercase;color:#fff;line-height:1.12;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  text-transform:uppercase;color:#fff;line-height:1.05;
+  white-space:normal;overflow-wrap:anywhere}
 .pj-pd-prole{font-size:clamp(.72rem,1.5vh,.95rem);font-weight:700;letter-spacing:.1em;
   text-transform:uppercase;color:#ffd700;line-height:1.1;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -533,7 +533,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   justify-content:center;font-size:1.25rem;font-weight:800;color:var(--tx2)}
 .pj-sq-pname{width:100%;font-size:.92rem;font-weight:800;line-height:1.15;
   text-transform:uppercase;letter-spacing:.03em;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  white-space:normal;overflow-wrap:anywhere}
 .pj-sq-prole{width:100%;font-size:.72rem;letter-spacing:.04em;color:var(--tx2);line-height:1.15;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pj-sq-tier{font-size:.62rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
@@ -731,6 +731,9 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 .pj-wait-sub,.pj-wait-sub.is-begin{font-size:clamp(1.1rem,3.6vh,2.5rem);letter-spacing:.14em;
   max-width:min(94vw,70rem);line-height:1.35;text-wrap:balance;padding:0 1rem 0 calc(1rem + .14em)}
 .pj-wait-sub.is-complete{font-size:clamp(1rem,3vh,2rem)}
+.pj-wait-desc{font-family:var(--pj-font-ui);font-weight:600;letter-spacing:.3em;text-transform:uppercase;text-align:center;
+  color:var(--gold);font-size:clamp(.95rem,2.6vh,1.8rem);line-height:1.25;width:100%;
+  max-width:min(94vw,64rem);text-wrap:balance;overflow-wrap:anywhere;margin-top:calc(-1 * clamp(.3rem,1vh,.8rem))}
 .pj-wait-dot{width:clamp(.7rem,1.6vh,1.1rem);height:clamp(.7rem,1.6vh,1.1rem)}
 .pj-wait-dots{gap:clamp(.6rem,1.4vh,1rem)}
 .pj-wait-powered-lbl{font-size:clamp(.7rem,1.6vh,1.1rem)}
@@ -741,6 +744,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 #pj-waiting.has-sponsors .pj-wait-normal{gap:clamp(.6rem,2.1vh,1.6rem)}
 #pj-waiting.has-sponsors .pj-wait-hero-logo{height:clamp(7rem,24vh,17rem)}
 #pj-waiting.has-sponsors .pj-wait-hero-name{font-size:clamp(2.4rem,8vh,6.4rem)}
+#pj-waiting.has-sponsors .pj-wait-desc{font-size:clamp(.9rem,2.5vh,1.7rem)}
 #pj-waiting.has-sponsors .pj-wait-sub,
 #pj-waiting.has-sponsors .pj-wait-sub.is-begin{font-size:clamp(1rem,3.1vh,2.2rem)}
 #pj-waiting.has-sponsors .pj-wait-powered{display:none}
@@ -1551,7 +1555,9 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   font-size:clamp(1.05rem,2.9vh,1.9rem);color:var(--tx)}
 .pj-col-k{color:var(--gold);font-size:.75em;letter-spacing:.16em;margin-right:.35rem}
 .pj-name{font-size:min(13vh,8vw);line-height:1;white-space:nowrap;overflow:hidden;
-  text-overflow:ellipsis;letter-spacing:.01em}
+  text-overflow:clip;letter-spacing:.01em}
+/* very long names: shrink first, then wrap onto two lines — never cut with "..." */
+.pj-name.is-wrap{flex:0 0 auto;white-space:normal;overflow:visible;overflow-wrap:anywhere;line-height:.95}
 .pj-badges{gap:0;margin-top:clamp(.3rem,1vh,.7rem)}
 .pj-role{order:1;font-size:clamp(.95rem,2.6vh,1.6rem);padding:.45rem 1.1rem;border-radius:0;
   color:var(--tx);border:1px solid var(--gold);
@@ -1879,6 +1885,9 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
           <t t-if="tournament"><t t-esc="tournament.name"/></t>
           <t t-else="">Auction Champ</t>
         </div>
+        <t t-if="tournament and tournament.description">
+          <div class="pj-wait-desc"><t t-esc="tournament.description"/></div>
+        </t>
         <div class="pj-wait-sub" id="pjWaitSub">THE SPOTLIGHT MOVES TO THE NEXT PLAYER</div>
         <div class="pj-wait-dots"><div class="pj-wait-dot"></div><div class="pj-wait-dot"></div><div class="pj-wait-dot"></div></div>
         <t t-if="tournament and tournament.logo">
@@ -2711,12 +2720,27 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       if (busy) return;
       busy = true;
       el.style.fontSize = '';
-      var size = parseFloat(getComputedStyle(el).fontSize) || 0;
+      el.classList.remove('is-wrap');
+      var base = parseFloat(getComputedStyle(el).fontSize) || 0;
+      var size = base;
       var n = 0;
-      while (size > 34 && el.scrollWidth > el.clientWidth + 1 && n < 60) {
-        size *= 0.93;
+      while (size > 34 && size > base * 0.6 && el.scrollWidth > el.clientWidth + 1 && n < 40) {
+        size *= 0.95;
         el.style.fontSize = size + 'px';
         n++;
+      }
+      if (el.scrollWidth > el.clientWidth + 1) {
+        /* still too wide on one line: wrap to two lines and fit that block */
+        el.classList.add('is-wrap');
+        size = base * 0.62;
+        el.style.fontSize = size + 'px';
+        n = 0;
+        /* keep it to two lines (line-height .95) */
+        while (size > 24 && (el.scrollWidth > el.clientWidth + 1 || el.offsetHeight > size * 2.05) && n < 60) {
+          size *= 0.95;
+          el.style.fontSize = size + 'px';
+          n++;
+        }
       }
       busy = false;
     }
@@ -2724,6 +2748,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       new MutationObserver(fit).observe(el, {childList: true, characterData: true, subtree: true});
     }
     window.addEventListener('resize', fit);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
   })();
 
   function renderPlayer(p, opts) {
