@@ -46,11 +46,15 @@
         'security/ir.model.access.csv',
         'views/res_users_views.xml',
         'views/auction_team_view_ext.xml',
+        'views/owner_user_wizard_view.xml',
         'views/auction_tournament_counter_ext.xml',
         'views/display_auction_counter_ext.xml',
         'views/owner_console_template.xml',
     ],
     'assets': {
+        'web.assets_backend': [
+            'auction_owner/static/src/css/owner_toast.css',
+        ],
         'web.assets_frontend': [
             'auction_owner/static/src/css/owner_console.css',
             'auction_owner/static/src/js/owner_console.js',

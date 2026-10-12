@@ -1051,51 +1051,144 @@ function renderTeamsStrip(teams, myTeamId) {
     });
 }
 
-// ── Render: teams full (Teams tab) ────────────────────────────────────
-function renderTeamsFull() {
+// ── Render: teams full (Teams tab) — Bid Summary structure, owner theme ──
+const OCB_EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+
+function ocbMetrics(t) {
+    const total = Number(t.total_points) || 0;
+    const rem = Number(t.remaining_points) || 0;
+    const pct = total > 0 ? Math.floor(rem * 100 / total) : 0;
+    const purseCls = pct >= 60 ? 'pf-high' : (pct >= 30 ? 'pf-mid' : (pct >= 10 ? 'pf-low' : 'pf-crit'));
+    const st = pct >= 60 ? ['COMFORTABLE', 'comfortable']
+        : (pct >= 40 ? ['HEALTHY', 'healthy']
+        : (pct >= 25 ? ['BALANCED', 'balanced']
+        : (pct >= 10 ? ['TIGHT', 'tight'] : ['CRITICAL', 'critical'])));
+    const maxPlayers = Number(t.max_players) || 0;
+    const have = Number(t.player_count) || 0;
+    const need = Math.max(maxPlayers - have, 0);
+    const maxCall = Number(t.max_call) || 0;
+    const share = rem > 0 ? Math.floor(maxCall * 100 / rem) : 100;
+    const heat = (need <= 1 || share <= 15) ? 'mb-crit' : ((need <= 3 || share <= 30) ? 'mb-tight' : 'mb-ok');
+    return {
+        pct: pct, purseCls: purseCls, statusLabel: st[0], statusCls: st[1],
+        need: need, squad: have + ' / ' + (maxPlayers || '?'), squadCompact: have + '/' + (maxPlayers || '?'),
+        purse: fmtU(rem), maxBid: maxCall > 0 ? fmtU(maxCall) : '—', heat: heat,
+    };
+}
+
+function ocbLogo(t, cls, fbCls) {
+    return t.logo_url
+        ? '<img class="' + cls + '" src="' + esc(t.logo_url) + '" alt="" loading="lazy"/>'
+        : '<span class="' + fbCls + '">' + esc((t.name || '').charAt(0)) + '</span>';
+}
+
+function ocbTeamsHtml(teams, myTeamId, view) {
+    const rowsTable = [], cards = [], mobs = [];
+    teams.forEach(t => {
+        const m = ocbMetrics(t);
+        const mine = t.id === myTeamId;
+        const you = mine ? '<span class="ocb-you">YOU</span>' : '';
+        const eye = '<button type="button" class="ocb-eye" title="View squad" aria-label="View squad" data-team-id="' + t.id + '">' + OCB_EYE + '</button>';
+        const badge = '<span class="ocb-badge ' + m.statusCls + '">' + m.statusLabel + '</span>';
+        const bar = '<div class="ocb-progress"><div class="ocb-progress-fill ' + m.purseCls + '" style="width:' + m.pct + '%"></div></div>';
+        const pctLbl = '<div class="ocb-pct">' + m.pct + '% remaining</div>';
+        const mgr = esc(t.manager || 'Team Manager');
+
+        rowsTable.push(
+'<tr class="ocb-row' + (mine ? ' ocb-mine' : '') + '" data-team-id="' + t.id + '">' +
+  '<td><div class="ocb-team-cell">' + ocbLogo(t, 'ocb-logo', 'ocb-logo-fb') +
+    '<div class="ocb-team-copy"><div class="ocb-team-name">' + esc(t.name) + you + '</div><div class="ocb-manager">' + mgr + '</div></div></div></td>' +
+  '<td><div class="ocb-purse-stack"><span class="ocb-purse-value">' + m.purse + '</span>' + bar + pctLbl + '</div></td>' +
+  '<td><div class="ocb-needed"><span class="ocb-needed-n">' + m.need + '</span><span class="ocb-chip-label">players</span></div></td>' +
+  '<td><div class="ocb-maxbid ' + m.heat + '"><span class="ocb-maxbid-lbl">MAX BID</span><span class="ocb-maxbid-val">' + m.maxBid + '</span><span class="ocb-maxbid-hint">can bid up to</span></div></td>' +
+  '<td><div class="ocb-squad"><span class="ocb-squad-val">' + m.squad + '</span><span class="ocb-chip-label">recruited</span></div></td>' +
+  '<td>' + badge + '</td>' +
+  '<td class="ocb-access">' + eye + '</td>' +
+'</tr>');
+
+        cards.push(
+'<div class="ocb-card' + (mine ? ' ocb-mine' : '') + '" data-team-id="' + t.id + '">' +
+  '<div class="ocb-card-accent"></div><div class="ocb-card-body">' +
+  '<div class="ocb-card-head"><div class="ocb-team-cell">' + ocbLogo(t, 'ocb-card-logo', 'ocb-card-logo ocb-logo-fallback') +
+    '<div class="ocb-card-copy"><div class="ocb-card-name">' + esc(t.name) + '</div><div class="ocb-card-manager">' + mgr + you + '</div></div></div></div>' +
+  '<div class="ocb-card-purse"><div class="ocb-overline">Purse Remaining</div>' +
+    '<div class="ocb-card-purse-line"><span class="ocb-card-purse-value">' + m.purse + '</span></div>' + bar +
+    '<div class="ocb-pct-label">' + m.pct + '% remaining</div></div>' +
+  '<div class="ocb-card-stats">' +
+    '<div class="ocb-stat-col"><div class="ocb-stat-label">Players Needed</div><div class="ocb-stat-figure">' + m.need + '</div></div>' +
+    '<div class="ocb-stat-col ocb-stat-col--maxbid ' + m.heat + '"><div class="ocb-stat-label">Max Bid</div><div class="ocb-stat-figure"><span>' + m.maxBid + '</span></div></div>' +
+    '<div class="ocb-stat-col"><div class="ocb-stat-label">Squad</div><div class="ocb-stat-figure">' + m.squad + '</div></div>' +
+  '</div>' +
+  '<div class="ocb-card-foot"><span class="ocb-badge ocb-card-status ' + m.statusCls + '">' + m.statusLabel + '</span>' +
+    '<div class="ocb-access-actions">' + eye + '</div></div>' +
+  '</div></div>');
+
+        mobs.push(
+'<div class="ocb-mob-row' + (mine ? ' ocb-mine' : '') + '" data-team-id="' + t.id + '">' +
+  '<div class="ocb-mob-head">' + ocbLogo(t, 'ocb-mob-logo', 'ocb-logo-fb') +
+    '<div class="ocb-mob-copy"><div class="ocb-mob-name">' + esc(t.name) + you + '</div><div class="ocb-mob-manager">' + mgr + '</div></div>' + badge + '</div>' +
+  '<div class="ocb-mob-purse"><span class="ocb-mob-pts">' + m.purse + '</span>' +
+    '<div class="ocb-mob-bar">' + bar + '<div class="ocb-pct">' + m.pct + '% remaining</div></div></div>' +
+  '<div class="ocb-mob-stats">' +
+    '<div class="ocb-mob-stat"><span class="ocb-mob-lbl">Need</span><span class="ocb-mob-val">' + m.need + '</span></div>' +
+    '<div class="ocb-mob-stat ocb-mob-maxbid ' + m.heat + '"><span class="ocb-mob-lbl">Max Bid</span><span class="ocb-mob-val">' + m.maxBid + '</span></div>' +
+    '<div class="ocb-mob-stat"><span class="ocb-mob-lbl">Squad</span><span class="ocb-mob-val">' + m.squadCompact + '</span></div>' +
+  '</div>' +
+  '<div class="ocb-mob-foot">' + eye + '</div>' +
+'</div>');
+    });
+
+    return '' +
+'<div class="ocb-toolbar">' +
+  '<div class="ocb-toggle" role="tablist" aria-label="View toggle">' +
+    '<button type="button" class="ocb-toggle-btn' + (view === 'grid' ? ' active' : '') + '" data-view="grid" aria-pressed="' + (view === 'grid') + '">GRID</button>' +
+    '<button type="button" class="ocb-toggle-btn' + (view === 'list' ? ' active' : '') + '" data-view="list" aria-pressed="' + (view === 'list') + '">LIST</button>' +
+  '</div>' +
+'</div>' +
+'<div class="ocb-panel ocb-list" style="' + (view === 'list' ? '' : 'display:none') + '"><div class="ocb-table-wrap"><table class="ocb-table"><thead><tr>' +
+  '<th>Team</th><th>Purse</th><th>Needed</th><th>Max Bid</th><th>Squad</th><th>Status</th><th class="ocb-access" aria-label="View"></th>' +
+'</tr></thead><tbody>' + rowsTable.join('') + '</tbody></table></div></div>' +
+'<div class="ocb-panel ocb-gridwrap" style="' + (view === 'grid' ? '' : 'display:none') + '"><div class="ocb-grid">' + cards.join('') + '</div></div>' +
+'<div class="ocb-mobile">' + mobs.join('') + '</div>';
+}
+
+function renderTeamsFull(force) {
     const container = $('ocTeamsFull');
     if (!container) return;
-    const { teams, myTeam, player } = S;
-    if (!teams.length) { container.innerHTML = '<div class="oc-empty-state">No teams found.</div>'; return; }
+    const { teams, myTeam } = S;
+    if (!teams.length) { container.innerHTML = '<div class="oc-empty-state">No teams found.</div>'; S._teamsSig = ''; return; }
 
+    let view = 'grid';
+    try { view = window.localStorage.getItem('ocTeamsView') === 'list' ? 'list' : 'grid'; } catch (e) {}
     const myTeamId = myTeam && myTeam.id;
-    container.innerHTML = '';
-    teams.forEach(t => {
-        const isMine = t.id === myTeamId;
-        const pct = t.total_points > 0 ? Math.round(t.remaining_points / t.total_points * 100) : 0;
-        const card = document.createElement('div');
-        card.className = 'oc-team-full-card' + (isMine ? ' oc-mine-card' : '');
-        card.innerHTML = `
-<div class="oc-team-card-head">
-  <img class="oc-team-card-logo" src="${esc(t.logo_url)}" alt=""/>
-  <div class="oc-team-card-main">
-    <div class="oc-team-card-name">${esc(t.name)} ${isMine?'<span class="oc-mine-tag">MY TEAM</span>':''}</div>
-    <div class="oc-team-card-mgr">${esc(t.manager||'')}</div>
-  </div>
-  <div class="oc-team-card-squad-count">
-    ${t.player_count||0} / ${t.max_players||'?'}
-    <div class="oc-squad-fraction">players</div>
-  </div>
-</div>
-<div class="oc-team-card-body">
-  <div class="oc-budget-row">
-    <div class="oc-budget-bar-bg"><div class="oc-budget-bar-fill" style="width:${pct}%"></div></div>
-    <div class="oc-budget-text">${fmt(t.remaining_points)} / ${fmtU(t.total_points)}</div>
-  </div>
-  <div class="oc-team-stats-row">
-    <span class="oc-stat-pill"><span class="oc-stat-pill-icon">💰</span> Max call: ${t.max_call>0?fmtU(t.max_call):'—'}</span>
-    ${player?`<span class="oc-stat-pill"><span class="oc-stat-pill-icon">⬆️</span> Next bid: ${fmtU(t.next_bid)}</span>`:''}
-  </div>
-  <div class="oc-can-bid-row">
-    <span class="oc-can-bid-chip ${t.can_bid?'oc-chip-ok':'oc-chip-no'}">
-      ${t.can_bid ? '✅ Can bid this round' : '🚫 '+esc(t.can_bid_reason||'Cannot bid')}
-    </span>
-  </div>
-</div>`;
-        card.addEventListener('click', () => ocOpenSquadSheet(t));
-        container.appendChild(card);
-    });
+    // Skip DOM work when nothing visible changed (polling runs every few seconds).
+    const sig = view + '|' + myTeamId + '|' + teams.map(t =>
+        [t.id, t.remaining_points, t.total_points, t.max_call, t.player_count, t.max_players, t.name, t.logo_url].join(':')
+    ).join(',');
+    if (!force && sig === S._teamsSig) return;
+    S._teamsSig = sig;
+    container.classList.add('ocb-root');
+    container.innerHTML = ocbTeamsHtml(teams, myTeamId, view);
 }
+
+// One delegated handler: view toggle + squad sheet (eye / row / card tap).
+(function () {
+    document.addEventListener('click', function (ev) {
+        const root = ev.target.closest && ev.target.closest('#ocTeamsFull');
+        if (!root) return;
+        const toggle = ev.target.closest('.ocb-toggle-btn');
+        if (toggle) {
+            try { window.localStorage.setItem('ocTeamsView', toggle.getAttribute('data-view') === 'list' ? 'list' : 'grid'); } catch (e) {}
+            renderTeamsFull(true);
+            return;
+        }
+        const holder = ev.target.closest('[data-team-id]');
+        if (!holder) return;
+        const id = parseInt(holder.getAttribute('data-team-id'), 10);
+        const team = (S.teams || []).find(t => t.id === id);
+        if (team) ocOpenSquadSheet(team);
+    });
+})();
 
 // ── Render: my squad ──────────────────────────────────────────────────
 function renderMySquad() {
@@ -1425,6 +1518,7 @@ function fetchData() {
                 teamId: incoming.current_bid_team ? incoming.current_bid_team.id : null }
             : { playerId: null, bid: 0, teamId: null };
 
+        updatePlayerCounts(data.player_counts, incoming && incoming.id);
         S.player  = incoming;
         S.myTeam  = data.my_team || null;
         S.teams   = data.teams || [];
@@ -1468,6 +1562,109 @@ window.addEventListener('storage', e => {
         }, 1500);
     }
 });
+
+// ── Players board: Sold / Unsold / In auction ──────────────────────────
+const PB = { bucket: 'sold', offset: 0, total: 0, q: '', open: false, busy: false, seq: 0, myTeamId: 0, sig: '' };
+const PB_TITLES = { sold: 'Sold players', unsold: 'Unsold players', auction: 'In auction' };
+const PB_PAGE = 20;
+
+function updatePlayerCounts(c, stageId) {
+    c = c || {};
+    const sold = c.sold || 0, unsold = c.unsold || 0, auction = c.auction || 0;
+    const set = (id, v) => { const el = $(id); if (el && el.textContent !== String(v)) el.textContent = v; };
+    set('ocPcSold', sold); set('ocPcUnsold', unsold); set('ocPcAuction', auction);
+    // Re-pull the open list only when the counts actually moved (no polling).
+    const sig = sold + '/' + unsold + '/' + auction + '/' + (stageId || 0);
+    if (PB.open && sig !== PB.sig) loadPlayers(true);
+    PB.sig = sig;
+}
+
+function pbRow(p) {
+    const mine = PB.myTeamId && p.team_id === PB.myTeamId;
+    const photo = p.photo_url
+        ? '<img class="oc-pb-photo" src="' + esc(p.photo_url) + '" alt="" loading="lazy"/>'
+        : '<span class="oc-pb-photo oc-pb-photo-fb">' + esc((p.name || '?').charAt(0)) + '</span>';
+    let foot = '';
+    if (PB.bucket === 'sold') {
+        foot = '<div class="oc-pb-team">' +
+            (p.team_logo_url ? '<img src="' + esc(p.team_logo_url) + '" alt="" loading="lazy"/>' : '') +
+            '<span>' + esc(p.team_name || '') + '</span></div>' +
+            '<div class="oc-pb-price">' + fmtU(p.points) + '</div>';
+    } else {
+        foot = (p.on_stage ? '<div class="oc-pb-stage">ON STAGE</div>' : '<div class="oc-pb-base-lbl">Base</div>') +
+            '<div class="oc-pb-price">' + fmtU(p.base_price) + '</div>';
+    }
+    const attrs = (p.attrs || []).map(a =>
+        '<div class="oc-pb-attr"><span>' + esc(a.k) + '</span><b>' + esc(a.v) + '</b></div>').join('');
+    const live = PB.bucket === 'auction' && p.on_stage;
+    return '<div class="oc-pb-card' + (mine ? ' oc-pb-mine' : '') + (live ? ' oc-pb-live' : '') + '">' +
+        '<div class="oc-pb-ctop">' + photo +
+        '<div class="oc-pb-info"><div class="oc-pb-name">' + esc(p.name) + '</div>' +
+        '<div class="oc-pb-sub">' + (p.sl_no ? '<span class="oc-pb-sl">#' + p.sl_no + '</span>' : '') +
+        (p.role ? '<span class="oc-pb-role">' + esc(up(p.role)) + '</span>' : '') + '</div></div></div>' +
+        (attrs ? '<div class="oc-pb-attrs">' + attrs + '</div>' : '') +
+        '<div class="oc-pb-cfoot">' + foot + '</div></div>';
+}
+
+function loadPlayers(reset) {
+    if (reset) PB.offset = 0;
+    const mySeq = ++PB.seq;
+    PB.busy = true;
+    const list = $('ocPbList'), more = $('ocPbMore');
+    if (reset && list && !list.children.length) list.innerHTML = '<div class="oc-empty-state">Loading…</div>';
+    const url = '/auction/owner/players?bucket=' + encodeURIComponent(PB.bucket) +
+        '&offset=' + PB.offset + '&limit=' + PB_PAGE + '&q=' + encodeURIComponent(PB.q);
+    fetch(url, { cache: 'no-store' })
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(d => {
+            if (mySeq !== PB.seq) return;   // stale response
+            PB.busy = false;
+            PB.myTeamId = d.my_team_id || 0;
+            PB.total = d.total || 0;
+            const rows = (d.players || []).map(pbRow).join('');
+            if (reset) list.innerHTML = rows || '<div class="oc-empty-state">No players found.</div>';
+            else list.insertAdjacentHTML('beforeend', rows);
+            PB.offset = (d.offset || 0) + (d.players || []).length;
+            more.style.display = PB.offset < PB.total ? '' : 'none';
+        })
+        .catch(() => {
+            if (mySeq !== PB.seq) return;
+            PB.busy = false;
+            if (reset) list.innerHTML = '<div class="oc-empty-state">Could not load players.</div>';
+        });
+}
+
+window.ocOpenPlayers = function (bucket) {
+    if (PB.bucket !== bucket) { PB.q = ''; const si = $('ocPbSearch'); if (si) si.value = ''; }
+    PB.bucket = bucket;
+    PB.open = true;
+    $('ocPbTitle').textContent = PB_TITLES[bucket] || 'Players';
+    document.querySelectorAll('.oc-pb-tabs button, .oc-pc').forEach(b =>
+        b.classList.toggle('active', b.getAttribute('data-bucket') === bucket));
+    $('ocPbBackdrop').classList.add('oc-open');
+    $('ocPb').classList.add('oc-open');
+    $('ocPbList').innerHTML = '';
+    loadPlayers(true);
+};
+window.ocClosePlayers = function () {
+    PB.open = false; PB.seq++;
+    $('ocPbBackdrop').classList.remove('oc-open');
+    $('ocPb').classList.remove('oc-open');
+    document.querySelectorAll('.oc-pc').forEach(b => b.classList.remove('active'));
+};
+window.ocPlayersMore = function () { if (!PB.busy) loadPlayers(false); };
+(function () {
+    let timer = null;
+    document.addEventListener('input', function (ev) {
+        if (ev.target && ev.target.id === 'ocPbSearch') {
+            clearTimeout(timer);
+            timer = setTimeout(function () { PB.q = ev.target.value.trim(); loadPlayers(true); }, 300);
+        }
+    });
+    document.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Escape' && PB.open) window.ocClosePlayers();
+    });
+})();
 
 // ── Squad Snapshot ─────────────────────────────────────────────────────
 window.ocSquadSnapshot = function(mode, btn) {

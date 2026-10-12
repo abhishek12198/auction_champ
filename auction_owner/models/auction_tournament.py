@@ -36,7 +36,8 @@
 #
 ##############################################################################
 
-from odoo import fields, models
+from odoo import api, fields, models, _
+from odoo.exceptions import UserError
 
 
 class AuctionTournament(models.Model):
@@ -81,3 +82,100 @@ class AuctionTournament(models.Model):
         copy=False,
         help='Running count of revokes consumed globally. Auto-incremented on each revoke.',
     )
+
+    # ── Owner users: Tournament Settings → Auction Team and Rules ─────────
+
+    _OWNER_USER_SETTINGS_ACTIONS = {
+        'action_user_settings_create_owner_users',
+        'action_user_settings_remove_owner_users',
+        'action_user_settings_export_owner_users',
+    }
+
+    def _owner_users_check_access(self):
+        """Admins, organizers and the tournament's working users only."""
+        self.ensure_one()
+        user = self.env.user
+        if user.has_group('auction_module.group_auction_group_admin') or user.has_group('base.group_system'):
+            return True
+        if user.has_group('auction_owner.group_auction_owner'):
+            raise UserError(_('Owner users cannot manage owner logins.'))
+        if user == self.organizer_uid or user in self.organizer_uids:
+            return True
+        getter = getattr(user, 'get_working_tournament', None)
+        if callable(getter) and getter() == self:
+            return True
+        raise UserError(_('You are not allowed to manage owner users for this tournament.'))
+
+    def _owner_wizard_teams(self):
+        self.ensure_one()
+        return self._tournament_team_records()
+
+    def _open_owner_user_wizard(self, mode):
+        self.ensure_one()
+        self._owner_users_check_access()
+        teams = self._owner_wizard_teams()
+        if mode == 'remove':
+            teams = teams.filtered('owner_user_id')
+            if not teams:
+                raise UserError(_('No team in this tournament has an owner user yet.'))
+        elif not teams:
+            raise UserError(_('Add teams to this tournament first.'))
+        lines = []
+        for team in teams.sorted(lambda t: (t.name or '').lower()):
+            if mode == 'create':
+                # Pre-select teams that still need a login (never silently reset a password).
+                selected = bool(team.manager) and not team.owner_user_id
+            else:
+                selected = False
+            lines.append((0, 0, {'team_id': team.id, 'selected': selected}))
+        wizard = self.env['auction.owner.user.wizard'].create({
+            'mode': mode,
+            'tournament_id': self.id,
+            'line_ids': lines,
+        })
+        return wizard._reopen()
+
+    def action_user_settings_create_owner_users(self):
+        return self._open_owner_user_wizard('create')
+
+    def action_user_settings_remove_owner_users(self):
+        return self._open_owner_user_wizard('remove')
+
+    def action_user_settings_export_owner_users(self):
+        self.ensure_one()
+        self._owner_users_check_access()
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/auction_owner/owner_users/export/%d' % self.id,
+            'target': 'self',
+        }
+
+    def call_user_settings_action(self, action_name):
+        if action_name in self._OWNER_USER_SETTINGS_ACTIONS:
+            self.ensure_one()
+            rec = self.with_context(
+                default_tournament_id=self.id,
+                active_model='auction.tournament',
+                active_id=self.id,
+                active_ids=[self.id],
+            )
+            action = getattr(rec, action_name)()
+            if isinstance(action, dict):
+                ctx = dict(action.get('context') or {})
+                ctx['from_user_settings'] = True
+                action['context'] = ctx
+            return action
+        return super().call_user_settings_action(action_name)
+
+    @api.model
+    def get_user_settings_payload(self, tournament_id=None):
+        payload = super().get_user_settings_payload(tournament_id=tournament_id)
+        rec = self.browse((payload or {}).get('id') or 0).exists()
+        if rec:
+            teams = rec._tournament_team_records().sudo()
+            payload['owner_users_enabled'] = True
+            payload['owner_users_linked'] = len(teams.filtered('owner_user_id'))
+            payload['owner_export_ready'] = bool(
+                teams.filtered(lambda t: t.owner_user_id and t.owner_wizard_created)
+            )
+        return payload

@@ -684,6 +684,15 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                         }),
                     this._btn('Upload teams', {action: 'action_upload_teams', icon: 'fa-upload', cls: 'tsu-btn-green'}),
                     this._btn('Add Team', {action: 'action_user_settings_add_team', icon: 'fa-users'}),
+                    (d.owner_users_enabled && (d.team_count || d.has_teams))
+                        ? this._btn('Create Owner Users', {action: 'action_user_settings_create_owner_users', icon: 'fa-user-plus'})
+                        : '',
+                    (d.owner_users_enabled && d.owner_export_ready)
+                        ? this._btn('Export Owner Logins', {action: 'action_user_settings_export_owner_users', icon: 'fa-file-excel-o', cls: 'tsu-btn-green'})
+                        : '',
+                    (d.owner_users_enabled && d.owner_users_linked)
+                        ? this._btn('Remove Owner Users', {action: 'action_user_settings_remove_owner_users', icon: 'fa-user-times'})
+                        : '',
                     d.show_football_attrs
                         ? this._btn('Football extra labels', {action: 'action_user_settings_attributes', icon: 'fa-futbol-o'})
                         : '',

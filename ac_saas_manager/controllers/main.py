@@ -135,6 +135,9 @@ class AuctionSaasController(AuctionController):
     ], type='http', auth='none', website=False, sitemap=False)
     def player_selector(self, db_name, tournament_slug=None, **kw):
         """Roll Call console — scope to the login SaaS account's tournament."""
+        denied = self._require_login(db_name, 'Roll Call')
+        if denied:
+            return denied
         blocked = _block_if_account_frozen()
         if blocked:
             return blocked
@@ -186,6 +189,9 @@ class AuctionSaasController(AuctionController):
         '/<string:db_name>/auction/display_auction/<string:tournament_slug>/',
     ], type='http', auth='none', website=False, sitemap=False)
     def display_auction(self, db_name, tournament_slug=None, **kwargs):
+        denied = self._require_login(db_name, 'Player Showcase')
+        if denied:
+            return denied
         blocked = _block_if_account_frozen()
         if blocked:
             return blocked

@@ -60,6 +60,7 @@ from odoo.addons.http_routing.models.ir_http import slug, unslug
 from odoo.addons.website.controllers.main import QueryURL
 from odoo.addons.portal.controllers.portal import _build_url_w_params
 from odoo.http import request
+from odoo.service import security as _odoo_security
 from odoo.osv import expression
 from odoo.tools import html2plaintext
 from odoo.tools.misc import get_lang
@@ -440,6 +441,132 @@ class Auction(http.Controller):
             headers=[('Content-Type', 'text/html; charset=utf-8')]
         )
 
+
+    # ── Signed-in access gate (Projector / Player Showcase / Roll Call) ─────
+
+    _ACCESS_PAGE_CSS = (
+        '*{box-sizing:border-box}html,body{height:100%;margin:0}'
+        'body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;'
+        'background:radial-gradient(ellipse 120% 80% at 50% -10%,#10306a 0%,#07122b 50%,#03060f 100%);'
+        'color:#e9eefb;display:flex;align-items:center;justify-content:center;padding:24px}'
+        '.card{width:100%;max-width:560px;background:rgba(12,24,52,.82);border:1px solid rgba(242,201,76,.28);'
+        'border-radius:18px;padding:40px 36px 30px;text-align:center;'
+        'box-shadow:0 24px 70px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.04) inset}'
+        '.logo{height:34px;margin-bottom:22px;opacity:.95}'
+        '.code{font-size:84px;font-weight:800;line-height:1;letter-spacing:.04em;color:#f2c94c;'
+        'text-shadow:0 0 34px rgba(242,201,76,.35)}'
+        '.badge{display:inline-block;margin-top:12px;padding:5px 14px;border-radius:99px;'
+        'border:1px solid rgba(242,201,76,.5);background:rgba(242,201,76,.1);color:#f2c94c;'
+        'font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase}'
+        'h1{font-size:26px;margin:22px 0 10px;font-weight:700}'
+        'p{margin:0 0 10px;color:#a9b6d3;font-size:15px;line-height:1.55}'
+        '.area{color:#fff;font-weight:600}'
+        '.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px}'
+        '.btn{display:inline-block;padding:12px 26px;border-radius:10px;font-weight:700;font-size:15px;'
+        'text-decoration:none;border:1px solid rgba(242,201,76,.55);color:#e9eefb}'
+        '.btn.primary{background:#f2c94c;color:#101828;border-color:#f2c94c}'
+        '.foot{margin-top:26px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08);'
+        'font-size:12px;color:#7686a8;letter-spacing:.04em}'
+    )
+
+    def _access_denied_page(self, status, area, db_name=None, reason=''):
+        """Professional 401 / 403 page for the signed-in-only live screens."""
+        from html import escape as _esc
+        import urllib.parse as _up
+        path = request.httprequest.full_path or request.httprequest.path or '/'
+        path = path.rstrip('?')
+        login_q = {'redirect': path}
+        if db_name:
+            login_q['db'] = db_name
+        login_url = '/web/login?' + _up.urlencode(login_q)
+        if status == 401:
+            label = 'Unauthorized'
+            title = 'Authentication required'
+            msg = (
+                'The <span class="area">%s</span> is available only to signed-in '
+                'AuctionChamp users. Please sign in with your account to continue.'
+            ) % _esc(area)
+            if reason == 'expired':
+                msg = (
+                    'Your session has expired or is no longer valid. Please sign in '
+                    'again to open the <span class="area">%s</span>.'
+                ) % _esc(area)
+            primary = '<a class="btn primary" href="%s">Sign in</a>' % _esc(login_url, quote=True)
+        else:
+            label = 'Forbidden'
+            title = 'Access denied'
+            if reason == 'db':
+                msg = (
+                    'You are signed in to a different AuctionChamp database. Sign out '
+                    'and sign in with an account that belongs to this auction to open '
+                    'the <span class="area">%s</span>.'
+                ) % _esc(area)
+            else:
+                msg = (
+                    'Your account does not have permission to open the '
+                    '<span class="area">%s</span>. Please contact your auction '
+                    'administrator if you think this is a mistake.'
+                ) % _esc(area)
+            primary = '<a class="btn primary" href="%s">Switch account</a>' % _esc(
+                '/web/session/logout?redirect=' + _up.quote(login_url, safe=''), quote=True)
+        html = (
+            '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>'
+            '<meta name="viewport" content="width=device-width,initial-scale=1"/>'
+            '<meta name="robots" content="noindex,nofollow"/>'
+            '<title>Error %(code)s &middot; %(title)s</title><style>%(css)s</style></head>'
+            '<body><main class="card" role="alert">'
+            '<img class="logo" src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>'
+            '<div class="code">%(code)s</div>'
+            '<div class="badge">%(label)s</div>'
+            '<h1>%(title)s</h1><p>%(msg)s</p>'
+            '<div class="actions">%(primary)s'
+            '<a class="btn" href="/web">AuctionChamp home</a></div>'
+            '<div class="foot">Error code %(code)s &middot; %(label)s &middot; Secure access required</div>'
+            '</main></body></html>'
+        ) % {
+            'code': status, 'label': label, 'title': title, 'msg': msg,
+            'primary': primary, 'css': self._ACCESS_PAGE_CSS,
+        }
+        return _http_response(
+            html, status=status,
+            headers=[
+                ('Content-Type', 'text/html; charset=utf-8'),
+                ('Cache-Control', 'no-store'),
+            ],
+        )
+
+    def _require_login(self, db_name, area):
+        """Return an error response unless a valid internal user is signed in.
+
+        Used by the auth="none" live screens (Projector, Player Showcase,
+        Roll Call), which otherwise run as superuser for anyone with the URL.
+        Returns ``None`` when access is allowed.
+        """
+        sess = request.session
+        uid = getattr(sess, 'uid', None)
+        if not uid:
+            return self._access_denied_page(401, area, db_name)
+        if getattr(sess, 'db', None) != db_name:
+            return self._access_denied_page(403, area, db_name, reason='db')
+        try:
+            registry = odoo.registry(db_name)
+        except Exception:
+            return None  # unknown database: the route's own 404 handles it
+        try:
+            with registry.cursor() as cr:
+                env = api.Environment(cr, SUPERUSER_ID, {})
+                user = env['res.users'].browse(uid).exists()
+                if not user or not user.active:
+                    return self._access_denied_page(401, area, db_name, reason='expired')
+                if user.share:
+                    return self._access_denied_page(403, area, db_name)
+                if not _odoo_security.check_session(sess, env):
+                    return self._access_denied_page(401, area, db_name, reason='expired')
+        except Exception:
+            _logger.exception('Access check failed for %s', area)
+            return self._access_denied_page(401, area, db_name, reason='expired')
+        return None
+
     # ── Public Live Board access (tournament code gate) ─────────────────────
 
     @staticmethod
@@ -793,6 +920,9 @@ class Auction(http.Controller):
         '/<string:db_name>/auction/player_selector/<string:tournament_slug>/',
     ], type='http', auth="none", website=False, sitemap=False)
     def player_selector(self, db_name, tournament_slug=None, **kw):
+        denied = self._require_login(db_name, 'Roll Call')
+        if denied:
+            return denied
         with self._with_db(db_name) as ok:
             if not ok:
                 return self._not_found()
@@ -1756,6 +1886,9 @@ class Auction(http.Controller):
         '''/<string:db_name>/auction/display_auction/<string:tournament_slug>/''',
     ], type='http', auth="none", website=False, sitemap=False)
     def display_auction(self, db_name, tournament_slug=None, **kwargs):
+        denied = self._require_login(db_name, 'Player Showcase')
+        if denied:
+            return denied
         with self._with_db(db_name) as ok:
             if not ok:
                 return self._not_found()
@@ -3426,6 +3559,9 @@ class Auction(http.Controller):
         '/<string:db_name>/auction/projector/<string:tournament_slug>/',
     ], type='http', auth="none", website=False, sitemap=False)
     def auction_projector(self, db_name, tournament_slug=None, **kw):
+        denied = self._require_login(db_name, 'Projector')
+        if denied:
+            return denied
         with self._with_db(db_name) as ok:
             if not ok:
                 return self._not_found()
@@ -7894,6 +8030,10 @@ def _pj_squad(tournament, db_name, env=None):
         if auc.team_id:
             auctions_by_team[auc.team_id.id] = auc
 
+    # Same as Bid Summary: max bid honours tier caps for the player currently on stage.
+    on_stage_player = Player.search(
+        [('is_on_stage', '=', True), ('tournament_id', '=', tournament.id)], limit=1) or None
+
     teams_out = []
     for team in tournament.team_ids.sorted('name'):
         logo_url = ''
@@ -7907,6 +8047,12 @@ def _pj_squad(tournament, db_name, env=None):
         # Recruited slots = auction squad lines (what max_players caps)
         recruited = len(auction.player_ids) if auction else 0
         spent_purse = max(total_purse - remaining_purse, 0)
+        max_call = 0
+        if auction:
+            try:
+                max_call = int(auction.get_max_bid_for_team(auction, on_stage_player) or 0)
+            except Exception:
+                max_call = 0
 
         icon_ids = set(team.key_player_ids.ids) if team.key_player_ids else set()
 
@@ -7977,9 +8123,10 @@ def _pj_squad(tournament, db_name, env=None):
             'total_purse': total_purse,
             'remaining_purse': remaining_purse,
             'spent_purse': spent_purse,
+            'max_call': max_call,
             'players': players_out,
         })
-    return {'sport': sport, 'teams': teams_out}
+    return {'sport': sport, 'tournament_name': tournament.name or '', 'teams': teams_out}
 
 
 def _pj_remaining_players(tournament, db_name, env=None):

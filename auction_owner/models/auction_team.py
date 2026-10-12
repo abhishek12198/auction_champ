@@ -67,6 +67,14 @@ class AuctionTeamOwnerUser(models.Model):
         help='Plain-text password stored for admin reference. Share this with the team owner.',
     )
 
+    owner_wizard_created = fields.Boolean(
+        string='Owner Login Created by Wizard',
+        copy=False,
+        readonly=True,
+        help='Set when the owner user was created from Tournament Settings → '
+             'Create Owner Users. Enables the Excel export of owner logins.',
+    )
+
     @staticmethod
     def _random_password(length=12):
         chars = string.ascii_letters + string.digits + '!@#$%'
@@ -126,7 +134,8 @@ class AuctionTeamOwnerUser(models.Model):
                 base_login = self._owner_login_base(team)
                 login = base_login
                 counter = 1
-                while self.env['res.users'].sudo().search([('login', '=', login)], limit=1):
+                while self.env['res.users'].sudo().with_context(active_test=False).search(
+                        [('login', '=', login)], limit=1):
                     login = '%s_%d' % (base_login, counter)
                     counter += 1
 
@@ -163,3 +172,51 @@ class AuctionTeamOwnerUser(models.Model):
                 'sticky': False,
             },
         }
+
+    # ── Remove / recreate support (Tournament Settings → Remove Owner Users) ──
+
+    def _owner_user_remove(self, mode='archive'):
+        """Detach the owner user from the team and optionally archive / delete it.
+
+        ``unlink``  — detach from the team and drop the Owner Console access;
+                      the user account itself is kept.
+        ``archive`` — soft delete: detach, archive the user and free its login,
+                      so re-creating the owner user gives the same login again.
+        ``delete``  — detach and delete the user permanently (falls back to
+                      archive when the user is referenced elsewhere).
+
+        Returns a dict of counters for the confirmation message.
+        """
+        owner_group = self.env.ref('auction_owner.group_auction_owner')
+        done = {'unlink': 0, 'archive': 0, 'delete': 0, 'archived_instead': 0}
+        for team in self.sudo().with_context(auction_skip_tournament_security=True):
+            user = team.owner_user_id
+            team.write({
+                'owner_user_id': False,
+                'owner_password': False,
+                'owner_wizard_created': False,
+            })
+            if not user:
+                continue
+            user = user.sudo()
+            user.write({'auction_team_id': False, 'groups_id': [(3, owner_group.id)]})
+            if mode == 'unlink':
+                done['unlink'] += 1
+                continue
+            if mode == 'delete':
+                try:
+                    with self.env.cr.savepoint():
+                        user.unlink()
+                    done['delete'] += 1
+                    continue
+                except Exception:
+                    _logger.info('Owner user %s kept (archived): still referenced', user.login)
+                    done['archived_instead'] += 1
+            # archive / soft delete — free the login for re-creation
+            user.write({
+                'login': '%s__archived_%d' % (user.login.split('__archived_')[0], user.id),
+                'active': False,
+            })
+            if mode != 'delete':
+                done['archive'] += 1
+        return done

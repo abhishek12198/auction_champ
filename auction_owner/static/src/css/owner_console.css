@@ -549,3 +549,287 @@ html,body{margin:0;padding:0}
     letter-spacing:.05em;line-height:1;color:currentColor;white-space:nowrap;
     text-shadow:0 1px 5px rgba(0,0,0,.55);
 }
+
+
+/* ── Teams tab: Bid Summary layout in the owner blue + white theme ───────── */
+.ocb-root{display:block}
+.ocb-toolbar{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-bottom:12px}
+.ocb-title{font-weight:800;letter-spacing:.14em;font-size:.82rem;color:var(--action)}
+.ocb-toggle{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.ocb-toggle-btn{appearance:none;border:0;background:transparent;color:var(--dim);font-weight:800;font-size:.7rem;letter-spacing:.12em;
+    padding:6px 14px;border-radius:7px;cursor:pointer}
+.ocb-toggle-btn.active{background:var(--action);color:#fff}
+.ocb-panel{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.ocb-gridwrap{background:transparent;border:0;box-shadow:none;overflow:visible}
+.ocb-mobile{display:none}
+
+/* shared bits */
+.ocb-logo,.ocb-card-logo,.ocb-mob-logo{object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:50%;flex-shrink:0}
+.ocb-logo{width:40px;height:40px}.ocb-card-logo{width:46px;height:46px}.ocb-mob-logo{width:38px;height:38px}
+.ocb-logo-fb{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:50%;background:#e3f0ff;color:var(--action);font-weight:800;flex-shrink:0}
+.ocb-you{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--gold);color:#3a2a00;font-size:.6rem;font-weight:800;letter-spacing:.08em;vertical-align:middle}
+.ocb-progress{height:7px;border-radius:99px;background:#e3ebf6;overflow:hidden}
+.ocb-progress-fill{height:100%;border-radius:99px;transition:width .5s}
+.ocb-progress-fill.pf-high{background:linear-gradient(90deg,#1565c0,#42a5f5)}
+.ocb-progress-fill.pf-mid{background:linear-gradient(90deg,#1e88e5,#64b5f6)}
+.ocb-progress-fill.pf-low{background:linear-gradient(90deg,#e8b84a,#f5d27a)}
+.ocb-progress-fill.pf-crit{background:linear-gradient(90deg,#d32f3a,#ef6a73)}
+.ocb-pct{margin-top:4px;font-size:.66rem;font-weight:700;color:var(--dim);letter-spacing:.04em}
+.ocb-badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:.62rem;font-weight:800;letter-spacing:.1em;white-space:nowrap}
+.ocb-badge.comfortable{background:var(--ok-bg);color:var(--ok)}
+.ocb-badge.healthy{background:#e3f0ff;color:var(--action)}
+.ocb-badge.balanced{background:#eef3fa;color:var(--dim)}
+.ocb-badge.tight{background:#fff4dc;color:#9a6b00}
+.ocb-badge.critical{background:#fdecee;color:var(--danger)}
+.ocb-eye{appearance:none;display:inline-grid;place-items:center;width:36px;height:36px;border-radius:10px;border:1px solid var(--line);
+    background:#fff;color:var(--action);cursor:pointer}
+.ocb-eye:hover{background:var(--action);color:#fff;border-color:var(--action)}
+.ocb-eye svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.mb-ok{--mb:var(--action)}.mb-tight{--mb:#9a6b00}.mb-crit{--mb:var(--danger)}
+
+/* list (table) */
+.ocb-table-wrap{overflow-x:auto}
+.ocb-table{width:100%;border-collapse:collapse;min-width:760px}
+.ocb-table th{background:var(--chrome);color:#fff;text-align:left;font-size:.66rem;font-weight:800;letter-spacing:.14em;
+    text-transform:uppercase;padding:11px 14px;white-space:nowrap}
+.ocb-table td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+.ocb-row{cursor:pointer}.ocb-row:nth-child(even){background:#f7faff}.ocb-row:hover{background:#eaf2ff}
+.ocb-row.ocb-mine{background:#fff8e6}
+.ocb-team-cell{display:flex;align-items:center;gap:12px}
+.ocb-team-name{font-weight:800;font-size:.95rem;color:var(--ink)}
+.ocb-manager{font-size:.72rem;color:var(--dim);margin-top:1px}
+.ocb-purse-stack{min-width:150px}
+.ocb-purse-value{display:block;font-weight:800;font-size:1rem;color:var(--action);margin-bottom:5px}
+.ocb-needed,.ocb-squad{display:flex;flex-direction:column;align-items:flex-start}
+.ocb-needed-n,.ocb-squad-val{font-weight:800;font-size:1.15rem;color:var(--ink)}
+.ocb-chip-label{font-size:.64rem;font-weight:700;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+.ocb-maxbid{display:flex;flex-direction:column;border-left:3px solid var(--mb,var(--action));padding-left:10px}
+.ocb-maxbid-lbl{font-size:.6rem;font-weight:800;letter-spacing:.14em;color:var(--dim)}
+.ocb-maxbid-val{font-weight:800;font-size:1.05rem;color:var(--mb,var(--action))}
+.ocb-maxbid-hint{font-size:.62rem;color:var(--dim)}
+.ocb-access{text-align:right;width:60px}
+
+/* mobile compact rows */
+.ocb-mob-row{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:12px;margin-bottom:10px}
+.ocb-mob-row.ocb-mine{border-color:var(--gold);box-shadow:0 0 0 2px rgba(232,184,74,.4),var(--shadow)}
+.ocb-mob-head{display:flex;align-items:center;gap:10px}
+.ocb-mob-copy{flex:1;min-width:0}
+.ocb-mob-name{font-weight:800;font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ocb-mob-manager{font-size:.7rem;color:var(--dim)}
+.ocb-mob-purse{display:flex;align-items:center;gap:12px;margin:10px 0}
+.ocb-mob-pts{font-weight:800;font-size:1.05rem;color:var(--action);white-space:nowrap}
+.ocb-mob-bar{flex:1;min-width:0}
+.ocb-mob-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ocb-mob-stat{background:#f4f7fb;border-radius:10px;padding:7px 4px;text-align:center}
+.ocb-mob-lbl{display:block;font-size:.56rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.ocb-mob-val{display:block;font-weight:800;font-size:.95rem;color:var(--ink);margin-top:1px}
+.ocb-mob-maxbid .ocb-mob-val{color:var(--mb,var(--action))}
+.ocb-mob-foot{display:flex;justify-content:flex-end;margin-top:10px}
+.ocb-mob-foot .ocb-eye{width:42px;height:42px}
+
+/* ── Grid cards: same structure/type/sizing as Bid Summary (.bs2-card) ── */
+.ocb-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.ocb-card{position:relative;display:flex;flex-direction:column;overflow:hidden;border-radius:24px;border:1px solid var(--line);
+    background:var(--card);box-shadow:0 10px 26px rgba(18,36,63,.10);cursor:pointer;transition:transform .2s,box-shadow .2s}
+.ocb-card:hover{transform:translateY(-4px);box-shadow:0 18px 34px rgba(18,36,63,.16),0 0 0 1px #9ec3f0}
+.ocb-card.ocb-mine{border-color:var(--gold);box-shadow:0 0 0 2px rgba(232,184,74,.45),0 10px 26px rgba(18,36,63,.10)}
+.ocb-card-accent{height:3px;background:linear-gradient(90deg,#1565c0,#64b5f6);flex:0 0 auto}
+.ocb-card-body{flex:1 1 auto;padding:16px;display:flex;flex-direction:column;gap:16px}
+.ocb-card-head{display:flex;justify-content:flex-start;align-items:center;flex-wrap:nowrap}
+.ocb-team-cell{display:flex;align-items:center;gap:12px;flex:1 1 0;min-width:0}
+.ocb-card-logo,.ocb-logo-fallback{width:52px;height:52px;border-radius:16px;object-fit:cover;border:1px solid var(--line);
+    background:#fff;box-shadow:0 6px 14px rgba(18,36,63,.10);flex:0 0 auto}
+.ocb-logo-fallback{display:inline-flex;align-items:center;justify-content:center;font-family:'Orbitron','Rajdhani',sans-serif;
+    font-size:1.05rem;color:var(--action);background:#e3f0ff;text-transform:uppercase}
+.ocb-card-copy{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:3px;container-type:inline-size}
+.ocb-card-name{font-family:'Orbitron','Rajdhani',sans-serif;font-weight:900;letter-spacing:.08em;line-height:.95;text-transform:uppercase;
+    font-size:clamp(.4rem,5.4cqw,.92rem);color:var(--ink);white-space:nowrap;letter-spacing:.04em;font-weight:800;line-height:1.15}
+.ocb-card-manager{font-family:'Rajdhani','Segoe UI',sans-serif;color:var(--dim);font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocb-you{font-family:'Rajdhani',sans-serif}
+.ocb-card-purse{display:flex;flex-direction:column;gap:8px}
+.ocb-overline{font-family:'Orbitron','Rajdhani',sans-serif;font-size:.7rem;letter-spacing:.18em;color:var(--dim);text-transform:uppercase;margin:0}
+.ocb-card-purse-line{display:inline-flex;align-items:baseline;gap:6px}
+.ocb-card-purse-value{font-family:'Oswald','Teko',sans-serif;font-weight:700;letter-spacing:.02em;font-size:clamp(2rem,4.6vw,3.28rem);line-height:1.05;
+    color:var(--action);white-space:nowrap}
+.ocb-card .ocb-progress{height:8px;border-radius:999px;background:#e3ebf6;border:1px solid #d5e0ee}
+.ocb-pct-label{font-family:'Rajdhani','Segoe UI',sans-serif;font-size:.82rem;letter-spacing:.12em;color:var(--dim);text-transform:uppercase;margin:0}
+.ocb-card-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border:1.5px solid var(--line);border-radius:12px;
+    overflow:hidden;background:#f4f7fb}
+.ocb-stat-col{min-width:0;padding:10px 6px 12px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}
+.ocb-stat-col+.ocb-stat-col{border-left:1.5px solid var(--line)}
+.ocb-stat-label{font-family:'Rajdhani','Segoe UI',sans-serif;font-weight:700;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--dim);white-space:nowrap;margin:0}
+.ocb-card-stats .ocb-stat-figure{font-family:'Oswald','Teko',sans-serif;font-weight:700;letter-spacing:.01em;color:var(--ink);
+    font-size:clamp(.88rem,1.7vw,1.28rem);line-height:1.1;white-space:nowrap;max-width:100%;margin:0;
+    display:inline-flex;flex-wrap:nowrap;align-items:baseline;justify-content:center;gap:3px}
+.ocb-stat-col--maxbid{background:#e8f1fd;container-type:inline-size;overflow:hidden}
+.ocb-stat-col--maxbid .ocb-stat-label,.ocb-stat-col--maxbid .ocb-stat-figure{color:var(--action)}
+.ocb-stat-col--maxbid{padding-left:3px;padding-right:3px}
+.ocb-stat-col--maxbid .ocb-stat-figure{font-size:clamp(.5rem,14cqw,1.4rem);font-weight:800;letter-spacing:0}
+.ocb-stat-col--maxbid.mb-tight{background:#fff4dc}
+.ocb-stat-col--maxbid.mb-tight .ocb-stat-label,.ocb-stat-col--maxbid.mb-tight .ocb-stat-figure{color:#b45309}
+.ocb-stat-col--maxbid.mb-crit{background:#fdecee}
+.ocb-stat-col--maxbid.mb-crit .ocb-stat-label,.ocb-stat-col--maxbid.mb-crit .ocb-stat-figure{color:var(--danger)}
+.ocb-card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto}
+.ocb-card .ocb-badge{display:inline-flex;align-items:center;justify-content:center;min-width:132px;padding:8px 14px;border-radius:999px;
+    font-family:'Orbitron','Rajdhani',sans-serif;font-size:.76rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;
+    white-space:nowrap;border:1.5px solid transparent;flex-shrink:0}
+.ocb-card .ocb-badge.comfortable{border-color:rgba(30,158,85,.4)}
+.ocb-card .ocb-badge.healthy{border-color:rgba(21,101,192,.4)}
+.ocb-card .ocb-badge.balanced{border-color:#c5d3e6}
+.ocb-card .ocb-badge.tight{border-color:rgba(154,107,0,.4)}
+.ocb-card .ocb-badge.critical{border-color:rgba(211,47,58,.45)}
+.ocb-access-actions{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.ocb-card .ocb-eye{width:40px;height:40px;border-radius:999px;border:1.5px solid var(--line);background:#fff;color:var(--action)}
+.ocb-card .ocb-eye:hover{background:var(--action);color:#fff;border-color:var(--action);transform:translateY(-1px)}
+.ocb-mobile{display:none !important}
+
+@media (max-width:768px){
+    .ocb-toggle,.ocb-list{display:none !important}
+    .ocb-gridwrap{display:block !important}
+    .ocb-grid{gap:8px}
+    .ocb-card{border-radius:12px}
+    .ocb-card:hover{transform:none}
+    .ocb-card-body{padding:10px;gap:8px}
+    .ocb-card-logo,.ocb-logo-fallback{width:28px;height:28px;border-radius:7px;font-size:.8rem}
+    .ocb-team-cell{gap:8px}
+    .ocb-card-manager{font-size:.55rem;white-space:normal}
+    .ocb-overline{font-size:.5rem;letter-spacing:.08em;margin-bottom:2px}
+    .ocb-card-purse-value{font-size:1.15rem}
+    .ocb-card .ocb-progress{height:6px}
+    .ocb-pct-label{font-size:.55rem}
+    .ocb-card-stats{border-radius:8px;border-width:1px}
+    .ocb-stat-col{padding:6px 3px 8px;gap:3px}
+    .ocb-stat-col+.ocb-stat-col{border-left-width:1px}
+    .ocb-card-stats .ocb-stat-figure{font-size:clamp(.78rem,2.8vw,1.02rem)}
+    .ocb-stat-col--maxbid .ocb-stat-figure{font-size:clamp(.5rem,14cqw,1.05rem)}
+    .ocb-stat-label{font-size:.5rem;letter-spacing:.02em;white-space:normal;line-height:1.15;word-break:normal;overflow-wrap:normal}
+    .ocb-card .ocb-badge{min-width:0;padding:3px 6px;font-size:.48rem;letter-spacing:.04em}
+    .ocb-card .ocb-eye{width:28px;height:28px}
+    .ocb-card .ocb-eye svg{width:15px;height:15px}
+    .ocb-card-foot{flex-wrap:wrap;gap:6px}
+    .ocb-you{padding:1px 4px;font-size:.45rem}
+}
+@media (max-width:380px){
+    .ocb-card-purse-value{font-size:1.05rem}
+}
+
+
+/* ── Header chips: Sold / Unsold / In auction ───────────────────────────── */
+.oc-pc-row{display:flex;gap:8px;padding-top:2px}
+.oc-pc{appearance:none;flex:1 1 0;min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    padding:7px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);color:#dbe7f8;
+    font-family:inherit;font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+.oc-pc b{display:inline-block;min-width:22px;padding:1px 7px;border-radius:999px;background:#fff;color:var(--action);font-size:.72rem;letter-spacing:0}
+.oc-pc-sold b{color:var(--ok)}
+.oc-pc-unsold b{color:var(--danger)}
+.oc-pc:hover{background:rgba(255,255,255,.16)}
+.oc-pc.active{background:#fff;color:var(--action);border-color:#fff}
+.oc-pc.active b{background:var(--action);color:#fff}
+@media (min-width:700px){.oc-pc-row{max-width:520px}.oc-pc{flex:0 1 auto;padding:7px 18px}}
+
+/* ── Players board ──────────────────────────────────────────────────────── */
+.oc-pb-backdrop{position:fixed;inset:0;z-index:60;background:rgba(18,36,63,.5);opacity:0;pointer-events:none;transition:opacity .2s}
+.oc-pb-backdrop.oc-open{opacity:1;pointer-events:auto}
+.oc-pb{position:fixed;z-index:61;left:0;right:0;bottom:0;max-height:86dvh;display:flex;flex-direction:column;background:#fff;
+    border-radius:18px 18px 0 0;box-shadow:0 -12px 40px rgba(18,36,63,.25);transform:translateY(105%);transition:transform .25s ease;
+    padding-bottom:env(safe-area-inset-bottom)}
+.oc-pb.oc-open{transform:none}
+@media (min-width:700px){
+    .oc-pb{left:50%;right:auto;bottom:auto;top:50%;width:min(720px,94vw);max-height:84dvh;border-radius:18px;
+        transform:translate(-50%,-46%);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+    .oc-pb.oc-open{transform:translate(-50%,-50%);opacity:1;pointer-events:auto}
+}
+.oc-pb-head{display:flex;align-items:center;gap:10px;padding:14px 14px 8px}
+.oc-pb-title{font-weight:800;font-size:1rem;color:var(--ink);white-space:nowrap}
+.oc-pb-search{flex:1;min-width:0}
+.oc-pb-search input{width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:.82rem;background:#f4f7fb;color:var(--ink)}
+.oc-pb-search input:focus{outline:2px solid #9ec3f0;background:#fff}
+.oc-pb-close{appearance:none;border:0;background:#eef3fa;color:var(--dim);width:34px;height:34px;border-radius:50%;font-size:1rem;cursor:pointer}
+.oc-pb-tabs{display:flex;gap:6px;padding:0 14px 10px;border-bottom:1px solid var(--line)}
+.oc-pb-tabs button{appearance:none;flex:1;border:1px solid var(--line);background:#fff;color:var(--dim);border-radius:999px;padding:6px 4px;
+    font:inherit;font-size:.7rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;cursor:pointer}
+.oc-pb-tabs button.active{background:var(--action);border-color:var(--action);color:#fff}
+.oc-pb-list{flex:1;overflow-y:auto;padding:8px 12px;-webkit-overflow-scrolling:touch}
+.oc-pb-row{display:flex;align-items:center;gap:10px;padding:9px 6px;border-bottom:1px solid #edf2f9}
+.oc-pb-row.oc-pb-mine{background:#fff8e6;border-radius:10px}
+.oc-pb-photo{width:46px;height:46px;border-radius:12px;object-fit:cover;background:#e3f0ff;border:1px solid var(--line);flex:0 0 auto}
+.oc-pb-photo-fb{display:inline-grid;place-items:center;color:var(--action);font-weight:800}
+.oc-pb-info{flex:1;min-width:0}
+.oc-pb-name{font-weight:800;font-size:.88rem;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.oc-pb-sl{color:var(--dim);font-weight:700;font-size:.74rem}
+.oc-pb-sub{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;margin-top:2px}
+.oc-pb-role{background:#e3f0ff;color:var(--action);border-radius:6px;padding:1px 7px;font-size:.6rem;font-weight:800;letter-spacing:.06em}
+.oc-pb-attrs{font-size:.66rem;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.oc-pb-side{text-align:right;flex:0 0 auto;max-width:42%}
+.oc-pb-price{font-weight:800;font-size:.92rem;color:var(--action);white-space:nowrap}
+.oc-pb-base small{display:block;font-size:.55rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.oc-pb-team{display:flex;align-items:center;justify-content:flex-end;gap:5px;font-size:.68rem;font-weight:700;color:var(--dim);margin-top:2px}
+.oc-pb-team img{width:16px;height:16px;border-radius:4px;object-fit:cover}
+.oc-pb-team span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.oc-pb-team em{font-style:normal;background:var(--gold);color:#3a2a00;border-radius:999px;padding:0 6px;font-size:.52rem;font-weight:800}
+.oc-pb-stage{display:inline-block;margin-top:3px;background:var(--ok-bg);color:var(--ok);border-radius:999px;padding:1px 8px;font-size:.55rem;font-weight:800;letter-spacing:.08em}
+.oc-pb-more{appearance:none;margin:6px 14px 12px;padding:10px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--action);
+    font:inherit;font-weight:800;font-size:.78rem;cursor:pointer}
+
+/* chips: keep "In auction" inside its button on narrow screens */
+.oc-pc{gap:5px;padding:7px 6px;letter-spacing:.03em;overflow:hidden}
+.oc-pc-auction{flex:1.4 1 0}
+.oc-pc b{flex:0 0 auto;min-width:20px;padding:1px 6px;text-align:center}
+@media (max-width:420px){
+    .oc-pc-row{gap:5px}
+    .oc-pc{font-size:.62rem;letter-spacing:0;gap:4px;padding:7px 4px}
+    .oc-pc b{font-size:.64rem;min-width:18px;padding:1px 5px}
+}
+
+/* ── Players board: two compact cards per row ───────────────────────────── */
+.oc-pb-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-content:start;padding:10px}
+.oc-pb-list>.oc-empty-state{grid-column:1/-1}
+@media (min-width:700px){.oc-pb{width:min(860px,95vw)}.oc-pb-list{gap:10px}}
+.oc-pb-card{display:flex;flex-direction:column;gap:6px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px;
+    box-shadow:0 3px 10px rgba(18,36,63,.06);min-width:0}
+.oc-pb-card.oc-pb-mine{border-color:var(--gold);background:#fffbf0}
+.oc-pb-ctop{display:flex;align-items:center;gap:7px;min-width:0}
+.oc-pb-card .oc-pb-photo{width:38px;height:38px;border-radius:9px}
+.oc-pb-card .oc-pb-info{min-width:0;flex:1}
+.oc-pb-card .oc-pb-name{font-size:.7rem;line-height:1.15;white-space:normal;overflow:visible;word-break:break-word}
+.oc-pb-card .oc-pb-sub{gap:3px 5px;margin-top:2px}
+.oc-pb-card .oc-pb-sl{font-size:.6rem}
+.oc-pb-card .oc-pb-role{font-size:.5rem;padding:1px 5px}
+.oc-pb-attrs{display:flex;flex-direction:column;gap:2px;border-top:1px dashed var(--line);padding-top:5px}
+.oc-pb-attr{display:flex;gap:5px;font-size:.58rem;line-height:1.25;min-width:0}
+.oc-pb-attr span{flex:0 0 auto;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.03em;font-size:.5rem;padding-top:1px}
+.oc-pb-attr b{color:var(--ink);font-weight:700;min-width:0;word-break:break-word}
+.oc-pb-cfoot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;
+    border-top:1px solid #edf2f9;padding-top:5px}
+.oc-pb-card .oc-pb-price{font-size:.74rem}
+.oc-pb-base-lbl{font-size:.5rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.oc-pb-card .oc-pb-team{margin-top:0;font-size:.58rem;min-width:0;flex:1 1 auto;justify-content:flex-start}
+.oc-pb-card .oc-pb-team img{width:14px;height:14px}
+.oc-pb-card .oc-pb-stage{margin-top:0;font-size:.5rem}
+@media (min-width:700px){
+    .oc-pb-card{padding:10px}
+    .oc-pb-card .oc-pb-photo{width:46px;height:46px}
+    .oc-pb-card .oc-pb-name{font-size:.82rem}
+    .oc-pb-attr{font-size:.68rem}.oc-pb-attr span{font-size:.56rem}
+    .oc-pb-card .oc-pb-price{font-size:.86rem}
+}
+
+/* Players board: names and attribute values in capitals */
+.oc-pb-card .oc-pb-name,.oc-pb-attr b,.oc-pb-attr span,.oc-pb-card .oc-pb-team span{text-transform:uppercase}
+
+/* Players board: blocks owned by my team are highlighted (no tag) */
+.oc-pb-card.oc-pb-mine{border:2px solid var(--gold);background:linear-gradient(180deg,#fff6dc,#fffdf5);
+    box-shadow:0 0 0 3px rgba(232,184,74,.28),0 6px 16px rgba(232,184,74,.25)}
+.oc-pb-card.oc-pb-mine .oc-pb-attrs,.oc-pb-card.oc-pb-mine .oc-pb-cfoot{border-color:rgba(232,184,74,.55)}
+
+/* In auction: the player on stage right now glows */
+.oc-pb-card.oc-pb-live{border:2px solid #1e88e5;background:linear-gradient(180deg,#e8f3ff,#fff);
+    box-shadow:0 0 0 3px rgba(30,136,229,.25),0 0 18px rgba(30,136,229,.55);animation:ocPbGlow 1.6s ease-in-out infinite}
+.oc-pb-card.oc-pb-live .oc-pb-stage{background:#1565c0;color:#fff}
+@keyframes ocPbGlow{
+    0%,100%{box-shadow:0 0 0 3px rgba(30,136,229,.22),0 0 10px rgba(30,136,229,.40)}
+    50%{box-shadow:0 0 0 5px rgba(30,136,229,.32),0 0 26px rgba(66,165,245,.85)}
+}
+@media (prefers-reduced-motion:reduce){.oc-pb-card.oc-pb-live{animation:none}}

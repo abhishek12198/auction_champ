@@ -66,11 +66,13 @@
             ping(c, t + 0.09, 3320, 0.08, 0.1);
         } catch (e) {}
     }
+    /* Key on player + bid amount only. The leading team can arrive in a later
+       update than the amount (or change without a new bid), which used to make
+       the cue play twice — once for the amount, once for the team. */
     function bidKey(player) {
-        if (!player) return '0:0:0';
+        if (!player) return '0:0';
         var bid = Number(player.current_bid || 0) || 0;
-        var team = player.current_bid_team || {};
-        return String(player.id || 0) + ':' + bid + ':' + String(team.id || 0);
+        return String(player.id || 0) + ':' + bid;
     }
     var lastKey = '';
     function maybePlay(enabled, player) {

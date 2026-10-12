@@ -1,0 +1,27 @@
+/* Success / warning toast shown after Create / Remove Owner Users */
+.o_notification.ac_owner_toast {
+    border: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    min-width: 340px;
+    background: linear-gradient(135deg, #0b1b3f 0%, #12306b 100%);
+    color: #fff;
+    box-shadow: 0 14px 40px rgba(6, 14, 34, .45), 0 0 0 1px rgba(242, 201, 76, .35);
+}
+.o_notification.ac_owner_toast .o_notification_body { padding: 16px 18px 16px 64px; position: relative; }
+.o_notification.ac_owner_toast .o_notification_body::before {
+    content: "\f00c";
+    font-family: FontAwesome;
+    position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+    width: 36px; height: 36px; line-height: 36px; text-align: center; font-size: 18px;
+    border-radius: 50%; background: #22c55e; color: #05260f;
+    box-shadow: 0 0 0 5px rgba(34, 197, 94, .25);
+}
+.o_notification.ac_owner_toast_warning .o_notification_body::before {
+    content: "\f2bd"; background: #f2c94c; color: #3a2a00; box-shadow: 0 0 0 5px rgba(242, 201, 76, .25);
+}
+.o_notification.ac_owner_toast .o_notification_title { color: #f2c94c; font-weight: 700; letter-spacing: .02em; }
+.o_notification.ac_owner_toast .o_notification_content { color: #e9eefb; }
+.o_notification.ac_owner_toast .o_notification_close { color: #fff; opacity: .7; }
+.o_notification.ac_owner_toast .o_notification_buttons,
+.o_notification.ac_owner_toast .o_notification_icon { display: none; }

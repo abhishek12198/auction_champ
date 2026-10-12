@@ -9,8 +9,8 @@
     <title>Owner Console</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="/auction_owner/static/src/css/owner_console.css?v=21"/>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Orbitron:wght@600;700;900&amp;family=Oswald:wght@500;600;700&amp;family=Rajdhani:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/auction_owner/static/src/css/owner_console.css?v=33"/>
 </head>
 <body class="oc-body"
       t-att-data-theme="tournament.player_display_template if tournament else 'vanilla'"
@@ -57,6 +57,11 @@
             </svg>
             <span id="ocHeaderSquad">—</span>
         </span>
+    </div>
+    <div class="oc-pc-row" id="ocPcRow" role="tablist" aria-label="Players tracker">
+        <button type="button" class="oc-pc oc-pc-sold" data-bucket="sold" onclick="ocOpenPlayers('sold')">Sold <b id="ocPcSold">0</b></button>
+        <button type="button" class="oc-pc oc-pc-unsold" data-bucket="unsold" onclick="ocOpenPlayers('unsold')">Unsold <b id="ocPcUnsold">0</b></button>
+        <button type="button" class="oc-pc oc-pc-auction" data-bucket="auction" onclick="ocOpenPlayers('auction')">In auction <b id="ocPcAuction">0</b></button>
     </div>
 </header>
 
@@ -228,14 +233,10 @@
             <span class="oc-panel-hdr-icon">&#x1F465;</span>
             <span class="oc-panel-hdr-title">My Squad</span>
             <div class="oc-squad-snap-wrap">
-                <button class="oc-squad-snap-btn" title="Mobile / Tablet snapshot" onclick="ocSquadSnapshot('mobile',this)">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-                    Mobile
-                </button>
-                <button class="oc-squad-snap-btn" title="Laptop snapshot" onclick="ocSquadSnapshot('laptop',this)">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><line x1="2" y1="22" x2="22" y2="22"/></svg>
-                    Laptop
-                </button>
+                <a class="oc-squad-snap-btn" id="ocPrintRoster" href="/auction/owner/my-squad/roster.pdf" target="_blank" rel="noopener" title="Print squad roster PDF" style="text-decoration:none">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    Print Roster PDF
+                </a>
             </div>
         </div>
         <div class="oc-my-squad-banner" id="ocMySquadBanner" style="display:none">
@@ -252,6 +253,23 @@
     </section>
 
 </main>
+
+<!-- ═══════ PLAYERS BOARD (Sold / Unsold / In auction) ═══════════════ -->
+<div class="oc-pb-backdrop" id="ocPbBackdrop" onclick="ocClosePlayers()"></div>
+<aside class="oc-pb" id="ocPb" role="dialog" aria-label="Players">
+    <div class="oc-pb-head">
+        <div class="oc-pb-title" id="ocPbTitle">Sold</div>
+        <label class="oc-pb-search"><input type="search" id="ocPbSearch" placeholder="Search name, #serial, role, team" autocomplete="off" spellcheck="false"/></label>
+        <button type="button" class="oc-pb-close" onclick="ocClosePlayers()" aria-label="Close">&#x2715;</button>
+    </div>
+    <div class="oc-pb-tabs">
+        <button type="button" data-bucket="sold" onclick="ocOpenPlayers('sold')">Sold</button>
+        <button type="button" data-bucket="unsold" onclick="ocOpenPlayers('unsold')">Unsold</button>
+        <button type="button" data-bucket="auction" onclick="ocOpenPlayers('auction')">In auction</button>
+    </div>
+    <div class="oc-pb-list" id="ocPbList"></div>
+    <button type="button" class="oc-pb-more" id="ocPbMore" onclick="ocPlayersMore()" style="display:none">Show more</button>
+</aside>
 
 <!-- ═══════ SQUAD SHEET ═══════════════════════════════════════════════ -->
 <div class="oc-sheet-backdrop" id="ocSheetBackdrop" onclick="ocCloseSquadSheet()"></div>
@@ -358,7 +376,7 @@
 <t t-call="auction_module.point_unit_bootstrap">
     <t t-set="pu_tournament" t-value="tournament"/>
 </t>
-<script src="/auction_owner/static/src/js/owner_console.js?v=24"></script>
+<script src="/auction_owner/static/src/js/owner_console.js?v=31"></script>
 
 <!-- Squad snapshot button styles -->
 <style>

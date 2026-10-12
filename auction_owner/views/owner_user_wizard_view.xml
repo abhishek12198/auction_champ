@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_auction_owner_user_wizard_form" model="ir.ui.view">
+        <field name="name">auction.owner.user.wizard.form</field>
+        <field name="model">auction.owner.user.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Owner Users">
+                <field name="mode" invisible="1"/>
+                <field name="tournament_id" invisible="1"/>
+                <div class="alert alert-info mb-3" role="alert" attrs="{'invisible': [('mode', '!=', 'create')]}">
+                    <i class="fa fa-user-plus me-1"/> Select the teams that should get an Owner login.
+                    Usernames follow the Team Master convention
+                    (<code>tournamentcode_teamname</code>) with a random password.
+                    Teams that already have a user get a <b>new password</b> if selected.
+                </div>
+                <div class="alert alert-warning mb-3" role="alert" attrs="{'invisible': [('mode', '!=', 'remove')]}">
+                    <i class="fa fa-user-times me-1"/> Select the teams whose Owner login should be removed,
+                    then choose what happens to the user accounts.
+                </div>
+                <group attrs="{'invisible': [('mode', '!=', 'remove')]}">
+                    <field name="remove_mode" widget="radio"/>
+                </group>
+                <div class="mb-2">
+                    <button name="action_select_all" type="object" string="Select all" class="btn btn-link px-0 me-3"/>
+                    <button name="action_unselect_all" type="object" string="Unselect all" class="btn btn-link px-0"/>
+                    <span class="text-muted ms-3"><field name="selected_count" class="oe_inline"/> selected</span>
+                </div>
+                <field name="line_ids" nolabel="1">
+                    <tree editable="bottom" create="false" delete="false" decoration-muted="not selected">
+                        <field name="selected" widget="boolean_toggle"/>
+                        <field name="team_name" string="Team"/>
+                        <field name="owner_name"/>
+                        <field name="owner_login"/>
+                        <field name="status"/>
+                    </tree>
+                </field>
+                <footer>
+                    <button name="action_confirm" type="object" string="Continue" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

@@ -41,3 +41,4 @@ from . import auction_team
 from . import auction_team_player
 from . import auction_tournament
 from . import auction_bid_log
+from . import owner_user_wizard

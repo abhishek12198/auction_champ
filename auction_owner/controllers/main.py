@@ -39,8 +39,9 @@
 import json
 import logging
 
-from odoo import fields as odoo_fields, http
+from odoo import SUPERUSER_ID, fields as odoo_fields, http
 from odoo.http import request
+from werkzeug.urls import url_quote
 from odoo.addons.web.controllers.main import Home
 
 _logger = logging.getLogger(__name__)
@@ -267,6 +268,117 @@ class AuctionOwnerController(http.Controller):
             },
         )
 
+    # ── My Squad: roster PDF (existing auction.auction report) ─────────────
+
+    @http.route('/auction/owner/my-squad/roster.pdf', type='http', auth='user', website=False)
+    def owner_squad_roster_pdf(self, **kw):
+        """Squad roster PDF for the signed-in owner's own team only."""
+        user = request.env.user
+        if not user.has_group('auction_owner.group_auction_owner'):
+            return request.not_found()
+        team = user.auction_team_id
+        tournament = self._resolve_tournament()
+        if not team or not tournament:
+            return request.not_found()
+        auction = request.env['auction.auction'].sudo().search([
+            ('team_id', '=', team.id),
+            ('tournament_id', '=', tournament.id),
+        ], limit=1)
+        if not auction:
+            return request.not_found()
+        # Render as the superuser: the roster template reads models (venue, tiers...)
+        # that owner users have no ACL for. Access was already restricted above to
+        # the owner's own team auction, and only that id is rendered.
+        report = request.env.ref('auction_module.action_report_auction_players').with_user(SUPERUSER_ID)
+        pdf, _fmt = report._render_qweb_pdf(auction.ids)
+        filename = '%s Squad Roster.pdf' % (team.name or 'Team')
+        return request.make_response(pdf, headers=[
+            ('Content-Type', 'application/pdf'),
+            ('Content-Length', len(pdf)),
+            ('Content-Disposition', "inline; filename*=UTF-8''%s" % url_quote(filename, safe='')),
+            ('Cache-Control', 'no-store'),
+        ])
+
+    @staticmethod
+    def _owner_player_profile(pl, sport, fallback_role=''):
+        """Role + attribute rows for the players board, specific to each sport."""
+        from odoo.addons.auction_module.services.auction_live_payload import (
+            _balance_player_profile,
+        )
+        if sport == 'badminton':
+            lb = pl.badminton_card_labels() or {}
+            attrs = []
+            for key, label in (('category', 'Category'), ('style', 'Style'),
+                               ('level', 'Level'), ('hand', 'Hand')):
+                if lb.get(key):
+                    attrs.append({'k': label, 'v': str(lb[key])})
+            if lb.get('age'):
+                attrs.append({'k': 'Age', 'v': str(lb['age'])})
+            strengths = ', '.join(
+                ('%s %s' % (x.get('icon') or '', x.get('name') or '')).strip()
+                for x in (lb.get('strengths') or []) if x.get('name'))
+            if strengths:
+                attrs.append({'k': 'Strengths', 'v': strengths})
+            return (lb.get('category') or pl.role or fallback_role or ''), attrs
+        if sport == 'kabaddi':
+            attrs = []
+            if getattr(pl, 'age', 0):
+                attrs.append({'k': 'Age', 'v': str(pl.age)})
+            return (pl.kabaddi_role_label() or pl.role or fallback_role or ''), attrs
+        role, attrs = _balance_player_profile(pl, False, sport == 'football')
+        return (role or fallback_role or ''), attrs
+
+    # ── Players board (Sold / Unsold / In auction) ─────────────────────────
+
+    @http.route('/auction/owner/players', type='http', auth='user', website=False)
+    def owner_players(self, bucket='sold', offset=0, limit=20, q='', **kw):
+        """Paginated player list for the owner's own tournament (bal snapshot)."""
+        user = request.env.user
+        if not user.has_group('auction_owner.group_auction_owner'):
+            return request.not_found()
+        tournament = self._resolve_tournament()
+        if not tournament:
+            return request.not_found()
+        from odoo.addons.auction_module.services.auction_live_snapshot_service import (
+            get_or_rebuild_snapshot,
+        )
+        from odoo.addons.auction_module.services.auction_live_payload import (
+            slice_balance_players,
+        )
+        snap = get_or_rebuild_snapshot(request.env, tournament, 'bal') or {}
+        payload = slice_balance_players(
+            snap, bucket, offset=offset, limit=min(int(limit or 20), 50) if str(limit).isdigit() else 20,
+            query=q,
+        )
+        # The snapshot carries the raw per-player base_price (usually 0). Use the same
+        # effective base the live bid panel uses (tier base, else auction base).
+        rows = payload['players']
+        sport = tournament.tournament_type or 'cricket'
+        if rows:
+            players = request.env['auction.team.player'].sudo().browse(
+                [r['id'] for r in rows]).exists()
+            by_id = {pl.id: pl for pl in players}
+            auctions = request.env['auction.auction'].sudo().search(
+                [('tournament_id', '=', tournament.id)])
+            for row in rows:
+                pl = by_id.get(row['id'])
+                base = 0
+                for auc in auctions:
+                    base = max(base, self._get_effective_base(auc, pl))
+                row['base_price'] = base or row.get('base_price') or 0
+                # Full sport-specific attribute set (cricket / football / badminton / kabaddi).
+                if pl and row.get('name') != '???':
+                    row['role'], row['attrs'] = self._owner_player_profile(pl, sport, row.get('role'))
+        # Never hand player phone numbers to team owners.
+        payload['players'] = [
+            {k: v for k, v in row.items() if k != 'contact'} for row in payload['players']
+        ]
+        payload['my_team_id'] = user.auction_team_id.id if user.auction_team_id else 0
+        return request.make_response(json.dumps(payload), [
+            ('Content-Type', 'application/json'),
+            ('Cache-Control', 'no-store'),
+        ])
+
     # ── Owner Console data endpoint ────────────────────────────────────────
 
     @http.route('/auction/owner/data', type='http', auth='user', website=False, csrf=False)
@@ -390,6 +502,19 @@ class AuctionOwnerController(http.Controller):
                     for s in auc.auction_bid_slab_ids.sorted('from_amount', reverse=True)
                 ]
             result['teams'].append(payload)
+
+        # Sold / Unsold / In-auction counts for the header chips (cached bal snapshot,
+        # the same one Bid Summary reads; no extra polling endpoint).
+        result['player_counts'] = {'sold': 0, 'unsold': 0, 'auction': 0}
+        if tournament:
+            try:
+                from odoo.addons.auction_module.services.auction_live_snapshot_service import (
+                    get_or_rebuild_snapshot,
+                )
+                snap = get_or_rebuild_snapshot(env, tournament, 'bal') or {}
+                result['player_counts'].update(snap.get('player_counts') or {})
+            except Exception:
+                _logger.exception('owner_data: player counts failed')
 
         result['counter'] = {
             'started_at': (
@@ -720,3 +845,80 @@ class AuctionOwnerController(http.Controller):
             'prev_team_name': prev_team_name,
             'revokes_remaining': revokes_left,
         }
+
+
+# ── Excel export of owner logins (created through Tournament Settings) ─────────
+class AuctionOwnerExport(http.Controller):
+
+    @http.route('/auction_owner/owner_users/export/<int:tournament_id>',
+                type='http', auth='user', methods=['GET'])
+    def export_owner_users(self, tournament_id, **kw):
+        import io
+        import re
+        import openpyxl
+        from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
+        from openpyxl.utils import get_column_letter
+
+        tournament = request.env['auction.tournament'].browse(tournament_id).exists()
+        if not tournament:
+            return request.not_found()
+        try:
+            tournament._owner_users_check_access()
+        except Exception:
+            return request.make_response(
+                'You are not allowed to export owner logins for this tournament.',
+                [('Content-Type', 'text/plain; charset=utf-8')], status=403,
+            )
+        # Passwords are admin-only fields: read them with sudo after the access check.
+        teams = tournament.sudo()._tournament_team_records().filtered(
+            lambda t: t.owner_user_id and t.owner_wizard_created
+        ).sorted(lambda t: (t.name or '').lower())
+        if not teams:
+            return request.make_response(
+                'No owner users created from Tournament Settings were found.',
+                [('Content-Type', 'text/plain; charset=utf-8')], status=404,
+            )
+
+        base_url = request.env['ir.config_parameter'].sudo().get_param('web.base.url') or ''
+        login_url = (base_url.rstrip('/') + '/web/login') if base_url else ''
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = 'Owner Logins'
+        ws['A1'] = tournament.name or 'Tournament'
+        ws['A1'].font = Font(size=14, bold=True)
+        ws['A2'] = 'Owner login credentials — share each row only with its team owner.'
+        ws['A2'].font = Font(italic=True, color='666666')
+        headers = ['S.No', 'Team', 'Owner', 'Username', 'Password', 'Login URL']
+        head_fill = PatternFill('solid', fgColor='0B1B3F')
+        thin = Side(style='thin', color='C9CED8')
+        for col, title in enumerate(headers, 1):
+            cell = ws.cell(row=4, column=col, value=title)
+            cell.font = Font(bold=True, color='F2C94C')
+            cell.fill = head_fill
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+            cell.border = Border(top=thin, bottom=thin, left=thin, right=thin)
+        for idx, team in enumerate(teams, 1):
+            row = [idx, team.name or '', team.manager or '',
+                   team.owner_user_id.login or '', team.owner_password or '', login_url]
+            for col, value in enumerate(row, 1):
+                cell = ws.cell(row=4 + idx, column=col, value=value)
+                cell.border = Border(top=thin, bottom=thin, left=thin, right=thin)
+                cell.alignment = Alignment(vertical='center', horizontal='center' if col == 1 else 'left')
+        widths = [7, 28, 26, 34, 18, 34]
+        for col, width in enumerate(widths, 1):
+            ws.column_dimensions[get_column_letter(col)].width = width
+        ws.freeze_panes = 'A5'
+
+        buf = io.BytesIO()
+        wb.save(buf)
+        safe = re.sub(r'[^A-Za-z0-9_-]+', '_', tournament.name or 'tournament').strip('_') or 'tournament'
+        filename = '%s_owner_logins.xlsx' % safe
+        return request.make_response(
+            buf.getvalue(),
+            headers=[
+                ('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+                ('Content-Disposition', 'attachment; filename="%s"' % filename),
+                ('Cache-Control', 'no-store'),
+            ],
+        )

@@ -217,6 +217,9 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   box-shadow:0 0 0 1px rgba(232,184,74,.35)}
 
 /* ══ Live Pool / Fixture board — fills stage between header and sponsors ══ */
+#pjBsOverlay{position:fixed;inset:0;z-index:2147483000;display:none;background:var(--bg,#000)}
+#pjBsOverlay.is-open{display:block}
+#pjBsOverlay iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent}
 #pjBoardOverlay{
   position:absolute;left:0;right:0;z-index:40;display:none;flex-direction:column;
   background:var(--bg);
@@ -476,76 +479,239 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   .pj-pd-prole{font-size:clamp(.62rem,1.3vh,.8rem)}
 }
 
-.pj-sq-panel{flex:1;min-height:0;margin:1.1rem 1.4rem 1.2rem;display:flex;flex-direction:column;
-  background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);
-  border-radius:14px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.45)}
-.pj-sq-hd{display:flex;align-items:center;justify-content:space-between;gap:1rem;
-  padding:.85rem 1.2rem;border-bottom:1px solid var(--line);flex-shrink:0;
-  background:linear-gradient(135deg,var(--panel2),var(--panel))}
-.pj-sq-title{font-weight:900;letter-spacing:.22em;text-transform:uppercase;
-  font-size:clamp(.95rem,1.6vw,1.25rem)}
-.pj-sq-sub{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--tx2);margin-top:3px}
-.pj-sq-close{width:2.4rem;height:2.4rem;border-radius:.45rem;border:1px solid var(--line);
-  background:var(--gold-soft);color:var(--tx);font-size:1.35rem;cursor:pointer;
-  display:inline-flex;align-items:center;justify-content:center;line-height:1}
-.pj-sq-close:hover{border-color:var(--gold);color:var(--gold)}
-.pj-sq-body{flex:1;min-height:0;overflow:auto;padding:1rem 1.15rem 1.25rem;
-  display:flex;flex-direction:column;gap:.85rem;align-content:start}
-.pj-sq-loading,.pj-sq-empty{width:100%;text-align:center;padding:3rem 1rem;
-  color:var(--tx2);letter-spacing:.12em;text-transform:uppercase;font-size:.85rem}
-.pj-sq-team{display:flex;align-items:stretch;gap:1.1rem;width:100%;
-  border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.18);
-  padding:.85rem 1rem;min-width:0;box-sizing:border-box}
-[data-mode="light"] .pj-sq-team{background:rgba(255,255,255,.55)}
-.pj-sq-team-hd{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
-  gap:.45rem;flex-shrink:0;width:9.5rem;text-align:center;padding-top:.1rem}
-.pj-sq-team-logo{width:3.4rem;height:3.4rem;border-radius:10px;object-fit:contain;
-  background:rgba(255,255,255,.06);border:1px solid var(--line);flex-shrink:0}
-.pj-sq-team-logo-ph{width:3.4rem;height:3.4rem;border-radius:10px;background:var(--gold);
-  color:#111;font-weight:900;display:flex;align-items:center;justify-content:center;
-  font-size:1.05rem;flex-shrink:0}
-.pj-sq-team-name{font-weight:800;letter-spacing:.06em;text-transform:uppercase;
-  font-size:.78rem;line-height:1.15;max-width:100%;width:100%;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pj-sq-meters{display:flex;flex-direction:column;gap:.45rem;width:100%;margin-top:.15rem}
-.pj-sq-meter{display:flex;flex-direction:column;gap:.18rem;width:100%;text-align:left}
-.pj-sq-meter-top{display:flex;align-items:baseline;justify-content:space-between;gap:.35rem}
-.pj-sq-meter-lbl{font-size:.52rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--tx2)}
-.pj-sq-meter-val{font-size:.72rem;font-weight:900;letter-spacing:.04em;color:var(--tx);white-space:nowrap}
-.pj-sq-meter-track{height:.38rem;border-radius:999px;background:rgba(255,255,255,.1);
-  overflow:hidden;border:1px solid rgba(255,255,255,.08)}
-[data-mode="light"] .pj-sq-meter-track{background:rgba(0,0,0,.08);border-color:rgba(0,0,0,.06)}
-.pj-sq-meter-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--gold),#ffe08a);
-  min-width:0;transition:width .35s ease}
-.pj-sq-meter-fill.is-purse{background:linear-gradient(90deg,#2bb673,#69f0ae)}
-.pj-sq-meter-fill.is-full{background:linear-gradient(90deg,#00c853,#69f0ae)}
-.pj-sq-meter-fill.is-low{background:linear-gradient(90deg,#e67e22,#f5c842)}
-.pj-sq-players{flex:1;min-width:0;display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(6.8rem,1fr));
-  gap:1.15rem .95rem;align-content:flex-start}
-.pj-sq-player{display:flex;flex-direction:column;align-items:center;text-align:center;
-  gap:.28rem;min-width:0;box-sizing:border-box}
-.pj-sq-photo{width:100%;aspect-ratio:1;height:auto;border-radius:10px;
-  object-fit:cover;object-position:top center;border:1.5px solid var(--line);
-  background:rgba(255,255,255,.06);display:block}
-.pj-sq-photo-ph{width:100%;aspect-ratio:1;border-radius:10px;border:1.5px solid var(--line);
-  background:linear-gradient(145deg,var(--panel2),var(--panel));display:flex;align-items:center;
-  justify-content:center;font-size:1.25rem;font-weight:800;color:var(--tx2)}
-.pj-sq-pname{width:100%;font-size:.92rem;font-weight:800;line-height:1.15;
-  text-transform:uppercase;letter-spacing:.03em;
-  white-space:normal;overflow-wrap:anywhere}
-.pj-sq-prole{width:100%;font-size:.72rem;letter-spacing:.04em;color:var(--tx2);line-height:1.15;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pj-sq-tier{font-size:.62rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
-  color:#fff;padding:.12rem .35rem;border-radius:4px;line-height:1.2;max-width:100%;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pj-sq-pts{width:100%;font-size:.78rem;font-weight:900;letter-spacing:.04em;color:var(--gold);
+
+/* ══ Team Squad Showcase (All Teams → Team View) — follows the projector theme ══ */
+#pjSquadOverlay{
+  --u:.09259vh;
+  /* theme tokens (fallbacks first, color-mix refinements below) */
+  --s-acc-10:var(--gold-soft);--s-acc-22:var(--gold-soft);--s-acc-45:var(--line);
+  --s-ink-04:rgba(128,128,128,.08);--s-ink-08:rgba(128,128,128,.14);--s-ink-16:rgba(128,128,128,.26);
+  --s-ink-50:var(--tx2);
+  background:var(--bg);background-image:none;backdrop-filter:none;-webkit-backdrop-filter:none;
+  font-family:var(--pj-font-hero,'Oswald'),'Oswald','Barlow Condensed','Segoe UI',sans-serif;color:var(--tx);overflow:hidden}
+@supports (color:color-mix(in srgb,red 50%,blue)){
+  #pjSquadOverlay{
+    --s-acc-10:color-mix(in srgb,var(--gold) 10%,transparent);
+    --s-acc-22:color-mix(in srgb,var(--gold) 22%,transparent);
+    --s-acc-45:color-mix(in srgb,var(--gold) 45%,transparent);
+    --s-ink-04:color-mix(in srgb,var(--tx) 5%,transparent);
+    --s-ink-08:color-mix(in srgb,var(--tx) 9%,transparent);
+    --s-ink-16:color-mix(in srgb,var(--tx) 18%,transparent);
+    --s-ink-50:color-mix(in srgb,var(--tx) 55%,transparent);
+  }
+}
+[data-mode="light"] #pjSquadOverlay{background:var(--bg)}
+#pjSquadOverlay::before{content:"";position:absolute;inset:0;pointer-events:none;background:
+  radial-gradient(calc(900*var(--u)) calc(520*var(--u)) at 12% 0%,var(--ray),transparent 60%),
+  radial-gradient(calc(900*var(--u)) calc(600*var(--u)) at 100% 100%,var(--s-acc-10),transparent 60%),
+  linear-gradient(180deg,var(--bg2),var(--bg) 70%)}
+#pjSquadOverlay::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(115deg,var(--s-ink-04) 0 2px,transparent 2px calc(46*var(--u)))}
+.pjs-wrap{position:relative;z-index:1;flex:1;min-height:0;display:flex;flex-direction:column;padding:calc(20*var(--u)) calc(40*var(--u)) calc(18*var(--u))}
+.pjs-top{flex:0 0 auto;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:calc(48*var(--u));gap:calc(12*var(--u))}
+.pjs-left{display:flex;align-items:center;gap:calc(16*var(--u));min-width:0}
+.pjs-brand img{height:calc(38*var(--u));width:auto;opacity:.95;display:block}
+.pjs-sub{font-size:calc(15*var(--u));letter-spacing:.24em;color:var(--tx2);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
+.pjs-back{display:none;align-items:center;gap:calc(8*var(--u));border:1px solid var(--line);background:var(--gold-soft);color:var(--tx);border-radius:calc(999*var(--u));
+  padding:calc(9*var(--u)) calc(20*var(--u)) calc(9*var(--u)) calc(14*var(--u));font:inherit;font-size:calc(14*var(--u));font-weight:600;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+.pjs-back b{font-size:calc(20*var(--u));line-height:1;color:var(--gold)}
+.pjs-back:hover{border-color:var(--gold);color:var(--gold)}
+#pjSquadOverlay.pjs-in-team .pjs-back{display:inline-flex}
+.pjs-close{justify-self:end;width:calc(40*var(--u));height:calc(40*var(--u));border-radius:calc(10*var(--u));border:1px solid var(--line);
+  background:var(--gold-soft);color:var(--tx);font-size:calc(22*var(--u));cursor:pointer;display:grid;place-items:center;line-height:1}
+.pjs-close:hover{border-color:var(--gold);color:var(--gold)}
+.pjs-body{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+.pjs-body.is-enter{animation:pjsIn .3s ease}
+@keyframes pjsIn{from{opacity:0;transform:translateY(calc(8*var(--u)))}to{opacity:1;transform:none}}
+
+/* hero */
+.pjs-hero{flex:0 0 auto;margin-top:calc(10*var(--u));position:relative;display:flex;align-items:center;gap:calc(30*var(--u));padding:calc(18*var(--u)) calc(34*var(--u));border-radius:calc(22*var(--u));
+  background:linear-gradient(100deg,var(--s-acc-22),var(--panel2) 40%);
+  border:1.5px solid var(--s-acc-45);box-shadow:0 calc(18*var(--u)) calc(50*var(--u)) rgba(0,0,0,.28),inset 0 0 calc(40*var(--u)) var(--s-acc-10);overflow:hidden}
+.pjs-hero::before{content:"";position:absolute;left:calc(-60*var(--u));top:calc(-60*var(--u));width:calc(260*var(--u));height:calc(260*var(--u));border-radius:50%;
+  background:radial-gradient(circle,var(--s-acc-22),transparent 65%)}
+.pjs-logo{position:relative;width:calc(132*var(--u));height:calc(132*var(--u));border-radius:50%;padding:calc(5*var(--u));flex:0 0 auto;
+  background:linear-gradient(145deg,var(--gold2),var(--gold));box-shadow:0 calc(10*var(--u)) calc(30*var(--u)) rgba(0,0,0,.35),0 0 calc(40*var(--u)) var(--glow)}
+.pjs-logo img,.pjs-logo .ph{width:100%;height:100%;border-radius:50%;object-fit:cover;background:var(--bg2);display:grid;place-items:center}
+.pjs-logo .ph{font-size:calc(56*var(--u));font-weight:700;color:var(--gold)}
+.pjs-tname{position:relative;flex:1 1 auto;min-width:0}
+.pjs-tname small{font-size:calc(15*var(--u));letter-spacing:.34em;color:var(--gold);text-transform:uppercase}
+.pjs-tname h1{font-size:calc(72*var(--u));line-height:1;font-weight:700;font-style:normal;letter-spacing:.02em;text-transform:uppercase;
+  color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.pjs-stats{position:relative;display:grid;grid-template-columns:repeat(4,auto);gap:calc(14*var(--u))}
+.pjs-stat{min-width:calc(150*var(--u));padding:calc(12*var(--u)) calc(16*var(--u));border-radius:calc(14*var(--u));background:var(--card);border:1px solid var(--line)}
+.pjs-stat label{display:block;font-size:calc(12*var(--u));letter-spacing:.2em;color:var(--tx2);text-transform:uppercase}
+.pjs-stat b{display:block;margin-top:2px;font-size:calc(38*var(--u));font-weight:600;line-height:1.05;color:var(--tx);white-space:nowrap}
+.pjs-stat b em{font-style:normal;font-size:calc(20*var(--u));color:var(--tx2);font-weight:500}
+.pjs-stat b .pjs-unit,.pjs-stat b small{font-size:calc(15*var(--u));color:var(--tx2);font-weight:500;margin-left:calc(3*var(--u));letter-spacing:.08em}
+.pjs-stat .bar{margin-top:calc(8*var(--u));height:calc(7*var(--u));border-radius:calc(99*var(--u));background:var(--s-ink-16);overflow:hidden}
+.pjs-stat .bar i{display:block;height:100%;border-radius:calc(99*var(--u));background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.pjs-stat.left b{color:var(--gold)}
+.pjs-stat.left .bar i{background:var(--ok)}
+.pjs-stat.left.low .bar i{background:var(--danger)}
+.pjs-stat.avg .bar i{background:linear-gradient(90deg,var(--gold2),var(--gold))}
+
+/* squad mix strip */
+.pjs-roles{flex:0 0 auto;display:flex;gap:calc(10*var(--u));align-items:center;margin:calc(12*var(--u)) calc(4*var(--u)) calc(10*var(--u));min-width:0}
+.pjs-roles .lbl{font-size:calc(13*var(--u));letter-spacing:.24em;color:var(--tx2);text-transform:uppercase;margin-right:calc(6*var(--u));white-space:nowrap}
+.pjs-rp{display:inline-flex;align-items:center;gap:calc(9*var(--u));padding:calc(6*var(--u)) calc(16*var(--u)) calc(6*var(--u)) calc(8*var(--u));border-radius:calc(999*var(--u));background:var(--s-ink-08);
+  border:1px solid var(--line);font-size:calc(17*var(--u));letter-spacing:.1em;text-transform:uppercase;color:var(--tx);white-space:nowrap}
+.pjs-rp u{text-decoration:none;display:grid;place-items:center;width:calc(28*var(--u));height:calc(28*var(--u));border-radius:50%;font-size:calc(15*var(--u));
+  background:linear-gradient(135deg,var(--gold2),var(--gold))}
+.pjs-rp b{color:var(--gold);font-weight:600;font-size:calc(19*var(--u))}
+.pjs-roles .sp{flex:1}
+.pjs-tb{font-size:calc(15*var(--u));letter-spacing:.14em;color:var(--tx2);text-transform:uppercase;white-space:nowrap}
+.pjs-tb b{color:var(--gold);font-weight:600;font-size:calc(18*var(--u))}
+
+/* player cards */
+.pjs-grid{flex:1 1 auto;min-height:0;display:grid;gap:calc(14*var(--u));
+  grid-template-columns:repeat(var(--cols,8),minmax(0,1fr));grid-template-rows:repeat(var(--rows,2),minmax(0,1fr))}
+.pjs-card{position:relative;border-radius:calc(16*var(--u));overflow:hidden;border:1.5px solid var(--line);background:var(--panel2);
+  box-shadow:0 calc(12*var(--u)) calc(26*var(--u)) rgba(0,0,0,.3);min-width:0;min-height:0}
+.pjs-card .ph,.pjs-card img.ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 14%;display:block}
+.pjs-card .ph.fb{display:grid;place-items:center;font-size:calc(64*var(--u));font-weight:700;color:var(--s-ink-50);
+  background:linear-gradient(145deg,var(--bg2),var(--panel2))}
+.pjs-card::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,transparent 42%,var(--s-scrim-a,rgba(0,0,0,.55)) 72%,var(--bg) 100%)}
+@supports (color:color-mix(in srgb,red 50%,blue)){
+  .pjs-card::after{background:linear-gradient(180deg,transparent 42%,color-mix(in srgb,var(--bg) 82%,transparent) 72%,var(--bg) 100%)}
+}
+.pjs-num{position:absolute;top:calc(9*var(--u));left:calc(9*var(--u));z-index:3;min-width:calc(30*var(--u));height:calc(30*var(--u));padding:0 calc(6*var(--u));border-radius:calc(8*var(--u));display:grid;place-items:center;
+  font-size:calc(15*var(--u));font-weight:600;background:var(--panel2);color:var(--tx);border:1px solid var(--line)}
+.pjs-price{position:absolute;top:0;right:0;z-index:3;padding:calc(6*var(--u)) calc(12*var(--u)) calc(6*var(--u)) calc(18*var(--u));border-radius:0 0 0 calc(16*var(--u));font-size:calc(22*var(--u));font-weight:600;
+  background:var(--panel2);color:var(--gold);border-left:1.5px solid var(--line);border-bottom:1.5px solid var(--line);white-space:nowrap}
+.pjs-price .pjs-unit,.pjs-price small{font-size:calc(12*var(--u));font-weight:500;opacity:.85;margin-left:calc(3*var(--u));letter-spacing:.08em}
+.pjs-info{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:0 calc(10*var(--u)) calc(10*var(--u));text-align:center;min-width:0}
+.pjs-info .rl{display:flex;align-items:center;justify-content:center;gap:calc(6*var(--u));font-size:calc(13*var(--u));letter-spacing:.14em;color:var(--gold);
+  text-transform:uppercase;margin-bottom:calc(3*var(--u));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pjs-info .nm{font-size:calc(22*var(--u));font-weight:600;line-height:1.05;text-transform:uppercase;letter-spacing:.02em;color:var(--tx);
+  overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pjs-info .tr{margin-top:calc(6*var(--u));display:inline-block;max-width:100%;padding:2px calc(12*var(--u));border-radius:calc(99*var(--u));font-size:calc(12*var(--u));letter-spacing:.14em;font-weight:600;
+  text-transform:uppercase;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+[data-theme="lemon"] .pjs-info .rl,[data-theme="strawberry"] .pjs-info .rl,[data-mode="light"] .pjs-info .rl{color:var(--tx);opacity:.8}
+.pjs-card.icon{border:calc(2.5*var(--u)) solid var(--gold);box-shadow:0 0 0 calc(3*var(--u)) var(--s-acc-22),0 0 calc(34*var(--u)) var(--glow),0 calc(12*var(--u)) calc(26*var(--u)) rgba(0,0,0,.35)}
+.pjs-card.icon .pjs-price{background:linear-gradient(135deg,var(--gold2),var(--gold));color:var(--bg);border-color:transparent}
+.pjs-badge{position:absolute;top:calc(44*var(--u));left:calc(9*var(--u));z-index:3;padding:calc(3*var(--u)) calc(9*var(--u));border-radius:calc(7*var(--u));font-size:calc(12*var(--u));letter-spacing:.16em;font-weight:700;
+  background:linear-gradient(135deg,var(--gold2),var(--gold));color:var(--bg)}
+.pjs-card.best{border-color:var(--danger);box-shadow:0 0 0 calc(3*var(--u)) rgba(229,57,74,.2),0 0 calc(30*var(--u)) rgba(229,57,74,.35),0 calc(12*var(--u)) calc(26*var(--u)) rgba(0,0,0,.35)}
+.pjs-card.best .pjs-price{background:var(--danger);color:#fff;border-color:transparent}
+.pjs-card.best .pjs-badge{background:var(--danger);color:#fff}
+.pjs-card.empty{display:flex;align-items:center;justify-content:center;border:1.5px dashed var(--line);box-shadow:none;
+  background:repeating-linear-gradient(135deg,var(--s-ink-08) 0 calc(10*var(--u)),var(--s-ink-04) calc(10*var(--u)) calc(20*var(--u)))}
+.pjs-card.empty::after{display:none}
+.pjs-card.empty div{text-align:center}
+.pjs-card.empty b{display:block;font-size:calc(40*var(--u));color:var(--s-ink-50);font-weight:500;opacity:.7}
+.pjs-card.empty span{font-size:calc(14*var(--u));letter-spacing:.24em;color:var(--tx2);text-transform:uppercase}
+
+/* team rail */
+.pjs-rail{flex:0 0 auto;margin-top:calc(12*var(--u));display:flex;align-items:center;gap:calc(14*var(--u));padding:calc(10*var(--u)) calc(14*var(--u));border-radius:calc(16*var(--u));
+  background:var(--panel);border:1px solid var(--line)}
+.pjs-nav{width:calc(48*var(--u));height:calc(48*var(--u));border-radius:calc(12*var(--u));border:1px solid var(--line);background:var(--gold-soft);color:var(--tx);
+  font-size:calc(26*var(--u));cursor:pointer;display:grid;place-items:center;line-height:1;flex:0 0 auto}
+.pjs-nav:hover{border-color:var(--gold);color:var(--gold)}
+.pjs-teams{flex:1;min-width:0;display:flex;justify-content:center;align-items:center;gap:calc(12*var(--u));overflow:hidden;padding:calc(6*var(--u)) 0}
+.pjs-tm{position:relative;width:calc(60*var(--u));height:calc(60*var(--u));border-radius:50%;padding:calc(3*var(--u));background:var(--s-ink-16);opacity:.6;cursor:pointer;
+  flex:0 0 auto;border:0;transition:transform .2s,opacity .2s}
+.pjs-tm img,.pjs-tm span{width:100%;height:100%;border-radius:50%;object-fit:cover;display:grid;place-items:center;background:var(--bg2);
+  font-size:calc(22*var(--u));font-weight:700;color:var(--gold)}
+.pjs-tm:hover{opacity:.95}
+.pjs-tm.on{opacity:1;background:linear-gradient(145deg,var(--gold2),var(--gold));transform:scale(1.2);box-shadow:0 0 calc(22*var(--u)) var(--glow)}
+.pjs-cnt{font-size:calc(16*var(--u));letter-spacing:.2em;color:var(--tx2);text-transform:uppercase;min-width:calc(170*var(--u));text-align:center;white-space:nowrap}
+.pjs-cnt b{color:var(--gold);font-size:calc(22*var(--u))}
+
+/* all teams overview */
+.pjs-head{flex:0 0 auto;display:flex;align-items:flex-end;justify-content:space-between;margin:calc(16*var(--u)) calc(4*var(--u)) calc(14*var(--u))}
+.pjs-head h2{font-size:calc(44*var(--u));font-style:normal;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.pjs-head h2 em{font-style:normal;color:var(--gold)}
+.pjs-sum{display:flex;gap:calc(26*var(--u))}
+.pjs-sum div{text-align:right}
+.pjs-sum label{display:block;font-size:calc(12*var(--u));letter-spacing:.2em;color:var(--tx2);text-transform:uppercase}
+.pjs-sum b{font-size:calc(32*var(--u));font-weight:600;white-space:nowrap}
+.pjs-sum b.g{color:var(--gold)}
+.pjs-sum .pjs-unit,.pjs-sum small{font-size:calc(14*var(--u));color:var(--tx2);margin-left:calc(3*var(--u))}
+.pjs-tiles{flex:1 1 auto;min-height:0;display:grid;gap:calc(18*var(--u));
+  grid-template-columns:repeat(var(--cols,4),minmax(0,1fr));grid-template-rows:repeat(var(--rows,2),minmax(0,1fr))}
+.pjs-tile{position:relative;border-radius:calc(20*var(--u));padding:calc(16*var(--u)) calc(18*var(--u)) calc(14*var(--u));display:flex;flex-direction:column;gap:calc(10*var(--u));overflow:hidden;cursor:pointer;
+  min-width:0;min-height:0;text-align:left;font:inherit;color:inherit;
+  background:linear-gradient(160deg,var(--s-acc-22),var(--panel2) 46%);border:1.5px solid var(--line);
+  box-shadow:0 calc(14*var(--u)) calc(34*var(--u)) rgba(0,0,0,.28);transition:transform .2s,box-shadow .2s,border-color .2s}
+.pjs-tile:hover{transform:translateY(calc(-3*var(--u)));border-color:var(--gold);box-shadow:0 calc(18*var(--u)) calc(40*var(--u)) rgba(0,0,0,.35),0 0 0 2px var(--s-acc-45)}
+.pjs-tile::before{content:"";position:absolute;right:calc(-50*var(--u));top:calc(-50*var(--u));width:calc(200*var(--u));height:calc(200*var(--u));border-radius:50%;
+  background:radial-gradient(circle,var(--s-acc-22),transparent 65%);pointer-events:none}
+.pjs-th{position:relative;display:flex;align-items:center;gap:calc(14*var(--u));min-width:0}
+.pjs-th img,.pjs-th .ph{width:calc(72*var(--u));height:calc(72*var(--u));border-radius:50%;object-fit:cover;border:calc(3*var(--u)) solid var(--gold);
+  box-shadow:0 calc(6*var(--u)) calc(18*var(--u)) rgba(0,0,0,.35);flex:0 0 auto;background:var(--bg2);display:grid;place-items:center;font-size:calc(30*var(--u));font-weight:700;color:var(--gold)}
+.pjs-th .tx{min-width:0;flex:1}
+.pjs-th h3{font-size:calc(28*var(--u));line-height:1.02;font-weight:700;font-style:normal;text-transform:uppercase;letter-spacing:.02em;color:var(--tx);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pj-sq-pts-unit{font-size:.58rem;font-weight:700;opacity:.75;margin-left:2px;letter-spacing:.06em}
-.pj-sq-icon-tag{font-size:.55rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--gold);opacity:.9}
-.pj-sq-none{font-size:.65rem;color:var(--tx2);letter-spacing:.08em;
-  text-transform:uppercase;padding:.55rem .2rem;opacity:.8;align-self:center;grid-column:1/-1}
+.pjs-th p{font-size:calc(13*var(--u));letter-spacing:.2em;color:var(--tx2);text-transform:uppercase;margin-top:calc(4*var(--u))}
+.pjs-th .rk{font-size:calc(44*var(--u));font-weight:700;color:var(--s-ink-16);flex:0 0 auto}
+.pjs-th .sq{display:none;font-size:calc(20*var(--u));font-weight:600;color:var(--gold);flex:0 0 auto;white-space:nowrap}
+.pjs-meters{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:calc(14*var(--u))}
+.pjs-m label{display:flex;justify-content:space-between;gap:calc(6*var(--u));font-size:calc(12*var(--u));letter-spacing:.18em;color:var(--tx2);text-transform:uppercase;white-space:nowrap}
+.pjs-m label b{color:var(--tx);font-size:calc(15*var(--u));letter-spacing:.04em;font-weight:600}
+.pjs-m .pjs-unit,.pjs-m small{font-size:calc(10*var(--u));margin-left:2px;opacity:.7}
+.pjs-m .bar{margin-top:calc(5*var(--u));height:calc(8*var(--u));border-radius:calc(99*var(--u));background:var(--s-ink-16);overflow:hidden}
+.pjs-m .bar i{display:block;height:100%;border-radius:calc(99*var(--u));background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.pjs-m.p .bar i{background:var(--ok)}
+.pjs-m.p.low .bar i{background:var(--danger)}
+.pjs-list{position:relative;display:flex;flex-direction:column;gap:calc(7*var(--u));min-height:0;overflow:hidden}
+.pjs-li{display:flex;align-items:center;gap:calc(10*var(--u));padding:calc(6*var(--u)) calc(10*var(--u));border-radius:calc(10*var(--u));background:var(--s-ink-08);border:1px solid var(--s-ink-08);min-width:0}
+.pjs-li img,.pjs-li .ph{width:calc(36*var(--u));height:calc(36*var(--u));border-radius:50%;object-fit:cover;object-position:center 12%;border:2px solid var(--gold);
+  flex:0 0 auto;background:var(--bg2);display:grid;place-items:center;font-size:calc(15*var(--u));color:var(--gold)}
+.pjs-li b{font-size:calc(18*var(--u));font-weight:600;text-transform:uppercase;letter-spacing:.02em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pjs-li small{font-size:calc(12*var(--u));letter-spacing:.14em;color:var(--tx2);text-transform:uppercase;white-space:nowrap;max-width:34%;overflow:hidden;text-overflow:ellipsis}
+.pjs-li span{font-size:calc(19*var(--u));font-weight:600;color:var(--gold);min-width:calc(60*var(--u));text-align:right;white-space:nowrap}
+.pjs-li span .pjs-unit,.pjs-li span small{font-size:calc(10*var(--u));margin-left:2px;opacity:.7;max-width:none}
+.pjs-li.ic{border-color:var(--s-acc-45);background:linear-gradient(90deg,var(--s-acc-22),var(--s-ink-08))}
+.pjs-faces{position:relative;display:flex;align-items:center;margin-top:auto;min-width:0}
+.pjs-faces img,.pjs-faces .ph{width:calc(54*var(--u));height:calc(54*var(--u));border-radius:50%;object-fit:cover;object-position:center 12%;border:calc(2.5*var(--u)) solid var(--bg2);
+  margin-left:calc(-14*var(--u));box-shadow:0 calc(4*var(--u)) calc(10*var(--u)) rgba(0,0,0,.3);flex:0 0 auto;background:var(--bg2);display:grid;place-items:center;font-size:calc(20*var(--u));color:var(--gold)}
+.pjs-faces img:first-child,.pjs-faces .ph:first-child{margin-left:0}
+.pjs-faces .ic{border-color:var(--gold);box-shadow:0 0 calc(14*var(--u)) var(--glow)}
+.pjs-faces .more{margin-left:calc(-14*var(--u));width:calc(54*var(--u));height:calc(54*var(--u));border-radius:50%;display:grid;place-items:center;background:var(--gold);
+  color:var(--bg);font-size:calc(20*var(--u));font-weight:700;border:calc(2.5*var(--u)) solid var(--bg2);flex:0 0 auto}
+.pjs-faces .tbuy{margin-left:auto;text-align:right;padding-left:calc(8*var(--u));min-width:0}
+.pjs-faces .tbuy small{display:block;font-size:calc(11*var(--u));letter-spacing:.2em;color:var(--tx2);text-transform:uppercase}
+.pjs-faces .tbuy b{font-size:calc(18*var(--u));font-weight:600;color:var(--gold);white-space:nowrap}
+.pjs-tile .go{position:absolute;right:calc(16*var(--u));top:50%;display:none}
+.pjs-dense .pjs-tile{padding:calc(12*var(--u)) calc(14*var(--u)) calc(10*var(--u));gap:calc(8*var(--u))}
+.pjs-dense .pjs-list{display:none}
+.pjs-dense .pjs-th{gap:calc(10*var(--u))}
+.pjs-dense .pjs-th img,.pjs-dense .pjs-th .ph{width:calc(52*var(--u));height:calc(52*var(--u));border-width:2px}
+.pjs-dense .pjs-th h3{font-size:calc(22*var(--u))}
+.pjs-dense .pjs-th p{display:none}
+.pjs-dense .pjs-th .rk{display:none}
+.pjs-dense .pjs-th .sq{display:block}
+.pjs-dense .pjs-faces img,.pjs-dense .pjs-faces .ph,.pjs-dense .pjs-faces .more{width:calc(40*var(--u));height:calc(40*var(--u));margin-left:calc(-10*var(--u))}
+.pjs-dense .pjs-faces img:first-child,.pjs-dense .pjs-faces .ph:first-child{margin-left:0}
+.pjs-dense .pjs-faces .tbuy b{font-size:calc(15*var(--u))}
+.pjs-empty{margin:auto;color:var(--tx2);letter-spacing:.16em;text-transform:uppercase;font-size:calc(18*var(--u));text-align:center;padding:2rem}
+
+/* narrow / portrait screens: scroll instead of squeezing */
+@media (max-width:1000px), (max-aspect-ratio:1/1){
+  #pjSquadOverlay{--u:max(.55px,.21vw);overflow:auto}
+  .pjs-wrap{padding:12px 14px}
+  .pjs-top{grid-template-columns:1fr auto;height:auto}
+  .pjs-sub{display:none}
+  .pjs-brand{display:none}
+  .pjs-body{min-height:auto;overflow:visible}
+  .pjs-hero{flex-wrap:wrap;gap:16px;padding:14px 16px}
+  .pjs-logo{width:84px;height:84px}
+  .pjs-tname h1{font-size:34px;white-space:normal}
+  .pjs-stats{grid-template-columns:repeat(2,1fr);width:100%}
+  .pjs-roles{flex-wrap:wrap}
+  .pjs-grid{grid-template-columns:repeat(3,minmax(0,1fr)) !important;grid-template-rows:none !important;grid-auto-rows:minmax(230px,auto)}
+  .pjs-tiles{grid-template-columns:1fr !important;grid-template-rows:none !important}
+  .pjs-tile{min-height:300px}
+  .pjs-teams{justify-content:flex-start;overflow-x:auto}
+  .pjs-price{font-size:15px;padding:4px 8px 4px 12px}
+  .pjs-num{min-width:22px;height:22px;font-size:12px}
+  .pjs-badge{top:36px;font-size:10px}
+}
+
+.pj-sq-loading,.pj-sq-empty{width:100%;text-align:center;padding:3rem 1rem;
+  color:rgba(180,210,255,.7);letter-spacing:.12em;text-transform:uppercase;font-size:.85rem}
 
 /* ══ Remaining Players Overlay (kanban-style) ══════════════════════════ */
 #pjRemainOverlay{position:fixed;inset:0;z-index:900;display:none;flex-direction:column;
@@ -1747,7 +1913,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   window.PJ_BOARD_SHOW_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/boards/show';
 </script>
 <script src="/auction_module/static/src/js/auction_sse_client.js"></script>
-<script src="/auction_module/static/src/js/live_bid_tick.js?v=2"></script>
+<script src="/auction_module/static/src/js/live_bid_tick.js?v=3"></script>
 <script src="/auction_module/static/src/js/sold_coin_sound.js?v=2"></script>
 <t t-call="auction_module.point_unit_bootstrap">
   <t t-set="pu_tournament" t-value="tournament"/>
@@ -1796,7 +1962,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
             <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
           </svg>
         </button>
-        <a class="pj-bid-summary-btn"
+        <a class="pj-bid-summary-btn" id="pjBsBtn" onclick="return pjOpenBidSummary(this, event)"
            t-att-href="'/' + db_name + '/' + tournament_slug + '/auction/show/team/balance?from=projector&amp;mode=' + (mode or 'dark')"
            title="Bid Summary" aria-label="Bid Summary">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -1819,6 +1985,9 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       </button>
     </div>
   </div>
+
+  <!-- Bid Summary in-page overlay: keeps the browser in fullscreen (a page navigation would exit it) -->
+  <div id="pjBsOverlay" aria-hidden="true"><iframe id="pjBsFrame" title="Bid Summary" allow="fullscreen" src="about:blank"></iframe></div>
 
   <!-- Live Pool / Fixture Board Overlay -->
   <div id="pjBoardOverlay" onclick="pjBoardBackdrop(event)">
@@ -1852,17 +2021,18 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     </div>
   </div>
 
-  <!-- Team Squad Overlay -->
+  <!-- Team Squad Overlay: All Teams first, tap a team for its Team View -->
   <div id="pjSquadOverlay" onclick="pjSquadBackdrop(event)">
-    <div class="pj-sq-panel" onclick="event.stopPropagation()">
-      <div class="pj-sq-hd">
-        <div>
-          <div class="pj-sq-title">Team Squad</div>
-          <div class="pj-sq-sub" id="pjSqSub">All teams · Sold players</div>
+    <div class="pjs-wrap" onclick="event.stopPropagation()">
+      <div class="pjs-top">
+        <div class="pjs-left">
+          <button type="button" class="pjs-back" onclick="pjSqSetMode('all')" aria-label="Back to all teams"><b>&#8249;</b>All Teams</button>
+          <div class="pjs-brand"><img class="pj-ac-bar-logo" src="/auction_module/static/src/assets/images/logo.svg" alt=""/></div>
         </div>
-        <button type="button" class="pj-sq-close" onclick="closePjSquad()" title="Close">&#215;</button>
+        <div class="pjs-sub" id="pjSqSub">Squad Showcase</div>
+        <button type="button" class="pjs-close" onclick="closePjSquad()" title="Close" aria-label="Close">&#215;</button>
       </div>
-      <div class="pj-sq-body" id="pjSqBody">
+      <div class="pjs-body" id="pjSqBody">
         <div class="pj-sq-loading">Loading squads&#8230;</div>
       </div>
     </div>
@@ -3598,6 +3768,52 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       else enterIco.removeAttribute('hidden');
     }
   }
+  function pjBsClose() {
+    var ov = document.getElementById('pjBsOverlay');
+    var fr = document.getElementById('pjBsFrame');
+    if (!ov) return;
+    ov.classList.remove('is-open');
+    ov.setAttribute('aria-hidden', 'true');
+    if (fr) fr.src = 'about:blank';
+  }
+  window.pjCloseBidSummary = pjBsClose;
+  function pjBsPrepare(fr) {
+    /* Same-origin: swap the page's PROJECTOR link / FULL button for a close X. */
+    try {
+      var doc = fr.contentDocument;
+      if (!doc || fr.src === 'about:blank' || !doc.body) return;
+      /* Same pattern as the other projector screens: a ✕ at the top-right closes the layer.
+         Reuse the page's own FULL button slot (clone drops its fullscreen handler). */
+      var back = doc.querySelector('.bs2-back-btn');
+      if (back) back.style.display = 'none';
+      var fs = doc.getElementById('fs-btn');
+      if (fs) {
+        var x = fs.cloneNode(false);
+        x.id = 'pj-bs-close';
+        x.style.display = '';
+        x.setAttribute('aria-label', 'Close');
+        x.title = 'Close';
+        x.innerHTML = '<span class="bs2-fs-ico" style="font-size:1.15em">\u2715</span>';
+        x.addEventListener('click', function(e) { e.preventDefault(); pjBsClose(); });
+        fs.parentNode.replaceChild(x, fs);
+      }
+      doc.addEventListener('keydown', function(e) { if (e.key === 'Escape') pjBsClose(); });
+    } catch (err) { console.warn('Bid summary overlay prep failed:', err); }
+  }
+  window.pjOpenBidSummary = function(a, ev) {
+    /* Only needed in fullscreen. Otherwise keep the normal page navigation. */
+    if (!pjFsElement()) return true;
+    var ov = document.getElementById('pjBsOverlay');
+    var fr = document.getElementById('pjBsFrame');
+    if (!ov || !fr || !a || !a.href) return true;
+    if (ev && ev.preventDefault) ev.preventDefault();
+    fr.onload = function() { pjBsPrepare(fr); };
+    fr.src = a.href;
+    ov.classList.add('is-open');
+    ov.setAttribute('aria-hidden', 'false');
+    return false;
+  };
+  /* If fullscreen ends while the overlay is open, leave it open: it is a normal fixed layer. */
   window.pjToggleFs = function() {
     var active = pjFsElement();
     var target = document.documentElement;
@@ -4200,99 +4416,262 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   window.pjRemainBackdrop = function(ev) {
     if (ev.target && ev.target.id === 'pjRemainOverlay') closePjRemain();
   };
-  function renderPjSquad(data) {
-    var body = document.getElementById('pjSqBody');
-    var sub = document.getElementById('pjSqSub');
-    if (!body) return;
-    var sport = (data && data.sport) || window.PJ_SPORT || 'cricket';
-    var teams = (data && data.teams) || [];
-    if (sub) {
-      sub.textContent = sport === 'football'
-        ? 'Squad · Purse · Position + Points'
-        : 'Squad · Purse · Role + Points';
+  var _pjSqData = null;
+  var _pjSqMode = 'all';
+  var _pjSqTeamId = null;
+  var PJS_TINTS = ['245,197,24','239,83,80','74,163,255','60,210,150','255,150,60','190,110,255','120,140,255','74,181,106','255,120,170','90,200,230'];
+
+  function pjsNum(n) {
+    n = Number(n || 0);
+    try { return n.toLocaleString(); } catch (e) { return String(n); }
+  }
+  function pjsPts(n) {
+    n = Number(n || 0);
+    return window.fmtUnitHtml ? window.fmtUnitHtml(n, 'pjs-unit')
+      : (escHtml(pjsNum(n)) + '<small class="pjs-unit">PTS</small>');
+  }
+  function pjsPad(n) { n = String(n); return n.length < 2 ? '0' + n : n; }
+  function pjsRoleIcon(role) {
+    var r = String(role || '').toLowerCase();
+    if (/keep|wicket|\bwk\b|goal|\bgk\b/.test(r)) return '\uD83E\uDDE4';
+    if (/all[\s-]?round/.test(r)) return '\u26A1';
+    if (/bowl/.test(r)) return '\u26BE';
+    if (/bat/.test(r)) return '\uD83C\uDFCF';
+    if (/raid|rider/.test(r)) return '\uD83C\uDFC3';
+    if (/defen|back|cover/.test(r)) return '\uD83D\uDEE1\uFE0F';
+    if (/mid/.test(r)) return '\u2699\uFE0F';
+    if (/forward|strik|wing/.test(r)) return '\u26BD';
+    if (/single|double|mixed/.test(r)) return '\uD83C\uDFF8';
+    return '\u25CF';
+  }
+  function pjsFace(p, cls) {
+    if (p && p.photo_url) return '<img class="' + (cls || '') + '" src="' + escHtml(p.photo_url) + '" alt=""/>';
+    return '<span class="ph ' + (cls || '') + '">' + escHtml(((p && p.name) || '?').charAt(0)) + '</span>';
+  }
+  function pjsSorted(team) {
+    var list = (team.players || []).slice();
+    list.sort(function(a, b) {
+      if (!!a.is_icon !== !!b.is_icon) return a.is_icon ? -1 : 1;
+      var d = Number(b.points || 0) - Number(a.points || 0);
+      if (d) return d;
+      return String(a.name || '').localeCompare(String(b.name || ''));
+    });
+    return list;
+  }
+  function pjsStats(team) {
+    var players = team.players || [];
+    var sum = 0, cnt = 0, best = null;
+    for (var i = 0; i < players.length; i++) {
+      var p = players[i];
+      if (p.is_icon) continue;
+      var pt = Number(p.points || 0);
+      if (pt > 0) { sum += pt; cnt += 1; if (!best || pt > Number(best.points)) best = p; }
     }
+    var total = Number(team.total_purse || 0);
+    var spent = Number(team.spent_purse || 0);
+    var left = team.remaining_purse != null ? Number(team.remaining_purse) : Math.max(total - spent, 0);
+    return {
+      avg: cnt ? Math.round(sum / cnt) : 0, best: best,
+      total: total, spent: spent, left: left,
+      spentPct: total > 0 ? Math.min(100, Math.round(spent * 100 / total)) : 0,
+      leftPct: total > 0 ? Math.min(100, Math.round(left * 100 / total)) : 0,
+      avgPct: (cnt && total > 0) ? Math.min(100, Math.round((sum / cnt) * 100 / (total / Math.max(Number(team.max_players || 1), 1)) / 2)) : 0
+    };
+  }
+  function pjsLogoHtml(t, cls) {
+    return t.logo_url ? '<img src="' + escHtml(t.logo_url) + '" alt=""/>'
+      : '<div class="ph">' + escHtml((t.name || '?').charAt(0)) + '</div>';
+  }
+
+  function pjsTeamHtml(teams, idx) {
+    var t = teams[idx];
+    var st = pjsStats(t);
+    var players = pjsSorted(t);
+    var maxP = Number(t.max_players || 0);
+    var recruited = Number(t.count || 0);
+    var sqPct = maxP > 0 ? Math.min(100, Math.round(recruited * 100 / maxP)) : 0;
+
+    // squad mix
+    var mix = {}, order = [];
+    for (var i = 0; i < players.length; i++) {
+      var role = String(players[i].role || '').trim();
+      if (!role) continue;
+      if (!mix[role]) { mix[role] = 0; order.push(role); }
+      mix[role] += 1;
+    }
+    order.sort(function(a, b) { return mix[b] - mix[a]; });
+    var mixHtml = '';
+    for (var m = 0; m < order.length && m < 5; m++) {
+      mixHtml += '<span class="pjs-rp"><u>' + pjsRoleIcon(order[m]) + '</u>' + escHtml(order[m]) + ' <b>' + mix[order[m]] + '</b></span>';
+    }
+    var bestHtml = st.best
+      ? '<span class="pjs-tb">Top Buy &nbsp;<b>' + escHtml(st.best.name) + ' &middot; ' + pjsPts(st.best.points) + '</b></span>' : '';
+    var mbKnown = t.max_call != null;
+    var avgHtml = mbKnown ? '<span class="pjs-tb" style="margin-left:1.4em">Max Bid &nbsp;<b>' + pjsPts(t.max_call) + '</b></span>' : '';
+
+    // cards
+    var slots = Math.max(maxP, players.length, 1);
+    var cols = slots <= 6 ? Math.max(slots, 5) : Math.min(10, Math.ceil(slots / 2));
+    var rows = Math.ceil(slots / cols);
+    var cards = '';
+    for (var k = 0; k < slots; k++) {
+      var p = players[k];
+      if (!p) {
+        cards += '<div class="pjs-card empty"><div><b>' + pjsPad(k + 1) + '</b><span>Open slot</span></div></div>';
+        continue;
+      }
+      var isBest = st.best && p.id === st.best.id;
+      var cls = 'pjs-card' + (p.is_icon ? ' icon' : '') + (isBest ? ' best' : '');
+      var num = p.jersey ? p.jersey : pjsPad(k + 1);
+      var badge = p.is_icon ? '<div class="pjs-badge">&#9733; ICON</div>'
+        : (isBest ? '<div class="pjs-badge">&#9650; TOP BUY</div>' : '');
+      var price = (!p.is_icon && Number(p.points || 0) > 0) ? '<div class="pjs-price">' + pjsPts(p.points) + '</div>' : '';
+      var tier = p.tier_name ? '<div><span class="tr" style="background:' + escHtml(p.tier_color || '#888') + '">' + escHtml(p.tier_name) + '</span></div>' : '';
+      var photo = p.photo_url ? '<img class="ph" src="' + escHtml(p.photo_url) + '" alt=""/>'
+        : '<div class="ph fb">' + escHtml((p.name || '?').charAt(0)) + '</div>';
+      cards += '<div class="' + cls + '">' + photo +
+        '<div class="pjs-num">' + escHtml(num) + '</div>' + badge + price +
+        '<div class="pjs-info">' +
+          (p.role ? '<div class="rl">' + pjsRoleIcon(p.role) + ' ' + escHtml(p.role) + '</div>' : '') +
+          '<div class="nm" title="' + escHtml(p.name || '') + '">' + escHtml(p.name || '\u2014') + '</div>' + tier +
+        '</div></div>';
+    }
+
+    // rail
+    var rail = '';
+    for (var r = 0; r < teams.length; r++) {
+      var tt = teams[r];
+      rail += '<button type="button" class="pjs-tm' + (r === idx ? ' on' : '') + '" onclick="pjSqSelect(' + tt.id + ')" title="' + escHtml(tt.name || '') + '">' +
+        (tt.logo_url ? '<img src="' + escHtml(tt.logo_url) + '" alt=""/>' : '<span>' + escHtml((tt.name || '?').charAt(0)) + '</span>') + '</button>';
+    }
+
+    return '<div class="pjs-hero">' +
+        '<div class="pjs-logo">' + pjsLogoHtml(t) + '</div>' +
+        '<div class="pjs-tname"><small>Squad</small><h1 title="' + escHtml(t.name || '') + '">' + escHtml(t.name || 'Team') + '</h1></div>' +
+        '<div class="pjs-stats">' +
+          '<div class="pjs-stat"><label>Squad</label><b>' + recruited + '<em> / ' + (maxP || '?') + '</em></b><div class="bar"><i style="width:' + sqPct + '%"></i></div></div>' +
+          '<div class="pjs-stat spent"><label>Purse Spent</label><b>' + pjsPts(st.spent) + '</b><div class="bar"><i style="width:' + st.spentPct + '%"></i></div></div>' +
+          '<div class="pjs-stat left' + (st.leftPct < 15 ? ' low' : '') + '"><label>Purse Left</label><b>' + pjsPts(st.left) + '</b><div class="bar"><i style="width:' + st.leftPct + '%"></i></div></div>' +
+          '<div class="pjs-stat avg"><label>Max Bid</label><b>' + (mbKnown ? pjsPts(t.max_call) : '&mdash;') + '</b><div class="bar"><i style="width:' + (mbKnown && st.total > 0 ? Math.min(100, Math.round(Number(t.max_call || 0) * 100 / st.total)) : 0) + '%"></i></div></div>' +
+        '</div></div>' +
+      '<div class="pjs-roles"><span class="lbl">Squad Mix</span>' + (mixHtml || '<span class="pjs-tb">No players yet</span>') +
+        '<span class="sp"></span>' + bestHtml + avgHtml + '</div>' +
+      '<div class="pjs-grid" style="--cols:' + cols + ';--rows:' + rows + '">' + cards + '</div>' +
+      '<div class="pjs-rail">' +
+        '<button type="button" class="pjs-nav" onclick="pjSqGo(-1)" aria-label="Previous team">&#8249;</button>' +
+        '<div class="pjs-teams">' + rail + '</div>' +
+        '<div class="pjs-cnt">Team <b>' + (idx + 1) + '</b> / ' + teams.length + '</div>' +
+        '<button type="button" class="pjs-nav" onclick="pjSqGo(1)" aria-label="Next team">&#8250;</button>' +
+      '</div>';
+  }
+
+  function pjsAllHtml(teams) {
+    var soldTotal = 0, spentTotal = 0, highest = 0;
+    for (var i = 0; i < teams.length; i++) {
+      soldTotal += Number(teams[i].count || 0);
+      spentTotal += Number(teams[i].spent_purse || 0);
+      var ps = teams[i].players || [];
+      for (var j = 0; j < ps.length; j++) {
+        if (!ps[j].is_icon) highest = Math.max(highest, Number(ps[j].points || 0));
+      }
+    }
+    var n = teams.length;
+    var cols = n <= 8 ? 4 : (n <= 10 ? 5 : 6);
+    if (n <= 3) cols = Math.max(n, 1);
+    var rows = Math.ceil(n / cols);
+    var dense = n > 8;
+    var tiles = '';
+    for (var k = 0; k < n; k++) {
+      var t = teams[k];
+      var st = pjsStats(t);
+      var list = pjsSorted(t);
+      var maxP = Number(t.max_players || 0);
+      var rec = Number(t.count || 0);
+      var sqPct = maxP > 0 ? Math.min(100, Math.round(rec * 100 / maxP)) : 0;
+      var li = '';
+      for (var q = 0; q < list.length && q < 3; q++) {
+        var p = list[q];
+        li += '<div class="pjs-li' + (p.is_icon ? ' ic' : '') + '">' + pjsFace(p) +
+          '<b>' + escHtml(p.name || '\u2014') + '</b>' + (p.role ? '<small>' + escHtml(p.role) + '</small>' : '') +
+          '<span>' + (p.is_icon ? '&#9733;' : (Number(p.points || 0) > 0 ? pjsPts(p.points) : '')) + '</span></div>';
+      }
+      if (!li) li = '<div class="pjs-li"><b style="opacity:.6">No players yet</b></div>';
+      var faces = '';
+      for (var f = 0; f < list.length && f < 5; f++) faces += pjsFace(list[f], list[f].is_icon ? 'ic' : '');
+      if (list.length > 5) faces += '<div class="more">+' + (list.length - 5) + '</div>';
+      tiles += '<button type="button" class="pjs-tile" style="--c:' + PJS_TINTS[k % PJS_TINTS.length] + '" onclick="pjSqSelect(' + t.id + ',true)">' +
+        '<div class="pjs-th">' + pjsLogoHtml(t) + '<div class="tx"><h3 title="' + escHtml(t.name || '') + '">' + escHtml(t.name || 'Team') + '</h3>' +
+          '<p>Squad ' + rec + '/' + (maxP || '?') + '</p></div><div class="sq">' + rec + '/' + (maxP || '?') + '</div><div class="rk">' + pjsPad(k + 1) + '</div></div>' +
+        '<div class="pjs-meters">' +
+          '<div class="pjs-m"><label>Squad <b>' + rec + '/' + (maxP || '?') + '</b></label><div class="bar"><i style="width:' + sqPct + '%"></i></div></div>' +
+          '<div class="pjs-m p' + (st.spentPct > 85 ? ' low' : '') + '"><label>Spent <b>' + pjsPts(st.spent) + '</b></label><div class="bar"><i style="width:' + st.spentPct + '%"></i></div></div>' +
+        '</div>' +
+        '<div class="pjs-list">' + li + '</div>' +
+        '<div class="pjs-faces">' + faces + (st.best ? '<div class="tbuy"><small>Top buy</small><b>' + escHtml(st.best.name) + '</b></div>' : '') + '</div>' +
+      '</button>';
+    }
+    return '<div class="pjs-head"><h2>League <em>Squads</em></h2><div class="pjs-sum">' +
+        '<div><label>Players Sold</label><b>' + soldTotal + '</b></div>' +
+        '<div><label>Total Spent</label><b class="g">' + pjsPts(spentTotal) + '</b></div>' +
+        '<div><label>Highest Buy</label><b>' + (highest ? pjsPts(highest) : '&mdash;') + '</b></div></div></div>' +
+      '<div class="pjs-tiles' + (dense ? ' pjs-dense' : '') + '" style="--cols:' + cols + ';--rows:' + rows + '">' + tiles + '</div>';
+  }
+
+  function pjsRender(animate) {
+    var body = document.getElementById('pjSqBody');
+    if (!body) return;
+    var data = _pjSqData || {};
+    var teams = data.teams || [];
+    var sub = document.getElementById('pjSqSub');
+    if (sub) {
+      var cur = null;
+      for (var ti = 0; ti < teams.length; ti++) { if (teams[ti].id === _pjSqTeamId) cur = teams[ti]; }
+      sub.textContent = (_pjSqMode === 'team' && cur)
+        ? 'Team Squad'
+        : ((data.tournament_name ? data.tournament_name + ' \u00B7 ' : '') + 'Squad Showcase');
+    }
+    var ovl = document.getElementById('pjSquadOverlay');
+    if (ovl) ovl.classList.toggle('pjs-in-team', _pjSqMode === 'team');
     if (!teams.length) {
-      body.innerHTML = '<div class="pj-sq-empty">No teams found</div>';
+      body.innerHTML = '<div class="pjs-empty">No teams found</div>';
       return;
     }
-    function fmtNum(n) {
-      n = Number(n || 0);
-      try { return n.toLocaleString(); } catch (e) { return String(n); }
-    }
-    function meterHtml(label, cur, max, kind) {
-      max = Number(max || 0);
-      cur = Number(cur || 0);
-      var pct = max > 0 ? Math.max(0, Math.min(100, Math.round((cur / max) * 100))) : 0;
-      var fillClass = 'pj-sq-meter-fill';
-      if (kind === 'purse') fillClass += ' is-purse';
-      if (pct >= 100) fillClass += ' is-full';
-      else if (kind === 'purse' && pct >= 85) fillClass += ' is-low';
-      var val = max > 0 ? (fmtNum(cur) + ' / ' + fmtNum(max)) : fmtNum(cur);
-      return '<div class="pj-sq-meter">' +
-        '<div class="pj-sq-meter-top">' +
-          '<span class="pj-sq-meter-lbl">' + escHtml(label) + '</span>' +
-          '<span class="pj-sq-meter-val">' + escHtml(val) + '</span>' +
-        '</div>' +
-        '<div class="pj-sq-meter-track"><div class="' + fillClass + '" style="width:' + pct + '%"></div></div>' +
-      '</div>';
-    }
-    var html = '';
-    for (var i = 0; i < teams.length; i++) {
-      var t = teams[i];
-      var logo = t.logo_url
-        ? '<img class="pj-sq-team-logo" src="' + escHtml(t.logo_url) + '" alt=""/>'
-        : '<div class="pj-sq-team-logo-ph">' + escHtml((t.name || '?').charAt(0)) + '</div>';
-      var recruited = Number(t.count || 0);
-      var maxPlayers = Number(t.max_players || 0);
-      var spent = Number(t.spent_purse || 0);
-      var totalPurse = Number(t.total_purse || 0);
-      html += '<div class="pj-sq-team">' +
-        '<div class="pj-sq-team-hd">' + logo +
-          '<div class="pj-sq-team-name" title="' + escHtml(t.name || 'Team') + '">' + escHtml(t.name || 'Team') + '</div>' +
-          '<div class="pj-sq-meters">' +
-            meterHtml('Squad', recruited, maxPlayers, 'squad') +
-            meterHtml('Purse', spent, totalPurse, 'purse') +
-          '</div>' +
-        '</div><div class="pj-sq-players">';
-      var players = t.players || [];
-      if (!players.length) {
-        html += '<div class="pj-sq-none">No players yet</div>';
-      } else {
-        for (var j = 0; j < players.length; j++) {
-          var p = players[j];
-          var photo = p.photo_url
-            ? '<img class="pj-sq-photo" src="' + escHtml(p.photo_url) + '" alt=""/>'
-            : '<div class="pj-sq-photo-ph">' + escHtml((p.name || '?').charAt(0)) + '</div>';
-          var tier = p.tier_name
-            ? '<span class="pj-sq-tier" style="background:' + escHtml(p.tier_color || '#888') + '">' + escHtml(p.tier_name) + '</span>'
-            : '';
-          var pts = '';
-          if (p.is_icon) {
-            pts = '<div class="pj-sq-icon-tag">Icon</div>';
-          } else if (p.points != null && Number(p.points) > 0) {
-            pts = '<div class="pj-sq-pts">' +
-              (window.fmtUnitHtml
-                ? window.fmtUnitHtml(p.points, 'pj-sq-pts-unit')
-                : (escHtml(fmtNum(p.points)) + '<span class="pj-sq-pts-unit">PTS</span>')) +
-              '</div>';
-          }
-          html += '<div class="pj-sq-player">' + photo +
-            '<div class="pj-sq-pname" title="' + escHtml(p.name || '—') + '">' + escHtml(p.name || '—') + '</div>' +
-            (p.role ? '<div class="pj-sq-prole" title="' + escHtml(p.role) + '">' + escHtml(p.role) + '</div>' : '') +
-            tier +
-            pts +
-          '</div>';
-        }
-      }
-      html += '</div></div>';
-    }
-    body.innerHTML = html;
+    var idx = 0;
+    for (var i = 0; i < teams.length; i++) { if (teams[i].id === _pjSqTeamId) { idx = i; break; } }
+    _pjSqTeamId = teams[idx].id;
+    body.innerHTML = _pjSqMode === 'all' ? pjsAllHtml(teams) : pjsTeamHtml(teams, idx);
+    body.classList.remove('is-enter');
+    if (animate) { void body.offsetWidth; body.classList.add('is-enter'); }
   }
+
+  function renderPjSquad(data) {
+    _pjSqData = data || {};
+    pjsRender(false);
+  }
+  window.pjSqSetMode = function(mode) {
+    _pjSqMode = (mode === 'all') ? 'all' : 'team';
+    pjsRender(true);
+  };
+  window.pjSqSelect = function(teamId, toTeamView) {
+    _pjSqTeamId = teamId;
+    if (toTeamView) _pjSqMode = 'team';
+    pjsRender(true);
+  };
+  window.pjSqGo = function(delta) {
+    var teams = (_pjSqData && _pjSqData.teams) || [];
+    if (!teams.length) return;
+    var idx = 0;
+    for (var i = 0; i < teams.length; i++) { if (teams[i].id === _pjSqTeamId) { idx = i; break; } }
+    idx = (idx + delta + teams.length) % teams.length;
+    _pjSqTeamId = teams[idx].id;
+    pjsRender(true);
+  };
   window.openPjSquad = function() {
     var overlay = document.getElementById('pjSquadOverlay');
     if (!overlay) return;
     closePjRemain();
     closePjPosterDeck();
+    _pjSqMode = 'all';
     overlay.classList.add('open');
     loadPjSquad(true);
   };
@@ -4548,11 +4927,20 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   };
 
   document.addEventListener('keydown', function(ev) {
+    if (ev.key === 'Escape' && isPjSquadOpen() && _pjSqMode === 'team') {
+      pjSqSetMode('all');
+      return;
+    }
     if (ev.key === 'Escape') {
       try { closePjBoard(true); } catch (e0) {}
       closePjSquad();
       closePjRemain();
       closePjPosterDeck();
+      return;
+    }
+    if (isPjSquadOpen() && _pjSqMode === 'team' && (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight')) {
+      ev.preventDefault();
+      pjSqGo(ev.key === 'ArrowLeft' ? -1 : 1);
       return;
     }
     if (!isPjPosterDeckOpen()) return;
