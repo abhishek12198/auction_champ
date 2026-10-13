@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Orbitron:wght@600;700;900&amp;family=Oswald:wght@500;600;700&amp;family=Rajdhani:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="/auction_owner/static/src/css/owner_console.css?v=33"/>
+    <link rel="stylesheet" href="/auction_owner/static/src/css/owner_console.css?v=35"/>
 </head>
 <body class="oc-body"
       t-att-data-theme="tournament.player_display_template if tournament else 'vanilla'"
@@ -19,26 +19,36 @@
 
 <!-- ═══════ HEADER ════════════════════════════════════════════════════ -->
 <header class="oc-header">
+    <t t-set="hdr_team" t-value="team if team else (user.auction_team_id if user else None)"/>
+    <t t-set="hdr_owner" t-value="owner_name or (hdr_team.manager if hdr_team else '') or (user.name if user else '')"/>
     <div class="oc-header-top">
         <div class="oc-header-brand">
-            <t t-if="tournament and tournament.logo">
-                <img class="oc-header-logo"
-                     t-att-src="'/auction/public/image/auction.tournament/%d/logo' % tournament.id"
-                     alt="Tournament logo"/>
+            <t t-if="hdr_team and hdr_team.logo">
+                <img class="oc-header-team-logo" id="ocHdrTeamLogo"
+                     t-att-src="'/auction/public/image/auction.team/%d/logo' % hdr_team.id"
+                     t-att-alt="hdr_team.name or 'Team'"/>
+                <span class="oc-header-team-fb" id="ocHdrTeamLogoFb" hidden="hidden" aria-hidden="true"></span>
+            </t>
+            <t t-else="">
+                <img class="oc-header-team-logo" id="ocHdrTeamLogo" alt="" style="display:none"/>
+                <span class="oc-header-team-fb" id="ocHdrTeamLogoFb" aria-hidden="true"><t t-esc="(hdr_team.name or '?')[:1].upper() if hdr_team else '?'"/></span>
             </t>
             <div class="oc-header-titles">
+                <span class="oc-header-team" id="ocHdrTeamName">
+                    <t t-if="hdr_team"><t t-esc="hdr_team.name"/></t>
+                    <t t-else="">No team linked</t>
+                </span>
+                <span class="oc-header-owner" id="ocHdrOwnerName">
+                    <t t-if="hdr_owner">Owner · <t t-esc="hdr_owner"/></t>
+                    <t t-elif="user">Logged in as <t t-esc="user.name"/></t>
+                </span>
                 <span class="oc-header-tourn">
                     <t t-if="tournament"><t t-esc="tournament.name"/></t>
                     <t t-else="">No Active Tournament</t>
                 </span>
-                <span class="oc-header-desc" t-if="tournament and tournament.description" t-esc="tournament.description"/>
             </div>
         </div>
         <div class="oc-header-right">
-            <div class="oc-live-badge" id="ocLiveBadge">
-                <span class="oc-live-dot"></span>
-                <span>LIVE</span>
-            </div>
             <button type="button" class="oc-logout" id="ocLogoutBtn">Log out</button>
         </div>
     </div>
@@ -50,6 +60,10 @@
             </svg>
             <span id="ocHeaderPurse">—</span>
         </span>
+        <div class="oc-live-badge" id="ocLiveBadge">
+            <span class="oc-live-dot"></span>
+            <span>LIVE</span>
+        </div>
         <span class="oc-header-stat" title="Squad">
             <svg class="oc-header-ico" viewBox="0 0 24 24" aria-hidden="true">
                 <circle cx="12" cy="8" r="3.1" fill="currentColor"/>
@@ -376,7 +390,7 @@
 <t t-call="auction_module.point_unit_bootstrap">
     <t t-set="pu_tournament" t-value="tournament"/>
 </t>
-<script src="/auction_owner/static/src/js/owner_console.js?v=31"></script>
+<script src="/auction_owner/static/src/js/owner_console.js?v=32"></script>
 
 <!-- Squad snapshot button styles -->
 <style>

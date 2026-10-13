@@ -258,11 +258,14 @@ class AuctionOwnerController(http.Controller):
             return request.not_found()
 
         tournament = self._resolve_tournament()
+        team = request.env['res.users'].sudo().browse(user.id).auction_team_id
         return request.render(
             'auction_owner.owner_console_template',
             {
                 'tournament': tournament,
                 'user': user,
+                'team': team,
+                'owner_name': (team.manager or user.name or '') if team else (user.name or ''),
                 'favicon_url': '/web/image/res.company/%d/favicon' % request.env.company.id,
                 'db_name': request.env.cr.dbname,
             },

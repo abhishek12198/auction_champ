@@ -441,6 +441,37 @@ function closeOwnerBids() {
     paintBidTimer();
 }
 
+function paintHeaderIdentity(myTeam, owner) {
+    var name = (myTeam && myTeam.name) || '';
+    var logo = (myTeam && myTeam.logo_url) || '';
+    var ownerName = (myTeam && myTeam.manager) || (owner && owner.name) || '';
+    txt('ocHdrTeamName', name || 'No team linked');
+    var ownerEl = $('ocHdrOwnerName');
+    if (ownerEl) {
+        ownerEl.textContent = ownerName ? ('Owner · ' + ownerName) : '';
+    }
+    var img = $('ocHdrTeamLogo');
+    var fb = $('ocHdrTeamLogoFb');
+    if (logo && img) {
+        img.src = logo;
+        img.style.display = '';
+        img.removeAttribute('hidden');
+        if (fb) {
+            fb.setAttribute('hidden', 'hidden');
+            fb.textContent = '';
+        }
+    } else {
+        if (img) {
+            img.style.display = 'none';
+            img.removeAttribute('src');
+        }
+        if (fb) {
+            fb.removeAttribute('hidden');
+            fb.textContent = (name || '?').charAt(0).toUpperCase();
+        }
+    }
+}
+
 function paintHeaderPurse(myTeam) {
     const purse = $('ocHeaderPurse');
     const squad = $('ocHeaderSquad');
@@ -1521,7 +1552,9 @@ function fetchData() {
         updatePlayerCounts(data.player_counts, incoming && incoming.id);
         S.player  = incoming;
         S.myTeam  = data.my_team || null;
+        S.owner   = data.owner || null;
         S.teams   = data.teams || [];
+        paintHeaderIdentity(S.myTeam, S.owner);
         // Server sends slabs sorted descending by from_amount
         S.slabs   = data.slabs || [];
         S.presets = data.presets || [];

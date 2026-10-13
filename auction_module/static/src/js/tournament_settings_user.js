@@ -82,6 +82,12 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
             this._super.apply(this, arguments);
             this._publishTitle();
             this._syncWorkingTournament();
+            // Breadcrumb restore: reload after mount. Awaiting _load in
+            // on_reverse_breadcrumb leaves ClientActionAdapter.widget null.
+            if (this._restoreReload) {
+                this._restoreReload = false;
+                this._load();
+            }
         },
 
         _onWorkingTournamentChanged: function (tournamentId) {
@@ -170,11 +176,17 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
 
         _load: function () {
             var self = this;
+            if (this.isDestroyed && this.isDestroyed()) {
+                return Promise.resolve();
+            }
             return this._rpc({
                 model: 'auction.tournament',
                 method: 'get_user_settings_payload',
                 args: [false],
             }).then(function (data) {
+                if (self.isDestroyed && self.isDestroyed()) {
+                    return;
+                }
                 self.data = data || {};
                 if (self.data.id) {
                     self.tournamentId = self.data.id;
@@ -184,6 +196,9 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                 self._render();
                 self._publishTitle();
             }, function () {
+                if (self.isDestroyed && self.isDestroyed()) {
+                    return;
+                }
                 self.data = {ok: false, error: 'Could not load tournament settings.'};
                 self._render();
             });
@@ -1413,9 +1428,8 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                             }
                         },
                         on_reverse_breadcrumb: function () {
-                            if (!self.isDestroyed()) {
-                                return self._load();
-                            }
+                            // Must not return a promise. See on_attach_callback.
+                            self._restoreReload = true;
                         },
                     }).then(null, function (err) {
                         self._notify('danger', self._errMsg(err, 'Could not open this screen'));
