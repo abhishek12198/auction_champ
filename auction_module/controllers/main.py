@@ -1164,6 +1164,7 @@ class Auction(http.Controller):
             'action_unsold', 'action_auction', 'action_clear_stage',
             'action_set_on_stage', 'get_sell_teams_data', 'action_sell_from_web',
             'action_reveal_mystery',
+            'action_hold_owner_bid_timer', 'action_resume_owner_bid_timer',
         },
         'auction.tournament': {'set_dice_state', 'action_toggle_break_time', 'action_set_break_time'},
         'auction.auction': {'search_read'},
@@ -1219,6 +1220,109 @@ class Auction(http.Controller):
             if not ok:
                 return {'error': 'not found'}
             return self._player_quick_data_payload(player_id)
+
+    def _bid_timer_payload(self, player_id=None, tournament_id=None):
+        """Owner-bid countdown for the on-stage (or named) player."""
+        Player = request.env['auction.team.player'].sudo()
+        player = Player.browse()
+        if player_id:
+            try:
+                player = Player.browse(int(player_id))
+            except (TypeError, ValueError):
+                player = Player.browse()
+        if not player or not player.exists():
+            domain = [('is_on_stage', '=', True)]
+            if tournament_id:
+                try:
+                    domain.append(('tournament_id', '=', int(tournament_id)))
+                except (TypeError, ValueError):
+                    pass
+            player = Player.search(domain, limit=1)
+        if not player or not player.exists() or not hasattr(player, 'get_owner_bid_timer_state'):
+            return {'enabled': False}
+        try:
+            state = player.get_owner_bid_timer_state()
+        except Exception:
+            return {'enabled': False}
+        state['player_id'] = player.id
+        state['state'] = player.state or ''
+        return state
+
+    @http.route(['/auction/bid_timer', '/<string:db_name>/auction/bid_timer'],
+                type='http', auth='public', csrf=False, website=False)
+    def bid_timer(self, db_name=None, player_id=None, tournament_id=None, **kw):
+        payload = {'enabled': False}
+        if db_name:
+            with self._with_db(db_name) as ok:
+                if ok:
+                    payload = self._bid_timer_payload(player_id, tournament_id)
+        else:
+            payload = self._bid_timer_payload(player_id, tournament_id)
+        return request.make_response(
+            json.dumps(payload),
+            headers=[('Content-Type', 'application/json')],
+        )
+
+    def _bid_timer_action(self, action, player_id=None, tournament_id=None):
+        payload = self._bid_timer_payload(player_id, tournament_id)
+        pid = payload.get('player_id')
+        if not pid:
+            return payload
+        player = request.env['auction.team.player'].sudo().browse(pid)
+        method = (
+            'action_hold_owner_bid_timer'
+            if action == 'hold'
+            else 'action_resume_owner_bid_timer'
+        )
+        if not player.exists() or not hasattr(player, method):
+            return payload
+        try:
+            state = getattr(player, method)()
+        except Exception:
+            _logger.exception('bid timer %s failed player=%s', action, pid)
+            return payload
+        if not isinstance(state, dict):
+            return self._bid_timer_payload(pid, tournament_id)
+        state = dict(state)
+        state['player_id'] = player.id
+        state['state'] = player.state or ''
+        return state
+
+    @http.route(
+        ['/auction/bid_timer/hold', '/<string:db_name>/auction/bid_timer/hold'],
+        type='http', auth='public', csrf=False, website=False,
+        methods=['GET', 'POST'],
+    )
+    def bid_timer_hold(self, db_name=None, player_id=None, tournament_id=None, **kw):
+        payload = {'enabled': False}
+        if db_name:
+            with self._with_db(db_name) as ok:
+                if ok:
+                    payload = self._bid_timer_action('hold', player_id, tournament_id)
+        else:
+            payload = self._bid_timer_action('hold', player_id, tournament_id)
+        return request.make_response(
+            json.dumps(payload),
+            headers=[('Content-Type', 'application/json')],
+        )
+
+    @http.route(
+        ['/auction/bid_timer/resume', '/<string:db_name>/auction/bid_timer/resume'],
+        type='http', auth='public', csrf=False, website=False,
+        methods=['GET', 'POST'],
+    )
+    def bid_timer_resume(self, db_name=None, player_id=None, tournament_id=None, **kw):
+        payload = {'enabled': False}
+        if db_name:
+            with self._with_db(db_name) as ok:
+                if ok:
+                    payload = self._bid_timer_action('resume', player_id, tournament_id)
+        else:
+            payload = self._bid_timer_action('resume', player_id, tournament_id)
+        return request.make_response(
+            json.dumps(payload),
+            headers=[('Content-Type', 'application/json')],
+        )
 
     def _player_quick_data_payload(self, player_id):
         player = request.env['auction.team.player'].sudo().browse(player_id)
@@ -1286,6 +1390,12 @@ class Auction(http.Controller):
             auction_line = request.env['auction.auction.player'].sudo().search(
                 [('player_id', '=', player_id)], limit=1)
             result['sold_points'] = auction_line.points if auction_line else 0
+
+        if hasattr(player, 'get_owner_bid_timer_state'):
+            try:
+                result['timer'] = player.get_owner_bid_timer_state()
+            except Exception:
+                result['timer'] = {'enabled': False}
 
         result.update(_football_display_payload(player))
 

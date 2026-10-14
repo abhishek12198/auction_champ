@@ -205,12 +205,15 @@ class AuctionOwnerController(http.Controller):
         bid_timer = (
             player.get_owner_bid_timer_state()
             if player and hasattr(player, 'get_owner_bid_timer_state')
-            else {'frozen': False}
+            else {'frozen': False, 'held': False}
         )
         is_leading_bid = bool(
             player and player.current_bid_team_id and player.current_bid_team_id.id == team.id
         )
-        if bid_timer.get('frozen') and not is_leading_bid:
+        if bid_timer.get('held'):
+            can_bid = False
+            can_bid_reason = 'Timer on hold'
+        elif bid_timer.get('frozen') and not is_leading_bid:
             can_bid = False
             can_bid_reason = 'Time up — only the last bid stays open'
 
@@ -686,11 +689,13 @@ class AuctionOwnerController(http.Controller):
             (player.id,),
         )
         player.invalidate_cache()
-        if player._owner_bid_window_closed(player):
-            return {
-                'success': False,
-                'error': 'Time is up. Only the last bid stays open.',
-            }
+        lock_error = (
+            player._owner_bid_lock_error(player)
+            if hasattr(player, '_owner_bid_lock_error')
+            else False
+        )
+        if lock_error:
+            return {'success': False, 'error': lock_error}
 
         auction = env['auction.auction'].sudo().search(
             [('team_id', '=', int(team_id))], limit=1
@@ -791,11 +796,13 @@ class AuctionOwnerController(http.Controller):
             (player.id,),
         )
         player.invalidate_cache()
-        if player._owner_bid_window_closed(player):
-            return {
-                'success': False,
-                'error': 'Time is up. Only the last bid stays open.',
-            }
+        lock_error = (
+            player._owner_bid_lock_error(player)
+            if hasattr(player, '_owner_bid_lock_error')
+            else False
+        )
+        if lock_error:
+            return {'success': False, 'error': lock_error}
 
         tournament = player.tournament_id
         if not tournament.revoke_enabled:

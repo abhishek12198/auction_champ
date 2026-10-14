@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Orbitron:wght@600;700;900&amp;family=Oswald:wght@500;600;700&amp;family=Rajdhani:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="/auction_owner/static/src/css/owner_console.css?v=35"/>
+    <link rel="stylesheet" href="/auction_owner/static/src/css/owner_console.css?v=40"/>
 </head>
 <body class="oc-body"
       t-att-data-theme="tournament.player_display_template if tournament else 'vanilla'"
@@ -182,7 +182,6 @@
                             <svg class="oc-clock-svg" viewBox="0 0 36 36" aria-hidden="true">
                                 <circle class="oc-clock-track" cx="18" cy="18" r="15.5"></circle>
                                 <circle class="oc-clock-arc" id="ocClockArc" cx="18" cy="18" r="15.5"></circle>
-                                <line class="oc-clock-hand" id="ocClockHand" x1="18" y1="18" x2="18" y2="8"></line>
                             </svg>
                             <span class="oc-clock-num" id="ocClockNum">0</span>
                         </div>
@@ -390,7 +389,7 @@
 <t t-call="auction_module.point_unit_bootstrap">
     <t t-set="pu_tournament" t-value="tournament"/>
 </t>
-<script src="/auction_owner/static/src/js/owner_console.js?v=32"></script>
+<script src="/auction_owner/static/src/js/owner_console.js?v=36"></script>
 
 <!-- Squad snapshot button styles -->
 <style>

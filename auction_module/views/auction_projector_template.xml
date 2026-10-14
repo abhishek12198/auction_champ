@@ -1348,7 +1348,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   filter:sepia(1) saturate(18) hue-rotate(-45deg) brightness(1.02)}
 .pj-status-seal-logo{
   position:absolute;z-index:3;
-  left:50%;top:46%;transform:translate(-50%,-50%);
+  left:50%;top:50%;transform:translate(-50%,-50%);
   width:54%;height:54%;
   border-radius:50%;object-fit:contain;flex-shrink:0;
   background:rgba(255,255,255,.96);border:2px solid rgba(255,255,255,.9);padding:2px;
@@ -1356,16 +1356,7 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   box-shadow:0 2px 10px rgba(0,0,0,.4)}
 .pj-photo-status[data-kind="sold"] .pj-status-seal-logo.is-on{display:block}
 .pj-photo-status[data-kind="unsold"] .pj-status-seal-logo,
-.pj-photo-status[data-kind="unsold"] .pj-status-seal-pts{display:none !important}
-.pj-status-seal-pts{
-  position:absolute;z-index:3;left:50%;bottom:2%;
-  transform:translateX(-50%);
-  font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(1.15rem,2.6vw,1.85rem);
-  font-weight:900;letter-spacing:.05em;line-height:1;
-  color:currentColor;white-space:nowrap;
-  text-shadow:0 1px 5px rgba(0,0,0,.55);
-  pointer-events:none}
+.pj-status-seal-pts{display:none !important}
 
 /* Diagonal ribbon — hidden; circular seal is the sold overlay */
 .pj-status-ribbon-wrap{display:none !important}
@@ -3356,19 +3347,6 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
           logoEl.classList.remove('is-on');
         }
       }
-      var ptsEl = document.getElementById('pjStatusSealPts');
-      if (ptsEl) {
-        if (isSold && player && player.sold_points) {
-          ptsEl.textContent = window.fmtUnit
-            ? window.fmtUnit(player.sold_points)
-            : Number(player.sold_points).toLocaleString();
-          ptsEl.style.display = '';
-        } else {
-          ptsEl.textContent = '';
-          ptsEl.style.display = 'none';
-        }
-      }
-
       /* Replay premium broadcast sequence */
       clearSealFade();
       photoStatus.classList.remove('show', 'is-faded');

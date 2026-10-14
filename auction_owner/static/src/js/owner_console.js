@@ -21,6 +21,8 @@ const S = {
     _counterTs: null,   // last-seen counter_started_at; null = not yet initialised
     _counterInit: false,
     _sseStarted: false,
+    _timerEpoch: 0,
+    _bidTimerPoll: null,
 };
 
 // ── Tiny helpers ───────────────────────────────────────────────────────
@@ -120,17 +122,6 @@ function showPhotoStatus(kind, soldData) {
         } else {
             logoEl.removeAttribute('src');
             logoEl.classList.remove('is-on');
-        }
-    }
-    var ptsEl = $('ocStatusSealPts');
-    if (ptsEl) {
-        var pts = Number((soldData && (soldData.sold_points || soldData.points || soldData.current_bid)) || (S.player && S.player.current_bid) || 0);
-        if (isSold && pts) {
-            ptsEl.textContent = fmtU(pts);
-            ptsEl.style.display = '';
-        } else {
-            ptsEl.textContent = '';
-            ptsEl.style.display = 'none';
         }
     }
     overlay.classList.remove('oc-status-show');
@@ -435,6 +426,7 @@ function closeOwnerBids() {
     if (S.bidTimer) {
         S.bidTimer.running = false;
         S.bidTimer.frozen = false;
+        S.bidTimer.held = false;
     }
     renderBidPanel(S.myTeam, S.player);
     renderRevoke();
@@ -536,15 +528,18 @@ function renderBidPanel(myTeam, player) {
     const bidBtn  = $('ocBidCta');
     const reasonEl = $('ocBidReason');
 
-    if (ownerBidFrozen() && !myTeam.is_leading) {
+    if (ownerTimerHeld() || (ownerBidFrozen() && !myTeam.is_leading)) {
+        var lockReason = ownerTimerHeld()
+            ? 'Timer on hold'
+            : 'Time up — only the last bid stays open';
         if (input) { input.disabled = true; input.value = ''; }
         if (bidBtn) bidBtn.disabled = true;
         if (reasonEl) {
-            reasonEl.textContent = 'Time up — only the last bid stays open';
+            reasonEl.textContent = lockReason;
             reasonEl.className = 'oc-bid-reason oc-reason-err';
         }
         renderPresets(slabPresetBids(myTeam), myTeam);
-        renderQuickBidBox(false, 'Time up — only the last bid stays open', false);
+        renderQuickBidBox(false, lockReason, false);
     } else if (!myTeam.can_bid) {
         if (input) { input.disabled = true; input.value = ''; }
         if (bidBtn) bidBtn.disabled = true;
@@ -658,12 +653,24 @@ function renderQuickBidBox(canBid, nextBidOrReason, isLeading) {
 }
 
 // ── Quick Bid: one-tap bid at next slab value ─────────────────────────
+function ownerTimerHeld() {
+    const t = S.bidTimer;
+    return !!(t && t.enabled && t.held);
+}
+
 function ownerBidFrozen() {
     const t = S.bidTimer;
     if (!t || !t.enabled) return false;
+    if (t.held) return true;
     if (t.frozen) return true;
     if (!t.running) return false;
     return (t.remainUntil - Date.now()) <= 0;
+}
+
+function ownerBidLockToast() {
+    return ownerTimerHeld()
+        ? 'Timer is on hold. You can bid when it resumes.'
+        : 'Time is up. Only the last bid stays open.';
 }
 
 var OC_CLOCK_CIRC = 2 * Math.PI * 15.5;
@@ -726,7 +733,6 @@ function paintClock(left, total, blink) {
     const clock = $('ocClock');
     const num = $('ocClockNum');
     const arc = $('ocClockArc');
-    const hand = $('ocClockHand');
     if (!clock) return;
     clock.hidden = false;
     clock.classList.toggle('is-blink', !!blink);
@@ -738,7 +744,6 @@ function paintClock(left, total, blink) {
         arc.style.strokeDasharray = String(OC_CLOCK_CIRC);
         arc.style.strokeDashoffset = String(OC_CLOCK_CIRC * gone);
     }
-    if (hand) hand.setAttribute('transform', 'rotate(' + (gone * 360) + ' 18 18)');
 }
 
 function hideClock() {
@@ -770,6 +775,22 @@ function paintBidTimer() {
     }
     el.style.display = '';
     const leading = !!(S.myTeam && S.myTeam.is_leading);
+    if (t.held) {
+        var heldLeft = Math.max(0, t.remaining || 0);
+        el.className = 'oc-bid-timer is-paused';
+        paintClock(heldLeft, t.seconds || heldLeft, false);
+        clockBeep(false);
+        say('Timer on hold');
+        if (S.myTeam && !S._bidTimerHeld) {
+            S._bidTimerHeld = true;
+            S.myTeam.can_bid = false;
+            S.myTeam.can_bid_reason = 'Timer on hold';
+            renderBidPanel(S.myTeam, S.player);
+            renderRevoke();
+        }
+        return;
+    }
+    S._bidTimerHeld = false;
     if (!t.running && !t.frozen) {
         el.className = 'oc-bid-timer is-idle';
         hideClock();
@@ -817,23 +838,47 @@ function paintBidTimer() {
 
 function syncBidTimer(timer) {
     timer = timer || {};
+    var epoch = Number(timer.epoch || 0);
+    if (epoch && S._timerEpoch && epoch + 0.0001 < S._timerEpoch) return;
+    if (S.bidTimer && S.bidTimer.held && timer.running && !timer.held) {
+        if ((Number(timer.remaining) || 0) + 0.6 < (Number(S.bidTimer.remaining) || 0)) return;
+    }
+    if (epoch) S._timerEpoch = epoch;
     if (!timer.enabled) {
-        S.bidTimer = {enabled: false, frozen: false, running: false, seconds: 0};
+        S.bidTimer = {enabled: false, frozen: false, running: false, held: false, seconds: 0};
+        S._bidTimerFroze = false;
+        S._bidTimerHeld = false;
+    } else if (timer.held) {
+        S.bidTimer = {
+            enabled: true,
+            frozen: false,
+            running: false,
+            held: true,
+            seconds: timer.seconds || 0,
+            remaining: Math.max(0, timer.remaining || 0),
+            epoch: epoch,
+        };
         S._bidTimerFroze = false;
     } else if (timer.frozen) {
-        S.bidTimer = {enabled: true, frozen: true, running: false, seconds: timer.seconds || 0};
+        S.bidTimer = {enabled: true, frozen: true, running: false, held: false, seconds: timer.seconds || 0};
+        S._bidTimerHeld = false;
     } else if (timer.running) {
         S.bidTimer = {
             enabled: true,
             frozen: false,
             running: true,
+            held: false,
             seconds: timer.seconds || 0,
+            remaining: Math.max(0, timer.remaining || 0),
             remainUntil: Date.now() + Math.max(0, (timer.remaining || 0) * 1000),
+            epoch: epoch,
         };
         S._bidTimerFroze = false;
+        S._bidTimerHeld = false;
     } else {
-        S.bidTimer = {enabled: true, frozen: false, running: false, seconds: timer.seconds || 0};
+        S.bidTimer = {enabled: true, frozen: false, running: false, held: false, seconds: timer.seconds || 0};
         S._bidTimerFroze = false;
+        S._bidTimerHeld = false;
     }
     paintBidTimer();
     if (!S._bidTimerTick) {
@@ -844,8 +889,8 @@ function syncBidTimer(timer) {
 window.ocQuickBid = function() {
     const { myTeam, player } = S;
     if (!stageOpen(player)) return;
-    if (ownerBidFrozen() && !(myTeam && myTeam.is_leading)) {
-        toast('Time is up. Only the last bid stays open.', 'err');
+    if (ownerTimerHeld() || (ownerBidFrozen() && !(myTeam && myTeam.is_leading))) {
+        toast(ownerBidLockToast(), 'err');
         paintBidTimer();
         return;
     }
@@ -1359,8 +1404,8 @@ window.ocSetPreset = function(amount) {
 window.ocOpenBidConfirm = function() {
     const { myTeam, player } = S;
     if (!stageOpen(player)) return;
-    if (ownerBidFrozen() && !(myTeam && myTeam.is_leading)) {
-        toast('Time is up. Only the last bid stays open.', 'err');
+    if (ownerTimerHeld() || (ownerBidFrozen() && !(myTeam && myTeam.is_leading))) {
+        toast(ownerBidLockToast(), 'err');
         paintBidTimer();
         return;
     }
@@ -1419,7 +1464,7 @@ window.ocRevokeBid = function() {
     const { myTeam, player, revoke } = S;
     if (!stageOpen(player)) return;
     if (ownerBidFrozen()) {
-        toast('Time is up. Only the last bid stays open.', 'err');
+        toast(ownerBidLockToast(), 'err');
         return;
     }
     if (!myTeam || !player) return;
@@ -1824,6 +1869,22 @@ function projectorSseUrl(data) {
     if (!db || !slug) return '';
     return '/' + db + '/auction/projector/' + slug + '/events';
 }
+function bidTimerUrl() {
+    var db = (document.body && document.body.getAttribute('data-db')) || '';
+    var qs = [];
+    if (S.player && S.player.id) qs.push('player_id=' + encodeURIComponent(S.player.id));
+    var path = (db ? '/' + db : '') + '/auction/bid_timer';
+    return qs.length ? path + '?' + qs.join('&') : path;
+}
+function pollBidTimer() {
+    fetch(bidTimerUrl(), {cache: 'no-store', credentials: 'same-origin'})
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+        .then(syncBidTimer)
+        .catch(function () {});
+}
+function startBidTimerPoll() {
+    if (!S._bidTimerPoll) S._bidTimerPoll = setInterval(pollBidTimer, 1000);
+}
 function startHttpPoll() {
     if (!S.pollTimer) S.pollTimer = setInterval(fetchData, 3000);
 }
@@ -1868,6 +1929,7 @@ document.addEventListener('DOMContentLoaded', () => {
     bindBidGestures($('ocCurrentBidBox'));
     fetchData();
     startOwnerSse();
+    startBidTimerPoll();
     window._auctionOcFetch = fetchData;
 });
 

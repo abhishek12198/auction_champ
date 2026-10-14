@@ -55,7 +55,7 @@ html, body {
     line-height: 1;
     text-align: center;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    max-width: min(42vw, 420px);
+    max-width: min(36vw, 360px);
 }
 .hud-tourn-desc {
     margin-top: 4px;
@@ -71,6 +71,7 @@ html, body {
     justify-content: center;
     align-items: center;
     gap: 14px;
+    overflow: visible;
 }
 .hud-logo-center .tourn-logo {
     max-height: 54px; max-width: 120px;

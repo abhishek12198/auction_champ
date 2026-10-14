@@ -619,7 +619,7 @@ html[data-theme] .lb-photo-loading-txt {
   text-shadow:0 2px 10px rgba(0,0,0,.55)}
 .lb-mystery-lock-sub{opacity:.9;font-size:clamp(.75rem,1.3vw,.95rem);font-weight:600}
 .lb-sl-overlay {
-  position: absolute; top: 12px; left: 12px;
+  position: absolute; bottom: 12px; right: 12px; top: auto; left: auto;
   background: rgba(0,0,0,0.6);
   backdrop-filter: blur(6px);
   border: 1px solid rgba(255,255,255,0.15);
@@ -806,7 +806,7 @@ html[data-theme] .lb-photo-loading-txt {
 }
 .lb-status-seal-logo{
   position:absolute;z-index:3;
-  left:50%;top:46%;transform:translate(-50%,-50%);
+  left:50%;top:50%;transform:translate(-50%,-50%);
   width:54%;height:54%;
   border-radius:50%;object-fit:contain;flex-shrink:0;
   background:rgba(255,255,255,.96);border:2px solid rgba(255,255,255,.9);padding:2px;
@@ -815,15 +815,7 @@ html[data-theme] .lb-photo-loading-txt {
 }
 .lb-photo-status[data-kind="sold"] .lb-status-seal-logo.is-on{display:block}
 .lb-photo-status[data-kind="unsold"] .lb-status-seal-logo,
-.lb-photo-status[data-kind="unsold"] .lb-status-seal-pts{display:none !important}
-.lb-status-seal-pts{
-  position:absolute;z-index:3;left:50%;bottom:2%;
-  transform:translateX(-50%);
-  font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(.85rem,3.2vw,1.15rem);font-weight:900;letter-spacing:.05em;line-height:1;
-  color:currentColor;white-space:nowrap;
-  text-shadow:0 1px 5px rgba(0,0,0,.55);
-}
+.lb-status-seal-pts{display:none !important}
 .lb-photo-gradient {
   position: absolute; bottom: 0; left: 0; right: 0;
   height: 120px;
@@ -2974,7 +2966,7 @@ html[data-theme] body.lbx .lbx-photo.lb-photo-wrap::after{content:"";position:ab
   background:linear-gradient(180deg,transparent 55%,rgba(5,13,29,.92))}
 html[data-theme] body.lbx #lb-player-img{width:100%;height:100%;object-fit:cover;object-position:50% 12%}
 html[data-theme] body.lbx .lbx-photo .lb-photo-placeholder{font-size:max(10px,calc(var(--u)*110))}
-html[data-theme] body.lbx .lbx-photo .lb-sl-overlay{z-index:5;left:calc(var(--u)*16);top:calc(var(--u)*14);border:0;border-radius:calc(var(--u)*8);padding:calc(var(--u)*2) calc(var(--u)*18);
+html[data-theme] body.lbx .lbx-photo .lb-sl-overlay{z-index:5;right:calc(var(--u)*16);bottom:calc(var(--u)*14);left:auto;top:auto;border:0;border-radius:calc(var(--u)*8);padding:calc(var(--u)*2) calc(var(--u)*18);
   background:var(--x-gold);color:#101828;font:800 max(10px,calc(var(--u)*40))/1.15 var(--x-cond);letter-spacing:0;box-shadow:0 6px 18px rgba(0,0,0,.4);backdrop-filter:none}
 .lbx-sl-of{font-size:.38em;font-weight:700;letter-spacing:.1em;margin-left:.4em}
 .lbx-sl-of:empty{display:none}
@@ -3215,7 +3207,7 @@ body.lbx .lbx-pname .lb-dots,body.lbx .lbx-wait .lb-dots{display:inline-flex}
   .lbx-tiles{grid-column:1/-1;grid-row:5;gap:6px}
   .lbx-prog{grid-column:1/-1;grid-row:6;padding:7px 12px}
 
-  html[data-theme] body.lbx .lbx-photo .lb-sl-overlay{left:6px;top:6px;padding:0 9px;border-radius:6px;font-size:22px}
+  html[data-theme] body.lbx .lbx-photo .lb-sl-overlay{left:auto;top:auto;right:6px;bottom:22px;padding:0 9px;border-radius:6px;font-size:22px}
   html[data-theme] body.lbx .lbx-photo .lb-state-overlay{right:auto;left:0;top:auto;bottom:0;width:100%;text-align:center;border-radius:0;font-size:12px;padding:3px 0}
   html[data-theme] body.lbx .lbx-photo .lb-status-seal{width:92%}
   html[data-theme] body.lbx .lbx-photo .lb-status-seal-pts{font-size:13px}
@@ -4135,16 +4127,6 @@ html[data-theme] body.lbx #lb-brk-logo .lb-brk-logo-ph{font-size:calc(var(--u)*1
       } else {
         logoEl.removeAttribute('src');
         logoEl.classList.remove('is-on');
-      }
-    }
-    var ptsEl = document.getElementById('lbStatusSealPts');
-    if (ptsEl) {
-      if (isSold && soldInfo && soldInfo.amount) {
-        ptsEl.textContent = fmtPts(soldInfo.amount);
-        ptsEl.style.display = '';
-      } else {
-        ptsEl.textContent = '';
-        ptsEl.style.display = 'none';
       }
     }
     overlay.classList.remove('lb-status-show');

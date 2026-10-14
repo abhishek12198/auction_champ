@@ -2119,18 +2119,38 @@ class AuctionTeamPlayer(models.Model):
             self.write(vals)
 
     def _reopen_live_after_recall(self, tournaments=None):
-        """Clear Thank You / complete state and put a player back on stage."""
+        """Clear Thank You / complete state. Do not steal a live showcase.
+
+        Recalling a sold/unsold player used to always call ``get_random_player``,
+        which clears ``is_on_stage`` and puts someone else on the projector.
+        That is only needed when the live queue is empty (Thank You / complete).
+        """
         tournaments = tournaments or self.mapped('tournament_id')
         if not tournaments:
             return
-        tournaments.sudo().write({
-            'auction_declared_complete': False,
-            'stamp_player_id': False,
-            'stamp_state': False,
-            'stamp_expires_at': False,
-        })
         Player = self.env['auction.team.player'].sudo()
+        now_dt = fields.Datetime.now()
         for tournament in tournaments:
+            on_stage = Player.search([
+                ('tournament_id', '=', tournament.id),
+                ('is_on_stage', '=', True),
+            ], limit=1)
+            stamp_live = bool(
+                tournament.stamp_player_id
+                and tournament.stamp_expires_at
+                and tournament.stamp_expires_at > now_dt
+            )
+            vals = {'auction_declared_complete': False}
+            if on_stage or stamp_live:
+                # Live showcase or SOLD/UNSOLD stamp is in progress — leave it.
+                tournament.sudo().write(vals)
+                continue
+            vals.update({
+                'stamp_player_id': False,
+                'stamp_state': False,
+                'stamp_expires_at': False,
+            })
+            tournament.sudo().write(vals)
             try:
                 Player.get_random_player(tournament_id=tournament)
             except Exception:

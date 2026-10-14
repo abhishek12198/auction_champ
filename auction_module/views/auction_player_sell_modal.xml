@@ -555,18 +555,13 @@
     opacity:.95;pointer-events:none;
   }
   .sm-status-seal-logo{
-    position:absolute;z-index:3;left:50%;top:46%;transform:translate(-50%,-50%);
+    position:absolute;z-index:3;left:50%;top:50%;transform:translate(-50%,-50%);
     width:54%;height:54%;border-radius:50%;object-fit:contain;
     background:rgba(255,255,255,.96);border:2px solid rgba(255,255,255,.9);padding:2px;
     display:none;box-shadow:0 2px 10px rgba(0,0,0,.4);
   }
   .sm-status-seal-logo.is-on{display:block}
-  .sm-status-seal-pts{
-    position:absolute;z-index:3;left:50%;bottom:2%;transform:translateX(-50%);
-    font-family:'Bebas Neue',sans-serif;
-    font-size:clamp(.85rem,3vw,1.2rem);font-weight:900;letter-spacing:.05em;line-height:1;
-    color:currentColor;white-space:nowrap;text-shadow:0 1px 5px rgba(0,0,0,.55);
-  }
+  .sm-status-seal-pts{display:none !important}
 
   /* Sold info panel */
   .sm-sold-info {
@@ -1531,8 +1526,6 @@
         logoEl.classList.remove('is-on');
       }
     }
-    var ptsEl = document.getElementById('smStatusSealPts');
-    if (ptsEl) ptsEl.textContent = ptsTxt || '';
     overlay.classList.remove('sm-status-show');
     void overlay.offsetWidth;
     overlay.classList.add('sm-status-show');

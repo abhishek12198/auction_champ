@@ -22,7 +22,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
     <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;700&amp;family=Barlow:wght@400;500;600;700&amp;family=Barlow+Condensed:wght@400;500;600;700&amp;family=Bebas+Neue&amp;family=Exo+2:wght@400;600;700&amp;family=Orbitron:wght@400;600;700;900&amp;family=Oswald:wght@400;500;600;700&amp;family=Rajdhani:wght@500;600;700&amp;family=Saira+Condensed:wght@600;700;800&amp;family=Teko:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="/auction_module/static/src/css/display_hud_themes.css?v=7"/>
-    <link rel="stylesheet" href="/auction_module/static/src/css/display_hud.css?v=6"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/display_hud.css?v=8"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/bid_clock.css?v=6"/>
     <t t-call="auction_module.player_mystery_critical_css"/>
   </head>
 
@@ -50,6 +51,14 @@
         <div class="hud-tourn-info">
           <div class="hud-tourn-name"><t t-esc="player.tournament_id.name"/></div>
           <div class="hud-tourn-desc"><t t-esc="player.tournament_id.description"/></div>
+        </div>
+        <div class="ac-bid-clock hud-bid-clock" data-bid-clock="hud" data-bid-clock-ctrl="1" hidden="hidden">
+          <svg class="ac-bid-clock-svg" viewBox="0 0 36 36" aria-hidden="true">
+            <circle class="ac-bid-clock-track" cx="18" cy="18" r="15.5"></circle>
+            <circle class="ac-bid-clock-arc" cx="18" cy="18" r="15.5"></circle>
+          </svg>
+          <span class="ac-bid-clock-num">0</span>
+          <span class="ac-bid-clock-tip" data-bid-clock-tip="">Click to hold</span>
         </div>
       </div>
       <div class="hud-tourn-logo">
@@ -516,6 +525,7 @@
       </div>
     </div>
 
+    <script src="/auction_module/static/src/js/bid_clock.js?v=5"></script>
     <t t-call="auction_module.player_break_pause_assets"/>
     <t t-call="auction_module.player_mystery_controls"/>
     <t t-call="auction_module.player_sell_modal"/>
