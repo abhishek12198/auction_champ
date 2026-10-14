@@ -3178,10 +3178,10 @@ body.lbx .lbx-pname .lb-dots,body.lbx .lbx-wait .lb-dots{display:inline-flex}
   .lbx-band{flex:none;grid-template-columns:1fr}
   .lbx-feed .lbx-fi:nth-child(n+4),.lbx-top .lbx-tp:nth-child(n+4){display:flex}
   .lbx-top{grid-template-columns:repeat(3,minmax(0,1fr));flex:0 0 auto;min-height:auto}
-  .lbx-teams{flex:none;flex-direction:column;align-items:stretch}
+  .lbx-teams{flex:none;flex-direction:column;align-items:stretch;overflow:visible;width:100%;max-width:100%;box-sizing:border-box}
   .lbx-teams-lab{width:auto}
-  .lbx-teams-grid{flex-wrap:wrap;overflow:visible}
-  .lbx-team{flex:1 1 200px}
+  .lbx-teams-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;overflow:visible;min-width:0;width:100%}
+  .lbx-team{flex:none;min-width:0;max-width:100%;width:auto;box-sizing:border-box;overflow:hidden}
   .lbx-foot{height:auto;flex-direction:column;margin-top:16px}
   .lbx-ticker{height:40px}
   .lbx-spon{flex:none;padding:8px 20px}
@@ -3271,13 +3271,14 @@ body.lbx .lbx-pname .lb-dots,body.lbx .lbx-wait .lb-dots{display:inline-flex}
   .lbx-tp-nm{font-size:18px}
   .lbx-tp-pt{font-size:22px}
   .lbx-tp-rk{font-size:40px}
-  .lbx-teams{flex:none;display:block;padding:0;background:none;border:0;border-radius:0}
+  .lbx-teams{flex:none;display:block;padding:0;background:none;border:0;border-radius:0;overflow:visible;width:100%;max-width:100%;box-sizing:border-box}
   .lbx-teams-lab{display:none}
-  .lbx-teams-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;overflow:visible}
-  .lbx-team{flex:none;padding:8px 10px;gap:9px;border-radius:12px;background:var(--x-panel)}
-  .lbx-team-logo{width:38px;height:38px}
-  .lbx-team-name{font-size:15px}
-  .lbx-team-pts{font-size:11px}
+  .lbx-teams-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;overflow:visible;min-width:0;width:100%}
+  .lbx-team{flex:none;min-width:0;max-width:100%;width:auto;padding:6px 7px;gap:6px;border-radius:10px;background:var(--x-panel);box-sizing:border-box;overflow:hidden}
+  .lbx-team-logo{width:28px;height:28px;min-width:28px;min-height:28px}
+  .lbx-team-txt{min-width:0;overflow:hidden}
+  .lbx-team-name{font-size:12px}
+  .lbx-team-pts{font-size:10px}
 
   .lbx-foot{margin-top:12px;height:auto;flex-direction:column;background:none;border-top:0}
   .lbx-spon{order:1;flex:none;padding:8px 14px;border:1px solid var(--x-line);border-radius:12px;background:var(--x-panel);margin:0 14px;gap:10px}
