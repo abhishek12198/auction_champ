@@ -718,86 +718,107 @@
   #smSoldScreen.sm-break-on .sm-break-banner { display: flex; }
   #smSoldScreen.sm-break-on #smSkipBtn { display: none; }
 
-  /* ── Mobile / small screens: sheet layout, pinned header &amp; actions ── */
-  @media (max-width: 640px) {
+  /* ── Mobile: compact sheet so teams + points + actions fit without scroll ── */
+  @media (max-width: 767px) {
     #sellModal {
-      padding: 0;
-      align-items: stretch;
-      justify-content: stretch;
+      padding: 8px;
+      padding: max(6px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
+               max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+      align-items: center;
+      justify-content: center;
     }
     .sm-card {
       max-width: 100%;
       width: 100%;
-      height: 100%;
+      height: auto;
       max-height: min(100dvh, 100vh);
-      border-radius: 0;
-      box-shadow: none;
+      border-radius: 14px;
     }
+    .sm-steps { display: none; }
     .sm-header {
-      padding: max(2px, env(safe-area-inset-top)) 14px 10px;
+      padding: 0 12px 6px;
     }
     .sm-header::before {
-      margin: 0 -14px 10px;
-      height: 3px;
+      margin: 0 -12px 6px;
+      height: 2px;
     }
-    .sm-header-title { font-size: 1.15rem; letter-spacing: 1.5px; }
-    .sm-header-label { font-size: .55rem; letter-spacing: 2.5px; }
+    .sm-header-title { font-size: .95rem; letter-spacing: 1px; }
+    .sm-header-label { font-size: .5rem; letter-spacing: 1.5px; margin-bottom: 0; }
     .sm-close-btn {
-      width: 44px; height: 44px; font-size: 1.25rem;
+      width: 32px; height: 32px; font-size: 1rem;
       background: rgba(255,255,255,.2);
     }
-    .sm-transfer-row { padding: 8px 14px; gap: 8px; flex-shrink: 0; }
+    .sm-transfer-row { padding: 6px 12px; gap: 6px; flex-shrink: 0; }
     .sm-avatar,
     .sm-team-logo,
-    .sm-team-logo-placeholder { width: 40px; height: 40px; }
-    .sm-arrow { font-size: 1.2rem; }
-    .sm-section { padding: 8px 14px 4px; }
-    /* Cap team list height when many teams; no forced min-height (avoids empty gap before points) */
+    .sm-team-logo-placeholder { width: 30px; height: 30px; }
+    .sm-player-info strong { font-size: .78rem; }
+    .sm-player-info span { font-size: .6rem; letter-spacing: .4px; }
+    .sm-arrow { font-size: 1rem; }
+    .sm-team-logo-wrap { min-width: 48px; gap: 2px; }
+    .sm-team-name-label { font-size: .55rem; max-width: 56px; }
+    .sm-section { padding: 5px 12px 2px; }
+    #smPointsSection { padding-top: 4px !important; }
+    .sm-section-label { font-size: .55rem; letter-spacing: 1px; margin-bottom: 5px; }
     .sm-section-teams {
       display: flex;
       flex-direction: column;
     }
     .sm-team-badges {
-      max-height: min(42vh, 360px);
+      max-height: min(22vh, 132px);
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       align-content: flex-start;
-      padding-bottom: 2px;
+      gap: 5px;
+      min-height: 0;
+      padding-bottom: 0;
     }
-    .sm-badge { padding: 8px 14px; font-size: .8rem; min-height: 40px; }
-    .sm-pts-btn { width: 42px; height: 42px; }
-    #sellPoints { font-size: 1.25rem; padding: 8px 10px; }
-    .sm-presets { gap: 6px; margin-top: 8px; }
-    .sm-preset-btn { padding: 6px 12px; font-size: .74rem; }
-    #teamDetailsStrip { margin: 8px 14px 0; padding: 10px 10px; }
-    #sellSuggestion, #sellError { margin: 6px 14px 0; }
+    .sm-badge {
+      padding: 3px 9px;
+      font-size: .7rem;
+      min-height: 26px;
+      border-width: 1.5px;
+    }
+    .sm-points-wrap { gap: 8px; }
+    .sm-pts-btn { width: 32px; height: 32px; font-size: 1.1rem; }
+    #sellPoints { font-size: 1.05rem; padding: 5px 8px; border-radius: 8px; }
+    .sm-presets { gap: 4px; margin-top: 6px; }
+    .sm-preset-btn { padding: 3px 8px; font-size: .65rem; }
+    #teamDetailsStrip { margin: 6px 12px 0; padding: 6px 8px; border-radius: 8px; }
+    .sm-detail-key { font-size: .5rem; letter-spacing: 1px; margin-bottom: 1px; }
+    .sm-detail-val { font-size: .92rem; }
+    #sellSuggestion, #sellError { margin: 4px 12px 0; padding: 5px 8px; font-size: .7rem; }
+    .sm-form-scroll { overflow-y: auto; }
     .sm-footer {
       display: grid;
       grid-template-columns: 1fr 1.35fr;
-      gap: 10px;
-      padding: 12px 14px max(14px, env(safe-area-inset-bottom));
+      gap: 8px;
+      padding: 8px 12px max(8px, env(safe-area-inset-bottom));
     }
     .sm-btn-cancel,
     .sm-btn-sell {
       width: 100%;
-      padding: 13px 12px;
+      padding: 8px 10px;
       justify-content: center;
       text-align: center;
+      min-height: 36px;
+      font-size: .78rem;
     }
     .sm-sold-photo-wrap,
-    .sm-sold-photo { max-height: min(38vh, 260px); }
-    .sm-countdown-wrap { width: calc(100% - 28px); margin: 8px 14px 12px; }
+    .sm-sold-photo { max-height: min(32vh, 200px); }
+    .sm-countdown-wrap { width: calc(100% - 24px); margin: 6px 12px 8px; }
     .sm-skip-btn {
-      margin: 0 14px max(16px, env(safe-area-inset-bottom));
-      width: calc(100% - 28px);
-      min-height: 48px;
+      margin: 0 12px max(10px, env(safe-area-inset-bottom));
+      width: calc(100% - 24px);
+      min-height: 36px;
     }
   }
 
   @media (max-width: 380px) {
-    .sm-header-title { font-size: 1.02rem; }
-    .sm-footer { grid-template-columns: 1fr; }
-    .sm-detail-val { font-size: 1rem; }
+    .sm-header-title { font-size: .88rem; }
+    .sm-team-badges { max-height: min(20vh, 112px); }
+    .sm-badge { padding: 2px 7px; font-size: .65rem; min-height: 24px; }
+    .sm-detail-val { font-size: .82rem; }
   }
 </style>
 

@@ -25,7 +25,7 @@
                 </div>
                 <div class="pj-live-bid__waiting" id="pjLiveBidWaiting" style="display:none">
                     <span class="pj-live-bid__wait-dot" aria-hidden="true"></span>
-                    <span>Waiting for opening bid</span>
+                    <span>The floor is open. Waiting for the first bid.</span>
                 </div>
                 <div class="pj-live-bid__note" id="pjLiveBidNote"></div>
             </div>
@@ -234,8 +234,31 @@
 .pj-live-bid.is-unsold .pj-live-bid__team,
 .pj-live-bid.is-unsold .pj-live-bid__waiting{display:none !important}
 .pj-live-bid.is-unsold .pj-live-bid__note{display:block}
-.pj-live-bid.is-waiting .pj-live-bid__team{display:none !important}
-.pj-live-bid.is-waiting .pj-live-bid__waiting{display:flex}
+.pj-live-bid.is-waiting{
+  display:flex !important;
+}
+.pj-live-bid.is-waiting .pj-live-bid__team,
+.pj-live-bid.is-waiting .pj-live-bid__sub{display:none !important}
+.pj-live-bid.is-waiting .pj-live-bid__waiting{display:flex !important}
+.pj-live-bid.is-waiting .pj-live-bid__amount{
+  font-family:var(--pj-font-ui) !important;
+  font-weight:800 !important;
+  font-size:clamp(1.25rem,3.4vh,2.1rem) !important;
+  line-height:1.2 !important;
+  letter-spacing:.05em !important;
+  text-transform:uppercase !important;
+  white-space:normal !important;
+  color:var(--tx) !important;
+  text-shadow:none !important;
+}
+[data-theme="lemon"] .pj-live-bid.is-waiting .pj-live-bid__amount,
+[data-theme="vanilla"] .pj-live-bid.is-waiting .pj-live-bid__amount{
+  color:#1F1A0A !important;
+}
+[data-theme="lemon"] .pj-live-bid.is-waiting .pj-live-bid__waiting,
+[data-theme="vanilla"] .pj-live-bid.is-waiting .pj-live-bid__waiting{
+  color:#3a2a10 !important;
+}
         ]]></style>
 
         <script type="text/javascript"><![CDATA[
@@ -357,12 +380,15 @@
         syncLiveBidUnit();
         root.classList.toggle('is-sold', sold);
 
-        // No opening bid yet: keep the panel, show a waiting line (no invented number).
+        // No opening bid yet: IPL-style empty floor — no invented number.
         if (!sold && bid <= 0) {
             root.classList.add('is-waiting');
-            setText('pjLiveBidLabel', 'Current Bid');
+            setText('pjLiveBidLabel', 'Bidding Open');
             setText('pjLiveBidSub', 'Highest Bidder');
-            if (valEl) valEl.textContent = '\u2014';
+            if (valEl) {
+                valEl.style.fontSize = '';
+                valEl.textContent = 'No paddle raised yet';
+            }
             var waitEl = document.getElementById('pjLiveBidWaiting');
             if (waitEl) waitEl.style.display = '';
             if (teamEl) teamEl.style.display = 'none';
@@ -372,9 +398,15 @@
         }
 
         root.classList.remove('is-waiting');
+        var waitEl = document.getElementById('pjLiveBidWaiting');
+        if (waitEl) waitEl.style.display = 'none';
         setText('pjLiveBidLabel', sold ? 'Sold For' : 'Current Bid');
         setText('pjLiveBidSub', sold ? 'Sold To' : 'Highest Bidder');
-        if (valEl) { valEl.textContent = fmtPts(bid); fitAmount(valEl); }
+        if (valEl) {
+            valEl.style.fontSize = '';
+            valEl.textContent = fmtPts(bid);
+            fitAmount(valEl);
+        }
         flashIfChanged(root, bid, team && team.id ? team.id : (sold ? 'sold' : null));
 
         if (team && (team.name || team.logo_url) && teamEl) {

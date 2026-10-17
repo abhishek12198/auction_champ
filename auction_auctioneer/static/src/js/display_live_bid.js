@@ -284,6 +284,18 @@
             restoreScroll(pos);
         }
     }
+    function ensureHeroBadge(hero) {
+        var head = hero && hero.querySelector('.ac-bid-hero-head');
+        var pulse = hero && hero.querySelector('.ac-bid-hero-pulse');
+        var lbl = hero && hero.querySelector('.ac-bid-hero-lbl');
+        if (!head || !pulse || !lbl || lbl.closest('.ac-bid-hero-badge')) return;
+        var badge = document.createElement('div');
+        badge.className = 'ac-bid-hero-badge';
+        head.insertBefore(badge, pulse);
+        badge.appendChild(pulse);
+        badge.appendChild(lbl);
+    }
+
     function paintBidHero(lead, logoSrc, amount) {
         var hero = document.getElementById('acBidHero');
         var logo = document.getElementById('acBidHeroLogo');
@@ -291,6 +303,7 @@
         var ptsEl = document.getElementById('acBidHeroPts');
         var lbl = hero && hero.querySelector('.ac-bid-hero-lbl');
         if (!hero) return;
+        ensureHeroBadge(hero);
         var pos = scrollPos();
         var sold = !!(playerCache && playerCache.state === 'sold');
         var on = !!(amount > 0 && (lead || sold));

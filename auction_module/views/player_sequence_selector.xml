@@ -1222,39 +1222,52 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 }
 .sm-skip-btn:hover { background: rgba(255,255,255,.22); border-color: rgba(255,255,255,.55); }
 
-/* ── Sell modal mobile ────────────────────────────────────── */
-@media(max-width:640px){
-  #sellModal{ padding:0; align-items:flex-end; justify-content:stretch; }
+/* ── Sell modal mobile: keep teams + points + actions on one screen ── */
+@media(max-width:767px){
+  #sellModal{
+    padding:8px;
+    padding:max(6px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
+            max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+    align-items:center; justify-content:center;
+  }
   .sm-card{
-    border-radius: 18px 18px 0 0; max-width:100%; width:100%;
+    border-radius:14px; max-width:100%; width:100%; height:auto;
     max-height:min(100dvh,100vh);
   }
-  .sm-header{ padding: max(2px, env(safe-area-inset-top)) 14px 12px; }
-  .sm-header-title{ font-size: 1.15rem; }
-  .sm-close-btn{ width:44px; height:44px; font-size:1.25rem; background:rgba(255,255,255,.2); }
-  .sm-transfer-row{ padding: 10px 14px; gap: 8px; }
-  .sm-avatar,.sm-team-logo,.sm-team-logo-placeholder{ width:44px; height:44px; }
-  .sm-section{ padding: 10px 14px 4px; }
-  /* Match Lucky Dip — room for all eligible team tags (was 22vh/140px ≈ 5 tags) */
+  .sm-steps{ display:none; }
+  .sm-header{ padding:0 12px 6px; }
+  .sm-header-title{ font-size:.95rem; letter-spacing:1px; }
+  .sm-close-btn{ width:32px; height:32px; font-size:1rem; background:rgba(255,255,255,.2); }
+  .sm-transfer-row{ padding:6px 12px; gap:6px; }
+  .sm-avatar,.sm-team-logo,.sm-team-logo-placeholder{ width:30px; height:30px; }
+  .sm-section{ padding:5px 12px 2px; }
+  #smPointsSection{ padding-top:4px !important; }
+  .sm-section-label{ font-size:.55rem; margin-bottom:5px; }
   .sm-section-teams{ display:flex; flex-direction:column; }
   .sm-team-badges{
-    max-height:min(42vh,360px); overflow-y:auto; -webkit-overflow-scrolling:touch;
-    align-content:flex-start; padding-bottom:2px;
+    max-height:min(22vh,132px); overflow-y:auto; -webkit-overflow-scrolling:touch;
+    align-content:flex-start; gap:5px; min-height:0;
   }
-  .sm-badge{ padding:8px 14px; font-size:.8rem; min-height:40px; }
-  .sm-pts-btn{ width:42px; height:42px; }
-  #sellPoints{ font-size:1.25rem; padding:8px 10px; }
+  .sm-badge{ padding:3px 9px; font-size:.7rem; min-height:26px; }
+  .sm-pts-btn{ width:32px; height:32px; font-size:1.1rem; }
+  #sellPoints{ font-size:1.05rem; padding:5px 8px; }
+  .sm-presets{ gap:4px; margin-top:6px; }
+  .sm-preset-btn{ padding:3px 8px; font-size:.65rem; }
   .sm-footer{
-    display:grid; grid-template-columns:1fr 1.35fr; gap:10px;
-    padding:12px 14px max(14px, env(safe-area-inset-bottom));
+    display:grid; grid-template-columns:1fr 1.35fr; gap:8px;
+    padding:8px 12px max(8px, env(safe-area-inset-bottom));
   }
-  .sm-btn-sell,.sm-btn-cancel{ width:100%; padding:13px 12px; text-align:center; }
-  #teamDetailsStrip{ margin: 8px 14px 0; padding:10px 10px; }
-  #sellSuggestion,#sellError{ margin: 6px 14px 0; }
+  .sm-btn-sell,.sm-btn-cancel{
+    width:100%; padding:8px 10px; text-align:center; min-height:36px; font-size:.78rem;
+  }
+  #teamDetailsStrip{ margin:6px 12px 0; padding:6px 8px; }
+  .sm-detail-val{ font-size:.92rem; }
+  #sellSuggestion,#sellError{ margin:4px 12px 0; }
 }
 @media(max-width:380px){
-  .sm-footer{ grid-template-columns:1fr; }
-  .sm-header-title{ font-size:1.02rem; }
+  .sm-header-title{ font-size:.88rem; }
+  .sm-team-badges{ max-height:min(20vh,112px); }
+  .sm-badge{ padding:2px 7px; font-size:.65rem; min-height:24px; }
 }
 
 /* ═══ BID SUMMARY DRAWER ══════════════════════════════════════════════ */

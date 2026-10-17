@@ -707,3 +707,53 @@ html.hud-light .hud-photo-col::before {
     .hud-brand-sub { display: none; }
     .hud-photo-col { height: 48vw; min-height: 200px; max-height: 280px; }
 }
+
+/* Sell to Team popup — keep the full form on one phone screen */
+@media (max-width: 767px) {
+    #sellModal {
+        padding: 8px !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    #sellModal .sm-card {
+        height: auto !important;
+        max-height: min(100dvh, 100vh) !important;
+        border-radius: 14px !important;
+    }
+    #sellModal .sm-steps { display: none !important; }
+    #sellModal .sm-header { padding: 0 12px 6px !important; }
+    #sellModal .sm-header-title { font-size: .95rem !important; letter-spacing: 1px !important; }
+    #sellModal .sm-close-btn { width: 32px !important; height: 32px !important; font-size: 1rem !important; }
+    #sellModal .sm-transfer-row { padding: 6px 12px !important; gap: 6px !important; }
+    #sellModal .sm-avatar,
+    #sellModal .sm-team-logo,
+    #sellModal .sm-team-logo-placeholder { width: 30px !important; height: 30px !important; }
+    #sellModal .sm-section { padding: 5px 12px 2px !important; }
+    #sellModal #smPointsSection { padding-top: 4px !important; }
+    #sellModal .sm-section-label { font-size: .55rem !important; margin-bottom: 5px !important; }
+    #sellModal .sm-team-badges {
+        max-height: min(22vh, 132px) !important;
+        gap: 5px !important;
+        min-height: 0 !important;
+    }
+    #sellModal .sm-badge {
+        padding: 3px 9px !important;
+        font-size: .7rem !important;
+        min-height: 26px !important;
+    }
+    #sellModal .sm-pts-btn { width: 32px !important; height: 32px !important; font-size: 1.1rem !important; }
+    #sellModal #sellPoints { font-size: 1.05rem !important; padding: 5px 8px !important; }
+    #sellModal .sm-preset-btn { padding: 3px 8px !important; font-size: .65rem !important; }
+    #sellModal #teamDetailsStrip { margin: 6px 12px 0 !important; padding: 6px 8px !important; }
+    #sellModal .sm-detail-val { font-size: .92rem !important; }
+    #sellModal .sm-footer {
+        gap: 8px !important;
+        padding: 8px 12px max(8px, env(safe-area-inset-bottom)) !important;
+    }
+    #sellModal .sm-btn-cancel,
+    #sellModal .sm-btn-sell {
+        padding: 8px 10px !important;
+        min-height: 36px !important;
+        font-size: .78rem !important;
+    }
+}

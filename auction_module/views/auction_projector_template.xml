@@ -218,6 +218,68 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
     linear-gradient(160deg, var(--bg2), var(--bg));
 }
 
+/* Glossy broadcast wash — every edition except Standard */
+html:not([data-theme="standard"]) #pj-root::before,
+html:not([data-theme="standard"]) #pj-root::after{
+  content:"";
+  position:absolute;
+  pointer-events:none;
+}
+html:not([data-theme="standard"]) #pj-root::before{
+  inset:0;
+  z-index:45;
+  background:
+    linear-gradient(122deg,
+      rgba(255,255,255,.18) 0%,
+      rgba(255,255,255,.04) 18%,
+      transparent 38%,
+      transparent 58%,
+      rgba(255,255,255,.07) 78%,
+      rgba(255,255,255,.12) 100%),
+    radial-gradient(70% 40% at 12% -8%, color-mix(in srgb, var(--gold) 28%, transparent) 0%, transparent 70%);
+  mix-blend-mode:soft-light;
+}
+html:not([data-theme="standard"]) #pj-root::after{
+  inset:-18% -10% auto auto;
+  width:55%;
+  height:55%;
+  z-index:4;
+  background:radial-gradient(circle at 70% 30%, var(--glow) 0%, transparent 68%);
+  opacity:.38;
+  animation:pjGlossSweep 8s ease-in-out infinite;
+}
+@keyframes pjGlossSweep{
+  0%,100%{opacity:.22;transform:translate3d(0,0,0) scale(1)}
+  50%{opacity:.48;transform:translate3d(-4%,3%,0) scale(1.06)}
+}
+@media (prefers-reduced-motion:reduce){
+  html:not([data-theme="standard"]) #pj-root::after{animation:none}
+}
+html:not([data-theme="standard"]) #pj-bar{
+  box-shadow:0 10px 28px rgba(0,0,0,.22), 0 0 26px color-mix(in srgb, var(--glow) 42%, transparent);
+  border-bottom-color:color-mix(in srgb, var(--gold) 72%, var(--line));
+}
+html:not([data-theme="standard"]) .pj-photo-side{
+  box-shadow:inset 0 0 48px color-mix(in srgb, var(--glow) 22%, transparent);
+}
+html:not([data-theme="standard"]) .pj-aside{
+  box-shadow:0 0 34px color-mix(in srgb, var(--glow) 38%, transparent),
+             inset 0 1px 0 rgba(255,255,255,.14);
+  border-color:color-mix(in srgb, var(--gold) 78%, var(--line));
+}
+html:not([data-theme="standard"]) .pj-name,
+html:not([data-theme="standard"]) .pj-base-val,
+html:not([data-theme="standard"]) .pj-live-bid__amount,
+html:not([data-theme="standard"]) .pj-live-bid__team-name{
+  text-shadow:0 0 22px var(--glow), 0 2px 8px rgba(0,0,0,.28);
+}
+html:not([data-theme="standard"]) .pj-live-bid__head{
+  box-shadow:0 0 1.8rem -.15rem var(--glow), inset 0 1px 0 rgba(255,255,255,.18);
+}
+html:not([data-theme="standard"]) .pj-recent-band{
+  box-shadow:0 -8px 24px color-mix(in srgb, var(--glow) 22%, transparent);
+}
+
 /* ══ Header ═══════════════════════════════════════════════════════════ */
 #pj-bar{flex-shrink:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,auto) minmax(0,auto) max-content;
   align-items:center;gap:.75rem;padding:.55rem 1.2rem;
@@ -1101,12 +1163,13 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
 /* Left vertical status */
 .pj-spine-rail{writing-mode:vertical-rl;transform:rotate(180deg);align-self:stretch;
   display:flex;align-items:center;justify-content:center;padding:1rem .55rem;
-  background:linear-gradient(180deg,var(--danger),#a31624);color:#fff;
+  background:linear-gradient(180deg,#ffc107,#ef6c00);color:#1a1000;
   font-family:var(--pj-font-ui);font-weight:800;letter-spacing:.35em;font-size:clamp(.65rem,1.2vw,.9rem);
   text-transform:uppercase;box-shadow:4px 0 18px rgba(0,0,0,.25)}
-.pj-spine-rail[data-status="sold"]{background:linear-gradient(180deg,#1e9e55,#0d6b38)}
-.pj-spine-rail[data-status="unsold"]{background:linear-gradient(180deg,#c62828,#7f1010)}
-.pj-spine-rail[data-status="withdrawn"]{background:linear-gradient(180deg,#555,#222)}
+.pj-spine-rail[data-status="auctioning"]{background:linear-gradient(180deg,#ffc107,#ef6c00);color:#1a1000}
+.pj-spine-rail[data-status="sold"]{background:linear-gradient(180deg,#1e9e55,#0d6b38);color:#fff}
+.pj-spine-rail[data-status="unsold"]{background:linear-gradient(180deg,#c62828,#7f1010);color:#fff}
+.pj-spine-rail[data-status="withdrawn"]{background:linear-gradient(180deg,#555,#222);color:#fff}
 
 /* Photo — projected / holographic stage look */
 .pj-photo-side{position:relative;min-width:0;min-height:0;height:100%;overflow:hidden;
@@ -3738,6 +3801,9 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
       updateAuctionMeta(result.auction_meta);
       if (typeof window._pjOnPollResult === 'function') {
         try { window._pjOnPollResult(result); } catch (e) {}
+      }
+      if (window.acLiveBidTick && window.acLiveBidTick.paintProjectorEmptyBid) {
+        try { window.acLiveBidTick.paintProjectorEmptyBid(p); } catch (eBid) {}
       }
       maybeRefreshPjSquad(p);
 

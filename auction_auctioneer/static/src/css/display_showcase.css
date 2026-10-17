@@ -49,8 +49,8 @@ body:has(#acLiveBidPad) {
 
     body:has(#acLiveBidPad) .ac-bid-hero {
         flex-shrink: 0 !important;
-        margin: 4px 12px 6px !important;
-        padding: 8px 16px !important;
+        margin: 8px 12px 8px !important;
+        padding: 14px 16px 13px !important;
     }
 
     body:has(#acLiveBidPad) #acLiveBidPad.is-on.is-open {
@@ -181,8 +181,8 @@ body:has(#acLiveBidPad) .ac-livebid-title {
 }
 body:has(#acLiveBidPad) .ac-livebid-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
-    align-items: start;
+    gap: 10px;
+    align-items: stretch;
 }
 body:has(#acLiveBidPad) .ac-livebid-chip {
     background: var(--lb-accent);
@@ -302,11 +302,12 @@ body:has(#acLiveBidPad) .hud-stats-heading {
         z-index: 10060;
     }
     body:has(#acLiveBidPad) .ac-bid-hero {
-        margin: 4px 8px !important;
-        padding: 4px 10px !important;
+        margin: 6px 8px 8px !important;
+        padding: 12px 12px 11px !important;
     }
     body:has(#acLiveBidPad) .ac-livebid-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
         max-height: none !important;
         overflow: visible !important;
         height: auto !important;
