@@ -22,6 +22,38 @@
     --sm-font:            'Poppins','Rajdhani',sans-serif;
     --sm-title-font:      'Poppins','Teko',sans-serif;
   }
+  /* ── Standard ──────────────────────────────────────────────── */
+  #sellModal[data-theme="standard"] {
+    --sm-header-bg:       #1058B0;
+    --sm-header-stripe:   #F5A623;
+    --sm-accent:          #1058B0;
+    --sm-accent-dim:      rgba(16,88,176,0.14);
+    --sm-primary:         #1058B0;
+    --sm-primary-dark:    #1058B0;
+    --sm-primary-light:   #FFFFFF;
+    --sm-btn-bg:          #F5A623;
+    --sm-badge-active:    #1058B0;
+    --sm-transfer-bg:     #FFFFFF;
+    --sm-detail-bg:       #FFFFFF;
+    --sm-maxcall-color:   #2e7d32;
+    --sm-suggest-color:   #1058B0;
+    --sm-sold-ribbon:     #F5A623;
+    --sm-sold-bg:         #FFFFFF;
+    --sm-font:            'Barlow',sans-serif;
+    --sm-title-font:      'Barlow',sans-serif;
+  }
+  #sellModal[data-theme="standard"] .sm-header-title,
+  #sellModal[data-theme="standard"] .sm-close-btn { color: #FFFFFF; }
+  #sellModal[data-theme="standard"] .sm-close-btn { background: rgba(255,255,255,.16); }
+  #sellModal[data-theme="standard"] .sm-sold-stamp {
+    color: #1A202C;
+    border-color: rgba(26,32,44,.45);
+    text-shadow: none;
+  }
+  #sellModal[data-theme="standard"] .sm-sold-label { color: #1058B0; }
+  #sellModal[data-theme="standard"] .sm-sold-team-name { color: #1A202C; }
+  #sellModal[data-theme="standard"] .sm-sold-points { color: rgba(26,32,44,.72); }
+  #sellModal[data-theme="standard"] .sm-sold-points span { color: #1058B0; }
   /* ── Lemon ─────────────────────────────────────────────────── */
   #sellModal[data-theme="lemon"] {
     --sm-header-bg:       linear-gradient(135deg,#F4ECD0 0%,#E8DDB8 100%);
@@ -159,8 +191,7 @@
   }
 
 
-  #sellModal[data-theme="blueberry"],
-  #sellModal[data-theme="blackberry"] {
+  #sellModal[data-theme="blueberry"] {
     --sm-header-bg:       linear-gradient(135deg,#050a14 0%,#0d1830 100%);
     --sm-header-stripe:   #3B82F6;
     --sm-accent:          #3B82F6;
@@ -178,6 +209,26 @@
     --sm-sold-bg:         linear-gradient(160deg,#050a14 0%,#0d1830 60%,#14305f 100%);
     --sm-font:            'Exo 2','Rajdhani',sans-serif;
     --sm-title-font:      'Orbitron','Exo 2',sans-serif;
+  }
+
+  #sellModal[data-theme="blackberry"] {
+    --sm-header-bg:       linear-gradient(135deg,#101113 0%,#222328 100%);
+    --sm-header-stripe:   #A77BFF;
+    --sm-accent:          #7629D9;
+    --sm-accent-dim:      rgba(118,41,217,0.16);
+    --sm-primary:         #7629D9;
+    --sm-primary-dark:    #4C1D95;
+    --sm-primary-light:   #F5F3FF;
+    --sm-btn-bg:          linear-gradient(135deg,#4C1D95,#7629D9);
+    --sm-badge-active:    #7629D9;
+    --sm-transfer-bg:     #F5F3FF;
+    --sm-detail-bg:       #EDE9FE;
+    --sm-maxcall-color:   #4C1D95;
+    --sm-suggest-color:   #4C1D95;
+    --sm-sold-ribbon:     #7629D9;
+    --sm-sold-bg:         linear-gradient(160deg,#101113 0%,#222328 60%,#303137 100%);
+    --sm-font:            'Barlow Condensed','Rajdhani',sans-serif;
+    --sm-title-font:      'Oswald','Barlow Condensed',sans-serif;
   }
 
   #sellModal[data-theme="pistah"] {

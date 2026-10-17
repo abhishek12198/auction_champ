@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_squad_view_client" model="ir.actions.client">
+        <field name="name">Squad Modification</field>
+        <field name="tag">auction_module.squad_view</field>
+    </record>
+</odoo>

@@ -180,8 +180,6 @@ class AcSaasPlan(models.Model):
         keys = []
         for raw_key in raw.split(','):
             key = raw_key.strip()
-            if key == 'blackberry':
-                key = 'blueberry'
             if key:
                 keys.append(key)
         return keys
@@ -332,6 +330,7 @@ class AcSaasPlan(models.Model):
         if not allowed:
             return False
         labels = {
+            'standard': _('Standard'),
             'lemon': _('Lemon'),
             'vanilla': _('Vanilla'),
             'butterscotch': _('Butterscotch'),
@@ -339,7 +338,7 @@ class AcSaasPlan(models.Model):
             'cherry': _('Cherry'),
             'pistah': _('Pistah'),
             'blueberry': _('Blueberry'),
-            'blackberry': _('Blueberry'),
+            'blackberry': _('Blackberry'),
         }
         included = ', '.join(labels.get(k, k.title()) for k in allowed)
         return _('%(plan)s plan · included: %(themes)s') % {

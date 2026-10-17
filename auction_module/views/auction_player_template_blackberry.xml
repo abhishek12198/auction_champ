@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <template id="player_template_blackberry" name="Player Auction – Blueberry">
-        <t t-set="hud_theme" t-value="'blueberry'"/>
-        <t t-set="hud_edition" t-value="'Blueberry Edition'"/>
+    <template id="player_template_blackberry" name="Player Auction – Blackberry">
+        <t t-set="hud_theme" t-value="'blackberry'"/>
+        <t t-set="hud_edition" t-value="'Blackberry Edition'"/>
         <t t-set="hud_light" t-value="False"/>
         <t t-call="auction_module.player_template_hud"/>
     </template>

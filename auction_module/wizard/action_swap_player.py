@@ -111,6 +111,34 @@ class AuctionSwapPlayer(models.TransientModel):
             'board_json': self._build_board_json(auction, tournament, False, False, fmt, unit_name),
             'summary_html': self._render_empty_summary(),
         })
+        return self._apply_squad_drop_defaults(
+            defaults, auction, tournament, fmt, unit_name)
+
+    def _apply_squad_drop_defaults(self, defaults, auction, tournament, fmt, unit_name):
+        """Prefill target team/player when opened from Squad Modification drop."""
+        target_team_id = int(self.env.context.get('squad_target_team_id') or 0)
+        target_line_id = int(self.env.context.get('squad_target_line_id') or 0)
+        target_team = self.env['auction.team'].browse(target_team_id)
+        source_team_id = auction.team_id.id if auction.team_id else 0
+        if not target_team.exists() or target_team.id == source_team_id:
+            return defaults
+        defaults['target_team_id'] = target_team.id
+        defaults['board_json'] = self._build_board_json(
+            auction, tournament, target_team, target_line_id, fmt, unit_name)
+        tline = self.env['auction.auction.player'].browse(target_line_id)
+        if (
+            tline.exists()
+            and tline.player_id
+            and tline.auction_id.team_id.id == target_team.id
+        ):
+            defaults.update({
+                'target_line_id': tline.id,
+                'target_player_id': tline.player_id.id,
+                'target_points': tline.points,
+                'target_swap_points': tline.points,
+                'has_target_player': True,
+            })
+            defaults['summary_html'] = self.new(defaults)._render_summary()
         return defaults
 
     @api.depends('target_team_id', 'tournament_id')

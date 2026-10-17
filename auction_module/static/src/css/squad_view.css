@@ -1,0 +1,735 @@
+/* Squad View — isolated. All rules stay under .ac-sv-app / .o_ac_squad_view. */
+
+.o_content > .o_ac_squad_view,
+.o_action > .o_ac_squad_view,
+.o_ac_squad_view {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: calc(100vh - 46px) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #f4f6fa !important;
+    overflow: auto !important;
+    box-sizing: border-box !important;
+}
+
+.ac-sv-app {
+    --ac-sv-blue: #2252b5;
+    --ac-sv-blue-deep: #0a1429;
+    --ac-sv-navy: #0d1e3a;
+    --ac-sv-amber: #f5a623;
+    --ac-sv-ink: #1a202c;
+    --ac-sv-muted: #4a5568;
+    --ac-sv-line: #d0d7e2;
+    --ac-sv-soft: #f4f7fb;
+    --ac-sv-white: #ffffff;
+    --ac-sv-font: 'Segoe UI', Tahoma, sans-serif;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    min-height: calc(100vh - 46px) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #f4f6fa !important;
+    color: var(--ac-sv-ink) !important;
+    font-family: var(--ac-sv-font) !important;
+    text-transform: uppercase !important;
+    box-sizing: border-box !important;
+}
+
+.ac-sv-app *,
+.ac-sv-app *::before,
+.ac-sv-app *::after {
+    box-sizing: border-box !important;
+}
+
+.ac-sv-app h1,
+.ac-sv-app h2,
+.ac-sv-app p,
+.ac-sv-app ul,
+.ac-sv-app li,
+.ac-sv-app header,
+.ac-sv-app section {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
+    font-family: inherit !important;
+    font-weight: inherit !important;
+    line-height: 1.3 !important;
+    box-shadow: none !important;
+    text-transform: inherit !important;
+}
+
+.ac-sv-app ul {
+    list-style: none !important;
+}
+
+.ac-sv-app button {
+    font-family: inherit !important;
+    text-transform: inherit !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    box-shadow: none !important;
+}
+
+.ac-sv-app .ac-sv-head {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    padding: 16px 20px !important;
+    background: linear-gradient(135deg, #0a1429 0%, #0d1e3a 100%) !important;
+    color: #fff !important;
+    border-bottom: 2px solid rgba(253, 206, 51, 0.25) !important;
+    flex-shrink: 0 !important;
+}
+
+.ac-sv-app .ac-sv-tour-logo {
+    width: 42px !important;
+    height: 42px !important;
+    flex-shrink: 0 !important;
+    overflow: hidden !important;
+    background: #fdce33 !important;
+    color: #0a1429 !important;
+}
+
+.ac-sv-app .ac-sv-tour-logo img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+    border: 0 !important;
+}
+
+.ac-sv-app .ac-sv-tour-logo .ac-sv-ph {
+    color: #0a1429 !important;
+}
+
+.ac-sv-app .ac-sv-head-copy {
+    flex: 1 1 180px !important;
+    min-width: 0 !important;
+}
+
+.ac-sv-app .ac-sv-crumb {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    letter-spacing: .06em !important;
+    color: #f0d089 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.ac-sv-app .ac-sv-crumb-settings {
+    color: #d7e6ff !important;
+    text-decoration: underline !important;
+    cursor: pointer !important;
+    background: none !important;
+    border: 0 !important;
+    padding: 0 !important;
+}
+
+.ac-sv-app .ac-sv-crumb-settings:hover {
+    color: #fff !important;
+}
+
+.ac-sv-app .ac-sv-crumb-sep {
+    color: rgba(255, 255, 255, .45) !important;
+}
+
+.ac-sv-app .ac-sv-head-copy p,
+.ac-sv-app .ac-sv-head-meta {
+    margin-top: 4px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    letter-spacing: .06em !important;
+    color: rgba(255, 255, 255, .82) !important;
+}
+
+.ac-sv-app .ac-sv-body {
+    padding: 16px 16px 28px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+}
+
+.ac-sv-app .ac-sv-team {
+    background: var(--ac-sv-white) !important;
+    border: 1px solid var(--ac-sv-line) !important;
+    overflow: hidden !important;
+}
+
+.ac-sv-app .ac-sv-team-head {
+    display: grid !important;
+    grid-template-columns: 56px minmax(0, 1fr) !important;
+    gap: 10px 12px !important;
+    padding: 14px 16px 12px !important;
+    background: #dce2ea !important;
+    border-bottom: 1px solid #c3cad4 !important;
+}
+
+.ac-sv-app .ac-sv-logo,
+.ac-sv-app .ac-sv-photo {
+    width: 56px !important;
+    height: 56px !important;
+    background: var(--ac-sv-blue) !important;
+    color: #fff !important;
+    overflow: hidden !important;
+    position: relative !important;
+    flex-shrink: 0 !important;
+}
+
+.ac-sv-app .ac-sv-photo {
+    width: 56px !important;
+    height: 56px !important;
+    background: #2d3748 !important;
+}
+
+.ac-sv-app .ac-sv-logo img,
+.ac-sv-app .ac-sv-photo img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+    border: 0 !important;
+}
+
+.ac-sv-app .ac-sv-ph {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    letter-spacing: .06em !important;
+    color: #fff !important;
+}
+
+.ac-sv-app .ac-sv-team-id h2 {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    letter-spacing: .05em !important;
+    color: var(--ac-sv-ink) !important;
+}
+
+.ac-sv-app .ac-sv-team-id p,
+.ac-sv-app .ac-sv-sold,
+.ac-sv-app .ac-sv-meter-row {
+    margin-top: 3px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: .08em !important;
+    color: var(--ac-sv-muted) !important;
+}
+
+.ac-sv-app .ac-sv-meters {
+    grid-column: 1 / -1 !important;
+    display: grid !important;
+    gap: 8px !important;
+}
+
+.ac-sv-app .ac-sv-team-tools {
+    grid-column: 1 / -1 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+}
+
+.ac-sv-app .ac-sv-team-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    min-height: 32px !important;
+    padding: 6px 10px !important;
+    border: 1px solid #c3cad4 !important;
+    background: #fff !important;
+    color: #0d1e3a !important;
+    cursor: pointer !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: .05em !important;
+    text-transform: uppercase !important;
+}
+
+.ac-sv-app .ac-sv-team-btn:hover {
+    background: #eef3fb !important;
+    border-color: #2252b5 !important;
+}
+
+.ac-sv-app .ac-sv-print-poster {
+    background: #0d1e3a !important;
+    border-color: #0d1e3a !important;
+    color: #fdce33 !important;
+}
+
+.ac-sv-app .ac-sv-print-poster:hover {
+    background: #122d6b !important;
+    border-color: #122d6b !important;
+    color: #fff !important;
+}
+
+.ac-sv-app .ac-sv-meter-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+}
+
+.ac-sv-app .ac-sv-track {
+    height: 8px !important;
+    background: #d8dee8 !important;
+    overflow: hidden !important;
+}
+
+.ac-sv-app .ac-sv-track i {
+    display: block !important;
+    height: 100% !important;
+    background: var(--ac-sv-blue) !important;
+    font-style: normal !important;
+}
+
+.ac-sv-app .ac-sv-track-spend i {
+    background: var(--ac-sv-amber) !important;
+}
+
+.ac-sv-app .ac-sv-players {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    padding: 10px 12px 14px !important;
+}
+
+.ac-sv-app .ac-sv-player {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    padding: 12px 10px !important;
+    border: 1px solid #e2e8f0 !important;
+    background: var(--ac-sv-white) !important;
+    text-align: center !important;
+    cursor: grab !important;
+}
+
+.ac-sv-app .ac-sv-player.is-dragging {
+    opacity: .45 !important;
+    cursor: grabbing !important;
+}
+
+.ac-sv-app .ac-sv-player img,
+.ac-sv-app .ac-sv-logo img,
+.ac-sv-app .ac-sv-tour-logo img {
+    -webkit-user-drag: none !important;
+    user-select: none !important;
+    pointer-events: none !important;
+}
+
+.ac-sv-app .ac-sv-team.is-drop {
+    outline: 2px solid #2252b5 !important;
+    outline-offset: 2px !important;
+    background: #eef3fb !important;
+}
+
+.ac-sv-app .ac-sv-player.is-drop-target {
+    outline: 2px solid #059669 !important;
+    outline-offset: 1px !important;
+}
+
+.ac-sv-ghost {
+    position: fixed !important;
+    z-index: 3000 !important;
+    pointer-events: none !important;
+    margin: 0 !important;
+    width: 148px !important;
+    box-sizing: border-box !important;
+    opacity: .94 !important;
+    box-shadow: 0 10px 28px rgba(10, 20, 41, .28) !important;
+    transform: scale(.96) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 10px 8px !important;
+    background: #fff !important;
+    border: 1px solid #d0d7e2 !important;
+    list-style: none !important;
+    text-align: center !important;
+    font-family: 'Segoe UI', Tahoma, sans-serif !important;
+    text-transform: uppercase !important;
+}
+
+.ac-sv-ghost .ac-sv-acts {
+    display: none !important;
+}
+
+.ac-sv-ghost .ac-sv-photo {
+    width: 48px !important;
+    height: 48px !important;
+    overflow: hidden !important;
+    background: #2d3748 !important;
+    color: #fff !important;
+}
+
+.ac-sv-ghost .ac-sv-photo img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+}
+
+.ac-sv-ghost .ac-sv-name {
+    margin: 0 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    letter-spacing: .04em !important;
+    color: #1a202c !important;
+}
+
+.ac-sv-ghost .ac-sv-sold {
+    margin: 0 !important;
+    font-size: 10px !important;
+    color: #4a5568 !important;
+}
+
+@media (max-width: 719px) {
+    .ac-sv-app .ac-sv-player {
+        padding: 10px 6px !important;
+    }
+    .ac-sv-app .ac-sv-photo {
+        width: 48px !important;
+        height: 48px !important;
+    }
+    .ac-sv-app .ac-sv-name {
+        font-size: 12px !important;
+    }
+    .ac-sv-app .ac-sv-btn {
+        flex: 0 0 26px !important;
+        width: 26px !important;
+        min-width: 26px !important;
+        height: 26px !important;
+    }
+    .ac-sv-app .ac-sv-acts {
+        gap: 3px !important;
+    }
+    .ac-sv-app .ac-sv-head-meta {
+        width: 100% !important;
+    }
+}
+
+.ac-sv-app.is-dragging-player .ac-sv-team:not(.is-drop) {
+    transition: outline .12s ease !important;
+}
+
+.ac-sv-app .ac-sv-who {
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+.ac-sv-app .ac-sv-name {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    letter-spacing: .04em !important;
+    color: var(--ac-sv-ink) !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.ac-sv-app .ac-sv-acts {
+    display: flex !important;
+    justify-content: center !important;
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
+}
+
+.ac-sv-app .ac-sv-btn {
+    flex: 0 0 30px !important;
+    width: 30px !important;
+    min-width: 30px !important;
+    height: 28px !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 7px !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-transform: none !important;
+    line-height: 1 !important;
+}
+
+.ac-sv-app .ac-sv-btn i {
+    font-size: .82rem !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+}
+
+.ac-sv-app .ac-sv-btn-edit {
+    background: #ede9fe !important;
+    color: #7c3aed !important;
+}
+
+.ac-sv-app .ac-sv-btn-swap {
+    background: #ecfdf5 !important;
+    color: #059669 !important;
+}
+
+.ac-sv-app .ac-sv-btn-move {
+    background: #ffedd5 !important;
+    color: #ea580c !important;
+}
+
+.ac-sv-app .ac-sv-btn-recall {
+    background: #dbeafe !important;
+    color: #2563eb !important;
+}
+
+.ac-sv-app .ac-sv-empty,
+.ac-sv-app .ac-sv-empty-row {
+    padding: 22px 16px !important;
+    text-align: center !important;
+    letter-spacing: .08em !important;
+    color: var(--ac-sv-muted) !important;
+    list-style: none !important;
+    background: transparent !important;
+    grid-column: 1 / -1 !important;
+}
+
+@media (min-width: 720px) {
+    .ac-sv-app .ac-sv-team-head {
+        grid-template-columns: 56px minmax(160px, .8fr) minmax(0, 1.4fr) !important;
+        align-items: center !important;
+    }
+    .ac-sv-app .ac-sv-meters {
+        grid-column: auto !important;
+    }
+    .ac-sv-app .ac-sv-players {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (min-width: 1100px) {
+    .ac-sv-app .ac-sv-players {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+}
+
+.ac-sv-app .ac-sv-choice[hidden] {
+    display: none !important;
+}
+
+.ac-sv-app .ac-sv-choice {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 2000 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 16px !important;
+    background: rgba(10, 20, 41, .48) !important;
+}
+
+.ac-sv-app .ac-sv-choice-card {
+    width: min(460px, 100%) !important;
+    padding: 22px 20px 18px !important;
+    background: #fff !important;
+    border: 1px solid #d0d7e2 !important;
+    color: #1a202c !important;
+    text-transform: none !important;
+}
+
+.ac-sv-app .ac-sv-choice-faces {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    margin-top: 14px !important;
+}
+
+.ac-sv-app .ac-sv-choice-face {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+    flex: 1 1 120px !important;
+    max-width: 160px !important;
+}
+
+.ac-sv-app .ac-sv-choice-pic {
+    width: 72px !important;
+    height: 72px !important;
+    overflow: hidden !important;
+    background: #2d3748 !important;
+    color: #fff !important;
+    flex-shrink: 0 !important;
+}
+
+.ac-sv-app .ac-sv-choice-pic img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+    border: 0 !important;
+    -webkit-user-drag: none !important;
+}
+
+.ac-sv-app .ac-sv-choice-pic .ac-sv-ph {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    color: #fff !important;
+}
+
+.ac-sv-app .ac-sv-choice-label {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    letter-spacing: .04em !important;
+    text-transform: uppercase !important;
+    text-align: center !important;
+    color: #0d1e3a !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: 100% !important;
+}
+
+.ac-sv-app .ac-sv-choice-arrow {
+    flex: 0 0 auto !important;
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: #1058b0 !important;
+    line-height: 1 !important;
+}
+
+.ac-sv-app .ac-sv-choice-kicker {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: .08em !important;
+    text-transform: uppercase !important;
+    color: #5a6b85 !important;
+}
+
+.ac-sv-app .ac-sv-choice-msg {
+    margin-top: 8px !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    letter-spacing: .03em !important;
+    text-transform: uppercase !important;
+    color: #0d1e3a !important;
+}
+
+.ac-sv-app .ac-sv-choice-acts {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    margin-top: 16px !important;
+}
+
+.ac-sv-app .ac-sv-choice-swap,
+.ac-sv-app .ac-sv-choice-move,
+.ac-sv-app .ac-sv-choice-cancel {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    min-height: 36px !important;
+    padding: 8px 12px !important;
+    border: 0 !important;
+    cursor: pointer !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    letter-spacing: .05em !important;
+    text-transform: uppercase !important;
+}
+
+.ac-sv-app .ac-sv-choice-swap {
+    background: #ecfdf5 !important;
+    color: #059669 !important;
+}
+
+.ac-sv-app .ac-sv-choice-move {
+    background: #ffedd5 !important;
+    color: #ea580c !important;
+}
+
+.ac-sv-app .ac-sv-choice-cancel {
+    background: #eef2f7 !important;
+    color: #4a5568 !important;
+    margin-left: auto !important;
+}
+
+.ac-sv-app .ac-sv-choice-card.is-move-only .ac-sv-choice-swap,
+.ac-sv-app .ac-sv-choice-card.is-swap-only .ac-sv-choice-move {
+    display: none !important;
+}
+
+.ac-sv-app .ac-sv-poster[hidden] {
+    display: none !important;
+}
+
+.ac-sv-app .ac-sv-poster {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 2100 !important;
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    padding: 0 !important;
+    background: rgba(10, 20, 41, .72) !important;
+}
+
+.ac-sv-app .ac-sv-poster-card {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: #0a1429 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+}
+
+.ac-sv-app .ac-sv-poster-bar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    padding: 6px 10px !important;
+    background: #0d1e3a !important;
+    color: #fdce33 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    letter-spacing: .06em !important;
+    text-transform: uppercase !important;
+    flex-shrink: 0 !important;
+}
+
+.ac-sv-app .ac-sv-poster-close {
+    border: 1px solid rgba(253, 206, 51, .45) !important;
+    background: transparent !important;
+    color: #fff !important;
+    padding: 5px 10px !important;
+    cursor: pointer !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: .05em !important;
+    text-transform: uppercase !important;
+}
+
+.ac-sv-app .ac-sv-poster-frame {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    border: 0 !important;
+    background: #071428 !important;
+}

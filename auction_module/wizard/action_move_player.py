@@ -100,6 +100,24 @@ class AuctionMovePlayer(models.TransientModel):
             'summary_html': self._render_empty_summary(),
             'has_target_team': False,
         })
+        return self._apply_squad_drop_defaults(
+            defaults, auction, tournament, fmt, unit_name)
+
+    def _apply_squad_drop_defaults(self, defaults, auction, tournament, fmt, unit_name):
+        """Prefill destination team when opened from Squad Modification drop."""
+        target_team_id = int(self.env.context.get('squad_target_team_id') or 0)
+        target_team = self.env['auction.team'].browse(target_team_id)
+        source_team_id = auction.team_id.id if auction.team_id else 0
+        if not target_team.exists() or target_team.id == source_team_id:
+            return defaults
+        defaults.update({
+            'target_team_id': target_team.id,
+            'selected_team_id': target_team.id,
+            'has_target_team': True,
+            'board_json': self._build_board_json(
+                auction, tournament, target_team, fmt, unit_name),
+        })
+        defaults['summary_html'] = self.new(defaults)._render_summary()
         return defaults
 
     # ── Board / HTML helpers ────────────────────────────────────────────────

@@ -165,7 +165,7 @@ class AuctionTournament(models.Model):
 
             # Theme restriction: plan lists a subset of themes
             all_keys = {
-                'lemon', 'vanilla', 'butterscotch', 'strawberry', 'cherry', 'pistah',
+                'standard', 'lemon', 'vanilla', 'butterscotch', 'strawberry', 'cherry', 'pistah',
                 'blueberry', 'blackberry',
             }
             allowed = plan.get_allowed_templates() if plan else []
@@ -229,7 +229,7 @@ class AuctionTournament(models.Model):
             if 'saas_account_id' in fields_list or not fields_list:
                 defaults.setdefault('saas_account_id', account.id)
             # Default to the first theme included in the active plan (not core
-            # default 'lemon', which may be locked and triggers a warning).
+            # default 'standard', which may be locked and triggers a warning).
             if 'player_display_template' in fields_list or not fields_list:
                 allowed = plan.get_allowed_templates()
                 if allowed:
@@ -583,7 +583,7 @@ class AuctionTournament(models.Model):
                             'are derived from it. Use the “Update Tournament Name” '
                             'button next to the name.'
                         ))
-            if 'active' in vals and not vals.get('active'):
+            if 'active' in vals:
                 self._saas_assert_can_archive_or_delete()
             for tournament in self:
                 if tournament.saas_account_id and tournament.saas_account_id != account:
@@ -636,6 +636,14 @@ class AuctionTournament(models.Model):
     def action_deactivate_tournament(self):
         self._saas_assert_can_archive_or_delete()
         return super().action_deactivate_tournament()
+
+    def _assert_can_reactivate_tournament(self):
+        self._saas_assert_can_archive_or_delete()
+        return super()._assert_can_reactivate_tournament()
+
+    def action_reactivate_tournament(self):
+        self._saas_assert_can_archive_or_delete()
+        return super().action_reactivate_tournament()
 
     def unlink(self):
         self._saas_assert_can_archive_or_delete()

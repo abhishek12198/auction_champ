@@ -19,6 +19,11 @@ html, body {
     font-family: 'Exo 2', 'Barlow Condensed', sans-serif;
 }
 
+html[data-theme="standard"]{
+  --panel:#ffffff;--tx:#1A202C;--tx2:rgba(26,32,44,.7);
+  --gold:#1058B0;--gold2:#1058B0;--line:rgba(16,88,176,.28);
+  --danger:#c62828;--ok:#43a047;
+}
 html[data-theme="lemon"]{
   --panel:rgba(32,24,8,.88);--tx:#fff8e8;--tx2:rgba(255,248,232,.7);
   --gold:#C9A400;--gold2:#D9B820;--line:rgba(201,164,0,.45);
@@ -44,9 +49,14 @@ html[data-theme="cherry"]{
   --gold:#E8C547;--gold2:#FB7185;--line:rgba(225,29,72,.42);
   --danger:#E11D48;--ok:#2ecc71;
 }
-html[data-theme="blackberry"]{
+html[data-theme="blueberry"]{
   --panel:rgba(8,14,28,.9);--tx:#fff;--tx2:rgba(255,255,255,.64);
   --gold:#3B82F6;--gold2:#93C5FD;--line:rgba(59,130,246,.45);
+  --danger:#e53935;--ok:#66bb6a;
+}
+html[data-theme="blackberry"]{
+  --panel:rgba(16,17,19,.92);--tx:#fff;--tx2:rgba(191,195,204,.72);
+  --gold:#7629D9;--gold2:#A77BFF;--line:rgba(167,123,255,.45);
   --danger:#e53935;--ok:#66bb6a;
 }
 html[data-theme="pistah"]{

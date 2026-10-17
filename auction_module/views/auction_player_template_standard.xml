@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="player_template_standard" name="Player Auction – Standard">
+        <t t-set="hud_theme" t-value="'standard'"/>
+        <t t-set="hud_edition" t-value="'Standard Edition'"/>
+        <t t-set="hud_light" t-value="True"/>
+        <t t-call="auction_module.player_template_hud"/>
+    </template>
+</odoo>

@@ -60,6 +60,12 @@
     opacity: 0.95;
 }
 
+.o_form_view .o_at_theme_standard {
+    background: #1058B0;
+    color: #FFFFFF;
+    border-color: #F5A623;
+}
+
 .o_form_view .o_at_theme_vanilla {
     background: linear-gradient(135deg, #1a3560 0%, #5b7eb8 100%);
     color: #c8d4e8;
@@ -89,12 +95,16 @@
     color: #d4e157;
     border-color: rgba(212, 225, 87, 0.5);
 }
-.o_form_view .o_at_theme_blueberry,
-.o_form_view .o_at_theme_blackberry {
+.o_form_view .o_at_theme_blueberry {
     background: linear-gradient(135deg, #050a14 0%, #1e3a8a 100%);
     color: #ffffff;
     border-color: rgba(59,130,246,.55);
     box-shadow: 0 0 12px rgba(59,130,246,.35);
+}
+.o_form_view .o_at_theme_blackberry {
+    background: linear-gradient(135deg, #101113 0%, #1a1b20 38%, #3b1d6e 72%, #7629D9 100%);
+    color: #ffffff;
+    border-color: rgba(167,123,255,.55);
 }
 
 
@@ -252,6 +262,15 @@
     filter: grayscale(0.15);
     transform: none !important;
     box-shadow: none !important;
+}
+
+.o_form_view .o_at_squad_view {
+    background:
+        linear-gradient(135deg, #0b3d7a 0%, #1058b0 48%, #3b82f6 100%) !important;
+}
+.o_form_view .o_at_squad_view:hover {
+    background:
+        linear-gradient(135deg, #082d5c 0%, #0d4a96 48%, #2563eb 100%) !important;
 }
 
 .o_form_view .o_at_player_categorization {

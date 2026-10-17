@@ -20,7 +20,7 @@
         <field name="allow_roster_print_auction_screen" eval="False"/>
         <field name="allow_parallel_sessions" eval="False"/>
         <field name="allow_mystery_players" eval="False"/>
-        <field name="allowed_player_templates">lemon</field>
+        <field name="allowed_player_templates">standard,lemon</field>
         <field name="contact_support" eval="False"/>
     </record>
 
@@ -44,7 +44,7 @@
         <field name="allow_roster_print_auction_screen" eval="True"/>
         <field name="allow_parallel_sessions" eval="False"/>
         <field name="allow_mystery_players" eval="False"/>
-        <field name="allowed_player_templates">lemon,vanilla</field>
+        <field name="allowed_player_templates">standard,lemon,vanilla</field>
         <field name="contact_support" eval="False"/>
     </record>
 
@@ -68,7 +68,7 @@
         <field name="allow_roster_print_auction_screen" eval="True"/>
         <field name="allow_parallel_sessions" eval="True"/>
         <field name="allow_mystery_players" eval="True"/>
-        <field name="allowed_player_templates">lemon,vanilla,strawberry</field>
+        <field name="allowed_player_templates">standard,lemon,vanilla,strawberry</field>
         <field name="contact_support" eval="False"/>
     </record>
 
@@ -92,7 +92,7 @@
         <field name="allow_roster_print_auction_screen" eval="True"/>
         <field name="allow_parallel_sessions" eval="True"/>
         <field name="allow_mystery_players" eval="True"/>
-        <field name="allowed_player_templates">strawberry,cherry,pistah</field>
+        <field name="allowed_player_templates">standard,strawberry,cherry,pistah,blackberry</field>
         <field name="contact_support" eval="True"/>
     </record>
 </odoo>

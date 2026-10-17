@@ -148,6 +148,11 @@
 }
 
 /* Theme swatches (player_display_template values) */
+.o_form_view .o_sel_card_standard .o_sel_card_swatch {
+    background: #1058B0;
+    color: #FFFFFF;
+}
+
 .o_form_view .o_sel_card_lemon .o_sel_card_swatch {
     background: linear-gradient(135deg, #e8ddb8 0%, #c9a400 55%, #8f7400 100%);
     color: #1f1a0a;
@@ -200,9 +205,9 @@
     width: 100%;
 }
 
-/* Keep all card themes on one row (8 compact tiles). */
+/* Keep all card themes on one row (9 compact tiles). */
 .o_form_view .o_at_theme_picker_wrap .o_field_selection_card {
-    grid-template-columns: repeat(8, minmax(0, 1fr));
+    grid-template-columns: repeat(9, minmax(0, 1fr));
     gap: 8px;
     max-width: none;
 }
@@ -418,14 +423,18 @@
     }
 }
 
-.o_form_view .o_sel_card_blueberry .o_sel_card_swatch,
-.o_form_view .o_sel_card_blackberry .o_sel_card_swatch {
+.o_form_view .o_sel_card_blueberry .o_sel_card_swatch {
     background: linear-gradient(135deg, #050a14 0%, #1e3a8a 45%, #3b82f6 100%);
     color: #ffffff;
     box-shadow: 0 0 18px rgba(59,130,246,.45);
 }
 
-/* Sport picker — compact Cricket / Football / Kabaddi tiles */
+.o_form_view .o_sel_card_blackberry .o_sel_card_swatch {
+    background: linear-gradient(135deg, #101113 0%, #1a1b20 38%, #3b1d6e 72%, #7629D9 100%);
+    color: #ffffff;
+}
+
+/* Sport picker — Cricket / Football / Badminton / Kabaddi on one row */
 .o_form_view .o_at_sport_section {
     margin: 0 0 0.55rem;
 }
@@ -440,8 +449,8 @@
     width: 100%;
 }
 .o_form_view .o_at_sport_section .o_field_selection_card_sport {
-    max-width: 360px;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: 560px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
 }
 .o_form_view .o_at_sport_picker_wrap .o_sel_card {
@@ -666,5 +675,6 @@
 @media (max-width: 768px) {
     .o_form_view .o_at_sport_section .o_field_selection_card_sport {
         max-width: 100%;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 }

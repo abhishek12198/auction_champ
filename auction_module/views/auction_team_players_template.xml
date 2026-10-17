@@ -60,6 +60,22 @@
           --hf:'Orbitron',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Teko',sans-serif;
           --card-bg:rgba(26,5,8,.85); --card-bdr:rgba(220,20,60,.15);
         }
+        [data-theme="standard"] {
+          --bg:#FFFFFF; --bg2:#FFFFFF; --bg3:#FFFFFF;
+          --acc:#1058B0; --acc2:#1058B0; --glow:rgba(16,88,176,.12);
+          --bdr:#E2E8F0; --bdr2:#E2E8F0;
+          --tx:#1A202C; --tx-d:rgba(26,32,44,.62); --tx-m:rgba(26,32,44,.40);
+          --hf:'Barlow',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Barlow',sans-serif;
+          --card-bg:#FFFFFF; --card-bdr:#E2E8F0;
+        }
+        [data-theme="blackberry"] {
+          --bg:#101113; --bg2:#222328; --bg3:#303137;
+          --acc:#7629D9; --acc2:#A77BFF; --glow:rgba(118,41,217,.28);
+          --bdr:rgba(167,123,255,.22); --bdr2:rgba(255,255,255,.08);
+          --tx:#FFFFFF; --tx-d:rgba(191,195,204,.85); --tx-m:rgba(191,195,204,.45);
+          --hf:'Oswald',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Oswald',sans-serif;
+          --card-bg:rgba(48,49,55,.92); --card-bdr:rgba(73,75,82,.7);
+        }
 
         /* Projector skin — match projector navy/gold when opened from projector */
         html[data-skin="projector"][data-mode="dark"] {
@@ -121,6 +137,67 @@
           border-bottom: 1px solid var(--bdr2);
           backdrop-filter: blur(16px);
           box-shadow: 0 4px 24px rgba(0,0,0,.35);
+        }
+        [data-theme="standard"] body {
+          background: #FFFFFF;
+        }
+        [data-theme="standard"] body::before {
+          background: none;
+        }
+        html[data-theme="standard"] .tp-header,
+        html[data-theme="standard"][data-skin="projector"] .tp-header,
+        [data-theme="standard"] .tp-header {
+          background: #1058B0;
+          border-bottom: none;
+          box-shadow: none;
+        }
+        [data-theme="standard"] .tp-header img.logo {
+          filter: brightness(0) invert(1);
+        }
+        [data-theme="standard"] .tp-back-btn,
+        [data-theme="standard"] .tp-snap-btn {
+          background: rgba(255,255,255,.14);
+          border: 1px solid #FFFFFF;
+          color: #FFFFFF;
+          box-shadow: none;
+        }
+        [data-theme="standard"] .tp-back-btn:hover,
+        [data-theme="standard"] .tp-snap-btn:hover {
+          background: #FFFFFF;
+          border-color: #FFFFFF;
+          color: #1058B0;
+          box-shadow: none;
+        }
+        html[data-theme="standard"][data-skin="projector"],
+        html[data-theme="standard"][data-skin="projector"][data-mode="light"],
+        html[data-theme="standard"][data-skin="projector"][data-mode="dark"] {
+          --bg:#FFFFFF; --bg2:#FFFFFF; --bg3:#FFFFFF;
+          --card-bg:#FFFFFF; --card-bdr:#E2E8F0;
+          --bdr:#E2E8F0; --bdr2:#E2E8F0;
+          --acc:#1058B0; --acc2:#1058B0;
+          --glow:rgba(16,88,176,.12);
+          --tx:#1A202C; --tx-d:rgba(26,32,44,.62); --tx-m:rgba(26,32,44,.40);
+        }
+        [data-theme="standard"] .tp-team-hero,
+        [data-theme="standard"] .tp-card,
+        [data-theme="standard"] .tp-card-photo-wrap,
+        [data-theme="standard"] .tp-card-foot,
+        [data-theme="standard"] .tp-stat,
+        [data-theme="standard"] .tp-tag,
+        [data-theme="standard"] .tp-player-count,
+        [data-theme="standard"] .tp-pts-badge,
+        [data-theme="standard"] .tp-list-row,
+        [data-theme="standard"] .tp-list-thumb-ph {
+          background: #FFFFFF;
+        }
+        [data-theme="standard"] .tp-card {
+          box-shadow: 0 2px 10px rgba(16,88,176,.08);
+        }
+        [data-theme="standard"] .tp-card:hover {
+          box-shadow: 0 8px 20px rgba(16,88,176,.12);
+        }
+        [data-theme="standard"] .tp-list-row:hover {
+          background: #FFFFFF;
         }
         .tp-header img.logo { height: 40px; width: auto; object-fit: contain; }
 

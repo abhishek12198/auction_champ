@@ -1220,6 +1220,23 @@ body.hide-main-menu .oe_main_menu_navbar {
     margin-top: 2px;
 }
 
+.o_dt_wizard.o_ra_wizard .dt-hero {
+    background: linear-gradient(135deg, #14532d 0%, #15803d 100%);
+}
+.o_dt_wizard.o_ra_wizard .dt-list-title {
+    color: #14532d;
+}
+.o_dt_wizard.o_ra_wizard .dt-warn {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+.o_dt_wizard.o_ra_wizard .dt-warn-title {
+    color: #166534;
+}
+.o_dt_wizard.o_ra_wizard .dt-warn-text {
+    color: #14532d;
+}
+
 .o_dialog .modal-dialog:has(.o_rn_wizard),
 .modal-dialog:has(.o_rn_wizard) {
     max-width: 920px;

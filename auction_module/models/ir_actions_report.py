@@ -52,7 +52,9 @@ PLAYER_CARD_REPORT_NAMES = frozenset({
     'auction_module.report_player_card_list_cherry',
     'auction_module.report_player_card_list_pistah',
     'auction_module.report_player_card_list_lemon',
+    'auction_module.report_player_card_list_standard',
     'auction_module.report_player_card_list_blackberry',
+    'auction_module.report_player_card_list_blackberry_matte',
     'auction_module.report_player_card_football_list',
 })
 
@@ -139,7 +141,9 @@ class IrActionsReport(models.Model):
             'auction_module.report_player_card_list_cherry',
             'auction_module.report_player_card_list_pistah',
             'auction_module.report_player_card_list_lemon',
+            'auction_module.report_player_card_list_standard',
             'auction_module.report_player_card_list_blackberry',
+            'auction_module.report_player_card_list_blackberry_matte',
         )
         if self.report_name in generic_card_reports and res_ids:
             players = self.env['auction.team.player'].browse(res_ids).exists()

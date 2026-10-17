@@ -49,7 +49,7 @@ from psycopg2 import OperationalError
 from odoo import api, models, fields, _
 from odoo.exceptions import UserError
 from odoo.tools.image import image_data_uri, image_process
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import AccessError, UserError, ValidationError
 
 _YOUTUBE_ID_RE = re.compile(
     r'(?:youtu\.be/|youtube(?:-nocookie)?\.com/(?:watch\?(?:.*&)?v=|embed/|live/|shorts/))'
@@ -251,6 +251,7 @@ class AuctionTournament(models.Model):
         help='Hex color used to visually identify this tournament in kanban/list views.'
     )
     player_display_template = fields.Selection([
+        ('standard', 'Standard'),
         ('lemon', 'Lemon'),
         ('vanilla', 'Vanilla'),
         ('butterscotch', 'Butterscotch'),
@@ -258,8 +259,9 @@ class AuctionTournament(models.Model):
         ('cherry', 'Cherry'),
         ('pistah', 'Pistah'),
         ('blueberry', 'Blueberry'),
+        ('blackberry', 'Blackberry'),
     ], string='Theme'
-              '', default='lemon', required=True)
+              '', default='standard', required=True)
     sold_display_seconds = fields.Integer(
         string='Sold Screen Duration (seconds)',
         default=5,
@@ -1873,6 +1875,91 @@ class AuctionTournament(models.Model):
             'context': ctx,
         }
 
+    def action_open_squad_view(self):
+        """Open the per-team sold-player board with purse, squad, and line actions."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'auction_module.squad_view',
+            'name': _('Squad Modification'),
+            'target': 'current',
+            'context': {
+                'tournament_id': self.id,
+                'default_tournament_id': self.id,
+            },
+            'params': {'tournament_id': self.id},
+        }
+
+    def get_squad_view_payload(self):
+        """Team cards + sold auction.auction.player rows for Squad View."""
+        self.ensure_one()
+        auctions = self.env['auction.auction'].search(
+            [('tournament_id', '=', self.id)],
+            order='id asc',
+        )
+        teams = []
+        sold_total = 0
+        for auction in auctions:
+            team = auction.team_id
+            lines = auction.player_ids.sorted(
+                key=lambda line: (line.player_id.sl_no or 0, line.id)
+            )
+            max_squad = auction.max_players or 0
+            now = len(lines)
+            purse = auction.total_point or 0
+            remaining = auction.remaining_points or 0
+            spent = max(0, purse - remaining)
+            sold_total += now
+            players = []
+            for line in lines:
+                player = line.player_id
+                role = (line.role or player.role or '').strip()
+                players.append({
+                    'line_id': line.id,
+                    'name': (player.name or '').upper(),
+                    'role': role.upper(),
+                    'points_display': (line.points_display or '').upper(),
+                    'photo_url': (
+                        '/web/image/auction.team.player/%s/photo?unique=%s'
+                        % (player.id, player.write_date or line.id)
+                    ) if player else '',
+                    'initials': ''.join(
+                        part[:1] for part in (player.name or '').split()[:2]
+                    ).upper() or '?',
+                })
+            name = (team.name or auction.display_name or _('Team')).upper()
+            teams.append({
+                'auction_id': auction.id,
+                'team_id': team.id if team else 0,
+                'name': name,
+                'owner': (auction.manager or '').upper(),
+                'logo_url': (
+                    '/web/image/auction.team/%s/logo?unique=%s'
+                    % (team.id, team.write_date)
+                ) if team else '',
+                'initials': ''.join(
+                    part[:1] for part in name.split()[:2]
+                ) or 'TM',
+                'squad_now': now,
+                'squad_max': max_squad,
+                'squad_pct': int(round(100.0 * now / max_squad)) if max_squad else 0,
+                'spent_display': self.format_points(spent).upper(),
+                'purse_display': (auction.total_point_display or self.format_points(purse)).upper(),
+                'spend_pct': int(round(100.0 * spent / purse)) if purse else 0,
+                'players': players,
+            })
+        return {
+            'tournament_id': self.id,
+            'tournament_name': (self.name or '').upper(),
+            'logo_url': self._user_settings_img(self, 'logo'),
+            'initials': ''.join(
+                part[:1] for part in (self.name or '').split()[:2]
+            ).upper() or 'AC',
+            'team_count': len(teams),
+            'sold_count': sold_total,
+            'teams': teams,
+        }
+
     def action_view_icon_players(self):
         self.ensure_one()
         ctx = {'default_tournament_id': self.id}
@@ -2180,6 +2267,71 @@ class AuctionTournament(models.Model):
             'type': 'ir.actions.act_window',
             'res_model': 'auction.tournament',
             'view_mode': 'kanban,list,form',
+            'target': 'current',
+        }
+
+    def _assert_can_reactivate_tournament(self):
+        """Only AuctionChamp administrators may restore an archived tournament."""
+        if self.env.su:
+            return True
+        if not self.env.user.has_group('auction_module.group_auction_group_admin'):
+            raise AccessError(_(
+                'Only administrators can re-activate an archived tournament.'
+            ))
+        return True
+
+    def action_reactivate_tournament(self):
+        """Open the consent wizard before restoring this archived tournament."""
+        self.ensure_one()
+        self._assert_can_reactivate_tournament()
+        if self.active:
+            raise UserError(_('This tournament is already active.'))
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Re-Activate Tournament'),
+            'res_model': 'auction.reactivate.tournament.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_tournament_id': self.id,
+            },
+        }
+
+    def _unarchive_tournament_data(self):
+        """Restore an archived tournament and its related records.
+
+        Reverse of ``_archive_tournament_data``. Recycle-bin players that were
+        hard-deleted on deactivate cannot be restored.
+        """
+        self._assert_can_reactivate_tournament()
+        ctx = {'active_test': False}
+        for rec in self:
+            if rec.active:
+                continue
+            domain = [('tournament_id', '=', rec.id)]
+            rec.sudo().write({'active': True})
+            self.env['auction.advertiser'].sudo().with_context(**ctx).search(domain).write(
+                {'active': True}
+            )
+            self.env['auction.team'].sudo().with_context(**ctx).search(domain).write(
+                {'active': True}
+            )
+            self.env['auction.history'].sudo().with_context(**ctx).search(domain).write(
+                {'active': True}
+            )
+            self.env['auction.auction'].sudo().with_context(**ctx).search(domain).write(
+                {'active': True}
+            )
+            self.env['auction.team.player'].sudo().with_context(**ctx).search(domain).write(
+                {'active': True}
+            )
+        tournament = self[:1]
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'auction.tournament',
+            'res_id': tournament.id,
+            'view_mode': 'form',
+            'views': [(False, 'form')],
             'target': 'current',
         }
 
@@ -2954,6 +3106,7 @@ class AuctionTournament(models.Model):
         'action_view_registered_players',
         'action_view_auction_players',
         'action_view_sold_players',
+        'action_open_squad_view',
         'action_view_icon_players',
         'action_view_unsold_players',
         'action_view_jersey_players',
@@ -3024,7 +3177,7 @@ class AuctionTournament(models.Model):
         }
 
     def action_user_settings_team_auction(self):
-        """Open the team's auction.auction form (signed players + squad actions)."""
+        """Open the team edit popup (name, logo, owner name, owner photo)."""
         self.ensure_one()
         team_id = self.env.context.get('settings_team_id')
         try:
@@ -3033,29 +3186,26 @@ class AuctionTournament(models.Model):
             team_id = 0
         if not team_id:
             raise UserError(_('Select a team.'))
-        auction = self.env['auction.auction'].sudo().with_context(
+        team = self.env['auction.team'].sudo().with_context(
             auction_skip_tournament_security=True,
-        ).search([
-            ('tournament_id', '=', self.id),
-            ('team_id', '=', team_id),
-        ], limit=1)
-        if not auction:
-            raise UserError(_(
-                'Set Auction Rules first to open this team squad.'
-            ))
+        ).browse(team_id).exists()
+        if not team or team.tournament_id.id != self.id:
+            raise UserError(_('Select a team from this tournament.'))
+        view = self.env.ref(
+            'auction_module.view_auction_team_quick_form',
+            raise_if_not_found=False,
+        )
         return {
             'type': 'ir.actions.act_window',
-            'name': _('Signed Players — %s') % (auction.team_id.name or auction.display_name),
-            'res_model': 'auction.auction',
-            'res_id': auction.id,
+            'name': _('Edit Team'),
+            'res_model': 'auction.team',
+            'res_id': team.id,
             'view_mode': 'form',
-            'views': [
-                (self.env.ref('auction_module.view_auction_auction_form').id, 'form'),
-            ],
-            'target': 'current',
+            'views': [(view.id, 'form')] if view else [(False, 'form')],
+            'target': 'new',
             'context': {
                 'default_tournament_id': self.id,
-                'form_view_initial_mode': 'readonly',
+                'form_view_initial_mode': 'edit',
             },
         }
 
@@ -3100,7 +3250,11 @@ class AuctionTournament(models.Model):
 
     def action_user_settings_add_team(self):
         self.ensure_one()
-        return {
+        view = self.env.ref(
+            'auction_module.view_auction_team_quick_form',
+            raise_if_not_found=False,
+        )
+        action = {
             'type': 'ir.actions.act_window',
             'name': _('Add Team'),
             'res_model': 'auction.team',
@@ -3108,6 +3262,9 @@ class AuctionTournament(models.Model):
             'target': 'new',
             'context': {'default_tournament_id': self.id},
         }
+        if view:
+            action['views'] = [(view.id, 'form')]
+        return action
 
     def action_user_settings_tiers(self):
         self.ensure_one()

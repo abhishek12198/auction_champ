@@ -384,6 +384,11 @@
           flex-direction: column;
           gap: 8px;
         }
+        .bs2-card-purse {
+          min-width: 0;
+          container-type: inline-size;
+          container-name: purse;
+        }
         .bs2-overline {
           font-family: var(--hf);
           font-size: .7rem;
@@ -427,8 +432,15 @@
           max-width: 100%;
           overflow: visible;
         }
+        /* Grid: keep purse remaining on one line up to 10 characters */
         .bs2-card-purse-value {
-          font-size: 3.28rem;
+          display: block;
+          max-width: 100%;
+          font-size: clamp(1.35rem, 15cqw, 2.45rem);
+          line-height: 1.05;
+          white-space: nowrap;
+          letter-spacing: .01em;
+          overflow: visible;
         }
 
         /* Max Bid decision callout + urgency heat */
@@ -936,17 +948,30 @@
         #list-section .bs2-chip-label,
         #list-section .bs2-maxbid-lbl,
         #list-section .bs2-maxbid-hint { font-size: .55rem; }
-        #list-section .bs2-access-actions { gap: 6px; }
+        #list-section .bs2-access-actions {
+          gap: 6px;
+          flex-wrap: nowrap;
+          justify-content: flex-end;
+        }
+        #list-section .bs2-eye-btn,
+        #list-section .bs2-tiers-btn {
+          width: 34px;
+          min-width: 34px;
+          height: 34px;
+          padding: 0;
+        }
+        #list-section .bs2-tiers-btn span { display: none; }
         #list-section .bs2-engage { height: 36px; padding: 0 14px; font-size: .72rem; }
         #list-section .bs2-table th,
         #list-section .bs2-table td { overflow: hidden; }
         #list-section .bs2-team-cell { gap: 10px; }
         #list-section .bs2-table th:last-child,
         #list-section .bs2-table td:last-child {
-          width: 3.5rem;
-          max-width: 3.5rem;
-          padding-left: 4px;
-          padding-right: 8px;
+          width: 6.75rem;
+          max-width: 6.75rem;
+          padding-left: 8px;
+          padding-right: 20px;
+          overflow: visible;
         }
         #list-section .bs2-table thead th:last-child {
           font-size: 0;

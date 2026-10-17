@@ -72,6 +72,7 @@ class AuctionChampHomepage(Website):
             'pro_plus': 'Champion',
         }
         theme_labels = {
+            'standard': 'Standard',
             'lemon': 'Lemon',
             'vanilla': 'Vanilla',
             'butterscotch': 'Butterscotch',
@@ -79,7 +80,7 @@ class AuctionChampHomepage(Website):
             'cherry': 'Cherry',
             'pistah': 'Pistah',
             'blueberry': 'Blueberry',
-            'blackberry': 'Blueberry',
+            'blackberry': 'Blackberry',
         }
         plans = request.env['ac.saas.plan'].sudo().search(
             [('active', '=', True)],

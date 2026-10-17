@@ -170,6 +170,9 @@ class AuctionTeamPlayer(models.Model):
                 'cherry': 'auction_module.action_report_player_card_cherry',
                 'pistah': 'auction_module.action_report_player_card_pistah',
                 'lemon': 'auction_module.action_report_player_card_lemon',
+                'standard': 'auction_module.action_report_player_card_standard',
+                'blueberry': 'auction_module.action_report_player_card_blackberry',
+                'blackberry': 'auction_module.action_report_player_card_blackberry_matte',
             }
             report_ref = report_map.get(theme, 'auction_module.action_report_player_card')
 

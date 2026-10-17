@@ -20,7 +20,7 @@
           <t t-set="og_record" t-value="tournament"/>
       </t>
       <script src="/auction_module/static/src/js/auction_sse_client.js"></script>
-      <link rel="stylesheet" href="/auction_module/static/src/css/bid_summary_tracker.css?v=1.5.574"/>
+      <link rel="stylesheet" href="/auction_module/static/src/css/bid_summary_tracker.css?v=1.5.880"/>
       <link href="/auction_module/static/src/assets/css/bootstrap.min.css" rel="stylesheet"/>
       <link rel="preconnect" href="https://fonts.googleapis.com"/>
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
@@ -72,6 +72,14 @@
           --hf:'Orbitron',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Teko',sans-serif;
           --card-bg:rgba(22,8,12,.85); --card-bdr:rgba(225,29,72,.18);
         }
+        [data-theme="standard"] {
+          --bg:#FFFFFF; --bg2:#FFFFFF; --bg3:#FFFFFF;
+          --acc:#1058B0; --acc2:#1058B0; --glow:rgba(16,88,176,.12);
+          --bdr:#E2E8F0; --bdr2:#E2E8F0;
+          --tx:#1A202C; --tx-d:rgba(26,32,44,.62); --tx-m:rgba(26,32,44,.40);
+          --hf:'Barlow',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Barlow',sans-serif;
+          --card-bg:#FFFFFF; --card-bdr:#E2E8F0;
+        }
         [data-theme="lemon"] {
           /* Warm parchment — matches display_auction lemon */
           --bg:#E8DDB8; --bg2:#F4ECD0; --bg3:#DDD0A0;
@@ -82,7 +90,7 @@
           --card-bg:rgba(244,236,208,.92); --card-bdr:rgba(120,95,0,.28);
         }
 
-        [data-theme="blackberry"] {
+        [data-theme="blueberry"] {
           --bg: #050a14;
           --panel: #0a1220;
           --panel2: #0d1830;
@@ -96,6 +104,15 @@
           --danger: #e53935;
           --hf: 'Orbitron', sans-serif;
           --bf: 'Exo 2', sans-serif;
+        }
+
+        [data-theme="blackberry"] {
+          --bg:#101113; --bg2:#222328; --bg3:#303137;
+          --acc:#7629D9; --acc2:#A77BFF; --glow:rgba(118,41,217,.28);
+          --bdr:rgba(167,123,255,.22); --bdr2:rgba(255,255,255,.08);
+          --tx:#FFFFFF; --tx-d:rgba(191,195,204,.85); --tx-m:rgba(191,195,204,.45);
+          --hf:'Oswald',sans-serif; --bf:'Barlow Condensed',sans-serif; --nf:'Oswald',sans-serif;
+          --card-bg:rgba(48,49,55,.92); --card-bdr:rgba(73,75,82,.7);
         }
 
 
@@ -157,6 +174,41 @@
           border-bottom: 2px solid var(--bdr);
           box-shadow: 0 8px 22px rgba(0,0,0,.08);
         }
+        [data-theme="standard"] body {
+          background: #FFFFFF;
+        }
+        [data-theme="standard"] body::before {
+          background: none;
+        }
+        [data-theme="standard"] .bs2-progress,
+        [data-theme="standard"] .bs2-needed-chip,
+        [data-theme="standard"] .bs2-mob-stat,
+        [data-theme="standard"] .bs2-sq-sheet {
+          background: #FFFFFF;
+        }
+        [data-theme="standard"] .bs2-progress {
+          border-color: #E2E8F0;
+          box-shadow: none;
+        }
+        [data-theme="standard"] .bs2-hdr {
+          background: #1058B0;
+          border-bottom: none;
+          box-shadow: none;
+          color: #FFFFFF;
+        }
+        [data-theme="standard"] .bs2-t-name,
+        [data-theme="standard"] .bs2-title,
+        [data-theme="standard"] .bs2-live {
+          color: #FFFFFF;
+        }
+        [data-theme="standard"] .bs2-t-desc,
+        [data-theme="standard"] .bs2-edition {
+          color: rgba(255,255,255,.78);
+        }
+        [data-theme="standard"] .bs2-live-dot {
+          background: #FFFFFF;
+          box-shadow: none;
+        }
         [data-theme="lemon"] .bs2-back-btn,
         [data-theme="lemon"] .bs2-fs-btn,
         [data-theme="lemon"] .bs2-view-toggle,
@@ -174,6 +226,46 @@
         [data-theme="strawberry"] .bs2-fs-btn:hover {
           border-color: var(--bdr);
           box-shadow: 0 8px 18px rgba(0,0,0,.1), 0 0 0 1px var(--bdr);
+        }
+        [data-theme="standard"] .bs2-view-toggle {
+          background: rgba(255,255,255,.14);
+          border-color: #FFFFFF;
+          box-shadow: none;
+        }
+        [data-theme="standard"] .bs2-back-btn,
+        [data-theme="standard"] .bs2-fs-btn {
+          background: rgba(255,255,255,.14);
+          border-color: #FFFFFF;
+          color: #FFFFFF;
+          box-shadow: none;
+        }
+        [data-theme="standard"] .bs2-toggle-btn {
+          background: transparent;
+          border-color: transparent;
+          color: rgba(255,255,255,.86);
+          box-shadow: none;
+        }
+        [data-theme="standard"] .bs2-back-btn:hover,
+        [data-theme="standard"] .bs2-fs-btn:hover,
+        [data-theme="standard"] .bs2-toggle-btn:hover {
+          background: #FFFFFF;
+          border-color: #FFFFFF;
+          color: #1058B0;
+          box-shadow: none;
+        }
+        [data-theme="standard"] .bs2-toggle-btn.active {
+          background: #FFFFFF;
+          color: #1058B0;
+          border-color: #FFFFFF;
+          box-shadow: none;
+        }
+        [data-theme="standard"] .bs2-v-divider {
+          background: rgba(255,255,255,.35);
+        }
+        [data-theme="standard"] .bs2-engage {
+          background: #F5A623;
+          color: #1A202C;
+          border-color: #F5A623;
         }
         .bs2-hdr-side {
           display: flex;
@@ -457,6 +549,11 @@
           flex-direction: column;
           gap: 8px;
         }
+        .bs2-card-purse {
+          min-width: 0;
+          container-type: inline-size;
+          container-name: purse;
+        }
         .bs2-overline {
           font-family: var(--hf);
           font-size: .7rem;
@@ -500,8 +597,15 @@
           max-width: 100%;
           overflow: visible;
         }
+        /* Grid: keep purse remaining on one line up to 10 characters */
         .bs2-card-purse-value {
-          font-size: 3.28rem;
+          display: block;
+          max-width: 100%;
+          font-size: clamp(1.35rem, 15cqw, 2.45rem);
+          line-height: 1.05;
+          white-space: nowrap;
+          letter-spacing: .01em;
+          overflow: visible;
         }
         /* Max Bid decision callout + urgency heat */
         .bs2-maxbid {
@@ -531,6 +635,10 @@
         [data-theme="lemon"] .bs2-maxbid,
         [data-theme="strawberry"] .bs2-maxbid {
           background: rgba(0,0,0,.04);
+          box-shadow: none;
+        }
+        [data-theme="standard"] .bs2-maxbid {
+          background: #FFFFFF;
           box-shadow: none;
         }
         .bs2-maxbid-lbl {
@@ -598,6 +706,10 @@
           background: rgba(0,0,0,.05);
           box-shadow: none;
         }
+        [data-theme="standard"] .bs2-stat-col--maxbid {
+          background: #FFFFFF;
+          box-shadow: none;
+        }
         .bs2-stat-col--maxbid .bs2-stat-label {
           color: var(--acc2);
           font-weight: 700;
@@ -621,6 +733,9 @@
         [data-theme="lemon"] .bs2-mob-stat--maxbid,
         [data-theme="strawberry"] .bs2-mob-stat--maxbid {
           background: rgba(0,0,0,.05);
+        }
+        [data-theme="standard"] .bs2-mob-stat--maxbid {
+          background: #FFFFFF;
         }
         .bs2-mob-stat--maxbid .bs2-mob-stat-lbl {
           color: var(--acc2);
@@ -681,6 +796,10 @@
           background: rgba(0,0,0,.05);
           box-shadow: 0 4px 12px rgba(0,0,0,.08);
         }
+        [data-theme="standard"] .bs2-eye-btn {
+          background: #FFFFFF;
+          box-shadow: 0 4px 12px rgba(0,0,0,.08);
+        }
         .bs2-access-cell { text-align: center; }
         .bs2-access-actions {
           display: inline-flex;
@@ -728,6 +847,10 @@
         [data-theme="lemon"] .bs2-tiers-btn,
         [data-theme="strawberry"] .bs2-tiers-btn {
           background: rgba(0,0,0,.05);
+          box-shadow: 0 4px 12px rgba(0,0,0,.08);
+        }
+        [data-theme="standard"] .bs2-tiers-btn {
+          background: #FFFFFF;
           box-shadow: 0 4px 12px rgba(0,0,0,.08);
         }
         #bs2-squad-overlay,
@@ -1017,17 +1140,30 @@
         #list-section .bs2-chip-label,
         #list-section .bs2-maxbid-lbl,
         #list-section .bs2-maxbid-hint { font-size: .55rem; }
-        #list-section .bs2-access-actions { gap: 6px; }
+        #list-section .bs2-access-actions {
+          gap: 6px;
+          flex-wrap: nowrap;
+          justify-content: flex-end;
+        }
+        #list-section .bs2-eye-btn,
+        #list-section .bs2-tiers-btn {
+          width: 34px;
+          min-width: 34px;
+          height: 34px;
+          padding: 0;
+        }
+        #list-section .bs2-tiers-btn span { display: none; }
         #list-section .bs2-engage { height: 36px; padding: 0 14px; font-size: .72rem; }
         #list-section .bs2-table th,
         #list-section .bs2-table td { overflow: hidden; }
         #list-section .bs2-team-cell { gap: 10px; }
         #list-section .bs2-table th:last-child,
         #list-section .bs2-table td:last-child {
-          width: 3.5rem;
-          max-width: 3.5rem;
-          padding-left: 4px;
-          padding-right: 8px;
+          width: 6.75rem;
+          max-width: 6.75rem;
+          padding-left: 8px;
+          padding-right: 20px;
+          overflow: visible;
         }
         #list-section .bs2-table thead th:last-child {
           font-size: 0;
@@ -1137,6 +1273,10 @@
         [data-theme="strawberry"] .bs2-card-stats,
         [data-theme="lemon"] .bs2-card-stats {
           background: rgba(0,0,0,.04);
+          box-shadow: none;
+        }
+        [data-theme="standard"] .bs2-card-stats {
+          background: #FFFFFF;
           box-shadow: none;
         }
         .bs2-flash {
@@ -1466,7 +1606,8 @@
             backdrop-filter: blur(10px);
           }
           [data-theme="lemon"] .bs2-powered,
-          [data-theme="strawberry"] .bs2-powered {
+          [data-theme="strawberry"] .bs2-powered,
+          [data-theme="standard"] .bs2-powered {
             background: rgba(255,255,255,.55);
             border-color: var(--bdr);
           }
@@ -1488,8 +1629,12 @@
             filter: drop-shadow(0 0 8px var(--glow));
           }
           [data-theme="lemon"] .bs2-powered-logo,
-          [data-theme="strawberry"] .bs2-powered-logo {
+          [data-theme="strawberry"] .bs2-powered-logo,
+          [data-theme="standard"] .bs2-powered-logo {
             filter: brightness(0) sepia(1) saturate(5) hue-rotate(6deg) brightness(0.45);
+          }
+          [data-theme="standard"] .bs2-powered-logo {
+            filter: brightness(0) saturate(100%) invert(24%) sepia(78%) saturate(1876%) hue-rotate(196deg) brightness(0.95);
           }
           [data-theme="strawberry"] .bs2-powered-logo {
             filter: brightness(0) sepia(1) saturate(8) hue-rotate(300deg) brightness(0.55);

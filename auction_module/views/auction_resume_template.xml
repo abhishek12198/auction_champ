@@ -65,7 +65,7 @@
       --r-draft: #86efac; --r-unsold: #fca5a5; --r-sold: #4ade80;
     }
     </t>
-    <t t-elif="theme == 'blackberry'">
+    <t t-elif="theme == 'blueberry'">
     :root {
       --r-primary: #3B82F6; --r-primary-dk: #1E3A8A; --r-accent: #93C5FD;
       --r-bg: #050a14; --r-bg2: #0d1830; --r-border: rgba(59,130,246,0.28);
@@ -73,6 +73,24 @@
       --r-draft: #93c5fd; --r-unsold: #fca5a5; --r-sold: #60a5fa;
       --r-auction: #93C5FD; --r-danger: #ef4444; --r-ok: #60a5fa;
       --r-surface: rgba(59,130,246,0.08); --r-radius: 16px;
+    }
+    </t>
+    <t t-elif="theme == 'blackberry'">
+    :root {
+      --r-primary: #7629D9; --r-primary-dk: #4C1D95; --r-accent: #A77BFF;
+      --r-bg: #101113; --r-bg2: #222328; --r-border: rgba(167,123,255,0.28);
+      --r-text: #ffffff; --r-muted: rgba(191,195,204,0.72); --r-glow: rgba(118,41,217,0.32);
+      --r-draft: #A77BFF; --r-unsold: #fca5a5; --r-sold: #7629D9;
+      --r-auction: #A77BFF; --r-danger: #ef4444; --r-ok: #7629D9;
+      --r-surface: rgba(118,41,217,0.08); --r-radius: 16px;
+    }
+    </t>
+    <t t-elif="theme == 'standard'">
+    :root {
+      --r-primary: #F5A623; --r-primary-dk: #F5A623; --r-accent: #1058B0;
+      --r-bg: #FFFFFF; --r-bg2: #FFFFFF; --r-border: #E2E8F0;
+      --r-text: #1A202C; --r-muted: rgba(26,32,44,0.55); --r-glow: rgba(16,88,176,0.10);
+      --r-draft: #1058B0; --r-unsold: #e53935; --r-sold: #2e7d32;
     }
     </t>
     <t t-elif="theme == 'lemon'">
@@ -496,6 +514,7 @@
       box-shadow: 0 8px 22px var(--r-glow);
     }
     html[data-theme="butterscotch"] .ar-btn-primary { color: #1a1200; }
+    html[data-theme="standard"] .ar-btn-primary { color: #1A202C; }
     html[data-theme="lemon"] .ar-btn-primary { color: #1a1608; }
     .ar-btn-ghost {
       background: rgba(255,255,255,0.06);

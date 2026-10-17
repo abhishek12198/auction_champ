@@ -699,6 +699,7 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                         }),
                     this._btn('Upload teams', {action: 'action_upload_teams', icon: 'fa-upload', cls: 'tsu-btn-green'}),
                     this._btn('Add Team', {action: 'action_user_settings_add_team', icon: 'fa-users'}),
+                    this._btn('Squad Modification', {action: 'action_open_squad_view', icon: 'fa-users', cls: 'tsu-btn-blue'}),
                     (d.owner_users_enabled && (d.team_count || d.has_teams))
                         ? this._btn('Create Owner Users', {action: 'action_user_settings_create_owner_users', icon: 'fa-user-plus'})
                         : '',

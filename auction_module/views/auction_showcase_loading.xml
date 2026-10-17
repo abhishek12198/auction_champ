@@ -171,6 +171,35 @@
                         border-top-color: #F5C842;
                     }
 
+                    /* ── Standard (login ice + website blue/gold) ── */
+                    html[data-theme="standard"],
+                    html[data-theme="standard"] body {
+                        background: #FFFFFF;
+                        color: #1A202C;
+                        font-family: 'Barlow', 'Segoe UI', sans-serif;
+                    }
+                    html[data-theme="standard"] .ac-sc-load {
+                        background: #FFFFFF;
+                    }
+                    html[data-theme="standard"] .ac-sc-logo,
+                    html[data-theme="standard"] .ac-sc-logo-ph {
+                        background: #fff;
+                        border: 2px solid #1058B0;
+                        color: #1058B0;
+                    }
+                    html[data-theme="standard"] .ac-sc-kicker,
+                    html[data-theme="standard"] .ac-sc-theme-chip,
+                    html[data-theme="standard"] .ac-sc-spinner { color: #1058B0; }
+                    html[data-theme="standard"] .ac-sc-title {
+                        font-family: 'Barlow', sans-serif;
+                        color: #1A202C;
+                    }
+                    html[data-theme="standard"] .ac-sc-tour { color: #4A5568; opacity: 1; }
+                    html[data-theme="standard"] .ac-sc-spinner {
+                        border-color: #E2E8F0;
+                        border-top-color: #F5A623;
+                    }
+
                     /* ── Strawberry (soft rose) ── */
                     html[data-theme="strawberry"],
                     html[data-theme="strawberry"] body {
@@ -234,35 +263,66 @@
                         border-top-color: #E11D48;
                     }
 
-                    /* ── Blackberry (navy blue-glow) ── */
-                    html[data-theme="blackberry"],
-                    html[data-theme="blackberry"] body {
+                    /* ── Blueberry (navy) ── */
+                    html[data-theme="blueberry"],
+                    html[data-theme="blueberry"] body {
                         background: #050a14;
                         color: #ffffff;
                         font-family: 'Orbitron', 'Rajdhani', sans-serif;
                     }
-                    html[data-theme="blackberry"] .ac-sc-load {
+                    html[data-theme="blueberry"] .ac-sc-load {
                         background:
                             radial-gradient(ellipse 55% 40% at 50% 28%, rgba(59,130,246,.16), transparent 70%),
                             radial-gradient(ellipse 70% 50% at 50% 100%, rgba(30,58,138,.14), transparent 65%),
                             #050a14;
                     }
-                    html[data-theme="blackberry"] .ac-sc-logo,
-                    html[data-theme="blackberry"] .ac-sc-logo-ph {
+                    html[data-theme="blueberry"] .ac-sc-logo,
+                    html[data-theme="blueberry"] .ac-sc-logo-ph {
                         background: #0d1830;
                         border: 1px solid rgba(59,130,246,.45);
                         color: #93C5FD;
                     }
-                    html[data-theme="blackberry"] .ac-sc-kicker,
-                    html[data-theme="blackberry"] .ac-sc-theme-chip,
-                    html[data-theme="blackberry"] .ac-sc-spinner { color: #3B82F6; }
-                    html[data-theme="blackberry"] .ac-sc-title {
+                    html[data-theme="blueberry"] .ac-sc-kicker,
+                    html[data-theme="blueberry"] .ac-sc-theme-chip,
+                    html[data-theme="blueberry"] .ac-sc-spinner { color: #3B82F6; }
+                    html[data-theme="blueberry"] .ac-sc-title {
                         color: #93C5FD;
                         letter-spacing: .1em;
                     }
-                    html[data-theme="blackberry"] .ac-sc-spinner {
+                    html[data-theme="blueberry"] .ac-sc-spinner {
                         border-color: rgba(59,130,246,.22);
                         border-top-color: #3B82F6;
+                    }
+
+                    /* ── Blackberry (matte black + purple) ── */
+                    html[data-theme="blackberry"],
+                    html[data-theme="blackberry"] body {
+                        background: #101113;
+                        color: #ffffff;
+                        font-family: 'Oswald', 'Barlow Condensed', sans-serif;
+                    }
+                    html[data-theme="blackberry"] .ac-sc-load {
+                        background:
+                            radial-gradient(ellipse 55% 40% at 50% 28%, rgba(118,41,217,.14), transparent 70%),
+                            radial-gradient(ellipse 70% 50% at 50% 100%, rgba(76,29,149,.12), transparent 65%),
+                            #101113;
+                    }
+                    html[data-theme="blackberry"] .ac-sc-logo,
+                    html[data-theme="blackberry"] .ac-sc-logo-ph {
+                        background: #222328;
+                        border: 1px solid rgba(167,123,255,.45);
+                        color: #A77BFF;
+                    }
+                    html[data-theme="blackberry"] .ac-sc-kicker,
+                    html[data-theme="blackberry"] .ac-sc-theme-chip,
+                    html[data-theme="blackberry"] .ac-sc-spinner { color: #7629D9; }
+                    html[data-theme="blackberry"] .ac-sc-title {
+                        color: #FFFFFF;
+                        letter-spacing: .1em;
+                    }
+                    html[data-theme="blackberry"] .ac-sc-spinner {
+                        border-color: rgba(118,41,217,.22);
+                        border-top-color: #7629D9;
                     }
 
                     /* ── Pistah (dark green) ── */

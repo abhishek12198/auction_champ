@@ -16,6 +16,9 @@
             <xpath expr="//button[@name='action_deactivate_tournament']" position="attributes">
                 <attribute name="groups">!ac_saas_manager.group_saas_account_user</attribute>
             </xpath>
+            <xpath expr="//button[@name='action_reactivate_tournament']" position="attributes">
+                <attribute name="groups">auction_module.group_auction_group_admin</attribute>
+            </xpath>
             <xpath expr="//widget[@name='web_ribbon']" position="after">
                 <field name="is_saas_active" invisible="1"/>
                 <field name="saas_name_locked" invisible="1"/>

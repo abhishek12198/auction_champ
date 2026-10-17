@@ -651,6 +651,7 @@ input[type="file"].tr-file-hidden { display: none; }
 .swatch-strawberry  { background: linear-gradient(135deg,#ff80b5 0%,#ff2070 100%); }
 .swatch-cherry      { background: linear-gradient(135deg,#5a0000 0%,#b01020 100%); }
 .swatch-pistah      { background: linear-gradient(135deg,#002a00 0%,#007840 100%); }
+.swatch-standard    { background: #1058B0; }
 .swatch-lemon       { background: linear-gradient(135deg,#E8DDB8 0%,#C9A400 55%,#8F7400 100%); }
 .swatch-football    { background: linear-gradient(135deg,#0a1a00 0%,#2a6000 100%); }
 
@@ -994,8 +995,10 @@ input[type="file"].tr-file-hidden { display: none; }
     .tr-theme-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-.swatch-blueberry,
-.swatch-blackberry {
+.swatch-blueberry {
   background: linear-gradient(135deg, #050a14 0%, #1e3a8a 50%, #3b82f6 100%);
   box-shadow: 0 0 14px rgba(59,130,246,.45);
+}
+.swatch-blackberry {
+  background: linear-gradient(135deg, #101113 0%, #1a1b20 38%, #3b1d6e 72%, #7629D9 100%);
 }

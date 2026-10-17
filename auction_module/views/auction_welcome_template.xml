@@ -64,13 +64,31 @@
       --w-divider: rgba(107,191,78,0.38);
     }
     </t>
-    <t t-elif="theme == 'blackberry'">
+    <t t-elif="theme == 'blueberry'">
     :root {
       --w-primary: #3B82F6; --w-primary-dk: #1E3A8A; --w-accent: #93C5FD;
       --w-bg: #050a14; --w-bg2: #0d1830; --w-border: rgba(59,130,246,0.28);
       --w-text: #ffffff; --w-muted: rgba(255,255,255,0.55); --w-glow: rgba(59,130,246,0.42);
       --w-rule-bg: rgba(59,130,246,0.10); --w-rule-bd: rgba(59,130,246,0.40);
       --w-divider: rgba(59,130,246,0.40);
+    }
+    </t>
+    <t t-elif="theme == 'blackberry'">
+    :root {
+      --w-primary: #7629D9; --w-primary-dk: #4C1D95; --w-accent: #A77BFF;
+      --w-bg: #101113; --w-bg2: #222328; --w-border: rgba(167,123,255,0.28);
+      --w-text: #ffffff; --w-muted: rgba(191,195,204,0.72); --w-glow: rgba(118,41,217,0.32);
+      --w-rule-bg: rgba(118,41,217,0.10); --w-rule-bd: rgba(167,123,255,0.40);
+      --w-divider: rgba(73,75,82,0.70);
+    }
+    </t>
+    <t t-elif="theme == 'standard'">
+    :root {
+      --w-primary: #1058B0; --w-primary-dk: #1058B0; --w-accent: #F5A623;
+      --w-bg: #FFFFFF; --w-bg2: #FFFFFF; --w-border: #E2E8F0;
+      --w-text: #1A202C; --w-muted: rgba(26,32,44,0.55); --w-glow: rgba(16,88,176,0.10);
+      --w-rule-bg: #FFFFFF; --w-rule-bd: #E2E8F0;
+      --w-divider: #E2E8F0;
     }
     </t>
     <t t-elif="theme == 'lemon'">
@@ -82,6 +100,13 @@
       --w-divider: rgba(232,194,0,0.38);
     }
     </t>
+
+    html[data-theme="standard"] body { background-image: none; }
+    html[data-theme="standard"] .wc-header,
+    html[data-theme="standard"] .wc-logo,
+    html[data-theme="standard"] .wc-logo-ph,
+    html[data-theme="standard"] .wc-badge,
+    html[data-theme="standard"] .wc-rules { background: #FFFFFF; }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {

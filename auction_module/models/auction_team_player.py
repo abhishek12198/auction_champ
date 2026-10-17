@@ -1133,7 +1133,8 @@ class AuctionTeamPlayer(models.Model):
             'cherry':        'auction_module.action_report_player_card_cherry',
             'pistah':        'auction_module.action_report_player_card_pistah',
             'lemon':         'auction_module.action_report_player_card_lemon',
-            'blackberry':    'auction_module.action_report_player_card_blackberry',
+            'standard':      'auction_module.action_report_player_card_standard',
+            'blackberry':    'auction_module.action_report_player_card_blackberry_matte',
             'blueberry':     'auction_module.action_report_player_card_blackberry',
         }
         report_ref = report_map.get(template, 'auction_module.action_report_player_card')
@@ -1175,7 +1176,8 @@ class AuctionTeamPlayer(models.Model):
         'cherry':       {'bg1': '#2a0509', 'bg2': '#140203', 'bg3': '#4a0a13', 'accent': '#f5c842', 'accent2': '#ffdd88', 'accentD': '#9a0f22', 'txt': '#ffecec', 'sub': '#e0a0a8', 'badge1': '#e01e37', 'badge2': '#5a0810'},
         'pistah':       {'bg1': '#0e2a15', 'bg2': '#05130a', 'bg3': '#1c4d2a', 'accent': '#d4e157', 'accent2': '#eaff9a', 'accentD': '#2f7d32', 'txt': '#ecfce8', 'sub': '#a7d1a0', 'badge1': '#7cb342', 'badge2': '#1b4a1e'},
         'lemon':        {'bg1': '#1a1e10', 'bg2': '#0c0e08', 'bg3': '#2a3218', 'accent': '#D9B820', 'accent2': '#E8D48A', 'accentD': '#8F7400', 'txt': '#fff6d6', 'sub': '#d4c078', 'badge1': '#C9A400', 'badge2': '#6E5A00'},
-        'blackberry':   {'bg1': '#0a1628', 'bg2': '#050a14', 'bg3': '#14305f', 'accent': '#60a5fa', 'accent2': '#93c5fd', 'accentD': '#1e3a8a', 'txt': '#ffffff', 'sub': '#93c5fd', 'badge1': '#3b82f6', 'badge2': '#0f285f'},
+        'standard':     {'bg1': '#1058B0', 'bg2': '#1058B0', 'bg3': '#1058B0', 'accent': '#FFFFFF', 'accent2': '#FFFFFF', 'accentD': '#1058B0', 'txt': '#FFFFFF', 'sub': '#FFFFFF', 'badge1': '#1058B0', 'badge2': '#1058B0'},
+        'blackberry':   {'bg1': '#101113', 'bg2': '#222328', 'bg3': '#303137', 'accent': '#7629D9', 'accent2': '#A77BFF', 'accentD': '#4C1D95', 'txt': '#FFFFFF', 'sub': '#BFC3CC', 'badge1': '#7629D9', 'badge2': '#4C1D95'},
         'blueberry':    {'bg1': '#0a1628', 'bg2': '#050a14', 'bg3': '#14305f', 'accent': '#60a5fa', 'accent2': '#93c5fd', 'accentD': '#1e3a8a', 'txt': '#ffffff', 'sub': '#93c5fd', 'badge1': '#3b82f6', 'badge2': '#0f285f'},
     }
 

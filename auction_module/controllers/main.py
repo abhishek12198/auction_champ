@@ -70,6 +70,7 @@ from odoo.tools.image import image_process
 _logger = logging.getLogger(__name__)
 
 DISPLAY_AUCTION_TEMPLATES = {
+    'standard': 'auction_module.player_template_standard',
     'vanilla': 'auction_module.player_template_new',
     'butterscotch': 'auction_module.player_template_butterscotch',
     'strawberry': 'auction_module.player_template_strawberry',
@@ -77,13 +78,11 @@ DISPLAY_AUCTION_TEMPLATES = {
     'pistah': 'auction_module.player_template_pistah',
     'lemon': 'auction_module.player_template_lemon',
     'blueberry': 'auction_module.player_template_blueberry',
-    'blackberry': 'auction_module.player_template_blueberry',
+    'blackberry': 'auction_module.player_template_blackberry',
 }
 
 
 def normalize_card_theme(theme):
-    if theme == 'blackberry':
-        return 'blueberry'
     return theme or 'vanilla'
 
 # Process-local snapshot of projector / live-board JSON. Two concurrent
@@ -1130,11 +1129,12 @@ class Auction(http.Controller):
             'strawberry':   '#C2185B',
             'pistah':       '#6BBF4E',
             'lemon':        '#E8C200',
-            'blackberry':   '#3B82F6',
+            'standard':     '#F5A623',
+            'blackberry':   '#7629D9',
             'blueberry':    '#3B82F6',
         }.get(normalize_card_theme(theme), '#b71c1c')
 
-        _unsold_text = '#090912' if theme in ('butterscotch', 'lemon') else '#fff'
+        _unsold_text = '#090912' if theme in ('butterscotch', 'lemon', 'standard') else '#fff'
 
         sold_points = 0
         if player.state == 'sold':
@@ -1606,14 +1606,13 @@ class Auction(http.Controller):
         access_type = 'internal' if request.session.uid else 'public'
         balance_template_map = {
             'pistah': 'auction_module.auction_details_show_pistah',
-            'blackberry': 'auction_module.auction_details_show_blackberry',
             'blueberry': 'auction_module.auction_details_show_blackberry',
         }
         template_ref = balance_template_map.get(theme, 'auction_module.auction_details_show')
         q = request.httprequest.args
         from_projector = (kwargs.get('from') or q.get('from') or '') == 'projector'
         mode = kwargs.get('mode') or q.get('mode') or (
-            'light' if theme in ('lemon', 'strawberry') else 'dark')
+            'light' if theme in ('lemon', 'strawberry', 'standard') else 'dark')
         if mode not in ('dark', 'light'):
             mode = 'dark'
         company = request.env['res.company'].sudo().search([], limit=1)
@@ -2780,7 +2779,6 @@ class Auction(http.Controller):
                 player_data_list.append(player_data)
         players_template_map = {
             'pistah': 'auction_module.auction_team_players_template_pistah',
-            'blackberry': 'auction_module.auction_team_players_template_blackberry',
             'blueberry': 'auction_module.auction_team_players_template_blackberry',
         }
         template_ref = players_template_map.get(theme, 'auction_module.auction_team_players_template')
@@ -2788,7 +2786,7 @@ class Auction(http.Controller):
         q = request.httprequest.args
         from_projector = (kwargs.get('from') or q.get('from') or '') == 'projector'
         mode = kwargs.get('mode') or q.get('mode') or (
-            'light' if theme in ('lemon', 'strawberry') else 'dark')
+            'light' if theme in ('lemon', 'strawberry', 'standard') else 'dark')
         if mode not in ('dark', 'light'):
             mode = 'dark'
         ctx = {
@@ -3694,7 +3692,7 @@ class Auction(http.Controller):
                     target, tournament, title='Loading Players…')
             theme = (tournament.player_display_template or 'vanilla') if tournament else 'vanilla'
             sport = (tournament.tournament_type or 'cricket') if tournament else 'cricket'
-            mode = 'light' if theme in ('lemon', 'strawberry') else 'dark'
+            mode = 'light' if theme in ('lemon', 'strawberry', 'standard') else 'dark'
             company = request.env['res.company'].sudo().search([], limit=1)
             html = request.render('auction_module.projector_template', {
                 'tournament': tournament,
@@ -3725,7 +3723,7 @@ class Auction(http.Controller):
             overlay_status = 'ok' if tournament else 'missing'
             theme = (tournament.player_display_template if tournament else None) or 'vanilla'
             sport = (tournament.tournament_type if tournament else None) or 'cricket'
-            mode = 'light' if theme in ('lemon', 'strawberry') else 'dark'
+            mode = 'light' if theme in ('lemon', 'strawberry', 'standard') else 'dark'
             company = request.env['res.company'].sudo().search([], limit=1)
             embed_id = tournament.youtube_embed_id() if (page == 'watch' and tournament) else ''
             logo_url = ''
@@ -4913,10 +4911,10 @@ class Auction(http.Controller):
             tournament = user.tournament_id or user.tournament_ids[:1]
         return tournament
 
-    # ── Squad Poster (franchise 2:3 · 1024×1536) ──────────────────────────────
+    # ── Squad Poster (Instagram 4:5 · 1080×1350, export 2160×2700) ─────────────
 
-    SP_CANVAS_W = 1024
-    SP_CANVAS_H = 1536
+    SP_CANVAS_W = 1080
+    SP_CANVAS_H = 1350
 
     def _sp_b64_uri(self, binary, mime='image/jpeg', size=None, quality=95):
         """Binary field → data URI; optional resize for crisp poster cards."""
@@ -5535,6 +5533,37 @@ class Auction(http.Controller):
         pack = self._sp_photo_pack(binary, max_side=max_side)
         return pack.get('full_uri') or ''
 
+    def _sp_photo_full_bytes(self, binary, max_side=1280):
+        """Uncropped JPEG bytes for the photo editor (original framing)."""
+        if not binary:
+            return b''
+        from io import BytesIO
+        try:
+            im = self._sp_open_image(binary)
+            if im is None:
+                return b''
+            try:
+                from PIL import ImageOps
+                im = ImageOps.exif_transpose(im)
+            except Exception:
+                pass
+            if im.mode != 'RGB':
+                im = im.convert('RGB')
+            w, h = im.size
+            side_max = max(w, h)
+            if side_max > max_side > 0:
+                scale = float(max_side) / float(side_max)
+                im = im.resize(
+                    (max(1, int(w * scale)), max(1, int(h * scale))),
+                    Image.BILINEAR,
+                )
+            buf = BytesIO()
+            im.save(buf, format='JPEG', quality=88, optimize=True)
+            return buf.getvalue()
+        except Exception:
+            _logger.exception('Squad poster full photo encode failed')
+            return b''
+
     def _sp_photo_pack(self, binary, size=(420, 420), max_side=720,
                        crop_override=None, include_full=True):
         """
@@ -5717,14 +5746,14 @@ class Auction(http.Controller):
         nlines = max(1, len([l for l in lines if l]))
         # Shrink more when few long lines (overlap / clip risk)
         if longest >= 14 or chars >= 24:
-            return {'line1': 28, 'body': 26, 'only': 28}
+            return {'line1': 42, 'body': 38, 'only': 42}
         if longest >= 11 or chars >= 18:
-            return {'line1': 34, 'body': 30, 'only': 32}
+            return {'line1': 52, 'body': 46, 'only': 50}
         if longest >= 9 or chars >= 14 or nlines >= 3:
-            return {'line1': 40, 'body': 34, 'only': 38}
+            return {'line1': 64, 'body': 54, 'only': 60}
         if longest >= 7 or chars >= 11:
-            return {'line1': 46, 'body': 40, 'only': 44}
-        return {'line1': 52, 'body': 44, 'only': 48}
+            return {'line1': 76, 'body': 64, 'only': 70}
+        return {'line1': 88, 'body': 72, 'only': 82}
 
     def _sp_tourn_title_parts(self, name, season_label=''):
         """
@@ -5878,19 +5907,48 @@ class Auction(http.Controller):
                 {'key': 'bat', 'value': _fmt(bat), 'label': 'BATTERS', 'icon': 'batter'},
                 {'key': 'bowl', 'value': _fmt(bowl), 'label': 'BOWLER' if bowl == 1 else 'BOWLERS', 'icon': 'bowler'},
             ]
+        filled = 0
+        for it in items:
+            try:
+                filled += 1 if int(it.get('value') or 0) > 0 else 0
+            except Exception:
+                pass
         return {
             'title': 'THE STRIKE FORCE',
-            'tagline': 'ONE TEAM • ONE MISSION • ONE TROPHY',
+            'tagline': '',
             'items': items,
+            'show': False,
         }
 
+    def _sp_grid_shape(self, n):
+        """Rows/cols from total roster so 10 fill 2 rows and 15 fill 3."""
+        n = max(0, int(n or 0))
+        if n <= 0:
+            return 1, 5
+        if n <= 5:
+            return 1, n
+        if n <= 10:
+            rows = 2
+        elif n <= 15:
+            rows = 3
+        elif n <= 20:
+            rows = 4
+        else:
+            rows = (n + 5) // 6
+            return rows, 6
+        cols = (n + rows - 1) // rows
+        return rows, cols
+
     def _sp_grid_cols(self, n):
-        """Always 5 square face placeholders per row (max 15 in 3 rows)."""
-        return 5
+        return self._sp_grid_shape(n)[1]
 
     def _sp_row_gap(self, n_rows):
-        """Tight spacing between packed player rows."""
-        return 4
+        n_rows = int(n_rows or 1)
+        if n_rows <= 1:
+            return 12
+        if n_rows <= 2:
+            return 10
+        return 8
 
     def _sp_player_rows(self, players, cols):
         """Split players into rows so incomplete last rows can be centered."""
@@ -6018,43 +6076,16 @@ class Auction(http.Controller):
             (pl.get('name') or '').lower(),
         ))
 
-        # Icon / Key players — up to 4 in a featured top row.
-        # Remaining squad — up to 15 in a 5×3 grid below.
-        icon_players = []
-        seen_icon = set()
-        if team and team.key_player_ids:
-            by_id = {pl.get('id'): pl for pl in players_out}
-            for kp in team.key_player_ids:
-                pl = by_id.get(kp.id)
-                if pl and kp.id not in seen_icon:
-                    icon_players.append(pl)
-                    seen_icon.add(kp.id)
-        for pl in players_out:
-            pid = pl.get('id')
-            if pl.get('is_icon') and pid not in seen_icon:
-                icon_players.append(pl)
-                seen_icon.add(pid)
-        icon_players = icon_players[:4]
-        for pl in icon_players:
-            pl['is_icon'] = True
-
-        icon_id_set = {pl.get('id') for pl in icon_players}
-        rest_players = [
-            pl for pl in players_out
-            if pl.get('id') not in icon_id_set
-        ][:15]
-        for pl in rest_players:
-            pl['is_icon'] = False
-
+        # Icons stay first (already sorted). Every registered player is in the grid.
+        icon_players = [pl for pl in players_out if pl.get('is_icon')]
+        rest_players = [pl for pl in players_out if not pl.get('is_icon')]
         has_icon = bool(icon_players)
         icon_hero = icon_players[0] if icon_players else None
-        # Full poster roster for stats / strike force
-        players_out = icon_players + rest_players
 
         side_players = []
         bottom_players = []
-        grid_players = list(rest_players)
-        sym_players = list(rest_players)
+        grid_players = list(players_out)
+        sym_players = list(players_out)
 
         groups = []
         if group and players_out:
@@ -6083,15 +6114,14 @@ class Auction(http.Controller):
         remaining = int(auction.remaining_points or 0)
         spent = max(total_purse - remaining, 0)
         n_players = len(players_out)
-        n_grid = len(rest_players)
-        grid_cols = self._sp_grid_cols(n_grid or n_players)
+        n_grid = n_players
+        grid_rows, grid_cols = self._sp_grid_shape(n_players)
         side_cols = 3
         bottom_cols = 5
-        grid_rows = max(1, (n_grid + grid_cols - 1) // grid_cols) if n_grid else (0 if has_icon else 1)
         row_gap = self._sp_row_gap(grid_rows)
         sparse_squad = False
         has_bottom = False
-        player_rows = self._sp_player_rows(rest_players, grid_cols)
+        player_rows = self._sp_player_rows(players_out, grid_cols)
         strike_force = self._sp_strike_force(players_out, sport=sport)
 
         stats = {
@@ -6310,7 +6340,11 @@ class Auction(http.Controller):
         projector_mode = str(
             kw.get('projector') or request.params.get('projector') or ''
         ).lower() in ('1', 'true', 'yes')
+        embed_mode = str(
+            kw.get('embed') or request.params.get('embed') or ''
+        ).lower() in ('1', 'true', 'yes')
         ctx['projector_mode'] = projector_mode
+        ctx['embed_mode'] = embed_mode
         html = request.render('auction_module.squad_poster_template', ctx, lazy=False)
         if isinstance(html, bytes):
             body = html
@@ -6360,7 +6394,7 @@ class Auction(http.Controller):
         )
         editor_tag = (
             map_tag
-            + b'\n<script src="/auction_module/static/src/js/squad_poster_editor.js?v=280">'
+            + b'\n<script src="/auction_module/static/src/js/squad_poster_editor.js?v=325">'
             + b'</script>\n</body>'
         )
         if b'squad_poster_editor.js' not in body:
@@ -6374,6 +6408,47 @@ class Auction(http.Controller):
             body,
             headers=[('Content-Type', 'text/html; charset=utf-8')],
         )
+
+    @http.route(['/auction/squad-poster/<int:auction_id>/full-photo-img/<int:player_id>',
+                 '/<string:db_name>/auction/squad-poster/<int:auction_id>/full-photo-img/<int:player_id>'],
+                type='http', auth='user', website=False, csrf=False)
+    def squad_poster_full_photo_img(self, auction_id, player_id, db_name=None, **kw):
+        """Serve the original (uncropped) player photo for the crop editor."""
+        redirect = self._sp_bind_db_and_user(db_name=db_name)
+        if redirect is not None:
+            return redirect
+        auction = request.env['auction.auction'].sudo().browse(auction_id)
+        if not auction.exists():
+            return request.not_found()
+        player = request.env['auction.team.player'].sudo().browse(int(player_id))
+        if not player.exists():
+            return request.not_found()
+        raw = self._sp_photo_full_bytes(self._sp_photo_binary(player))
+        if not raw:
+            return request.not_found()
+        return request.make_response(raw, headers=[
+            ('Content-Type', 'image/jpeg'),
+            ('Cache-Control', 'private, max-age=300'),
+        ])
+
+    @http.route(['/auction/squad-poster/<int:auction_id>/owner-full-photo-img',
+                 '/<string:db_name>/auction/squad-poster/<int:auction_id>/owner-full-photo-img'],
+                type='http', auth='user', website=False, csrf=False)
+    def squad_poster_owner_full_photo_img(self, auction_id, db_name=None, **kw):
+        """Serve the original (uncropped) owner photo for the crop editor."""
+        redirect = self._sp_bind_db_and_user(db_name=db_name)
+        if redirect is not None:
+            return redirect
+        auction = request.env['auction.auction'].sudo().browse(auction_id)
+        if not auction.exists() or not auction.team_id or not auction.team_id.owner_photo:
+            return request.not_found()
+        raw = self._sp_photo_full_bytes(auction.team_id.owner_photo)
+        if not raw:
+            return request.not_found()
+        return request.make_response(raw, headers=[
+            ('Content-Type', 'image/jpeg'),
+            ('Cache-Control', 'private, max-age=300'),
+        ])
 
     @http.route(['/auction/squad-poster/<int:auction_id>/full-photo/<int:player_id>',
                  '/<string:db_name>/auction/squad-poster/<int:auction_id>/full-photo/<int:player_id>'],
@@ -6531,7 +6606,7 @@ class Auction(http.Controller):
                  '/<string:db_name>/auction/squad-poster/<int:auction_id>'],
                 type='http', auth='none', website=False, csrf=False)
     def squad_poster_page(self, auction_id, db_name=None, **kw):
-        """Premium 2:3 franchise squad poster (1024×1536) with hi-res PNG/JPG export."""
+        """Premium 4:5 Instagram squad poster (1080×1350, export 2160×2700)."""
         redirect = self._sp_bind_db_and_user(db_name=db_name)
         if redirect is not None:
             return redirect
@@ -7054,7 +7129,8 @@ class Auction(http.Controller):
                     'cherry':       'auction_module.action_report_player_card_cherry',
                     'pistah':       'auction_module.action_report_player_card_pistah',
                     'lemon':        'auction_module.action_report_player_card_lemon',
-                    'blackberry':   'auction_module.action_report_player_card_blackberry',
+                    'standard':     'auction_module.action_report_player_card_standard',
+                    'blackberry':   'auction_module.action_report_player_card_blackberry_matte',
                     'blueberry':    'auction_module.action_report_player_card_blackberry',
                 }
                 report_ref = report_map.get(theme, 'auction_module.action_report_player_card')
@@ -7124,7 +7200,8 @@ class Auction(http.Controller):
                     'cherry':       'auction_module.action_report_player_card_cherry',
                     'pistah':       'auction_module.action_report_player_card_pistah',
                     'lemon':        'auction_module.action_report_player_card_lemon',
-                    'blackberry':   'auction_module.action_report_player_card_blackberry',
+                    'standard':     'auction_module.action_report_player_card_standard',
+                    'blackberry':   'auction_module.action_report_player_card_blackberry_matte',
                     'blueberry':    'auction_module.action_report_player_card_blackberry',
                 }
                 report_ref = report_map.get(theme, 'auction_module.action_report_player_card')

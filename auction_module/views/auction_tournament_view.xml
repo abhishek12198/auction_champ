@@ -174,6 +174,18 @@
                                     <span class="o_stat_text text-danger" style="font-size:10px">Tournament</span>
                                 </div>
                             </button>
+                            <button name="action_reactivate_tournament"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    icon="fa-undo"
+                                    groups="auction_module.group_auction_group_admin"
+                                    attrs="{'invisible': [('active', '=', True)]}"
+                                    help="Restore this archived tournament and its related players, teams, auction rules, history and sponsors. Recycle-bin players deleted on deactivate cannot be restored.">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text text-success">Re-Activate</span>
+                                    <span class="o_stat_text text-success" style="font-size:10px">Tournament</span>
+                                </div>
+                            </button>
 
                         </div>
 
@@ -191,6 +203,10 @@
                                         </h1>
                                     </div>
                                     <div class="o_at_tournament_theme_tag_col flex-shrink-0 ml-md-3 mt-2 mt-md-0">
+                                        <span class="o_at_tournament_theme_tag o_at_theme_standard"
+                                              attrs="{'invisible': [('player_display_template', '!=', 'standard')]}">
+                                            <i class="fa fa-paint-brush" title="Card theme"/> Standard
+                                        </span>
                                         <span class="o_at_tournament_theme_tag o_at_theme_lemon"
                                               attrs="{'invisible': [('player_display_template', '!=', 'lemon')]}">
                                             <i class="fa fa-paint-brush" title="Card theme"/> Lemon
@@ -218,6 +234,10 @@
                                         <span class="o_at_tournament_theme_tag o_at_theme_blueberry"
                                               attrs="{'invisible': [('player_display_template', '!=', 'blueberry')]}">
                                             <i class="fa fa-paint-brush" title="Card theme"/> Blueberry
+                                        </span>
+                                        <span class="o_at_tournament_theme_tag o_at_theme_blackberry"
+                                              attrs="{'invisible': [('player_display_template', '!=', 'blackberry')]}">
+                                            <i class="fa fa-paint-brush" title="Card theme"/> Blackberry
                                         </span>
                                     </div>
                                 </div>
@@ -428,6 +448,12 @@
                                             string="Upload Teams &amp; Tiers"
                                             icon="fa-sitemap"
                                             class="o_at_upload_btn o_at_upload_teams"
+                                            attrs="{'invisible': [('active', '=', False)]}"/>
+                                    <button name="action_open_squad_view"
+                                            type="object"
+                                            string="Squad Modification"
+                                            icon="fa-users"
+                                            class="o_at_upload_btn o_at_squad_view"
                                             attrs="{'invisible': [('active', '=', False)]}"/>
                                 </div>
 
@@ -1245,8 +1271,11 @@
             <field name="mode">primary</field>
             <field name="arch" type="xml">
 
-                <!-- Hide Deactivate Tournament button -->
+                <!-- Hide Deactivate / Re-Activate Tournament buttons -->
                 <button name="action_deactivate_tournament" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </button>
+                <button name="action_reactivate_tournament" position="attributes">
                     <attribute name="invisible">1</attribute>
                 </button>
 

@@ -256,6 +256,7 @@ class ResUsers(models.Model):
         plan = account.plan_id
         themes = plan.get_allowed_templates() or []
         theme_labels = {
+            'standard': _('Standard'),
             'lemon': _('Lemon'),
             'vanilla': _('Vanilla'),
             'butterscotch': _('Butterscotch'),
@@ -263,7 +264,7 @@ class ResUsers(models.Model):
             'cherry': _('Cherry'),
             'pistah': _('Pistah'),
             'blueberry': _('Blueberry'),
-            'blackberry': _('Blueberry'),
+            'blackberry': _('Blackberry'),
         }
         theme_names = [theme_labels.get(k, k.title()) for k in themes]
         higher = self.env['ac.saas.plan'].sudo().search_count([

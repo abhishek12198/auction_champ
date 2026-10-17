@@ -46,9 +46,25 @@ html {
     --overlay-bg: rgba(10, 8, 0, 0.90);
     --overlay-muted: rgba(255, 240, 180, 0.75);
     --overlay-faint: rgba(255, 240, 180, 0.4);
-    --hud-font-ui: 'Barlow Condensed', sans-serif;
-    --hud-font-label: 'Oswald', sans-serif;
-    --hud-font-display: 'Baseball Club Solid', 'Oswald', sans-serif;
+}
+
+html,
+html[data-theme],
+html[data-theme="butterscotch"],
+html[data-theme="cherry"],
+html[data-theme="vanilla"],
+html[data-theme="pistah"],
+html[data-theme="blueberry"],
+html[data-theme="blackberry"],
+html[data-theme="lemon"],
+html[data-theme="standard"],
+html[data-theme="strawberry"] {
+    --hud-font-body: 'Exo 2', 'Barlow Condensed', sans-serif;
+    --hud-font-ui: 'Barlow Semi Condensed', 'Barlow Condensed', sans-serif;
+    --hud-font-label: 'Barlow Semi Condensed', 'Barlow Condensed', sans-serif;
+    --hud-font-display: 'Barlow Condensed', 'Oswald', sans-serif;
+    --hud-font-name: 'Barlow Condensed', 'Oswald', sans-serif;
+    --hud-font-stamp: 'Bebas Neue', 'Barlow Condensed', sans-serif;
 }
 
 html[data-theme="butterscotch"] { /* defaults */ }
@@ -70,9 +86,6 @@ html[data-theme="cherry"] {
     --overlay-bg: rgba(12, 2, 6, 0.92);
     --overlay-muted: rgba(255, 210, 220, 0.75);
     --overlay-faint: rgba(255, 210, 220, 0.4);
-    --hud-font-ui: 'Barlow Condensed', sans-serif;
-    --hud-font-label: 'Oswald', sans-serif;
-    --hud-font-display: 'Baseball Club Solid', 'Oswald', sans-serif;
 }
 
 html[data-theme="vanilla"] {
@@ -92,9 +105,6 @@ html[data-theme="vanilla"] {
     --overlay-bg: rgba(8, 12, 22, 0.92);
     --overlay-muted: rgba(220, 228, 240, 0.75);
     --overlay-faint: rgba(220, 228, 240, 0.4);
-    --hud-font-ui: 'Rajdhani', sans-serif;
-    --hud-font-label: 'Oswald', sans-serif;
-    --hud-font-display: 'Varsity Team', 'Bebas Neue', 'Oswald', sans-serif;
 }
 
 html[data-theme="pistah"] {
@@ -114,14 +124,9 @@ html[data-theme="pistah"] {
     --overlay-bg: rgba(4, 12, 6, 0.92);
     --overlay-muted: rgba(200, 240, 190, 0.75);
     --overlay-faint: rgba(200, 240, 190, 0.4);
-    --hud-font-ui: 'Barlow Condensed', sans-serif;
-    --hud-font-label: 'Oswald', sans-serif;
-    --hud-font-display: 'Oswald', sans-serif;
-    --hud-font-name: 'Oswald', sans-serif;
 }
 
-html[data-theme="blueberry"],
-html[data-theme="blackberry"] {
+html[data-theme="blueberry"] {
     --gold: #3B82F6;
     --gold-dark: #1E3A8A;
     --amber: #93C5FD;
@@ -140,16 +145,22 @@ html[data-theme="blackberry"] {
     --overlay-faint: rgba(190, 220, 255, 0.4);
 }
 html[data-theme="blackberry"] {
-    --hud-font-ui: 'Exo 2', sans-serif;
-    --hud-font-label: 'Orbitron', sans-serif;
-    --hud-font-display: 'Atlanta College', 'Orbitron', sans-serif;
-    --hud-font-name: 'Saira Condensed', 'Oswald', sans-serif;
-}
-html[data-theme="blueberry"] {
-    --hud-font-ui: 'Barlow Condensed', sans-serif;
-    --hud-font-label: 'Oswald', sans-serif;
-    --hud-font-display: 'Oswald', sans-serif;
-    --hud-font-name: 'Oswald', sans-serif;
+    --gold: #7629D9;
+    --gold-dark: #4C1D95;
+    --amber: #A77BFF;
+    --gold-glow: rgba(118, 41, 217, 0.28);
+    --accent-rgb: 118, 41, 217;
+    --navy: #101113;
+    --navy-card: #222328;
+    --navy-rgb: 16, 17, 19;
+    --photo-bg: #101113;
+    --border: rgba(118, 41, 217, 0.28);
+    --border-hot: rgba(167, 123, 255, 0.55);
+    --badge-hi: #FFFFFF;
+    --ink-on-accent: #FFFFFF;
+    --overlay-bg: rgba(16, 17, 19, 0.92);
+    --overlay-muted: rgba(191, 195, 204, 0.75);
+    --overlay-faint: rgba(191, 195, 204, 0.4);
 }
 html[data-theme="pistah"] .hud-serial-number,
 html[data-theme="pistah"] .hud-base-badge-val,
@@ -158,7 +169,11 @@ html[data-theme="pistah"] #ac-next-count,
 html[data-theme="blueberry"] .hud-serial-number,
 html[data-theme="blueberry"] .hud-base-badge-val,
 html[data-theme="blueberry"] .hud-stat-val,
-html[data-theme="blueberry"] #ac-next-count {
+html[data-theme="blueberry"] #ac-next-count,
+html[data-theme="blackberry"] .hud-serial-number,
+html[data-theme="blackberry"] .hud-base-badge-val,
+html[data-theme="blackberry"] .hud-stat-val,
+html[data-theme="blackberry"] #ac-next-count {
     font-variant-numeric: lining-nums tabular-nums;
     letter-spacing: 0.02em;
 }
@@ -193,9 +208,41 @@ html[data-theme="lemon"] {
     --ink-on-accent: #1A1608;
     --overlay-muted: rgba(80, 60, 0, 0.75);
     --overlay-faint: rgba(80, 60, 0, 0.45);
-    --hud-font-ui: 'Barlow', sans-serif;
-    --hud-font-label: 'Antonio', sans-serif;
-    --hud-font-display: 'Light Sport', 'Antonio', sans-serif;
+}
+
+html[data-theme="standard"] {
+    --gold: #1058B0;
+    --gold-dark: #1058B0;
+    --amber: #1058B0;
+    --gold-glow: rgba(16, 88, 176, 0.18);
+    --accent-rgb: 16, 88, 176;
+    --navy: #FFFFFF;
+    --navy-card: #FFFFFF;
+    --navy-rgb: 255, 255, 255;
+    --white: #1A202C;
+    --dim: rgba(26, 32, 44, 0.50);
+    --border: rgba(16, 88, 176, 0.22);
+    --border-hot: rgba(16, 88, 176, 0.50);
+    --badge-hi: #1058B0;
+    --ink-on-accent: #FFFFFF;
+    --stat-bg: #FFFFFF;
+    --ghost-bg: #FFFFFF;
+    --ghost-border: rgba(26, 32, 44, 0.18);
+    --ghost-ink: rgba(26, 32, 44, 0.70);
+    --ghost-bg-hot: rgba(16, 88, 176, 0.10);
+    --ghost-border-hot: rgba(16, 88, 176, 0.36);
+    --drawer-bg: #ffffff;
+    --overlay-bg: rgba(255, 255, 255, 0.94);
+    --overlay-muted: rgba(26, 32, 44, 0.75);
+    --overlay-faint: rgba(26, 32, 44, 0.45);
+    --photo-bg: #050810;
+}
+
+html[data-theme="standard"] .hud-btn-sell,
+html[data-theme="standard"] .hud-modal-ok {
+    background: #F5A623;
+    color: #1A202C;
+    box-shadow: 0 4px 18px rgba(245, 166, 35, 0.28);
 }
 
 html[data-theme="strawberry"] {
@@ -224,7 +271,4 @@ html[data-theme="strawberry"] {
     --overlay-muted: rgba(90, 32, 64, 0.75);
     --overlay-faint: rgba(90, 32, 64, 0.45);
     --photo-bg: #3A1020;
-    --hud-font-ui: 'Barlow', sans-serif;
-    --hud-font-label: 'Antonio', sans-serif;
-    --hud-font-display: 'Light Sport', 'Antonio', sans-serif;
 }

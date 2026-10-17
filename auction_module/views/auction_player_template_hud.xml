@@ -20,10 +20,29 @@
     <script src="/auction_module/static/src/js/screen_fit.js?v=4"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
-    <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;700&amp;family=Barlow:wght@400;500;600;700&amp;family=Barlow+Condensed:wght@400;500;600;700&amp;family=Bebas+Neue&amp;family=Exo+2:wght@400;600;700&amp;family=Orbitron:wght@400;600;700;900&amp;family=Oswald:wght@400;500;600;700&amp;family=Rajdhani:wght@500;600;700&amp;family=Saira+Condensed:wght@600;700;800&amp;family=Teko:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="/auction_module/static/src/css/display_hud_themes.css?v=7"/>
-    <link rel="stylesheet" href="/auction_module/static/src/css/display_hud.css?v=8"/>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&amp;family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Bebas+Neue&amp;family=Exo+2:wght@500;600;700;800;900&amp;family=Oswald:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/display_hud_themes.css?v=889pj"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/display_hud.css?v=890pj"/>
     <link rel="stylesheet" href="/auction_module/static/src/css/bid_clock.css?v=6"/>
+    <style id="hud-pj-fonts">
+      html, body { font-family: 'Exo 2', 'Barlow Condensed', sans-serif !important; }
+      .hud-player-name,
+      .hud-tourn-name,
+      .hud-serial-number,
+      .hud-serial-watermark,
+      .hud-stats-heading,
+      #ac-next-count { font-family: 'Barlow Condensed', 'Oswald', sans-serif !important; }
+      .hud-stat-val,
+      .hud-base-badge-val { font-family: 'Barlow Condensed', 'Oswald', sans-serif !important; }
+      .hud-brand-sub,
+      .hud-stat-key,
+      .hud-role-tag,
+      .hud-base-badge-lbl,
+      .hud-serial-label,
+      .hud-btn,
+      .hud-next-btn,
+      .hud-hdr-drawer-btn { font-family: 'Barlow Semi Condensed', 'Barlow Condensed', sans-serif !important; }
+    </style>
     <t t-call="auction_module.player_mystery_critical_css"/>
   </head>
 
@@ -126,26 +145,27 @@
               <t t-if="player.preferred_foot">
                 <div class="hud-stat-row"><span class="hud-stat-key">Preferred Foot</span><span class="hud-stat-val"><t t-esc="player.preferred_foot.capitalize()"/></span></div>
               </t>
+              <t t-if="player.work_rate">
+                <div class="hud-stat-row"><span class="hud-stat-key">Work Rate</span><span class="hud-stat-val"><t t-esc="player.work_rate.capitalize()"/></span></div>
+              </t>
+              <t t-if="player.age">
+                <div class="hud-stat-row"><span class="hud-stat-key">Age</span><span class="hud-stat-val"><t t-esc="player.age"/></span></div>
+              </t>
+              <t t-if="player.height">
+                <div class="hud-stat-row"><span class="hud-stat-key">Height</span><span class="hud-stat-val"><t t-esc="player.height"/></span></div>
+              </t>
+              <t t-if="player.weight">
+                <div class="hud-stat-row"><span class="hud-stat-key">Weight</span><span class="hud-stat-val"><t t-esc="player.weight"/></span></div>
+              </t>
+              <t t-if="player.blood_group">
+                <div class="hud-stat-row"><span class="hud-stat-key">Blood Group</span><span class="hud-stat-val"><t t-esc="player.blood_group"/></span></div>
+              </t>
+              <t t-if="player.secondary_position_ids">
+                <div class="hud-stat-row"><span class="hud-stat-key">Secondary</span><span class="hud-stat-val"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span></div>
+              </t>
               <t t-if="player.use_other_attributes">
                 <t t-foreach="player.other_attribute_ids.filtered('value')" t-as="oattr">
                   <div class="hud-stat-row"><span class="hud-stat-key"><t t-esc="oattr.label"/></span><span class="hud-stat-val"><t t-esc="oattr.value or '—'"/></span></div>
-                </t>
-              </t>
-              <t t-else="">
-                <t t-if="player.secondary_position_ids">
-                  <div class="hud-stat-row"><span class="hud-stat-key">Secondary</span><span class="hud-stat-val"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span></div>
-                </t>
-                <t t-if="player.age">
-                  <div class="hud-stat-row"><span class="hud-stat-key">Age</span><span class="hud-stat-val"><t t-esc="player.age"/></span></div>
-                </t>
-                <t t-if="player.work_rate">
-                  <div class="hud-stat-row"><span class="hud-stat-key">Work Rate</span><span class="hud-stat-val"><t t-esc="player.work_rate.capitalize()"/></span></div>
-                </t>
-                <t t-if="player.height">
-                  <div class="hud-stat-row"><span class="hud-stat-key">Height</span><span class="hud-stat-val"><t t-esc="player.height"/></span></div>
-                </t>
-                <t t-if="player.weight">
-                  <div class="hud-stat-row"><span class="hud-stat-key">Weight</span><span class="hud-stat-val"><t t-esc="player.weight"/></span></div>
                 </t>
               </t>
               <t t-if="player.address">
@@ -188,6 +208,12 @@
           </t>
           <t t-else="">
             <div class="hud-attr-grid ac-fb-grid">
+              <t t-if="player.role">
+                <div class="hud-stat-row">
+                  <span class="hud-stat-key">Role</span>
+                  <span class="hud-stat-val"><t t-esc="player.role"/></span>
+                </div>
+              </t>
               <t t-if="player.batting_style">
                 <div class="hud-stat-row">
                   <span class="hud-stat-key">Batting</span>
@@ -198,6 +224,30 @@
                 <div class="hud-stat-row">
                   <span class="hud-stat-key">Bowling</span>
                   <span class="hud-stat-val"><t t-esc="player.bowling_style"/></span>
+                </div>
+              </t>
+              <t t-if="player.age">
+                <div class="hud-stat-row">
+                  <span class="hud-stat-key">Age</span>
+                  <span class="hud-stat-val"><t t-esc="player.age"/></span>
+                </div>
+              </t>
+              <t t-if="player.height">
+                <div class="hud-stat-row">
+                  <span class="hud-stat-key">Height</span>
+                  <span class="hud-stat-val"><t t-esc="player.height"/></span>
+                </div>
+              </t>
+              <t t-if="player.weight">
+                <div class="hud-stat-row">
+                  <span class="hud-stat-key">Weight</span>
+                  <span class="hud-stat-val"><t t-esc="player.weight"/></span>
+                </div>
+              </t>
+              <t t-if="player.blood_group">
+                <div class="hud-stat-row">
+                  <span class="hud-stat-key">Blood Group</span>
+                  <span class="hud-stat-val"><t t-esc="player.blood_group"/></span>
                 </div>
               </t>
               <t t-if="player.address">
@@ -384,7 +434,7 @@
         var ov = document.createElement('div');
         ov.style.cssText = 'position:fixed;z-index:9500;top:'+r.top+'px;left:'+r.left+'px;width:'+r.width+'px;height:'+r.height+'px;background:rgba(0,0,0,0.48);display:flex;align-items:center;justify-content:center;animation:_unsoldFadeIn .35s ease;pointer-events:none;';
         var stamp = document.createElement('div');
-        stamp.style.cssText = 'background:'+stampColor+';color:'+stampText+';font-size:clamp(1.8rem,5vw,3.2rem);font-weight:900;letter-spacing:6px;padding:8px 36px;border:5px solid rgba(255,255,255,0.85);border-radius:6px;box-shadow:0 0 0 3px '+stampColor+',0 8px 40px rgba(0,0,0,.5);opacity:0;animation:_unsoldDrop .5s cubic-bezier(.34,1.3,.64,1) .15s forwards;';
+        stamp.style.cssText = 'background:'+stampColor+';color:'+stampText+';font-family:'+hudToken('--hud-font-stamp','Bebas Neue, Barlow Condensed, sans-serif')+';font-size:clamp(1.8rem,5vw,3.2rem);font-weight:900;letter-spacing:6px;padding:8px 36px;border:5px solid rgba(255,255,255,0.85);border-radius:6px;box-shadow:0 0 0 3px '+stampColor+',0 8px 40px rgba(0,0,0,.5);opacity:0;animation:_unsoldDrop .5s cubic-bezier(.34,1.3,.64,1) .15s forwards;';
         stamp.textContent = 'UNSOLD';
         var barWrap = document.createElement('div');
         barWrap.style.cssText = 'position:absolute;bottom:12px;left:16px;right:16px;';

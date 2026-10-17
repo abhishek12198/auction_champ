@@ -39,10 +39,11 @@ body:has(#acLiveBidPad) {
     body:has(#acLiveBidPad) .sw-stats-wrap,
     body:has(#acLiveBidPad) .hud-stats,
     body:has(#acLiveBidPad) .cr-stats-col .ac-fb-grid {
-        flex: 0 1 auto !important;
-        min-height: 220px !important;
-        max-height: 48% !important;
-        overflow: hidden !important;
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        max-height: 62% !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
         padding: 8px 12px 6px !important;
     }
 
@@ -115,7 +116,8 @@ body:has(#acLiveBidPad) {
     body:has(#acLiveBidPad) .player-profession,
     body:has(#acLiveBidPad) .cr-stats-col .ac-fb-grid {
         min-height: 0 !important;
-        max-height: 34% !important;
+        max-height: 48% !important;
+        overflow-y: auto !important;
     }
     body:has(#acLiveBidPad) #acLiveBidPad.is-on.is-open {
         min-height: 0 !important;
@@ -331,7 +333,8 @@ body:has(#acLiveBidPad) .hud-stats-heading {
     body:has(#acLiveBidPad) .player-profession,
     body:has(#acLiveBidPad) .cr-stats-col .ac-fb-grid {
         min-height: 0 !important;
-        max-height: 34% !important;
+        max-height: 48% !important;
+        overflow-y: auto !important;
     }
     body:has(#acLiveBidPad) #acLiveBidPad.is-on.is-open {
         min-height: 0 !important;

@@ -68,7 +68,7 @@
                 --reg-section-title:#4a0000;
             }
         </t>
-        <t t-elif="theme == 'blackberry' or theme == 'blueberry'">
+        <t t-elif="theme == 'blueberry'">
             :root {
                 --reg-primary:      #050a14;
                 --reg-primary-mid:  #1e3a8a;
@@ -81,6 +81,36 @@
                 --reg-bg-to:        #93c5fd;
                 --reg-ghost-num:    rgba(5,10,20,.05);
                 --reg-section-title:#0f285f;
+            }
+        </t>
+        <t t-elif="theme == 'blackberry'">
+            :root {
+                --reg-primary:      #101113;
+                --reg-primary-mid:  #4C1D95;
+                --reg-accent:       #7629D9;
+                --reg-accent-rgb:   118, 41, 217;
+                --reg-accent-glow:  rgba(118,41,217,.28);
+                --reg-accent-light: rgba(118,41,217,.10);
+                --reg-btn-text:     #fff;
+                --reg-bg-from:      #EDE9FE;
+                --reg-bg-to:        #C4B5FD;
+                --reg-ghost-num:    rgba(16,17,19,.05);
+                --reg-section-title:#4C1D95;
+            }
+        </t>
+        <t t-elif="theme == 'standard'">
+            :root {
+                --reg-primary:      #1058B0;
+                --reg-primary-mid:  #1058B0;
+                --reg-accent:       #F5A623;
+                --reg-accent-rgb:   245, 166, 35;
+                --reg-accent-glow:  rgba(16,88,176,.12);
+                --reg-accent-light: rgba(16,88,176,.08);
+                --reg-btn-text:     #1A202C;
+                --reg-bg-from:      #FFFFFF;
+                --reg-bg-to:        #FFFFFF;
+                --reg-ghost-num:    rgba(16,88,176,.06);
+                --reg-section-title:#1058B0;
             }
         </t>
         <t t-elif="theme == 'pistah'">

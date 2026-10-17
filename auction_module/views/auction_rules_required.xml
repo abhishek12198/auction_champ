@@ -258,6 +258,23 @@
         html[data-theme="vanilla"] .ac-rr-title { font-family: 'Oswald', 'Rajdhani', sans-serif; }
         html[data-theme="vanilla"] .ac-rr-btn { font-family: 'Oswald', 'Rajdhani', sans-serif; }
 
+        html[data-theme="standard"] {
+          --rr-bg: #FFFFFF;
+          --rr-hdr-bg: #FFFFFF;
+          --rr-card: #FFFFFF;
+          --rr-step-bg: #FFFFFF;
+          --rr-tx: #1A202C;
+          --rr-muted: rgba(26,32,44,.62);
+          --rr-acc: #1058B0;
+          --rr-acc2: #1058B0;
+          --rr-on-acc: #FFFFFF;
+          --rr-bdr: #E2E8F0;
+          --rr-logo-bg: #FFFFFF;
+          --rr-icon-bg: #FFFFFF;
+          --rr-glow: rgba(16,88,176,.10);
+          --rr-shadow: 0 8px 24px rgba(26,32,44,.08);
+          font-family: 'Barlow', sans-serif;
+        }
         html[data-theme="lemon"] {
           --rr-bg: linear-gradient(180deg, #F4ECD0 0%, #E8DDB8 55%, #DDD0A0 100%);
           --rr-hdr-bg: rgba(244,236,208,.94);
@@ -344,7 +361,7 @@
         html[data-theme="cherry"] .ac-rr-btn { font-family: 'Saira', sans-serif; }
 
 
-        html[data-theme="blackberry"] {
+        html[data-theme="blueberry"] {
           --rr-bg: radial-gradient(ellipse 55% 40% at 50% 20%, rgba(59,130,246,.16), transparent 70%), #050a14;
           --rr-hdr-bg: rgba(5,10,20,.94);
           --rr-card: rgba(13,24,48,.92);
@@ -361,8 +378,28 @@
           --rr-shadow: 0 18px 48px rgba(0,0,0,.5);
           font-family: 'Orbitron', 'Exo 2', sans-serif;
         }
-        html[data-theme="blackberry"] .ac-rr-title { color: #93C5FD; letter-spacing: .08em; }
-        html[data-theme="blackberry"] .ac-rr-btn { font-family: 'Orbitron', 'Exo 2', sans-serif; font-size: .78rem; }
+        html[data-theme="blueberry"] .ac-rr-title { color: #93C5FD; letter-spacing: .08em; }
+        html[data-theme="blueberry"] .ac-rr-btn { font-family: 'Orbitron', 'Exo 2', sans-serif; font-size: .78rem; }
+
+        html[data-theme="blackberry"] {
+          --rr-bg: radial-gradient(ellipse 55% 40% at 50% 20%, rgba(118,41,217,.14), transparent 70%), #101113;
+          --rr-hdr-bg: rgba(16,17,19,.94);
+          --rr-card: rgba(34,35,40,.92);
+          --rr-step-bg: rgba(118,41,217,.08);
+          --rr-tx: #ffffff;
+          --rr-muted: rgba(191,195,204,.72);
+          --rr-acc: #7629D9;
+          --rr-acc2: #A77BFF;
+          --rr-on-acc: #FFFFFF;
+          --rr-bdr: rgba(167,123,255,.30);
+          --rr-logo-bg: #222328;
+          --rr-icon-bg: rgba(118,41,217,.14);
+          --rr-glow: rgba(118,41,217,.28);
+          --rr-shadow: 0 18px 48px rgba(0,0,0,.5);
+          font-family: 'Oswald', 'Barlow Condensed', sans-serif;
+        }
+        html[data-theme="blackberry"] .ac-rr-title { color: #A77BFF; letter-spacing: .08em; }
+        html[data-theme="blackberry"] .ac-rr-btn { font-family: 'Oswald', 'Barlow Condensed', sans-serif; font-size: .78rem; }
 
         html[data-theme="pistah"] {
           --rr-bg: radial-gradient(ellipse 55% 40% at 50% 20%, rgba(107,191,78,.14), transparent 70%), #060e08;

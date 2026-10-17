@@ -140,9 +140,8 @@
         }
 
 
-        /* blackberry */
-        body.rp-theme-blueberry,
-        body.rp-theme-blackberry {
+        /* blueberry */
+        body.rp-theme-blueberry {
           --rp-primary:      #3B82F6;
           --rp-primary-dk:   #1E3A8A;
           --rp-glow:         rgba(59,130,246,0.32);
@@ -162,6 +161,77 @@
           --rp-value:        rgba(255,255,255,0.72);
           --rp-count-bg:     rgba(59,130,246,0.14);
           --rp-count-text:   #93C5FD;
+        }
+
+        /* blackberry */
+        body.rp-theme-blackberry {
+          --rp-primary:      #7629D9;
+          --rp-primary-dk:   #4C1D95;
+          --rp-glow:         rgba(118,41,217,0.28);
+          --rp-bg:           #101113;
+          --rp-surface:      #222328;
+          --rp-surface2:     #303137;
+          --rp-border:       rgba(167,123,255,0.22);
+          --rp-text:         #ffffff;
+          --rp-text-muted:   rgba(191,195,204,0.65);
+          --rp-header-bg:    linear-gradient(135deg,#101113,#222328);
+          --rp-header-text:  #A77BFF;
+          --rp-card-bg:      rgba(118,41,217,0.06);
+          --rp-card-hover:   rgba(118,41,217,0.12);
+          --rp-tier-bg:      rgba(118,41,217,0.08);
+          --rp-sl-text:      #101113;
+          --rp-label:        rgba(191,195,204,0.55);
+          --rp-value:        rgba(255,255,255,0.85);
+          --rp-count-bg:     rgba(118,41,217,0.14);
+          --rp-count-text:   #A77BFF;
+        }
+
+        /* standard */
+        body.rp-theme-standard {
+          --rp-primary:      #1058B0;
+          --rp-primary-dk:   #1058B0;
+          --rp-glow:         rgba(16,88,176,0.12);
+          --rp-bg:           #FFFFFF;
+          --rp-surface:      #FFFFFF;
+          --rp-surface2:     #FFFFFF;
+          --rp-border:       #E2E8F0;
+          --rp-text:         #1A202C;
+          --rp-text-muted:   rgba(26,32,44,0.52);
+          --rp-header-bg:    #1058B0;
+          --rp-header-text:  #FFFFFF;
+          --rp-card-bg:      #FFFFFF;
+          --rp-card-hover:   #FFFFFF;
+          --rp-tier-bg:      #FFFFFF;
+          --rp-sl-text:      #1A202C;
+          --rp-label:        #4A5568;
+          --rp-value:        #1A202C;
+          --rp-count-bg:     rgba(255,255,255,.16);
+          --rp-count-text:   #FFFFFF;
+        }
+        body.rp-theme-standard .rp-header {
+          border-bottom: none;
+          box-shadow: none;
+        }
+        body.rp-theme-standard .rp-header-count {
+          border-color: #FFFFFF;
+        }
+        body.rp-theme-standard #rp-fs-btn,
+        body.rp-theme-standard .rp-refresh-btn {
+          background: rgba(255,255,255,.14);
+          border-color: #FFFFFF;
+          color: #FFFFFF;
+        }
+        body.rp-theme-standard #rp-fs-btn:hover,
+        body.rp-theme-standard .rp-refresh-btn:hover {
+          background: #FFFFFF;
+          color: #1058B0;
+        }
+        body.rp-theme-standard,
+        body.rp-theme-standard .rp-body,
+        body.rp-theme-standard .rp-player-grid,
+        body.rp-theme-standard .rp-card,
+        body.rp-theme-standard .rp-photo {
+          background: #FFFFFF;
         }
 
         /* lemon */

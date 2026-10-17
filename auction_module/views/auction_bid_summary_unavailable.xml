@@ -112,6 +112,14 @@
           --bsu-logo-bg: #fff; --bsu-icon-bg: rgba(91,126,184,.18);
           --bsu-glow: rgba(91,126,184,.28); --bsu-shadow: 0 18px 48px rgba(0,0,0,.35);
         }
+        html[data-theme="standard"] {
+          --bsu-bg: #FFFFFF;
+          --bsu-hdr: #FFFFFF; --bsu-card: #FFFFFF;
+          --bsu-tx: #1A202C; --bsu-muted: rgba(26,32,44,.62);
+          --bsu-acc: #1058B0; --bsu-bdr: #E2E8F0;
+          --bsu-logo-bg: #FFFFFF; --bsu-icon-bg: #FFFFFF;
+          --bsu-glow: rgba(16,88,176,.10); --bsu-shadow: 0 8px 24px rgba(26,32,44,.08);
+        }
         html[data-theme="lemon"] {
           --bsu-bg: linear-gradient(180deg, #F4ECD0 0%, #E8DDB8 100%);
           --bsu-hdr: rgba(244,236,208,.94); --bsu-card: rgba(255,252,240,.92);
@@ -144,13 +152,21 @@
           --bsu-logo-bg: #16080c; --bsu-icon-bg: rgba(225,29,72,.14);
           --bsu-glow: rgba(225,29,72,.28); --bsu-shadow: 0 18px 48px rgba(0,0,0,.55);
         }
-        html[data-theme="blackberry"] {
+        html[data-theme="blueberry"] {
           --bsu-bg: radial-gradient(ellipse 55% 40% at 50% 20%, rgba(59,130,246,.16), transparent 70%), #050a14;
           --bsu-hdr: rgba(5,10,20,.94); --bsu-card: rgba(13,24,48,.92);
           --bsu-tx: #ffffff; --bsu-muted: rgba(255,255,255,.62);
           --bsu-acc: #3B82F6; --bsu-bdr: rgba(59,130,246,.30);
           --bsu-logo-bg: #0d1830; --bsu-icon-bg: rgba(59,130,246,.14);
           --bsu-glow: rgba(59,130,246,.30); --bsu-shadow: 0 18px 48px rgba(0,0,0,.5);
+        }
+        html[data-theme="blackberry"] {
+          --bsu-bg: radial-gradient(ellipse 55% 40% at 50% 20%, rgba(118,41,217,.14), transparent 70%), #101113;
+          --bsu-hdr: rgba(16,17,19,.94); --bsu-card: rgba(34,35,40,.92);
+          --bsu-tx: #ffffff; --bsu-muted: rgba(191,195,204,.72);
+          --bsu-acc: #7629D9; --bsu-bdr: rgba(167,123,255,.30);
+          --bsu-logo-bg: #222328; --bsu-icon-bg: rgba(118,41,217,.14);
+          --bsu-glow: rgba(118,41,217,.28); --bsu-shadow: 0 18px 48px rgba(0,0,0,.5);
         }
         html[data-theme="pistah"] {
           --bsu-bg: radial-gradient(ellipse 55% 40% at 50% 20%, rgba(107,191,78,.14), transparent 70%), #060e08;

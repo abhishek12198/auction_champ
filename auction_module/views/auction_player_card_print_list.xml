@@ -197,9 +197,19 @@
                     <t t-call="auction_module.report_player_card_lemon_page"/>
                 </page>
             </t>
-            <t t-elif="doc.tournament_id.player_display_template in ('blackberry', 'blueberry')">
+            <t t-elif="doc.tournament_id.player_display_template == 'standard'">
+                <page t-call="web.basic_layout">
+                    <t t-call="auction_module.report_player_card_standard_page"/>
+                </page>
+            </t>
+            <t t-elif="doc.tournament_id.player_display_template == 'blueberry'">
                 <page t-call="web.basic_layout">
                     <t t-call="auction_module.report_player_card_blackberry_page"/>
+                </page>
+            </t>
+            <t t-elif="doc.tournament_id.player_display_template == 'blackberry'">
+                <page t-call="web.basic_layout">
+                    <t t-call="auction_module.report_player_card_blackberry_matte_page"/>
                 </page>
             </t>
             <t t-else="">

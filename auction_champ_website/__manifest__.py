@@ -38,7 +38,7 @@
 
 {
     'name': 'AuctionChamp Website',
-    'version': '1.0.61',
+    'version': '1.0.62',
     'summary': 'Responsive marketing website for AuctionChamp premier sports auction platform',
     'sequence': 15,
     'description': """

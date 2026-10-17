@@ -52,6 +52,10 @@
   color: #07101f;
   border-color: transparent;
 }
+[data-theme="standard"] .bs2-pulse-btn.active {
+  background: #1058B0;
+  color: #FFFFFF;
+}
 .bs2-pulse-btn.active .bs2-pulse-n {
   color: inherit;
 }
@@ -306,12 +310,17 @@ body.bs2-tab-players .bs2-tracker-players {
   cursor: pointer;
 }
 [data-theme="lemon"] .bs2-pulse,
-[data-theme="strawberry"] .bs2-pulse {
+[data-theme="strawberry"] .bs2-pulse,
+[data-theme="standard"] .bs2-pulse {
   background: var(--bg2);
 }
 [data-theme="lemon"] .bs2-pulse-btn,
 [data-theme="strawberry"] .bs2-pulse-btn {
   background: rgba(0, 0, 0, .05);
+}
+[data-theme="standard"] .bs2-pulse-btn,
+[data-theme="standard"] .bs2-pl-search {
+  background: #FFFFFF;
 }
 [data-theme="lemon"] .bs2-pl-search,
 [data-theme="strawberry"] .bs2-pl-search {

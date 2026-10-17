@@ -185,8 +185,6 @@ class AuctionPointUnit(models.Model):
         Unknown themes fall back to Vanilla.
         """
         theme = (theme or 'vanilla').strip().lower()
-        if theme == 'blackberry':
-            theme = 'blueberry'
         palettes = {
             'vanilla': {
                 'primary': '#5B7EB8',
@@ -272,6 +270,20 @@ class AuctionPointUnit(models.Model):
                 'remaining': '#2F7D32',
                 'brand_dark': True,
             },
+            'standard': {
+                'primary': '#1058B0',
+                'primary_dark': '#0D47A1',
+                'on_primary': '#FFFFFF',
+                'muted_on_primary': '#E8F1FB',
+                'ink': '#1A202C',
+                'card_bg': '#FFFFFF',
+                'card_border': '#E2E8F0',
+                'row_alt': '#FFFFFF',
+                'subtle': '#4A5568',
+                'body': '#1A202C',
+                'remaining': '#B8F0C8',
+                'brand_dark': False,
+            },
             'blueberry': {
                 'primary': '#2563EB',
                 'primary_dark': '#1E3A8A',
@@ -283,6 +295,20 @@ class AuctionPointUnit(models.Model):
                 'row_alt': '#F5F9FF',
                 'subtle': '#64748B',
                 'body': '#334155',
+                'remaining': '#B8F0C8',
+                'brand_dark': False,
+            },
+            'blackberry': {
+                'primary': '#7629D9',
+                'primary_dark': '#4C1D95',
+                'on_primary': '#FFFFFF',
+                'muted_on_primary': '#EDE9FE',
+                'ink': '#101113',
+                'card_bg': '#F5F3F7',
+                'card_border': '#C4B5D6',
+                'row_alt': '#FAFAFB',
+                'subtle': '#6B7280',
+                'body': '#374151',
                 'remaining': '#B8F0C8',
                 'brand_dark': False,
             },

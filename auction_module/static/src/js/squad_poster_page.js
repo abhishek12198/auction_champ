@@ -1,4 +1,10 @@
 (function () {
+  try {
+    if (window.self !== window.top && document.body) {
+      document.body.classList.add('is-embed');
+    }
+  } catch (eEmbed) {}
+
   // Nuke any leftover full-screen editor overlays that steal clicks
   (function killClickBlockers() {
     var nodes = document.querySelectorAll('.sp-peditor, #spPhotoEditor');
@@ -14,12 +20,12 @@
     var preview = document.querySelector('.sp-preview-wrap');
     if (preview) preview.style.setProperty('pointer-events', 'auto', 'important');
     var scale = document.getElementById('spScaleBox');
-    if (scale) scale.style.setProperty('pointer-events', 'none', 'important');
+    if (scale) scale.style.setProperty('pointer-events', 'auto', 'important');
     var canvasEl = document.getElementById('spCanvas');
-    if (canvasEl) canvasEl.style.setProperty('pointer-events', 'none', 'important');
+    if (canvasEl) canvasEl.style.setProperty('pointer-events', 'auto', 'important');
   })();
 
-  var CANVAS_W = 1024, CANVAS_H = 1536;
+  var CANVAS_W = 1080, CANVAS_H = 1350;
   var shell = document.getElementById('spShell');
   var canvas = document.getElementById('spCanvas');
   var scaleBox = document.getElementById('spScaleBox');
@@ -51,9 +57,17 @@
   }
 
   function fitZoomValue() {
-    var avail = Math.max(220, (window.innerWidth || 360) - 28);
-    var z = avail / CANVAS_W;
-    return Math.max(0.18, Math.min(0.92, Math.round(z * 100) / 100));
+    var embed = document.body && document.body.classList.contains('is-embed');
+    var pad = embed ? 10 : 28;
+    var chrome = 0;
+    if (embed) {
+      var tb = document.getElementById('spToolbar');
+      chrome = (tb ? tb.offsetHeight : 0) + 8;
+    }
+    var availW = Math.max(160, (window.innerWidth || 360) - pad);
+    var availH = Math.max(160, (window.innerHeight || 500) - (embed ? chrome : 40));
+    var z = embed ? Math.min(availW / CANVAS_W, availH / CANVAS_H) : (availW / CANVAS_W);
+    return Math.max(0.12, Math.min(0.92, Math.round(z * 100) / 100));
   }
 
   function currentZoom() {
@@ -111,7 +125,11 @@
       applyBg(btn.getAttribute('data-bg'));
     });
   });
-  applyBg(currentBg());
+  if (shell && shell.getAttribute('data-theme') && (shell.getAttribute('data-bg') === 'theme' || document.body.classList.contains('is-embed'))) {
+    document.querySelectorAll('.sp-bg-chip').forEach(function (b) { b.classList.remove('is-active'); });
+  } else {
+    applyBg(currentBg());
+  }
 
   if (zoomSel) zoomSel.addEventListener('change', applyZoom);
   window.addEventListener('resize', function () {
@@ -120,8 +138,8 @@
   });
   applyZoom();
 
-  // Phones: default to 1× export to avoid OOM crashes
-  if (isMobile() && scaleSel) scaleSel.value = '1';
+  // Desktop Instagram export is 2× (2160×2700). Phones stay at 1× to avoid OOM.
+  if (scaleSel) scaleSel.value = isMobile() ? '1' : '2';
   // On phones, JPG is the fast path — nudge the primary label
   if (isMobile() && btnJpg) {
     btnJpg.textContent = 'Save JPG (fast)';
@@ -135,8 +153,8 @@
     var name = canvas && canvas.querySelector('.sp-team-name');
     if (!left || !name) return;
     // Reset scale before measuring
-    name.style.transform = 'rotate(-4deg) skewX(-2deg)';
-    name.style.transformOrigin = 'left center';
+    name.style.transform = 'none';
+    name.style.transformOrigin = 'left bottom';
     var maxW = Math.max(40, left.clientWidth - 8);
     var widest = 0;
     name.querySelectorAll('.sp-team-word-face').forEach(function (el) {
@@ -145,7 +163,7 @@
     if (widest < 8) return;
     var scale = Math.min(1, maxW / widest);
     scale = Math.max(0.42, scale);
-    name.style.transform = 'rotate(-4deg) skewX(-2deg) scale(' + scale + ')';
+    name.style.transform = scale < 0.999 ? ('scale(' + scale + ')') : 'none';
   }
 
   function fitTournamentName() {
@@ -170,12 +188,13 @@
     }
   }
 
-  function applyCardSide(cards, sidePx) {
+  function applyCardBox(cards, w, h) {
     Array.prototype.forEach.call(cards, function (card) {
-      card.style.width = sidePx + 'px';
-      card.style.height = sidePx + 'px';
-      card.style.maxWidth = sidePx + 'px';
-      card.style.flex = '0 0 ' + sidePx + 'px';
+      card.style.width = w + 'px';
+      card.style.height = h + 'px';
+      card.style.maxWidth = w + 'px';
+      card.style.flex = '0 0 ' + w + 'px';
+      card.style.aspectRatio = 'auto';
     });
   }
 
@@ -183,100 +202,49 @@
     var layer = canvas && canvas.querySelector('.sp-layer');
     var grid = canvas && canvas.querySelector('.sp-grid-sym');
     var squad = canvas && canvas.querySelector('.sp-squad');
-    var cols = 5;
-    var gap = 8;
-    var side = 0;
-    var rowGap = 4;
-    if (grid) {
-      cols = parseInt(getComputedStyle(grid).getPropertyValue('--sp-cols'), 10) || 5;
-      gap = parseFloat(getComputedStyle(grid).getPropertyValue('--sp-card-gap')) || 8;
-      rowGap = parseFloat(getComputedStyle(grid).getPropertyValue('--sp-row-gap')) || 4;
-      grid.querySelectorAll('.sp-grid-row').forEach(function (row) {
-        var rw = row.clientWidth;
-        if (rw < 8) return;
-        side = Math.floor((rw - (cols - 1) * gap) / cols);
-        side = Math.max(48, side);
-        applyCardSide(row.querySelectorAll('.sp-card'), side);
-      });
-      if (squad && side) {
-        squad.style.setProperty('--sp-card-side', side + 'px');
-        squad.style.setProperty('--sp-row-gap', rowGap + 'px');
-      }
+    if (!layer || !squad || !grid) {
+      fitTeamName();
+      fitTournamentName();
+      return;
     }
 
-    var heroRow = canvas && canvas.querySelector('.sp-icon-hero-row');
-    var heroCards = heroRow ? heroRow.querySelectorAll('.sp-card') : [];
-    var heroSide = 0;
-    if (heroCards.length) {
-      var nIcon = heroCards.length;
-      var baseSide = side;
-      if (!baseSide && squad) {
-        var sw0 = squad.clientWidth || 900;
-        baseSide = Math.max(120, Math.floor((sw0 - 4 * 8) / 5));
-      }
-      baseSide = baseSide || 160;
-      var rowW = heroRow.clientWidth || (squad && squad.clientWidth) || 900;
-      var iconGap = nIcon === 1 ? 0 : (nIcon === 2 ? 28 : (nIcon === 3 ? 18 : 12));
-      heroSide = Math.floor((rowW - (nIcon - 1) * iconGap) / nIcon);
-      var maxByCount = nIcon === 1 ? 268 : (nIcon === 2 ? 236 : (nIcon === 3 ? 210 : 186));
-      var minByCount = nIcon === 1 ? Math.round(baseSide * 1.35) : Math.round(baseSide * 1.08);
-      heroSide = Math.max(minByCount, Math.min(heroSide, maxByCount));
-      heroSide = Math.max(96, heroSide);
-      heroRow.style.setProperty('--sp-icon-gap', iconGap + 'px');
-      applyCardSide(heroCards, heroSide);
-      if (squad) {
-        squad.style.setProperty('--sp-icon-hero-side', heroSide + 'px');
-        squad.style.setProperty('--sp-icon-hero-h', (heroSide + 12) + 'px');
-        if (!side) {
-          squad.style.setProperty('--sp-card-side', baseSide + 'px');
-          squad.style.setProperty('--sp-row-gap', rowGap + 'px');
-        }
-      }
-    } else if (squad) {
-      squad.style.setProperty('--sp-icon-hero-h', '0px');
-    }
+    var cols = parseInt(getComputedStyle(grid).getPropertyValue('--sp-cols'), 10) || 5;
+    var gap = parseFloat(getComputedStyle(grid).getPropertyValue('--sp-card-gap')) || 8;
+    var rowGap = parseFloat(getComputedStyle(grid).getPropertyValue('--sp-row-gap')) || 8;
+    var rowsEls = grid.querySelectorAll('.sp-grid-row');
+    var rows = rowsEls.length || 1;
 
-    // Shrink cards if icon + grid would clip under strike / sponsors / footer
-    if (layer && squad && (side || heroSide)) {
-      var layerH = layer.clientHeight;
-      var usedOutside = 0;
-      var kids = layer.children;
-      for (var i = 0; i < kids.length; i++) {
-        if (kids[i] === squad) continue;
-        usedOutside += kids[i].offsetHeight || 0;
-      }
-      var layerGap = parseFloat(getComputedStyle(layer).gap) || 3;
-      usedOutside += Math.max(0, kids.length - 1) * layerGap;
-      // Extra clearance so last player row never sits under strike/sponsors
-      var avail = layerH - usedOutside - 16;
-      if (avail > 120) {
-        var gridRows = grid ? grid.querySelectorAll('.sp-grid-row').length : 0;
-        var heroPad = heroCards.length ? 12 : 0;
-        var need = (heroSide || 0) + heroPad;
-        if (gridRows && side) {
-          need += gridRows * side + Math.max(0, gridRows - 1) * rowGap;
-        }
-        need += 10;
-        if (need > avail) {
-          var scale = Math.max(0.68, avail / need);
-          if (scale < 0.995) {
-            if (side && grid) {
-              side = Math.max(48, Math.floor(side * scale));
-              grid.querySelectorAll('.sp-grid-row').forEach(function (row) {
-                applyCardSide(row.querySelectorAll('.sp-card'), side);
-              });
-              squad.style.setProperty('--sp-card-side', side + 'px');
-            }
-            if (heroSide && heroCards.length) {
-              heroSide = Math.max(84, Math.floor(heroSide * scale));
-              applyCardSide(heroCards, heroSide);
-              squad.style.setProperty('--sp-icon-hero-side', heroSide + 'px');
-              squad.style.setProperty('--sp-icon-hero-h', (heroSide + 12) + 'px');
-            }
-          }
-        }
-      }
+    var kids = layer.children;
+    var layerGap = parseFloat(getComputedStyle(layer).gap) || 3;
+    var usedOutside = 0;
+    for (var i = 0; i < kids.length; i++) {
+      if (kids[i] === squad) continue;
+      usedOutside += kids[i].offsetHeight || 0;
     }
+    usedOutside += Math.max(0, kids.length - 1) * layerGap;
+    var bandH = 0;
+    squad.querySelectorAll('.sp-band, .sp-cat-bar').forEach(function (b) {
+      bandH += b.offsetHeight || 0;
+    });
+    var availH = Math.max(120, (layer.clientHeight || 0) - usedOutside - bandH - 8);
+    var availW = grid.clientWidth || squad.clientWidth || 1000;
+    var rowH = Math.max(64, Math.floor((availH - (rows - 1) * rowGap) / rows));
+    var colW = Math.max(48, Math.floor((availW - (cols - 1) * gap) / cols));
+    var cardW = Math.min(colW, Math.round(rowH * 0.82));
+    var cardH = rowH;
+    if (cardW < 48) cardW = Math.max(40, colW);
+
+    rowsEls.forEach(function (row) {
+      var cards = row.querySelectorAll('.sp-card');
+      applyCardBox(cards, cardW, cardH);
+      var icons = row.querySelectorAll('.sp-card.is-icon');
+      if (icons.length) {
+        applyCardBox(icons, Math.min(colW, Math.round(cardW * 1.06)), cardH);
+      }
+    });
+    squad.style.setProperty('--sp-card-side', cardW + 'px');
+    squad.style.setProperty('--sp-row-gap', rowGap + 'px');
+    squad.style.setProperty('--sp-icon-hero-h', '0px');
 
     var srow = canvas && canvas.querySelector('.sp-sponsors-row');
     if (srow) {
@@ -460,11 +428,11 @@
     var photoBackups = [];
     var softBackups = [];
 
-    // Mobile: capture a smaller canvas (720×1080) — ~2–4× faster than 1024×1536
+    // Mobile: capture a smaller 4:5 canvas — faster than full 1080×1350
     var captureW = CANVAS_W;
     var captureH = CANVAS_H;
     if (mobile) {
-      captureW = 720;
+      captureW = 864;
       captureH = 1080;
       if (canvas) {
         canvas.style.width = captureW + 'px';

@@ -73,6 +73,12 @@ class AcSaasUpgradeRequestWizard(models.TransientModel):
     def _theme_meta(self):
         """Display label + chip colors for each player-card theme."""
         return {
+            'standard': {
+                'label': _('Standard'),
+                'bg': '#1058B0',
+                'fg': '#FFFFFF',
+                'border': '#F5A623',
+            },
             'lemon': {
                 'label': _('Lemon'),
                 'bg': '#F6E27A',
@@ -116,10 +122,10 @@ class AcSaasUpgradeRequestWizard(models.TransientModel):
                 'border': '#3B82F6',
             },
             'blackberry': {
-                'label': _('Blueberry'),
-                'bg': '#1E3A8A',
+                'label': _('Blackberry'),
+                'bg': 'linear-gradient(135deg, #101113 0%, #1a1b20 38%, #3b1d6e 72%, #7629D9 100%)',
                 'fg': '#FFFFFF',
-                'border': '#3B82F6',
+                'border': '#7629D9',
             },
         }
 
