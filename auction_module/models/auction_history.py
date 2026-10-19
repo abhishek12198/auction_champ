@@ -42,6 +42,14 @@ from odoo import api, models, fields, _
 from odoo.osv import expression
 
 PAGE_SIZE_DEFAULT = 80
+_SQUAD_MESSAGE_MARKERS = (
+    'swapped',
+    'moved to',
+    'value updated',
+    'points updated',
+    'sale corrected',
+)
+_BOARD_FILTERS = ('all', 'sold', 'unsold', 'squad', 'other')
 
 
 class AuctionHistory(models.Model):
@@ -101,22 +109,13 @@ class AuctionHistory(models.Model):
         page_size = min(page_size, 200)
 
         event_filter = (event_filter or 'all').strip().lower()
-        if event_filter not in ('all', 'sold', 'unsold', 'other'):
+        if event_filter not in _BOARD_FILTERS:
             event_filter = 'all'
 
         domain = [('tournament_id', '=', tournament_id)]
-        if event_filter == 'sold':
-            domain.append(('team_id', '!=', False))
-        elif event_filter == 'unsold':
-            domain = expression.AND([domain, [
-                ('team_id', '=', False),
-                ('message', 'ilike', 'unsold'),
-            ]])
-        elif event_filter == 'other':
-            domain = expression.AND([domain, [
-                ('team_id', '=', False),
-                '!', ('message', 'ilike', 'unsold'),
-            ]])
+        extra = self._event_filter_domain(event_filter)
+        if extra:
+            domain = expression.AND([domain, extra])
 
         search = (search or '').strip()
         if search:
@@ -208,13 +207,7 @@ class AuctionHistory(models.Model):
             player = rec.player_id
             team = rec.team_id
             msg = (rec.message or '').strip()
-            msg_l = msg.lower()
-            if team:
-                event = 'sold'
-            elif 'unsold' in msg_l:
-                event = 'unsold'
-            else:
-                event = 'other'
+            event = self._classify_history_event(team, msg)
 
             sold_points = points_map.get(player.id, 0) if player else 0
             if rec.id in history_photo_ids:
@@ -297,10 +290,61 @@ class AuctionHistory(models.Model):
         msg = (message or '').strip()
         if not msg:
             return ''
-        for sep in (' sold to ', ' is Unsold', ' sale corrected', ' Points updated for '):
+        for sep in (
+            ' sold to ', ' is Unsold', ' sale corrected',
+            ' Points updated for ', ' value updated',
+            ' swapped to ', ' moved to ',
+        ):
             if sep.lower() in msg.lower():
                 idx = msg.lower().find(sep.lower())
                 return msg[:idx].strip()
         return msg[:48]
+
+    @staticmethod
+    def _classify_history_event(team, message):
+        msg_l = (message or '').lower()
+        if 'swapped' in msg_l:
+            return 'swap'
+        if 'moved to' in msg_l:
+            return 'move'
+        if (
+            'value updated' in msg_l
+            or 'points updated' in msg_l
+            or 'sale corrected' in msg_l
+        ):
+            return 'points'
+        if 'unsold' in msg_l:
+            return 'unsold'
+        if team or 'sold to' in msg_l:
+            return 'sold'
+        return 'other'
+
+    @classmethod
+    def _event_filter_domain(cls, event_filter):
+        squad_or = expression.OR([
+            [('message', 'ilike', marker)] for marker in _SQUAD_MESSAGE_MARKERS
+        ])
+        if event_filter == 'sold':
+            domain = [('team_id', '!=', False)]
+            for marker in _SQUAD_MESSAGE_MARKERS:
+                domain.append('!')
+                domain.append(('message', 'ilike', marker))
+            return domain
+        if event_filter == 'unsold':
+            return [
+                ('message', 'ilike', 'unsold'),
+            ]
+        if event_filter == 'squad':
+            return squad_or
+        if event_filter == 'other':
+            domain = [
+                ('team_id', '=', False),
+                '!', ('message', 'ilike', 'unsold'),
+            ]
+            for marker in _SQUAD_MESSAGE_MARKERS:
+                domain.append('!')
+                domain.append(('message', 'ilike', marker))
+            return domain
+        return []
 
 

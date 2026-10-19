@@ -352,9 +352,27 @@
   box-shadow: 0 0 0 3px rgba(139, 155, 180, 0.22);
 }
 
-.o_ah_row_other .o_ah_dot {
+.o_ah_row_other .o_ah_dot,
+.o_ah_row_swap .o_ah_dot,
+.o_ah_row_move .o_ah_dot,
+.o_ah_row_points .o_ah_dot {
   background: var(--ah-blue);
   box-shadow: 0 0 0 3px rgba(34, 82, 181, 0.18);
+}
+
+.o_ah_row_swap .o_ah_dot {
+  background: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18);
+}
+
+.o_ah_row_move .o_ah_dot {
+  background: #c2410c;
+  box-shadow: 0 0 0 3px rgba(194, 65, 12, 0.18);
+}
+
+.o_ah_row_points .o_ah_dot {
+  background: var(--ah-gold-dark);
+  box-shadow: 0 0 0 3px rgba(224, 158, 0, 0.2);
 }
 
 .o_ah_card {
@@ -428,18 +446,72 @@
   padding: 2px 7px;
 }
 
-.o_ah_badge {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  border-radius: 6px;
-  padding: 2px 7px;
-  text-transform: uppercase;
+.o_ah_stamp {
+  --ah-stamp: var(--ah-blue);
+  --ah-stamp-wash: rgba(34, 82, 181, 0.1);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 4.6rem;
+  padding: 5px 11px 4px;
+  margin: 0 2px;
+  color: var(--ah-stamp);
+  background:
+    repeating-linear-gradient(
+      -18deg,
+      transparent,
+      transparent 3px,
+      rgba(255, 255, 255, 0.18) 3px,
+      rgba(255, 255, 255, 0.18) 4px
+    ),
+    var(--ah-stamp-wash);
+  border: 2.5px solid currentColor;
+  border-radius: 3px;
+  box-shadow:
+    inset 0 0 0 1.5px currentColor,
+    0 1px 0 rgba(13, 30, 58, 0.06);
+  transform: rotate(-8deg);
+  opacity: 0.94;
+  pointer-events: none;
+  user-select: none;
 }
 
-.o_ah_badge_sold { background: var(--ah-ok-bg); color: var(--ah-ok); }
-.o_ah_badge_unsold { background: var(--ah-muted-bg); color: var(--ah-tx2); }
-.o_ah_badge_other { background: rgba(34, 82, 181, 0.12); color: var(--ah-blue); }
+.o_ah_stamp_txt {
+  font-family: 'Bebas Neue', 'Oswald', 'Barlow Condensed', var(--ah-font);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  text-transform: uppercase;
+  text-shadow: 0 0 0.5px currentColor;
+}
+
+.o_ah_stamp_sold {
+  --ah-stamp: var(--ah-ok);
+  --ah-stamp-wash: rgba(21, 128, 61, 0.12);
+}
+.o_ah_stamp_unsold {
+  --ah-stamp: #6b7280;
+  --ah-stamp-wash: rgba(90, 107, 133, 0.12);
+}
+.o_ah_stamp_swap {
+  --ah-stamp: #6d28d9;
+  --ah-stamp-wash: rgba(124, 58, 237, 0.12);
+}
+.o_ah_stamp_move {
+  --ah-stamp: #c2410c;
+  --ah-stamp-wash: rgba(194, 65, 12, 0.12);
+}
+.o_ah_stamp_points {
+  --ah-stamp: #926400;
+  --ah-stamp-wash: rgba(253, 206, 51, 0.22);
+}
+.o_ah_stamp_other {
+  --ah-stamp: var(--ah-blue);
+  --ah-stamp-wash: rgba(34, 82, 181, 0.1);
+}
 
 .o_ah_player_name {
   font-size: 15px;
@@ -517,6 +589,8 @@
   color: var(--ah-tx2);
   line-height: 1.35;
   font-weight: 600;
+  margin-top: 4px;
+  white-space: normal;
 }
 
 .o_ah_time {
@@ -815,10 +889,18 @@
     padding: 1px 4px;
   }
 
-  .o_ah_badge {
-    font-size: 8px;
-    padding: 1px 4px;
-    letter-spacing: 0.04em;
+  .o_ah_stamp {
+    min-width: 3.4rem;
+    padding: 3px 7px 2px;
+    margin: 0;
+    border-width: 2px;
+    box-shadow: inset 0 0 0 1px currentColor;
+    transform: rotate(-6deg);
+  }
+
+  .o_ah_stamp_txt {
+    font-size: 11px;
+    letter-spacing: 0.1em;
   }
 
   .o_ah_player_name {

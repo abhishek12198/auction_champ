@@ -37,7 +37,7 @@ odoo.define('auction_module.AuctionHistoryBoard', function (require) {
             this.page = 1;
             this.pageSize = PAGE_SIZE;
             this.search = '';
-            this.filter = 'all'; // all | sold | unsold | other
+            this.filter = 'all'; // all | sold | unsold | squad | other
             this.data = null;
             this._searchTmr = null;
             this._allRecordsCache = null; // only when filtering client-side beyond server search
@@ -46,11 +46,23 @@ odoo.define('auction_module.AuctionHistoryBoard', function (require) {
         start: function () {
             var self = this;
             this.$el.addClass('o_ah_board_action');
+            this._ensureStampFont();
             var result = this._super.apply(this, arguments);
             this.$el.html(this._shellHtml());
             return Promise.resolve(result).then(function () {
                 return self._load();
             });
+        },
+
+        _ensureStampFont: function () {
+            if (document.getElementById('o_ah_stamp_fonts')) {
+                return;
+            }
+            var link = document.createElement('link');
+            link.id = 'o_ah_stamp_fonts';
+            link.rel = 'stylesheet';
+            link.href = 'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@700&display=swap';
+            document.head.appendChild(link);
         },
 
         destroy: function () {
@@ -89,6 +101,7 @@ odoo.define('auction_module.AuctionHistoryBoard', function (require) {
                 '      <button type="button" class="o_ah_filter active" data-filter="all">All</button>',
                 '      <button type="button" class="o_ah_filter" data-filter="sold">Sold</button>',
                 '      <button type="button" class="o_ah_filter" data-filter="unsold">Unsold</button>',
+                '      <button type="button" class="o_ah_filter" data-filter="squad">Squad</button>',
                 '      <button type="button" class="o_ah_filter" data-filter="other">Other</button>',
                 '    </div>',
                 '  </div>',
@@ -161,11 +174,14 @@ odoo.define('auction_module.AuctionHistoryBoard', function (require) {
 
         _rowHtml: function (r) {
             var event = r.event || 'other';
-            var badge = {
-                sold: 'SOLD',
-                unsold: 'UNSOLD',
-                other: 'UPDATE',
-            }[event] || 'EVENT';
+            var stamp = {
+                sold: 'Sold',
+                unsold: 'Unsold',
+                swap: 'Swap',
+                move: 'Move',
+                points: 'Points',
+                other: 'Update',
+            }[event] || 'Event';
 
             var photo = r.photo_url
                 ? '<img class="o_ah_photo" src="' + esc(r.photo_url) + '" alt=""/>'
@@ -198,8 +214,31 @@ odoo.define('auction_module.AuctionHistoryBoard', function (require) {
             } else if (event === 'unsold') {
                 teamBlock = '<div class="o_ah_team o_ah_team_unsold"><span class="o_ah_team_lbl">Result</span>' +
                     '<div class="o_ah_team_name">Unsold</div></div>';
-            } else if (r.message) {
-                teamBlock = '<div class="o_ah_msg">' + esc(r.message) + '</div>';
+            } else {
+                var squadLbl = {
+                    swap: 'Swapped to',
+                    move: 'Moved to',
+                    points: 'Team',
+                }[event] || 'Team';
+                if (r.team_name || r.team_logo_url) {
+                    var squadLogo = r.team_logo_url
+                        ? '<img class="o_ah_team_logo" src="' + esc(r.team_logo_url) + '" alt=""/>'
+                        : '<div class="o_ah_team_logo o_ah_team_logo_ph">&#9917;</div>';
+                    teamBlock += [
+                        '<div class="o_ah_team">',
+                        '  <span class="o_ah_team_lbl">' + esc(squadLbl) + '</span>',
+                        '  <div class="o_ah_team_row">',
+                        squadLogo,
+                        '    <div class="o_ah_team_meta">',
+                        '      <div class="o_ah_team_name">' + esc(r.team_name || '—') + '</div>',
+                        '    </div>',
+                        '  </div>',
+                        '</div>',
+                    ].join('');
+                }
+                if (r.message) {
+                    teamBlock += '<div class="o_ah_msg">' + esc(r.message) + '</div>';
+                }
             }
 
             return [
@@ -210,12 +249,11 @@ odoo.define('auction_module.AuctionHistoryBoard', function (require) {
                 '      <div class="o_ah_player">',
                 photo,
                 '        <div class="o_ah_player_meta">',
-                '          <div class="o_ah_player_top">' + sl +
-                '            <span class="o_ah_badge o_ah_badge_' + esc(event) + '">' + badge + '</span>',
-                '          </div>',
+                '          <div class="o_ah_player_top">' + sl + '</div>',
                 '          <div class="o_ah_player_name">' + esc(r.player_name || 'Unknown player') + '</div>',
                 '        </div>',
                 '      </div>',
+                '      <span class="o_ah_stamp o_ah_stamp_' + esc(event) + '"><span class="o_ah_stamp_txt">' + esc(stamp) + '</span></span>',
                 '      <div class="o_ah_mid">' + teamBlock + '</div>',
                 '    </div>',
                 '    <div class="o_ah_time">',

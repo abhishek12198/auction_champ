@@ -109,11 +109,29 @@ class EditPlayerPoints(models.TransientModel):
         if not player_line_id:
             return True
         player_line = self.env['auction.auction.player'].browse(player_line_id)
-        player_line.points = self.points
+        player = player_line.player_id
+        old_points = self.previous_points or player_line.points or 0
+        new_points = self.points or 0
+        player_line.points = new_points
         unit = self.point_unit_label or 'value'
         message = '%s updated to %s successfully' % (
-            player_line.player_id.name,
-            self._fmt(self.points),
+            player.name,
+            self._fmt(new_points),
         )
+        if player and old_points != new_points:
+            team = player_line.auction_id.team_id if player_line.auction_id else player.assigned_team_id
+            tournament = self.tournament_id or player.tournament_id
+            history_msg = '%s value updated: %s → %s%s' % (
+                player.name,
+                self._fmt(old_points),
+                self._fmt(new_points),
+                (' (%s)' % team.name) if team else '',
+            )
+            player.create_auction_history(
+                team.id if team else False,
+                history_msg,
+                tournament_id=tournament.id if tournament else False,
+                player=player,
+            )
         self.env.user.notify_success(message=message, title='%s Updated' % unit)
         return True

@@ -2398,6 +2398,11 @@ class AuctionTeamPlayer(models.Model):
         message = '%s sale corrected: sold to %s for %s' % (
             player.name, new_team_name, player._history_value(new_points)
         )
+        player.create_auction_history(
+            new_team_id, message,
+            tournament_id=player.tournament_id.id if player.tournament_id else False,
+            player=player,
+        )
         self.env.user.notify_success(message=message, title='Sale Updated')
         return {
             'success': True,
@@ -2419,7 +2424,17 @@ class AuctionTeamPlayer(models.Model):
             return {'success': False, 'error': 'Sale record not found'}
         old_points = player_line.points
         player_line.points = int(new_points)
-        message = 'Points updated for %s: %d → %d pts' % (player.name, old_points, int(new_points))
+        message = 'Points updated for %s: %s → %s' % (
+            player.name,
+            player._history_value(old_points),
+            player._history_value(int(new_points)),
+        )
+        team = player.assigned_team_id
+        player.create_auction_history(
+            team.id if team else False, message,
+            tournament_id=player.tournament_id.id if player.tournament_id else False,
+            player=player,
+        )
         self.env.user.notify_success(message=message, title='Points Updated')
         return {'success': True, 'message': message, 'old_points': old_points, 'new_points': int(new_points)}
 
