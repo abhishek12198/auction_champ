@@ -261,6 +261,41 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.o_form_view .o_at_drawer_wrap {
+    margin: 18px 0 0;
+    max-width: 640px;
+}
+
+.o_form_view .o_at_drawer_wrap > label {
+    display: block;
+    margin: 0 0 8px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.o_form_view .o_at_drawer_picker_wrap {
+    width: 100%;
+    margin: 0 0 10px;
+}
+
+.o_form_view .o_at_drawer_wrap .o_at_presentation_help {
+    margin: 0;
+}
+
+.o_form_view .o_at_drawer_wrap .o_sel_card_automatic .o_sel_card_swatch {
+    background:
+        linear-gradient(180deg, rgba(245, 158, 11, 0.18), transparent 55%),
+        #111827;
+    color: #fbbf24;
+}
+
+.o_form_view .o_at_drawer_wrap .o_sel_card_manual .o_sel_card_swatch {
+    background:
+        linear-gradient(180deg, rgba(56, 189, 248, 0.16), transparent 55%),
+        #111827;
+    color: #7dd3fc;
+}
+
 /* Mode cards — icon-led (not colour themes) */
 .o_form_view .o_field_selection_card_mode .o_sel_card_swatch {
     min-height: 88px;

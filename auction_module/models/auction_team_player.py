@@ -1026,10 +1026,8 @@ class AuctionTeamPlayer(models.Model):
 
         # ── Stamp: record on tournament for the live board ──
         if player.tournament_id:
-            display_secs = player.tournament_id.sold_display_seconds or 5
             from datetime import timedelta
-            # Mystery stays on stage until Reveal — keep stamp active long enough
-            stamp_secs = (display_secs + 3) if not is_mystery else max(display_secs + 3, 3600)
+            stamp_secs = player.tournament_id.result_stamp_hold_seconds(is_mystery=is_mystery)
             player.tournament_id.sudo().write({
                 'stamp_player_id': player.id,
                 'stamp_state': 'sold',
@@ -1111,6 +1109,10 @@ class AuctionTeamPlayer(models.Model):
         }
 
     def print_player_cards(self):
+        # Always print in serial-number order. Selection / mapped() recordsets
+        # follow click order or player.id (model has no _order), so #12 can
+        # appear before #3 unless we sort here.
+        self = self.sorted(lambda p: (p.sl_no or 0, p.name or '', p.id))
         # Refresh print photos so crop/size matches the card frame (wkhtmltopdf
         # ignores object-fit; pre-cropped JPEGs prevent stretch).
         with_photo = self.filtered('photo')
@@ -2097,12 +2099,12 @@ class AuctionTeamPlayer(models.Model):
                 self.env.user.notify_success(message)
                 # ── Stamp: record on tournament for the live board ──
                 if player.tournament_id:
-                    display_secs = player.tournament_id.sold_display_seconds or 5
                     from datetime import timedelta
+                    stamp_secs = player.tournament_id.result_stamp_hold_seconds()
                     player.tournament_id.sudo().write({
                         'stamp_player_id': player.id,
                         'stamp_state': 'unsold',
-                        'stamp_expires_at': fields.Datetime.now() + timedelta(seconds=display_secs + 3),
+                        'stamp_expires_at': fields.Datetime.now() + timedelta(seconds=stamp_secs),
                     })
         display_seconds = self[0].tournament_id.sold_display_seconds if self and self[0].tournament_id else 5
         return {

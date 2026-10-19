@@ -1564,6 +1564,105 @@ function handleCounter(counter) {
     }
 }
 
+function playerFromProjector(payload) {
+    var raw = payload && (payload.player || payload.current_player);
+    var stamp = (payload && payload.stamp_state) || (raw && raw.state) || '';
+    if (!raw) return null;
+    var state = (stamp === 'sold' || stamp === 'unsold') ? stamp : (raw.state || 'auction');
+    var team = raw.current_bid_team || null;
+    var soldInfo = payload.sold_info || null;
+    if (state === 'sold' && !team && (raw.team_name || raw.team_logo_url || (soldInfo && soldInfo.team_name))) {
+        team = {
+            id: (team && team.id) || 0,
+            name: (soldInfo && soldInfo.team_name) || raw.team_name || '',
+            logo_url: (soldInfo && soldInfo.team_logo_url) || raw.team_logo_url || ''
+        };
+    }
+    return {
+        id: raw.id,
+        name: raw.name,
+        photo_url: raw.photo_url,
+        role: raw.role,
+        tier_name: raw.tier_name,
+        tier_color: raw.tier_color,
+        state: state,
+        sl_no: raw.sl_no,
+        base_price: raw.base_price,
+        current_bid: Number(raw.current_bid || 0) || 0,
+        current_bid_team: team,
+        sold_team: state === 'sold' ? (raw.sold_team || team) : null,
+        sold_points: Number(raw.sold_points || (soldInfo && soldInfo.amount) || raw.current_bid || 0) || 0,
+        batting_style: raw.batting_style,
+        bowling_style: raw.bowling_style,
+        team_name: raw.team_name,
+        team_logo_url: raw.team_logo_url
+    };
+}
+
+function syncMyTeamFromLive(player) {
+    if (!S.myTeam || !player) return;
+    var myId = S.myTeam.id;
+    var lead = player.current_bid_team;
+    var leading = !!(lead && lead.id && Number(lead.id) === Number(myId));
+    S.myTeam.is_leading = leading;
+    if (player.state !== 'auction') {
+        S.myTeam.can_bid = false;
+        S.myTeam.can_bid_reason = 'Waiting for the next player';
+    } else if (leading) {
+        S.myTeam.can_bid = false;
+        S.myTeam.can_bid_reason = 'You have the current bid — wait for a rival';
+    } else if (S.myTeam.can_bid_reason === 'You have the current bid — wait for a rival'
+            || S.myTeam.can_bid_reason === 'Waiting for the next player') {
+        S.myTeam.can_bid = true;
+        S.myTeam.can_bid_reason = '';
+    }
+    var live = Number(player.current_bid || 0);
+    if (player.state === 'auction') {
+        S.myTeam.next_bid = live
+            ? live + slabStep(live, S.slabs || [])
+            : (S.myTeam.effective_base || S.myTeam.next_bid || 1);
+    }
+    if (S.revoke && S.revoke.feature_on) {
+        S.revoke.can_revoke = S.revoke.remaining > 0 && leading && player.state === 'auction';
+    }
+}
+
+function noteLiveBid(incoming) {
+    var myTeamId = (S.myTeam && S.myTeam.id) || null;
+    var prev = S._lastBid;
+    if (
+        incoming && prev.playerId === incoming.id &&
+        (incoming.current_bid || 0) > prev.bid &&
+        incoming.current_bid_team &&
+        incoming.current_bid_team.id !== myTeamId
+    ) {
+        flashRivalBid(incoming);
+    }
+    S._lastBid = incoming
+        ? {
+            playerId: incoming.id,
+            bid: incoming.current_bid || 0,
+            teamId: incoming.current_bid_team ? incoming.current_bid_team.id : null
+        }
+        : { playerId: null, bid: 0, teamId: null };
+}
+
+function applyOwnerSnapshot(payload) {
+    if (!payload) return;
+    var incoming = playerFromProjector(payload);
+    if (!incoming) return;
+    var prevId = S.player && S.player.id;
+    noteLiveBid(incoming);
+    S.player = Object.assign({}, S.player || {}, incoming);
+    syncMyTeamFromLive(S.player);
+    renderPlayer(S.player);
+    renderBidPanel(S.myTeam, S.player);
+    renderRevoke();
+    if (incoming.id && prevId && Number(incoming.id) !== Number(prevId) && incoming.state === 'auction') {
+        fetchData();
+    }
+}
+
 // ── Poll ───────────────────────────────────────────────────────────────
 function fetchData() {
     fetch('/auction/owner/data', {cache:'no-store'})
@@ -1575,24 +1674,7 @@ function fetchData() {
         if (liveBadge) liveBadge.className = 'oc-live-badge';
 
         const incoming  = data.current_player || null;
-        const myTeamId  = (data.my_team && data.my_team.id) || null;
-        const prev      = S._lastBid;
-
-        // Detect a rival bid: same player, bid went up, and it's NOT my team
-        if (
-            incoming && prev.playerId === incoming.id &&
-            (incoming.current_bid || 0) > prev.bid &&
-            incoming.current_bid_team &&
-            incoming.current_bid_team.id !== myTeamId
-        ) {
-            flashRivalBid(incoming);
-        }
-
-        // Update last-bid tracker
-        S._lastBid = incoming
-            ? { playerId: incoming.id, bid: incoming.current_bid || 0,
-                teamId: incoming.current_bid_team ? incoming.current_bid_team.id : null }
-            : { playerId: null, bid: 0, teamId: null };
+        noteLiveBid(incoming);
 
         updatePlayerCounts(data.player_counts, incoming && incoming.id);
         S.player  = incoming;
@@ -1902,9 +1984,11 @@ function startOwnerSse(data) {
     var es;
     try { es = new EventSource(url); }
     catch (e) { startHttpPoll(); return; }
-    function onEvt() {
+    function onEvt(ev) {
         stopHttpPoll();
-        fetchData();
+        var payload = null;
+        try { payload = ev && ev.data ? JSON.parse(ev.data) : null; } catch (e1) { payload = null; }
+        applyOwnerSnapshot(payload);
     }
     es.addEventListener('snapshot', onEvt);
     es.addEventListener('auction.update', onEvt);

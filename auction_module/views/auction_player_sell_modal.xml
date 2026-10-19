@@ -1122,27 +1122,43 @@
     'button.pt-btn-sell', 'button.cr-btn-sell',
     'button.lm-btn-unsold', 'button.sw-btn-unsold', 'button.hud-btn-unsold',
     'button.pt-btn-unsold', 'button.cr-btn-unsold',
-    '.auction-single-buttons button'
+    '.auction-single-buttons button',
+    '#acLiveBidGrid .ac-livebid-tile',
+    '#acLiveBidGrid .ac-livebid-chip',
+    '#acLbPlace',
+    '.ac-livebid-place'
   ].join(',');
+
+  function acApplyActionLock(on) {
+    if (document.body) document.body.classList.toggle('ac-actions-locked', !!on);
+    document.querySelectorAll(AC_ACTION_BTN_SEL).forEach(function(btn) {
+      var label = (btn.textContent || '').toLowerCase();
+      if (label.indexOf('next player') !== -1) return;
+      if (on) {
+        btn.disabled = true;
+        btn.setAttribute('data-ac-action-locked', '1');
+        btn.classList.add('is-action-locked');
+      } else if (btn.getAttribute('data-ac-action-locked') === '1') {
+        btn.disabled = false;
+        btn.removeAttribute('data-ac-action-locked');
+        btn.classList.remove('is-action-locked');
+      }
+    });
+    var modal = document.getElementById('acLiveBidModal');
+    if (on && modal) {
+      modal.classList.remove('is-on');
+      modal.setAttribute('hidden', 'hidden');
+    }
+  }
 
   window.acLockAuctionActions = function() {
     window._acAuctionActionsLocked = true;
-    document.querySelectorAll(AC_ACTION_BTN_SEL).forEach(function(btn) {
-      // Keep Next Player enabled — only lock sell / unsold
-      var label = (btn.textContent || '').toLowerCase();
-      if (label.indexOf('next player') !== -1) return;
-      btn.disabled = true;
-      btn.setAttribute('data-ac-action-locked', '1');
-    });
+    acApplyActionLock(true);
   };
 
   window.acUnlockAuctionActions = function() {
     window._acAuctionActionsLocked = false;
-    // Fresh zone HTML already has enabled buttons; clear any leftovers
-    document.querySelectorAll('[data-ac-action-locked="1"]').forEach(function(btn) {
-      btn.disabled = false;
-      btn.removeAttribute('data-ac-action-locked');
-    });
+    acApplyActionLock(false);
   };
 
   // Capture-phase guard so onclick handlers cannot fire while locked
@@ -1568,6 +1584,35 @@
         smShowError(result.error);
         btn.disabled = false; btn.textContent = 'Sell Player'; return;
       }
+      if (typeof window.acIsManualPlayerDrawer === 'function' && window.acIsManualPlayerDrawer()) {
+        if (typeof window.closeSellModal === 'function') window.closeSellModal();
+        else if (typeof window.smSetSellModalOpen === 'function') window.smSetSellModalOpen(false);
+        var isMysterySold = ((document.body.getAttribute('data-is-mystery') === '1') || !!window.AUCTION_IS_MYSTERY)
+          && !window.AUCTION_MYSTERY_REVEALED;
+        window._acMysteryPendingSold = {
+          team_id: result.team_id,
+          team_name: result.team_name,
+          final_point: result.final_point
+        };
+        if (typeof window.acLockAuctionActions === 'function') {
+          window.acLockAuctionActions();
+        }
+        if (isMysterySold && typeof window.acMysteryMarkSold === 'function') {
+          window.AUCTION_IS_MYSTERY = true;
+          window.acMysteryMarkSold(window._acMysteryPendingSold);
+          window._acMysteryPendingSold = null;
+        }
+        if (typeof window.acShowResultStampOnPhoto === 'function') {
+          window.acShowResultStampOnPhoto('sold', result);
+        }
+        if (typeof window.acPaintBidHeroResult === 'function') {
+          window.acPaintBidHeroResult('sold', result);
+        }
+        if (typeof window.acMarkWaitingNextPlayer === 'function' && !isMysterySold) {
+          window.acMarkWaitingNextPlayer(true);
+        }
+        return;
+      }
       smShowSoldScreen(result);
     })
     .catch(function() {
@@ -1842,6 +1887,9 @@
   window.addEventListener('storage', function (e) {
     if (e.key === 'auction:player_sold' && e.newValue) {
       try {
+        if (typeof window.acIsManualPlayerDrawer === 'function' && window.acIsManualPlayerDrawer()) {
+          return;
+        }
         // Mystery players must stay on stage until revealed.
         if (window.AUCTION_IS_MYSTERY && !window.AUCTION_MYSTERY_REVEALED) {
           if (typeof window.acMysteryMarkSold === 'function') {

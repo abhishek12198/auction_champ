@@ -163,4 +163,5 @@ class AuctionPlayerCardWizard(models.TransientModel):
         players = self.line_ids.filtered('print_ok').mapped('player_id')
         if not players:
             raise UserError(_('Select at least one player to print.'))
+        players = players.sorted(lambda p: (p.sl_no or 0, p.name or '', p.id))
         return players.sudo().print_player_cards()

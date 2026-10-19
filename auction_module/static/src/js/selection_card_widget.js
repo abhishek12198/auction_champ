@@ -7,6 +7,8 @@ odoo.define('auction_module.SelectionCardWidget', function (require) {
     var MODE_ICONS = {
         linear: 'fa-list-ol',
         random: 'fa-random',
+        automatic: 'fa-magic',
+        manual: 'fa-hand-pointer-o',
     };
 
     var SPORT_ICONS = {

@@ -444,6 +444,106 @@ html.hud-light .hud-next-bar {
 }
 .hud-next-btn svg { transition: transform .22s; }
 .hud-next-btn:hover svg { transform: translateX(4px); }
+body.ac-actions-locked .hud-btn-sell,
+body.ac-actions-locked .hud-btn-unsold,
+.hud-btn-sell[data-ac-action-locked="1"],
+.hud-btn-unsold[data-ac-action-locked="1"] {
+    opacity: .42;
+    pointer-events: none;
+    filter: grayscale(.35);
+    cursor: default;
+}
+.hud-next-btn.is-waiting-next {
+    border-color: var(--gold, #f5c842);
+    color: var(--gold, #f5c842);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold, #f5c842) 28%, transparent);
+    animation: acWaitingNextPulse 1.4s ease-in-out infinite;
+}
+@keyframes acWaitingNextPulse {
+    0%,100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold, #f5c842) 22%, transparent); }
+    50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--gold, #f5c842) 12%, transparent); }
+}
+
+/* Projector / live-board circular SOLD / UNSOLD seal on the console photo */
+.hud-photo-status{
+    --hud-sold-a:#00C853; --hud-sold-b:#2ECC71; --hud-sold-c:#00E676;
+    --hud-unsold-a:#B71C1C; --hud-unsold-b:#C62828; --hud-unsold-c:#D32F2F;
+    position:absolute;inset:0;z-index:14;display:none;
+    pointer-events:none;overflow:hidden;
+}
+.hud-photo-status.hud-status-show{display:block}
+html.hud-light .hud-photo-status{
+    --hud-sold-a:#008C3A; --hud-sold-b:#1B9E55; --hud-sold-c:#00B85A;
+    --hud-unsold-a:#8E0000; --hud-unsold-b:#A31515; --hud-unsold-c:#B71C1C;
+}
+.hud-status-glow{
+    position:absolute;inset:0;z-index:1;opacity:0;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 42%, rgba(0,200,83,.28) 0%, transparent 65%);
+}
+.hud-photo-status[data-kind="sold"].hud-status-show .hud-status-glow{
+    animation:hudStatusWash .8s ease-out both;
+}
+.hud-photo-status[data-kind="unsold"] .hud-status-glow{
+    background:radial-gradient(ellipse at 50% 42%, rgba(198,40,40,.22) 0%, transparent 65%);
+}
+.hud-photo-status[data-kind="unsold"].hud-status-show .hud-status-glow{
+    animation:hudStatusWash .55s ease-out both;
+}
+@keyframes hudStatusWash{0%{opacity:0} 35%{opacity:.7} 100%{opacity:0}}
+.hud-status-seal{
+    position:absolute;z-index:2;
+    width:min(78%, 22rem);aspect-ratio:1;
+    left:50%;top:46%;
+    transform:translate(-50%,-50%) scale(0) rotate(-14deg);
+    opacity:0;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+}
+.hud-photo-status.hud-status-show .hud-status-seal{
+    animation:hudSealIn .55s cubic-bezier(.2,.8,.2,1.15) .12s both;
+}
+.hud-photo-status[data-kind="unsold"].hud-status-show .hud-status-seal{
+    animation:hudSealStamp .42s cubic-bezier(.15,.9,.25,1.2) .05s both;
+}
+@keyframes hudSealIn{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(0) rotate(-28deg)}
+    70%{opacity:1;transform:translate(-50%,-50%) scale(1.06) rotate(-10deg)}
+    100%{opacity:.96;transform:translate(-50%,-50%) scale(1) rotate(-14deg)}
+}
+@keyframes hudSealStamp{
+    0%{opacity:0;transform:translate(-50%,-58%) scale(.2) rotate(-32deg)}
+    55%{opacity:1;transform:translate(-50%,-48%) scale(1.12) rotate(-10deg)}
+    100%{opacity:.9;transform:translate(-50%,-50%) scale(1) rotate(-14deg)}
+}
+.hud-status-seal-ring{
+    position:absolute;inset:1.5%;border-radius:50%;
+    border:3px solid currentColor;
+    box-shadow:inset 0 0 0 4px rgba(255,255,255,.14), inset 0 0 0 7px currentColor;
+    background:rgba(4,18,12,.62);
+}
+.hud-status-seal-ring--inner{
+    inset:16%;border:1.6px dashed currentColor;box-shadow:none;background:transparent;
+}
+.hud-photo-status[data-kind="sold"] .hud-status-seal{color:var(--hud-sold-b)}
+.hud-photo-status[data-kind="unsold"] .hud-status-seal{color:var(--hud-unsold-b)}
+.hud-photo-status[data-kind="unsold"] .hud-status-seal-ring{background:rgba(28,6,6,.7)}
+.hud-status-seal-svg{
+    position:absolute;inset:0;width:100%;height:100%;opacity:.98;z-index:4;
+    font-family:'Bebas Neue','Exo 2',sans-serif;text-transform:uppercase;pointer-events:none;
+}
+.hud-status-seal-core{
+    position:relative;z-index:1;width:52%;aspect-ratio:1;
+    display:flex;align-items:center;justify-content:center;
+}
+.hud-status-seal-mark{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+    mix-blend-mode:screen;
+    filter:sepia(1) saturate(14) hue-rotate(70deg) brightness(1.05);
+    opacity:.95;pointer-events:none;
+}
+.hud-photo-status[data-kind="unsold"] .hud-status-seal-mark{
+    filter:sepia(1) saturate(18) hue-rotate(-45deg) brightness(1.02);
+}
+.hud-status-seal-logo{display:none !important}
 
 .hud-footer {
     position: fixed; bottom: 0; left: 0; right: 0;

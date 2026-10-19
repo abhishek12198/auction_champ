@@ -218,16 +218,27 @@ def build_live_board_payload(env, tournament, db_name):
                 'current_bid': 0,
                 'current_bid_team': None,
             })
-        if current_player.state == 'sold' and current_player.assigned_team_id:
-            auc_line = env['auction.auction.player'].sudo().search(
-                [('player_id', '=', current_player.id)], limit=1
-            )
-            team = current_player.assigned_team_id
-            result['sold_info'] = {
-                'team_name': team.name or '',
-                'team_logo_url': pub_img('auction.team', team.id, 'logo', team.write_date) if _has_binary(team, 'logo') else '',
-                'amount': auc_line.points if auc_line else 0,
-            }
+        if current_player.state in ('sold', 'unsold'):
+            if tournament and tournament.stamp_state in ('sold', 'unsold'):
+                result['current_player']['state'] = tournament.stamp_state
+            if current_player.state == 'sold' and current_player.assigned_team_id:
+                auc_line = env['auction.auction.player'].sudo().search(
+                    [('player_id', '=', current_player.id)], limit=1
+                )
+                team = current_player.assigned_team_id
+                sold_points = auc_line.points if auc_line else 0
+                team_logo = pub_img('auction.team', team.id, 'logo', team.write_date) if _has_binary(team, 'logo') else ''
+                result['sold_info'] = {
+                    'team_name': team.name or '',
+                    'team_logo_url': team_logo,
+                    'amount': sold_points,
+                }
+                result['current_player']['sold_points'] = sold_points
+                result['current_player']['current_bid_team'] = {
+                    'id': team.id,
+                    'name': team.name or '',
+                    'logo_url': team_logo,
+                }
 
     history = env['auction.history'].sudo().search(
         [('tournament_id', '=', tournament.id)], order='create_date desc', limit=5
@@ -498,6 +509,12 @@ def build_projector_payload(env, tournament, db_name):
     leading_team_id = None
     if player.assigned_team_id and (state_override or player.state) == 'sold':
         leading_team_id = player.assigned_team_id.id
+        if not player_payload.get('current_bid_team'):
+            player_payload['current_bid_team'] = {
+                'id': player.assigned_team_id.id,
+                'name': team_name,
+                'logo_url': team_logo_url,
+            }
     if hasattr(player, 'current_bid') and player.current_bid:
         player_payload['current_bid'] = int(player.current_bid or 0)
         cteam = getattr(player, 'current_bid_team_id', False)

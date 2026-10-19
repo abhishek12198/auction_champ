@@ -22,7 +22,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&amp;family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Bebas+Neue&amp;family=Exo+2:wght@500;600;700;800;900&amp;family=Oswald:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="/auction_module/static/src/css/display_hud_themes.css?v=889pj"/>
-    <link rel="stylesheet" href="/auction_module/static/src/css/display_hud.css?v=890pj"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/display_hud.css?v=895pj"/>
     <link rel="stylesheet" href="/auction_module/static/src/css/bid_clock.css?v=6"/>
     <style id="hud-pj-fonts">
       html, body { font-family: 'Exo 2', 'Barlow Condensed', sans-serif !important; }
@@ -54,7 +54,8 @@
         t-att-data-next-countdown="tournament.next_player_countdown if tournament else 5"
         t-att-data-is-mystery="'1' if player.tier_id and player.tier_id.mystery else '0'"
         t-att-data-tournament-id="tournament.id if tournament else ''"
-        t-att-data-break-time="'1' if tournament and tournament.break_time_active else '0'">
+        t-att-data-break-time="'1' if tournament and tournament.break_time_active else '0'"
+        t-att-data-player-drawer="'manual' if tournament and tournament.player_appearance_algorithm == 'random' and tournament.player_drawer_mode == 'manual' else 'automatic'">
 
     <header class="hud-header">
       <a href="/web" class="hud-brand">
@@ -103,6 +104,29 @@
         <div class="hud-serial-badge">
           <span class="hud-serial-label">No.</span>
           <span class="hud-serial-number"><t t-esc="player.sl_no"/></span>
+        </div>
+        <div class="hud-photo-status" id="hudPhotoStatus" data-kind="sold" aria-live="polite">
+          <div class="hud-status-glow" aria-hidden="true"></div>
+          <div class="hud-status-seal" id="hudStatusSeal" aria-hidden="true">
+            <div class="hud-status-seal-ring"></div>
+            <div class="hud-status-seal-ring hud-status-seal-ring--inner"></div>
+            <svg class="hud-status-seal-svg" viewBox="0 0 200 200" aria-hidden="true"
+                 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+              <defs>
+                <path id="hudSealArcTop" d="M38,58 A80,80 0 0,1 162,58"/>
+                <path id="hudSealArcBot" d="M36,158 A80,80 0 0,0 164,158"/>
+              </defs>
+              <text id="hudSealArcTopText" fill="currentColor" font-size="18" font-weight="800" letter-spacing="3.8">
+                <textPath xlink:href="#hudSealArcTop" href="#hudSealArcTop" startOffset="50%" text-anchor="middle">SOLD TO</textPath>
+              </text>
+              <text id="hudSealArcBotText" fill="currentColor" font-size="16" font-weight="800" letter-spacing="1.4">
+                <textPath xlink:href="#hudSealArcBot" href="#hudSealArcBot" startOffset="50%" text-anchor="middle">TEAM</textPath>
+              </text>
+            </svg>
+            <div class="hud-status-seal-core">
+              <img class="hud-status-seal-mark" src="/auction_module/static/img/sold_overlay_gray.png" alt=""/>
+            </div>
+          </div>
         </div>
         <div class="hud-photo-overlay">
           <div class="hud-player-name" data-sm-name=""><t t-esc="player.name.upper()"/></div>
@@ -423,32 +447,28 @@
         setTimeout(function() { toast.style.display = 'none'; }, 3500);
       }
       function showUnsoldStamp(displaySeconds, stampColor, stampText) {
-        if (!document.getElementById('_unsoldStampCSS')) {
-          var s = document.createElement('style');
-          s.id = '_unsoldStampCSS';
-          s.textContent = '@keyframes _unsoldDrop{0%{transform:rotate(-22deg) scale(2.4);opacity:0}100%{transform:rotate(-22deg) scale(1);opacity:.92}}@keyframes _unsoldFadeIn{from{opacity:0}to{opacity:1}}';
-          document.head.appendChild(s);
+        if (typeof window.acShowResultStampOnPhoto === 'function') {
+          window.acShowResultStampOnPhoto('unsold');
         }
-        var img = document.getElementById('loadImage');
-        var r = img.getBoundingClientRect();
-        var ov = document.createElement('div');
-        ov.style.cssText = 'position:fixed;z-index:9500;top:'+r.top+'px;left:'+r.left+'px;width:'+r.width+'px;height:'+r.height+'px;background:rgba(0,0,0,0.48);display:flex;align-items:center;justify-content:center;animation:_unsoldFadeIn .35s ease;pointer-events:none;';
-        var stamp = document.createElement('div');
-        stamp.style.cssText = 'background:'+stampColor+';color:'+stampText+';font-family:'+hudToken('--hud-font-stamp','Bebas Neue, Barlow Condensed, sans-serif')+';font-size:clamp(1.8rem,5vw,3.2rem);font-weight:900;letter-spacing:6px;padding:8px 36px;border:5px solid rgba(255,255,255,0.85);border-radius:6px;box-shadow:0 0 0 3px '+stampColor+',0 8px 40px rgba(0,0,0,.5);opacity:0;animation:_unsoldDrop .5s cubic-bezier(.34,1.3,.64,1) .15s forwards;';
-        stamp.textContent = 'UNSOLD';
-        var barWrap = document.createElement('div');
-        barWrap.style.cssText = 'position:absolute;bottom:12px;left:16px;right:16px;';
-        var barTrack = document.createElement('div');
-        barTrack.style.cssText = 'background:rgba(255,255,255,0.25);border-radius:4px;height:6px;overflow:hidden;';
-        var bar = document.createElement('div');
-        bar.style.cssText = 'height:100%;width:100%;background:'+stampColor+';border-radius:4px;transition:width '+displaySeconds+'s linear;';
-        barTrack.appendChild(bar);
-        barWrap.appendChild(barTrack);
-        ov.appendChild(stamp);
-        ov.appendChild(barWrap);
-        document.body.appendChild(ov);
-        requestAnimationFrame(function() { requestAnimationFrame(function() { bar.style.width = '0%'; }); });
-        setTimeout(function() { if (ov.parentNode) ov.parentNode.removeChild(ov); changeImage(true); }, displaySeconds * 1000);
+        if (typeof window.acPaintBidHeroResult === 'function') {
+          window.acPaintBidHeroResult('unsold');
+        }
+        if (typeof window.acLockAuctionActions === 'function') {
+          window.acLockAuctionActions();
+        }
+        if (typeof window.acIsManualPlayerDrawer === 'function' &amp;&amp; window.acIsManualPlayerDrawer()) {
+          if (typeof window.acMarkWaitingNextPlayer === 'function') {
+            window.acMarkWaitingNextPlayer(true);
+          }
+          return;
+        }
+        var secs = Math.max(1, parseInt(displaySeconds, 10) || 5);
+        setTimeout(function() {
+          if (typeof window.acClearResultStampOnPhoto === 'function') {
+            window.acClearResultStampOnPhoto();
+          }
+          changeImage(true);
+        }, secs * 1000);
       }
       function resolveAuctionPanelUrl(kind) {
         var el = document.documentElement;
@@ -575,6 +595,7 @@
       </div>
     </div>
 
+    <script src="/auction_module/static/src/js/player_drawer.js?v=3"></script>
     <script src="/auction_module/static/src/js/bid_clock.js?v=5"></script>
     <t t-call="auction_module.player_break_pause_assets"/>
     <t t-call="auction_module.player_mystery_controls"/>

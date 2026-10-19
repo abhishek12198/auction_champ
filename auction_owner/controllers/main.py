@@ -426,13 +426,27 @@ class AuctionOwnerController(http.Controller):
                 except Exception:
                     pass
 
-        # ── Current player on stage ────────────────────────────────────────
-        on_stage_domain = [('is_on_stage', '=', True)]
+        # ── Current player: on-stage auction, else Redis SOLD/UNSOLD stamp ─
+        now_dt = odoo_fields.Datetime.now()
+        stamp_player = None
+        if (tournament and tournament.stamp_expires_at
+                and tournament.stamp_expires_at > now_dt
+                and tournament.stamp_player_id):
+            stamp_player = tournament.stamp_player_id
+        on_stage = env['auction.team.player'].sudo().browse()
         if tournament:
-            on_stage_domain.append(('tournament_id', '=', tournament.id))
-        current_player = env['auction.team.player'].sudo().search(
-            on_stage_domain, limit=1
-        ) if tournament else env['auction.team.player'].sudo().browse()
+            on_stage = env['auction.team.player'].sudo().search(
+                [('is_on_stage', '=', True), ('tournament_id', '=', tournament.id)],
+                limit=1,
+            )
+        current_player = env['auction.team.player'].sudo().browse()
+        if (on_stage and on_stage.state == 'auction'
+                and (not stamp_player or stamp_player.id != on_stage.id)):
+            current_player = on_stage
+        elif stamp_player:
+            current_player = stamp_player
+        elif on_stage:
+            current_player = on_stage
 
         if current_player:
             base_price = 0
@@ -451,9 +465,13 @@ class AuctionOwnerController(http.Controller):
                     'name': t.name or '',
                     'logo_url': self._pub_img('auction.team', t.id, 'logo') if t.logo else '',
                 }
+            player_state = current_player.state
+            if (stamp_player and stamp_player.id == current_player.id
+                    and tournament.stamp_state in ('sold', 'unsold')):
+                player_state = tournament.stamp_state
             sold_team = None
             sold_points = 0
-            if current_player.state == 'sold':
+            if player_state == 'sold':
                 buyer = current_player.assigned_team_id or current_player.current_bid_team_id
                 if buyer:
                     sold_team = {
@@ -472,7 +490,7 @@ class AuctionOwnerController(http.Controller):
                 'role': current_player.role or '',
                 'tier_name': current_player.tier_id.name if current_player.tier_id else '',
                 'tier_color': current_player.tier_color or '#2252b5',
-                'state': current_player.state,
+                'state': player_state,
                 'sl_no': current_player.sl_no or 0,
                 'base_price': base_price,
                 'current_bid': current_player.current_bid or 0,
@@ -556,6 +574,12 @@ class AuctionOwnerController(http.Controller):
             'used':        tournament.revokes_used if tournament else 0,
             'can_revoke':  revoke_feature_on and revokes_remaining > 0 and is_leading,
         }
+        if tournament:
+            result['stamp_state'] = tournament.stamp_state or None
+            result['stamp_expires_at'] = (
+                odoo_fields.Datetime.to_string(tournament.stamp_expires_at)
+                if tournament.stamp_expires_at else None
+            )
 
         return request.make_response(
             json.dumps(result),

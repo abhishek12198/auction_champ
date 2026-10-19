@@ -47,8 +47,8 @@ class PlayerCardAuction(models.AbstractModel):
 
     @api.model
     def _get_report_values(self, docids, data=None):
-        docs = []
         docs = self.env['auction.team.player'].browse(docids)
+        docs = docs.sorted(lambda p: (p.sl_no or 0, p.name or '', p.id))
 
         return {
             'doc_ids': docids,

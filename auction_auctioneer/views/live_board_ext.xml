@@ -18,9 +18,11 @@
         <script type="text/javascript"><![CDATA[
 (function () {
     'use strict';
-    // _auctionLbPoll is exposed by the base template's IIFE.
-    // Calling it every 2 s keeps current_bid / current_bid_team updated
-    // twice as fast as the base 4 s poll, without duplicating any render logic.
+    // Redis SSE already applies current_bid / SOLD / UNSOLD. Keep this extra
+    // Odoo poll only when the socket is off.
+    if (window.AuctionChampSSE && window.AuctionChampSSE.enabled(document.documentElement)) {
+        return;
+    }
     setInterval(function () {
         if (typeof window._auctionLbPoll === 'function') {
             window._auctionLbPoll();

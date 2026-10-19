@@ -203,6 +203,38 @@ class AuctionTournament(models.Model):
              'Lucky Dip — draw the next player at random; '
              'Roll Call — pick from the set list or roll the dice for a squad number.',
     )
+    player_drawer_mode = fields.Selection(
+        [
+            ('automatic', 'Automatic'),
+            ('manual', 'Manual'),
+        ],
+        string='Player Drawer?',
+        default='automatic',
+        help='Lucky Dip only. Automatic: after Sold or Unsold the next player '
+             'is drawn onto the console. Manual: stamp the result on the photo '
+             'and wait for Next Player.',
+    )
+
+    @api.onchange('player_appearance_algorithm')
+    def _onchange_lucky_dip_drawer_default(self):
+        if self.player_appearance_algorithm == 'random':
+            self.player_drawer_mode = 'automatic'
+
+    def uses_manual_player_drawer(self):
+        """True when Lucky Dip is set to wait for Next Player after a result."""
+        self.ensure_one()
+        return (
+            self.player_appearance_algorithm == 'random'
+            and (self.player_drawer_mode or 'automatic') == 'manual'
+        )
+
+    def result_stamp_hold_seconds(self, is_mystery=False):
+        """How long the live-board Sold/Unsold stamp should stay active."""
+        self.ensure_one()
+        display_secs = (self.sold_display_seconds or 5) + 3
+        if is_mystery or self.uses_manual_player_drawer():
+            return max(display_secs, 14400)
+        return display_secs
     team_max_points = fields.Integer(string="Max points alloted for a team")
     point_unit_id = fields.Many2one(
         'auction.point.unit',
@@ -1517,6 +1549,8 @@ class AuctionTournament(models.Model):
             unit = self.env['auction.point.unit'].default_unit()
             if unit:
                 vals['point_unit_id'] = unit.id
+        if vals.get('player_appearance_algorithm', 'random') == 'random':
+            vals.setdefault('player_drawer_mode', 'automatic')
         # Prefer char multi-dates; fall back to single tournament_date
         if vals.get('tournament_dates') and not vals.get('tournament_date'):
             try:

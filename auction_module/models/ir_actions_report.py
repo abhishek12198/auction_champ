@@ -145,6 +145,14 @@ class IrActionsReport(models.Model):
             'auction_module.report_player_card_list_blackberry',
             'auction_module.report_player_card_list_blackberry_matte',
         )
+        if self._is_player_card_report() and res_ids:
+            players = self.env['auction.team.player'].browse(res_ids).exists()
+            if players:
+                res_ids = [
+                    p.id for p in players.sorted(
+                        lambda rec: (rec.sl_no or 0, rec.name or '', rec.id)
+                    )
+                ]
         if self.report_name in generic_card_reports and res_ids:
             players = self.env['auction.team.player'].browse(res_ids).exists()
             if players and all(

@@ -307,6 +307,23 @@
                                        nolabel="1"
                                        options="{'card_style': 'mode'}"/>
                             </div>
+                            <div class="o_at_drawer_wrap"
+                                 attrs="{'invisible': [('player_appearance_algorithm', '!=', 'random')]}">
+                                <label for="player_drawer_mode" string="Player Drawer?"/>
+                                <div class="o_at_drawer_picker_wrap">
+                                    <field name="player_drawer_mode"
+                                           widget="selection_card"
+                                           nolabel="1"
+                                           options="{'card_style': 'mode'}"/>
+                                </div>
+                                <p class="o_at_presentation_help">
+                                    <strong>Automatic</strong> — after a player is Sold or Unsold,
+                                    the next name is drawn onto the console by itself.
+                                    <strong>Manual</strong> — Sold or Unsold is stamped on the
+                                    player photo (no result popup). The next player comes only
+                                    when you click Next Player.
+                                </p>
+                            </div>
                         </div>
 
                         <!-- ── Notebook ── -->

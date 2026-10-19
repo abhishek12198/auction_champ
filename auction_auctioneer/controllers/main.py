@@ -39,7 +39,7 @@
 import json
 import logging
 
-from odoo import http
+from odoo import fields, http
 from odoo.http import request
 from odoo.addons.auction_module.controllers.main import _football_display_payload
 
@@ -247,41 +247,41 @@ class AuctionAuctioneerController(http.Controller):
             }
 
         # ── Current player on stage for THIS tournament ────────────────────
-        # Active auction player for bidding, OR sold mystery awaiting Reveal
-        # (must stay on stage so dice/next stay locked until reveal).
+        # Same as Redis projector/live snapshots: an on-stage auction player
+        # wins, otherwise keep the SOLD/UNSOLD stamp player until Next Player.
         t_id = tournament.id if tournament else False
-        current_player = env['auction.team.player'].sudo().search(
+        now_dt = fields.Datetime.now()
+        stamp_player = None
+        if (tournament and tournament.stamp_expires_at
+                and tournament.stamp_expires_at > now_dt
+                and tournament.stamp_player_id):
+            stamp_player = tournament.stamp_player_id
+        on_stage = env['auction.team.player'].sudo().search(
             [
                 ('is_on_stage', '=', True),
                 ('tournament_id', '=', t_id),
-                '|',
-                ('state', '=', 'auction'),
-                '&', '&',
-                ('state', '=', 'sold'),
-                ('tier_id.mystery', '=', True),
-                ('mystery_revealed', '=', False),
             ],
             limit=1,
         )
-        # Also keep a just-revealed mystery on stage until the next showcase call
-        if not current_player:
-            current_player = env['auction.team.player'].sudo().search(
-                [
-                    ('is_on_stage', '=', True),
-                    ('tournament_id', '=', t_id),
-                    ('state', '=', 'sold'),
-                    ('tier_id.mystery', '=', True),
-                    ('mystery_revealed', '=', True),
-                ],
-                limit=1,
-            )
+        current_player = None
+        if (on_stage and on_stage.state == 'auction'
+                and (not stamp_player or stamp_player.id != on_stage.id)):
+            current_player = on_stage
+        elif stamp_player:
+            current_player = stamp_player
+        elif on_stage:
+            current_player = on_stage
 
         if current_player:
             is_mystery = bool(current_player.tier_id and current_player.tier_id.mystery)
             mystery_revealed = bool(current_player.mystery_revealed)
             mystery_hidden = is_mystery and not mystery_revealed
+            player_state = current_player.state
+            if (stamp_player and stamp_player.id == current_player.id
+                    and tournament.stamp_state in ('sold', 'unsold')):
+                player_state = tournament.stamp_state
             awaiting_reveal = (
-                current_player.state == 'sold' and is_mystery and not mystery_revealed
+                player_state == 'sold' and is_mystery and not mystery_revealed
             )
 
             base_price = 0
@@ -302,6 +302,13 @@ class AuctionAuctioneerController(http.Controller):
                     'logo_url': self._pub_img('auction.team', t.id, 'logo') if t.logo else '',
                 }
             # After sold (awaiting reveal), still show winning team
+            if player_state == 'sold' and current_player.assigned_team_id and not current_bid_team:
+                t = current_player.assigned_team_id
+                current_bid_team = {
+                    'id': t.id,
+                    'name': t.name or '',
+                    'logo_url': self._pub_img('auction.team', t.id, 'logo') if t.logo else '',
+                }
             if awaiting_reveal and current_player.assigned_team_id:
                 t = current_player.assigned_team_id
                 current_bid_team = {
@@ -311,7 +318,7 @@ class AuctionAuctioneerController(http.Controller):
                 }
 
             sold_points = 0
-            if current_player.state == 'sold':
+            if player_state == 'sold':
                 auction_line = env['auction.auction.player'].sudo().search(
                     [('player_id', '=', current_player.id)], limit=1)
                 sold_points = auction_line.points if auction_line else 0
@@ -331,7 +338,7 @@ class AuctionAuctioneerController(http.Controller):
                     current_player.tier_id.name if current_player.tier_id else ''
                 ),
                 'tier_color': current_player.tier_color or '#e0b84a',
-                'state': current_player.state,
+                'state': player_state,
                 'sl_no': '?' if mystery_hidden else (current_player.sl_no or 0),
                 'base_price': base_price,
                 'current_bid': 0 if awaiting_reveal else (current_player.current_bid or 0),
@@ -430,7 +437,7 @@ class AuctionAuctioneerController(http.Controller):
                 can_bid_reason = (
                     'Reveal mystery player first'
                     if (player.tier_id and player.tier_id.mystery and not player.mystery_revealed)
-                    else 'Player already sold'
+                    else ('Player unsold' if player.state == 'unsold' else 'Player already sold')
                 )
             elif auc.remaining_players_count <= 0:
                 can_bid = False
@@ -513,6 +520,12 @@ class AuctionAuctioneerController(http.Controller):
         result['remaining_count'] = sum(1 for p in pool if p['state'] == 'auction')
         cp = result.get('current_player') or {}
         result['awaiting_reveal'] = bool(cp.get('awaiting_reveal'))
+        if tournament:
+            result['stamp_state'] = tournament.stamp_state or None
+            result['stamp_expires_at'] = (
+                fields.Datetime.to_string(tournament.stamp_expires_at)
+                if tournament.stamp_expires_at else None
+            )
 
         return request.make_response(
             json.dumps(result),

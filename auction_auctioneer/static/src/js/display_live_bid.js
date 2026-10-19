@@ -21,6 +21,7 @@
     var pollTimer = null;
     var boundPad = null;
     var lastHeroKey = '';
+    var heroResultHold = null;
 
     function padEl() { return document.getElementById('acLiveBidPad'); }
     function launchEl() { return document.getElementById('acLiveBidLaunch'); }
@@ -47,7 +48,11 @@
     function maxCall(team) {
         return team.max_call != null ? team.max_call : team.max_call;
     }
+    function actionsLocked() {
+        return !!window._acAuctionActionsLocked;
+    }
     function canBid(team) {
+        if (actionsLocked()) return false;
         return !!(team.can_bid || team.can_bid);
     }
     function bidReason(team) {
@@ -227,8 +232,10 @@
         return amount;
     }
     function leadTeam(player) {
-        if (!player || !player.current_bid) return null;
-        return player.current_bid_team || player.current_bid_team || null;
+        if (!player) return null;
+        if (player.state === 'sold') return player.current_bid_team || null;
+        if (!player.current_bid) return null;
+        return player.current_bid_team || null;
     }
     function squadSlotsLeft(team) {
         if (team.remaining_players != null) return Number(team.remaining_players);
@@ -296,22 +303,143 @@
         badge.appendChild(lbl);
     }
 
+    function setHeroHold(kind, info, playerId) {
+        info = info || {};
+        var team = info.current_bid_team || null;
+        if (!team && kind === 'sold' && (info.team_name || info.team_logo_url || info.team_id)) {
+            team = {
+                id: info.team_id || 0,
+                name: info.team_name || '',
+                logo_url: info.team_logo_url || (info.team_id ? ('/web/image/auction.team/' + info.team_id + '/logo') : '')
+            };
+        }
+        heroResultHold = {
+            playerId: playerId || (playerCache && playerCache.id) || 0,
+            kind: kind,
+            sold_points: Number(info.sold_points || info.final_point || info.amount || 0) || 0,
+            team: team
+        };
+    }
+    function playerFromHold() {
+        if (!heroResultHold) return null;
+        return {
+            id: heroResultHold.playerId,
+            state: heroResultHold.kind,
+            sold_points: heroResultHold.sold_points,
+            current_bid: heroResultHold.sold_points,
+            current_bid_team: heroResultHold.team
+        };
+    }
+    function mergeHeroHold(player) {
+        if (player && player.state === 'auction') {
+            if (heroResultHold && Number(heroResultHold.playerId) === Number(player.id)) {
+                return playerFromHold();
+            }
+            heroResultHold = null;
+            return player;
+        }
+        if (player && (player.state === 'sold' || player.state === 'unsold')) {
+            var team = player.current_bid_team || null;
+            if (!team && player.team_name) {
+                team = { id: 0, name: player.team_name, logo_url: player.team_logo_url || '' };
+            }
+            setHeroHold(player.state, {
+                sold_points: player.sold_points || player.current_bid,
+                current_bid_team: team,
+                team_name: player.team_name,
+                team_logo_url: player.team_logo_url,
+                amount: player.sold_points
+            }, player.id);
+            if (player.state === 'sold' && !player.current_bid_team && team) {
+                player = Object.assign({}, player, {
+                    current_bid_team: team,
+                    sold_points: heroResultHold.sold_points || player.sold_points
+                });
+            }
+            return player;
+        }
+        if (!player && heroResultHold) return playerFromHold();
+        return player;
+    }
+    function applyProjectorSnapshot(payload) {
+        if (!payload) return;
+        var p = payload.player || payload.current_player || null;
+        var soldInfo = payload.sold_info || null;
+        var stamp = payload.stamp_state || (p && p.state) || '';
+        if (p && (stamp === 'sold' || stamp === 'unsold' || p.state === 'sold' || p.state === 'unsold')) {
+            var kind = (stamp === 'unsold' || p.state === 'unsold') ? 'unsold' : 'sold';
+            var team = p.current_bid_team || null;
+            if (kind === 'sold' && !team && (p.team_name || p.team_logo_url || (soldInfo && soldInfo.team_name))) {
+                team = {
+                    id: 0,
+                    name: (soldInfo && soldInfo.team_name) || p.team_name || '',
+                    logo_url: (soldInfo && soldInfo.team_logo_url) || p.team_logo_url || ''
+                };
+            }
+            setHeroHold(kind, {
+                sold_points: p.sold_points || (soldInfo && soldInfo.amount) || p.current_bid,
+                current_bid_team: team,
+                team_name: team && team.name,
+                team_logo_url: team && team.logo_url,
+                amount: p.sold_points || (soldInfo && soldInfo.amount)
+            }, p.id);
+            playerCache = playerFromHold();
+            var soldLead = leadTeam(playerCache);
+            paintBidHero(
+                soldLead,
+                soldLead ? logoUrl(soldLead) : '',
+                kind === 'sold' ? Number(playerCache.sold_points || 0) : 0
+            );
+            return;
+        }
+        if (p && p.state === 'auction') {
+            if (!heroResultHold || Number(p.id) !== Number(heroResultHold.playerId)) {
+                heroResultHold = null;
+            }
+            if (heroResultHold) {
+                playerCache = playerFromHold();
+            } else {
+                playerCache = Object.assign({}, playerCache || {}, p);
+            }
+            var live = playerCache;
+            var liveLead = leadTeam(live);
+            var liveAmt = live && live.state === 'sold'
+                ? Number(live.sold_points || live.current_bid || 0)
+                : Number((live && live.current_bid) || 0);
+            paintBidHero(liveLead, liveLead ? logoUrl(liveLead) : '', liveAmt);
+        }
+    }
+
     function paintBidHero(lead, logoSrc, amount) {
         var hero = document.getElementById('acBidHero');
         var logo = document.getElementById('acBidHeroLogo');
         var teamEl = document.getElementById('acBidHeroTeam');
         var ptsEl = document.getElementById('acBidHeroPts');
+        var waitEl = document.getElementById('acBidHeroWait');
         var lbl = hero && hero.querySelector('.ac-bid-hero-lbl');
         if (!hero) return;
         ensureHeroBadge(hero);
         var pos = scrollPos();
-        var sold = !!(playerCache && playerCache.state === 'sold');
-        var on = !!(amount > 0 && (lead || sold));
+        var state = playerCache && playerCache.state;
+        var sold = state === 'sold';
+        var unsold = state === 'unsold';
+        var on = !unsold && !!(sold || (amount > 0 && lead));
         hero.classList.toggle('is-on', on);
         hero.classList.toggle('is-sold', sold);
-        if (lbl) lbl.textContent = sold ? 'SOLD' : 'Current Bid';
-        if (ptsEl) ptsEl.textContent = amount ? fmt(amount) : '—';
-        if (teamEl) teamEl.textContent = on ? ((lead && lead.name) || 'Leading team') : '';
+        hero.classList.toggle('is-unsold', unsold);
+        if (lbl) {
+            lbl.textContent = unsold ? 'UNSOLD' : (sold ? 'SOLD' : 'Current Bid');
+        }
+        if (ptsEl) {
+            if (unsold) ptsEl.textContent = 'UNSOLD';
+            else ptsEl.textContent = amount ? fmt(amount) : '—';
+        }
+        if (waitEl) {
+            waitEl.textContent = unsold
+                ? 'No bids were placed. This player can be brought back to the auction later.'
+                : 'Waiting for opening bid';
+        }
+        if (teamEl) teamEl.textContent = on ? ((lead && lead.name) || 'Sold to') : '';
         if (logo) {
             if (on && logoSrc) {
                 logo.src = logoSrc;
@@ -321,16 +449,31 @@
                 logo.style.display = 'none';
             }
         }
-        var key = on ? (String((lead && lead.id) || '') + ':' + amount + (sold ? ':s' : '')) : '';
+        var key = unsold ? 'unsold' : (on ? (String((lead && lead.id) || '') + ':' + amount + (sold ? ':s' : '')) : '');
         if (key && key !== lastHeroKey) {
             hero.classList.remove('is-flash');
             void hero.offsetWidth;
             hero.classList.add('is-flash');
         }
         lastHeroKey = key;
-        // Mobile browsers often jump to Current Bid when it updates — keep viewport put.
         restoreScroll(pos);
     }
+    window.acPaintBidHeroResult = function (kind, info) {
+        info = info || {};
+        setHeroHold(kind === 'sold' ? 'sold' : 'unsold', info, (playerCache && playerCache.id) || info.player_id);
+        playerCache = playerFromHold();
+        var lead = leadTeam(playerCache);
+        var amt = kind === 'sold' ? Number(playerCache.sold_points || 0) : 0;
+        paintBidHero(lead, lead ? logoUrl(lead) : '', amt);
+    };
+    window.acClearBidHeroResult = function () {
+        heroResultHold = null;
+        if (playerCache && (playerCache.state === 'sold' || playerCache.state === 'unsold')) {
+            playerCache = null;
+        }
+        lastHeroKey = '';
+        paintBidHero(null, '', 0);
+    };
     function isSquadFull(team) {
         var left = squadSlotsLeft(team);
         if (left != null && left <= 0) return true;
@@ -349,6 +492,7 @@
             return String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' });
         });
         teamsCache = teams;
+        player = mergeHeroHold(player);
         playerCache = player;
         if (!teams.length) {
             allowed = false;
@@ -360,17 +504,21 @@
             applyChrome();
             var lead = leadTeam(player);
             var leadLogoSrc = lead ? logoUrl(lead) : '';
-            var leadAmt = player && player.current_bid ? Number(player.current_bid) : 0;
+            var leadAmt = player && player.state === 'sold'
+                ? Number(player.sold_points || player.current_bid || 0)
+                : (player && player.current_bid ? Number(player.current_bid) : 0);
             paintBidHero(lead, leadLogoSrc, leadAmt);
             var html = teams.map(function (team) {
                 var leadOn = !!(lead && Number(lead.id) === Number(team.id));
-                var off = !player || !canBid(team);
+                var locked = actionsLocked();
+                var off = locked || !player || !canBid(team);
                 var rem = remaining(team) || 0;
                 var tot = totalPts(team) || 0;
                 var pct = tot > 0 ? Math.max(0, Math.min(100, (rem / tot) * 100)) : 0;
                 var barMod = pct > 50 ? '' : pct > 25 ? ' is-mid' : ' is-low';
                 var cls = 'ac-livebid-tile'
                     + (off ? ' is-off' : '')
+                    + (locked ? ' is-action-locked' : '')
                     + (leadOn ? ' is-lead' : '')
                     + (busyId === team.id ? ' is-busy' : '');
                 var logo = logoUrl(team)
@@ -401,6 +549,7 @@
                     foot = '<span class="ac-livebid-chip" data-custom="' + team.id + '" title="Enter custom points">' + fmt(team.next_bid) + '</span>';
                 }
                 return '<button type="button" class="' + cls + '" data-team-id="' + team.id + '"'
+                    + (locked ? ' disabled="disabled"' : '')
                     + ' title="' + esc(team.name) + '">'
                     + '<div class="ac-livebid-head">'
                     + logo
@@ -438,6 +587,7 @@
     }
 
     function placeBid(team, amount, done) {
+        if (actionsLocked()) { done('Wait for Next Player'); return; }
         var player = playerCache;
         if (!player || !team) { done('No player on stage'); return; }
         jsonRpc(BID_URL, {
@@ -470,6 +620,7 @@
     }
 
     function openCustom(teamId) {
+        if (actionsLocked()) return;
         var modal = modalEl();
         var team = teamsCache.filter(function (t) { return t.id === teamId; })[0];
         var player = playerCache;
@@ -678,6 +829,14 @@
             ev.preventDefault();
             ev.stopPropagation();
             return;
+        }
+        if (actionsLocked() && ev.target.closest('#acLiveBidGrid, #acLbPlace, #acLiveBidModal')) {
+            if (!ev.target.closest('#acLbModalClose')) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                closeCustom();
+                return;
+            }
         }
         if (ev.target.closest('#acLiveBidToggle')) {
             setExpanded(!isExpanded());
@@ -889,16 +1048,17 @@
             startHttpPoll();
             return;
         }
-        function onEvt() {
+        function onEvt(ev) {
             stopHttpPoll();
             wrapChangeImage();
-            poll();
+            var payload = null;
+            try { payload = ev && ev.data ? JSON.parse(ev.data) : null; } catch (e1) { payload = null; }
+            applyProjectorSnapshot(payload);
         }
         es.addEventListener('snapshot', onEvt);
         es.addEventListener('auction.update', onEvt);
         es.onopen = function () {
             stopHttpPoll();
-            poll();
         };
         es.onerror = function () {
             startHttpPoll();
