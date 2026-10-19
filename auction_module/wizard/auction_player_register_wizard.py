@@ -93,6 +93,12 @@ class AuctionPlayerRegisterWizard(models.TransientModel):
     jersy_name = fields.Char(string='Name on Jersey')
     jersy_number = fields.Char(string='Jersey Number')
     jersy_size = fields.Char(string='Jersey Size')
+    jersy_sleeve = fields.Selection(
+        [('HS', 'HS'), ('FS', 'FS')],
+        string='Sleeve',
+        default='HS',
+        help='Half Sleeve (HS) or Full Sleeve (FS).',
+    )
     track_size = fields.Selection(
         [
             ('S', 'S'),
@@ -155,6 +161,7 @@ class AuctionPlayerRegisterWizard(models.TransientModel):
                 'jersy_name': self.jersy_name or False,
                 'jersy_number': self.jersy_number or False,
                 'jersy_size': self.jersy_size or False,
+                'jersy_sleeve': self.jersy_sleeve or 'HS',
                 'track_size': self.track_size or False,
             })
         if self.tournament_type == 'football':

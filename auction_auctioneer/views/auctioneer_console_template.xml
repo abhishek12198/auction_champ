@@ -348,7 +348,7 @@ window.acToggleTheme = function() {
     document.getElementById('acThemeIcon').textContent = next === 'dark' ? '☀' : '🌙';
 };
 </script>
-<script src="/auction_auctioneer/static/src/js/auctioneer_console.js?v=1.4.79"></script>
+<script src="/auction_auctioneer/static/src/js/auctioneer_console.js?v=1.4.86"></script>
 </body>
 </html>
 </template>

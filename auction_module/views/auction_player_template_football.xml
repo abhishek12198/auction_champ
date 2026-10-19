@@ -321,7 +321,7 @@
                                             </t>
                                             <t t-else="">—</t>
                                         </div>
-                                        <t t-if="player.secondary_position_ids and not player.use_other_attributes">
+                                        <t t-if="player.secondary_position_ids">
                                             <div class="fbc-val-sub">Also: <t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></div>
                                         </t>
                                     </div>
@@ -334,8 +334,6 @@
                                         <div class="fbc-val"><t t-esc="foot_map.get(player.preferred_foot, '—')"/></div>
                                     </div>
                                 </div>
-                                <!-- Age (hidden when Other Attributes are used) -->
-                                <t t-if="not player.use_other_attributes">
                                 <div class="fbc-cell">
                                     <div class="fbc-ic">📅</div>
                                     <div class="fbc-cell-body">
@@ -343,9 +341,8 @@
                                         <div class="fbc-val"><t t-esc="('%s Years' % player.age) if player.age else '—'"/></div>
                                     </div>
                                 </div>
-                                </t>
-                                <!-- Other Attributes (replace Secondary / Age / Style / Strengths) -->
                                 <t t-foreach="player.other_attribute_ids.filtered('value')" t-as="oattr">
+                                <t t-if="oattr_index &lt; 3">
                                     <div class="fbc-cell">
                                         <div class="fbc-ic">✦</div>
                                         <div class="fbc-cell-body">
@@ -353,6 +350,7 @@
                                             <div class="fbc-val"><t t-esc="oattr.value or '—'"/></div>
                                         </div>
                                     </div>
+                                </t>
                                 </t>
                                 <!-- Blood Group -->
                                 <div class="fbc-cell">
@@ -373,7 +371,7 @@
                             </div>
 
                             <!-- Playing Style -->
-                            <t t-if="player.playing_style_ids and not player.use_other_attributes">
+                            <t t-if="player.playing_style_ids">
                                 <div class="fbc-sec">
                                     <div class="fbc-ic">🏃</div>
                                     <div class="fbc-sec-main">
@@ -388,7 +386,7 @@
                             </t>
 
                             <!-- Strengths (+ work rate) -->
-                            <t t-if="(player.strength_ids or player.work_rate) and not player.use_other_attributes">
+                            <t t-if="player.strength_ids or player.work_rate">
                                 <div class="fbc-sec">
                                     <div class="fbc-ic">💪</div>
                                     <div class="fbc-sec-main">

@@ -36,7 +36,20 @@
 #
 ##############################################################################
 
-from odoo import fields, models
+from odoo import api, fields, models, _
+from odoo.exceptions import ValidationError
+
+
+_EXTRA_INPUT_TYPES = [
+    ('text', 'Text'),
+    ('dropdown', 'Dropdown'),
+    ('radio', 'Radio'),
+    ('badge', 'Selection Badge'),
+    ('multi', 'Multi-select checkbox'),
+    ('checkbox', 'Checkbox'),
+]
+_EXTRA_TYPES_WITH_OPTIONS = frozenset(('dropdown', 'radio', 'badge', 'multi'))
+_MAX_DISPLAY_EXTRA_ATTRS = 3
 
 
 class AuctionPlayerPosition(models.Model):
@@ -87,26 +100,148 @@ class AuctionPlayerStrength(models.Model):
 class AuctionPlayerOtherAttribute(models.Model):
     _name = 'auction.player.other.attribute'
     _inherit = ['auction.tournament.security.mixin']
-    _description = 'Football Player Other Attribute'
+    _description = 'Player Additional Attribute'
     _order = 'sequence, id'
 
     player_id = fields.Many2one(
         'auction.team.player', string='Player', required=True, ondelete='cascade', index=True)
-    label = fields.Char(string='Label', required=True)
+    definition_id = fields.Many2one(
+        'auction.tournament.attribute.label',
+        string='Attribute',
+        ondelete='cascade',
+        index=True,
+    )
+    label = fields.Char(string='Attribute', required=True)
     value = fields.Char(string='Value')
     sequence = fields.Integer(default=10)
+    input_type = fields.Selection(
+        related='definition_id.input_type', readonly=True,
+    )
+    show_on_display = fields.Boolean(
+        related='definition_id.show_on_display', readonly=True,
+    )
+
+    @api.onchange('definition_id')
+    def _onchange_definition_id(self):
+        if self.definition_id:
+            self.label = self.definition_id.label
+            self.sequence = self.definition_id.sequence
 
 
 class AuctionTournamentAttributeLabel(models.Model):
     _name = 'auction.tournament.attribute.label'
     _inherit = ['auction.tournament.security.mixin']
-    _description = 'Tournament Other Attribute Label'
+    _description = 'Tournament Additional Attribute'
     _order = 'sequence, id'
 
     tournament_id = fields.Many2one(
         'auction.tournament', string='Tournament', required=True, ondelete='cascade', index=True)
     label = fields.Char(
-        string='Att-Label', required=True,
-        help='Column / field label shown on the Excel template and player form '
-             '(e.g. Club, Experience). Player rows store the matching Label-Value.')
+        string='Attribute', required=True,
+        help='Question shown on player registration and stored on the player.',
+    )
+    input_type = fields.Selection(
+        _EXTRA_INPUT_TYPES,
+        string='Input Type',
+        default='text',
+        required=True,
+    )
+    option_text = fields.Text(
+        string='Attribute Values',
+        help='Comma-separated options for Dropdown, Radio, Selection Badge '
+             'and Multi-select checkbox. Example: Fast, Medium, Slow',
+    )
+    required = fields.Boolean(string='Mandatory', default=False)
+    show_on_display = fields.Boolean(
+        string='Show on player card / showcase',
+        default=False,
+        help='Show this answer on the player card, projector and live URL. '
+             'At most 3 attributes can be shown so the current layout stays intact.',
+    )
     sequence = fields.Integer(default=10)
+    answer_ids = fields.One2many(
+        'auction.player.other.attribute', 'definition_id', string='Answers',
+    )
+
+    def option_list(self):
+        self.ensure_one()
+        options = []
+        seen = set()
+        raw = (self.option_text or '').replace('\r\n', '\n').replace('\r', '\n')
+        for chunk in raw.replace('\n', ',').split(','):
+            opt = chunk.strip()
+            if not opt or opt in seen:
+                continue
+            seen.add(opt)
+            options.append(opt)
+        return options
+
+    def posted_value(self, post):
+        """Read this question's submitted value from a registration POST."""
+        self.ensure_one()
+        key = 'extra_attr_%s' % self.id
+        getter = post.getlist if hasattr(post, 'getlist') else None
+        if self.input_type == 'checkbox':
+            raw = (post.get(key) or '').strip()
+            return 'Yes' if raw else ''
+        if self.input_type == 'multi':
+            raw = getter(key) if getter else post.get(key)
+            if isinstance(raw, str):
+                raw = [part.strip() for part in raw.split(',') if part.strip()]
+            allowed = set(self.option_list())
+            values = [val for val in (raw or []) if val in allowed]
+            return ', '.join(values)
+        value = (post.get(key) or '').strip()
+        if self.input_type in _EXTRA_TYPES_WITH_OPTIONS:
+            return value if value in self.option_list() else ''
+        return value
+
+    def validate_posted_value(self, value):
+        self.ensure_one()
+        if self.required and not (value or '').strip():
+            if self.input_type == 'checkbox':
+                return _('%s must be checked.') % (self.label or 'This field')
+            return _('%s is required.') % (self.label or 'This field')
+        return None
+
+    @api.constrains('input_type', 'option_text')
+    def _check_option_text(self):
+        for rec in self:
+            if rec.input_type in _EXTRA_TYPES_WITH_OPTIONS and not rec.option_list():
+                raise ValidationError(_(
+                    'Enter possible values (comma-separated) for "%s".'
+                ) % (rec.label or _('this attribute')))
+
+    @api.constrains('show_on_display', 'tournament_id')
+    def _check_max_display_attributes(self):
+        for tournament in self.mapped('tournament_id'):
+            shown = self.search_count([
+                ('tournament_id', '=', tournament.id),
+                ('show_on_display', '=', True),
+            ])
+            if shown > _MAX_DISPLAY_EXTRA_ATTRS:
+                raise ValidationError(_(
+                    'You can show at most %s additional attributes on the player card, '
+                    'projector and live URL so the current design is not disturbed.'
+                ) % _MAX_DISPLAY_EXTRA_ATTRS)
+
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        records._sync_tournament_players()
+        return records
+
+    def write(self, vals):
+        res = super().write(vals)
+        if any(key in vals for key in ('label', 'sequence', 'show_on_display')):
+            self._sync_tournament_players()
+        return res
+
+    def _sync_tournament_players(self):
+        tournaments = self.mapped('tournament_id')
+        if not tournaments:
+            return
+        players = self.env['auction.team.player'].search([
+            ('tournament_id', 'in', tournaments.ids),
+        ])
+        if players:
+            players._sync_other_attributes_from_tournament()

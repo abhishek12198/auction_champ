@@ -3334,17 +3334,14 @@ html:not([data-theme="standard"]) .pj-recent-band{
       if (p.blood_group) statsHtml += stat('Blood Group', p.blood_group, ICO.tag);
       if (p.secondary_positions && p.secondary_positions.length)
         statsHtml += stat('Secondary', (p.secondary_positions.join ? p.secondary_positions.join(', ') : p.secondary_positions), ICO.user);
-      if (p.use_other_attributes && p.other_attributes && p.other_attributes.length) {
-        for (var oi = 0; oi < p.other_attributes.length; oi++) {
-          var oa = p.other_attributes[oi];
-          if (oa && oa.label) statsHtml += stat(oa.label, oa.value || '—', ICO.tag);
-        }
+      var extras = p.extra_attributes || p.other_attributes || [];
+      for (var oi = 0; oi < extras.length && oi < 3; oi++) {
+        var oa = extras[oi];
+        if (oa && oa.label) statsHtml += stat(oa.label, oa.value || '—', ICO.tag);
       }
       if (p.location) statsHtml += stat('Location', p.location, ICO.tag);
       statsEl.innerHTML = statsHtml;
-      if (!(p.use_other_attributes && p.other_attributes && p.other_attributes.length)) {
-        statsEl.insertAdjacentHTML('beforeend', chips(p.playing_styles) + chips(p.strengths));
-      }
+      statsEl.insertAdjacentHTML('beforeend', chips(p.playing_styles) + chips(p.strengths));
     } else if (isBadminton) {
       statsHtml += stat('Age', p.age ? String(p.age) : '—', ICO.chron);
       statsHtml += stat('Category', p.badminton_category || p.role || '—', ICO.user);
@@ -3353,12 +3350,22 @@ html:not([data-theme="standard"]) .pj-recent-band{
       statsHtml += stat('Level', p.skill_level || '—', ICO.tag);
       if (p.tier_name) statsHtml += stat('Tier', p.tier_name, ICO.tag);
       if (p.location) statsHtml += stat('Location', p.location, ICO.tag);
+      extras = p.extra_attributes || p.other_attributes || [];
+      for (oi = 0; oi < extras.length && oi < 3; oi++) {
+        oa = extras[oi];
+        if (oa && oa.label) statsHtml += stat(oa.label, oa.value || '—', ICO.tag);
+      }
       statsEl.innerHTML = statsHtml;
       statsEl.insertAdjacentHTML('beforeend', chips(p.strengths));
     } else if (isKabaddi) {
       if (p.kabaddi_role || p.role) statsHtml += stat('Role', p.kabaddi_role || p.role, ICO.user);
       var club = p.previous_club || p.current_team || '';
       if (club) statsHtml += stat('Previous Club / Current Club', club, ICO.tag);
+      extras = p.extra_attributes || p.other_attributes || [];
+      for (oi = 0; oi < extras.length && oi < 3; oi++) {
+        oa = extras[oi];
+        if (oa && oa.label) statsHtml += stat(oa.label, oa.value || '—', ICO.tag);
+      }
       statsEl.innerHTML = statsHtml;
     } else {
       // Cricket — label is Role (not Position); show full profile attrs
@@ -3370,6 +3377,11 @@ html:not([data-theme="standard"]) .pj-recent-band{
       if (p.weight) statsHtml += stat('Weight', p.weight, ICO.user);
       if (p.blood_group) statsHtml += stat('Blood Group', p.blood_group, ICO.tag);
       if (p.location) statsHtml += stat('Location', p.location, ICO.tag);
+      extras = p.extra_attributes || p.other_attributes || [];
+      for (oi = 0; oi < extras.length && oi < 3; oi++) {
+        oa = extras[oi];
+        if (oa && oa.label) statsHtml += stat(oa.label, oa.value || '—', ICO.tag);
+      }
       statsEl.innerHTML = statsHtml;
     }
 
@@ -4549,20 +4561,29 @@ html:not([data-theme="standard"]) .pj-recent-band{
       var stats = '';
       if (isFootball) {
         stats += pjRmStat('Foot', p.preferred_foot);
-        if (!p.use_other_attributes) stats += pjRmStat('Age', p.age);
-        if (p.use_other_attributes && p.other_attributes && p.other_attributes.length) {
-          for (var oi = 0; oi < p.other_attributes.length; oi++) {
-            var oa = p.other_attributes[oi] || {};
-            stats += pjRmStat(oa.label || 'Attr', oa.value || '');
-          }
+        stats += pjRmStat('Age', p.age);
+        extras = p.extra_attributes || p.other_attributes || [];
+        for (oi = 0; oi < extras.length && oi < 3; oi++) {
+          oa = extras[oi] || {};
+          stats += pjRmStat(oa.label || 'Attr', oa.value || '');
         }
         stats += pjRmStat('Blood', p.blood_group);
         stats += pjRmStat('Loc', p.location);
       } else if (isKabaddi) {
         stats += pjRmStat('Club', p.previous_club || p.current_team);
+        extras = p.extra_attributes || p.other_attributes || [];
+        for (oi = 0; oi < extras.length && oi < 3; oi++) {
+          oa = extras[oi] || {};
+          stats += pjRmStat(oa.label || 'Attr', oa.value || '');
+        }
       } else {
         stats += pjRmStat('Bat', p.batting_style);
         stats += pjRmStat('Bowl', p.bowling_style);
+        extras = p.extra_attributes || p.other_attributes || [];
+        for (oi = 0; oi < extras.length && oi < 3; oi++) {
+          oa = extras[oi] || {};
+          stats += pjRmStat(oa.label || 'Attr', oa.value || '');
+        }
         stats += pjRmStat('Loc', p.location);
         stats += pjRmStat('Blood', p.blood_group);
       }

@@ -498,3 +498,86 @@
         justify-content: center;
     }
 }
+
+.o_form_view .ac-aa-wrap {
+    padding: 4px 2px 12px;
+}
+.o_form_view .ac-aa-hero {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+    padding: 16px 18px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 58%, #1d4ed8 100%);
+    color: #e2e8f0;
+}
+.o_form_view .ac-aa-kicker {
+    font-size: 11px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: #93c5fd;
+    font-weight: 700;
+}
+.o_form_view .ac-aa-title {
+    margin: 4px 0 6px;
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+}
+.o_form_view .ac-aa-help {
+    margin: 0;
+    max-width: 720px;
+    color: rgba(226, 232, 240, 0.88);
+    line-height: 1.45;
+}
+.o_form_view .ac-aa-counter {
+    flex: 0 0 auto;
+    min-width: 92px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.12);
+    text-align: center;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+.o_form_view .ac-aa-counter .o_field_integer,
+.o_form_view .ac-aa-counter .o_field_widget {
+    display: block;
+    width: auto !important;
+    font-size: 28px;
+    line-height: 1;
+    color: #fff;
+    font-weight: 800;
+}
+.o_form_view .ac-aa-counter input {
+    background: transparent !important;
+    border: 0 !important;
+    color: #fff !important;
+    font-size: 28px !important;
+    font-weight: 800 !important;
+    text-align: center;
+    width: 42px !important;
+    padding: 0 !important;
+}
+.o_form_view .ac-aa-list .o_list_table {
+    border-radius: 12px;
+    overflow: hidden;
+}
+.o_form_view .ac-aa-list .o_list_table thead th {
+    background: #f1f5f9;
+    color: #0f172a;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-size: 11px;
+}
+.o_form_view .ac-aa-list .o_data_row {
+    background: #fff;
+}
+.o_form_view .ac-aa-list .o_data_row:nth-child(even) {
+    background: #f8fafc;
+}

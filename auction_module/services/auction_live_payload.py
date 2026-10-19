@@ -625,45 +625,42 @@ def _balance_player_profile(player, mystery, is_football):
     if is_football:
         pos = player.dominant_position_id
         role = ((pos.name or pos.code) if pos else '') or (player.role or '')
-        if player.use_other_attributes:
-            for item in player.other_attribute_ids:
-                label = (item.label or '').strip()
-                value = (item.value or '').strip()
-                if label and value:
-                    attrs.append({'k': label, 'v': value})
-        else:
-            foot = _FOOT_LABEL.get(player.preferred_foot, '')
-            if foot:
-                attrs.append({'k': 'Foot', 'v': foot})
-            secondary = [
-                (sec.code or sec.name or '').strip()
-                for sec in player.secondary_position_ids
-                if (sec.code or sec.name)
-            ]
-            if secondary:
-                attrs.append({'k': 'Secondary', 'v': ', '.join(secondary)})
-            if player.age:
-                attrs.append({'k': 'Age', 'v': str(player.age)})
-            rate = _RATE_LABEL.get(player.work_rate, '')
-            if rate:
-                attrs.append({'k': 'Work Rate', 'v': rate})
-            tags = []
-            for style in player.playing_style_ids:
-                label = ('%s %s' % (style.icon or '', style.name or '')).strip()
-                if label:
-                    tags.append(label)
-            for strength in player.strength_ids:
-                label = ('%s %s' % (strength.icon or '', strength.name or '')).strip()
-                if label:
-                    tags.append(label)
-            if tags:
-                attrs.append({'k': 'Tags', 'v': ' · '.join(tags)})
+        foot = _FOOT_LABEL.get(player.preferred_foot, '')
+        if foot:
+            attrs.append({'k': 'Foot', 'v': foot})
+        secondary = [
+            (sec.code or sec.name or '').strip()
+            for sec in player.secondary_position_ids
+            if (sec.code or sec.name)
+        ]
+        if secondary:
+            attrs.append({'k': 'Secondary', 'v': ', '.join(secondary)})
+        if player.age:
+            attrs.append({'k': 'Age', 'v': str(player.age)})
+        rate = _RATE_LABEL.get(player.work_rate, '')
+        if rate:
+            attrs.append({'k': 'Work Rate', 'v': rate})
+        tags = []
+        for style in player.playing_style_ids:
+            label = ('%s %s' % (style.icon or '', style.name or '')).strip()
+            if label:
+                tags.append(label)
+        for strength in player.strength_ids:
+            label = ('%s %s' % (strength.icon or '', strength.name or '')).strip()
+            if label:
+                tags.append(label)
+        if tags:
+            attrs.append({'k': 'Tags', 'v': ' · '.join(tags)})
+        for extra in player.extra_attributes_payload():
+            attrs.append({'k': extra['label'], 'v': extra['value']})
         return role, attrs
     role = player.role or ''
     if player.batting_style:
         attrs.append({'k': 'Batting', 'v': player.batting_style})
     if player.bowling_style:
         attrs.append({'k': 'Bowling', 'v': player.bowling_style})
+    for extra in player.extra_attributes_payload():
+        attrs.append({'k': extra['label'], 'v': extra['value']})
     return role, attrs
 
 
@@ -872,21 +869,25 @@ def _serialize_registered_player(player, db_name, is_football, show_org, show_ad
             'work_rate': work_labels.get(player.work_rate, '') or '',
             'styles': [s.name for s in player.playing_style_ids if s.name],
             'strengths': [s.name for s in player.strength_ids if s.name],
-            'other_attributes': [
-                {'label': (a.label or '').strip(), 'value': (a.value or '').strip()}
-                for a in player.other_attribute_ids
-                if (a.label or '').strip() and (a.value or '').strip()
-            ],
+            'other_attributes': player.extra_attributes_payload(),
+            'extra_attributes': player.extra_attributes_payload(),
+            'use_other_attributes': False,
         })
     elif player.tournament_id and player.tournament_id.tournament_type == 'kabaddi':
         data.update({
             'role': (player.kabaddi_role_label() or player.role or '').strip(),
+            'other_attributes': player.extra_attributes_payload(),
+            'extra_attributes': player.extra_attributes_payload(),
+            'use_other_attributes': False,
         })
     else:
         data.update({
             'role': (player.role or '').strip(),
             'batting_style': (player.batting_style or '').strip(),
             'bowling_style': (player.bowling_style or '').strip(),
+            'other_attributes': player.extra_attributes_payload(),
+            'extra_attributes': player.extra_attributes_payload(),
+            'use_other_attributes': False,
         })
     return data
 

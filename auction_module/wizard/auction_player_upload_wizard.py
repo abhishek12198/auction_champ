@@ -94,6 +94,7 @@ class AuctionPlayerUploadWizard(models.TransientModel):
             'Jersey Name',
             'Jersey Number',
             'Jersey Size',
+            'Jersey Sleeve',
         ]
 
     def _football_base_columns(self):
@@ -117,6 +118,7 @@ class AuctionPlayerUploadWizard(models.TransientModel):
             'Jersey Name',
             'Jersey Number',
             'Jersey Size',
+            'Jersey Sleeve',
         ]
 
     def _kabaddi_columns(self):
@@ -133,20 +135,29 @@ class AuctionPlayerUploadWizard(models.TransientModel):
             'Jersey Name',
             'Jersey Number',
             'Jersey Size',
+            'Jersey Sleeve',
         ]
+
+    def _extra_attribute_columns(self):
+        cols = []
+        for lab in self.tournament_id.other_attribute_label_ids.sorted('sequence'):
+            if lab.label and lab.label not in cols:
+                cols.append(lab.label)
+        return cols
 
     def _excel_columns(self):
         self.ensure_one()
         sport = self.tournament_id.tournament_type
         if sport == 'football':
             cols = list(self._football_base_columns())
-            for lab in self.tournament_id.other_attribute_label_ids.sorted('sequence'):
-                if lab.label and lab.label not in cols:
-                    cols.append(lab.label)
-            return cols
-        if sport == 'kabaddi':
-            return list(self._kabaddi_columns())
-        return list(self._cricket_columns())
+        elif sport == 'kabaddi':
+            cols = list(self._kabaddi_columns())
+        else:
+            cols = list(self._cricket_columns())
+        for label in self._extra_attribute_columns():
+            if label not in cols:
+                cols.append(label)
+        return cols
 
     def action_download_template(self):
         self.ensure_one()
@@ -200,6 +211,10 @@ class AuctionPlayerUploadWizard(models.TransientModel):
             sample['Bowling Style'] = 'Right Arm'
         sample['Blood Group'] = 'A+'
         sample['Tier'] = 'Rookie'
+        sample['Jersey Name'] = 'PLAYER'
+        sample['Jersey Number'] = '18'
+        sample['Jersey Size'] = 'L'
+        sample['Jersey Sleeve'] = 'HS'
         for col_idx, title in enumerate(columns, start=1):
             cell = ws.cell(row=2, column=col_idx, value=sample.get(title, ''))
             cell.border = thin
@@ -345,6 +360,12 @@ class AuctionPlayerUploadWizard(models.TransientModel):
                 'Free text',
                 'Size label (e.g. S, M, L, XL).',
                 'Free text — not a fixed selection in upload.',
+            ],
+            [
+                'Jersey Sleeve',
+                'HS or FS',
+                'Sleeve preference.',
+                'HS = Half Sleeve. FS = Full Sleeve.',
             ],
         ]
 
@@ -842,6 +863,14 @@ class AuctionPlayerUploadWizard(models.TransientModel):
             tier = Tier.search([('name', '=ilike', tier_name)], limit=1)
         return tier.id if tier else False
 
+    def _normalize_upload_sleeve(self, value):
+        raw = (value or '').strip().upper().replace(' ', '').replace('-', '')
+        aliases = {
+            'HS': 'HS', 'H': 'HS', 'HALF': 'HS', 'HALFSLEEVE': 'HS',
+            'FS': 'FS', 'F': 'FS', 'FULL': 'FS', 'FULLSLEEVE': 'FS',
+        }
+        return aliases.get(raw) or False
+
     def _resolve_positions(self, text, multi=False):
         Position = self.env['auction.player.position']
         if not text:
@@ -887,6 +916,9 @@ class AuctionPlayerUploadWizard(models.TransientModel):
             'jersy_name': cell(['jersey name', 'jersy name', 'name on jersey']),
             'jersy_number': cell(['jersey number', 'jersy number', 'jersey no']),
             'jersy_size': cell(['jersey size', 'jersy size']),
+            'jersy_sleeve': self._normalize_upload_sleeve(
+                cell(['jersey sleeve', 'jersy sleeve', 'sleeve'])
+            ),
             'state': 'draft',
         }
         tier_id = self._resolve_tier(cell(['tier']))
@@ -937,28 +969,6 @@ class AuctionPlayerUploadWizard(models.TransientModel):
             if rate in ('low', 'medium', 'high'):
                 vals['work_rate'] = rate
 
-            attr_commands = []
-            for lab in tournament.other_attribute_label_ids.sorted('sequence'):
-                label = (lab.label or '').strip()
-                if not label:
-                    continue
-                key = self._norm_header(label)
-                value = ''
-                if key in header_map:
-                    idx = header_map[key]
-                    raw_val = raw[idx] if idx < len(raw) else None
-                    if raw_val is not None:
-                        if isinstance(raw_val, float) and raw_val.is_integer():
-                            value = str(int(raw_val))
-                        else:
-                            value = str(raw_val).strip()
-                attr_commands.append((0, 0, {
-                    'label': label,
-                    'value': value,
-                    'sequence': lab.sequence or 10,
-                }))
-            if attr_commands:
-                vals['other_attribute_ids'] = attr_commands
         elif tournament.tournament_type == 'kabaddi':
             role = cell(['role'])
             labels = {
@@ -989,5 +999,29 @@ class AuctionPlayerUploadWizard(models.TransientModel):
                 vals['batting_style'] = batting
             if bowling:
                 vals['bowling_style'] = bowling
+
+        attr_commands = []
+        for lab in tournament.other_attribute_label_ids.sorted('sequence'):
+            label = (lab.label or '').strip()
+            if not label:
+                continue
+            key = self._norm_header(label)
+            value = ''
+            if key in header_map:
+                idx = header_map[key]
+                raw_val = raw[idx] if idx < len(raw) else None
+                if raw_val is not None:
+                    if isinstance(raw_val, float) and raw_val.is_integer():
+                        value = str(int(raw_val))
+                    else:
+                        value = str(raw_val).strip()
+            attr_commands.append((0, 0, {
+                'definition_id': lab.id,
+                'label': label,
+                'value': value,
+                'sequence': lab.sequence or 10,
+            }))
+        if attr_commands:
+            vals['other_attribute_ids'] = attr_commands
 
         return vals

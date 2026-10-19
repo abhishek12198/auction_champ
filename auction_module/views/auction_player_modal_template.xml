@@ -330,23 +330,16 @@
                     <span class="player-attr-label">Preferred Foot</span>
                     <span class="player-attr-value"><t t-esc="player.preferred_foot.capitalize()"/></span>
                   </t>
-                  <t t-if="player.use_other_attributes">
-                    <t t-foreach="player.other_attribute_ids.filtered('value')" t-as="oattr">
-                      <span class="player-attr-label"><t t-esc="oattr.label"/></span>
-                      <span class="player-attr-value"><t t-esc="oattr.value or '—'"/></span>
-                    </t>
+                  <t t-if="player.secondary_position_ids">
+                    <span class="player-attr-label">Secondary</span>
+                    <span class="player-attr-value"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span>
                   </t>
-                  <t t-else="">
-                    <t t-if="player.secondary_position_ids">
-                      <span class="player-attr-label">Secondary</span>
-                      <span class="player-attr-value"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span>
-                    </t>
-                    <t t-if="player.age">
-                      <span class="player-attr-label">Age</span>
-                      <span class="player-attr-value"><t t-esc="player.age"/></span>
-                    </t>
+                  <t t-if="player.age">
+                    <span class="player-attr-label">Age</span>
+                    <span class="player-attr-value"><t t-esc="player.age"/></span>
                   </t>
                 </t>
+                <t t-call="auction_module.football_other_attribute_rows"/>
                 <t t-if="player.blood_group">
                   <span class="player-attr-label">Blood Group &#x1F9B8;</span>
                   <span class="player-attr-value" style="color:#e53935;font-weight:600;">

@@ -2765,13 +2765,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         if (p.height)         attrsHtml += attr('Height', p.height);
         if (p.weight)         attrsHtml += attr('Weight', p.weight);
         if (p.blood_group)    attrsHtml += attr('Blood Group', p.blood_group);
-        if (p.use_other_attributes && p.other_attributes && p.other_attributes.length) {
-          for (var oi = 0; oi < p.other_attributes.length; oi++) {
-            var oa = p.other_attributes[oi] || {};
-            if (oa.label) attrsHtml += attr(oa.label, oa.value || '—');
-          }
-        } else if (p.secondary_positions && p.secondary_positions.length) {
+        if (p.secondary_positions && p.secondary_positions.length) {
           attrsHtml += attr('Secondary', p.secondary_positions.join(', '));
+        }
+        var extras = p.extra_attributes || p.other_attributes || [];
+        for (var oi = 0; oi < extras.length && oi < 3; oi++) {
+          var oa = extras[oi] || {};
+          if (oa.label) attrsHtml += attr(oa.label, oa.value || '—');
         }
         if (p.location) attrsHtml += attr('Location', p.location);
         if (p.mobile) attrsHtml += attr('Contact', p.mobile);
@@ -2786,10 +2786,20 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         attrsHtml += attr('Tier', (p.tier_id && p.tier_id[1]) ? p.tier_id[1] : '—');
         attrsHtml += attr('Mobile', p.mobile || p.masked_contact || '—');
         attrsHtml += attr('Location', p.location || '—');
+        extras = p.extra_attributes || p.other_attributes || [];
+        for (oi = 0; oi < extras.length && oi < 3; oi++) {
+          oa = extras[oi] || {};
+          if (oa.label) attrsHtml += attr(oa.label, oa.value || '—');
+        }
         attrsHtml += pcChips(p.strengths);
       } else if (isKabaddi) {
         if (p.kabaddi_role || p.role) attrsHtml += attr('Role', p.kabaddi_role || p.role);
         if (p.previous_club) attrsHtml += attr('Previous Club / Current Club', p.previous_club);
+        extras = p.extra_attributes || p.other_attributes || [];
+        for (oi = 0; oi < extras.length && oi < 3; oi++) {
+          oa = extras[oi] || {};
+          if (oa.label) attrsHtml += attr(oa.label, oa.value || '—');
+        }
       } else {
         // Cricket — Role (not Position); richer profile like themed cards
         if (p.role) attrsHtml += attr('Role', p.role);
@@ -2801,6 +2811,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         if (p.blood_group) attrsHtml += attr('Blood Group', p.blood_group);
         if (p.location) attrsHtml += attr('Location', p.location);
         if (p.mobile) attrsHtml += attr('Contact', p.mobile);
+        extras = p.extra_attributes || p.other_attributes || [];
+        for (oi = 0; oi < extras.length && oi < 3; oi++) {
+          oa = extras[oi] || {};
+          if (oa.label) attrsHtml += attr(oa.label, oa.value || '—');
+        }
       }
     }
 

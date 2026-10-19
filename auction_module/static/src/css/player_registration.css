@@ -3161,3 +3161,39 @@ body.reg-roster-lock {
     .reg-roster-chip { font-size: .52rem; padding: .08rem .35rem; }
     .reg-roster-meta { display: none; }
 }
+
+.reg-extra-q {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.reg-radio-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.reg-radio-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--reg-input-border);
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 0.92rem;
+}
+.reg-radio-line:hover {
+    border-color: var(--reg-accent);
+}
+.reg-bool-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--reg-input-border);
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    font-weight: 600;
+}

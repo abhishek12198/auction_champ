@@ -84,7 +84,7 @@
                                         <td style="color:#fff2dc; font-size:0.85rem; font-weight:600; padding:7px 0; border-bottom:1px solid rgba(245,200,66,0.15); vertical-align:middle;"><t t-esc="doc.dominant_position_id.name"/></td>
                                     </tr>
                                 </t>
-                                <t t-if="doc.tournament_id.tournament_type == 'football' and doc.secondary_position_ids and not doc.use_other_attributes">
+                                <t t-if="doc.tournament_id.tournament_type == 'football' and doc.secondary_position_ids">
                                     <tr>
                                         <td style="color:#d8b98a; font-family:'Oswald',sans-serif; font-size:0.7rem; font-weight:500; letter-spacing:0.8px; text-transform:uppercase; padding:7px 10px 7px 0; white-space:nowrap; width:42%; border-bottom:1px solid rgba(245,200,66,0.15); vertical-align:middle;">Secondary</td>
                                         <td style="color:#fff2dc; font-size:0.85rem; font-weight:600; padding:7px 0; border-bottom:1px solid rgba(245,200,66,0.15); vertical-align:middle;"><t t-esc="', '.join(doc.secondary_position_ids.mapped('code'))"/></td>
@@ -96,7 +96,7 @@
                                         <td style="color:#fff2dc; font-size:0.85rem; font-weight:600; padding:7px 0; border-bottom:1px solid rgba(245,200,66,0.15); vertical-align:middle;"><t t-esc="doc.preferred_foot.capitalize()"/></td>
                                     </tr>
                                 </t>
-                                <t t-if="doc.tournament_id.tournament_type == 'football' and doc.use_other_attributes">
+                                <t t-if="doc.other_attribute_ids.filtered('value')">
                                     <t t-foreach="doc.other_attribute_ids.filtered('value')" t-as="oattr">
                                         <tr>
                                             <td style="color:#d8b98a; font-family:'Oswald',sans-serif; font-size:0.7rem; font-weight:500; letter-spacing:0.8px; text-transform:uppercase; padding:7px 10px 7px 0; white-space:nowrap; width:42%; border-bottom:1px solid rgba(245,200,66,0.15); vertical-align:middle;"><t t-esc="oattr.label"/></td>
@@ -104,13 +104,13 @@
                                         </tr>
                                     </t>
                                 </t>
-                                <t t-if="doc.tournament_id.tournament_type == 'football' and doc.work_rate and not doc.use_other_attributes">
+                                <t t-if="doc.tournament_id.tournament_type == 'football' and doc.work_rate">
                                     <tr>
                                         <td style="color:#d8b98a; font-family:'Oswald',sans-serif; font-size:0.7rem; font-weight:500; letter-spacing:0.8px; text-transform:uppercase; padding:7px 10px 7px 0; white-space:nowrap; width:42%; border-bottom:1px solid rgba(245,200,66,0.15); vertical-align:middle;">Work Rate</td>
                                         <td style="color:#fff2dc; font-size:0.85rem; font-weight:600; padding:7px 0; border-bottom:1px solid rgba(245,200,66,0.15); vertical-align:middle;"><t t-esc="doc.work_rate.capitalize()"/></td>
                                     </tr>
                                 </t>
-                                <t t-if="doc.tournament_id.tournament_type == 'football' and doc.age and not doc.use_other_attributes">
+                                <t t-if="doc.tournament_id.tournament_type == 'football' and doc.age">
                                     <tr>
                                         <td style="color:#d8b98a; font-family:'Oswald',sans-serif; font-size:0.7rem; font-weight:500; letter-spacing:0.8px; text-transform:uppercase; padding:7px 10px 7px 0; white-space:nowrap; width:42%; border-bottom:1px solid rgba(245,200,66,0.15); vertical-align:middle;">Age</td>
                                         <td style="color:#fff2dc; font-size:0.85rem; font-weight:600; padding:7px 0; border-bottom:1px solid rgba(245,200,66,0.15); vertical-align:middle;"><t t-esc="doc.age"/></td>

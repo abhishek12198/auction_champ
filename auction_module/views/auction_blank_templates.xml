@@ -3988,6 +3988,16 @@ html[data-theme] body.lbx #lb-brk-logo .lb-brk-logo-ph{font-size:calc(var(--u)*1
            '</div><div class="lb-stat-val">' + lbEsc(val) + '</div></div>';
   }
 
+  function lbExtraAttrs(p) {
+    const extras = (p && (p.extra_attributes || p.other_attributes)) || [];
+    let html = '';
+    for (let i = 0; i < extras.length && i < 3; i++) {
+      const oa = extras[i];
+      if (oa && oa.label) html += lbStat(oa.label, oa.value || '—');
+    }
+    return html;
+  }
+
   function lbChips(items) {
     if (!items || !items.length) return '';
     let html = '';
@@ -4298,25 +4308,17 @@ html[data-theme] body.lbx #lb-brk-logo .lb-brk-logo-ph{font-size:calc(var(--u)*1
     } else if (isFootball) {
       let r1 = '';
       if (p.preferred_foot) r1 += lbStat('Foot', p.preferred_foot);
-      if (p.use_other_attributes && p.other_attributes && p.other_attributes.length) {
-        for (let oi = 0; oi < p.other_attributes.length; oi++) {
-          const oa = p.other_attributes[oi];
-          if (oa && oa.label) r1 += lbStat(oa.label, oa.value || '—');
-        }
-      } else {
-        if (p.age) r1 += lbStat('Age', String(p.age));
-        if (p.secondary_positions && p.secondary_positions.length)
-          r1 += lbStat('Secondary', p.secondary_positions.join(', '));
-      }
+      if (p.age) r1 += lbStat('Age', String(p.age));
+      if (p.secondary_positions && p.secondary_positions.length)
+        r1 += lbStat('Secondary', p.secondary_positions.join(', '));
+      r1 += lbExtraAttrs(p);
       let r2 = '';
       if (p.blood_group) r2 += lbStat('Blood', p.blood_group);
       let sh = r1;
       if (r1 && r2) sh += '<div class="lb-stat-break"></div>';
       sh += r2;
-      if (!(p.use_other_attributes && p.other_attributes && p.other_attributes.length)) {
-        const fChips = lbChips(p.playing_styles) + lbChips(p.strengths);
-        if (fChips) sh += (sh ? '<div class="lb-stat-break"></div>' : '') + fChips;
-      }
+      const fChips = lbChips(p.playing_styles) + lbChips(p.strengths);
+      if (fChips) sh += (sh ? '<div class="lb-stat-break"></div>' : '') + fChips;
       if (sh) {
         statsRow.style.display = 'flex';
         lbxSet(statsRow, sh);
@@ -4330,6 +4332,7 @@ html[data-theme] body.lbx #lb-brk-logo .lb-brk-logo-ph{font-size:calc(var(--u)*1
       r1 += lbStat('Hand', p.preferred_hand || p.preferred_foot || '—');
       r1 += lbStat('Style', p.badminton_style || '—');
       r1 += lbStat('Level', p.skill_level || '—');
+      r1 += lbExtraAttrs(p);
       let sh = r1;
       const bChips = lbChips(p.strengths);
       if (bChips) sh += (sh ? '<div class="lb-stat-break"></div>' : '') + bChips;
@@ -4339,18 +4342,20 @@ html[data-theme] body.lbx #lb-brk-logo .lb-brk-logo-ph{font-size:calc(var(--u)*1
       let r1 = '';
       if (p.kabaddi_role || p.role) r1 += lbStat('Role', p.kabaddi_role || p.role);
       if (p.previous_club || p.current_team) r1 += lbStat('Club', p.previous_club || p.current_team);
+      r1 += lbExtraAttrs(p);
       if (r1) {
         statsRow.style.display = 'flex';
         lbxSet(statsRow, r1);
       } else {
         statsRow.style.display = 'none';
       }
-    } else if (p.batting_style || p.bowling_style) {
+    } else if (p.batting_style || p.bowling_style || lbExtraAttrs(p)) {
       statsRow.style.display = 'flex';
       lbxSet(statsRow, '<div class="lb-stat-chip"><div class="lb-stat-lbl">Batting</div>' +
         '<div class="lb-stat-val">' + lbEsc(p.batting_style || '—') + '</div></div>' +
         '<div class="lb-stat-chip"><div class="lb-stat-lbl">Bowling</div>' +
-        '<div class="lb-stat-val">' + lbEsc(p.bowling_style || '—') + '</div></div>');
+        '<div class="lb-stat-val">' + lbEsc(p.bowling_style || '—') + '</div></div>' +
+        lbExtraAttrs(p));
     } else {
       statsRow.style.display = 'none';
     }

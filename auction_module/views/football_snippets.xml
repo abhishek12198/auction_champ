@@ -5,7 +5,7 @@
          color:inherit so it adapts to every card theme (light or dark).
          Skipped when Other Attributes are populated (those replace this block). -->
     <template id="football_tag_chips">
-        <t t-if="player.tournament_type == 'football' and not player.use_other_attributes and (player.playing_style_ids or player.strength_ids)">
+        <t t-if="player.tournament_type == 'football' and (player.playing_style_ids or player.strength_ids)">
             <div class="ac-fb-chip-row" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;">
                 <t t-foreach="player.playing_style_ids" t-as="sty">
                     <span style="display:inline-flex; align-items:center; gap:5px; background:rgba(120,144,180,0.18); border:1px solid rgba(120,144,180,0.45); border-radius:999px; padding:5px 12px; font-size:0.8rem; font-weight:600; letter-spacing:0.3px; color:inherit;"><t t-esc="sty.icon"/> <t t-esc="sty.name"/></span>
@@ -17,12 +17,22 @@
         </t>
     </template>
 
-    <!-- Label/value rows for Other Attributes (legacy vanilla grid). -->
     <template id="football_other_attribute_rows">
-        <t t-if="player.tournament_type == 'football' and player.use_other_attributes">
-            <t t-foreach="player.other_attribute_ids.filtered('value')" t-as="oattr">
+        <t t-foreach="player.other_attribute_ids.filtered('value')" t-as="oattr">
+            <t t-if="oattr_index &lt; 3">
                 <span class="player-attr-label"><t t-esc="oattr.label"/></span>
                 <span class="player-attr-value"><t t-esc="oattr.value or '—'"/></span>
+            </t>
+        </t>
+    </template>
+
+    <template id="player_extra_attribute_hud_rows">
+        <t t-foreach="player.other_attribute_ids.filtered('value')" t-as="oattr">
+            <t t-if="oattr_index &lt; 3">
+                <div class="hud-stat-row">
+                    <span class="hud-stat-key"><t t-esc="oattr.label"/></span>
+                    <span class="hud-stat-val"><t t-esc="oattr.value or '—'"/></span>
+                </div>
             </t>
         </t>
     </template>

@@ -514,13 +514,24 @@ class AuctionTeamPlayer(models.Model):
 
     other_attribute_ids = fields.One2many(
         'auction.player.other.attribute', 'player_id',
-        string='Other Attributes',
-        help='When values are set, Secondary / Age / Playing Style / Strengths are hidden on '
-             'player cards and live displays; these label–value rows are shown instead.')
+        string='Additional Attributes',
+        help='Answers to the tournament Additional Attributes questionnaire.',
+    )
+    display_extra_attribute_ids = fields.One2many(
+        'auction.player.other.attribute',
+        compute='_compute_display_extra_attribute_ids',
+        string='Display Additional Attributes',
+    )
     use_other_attributes = fields.Boolean(
-        string='Use Other Attributes',
+        string='Has Display Additional Attributes',
         compute='_compute_use_other_attributes',
-        help='True when at least one Other Attribute has a value.')
+        help='True when at least one additional attribute is flagged to show '
+             'on the player card, projector or live URL.',
+    )
+    has_extra_attributes = fields.Boolean(
+        string='Has Additional Attribute Questions',
+        compute='_compute_has_extra_attributes',
+    )
     kanban_other_attrs_html = fields.Html(
         string='Other Attributes (Kanban)',
         compute='_compute_kanban_other_attrs_html',
@@ -591,6 +602,12 @@ class AuctionTeamPlayer(models.Model):
     jersy_size = fields.Char('Jersy Size')
     jersy_number = fields.Char("Number in Jersy")
     jersy_name = fields.Char("Name in Jersy")
+    jersy_sleeve = fields.Selection(
+        [('HS', 'HS'), ('FS', 'FS')],
+        string='Sleeve',
+        default='HS',
+        help='Half Sleeve (HS) or Full Sleeve (FS).',
+    )
     track_size = fields.Selection(
         [
             ('S', 'S'),
@@ -619,59 +636,143 @@ class AuctionTeamPlayer(models.Model):
             else:
                 player.masked_contact = c
 
-    @api.depends('other_attribute_ids', 'other_attribute_ids.value', 'other_attribute_ids.label')
-    def _compute_use_other_attributes(self):
+    @api.depends('tournament_id', 'tournament_id.other_attribute_label_ids')
+    def _compute_has_extra_attributes(self):
         for player in self:
-            player.use_other_attributes = any(
-                (a.label and (a.value or '').strip()) for a in player.other_attribute_ids
+            player.has_extra_attributes = bool(
+                player.tournament_id.other_attribute_label_ids
             )
 
+    def get_display_extra_attributes(self):
+        """Answers flagged for public display, capped at 3."""
+        Attribute = self.env['auction.player.other.attribute']
+        if not self:
+            return Attribute
+        self.ensure_one()
+        shown = Attribute.browse()
+        try:
+            attrs = self.other_attribute_ids.sorted(
+                lambda rec: (rec.sequence or 0, rec.id or 0)
+            )
+        except Exception:
+            attrs = self.other_attribute_ids
+        for attr in attrs:
+            try:
+                definition = attr.definition_id if 'definition_id' in attr._fields else False
+                if not definition or not getattr(definition, 'show_on_display', False):
+                    continue
+                if not (attr.value or '').strip() or not (attr.label or '').strip():
+                    continue
+                shown |= attr
+                if len(shown) >= 3:
+                    break
+            except Exception:
+                continue
+        return shown
+
+    def extra_attributes_payload(self, display_only=True):
+        if not self:
+            return []
+        self.ensure_one()
+        try:
+            recs = (
+                self.get_display_extra_attributes()
+                if display_only
+                else self.other_attribute_ids.sorted(
+                    lambda rec: (rec.sequence or 0, rec.id or 0)
+                ).filtered(
+                    lambda rec: (rec.label or '').strip() and (rec.value or '').strip()
+                )
+            )
+            return [
+                {'label': (rec.label or '').strip(), 'value': (rec.value or '').strip()}
+                for rec in recs
+            ]
+        except Exception:
+            return []
+
     @api.depends(
-        'tournament_type',
-        'other_attribute_ids', 'other_attribute_ids.value', 'other_attribute_ids.label',
+        'other_attribute_ids',
+        'other_attribute_ids.value',
+        'other_attribute_ids.label',
+        'other_attribute_ids.sequence',
+        'other_attribute_ids.definition_id',
+        'other_attribute_ids.definition_id.show_on_display',
+    )
+    def _compute_use_other_attributes(self):
+        for player in self:
+            player.use_other_attributes = bool(player.get_display_extra_attributes())
+
+    @api.depends(
+        'other_attribute_ids',
+        'other_attribute_ids.value',
+        'other_attribute_ids.label',
+        'other_attribute_ids.sequence',
+        'other_attribute_ids.definition_id',
+        'other_attribute_ids.definition_id.show_on_display',
+    )
+    def _compute_display_extra_attribute_ids(self):
+        for player in self:
+            player.display_extra_attribute_ids = player.get_display_extra_attributes()
+
+    @api.depends(
+        'other_attribute_ids',
+        'other_attribute_ids.value',
+        'other_attribute_ids.label',
+        'other_attribute_ids.sequence',
+        'other_attribute_ids.definition_id',
+        'other_attribute_ids.definition_id.show_on_display',
     )
     def _compute_kanban_other_attrs_html(self):
         from odoo.tools import html_escape
         for player in self:
-            if player.tournament_type != 'football':
-                player.kanban_other_attrs_html = False
-                continue
             parts = []
-            for attr in player.other_attribute_ids:
-                label = (attr.label or '').strip()
-                value = (attr.value or '').strip()
-                if not label or not value:
-                    continue
+            for attr in player.get_display_extra_attributes():
                 parts.append(
                     '<div class="pk2-stat">'
                     '<div class="pk2-stat-label">%s</div>'
                     '<div class="pk2-stat-value">%s</div>'
-                    '</div>' % (html_escape(label), html_escape(value))
+                    '</div>' % (html_escape(attr.label or ''), html_escape(attr.value or ''))
                 )
             player.kanban_other_attrs_html = ''.join(parts) or False
 
     def _sync_other_attributes_from_tournament(self):
-        """Ensure football players have Other Attribute rows for each tournament Att-Label."""
+        """Ensure every player has an answer row for each tournament question."""
         for player in self:
             tournament = player.tournament_id
-            if not tournament or tournament.tournament_type != 'football':
+            if not tournament:
                 continue
             labels = tournament.other_attribute_label_ids.sorted('sequence')
-            if not labels:
-                continue
+            existing_by_def = {
+                attr.definition_id.id: attr
+                for attr in player.other_attribute_ids
+                if attr.definition_id
+            }
             existing_by_label = {
-                (a.label or '').strip().lower(): a for a in player.other_attribute_ids
+                (attr.label or '').strip().lower(): attr
+                for attr in player.other_attribute_ids
             }
             commands = []
             for lab in labels:
                 key = (lab.label or '').strip().lower()
-                if not key or key in existing_by_label:
-                    continue
-                commands.append((0, 0, {
-                    'label': lab.label,
-                    'value': '',
-                    'sequence': lab.sequence,
-                }))
+                rec = existing_by_def.get(lab.id) or (existing_by_label.get(key) if key else False)
+                if rec:
+                    updates = {}
+                    if rec.definition_id != lab:
+                        updates['definition_id'] = lab.id
+                    if rec.label != lab.label:
+                        updates['label'] = lab.label
+                    if rec.sequence != lab.sequence:
+                        updates['sequence'] = lab.sequence
+                    if updates:
+                        commands.append((1, rec.id, updates))
+                elif lab.label:
+                    commands.append((0, 0, {
+                        'definition_id': lab.id,
+                        'label': lab.label,
+                        'value': '',
+                        'sequence': lab.sequence,
+                    }))
             if commands:
                 player.other_attribute_ids = commands
 
@@ -699,7 +800,7 @@ class AuctionTeamPlayer(models.Model):
                 ) % (player.tier_id.name, player.tournament_id.name))
 
     def action_sync_other_attributes(self):
-        """Manual sync of tournament Att-Labels onto this player."""
+        """Manual sync of tournament Additional Attributes onto this player."""
         self._sync_other_attributes_from_tournament()
         return True
 

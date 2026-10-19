@@ -229,8 +229,9 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
         name_col = header_map.get('jersey name')
         number_col = header_map.get('jersey number')
         size_col = header_map.get('jersey size')
+        sleeve_col = header_map.get('jersey sleeve')
         track_col = header_map.get('track size')
-        if name_col is None and number_col is None and size_col is None and track_col is None:
+        if name_col is None and number_col is None and size_col is None and sleeve_col is None and track_col is None:
             raise UserError(_(
                 'Could not find Jersey Name / Jersey Number / Jersey Size columns.'
             ))
@@ -273,6 +274,10 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
                     self._cell_str(ws.cell(row=row_idx, column=size_col + 1).value)
                     if size_col is not None else (player.jersy_size or '')
                 )
+                j_sleeve = self._normalize_jersey_sleeve(
+                    self._cell_str(ws.cell(row=row_idx, column=sleeve_col + 1).value)
+                    if sleeve_col is not None else (player.jersy_sleeve or '')
+                )
                 j_track = self._normalize_track_size(
                     self._cell_str(ws.cell(row=row_idx, column=track_col + 1).value)
                     if track_col is not None else (player.track_size or '')
@@ -289,6 +294,8 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
                 vals['jersy_number'] = j_number or False
             if (player.jersy_size or '') != j_size:
                 vals['jersy_size'] = j_size or False
+            if (player.jersy_sleeve or '') != j_sleeve:
+                vals['jersy_sleeve'] = j_sleeve or False
             if (player.track_size or '') != j_track:
                 vals['track_size'] = j_track or False
 
@@ -392,38 +399,43 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
                     cols.append(lab.label)
             return cols
         if t.tournament_type == 'kabaddi':
-            return [
+            cols = [
                 'Role',
                 'Previous Club / Current Club',
             ]
-        return [
-            'Role',
-            'Batting Style',
-            'Bowling Style',
-            'Blood Group',
-        ]
+        else:
+            cols = [
+                'Role',
+                'Batting Style',
+                'Bowling Style',
+                'Blood Group',
+            ]
+        for lab in t.other_attribute_label_ids.sorted('sequence'):
+            if lab.label and lab.label not in cols:
+                cols.append(lab.label)
+        return cols
 
     def _jersey_headers(self, include_player_id=False):
         headers = []
         if include_player_id:
             headers.append(_PLAYER_ID_HEADER)
         return headers + self._common_headers() + self._sport_headers() + [
-            'Jersey Name', 'Jersey Number', 'Jersey Size', 'Track Size', 'Team', 'Status',
+            'Jersey Name', 'Jersey Number', 'Jersey Size', 'Jersey Sleeve', 'Track Size', 'Team', 'Status',
         ]
 
     def _jersey_editable_headers(self):
-        return {'Jersey Name', 'Jersey Number', 'Jersey Size', 'Track Size'}
+        return {'Jersey Name', 'Jersey Number', 'Jersey Size', 'Jersey Sleeve', 'Track Size'}
 
     def _stage_headers(self, stage):
         base = self._common_headers() + self._sport_headers()
         if stage == 'sold':
             return base + ['Sold To', 'Sold Points', 'Base Point', 'Tier',
-                           'Jersey Name', 'Jersey Number', 'Jersey Size', 'Track Size']
+                           'Jersey Name', 'Jersey Number', 'Jersey Size', 'Jersey Sleeve', 'Track Size']
         if stage == 'draft':
             return base + ['Status', 'Tier', 'Base Point',
-                           'Jersey Name', 'Jersey Number', 'Jersey Size', 'Track Size']
+                           'Jersey Name', 'Jersey Number', 'Jersey Size', 'Jersey Sleeve', 'Track Size']
         return base + ['Status', 'Tier', 'Base Point',
-                       'Jersey Name', 'Jersey Number', 'Jersey Size', 'Track Size']
+                       'Jersey Name', 'Jersey Number', 'Jersey Size', 'Jersey Sleeve', 'Track Size']
 
     def _sold_points_map(self, players):
         if not players:
@@ -459,22 +471,33 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
                 vals.append(attr_map.get(lab.label.strip().lower(), ''))
             return vals
         if t.tournament_type == 'kabaddi':
-            return [
+            vals = [
                 player.kabaddi_role_label() or '',
                 player.current_team or '',
             ]
-        return [
-            player.role or '',
-            player.batting_style or '',
-            player.bowling_style or '',
-            player.blood_group or '',
-        ]
+        else:
+            vals = [
+                player.role or '',
+                player.batting_style or '',
+                player.bowling_style or '',
+                player.blood_group or '',
+            ]
+        attr_map = {
+            (a.label or '').strip().lower(): (a.value or '').strip()
+            for a in player.other_attribute_ids
+        }
+        for lab in t.other_attribute_label_ids.sorted('sequence'):
+            if not lab.label:
+                continue
+            vals.append(attr_map.get(lab.label.strip().lower(), ''))
+        return vals
 
     def _jersey_values(self, player):
         return [
             (player.jersy_name or '').upper(),
             player.jersy_number or '',
             player.jersy_size or '',
+            player.jersy_sleeve or '',
             player.track_size or '',
         ]
 
@@ -574,6 +597,19 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
                 'Jersey Size must be one of: %s'
             ) % ', '.join(_JERSEY_SIZES))
         return size
+
+    def _normalize_jersey_sleeve(self, value):
+        raw = (value or '').strip().upper().replace(' ', '').replace('-', '')
+        if not raw:
+            return ''
+        aliases = {
+            'HS': 'HS', 'H': 'HS', 'HALF': 'HS', 'HALFSLEEVE': 'HS',
+            'FS': 'FS', 'F': 'FS', 'FULL': 'FS', 'FULLSLEEVE': 'FS',
+        }
+        sleeve = aliases.get(raw)
+        if not sleeve:
+            raise UserError(_('Jersey Sleeve must be HS (Half Sleeve) or FS (Full Sleeve).'))
+        return sleeve
 
     def _normalize_track_size(self, value):
         size = (value or '').strip().upper().replace(' ', '')
@@ -719,7 +755,7 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
 
         rows = [
             (4, 'HOW TO USE', section_fill, True),
-            (5, '1. On "%s", edit only the yellow columns: Jersey Name, Jersey Number, Jersey Size, Track Size.'
+            (5, '1. On "%s", edit only the yellow columns: Jersey Name, Jersey Number, Jersey Size, Jersey Sleeve, Track Size.'
                % _IMPORT_SHEET_NAME, None, False),
             (6, '2. Do not change Player ID (needed to match players on import).', None, False),
             (7, '3. Other columns (name, mobile, attributes, team, status) are ignored on import.', None, False),
@@ -781,7 +817,25 @@ class AuctionPlayerStageExportWizard(models.TransientModel):
             value='Type the Code exactly (e.g. XL). Leave blank only if size is unknown.',
         ).fill = tip_fill
 
-        track_title = note_row + 2
+        sleeve_title = note_row + 2
+        ws.merge_cells(start_row=sleeve_title, start_column=1, end_row=sleeve_title, end_column=2)
+        sleeve_head = ws.cell(
+            row=sleeve_title, column=1,
+            value='JERSEY SLEEVE — type exactly HS or FS',
+        )
+        sleeve_head.fill = section_fill
+        sleeve_head.font = Font(color='FFFFFF', bold=True, size=11)
+        ws.row_dimensions[sleeve_title].height = 20
+        sleeve_codes = sleeve_title + 1
+        ws.cell(row=sleeve_codes, column=1, value='HS').font = Font(bold=True, size=11)
+        ws.cell(row=sleeve_codes, column=1).fill = ok_fill
+        ws.cell(row=sleeve_codes, column=2, value='Half Sleeve').font = Font(size=10)
+        sleeve_codes2 = sleeve_title + 2
+        ws.cell(row=sleeve_codes2, column=1, value='FS').font = Font(bold=True, size=11)
+        ws.cell(row=sleeve_codes2, column=1).fill = ok_fill
+        ws.cell(row=sleeve_codes2, column=2, value='Full Sleeve').font = Font(size=10)
+
+        track_title = sleeve_codes2 + 2
         ws.merge_cells(start_row=track_title, start_column=1, end_row=track_title, end_column=2)
         track_head = ws.cell(row=track_title, column=1, value='TRACK SIZE — optional. Type exactly one of these codes')
         track_head.fill = section_fill

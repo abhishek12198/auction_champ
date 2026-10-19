@@ -279,7 +279,7 @@
                         <strong>Jersey Included</strong>
                         <span>
                             Enable if your tournament committee provides jerseys to players.
-                            This adds Name on Jersey, Jersey Number and Jersey Size fields
+                            This adds Name on Jersey, Jersey Number, Jersey Size and Sleeve (HS / FS) fields
                             to the player registration form.
                         </span>
                     </div>

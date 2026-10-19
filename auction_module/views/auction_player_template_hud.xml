@@ -187,11 +187,7 @@
               <t t-if="player.secondary_position_ids">
                 <div class="hud-stat-row"><span class="hud-stat-key">Secondary</span><span class="hud-stat-val"><t t-esc="', '.join(player.secondary_position_ids.mapped('code'))"/></span></div>
               </t>
-              <t t-if="player.use_other_attributes">
-                <t t-foreach="player.other_attribute_ids.filtered('value')" t-as="oattr">
-                  <div class="hud-stat-row"><span class="hud-stat-key"><t t-esc="oattr.label"/></span><span class="hud-stat-val"><t t-esc="oattr.value or '—'"/></span></div>
-                </t>
-              </t>
+              <t t-call="auction_module.player_extra_attribute_hud_rows"/>
               <t t-if="player.address">
                 <div class="hud-stat-row ac-fb-span-2"><span class="hud-stat-key">Location</span><span class="hud-stat-val"><t t-esc="player.address"/></span></div>
               </t>
@@ -215,6 +211,7 @@
               <div class="hud-stat-row"><span class="hud-stat-key">Tier</span><span class="hud-stat-val"><t t-esc="player.tier_id.name if player.tier_id else '—'"/></span></div>
               <div class="hud-stat-row"><span class="hud-stat-key">Mobile</span><span class="hud-stat-val"><t t-esc="player.masked_contact or '—'"/></span></div>
               <div class="hud-stat-row"><span class="hud-stat-key">Location</span><span class="hud-stat-val"><t t-esc="player.address or '—'"/></span></div>
+              <t t-call="auction_module.player_extra_attribute_hud_rows"/>
               <t t-if="bm.get('strengths')">
                 <div class="ac-fb-chip-row ac-fb-span-2" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;">
                   <t t-foreach="bm['strengths']" t-as="strg">
@@ -228,6 +225,7 @@
             <div class="ac-fb-grid">
               <div class="hud-stat-row"><span class="hud-stat-key">Role</span><span class="hud-stat-val"><t t-esc="player.kabaddi_role_label() or '—'"/></span></div>
               <div class="hud-stat-row ac-fb-span-2"><span class="hud-stat-key">Previous Club / Current Club</span><span class="hud-stat-val"><t t-esc="player.current_team or '—'"/></span></div>
+              <t t-call="auction_module.player_extra_attribute_hud_rows"/>
             </div>
           </t>
           <t t-else="">
@@ -280,6 +278,7 @@
                   <span class="hud-stat-val"><t t-esc="player.address"/></span>
                 </div>
               </t>
+              <t t-call="auction_module.player_extra_attribute_hud_rows"/>
             </div>
           </t>
         </div>

@@ -47,8 +47,6 @@
                             <field name="tier_id" placeholder="Tier"
                                    domain="[('tournament_id', '=', tournament_id)]"
                                    options="{'no_create': True, 'no_open': True}"/>
-                            <field name="current_team"
-                                   string="Previous / Current Club"/>
                         </group>
                     </div>
 
@@ -119,6 +117,7 @@
                                 <field name="jersy_name" string="Name on Jersey"/>
                                 <field name="jersy_number" string="Jersey Number"/>
                                 <field name="jersy_size" string="Jersey Size"/>
+                                <field name="jersy_sleeve" string="Sleeve"/>
                                 <field name="track_size" string="Track Size"/>
                             </group>
                         </group>

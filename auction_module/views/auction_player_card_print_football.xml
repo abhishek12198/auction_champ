@@ -187,27 +187,6 @@
                                                     <div t-att-style="valcss"><t t-esc="doc.preferred_foot.capitalize() if doc.preferred_foot else '—'"/></div>
                                                 </td>
                                             </tr>
-                                            <t t-if="doc.use_other_attributes">
-                                                <t t-set="oa_rows" t-value="doc.other_attribute_ids.filtered('value')"/>
-                                                <t t-foreach="oa_rows" t-as="oattr">
-                                                    <t t-if="oattr_index % 2 == 0">
-                                                    <tr>
-                                                        <td t-att-style="tdL">
-                                                            <div t-att-style="lblcss"><t t-esc="oattr.label"/></div>
-                                                            <div t-att-style="valcss"><t t-esc="oattr.value or '—'"/></div>
-                                                        </td>
-                                                        <td t-att-style="tdR">
-                                                            <t t-if="oattr_index + 1 &lt; len(oa_rows)">
-                                                                <t t-set="oattr2" t-value="oa_rows[oattr_index + 1]"/>
-                                                                <div t-att-style="lblcss"><t t-esc="oattr2.label"/></div>
-                                                                <div t-att-style="valcss"><t t-esc="oattr2.value or '—'"/></div>
-                                                            </t>
-                                                        </td>
-                                                    </tr>
-                                                    </t>
-                                                </t>
-                                            </t>
-                                            <t t-else="">
                                             <tr>
                                                 <td t-att-style="tdL">
                                                     <div t-att-style="lblcss">Secondary</div>
@@ -218,6 +197,24 @@
                                                     <div t-att-style="valcss"><t t-esc="(str(doc.age) + ' Years') if doc.age else '—'"/></div>
                                                 </td>
                                             </tr>
+                                            <t t-set="oa_rows" t-value="doc.other_attribute_ids.filtered('value')"/>
+                                            <t t-foreach="oa_rows" t-as="oattr">
+                                                <t t-if="oattr_index % 2 == 0">
+                                                <tr>
+                                                    <td t-att-style="tdL">
+                                                        <div t-att-style="lblcss"><t t-esc="oattr.label"/></div>
+                                                        <div t-att-style="valcss"><t t-esc="oattr.value or '—'"/></div>
+                                                    </td>
+                                                    <td t-att-style="tdR">
+                                                        <t t-if="oattr_index + 1 &lt; len(oa_rows)">
+                                                            <t t-set="oattr2" t-value="oa_rows[oattr_index + 1]"/>
+                                                            <div t-att-style="lblcss"><t t-esc="oattr2.label"/></div>
+                                                            <div t-att-style="valcss"><t t-esc="oattr2.value or '—'"/></div>
+                                                        </t>
+                                                    </td>
+                                                </tr>
+                                                </t>
+                                            </t>
                                             <tr>
                                                 <td t-att-style="tdLchip">
                                                     <div t-att-style="chiplbl">Playing Style</div>
@@ -241,7 +238,6 @@
                                                     </div>
                                                 </td>
                                             </tr>
-                                            </t>
                                             <tr>
                                                 <td t-att-style="tdL">
                                                     <div t-att-style="lblcss">Mobile</div>

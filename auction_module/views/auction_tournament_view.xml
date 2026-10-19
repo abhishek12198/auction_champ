@@ -569,23 +569,55 @@
                                 </field>
                             </page>
 
-                            <!-- Football Other Attribute Labels (Att-Labels) -->
-                            <page string="Other Attributes" name="other_attributes"
-                                  attrs="{'invisible': [('tournament_type', '!=', 'football')]}">
-                                <separator string="Att-Labels for Player Cards &amp; Excel Upload"/>
-                                <p class="text-muted">
-                                    Define the Other Attribute labels for this football tournament
-                                    (e.g. Club, Experience). They appear as Excel template columns
-                                    and as Label / Value rows on each player form. When a player has
-                                    values filled, Secondary / Age / Playing Style / Strengths are
-                                    replaced by these attributes on cards and live displays.
-                                </p>
-                                <field name="other_attribute_label_ids" nolabel="1">
-                                    <tree editable="bottom">
-                                        <field name="sequence" widget="handle"/>
-                                        <field name="label" string="Att-Label"/>
-                                    </tree>
-                                </field>
+                            <page string="Additional Attributes" name="other_attributes">
+                                <div class="ac-aa-wrap">
+                                    <div class="ac-aa-hero">
+                                        <div>
+                                            <div class="ac-aa-kicker">Player registration questionnaire</div>
+                                            <h3 class="ac-aa-title">Additional Attributes</h3>
+                                            <p class="ac-aa-help">
+                                                These questions appear in the <b>Other Information</b> section
+                                                on the player registration form, for every sport.
+                                                For Dropdown, Radio, Selection Badge and Multi-select, type
+                                                <b>Attribute Values</b> as a comma-separated list
+                                                (example: Fast, Medium, Slow).
+                                                Answers are stored on the player. Tick
+                                                <b>Show on player card / showcase</b> on at most 3 questions
+                                                to show them on the player card, projector and live URL.
+                                            </p>
+                                        </div>
+                                        <div class="ac-aa-counter">
+                                            <field name="extra_attr_display_count" nolabel="1" readonly="1"/>
+                                            <span>/ 3 shown</span>
+                                        </div>
+                                    </div>
+                                    <field name="other_attribute_label_ids" nolabel="1" class="ac-aa-list">
+                                        <tree editable="bottom">
+                                            <field name="sequence" widget="handle"/>
+                                            <field name="label" string="Attribute" required="1"/>
+                                            <field name="input_type" string="Input Type" required="1"/>
+                                            <field name="option_text" string="Attribute Values"
+                                                   placeholder="Fast, Medium, Slow"
+                                                   attrs="{'invisible': [('input_type', 'in', ['text', 'checkbox'])],
+                                                           'required': [('input_type', 'in', ['dropdown', 'radio', 'badge', 'multi'])]}"/>
+                                            <field name="required" string="Mandatory"/>
+                                            <field name="show_on_display" string="Show on card"/>
+                                        </tree>
+                                        <form string="Additional Attribute">
+                                            <group>
+                                                <field name="label" placeholder="e.g. Experience, T-shirt colour"/>
+                                                <field name="input_type" widget="selection_badge"/>
+                                                <field name="option_text"
+                                                       placeholder="Fast, Medium, Slow"
+                                                       attrs="{'invisible': [('input_type', 'in', ['text', 'checkbox'])],
+                                                               'required': [('input_type', 'in', ['dropdown', 'radio', 'badge', 'multi'])]}"/>
+                                                <field name="required"/>
+                                                <field name="show_on_display"/>
+                                                <field name="sequence" invisible="1"/>
+                                            </group>
+                                        </form>
+                                    </field>
+                                </div>
                             </page>
 
                             <!-- Tab: Presentation & Theme -->

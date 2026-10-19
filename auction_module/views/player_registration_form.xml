@@ -19,7 +19,7 @@
           rel="stylesheet"/>
 
     <!-- Registration form CSS -->
-    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.731"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.940"/>
 
     <!-- ── Per-theme CSS custom properties ────────────────────── -->
     <style>
@@ -1043,7 +1043,7 @@
                     </div>
                 </t>
 
-                <!-- ───────── COMMON: Tier + Current Club ───────── -->
+                <!-- ───────── COMMON: Tier ───────── -->
                 <div class="reg-grid" style="margin-top:16px">
                     <div>
                         <label class="reg-label" for="playerTier">Player Tier <span class="req">*</span></label>
@@ -1064,12 +1064,6 @@
                                 </t>
                             </select>
                         </t>
-                    </div>
-
-                    <div>
-                        <label class="reg-label" for="currentTeam"><t t-if="is_kabaddi">Previous Club / Current Club</t><t t-else="">Previous Club / Team</t></label>
-                        <input type="text" id="currentTeam" name="current_team" class="reg-input"
-                               placeholder="e.g. Chennai Warriors" maxlength="128"/>
                     </div>
                 </div>
             </div>
@@ -1161,8 +1155,99 @@
                 </div>
             </div>
 
+            <t t-if="tournament and tournament.other_attribute_label_ids">
+            <div class="reg-section" id="extraAttrSection">
+                <div class="reg-section-header">
+                    <div class="reg-section-strip"/>
+                    <h3>Other Information</h3>
+                    <span class="reg-section-icon">🧩</span>
+                    <span class="reg-section-num">04</span>
+                </div>
+                <div class="reg-grid">
+                    <t t-foreach="tournament.other_attribute_label_ids.sorted('sequence')" t-as="q">
+                        <div t-att-class="'reg-extra-q' + (' col-full' if q.input_type in ('radio', 'multi', 'badge') else '')">
+                            <label class="reg-label" t-att-for="'extra_attr_%s' % q.id">
+                                <t t-esc="q.label"/>
+                                <t t-if="q.required"><span class="req">*</span></t>
+                                <t t-else=""><span class="reg-opt">(optional)</span></t>
+                            </label>
+                            <t t-if="q.input_type == 'text'">
+                                <input type="text" class="reg-input"
+                                       t-att-id="'extra_attr_%s' % q.id"
+                                       t-att-name="'extra_attr_%s' % q.id"
+                                       t-att-required="'required' if q.required else None"/>
+                            </t>
+                            <t t-elif="q.input_type == 'dropdown'">
+                                <select class="reg-select"
+                                        t-att-id="'extra_attr_%s' % q.id"
+                                        t-att-name="'extra_attr_%s' % q.id"
+                                        t-att-required="'required' if q.required else None">
+                                    <option value="">— Select —</option>
+                                    <t t-foreach="q.option_list()" t-as="opt">
+                                        <option t-att-value="opt"><t t-esc="opt"/></option>
+                                    </t>
+                                </select>
+                            </t>
+                            <t t-elif="q.input_type == 'radio'">
+                                <div class="reg-radio-stack">
+                                    <t t-foreach="q.option_list()" t-as="opt">
+                                        <label class="reg-radio-line">
+                                            <input type="radio"
+                                                   t-att-name="'extra_attr_%s' % q.id"
+                                                   t-att-value="opt"
+                                                   t-att-required="'required' if q.required else None"/>
+                                            <span><t t-esc="opt"/></span>
+                                        </label>
+                                    </t>
+                                </div>
+                            </t>
+                            <t t-elif="q.input_type == 'badge'">
+                                <div class="reg-chip-group">
+                                    <t t-foreach="q.option_list()" t-as="opt">
+                                        <input type="radio" class="reg-chip-option"
+                                               t-att-id="'extra_attr_%s_%s' % (q.id, opt_index)"
+                                               t-att-name="'extra_attr_%s' % q.id"
+                                               t-att-value="opt"
+                                               t-att-required="'required' if q.required else None"/>
+                                        <label class="reg-chip-label"
+                                               t-att-for="'extra_attr_%s_%s' % (q.id, opt_index)">
+                                            <span class="reg-chip-text"><t t-esc="opt"/></span>
+                                        </label>
+                                    </t>
+                                </div>
+                            </t>
+                            <t t-elif="q.input_type == 'multi'">
+                                <div class="reg-chip-group">
+                                    <t t-foreach="q.option_list()" t-as="opt">
+                                        <input type="checkbox" class="reg-chip-option"
+                                               t-att-id="'extra_attr_%s_%s' % (q.id, opt_index)"
+                                               t-att-name="'extra_attr_%s' % q.id"
+                                               t-att-value="opt"/>
+                                        <label class="reg-chip-label"
+                                               t-att-for="'extra_attr_%s_%s' % (q.id, opt_index)">
+                                            <span class="reg-chip-text"><t t-esc="opt"/></span>
+                                        </label>
+                                    </t>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <label class="reg-bool-check">
+                                    <input type="checkbox"
+                                           t-att-id="'extra_attr_%s' % q.id"
+                                           t-att-name="'extra_attr_%s' % q.id"
+                                           value="Yes"
+                                           t-att-required="'required' if q.required else None"/>
+                                    <span>Yes</span>
+                                </label>
+                            </t>
+                        </div>
+                    </t>
+                </div>
+            </div>
+            </t>
+
             <!-- ══════════════════════════════════════
-                 04 · JERSEY  (enabled per tournament)
+                 05 · JERSEY  (enabled per tournament)
                  ══════════════════════════════════════ -->
             <t t-if="tournament and tournament.enable_jersey_section">
             <div class="reg-section" id="jerseySection">
@@ -1170,7 +1255,7 @@
                     <div class="reg-section-strip"/>
                     <h3>Jersey Details</h3>
                     <span class="reg-section-icon">👕</span>
-                    <span class="reg-section-num">04</span>
+                    <span class="reg-section-num">05</span>
                 </div>
 
                 <div class="reg-grid">
@@ -1197,6 +1282,13 @@
                             <option value="XL">XL — Extra Large</option>
                             <option value="XXL">XXL — Double XL</option>
                             <option value="XXXL">XXXL — Triple XL</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="reg-label" for="jerseySleeve">Sleeve <span class="req">*</span></label>
+                        <select id="jerseySleeve" name="jersy_sleeve" class="reg-select" required="required">
+                            <option value="HS" selected="selected">HS — Half Sleeve</option>
+                            <option value="FS">FS — Full Sleeve</option>
                         </select>
                     </div>
                     <div>
@@ -1232,7 +1324,7 @@
                         </t>
                     </h3>
                     <span class="reg-section-icon">💳</span>
-                    <span class="reg-section-num">05</span>
+                    <span class="reg-section-num">06</span>
                 </div>
 
                 <t t-if="tournament and tournament.payment_proof_required">
@@ -2095,6 +2187,8 @@
                     }
                     if (first.id === 'jerseySize' || first.name === 'jersy_size') {
                         labelText = 'Jersey size is required. Please select a jersey size.';
+                    } else if (first.id === 'jerseySleeve' || first.name === 'jersy_sleeve') {
+                        labelText = 'Sleeve is required. Please select HS or FS.';
                     } else {
                     var lbl = form.querySelector('label[for="' + (first.id || '') + '"]');
                     if (lbl) {
@@ -2504,7 +2598,33 @@
         setVal('jerseyName', profile.jersy_name || '');
         setVal('jerseyNumber', profile.jersy_number || '');
         setSelect('jerseySize', profile.jersy_size || '');
+        setSelect('jerseySleeve', profile.jersy_sleeve || 'HS');
         setSelect('trackSize', profile.track_size || '');
+        if (profile.extra_attributes) {
+            Object.keys(profile.extra_attributes).forEach(function (id) {
+                var val = profile.extra_attributes[id] || '';
+                var nodes = document.querySelectorAll('[name="extra_attr_' + id + '"]');
+                if (!nodes.length) return;
+                var first = nodes[0];
+                if (first.type === 'checkbox' &amp;&amp; first.value === 'Yes' &amp;&amp; nodes.length === 1) {
+                    first.checked = (val === 'Yes');
+                    return;
+                }
+                if (first.type === 'checkbox') {
+                    var picked = {};
+                    String(val).split(',').forEach(function (part) {
+                        if (part.trim()) picked[part.trim()] = true;
+                    });
+                    nodes.forEach(function (node) { node.checked = !!picked[node.value]; });
+                    return;
+                }
+                if (first.type === 'radio') {
+                    nodes.forEach(function (node) { node.checked = node.value === val; });
+                    return;
+                }
+                first.value = val;
+            });
+        }
 
         var codeEl = document.getElementById('countryCode');
         var numEl = document.getElementById('mobileNumber');

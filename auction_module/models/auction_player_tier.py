@@ -136,13 +136,8 @@ class AuctionPlayerTier(models.Model):
         help='True when this tier can have a dedicated /player/register/<slug> URL.',
     )
 
-    _sql_constraints = [
-        (
-            'registration_slug_tournament_uniq',
-            'unique(tournament_id, registration_slug)',
-            'Each tier registration URL slug must be unique within a tournament.',
-        ),
-    ]
+    # Unique slugs are enforced in Python + a partial unique index
+    # (NULL slugs are allowed; duplicate existing data must not block registry load).
 
     def init(self):
         """Create tier registration columns on registry load without requiring -u."""

@@ -175,21 +175,20 @@
             + '</div>';
     }
 
+    function extraAttrList(p) {
+        var extras = (p && (p.extra_attributes || p.other_attributes)) || [];
+        return extras.slice(0, 3);
+    }
+
     function playerAttrChipsHtml(p) {
         if (!p) return '';
         var chips = [];
         if (isFootball(p)) {
-            if (p.use_other_attributes && p.other_attributes && p.other_attributes.length) {
-                p.other_attributes.forEach(function (a) {
-                    chips.push(attrChip(a.label, a.value));
-                });
-            } else {
-                chips.push(attrChip('Position', p.dominant_position || p.dominant_position_code));
-                chips.push(attrChip('Foot', p.preferred_foot));
-                chips.push(attrChip('Age', p.age));
-                if (p.secondary_positions && p.secondary_positions.length) {
-                    chips.push(attrChip('Secondary', p.secondary_positions.join(', ')));
-                }
+            chips.push(attrChip('Position', p.dominant_position || p.dominant_position_code));
+            chips.push(attrChip('Foot', p.preferred_foot));
+            chips.push(attrChip('Age', p.age));
+            if (p.secondary_positions && p.secondary_positions.length) {
+                chips.push(attrChip('Secondary', p.secondary_positions.join(', ')));
             }
         } else if (isBadminton(p)) {
             chips.push(attrChip('Age', p.age));
@@ -205,18 +204,18 @@
             chips.push(attrChip('Bat', p.batting_style));
             chips.push(attrChip('Bowl', p.bowling_style));
         }
+        extraAttrList(p).forEach(function (a) {
+            chips.push(attrChip(a.label, a.value));
+        });
         return chips.filter(Boolean).join('');
     }
 
     function playerMetaLine(p) {
         if (!p) return '';
         if (isFootball(p)) {
-            if (p.use_other_attributes && p.other_attributes && p.other_attributes.length) {
-                return p.other_attributes.map(function (a) {
-                    return a.value;
-                }).filter(Boolean).join(' · ');
-            }
+            var extraVals = extraAttrList(p).map(function (a) { return a.value; }).filter(Boolean);
             return [p.dominant_position || p.dominant_position_code, p.preferred_foot, p.age ? ('Age ' + p.age) : '']
+                .concat(extraVals)
                 .filter(Boolean).join(' · ');
         }
         if (isBadminton(p)) {
@@ -226,12 +225,16 @@
                 p.badminton_style,
                 p.skill_level,
                 p.age ? ('Age ' + p.age) : ''
-            ].filter(Boolean).join(' · ');
+            ].concat(extraAttrList(p).map(function (a) { return a.value; })).filter(Boolean).join(' · ');
         }
         if (isKabaddi(p)) {
-            return [p.kabaddi_role || p.role, p.previous_club].filter(Boolean).join(' · ');
+            return [p.kabaddi_role || p.role, p.previous_club]
+                .concat(extraAttrList(p).map(function (a) { return a.value; }))
+                .filter(Boolean).join(' · ');
         }
-        return [p.role, p.batting_style, p.bowling_style].filter(Boolean).join(' · ');
+        return [p.role, p.batting_style, p.bowling_style]
+            .concat(extraAttrList(p).map(function (a) { return a.value; }))
+            .filter(Boolean).join(' · ');
     }
 
     /* ── Render ─────────────────────────────────────────────────────────── */

@@ -146,7 +146,7 @@
 
                                 <!-- ── STATS (sport-specific) ── -->
                                 <t t-if="record.tournament_type.raw_value == 'football'">
-                                    <t t-if="record.dominant_position_id.raw_value or record.preferred_foot.raw_value or (!record.use_other_attributes.raw_value and record.age.raw_value) or record.blood_group.raw_value or record.kanban_other_attrs_html.raw_value">
+                                    <t t-if="record.dominant_position_id.raw_value or record.preferred_foot.raw_value or record.age.raw_value or record.blood_group.raw_value or record.kanban_other_attrs_html.raw_value">
                                         <div class="pk2-stats">
                                             <t t-if="record.dominant_position_id.raw_value">
                                                 <div class="pk2-stat">
@@ -160,14 +160,13 @@
                                                     <div class="pk2-stat-value" t-esc="record.preferred_foot.value"/>
                                                 </div>
                                             </t>
-                                            <!-- Age hidden when Other Attributes are in use (same as cards/live) -->
-                                            <t t-if="!record.use_other_attributes.raw_value and record.age.raw_value">
+                                            <t t-if="record.age.raw_value">
                                                 <div class="pk2-stat">
                                                     <div class="pk2-stat-label">Age</div>
                                                     <div class="pk2-stat-value" t-esc="record.age.raw_value"/>
                                                 </div>
                                             </t>
-                                            <t t-if="record.use_other_attributes.raw_value and record.kanban_other_attrs_html.raw_value">
+                                            <t t-if="record.kanban_other_attrs_html.raw_value">
                                                 <t t-raw="record.kanban_other_attrs_html.raw_value"/>
                                             </t>
                                             <t t-if="record.blood_group.raw_value">
@@ -180,7 +179,7 @@
                                     </t>
                                 </t>
                                 <t t-elif="record.tournament_type.raw_value == 'kabaddi'">
-                                    <t t-if="record.role.raw_value or record.current_team.raw_value">
+                                    <t t-if="record.role.raw_value or record.current_team.raw_value or record.kanban_other_attrs_html.raw_value">
                                         <div class="pk2-stats">
                                             <t t-if="record.role.raw_value">
                                                 <div class="pk2-stat">
@@ -194,11 +193,14 @@
                                                     <div class="pk2-stat-value" t-esc="record.current_team.raw_value"/>
                                                 </div>
                                             </t>
+                                            <t t-if="record.kanban_other_attrs_html.raw_value">
+                                                <t t-raw="record.kanban_other_attrs_html.raw_value"/>
+                                            </t>
                                         </div>
                                     </t>
                                 </t>
                                 <t t-else="">
-                                    <t t-if="record.batting_style.raw_value or record.bowling_style.raw_value or record.blood_group.raw_value">
+                                    <t t-if="record.batting_style.raw_value or record.bowling_style.raw_value or record.blood_group.raw_value or record.kanban_other_attrs_html.raw_value">
                                         <div class="pk2-stats">
                                             <t t-if="record.batting_style.raw_value">
                                                 <div class="pk2-stat">
@@ -217,6 +219,9 @@
                                                     <div class="pk2-stat-label">Blood</div>
                                                     <div class="pk2-stat-value" t-esc="record.blood_group.raw_value"/>
                                                 </div>
+                                            </t>
+                                            <t t-if="record.kanban_other_attrs_html.raw_value">
+                                                <t t-raw="record.kanban_other_attrs_html.raw_value"/>
                                             </t>
                                         </div>
                                     </t>
@@ -347,6 +352,7 @@
                     <field name="jersy_name"/>
                     <field name="jersy_number"/>
                     <field name="jersy_size"/>
+                    <field name="jersy_sleeve"/>
                     <field name="assigned_team_id"/>
                     <field name="role"/>
                     <field name="tier_id"/>
@@ -420,6 +426,12 @@
                                                 <span class="pjk-chip-value" t-esc="record.jersy_size.raw_value"/>
                                             </div>
                                         </t>
+                                        <t t-if="record.jersy_sleeve.raw_value">
+                                            <div class="pjk-chip">
+                                                <span class="pjk-chip-label">Sleeve</span>
+                                                <span class="pjk-chip-value" t-esc="record.jersy_sleeve.raw_value"/>
+                                            </div>
+                                        </t>
                                         <t t-if="record.role.raw_value">
                                             <div class="pjk-chip">
                                                 <span class="pjk-chip-label">Role</span>
@@ -455,6 +467,7 @@
                     <field name="contact"/>
                     <field name="jersy_name"/>
                     <field name="jersy_size"/>
+                    <field name="jersy_sleeve" string="Sleeve"/>
                     <field name="jersy_number"/>
                 </tree>
             </field>
@@ -494,6 +507,7 @@
                         <field name="tournament_id" invisible="1"/>
                         <field name="tournament_type" invisible="1"/>
                         <field name="enable_jersey_section" invisible="1"/>
+                        <field name="has_extra_attributes" invisible="1"/>
                         <field name="photo_url" invisible="1"/>
                         <field name="use_other_attributes" invisible="1"/>
                         <field name="icon_player" string="Key / Icon Player"
@@ -548,8 +562,6 @@
                                     <field name="assigned_team_id" string="Assigned Team"
                                            readonly="1"
                                            domain="[('tournament_id', '=', tournament_id)]"/>
-                                    <field name="current_team"
-                                           string="Previous / Current Club"/>
                                 </group>
                             </div>
 
@@ -595,7 +607,6 @@
                                 </div>
                                 <group>
                                     <field name="kabaddi_role"/>
-                                    <field name="current_team" string="Previous Club / Current Club"/>
                                 </group>
                             </div>
 
@@ -630,26 +641,31 @@
                                                domain="[('sport', '=', 'football')]"/>
                                     </group>
                                 </group>
-                                <group string="Other Attributes"
-                                       colspan="2">
-                                    <div class="text-muted" colspan="2">
-                                        Labels come from the tournament Other Attributes (Att-Labels).
-                                        Fill Label-Values here. When values are set, they replace
-                                        Secondary / Age / Playing Style / Strengths on cards and live displays.
-                                    </div>
-                                    <button name="action_sync_other_attributes"
-                                            type="object"
-                                            string="Sync Labels from Tournament"
-                                            class="btn-link"
-                                            colspan="2"
-                                            attrs="{'invisible': [('tournament_type', '!=', 'football')]}"/>
-                                    <field name="other_attribute_ids" nolabel="1" colspan="2">
-                                        <tree editable="bottom">
-                                            <field name="sequence" widget="handle"/>
-                                            <field name="label" string="Att-Label"/>
-                                            <field name="value" string="Label-Value"/>
-                                        </tree>
-                                    </field>
+                            </page>
+                            <page string="Additional Attributes"
+                                  attrs="{'invisible': [('has_extra_attributes', '=', False)]}">
+                                <group>
+                                    <group string="Answers">
+                                        <div class="text-muted" colspan="2">
+                                            Questions come from Tournament → Additional Attributes.
+                                            Values flagged to show on the card appear on the player card,
+                                            projector and live URL (maximum 3).
+                                        </div>
+                                        <button name="action_sync_other_attributes"
+                                                type="object"
+                                                string="Sync Questions from Tournament"
+                                                class="btn-link"
+                                                colspan="2"/>
+                                        <field name="other_attribute_ids" nolabel="1" colspan="2">
+                                            <tree editable="bottom" create="0" delete="0">
+                                                <field name="sequence" widget="handle"/>
+                                                <field name="definition_id" invisible="1"/>
+                                                <field name="label" string="Attribute" readonly="1"/>
+                                                <field name="value" string="Answer"/>
+                                                <field name="show_on_display" string="On card" readonly="1"/>
+                                            </tree>
+                                        </field>
+                                    </group>
                                 </group>
                             </page>
                             <page string="Jersey Details"
@@ -660,6 +676,7 @@
                                         <field name="jersy_name"   string="Name on Jersey"/>
                                         <field name="jersy_number" string="Jersey Number"/>
                                         <field name="jersy_size"   string="Jersey Size"/>
+                                        <field name="jersy_sleeve" string="Sleeve"/>
                                         <field name="track_size"   string="Track Size"/>
                                     </group>
                                     <group string="Admin">

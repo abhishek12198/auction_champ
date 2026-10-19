@@ -235,6 +235,14 @@ class AuctionTournament(models.Model):
         if is_mystery or self.uses_manual_player_drawer():
             return max(display_secs, 14400)
         return display_secs
+
+    @api.depends('other_attribute_label_ids', 'other_attribute_label_ids.show_on_display')
+    def _compute_extra_attr_display_count(self):
+        for tournament in self:
+            tournament.extra_attr_display_count = len(
+                tournament.other_attribute_label_ids.filtered('show_on_display')
+            )
+
     team_max_points = fields.Integer(string="Max points alloted for a team")
     point_unit_id = fields.Many2one(
         'auction.point.unit',
@@ -261,9 +269,14 @@ class AuctionTournament(models.Model):
     )
     other_attribute_label_ids = fields.One2many(
         'auction.tournament.attribute.label', 'tournament_id',
-        string='Other Attribute Labels',
-        help='Football only: define Att-Labels for this tournament. They appear as '
-             'Excel template columns and as Label/Value rows on each player form.')
+        string='Additional Attributes',
+        help='Questionnaire collected on player registration for every sport. '
+             'Up to 3 answers can be shown on the player card, projector and live URL.',
+    )
+    extra_attr_display_count = fields.Integer(
+        string='Shown Additional Attributes',
+        compute='_compute_extra_attr_display_count',
+    )
     template_image = fields.Binary('Template Image')
     report_footer = fields.Binary('Footer')
     rules_regulations = fields.Html("Rules and Regulations")

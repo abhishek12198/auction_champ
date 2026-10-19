@@ -8569,7 +8569,8 @@ def _football_display_payload(player):
             'work_rate': '',
             'playing_styles': [],
             'strengths': [],
-            'other_attributes': [],
+            'other_attributes': player.extra_attributes_payload(),
+            'extra_attributes': player.extra_attributes_payload(),
             'use_other_attributes': False,
             'age': '',
             'height': '',
@@ -8590,7 +8591,8 @@ def _football_display_payload(player):
             'work_rate': '',
             'playing_styles': [],
             'strengths': [{'name': s.name, 'icon': s.icon or ''} for s in player.strength_ids],
-            'other_attributes': [],
+            'other_attributes': player.extra_attributes_payload(),
+            'extra_attributes': player.extra_attributes_payload(),
             'use_other_attributes': False,
             'badminton_category': cat_map.get(player.badminton_category, ''),
             'badminton_style': style_map.get(player.badminton_style, ''),
@@ -8607,28 +8609,25 @@ def _football_display_payload(player):
             'work_rate': '',
             'playing_styles': [],
             'strengths': [],
-            'other_attributes': [],
+            'other_attributes': player.extra_attributes_payload(),
+            'extra_attributes': player.extra_attributes_payload(),
             'use_other_attributes': False,
         }
-    other_attributes = [
-        {'label': a.label or '', 'value': a.value or ''}
-        for a in player.other_attribute_ids
-        if a.label and (a.value or '').strip()
-    ]
-    use_other = bool(other_attributes)
+    extras = player.extra_attributes_payload()
     return {
         **shared,
         'tournament_type': 'football',
         'dominant_position': player.dominant_position_id.name if player.dominant_position_id else '',
         'dominant_position_code': player.dominant_position_id.code if player.dominant_position_id else '',
-        'secondary_positions': [] if use_other else [p.code or p.name for p in player.secondary_position_ids],
+        'secondary_positions': [p.code or p.name for p in player.secondary_position_ids],
         'preferred_foot': foot_map.get(player.preferred_foot, ''),
-        'age': '' if use_other else (player.age or ''),
-        'work_rate': '' if use_other else rate_map.get(player.work_rate, ''),
-        'playing_styles': [] if use_other else [{'name': s.name, 'icon': s.icon or ''} for s in player.playing_style_ids],
-        'strengths': [] if use_other else [{'name': s.name, 'icon': s.icon or ''} for s in player.strength_ids],
-        'other_attributes': other_attributes,
-        'use_other_attributes': use_other,
+        'age': player.age or '',
+        'work_rate': rate_map.get(player.work_rate, ''),
+        'playing_styles': [{'name': s.name, 'icon': s.icon or ''} for s in player.playing_style_ids],
+        'strengths': [{'name': s.name, 'icon': s.icon or ''} for s in player.strength_ids],
+        'other_attributes': extras,
+        'extra_attributes': extras,
+        'use_other_attributes': False,
     }
 
 
@@ -8742,7 +8741,13 @@ def _registration_profile_payload(player, tournament, db_name):
         'jersy_name': player.jersy_name or '',
         'jersy_number': player.jersy_number or '',
         'jersy_size': player.jersy_size or '',
+        'jersy_sleeve': player.jersy_sleeve or '',
         'track_size': player.track_size or '',
+        'extra_attributes': {
+            str(attr.definition_id.id): attr.value or ''
+            for attr in player.other_attribute_ids
+            if attr.definition_id
+        },
     }
     if 'email' in player._fields:
         profile['email'] = player.email or ''
@@ -8944,8 +8949,26 @@ def _build_player_vals_from_post(request, tournament, locked_tier=None):
         vals['jersy_size']   = (post.get('jersy_size') or '').strip()
         if not vals['jersy_size']:
             raise ValueError("Jersey size is required. Please select a jersey size.")
+        sleeve = (post.get('jersy_sleeve') or 'HS').strip().upper()
+        vals['jersy_sleeve'] = sleeve if sleeve in ('HS', 'FS') else 'HS'
         track_size = (post.get('track_size') or '').strip().upper()
         allowed_track = {'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '4XL'}
         vals['track_size'] = track_size if track_size in allowed_track else False
+
+    if tournament and tournament.other_attribute_label_ids:
+        commands = []
+        for question in tournament.other_attribute_label_ids.sorted('sequence'):
+            value = question.posted_value(post)
+            error = question.validate_posted_value(value)
+            if error:
+                raise ValueError(error)
+            commands.append((0, 0, {
+                'definition_id': question.id,
+                'label': question.label,
+                'value': value,
+                'sequence': question.sequence,
+            }))
+        if commands:
+            vals['other_attribute_ids'] = commands
 
     return vals
