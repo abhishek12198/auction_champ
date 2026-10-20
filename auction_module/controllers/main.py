@@ -6115,13 +6115,14 @@ class Auction(http.Controller):
         spent = max(total_purse - remaining, 0)
         n_players = len(players_out)
         n_grid = n_players
-        grid_rows, grid_cols = self._sp_grid_shape(n_players)
+        grid_source = rest_players if has_icon else players_out
+        grid_rows, grid_cols = self._sp_grid_shape(len(grid_source) or n_players)
         side_cols = 3
         bottom_cols = 5
         row_gap = self._sp_row_gap(grid_rows)
         sparse_squad = False
         has_bottom = False
-        player_rows = self._sp_player_rows(players_out, grid_cols)
+        player_rows = self._sp_player_rows(grid_source, grid_cols)
         strike_force = self._sp_strike_force(players_out, sport=sport)
 
         stats = {

@@ -125,11 +125,7 @@
       applyBg(btn.getAttribute('data-bg'));
     });
   });
-  if (shell && shell.getAttribute('data-theme') && (shell.getAttribute('data-bg') === 'theme' || document.body.classList.contains('is-embed'))) {
-    document.querySelectorAll('.sp-bg-chip').forEach(function (b) { b.classList.remove('is-active'); });
-  } else {
-    applyBg(currentBg());
-  }
+  applyBg(currentBg());
 
   if (zoomSel) zoomSel.addEventListener('change', applyZoom);
   window.addEventListener('resize', function () {

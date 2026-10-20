@@ -2261,16 +2261,57 @@ class AuctionTeamPlayer(models.Model):
             except Exception:
                 pass
 
+    def _restore_sold_player_to_auction(self, restore_state='auction', context=None):
+        """Clear the sale on this player. Caller removes auction.auction.player lines."""
+        context = context if context is not None else self.env.context
+        if restore_state not in ('draft', 'auction'):
+            restore_state = 'auction'
+        for player in self:
+            player._clear_live_bid()
+            team = player.assigned_team_id
+            if not context.get('skip_recall_history'):
+                try:
+                    player.create_auction_history(
+                        team.id if team else False,
+                        '%s recalled to auction' % (player.name or 'Player'),
+                        tournament_id=player.tournament_id.id if player.tournament_id else False,
+                        player=player,
+                    )
+                except Exception:
+                    _logger.warning('recall history failed for player %s', player.id, exc_info=True)
+            player.write({
+                'assigned_team_id': False,
+                'state': restore_state,
+            })
+            if not context.get('mass_update', False):
+                try:
+                    if hasattr(self.env.user, 'notify_success'):
+                        self.env.user.notify_success(
+                            (player.name or 'Player')
+                            + ' brought back to auction successfully!. The player will be available in the auction'
+                        )
+                except Exception:
+                    _logger.warning('recall notify failed for player %s', player.id, exc_info=True)
+        return self
+
     def action_recall_auction_sold(self):
         context = self.env.context.copy()
+        restore_state = context.get('restore_to_state') or 'auction'
+        if restore_state not in ('draft', 'auction'):
+            restore_state = 'auction'
         recalled = self.env['auction.team.player']
+        line_ctx = dict(context, skip_reopen_live=True)
         for player in self:
-            if player.state == 'sold':
-                player._clear_live_bid()
-                auction_player = self.env['auction.auction.player'].search([('player_id', '=', player.id)])
-                if auction_player:
-                    auction_player.with_context(**context).action_recall_to_auction()
-                    recalled |= player
+            if player.state != 'sold':
+                continue
+            auction_player = self.env['auction.auction.player'].search(
+                [('player_id', '=', player.id)]
+            )
+            if auction_player:
+                auction_player.with_context(**line_ctx).action_recall_to_auction()
+            else:
+                player._restore_sold_player_to_auction(restore_state, context)
+            recalled |= player
         tournaments = (recalled | self).mapped('tournament_id')
         if not context.get('skip_reopen_live'):
             self._reopen_live_after_recall(tournaments)
@@ -2281,6 +2322,7 @@ class AuctionTeamPlayer(models.Model):
                 message = 'Selected players brought back to auction successfully!. The player will be available in the auction'
             if hasattr(self.env.user, 'notify_success') and not context.get('revoke_wizard'):
                 self.env.user.notify_success(message)
+        return True
 
     def action_auction(self):
         """Move draft/unsold players into In Auction (manual or mass reopen)."""

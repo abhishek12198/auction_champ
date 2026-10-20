@@ -402,20 +402,19 @@ class AuctionPlayer(models.Model):
 
     def action_recall_to_auction(self):
         context = self.env.context.copy()
-        for player in self:
-            player_obj = player.player_id
-            if hasattr(player_obj, '_clear_live_bid'):
-                player_obj._clear_live_bid()
-            player.player_id.assigned_team_id = False
-            restore_state = context.get('restore_to_state') or 'auction'
-            if restore_state not in ('draft', 'auction'):
-                restore_state = 'auction'
-            player.player_id.state = restore_state
-
-            player.unlink()
-            if not context.get('mass_update', False):
-                message = player_obj.name + ' brought back to auction successfully!. The player will be available in the auction'
-                self.env.user.notify_success(message)
+        restore_state = context.get('restore_to_state') or 'auction'
+        if restore_state not in ('draft', 'auction'):
+            restore_state = 'auction'
+        recalled = self.env['auction.team.player']
+        for line in self:
+            player_obj = line.player_id
+            if player_obj:
+                player_obj._restore_sold_player_to_auction(restore_state, context)
+                recalled |= player_obj
+            line.unlink()
+        if recalled and not context.get('skip_reopen_live'):
+            recalled._reopen_live_after_recall(recalled.mapped('tournament_id'))
+        return True
 
 class AuctionBidSlab(models.Model):
 

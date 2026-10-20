@@ -2581,8 +2581,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
             }
             if (btnBringBack) btnBringBack.style.display = 'none';
           } else {
-            actions.style.display = 'none';
-            setSellBtnMode('sell');
+            actions.style.display = 'flex';
+            if (btnUnsold)    btnUnsold.style.display    = 'none';
+            if (btnSell) {
+              btnSell.style.display = 'none';
+              setSellBtnMode('sell');
+            }
+            if (btnBringBack) btnBringBack.style.display = '';
+            setBringBackMode('sold');
           }
         } else if (p.state === 'unsold') {
           actions.style.display = 'flex';
@@ -2592,6 +2598,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
             setSellBtnMode('sell');
           }
           if (btnBringBack) btnBringBack.style.display = '';
+          setBringBackMode('unsold');
         } else {
           actions.style.display = 'flex';
           if (btnUnsold)    btnUnsold.style.display    = '';
@@ -3023,15 +3030,34 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     }).catch(function() { closePlayerDrawer(); });
   };
 
-  /* ── Bring Back to Auction ─────────────────────────── */
+  /* ── Bring Back / Recall to Auction ─────────────────────────── */
+  function setBringBackMode(mode) {
+    var btn = document.getElementById('btnBringBack');
+    if (!btn) return;
+    var label = btn.querySelector('.pc-btn-label');
+    var sub = btn.querySelector('.pc-btn-sub');
+    if (mode === 'sold') {
+      if (label) label.textContent = 'Recall to Auction';
+      if (sub) sub.textContent = 'Remove from the team';
+    } else {
+      if (label) label.textContent = 'Bring Back';
+      if (sub) sub.textContent = 'Return to auction';
+    }
+  }
+
   window.openBringBackConfirm = function() {
+    var isSold = currentPlayerState === 'sold';
     var sub = document.getElementById('cmSub');
     var title = document.querySelector('#unsoldModal .cm-title');
     var confirm = document.querySelector('#unsoldModal .cm-confirm');
     var icon = document.querySelector('#unsoldModal .cm-icon');
-    if (sub)     sub.textContent     = 'Return "' + currentPlayerName + '" to the auction queue?';
-    if (title)   title.textContent   = 'Bring Back to Auction?';
-    if (confirm) confirm.textContent = 'Bring Back';
+    if (sub) {
+      sub.textContent = isSold
+        ? 'Recall "' + currentPlayerName + '" to auction? This removes them from the team.'
+        : 'Return "' + currentPlayerName + '" to the auction queue?';
+    }
+    if (title)   title.textContent   = isSold ? 'Recall to Auction?' : 'Bring Back to Auction?';
+    if (confirm) confirm.textContent = isSold ? 'Recall' : 'Bring Back';
     if (confirm) confirm.onclick     = doBringBack;
     if (icon)    icon.textContent    = '↩';
     var modal = document.getElementById('unsoldModal');
@@ -3043,12 +3069,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     closeUnsoldConfirm();
     if (!currentPlayerId) return;
     var pid = currentPlayerId;
+    var method = currentPlayerState === 'sold' ? 'action_recall_auction_sold' : 'action_auction';
     markSlotState(pid, 'auction');
-    callKw('auction.team.player', 'action_auction', [[pid]]).then(function() {
+    callKw('auction.team.player', method, [[pid]]).then(function() {
       closePlayerDrawer(false);
       loadGrid();
     }).catch(function() {
-      markSlotState(pid, 'unsold');
+      markSlotState(pid, currentPlayerState === 'sold' ? 'sold' : 'unsold');
       closePlayerDrawer();
     });
   };
