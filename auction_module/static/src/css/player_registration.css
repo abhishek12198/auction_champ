@@ -1214,7 +1214,6 @@ input[type="file"].reg-file-input { display: none; }
     white-space: nowrap;
     box-shadow: 0 2px 6px rgba(232,160,32,.35);
 }
-}
 
 /* Instructions column */
 .reg-photo-instructions {

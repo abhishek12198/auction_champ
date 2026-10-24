@@ -2140,6 +2140,197 @@ class AuctionTournament(models.Model):
             'context': {'default_tournament_id': self.id},
         }
 
+    def _top_bid_lines(self):
+        """Highest five completed sales. One row per player."""
+        self.ensure_one()
+        lines = self.env['auction.auction.player'].search([
+            ('auction_id.tournament_id', '=', self.id),
+            ('player_id.state', '=', 'sold'),
+            ('points', '>', 0),
+        ], order='points desc, id desc')
+        picked = self.env['auction.auction.player']
+        seen = set()
+        for line in lines:
+            player = line.player_id
+            if not player or player.id in seen:
+                continue
+            seen.add(player.id)
+            picked |= line
+            if len(picked) >= 5:
+                break
+        return picked
+
+    def _top_bid_cover_uri(self, binary_val, box_w, box_h):
+        if not binary_val:
+            return ''
+        try:
+            from io import BytesIO
+            from PIL import Image, ImageOps
+            raw = base64.b64decode(binary_val)
+            im = Image.open(BytesIO(raw))
+            try:
+                im = ImageOps.exif_transpose(im)
+            except Exception:
+                pass
+            im = im.convert('RGB')
+            try:
+                resample = Image.Resampling.LANCZOS
+            except AttributeError:
+                resample = Image.LANCZOS
+            sw, sh = im.size
+            scale = max(box_w / float(sw or 1), box_h / float(sh or 1))
+            nw = max(box_w, int(round(sw * scale)))
+            nh = max(box_h, int(round(sh * scale)))
+            im = im.resize((nw, nh), resample)
+            left = max(0, (nw - box_w) // 2)
+            # Player photos are usually full-length. Keep the face, not the middle.
+            top = max(0, int(round((nh - box_h) * 0.08)))
+            im = im.crop((left, top, left + box_w, top + box_h))
+            out = BytesIO()
+            im.save(out, format='JPEG', quality=90)
+            return 'data:image/jpeg;base64,' + base64.b64encode(out.getvalue()).decode('ascii')
+        except Exception:
+            _logger.exception('Top bid photo crop failed')
+            try:
+                return image_data_uri(binary_val) if binary_val else ''
+            except Exception:
+                return ''
+
+    def _top_bid_logo_uri(self, binary_val):
+        try:
+            return image_data_uri(binary_val) if binary_val else ''
+        except Exception:
+            return ''
+
+    @staticmethod
+    def _top_bid_initials(name, n=2):
+        parts = [p for p in re.split(r'\s+', (name or '').strip()) if p]
+        letters = ''.join(p[0] for p in parts[:n]) or (name or 'AC')[:n]
+        return letters.upper()
+
+    def _top_bid_html_to_jpg(self, html, workdir, binary):
+        import os
+        import subprocess
+        import uuid
+        base = os.path.join(workdir, uuid.uuid4().hex)
+        hpath = base + '.html'
+        opath = base + '.jpg'
+        with open(hpath, 'w', encoding='utf-8') as fh:
+            fh.write(html)
+        cmd = [
+            binary, '--format', 'jpg', '--quality', '92',
+            '--width', '1080', '--height', '1350',
+            '--disable-smart-width',
+            '--enable-local-file-access',
+            '--load-error-handling', 'ignore',
+            '--load-media-error-handling', 'ignore',
+            '--quiet', hpath, opath,
+        ]
+        try:
+            proc = subprocess.run(
+                cmd, timeout=120, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except subprocess.TimeoutExpired:
+            _logger.warning('wkhtmltoimage timed out on a top-bid poster')
+            return None
+        if not (os.path.exists(opath) and os.path.getsize(opath) > 0):
+            _logger.warning(
+                'Top bid poster render failed rc=%s stderr=%s',
+                proc.returncode,
+                (proc.stderr or b'')[-600:].decode('utf-8', 'replace'),
+            )
+            return None
+        with open(opath, 'rb') as fh:
+            return fh.read()
+
+    def action_download_top_bid_posters(self):
+        """Download a zip of five posters for the highest sold bids."""
+        import io
+        import shutil
+        import zipfile
+        from datetime import datetime
+
+        self.ensure_one()
+        lines = self._top_bid_lines()
+        if not lines:
+            raise UserError(_(
+                'No sold players yet. Top bid posters are available after players are sold.'
+            ))
+
+        Player = self.env['auction.team.player']
+        binary = Player._card_render_binary()
+        if not binary:
+            raise UserError(_(
+                'The wkhtmltoimage tool was not found on the server, which is '
+                'required to render the posters.'
+            ))
+
+        rank_meta = {
+            1: ('#e8b923', '#1a1404', 'HIGHEST BID'),
+            2: ('#d5dde6', '#1a1404', '2ND HIGHEST BID'),
+            3: ('#e0a06a', '#1a1404', '3RD HIGHEST BID'),
+            4: ('#7eb3ff', '#07111f', '4TH HIGHEST BID'),
+            5: ('#9aa8bc', '#07111f', '5TH HIGHEST BID'),
+        }
+        workdir = Player._card_workdir()
+        used_names = set()
+        images = []
+        try:
+            for index, line in enumerate(lines, start=1):
+                player = line.player_id
+                team = line.auction_id.team_id or player.assigned_team_id
+                color, ink, label = rank_meta.get(index, rank_meta[5])
+                photo = Player._card_social_photo(player.photo) or player.photo
+                html = self.env['ir.qweb']._render('auction_module.top_bid_poster', {
+                    'tournament_name': self.name or 'Tournament',
+                    'tournament_logo_uri': self._top_bid_logo_uri(self.logo),
+                    'tournament_initials': self._top_bid_initials(self.name),
+                    'rank': index,
+                    'rank_color': color,
+                    'rank_ink': ink,
+                    'rank_label': label,
+                    'player_name': player.name or 'Player',
+                    'player_initials': self._top_bid_initials(player.name),
+                    'photo_uri': self._top_bid_cover_uri(photo, 1000, 640),
+                    'points_display': self.format_points(line.points or 0),
+                    'team_name': (team.name if team else '') or 'Team',
+                    'team_logo_uri': self._top_bid_logo_uri(team.logo) if team else '',
+                    'team_initials': self._top_bid_initials(team.name if team else 'Team'),
+                })
+                if isinstance(html, bytes):
+                    html = html.decode('utf-8')
+                jpg = self._top_bid_html_to_jpg(str(html), workdir, binary)
+                if not jpg:
+                    raise UserError(_(
+                        'Could not render the poster for %s.'
+                    ) % (player.name or 'a player'))
+                fname = Player._card_safe_filename(
+                    '%d_%s' % (index, player.name or ('player_%s' % player.id)),
+                    used_names,
+                )
+                images.append((fname, jpg))
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+
+        zip_buf = io.BytesIO()
+        with zipfile.ZipFile(zip_buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for fname, jpg in images:
+                zf.writestr(fname, jpg)
+        tname = re.sub(r'[^A-Za-z0-9]+', '_', self.name or 'Tournament').strip('_') or 'Tournament'
+        zipname = 'Top_Bids_%s_%s.zip' % (tname, datetime.now().strftime('%Y%m%d_%H%M%S'))
+        attachment = self.env['ir.attachment'].sudo().create({
+            'name': zipname,
+            'type': 'binary',
+            'datas': base64.b64encode(zip_buf.getvalue()),
+            'mimetype': 'application/zip',
+            'res_model': 'auction.tournament',
+            'res_id': self.id,
+        })
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/web/content/%s?download=true' % attachment.id,
+            'target': 'self',
+        }
+
     def action_view_jersey_players(self):
         """Open the jersey view for sold/in-auction players in this tournament."""
         self.ensure_one()
@@ -3160,6 +3351,7 @@ class AuctionTournament(models.Model):
         'action_view_deleted_players',
         'action_set_auction_rules',
         'action_view_auction_rules',
+        'action_download_top_bid_posters',
         'action_upload_teams',
         'action_open_expose_contact_privacy_wizard',
         'action_remask_player_contact',

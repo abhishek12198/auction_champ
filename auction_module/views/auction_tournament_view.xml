@@ -460,6 +460,12 @@
                                             class="o_at_upload_btn o_at_view_rules o_at_btn_deactivated"
                                             title="Set auction rules first"
                                             attrs="{'invisible': ['|', '|', ('active', '=', False), ('has_teams', '=', False), ('has_auction_rules', '=', True)]}"/>
+                                    <button name="action_download_top_bid_posters"
+                                            type="object"
+                                            string="Top 5 Bid Posters"
+                                            icon="fa-file-archive-o"
+                                            class="o_at_upload_btn o_at_view_rules"
+                                            attrs="{'invisible': [('active', '=', False)]}"/>
                                     <button name="action_upload_teams"
                                             type="object"
                                             string="Upload Teams &amp; Tiers"

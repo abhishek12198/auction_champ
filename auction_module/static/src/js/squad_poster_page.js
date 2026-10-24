@@ -224,23 +224,60 @@
     });
     var availH = Math.max(120, (layer.clientHeight || 0) - usedOutside - bandH - 8);
     var availW = grid.clientWidth || squad.clientWidth || 1000;
-    var rowH = Math.max(64, Math.floor((availH - (rows - 1) * rowGap) / rows));
     var colW = Math.max(48, Math.floor((availW - (cols - 1) * gap) / cols));
+
+    // Icon / key players sit above the squad, centered and larger.
+    // They are not in .sp-grid-row, so they need their own box — otherwise
+    // min-height:0 collapses the photo to nothing and the grid covers their space.
+    var hero = squad.querySelector('.sp-icon-hero-row');
+    var heroCards = hero ? hero.querySelectorAll('.sp-card') : [];
+    var heroCount = heroCards.length;
+    var heroGap = 14;
+    var heroExtra = 12;
+    var fitW = colW;
+    if (hero && heroCount) {
+      var hs = getComputedStyle(hero);
+      heroGap = parseFloat(hs.columnGap || hs.gap) || 14;
+      heroExtra = (parseFloat(hs.paddingTop) || 0) + (parseFloat(hs.paddingBottom) || 0)
+        + (parseFloat(hs.marginTop) || 0) + (parseFloat(hs.marginBottom) || 0);
+      var heroAvailW = Math.max(80, (hero.clientWidth || availW) - 8);
+      fitW = Math.floor((heroAvailW - Math.max(0, heroCount - 1) * heroGap) / heroCount);
+    }
+    var heroSide = 0;
+    if (heroCount) {
+      var maxByHeight = Math.floor(availH * (heroCount === 1 ? 0.46 : 0.38));
+      heroSide = Math.max(110, Math.min(fitW, maxByHeight, 300));
+    }
+    var heroBlock = heroCount ? (heroSide + heroExtra) : 0;
+    var gridAvail = Math.max(96, availH - heroBlock);
+    var rowH = Math.max(56, Math.floor((gridAvail - (rows - 1) * rowGap) / rows));
     var cardW = Math.min(colW, Math.round(rowH * 0.82));
-    var cardH = rowH;
+    var cardH = heroCount ? cardW : rowH;
     if (cardW < 48) cardW = Math.max(40, colW);
+    if (heroCount) cardH = cardW;
+    if (heroCount && heroSide < cardW + 28) {
+      var want = Math.min(fitW, cardW + 48, 300);
+      var grow = want - heroSide;
+      if (grow > 0 && gridAvail - grow > rows * 56) {
+        heroSide = want;
+        heroBlock = heroSide + heroExtra;
+        gridAvail = Math.max(96, availH - heroBlock);
+        rowH = Math.max(56, Math.floor((gridAvail - (rows - 1) * rowGap) / rows));
+        cardW = Math.min(colW, Math.round(rowH * 0.82));
+        cardH = cardW;
+        if (cardW < 48) cardW = Math.max(40, colW);
+      }
+    }
+    if (heroCount) applyCardBox(heroCards, heroSide, heroSide);
 
     rowsEls.forEach(function (row) {
       var cards = row.querySelectorAll('.sp-card');
       applyCardBox(cards, cardW, cardH);
-      var icons = row.querySelectorAll('.sp-card.is-icon');
-      if (icons.length) {
-        applyCardBox(icons, Math.min(colW, Math.round(cardW * 1.06)), cardH);
-      }
     });
     squad.style.setProperty('--sp-card-side', cardW + 'px');
     squad.style.setProperty('--sp-row-gap', rowGap + 'px');
-    squad.style.setProperty('--sp-icon-hero-h', '0px');
+    squad.style.setProperty('--sp-icon-hero-side', heroSide + 'px');
+    squad.style.setProperty('--sp-icon-hero-h', heroBlock + 'px');
 
     var srow = canvas && canvas.querySelector('.sp-sponsors-row');
     if (srow) {

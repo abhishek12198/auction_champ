@@ -6765,6 +6765,15 @@ class Auction(http.Controller):
             # Gate:
             #  - public: closed when registration_open is False OR allotment full
             #  - admin:  closed only when allotment full (can register while public is closed)
+            tournament_logo_src = ''
+            if tournament.logo:
+                try:
+                    tournament_logo_src = self._sp_logo_uri(tournament.logo, size=(360, 360))
+                except Exception:
+                    _logger.exception(
+                        'player_register: logo plate removal failed for tournament %s',
+                        tournament.id,
+                    )
             public_closed = (not tournament.registration_open) and not admin
             if public_closed or is_full:
                 if overall_full and tournament.registration_open:
@@ -6805,6 +6814,7 @@ class Auction(http.Controller):
                     'locked_tier_color': tier_style['color'],
                     'locked_tier_ink': tier_style['ink'],
                     'locked_tier_rgb': tier_style['rgb'],
+                    'tournament_logo_src': tournament_logo_src,
                 }, lazy=False)
                 return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
@@ -6839,6 +6849,7 @@ class Auction(http.Controller):
                 'locked_tier_color': tier_style['color'],
                 'locked_tier_ink': tier_style['ink'],
                 'locked_tier_rgb': tier_style['rgb'],
+                'tournament_logo_src': tournament_logo_src,
             }
 
             if request.httprequest.method == 'POST':
@@ -8849,6 +8860,7 @@ def _build_player_vals_from_post(request, tournament, locked_tier=None):
         'state':         'draft',
         'photo':         photo_data,
         'payment_proof': payment_proof_data,
+        'amount_paid':   bool(payment_proof_data),
     }
 
     # Optional email (added by overlay modules such as ac_whatsapp)

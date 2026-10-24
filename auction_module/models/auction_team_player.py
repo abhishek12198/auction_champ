@@ -1938,8 +1938,12 @@ class AuctionTeamPlayer(models.Model):
             if image_base64:
                vals.update({'photo': image_base64})
 
-        if not vals.get('payment_url', False):
-            vals.update({'amount_paid': False})
+        # A receipt upload is payment, same as a payment link. Without either,
+        # a new registration stays unpaid.
+        if vals.get('payment_url') or vals.get('payment_proof'):
+            vals['amount_paid'] = True
+        else:
+            vals['amount_paid'] = False
         vals = self._apply_kabaddi_role_label(vals)
         player = super(AuctionTeamPlayer, self).create(vals)
         player._sync_other_attributes_from_tournament()
@@ -1956,6 +1960,9 @@ class AuctionTeamPlayer(models.Model):
             vals = dict(vals)
             vals['role'] = cat_map.get(vals['badminton_category'], vals['badminton_category'])
         vals = self._apply_kabaddi_role_label(vals)
+        if vals.get('payment_proof') and 'amount_paid' not in vals:
+            vals = dict(vals)
+            vals['amount_paid'] = True
         res = super(AuctionTeamPlayer, self).write(vals)
         if 'tournament_id' in vals:
             self._sync_other_attributes_from_tournament()

@@ -697,6 +697,7 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                             locked: !(d.team_count || d.has_teams),
                             title: (d.team_count || d.has_teams) ? '' : 'Add teams first',
                         }),
+                    this._btn('Top 5 Bid Posters', {action: 'action_download_top_bid_posters', icon: 'fa-file-archive-o'}),
                     this._btn('Upload teams', {action: 'action_upload_teams', icon: 'fa-upload', cls: 'tsu-btn-green'}),
                     this._btn('Add Team', {action: 'action_user_settings_add_team', icon: 'fa-users'}),
                     this._btn('Squad Modification', {action: 'action_open_squad_view', icon: 'fa-users', cls: 'tsu-btn-blue'}),

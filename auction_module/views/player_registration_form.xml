@@ -12,14 +12,15 @@
         <t t-set="og_record" t-value="tournament"/>
     </t>
 
-    <!-- Google Fonts: Bebas Neue · Barlow Condensed · Poppins (body) -->
+    <!-- Google Fonts: Oswald (sport display) · Barlow Condensed (UI) · Source Sans 3 (body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Barlow+Condensed:wght@400;600;700&amp;family=Poppins:wght@400;600&amp;display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&amp;family=Barlow+Condensed:wght@600;700&amp;family=Source+Sans+3:wght@400;500;600;700&amp;display=swap"
           rel="stylesheet"/>
 
     <!-- Registration form CSS -->
-    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.940"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.981"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration_pro.css?v=1.5.981"/>
 
     <!-- ── Per-theme CSS custom properties ────────────────────── -->
     <style>
@@ -128,8 +129,36 @@
                 --reg-section-title:#0a3d12;
             }
         </t>
+        <t t-elif="theme == 'lemon'">
+            :root {
+                --reg-primary:      #1f1a0a;
+                --reg-primary-mid:  #8f7400;
+                --reg-accent:       #e8c200;
+                --reg-accent-rgb:   232, 194, 0;
+                --reg-accent-glow:  rgba(232,194,0,.40);
+                --reg-accent-light: rgba(232,194,0,.10);
+                --reg-btn-text:     #1f1a0a;
+                --reg-bg-from:      #fff8dc;
+                --reg-bg-to:        #f6e7a8;
+                --reg-ghost-num:    rgba(31,26,10,.05);
+                --reg-section-title:#6e5a00;
+            }
+        </t>
         <t t-else="">
-            /* vanilla — values set in player_registration.css */
+            /* vanilla, and any theme without its own palette */
+            :root {
+                --reg-primary:      #142846;
+                --reg-primary-mid:  #3d5f94;
+                --reg-accent:       #8aa6d4;
+                --reg-accent-rgb:   138, 166, 212;
+                --reg-accent-glow:  rgba(91,126,184,.35);
+                --reg-accent-light: rgba(91,126,184,.12);
+                --reg-btn-text:     #eef2f8;
+                --reg-bg-from:      #eef2f8;
+                --reg-bg-to:        #c8d4e8;
+                --reg-ghost-num:    rgba(20,40,70,.05);
+                --reg-section-title:#142846;
+            }
         </t>
     </style>
 </head>
@@ -137,7 +166,8 @@
 <t t-set="locked_tier_color" t-value="locked_tier_color or ''"/>
 <t t-set="locked_tier_ink" t-value="locked_tier_ink or '#ffffff'"/>
 <t t-set="locked_tier_rgb" t-value="locked_tier_rgb or '52,152,219'"/>
-<body t-att-class="'reg-page' + (' reg-page--tier-locked' if locked_tier else '')"
+<body t-att-class="'reg-page reg-page--steps' + (' reg-page--tier-locked' if locked_tier else '')"
+      t-att-data-reg-theme="theme or 'vanilla'"
       t-att-style="('--tier-color:%s;--tier-ink:%s;--tier-rgb:%s;' % (locked_tier_color, locked_tier_ink, locked_tier_rgb)) if locked_tier and locked_tier_color else None">
 <div class="reg-wrapper">
     <t t-set="hide_reg_form" t-value="success or registration_closed or razorpay_await_payment"/>
@@ -152,7 +182,7 @@
             <!-- Tournament logo -->
             <div class="reg-tournament-logo-wrap">
                 <t t-if="tournament and tournament.logo">
-                    <img t-att-src="'data:image/png;base64,' + tournament.logo.decode('utf-8')"
+                    <img t-att-src="tournament_logo_src or ('data:image/png;base64,' + tournament.logo.decode('utf-8'))"
                          alt="Tournament Logo"/>
                 </t>
                 <t t-else="">
@@ -167,10 +197,43 @@
                 <p class="reg-tournament-desc"
                    t-esc="tournament.description if tournament and tournament.description else 'Join the auction pool and secure your spot.'"/>
                 <t t-if="not locked_tier">
-                    <span class="reg-page-label">Player Registration</span>
+                    <span class="reg-page-label reg-page-label--inline">Player Registration</span>
                 </t>
             </div>
+
+            <t t-set="show_roster_cta" t-value="bool(tournament and db_name and tournament_slug and tournament.show_registered_players)"/>
+            <t t-set="show_icons_cta" t-value="bool(tournament and tournament.show_registration_icon_players and tournament.icon_player_count)"/>
+            <t t-if="show_roster_cta or show_icons_cta">
+            <div class="reg-header-tools">
+                <t t-if="show_roster_cta">
+                <button type="button"
+                        class="reg-header-tool"
+                        id="regRosterOpen"
+                        t-att-data-url="'/%s/%s/player/register/players' % (db_name, tournament_slug)"
+                        t-att-data-sport="tournament.tournament_type or 'cricket'"
+                        t-att-data-count="roster_count or 0">
+                    <span>Registered</span>
+                    <strong id="regRosterCount"><t t-esc="roster_count or 0"/></strong>
+                </button>
+                </t>
+                <t t-if="show_icons_cta">
+                <button type="button"
+                        class="reg-header-tool"
+                        id="regIconsOpen"
+                        aria-haspopup="dialog"
+                        aria-controls="regIconsOverlay">
+                    <span>Icons</span>
+                    <strong><t t-esc="tournament.icon_player_count"/></strong>
+                </button>
+                </t>
+            </div>
+            </t>
         </div>
+
+        <t t-if="not locked_tier and not hide_reg_form">
+            <span class="reg-page-label reg-page-label--lead">Player Registration</span>
+            <a href="#reg-form-start" class="reg-goto-form">Go to Registration form</a>
+        </t>
 
         <!-- Tier tags: full-width under logo row so they stay left-aligned on mobile -->
         <t t-if="locked_tier">
@@ -190,16 +253,8 @@
             </div>
         </t>
 
-        <div class="reg-hero-copy">
-            <p class="reg-hero-sub">
-                Team owners are building their squads — register now to enter the auction,
-                get your official player card, and give yourself a real shot at being picked.
-                Spots fill as registrations come in, so don’t wait.
-            </p>
-        </div>
-
-        <!-- Meta bar: date, venue, sport -->
-        <div class="reg-header-meta">
+        <t t-if="not hide_reg_form">
+        <div class="reg-header-facts">
             <t t-if="tournament and tournament.tournament_date_display">
                 <div class="reg-meta-item reg-meta-item--highlight">
                     <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
@@ -232,48 +287,26 @@
                         <circle cx="12" cy="12" r="10"/>
                         <path d="M12 8v4l3 3"/>
                     </svg>
-                    <span><span class="reg-meta-label">Sport</span><t t-esc="(tournament.tournament_type or '').upper()"/></span>
+                    <span>
+                        <span class="reg-meta-label">Sport</span>
+                        <span class="reg-meta-val" t-esc="(tournament.tournament_type or '').upper()"/>
+                    </span>
                 </div>
             </t>
         </div>
+        </t>
+
+        <div class="reg-hero-copy">
+            <p class="reg-hero-sub">
+                Team owners are building their squads — register now to enter the auction,
+                get your official player card, and give yourself a real shot at being picked.
+                Spots fill as registrations come in, so don’t wait.
+            </p>
+        </div>
+
     </div><!-- /reg-header-card -->
 
-    <!-- Roster / Icon CTAs — compact buttons that open popups (like roster) -->
-    <t t-set="show_roster_cta" t-value="bool(tournament and db_name and tournament_slug and tournament.show_registered_players)"/>
-    <t t-set="show_icons_cta" t-value="bool(tournament and tournament.show_registration_icon_players and tournament.icon_player_count)"/>
-    <t t-if="show_roster_cta or show_icons_cta">
-    <div class="reg-cta-stack">
-        <t t-if="show_roster_cta">
-        <button type="button"
-                class="reg-roster-cta"
-                id="regRosterOpen"
-                t-att-data-url="'/%s/%s/player/register/players' % (db_name, tournament_slug)"
-                t-att-data-sport="tournament.tournament_type or 'cricket'"
-                t-att-data-count="roster_count or 0">
-            <span class="reg-roster-cta-ic" aria-hidden="true">👥</span>
-            <span class="reg-roster-cta-copy">
-                <b>Players registered so far</b>
-                <span>See who has joined · find your friends</span>
-            </span>
-            <span class="reg-roster-cta-count" id="regRosterCount"><t t-esc="roster_count or 0"/></span>
-        </button>
-        </t>
-        <t t-if="show_icons_cta">
-        <button type="button"
-                class="reg-roster-cta"
-                id="regIconsOpen"
-                aria-haspopup="dialog"
-                aria-controls="regIconsOverlay">
-            <span class="reg-roster-cta-ic" aria-hidden="true">👑</span>
-            <span class="reg-roster-cta-copy">
-                <b>Icon Players</b>
-                <span>Assigned by teams · tap to view</span>
-            </span>
-            <span class="reg-roster-cta-count"><t t-esc="tournament.icon_player_count"/></span>
-        </button>
-        </t>
-    </div>
-    </t>
+    <!-- Roster / Icon CTAs live in the compact header (.reg-header-tools) -->
 
     <!-- ════════════════════════════════════════
          TRUST BAR — premium reassurance strip
@@ -310,20 +343,78 @@
     </div>
     </t>
 
+    <!-- Date / Venue / Sport. On phones the poster sits on the left of this strip. -->
+    <t t-if="not hide_reg_form">
+    <div t-attf-class="reg-hero-strip{{' reg-hero-strip--poster' if tournament and tournament.poster_image else ''}}">
+        <t t-if="tournament and tournament.poster_image">
+        <button type="button" class="reg-poster-mobile reg-poster-open" id="regPosterOpen" aria-haspopup="dialog" aria-label="Enlarge tournament poster">
+            <img t-att-src="'data:image/png;base64,' + tournament.poster_image.decode('utf-8')"
+                 alt="Tournament poster"
+                 class="reg-poster-mobile-img"/>
+            <span class="reg-poster-mobile-copy">
+                <b>Tournament poster</b>
+                <span>Tap to enlarge</span>
+            </span>
+        </button>
+        </t>
+        <div class="reg-header-meta">
+            <t t-if="tournament and tournament.tournament_date_display">
+                <div class="reg-meta-item reg-meta-item--highlight">
+                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <span>
+                        <span class="reg-meta-label">Date</span>
+                        <span class="reg-meta-val" t-esc="tournament.tournament_date_display"/>
+                    </span>
+                </div>
+            </t>
+            <t t-if="tournament and tournament.venue">
+                <div class="reg-meta-item reg-meta-item--highlight">
+                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                        <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    <span>
+                        <span class="reg-meta-label">Venue</span>
+                        <span class="reg-meta-val" t-esc="tournament.get_venue_label()"/>
+                    </span>
+                </div>
+            </t>
+            <t t-if="tournament and tournament.tournament_type">
+                <div class="reg-meta-item">
+                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 8v4l3 3"/>
+                    </svg>
+                    <span>
+                        <span class="reg-meta-label">Sport</span>
+                        <span class="reg-meta-val" t-esc="(tournament.tournament_type or '').upper()"/>
+                    </span>
+                </div>
+            </t>
+        </div>
+    </div>
+    <t t-if="tournament and tournament.poster_image">
+    <div class="reg-poster-overlay" id="regPosterOverlay" aria-hidden="true">
+        <div class="reg-poster-dialog" role="dialog" aria-modal="true" aria-label="Tournament poster">
+            <button type="button" class="reg-poster-x" id="regPosterClose" aria-label="Close">&#215;</button>
+            <img t-att-src="'data:image/png;base64,' + tournament.poster_image.decode('utf-8')"
+                 alt="Tournament Poster"
+                 class="reg-poster-overlay-img"/>
+        </div>
+    </div>
+    </t>
+    </t>
+
     <!-- ════════════════════════════════════════
-         LAYOUT — main form + sticky benefits sidebar
+         LAYOUT — form, then trust notes under it, poster rail beside it
          ════════════════════════════════════════ -->
     <div t-attf-class="reg-layout{{' reg-layout--success' if (success or registration_closed or razorpay_await_payment) else ''}}">
     <div class="reg-main">
-
-    <!-- ── Mobile-only poster (shown above form on small screens) ── -->
-    <t t-if="not hide_reg_form and tournament and tournament.poster_image">
-    <div class="reg-poster-mobile">
-        <img t-att-src="'data:image/png;base64,' + tournament.poster_image.decode('utf-8')"
-             alt="Tournament Poster"
-             class="reg-poster-mobile-img"/>
-    </div>
-    </t>
 
     <!-- ════════════════════════════════════════
          FORM BODY
@@ -344,6 +435,20 @@
                 <p t-else="">Fields marked <span style="color:#e91e63">*</span> are required · Submitted players join as Draft</p>
             </div>
         </div>
+        <nav class="reg-steps" id="regStepsNav" aria-label="Registration steps">
+            <button type="button" class="reg-step is-on" data-step="1" aria-current="step">
+                <span class="reg-step-n">1</span>
+                <span class="reg-step-copy"><b>Player</b><span>Photo, name, contact</span></span>
+            </button>
+            <button type="button" class="reg-step" data-step="2">
+                <span class="reg-step-n">2</span>
+                <span class="reg-step-copy"><b>Game</b><span>Role, style, jersey</span></span>
+            </button>
+            <button type="button" class="reg-step" data-step="3">
+                <span class="reg-step-n">3</span>
+                <span class="reg-step-copy"><b>Pay &amp; submit</b><span>Proof, then register</span></span>
+            </button>
+        </nav>
         </t>
 
         <!-- ── Registration Closed ── -->
@@ -475,6 +580,7 @@
             <div class="reg-alert reg-alert-error" id="regServerAlert">
                 <span class="reg-alert-icon">⚠️</span>
                 <div><strong>Submission Error</strong><span t-esc="error"/></div>
+                <button type="button" class="reg-alert-clear" data-reg-alert-clear="1">Clear</button>
             </div>
         </t>
 
@@ -485,6 +591,7 @@
                 <strong>Missing Required Information</strong>
                 <span id="regClientAlertMsg">Please fill all mandatory fields marked with *.</span>
             </div>
+            <button type="button" class="reg-alert-clear" data-reg-alert-clear="1">Clear</button>
         </div>
 
         <!-- ── Main form (hidden after success or when closed) ── -->
@@ -655,7 +762,7 @@
             <input type="hidden" name="reuse_source_photo" id="reuseSourcePhoto" value="0"/>
 
             <!-- Optional: returning player lookup — collapsed by default (most are new) -->
-            <div class="reg-returning is-collapsed" id="returningPlayerPanel">
+            <div class="reg-returning is-collapsed" id="returningPlayerPanel" data-reg-step="1">
                 <button type="button" class="reg-returning-toggle" id="returningToggleBtn"
                         aria-expanded="false" aria-controls="returningLookupBody">
                     <span class="reg-returning-toggle-label">
@@ -704,7 +811,7 @@
             <!-- ══════════════════════════════════════
                  01 · PLAYER IDENTITY
                  ══════════════════════════════════════ -->
-            <div class="reg-section">
+            <div class="reg-section" data-reg-step="1">
                 <div class="reg-section-header">
                     <div class="reg-section-strip"/>
                     <h3>Player Identity</h3>
@@ -790,7 +897,7 @@
             <t t-set="is_football" t-value="tournament.tournament_type == 'football'"/>
             <t t-set="is_badminton" t-value="tournament.tournament_type == 'badminton'"/>
             <t t-set="is_kabaddi" t-value="tournament.tournament_type == 'kabaddi'"/>
-            <div class="reg-section">
+            <div class="reg-section" data-reg-step="2">
                 <div class="reg-section-header">
                     <div class="reg-section-strip"/>
                     <h3><t t-esc="'Football Profile' if is_football else ('Badminton Profile' if is_badminton else ('Kabaddi Profile' if is_kabaddi else 'Cricket Profile'))"/></h3>
@@ -1071,7 +1178,7 @@
             <!-- ══════════════════════════════════════
                  03 · PERSONAL &amp; CONTACT
                  ══════════════════════════════════════ -->
-            <div class="reg-section">
+            <div class="reg-section" data-reg-step="1">
                 <div class="reg-section-header">
                     <div class="reg-section-strip"/>
                     <h3>Personal &amp; Contact</h3>
@@ -1156,7 +1263,7 @@
             </div>
 
             <t t-if="tournament and tournament.other_attribute_label_ids">
-            <div class="reg-section" id="extraAttrSection">
+            <div class="reg-section" id="extraAttrSection" data-reg-step="2">
                 <div class="reg-section-header">
                     <div class="reg-section-strip"/>
                     <h3>Other Information</h3>
@@ -1250,7 +1357,7 @@
                  05 · JERSEY  (enabled per tournament)
                  ══════════════════════════════════════ -->
             <t t-if="tournament and tournament.enable_jersey_section">
-            <div class="reg-section" id="jerseySection">
+            <div class="reg-section" id="jerseySection" data-reg-step="2">
                 <div class="reg-section-header">
                     <div class="reg-section-strip"/>
                     <h3>Jersey Details</h3>
@@ -1311,7 +1418,7 @@
             <!-- ══════════════════════════════════════
                  05 · PAYMENT
                  ══════════════════════════════════════ -->
-            <div class="reg-section" id="paymentSection"
+            <div class="reg-section" id="paymentSection" data-reg-step="3"
                  t-att-data-payment-required="'1' if tournament and tournament.payment_proof_required else '0'">
                 <div class="reg-section-header">
                     <div class="reg-section-strip"/>
@@ -1426,14 +1533,17 @@
             </div>
 
             <!-- ── PRIVACY REASSURANCE STRIP ── -->
-            <div class="reg-consent-note">
+            <div class="reg-consent-note" data-reg-step="3">
                 <span class="reg-consent-ic">🔒</span>
-                <span>By submitting, your profile is stored securely and only reviewed by verified tournament organisers. Your data is encrypted and never shared with unauthorised third parties. If selected, your profile may be shown during the live auction.</span>
+                <span>Encrypted · Not shared · Organiser reviewed. If selected, your profile may be shown during the live auction.</span>
             </div>
 
             <!-- ── ACTION BUTTONS ── -->
             <div class="reg-actions">
-                <button type="reset" class="reg-btn reg-btn-cancel">
+                <button type="button" class="reg-btn reg-btn-cancel" id="regStepBack" hidden="hidden">
+                    Back
+                </button>
+                <button type="reset" class="reg-btn reg-btn-cancel" id="regStepClear">
                     <svg width="14" height="14" fill="none" viewBox="0 0 24 24"
                          stroke="currentColor" stroke-width="2.5">
                         <line x1="18" y1="6" x2="6" y2="18"/>
@@ -1441,7 +1551,10 @@
                     </svg>
                     Clear
                 </button>
-                <button type="submit" class="reg-btn reg-btn-submit">
+                <button type="button" class="reg-btn reg-btn-submit" id="regStepNext">
+                    Continue
+                </button>
+                <button type="submit" class="reg-btn reg-btn-submit" id="regStepSubmit">
                     Submit Registration
                     <svg width="15" height="15" fill="none" viewBox="0 0 24 24"
                          stroke="currentColor" stroke-width="2.5">
@@ -1454,6 +1567,22 @@
         </form>
         </t><!-- /not success -->
     </div><!-- /reg-form-body -->
+
+    <t t-if="not hide_reg_form">
+    <div class="reg-below">
+        <div class="reg-aside-card reg-aside-ethics">
+            <h4 class="reg-aside-title"><span>⚖️</span> Fair Selection</h4>
+            <div class="reg-ethics-chips">
+                <span>No discrimination</span>
+                <span>No bias</span>
+                <span>Equal opportunity</span>
+                <span>Transparent auction</span>
+                <span>Verified organisers</span>
+                <span>Responsible data use</span>
+            </div>
+        </div>
+    </div>
+    </t>
     </div><!-- /reg-main -->
 
     <!-- ── STICKY BENEFITS SIDEBAR ── -->
@@ -1463,12 +1592,18 @@
 
             <!-- Why Register -->
             <t t-if="tournament and tournament.poster_image">
-            <div class="reg-aside-card reg-aside-poster" style="padding:0;overflow:hidden;border-radius:12px;">
+            <button type="button" class="reg-aside-card reg-aside-poster reg-poster-open" aria-label="Enlarge tournament poster">
                 <img t-att-src="'data:image/png;base64,' + tournament.poster_image.decode('utf-8')"
                      alt="Tournament Poster"
-                     style="width:100%;display:block;border-radius:12px;"/>
-            </div>
+                     class="reg-aside-poster-img"/>
+                <span class="reg-poster-zoom">Enlarge</span>
+            </button>
             </t>
+
+            <div class="reg-aside-card reg-aside-privacy">
+                <h4 class="reg-aside-title"><span>🛡️</span> Privacy &amp; Security</h4>
+                <p class="reg-aside-note">Your personal information is encrypted. AuctionChamp never shares player information with unauthorised third parties. Documents are stored securely, and only tournament organisers can review submitted applications.</p>
+            </div>
 
             <!-- Why Register -->
             <div class="reg-aside-card reg-aside-benefits">
@@ -1485,35 +1620,16 @@
                 </ul>
             </div>
 
-            <!-- Privacy &amp; Security -->
-            <div class="reg-aside-card reg-aside-privacy">
-                <h4 class="reg-aside-title"><span>🛡️</span> Privacy &amp; Security</h4>
-                <p class="reg-aside-note">Your personal information is encrypted. AuctionChamp never shares player information with unauthorised third parties. Documents are stored securely, and only tournament organisers can review submitted applications.</p>
-            </div>
-
-            <!-- Fair Selection / Ethics -->
-            <div class="reg-aside-card reg-aside-ethics">
-                <h4 class="reg-aside-title"><span>⚖️</span> Fair Selection</h4>
-                <div class="reg-ethics-chips">
-                    <span>No discrimination</span>
-                    <span>No bias</span>
-                    <span>Equal opportunity</span>
-                    <span>Transparent auction</span>
-                    <span>Verified organisers</span>
-                    <span>Responsible data use</span>
-                </div>
-            </div>
-
         </div>
     </aside>
     </t>
     </div><!-- /reg-layout -->
 
-    <!-- Footer -->
-    <div class="reg-footer">
-        <img src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
-        Powered by AuctionChamp
-    </div>
+    <!-- Footer: small label, then the wordmark. The name is in the logo. -->
+    <footer class="reg-footer" aria-label="Powered by AuctionChamp">
+        <span class="reg-footer-label">Powered by</span>
+        <img class="reg-footer-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+    </footer>
 </div><!-- /reg-wrapper -->
 
 <!-- ── Registered players popup ── -->
@@ -1912,17 +2028,30 @@
     }
 
     // ── Secure Registration → scroll to form start ───────────────────
-    var secureRegBtn = document.getElementById('reg-secure-registration-btn');
-    if (secureRegBtn) {
+    document.querySelectorAll('#reg-secure-registration-btn, .reg-goto-form').forEach(function (secureRegBtn) {
         secureRegBtn.addEventListener('click', function (e) {
             var target = document.getElementById('reg-form-start');
             if (!target) return;
             e.preventDefault();
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            var step1 = document.querySelector('#regStepsNav .reg-step[data-step="1"]');
+            if (step1 &amp;&amp; !step1.classList.contains('is-on')) step1.click();
             var firstSec = target.querySelector('.reg-section');
             if (firstSec) firstSec.classList.add('mob-open');
+            var nameEl = document.getElementById('playerName');
+            if (!nameEl) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+            setTimeout(function () {
+                try { nameEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (err) {}
+                nameEl.focus();
+                var len = nameEl.value ? nameEl.value.length : 0;
+                if (nameEl.setSelectionRange) {
+                    try { nameEl.setSelectionRange(len, len); } catch (err2) {}
+                }
+            }, 60);
         });
-    }
+    });
 
     // ── Icon Players popup (same UX as registered-players CTA) ────────
     (function () {
@@ -1985,7 +2114,7 @@
     })();
 
     // ── Mobile Accordion (≤ 640 px) ───────────────────────────────────
-    if (window.innerWidth &lt;= 640) {
+    if (window.innerWidth &lt;= 640 &amp;&amp; !document.body.classList.contains('reg-page--steps')) {
         var sections = document.querySelectorAll('.reg-section');
 
         sections.forEach(function (sec, idx) {
@@ -2128,6 +2257,7 @@
         }
 
         form.addEventListener('submit', function (e) {
+            if (document.body.classList.contains('reg-page--steps')) return;
             hideRegTopWarning();
 
             // Keep gate in sync before validating
@@ -2793,6 +2923,7 @@
 </script>
 <script src="/auction_module/static/src/js/auction_sse_client.js"></script>
 <script src="/auction_module/static/src/js/player_registration_roster.js?v=1.5.661"></script>
+<script src="/auction_module/static/src/js/player_registration_steps.js?v=1.5.981"></script>
 
 </body>
 </html>

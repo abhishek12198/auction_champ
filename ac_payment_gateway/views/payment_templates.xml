@@ -23,7 +23,7 @@
        Match by id — h3 text is not exactly "Payment Proof" (may include * / Optional). -->
   <xpath expr="//div[@id='paymentSection']" position="replace">
     <t t-if="razorpay_enabled">
-      <div class="reg-section">
+      <div class="reg-section" data-reg-step="3">
         <div class="reg-section-header">
           <div class="reg-section-strip"/>
           <h3>Registration Fee</h3>
@@ -58,7 +58,7 @@
     <t t-else="">
       <!-- Classic QR + proof upload (flag OFF) — respect tournament.payment_proof_required -->
       <t t-set="pay_req" t-value="bool(tournament and tournament.payment_proof_required)"/>
-      <div class="reg-section" id="paymentSection"
+      <div class="reg-section" id="paymentSection" data-reg-step="3"
            t-att-data-payment-required="'1' if pay_req else '0'">
         <div class="reg-section-header">
           <div class="reg-section-strip"/>
