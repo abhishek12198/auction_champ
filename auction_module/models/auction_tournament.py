@@ -2208,6 +2208,157 @@ class AuctionTournament(models.Model):
         letters = ''.join(p[0] for p in parts[:n]) or (name or 'AC')[:n]
         return letters.upper()
 
+    @staticmethod
+    def _top_bid_name_size(name):
+        n = len((name or '').strip())
+        if n <= 10:
+            return 34
+        if n <= 14:
+            return 30
+        if n <= 18:
+            return 26
+        if n <= 24:
+            return 22
+        return 18
+
+    @staticmethod
+    def _top_bid_points_size(label):
+        n = len((label or '').strip())
+        if n <= 8:
+            return 52
+        if n <= 12:
+            return 42
+        if n <= 16:
+            return 34
+        return 28
+
+    @staticmethod
+    def _top_bid_team_size(name):
+        n = len((name or '').strip())
+        if n <= 12:
+            return 22
+        if n <= 18:
+            return 18
+        if n <= 24:
+            return 16
+        return 14
+
+    def _top_bid_role(self, player):
+        sport = self.tournament_type or 'cricket'
+        label = ''
+        if sport == 'football' and player.dominant_position_id:
+            label = player.dominant_position_id.name or ''
+        elif sport == 'kabaddi' and player.kabaddi_role:
+            label = dict(player._fields['kabaddi_role'].selection).get(player.kabaddi_role, '')
+        elif sport == 'badminton' and player.badminton_category:
+            label = dict(player._fields['badminton_category'].selection).get(
+                player.badminton_category, '')
+        if not label:
+            label = (player.role or '').strip()
+        return (label or 'Player').upper()
+
+    def _top_bid_brand_svg(self):
+        """Official white AuctionChamp wordmark used on the public pages."""
+        import os
+        path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            'static', 'src', 'assets', 'images', 'logo.svg',
+        )
+        try:
+            with open(path, 'r', encoding='utf-8') as fh:
+                raw = fh.read()
+        except Exception:
+            _logger.exception('AuctionChamp logo missing')
+            return ''
+        return raw.replace('<svg ', '<svg class="brand-logo" ', 1)
+
+    @staticmethod
+    def _top_bid_title_size(name):
+        n = len((name or '').strip())
+        if n <= 16:
+            return 52
+        if n <= 26:
+            return 42
+        if n <= 36:
+            return 34
+        return 26
+
+    @staticmethod
+    def _top_bid_desc_size(text):
+        n = len((text or '').strip())
+        if n <= 42:
+            return 20
+        if n <= 70:
+            return 17
+        return 15
+
+    def _top_bid_stadium_uri(self):
+        import os
+        path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            'static', 'img', 'top5_stadium_night.jpg',
+        )
+        try:
+            with open(path, 'rb') as fh:
+                return 'data:image/jpeg;base64,' + base64.b64encode(fh.read()).decode('ascii')
+        except Exception:
+            _logger.exception('Top bid stadium background missing')
+            return ''
+
+    def _top_bid_logo_box(self, binary_val, size=160):
+        """Fit a team logo inside a square so the card does not stretch it."""
+        if not binary_val:
+            return ''
+        try:
+            from io import BytesIO
+            from PIL import Image
+            raw = base64.b64decode(binary_val)
+            im = Image.open(BytesIO(raw)).convert('RGBA')
+            try:
+                resample = Image.Resampling.LANCZOS
+            except AttributeError:
+                resample = Image.LANCZOS
+            im.thumbnail((size, size), resample)
+            canvas = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+            canvas.paste(im, ((size - im.size[0]) // 2, (size - im.size[1]) // 2), im)
+            out = BytesIO()
+            canvas.save(out, format='PNG')
+            return 'data:image/png;base64,' + base64.b64encode(out.getvalue()).decode('ascii')
+        except Exception:
+            _logger.exception('Top bid logo fit failed')
+            return self._top_bid_logo_uri(binary_val)
+
+    def _top_bid_font_css(self):
+        """Embed display fonts so wkhtmltoimage does not fall back to Arial."""
+        import os
+        base = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            'static', 'src', 'assets', 'fonts',
+        )
+        faces = (
+            ('TBTeko', 'Teko-ExtraBold.ttf'),
+            ('TBDisplay', 'BebasNeue-Regular.ttf'),
+            ('TBName', 'Oswald-Bold.ttf'),
+            ('TBPrice', 'Anton-Regular.ttf'),
+            ('TBTeam', 'Montserrat-Bold.ttf'),
+            ('TBLabel', 'Montserrat-SemiBold.ttf'),
+        )
+        css = []
+        for family, filename in faces:
+            path = os.path.join(base, filename)
+            try:
+                with open(path, 'rb') as fh:
+                    raw = base64.b64encode(fh.read()).decode('ascii')
+            except Exception:
+                _logger.exception('Top bid poster font missing: %s', path)
+                continue
+            css.append(
+                "@font-face{font-family:'%s';src:url('data:font/truetype;base64,%s') "
+                "format('truetype');font-weight:normal;font-style:normal;}"
+                % (family, raw)
+            )
+        return ''.join(css)
+
     def _top_bid_html_to_jpg(self, html, workdir, binary):
         import os
         import subprocess
@@ -2219,7 +2370,7 @@ class AuctionTournament(models.Model):
             fh.write(html)
         cmd = [
             binary, '--format', 'jpg', '--quality', '92',
-            '--width', '1080', '--height', '1350',
+            '--width', '1920', '--height', '1080',
             '--disable-smart-width',
             '--enable-local-file-access',
             '--load-error-handling', 'ignore',
@@ -2243,10 +2394,8 @@ class AuctionTournament(models.Model):
             return fh.read()
 
     def action_download_top_bid_posters(self):
-        """Download a zip of five posters for the highest sold bids."""
-        import io
+        """Download one sheet of the five highest sold bids."""
         import shutil
-        import zipfile
         from datetime import datetime
 
         self.ensure_one()
@@ -2264,64 +2413,83 @@ class AuctionTournament(models.Model):
                 'required to render the posters.'
             ))
 
+        # badge background, badge ink, photo wash
         rank_meta = {
-            1: ('#e8b923', '#1a1404', 'HIGHEST BID'),
-            2: ('#d5dde6', '#1a1404', '2ND HIGHEST BID'),
-            3: ('#e0a06a', '#1a1404', '3RD HIGHEST BID'),
-            4: ('#7eb3ff', '#07111f', '4TH HIGHEST BID'),
-            5: ('#9aa8bc', '#07111f', '5TH HIGHEST BID'),
+            1: ('#f6c445', '#1a1404', 'rgba(16,64,170,.62)'),
+            2: ('#e8eef6', '#1a1404', 'rgba(176,28,42,.55)'),
+            3: ('#e0a06a', '#1a1404', 'rgba(98,36,176,.55)'),
+            4: ('#1a2436', '#f4f7fb', 'rgba(212,160,32,.50)'),
+            5: ('#1a2436', '#f4f7fb', 'rgba(186,36,120,.52)'),
         }
+        card_w = 340
+        gap = 18
+        count = len(lines)
+        row_w = count * card_w + max(count - 1, 0) * gap
+        origin = (1920 - row_w) // 2
+        cards = []
+        for index, line in enumerate(lines, start=1):
+            player = line.player_id
+            team = line.auction_id.team_id or player.assigned_team_id
+            badge, ink, wash = rank_meta.get(index, rank_meta[5])
+            photo = Player._card_social_photo(player.photo) or player.photo
+            player_name = (player.name or 'Player').upper()
+            team_name = ((team.name if team else '') or 'Team').upper()
+            points_display = self.format_points(line.points or 0)
+            left = origin + (index - 1) * (card_w + gap)
+            cards.append({
+                'rank': index,
+                'box_style': 'left:%dpx;' % left,
+                'badge_style': 'background:%s;color:%s;' % (badge, ink),
+                'wash_style': (
+                    'background-image:-webkit-linear-gradient(top, rgba(0,0,0,0) 46%%, %s 100%%);'
+                    % wash
+                ),
+                'player_name': player_name,
+                'name_style': 'font-size:%dpx;' % self._top_bid_name_size(player_name),
+                'initials': self._top_bid_initials(player.name),
+                'role': self._top_bid_role(player),
+                'photo_uri': self._top_bid_cover_uri(photo, 680, 860),
+                'team_name': team_name,
+                'team_style': 'font-size:%dpx;' % self._top_bid_team_size(team_name),
+                'team_logo_uri': self._top_bid_logo_box(team.logo) if team else '',
+                'team_initials': self._top_bid_initials(team.name if team else 'Team'),
+                'points_display': points_display,
+                'amount_style': 'font-size:%dpx;' % self._top_bid_points_size(points_display),
+            })
+
+        tournament_name = self.name or 'Tournament'
+        description = (self.description or '').strip()
         workdir = Player._card_workdir()
-        used_names = set()
-        images = []
+        jpg = None
         try:
-            for index, line in enumerate(lines, start=1):
-                player = line.player_id
-                team = line.auction_id.team_id or player.assigned_team_id
-                color, ink, label = rank_meta.get(index, rank_meta[5])
-                photo = Player._card_social_photo(player.photo) or player.photo
-                html = self.env['ir.qweb']._render('auction_module.top_bid_poster', {
-                    'tournament_name': self.name or 'Tournament',
-                    'tournament_logo_uri': self._top_bid_logo_uri(self.logo),
-                    'tournament_initials': self._top_bid_initials(self.name),
-                    'rank': index,
-                    'rank_color': color,
-                    'rank_ink': ink,
-                    'rank_label': label,
-                    'player_name': player.name or 'Player',
-                    'player_initials': self._top_bid_initials(player.name),
-                    'photo_uri': self._top_bid_cover_uri(photo, 1000, 640),
-                    'points_display': self.format_points(line.points or 0),
-                    'team_name': (team.name if team else '') or 'Team',
-                    'team_logo_uri': self._top_bid_logo_uri(team.logo) if team else '',
-                    'team_initials': self._top_bid_initials(team.name if team else 'Team'),
-                })
-                if isinstance(html, bytes):
-                    html = html.decode('utf-8')
-                jpg = self._top_bid_html_to_jpg(str(html), workdir, binary)
-                if not jpg:
-                    raise UserError(_(
-                        'Could not render the poster for %s.'
-                    ) % (player.name or 'a player'))
-                fname = Player._card_safe_filename(
-                    '%d_%s' % (index, player.name or ('player_%s' % player.id)),
-                    used_names,
-                )
-                images.append((fname, jpg))
+            html = self.env['ir.qweb']._render('auction_module.top_bid_poster', {
+                'font_css': self._top_bid_font_css(),
+                'stadium_uri': self._top_bid_stadium_uri(),
+                'brand_logo_svg': self._top_bid_brand_svg(),
+                'tournament_name': tournament_name,
+                'title_style': 'font-size:%dpx;' % self._top_bid_title_size(tournament_name),
+                'description': description,
+                'desc_style': 'font-size:%dpx;' % self._top_bid_desc_size(description),
+                'tournament_logo_uri': self._top_bid_logo_box(self.logo, 220),
+                'tournament_initials': self._top_bid_initials(tournament_name),
+                'cards': cards,
+            })
+            if isinstance(html, bytes):
+                html = html.decode('utf-8')
+            jpg = self._top_bid_html_to_jpg(str(html), workdir, binary)
         finally:
             shutil.rmtree(workdir, ignore_errors=True)
+        if not jpg:
+            raise UserError(_('Could not render the top bid poster.'))
 
-        zip_buf = io.BytesIO()
-        with zipfile.ZipFile(zip_buf, 'w', zipfile.ZIP_DEFLATED) as zf:
-            for fname, jpg in images:
-                zf.writestr(fname, jpg)
         tname = re.sub(r'[^A-Za-z0-9]+', '_', self.name or 'Tournament').strip('_') or 'Tournament'
-        zipname = 'Top_Bids_%s_%s.zip' % (tname, datetime.now().strftime('%Y%m%d_%H%M%S'))
+        filename = 'Top_5_Bids_%s_%s.jpg' % (
+            tname, datetime.now().strftime('%Y%m%d_%H%M%S'))
         attachment = self.env['ir.attachment'].sudo().create({
-            'name': zipname,
+            'name': filename,
             'type': 'binary',
-            'datas': base64.b64encode(zip_buf.getvalue()),
-            'mimetype': 'application/zip',
+            'datas': base64.b64encode(jpg),
+            'mimetype': 'image/jpeg',
             'res_model': 'auction.tournament',
             'res_id': self.id,
         })

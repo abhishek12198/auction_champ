@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
   <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&amp;family=Oswald:wght@600;700&amp;family=Roboto+Condensed:ital,wght@0,700;1,700&amp;family=Russo+One&amp;family=Teko:wght@600;700&amp;display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="/auction_module/static/src/css/squad_poster.css?v=349"/>
+  <link rel="stylesheet" href="/auction_module/static/src/css/squad_poster.css?v=351"/>
 </head>
 <body t-attf-class="sp-shell#{' is-projector' if projector_mode else ''}#{' is-embed' if embed_mode else ''}" data-bg="stadium-fire" t-att-data-team-name="team_name" t-att-data-tournament-name="tournament_name" id="spShell">
 
@@ -123,6 +123,10 @@
           </t>
           <div class="sp-bg-grade"></div>
           <div class="sp-bg-wash"></div>
+          <div class="sp-bg-lights" aria-hidden="true"></div>
+          <div class="sp-bg-beams" aria-hidden="true"></div>
+          <div class="sp-bg-haze" aria-hidden="true"></div>
+          <div class="sp-bg-dust" aria-hidden="true"></div>
           <img class="sp-fx-smoke" src="/auction_module/static/src/assets/images/squad_poster/sp_smoke.jpg" alt=""/>
           <img class="sp-fx-fire" src="/auction_module/static/src/assets/images/squad_poster/sp_fire_band.jpg" alt=""/>
           <img class="sp-fx-sparks" src="/auction_module/static/src/assets/images/squad_poster/sp_sparks.jpg" alt=""/>
@@ -340,7 +344,7 @@
   </div>
 
   <script src="/auction_module/static/src/lib/html2canvas.min.js"></script>
-  <script src="/auction_module/static/src/js/squad_poster_page.js?v=349"></script>
+  <script src="/auction_module/static/src/js/squad_poster_page.js?v=350"></script>
   <script src="/auction_module/static/src/js/squad_poster_editor.js?v=347"></script>
   <script>
     window.addEventListener('load', function () {
@@ -363,6 +367,8 @@
            t-att-data-player-role="pl.get('role') or 'Player'"
            t-att-data-photo-crop="pl.get('photo_uri')"
            t-att-data-icon-badge="pl.get('icon_badge') or 'ICON PLAYER'">
+    <div class="sp-card-shadow" aria-hidden="true"></div>
+    <div class="sp-card-slab" aria-hidden="true"></div>
     <div class="sp-card-frame">
       <img class="sp-card-lava" src="/auction_module/static/src/assets/images/squad_poster/sp_icon_fire.jpg" alt=""/>
       <t t-if="pl.get('is_icon')">
@@ -393,6 +399,8 @@
         </t>
         <div class="sp-card-role" t-esc="pl.get('role') or 'Player'"/>
       </div>
+      <div class="sp-card-sheen" aria-hidden="true"></div>
+      <div class="sp-card-rim" aria-hidden="true"></div>
     </div>
   </article>
 </template>

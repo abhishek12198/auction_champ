@@ -641,7 +641,7 @@
     }
 
     // Strip heavy textures (lava on every card + stadium FX) — biggest mobile win
-    softHide('.sp-fx-smoke, .sp-fx-fire, .sp-fx-sparks, .sp-fx-flare, .sp-brand-logo, .sp-type-glow, .sp-card-lava, .sp-bg-img, .sp-bg-tourn');
+    softHide('.sp-fx-smoke, .sp-fx-fire, .sp-fx-sparks, .sp-fx-flare, .sp-brand-logo, .sp-type-glow, .sp-card-lava');
     if (mobile) softHide('.sp-card-spotlight');
 
     canvas.querySelectorAll('img').forEach(function (img) {
@@ -705,10 +705,13 @@
           '#spCanvas.is-exporting,#spCanvas.is-exporting *{',
           'mix-blend-mode:normal!important;filter:none!important;',
           'backdrop-filter:none!important;-webkit-backdrop-filter:none!important;',
-          'box-shadow:none!important;text-shadow:none!important}',
+          'text-shadow:none!important}',
+          '#spCanvas.is-exporting .sp-card,#spCanvas.is-exporting .sp-card-frame,#spCanvas.is-exporting .sp-grid-row,',
+          '#spCanvas.is-exporting .sp-icon-hero-row,#spCanvas.is-exporting .sp-squad{',
+          'transform:none!important;perspective:none!important}',
           '.sp-card-lava,.sp-fx-smoke,.sp-fx-fire,.sp-fx-sparks,.sp-fx-flare,',
-          '.sp-type-glow,.sp-brand-logo,.sp-bg-img,.sp-bg-tourn,.sp-card-spotlight{display:none!important}',
-          '.sp-bg{background:#050506!important}',
+          '.sp-type-glow,.sp-brand-logo,.sp-card-spotlight{display:none!important}',
+          '.sp-bg{background:#06101f!important}',
           '.sp-strike-rule,.sp-sponsors-rule,.sp-season-rule{',
           'background:#e8c547!important;background-image:none!important;height:2px!important;opacity:.85}',
           '.sp-slogan-word{color:rgba(255,255,255,.45)!important;-webkit-text-fill-color:rgba(255,255,255,.45)!important}',

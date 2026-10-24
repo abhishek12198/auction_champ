@@ -72,15 +72,15 @@ html,body{margin:0;padding:0;min-height:100%;background:#030304;color:var(--sp-t
     0 0 80px rgba(0,0,0,.45);
 }
 .sp-bg{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:#050506}
-.sp-bg-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 22%;opacity:.62;filter:saturate(.9) contrast(1.2) brightness(.42)}
-.sp-bg-tourn{object-position:center center;opacity:.38;filter:saturate(.9) contrast(1.08) brightness(.82)}
-.sp-bg-grade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.55) 0%,rgba(8,4,2,.28) 18%,rgba(6,2,0,.35) 48%,rgba(10,2,0,.55) 72%,rgba(18,4,0,.9) 100%),radial-gradient(ellipse 70% 35% at 50% 0%,rgba(255,160,50,.14),transparent 70%)}
+.sp-bg-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 22%;opacity:.78;filter:saturate(.55) contrast(1.16) brightness(.5) hue-rotate(198deg)}
+.sp-bg-tourn{object-position:center center;opacity:.42;filter:saturate(.7) contrast(1.08) brightness(.62) hue-rotate(190deg)}
+.sp-bg-grade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,8,22,.42) 0%,rgba(4,12,28,.16) 24%,rgba(3,8,20,.38) 58%,rgba(2,6,16,.9) 100%),radial-gradient(ellipse 42% 24% at 14% 0%,rgba(186,214,255,.32),transparent 72%),radial-gradient(ellipse 42% 24% at 86% 0%,rgba(186,214,255,.26),transparent 72%),radial-gradient(ellipse 36% 18% at 50% 6%,rgba(232,197,71,.16),transparent 74%)}
 .sp-bg-wash{position:absolute;inset:0;pointer-events:none;background:transparent}
 .sp-fx-smoke{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5;mix-blend-mode:screen;filter:contrast(1.1) brightness(.9);pointer-events:none}
 .sp-fx-fire{position:absolute;left:-6%;right:-6%;bottom:-10%;width:112%;height:46%;object-fit:cover;object-position:center bottom;opacity:.92;mix-blend-mode:screen;filter:saturate(1.3) contrast(1.15) brightness(1.05);pointer-events:none}
 .sp-fx-sparks{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.88;mix-blend-mode:screen;filter:brightness(1.25) contrast(1.2);pointer-events:none}
 .sp-fx-flare{position:absolute;top:4%;left:36%;width:300px;height:300px;background:radial-gradient(circle,rgba(255,210,90,.42) 0%,rgba(255,120,20,.1) 38%,transparent 70%);mix-blend-mode:screen;filter:blur(2px);pointer-events:none}
-.sp-bg-vignette{position:absolute;inset:0;background:radial-gradient(ellipse 90% 75% at 50% 40%,transparent 40%,rgba(0,0,0,.38) 100%),linear-gradient(90deg,rgba(0,0,0,.22),transparent 18%,transparent 82%,rgba(0,0,0,.22));pointer-events:none}
+.sp-bg-vignette{position:absolute;inset:0;z-index:4;background:radial-gradient(ellipse 90% 75% at 50% 40%,transparent 40%,rgba(0,0,0,.38) 100%),linear-gradient(90deg,rgba(0,0,0,.22),transparent 18%,transparent 82%,rgba(0,0,0,.22));pointer-events:none}
 
 /* Background presets — actually recolor the poster stage */
 .sp-shell[data-bg="inferno"] .sp-bg-photo{filter:saturate(1.25) contrast(1.25) brightness(.38) hue-rotate(-8deg)}
@@ -991,3 +991,106 @@ html:has(.sp-shell.is-embed) body,
 .sp-photo-zoom-lbl{min-width:3.4em;font:700 13px/1 sans-serif;letter-spacing:.04em}
 .sp-photo-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .sp-photo-actions .sp-btn{min-height:42px}
+
+/* Cinematic stadium atmosphere — sits over the photo, under the vignette */
+.sp-bg-lights,
+.sp-bg-beams,
+.sp-bg-haze,
+.sp-bg-dust{position:absolute;inset:0;pointer-events:none}
+.sp-bg-lights{
+  z-index:2;
+  background:
+    radial-gradient(ellipse 16% 11% at 12% 7%, rgba(255,255,255,.62), transparent 70%),
+    radial-gradient(ellipse 16% 11% at 88% 7%, rgba(255,255,255,.55), transparent 70%),
+    radial-gradient(ellipse 28% 14% at 50% 0%, rgba(140,180,255,.28), transparent 74%);
+}
+.sp-bg-beams{
+  z-index:2;
+  background:
+    linear-gradient(112deg, transparent 16%, rgba(186,214,255,.16) 27%, transparent 40%),
+    linear-gradient(248deg, transparent 16%, rgba(186,214,255,.14) 29%, transparent 42%),
+    linear-gradient(180deg, rgba(255,236,180,.1) 0%, transparent 26%);
+}
+.sp-bg-haze{
+  z-index:2;
+  top:auto;height:46%;
+  background:linear-gradient(180deg, transparent, rgba(6,14,28,.28) 46%, rgba(3,8,18,.78));
+}
+.sp-bg-dust{
+  z-index:3;
+  opacity:.5;
+  background-image:
+    radial-gradient(circle, rgba(255,214,120,.9) 0 1px, transparent 1.7px),
+    radial-gradient(circle, rgba(255,246,214,.55) 0 1px, transparent 1.8px);
+  background-size:160px 210px, 240px 280px;
+  background-position:24px 36px, 90px 140px;
+}
+.sp-shell[data-bg="inferno"] .sp-bg-lights,
+.sp-shell[data-bg="inferno"] .sp-bg-beams{opacity:.22}
+.sp-shell[data-bg="pitch-green"] .sp-bg-lights,
+.sp-shell[data-bg="pitch-green"] .sp-bg-beams{opacity:.35}
+.sp-shell[data-bg="carbon"] .sp-bg-lights,
+.sp-shell[data-bg="carbon"] .sp-bg-beams,
+.sp-shell[data-bg="carbon"] .sp-bg-dust{opacity:.2}
+
+/* 3D must live on the card itself. The row is a flex box, and Chrome
+   flattens preserve-3d on flex containers, which made rotateX invisible. */
+.sp-grid-row,
+.sp-icon-hero-row,
+.sp-grid-sym,
+.sp-squad{overflow:visible}
+.sp-grid-row .sp-card,
+.sp-icon-hero-row .sp-card{
+  perspective:520px;
+  perspective-origin:50% 0%;
+  overflow:visible;
+  transform:none;
+}
+.sp-grid-row .sp-card .sp-card-frame{
+  transform:rotateX(14deg);
+  transform-origin:center bottom;
+  transform-style:preserve-3d;
+}
+.sp-grid-row .sp-card:first-child .sp-card-frame{transform:rotateY(11deg) rotateX(12deg)}
+.sp-grid-row .sp-card:last-child .sp-card-frame{transform:rotateY(-11deg) rotateX(12deg)}
+.sp-icon-hero-row .sp-card{perspective:700px}
+.sp-icon-hero-row .sp-card .sp-card-frame{
+  transform:rotateX(10deg) translateZ(28px);
+  transform-origin:center bottom;
+}
+.sp-card-shadow{
+  position:absolute;left:8%;right:6%;bottom:-16px;height:22px;z-index:0;
+  pointer-events:none;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,.78) 0%, rgba(0,0,0,0) 72%);
+}
+.sp-card-slab{
+  position:absolute;left:7px;top:8px;right:-12px;bottom:-14px;z-index:0;
+  border-radius:8px;pointer-events:none;
+  background:linear-gradient(145deg, #8a6a32 0%, #24180c 38%, #07080c 100%);
+}
+.sp-card.is-icon .sp-card-slab{
+  left:6px;top:7px;right:-7px;bottom:-8px;
+  background:linear-gradient(145deg, #ffe7a3 0%, #c49220 28%, #3a240c 62%, #120e0a 100%);
+}
+.sp-card-frame{z-index:1}
+.sp-card-photo{object-position:center 18%}
+.sp-card-sheen{
+  position:absolute;left:0;right:0;top:0;height:32%;z-index:3;
+  pointer-events:none;
+  background:linear-gradient(180deg, rgba(255,244,214,.32), rgba(255,244,214,0) 72%);
+}
+.sp-card-rim{
+  position:absolute;inset:0;z-index:4;pointer-events:none;border-radius:inherit;
+  border:1px solid rgba(255,228,170,.72);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5), inset 0 0 0 1px rgba(0,0,0,.35);
+}
+.sp-card-meta{z-index:5}
+.sp-card-icon-badge{z-index:6}
+.sp-canvas.is-exporting .sp-card,
+.sp-canvas.is-exporting .sp-card-frame,
+.sp-canvas.is-exporting .sp-grid-row,
+.sp-canvas.is-exporting .sp-icon-hero-row,
+.sp-canvas.is-exporting .sp-squad{
+  transform:none!important;
+  perspective:none!important;
+}
