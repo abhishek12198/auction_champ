@@ -17,15 +17,15 @@
   .brand { position: absolute; top: 26px; left: 44px; z-index: 6; }
   .brand-logo { width: 248px; height: 38px; display: block; }
   .tmark {
-    position: absolute; top: 14px; right: 44px; z-index: 6;
-    width: 96px; height: 96px; border-radius: 48px;
-    border: 2px solid #e8c25a; background: #0c1424; overflow: hidden;
+    position: absolute; top: 4px; right: 28px; z-index: 6;
+    width: 228px; height: 228px;
+    background: transparent;
   }
-  .tmark img { display: block; width: 96px; height: 96px; }
+  .tmark img { display: block; width: 228px; height: 228px; }
   .tmark-ph {
-    width: 96px; height: 96px;
+    width: 228px; height: 228px;
     font-family: 'TBTeko', Impact, sans-serif;
-    font-size: 36px; line-height: 92px; text-align: center; color: #fff;
+    font-size: 72px; line-height: 228px; text-align: center; color: #fff;
   }
   .mast { position: absolute; top: 10px; left: 310px; width: 1240px; text-align: center; z-index: 4; }
   .tourn {
@@ -136,7 +136,7 @@
 
   <div class="tmark">
     <t t-if="tournament_logo_uri">
-      <img t-att-src="tournament_logo_uri" width="96" height="96" alt=""/>
+      <img t-att-src="tournament_logo_uri" width="228" height="228" alt=""/>
     </t>
     <t t-else="">
       <div class="tmark-ph"><t t-esc="tournament_initials"/></div>

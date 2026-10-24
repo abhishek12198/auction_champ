@@ -2470,7 +2470,7 @@ class AuctionTournament(models.Model):
                 'title_style': 'font-size:%dpx;' % self._top_bid_title_size(tournament_name),
                 'description': description,
                 'desc_style': 'font-size:%dpx;' % self._top_bid_desc_size(description),
-                'tournament_logo_uri': self._top_bid_logo_box(self.logo, 220),
+                'tournament_logo_uri': self._top_bid_logo_box(self.logo, 400),
                 'tournament_initials': self._top_bid_initials(tournament_name),
                 'cards': cards,
             })
