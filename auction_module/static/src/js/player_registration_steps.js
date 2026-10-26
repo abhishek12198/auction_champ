@@ -1,5 +1,32 @@
 /* 3-step player registration — vanilla JS, no Odoo webclient. */
 (function () {
+    var posterOverlay = document.getElementById('regPosterOverlay');
+    var posterClose = document.getElementById('regPosterClose');
+    function closePoster() {
+        if (!posterOverlay) return;
+        posterOverlay.classList.remove('open');
+        posterOverlay.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('reg-roster-lock');
+    }
+    function openPoster() {
+        if (!posterOverlay) return;
+        posterOverlay.classList.add('open');
+        posterOverlay.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('reg-roster-lock');
+    }
+    document.querySelectorAll('.reg-poster-open').forEach(function (btn) {
+        btn.addEventListener('click', openPoster);
+    });
+    if (posterClose) posterClose.addEventListener('click', closePoster);
+    if (posterOverlay) {
+        posterOverlay.addEventListener('click', function (ev) {
+            if (ev.target === posterOverlay) closePoster();
+        });
+        document.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Escape' && posterOverlay.classList.contains('open')) closePoster();
+        });
+    }
+
     var form = document.getElementById('playerRegisterForm');
     if (!form || !document.body.classList.contains('reg-page--steps')) return;
     form.setAttribute('novalidate', 'novalidate');
@@ -300,32 +327,4 @@
     });
 
     goTo(1, true);
-
-    var posterOpen = document.getElementById('regPosterOpen');
-    var posterOverlay = document.getElementById('regPosterOverlay');
-    var posterClose = document.getElementById('regPosterClose');
-    function closePoster() {
-        if (!posterOverlay) return;
-        posterOverlay.classList.remove('open');
-        posterOverlay.setAttribute('aria-hidden', 'true');
-        document.body.classList.remove('reg-roster-lock');
-    }
-    function openPoster() {
-        if (!posterOverlay) return;
-        posterOverlay.classList.add('open');
-        posterOverlay.setAttribute('aria-hidden', 'false');
-        document.body.classList.add('reg-roster-lock');
-    }
-    document.querySelectorAll('.reg-poster-open').forEach(function (btn) {
-        btn.addEventListener('click', openPoster);
-    });
-    if (posterClose) posterClose.addEventListener('click', closePoster);
-    if (posterOverlay) {
-        posterOverlay.addEventListener('click', function (ev) {
-            if (ev.target === posterOverlay) closePoster();
-        });
-        document.addEventListener('keydown', function (ev) {
-            if (ev.key === 'Escape' && posterOverlay.classList.contains('open')) closePoster();
-        });
-    }
 })();

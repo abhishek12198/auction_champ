@@ -20,7 +20,7 @@
 
     <!-- Registration form CSS -->
     <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.981"/>
-    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration_pro.css?v=1.5.981"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration_pro.css?v=1.5.987"/>
 
     <!-- ── Per-theme CSS custom properties ────────────────────── -->
     <style>
@@ -173,6 +173,7 @@
     <t t-set="hide_reg_form" t-value="success or registration_closed or razorpay_await_payment"/>
     <t t-set="reg_path" t-value="register_path or ('/' + db_name + '/' + tournament_slug + '/player/register')"/>
     <t t-set="is_admin_reg" t-value="bool(admin_registration)"/>
+    <t t-set="poster_src" t-value="poster_src or ''"/>
 
     <!-- ════════════════════════════════════════
          HEADER  — tournament-first (app logo is in footer)
@@ -192,7 +193,10 @@
 
             <!-- Tournament name → description → Player Registration -->
             <div class="reg-header-info">
+                <t t-set="reg_edition" t-value="{'butterscotch': 'Butterscotch Edition', 'cherry': 'Cherry Edition', 'strawberry': 'Strawberry Edition', 'lemon': 'Lemon Edition', 'vanilla': 'Vanilla Edition', 'pistah': 'Pistah Edition', 'blueberry': 'Blueberry Edition', 'blackberry': 'Blackberry Edition', 'standard': 'Standard Edition'}.get(theme or 'vanilla', 'Auction Edition')"/>
+                <div class="reg-edition" t-esc="reg_edition"/>
                 <h1 class="reg-tournament-name"
+                    t-attf-style="--reg-name-len: {{ (len(tournament.name) if tournament and tournament.name else 18) or 1 }};"
                     t-esc="tournament.name if tournament else 'Auction Tournament'"/>
                 <p class="reg-tournament-desc"
                    t-esc="tournament.description if tournament and tournament.description else 'Join the auction pool and secure your spot.'"/>
@@ -296,6 +300,7 @@
         </div>
         </t>
 
+        <t t-if="not registration_closed">
         <div class="reg-hero-copy">
             <p class="reg-hero-sub">
                 Team owners are building their squads — register now to enter the auction,
@@ -303,6 +308,7 @@
                 Spots fill as registrations come in, so don’t wait.
             </p>
         </div>
+        </t>
 
     </div><!-- /reg-header-card -->
 
@@ -345,10 +351,10 @@
 
     <!-- Date / Venue / Sport. On phones the poster sits on the left of this strip. -->
     <t t-if="not hide_reg_form">
-    <div t-attf-class="reg-hero-strip{{' reg-hero-strip--poster' if tournament and tournament.poster_image else ''}}">
-        <t t-if="tournament and tournament.poster_image">
+    <div t-attf-class="reg-hero-strip{{' reg-hero-strip--poster' if poster_src else ''}}">
+        <t t-if="poster_src">
         <button type="button" class="reg-poster-mobile reg-poster-open" id="regPosterOpen" aria-haspopup="dialog" aria-label="Enlarge tournament poster">
-            <img t-att-src="'data:image/png;base64,' + tournament.poster_image.decode('utf-8')"
+            <img t-att-src="poster_src"
                  alt="Tournament poster"
                  class="reg-poster-mobile-img"/>
             <span class="reg-poster-mobile-copy">
@@ -398,11 +404,11 @@
             </t>
         </div>
     </div>
-    <t t-if="tournament and tournament.poster_image">
+    <t t-if="poster_src">
     <div class="reg-poster-overlay" id="regPosterOverlay" aria-hidden="true">
         <div class="reg-poster-dialog" role="dialog" aria-modal="true" aria-label="Tournament poster">
             <button type="button" class="reg-poster-x" id="regPosterClose" aria-label="Close">&#215;</button>
-            <img t-att-src="'data:image/png;base64,' + tournament.poster_image.decode('utf-8')"
+            <img t-att-src="poster_src"
                  alt="Tournament Poster"
                  class="reg-poster-overlay-img"/>
         </div>
@@ -453,18 +459,51 @@
 
         <!-- ── Registration Closed ── -->
         <t t-if="registration_closed">
-            <div class="reg-success-body" style="text-align:center;padding:3rem 1rem;">
-                <div class="reg-success-check">&#127942;</div>
-                <h2 style="font-family:'Bebas Neue',sans-serif;letter-spacing:2px;font-size:2.2rem;">The Squad is Complete!</h2>
-                <p style="max-width:480px;margin:1rem auto 0;line-height:1.8;">
-                    The roster for this tournament has been locked in. &#128293;<br/>
-                    Our players are geared up and ready to battle it out on the field!<br/>
-                    Stay tuned for the action — it's going to be one epic tournament. &#127955;
-                </p>
-                <t t-if="tournament">
-                    <p style="margin-top:1.5rem;font-weight:700;letter-spacing:1px;opacity:.65;text-transform:uppercase;font-size:.85rem;" t-esc="tournament.name"/>
+            <t t-set="locked_max" t-value="max_registrations or 0"/>
+            <t t-set="locked_now" t-value="current_count or 0"/>
+            <t t-set="locked_full" t-value="bool(locked_max and locked_now &gt;= locked_max)"/>
+            <t t-set="locked_pct" t-value="100 if (not locked_max or locked_now &gt;= locked_max) else int((locked_now * 100) / locked_max)"/>
+            <div t-attf-class="reg-locked{{'' if poster_src else ' reg-locked--solo'}}">
+                <t t-if="poster_src">
+                <button type="button" class="reg-locked-poster reg-poster-open" aria-haspopup="dialog" aria-label="Enlarge tournament poster">
+                    <img t-att-src="poster_src" alt="Tournament poster"/>
+                </button>
                 </t>
+                <section class="reg-locked-card" aria-labelledby="regLockedTitle">
+                    <div class="reg-locked-medal" aria-hidden="true">
+                        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                            <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/>
+                            <path d="M7 6H4.5A2.5 2.5 0 0 0 7 11M17 6h2.5A2.5 2.5 0 0 1 17 11"/>
+                        </svg>
+                    </div>
+                    <p class="reg-locked-kicker">Roster locked</p>
+                    <h2 id="regLockedTitle">The Squad is Complete</h2>
+                    <p class="reg-locked-lead">
+                        Registration is closed.
+                        <t t-if="locked_full"> Every place on the roster has been taken.</t>
+                    </p>
+                    <t t-if="locked_max">
+                    <div class="reg-locked-meter">
+                        <div class="reg-locked-track" role="img" t-attf-aria-label="{{locked_now}} of {{locked_max}} places filled">
+                            <span t-attf-style="width: {{locked_pct}}%;"/>
+                        </div>
+                        <p class="reg-locked-count"><t t-esc="locked_now"/> / <t t-esc="locked_max"/></p>
+                    </div>
+                    </t>
+                    <p class="reg-locked-lines">Players are on the roster.<br/>Auction night is next.</p>
+                    <t t-if="show_roster_cta">
+                    <button type="button" class="reg-locked-cta" data-reg-roster-open="1">View registered players</button>
+                    </t>
+                </section>
             </div>
+            <t t-if="poster_src">
+            <div class="reg-poster-overlay" id="regPosterOverlay" aria-hidden="true">
+                <div class="reg-poster-dialog" role="dialog" aria-modal="true" aria-label="Tournament poster">
+                    <button type="button" class="reg-poster-x" id="regPosterClose" aria-label="Close">&#215;</button>
+                    <img t-att-src="poster_src" alt="Tournament Poster" class="reg-poster-overlay-img"/>
+                </div>
+            </div>
+            </t>
         </t>
 
         <!-- ── Success state ── -->
@@ -1591,9 +1630,9 @@
         <div class="reg-aside-inner">
 
             <!-- Why Register -->
-            <t t-if="tournament and tournament.poster_image">
+            <t t-if="poster_src">
             <button type="button" class="reg-aside-card reg-aside-poster reg-poster-open" aria-label="Enlarge tournament poster">
-                <img t-att-src="'data:image/png;base64,' + tournament.poster_image.decode('utf-8')"
+                <img t-att-src="poster_src"
                      alt="Tournament Poster"
                      class="reg-aside-poster-img"/>
                 <span class="reg-poster-zoom">Enlarge</span>
@@ -2923,7 +2962,7 @@
 </script>
 <script src="/auction_module/static/src/js/auction_sse_client.js"></script>
 <script src="/auction_module/static/src/js/player_registration_roster.js?v=1.5.661"></script>
-<script src="/auction_module/static/src/js/player_registration_steps.js?v=1.5.981"></script>
+<script src="/auction_module/static/src/js/player_registration_steps.js?v=1.5.986"></script>
 
 </body>
 </html>

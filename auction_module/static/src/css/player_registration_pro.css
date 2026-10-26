@@ -93,6 +93,21 @@ body.reg-page::before {
     background: radial-gradient(circle, rgba(var(--reg-accent-rgb), .22) 0%, transparent 68%);
 }
 
+/* Same treatment as display_auction .hud-brand-sub */
+.reg-edition {
+    margin: 0 0 6px;
+    font-family: 'Barlow Condensed', 'Oswald', sans-serif;
+    font-size: .85rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--da-gold, var(--reg-accent));
+    line-height: 1;
+    white-space: nowrap;
+}
+@media (max-width: 420px) {
+    .reg-edition { font-size: .72rem; letter-spacing: 1px; }
+}
 .reg-tournament-name,
 .reg-header-info h1 {
     font-family: var(--reg-font-display);
@@ -452,6 +467,28 @@ a.reg-trust-card--cta {
 /* ── Mobile / Instagram-first ──────────────────────────────────── */
 @media (max-width: 960px) {
     .reg-aside-card { background: var(--reg-surface); }
+    /* Phones and small screens only: keep the tournament name on one line.
+       The size shrinks with the name so a few hundred characters still fit. */
+    .reg-page--steps .reg-header-top {
+        container-type: inline-size;
+    }
+    .reg-page--steps .reg-tournament-name,
+    .reg-page--steps .reg-header-info h1 {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        white-space: nowrap;
+        word-break: normal;
+        overflow: hidden;
+        text-overflow: clip;
+        -webkit-line-clamp: unset;
+        line-clamp: unset;
+        -webkit-box-orient: unset;
+        letter-spacing: 0;
+        line-height: 1.05;
+        font-size: min(1.9rem, calc(100cqi / (var(--reg-name-len, 16) * 0.54)));
+    }
 }
 
 @media (max-width: 640px) {
@@ -580,6 +617,132 @@ a.reg-trust-card--cta {
 }
 .reg-page--steps .reg-layout--success {
     grid-template-columns: 1fr;
+}
+.reg-page--steps .reg-form-body:has(.reg-locked) {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    overflow: visible;
+}
+.reg-locked {
+    display: grid;
+    grid-template-columns: minmax(200px, 320px) minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+    margin: 8px 0 12px;
+}
+.reg-locked--solo {
+    grid-template-columns: minmax(0, 640px);
+    justify-content: center;
+}
+.reg-locked-poster {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 18px;
+    overflow: hidden;
+    cursor: pointer;
+    background: transparent;
+    box-shadow: var(--reg-lacquer-drop);
+}
+.reg-locked-poster img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+.reg-locked-card {
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    padding: 36px 28px 32px;
+    border-radius: 22px;
+    color: var(--da-tx, #fff);
+    background: var(--reg-gloss), var(--reg-enamel);
+    border: 1px solid var(--da-line, var(--reg-line-soft));
+    box-shadow: var(--reg-lacquer-edge), var(--reg-lacquer-drop);
+}
+.reg-locked-medal {
+    width: 74px;
+    height: 74px;
+    margin: 0 auto 14px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--da-gold, var(--reg-accent));
+    border: 1px solid var(--da-gold, var(--reg-accent));
+    box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--da-gold, var(--reg-accent)) 16%, transparent);
+}
+.reg-locked-kicker {
+    margin: 0 0 6px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--da-gold, var(--reg-accent));
+}
+.reg-locked-card h2 {
+    margin: 0;
+    font-family: 'Oswald', var(--reg-font-display), sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.7rem);
+    font-weight: 600;
+    letter-spacing: .04em;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--da-tx, #fff);
+}
+.reg-locked-lead,
+.reg-locked-lines {
+    margin: 12px auto 0;
+    max-width: 34rem;
+    line-height: 1.55;
+    color: var(--da-dim, rgba(255,255,255,.7));
+}
+.reg-locked-lines { margin-top: 16px; }
+.reg-locked-meter { margin: 22px auto 0; max-width: 280px; }
+.reg-locked-track {
+    height: 8px;
+    border-radius: 99px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--da-tx, #fff) 14%, transparent);
+}
+.reg-locked-track span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--da-gold, var(--reg-accent)), var(--da-gold2, var(--da-gold, var(--reg-accent))));
+}
+.reg-locked-count {
+    margin: 8px 0 0;
+    font-family: 'Oswald', var(--reg-font-display), sans-serif;
+    font-size: 1.15rem;
+    letter-spacing: .08em;
+    color: var(--da-tx, #fff);
+}
+.reg-locked-cta {
+    margin-top: 22px;
+    border: 0;
+    cursor: pointer;
+    font-family: 'Oswald', var(--reg-font-display), sans-serif;
+    font-size: 1rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 12px 22px;
+    border-radius: 999px;
+    color: var(--da-on, #111);
+    background: var(--da-gold, var(--reg-accent));
+    box-shadow: 0 10px 22px color-mix(in srgb, var(--da-gold, var(--reg-accent)) 28%, transparent);
+}
+@media (max-width: 960px) {
+    .reg-locked,
+    .reg-locked--solo {
+        grid-template-columns: 1fr;
+        justify-content: stretch;
+    }
+    .reg-locked-card { order: 1; }
+    .reg-locked-poster { order: 2; }
 }
 .reg-page--steps .reg-below {
     display: flex;
@@ -1152,6 +1315,69 @@ a.reg-trust-card--cta {
     .reg-page--steps .reg-actions {
         position: sticky;
         bottom: 0;
+    }
+}
+
+/* Small screens: name uses the full header row so it stays larger than the description. */
+@media (max-width: 960px) {
+    .reg-page--steps .reg-header-top {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        column-gap: 8px;
+        row-gap: 4px;
+        align-items: center;
+        container-type: inline-size;
+    }
+    .reg-page--steps .reg-header-info {
+        display: contents;
+    }
+    .reg-page--steps .reg-tournament-logo-wrap {
+        grid-column: 1;
+        grid-row: 1;
+        align-self: center;
+    }
+    .reg-page--steps .reg-edition {
+        grid-column: 2;
+        grid-row: 1;
+        margin: 0;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .reg-page--steps .reg-tournament-name,
+    .reg-page--steps .reg-header-info h1 {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        font-size: min(1.9rem, calc(100cqi / (var(--reg-name-len, 16) * 0.54)));
+    }
+    .reg-page--steps .reg-tournament-desc {
+        grid-column: 1 / -1;
+        grid-row: 3;
+        margin-top: 0;
+        font-size: .78rem;
+        line-height: 1.3;
+    }
+    .reg-page--steps .reg-header-tools {
+        grid-column: 3;
+        grid-row: 1;
+        width: auto;
+        margin: 0;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px;
+    }
+    .reg-page--steps .reg-header-tool {
+        padding: 2px 7px 2px 8px;
+        gap: 4px;
+    }
+    .reg-page--steps .reg-header-tool span {
+        font-size: .58rem;
+        letter-spacing: .04em;
+    }
+    .reg-page--steps .reg-header-tool strong {
+        font-size: .78rem;
+        min-width: 0;
     }
 }
 

@@ -6701,6 +6701,98 @@ class Auction(http.Controller):
             '/%s/%s/player/register/%s' % (db_name, tournament_slug, tier_slug), 301,
         )
 
+    def _reg_has_poster(self, tournament):
+        """True when a poster file exists, without reading the image into the page."""
+        if not tournament:
+            return False
+        return bool(request.env['ir.attachment'].sudo().search_count([
+            ('res_model', '=', 'auction.tournament'),
+            ('res_id', '=', tournament.id),
+            ('res_field', '=', 'poster_image'),
+        ]))
+
+    def _reg_poster_src(self, db_name, tournament_slug, tournament):
+        if not self._reg_has_poster(tournament):
+            return ''
+        stamp = ''
+        if tournament.write_date:
+            stamp = tournament.write_date.strftime('%Y%m%d%H%M%S')
+        return '/%s/%s/player/register/poster?v=%s' % (db_name, tournament_slug, stamp or '0')
+
+    def _reg_poster_jpeg(self, tournament, max_side=1100, quality=74):
+        """Small JPEG for the registration form. The stored poster is left unchanged."""
+        stamp = tournament.write_date.strftime('%Y%m%d%H%M%S') if tournament.write_date else '0'
+        cache = getattr(type(self), '_reg_poster_jpeg_cache', None)
+        if cache is None:
+            cache = {}
+            type(self)._reg_poster_jpeg_cache = cache
+        key = (tournament.id, stamp, max_side, quality)
+        hit = cache.get(key)
+        if hit:
+            return hit
+        binary_val = tournament.poster_image
+        if not binary_val:
+            return b''
+        from io import BytesIO
+        from PIL import Image
+        raw = binary_val
+        if isinstance(raw, str):
+            raw = base64.b64decode(raw)
+        elif isinstance(raw, bytes):
+            try:
+                Image.open(BytesIO(raw)).verify()
+            except Exception:
+                try:
+                    raw = base64.b64decode(raw)
+                except Exception:
+                    return b''
+        try:
+            im = Image.open(BytesIO(raw))
+            try:
+                from PIL import ImageOps
+                im = ImageOps.exif_transpose(im)
+            except Exception:
+                pass
+            if im.mode not in ('RGB', 'L'):
+                im = im.convert('RGB')
+            try:
+                resample = Image.Resampling.LANCZOS
+            except AttributeError:
+                resample = Image.LANCZOS
+            im.thumbnail((max_side, max_side), resample)
+            out = BytesIO()
+            im.save(out, format='JPEG', quality=quality, optimize=True)
+            data = out.getvalue()
+        except Exception:
+            _logger.exception('Registration poster compress failed for tournament %s', tournament.id)
+            return b''
+        if len(cache) > 24:
+            cache.clear()
+        cache[key] = data
+        return data
+
+    @http.route(
+        '/<string:db_name>/<string:tournament_slug>/player/register/poster',
+        type='http', auth='none', website=False, methods=['GET'], csrf=False,
+    )
+    def player_register_poster(self, db_name, tournament_slug, **kw):
+        """Compressed poster for the registration form."""
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return self._not_found()
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('slug', '=', tournament_slug)], limit=1
+            )
+            if not tournament:
+                return self._not_found()
+            data = self._reg_poster_jpeg(tournament)
+            if not data:
+                return self._not_found()
+            return request.make_response(data, headers=[
+                ('Content-Type', 'image/jpeg'),
+                ('Cache-Control', 'public, max-age=604800'),
+            ])
+
     def _player_register_core(self, db_name, tournament_slug, admin=False, tier_slug=None, **kw):
         with self._with_db(db_name) as ok:
             if not ok:
@@ -6719,6 +6811,7 @@ class Auction(http.Controller):
                     return self._not_found()
 
             theme = tournament.player_display_template or 'vanilla'
+            poster_src = self._reg_poster_src(db_name, tournament_slug, tournament)
             register_path = self._reg_path(
                 db_name, tournament_slug, admin=admin,
                 tier_slug=(locked_tier.registration_slug if locked_tier else None),
@@ -6815,6 +6908,7 @@ class Auction(http.Controller):
                     'locked_tier_ink': tier_style['ink'],
                     'locked_tier_rgb': tier_style['rgb'],
                     'tournament_logo_src': tournament_logo_src,
+                    'poster_src': poster_src,
                 }, lazy=False)
                 return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
@@ -6850,6 +6944,7 @@ class Auction(http.Controller):
                 'locked_tier_ink': tier_style['ink'],
                 'locked_tier_rgb': tier_style['rgb'],
                 'tournament_logo_src': tournament_logo_src,
+                'poster_src': poster_src,
             }
 
             if request.httprequest.method == 'POST':
