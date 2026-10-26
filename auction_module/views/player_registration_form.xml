@@ -20,7 +20,7 @@
 
     <!-- Registration form CSS -->
     <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.981"/>
-    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration_pro.css?v=1.5.991"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration_pro.css?v=1.5.994"/>
 
     <!-- ── Per-theme CSS custom properties ────────────────────── -->
     <style>

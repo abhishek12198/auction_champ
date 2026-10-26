@@ -2180,45 +2180,71 @@ body.reg-page.reg-page--steps[data-reg-theme] .reg-header-tool strong {
 
 @media (max-width: 960px) {
     .reg-page--steps .reg-header-top {
-        flex-direction: column;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
         align-items: center;
-        text-align: center;
-        gap: 0;
+        justify-content: flex-start;
+        text-align: left;
+        gap: 12px 14px;
     }
     .reg-page--steps .reg-header-info {
-        align-items: center;
-        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        flex: 1 1 0;
+        width: auto;
+        min-width: 0;
+        text-align: left;
     }
     .reg-page--steps .reg-mast-side {
+        flex: 1 1 100%;
         align-items: flex-start;
         width: 100%;
-        margin-top: 12px;
+        margin-top: 4px;
     }
     .reg-page--steps .reg-header-tools {
-        position: absolute;
-        top: 0;
-        right: 0;
+        position: static;
+        margin: 0 0 8px;
+    }
+    .reg-page--steps #regRosterOpen {
+        display: none;
+    }
+    .reg-page--steps .reg-header-tools:not(:has(#regIconsOpen)) {
+        display: none;
         margin: 0;
     }
     .reg-page--steps .reg-tournament-logo-wrap {
-        width: 72px;
-        height: 72px;
+        width: 96px;
+        height: 96px;
         border: 0;
         border-radius: 0;
         box-shadow: none;
         background: transparent;
     }
     .reg-page--steps .reg-tournament-logo-wrap img {
-        width: 100%;
-        height: 100%;
+        width: 100% !important;
+        height: 100% !important;
     }
-    .reg-page--steps .reg-edition { margin-top: 10px; text-align: center; }
+    .reg-page--steps .reg-edition {
+        margin: 0;
+        text-align: left;
+        max-width: 100%;
+        letter-spacing: .1em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
     .reg-page--steps .reg-tournament-name,
     .reg-page--steps .reg-header-info h1 {
-        text-align: center;
-        font-size: min(1.75rem, calc(100cqi / (var(--reg-name-len, 16) * 0.54)));
+        text-align: left;
+        font-size: min(1.45rem, calc(100cqi / (var(--reg-name-len, 16) * 0.52)));
     }
-    .reg-page--steps .reg-tournament-desc { justify-content: center; }
+    .reg-page--steps .reg-tournament-desc {
+        justify-content: flex-start;
+        text-align: left;
+        margin-top: 4px;
+        white-space: normal;
+    }
     .reg-page--steps .reg-page-label--lead { text-align: left; }
     .reg-page--steps .reg-header-facts {
         display: flex;
