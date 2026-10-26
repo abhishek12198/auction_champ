@@ -20,7 +20,7 @@
 
     <!-- Registration form CSS -->
     <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.981"/>
-    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration_pro.css?v=1.5.987"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration_pro.css?v=1.5.991"/>
 
     <!-- ── Per-theme CSS custom properties ────────────────────── -->
     <style>
@@ -180,7 +180,6 @@
          ════════════════════════════════════════ -->
     <div class="reg-header-card">
         <div class="reg-header-top">
-            <!-- Tournament logo -->
             <div class="reg-tournament-logo-wrap">
                 <t t-if="tournament and tournament.logo">
                     <img t-att-src="tournament_logo_src or ('data:image/png;base64,' + tournament.logo.decode('utf-8'))"
@@ -191,7 +190,6 @@
                 </t>
             </div>
 
-            <!-- Tournament name → description → Player Registration -->
             <div class="reg-header-info">
                 <t t-set="reg_edition" t-value="{'butterscotch': 'Butterscotch Edition', 'cherry': 'Cherry Edition', 'strawberry': 'Strawberry Edition', 'lemon': 'Lemon Edition', 'vanilla': 'Vanilla Edition', 'pistah': 'Pistah Edition', 'blueberry': 'Blueberry Edition', 'blackberry': 'Blackberry Edition', 'standard': 'Standard Edition'}.get(theme or 'vanilla', 'Auction Edition')"/>
                 <div class="reg-edition" t-esc="reg_edition"/>
@@ -200,44 +198,42 @@
                     t-esc="tournament.name if tournament else 'Auction Tournament'"/>
                 <p class="reg-tournament-desc"
                    t-esc="tournament.description if tournament and tournament.description else 'Join the auction pool and secure your spot.'"/>
-                <t t-if="not locked_tier">
-                    <span class="reg-page-label reg-page-label--inline">Player Registration</span>
-                </t>
             </div>
 
-            <t t-set="show_roster_cta" t-value="bool(tournament and db_name and tournament_slug and tournament.show_registered_players)"/>
-            <t t-set="show_icons_cta" t-value="bool(tournament and tournament.show_registration_icon_players and tournament.icon_player_count)"/>
-            <t t-if="show_roster_cta or show_icons_cta">
-            <div class="reg-header-tools">
-                <t t-if="show_roster_cta">
-                <button type="button"
-                        class="reg-header-tool"
-                        id="regRosterOpen"
-                        t-att-data-url="'/%s/%s/player/register/players' % (db_name, tournament_slug)"
-                        t-att-data-sport="tournament.tournament_type or 'cricket'"
-                        t-att-data-count="roster_count or 0">
-                    <span>Registered</span>
-                    <strong id="regRosterCount"><t t-esc="roster_count or 0"/></strong>
-                </button>
+            <div class="reg-mast-side">
+                <t t-set="show_roster_cta" t-value="bool(tournament and db_name and tournament_slug and tournament.show_registered_players)"/>
+                <t t-set="show_icons_cta" t-value="bool(tournament and tournament.show_registration_icon_players and tournament.icon_player_count)"/>
+                <t t-if="show_roster_cta or show_icons_cta">
+                <div class="reg-header-tools">
+                    <t t-if="show_roster_cta">
+                    <button type="button"
+                            class="reg-header-tool"
+                            id="regRosterOpen"
+                            t-att-data-url="'/%s/%s/player/register/players' % (db_name, tournament_slug)"
+                            t-att-data-sport="tournament.tournament_type or 'cricket'"
+                            t-att-data-count="roster_count or 0">
+                        <span>Registered</span>
+                        <strong id="regRosterCount"><t t-esc="roster_count or 0"/></strong>
+                    </button>
+                    </t>
+                    <t t-if="show_icons_cta">
+                    <button type="button"
+                            class="reg-header-tool"
+                            id="regIconsOpen"
+                            aria-haspopup="dialog"
+                            aria-controls="regIconsOverlay">
+                        <span>Icons</span>
+                        <strong><t t-esc="tournament.icon_player_count"/></strong>
+                    </button>
+                    </t>
+                </div>
                 </t>
-                <t t-if="show_icons_cta">
-                <button type="button"
-                        class="reg-header-tool"
-                        id="regIconsOpen"
-                        aria-haspopup="dialog"
-                        aria-controls="regIconsOverlay">
-                    <span>Icons</span>
-                    <strong><t t-esc="tournament.icon_player_count"/></strong>
-                </button>
+                <t t-if="not locked_tier and not hide_reg_form">
+                    <span class="reg-page-label reg-page-label--lead">Player Registration</span>
+                    <a href="#reg-form-start" class="reg-goto-form">Go to Registration form</a>
                 </t>
             </div>
-            </t>
         </div>
-
-        <t t-if="not locked_tier and not hide_reg_form">
-            <span class="reg-page-label reg-page-label--lead">Player Registration</span>
-            <a href="#reg-form-start" class="reg-goto-form">Go to Registration form</a>
-        </t>
 
         <!-- Tier tags: full-width under logo row so they stay left-aligned on mobile -->
         <t t-if="locked_tier">
