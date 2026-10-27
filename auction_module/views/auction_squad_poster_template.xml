@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
   <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&amp;family=Oswald:wght@600;700&amp;family=Roboto+Condensed:ital,wght@0,700;1,700&amp;family=Russo+One&amp;family=Teko:wght@600;700&amp;display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="/auction_module/static/src/css/squad_poster.css?v=351"/>
+  <link rel="stylesheet" href="/auction_module/static/src/css/squad_poster.css?v=354"/>
 </head>
 <body t-attf-class="sp-shell#{' is-projector' if projector_mode else ''}#{' is-embed' if embed_mode else ''}" data-bg="stadium-fire" t-att-data-team-name="team_name" t-att-data-tournament-name="tournament_name" id="spShell">
 
@@ -344,8 +344,8 @@
   </div>
 
   <script src="/auction_module/static/src/lib/html2canvas.min.js"></script>
-  <script src="/auction_module/static/src/js/squad_poster_page.js?v=350"></script>
-  <script src="/auction_module/static/src/js/squad_poster_editor.js?v=347"></script>
+  <script src="/auction_module/static/src/js/squad_poster_page.js?v=356"></script>
+  <script src="/auction_module/static/src/js/squad_poster_editor.js?v=348"></script>
   <script>
     window.addEventListener('load', function () {
       if (!window.spEditPlayer) {

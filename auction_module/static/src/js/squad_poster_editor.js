@@ -445,9 +445,31 @@
     else img.onload = paint;
   }
 
+  function resetCardPhoto(card) {
+    var img = card.querySelector('.sp-card-photo');
+    if (!img) return;
+    var orig = img.getAttribute('data-orig-crop');
+    if (orig) img.src = orig;
+    img.style.position = '';
+    img.style.width = '';
+    img.style.height = '';
+    img.style.left = '';
+    img.style.top = '';
+    img.style.right = '';
+    img.style.bottom = '';
+    img.style.maxWidth = '';
+    img.style.maxHeight = '';
+    img.style.objectFit = '';
+    img.style.transform = '';
+  }
+
   function reapplyAllPhotoStates() {
     cardsWithPhotos().forEach(function (card) {
       var st = getState(card);
+      if (!st.manual) {
+        resetCardPhoto(card);
+        return;
+      }
       var full = (window.__spFullPhotos && window.__spFullPhotos[photoKey(card)]) || '';
       applyToCard(card, st, full);
     });

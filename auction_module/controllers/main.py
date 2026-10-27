@@ -5654,7 +5654,14 @@ class Auction(http.Controller):
                     left = top = side = None
 
             if left is None:
-                left, top, side = self._sp_face_crop_box(im)
+                # Largest upper-centre square. Face detection was zooming
+                # some players and clipping others, and it made every poster
+                # load wait on a detector pass.
+                side = min(w, h)
+                left = (w - side) // 2
+                top = int(round((h - side) * 0.08)) if h > w else 0
+                top = max(0, min(top, h - side))
+                left = max(0, min(left, w - side))
                 auto_crop = {
                     'l': float(left) / float(w),
                     't': float(top) / float(h),

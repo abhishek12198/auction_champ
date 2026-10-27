@@ -25,7 +25,8 @@
     if (canvasEl) canvasEl.style.setProperty('pointer-events', 'auto', 'important');
   })();
 
-  var CANVAS_W = 1080, CANVAS_H = 1350;
+  // Match .sp-canvas (1024×1536). A 1080×1350 capture crops the footer.
+  var CANVAS_W = 1024, CANVAS_H = 1536;
   var shell = document.getElementById('spShell');
   var canvas = document.getElementById('spCanvas');
   var scaleBox = document.getElementById('spScaleBox');
@@ -134,7 +135,7 @@
   });
   applyZoom();
 
-  // Desktop Instagram export is 2× (2160×2700). Phones stay at 1× to avoid OOM.
+  // Desktop export is 2× the 1024×1536 poster. Phones stay at 1× to avoid OOM.
   if (scaleSel) scaleSel.value = isMobile() ? '1' : '2';
   // On phones, JPG is the fast path — nudge the primary label
   if (isMobile() && btnJpg) {
@@ -251,8 +252,8 @@
     var heroBlock = heroCount ? (heroSide + heroExtra) : 0;
     var gridAvail = Math.max(96, availH - heroBlock);
     var rowH = Math.max(56, Math.floor((gridAvail - (rows - 1) * rowGap) / rows));
-    var cardW = Math.min(colW, Math.round(rowH * 0.82));
-    var cardH = heroCount ? cardW : rowH;
+    var cardW = Math.min(colW, rowH);
+    var cardH = cardW;
     if (cardW < 48) cardW = Math.max(40, colW);
     if (heroCount) cardH = cardW;
     if (heroCount && heroSide < cardW + 28) {
@@ -263,7 +264,7 @@
         heroBlock = heroSide + heroExtra;
         gridAvail = Math.max(96, availH - heroBlock);
         rowH = Math.max(56, Math.floor((gridAvail - (rows - 1) * rowGap) / rows));
-        cardW = Math.min(colW, Math.round(rowH * 0.82));
+        cardW = Math.min(colW, rowH);
         cardH = cardW;
         if (cardW < 48) cardW = Math.max(40, colW);
       }
@@ -368,50 +369,55 @@
     lastName = filename;
     lastMime = blob.type || 'image/png';
     showShareBtn(true);
-
-    // Prefer native share sheet on phones (best UX)
-    if (isMobile() && navigator.share && navigator.canShare) {
-      try {
-        var file = new File([blob], filename, { type: lastMime });
-        if (navigator.canShare({ files: [file] })) {
-          navigator.share({
-            files: [file],
-            title: 'Squad Poster',
-            text: filename
-          }).then(function () {
-            setStatus('Shared · ' + filename, 'ok');
-          }).catch(function (err) {
-            if (err && err.name === 'AbortError') {
-              setStatus('Share cancelled — try Save again or Share', '');
-              return;
-            }
-            // Fall through to download / preview
-            legacyDownload(blob, filename);
-          });
-          return;
-        }
-      } catch (e) { /* fall through */ }
+    // Share must run inside the tap. After html2canvas it is no longer a
+    // user gesture, so phones ignore navigator.share and window.open.
+    if (isIOS()) {
+      showSaveSheet(blob, filename);
+      return;
     }
-
     legacyDownload(blob, filename);
+  }
+
+  function showSaveSheet(blob, filename) {
+    var url = URL.createObjectURL(blob);
+    var old = document.getElementById('spSaveSheet');
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+    var sheet = document.createElement('div');
+    sheet.id = 'spSaveSheet';
+    sheet.setAttribute('style',
+      'position:fixed;inset:0;z-index:2147483646;background:rgba(0,0,0,.92);'
+      + 'display:flex;flex-direction:column;align-items:center;padding:16px 12px 24px;'
+      + 'overflow:auto;-webkit-overflow-scrolling:touch');
+    sheet.innerHTML =
+      '<p style="color:#fff;font:700 15px/1.35 sans-serif;text-align:center;margin:4px 0 12px">'
+      + 'Long-press the image, then choose Save Image</p>'
+      + '<img alt="Squad poster" style="max-width:100%;height:auto;border-radius:8px" src="' + url + '"/>'
+      + '<button type="button" id="spSaveSheetClose" style="margin-top:16px;min-height:46px;'
+      + 'padding:10px 22px;border:0;border-radius:999px;font-weight:700;background:#e8c547;color:#111">'
+      + 'Close</button>';
+    document.body.appendChild(sheet);
+    var closeBtn = document.getElementById('spSaveSheetClose');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function () {
+        if (sheet.parentNode) sheet.parentNode.removeChild(sheet);
+        URL.revokeObjectURL(url);
+      });
+    }
+    setStatus('Long-press the image to save it', 'ok');
   }
 
   function legacyDownload(blob, filename) {
     var url = URL.createObjectURL(blob);
-    // iOS Safari often ignores <a download> for blobs
-    if (isIOS() || isMobile()) {
-      openImagePreview(blob, filename);
-      setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
-      return;
-    }
     var a = document.createElement('a');
     a.href = url;
     a.download = filename;
     a.rel = 'noopener';
     document.body.appendChild(a);
     a.click();
-    setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 2000);
+    setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 4000);
     setStatus('Downloaded · ' + filename, 'ok');
+    // Some mobile browsers ignore the download attribute. Keep a visible copy.
+    if (isMobile()) showSaveSheet(blob, filename);
   }
 
   if (btnShare) {
@@ -444,7 +450,7 @@
     }
     var mobile = isMobile();
     var scale = parseInt(scaleSel && scaleSel.value, 10) || 1;
-    if (mobile) scale = 1; // size comes from temporary smaller canvas
+    if (mobile) scale = 1;
     var buttons = [btnPng, btnJpg, btnShare];
     buttons.forEach(function (b) { if (b) b.disabled = true; });
     setStatus(mobile ? 'Saving…' : 'Preparing poster…', '');
@@ -461,29 +467,20 @@
     var photoBackups = [];
     var softBackups = [];
 
-    // Mobile: capture a smaller 4:5 canvas — faster than full 1080×1350
-    var captureW = CANVAS_W;
-    var captureH = CANVAS_H;
-    if (mobile) {
-      captureW = 864;
-      captureH = 1080;
-      if (canvas) {
-        canvas.style.width = captureW + 'px';
-        canvas.style.height = captureH + 'px';
-      }
-      if (scaleBox) {
-        scaleBox.style.zoom = '1';
-        scaleBox.style.transform = 'none';
-        scaleBox.style.transformOrigin = 'top left';
-        scaleBox.style.marginBottom = '0';
-      }
-      sizeSquareCards();
-    } else if (scaleBox) {
+    // Capture the poster the editor is showing. Forcing 4:5 (1080×1350)
+    // clipped the slogan and the bottom of the last row.
+    if (scaleBox) {
       scaleBox.style.zoom = '1';
       scaleBox.style.transform = 'none';
       scaleBox.style.transformOrigin = 'top left';
       scaleBox.style.marginBottom = '0';
     }
+    if (canvas) {
+      canvas.style.width = '';
+      canvas.style.height = '';
+    }
+    var captureW = CANVAS_W;
+    var captureH = CANVAS_H;
 
   function restoreExportUi() {
     // Restore baked photos
@@ -545,9 +542,9 @@
     });
   }
 
-  /** Flatten each card photo (with pan/zoom) into one small JPEG — huge html2canvas speedup */
+  /** Draw each card photo into its square so the export is not shifted by CSS transform. */
   function bakeCardPhotos(done) {
-    if (!mobile || !canvas) { done(); return; }
+    if (!canvas) { done(); return; }
     var wraps = canvas.querySelectorAll('.sp-card-photo-wrap');
     if (!wraps.length) { done(); return; }
     var i = 0;
@@ -558,7 +555,7 @@
       if (!img || !img.naturalWidth) { next(); return; }
       var w = Math.max(32, wrap.clientWidth || 120);
       var h = Math.max(32, wrap.clientHeight || 120);
-      var side = Math.min(160, Math.max(96, Math.round(w)));
+      var side = Math.min(640, Math.max(220, Math.round(Math.max(w, h) * 2)));
       try {
         var c = document.createElement('canvas');
         c.width = side;
@@ -576,7 +573,6 @@
           var sx = side / w;
           ctx.drawImage(img, il * sx, it * sx, iw * sx, ih * sx);
         } else {
-          // Default object-fit:cover
           var nw = img.naturalWidth || side;
           var nh = img.naturalHeight || side;
           var sc = Math.max(side / nw, side / nh);
@@ -584,12 +580,11 @@
           var dh = nh * sc;
           ctx.drawImage(img, (side - dw) / 2, (side - dh) / 2, dw, dh);
         }
-        var data = c.toDataURL('image/jpeg', 0.8);
+        var data = c.toDataURL('image/jpeg', 0.92);
         photoBackups.push({ wrap: wrap, html: wrap.innerHTML });
-        wrap.innerHTML = '<img class="sp-card-photo" alt="" draggable="false" src="' + data + '" style="position:absolute;left:0;top:0;width:100%;height:100%;max-width:none;max-height:none;object-fit:cover;transform:none;"/>';
+        wrap.innerHTML = '<img class="sp-card-photo" alt="" draggable="false" src="' + data + '" style="position:absolute;left:0;top:0;width:100%;height:100%;max-width:none;max-height:none;object-fit:fill;transform:none;"/>';
       } catch (eBake) {}
-      // Yield so UI stays responsive
-      if (i % 3 === 0) setTimeout(next, 0);
+      if (i % 2 === 0) setTimeout(next, 0);
       else next();
     }
     next();
@@ -634,7 +629,30 @@
     usePngFallback();
   }
 
+  function posterBox() {
+    var top = 0;
+    var left = 0;
+    var n = canvas;
+    while (n) {
+      top += n.offsetTop || 0;
+      left += n.offsetLeft || 0;
+      n = n.offsetParent;
+    }
+    return {
+      w: Math.ceil((canvas && canvas.offsetWidth) || CANVAS_W),
+      h: Math.ceil((canvas && canvas.offsetHeight) || CANVAS_H),
+      left: left,
+      top: top
+    };
+  }
+
   function runCapture() {
+    // The poster sits below the toolbar. A capture window that is only the
+    // poster height paints from the top of the page and cuts the strike
+    // line and footer off the bottom.
+    var box = posterBox();
+    captureW = box.w;
+    captureH = box.h;
     if (canvas) canvas.classList.add('is-exporting');
     if (window.__spClosePhotoEditor) {
       try { window.__spClosePhotoEditor(false); } catch (eClose) {}
@@ -658,8 +676,8 @@
       scale: scale,
       width: captureW,
       height: captureH,
-      windowWidth: captureW,
-      windowHeight: captureH,
+      windowWidth: Math.max(captureW + 8, box.left + captureW + 8),
+      windowHeight: Math.max(captureH + 8, box.top + captureH + 8),
       x: 0,
       y: 0,
       scrollX: 0,
@@ -760,20 +778,58 @@
       }
     };
 
-    function finishBlob(blob, w, h) {
+    var exportDone = false;
+    function releaseButtons() {
       buttons.forEach(function (b) { if (b) b.disabled = false; });
+    }
+    function finishBlob(blob, w, h) {
+      if (exportDone) return;
+      exportDone = true;
+      releaseButtons();
       if (!blob) { setStatus('Export failed — try again.', 'err'); return; }
       var outFmt = mobile ? 'jpg' : fmt;
       var filename = posterFileName(outFmt);
       downloadBlob(blob, filename);
-      setStatus('Ready · ' + w + '×' + h, 'ok');
+      if (!isIOS()) setStatus('Ready · ' + w + '×' + h, 'ok');
     }
 
+    // Phones often leave document.fonts.ready pending, and html2canvas waits
+    // on it forever — the Save button stays disabled and nothing downloads.
+    var restoreFonts = function () {};
+    try {
+      if (document.fonts && document.fonts.ready) {
+        var fontGate = Promise.race([
+          document.fonts.ready.catch(function () {}),
+          new Promise(function (resolve) { setTimeout(resolve, 1200); })
+        ]);
+        Object.defineProperty(document.fonts, 'ready', {
+          configurable: true,
+          get: function () { return fontGate; }
+        });
+        restoreFonts = function () {
+          try { delete document.fonts.ready; } catch (eFont) {}
+        };
+      }
+    } catch (eFontDef) {}
+
     var t0 = Date.now();
-    window.html2canvas(canvas, opts).then(function (off) {
+    var hangTimer = setTimeout(function () {
+      if (exportDone) return;
+      exportDone = true;
+      restoreFonts();
       restoreExportUi();
+      releaseButtons();
+      setStatus('Save stalled on this phone. Close other apps and try Save JPG again.', 'err');
+    }, 22000);
+
+    window.html2canvas(canvas, opts).then(function (off) {
+      clearTimeout(hangTimer);
+      restoreFonts();
+      restoreExportUi();
+      if (exportDone) return;
       if (!off.width || !off.height) {
-        buttons.forEach(function (b) { if (b) b.disabled = false; });
+        exportDone = true;
+        releaseButtons();
         setStatus('Export failed — empty canvas. Try Save JPG.', 'err');
         return;
       }
@@ -783,16 +839,63 @@
       var q = mobile ? 0.82 : (fmt === 'jpg' ? 0.92 : 0.92);
       if (!mobile && fmt === 'png') mime = 'image/png';
 
+      function blobFromDataUrl(source) {
+        var dataUrl = source.toDataURL(mime, q);
+        var arr = dataUrl.split(','), bstr = atob(arr[1]), n = bstr.length, u8 = new Uint8Array(n);
+        while (n--) u8[n] = bstr.charCodeAt(n);
+        return new Blob([u8], { type: mime });
+      }
+
       function encodeFrom(source) {
-        if (source.toBlob) {
+        // Mobile Safari often never calls toBlob, which leaves Save disabled.
+        if (mobile || !source.toBlob) {
+          try {
+            finishBlob(blobFromDataUrl(source), source.width, source.height);
+          } catch (eEnc) {
+            if (!exportDone) {
+              exportDone = true;
+              releaseButtons();
+              setStatus('Could not encode the image on this phone.', 'err');
+            }
+          }
+          return;
+        }
+        var blobTimer = setTimeout(function () {
+          try {
+            finishBlob(blobFromDataUrl(source), source.width, source.height);
+          } catch (eLate) {
+            if (!exportDone) {
+              exportDone = true;
+              releaseButtons();
+              setStatus('Could not encode the image.', 'err');
+            }
+          }
+        }, 2500);
+        try {
           source.toBlob(function (blob) {
-            finishBlob(blob, source.width, source.height);
+            clearTimeout(blobTimer);
+            if (blob) finishBlob(blob, source.width, source.height);
+            else {
+              try { finishBlob(blobFromDataUrl(source), source.width, source.height); }
+              catch (eNull) {
+                if (!exportDone) {
+                  exportDone = true;
+                  releaseButtons();
+                  setStatus('Could not encode the image.', 'err');
+                }
+              }
+            }
           }, mime, q);
-        } else {
-          var dataUrl = source.toDataURL(mime, q);
-          var arr = dataUrl.split(','), bstr = atob(arr[1]), n = bstr.length, u8 = new Uint8Array(n);
-          while (n--) u8[n] = bstr.charCodeAt(n);
-          finishBlob(new Blob([u8], { type: mime }), source.width, source.height);
+        } catch (eBlob) {
+          clearTimeout(blobTimer);
+          try { finishBlob(blobFromDataUrl(source), source.width, source.height); }
+          catch (eFall) {
+            if (!exportDone) {
+              exportDone = true;
+              releaseButtons();
+              setStatus('Could not encode the image.', 'err');
+            }
+          }
         }
       }
 
@@ -810,8 +913,12 @@
       try { off.width = 0; off.height = 0; } catch (eFree) {}
       encodeFrom(out);
     }).catch(function (err) {
+      clearTimeout(hangTimer);
+      restoreFonts();
       restoreExportUi();
-      buttons.forEach(function (b) { if (b) b.disabled = false; });
+      if (exportDone) return;
+      exportDone = true;
+      releaseButtons();
       setStatus('Export error: ' + (err && err.message ? err.message : err), 'err');
     });
   }
