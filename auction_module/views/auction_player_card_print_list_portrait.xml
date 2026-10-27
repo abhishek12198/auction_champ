@@ -2,14 +2,10 @@
 <odoo>
 
 <!-- ══════════════════════════════════════════════════════════════════════
-     AUCTIONCHAMP INSTAGRAM STATUS CARD  —  1080 × 1920 px (9:16)
-     Full-bleed Stories / Status format for cricket / football ZIP export.
-     Rendered to JPG by wkhtmltoimage.  Qt-WebKit safe.
-     Context from auction.team.player._card_values():
-      player, tournament, team, is_football, css, icons,
-      photo_uri, team_logo_uri, tournament_logo_uri, stadium_uri,
-      brand_name, name_first, name_last, card_id, badge, rows (6),
-      row_pairs, status_color, status_text, show_status
+     Registration status card — 1080 × 1920.
+     Left: night stadium, player photo, tournament logo, team mark.
+     Right: Player / Registered in the tournament theme, then that
+     tournament's own attribute rows.
      ══════════════════════════════════════════════════════════════════════ -->
 <template id="player_card_portrait_image" name="Player Card Instagram Status Image">
 <html>
@@ -19,131 +15,88 @@
 </head>
 <body>
 <div class="pc">
-
-    <!-- Stadium background (cricket / football) -->
-    <div class="pc-bg" t-attf-style="background-image:url({{ stadium_uri }});"/>
-    <div class="pc-shade"/>
-    <div class="pc-glow"/>
-
-    <!-- Frame -->
-    <div class="pc-frame"/>
-    <div class="pc-frame-in"/>
-
-    <!-- Header: brand logo · tournament · player id -->
-    <div class="pc-head">
-        <div class="pc-hcell pc-brand">
-            <!-- Prefer tournament logo in header; team logo appears in the sold stamp -->
+    <div class="pc-left">
+        <div class="pc-stadium" t-attf-style="background-image:url({{ stadium_uri }});"/>
+        <t t-if="photo_uri">
+            <div class="pc-photo" t-attf-style="background-image:url({{ photo_uri }});"/>
+        </t>
+    </div>
+    <div class="pc-right">
+        <t t-if="poster_wash_uri">
+            <div class="pc-wash" t-attf-style="background-image:url({{ poster_wash_uri }});"/>
+        </t>
+        <div class="pc-brand">
             <t t-if="tournament_logo_uri">
-                <div class="pc-brand-logo" t-attf-style="background-image:url({{ tournament_logo_uri }});"/>
+                <div class="pc-brand-mark">
+                    <div class="pc-logo" t-attf-style="background-image:url({{ tournament_logo_uri }});"/>
+                </div>
             </t>
-            <t t-elif="team_logo_uri">
-                <div class="pc-brand-logo" t-attf-style="background-image:url({{ team_logo_uri }});"/>
+            <div class="pc-brand-copy">
+                <div class="pc-tname"><t t-out="tournament.name if tournament else brand_name"/></div>
+                <t t-if="season_line">
+                    <div class="pc-season"><t t-out="season_line"/></div>
+                </t>
+                <t t-if="date_line or venue_line">
+                    <div class="pc-facts">
+                        <t t-if="date_line">
+                            <div class="pc-fact"><t t-out="date_line"/></div>
+                        </t>
+                        <t t-if="venue_line">
+                            <div class="pc-fact"><t t-out="venue_line"/></div>
+                        </t>
+                    </div>
+                </t>
+            </div>
+        </div>
+        <div class="pc-player-word">PLAYER</div>
+        <div class="pc-reg-word"><t t-out="status_word"/></div>
+        <div class="pc-namebar">
+            <t t-if="name_first">
+                <span class="pc-nf" t-attf-style="font-size:{{ name_px }}px;"><t t-out="name_first"/></span>
+                <span class="pc-nl" t-attf-style="font-size:{{ name_px }}px;"><t t-out="name_last"/></span>
             </t>
             <t t-else="">
-                <div class="pc-brand-ph">AC</div>
+                <span class="pc-nf" t-attf-style="font-size:{{ name_px }}px;"><t t-out="name_last"/></span>
             </t>
-            <div class="pc-brand-name">
-                <t t-out="tournament.name if tournament else brand_name"/>
-            </div>
         </div>
-        <div class="pc-hcell pc-hmid">
-            <div class="pc-tname">
-                <t t-out="tournament.name if tournament else 'AuctionChamp'"/>
-            </div>
+        <div class="pc-rows">
+            <t t-foreach="rows" t-as="row">
+                <div class="pc-row">
+                    <div class="pc-ico"><div class="pc-ico-box"><t t-out="icons[row['icon']]"/></div></div>
+                    <div class="pc-meta">
+                        <div class="pc-lbl"><t t-out="row['label']"/></div>
+                        <div class="pc-val"><t t-out="row['value']"/></div>
+                    </div>
+                </div>
+            </t>
         </div>
-        <div class="pc-hcell pc-hid">
-            <div class="pc-pid-lbl">PLAYER ID</div>
-            <div class="pc-pid-val"><t t-out="card_id"/></div>
-        </div>
-    </div>
-
-    <!-- Player hero -->
-    <div class="pc-stage">
-        <t t-if="show_status">
-            <div class="pc-status" t-attf-style="background:{{ status_color }};">
-                <t t-out="status_text"/>
-            </div>
-        </t>
-
-        <t t-if="photo_uri">
-            <div class="pc-photo-wrap">
-                <img class="pc-photo-img" t-att-src="photo_uri" alt=""/>
-            </div>
-        </t>
-        <t t-else="">
-            <div class="pc-photo-ph">&#9787;</div>
-        </t>
-
-        <!-- Sold / Unsold rubber stamp (translucent, over photo) -->
-        <t t-if="show_stamp">
-            <div t-attf-class="pc-stamp {{ 'unsold' if stamp_is_unsold else '' }}">
-                <div class="pc-stamp-ring"/>
-                <div class="pc-stamp-body">
-                    <div class="pc-stamp-inner">
-                        <div class="pc-stamp-tag"><t t-out="stamp_title"/></div>
-                        <t t-if="not stamp_is_unsold">
-                            <t t-if="team_logo_uri">
-                                <div class="pc-stamp-logo" t-attf-style="background-image:url({{ team_logo_uri }});"/>
-                            </t>
-                            <t t-else="">
-                                <div class="pc-stamp-logo-ph">★</div>
-                            </t>
-                            <div class="pc-stamp-amt"><t t-out="stamp_amount"/></div>
-                            <t t-if="stamp_sub">
-                                <div class="pc-stamp-sub"><t t-out="stamp_sub"/></div>
-                            </t>
+        <t t-if="is_sold and (team_name or sold_points_label)">
+            <div class="pc-sold">
+                <div class="pc-sold-row">
+                    <t t-if="team_logo_uri">
+                        <div class="pc-sold-mark">
+                            <div class="pc-sold-logo" t-attf-style="background-image:url({{ team_logo_uri }});"/>
+                        </div>
+                    </t>
+                    <div class="pc-sold-copy">
+                        <t t-if="team_name">
+                            <div class="pc-sold-team"><t t-out="team_name"/></div>
                         </t>
-                        <t t-else="">
-                            <div class="pc-stamp-logo-ph">✕</div>
+                        <t t-if="sold_points_label">
+                            <div class="pc-sold-pts"><t t-out="sold_points_label"/></div>
                         </t>
                     </div>
                 </div>
             </div>
         </t>
-
-        <div class="pc-pname">
-            <t t-if="name_first">
-                <div class="pc-pfn"><t t-out="name_first"/></div>
-            </t>
-            <div class="pc-pln"><t t-out="name_last"/></div>
-            <t t-if="badge">
-                <div class="pc-role"><t t-out="badge"/></div>
+        <div class="pc-powered">
+            <div class="pc-edition"><t t-if="edition_line"><t t-out="edition_line"/></t></div>
+            <div class="pc-powered-label">POWERED BY</div>
+            <t t-if="brand_logo_uri">
+                <div class="pc-ac-logo" t-attf-style="background-image:url({{ brand_logo_uri }});"/>
             </t>
         </div>
     </div>
-
-    <!-- 3×2 info panel -->
-    <div class="pc-panel-wrap">
-        <div class="pc-panel">
-            <table>
-                <t t-foreach="row_pairs" t-as="pair">
-                    <tr>
-                        <t t-foreach="pair" t-as="r">
-                            <td>
-                                <div class="pc-cell">
-                                    <div class="pc-ic">
-                                        <t t-if="r['icon'] == 'team' and team_logo_uri">
-                                            <div class="pc-ilogo" t-attf-style="background-image:url({{ team_logo_uri }});"/>
-                                        </t>
-                                        <t t-else="">
-                                            <div class="pc-ibox">
-                                                <t t-out="icons.get(r['icon'], icons.get('category', ''))"/>
-                                            </div>
-                                        </t>
-                                    </div>
-                                    <div class="pc-itxt">
-                                        <div class="pc-lbl"><t t-out="r['label']"/></div>
-                                        <div class="pc-val"><t t-out="r['value']"/></div>
-                                    </div>
-                                </div>
-                            </td>
-                        </t>
-                    </tr>
-                </t>
-            </table>
-        </div>
-    </div>
-
 </div>
 </body>
 </html>

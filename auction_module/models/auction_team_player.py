@@ -54,246 +54,51 @@ _logger = logging.getLogger(__name__)
 # Stylesheet for Instagram Stories / Status player cards (9:16).
 # Qt-WebKit-safe: -webkit- gradients, no CSS vars/grid/object-fit/backdrop-filter.
 # Palette values substituted via string.Template ($name placeholders).
+_CARD_SPLIT_THEMES = {
+    'butterscotch': {'ink': '#C8960C', 'bright': '#F5C842', 'surname': '#F5C842'},
+    'cherry':       {'ink': '#9F1239', 'bright': '#E11D48', 'surname': '#FB7185'},
+    'vanilla':      {'ink': '#8A7D62', 'bright': '#C4B8A0', 'surname': '#8AA6D4'},
+    'pistah':       {'ink': '#2E7D32', 'bright': '#6BBF4E', 'surname': '#A8E063'},
+    'blueberry':    {'ink': '#1E3A8A', 'bright': '#3B82F6', 'surname': '#93C5FD'},
+    'blackberry':   {'ink': '#4C1D95', 'bright': '#7629D9', 'surname': '#A77BFF'},
+    'lemon':        {'ink': '#8F7400', 'bright': '#C9A400', 'surname': '#D9B820'},
+    'strawberry':   {'ink': '#880E4F', 'bright': '#C2185B', 'surname': '#E91E63'},
+    'standard':     {'ink': '#1058B0', 'bright': '#1058B0', 'surname': '#FFFFFF'},
+}
+
 _CARD_CSS = """
 *{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact;}
-html,body{width:1080px;height:1920px;background:#000;overflow:hidden;}
-
-@font-face{
-  font-family:'AtlantaCollege';
-  src:url('/auction_module/static/src/assets/fonts/Atlanta-College.ttf') format('truetype');
-  font-weight:normal;font-style:normal;
-}
-
-/* ══════════════════════════════════════════════════════
-   AUCTIONCHAMP INSTAGRAM STATUS CARD — 1080 × 1920 px (9:16)
-   Full-bleed vertical Stories / Status format.
-   Heights: head(170)+stage(1280)+panel(420)+pad(50)=1920
-   ══════════════════════════════════════════════════════ */
-
-.pc{
-  position:relative;width:1080px;height:1920px;overflow:hidden;
-  color:$txt;font-family:Arial,Helvetica,sans-serif;
-  background-color:$bg2;
-}
-
-/* Stadium background — full bleed */
-.pc-bg{
-  position:absolute;top:0;left:0;width:1080px;height:1920px;z-index:0;
-  background-color:$bg1;
-  background-size:cover;background-position:center center;background-repeat:no-repeat;
-}
-.pc-shade{
-  position:absolute;top:0;left:0;width:1080px;height:1920px;z-index:1;pointer-events:none;
-  background:-webkit-linear-gradient(top,rgba(4,8,20,.28) 0%,rgba(4,8,20,.08) 28%,rgba(4,10,24,.35) 55%,$bg2 88%);
-}
-.pc-glow{
-  position:absolute;top:80px;left:50%;width:860px;height:700px;margin-left:-430px;z-index:1;pointer-events:none;
-  background:-webkit-radial-gradient(50% 30%,ellipse,rgba(255,230,160,.16) 0%,rgba(0,0,0,0) 70%);
-}
-
-/* Frame + corner gold ribbons */
-.pc-frame{
-  position:absolute;top:14px;left:14px;right:14px;bottom:14px;z-index:40;
-  border:2px solid $accent;pointer-events:none;
-  -webkit-box-shadow:0 0 36px $glow,inset 0 0 50px rgba(0,0,0,.22);
-}
-.pc-frame-in{
-  position:absolute;top:24px;left:24px;right:24px;bottom:24px;z-index:40;
-  border:1px solid rgba(255,255,255,.12);pointer-events:none;
-}
-
-/* Header: logo left · tournament · player id right */
-.pc-head{
-  position:relative;z-index:20;display:table;width:1080px;height:170px;
-  table-layout:fixed;padding:48px 52px 0;
-}
-.pc-hcell{display:table-cell;vertical-align:middle;}
-.pc-brand{width:300px;}
-.pc-brand-logo{
-  width:110px;height:110px;border-radius:14px;
-  background-size:contain;background-position:center;background-repeat:no-repeat;
-  background-color:rgba(0,0,0,.25);
-  border:1px solid rgba(255,255,255,.18);
-  -webkit-box-shadow:0 4px 18px rgba(0,0,0,.5);
-}
-.pc-brand-ph{
-  width:110px;height:110px;border-radius:14px;border:1px solid $accent;
-  background-color:rgba(0,0,0,.35);text-align:center;line-height:110px;
-  font-family:'AtlantaCollege','Arial Black',Arial,sans-serif;
-  font-size:32px;font-weight:900;color:$accent;
-}
-.pc-brand-name{
-  margin-top:10px;font-size:14px;font-weight:700;letter-spacing:1.5px;
-  color:#fff;text-transform:uppercase;text-shadow:0 2px 8px rgba(0,0,0,.8);
-  max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.pc-hmid{text-align:center;padding:0 12px;}
-.pc-tname{
-  font-family:'AtlantaCollege','Arial Black',Arial,sans-serif;font-size:26px;font-weight:900;
-  color:rgba(255,255,255,.92);text-transform:uppercase;letter-spacing:1px;
-  text-shadow:0 2px 12px rgba(0,0,0,.85);line-height:1.15;
-  max-height:72px;overflow:hidden;
-}
-.pc-hid{width:240px;text-align:right;}
-.pc-pid-lbl{
-  font-size:14px;font-weight:700;letter-spacing:3px;color:rgba(255,255,255,.78);
-  text-transform:uppercase;line-height:1;text-shadow:0 1px 6px rgba(0,0,0,.7);
-}
-.pc-pid-val{
-  font-family:'AtlantaCollege','Arial Black',Arial,sans-serif;font-size:48px;font-weight:900;
-  line-height:1.05;color:$accent;letter-spacing:1px;margin-top:8px;
-  text-shadow:0 2px 14px rgba(0,0,0,.85),0 0 20px $glow;
-}
-
-/* Hero / player stage — tall Stories middle */
-.pc-stage{
-  position:relative;z-index:10;height:1280px;overflow:hidden;
-}
-.pc-photo-wrap{
-  position:absolute;top:20px;left:90px;width:900px;height:1060px;z-index:4;
-  text-align:center;overflow:hidden;line-height:1060px;
-}
-.pc-photo-img{
-  max-width:900px;max-height:1060px;width:auto;height:auto;
-  vertical-align:bottom;
-  border:0;
-}
-.pc-photo-ph{
-  position:absolute;top:80px;left:0;right:0;bottom:220px;text-align:center;
-  font-size:280px;line-height:900px;color:rgba(255,255,255,.08);
-}
-.pc-pname{
-  position:absolute;left:40px;right:40px;bottom:28px;z-index:15;text-align:center;
-}
-.pc-pfn{
-  font-family:'AtlantaCollege','Arial Black',Arial,sans-serif;font-size:40px;font-weight:900;
-  line-height:1;letter-spacing:5px;color:#fff;text-transform:uppercase;
-  text-shadow:0 3px 18px rgba(0,0,0,.95);
-}
-.pc-pln{
-  font-family:'AtlantaCollege','Arial Black',Arial,sans-serif;font-size:92px;font-weight:900;
-  line-height:.92;letter-spacing:1px;color:#fff;text-transform:uppercase;
-  text-shadow:0 5px 26px rgba(0,0,0,.95);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-top:4px;
-}
-.pc-role{
-  display:inline-block;margin-top:18px;padding:14px 56px;
-  font-family:'AtlantaCollege','Arial Black',Arial,sans-serif;
-  font-size:26px;font-weight:900;letter-spacing:6px;text-transform:uppercase;color:#fff;
-  background:-webkit-linear-gradient(left,$badge1,$badge2);
-  -webkit-box-shadow:0 8px 26px rgba(0,0,0,.55),0 0 24px rgba(224,52,155,.35);
-}
-
-/* Stage status chip — draft / in-auction only (sold/unsold use stamp) */
-.pc-status{
-  position:absolute;top:12px;right:52px;z-index:25;
-  padding:10px 22px;border-radius:4px;
-  font-family:'AtlantaCollege','Arial Black',Arial,sans-serif;
-  font-size:18px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#fff;
-  -webkit-box-shadow:0 4px 16px rgba(0,0,0,.5);
-}
-
-/* Rubber-stamp sold / unsold seal — translucent so player stays visible */
-.pc-stamp{
-  position:absolute;left:50%;bottom:300px;z-index:22;
-  width:260px;height:260px;margin-left:-130px;
-  border-radius:130px;
-  background:rgba(255,248,240,.42);
-  border:5px solid rgba(176,28,28,.82);
-  -webkit-box-shadow:none;
-  text-align:center;overflow:hidden;
-  opacity:.88;
-  -webkit-transform:rotate(-14deg);
-}
-.pc-stamp.unsold{
-  background:rgba(236,239,241,.40);
-  border-color:rgba(84,110,122,.80);
-  opacity:.86;
-  -webkit-transform:rotate(12deg);
-}
-.pc-stamp-ring{
-  position:absolute;top:12px;left:12px;right:12px;bottom:12px;z-index:1;
-  border:3px dashed rgba(176,28,28,.65);border-radius:118px;pointer-events:none;
-}
-.pc-stamp.unsold .pc-stamp-ring{border-color:rgba(84,110,122,.60);}
-.pc-stamp-body{
-  position:relative;z-index:2;display:table;width:260px;height:260px;
-}
-.pc-stamp-inner{display:table-cell;vertical-align:middle;padding:16px 14px 12px;}
-.pc-stamp-tag{
-  font-family:'AtlantaCollege','Arial Black',Arial,sans-serif;
-  font-size:34px;font-weight:900;letter-spacing:5px;text-transform:uppercase;
-  color:rgba(176,28,28,.95);line-height:1;margin-bottom:8px;
-  text-shadow:0 1px 0 rgba(255,255,255,.25);
-}
-.pc-stamp.unsold .pc-stamp-tag{
-  color:rgba(55,71,79,.95);font-size:36px;letter-spacing:4px;margin-bottom:10px;
-}
-.pc-stamp-logo{
-  width:88px;height:88px;margin:0 auto 8px;
-  background-size:contain;background-position:center;background-repeat:no-repeat;
-  opacity:.92;
-}
-.pc-stamp-logo-ph{
-  width:72px;height:72px;margin:0 auto 8px;border-radius:36px;
-  background-color:transparent;line-height:72px;
-  font-family:'AtlantaCollege','Arial Black',Arial,sans-serif;
-  font-size:40px;font-weight:900;color:rgba(176,28,28,.70);
-}
-.pc-stamp.unsold .pc-stamp-logo-ph{color:rgba(55,71,79,.70);font-size:48px;}
-.pc-stamp-amt{
-  font-family:'AtlantaCollege','Arial Black',Arial,sans-serif;
-  font-size:28px;font-weight:900;letter-spacing:1px;
-  color:rgba(120,20,20,.95);line-height:1.05;
-}
-.pc-stamp.unsold .pc-stamp-amt{font-size:32px;color:rgba(55,71,79,.92);letter-spacing:3px;}
-.pc-stamp-sub{
-  margin-top:5px;font-size:11px;font-weight:700;letter-spacing:1.5px;
-  text-transform:uppercase;color:rgba(120,20,20,.85);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:210px;margin-left:auto;margin-right:auto;
-}
-.pc-stamp.unsold .pc-stamp-sub{color:rgba(55,71,79,.8);}
-
-/* Info panel — 3×2 table */
-.pc-panel-wrap{position:relative;z-index:20;padding:10px 40px 0;}
-.pc-panel{
-  width:1000px;height:400px;border:1px solid $accent;border-radius:12px;
-  background:-webkit-linear-gradient(top,rgba(8,14,32,.96),rgba(4,8,20,.98));
-  -webkit-box-shadow:0 12px 34px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.08);
-  overflow:hidden;
-}
-.pc-panel table{width:100%;height:400px;border-collapse:collapse;table-layout:fixed;}
-.pc-panel td{
-  width:50%;height:133px;padding:0 26px;vertical-align:middle;
-  border-right:1px solid rgba(233,193,90,.35);
-  border-bottom:1px solid rgba(233,193,90,.35);
-}
-.pc-panel tr td:last-child{border-right:none;}
-.pc-panel tr:last-child td{border-bottom:none;}
-.pc-cell{display:table;width:100%;height:110px;}
-.pc-ic{display:table-cell;width:52px;vertical-align:middle;}
-.pc-ibox{
-  width:48px;height:48px;border-radius:10px;overflow:hidden;
-  background-color:rgba(255,255,255,.06);border:1px solid rgba(233,193,90,.28);
-  text-align:center;line-height:46px;color:$accent;
-}
-.pc-ibox svg{width:26px;height:26px;vertical-align:middle;}
-.pc-ilogo{
-  width:48px;height:48px;border-radius:10px;
-  background-size:contain;background-position:center;background-repeat:no-repeat;
-  background-color:rgba(255,255,255,.06);
-}
-.pc-itxt{display:table-cell;vertical-align:middle;padding-left:16px;}
-.pc-lbl{
-  font-size:13px;font-weight:700;letter-spacing:2px;color:$sub;
-  text-transform:uppercase;line-height:1;
-}
-.pc-val{
-  font-size:24px;font-weight:700;color:$accent;text-transform:uppercase;
-  line-height:1.2;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  max-width:400px;
-}
+html,body{width:1080px;height:1920px;background:#ffffff;overflow:hidden;}
+.pc{position:relative;width:1080px;height:1920px;overflow:hidden;background:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#111827;}
+.pc-left{position:absolute;top:0;left:0;width:560px;height:1920px;overflow:hidden;background:#071426;}
+.pc-stadium{position:absolute;top:0;left:0;width:560px;height:1920px;background-color:#071426;background-size:cover;background-position:left top;background-repeat:no-repeat;}
+.pc-player{position:absolute;left:0;bottom:0;width:560px;height:1460px;background-size:cover;background-position:center 18%;background-repeat:no-repeat;}
+.pc-fade{position:absolute;left:0;bottom:0;width:560px;height:340px;background:-webkit-linear-gradient(top,rgba(0,0,0,0),$ink);}
+.pc-logo{position:absolute;top:48px;left:180px;width:200px;height:200px;background:#fff7ea;border:8px solid $ink;text-align:center;}
+.pc-logo-img{width:184px;height:184px;background-size:contain;background-position:center;background-repeat:no-repeat;}
+.pc-logo-ph{line-height:184px;font-size:28px;font-weight:700;color:$ink;letter-spacing:1px;}
+.pc-team{position:absolute;left:36px;bottom:48px;width:488px;color:#fff7ea;}
+.pc-team-logo{width:120px;height:120px;margin-bottom:8px;background-size:contain;background-position:left center;background-repeat:no-repeat;}
+.pc-team-name{font-size:42px;font-weight:700;letter-spacing:1px;line-height:1;text-transform:uppercase;}
+.pc-tags{margin-top:10px;font-size:20px;font-weight:700;letter-spacing:1px;}
+.pc-right{position:absolute;top:0;left:560px;width:520px;height:1920px;background:#ffffff;padding:120px 36px 48px;}
+.pc-player-word{font-size:78px;font-weight:700;font-style:italic;line-height:.9;color:$ink;letter-spacing:1px;}
+.pc-reg-word{margin-top:4px;font-size:64px;font-weight:700;font-style:italic;line-height:.9;color:$bright;letter-spacing:1px;}
+.pc-tname{margin-top:22px;font-size:22px;font-weight:700;letter-spacing:1px;line-height:1.25;color:#334155;text-transform:uppercase;}
+.pc-season{margin-top:4px;font-size:20px;font-weight:700;letter-spacing:2px;color:#334155;text-transform:uppercase;}
+.pc-namebar{margin-top:28px;background:$ink;padding:16px 18px 18px;-webkit-transform:skewX(-10deg);}
+.pc-nf,.pc-nl{display:inline-block;-webkit-transform:skewX(10deg);font-weight:700;font-style:italic;line-height:1;letter-spacing:1px;text-transform:uppercase;}
+.pc-nf{font-size:48px;color:#fff7ea;margin-right:12px;}
+.pc-nl{font-size:40px;color:$surname;}
+.pc-rows{margin-top:36px;}
+.pc-row{display:table;width:100%;margin-top:22px;}
+.pc-tile{display:table-cell;width:72px;vertical-align:middle;}
+.pc-tile-box{width:56px;height:56px;border-radius:12px;background:$ink;color:#ffffff;text-align:center;line-height:56px;font-size:22px;font-weight:700;}
+.pc-meta{display:table-cell;vertical-align:middle;}
+.pc-lbl{font-size:16px;font-weight:700;letter-spacing:1px;color:#64748b;text-transform:uppercase;line-height:1;}
+.pc-val{margin-top:4px;font-size:28px;font-weight:700;color:#111827;line-height:1.15;}
 """
+
 
 
 def _get_default_player_photo(self):
@@ -1250,7 +1055,84 @@ class AuctionTeamPlayer(models.Model):
     #  per player via wkhtmltoimage and streams a ZIP to the browser.
     # ══════════════════════════════════════════════════════════════════
     _CARD_W = 1080
-    _CARD_H = 1920
+    _CARD_H = 1350
+    # Fixed portrait box. Every player photo is cropped to this size
+    # before it is placed, so the source photo cannot change the poster.
+    # 1080×1350 is the Instagram feed portrait (4:5). A 9:16 story is
+    # cropped in the feed and cuts off the heading.
+    _PHOTO_W = 580
+    _PHOTO_H = 1350
+    _PORTRAIT_CSS = None
+    _FACE_DET = None
+    _CARD_FONT_FILES = (
+        ('__FONT_BANGERS__', 'Bangers-Regular.ttf'),
+        ('__FONT_ANTON__', 'Anton-Regular.ttf'),
+        ('__FONT_OSWALD__', 'Oswald-Bold.ttf'),
+        ('__FONT_MONTSERRAT__', 'Montserrat-Bold.ttf'),
+    )
+    _BRAND_LOGO = None
+    # Projector / display_auction palette.
+    # ink = --gold (primary), bright = --amber (secondary), paper = --navy.
+    # Light editions (lemon, strawberry, standard) keep the light projector paper.
+    _CARD_PAINTS = {
+        'standard': {
+            'ink': '#1058B0', 'bright': '#F5A623', 'paper': '#FFFFFF',
+            'panel': '#F3F7FC', 'label': '#5B7BA6', 'value': '#1A202C',
+            'onbar': '#FFFFFF', 'surname': '#F5A623',
+        },
+        'butterscotch': {
+            'ink': '#F5C842', 'bright': '#FF9F1C', 'paper': '#070B14',
+            'panel': '#0C1120', 'label': '#C9B27A', 'value': '#FFFFFF',
+            'onbar': '#070B14', 'surname': '#3A2A08',
+        },
+        'cherry': {
+            'ink': '#E11D48', 'bright': '#FB7185', 'paper': '#070104',
+            'panel': '#12060A', 'label': '#E7A8B4', 'value': '#FFFFFF',
+            'onbar': '#1A0408', 'surname': '#FFE4E8',
+        },
+        'vanilla': {
+            'ink': '#C4B8A0', 'bright': '#8AA6D4', 'paper': '#0D1524',
+            'panel': '#142036', 'label': '#C4B8A0', 'value': '#FFFFFF',
+            'onbar': '#121820', 'surname': '#1A2744',
+        },
+        'pistah': {
+            'ink': '#6BBF4E', 'bright': '#A8E063', 'paper': '#060E08',
+            'panel': '#0B1A0E', 'label': '#A8D4A0', 'value': '#FFFFFF',
+            'onbar': '#061208', 'surname': '#0B3D12',
+        },
+        'blueberry': {
+            'ink': '#3B82F6', 'bright': '#93C5FD', 'paper': '#050A14',
+            'panel': '#0A1220', 'label': '#93C5FD', 'value': '#FFFFFF',
+            'onbar': '#050A14', 'surname': '#DBEAFE',
+        },
+        'blackberry': {
+            'ink': '#7629D9', 'bright': '#A77BFF', 'paper': '#101113',
+            'panel': '#222328', 'label': '#BFC3CC', 'value': '#FFFFFF',
+            'onbar': '#FFFFFF', 'surname': '#E4D4FF',
+        },
+        'lemon': {
+            'ink': '#C9A400', 'bright': '#8F7400', 'paper': '#FDF8EF',
+            'panel': '#FFFFFF', 'label': '#8F7400', 'value': '#1A1000',
+            'onbar': '#1A1608', 'surname': '#3A3008',
+        },
+        'strawberry': {
+            'ink': '#C2185B', 'bright': '#E91E63', 'paper': '#FFF0F5',
+            'panel': '#FFFFFF', 'label': '#880E4F', 'value': '#1A0A12',
+            'onbar': '#FFFFFF', 'surname': '#FCE4EC',
+        },
+    }
+    _CARD_EDITIONS = {
+        'butterscotch': 'Butterscotch Edition',
+        'cherry': 'Cherry Edition',
+        'vanilla': 'Vanilla Edition',
+        'pistah': 'Pistah Edition',
+        'blueberry': 'Blueberry Edition',
+        'blackberry': 'Blackberry Edition',
+        'lemon': 'Lemon Edition',
+        'strawberry': 'Strawberry Edition',
+        'standard': 'Standard Edition',
+    }
+    _CARD_LIGHT_THEMES = ('lemon', 'strawberry', 'standard')
 
     _FOOT_LABELS = {'left': 'Left Foot', 'right': 'Right Foot', 'both': 'Both Feet'}
 
@@ -1261,6 +1143,7 @@ class AuctionTeamPlayer(models.Model):
         'foot': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M8 3c1.6 0 2.5 1.4 2.7 3.2.2 1.8.5 3.3 1.4 4.6.8 1.2 1.9 2 1.9 3.9 0 2.4-1.8 4.3-4.3 4.3-2.2 0-3.7-1.4-3.7-3.6 0-1.3.3-2.2.3-3.6C6.3 12 5 9.4 5 6.8 5 4.6 6.2 3 8 3z"/></svg>',
         'age': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>',
         'category': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M20.5 12.5l-8 8-9-9V4h7.5z"/><circle cx="8" cy="8" r="1.4" fill="currentColor"/></svg>',
+        'user': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19.5c1.2-3.2 3.4-4.8 6.5-4.8s5.3 1.6 6.5 4.8"/></svg>',
         'location': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 21.5c4.5-4.8 7-8.3 7-11.5a7 7 0 10-14 0c0 3.2 2.5 6.7 7 11.5z"/><circle cx="12" cy="10" r="2.6"/></svg>',
         'nation': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.8 3.8 5.8 3.8 9s-1.3 6.2-3.8 9c-2.5-2.8-3.8-5.8-3.8-9S9.5 5.8 12 3z"/></svg>',
         'price': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M9 8h6M9 11h6M14 8c0 3-2 4-4.5 4L15 16.5"/></svg>',
@@ -1298,12 +1181,12 @@ class AuctionTeamPlayer(models.Model):
         return tempfile.mkdtemp(prefix='ac_cards_')
 
     def _card_stadium_uri(self, is_football):
-        """Return a data-URI for the sport-specific stadium background."""
-        key = 'football' if is_football else 'cricket'
+        """Night stadium with floodlights, used behind the player photo."""
+        key = 'night'
         cached = self._STADIUM_CACHE.get(key)
         if cached:
             return cached
-        fname = 'stadium_football.jpg' if is_football else 'stadium_cricket.jpg'
+        fname = 'top5_stadium_night.jpg'
         path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'img', fname)
         try:
             with open(path, 'rb') as fh:
@@ -1311,6 +1194,58 @@ class AuctionTeamPlayer(models.Model):
         except Exception:
             uri = ''
         self._STADIUM_CACHE[key] = uri
+        return uri
+
+    def _card_poster_wash_uri(self, tournament, paper='#FFFFFF'):
+        """Very light poster (or stadium) wash, tinted to the theme paper."""
+        from io import BytesIO
+        from PIL import Image
+        paper = (paper or '#FFFFFF').upper()
+        key = 'stadium'
+        binary = False
+        if tournament and tournament.poster_image:
+            key = 'poster-%s-%s' % (tournament.id, tournament.write_date or '')
+            binary = tournament.poster_image
+        cache_key = 'wash-%s-%s' % (key, paper)
+        cached = self._STADIUM_CACHE.get(cache_key)
+        if cached:
+            return cached
+        try:
+            if binary:
+                raw = base64.b64decode(binary)
+                im = Image.open(BytesIO(raw))
+            else:
+                path = os.path.join(
+                    os.path.dirname(os.path.dirname(__file__)),
+                    'static', 'img', 'top5_stadium_night.jpg')
+                im = Image.open(path)
+            im = im.convert('RGB')
+            tw, th = 1000, 2700
+            sw, sh = im.size
+            scale = max(tw / float(sw or 1), th / float(sh or 1))
+            nw, nh = max(1, int(sw * scale)), max(1, int(sh * scale))
+            try:
+                resample = Image.Resampling.LANCZOS
+            except AttributeError:
+                resample = Image.LANCZOS
+            im = im.resize((nw, nh), resample)
+            left = max(0, (nw - tw) // 2)
+            top = max(0, (nh - th) // 2)
+            im = im.crop((left, top, left + tw, top + th))
+            hex_paper = paper[1:] if paper.startswith('#') else paper
+            if len(hex_paper) != 6:
+                rgb = (255, 255, 255)
+            else:
+                rgb = tuple(int(hex_paper[i:i + 2], 16) for i in (0, 2, 4))
+            tint = Image.new('RGB', im.size, rgb)
+            im = Image.blend(tint, im, 0.16)
+            out = BytesIO()
+            im.save(out, format='JPEG', quality=72, optimize=True)
+            uri = 'data:image/jpeg;base64,' + base64.b64encode(out.getvalue()).decode('ascii')
+        except Exception:
+            _logger.debug('Player card poster wash failed', exc_info=True)
+            uri = ''
+        self._STADIUM_CACHE[cache_key] = uri
         return uri
 
     @staticmethod
@@ -1325,60 +1260,154 @@ class AuctionTeamPlayer(models.Model):
         num = player.sl_no or (player.id % 1000) or 0
         return '%s-%03d' % (letters, int(num))
 
-    @staticmethod
-    def _card_social_photo(binary_photo):
-        """Prepare a crisp source photo for Instagram Status cards.
+    def _card_portrait_css(self, paint):
+        """Poster CSS with fonts inlined and the tournament theme painted in."""
+        import string
+        raw = type(self)._PORTRAIT_CSS
+        if not raw:
+            base = os.path.dirname(os.path.dirname(__file__))
+            css_path = os.path.join(base, 'static', 'src', 'css', 'player_card_portrait.css')
+            with open(css_path, 'r', encoding='utf-8') as fh:
+                raw = fh.read()
+            font_dir = os.path.join(base, 'static', 'src', 'assets', 'fonts')
+            for token, fname in self._CARD_FONT_FILES:
+                with open(os.path.join(font_dir, fname), 'rb') as fh:
+                    uri = 'data:font/truetype;base64,' + base64.b64encode(fh.read()).decode('ascii')
+                raw = raw.replace(token, uri)
+            type(self)._PORTRAIT_CSS = raw
+        return string.Template(raw).safe_substitute(paint)
 
-        Keeps up to 1600×2200 (≈2× display) so 2× supersampled renders stay sharp.
-        JPEG quality 100, 4:4:4 chroma, clarity enhance.
+    def _card_brand_logo_uri(self, on_light=True):
+        """Navy wordmark on light paper, white wordmark on dark projector paper."""
+        cache = type(self)._BRAND_LOGO
+        if not isinstance(cache, dict):
+            cache = {}
+            type(self)._BRAND_LOGO = cache
+        key = 'light' if on_light else 'dark'
+        if key not in cache:
+            cache[key] = self.env['auction.point.unit'].sudo().report_brand_logo_data_uri(
+                dark=on_light) or ''
+        return cache[key]
+
+    def _detect_face_box(self, im):
+        """Return (x, y, w, h) of the largest face, or None."""
+        try:
+            import cv2
+            import numpy as np
+        except Exception:
+            return None
+        model = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            'data', 'face_detection_yunet_2023mar.onnx')
+        if not os.path.exists(model):
+            return None
+        width, height = im.size
+        scale = min(1.0, 800.0 / float(max(width, height) or 1))
+        arr = np.asarray(im.convert('RGB'), dtype=np.uint8)
+        bgr = cv2.cvtColor(arr, cv2.COLOR_RGB2BGR)
+        if scale < 1:
+            bgr = cv2.resize(bgr, (max(1, int(width * scale)), max(1, int(height * scale))))
+        sh, sw = bgr.shape[:2]
+        det = type(self)._FACE_DET
+        try:
+            if det is None:
+                det = cv2.FaceDetectorYN.create(model, '', (sw, sh), 0.55, 0.3, 5000)
+                type(self)._FACE_DET = det
+            else:
+                det.setInputSize((sw, sh))
+            _, faces = det.detect(bgr)
+        except Exception:
+            _logger.debug('Player card face detection failed', exc_info=True)
+            return None
+        if faces is None or len(faces) == 0:
+            return None
+        best = max(faces, key=lambda face: float(face[2]) * float(face[3]))
+        inv = 1.0 / scale
+        return (
+            float(best[0]) * inv, float(best[1]) * inv,
+            float(best[2]) * inv, float(best[3]) * inv,
+        )
+
+    def _card_portrait_crop(self, im):
+        """Crop to the fixed portrait box, keeping the face in the upper third.
+
+        The returned image is always the same pixel size, so a square, landscape,
+        close-up, or full-body source cannot change the poster.
         """
+        from PIL import Image
+        try:
+            resample = Image.Resampling.LANCZOS
+        except AttributeError:
+            resample = Image.LANCZOS
+        tw, th = self._PHOTO_W * 2, self._PHOTO_H * 2
+        ratio = tw / float(th)
+        im = im.convert('RGB')
+        iw, ih = im.size
+        if iw < 2 or ih < 2:
+            return im.resize((tw, th), resample)
+        face = self._detect_face_box(im)
+        if face:
+            x, y, fw, fh = face
+            ax = x + fw / 2.0
+            ay = y + fh / 2.0
+            want_w = max(fw * 3.2, iw * 0.42)
+        else:
+            ax = iw / 2.0
+            ay = ih * 0.28
+            want_w = iw * 0.94
+        want_h = want_w / ratio
+        if want_w > iw or want_h > ih:
+            if (iw / float(ih)) > ratio:
+                want_h = float(ih)
+                want_w = want_h * ratio
+            else:
+                want_w = float(iw)
+                want_h = want_w / ratio
+        left = ax - want_w / 2.0
+        top = ay - (0.30 * want_h)
+        left = min(max(0.0, left), max(0.0, iw - want_w))
+        top = min(max(0.0, top), max(0.0, ih - want_h))
+        box = (
+            int(round(left)), int(round(top)),
+            int(round(left + want_w)), int(round(top + want_h)),
+        )
+        box = (
+            max(0, min(box[0], iw - 1)),
+            max(0, min(box[1], ih - 1)),
+            max(1, min(box[2], iw)),
+            max(1, min(box[3], ih)),
+        )
+        cropped = im.crop(box)
+        if cropped.size != (tw, th):
+            cropped = cropped.resize((tw, th), resample)
+        return cropped
+
+    def _card_social_photo(self, binary_photo):
+        """Face-cropped portrait at the fixed card size, as base64 JPEG."""
         if not binary_photo:
             return binary_photo
         try:
             from io import BytesIO
-            from PIL import Image, ImageFilter, ImageOps, ImageEnhance
+            from PIL import Image, ImageOps, ImageEnhance, ImageFilter
             raw = base64.b64decode(binary_photo)
             im = Image.open(BytesIO(raw))
             try:
                 im = ImageOps.exif_transpose(im)
             except Exception:
                 pass
-            if im.mode not in ('RGB', 'L'):
-                im = im.convert('RGB')
-            elif im.mode == 'L':
-                im = im.convert('RGB')
-
-            try:
-                resample = Image.Resampling.LANCZOS
-            except AttributeError:
-                resample = Image.LANCZOS
-
-            # ~2× the on-card photo box so zoomed renders stay detailed
-            max_w, max_h = 1600, 2200
-            w, h = im.size
-
-            if w < 1200 or h < 1600:
-                scale = min(max_w / float(w), max_h / float(h), 2.0)
-                if scale > 1.05:
-                    im = im.resize((int(round(w * scale)), int(round(h * scale))), resample)
-                    w, h = im.size
-
-            if w > max_w or h > max_h:
-                im.thumbnail((max_w, max_h), resample)
-
-            im = ImageEnhance.Contrast(im).enhance(1.10)
-            im = ImageEnhance.Sharpness(im).enhance(1.35)
-            im = im.filter(ImageFilter.UnsharpMask(radius=1.8, percent=160, threshold=1))
-
+            im = self._card_portrait_crop(im)
+            im = ImageEnhance.Contrast(im).enhance(1.06)
+            im = ImageEnhance.Sharpness(im).enhance(1.2)
+            im = im.filter(ImageFilter.UnsharpMask(radius=1.2, percent=120, threshold=2))
             out = BytesIO()
-            # quality 100 + no chroma subsample = maximum JPEG fidelity
-            im.save(out, format='JPEG', quality=100, optimize=False, progressive=False,
-                    subsampling=0)
+            im.save(out, format='JPEG', quality=92, optimize=True, progressive=False,
+                    subsampling=0, dpi=(72, 72))
             return base64.b64encode(out.getvalue())
         except Exception:
-            _logger.debug('Social photo enhance failed; using original', exc_info=True)
+            _logger.debug('Social photo crop failed; using original', exc_info=True)
             try:
-                return image_process(binary_photo, size=(1600, 2200), quality=100)
+                return image_process(
+                    binary_photo, size=(self._PHOTO_W * 2, self._PHOTO_H * 2), quality=90)
             except Exception:
                 return binary_photo
 
@@ -1485,6 +1514,14 @@ class AuctionTeamPlayer(models.Model):
         }
         _st = _status_cfg.get(player.state or 'draft', _status_cfg['draft'])
         player_state = player.state or 'draft'
+        is_sold = player_state == 'sold'
+        status_word = 'SOLD' if is_sold else 'REGISTERED'
+        sold_points_label = ''
+        if is_sold and tournament and sold_points:
+            try:
+                sold_points_label = tournament.format_points(sold_points) or ''
+            except Exception:
+                sold_points_label = '{:,}'.format(int(sold_points))
         show_stamp = player_state in ('sold', 'unsold')
         # Corner chip only for draft / in-auction — sold/unsold use the photo stamp
         show_status = player_state in ('draft', 'auction')
@@ -1498,68 +1535,106 @@ class AuctionTeamPlayer(models.Model):
         else:
             stamp_sub = ''
 
-        # ── Instagram info grid: fixed 6 cells matching social mockup ──
+        # Sport profile plus this tournament's own answered attributes.
+        # Empty answers are omitted. No padded nationality, price, or team row.
         rows = []
+        seen_labels = set()
+        icon_for = {
+            'role': 'user',
+            'category': 'user',
+            'batting': 'bat',
+            'bowling': 'ball',
+            'position': 'position',
+            'preferred foot': 'foot',
+            'hand': 'foot',
+            'style': 'bat',
+            'level': 'category',
+            'age': 'age',
+            'location': 'location',
+            'height': 'height',
+            'jersey': 'jersey',
+            'number': 'jersey',
+            'club': 'team',
+        }
+
+        def add_row(label, value):
+            label = (label or '').strip()
+            if isinstance(value, int):
+                value = str(value) if value else ''
+            value = (value or '').strip()
+            key = label.lower()
+            if not label or not value or value in ('—', '-', 'None') or key in seen_labels:
+                return
+            seen_labels.add(key)
+            rows.append({
+                'mark': label[:1].upper(),
+                'label': label,
+                'value': value,
+                'icon': icon_for.get(key, 'category'),
+            })
+
         if is_football:
-            rows.append((
-                'position', 'Position',
-                (player.dominant_position_id.name if player.dominant_position_id else (player.role or '—'))
-            ))
-            rows.append((
-                'foot', 'Preferred Foot',
-                self._FOOT_LABELS.get(player.preferred_foot, (player.preferred_foot or '—').title())
-                if player.preferred_foot else '—'
-            ))
-            if player.use_other_attributes and player.other_attribute_ids:
-                attr = next((a for a in player.other_attribute_ids if (a.value or '').strip()), None)
-                rows.append(('category', (attr.label if attr else 'Category') or 'Category',
-                             (attr.value if attr else '—') or '—'))
-            elif player.height:
-                rows.append(('height', 'Height', player.height))
-            else:
-                rows.append(('nation', 'Nationality', 'India'))
+            add_row('Position', player.dominant_position_id.name if player.dominant_position_id else player.role)
+            if player.preferred_foot:
+                add_row('Preferred Foot', self._FOOT_LABELS.get(player.preferred_foot, player.preferred_foot.title()))
+            add_row('Height', player.height)
         elif is_badminton:
-            cat_map = dict(player._fields['badminton_category'].selection or [])
-            style_map = dict(player._fields['badminton_style'].selection or [])
-            level_map = dict(player._fields['skill_level'].selection or [])
-            hand_map = {'left': 'Left', 'right': 'Right', 'both': 'Both'}
-            rows.append((
-                'category', 'Category',
-                cat_map.get(player.badminton_category) or player.role or '—',
-            ))
-            rows.append((
-                'foot', 'Hand',
-                hand_map.get(player.preferred_foot, '—') if player.preferred_foot else '—',
-            ))
-            rows.append((
-                'bat', 'Style',
-                style_map.get(player.badminton_style) or '—',
-            ))
-            rows.append((
-                'ball', 'Level',
-                level_map.get(player.skill_level) or '—',
-            ))
+            labels = player.badminton_card_labels()
+            add_row('Category', labels.get('category'))
+            add_row('Hand', labels.get('hand'))
+            add_row('Style', labels.get('style'))
+            add_row('Level', labels.get('level'))
         elif is_kabaddi:
-            rows.append(('role', 'Role', player.kabaddi_role_label() or '—'))
-            rows.append(('team', 'Club', player.current_team or '—'))
+            add_row('Role', player.kabaddi_role_label())
+            add_row('Club', player.current_team)
         else:
-            bat = (player.batting_style or '').strip() or '—'
-            bowl = (player.bowling_style or '').strip() or '—'
-            rows.append(('bat', 'Batting Style', bat))
-            rows.append(('ball', 'Bowling Style', bowl))
-            rows.append(('nation', 'Nationality', 'India'))
+            add_row('Category', player.role)
+            add_row('Batting', player.batting_style)
+            add_row('Bowling', player.bowling_style)
+        if player.age:
+            add_row('Age', '%d' % player.age)
+        location = ((player.address or '').splitlines() or [''])[0].strip()
+        if len(location) > 32:
+            location = location[:31].rstrip() + '…'
+        add_row('Location', location)
+        if tournament and tournament.enable_jersey_section:
+            add_row('Jersey', player.jersy_size)
+            add_row('Number', player.jersy_number)
+        try:
+            for extra in player.extra_attributes_payload(display_only=False):
+                add_row(extra.get('label'), extra.get('value'))
+        except Exception:
+            pass
+        rows = rows[:8]
 
-        if not is_kabaddi:
-            rows.append(('age', 'Age', ('%d Years' % player.age) if player.age else '—'))
-        rows.append(('price', price_label, price_display))
-        team_name = (team.name if team else (player.current_team or '')) or 'Unassigned'
-        rows.append(('team', 'Team', team_name))
+        def _hash_tag(text):
+            words = re.findall(r'[A-Za-z0-9]+', text or '')
+            if not words:
+                return ''
+            if len(words) >= 2:
+                return '#' + ''.join(word[0] for word in words[:4]).upper()
+            return '#' + words[0][:14].upper()
 
-        # Pad to exactly 6 cells for the 3×2 table
-        while len(rows) < 6:
-            rows.append(('category', '—', '—'))
-        rows = [{'icon': i, 'label': l, 'value': v} for i, l, v in rows[:6]]
-        row_pairs = [rows[0:2], rows[2:4], rows[4:6]]
+        tag_line = '  '.join(tag for tag in (
+            _hash_tag(team.name if team else ''),
+            _hash_tag(tournament.name if tournament else ''),
+        ) if tag)
+        description = (tournament.description or '').strip() if tournament else ''
+        if len(description) > 90:
+            description = description[:89].rstrip() + '…'
+        season_line = description
+        date_line = ''
+        venue_line = ''
+        if tournament:
+            date_line = (tournament.format_player_card_dates() or '').strip()
+            if not date_line and tournament.auction_date:
+                date_line = tournament.auction_date.strftime('%d %b %Y')
+            venue_line = (tournament.get_venue_label() or (tournament.auction_venue or '')).strip()
+        team_name = (team.name if team and team.name else '') or ''
+        full_name = (name_first + ' ' + name_last).strip()
+        name_px = 54
+        if len(full_name) > 16:
+            name_px = max(32, 54 - (len(full_name) - 16) * 2)
 
         def uri(binary_val):
             try:
@@ -1570,25 +1645,9 @@ class AuctionTeamPlayer(models.Model):
         # High-quality photo for Instagram Status (avoid print-sized photo_card)
         social_photo = self._card_social_photo(player.photo) or player.photo or player.photo_card
 
-        pal['line'] = 'rgba(255,255,255,0.12)'
-        pal['glow'] = (pal['accent'] or '#e9c15a') + '55'
-        import string
         from markupsafe import Markup
-        css = string.Template(_CARD_CSS).safe_substitute(pal)
-
-        try:
-            _fp = os.path.join(
-                os.path.dirname(os.path.dirname(__file__)),
-                'static', 'src', 'assets', 'fonts', 'Atlanta-College.ttf'
-            )
-            with open(_fp, 'rb') as _ff:
-                _font_b64 = base64.b64encode(_ff.read()).decode('ascii')
-            css = css.replace(
-                "url('/auction_module/static/src/assets/fonts/Atlanta-College.ttf') format('truetype')",
-                "url('data:font/truetype;base64," + _font_b64 + "') format('truetype')"
-            )
-        except Exception:
-            pass
+        paint = dict(self._CARD_PAINTS.get(theme, self._CARD_PAINTS['vanilla']))
+        css = self._card_portrait_css(paint)
 
         icons_safe = {k: Markup(v) for k, v in self._CARD_ICONS.items()}
 
@@ -1603,14 +1662,27 @@ class AuctionTeamPlayer(models.Model):
             'photo_uri': uri(social_photo),
             'team_logo_uri': uri(team.logo) if team else '',
             'tournament_logo_uri': uri(tournament.logo) if tournament else '',
+            'poster_wash_uri': self._card_poster_wash_uri(tournament, paint['paper']),
+            'edition_line': self._CARD_EDITIONS.get(theme, ''),
             'stadium_uri': self._card_stadium_uri(is_football),
             'brand_name': brand_name,
             'name_first': name_first,
             'name_last': name_last,
+            'name_px': name_px,
             'card_id': card_id,
             'badge': badge,
             'rows': rows,
-            'row_pairs': row_pairs,
+            'row_pairs': [],
+            'season_line': season_line,
+            'date_line': date_line,
+            'venue_line': venue_line,
+            'brand_logo_uri': self._card_brand_logo_uri(
+                on_light=theme in self._CARD_LIGHT_THEMES),
+            'tag_line': tag_line,
+            'team_name': team_name,
+            'is_sold': is_sold,
+            'status_word': status_word,
+            'sold_points_label': sold_points_label,
             'player_state': player_state,
             'sold_points': sold_points,
             'price_label': price_label,
@@ -1637,8 +1709,7 @@ class AuctionTeamPlayer(models.Model):
         """Render card at 2× via CSS scale, then LANCZOS-downscale to 1080×1920."""
         import subprocess
         import uuid as _uuid
-        from io import BytesIO
-        from PIL import Image, ImageFilter, ImageEnhance
+        from PIL import Image
 
         base = os.path.join(workdir, _uuid.uuid4().hex)
         hpath, opath = base + '.html', base + '.png'
@@ -1649,13 +1720,13 @@ class AuctionTeamPlayer(models.Model):
         big_w, big_h = self._CARD_W * scale, self._CARD_H * scale
         html_ss = html
         html_ss = html_ss.replace(
-            'html,body{width:1080px;height:1920px;',
+            'html,body{width:%dpx;height:%dpx;' % (self._CARD_W, self._CARD_H),
             'html,body{width:%dpx;height:%dpx;' % (big_w, big_h),
         )
         html_ss = html_ss.replace(
-            'position:relative;width:1080px;height:1920px;overflow:hidden;',
-            'position:relative;width:1080px;height:1920px;overflow:hidden;'
-            '-webkit-transform:scale(%d);-webkit-transform-origin:0 0;' % scale,
+            'position:relative;width:%dpx;height:%dpx;overflow:hidden;' % (self._CARD_W, self._CARD_H),
+            'position:relative;width:%dpx;height:%dpx;overflow:hidden;'
+            '-webkit-transform:scale(%d);-webkit-transform-origin:0 0;' % (self._CARD_W, self._CARD_H, scale),
         )
 
         with open(hpath, 'w', encoding='utf-8') as fh:
@@ -1677,7 +1748,7 @@ class AuctionTeamPlayer(models.Model):
             return None
 
         if not (os.path.exists(opath) and os.path.getsize(opath) > 0):
-            # Fallback: 1× high-quality JPEG
+            # Fallback: 1× high-quality JPEG, then the same 1080×1920 finish.
             opath_jpg = base + '.jpg'
             with open(hpath, 'w', encoding='utf-8') as fh:
                 fh.write(html)
@@ -1698,28 +1769,53 @@ class AuctionTeamPlayer(models.Model):
                 _logger.warning('wkhtmltoimage produced no image (rc=%s). stderr: %s',
                                 proc.returncode, (proc.stderr or b'')[-800:].decode('utf-8', 'replace'))
                 return None
-            with open(opath_jpg, 'rb') as fh:
-                return fh.read()
+            opath = opath_jpg
 
         try:
-            try:
-                resample = Image.Resampling.LANCZOS
-            except AttributeError:
-                resample = Image.LANCZOS
-            im = Image.open(opath).convert('RGB')
-            target = (self._CARD_W, self._CARD_H)
-            if im.size != target:
-                im = im.resize(target, resample)
-            im = ImageEnhance.Sharpness(im).enhance(1.15)
-            im = im.filter(ImageFilter.UnsharpMask(radius=1.1, percent=130, threshold=2))
-            out = BytesIO()
-            im.save(out, format='JPEG', quality=100, optimize=False, progressive=False,
-                    subsampling=0)
-            return out.getvalue()
+            im = Image.open(opath)
+            return self._card_finish_instagram_jpeg(im)
         except Exception:
             _logger.exception('Failed to downscale supersampled player card')
-            with open(opath, 'rb') as fh:
-                return fh.read()
+            return None
+
+    def _card_finish_instagram_jpeg(self, im):
+        """Crop to 9:16 and save a 1080×1920 JPEG at 72 DPI.
+
+        A missing DPI tag makes some apps treat the file as 1 pixel per inch
+        and report a print height of 1920 inches.
+        """
+        from io import BytesIO
+        from PIL import Image, ImageEnhance, ImageFilter
+
+        try:
+            resample = Image.Resampling.LANCZOS
+        except AttributeError:
+            resample = Image.LANCZOS
+        im = im.convert('RGB')
+        tw, th = self._CARD_W, self._CARD_H
+        w, h = im.size
+        if w and h:
+            target_ratio = tw / float(th)
+            ratio = w / float(h)
+            if abs(ratio - target_ratio) > 0.01:
+                if ratio > target_ratio:
+                    new_w = int(round(h * target_ratio))
+                    left = max(0, (w - new_w) // 2)
+                    im = im.crop((left, 0, left + new_w, h))
+                else:
+                    new_h = int(round(w / target_ratio))
+                    top = max(0, (h - new_h) // 2)
+                    im = im.crop((0, top, w, top + new_h))
+        if im.size != (tw, th):
+            im = im.resize((tw, th), resample)
+        im = ImageEnhance.Sharpness(im).enhance(1.15)
+        im = im.filter(ImageFilter.UnsharpMask(radius=1.1, percent=130, threshold=2))
+        out = BytesIO()
+        im.save(
+            out, format='JPEG', quality=92, optimize=True, progressive=False,
+            subsampling=0, dpi=(72, 72),
+        )
+        return out.getvalue()
 
     def render_instagram_status_jpg(self):
         """Render one player's vertical Instagram Status card (1080×1920 JPG).

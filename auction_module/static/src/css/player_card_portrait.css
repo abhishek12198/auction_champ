@@ -1,0 +1,53 @@
+@font-face{font-family:'Bangers';src:url(__FONT_BANGERS__) format('truetype');font-weight:400;font-style:normal;}
+@font-face{font-family:'Anton';src:url(__FONT_ANTON__) format('truetype');font-weight:400;font-style:normal;}
+@font-face{font-family:'Oswald';src:url(__FONT_OSWALD__) format('truetype');font-weight:700;font-style:normal;}
+@font-face{font-family:'Montserrat';src:url(__FONT_MONTSERRAT__) format('truetype');font-weight:700;font-style:normal;}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact;}
+html,body{width:1080px;height:1350px;background:$paper;overflow:hidden;}
+.pc{position:relative;width:1080px;height:1350px;overflow:hidden;background:$paper;font-family:Montserrat,Arial,Helvetica,sans-serif;color:$value;}
+
+.pc-left{position:absolute;top:0;left:0;width:580px;height:1350px;overflow:hidden;background:#06295B;}
+.pc-stadium{position:absolute;top:0;left:0;width:580px;height:1350px;background-color:#06295B;background-size:cover;background-position:left center;background-repeat:no-repeat;}
+.pc-photo{
+  position:absolute;left:0;top:0;width:580px;height:1350px;overflow:hidden;
+  background-color:transparent;background-size:cover;background-position:center top;background-repeat:no-repeat;
+}
+
+.pc-right{position:absolute;top:0;left:580px;width:500px;height:1350px;background:$paper;padding:36px 28px 88px;overflow:hidden;}
+.pc-wash{position:absolute;top:0;left:0;width:500px;height:1350px;background-size:cover;background-position:center top;background-repeat:no-repeat;}
+.pc-brand,.pc-facts,.pc-player-word,.pc-reg-word,.pc-namebar,.pc-rows,.pc-sold{position:relative;}
+.pc-brand{display:table;width:100%;margin:0 0 12px 0;}
+.pc-brand-mark{display:table-cell;width:112px;vertical-align:top;}
+.pc-logo{width:104px;height:104px;background-color:transparent;background-size:contain;background-position:center top;background-repeat:no-repeat;}
+.pc-brand-copy{display:table-cell;vertical-align:top;padding-left:12px;}
+.pc-tname{font-family:Oswald,Arial,sans-serif;font-size:28px;font-weight:700;letter-spacing:0.4px;line-height:1.12;color:$value;text-transform:uppercase;}
+.pc-edition{font-family:Oswald,Arial,sans-serif;font-size:15px;font-weight:700;letter-spacing:0.6px;line-height:1.1;color:$ink;text-transform:uppercase;text-align:left;vertical-align:middle;}
+.pc-powered{position:absolute;left:28px;bottom:22px;width:444px;display:table;}
+.pc-edition,.pc-powered-label,.pc-ac-logo{display:table-cell;vertical-align:middle;}
+.pc-powered-label{width:92px;padding-right:8px;font-family:Oswald,Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:1.2px;color:$label;line-height:1;text-align:right;}
+.pc-ac-logo{width:148px;height:24px;background-size:contain;background-position:right center;background-repeat:no-repeat;}
+.pc-season{margin-top:6px;font-family:Oswald,Arial,sans-serif;font-size:22px;font-weight:700;letter-spacing:0.4px;line-height:1.2;color:$label;text-transform:uppercase;}
+.pc-facts{margin:8px 0 0 0;}
+.pc-fact{font-family:Oswald,Arial,sans-serif;font-size:22px;font-weight:700;letter-spacing:0.4px;line-height:1.25;color:$label;text-transform:uppercase;}
+.pc-player-word{margin-top:48px;font-family:Bangers,Arial,sans-serif;font-size:92px;line-height:0.82;color:$ink;letter-spacing:1px;}
+.pc-reg-word{margin-top:2px;font-family:Bangers,Arial,sans-serif;font-size:74px;line-height:0.82;color:$bright;letter-spacing:1px;}
+.pc-namebar{margin-top:16px;background:$ink;padding:14px 16px 16px;-webkit-transform:skewX(-8deg);}
+.pc-nf,.pc-nl{display:inline-block;-webkit-transform:skewX(8deg);font-family:Anton,Arial,sans-serif;font-weight:400;line-height:1;letter-spacing:1px;text-transform:uppercase;}
+.pc-nf{color:$onbar;margin-right:10px;}
+.pc-nl{color:$surname;}
+.pc-rows{margin-top:16px;}
+.pc-row{display:table;width:100%;margin-top:10px;background:$panel;border-radius:18px;}
+.pc-ico{display:table-cell;width:78px;vertical-align:middle;text-align:center;padding:10px 0 10px 10px;}
+.pc-ico-box{width:50px;height:50px;border-radius:14px;background:$ink;color:$onbar;text-align:center;line-height:50px;}
+.pc-ico-box svg{width:26px;height:26px;vertical-align:middle;}
+.pc-meta{display:table-cell;vertical-align:middle;padding:10px 14px 10px 8px;}
+.pc-lbl{font-family:Oswald,Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;color:$label;text-transform:uppercase;line-height:1;}
+.pc-val{margin-top:3px;font-family:Montserrat,Arial,sans-serif;font-size:22px;font-weight:700;color:$value;line-height:1.15;text-transform:uppercase;}
+.pc-sold{margin-top:22px;background:transparent;padding:0;}
+.pc-sold-row{display:table;width:100%;}
+.pc-sold-mark{display:table-cell;width:118px;vertical-align:middle;}
+.pc-sold-logo{width:104px;height:104px;background-color:transparent;background-size:contain;background-position:center;background-repeat:no-repeat;}
+.pc-sold-copy{display:table-cell;vertical-align:middle;padding-left:12px;}
+.pc-sold-team{font-family:Anton,Arial,sans-serif;font-size:40px;letter-spacing:0.5px;color:$ink;line-height:1;text-transform:uppercase;}
+.pc-sold-pts{margin-top:8px;font-family:Montserrat,Arial,sans-serif;font-size:32px;font-weight:700;color:$ink;line-height:1;}
