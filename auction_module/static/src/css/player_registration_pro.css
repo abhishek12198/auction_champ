@@ -2085,10 +2085,19 @@ body.reg-page.reg-page--steps[data-reg-theme] .reg-header-tool strong {
     line-height: 1;
     min-width: 0;
 }
+.reg-page--steps .reg-lead-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    width: 100%;
+    margin: 0 0 8px;
+}
+.reg-page--steps .reg-roster-round { display: none; }
 .reg-page--steps .reg-page-label--lead {
     display: block;
     width: auto;
-    margin: 0 0 8px;
+    margin: 0;
     padding: 0;
     border: 0;
     background: transparent;
@@ -2245,7 +2254,48 @@ body.reg-page.reg-page--steps[data-reg-theme] .reg-header-tool strong {
         margin-top: 4px;
         white-space: normal;
     }
-    .reg-page--steps .reg-page-label--lead { text-align: left; }
+    .reg-page--steps .reg-lead-row {
+        justify-content: space-between;
+        width: 100%;
+        margin: 10px 0 0;
+    }
+    .reg-page--steps .reg-page-label--lead {
+        text-align: left;
+        margin: 0;
+        min-width: 0;
+    }
+    .reg-page--steps .reg-roster-round {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1px;
+        flex: 0 0 auto;
+        width: 56px;
+        height: 56px;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: var(--da-gold);
+        color: var(--da-on);
+        font-family: 'Barlow Condensed', 'Oswald', sans-serif;
+        line-height: 1;
+        cursor: pointer;
+    }
+    .reg-page--steps .reg-roster-round span {
+        font-size: .42rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        line-height: 1;
+    }
+    .reg-page--steps .reg-roster-round strong {
+        font-size: 1.05rem;
+        font-weight: 700;
+        letter-spacing: 0;
+        line-height: 1;
+    }
     .reg-page--steps .reg-header-facts {
         display: flex;
         flex-direction: column;

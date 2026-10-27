@@ -20,7 +20,7 @@
 
     <!-- Registration form CSS -->
     <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.981"/>
-    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration_pro.css?v=1.5.994"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration_pro.css?v=1.5.996"/>
 
     <!-- ── Per-theme CSS custom properties ────────────────────── -->
     <style>
@@ -229,7 +229,18 @@
                 </div>
                 </t>
                 <t t-if="not locked_tier and not hide_reg_form">
-                    <span class="reg-page-label reg-page-label--lead">Player Registration</span>
+                    <div class="reg-lead-row">
+                        <span class="reg-page-label reg-page-label--lead">Player Registration</span>
+                        <t t-if="show_roster_cta">
+                            <button type="button"
+                                    class="reg-roster-round"
+                                    data-reg-roster-open="1"
+                                    t-att-aria-label="'%s registered' % (roster_count or 0)">
+                                <span>Registered</span>
+                                <strong t-esc="roster_count or 0"/>
+                            </button>
+                        </t>
+                    </div>
                     <a href="#reg-form-start" class="reg-goto-form">Go to Registration form</a>
                 </t>
             </div>
