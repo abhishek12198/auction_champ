@@ -1209,10 +1209,18 @@
   window.acCommitPlayerOnStage = function(playerId) {
     playerId = parseInt(playerId || '0', 10);
     if (!playerId) return Promise.resolve();
-    // New player on stage → Sell / Unsold are available again
-    window.acUnlockAuctionActions();
+    if (typeof window.acLiveBidStageMoved === 'function') {
+      window.acLiveBidStageMoved(playerId);
+    }
     return smConsoleCall('auction.team.player', 'action_set_on_stage', [[playerId]])
-      .catch(function() { /* projector will catch up on next real navigation */ });
+      .then(function() {
+        window.acUnlockAuctionActions();
+        if (typeof window.acRefreshLiveBidPad === 'function') window.acRefreshLiveBidPad();
+      })
+      .catch(function() {
+        window.acUnlockAuctionActions();
+        if (typeof window.acRefreshLiveBidPad === 'function') window.acRefreshLiveBidPad();
+      });
   };
 
   /* ── Open / Close ──────────────────────────────────────────── */
@@ -1315,29 +1323,6 @@
     return '';
   }
 
-  function smWaitForImg(img, timeoutMs) {
-    return new Promise(function(resolve) {
-      if (!img) { resolve(); return; }
-      if (img.complete && img.naturalWidth > 0) { resolve(); return; }
-      var done = false;
-      var finish = function() {
-        if (done) return;
-        done = true;
-        img.removeEventListener('load', finish);
-        img.removeEventListener('error', finish);
-        resolve();
-      };
-      img.addEventListener('load', finish);
-      img.addEventListener('error', finish);
-      setTimeout(finish, timeoutMs || 2500);
-    });
-  }
-
-  // Hide sold UI only after the next stage photo has painted (or timed out).
-  function smHideSoldUiAfterStageReady() {
-    return smWaitForImg(document.getElementById('loadImage'), 2500).then(smHideSoldUi);
-  }
-
   function smQueueIsEmptyDoc(doc) {
     if (!doc || !doc.body) return true;
     if (doc.body.getAttribute('data-auction-queue') === 'empty') return true;
@@ -1382,7 +1367,7 @@
     // previously sold face never flashes under an empty / loading stage.
     if (typeof changeImage === 'function') {
       Promise.resolve(changeImage(true))
-        .then(smHideSoldUiAfterStageReady)
+        .then(smHideSoldUi)
         .catch(function() {
           smHideSoldUi();
           window.location.reload();
@@ -1807,7 +1792,7 @@
           if (typeof window.acCommitPlayerOnStage === 'function') {
             window.acCommitPlayerOnStage(newId);
           }
-          smHideSoldUiAfterStageReady();
+          smHideSoldUi();
           return;
         }
       }
@@ -1819,7 +1804,7 @@
               smGoEmptyQueueScreen();
               return;
             }
-            return smHideSoldUiAfterStageReady();
+            smHideSoldUi();
           })
           .catch(function() {
             smHideSoldUi();

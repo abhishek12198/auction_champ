@@ -37,7 +37,13 @@
     }
     function dataUrl() {
         var id = tournamentId();
-        return DATA_URL + (id ? ('?tournament_id=' + encodeURIComponent(id)) : '');
+        var url = DATA_URL + (id ? ('?tournament_id=' + encodeURIComponent(id)) : '');
+        return url + (url.indexOf('?') >= 0 ? '&' : '?') + '_ts=' + Date.now();
+    }
+    function stagePlayerId() {
+        var raw = document.body && document.body.getAttribute('data-player-id');
+        var n = parseInt(raw || '0', 10);
+        return n > 0 ? n : 0;
     }
     function remaining(team) {
         return team.remaining_points != null ? team.remaining_points : team.remaining_points;
@@ -330,7 +336,22 @@
             current_bid_team: heroResultHold.team
         };
     }
+    function clearStaleSoldReason() {
+        var grid = gridEl();
+        if (!grid) return;
+        var nodes = grid.querySelectorAll('.ac-livebid-off');
+        for (var i = 0; i < nodes.length; i++) {
+            var text = (nodes[i].textContent || '').toLowerCase();
+            if (text.indexOf('already sold') !== -1 || text.indexOf('unsold') !== -1) {
+                nodes[i].textContent = '';
+            }
+        }
+    }
     function mergeHeroHold(player) {
+        var stageId = stagePlayerId();
+        if (heroResultHold && stageId && Number(heroResultHold.playerId) !== stageId) {
+            heroResultHold = null;
+        }
         if (player && player.state === 'auction') {
             if (heroResultHold && Number(heroResultHold.playerId) === Number(player.id)) {
                 return playerFromHold();
@@ -361,11 +382,32 @@
         if (!player && heroResultHold) return playerFromHold();
         return player;
     }
+    var pollSoonTimer = null;
+    function pollSoon() {
+        clearTimeout(pollSoonTimer);
+        pollSoonTimer = setTimeout(function () {
+            pollSoonTimer = null;
+            poll();
+        }, 60);
+    }
     function applyProjectorSnapshot(payload) {
         if (!payload) return;
         var p = payload.player || payload.current_player || null;
         var soldInfo = payload.sold_info || null;
         var stamp = payload.stamp_state || (p && p.state) || '';
+        var stageId = stagePlayerId();
+        var snapSold = !!(p && (stamp === 'sold' || stamp === 'unsold' || p.state === 'sold' || p.state === 'unsold'));
+        if (snapSold && stageId && Number(p.id) !== stageId) {
+            if (!heroResultHold || Number(heroResultHold.playerId) !== stageId) {
+                heroResultHold = null;
+                if (playerCache && Number(playerCache.id) !== stageId) playerCache = null;
+                lastHeroKey = '';
+                paintBidHero(null, '', 0);
+            }
+            clearStaleSoldReason();
+            pollSoon();
+            return;
+        }
         if (p && (stamp === 'sold' || stamp === 'unsold' || p.state === 'sold' || p.state === 'unsold')) {
             var kind = (stamp === 'unsold' || p.state === 'unsold') ? 'unsold' : 'sold';
             var team = p.current_bid_team || null;
@@ -393,7 +435,9 @@
             return;
         }
         if (p && p.state === 'auction') {
-            if (!heroResultHold || Number(p.id) !== Number(heroResultHold.playerId)) {
+            var leavingSale = !playerCache || playerCache.state !== 'auction' || Number(playerCache.id) !== Number(p.id);
+            if (stageId && Number(p.id) === stageId) heroResultHold = null;
+            else if (!heroResultHold || Number(p.id) !== Number(heroResultHold.playerId)) {
                 heroResultHold = null;
             }
             if (heroResultHold) {
@@ -407,6 +451,7 @@
                 ? Number(live.sold_points || live.current_bid || 0)
                 : Number((live && live.current_bid) || 0);
             paintBidHero(liveLead, liveLead ? logoUrl(liveLead) : '', liveAmt);
+            if (leavingSale) pollSoon();
         }
     }
 
@@ -439,7 +484,7 @@
                 ? 'No bids were placed. This player can be brought back to the auction later.'
                 : 'Waiting for opening bid';
         }
-        if (teamEl) teamEl.textContent = on ? ((lead && lead.name) || 'Sold to') : '';
+        if (teamEl) teamEl.textContent = (on && lead && lead.name) ? lead.name : '';
         if (logo) {
             if (on && logoSrc) {
                 logo.src = logoSrc;
@@ -474,6 +519,17 @@
         lastHeroKey = '';
         paintBidHero(null, '', 0);
     };
+    window.acLiveBidStageMoved = function (playerId) {
+        playerId = parseInt(playerId || '0', 10) || 0;
+        if (!heroResultHold || Number(heroResultHold.playerId) !== playerId) {
+            heroResultHold = null;
+            if (playerCache && Number(playerCache.id) !== playerId) playerCache = null;
+            lastHeroKey = '';
+            paintBidHero(null, '', 0);
+        }
+        clearStaleSoldReason();
+    };
+    window.acRefreshLiveBidPad = function () { poll(); };
     function isSquadFull(team) {
         var left = squadSlotsLeft(team);
         if (left != null && left <= 0) return true;
@@ -487,6 +543,17 @@
         var meta = metaEl();
         if (!pad || !grid) return;
         var player = data.current_player || null;
+        var stageId = stagePlayerId();
+        if (player && stageId && Number(player.id) !== stageId
+                && (player.state === 'sold' || player.state === 'unsold')) {
+            if (!heroResultHold || Number(heroResultHold.playerId) !== stageId) {
+                heroResultHold = null;
+                lastHeroKey = '';
+                paintBidHero(null, '', 0);
+            }
+            clearStaleSoldReason();
+            return;
+        }
         var teams = (data.teams || []).filter(function (t) { return !isSquadFull(t); });
         teams.sort(function (a, b) {
             return String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' });
