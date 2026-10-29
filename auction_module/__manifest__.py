@@ -121,6 +121,7 @@
         'views/auction_bid_summary_unavailable.xml',
         'views/auction_squad_poster_template.xml',
         'views/top_bid_poster_template.xml',
+        'views/auction_rules_poster_template.xml',
         'views/auction_show_balance_tracker.xml',
         'views/auction_show_balance_template1.xml',
         'views/auction_show_balance_template1_pistah.xml',

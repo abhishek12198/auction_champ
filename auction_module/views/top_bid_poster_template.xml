@@ -7,186 +7,267 @@
 <style>
   <t t-raw="font_css"/>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-print-color-adjust: exact; }
-  html, body { width: 1920px; height: 1080px; margin: 0; padding: 0; overflow: hidden; background: #06101f; }
-  .sheet { position: relative; width: 1920px; height: 1080px; overflow: hidden; color: #fff; font-family: 'TBLabel', 'Montserrat', Arial, sans-serif; }
-  .bg { position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; }
+  html, body { width: 1080px; height: 1350px; margin: 0; padding: 0; overflow: hidden; background: #06101f; }
+  .sheet { position: relative; width: 1080px; height: 1350px; overflow: hidden; color: #fff; font-family: 'TBLabel', 'Montserrat', Arial, sans-serif; }
+  .bg { position: absolute; top: 0; left: 0; width: 1080px; height: 1350px; }
   .veil {
-    position: absolute; top: 0; left: 0; width: 1920px; height: 1080px;
-    background-image: -webkit-linear-gradient(top, rgba(4,12,32,.18) 0%, rgba(4,12,32,.42) 22%, rgba(3,8,22,.78) 48%, rgba(3,8,20,.94) 100%);
+    position: absolute; top: 0; left: 0; width: 1080px; height: 1350px;
+    background-image: -webkit-linear-gradient(top, rgba(4,10,24,.28) 0%, rgba(4,10,24,.55) 18%, rgba(3,8,20,.88) 42%, rgba(3,8,18,.96) 100%);
   }
-  .brand { position: absolute; top: 26px; left: 44px; z-index: 6; }
-  .brand-logo { width: 248px; height: 38px; display: block; }
-  .tmark {
-    position: absolute; top: 4px; right: 28px; z-index: 6;
-    width: 228px; height: 228px;
-    background: transparent;
-  }
-  .tmark img { display: block; width: 228px; height: 228px; }
+  .brand { position: absolute; top: 28px; left: 40px; z-index: 6; }
+  .brand-logo { width: 210px; height: 32px; display: block; }
+  .tmark { position: absolute; top: 18px; right: 36px; z-index: 6; width: 88px; height: 88px; }
+  .tmark img { display: block; width: 88px; height: 88px; }
   .tmark-ph {
-    width: 228px; height: 228px;
+    width: 88px; height: 88px;
     font-family: 'TBTeko', Impact, sans-serif;
-    font-size: 72px; line-height: 228px; text-align: center; color: #fff;
+    font-size: 34px; line-height: 88px; text-align: center; color: #fff;
   }
-  .mast { position: absolute; top: 10px; left: 310px; width: 1240px; text-align: center; z-index: 4; }
   .tourn {
+    position: absolute; top: 114px; left: 140px; width: 780px; height: 40px; z-index: 4;
     font-family: 'TBName', 'Oswald', sans-serif;
-    color: #fff; line-height: 1; letter-spacing: 0.5px;
+    color: #fff; line-height: 40px; letter-spacing: 0.4px; text-align: center;
     white-space: nowrap; overflow: hidden;
-    text-shadow: 0 3px 12px rgba(0,0,0,.5);
+    text-shadow: 0 3px 12px rgba(0,0,0,.55);
   }
   .tdesc {
-    width: 980px; margin: 6px auto 0;
+    position: absolute; top: 156px; left: 160px; width: 760px; height: 24px; z-index: 4;
+    overflow: hidden; text-align: center;
     font-family: 'TBLabel', 'Montserrat', sans-serif;
-    color: #d7e2f2; letter-spacing: 0.4px; line-height: 1.25;
-    max-height: 48px; overflow: hidden;
+    color: #d7e2f2; letter-spacing: 0.3px; line-height: 24px;
   }
   .top5 {
-    margin-top: 2px;
+    position: absolute; top: 184px; left: 40px; width: 1000px; height: 52px; z-index: 4;
+    text-align: center;
     font-family: 'TBTeko', Impact, sans-serif;
-    font-size: 76px; line-height: 0.78; letter-spacing: 1px; color: #ffe08a;
-    text-shadow: 0 2px 0 #fff6cf, 0 4px 0 #e2b034, 0 7px 0 #a87812, 0 10px 16px rgba(0,0,0,.4);
+    font-size: 48px; line-height: 48px; letter-spacing: 1px; color: #ffe08a;
+    text-shadow: 0 2px 0 #fff6cf, 0 4px 0 #e2b034, 0 7px 0 #a87812;
   }
-  .bids {
-    margin-top: -4px;
+  .top5 .bids {
     font-family: 'TBDisplay', Impact, sans-serif;
-    font-size: 50px; line-height: 0.9; letter-spacing: 6px; color: #f5f8fd;
-    text-shadow: 0 2px 0 #ffffff, 0 4px 0 #c5d0e0, 0 8px 14px rgba(0,0,0,.4);
+    font-size: 22px; letter-spacing: 6px; color: #f5f8fd;
+    padding-left: 12px;
+    text-shadow: none;
   }
-  .card {
-    position: absolute; top: 262px; width: 340px; height: 786px;
-    border: 2px solid #e8c25a;
-    border-radius: 18px;
-    overflow: hidden;
-    background: #0b1220;
-    box-shadow: 0 0 0 1px rgba(255,214,120,.25), 0 0 22px rgba(232,185,50,.28), 0 16px 28px rgba(0,0,0,.45);
+  .hero {
+    position: absolute; top: 250px; left: 36px; width: 1008px; height: 508px;
+    border: 3px solid #e8c25a; border-radius: 18px; overflow: hidden;
+    background: #0c1422;
+    box-shadow: 0 0 0 1px rgba(255,214,120,.25), 0 18px 32px rgba(0,0,0,.45);
   }
-  .photo { position: absolute; top: 0; left: 0; width: 340px; height: 430px; background: #10192c; }
-  .photo img { display: block; width: 340px; height: 430px; }
-  .ph {
-    width: 340px; height: 430px;
+  .hero-photo { position: absolute; top: 0; left: 0; width: 470px; height: 508px; background: #10192c; overflow: hidden; }
+  .hero-photo img { display: block; width: 470px; height: 508px; }
+  .hero-ph {
+    width: 470px; height: 508px;
     font-family: 'TBTeko', Impact, sans-serif;
-    font-size: 92px; line-height: 430px; text-align: center; color: rgba(255,255,255,.35);
+    font-size: 120px; line-height: 508px; text-align: center; color: rgba(255,255,255,.4);
     background-image: -webkit-linear-gradient(135deg, #16315f 0%, #0c1424 100%);
   }
-  .wash { position: absolute; left: 0; top: 0; width: 340px; height: 430px; }
-  .badge {
-    position: absolute; top: 14px; left: 14px; width: 64px; height: 64px;
-    border-radius: 14px; border: 2px solid rgba(255,255,255,.35);
+  .hero-panel { position: absolute; top: 0; left: 470px; width: 532px; height: 508px; background: #0c1422; }
+  .hero-rank {
+    position: absolute; top: 28px; left: 28px; width: 78px; height: 78px;
+    border-radius: 16px;
     font-family: 'TBTeko', Impact, sans-serif;
-    font-size: 46px; line-height: 60px; text-align: center;
-    box-shadow: 0 6px 14px rgba(0,0,0,.35);
+    font-size: 52px; line-height: 78px; text-align: center;
   }
-  .who { position: absolute; top: 430px; left: 0; width: 340px; height: 78px; background: #0c1422; padding: 10px 16px 0; }
-  .pname {
-    font-family: 'TBName', 'Oswald', sans-serif;
-    color: #fff; letter-spacing: 0.4px; line-height: 1;
-    white-space: nowrap; overflow: hidden;
-  }
-  .role {
-    margin-top: 6px;
+  .hero-kicker {
+    position: absolute; top: 36px; left: 122px; width: 350px;
     font-family: 'TBLabel', 'Montserrat', sans-serif;
-    font-size: 12px; letter-spacing: 1.4px; color: #9eb0c9;
+    font-size: 14px; letter-spacing: 2.6px; color: #e8c25a; line-height: 1.2;
+  }
+  .hero-kicker span { display: block; color: #f5f8fd; letter-spacing: 3px; font-size: 18px; margin-top: 4px; }
+  .hero-name {
+    position: absolute; top: 140px; left: 28px; width: 452px; height: 120px; overflow: hidden;
+    font-family: 'TBName', 'Oswald', sans-serif;
+    color: #fff; letter-spacing: 0.4px; line-height: 0.95;
+    white-space: nowrap;
+  }
+  .hero-role {
+    position: absolute; top: 268px; left: 28px; width: 452px;
+    font-family: 'TBLabel', 'Montserrat', sans-serif;
+    font-size: 16px; letter-spacing: 2px; color: #9eb0c9;
     white-space: nowrap; overflow: hidden;
   }
-  .teamrow {
-    position: absolute; top: 508px; left: 0; width: 340px; height: 132px;
-    display: table; background: #0c1422;
-    border-top: 1px solid rgba(255,255,255,.08);
-  }
-  .tlogo, .tcopy { display: table-cell; vertical-align: middle; }
-  .tlogo { width: 108px; padding-left: 18px; }
-  .tlogo img { display: block; width: 74px; height: 74px; }
-  .tph {
-    width: 74px; height: 74px; border-radius: 37px;
+  .hero-team { position: absolute; top: 312px; left: 28px; width: 452px; height: 72px; }
+  .hero-team img { position: absolute; top: 0; left: 0; width: 64px; height: 64px; }
+  .hero-tph {
+    position: absolute; top: 0; left: 0; width: 64px; height: 64px; border-radius: 32px;
     background: #182236; border: 1px solid rgba(255,255,255,.2);
-    color: #fff; font-family: 'TBLabel', 'Montserrat', sans-serif;
-    font-size: 18px; line-height: 72px; text-align: center;
+    color: #fff; font-family: 'TBLabel', sans-serif; font-size: 16px; line-height: 64px; text-align: center;
   }
-  .tname {
+  .hero-tname {
+    position: absolute; top: 16px; left: 80px; width: 360px;
     font-family: 'TBTeam', 'Montserrat', sans-serif;
-    color: #fff; letter-spacing: 0.3px; line-height: 1.15;
-    padding-right: 14px;
+    color: #fff; line-height: 1.15;
     white-space: nowrap; overflow: hidden;
   }
-  .price {
-    position: absolute; top: 640px; left: 0; width: 340px; height: 146px;
-    text-align: center;
+  .hero-price {
+    position: absolute; left: 0; bottom: 0; width: 532px; height: 118px; text-align: center;
     background-image: -webkit-linear-gradient(top, #fff3c4 0%, #f6d36a 28%, #e2b034 62%, #c49216 100%);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
   }
   .soldfor {
     padding-top: 14px;
     font-family: 'TBLabel', 'Montserrat', sans-serif;
-    font-size: 13px; letter-spacing: 2.4px; color: #6d5214;
+    font-size: 13px; letter-spacing: 2.6px; color: #6d5214;
   }
-  .amount {
-    margin-top: 4px;
+  .hero-amount {
+    margin-top: 2px;
     font-family: 'TBPrice', 'Anton', sans-serif;
-    color: #1a1404; letter-spacing: 0.5px; line-height: 1;
+    color: #1a1404; letter-spacing: 0.4px; line-height: 1;
     white-space: nowrap; overflow: hidden;
+  }
+  .row {
+    position: absolute; left: 36px; width: 1008px; height: 112px;
+    background: #0c1526;
+    border: 2px solid rgba(232,194,90,.72);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .row-rank {
+    position: absolute; left: 12px; top: 22px; width: 68px; height: 68px;
+    border-radius: 12px;
+    font-family: 'TBTeko', Impact, sans-serif;
+    font-size: 40px; line-height: 68px; text-align: center;
+  }
+  .row-photo {
+    position: absolute; left: 92px; top: 8px; width: 96px; height: 96px;
+    background: #10192c; overflow: hidden; border-radius: 10px;
+  }
+  .row-photo img { display: block; width: 96px; height: 96px; }
+  .row-ph {
+    width: 96px; height: 96px;
+    font-family: 'TBTeko', Impact, sans-serif;
+    font-size: 32px; line-height: 96px; text-align: center; color: rgba(255,255,255,.45);
+    background: #16315f;
+  }
+  .row-name {
+    position: absolute; left: 204px; top: 12px; width: 500px; height: 34px; overflow: hidden;
+    font-family: 'TBName', 'Oswald', sans-serif;
+    color: #fff; letter-spacing: 0.3px; line-height: 34px;
+    white-space: nowrap;
+  }
+  .row-role {
+    position: absolute; left: 204px; top: 48px; width: 500px;
+    font-family: 'TBLabel', 'Montserrat', sans-serif;
+    font-size: 13px; letter-spacing: 1.4px; color: #9eb0c9;
+    white-space: nowrap; overflow: hidden;
+  }
+  .row-team { position: absolute; left: 204px; top: 72px; width: 500px; height: 28px; }
+  .row-team img { position: absolute; top: 0; left: 0; width: 26px; height: 26px; }
+  .row-tph {
+    position: absolute; top: 0; left: 0; width: 26px; height: 26px; border-radius: 13px;
+    background: #182236; color: #fff; font-size: 10px; line-height: 26px; text-align: center;
+  }
+  .row-tname {
+    position: absolute; top: 4px; left: 34px; width: 450px;
+    font-family: 'TBTeam', 'Montserrat', sans-serif;
+    color: #e7eef8; line-height: 20px;
+    white-space: nowrap; overflow: hidden;
+  }
+  .row-pts {
+    position: absolute; right: 18px; top: 22px; width: 250px; text-align: right;
+  }
+  .row-sold {
+    font-family: 'TBLabel', 'Montserrat', sans-serif;
+    font-size: 11px; letter-spacing: 1.8px; color: #e8c25a;
+  }
+  .row-amount {
+    font-family: 'TBPrice', 'Anton', sans-serif;
+    color: #ffe08a; line-height: 1; margin-top: 2px;
+    white-space: nowrap; overflow: hidden;
+  }
+  .foot {
+    position: absolute; left: 40px; top: 1292px; width: 1000px; text-align: center;
+    font-family: 'TBLabel', 'Montserrat', sans-serif;
+    font-size: 14px; letter-spacing: 1.6px; color: rgba(255,255,255,.55);
   }
 </style>
 </head>
 <body>
 <div class="sheet">
-  <img class="bg" t-att-src="stadium_uri" width="1920" height="1080" alt=""/>
+  <img class="bg" t-att-src="stadium_uri" width="1080" height="1350" alt=""/>
   <div class="veil"></div>
 
   <div class="brand"><t t-raw="brand_logo_svg"/></div>
 
   <div class="tmark">
     <t t-if="tournament_logo_uri">
-      <img t-att-src="tournament_logo_uri" width="228" height="228" alt=""/>
+      <img t-att-src="tournament_logo_uri" width="108" height="108" alt=""/>
     </t>
     <t t-else="">
       <div class="tmark-ph"><t t-esc="tournament_initials"/></div>
     </t>
   </div>
 
-  <div class="mast">
-    <div class="tourn" t-att-style="title_style"><t t-esc="tournament_name"/></div>
-    <t t-if="description">
-      <div class="tdesc" t-att-style="desc_style"><t t-esc="description"/></div>
-    </t>
-    <div class="top5">TOP 5</div>
-    <div class="bids">BIDS</div>
-  </div>
+  <div class="tourn" t-att-style="title_style"><t t-esc="tournament_name"/></div>
+  <t t-if="description">
+    <div class="tdesc" t-att-style="desc_style"><t t-esc="description"/></div>
+  </t>
+  <div class="top5">TOP 5 <span class="bids">BIDS</span></div>
 
   <t t-foreach="cards" t-as="card">
-    <div class="card" t-att-style="card['box_style']">
-      <div class="photo">
-        <t t-if="card['photo_uri']">
-          <img t-att-src="card['photo_uri']" width="340" height="430" alt=""/>
-        </t>
-        <t t-else="">
-          <div class="ph"><t t-esc="card['initials']"/></div>
-        </t>
-        <div class="wash" t-att-style="card['wash_style']"></div>
-        <div class="badge" t-att-style="card['badge_style']"><t t-esc="card['rank']"/></div>
-      </div>
-      <div class="who">
-        <div class="pname" t-att-style="card['name_style']"><t t-esc="card['player_name']"/></div>
-        <div class="role"><t t-esc="card['role']"/></div>
-      </div>
-      <div class="teamrow">
-        <div class="tlogo">
-          <t t-if="card['team_logo_uri']">
-            <img t-att-src="card['team_logo_uri']" width="74" height="74" alt=""/>
+    <t t-if="card['is_hero']">
+      <div class="hero">
+        <div class="hero-photo">
+          <t t-if="card['photo_uri']">
+            <img t-att-src="card['photo_uri']" width="470" height="508" alt=""/>
           </t>
           <t t-else="">
-            <div class="tph"><t t-esc="card['team_initials']"/></div>
+            <div class="hero-ph"><t t-esc="card['initials']"/></div>
           </t>
         </div>
-        <div class="tcopy">
-          <div class="tname" t-att-style="card['team_style']"><t t-esc="card['team_name']"/></div>
+        <div class="hero-panel">
+          <div class="hero-rank" t-att-style="card['badge_style']"><t t-esc="card['rank']"/></div>
+          <div class="hero-kicker">RANK ONE<span>BIGGEST BUY</span></div>
+          <div class="hero-name" t-att-style="card['name_style']"><t t-esc="card['player_name']"/></div>
+          <div class="hero-role"><t t-esc="card['role']"/></div>
+          <div class="hero-team">
+            <t t-if="card['team_logo_uri']">
+              <img t-att-src="card['team_logo_uri']" width="64" height="64" alt=""/>
+            </t>
+            <t t-else="">
+              <div class="hero-tph"><t t-esc="card['team_initials']"/></div>
+            </t>
+            <div class="hero-tname" t-att-style="card['team_style']"><t t-esc="card['team_name']"/></div>
+          </div>
+          <div class="hero-price">
+            <div class="soldfor">SOLD FOR</div>
+            <div class="hero-amount" t-att-style="card['amount_style']"><t t-esc="card['points_display']"/></div>
+          </div>
         </div>
       </div>
-      <div class="price">
-        <div class="soldfor">SOLD FOR</div>
-        <div class="amount" t-att-style="card['amount_style']"><t t-esc="card['points_display']"/></div>
+    </t>
+    <t t-else="">
+      <div class="row" t-att-style="card['row_style']">
+        <div class="row-rank" t-att-style="card['badge_style']"><t t-esc="card['rank']"/></div>
+        <div class="row-photo">
+          <t t-if="card['photo_uri']">
+            <img t-att-src="card['photo_uri']" width="96" height="96" alt=""/>
+          </t>
+          <t t-else="">
+            <div class="row-ph"><t t-esc="card['initials']"/></div>
+          </t>
+        </div>
+        <div class="row-name" t-att-style="card['name_style']"><t t-esc="card['player_name']"/></div>
+        <div class="row-role"><t t-esc="card['role']"/></div>
+        <div class="row-team">
+          <t t-if="card['team_logo_uri']">
+            <img t-att-src="card['team_logo_uri']" width="26" height="26" alt=""/>
+          </t>
+          <t t-else="">
+            <div class="row-tph"><t t-esc="card['team_initials']"/></div>
+          </t>
+          <div class="row-tname" t-att-style="card['team_style']"><t t-esc="card['team_name']"/></div>
+        </div>
+        <div class="row-pts">
+          <div class="row-sold">SOLD FOR</div>
+          <div class="row-amount" t-att-style="card['amount_style']"><t t-esc="card['points_display']"/></div>
+        </div>
       </div>
-    </div>
+    </t>
   </t>
+
+  <div class="foot">WWW.AUCTIONCHAMP.LIVE</div>
 </div>
 </body>
 </html>

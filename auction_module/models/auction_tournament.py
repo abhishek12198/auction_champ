@@ -2160,7 +2160,12 @@ class AuctionTournament(models.Model):
                 break
         return picked
 
-    def _top_bid_cover_uri(self, binary_val, box_w, box_h):
+    def _top_bid_face_crop(self, binary_val, box_w, box_h):
+        """Face-centred JPEG that is exactly box_w × box_h.
+
+        The poster slot is this size, so the face cannot slide or get a
+        different crop from one player to the next.
+        """
         if not binary_val:
             return ''
         try:
@@ -2177,24 +2182,74 @@ class AuctionTournament(models.Model):
                 resample = Image.Resampling.LANCZOS
             except AttributeError:
                 resample = Image.LANCZOS
-            sw, sh = im.size
-            scale = max(box_w / float(sw or 1), box_h / float(sh or 1))
-            nw = max(box_w, int(round(sw * scale)))
-            nh = max(box_h, int(round(sh * scale)))
-            im = im.resize((nw, nh), resample)
-            left = max(0, (nw - box_w) // 2)
-            # Player photos are usually full-length. Keep the face, not the middle.
-            top = max(0, int(round((nh - box_h) * 0.08)))
-            im = im.crop((left, top, left + box_w, top + box_h))
+            iw, ih = im.size
+            if iw < 2 or ih < 2:
+                im = im.resize((box_w, box_h), resample)
+            else:
+                ratio = float(box_w) / float(box_h)
+                face = self.env['auction.team.player']._detect_face_box(im)
+                if face:
+                    x, y, fw, fh = face
+                    ax = x + fw / 2.0
+                    ay = y + fh / 2.0
+                    # Hair above, chin and a little shoulder below.
+                    want_h = max(fh / 0.34, ih * 0.42)
+                    want_w = want_h * ratio
+                    if want_w < fw / 0.46:
+                        want_w = fw / 0.46
+                        want_h = want_w / ratio
+                else:
+                    ax = iw / 2.0
+                    ay = ih * (0.30 if ih > iw else 0.50)
+                    if (iw / float(ih)) >= ratio:
+                        want_h = ih * 0.96
+                        want_w = want_h * ratio
+                    else:
+                        want_w = iw * 0.96
+                        want_h = want_w / ratio
+                if want_w > iw or want_h > ih:
+                    if (iw / float(ih)) > ratio:
+                        want_h = float(ih)
+                        want_w = want_h * ratio
+                    else:
+                        want_w = float(iw)
+                        want_h = want_w / ratio
+                left = ax - want_w / 2.0
+                top = ay - (0.34 * want_h)
+                left = min(max(0.0, left), max(0.0, iw - want_w))
+                top = min(max(0.0, top), max(0.0, ih - want_h))
+                if face:
+                    x, y, fw, fh = face
+                    pad_x, pad_y = fw * 0.12, fh * 0.16
+                    fx0, fy0 = x - pad_x, y - pad_y
+                    fx1, fy1 = x + fw + pad_x, y + fh + fh * 0.28
+                    if left > fx0:
+                        left = fx0
+                    if top > fy0:
+                        top = fy0
+                    if left + want_w < fx1:
+                        left = fx1 - want_w
+                    if top + want_h < fy1:
+                        top = fy1 - want_h
+                    left = min(max(0.0, left), max(0.0, iw - want_w))
+                    top = min(max(0.0, top), max(0.0, ih - want_h))
+                box = (
+                    int(round(left)), int(round(top)),
+                    int(round(left + want_w)), int(round(top + want_h)),
+                )
+                box = (
+                    max(0, min(box[0], iw - 1)),
+                    max(0, min(box[1], ih - 1)),
+                    max(1, min(box[2], iw)),
+                    max(1, min(box[3], ih)),
+                )
+                im = im.crop(box).resize((box_w, box_h), resample)
             out = BytesIO()
-            im.save(out, format='JPEG', quality=90)
+            im.save(out, format='JPEG', quality=92, optimize=True)
             return 'data:image/jpeg;base64,' + base64.b64encode(out.getvalue()).decode('ascii')
         except Exception:
             _logger.exception('Top bid photo crop failed')
-            try:
-                return image_data_uri(binary_val) if binary_val else ''
-            except Exception:
-                return ''
+            return ''
 
     def _top_bid_logo_uri(self, binary_val):
         try:
@@ -2359,7 +2414,7 @@ class AuctionTournament(models.Model):
             )
         return ''.join(css)
 
-    def _top_bid_html_to_jpg(self, html, workdir, binary):
+    def _top_bid_html_to_jpg(self, html, workdir, binary, width=1080, height=1350):
         import os
         import subprocess
         import uuid
@@ -2370,7 +2425,7 @@ class AuctionTournament(models.Model):
             fh.write(html)
         cmd = [
             binary, '--format', 'jpg', '--quality', '92',
-            '--width', '1920', '--height', '1080',
+            '--width', str(int(width)), '--height', str(int(height)),
             '--disable-smart-width',
             '--enable-local-file-access',
             '--load-error-handling', 'ignore',
@@ -2391,10 +2446,38 @@ class AuctionTournament(models.Model):
             )
             return None
         with open(opath, 'rb') as fh:
-            return fh.read()
+            raw = fh.read()
+        return self._top_bid_finish_jpeg(raw, width, height)
+
+    def _top_bid_finish_jpeg(self, raw, tw=1080, th=1350):
+        """Crop and stamp an exact JPEG size at 72 DPI."""
+        from io import BytesIO
+        from PIL import Image
+        try:
+            resample = Image.Resampling.LANCZOS
+        except AttributeError:
+            resample = Image.LANCZOS
+        im = Image.open(BytesIO(raw)).convert('RGB')
+        tw, th = int(tw), int(th)
+        w, h = im.size
+        if w and h and abs((w / float(h)) - (tw / float(th))) > 0.02:
+            target = tw / float(th)
+            if (w / float(h)) > target:
+                new_w = int(round(h * target))
+                left = max(0, (w - new_w) // 2)
+                im = im.crop((left, 0, left + new_w, h))
+            else:
+                new_h = int(round(w / target))
+                top = max(0, (h - new_h) // 2)
+                im = im.crop((0, top, w, top + new_h))
+        if im.size != (tw, th):
+            im = im.resize((tw, th), resample)
+        out = BytesIO()
+        im.save(out, format='JPEG', quality=92, optimize=True, dpi=(72, 72))
+        return out.getvalue()
 
     def action_download_top_bid_posters(self):
-        """Download one sheet of the five highest sold bids."""
+        """Download one Instagram sheet (1080×1350) of the five highest sold bids."""
         import shutil
         from datetime import datetime
 
@@ -2413,48 +2496,48 @@ class AuctionTournament(models.Model):
                 'required to render the posters.'
             ))
 
-        # badge background, badge ink, photo wash
+        # Rank badge fill and ink. Rank 1 is the hero portrait.
         rank_meta = {
-            1: ('#f6c445', '#1a1404', 'rgba(16,64,170,.62)'),
-            2: ('#e8eef6', '#1a1404', 'rgba(176,28,42,.55)'),
-            3: ('#e0a06a', '#1a1404', 'rgba(98,36,176,.55)'),
-            4: ('#1a2436', '#f4f7fb', 'rgba(212,160,32,.50)'),
-            5: ('#1a2436', '#f4f7fb', 'rgba(186,36,120,.52)'),
+            1: ('#f6c445', '#1a1404'),
+            2: ('#e8eef6', '#1a1404'),
+            3: ('#e0a06a', '#1a1404'),
+            4: ('#1c283c', '#f4f7fb'),
+            5: ('#1c283c', '#f4f7fb'),
         }
-        card_w = 340
-        gap = 18
-        count = len(lines)
-        row_w = count * card_w + max(count - 1, 0) * gap
-        origin = (1920 - row_w) // 2
         cards = []
         for index, line in enumerate(lines, start=1):
             player = line.player_id
             team = line.auction_id.team_id or player.assigned_team_id
-            badge, ink, wash = rank_meta.get(index, rank_meta[5])
-            photo = Player._card_social_photo(player.photo) or player.photo
+            badge, ink = rank_meta.get(index, rank_meta[5])
+            photo = player.photo
             player_name = (player.name or 'Player').upper()
             team_name = ((team.name if team else '') or 'Team').upper()
             points_display = self.format_points(line.points or 0)
-            left = origin + (index - 1) * (card_w + gap)
+            is_hero = index == 1
+            if is_hero:
+                photo_box = (940, 1016)
+            else:
+                photo_box = (256, 256)
             cards.append({
                 'rank': index,
-                'box_style': 'left:%dpx;' % left,
+                'is_hero': is_hero,
+                'row_style': 'top:%dpx;' % (774 + (index - 2) * 122),
                 'badge_style': 'background:%s;color:%s;' % (badge, ink),
-                'wash_style': (
-                    'background-image:-webkit-linear-gradient(top, rgba(0,0,0,0) 46%%, %s 100%%);'
-                    % wash
-                ),
                 'player_name': player_name,
-                'name_style': 'font-size:%dpx;' % self._top_bid_name_size(player_name),
+                'name_style': 'font-size:%dpx;' % (
+                    self._top_bid_name_size(player_name) + (16 if is_hero else 0)
+                ),
                 'initials': self._top_bid_initials(player.name),
                 'role': self._top_bid_role(player),
-                'photo_uri': self._top_bid_cover_uri(photo, 680, 860),
+                'photo_uri': self._top_bid_face_crop(photo, photo_box[0], photo_box[1]),
                 'team_name': team_name,
                 'team_style': 'font-size:%dpx;' % self._top_bid_team_size(team_name),
-                'team_logo_uri': self._top_bid_logo_box(team.logo) if team else '',
+                'team_logo_uri': self._top_bid_logo_box(team.logo, 160 if is_hero else 64) if team else '',
                 'team_initials': self._top_bid_initials(team.name if team else 'Team'),
                 'points_display': points_display,
-                'amount_style': 'font-size:%dpx;' % self._top_bid_points_size(points_display),
+                'amount_style': 'font-size:%dpx;' % max(
+                    22, self._top_bid_points_size(points_display) + (6 if is_hero else -6)
+                ),
             })
 
         tournament_name = self.name or 'Tournament'
@@ -2467,9 +2550,9 @@ class AuctionTournament(models.Model):
                 'stadium_uri': self._top_bid_stadium_uri(),
                 'brand_logo_svg': self._top_bid_brand_svg(),
                 'tournament_name': tournament_name,
-                'title_style': 'font-size:%dpx;' % self._top_bid_title_size(tournament_name),
+                'title_style': 'font-size:%dpx;' % min(34, self._top_bid_title_size(tournament_name)),
                 'description': description,
-                'desc_style': 'font-size:%dpx;' % self._top_bid_desc_size(description),
+                'desc_style': 'font-size:%dpx;' % min(16, self._top_bid_desc_size(description)),
                 'tournament_logo_uri': self._top_bid_logo_box(self.logo, 400),
                 'tournament_initials': self._top_bid_initials(tournament_name),
                 'cards': cards,
@@ -2484,6 +2567,271 @@ class AuctionTournament(models.Model):
 
         tname = re.sub(r'[^A-Za-z0-9]+', '_', self.name or 'Tournament').strip('_') or 'Tournament'
         filename = 'Top_5_Bids_%s_%s.jpg' % (
+            tname, datetime.now().strftime('%Y%m%d_%H%M%S'))
+        attachment = self.env['ir.attachment'].sudo().create({
+            'name': filename,
+            'type': 'binary',
+            'datas': base64.b64encode(jpg),
+            'mimetype': 'image/jpeg',
+            'res_model': 'auction.tournament',
+            'res_id': self.id,
+        })
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/web/content/%s?download=true' % attachment.id,
+            'target': 'self',
+        }
+
+    def _rules_poster_auction(self):
+        """The shared rule sheet. Every team is given the same rules."""
+        self.ensure_one()
+        return self.env['auction.auction'].sudo().search([
+            ('tournament_id', '=', self.id),
+            ('active', '=', True),
+        ], order='id', limit=1)
+
+    @staticmethod
+    def _rules_poster_num(amount):
+        try:
+            num = int(amount or 0)
+        except (TypeError, ValueError):
+            num = 0
+        return '{:,}'.format(num)
+
+    def _rules_poster_theme(self, theme=None):
+        """Colours for the rules poster, matching the showcase theme pair."""
+        theme = (theme or self.player_display_template or 'standard').strip().lower()
+        # bg is the paper/navy, accent is the theme gold. Light themes use dark ink.
+        themes = {
+            'butterscotch': {
+                'bg_top': '#3A2E14', 'bg_mid': '#16120C', 'bg_bot': '#070B14',
+                'title': '#FFFFFF', 'title_shadow': '#070B14', 'season': '#F5C842',
+                'pill': '#C8960C', 'pill_text': '#070B14',
+                'header_from': '#C8960C', 'header_to': '#F5C842', 'header_text': '#070B14',
+                'stat_from': '#FFF8DC', 'stat_to': '#F5C842', 'stat_text': '#070B14',
+                'bullet': '#C8960C', 'ink': '#1A1408',
+            },
+            'cherry': {
+                'bg_top': '#4A1020', 'bg_mid': '#1A060C', 'bg_bot': '#070104',
+                'title': '#FFFFFF', 'title_shadow': '#070104', 'season': '#FB7185',
+                'pill': '#9F1239', 'pill_text': '#FFFFFF',
+                'header_from': '#9F1239', 'header_to': '#E11D48', 'header_text': '#FFFFFF',
+                'stat_from': '#FFE4E8', 'stat_to': '#FB7185', 'stat_text': '#1A0408',
+                'bullet': '#E11D48', 'ink': '#1A0408',
+            },
+            'vanilla': {
+                'bg_top': '#2A3A56', 'bg_mid': '#142036', 'bg_bot': '#0D1524',
+                'title': '#FFFFFF', 'title_shadow': '#0D1524', 'season': '#C4B8A0',
+                'pill': '#8A7D62', 'pill_text': '#121820',
+                'header_from': '#8A7D62', 'header_to': '#C4B8A0', 'header_text': '#121820',
+                'stat_from': '#F4EFE4', 'stat_to': '#C4B8A0', 'stat_text': '#121820',
+                'bullet': '#8AA6D4', 'ink': '#121820',
+            },
+            'pistah': {
+                'bg_top': '#1A4022', 'bg_mid': '#0B1A0E', 'bg_bot': '#060E08',
+                'title': '#FFFFFF', 'title_shadow': '#060E08', 'season': '#A8E063',
+                'pill': '#2E7D32', 'pill_text': '#F4FFF0',
+                'header_from': '#2E7D32', 'header_to': '#6BBF4E', 'header_text': '#061208',
+                'stat_from': '#E8F5E9', 'stat_to': '#A8E063', 'stat_text': '#061208',
+                'bullet': '#2E7D32', 'ink': '#061208',
+            },
+            'blueberry': {
+                'bg_top': '#16356E', 'bg_mid': '#0A1220', 'bg_bot': '#050A14',
+                'title': '#FFFFFF', 'title_shadow': '#050A14', 'season': '#93C5FD',
+                'pill': '#1E3A8A', 'pill_text': '#FFFFFF',
+                'header_from': '#1E3A8A', 'header_to': '#3B82F6', 'header_text': '#FFFFFF',
+                'stat_from': '#DBEAFE', 'stat_to': '#93C5FD', 'stat_text': '#050A14',
+                'bullet': '#3B82F6', 'ink': '#050A14',
+            },
+            'blackberry': {
+                'bg_top': '#3A2460', 'bg_mid': '#1A1424', 'bg_bot': '#101113',
+                'title': '#FFFFFF', 'title_shadow': '#101113', 'season': '#A77BFF',
+                'pill': '#4C1D95', 'pill_text': '#FFFFFF',
+                'header_from': '#4C1D95', 'header_to': '#7629D9', 'header_text': '#FFFFFF',
+                'stat_from': '#EDE9FE', 'stat_to': '#C4B5FD', 'stat_text': '#101113',
+                'bullet': '#7629D9', 'ink': '#101113',
+            },
+            'lemon': {
+                'bg_top': '#FFF8E4', 'bg_mid': '#FBF3D8', 'bg_bot': '#F4ECD0',
+                'title': '#1A1608', 'title_shadow': '#E6D7A2', 'season': '#8F7400',
+                'pill': '#C9A400', 'pill_text': '#1A1608',
+                'header_from': '#8F7400', 'header_to': '#C9A400', 'header_text': '#1A1608',
+                'stat_from': '#FFF8DC', 'stat_to': '#E6C200', 'stat_text': '#1A1608',
+                'bullet': '#8F7400', 'ink': '#1A1608',
+            },
+            'strawberry': {
+                'bg_top': '#FFF5F8', 'bg_mid': '#FFE4EE', 'bg_bot': '#F8D0E0',
+                'title': '#1A0A12', 'title_shadow': '#F8BBD0', 'season': '#C2185B',
+                'pill': '#880E4F', 'pill_text': '#FFFFFF',
+                'header_from': '#880E4F', 'header_to': '#C2185B', 'header_text': '#FFFFFF',
+                'stat_from': '#FCE4EC', 'stat_to': '#F48FB1', 'stat_text': '#1A0A12',
+                'bullet': '#C2185B', 'ink': '#1A0A12',
+            },
+            'standard': {
+                'bg_top': '#F7FAFE', 'bg_mid': '#E8F1FB', 'bg_bot': '#D6E6F8',
+                'title': '#1A202C', 'title_shadow': '#D6E6F8', 'season': '#1058B0',
+                'pill': '#F5A623', 'pill_text': '#1A202C',
+                'header_from': '#0D47A1', 'header_to': '#1058B0', 'header_text': '#FFFFFF',
+                'stat_from': '#FFE8A3', 'stat_to': '#F5A623', 'stat_text': '#1A202C',
+                'bullet': '#F5A623', 'ink': '#1A202C',
+            },
+        }
+        return dict(themes.get(theme) or themes['standard'])
+
+    def _rules_poster_mallet_uri(self):
+        """Wooden gavel picture for the rules poster."""
+        import os
+        path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            'static', 'src', 'img', 'wooden_mallet.png',
+        )
+        with open(path, 'rb') as fh:
+            raw = base64.b64encode(fh.read()).decode('ascii')
+        return 'data:image/png;base64,' + raw
+
+    def _rules_poster_theme_css(self, theme=None):
+        c = self._rules_poster_theme(theme)
+        return (
+            "html, body {{ background: {bg_bot}; }}"
+            ".sheet {{ color: {ink}; background-color: {bg_mid};"
+            " background-image: -webkit-linear-gradient(top, {bg_top} 0%, {bg_mid} 46%, {bg_bot} 100%); }}"
+            ".name {{ color: {title}; text-shadow: 0 3px 0 {title_shadow}; }}"
+            ".season {{ color: {season}; }}"
+            ".rules {{ background-color: {pill}; color: {pill_text}; }}"
+            ".hd {{ color: {header_text};"
+            " background-image: -webkit-linear-gradient(left, {header_from} 0%, {header_to} 100%); }}"
+            ".stat-v {{ color: {stat_text};"
+            " background-image: -webkit-linear-gradient(top, {stat_from} 0%, {stat_to} 100%); }}"
+            ".bullet {{ background: {bullet}; }}"
+            ".foot-name {{ color: {ink}; }}"
+            ".logo-ph {{ color: {header_text};"
+            " background-image: -webkit-linear-gradient(135deg, {header_to} 0%, {header_from} 100%); }}"
+        ).format(**c)
+
+    def action_download_auction_rules(self):
+        """Download a landscape sheet of this tournament's auction rules."""
+        import shutil
+        from datetime import datetime
+
+        self.ensure_one()
+        auction = self._rules_poster_auction()
+        if not auction:
+            raise UserError(_(
+                'Set auction rules for this tournament before downloading the rules poster.'
+            ))
+
+        Player = self.env['auction.team.player']
+        binary = Player._card_render_binary()
+        if not binary:
+            raise UserError(_(
+                'The wkhtmltoimage tool was not found on the server, which is '
+                'required to render the poster.'
+            ))
+
+        unit = self.get_point_unit()
+        unit_name = ((unit.name if unit else '') or 'Points').strip() or 'Points'
+        unit_label = unit_name.upper()
+        global_base = auction.base_point or 0
+        purse = auction.total_point or 0
+        squad = auction.max_players or 0
+        base_display = self.format_points(global_base) if global_base else '—'
+        purse_display = self._rules_poster_num(purse)
+
+        tiers = []
+        for line in auction.tier_limit_ids.sorted(
+            key=lambda tl: ((tl.tier_id.sequence or 0), tl.tier_id.id or 0)
+        ):
+            tier = line.tier_id
+            color = (tier.color or '#3498db') if tier else '#3498db'
+            if not re.match(r'^#[0-9A-Fa-f]{3,8}$', color or ''):
+                color = '#3498db'
+            raw_name = (tier.name if tier else 'Tier').strip()
+            label = raw_name.upper()
+            if 'TIER' not in label:
+                label = '%s TIER' % label
+            base = line.base_point if line.base_point and line.base_point > 0 else global_base
+            tiers.append({
+                'name': label,
+                'color': color,
+                'max_players': self._rules_poster_num(line.max_players or 0),
+                'base': self.format_points(base) if base else '—',
+            })
+
+        slabs = []
+        for slab in auction.auction_bid_slab_ids.sorted('from_amount'):
+            step = slab.increment or 0
+            step_label = '+%s' % self._rules_poster_num(step) if step else '—'
+            slabs.append({
+                'from': self._rules_poster_num(slab.from_amount),
+                'to': self._rules_poster_num(slab.to_amount),
+                'step': step_label,
+            })
+
+        points_word = unit_name.lower()
+        key_points = [
+            'Each team has a total budget of %s %s.' % (purse_display, points_word),
+            'Each team can build a squad of %s players.' % self._rules_poster_num(squad),
+            'Base value for each player is %s.' % base_display,
+            'Bidding will follow the defined bid slab and tier limits.',
+        ]
+        if auction.max_limited == 'yes' and (auction.max_points or 0) > 0:
+            key_points.append(
+                'A single player cannot be sold above %s.' % self.format_points(auction.max_points)
+            )
+
+        tier_h = min(520, 108 + max(len(tiers), 1) * 44)
+        slab_h = min(300, 108 + max(len(slabs), 1) * 44)
+        keys_top = 384 + slab_h + 16
+        keys_h = min(300, 64 + len(key_points) * 44)
+        if keys_top + keys_h > 988:
+            keys_h = max(120, 988 - keys_top)
+
+        tournament_name = (self.name or 'Tournament').upper()
+        n = len(tournament_name)
+        if n <= 16:
+            title_px = 64
+        elif n <= 26:
+            title_px = 52
+        elif n <= 36:
+            title_px = 42
+        else:
+            title_px = 32
+
+        workdir = Player._card_workdir()
+        jpg = None
+        try:
+            html = self.env['ir.qweb']._render('auction_module.auction_rules_poster', {
+                'font_css': self._top_bid_font_css(),
+                'brand_logo_svg': self._top_bid_brand_svg().replace(
+                    'fill="white"', 'fill="#10224f"'),
+                'tournament_name': tournament_name,
+                'title_style': 'font-size:%dpx;' % title_px,
+                'description': (self.description or '').strip(),
+                'tournament_logo_uri': self._top_bid_logo_box(self.logo, 280),
+                'tournament_initials': self._top_bid_initials(self.name),
+                'unit_label': unit_label,
+                'purse_display': purse_display,
+                'squad_display': self._rules_poster_num(squad),
+                'base_display': base_display,
+                'tiers': tiers,
+                'slabs': slabs,
+                'key_points': key_points,
+                'tier_style': 'height:%dpx;' % tier_h,
+                'slab_style': 'height:%dpx;' % slab_h,
+                'keys_style': 'top:%dpx;height:%dpx;' % (keys_top, keys_h),
+                'theme_css': self._rules_poster_theme_css(),
+                'mallet_uri': self._rules_poster_mallet_uri(),
+            })
+            if isinstance(html, bytes):
+                html = html.decode('utf-8')
+            jpg = self._top_bid_html_to_jpg(str(html), workdir, binary, 1920, 1080)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        if not jpg:
+            raise UserError(_('Could not render the auction rules poster.'))
+
+        tname = re.sub(r'[^A-Za-z0-9]+', '_', self.name or 'Tournament').strip('_') or 'Tournament'
+        filename = 'Auction_Rules_%s_%s.jpg' % (
             tname, datetime.now().strftime('%Y%m%d_%H%M%S'))
         attachment = self.env['ir.attachment'].sudo().create({
             'name': filename,
@@ -3520,6 +3868,7 @@ class AuctionTournament(models.Model):
         'action_set_auction_rules',
         'action_view_auction_rules',
         'action_download_top_bid_posters',
+        'action_download_auction_rules',
         'action_upload_teams',
         'action_open_expose_contact_privacy_wizard',
         'action_remask_player_contact',

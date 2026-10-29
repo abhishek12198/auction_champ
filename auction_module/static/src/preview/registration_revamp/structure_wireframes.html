@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Registration structure proposal</title>
+<style>
+  :root {
+    --ink: #1c2430;
+    --muted: #5d6b7a;
+    --line: #c9d0d8;
+    --paper: #fff;
+    --board: #eef1f4;
+    --accent: #c9a227;
+    --navy: #111d2c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #d8dde3;
+    color: var(--ink);
+    font-family: "Source Sans 3", "Segoe UI", sans-serif;
+  }
+  .page { max-width: 1180px; margin: 0 auto; padding: 28px 20px 64px; }
+  h1 { font: 600 28px/1.15 Oswald, Impact, sans-serif; letter-spacing: .04em; text-transform: uppercase; margin: 0 0 8px; }
+  .lead { color: var(--muted); max-width: 720px; margin: 0 0 28px; line-height: 1.5; }
+  .note { font-size: 13px; color: var(--muted); margin: 0 0 18px; }
+  .frame {
+    background: var(--board);
+    border: 1px solid #b7bec7;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 36px;
+  }
+  .frame h2 {
+    font: 600 15px/1 Oswald, sans-serif;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    margin: 0 0 14px;
+    color: #3d4a58;
+  }
+  .ann {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #e24b4b; color: #fff; font: 700 10px/1 sans-serif;
+    margin-right: 6px; vertical-align: middle;
+  }
+
+  /* Desktop wire */
+  .desk { display: grid; gap: 10px; }
+  .desk-split { display: grid; grid-template-columns: minmax(0,1fr) 240px; gap: 12px; align-items: start; }
+  .poster {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .poster-art {
+    height: 300px;
+    background:
+      linear-gradient(180deg, rgba(201,162,39,.18), rgba(17,29,44,.08)),
+      repeating-linear-gradient(-45deg, #f3f0e6 0 10px, #ece7d8 10px 20px);
+    display: flex; align-items: flex-end; justify-content: center;
+    padding: 12px;
+    color: #3d4a58;
+    font: 600 12px/1.3 Oswald, sans-serif;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    text-align: center;
+  }
+  .poster-cap {
+    padding: 10px 12px 12px;
+    font-size: 12px;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+  }
+  .header {
+    background: var(--navy); color: #fff; border-radius: 10px;
+    padding: 16px 18px; display: grid; grid-template-columns: 56px 1fr auto;
+    gap: 14px; align-items: center;
+  }
+  .logo { width: 56px; height: 56px; border-radius: 10px; background: #fff; }
+  .tname { font: 600 22px/1 Oswald, sans-serif; letter-spacing: .03em; text-transform: uppercase; }
+  .tpills { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .pill { border: 1px solid rgba(255,255,255,.28); border-radius: 999px; padding: 4px 10px; font-size: 11px; color: #d7dde6; }
+  .roster { color: var(--accent); font: 700 12px/1.2 "Source Sans 3", sans-serif; text-align: right; }
+  .steps {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    background: var(--paper); border: 1px dashed var(--line); border-radius: 10px; padding: 10px;
+  }
+  .step { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; }
+  .step.on { background: #fff6d8; border: 1px solid #e2c56a; }
+  .step .n { width: 22px; height: 22px; border-radius: 6px; background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: center; font: 600 11px Oswald, sans-serif; }
+  .step.on .n { background: var(--accent); color: #111; }
+  .step b { font: 600 13px Oswald, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+  .step span { display: block; font-size: 11px; color: var(--muted); }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+  .sec { font: 600 13px/1 Oswald, sans-serif; letter-spacing: .1em; text-transform: uppercase; margin: 0 0 12px; color: #2b3642; }
+  .row { display: grid; grid-template-columns: 88px 1fr; gap: 14px; margin-bottom: 12px; }
+  .ph { width: 88px; height: 88px; border: 1px dashed #9aa4b0; border-radius: 10px; background: #f7f8fa; }
+  .field { border: 1px solid var(--line); border-radius: 8px; height: 40px; background: #fafbfc; margin-top: 4px; }
+  .lab { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #667484; font-weight: 700; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .roles { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .role { height: 54px; border: 1px solid var(--line); border-radius: 8px; background: #fafbfc; }
+  .role.on { border-color: var(--accent); background: #fff8df; }
+  .foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; }
+  .trust { font-size: 12px; color: var(--muted); }
+  .btn { background: var(--accent); color: #111; border: 0; border-radius: 8px; padding: 11px 22px; font: 600 13px Oswald, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+  .ghost { background: transparent; border: 1px solid var(--line); color: #4b5563; }
+
+  /* Mobile wire */
+  .phones { display: flex; gap: 28px; flex-wrap: wrap; }
+  .phone {
+    width: 280px; background: #1a1f26; border-radius: 28px; padding: 12px 10px 16px;
+    box-shadow: 0 16px 30px rgba(0,0,0,.18);
+  }
+  .phone-notch { width: 88px; height: 8px; background: #111; border-radius: 8px; margin: 0 auto 10px; }
+  .phone-screen { background: #e9edf1; border-radius: 18px; padding: 10px; min-height: 520px; }
+  .m-header { background: var(--navy); color: #fff; border-radius: 10px; padding: 10px; }
+  .m-poster {
+    margin: 8px 0 0;
+    height: 72px;
+    border-radius: 8px;
+    background:
+      linear-gradient(90deg, rgba(201,162,39,.25), rgba(255,255,255,.08)),
+      repeating-linear-gradient(-45deg, rgba(255,255,255,.08) 0 8px, transparent 8px 16px);
+    border: 1px solid rgba(255,255,255,.2);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 10px;
+    font: 600 11px/1 Oswald, sans-serif;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  .m-title { font: 600 16px/1.1 Oswald, sans-serif; letter-spacing: .03em; text-transform: uppercase; }
+  .m-pills { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+  .m-pill { border: 1px solid rgba(255,255,255,.25); border-radius: 8px; padding: 6px; font-size: 10px; }
+  .m-step { margin: 8px 0; font: 600 11px Oswald, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #3d4a58; }
+  .m-card { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+  .m-btn { width: 100%; margin-top: 10px; }
+
+  .why {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px;
+  }
+  .why article { background: #fff; border: 1px solid #c5ccd4; border-radius: 10px; padding: 14px 16px; }
+  .why h3 { margin: 0 0 8px; font: 600 14px Oswald, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+  .why li { margin: 0 0 6px; color: #3d4a58; font-size: 14px; }
+  @media (max-width: 720px) {
+    .why { grid-template-columns: 1fr; }
+    .desk-split { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Proposed structure</h1>
+  <p class="lead">Keep every existing field. Change the page architecture: compact tournament header, three steps, no marketing sidebar. First screen is the form — that is what Instagram traffic needs.</p>
+
+  <div class="why">
+    <article>
+      <h3>What is wrong now</h3>
+      <ul>
+        <li>Hero copy, roster banner, six trust cards, then a second “Registration” strip — four layers before the first field</li>
+        <li>Sidebar (Why / Privacy / Fair) repeats the trust strip and does not help submit</li>
+        <li>One long page of 5–6 sections; mobile users accordion-hunt</li>
+        <li>Instagram first fold never reaches photo + name</li>
+      </ul>
+    </article>
+    <article>
+      <h3>What to change</h3>
+      <ul>
+        <li>Header is compact: logo, name, date, venue, roster count</li>
+        <li>Tournament poster stays — desktop sticky rail, mobile thumbnail (tap to open)</li>
+        <li>Three steps: Player → Game → Pay &amp; submit</li>
+        <li>Trust becomes one line under the button</li>
+      </ul>
+    </article>
+  </div>
+
+  <div class="frame">
+    <h2>Desktop · Step 1 of 3</h2>
+    <p class="note"><span class="ann">1</span>Compact header &nbsp; <span class="ann">2</span>Step tracker &nbsp; <span class="ann">3</span>Only current fields &nbsp; <span class="ann">4</span>Tournament poster rail &nbsp; <span class="ann">5</span>Trust under action</p>
+    <div class="desk">
+      <div class="header">
+        <div class="logo"></div>
+        <div>
+          <div class="tname">Royal Premier League 2026</div>
+          <div class="tpills">
+            <span class="pill">12–14 Apr 2026</span>
+            <span class="pill">Nehru Stadium, Chennai</span>
+            <span class="pill">Cricket</span>
+          </div>
+        </div>
+        <div class="roster">86 registered<br/>View players</div>
+      </div>
+      <div class="steps">
+        <div class="step on"><span class="n">1</span><div><b>Player</b><span>Photo, name, contact</span></div></div>
+        <div class="step"><span class="n">2</span><div><b>Game</b><span>Role, style, jersey</span></div></div>
+        <div class="step"><span class="n">3</span><div><b>Pay &amp; submit</b><span>Proof, then register</span></div></div>
+      </div>
+      <div class="desk-split">
+      <div class="card">
+        <p class="sec">01 · Player</p>
+        <div class="row">
+          <div class="ph"></div>
+          <div>
+            <div class="lab">Full name *</div>
+            <div class="field"></div>
+            <div class="lab" style="margin-top:10px">Already on Auction Champ? Find my details</div>
+          </div>
+        </div>
+        <div class="grid2">
+          <div><div class="lab">Mobile *</div><div class="field"></div></div>
+          <div><div class="lab">Blood group</div><div class="field"></div></div>
+          <div style="grid-column:1/-1"><div class="lab">Location / address</div><div class="field"></div></div>
+        </div>
+        <div class="foot">
+          <div class="trust">Encrypted · Not shared · Organiser reviewed</div>
+          <button class="btn" type="button">Continue to game</button>
+        </div>
+      </div>
+      <aside class="poster">
+        <div class="poster-art">Tournament poster</div>
+        <div class="poster-cap">Same image organisers upload today. Stays visible while the player moves through steps.</div>
+      </aside>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <h2>Desktop · Step 2 of 3</h2>
+    <div class="desk">
+      <div class="header">
+        <div class="logo"></div>
+        <div>
+          <div class="tname">Royal Premier League 2026</div>
+          <div class="tpills">
+            <span class="pill">12–14 Apr 2026</span>
+            <span class="pill">Nehru Stadium, Chennai</span>
+            <span class="pill">Cricket</span>
+          </div>
+        </div>
+        <div class="roster">86 registered<br/>View players</div>
+      </div>
+      <div class="steps">
+        <div class="step"><span class="n">1</span><div><b>Player</b><span>Done</span></div></div>
+        <div class="step on"><span class="n">2</span><div><b>Game</b><span>Role, style, jersey</span></div></div>
+        <div class="step"><span class="n">3</span><div><b>Pay &amp; submit</b><span>Proof, then register</span></div></div>
+      </div>
+      <div class="desk-split">
+      <div class="card">
+        <p class="sec">02 · Cricket profile</p>
+        <div class="lab">Role *</div>
+        <div class="roles" style="margin:8px 0 14px">
+          <div class="role on"></div><div class="role"></div><div class="role"></div>
+        </div>
+        <div class="grid2">
+          <div><div class="lab">Batting style *</div><div class="field"></div></div>
+          <div><div class="lab">Bowling style</div><div class="field"></div></div>
+        </div>
+        <p class="sec" style="margin-top:18px">Jersey · if tournament enabled</p>
+        <div class="grid2">
+          <div><div class="lab">Name on jersey</div><div class="field"></div></div>
+          <div><div class="lab">Size *</div><div class="field"></div></div>
+        </div>
+        <div class="foot">
+          <button class="btn ghost" type="button">Back</button>
+          <button class="btn" type="button">Continue to payment</button>
+        </div>
+      </div>
+      <aside class="poster">
+        <div class="poster-art">Tournament poster</div>
+        <div class="poster-cap">Poster stays on the rail in every step. Why / Privacy cards are removed.</div>
+      </aside>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <h2>Mobile · Instagram first fold</h2>
+    <p class="note">Poster is a compact thumbnail in the header — tap to open full size. A full poster above the form would hide name and mobile on Instagram.</p>
+    <div class="phones">
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <div class="m-header">
+            <div class="m-title">Royal Premier League 2026</div>
+            <div class="m-pills">
+              <div class="m-pill">12–14 Apr 2026</div>
+              <div class="m-pill">Chennai</div>
+            </div>
+            <div class="m-poster"><span>Tournament poster</span><span>View</span></div>
+          </div>
+          <div class="m-step">Step 1 of 3 · Player</div>
+          <div class="m-card">
+            <div class="ph" style="width:64px;height:64px;margin-bottom:10px"></div>
+            <div class="lab">Full name *</div>
+            <div class="field"></div>
+            <div class="lab" style="margin-top:10px">Mobile *</div>
+            <div class="field"></div>
+          </div>
+          <button class="btn m-btn" type="button">Continue</button>
+        </div>
+      </div>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <div class="m-header">
+            <div class="m-title">Royal Premier League 2026</div>
+          </div>
+          <div class="m-step">Step 3 of 3 · Pay &amp; submit</div>
+          <div class="m-card">
+            <div class="ph" style="width:100%;height:120px;margin-bottom:10px"></div>
+            <div class="lab">Upload payment proof</div>
+            <div class="field"></div>
+          </div>
+          <div class="trust" style="margin:10px 2px">Encrypted · Not shared</div>
+          <button class="btn m-btn" type="button">Submit registration</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

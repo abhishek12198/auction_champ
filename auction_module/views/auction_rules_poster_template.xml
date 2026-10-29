@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="auction_rules_poster" name="Auction Rules Poster">
+<html>
+<head>
+<meta charset="utf-8"/>
+<style>
+  <t t-raw="font_css"/>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-print-color-adjust: exact; }
+  html, body { width: 1920px; height: 1080px; margin: 0; padding: 0; overflow: hidden; background: #08398f; }
+  .sheet {
+    position: relative; width: 1920px; height: 1080px; overflow: hidden; color: #10224f;
+    font-family: 'TBLabel', 'Montserrat', Arial, sans-serif;
+    background-color: #0a46b5;
+    background-image: -webkit-linear-gradient(top, #2f7bff 0%, #0d4ec4 22%, #0a3eae 48%, #0c4fbe 72%, #123a86 100%);
+  }
+  .glow {
+    position: absolute; width: 420px; height: 220px;
+    background-image: -webkit-radial-gradient(circle, rgba(255,255,255,.42) 0%, rgba(255,255,255,0) 68%);
+  }
+  .glow-l { left: 40px; top: -40px; }
+  .glow-r { right: 20px; top: -20px; }
+  .pitch {
+    position: absolute; left: 0; bottom: 0; width: 1920px; height: 220px;
+    background-image: -webkit-linear-gradient(top, rgba(255,255,255,0) 0%, rgba(186,214,255,.18) 40%, rgba(8,30,80,.35) 100%);
+  }
+  .logo { position: absolute; left: 48px; top: 28px; width: 150px; height: 150px; z-index: 4; }
+  .logo img { display: block; width: 150px; height: 150px; }
+  .logo-ph {
+    width: 150px; height: 150px; border-radius: 28px;
+    background-image: -webkit-linear-gradient(135deg, #f6d36a 0%, #c49216 100%);
+    color: #10224f; font-family: 'TBTeko', Impact, sans-serif;
+    font-size: 54px; line-height: 150px; text-align: center;
+    border: 4px solid #fff;
+  }
+  .name {
+    position: absolute; left: 220px; top: 28px; width: 1640px; height: 78px; z-index: 4;
+    text-align: center; color: #fff; line-height: 78px;
+    font-family: 'TBName', 'Oswald', sans-serif; letter-spacing: 1px;
+    white-space: nowrap; overflow: hidden;
+    text-shadow: 0 3px 0 #12306e, 0 0 18px rgba(0,0,0,.25);
+  }
+  .season {
+    position: absolute; left: 220px; top: 108px; width: 1640px; height: 36px; z-index: 4;
+    text-align: center; color: #ffe08a;
+    font-family: 'TBName', 'Oswald', sans-serif;
+    font-size: 30px; line-height: 36px; letter-spacing: 1px;
+    white-space: nowrap; overflow: hidden;
+  }
+  .rules {
+    position: absolute; left: 560px; top: 152px; width: 800px; height: 64px; z-index: 4;
+    text-align: center; color: #fff;
+    font-family: 'TBName', 'Oswald', sans-serif;
+    font-size: 46px; line-height: 64px; letter-spacing: 1px;
+    background-color: #123a86;
+    border-radius: 18px;
+    box-shadow: 0 8px 0 rgba(8,28,80,.25);
+  }
+  .stats { position: absolute; left: 40px; top: 236px; width: 1840px; height: 128px; z-index: 4; }
+  .stat {
+    position: absolute; top: 0; width: 440px; height: 128px;
+    background-image: -webkit-linear-gradient(top, #fff 0%, #f4f7fb 100%);
+    border: 3px solid #d7e4fb; border-radius: 18px; text-align: center;
+  }
+  .s1 { left: 0; }
+  .s2 { left: 466px; }
+  .s3 { left: 932px; }
+  .s4 { left: 1398px; }
+  .stat-k {
+    margin-top: 14px;
+    font-family: 'TBLabel', 'Montserrat', sans-serif;
+    font-size: 16px; letter-spacing: 1.4px; color: #3d5278;
+  }
+  .stat-v {
+    margin-top: 2px; height: 52px;
+    font-family: 'TBPrice', 'Anton', sans-serif;
+    font-size: 42px; line-height: 52px; color: #10224f;
+    background-image: -webkit-linear-gradient(top, #ffe9a0 0%, #f0c14b 100%);
+    white-space: nowrap; overflow: hidden;
+  }
+  .stat-u {
+    margin-top: 4px;
+    font-family: 'TBLabel', 'Montserrat', sans-serif;
+    font-size: 14px; letter-spacing: 1.6px; color: #5a6e90;
+  }
+  .panel {
+    position: absolute; background: #fff; border-radius: 16px; overflow: hidden;
+    border: 3px solid rgba(255,255,255,.7);
+    box-shadow: 0 10px 24px rgba(6,24,70,.22);
+  }
+  .tiers { left: 40px; top: 384px; width: 900px; height: 590px; }
+  .slabs { left: 960px; top: 384px; width: 540px; height: 300px; }
+  .keys { left: 960px; top: 700px; width: 540px; height: 280px; }
+  .hd {
+    height: 52px; line-height: 52px; padding-left: 22px;
+    color: #fff; font-family: 'TBName', 'Oswald', sans-serif;
+    font-size: 26px; letter-spacing: 1px;
+    background-image: -webkit-linear-gradient(left, #1d4ed8 0%, #2563eb 70%, #3b82f6 100%);
+  }
+  table.grid { width: 100%; border-collapse: collapse; }
+  table.grid th {
+    height: 36px; text-align: left; padding: 0 16px;
+    font-family: 'TBLabel', 'Montserrat', sans-serif;
+    font-size: 13px; letter-spacing: 1px; color: #5a6e90;
+    background: #f3f7fd; border-bottom: 1px solid #e3ebf6;
+  }
+  table.grid td {
+    height: 42px; padding: 0 16px;
+    font-family: 'TBTeam', 'Montserrat', sans-serif;
+    font-size: 20px; color: #10224f;
+    border-bottom: 1px solid #eef3fa;
+    white-space: nowrap; overflow: hidden;
+  }
+  table.grid td.num, table.grid th.num { text-align: center; }
+  .dot {
+    display: inline-block; width: 16px; height: 16px; border-radius: 4px;
+    margin-right: 10px; vertical-align: -2px;
+  }
+  .empty {
+    padding: 28px 22px; color: #5a6e90;
+    font-family: 'TBLabel', 'Montserrat', sans-serif; font-size: 18px;
+  }
+  .keyline {
+    padding: 7px 16px;
+    font-family: 'TBLabel', 'Montserrat', sans-serif;
+    font-size: 16px; line-height: 22px; color: #10224f;
+    border-bottom: 1px solid #eef3fa;
+  }
+  .bullet {
+    display: inline-block; width: 10px; height: 10px; border-radius: 5px;
+    background: #1d4ed8; margin-right: 10px;
+  }
+  .gavel { position: absolute; left: 1540px; top: 488px; width: 340px; height: auto; z-index: 3; }
+  <t t-raw="theme_css"/>
+  .foot {
+    position: absolute; left: 0; top: 1004px; width: 1920px; height: 76px;
+    background: #fff; z-index: 6;
+  }
+  .brand { position: absolute; left: 48px; top: 22px; }
+  .brand-logo { width: 210px; height: 32px; display: block; }
+  .powered {
+    position: absolute; left: 48px; top: 4px; width: 400px;
+    font-family: 'TBLabel', 'Montserrat', sans-serif;
+    font-size: 11px; letter-spacing: 1.8px; color: #7b8ba6;
+  }
+  .foot-name {
+    position: absolute; right: 48px; top: 18px; width: 1100px; text-align: right;
+    font-family: 'TBName', 'Oswald', sans-serif;
+    font-size: 26px; line-height: 40px; color: #10224f; letter-spacing: 1px;
+    white-space: nowrap; overflow: hidden;
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="glow glow-l"></div>
+  <div class="glow glow-r"></div>
+  <div class="pitch"></div>
+
+  <div class="logo">
+    <t t-if="tournament_logo_uri">
+      <img t-att-src="tournament_logo_uri" width="150" height="150" alt=""/>
+    </t>
+    <t t-else="">
+      <div class="logo-ph"><t t-esc="tournament_initials"/></div>
+    </t>
+  </div>
+  <div class="name" t-att-style="title_style"><t t-esc="tournament_name"/></div>
+  <t t-if="description">
+    <div class="season"><t t-esc="description"/></div>
+  </t>
+  <div class="rules">AUCTION RULES</div>
+
+  <div class="stats">
+    <div class="stat s1">
+      <div class="stat-k">TOTAL BUDGET</div>
+      <div class="stat-v"><t t-esc="purse_display"/></div>
+      <div class="stat-u"><t t-esc="unit_label"/></div>
+    </div>
+    <div class="stat s2">
+      <div class="stat-k">SQUAD SIZE</div>
+      <div class="stat-v"><t t-esc="squad_display"/></div>
+      <div class="stat-u">PLAYERS</div>
+    </div>
+    <div class="stat s3">
+      <div class="stat-k">BASE <t t-esc="unit_label"/> PER PLAYER</div>
+      <div class="stat-v"><t t-esc="base_display"/></div>
+      <div class="stat-u">MINIMUM BID</div>
+    </div>
+    <div class="stat s4">
+      <div class="stat-k">MAX PLAYERS PER TEAM</div>
+      <div class="stat-v"><t t-esc="squad_display"/></div>
+      <div class="stat-u">PLAYERS</div>
+    </div>
+  </div>
+
+  <div class="panel tiers" t-att-style="tier_style">
+    <div class="hd">TIER LIMITS</div>
+    <t t-if="tiers">
+      <table class="grid">
+        <tr>
+          <th>TIER</th>
+          <th class="num">MAX PLAYERS</th>
+          <th class="num">BASE <t t-esc="unit_label"/></th>
+        </tr>
+        <t t-foreach="tiers" t-as="tier">
+          <tr>
+            <td>
+              <span class="dot" t-attf-style="background:#{tier['color']};"></span>
+              <t t-esc="tier['name']"/>
+            </td>
+            <td class="num"><t t-esc="tier['max_players']"/></td>
+            <td class="num"><t t-esc="tier['base']"/></td>
+          </tr>
+        </t>
+      </table>
+    </t>
+    <t t-else="">
+      <div class="empty">No tier limits are set.</div>
+    </t>
+  </div>
+
+  <div class="panel slabs" t-att-style="slab_style">
+    <div class="hd">BID SLAB</div>
+    <t t-if="slabs">
+      <table class="grid">
+        <tr>
+          <th class="num">FROM (<t t-esc="unit_label"/>)</th>
+          <th class="num">TO (<t t-esc="unit_label"/>)</th>
+          <th class="num">INCREMENT (<t t-esc="unit_label"/>)</th>
+        </tr>
+        <t t-foreach="slabs" t-as="slab">
+          <tr>
+            <td class="num"><t t-esc="slab['from']"/></td>
+            <td class="num"><t t-esc="slab['to']"/></td>
+            <td class="num"><t t-esc="slab['step']"/></td>
+          </tr>
+        </t>
+      </table>
+    </t>
+    <t t-else="">
+      <div class="empty">No bid slabs are set.</div>
+    </t>
+  </div>
+
+  <div class="panel keys" t-att-style="keys_style">
+    <div class="hd">KEY POINTS</div>
+    <t t-foreach="key_points" t-as="point">
+      <div class="keyline"><span class="bullet"></span><t t-esc="point"/></div>
+    </t>
+  </div>
+
+  <img class="gavel" t-att-src="mallet_uri" width="340" alt=""/>
+
+  <div class="foot">
+    <div class="powered">POWERED BY</div>
+    <div class="brand"><t t-raw="brand_logo_svg"/></div>
+    <div class="foot-name"><t t-esc="tournament_name"/></div>
+  </div>
+</div>
+</body>
+</html>
+</template>
+</odoo>

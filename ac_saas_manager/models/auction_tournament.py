@@ -558,17 +558,43 @@ class AuctionTournament(models.Model):
                         super(AuctionTournament, tournament).write(row)
                     return True
 
-        # When linking a SaaS account, also clamp an existing over-limit value
+        # When linking a SaaS account, snap theme, call-up, and the registration
+        # cap to that plan before the constraint runs. An older tournament can
+        # still be on a theme the plan does not include (for example Blackberry
+        # on Starter, which only allows Lemon). Leaving it unchanged aborts
+        # module upgrade inside the organiser-link repair.
         if 'saas_account_id' in vals and vals.get('saas_account_id'):
             owner = self.env['ac.saas.account'].browse(vals['saas_account_id'])
-            if owner.plan_id and 'max_registrations' not in vals:
-                for tournament in self:
-                    capped = tournament._saas_clamp_max_registrations(
-                        tournament.max_registrations, owner.plan_id
+            plan = owner.plan_id
+            if plan:
+                allowed = plan.get_allowed_templates()
+                if allowed and 'player_display_template' not in vals:
+                    disallowed = self.filtered(
+                        lambda t: (t.player_display_template or '') not in allowed
                     )
-                    if capped != tournament.max_registrations:
-                        vals['max_registrations'] = capped
-                        break
+                    if disallowed:
+                        super(AuctionTournament, disallowed).write({
+                            'player_display_template': allowed[0],
+                        })
+                if (
+                    not plan.allow_random_mode
+                    and 'player_appearance_algorithm' not in vals
+                ):
+                    random_mode = self.filtered(
+                        lambda t: t.player_appearance_algorithm == 'random'
+                    )
+                    if random_mode:
+                        super(AuctionTournament, random_mode).write({
+                            'player_appearance_algorithm': 'linear',
+                        })
+                if 'max_registrations' not in vals:
+                    for tournament in self:
+                        capped = tournament._saas_clamp_max_registrations(
+                            tournament.max_registrations, plan
+                        )
+                        if capped != tournament.max_registrations:
+                            vals['max_registrations'] = capped
+                            break
 
         # SaaS organisers (all plans) own their tournaments. auction_module.write()
         # blocks non-admins from fields like team_ids — bypass after ownership check.
@@ -675,18 +701,31 @@ class AuctionTournament(models.Model):
 
     @api.model
     def _saas_repair_max_registrations(self):
-        """Clamp existing SaaS tournaments that exceed (or unset) plan registration caps."""
+        """Clamp existing SaaS tournaments to their plan.
+
+        Registration cap, player-card theme, and Lucky Dip are checked together.
+        A theme the plan does not include is replaced with the plan's first
+        allowed theme so a later write does not fail the plan constraint.
+        """
         tournaments = self.sudo().search([('saas_account_id', '!=', False)])
         for tournament in tournaments:
             plan = tournament.saas_account_id.plan_id
             if not plan:
                 continue
+            repair = {}
             capped = tournament._saas_clamp_max_registrations(
                 tournament.max_registrations, plan
             )
             if capped != tournament.max_registrations:
-                # Bypass re-entrancy noise; constraint expects clamped value
-                super(AuctionTournament, tournament).write({
-                    'max_registrations': capped,
-                })
+                repair['max_registrations'] = capped
+            allowed = plan.get_allowed_templates()
+            if allowed and (tournament.player_display_template or '') not in allowed:
+                repair['player_display_template'] = allowed[0]
+            if (
+                tournament.player_appearance_algorithm == 'random'
+                and not plan.allow_random_mode
+            ):
+                repair['player_appearance_algorithm'] = 'linear'
+            if repair:
+                super(AuctionTournament, tournament).write(repair)
         return True

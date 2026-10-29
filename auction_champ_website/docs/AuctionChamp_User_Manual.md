@@ -1,1738 +1,742 @@
-# AuctionChamp User Manual
+# AuctionChamp Organiser Manual
 
-**Version:** 1.0  
-**Document Version:** 1.0  
-**Prepared By:** AuctionChamp Team  
-**Product Website:** https://www.auctionchamp.live  
-**Support Email:** auctionchamp.live@gmail.com  
+**Version:** 2.5
+
+## Start here
+
+This guide is for the account created at signup. Read it in order, or jump from the chapter list. The path is one tournament: sign in, choose it, create it, add teams and players, set the rules, sell on Player Showcase, then correct a squad if a sale needs a change.
+
+- Every person in the figures is sample data. Leave a mobile blank unless you are allowed to store that number.
+- The signed-in account is not shown in the pictures.
+- Paths are written as **App → Action**.
+
+> The walkthrough tournament is **Manual Premier League**. On a Starter account that tournament fills the one tournament slot.
 
 ---
 
-## Copyright Notice
+## 1. What you can do
+
+After signup you have one login. That login chooses the working tournament, creates the tournament, adds teams and players, sets the purse and bid slabs, and runs the auction until the last player is sold or left unsold. Player Dashboard and Tournament Settings are where you read the counts and change a squad after a sale.
+
+On the Starter account used for these figures, the home menu shows:
+
+- **Tournament(s)**
+- **Player Dashboard**
+- **Player Showcase**
+- **Pool Generator**
+- **Payment Tracker**
+
+Player Showcase is the screen where you sell or mark a player unsold. An auctioneer console is not in this menu.
+
+---
+
+## 2. Sign in
+
+1. Open the AuctionChamp address you were given.
+2. Sign in with the login and password from the signup email.
+3. You land in the backend. The plan name (for example **Starter**) sits in the top bar.
+
+Do not share the password. These figures do not show the login, the account name, or a phone number.
+
+---
+
+## 3. Apps on this account
+
+Click the grid icon at the top left. The home menu lists the apps this plan includes.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 5.2 — Apps after sign-in                          ║
+║  File: docs/screenshots/fig_5_2_apps.png                     ║
+║  Capture: Starter home menu                                  ║
+╚══════════════════════════════════════════════════════════════╝
+
+Open **Tournament(s)** to see tournaments that belong to this account. Click **Create** for a new one. If the plan allows only one tournament and one already exists, create is refused until that tournament is removed by support.
+
+---
+
+## 4. Choose the working tournament
+
+The top bar shows the tournament the apps are using. The crest and the name sit beside the plan chip. That name is the **working tournament**. Player Showcase, Player Dashboard, and Tournament Settings follow it.
+
+1. Click the tournament name in the top bar.
+2. When the account has more than one tournament, the list opens. A tick marks the working one.
+3. Click another name to switch. The list closes and the apps reload for that tournament.
+4. Read the line under the list. **Shared mode** means this switch updates the working tournament on every device signed in with this account. **Parallel mode** means the switch stays in this browser, so another device can run a different tournament.
+
+A long list adds **Search for more…**. That opens a search box. Type part of the name, then choose **Enable** on the row you want.
+
+With only one tournament, the name is shown and there is no other row to pick.
+
+Do not open the round account mark at the far right of the bar. The figures leave that mark out.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 14.1 — Tournament switcher                        ║
+║  File: docs/screenshots/fig_14_1_switcher.png                ║
+║  Capture: Working tournament ticked in the top-bar list      ║
+╚══════════════════════════════════════════════════════════════╝
+
+The sample list has **Manual Premier League** ticked. The other row is a second tournament on the same account. The figures in this manual stay on Manual Premier League.
+
+The plan chip (for example **Starter**) is next to the tournament name. Click it to read the plan name, what the plan includes, and the expiry. Closing that panel does not change the working tournament.
+
+---
+
+## 5. Player Dashboard
+
+Open **Player Dashboard** from the home menu. The header is the working tournament. If the header names the wrong tournament, switch it in the top bar and click **Refresh**.
+
+The header has three controls:
+
+- **Dark** or **Light** — chart colours only.
+- **Refresh** — reload the counts.
+- **Tournament Settings** — open the setup screens for the working tournament. Every button on that screen is listed in [Tournament Settings](#7-tournament-settings), after the tournament has been created.
+
+The tiles are the player counts. Click a tile to open that list.
+
+| Tile | Meaning |
+|------|---------|
+| Total | Every player on this tournament |
+| Draft | Registered, not yet in the auction |
+| In Auction | Waiting to be called or on stage |
+| Sold | Bought by a team |
+| Unsold | Called and not bought |
+| Icon Players | Marked as icon or key players |
+| Paid / Unpaid | Registration payment flag |
+
+Under the tiles, the charts show state, registrations over the last five days, role (playing position for football), tier, players per team, and payment. Further down, one table lists icon players and another lists the last players still in draft.
+
+On the sample tournament the tiles read 4 total, 0 draft, 0 in auction, 2 sold, and 2 unsold. Both sold players are already on a team, so the draft and in-auction charts are empty.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 15.1 — Player Dashboard                           ║
+║  File: docs/screenshots/fig_15_1_dashboard.png               ║
+║  Capture: Counts for the working tournament                  ║
+╚══════════════════════════════════════════════════════════════╝
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 15.2 — Dashboard charts                           ║
+║  File: docs/screenshots/fig_15_2_dashboard_charts.png        ║
+║  Capture: Role, tier, team, and payment charts               ║
+╚══════════════════════════════════════════════════════════════╝
+
+---
+
+## 6. Create the tournament
+
+On the tournament form, fill the fields the auction needs. Required fields are the name and a short description.
+
+| Field | What to enter |
+|-------|----------------|
+| Name | Tournament name, for example Manual Premier League |
+| Short description | One line that appears under the name |
+| Sport | Cricket, Football, Badminton, or Kabaddi |
+| Organizer Name | The name you want printed for the organiser. Use a display name. |
+| Organizer Contact | Leave blank unless you intend to publish a contact |
+| Player call-up | **Lucky Dip** draws the next name at random. **Roll Call** follows your list |
+| Player drawer | **Automatic** brings the next player up after Sold or Unsold. **Manual** waits for Next Player |
+
+Save the form. The breadcrumb shows the tournament name. A chip on the title shows when this tournament is the active one. If it is not active, click **Use this tournament** so Showcase and the other apps use this tournament.
+
+Add a logo on the tournament and on each team. A simple crest is enough. The same image appears on the tournament form, the team list, and the purse cards.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 4.1 — Tournament with a logo                      ║
+║  File: docs/screenshots/fig_4_1_tournament.png               ║
+║  Capture: Tournament form with a sample crest                ║
+╚══════════════════════════════════════════════════════════════╝
+
+> **Warning:** Do not put a personal mobile number in Organizer Contact or on a player if that number should not appear on screens, posters, or exports.
+
+---
+
+
+## 7. Tournament Settings
+
+Open this after the tournament is saved and it is the working tournament in the top bar. From **Player Dashboard**, click **Tournament Settings**. The breadcrumb reads **Player Dashboard / Tournament Settings**. The header shows that tournament. If the name is wrong, switch it in the top bar, come back, and the screen reloads for the new working tournament.
+
+Two buttons sit on every screen:
+
+| Button | What it does |
+|--------|----------------|
+| **Back** | Returns to Player Dashboard. Unsaved typing on a gold card is not kept. |
+| **Save** | Stores the edits on the screen you are on: logo, timers, dates, poster, payment note, YouTube address, tier names, and the other gold cards. |
+
+Tap the crest under the breadcrumb, choose an image, then **Save**. That replaces the tournament logo. The tournament name on this screen is locked.
+
+The bar at the bottom is **Summary**, **Players**, **Teams**, and **More**. **More** opens the rest of the sections.
+
+### Summary
+
+Summary is the checklist for the working tournament.
+
+| Button | What it does |
+|--------|----------------|
+| **Copy Registration Link** | Copies the public player-registration form. Share it only when registration should be open. |
+| **Remove Duplicates** | Opens the duplicate wizard described under Players. |
+| **Restore Transactions** | Opens a restore wizard. You can clear who is on stage, clear auction history, and put sold or unsold players back to draft or in auction. Tick **I understand this cannot be undone** before **Restore Selected**. **Cancel** leaves the auction as it is. |
+| **Bid Summary** | Opens the bid-summary page. It stays locked until **Live board** is on. |
+| **Live Board** | Opens the public live board in a new tab. It stays locked, with the hint **Turn on Live board first**, until the Live board switch below is on. |
+
+These cards are buttons too:
+
+| Card | What it does |
+|------|----------------|
+| **Registered players** | Opens the draft (registered) list. The number is drafts against the registration cap. |
+| **Teams ready** | Opens the team list. |
+| **Auction rules** | If rules are not set, opens **Set Auction Rules** (teams must exist first). If rules are already set, opens the purse cards. |
+| **Subscription** | Not a button. Paid or unpaid is set by AuctionChamp admin. |
+
+Three switches apply as soon as you tap them. You do not need **Save** for these:
+
+| Switch | What it does |
+|--------|----------------|
+| **Player registration** | Opens or closes the public form. Closed means new players cannot register themselves. |
+| **Live board** | Puts the audience page on air, or stops it. Live Board and Bid Summary stay locked while this is stopped. |
+| **Board code** | When on, the public live board asks for the tournament code before it opens. |
+
+On the sample tournament, registration is closed, the live board is stopped, and a board code is required. Registered players show **0 / 100** because the four sample players have already left draft.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 16.1 — Settings, Summary                          ║
+║  File: docs/screenshots/fig_16_1_settings_summary.png        ║
+║  Capture: Summary cards and actions                          ║
+╚══════════════════════════════════════════════════════════════╝
+
+### Players
+
+| Button | What it does |
+|--------|----------------|
+| **Add Player** | Opens Register Player for this tournament. Name is required. Leave mobile blank unless you are storing a number you are allowed to keep. |
+| **Upload Excel** | Opens the spreadsheet upload. A photo zip can travel with the sheet. Use sample-style names if the file will be shared. |
+| **Sort categories** | Opens Player Categorization. You reorder tiers, move players between tiers, search the list, and resequence the call order. **Back** on that board returns here. |
+| **Export sold** | Opens Export Players. Choose Registered, Sold, Unsold, or Jersey, then **Generate Excel**. On a jersey export you can fill the sheet and **Import Jersey Updates**. |
+| **Print Player Cards** | Opens the print wizard described below. |
+| **Remove Duplicates** | Same wizard as on Summary. Steps are below. |
+| **Restore Transactions** | Same restore wizard as on Summary. |
+
+Count tiles open that list:
+
+| Tile | What it opens |
+|------|----------------|
+| **Registered** | Draft players |
+| **In auction** | Players waiting to be called |
+| **Sold** | Players bought by a team |
+| **Icon** | Icon or key players |
+| **Unsold** | Players called and not bought |
+| **Jersey** | Jersey list. The tile opens only when jersey extras are on under Look of the day. |
+| **Deleted** | Players removed from the live lists |
+
+**How the next player appears** shows Lucky Dip or Roll Call. It is locked here. Change it on the tournament form.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 16.2 — Settings, Players                          ║
+║  File: docs/screenshots/fig_16_2_settings_players.png        ║
+║  Capture: Player actions and counts                          ║
+╚══════════════════════════════════════════════════════════════╝
+
+#### Print player cards
+
+Player Dashboard → **Tournament Settings** → **Players** → **Print Player Cards**.
+
+1. Tick the statuses you want in the file: **Registered**, **In Auction**, **Sold**, and **Unsold**. The counts on the right update as you tick.
+2. In the list, leave **Print** ticked only for the players who should get a card. **Select All** ticks every row in the chosen statuses. **Unselect All** clears every row.
+3. **Download** saves one PDF. Each ticked player is one landscape card, in serial-number order, in the tournament theme. On a Starter account that theme is Lemon.
+4. **Cancel** closes the wizard and prints nothing.
+
+A cricket Lemon card shows the tournament name, the player photo, the serial number, the name, the role, the tier, and any filled batting style, bowling style, blood group, and location. A mobile row is printed only when that player has a contact number stored. Leave the contact blank and the card has no phone number.
+
+The sample below is Rohit Menon, serial 4, Wicket Keeper, tier Default. His contact is blank, so the card has no mobile line.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 16.6 — Print Player Cards                         ║
+║  File: docs/screenshots/fig_16_6_print_cards.png             ║
+║  Capture: Status ticks, player ticks, and Download           ║
+╚══════════════════════════════════════════════════════════════╝
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 16.7 — Sample player card                         ║
+║  File: docs/screenshots/fig_16_7_sample_card.png             ║
+║  Capture: Lemon card for Rohit Menon                         ║
+╚══════════════════════════════════════════════════════════════╝
+
+#### Remove duplicates
+
+**Tournament Settings** → **Summary** or **Players** → **Remove Duplicates**.
+
+The scan looks only at **Draft** and **In Auction** players. Sold and unsold players are left out, so a sold name that also exists as unsold is not offered here.
+
+1. Leave **Same Name** on to match names that are the same after trimming, ignoring capitals. Leave **Same Mobile Number** on to match a stored mobile. A blank mobile is never treated as a match. Turn **Same Photo** on only when you want an identical photo to count. At least one of these three must stay on.
+2. Leave **Draft Players** and **In Auction Players** on for the states you want checked. At least one must stay on.
+3. **Find Duplicates** opens the preview. Each pair shows the later serial as **Remove** and the earlier serial as **Will keep**, with the reason (Same Name, Same Mobile, or Same Photo).
+4. Click the **Remove** or **Will keep** chip to swap which copy is deleted. Turn **Include** off to leave that pair alone.
+5. **Remove & Resequence** deletes only the copies marked Remove on included pairs, then renumbers everyone who remains: drafts first, then icon players, then the rest, starting at 1. Confirm that dialog only when those copies should go.
+6. **Back** returns to the switches. **Cancel** closes the wizard and deletes nothing.
+
+**Resequence Players** does not look for duplicates. It only renumbers the tournament: drafts, then icon players, then the rest. Confirm it only when you want every serial rewritten.
+
+**Delete by Serial Number?** switches this same wizard. Type draft serials, separated by commas. Only draft players with those serials are listed. **Remove Serials & Resequence** deletes that list and renumbers the rest from 1. Sold, unsold, and in-auction serials are ignored.
+
+On the sample, two draft copies of Arun Varma (serials 5 and 6) were shown so the preview could be captured. **Remove & Resequence** was not confirmed. Those two copies were taken off afterwards. Kiran Nair, Dev Sharma, Sana Pillai, and Rohit Menon are unchanged.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 16.8 — Remove Duplicates                          ║
+║  File: docs/screenshots/fig_16_8_remove_duplicates.png       ║
+║  Capture: Match switches and Find Duplicates                 ║
+╚══════════════════════════════════════════════════════════════╝
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 16.9 — Duplicate preview                          ║
+║  File: docs/screenshots/fig_16_9_remove_duplicates_preview.png ║
+║  Capture: One pair, Include on, Cancel still available       ║
+╚══════════════════════════════════════════════════════════════╝
+
+### Teams
+
+The title on this tab is **Auction Team and Rules**.
+
+| Button | What it does |
+|--------|----------------|
+| **Set Auction Rules** | Shown before rules exist. Opens the purse, squad size, base, and slabs. It stays locked until the tournament has a team. |
+| **Auction Rules** | Shown after rules exist. Opens the team purse cards. |
+| **Download Auction Rules** | Shown after rules exist. Downloads a landscape sheet of the purse, squad size, base, and tiers. |
+| **Top 5 Bid Posters** | Downloads one Instagram sheet of the five highest sold bids. It needs at least one sold player. |
+| **Upload teams** | Opens the team spreadsheet upload, with an optional logo zip. |
+| **Add Team** | Opens a short form. Team name and owner name are required. Save it, or the team is not stored. |
+| **Squad Modification** | Opens the sold-player board. Pencil edits the sold value, the exchange icon swaps with another team's player, the arrow moves the player, and undo recalls them to the auction. Full steps are in [Change a squad](#13-change-a-squad). |
+| **Create Owner Users** | Shown when this account can issue team-owner logins and teams exist. Opens a wizard to create a login for an owner who does not have one yet. Skip it unless you mean to issue those logins. |
+| **Export Owner Logins** | Shown after owner logins exist. Downloads the login sheet. |
+| **Remove Owner Users** | Shown after owner logins exist. Opens a wizard to remove selected owner logins. |
+| **Football extra labels** | Shown on a football tournament. Opens the extra attribute labels for that sport. |
+
+Click a team card (Royal XI or Blue Hawks on the sample) to open that team's auction: purse, slots, and signed players.
+
+Under the cards, each tier can be edited. Change the name, description, colour, or max registrations, then **Save**. Two switches on the tier card:
+
+| Switch | What it does |
+|--------|----------------|
+| **Icon tier** | Marks the tier as the icon or key-player category. Icon tiers have no public register link. |
+| **Mystery** | Marks the tier as a mystery category. Mystery tiers have no public register link. |
+
+| Button on a tier | What it does |
+|------------------|----------------|
+| **Copy Register URL** | Copies that tier's public registration link. Copy it only when you intend to share it. |
+| **View Players** | Opens the players in that tier. |
+| **Open tier list** or **Open full tier list** | Opens the full tier list, where you can add a tier that is not on this screen yet. |
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 16.3 — Settings, Teams                            ║
+║  File: docs/screenshots/fig_16_3_settings_teams.png          ║
+║  Capture: Squad Modification on the teams screen             ║
+╚══════════════════════════════════════════════════════════════╝
+
+### More
+
+**More** is the list of the other sections. **Close** dismisses the list without changing anything.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 16.4 — Settings, More                             ║
+║  File: docs/screenshots/fig_16_4_settings_more.png           ║
+║  Capture: The other settings sections                        ║
+╚══════════════════════════════════════════════════════════════╝
+
+#### Look of the day
+
+Gold cards can be changed. Tap the value, then **Save**. Grey cards are locked.
+
+| Control | What it does |
+|---------|----------------|
+| **Tournament logo** / **Choose File** | Picks a new crest. **Save** stores it. This is the same mark as the dashboard. |
+| **Theme** | Locked. On this account it is Lemon. Ask AuctionChamp admin to change the theme. |
+| **Sold display** | Seconds the SOLD banner stays on the showcase. |
+| **Next player countdown** | Seconds before the next player appears when the drawer is automatic. |
+| **Preset bids** | Locked. |
+| **Jersey extras** | On shows jersey fields on registration and enables the Jersey tile. Off hides them. |
+| **Point unit** | Points or Rupees. That unit is what sold values and the purse use. |
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 16.5 — Look of the day                            ║
+║  File: docs/screenshots/fig_16_5_settings_look.png           ║
+║  Capture: Logo, theme, and the timers you can edit           ║
+╚══════════════════════════════════════════════════════════════╝
+
+#### Registration
+
+| Button | What it does |
+|--------|----------------|
+| **Copy reg link** | Copies the main public registration form. |
+| **WhatsApp** | Opens a share box so you can send the registration message on WhatsApp. |
+| **Admin add-player** | Opens the organiser form for adding a player with the tournament code. Use it when you are entering the player, not the player themselves. |
+| **Payment tracker** | Opens Payment Tracker for this tournament. That list is registration payments, not bid points. |
+| **Unmask Contacts** | Opens the privacy notice. Contacts stay hidden until you accept it. Leave this alone unless you are allowed to show phone numbers on cards. |
+| **Mask Contacts** | Shown only after contacts were unmasked. Hides phone numbers on cards and on the showcase again. |
+| **Open** on a link card | Opens that page: the public form, the admin add-player form, or Payment Tracker. |
+| **Copy** next to the WhatsApp group | Copies the group invite after you paste it and **Save**. |
+| **Copy URL** on a tier | Copies that tier's registration link. |
+| **View Players** on a tier | Opens the players registered in that tier. |
+
+**WhatsApp group** is a field. Paste the invite, then **Save**. **Max** on a tier is the registration cap for that tier. The caps must add up to Max Registrations when any cap is set. **Save** stores the caps.
+
+**Public form flags** (seats left, names, icons, organisation id, address) are locked on this login.
+
+#### When & where
+
+There is no separate action button on this section. Edit the fields, then **Save** on the header.
+
+| Control | What it does |
+|---------|----------------|
+| Date field | Adds a match day. |
+| **×** on a date | Removes that day. **Save** keeps the change. |
+| **Ground / venue** | Picks the ground from the venue list. |
+| **Auction date** | The day of the auction. |
+| **Auction hall** | The room or hall name. |
+| **Organisers** | Locked. It shows who is already linked. It is not edited here. |
+
+#### Poster & pay
+
+Pick a file on a card, then **Save**.
+
+| Control | What it does |
+|---------|----------------|
+| **Tournament poster** | Image used on share cards and the public page. |
+| **Social share image** | Optional image for link previews. |
+| **Payment QR** | The UPI or bank QR players see when they pay. |
+| **Payment note** | The text under the QR. |
+| **Proof required** | When ticked, the registration form asks for a payment screenshot. **Save** stores the tick. |
+
+#### Auction day
+
+| Button | What it does |
+|--------|----------------|
+| **Copy projector** | Copies the projector address. |
+| **Open projector** | Opens the projector in a new tab. It is meant for a large screen. Auction rules must already be set. |
+| **Live Board** | Same as Summary. Locked until the Live board switch is on. |
+| **Bid Summary** | Same as Summary. Locked until the Live board switch is on. |
+| **YouTube overlay** | Opens the transparent overlay used on a stream. Auction rules must already be set. |
+| **YouTube watch** | Opens the public watch page for the stream. |
+| **Open** or **Copy** on a link card | Opens or copies that address: projector, live board, bid summary, or YouTube overlay. |
+
+| Field or switch | What it does |
+|-----------------|----------------|
+| **YouTube stream URL** | The stream address. **Save** stores it. |
+| **Sound on live bids** | Plays a sound when a live bid comes in. The switch saves itself. |
+| **Sound when a player is sold** | Plays the coin sound on the projector and live board after a confirmed sale. The switch saves itself. |
+| **Owner bid window** | Seconds other owners have to raise a bid. **0** turns the window off. **Save** stores the number. |
+
+#### Rules & extras
+
+| Button | What it does |
+|--------|----------------|
+| **Open pool generator** | Shown when this plan includes pools. Opens Pool Generator for fixtures. |
+| **Football extra labels** | Shown on a football tournament. Same list as on Teams. |
+| **Advertisers** | Opens the sponsor list for this tournament. Add a name there when a sponsor should appear on the screens. The sponsor card on this section is the same button. |
+
+The player-facing rules text is locked for this login. Ask AuctionChamp admin to change that HTML.
+
+---
+
+## 8. Add teams
+
+Open the **Teams & Tiers** tab. Each team belongs only to this tournament.
+
+1. Click **Edit** if the form is not already editable.
+2. Click **Add** on the teams list.
+3. Enter the team name and the owner name. Both are required. Owner name is the name shown on the team card.
+4. Click **Save & Close**.
+5. Click **Save** on the tournament form. A team left only in the dialog is not stored.
+
+The sample tournament has two teams. Auction rules need at least two.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 10.1 — Teams                                      ║
+║  File: docs/screenshots/fig_10_1_teams.png                   ║
+║  Capture: Teams and owners on the tournament                 ║
+╚══════════════════════════════════════════════════════════════╝
+
+A **DEFAULT** player tier is created for you. Add more tiers later if categories need their own base price or squad limit.
+
+---
+
+## 9. Add players
+
+Open the **Players** tab and click **Add Player**.
+
+1. Type the player name. This is the only required field.
+2. Type a role, such as Batsman, Bowler, All-Rounder, or Wicket Keeper.
+3. Leave **Mobile Number** blank unless you are storing a number you are allowed to keep.
+4. Leave address and other personal fields blank for the same reason.
+5. Click **Register**.
+
+The player is saved as **Draft** (registered) until you bring them into the auction.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 11.1 — Register a player                          ║
+║  File: docs/screenshots/fig_11_1_add_player.png              ║
+║  Capture: Add Player dialog with a sample name               ║
+╚══════════════════════════════════════════════════════════════╝
+
+Open **Registered** on the Players tab to see the draft list. The count on the right of the search bar is the number of players in that list.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 11.2 — Registered players                         ║
+║  File: docs/screenshots/fig_11_2_players.png                 ║
+║  Capture: Draft player cards                                 ║
+╚══════════════════════════════════════════════════════════════╝
+
+You can also use **Upload Players** on the same tab when the list is in a spreadsheet. The sheet should use the same sample-style names, with no personal phone numbers, if the file will be shared.
+
+---
+
+## 10. Set auction rules
+
+Rules can be set only after the tournament has at least one team. In practice, select at least two teams. Rules can be created once. To change them later, the existing rule records have to be removed first.
+
+On the tournament form, click **Set Auction Rules**.
+
+| Setting | Sample value | Meaning |
+|---------|--------------|---------|
+| Total purse | 10000 | Budget for each team |
+| Max players | 2 | Squad size for each team |
+| Global base point | 100 | Minimum bid when a tier base is 0 |
+| Teams | Both teams | Rules are created per team |
+| Bid slab | 100 to 10000, step 100 | How much a bid can rise |
+| Tier | DEFAULT | Max per team follows the squad size. Base 0 uses the global base |
+
+Click **Apply Auction Rules** and confirm. AuctionChamp opens the team cards: purse left, slots left, and the tier base.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 12.1 — Set Auction Rules                          ║
+║  File: docs/screenshots/fig_12_1_rules.png                   ║
+║  Capture: Purse, squad size, and base point                 ║
+╚══════════════════════════════════════════════════════════════╝
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 12.2 — Team purses                                ║
+║  File: docs/screenshots/fig_12_2_purse.png                   ║
+║  Capture: One team card after rules are applied             ║
+╚══════════════════════════════════════════════════════════════╝
+
+Bring registered players into the auction before you open the showcase. From the registered list, move the players to **In Auction**. Until that happens, the showcase has no one to call.
+
+---
+
+## 11. Run the auction
+
+Confirm the tournament is the active one, then open **Player Showcase** from the home menu.
+
+The showcase loads the player console for the working tournament. With **Lucky Dip** and **Automatic** drawer, a player appears on the stage. After you sell or mark unsold, the next name comes up on its own.
+
+For cricket, the profile lists every attribute that was filled in: role, batting style, bowling style, club, jersey, age, height, weight, blood group, and location. Empty fields stay off the card. Fill those on the player before the auction if the card should show them.
+
+The bottom bar has three actions:
+
+- **Set Unsold** — the player is not bought. You can bring them back later.
+- **Sell to Team** — choose the team and the points.
+- **Next Player** — skip ahead when the drawer is set to manual, or when you want the next name without a result.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 13.1 — Player on stage                            ║
+║  File: docs/screenshots/fig_13_1_showcase.png                ║
+║  Capture: Showcase with a sample player and base price       ║
+╚══════════════════════════════════════════════════════════════╝
+
+### Sell a player
+
+1. Click **Sell to Team**.
+2. Select the buying team.
+3. Set the selling points. The field starts at the base price. Use **+** and **−** to move in slab steps.
+4. Check remaining purse, slots left, and max call.
+5. Click **Sell Player**.
+
+The sample sale is Rohit Menon to Royal XI for 200 points. Base price was 100. The team had 10,000 points and 2 slots before the sale.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 13.2 — Sell to a team                             ║
+║  File: docs/screenshots/fig_13_2_sell.png                    ║
+║  Capture: Team and points before confirming the sale         ║
+╚══════════════════════════════════════════════════════════════╝
+
+### Mark a player unsold
+
+1. Click **Set Unsold**.
+2. Read the confirmation. Unsold can be brought back to the auction later.
+3. Click **Confirm**.
+
+With the automatic drawer, the next player appears as soon as the result is saved.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 13.3 — Mark unsold                                ║
+║  File: docs/screenshots/fig_13_3_unsold.png                  ║
+║  Capture: Unsold confirmation                                ║
+╚══════════════════════════════════════════════════════════════╝
+
+Repeat sell or unsold until nobody is left to call. The console then shows **Auction queue empty**: draft, unsold, sold, and still available. From there you can reopen an unsold player, or click **Declare Auction Complete** when you are finished. Declare complete only when you want the Thank You screen. Reopening an unsold player puts them back **In Auction**.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 13.6 — Auction queue empty                        ║
+║  File: docs/screenshots/fig_13_6_queue_empty.png             ║
+║  Capture: No players left to call                            ║
+╚══════════════════════════════════════════════════════════════╝
+
+---
+
+## 12. After a sale
+
+Return to the tournament and open the **Players** tab. The tiles show how many players are registered, in auction, sold, unsold, or deleted.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 13.4 — Player counts                              ║
+║  File: docs/screenshots/fig_13_4_counts.png                  ║
+║  Capture: Counts after one sale and one unsold               ║
+╚══════════════════════════════════════════════════════════════╝
+
+Click **Sold** to open the sold cards. **Recall** puts that player back into the auction if the sale must be undone. **Print** prints the card.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 13.5 — Sold player                                ║
+║  File: docs/screenshots/fig_13_5_sold.png                    ║
+║  Capture: Sold list for the sample tournament                ║
+╚══════════════════════════════════════════════════════════════╝
+
+**Auction Rules** on the tournament opens the team cards again. **View Squad Summary** on a team card is the print view: roster, template, and squad poster. To change a sale, use **Squad Modification** in Tournament Settings, not this print view.
+
+**Payment Tracker** is for registration payments. It is separate from the bid points on the showcase.
+
+---
+
+## 13. Change a squad
+
+Open **Player Dashboard → Tournament Settings → Teams → Squad Modification**. The breadcrumb is **Tournament Settings / Squad Modification**. Each team shows the squad filled, the points spent against the purse, **Print Squad Roster**, and **Squad Poster (Instagram)**.
+
+Every sold player has four buttons under the name:
+
+| Button | Action |
+|--------|--------|
+| Pencil | Edit the sold value |
+| Exchange | Swap with a player on another team |
+| Arrow | Move this player to another team |
+| Undo | Recall the player into the auction |
+
+You can also drag a player onto another team. Dropping on a player offers **Swap**. Dropping on the team card offers **Move**. **Cancel** on that choice closes it and leaves both squads as they are.
+
+The sample board has Rohit Menon on Royal XI for 200 points and Sana Pillai on Blue Hawks for 100 points. The figures below open the dialogs and then cancel, so those two sales stay where they are.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 17.1 — Squad Modification                         ║
+║  File: docs/screenshots/fig_17_1_squad.png                   ║
+║  Capture: Sold player and the four squad actions             ║
+╚══════════════════════════════════════════════════════════════╝
+
+### Edit the sold value
+
+1. Click the pencil on the player.
+2. Type the new value. The line under the field spells the amount. **Previous value** stays the old sale. **Difference** shows what the purse gains or spends.
+3. Leave **Mobile Number** blank.
+4. Click **Update** and confirm. **Cancel** keeps the old value.
+
+On the sample, Rohit Menon is still 200 points because Update was not clicked.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 17.2 — Edit sold value                            ║
+║  File: docs/screenshots/fig_17_2_edit_points.png             ║
+║  Capture: New value, previous value, and difference          ║
+╚══════════════════════════════════════════════════════════════╝
+
+### Swap two players
+
+1. Click the exchange button on the player who should leave this team.
+2. Choose the other team.
+3. Select the player to bring back.
+4. Set **New value** for each side. The first value is what your player costs on the other team. The second is what their player costs on your team.
+5. Read **Swap preview**.
+6. Click **Confirm Swap** only when both moves are right. **Cancel** changes nothing.
+
+The sample preview is Rohit Menon to Blue Hawks for 200 points, and Sana Pillai to Royal XI for 100 points. Confirm Swap was not clicked.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 17.3 — Swap preview                               ║
+║  File: docs/screenshots/fig_17_3_swap.png                    ║
+║  Capture: Both players, both values, and the preview         ║
+╚══════════════════════════════════════════════════════════════╝
+
+### Move a player
+
+1. Click the arrow on the player.
+2. Choose the destination team. The card shows squad room and purse left.
+3. Set **New value**. **To team** and **From team** are filled from that choice.
+4. Read **Move preview**.
+5. Click **Confirm Move** to apply it. **Cancel** leaves the player on the original team.
+
+A move needs a free squad slot and enough purse on the destination. The sample preview sends Rohit Menon from Royal XI to Blue Hawks for 200 points. Confirm Move was not clicked.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 17.4 — Move preview                               ║
+║  File: docs/screenshots/fig_17_4_move.png                    ║
+║  Capture: Destination team and the move preview              ║
+╚══════════════════════════════════════════════════════════════╝
+
+### Recall a player
+
+1. Click the undo button.
+2. Read the confirmation. Recall takes the player off the team and puts them back **In Auction**. The points return to that team's purse.
+3. Click **Ok** only when the sale should be undone. **Cancel** keeps the player on the team.
+
+The sample confirmation was cancelled. Rohit Menon stays with Royal XI.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 17.5 — Recall confirmation                        ║
+║  File: docs/screenshots/fig_17_5_recall.png                  ║
+║  Capture: Recall prompt before any change                    ║
+╚══════════════════════════════════════════════════════════════╝
+
+After a confirmed edit, swap, move, or recall, the squad meters and the purse on Auction Rules update. Open Player Dashboard and click **Refresh** if a count still shows the old number.
+
+---
+
+## 14. Sample data used in the figures
+
+These names exist only so the screens can be shown. They are not real contacts.
+
+| Item | Sample value |
+|------|----------------|
+| Tournament | Manual Premier League |
+| Sport | Cricket |
+| Call-up | Lucky Dip |
+| Drawer | Automatic |
+| Organiser display name | A display name typed in Organizer Name. Contact left blank |
+| Teams | Royal XI (owner Arjun Das), Blue Hawks (owner Meera Iyer) |
+| Players | Kiran Nair, Dev Sharma, Sana Pillai, Rohit Menon |
+| Purse | 10,000 points per team |
+| Squad size | 2 |
+| Base | 100 |
+| Slab | 100 to 10,000, increment 100 |
+| Sales in the figures | Rohit Menon to Royal XI for 200. Sana Pillai to Blue Hawks for 100 |
+| Unsold in the figures | Dev Sharma and Kiran Nair |
+| End of the deck | 0 draft, 2 unsold, 2 sold. Auction was not declared complete |
+| Switcher | Manual Premier League is the working tournament. A second tournament name can appear in the list. The figures do not open it |
+| Squad changes | Edit, swap, move, and recall were opened and cancelled. Rohit Menon remains with Royal XI for 200. Sana Pillai remains with Blue Hawks for 100 |
+| Logos | Sample crests only: a gold trophy for the tournament, a crown for Royal XI, a hawk for Blue Hawks |
+| Player card | Lemon card for Rohit Menon, serial 4. Contact left blank, so the card has no mobile line |
+| Duplicates | Two draft copies of Arun Varma were opened in Remove Duplicates and not deleted from that wizard. They are not part of the auction. The four sample players above are unchanged |
+
+The account chip, login, and any phone number are not in the figures. When you run your own auction, type only the names and numbers you mean to store.
+
+---
+
+## Revision history
+
+| Version | Date | What changed |
+|---------|------|----------------|
+| 2.0 | 29 October 2026 | Organiser edition. Sign-in, tournament, teams, players, rules, showcase, sell, and unsold. Sample data only. |
+| 2.1 | 29 October 2026 | Working-tournament switcher, Player Dashboard, Tournament Settings, and squad changes. |
+| 2.2 | 29 October 2026 | Tournament Settings placed after tournament creation, with every button explained. |
+| 2.3 | 29 October 2026 | How to print player cards, with a sample Lemon card. |
+| 2.4 | 29 October 2026 | How to remove duplicate players. |
+| 2.5 | 29 October 2026 | Standalone reader. The guide opens on the chapters. Edition notes sit at the end. |
+
+---
+
+## Copyright
 
 © 2026 AuctionChamp. All Rights Reserved.
 
 This document contains proprietary and confidential information belonging to AuctionChamp. No part of this publication may be reproduced, distributed, transmitted, stored in a retrieval system, or translated into any language in any form or by any means without prior written permission from AuctionChamp.
-
-The software, user interface, workflows, designs, source code, logos, trademarks, and documentation described herein are protected by applicable intellectual property laws.
-
----
-
-## Revision History
-
-| Version | Date | Author | Description |
-|---------|------|--------|-------------|
-| 1.0 | July 2026 | AuctionChamp Team | Initial Release |
-
----
-
-## How to Use This Manual
-
-- **📷 Screenshot placeholders** appear throughout. To show an image on the `/user-manual` page, save the PNG with the suggested filename under:
-  - `auction_champ_website/docs/screenshots/` (served only to logged-in users)
-  The page auto-replaces matching placeholders with the image; no markdown edit is required.
-- Callouts:
-  - **Note** — Important information
-  - **Tip** — Faster or better ways to work
-  - **Warning** — Actions that can affect live auction data
-  - **Best Practice** — Recommended operating procedure
-- Menu paths use the format: **App / Menu → Submenu → Action**
-- Features gated by SaaS plan or security group are marked **(Plan-dependent)** or **(Permission required)**
-
-### Screenshot placeholder format
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE X.Y — Title                                       ║
-║  File: docs/screenshots/fig_X_Y_short_name.png               ║
-║  Capture: where to go / what to show in the frame            ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
----
-
-## Table of Contents
-
-1. [Introduction](#chapter-1--introduction)
-2. [About AuctionChamp](#chapter-2--about-auctionchamp)
-3. [Why AuctionChamp?](#chapter-3--why-auctionchamp)
-4. [System Requirements](#chapter-4--system-requirements)
-5. [Getting Started & Navigation](#chapter-5--getting-started--navigation)
-6. [User Roles & Permissions](#chapter-6--user-roles--permissions)
-7. [SaaS Plans, Accounts & Upgrades](#chapter-7--saas-plans-accounts--upgrades)
-8. [Website, Signup & Marketing Pages](#chapter-8--website-signup--marketing-pages)
-9. [Tournament Management](#chapter-9--tournament-management)
-10. [Team Management](#chapter-10--team-management)
-11. [Player Registration & Management](#chapter-11--player-registration--management)
-12. [Auction Configuration (Rules Setup)](#chapter-12--auction-configuration-rules-setup)
-13. [Player Showcase & Live Auction](#chapter-13--player-showcase--live-auction)
-14. [Auctioneer Console](#chapter-14--auctioneer-console)
-15. [Owner Console](#chapter-15--owner-console)
-16. [Projector Display & Public Live Board](#chapter-16--projector-display--public-live-board)
-17. [Payment Tracker & Registration Payments](#chapter-17--payment-tracker--registration-payments)
-18. [Reports & Exports](#chapter-18--reports--exports)
-19. [WhatsApp & Notifications](#chapter-19--whatsapp--notifications)
-20. [Settings & Configuration](#chapter-20--settings--configuration)
-21. [Pool Generator](#chapter-21--pool-generator)
-22. [FAQs](#chapter-22--faqs)
-23. [Troubleshooting](#chapter-23--troubleshooting)
-24. [Best Practices](#chapter-24--best-practices)
-25. [Glossary](#chapter-25--glossary)
-26. [Support](#chapter-26--support)
-
-**Modules covered in this manual:** `auction_module`, `auction_owner`, `auction_auctioneer`, `auction_champ_website`, `ac_saas_manager`, `ac_payment_gateway`, `ac_saas_payment`, `ac_whatsapp`
-
----
-
-# Chapter 1 – Introduction
-
-## Welcome to AuctionChamp
-
-Welcome to AuctionChamp, a modern cloud-based auction management platform designed to simplify and automate sports player auctions. Whether you're organising a neighbourhood cricket league, a football tournament, or a professional sporting event, AuctionChamp provides an efficient, transparent, and engaging auction experience for organisers, team owners, and participants.
-
-AuctionChamp eliminates the need for manual bidding sheets, spreadsheets, and complex calculations by providing a secure, real-time auction environment. From tournament creation to final player allocation, every stage of the auction lifecycle is managed through a single integrated platform.
-
-The platform is designed with flexibility in mind and supports tournaments of varying sizes, allowing organisers to customise auction rules, budgets, player categories, bidding increments, and team constraints according to their competition requirements.
-
-## Purpose of this Manual
-
-This manual provides comprehensive guidance for using AuctionChamp effectively. It explains every major feature of the platform, describes recommended workflows, and provides step-by-step instructions for performing common tasks.
-
-After reading this manual, users will be able to:
-
-- Create and configure tournaments
-- Register and manage players
-- Manage participating teams
-- Configure auction rules
-- Conduct live auctions
-- Monitor auction progress
-- Generate reports
-- Manage tournament settings
-- Troubleshoot common issues
-
-## Intended Audience
-
-This document is intended for:
-
-- Tournament Administrators
-- Auction Managers / Auctioneers
-- League Organisers
-- Team Managers / Team Owners
-- Tournament Coordinators
-- Technical Administrators
-- Support Personnel
-
-Some features described in this manual may only be available to users with the appropriate permissions or SaaS plan.
-
----
-
-# Chapter 2 – About AuctionChamp
-
-## What is AuctionChamp?
-
-AuctionChamp is a Software-as-a-Service (SaaS) platform built to digitise and streamline sports player auctions. It provides a complete ecosystem for organising tournaments, registering players, managing teams, conducting live auctions, and publishing auction results.
-
-Unlike traditional auction processes that rely heavily on spreadsheets and manual calculations, AuctionChamp automates the entire workflow while maintaining transparency, accuracy, and speed.
-
-The platform has been developed using the Odoo framework and follows a modular architecture, enabling organisations to manage multiple tournaments from a single account while ensuring data isolation and security.
-
-## Core Objectives
-
-AuctionChamp aims to:
-
-- Simplify tournament administration
-- Eliminate manual auction errors
-- Improve transparency during live bidding
-- Provide real-time auction tracking
-- Reduce administrative overhead
-- Enable cloud-based access from anywhere
-- Deliver a professional auction experience
-
-## Key Features
-
-### Tournament Management
-- Create and manage multiple tournaments
-- Tournament branding with logos and themes
-- Configure tournament-specific rules
-- Control auction lifecycle and registration
-
-### Team Management
-- Team registration and logos
-- Budget / purse allocation
-- Team owner assignment
-- Remaining points tracking
-
-### Player Management
-- Player registration (self-serve public form)
-- Player categorisation by tiers
-- Player profile photographs
-- Bulk player import (Excel)
-- Draft → Auction → Sold / Unsold workflow
-- Icon (Key) players
-
-### Live Auction
-- Player Showcase (manual Roll Call or Lucky Dip)
-- Auctioneer Console (plan-dependent)
-- Owner remote bidding (plan-dependent)
-- Automatic bid increments via slabs
-- Sell / Unsold / Recall workflows
-- Mystery players (plan-dependent)
-- Auction pause (Break Time)
-
-### Public Display
-- Live projector view
-- Sponsor / advertiser banners
-- Current bid display
-- Team balances
-- Public Live Bid Board (code-protected)
-
-### Payments & Notifications
-- QR / payment-proof registration flow
-- Razorpay online registration payment (optional or mandatory)
-- Payment Tracker for organisers
-- WhatsApp registration confirmation & tournament share
-- Email player-card PDF (when configured)
-
-### Reports
-- Player cards (PDF / image packs)
-- Sold / Unsold Excel export
-- Auction Bid Summary / team balance views
-- Pool draw & fixture snapshots
-
----
-
-# Chapter 3 – Why AuctionChamp?
-
-Organising player auctions manually often leads to errors, delays, and disputes. AuctionChamp addresses these challenges through automation and real-time data management.
-
-## Benefits
-
-- Cloud-hosted SaaS platform
-- Secure user authentication
-- Multi-user access with role-based permissions
-- Real-time auction updates
-- Automated budget validation
-- Transparent bidding process
-- Fast report generation
-- Mobile-friendly Owner Console
-- Centralised tournament management
-- Reduced operational effort
-
----
-
-# Chapter 4 – System Requirements
-
-## Recommended Hardware
-
-| Component | Minimum | Recommended |
-|-----------|---------|-------------|
-| Processor | Dual Core | Quad Core or higher |
-| Memory | 4 GB RAM | 8 GB or higher |
-| Display | 1366 × 768 | Full HD (1920 × 1080) |
-| Internet | 10 Mbps | 25 Mbps or higher |
-
-## Supported Browsers
-
-AuctionChamp supports the latest versions of:
-
-- Google Chrome
-- Microsoft Edge
-- Mozilla Firefox
-- Safari
-
-> **Tip:** For live auctions and the projector screen, use **Google Chrome** or **Microsoft Edge**.
-
-## Network Notes for Auction Day
-
-- Prefer a wired or strong Wi-Fi connection for the auctioneer laptop and projector machine
-- Pre-open Player Showcase, Auctioneer Console, and Projector URLs before the event starts
-- Keep a backup hotspot ready for mobile Owner Console users
-
----
-
-# Chapter 5 – Getting Started & Navigation
-
-## 5.1 Logging In
-
-1. Open your AuctionChamp URL (for example `https://www.auctionchamp.live` or your tenant login URL).
-2. Enter your **Email / Login** and **Password**.
-3. Click **Log in**.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 5.1 — Login Screen                                ║
-║  File: docs/screenshots/fig_5_1_login.png                    ║
-║  Capture: Full login page with AuctionChamp branding         ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-> **Note:** New organisers who purchase a plan from the website receive login credentials by email after successful Razorpay payment (`ac_saas_payment`).
-
-## 5.2 Home Screen / App Switcher
-
-After login you see the AuctionChamp backend home with application icons. Typical root apps for organisers:
-
-| App / Menu | Purpose |
-|------------|---------|
-| **Tournament(s)** | Create and manage tournaments |
-| **Auction Settings** | Teams, players, auction rules, configuration |
-| **Player Showcase** | Launch the live auction stage |
-| **Auctioneer Console** | Drive bidding live (permission + plan) |
-| **Payment Tracker** | Mark player registration payments |
-| **Player Dashboard** | Read-only player overview (special role) |
-| **SaaS Manager** | Plans, accounts, upgrade requests (platform admin) |
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 5.2 — Home / Apps Menu                            ║
-║  File: docs/screenshots/fig_5_2_home_apps.png                ║
-║  Capture: Backend home showing AuctionChamp app icons        ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 5.3 Navigation Overview – Auction Settings
-
-**Path:** Auction Settings
-
-| Submenu | Description |
-|---------|-------------|
-| **Auction → Auction Team(s)** | Per-team purse, players sold, slabs & tier limits |
-| **Auction → Auction Rules Setup** | Configure / apply auction rules |
-| **Auction → Auction Bid Summary** | Team balance / points table (opens public-style page) |
-| **Auction → Public Live Bid Board** | Shareable live board |
-| **Auction → Pool Generator** | Create pools and fixtures (plan-dependent) |
-| **Players → Draft** | Players not yet in auction |
-| **Players → Players in Auction** | Active auction pool |
-| **Players → Icon Players** | Key / icon players |
-| **Players → Players Sold** | Sold players |
-| **Players → Unsold Players** | Unsold players |
-| **Players → Unpaid Players** | Players marked unpaid |
-| **Players → Players-Jersy** | Jersey details list (permission) |
-| **Players → Convert PDF to PNG** | Bulk card image conversion (permission) |
-| **Configuration → Team(s)** | Team master |
-| **Configuration → Player Tier(s)** | Tier master |
-| **Configuration → Website Configurator** | Marketing site content (admin) |
-| **Configuration → Website FAQ** | Public FAQ entries (admin) |
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 5.3 — Auction Settings Menu Tree                  ║
-║  File: docs/screenshots/fig_5_3_auction_settings_menu.png    ║
-║  Capture: Expanded Auction Settings sidebar / app menus      ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 5.4 Working Tournament Switcher (Navbar)
-
-**(SaaS)** Organisers with multiple tournaments use the **tournament switcher** in the top navbar to choose the **working tournament**. Most live screens (Showcase, Live Board, Payment Tracker redirects) use this active tournament.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 5.4 — Tournament Switcher in Navbar               ║
-║  File: docs/screenshots/fig_5_4_tournament_systray.png       ║
-║  Capture: Navbar dropdown showing tournaments; one marked    ║
-║           as active / working                                ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-> **Tip:** Always confirm the working tournament before opening Player Showcase on auction day.
-
-## 5.5 Recommended First-Time Setup Sequence
-
-1. Sign up / receive SaaS account credentials  
-2. Log in and open **Tournament(s)**  
-3. Create tournament (sport, logo, dates, theme)  
-4. Add **Teams** and **Player Tiers**  
-5. Open registration / upload players  
-6. Configure **Auction Rules Setup** (purse, max players, slabs, tier limits)  
-7. Assign Auctioneer / Owner users if needed  
-8. Test Projector URL + Live Board  
-9. Run a short dry-run auction  
-
----
-
-# Chapter 6 – User Roles & Permissions
-
-AuctionChamp uses Odoo security groups under the **Auction** category (plus SaaS groups).
-
-## 6.1 Role Summary
-
-| Role / Group | Typical User | What they can do |
-|--------------|--------------|------------------|
-| **Administrator** | Platform / full organiser admin | Full auction access including all sub-roles |
-| **User** | Auction operator | Player Showcase, Auction Team(s), core auction actions |
-| **Player Setup** | Registration desk | Full player CRUD (Draft, Auction, Icon, Sold, Unsold, Unpaid) |
-| **Player Card Print** | Print desk | Print player cards from kanban/form/list |
-| **Player Jersey View** | Kit manager | Jersey fields + Players-Jersey menu |
-| **PDF to PNG** | Design desk | Convert PDF card sheets to PNG ZIP |
-| **Pool Generator** | Fixture planner | Pool Generator access |
-| **Bid Board** | Coordinator | Public Live Bid Board |
-| **Payment Tracker** | Cash desk | Payment Tracker app (needs Active Tournament) |
-| **Player Dashboard Viewer** | Observer | Player Detail Dashboard only |
-| **Team Owner** / **Owner** | Franchise owner | Owner Console bidding for assigned team |
-| **Auctioneer** | Auctioneer | Auctioneer Console |
-| **SaaS Account User** | Paying organiser | Own tournaments within plan limits |
-| **SaaS Manager** | AuctionChamp ops | All SaaS accounts, plans, upgrade approvals |
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 6.1 — User Form with Auction Access Rights        ║
-║  File: docs/screenshots/fig_6_1_user_groups.png              ║
-║  Capture: Settings → Users → Access Rights showing Auction   ║
-║           and SaaS groups                                    ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 6.2 Assigning a Team Owner
-
-1. Create or open the **User**.
-2. Grant **Owner** / **Team Owner** group.
-3. Set the user’s **Tournament** and **Team** (Owner Console uses these assignments).
-4. Ask the owner to open `/auction/owner/console` after login.
-
-> **Warning:** Owners must be linked to the correct team before live bidding. Wrong assignment places bids for the wrong franchise.
-
-## 6.3 Assigning an Auctioneer
-
-1. Grant the **Auctioneer** group (Administrators imply this automatically).
-2. Ensure Auctioneer Console is allowed on the organiser’s **SaaS plan** (Classic and above).
-3. Open **Auctioneer Console** from the app menu or `/auction/auctioneer/console`.
-
----
-
-# Chapter 7 – SaaS Plans, Accounts & Upgrades
-
-**Modules:** `ac_saas_manager`, `ac_saas_payment`
-
-## 7.1 Purpose
-
-SaaS Manager enforces plan limits and feature gates for organiser accounts:
-
-- Max tournaments, teams per tournament, players per tournament
-- Feature flags: Random mode, Auctioneer Console, Owner bidding, Pool Creator, Parallel sessions, Mystery players, allowed card themes
-
-## 7.2 Plan Comparison (Default Catalogue)
-
-| Feature | Standard | Classic | Pro | Pro+ |
-|---------|----------|---------|-----|------|
-| Max tournaments | 5 | 6 | 10 | 16 |
-| Max teams / tournament | 6 | 8 | 12 | 24 |
-| Max players / tournament | 80 | 100 | 150 | 300 |
-| Lucky Dip (Random) | No | Yes | Yes | Yes |
-| Auctioneer Console | No | Yes | Yes | Yes |
-| Owners remote bidding | No | No | Yes | Yes |
-| Pool Creator | No | No | Yes | Yes |
-| Parallel multi-device sessions | No | No | Yes | Yes |
-| Mystery players | No | No | Yes | Yes |
-| Default card themes | Lemon | Vanilla | Strawberry | Strawberry, Cherry, Pistah |
-| Notes | Mini / friendly | Mini + auctioneer | Premier leagues | Large premier; contact support beyond |
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 7.1 — Website Pricing Cards                       ║
-║  File: docs/screenshots/fig_7_1_pricing_plans.png            ║
-║  Capture: Homepage Plans & Pricing section                   ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 7.3 SaaS Account (Organiser View)
-
-Organisers see their own account usage (tournaments / teams / players) against plan limits. When a limit is hit, creation is blocked with an upgrade hint.
-
-**Account states** typically include Active / Expired (and related operational states managed by SaaS Manager).
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 7.2 — SaaS Account Form (Organiser)               ║
-║  File: docs/screenshots/fig_7_2_saas_account.png             ║
-║  Capture: Account with plan, dates, usage counters           ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 7.4 SaaS Manager (Platform Admin)
-
-**Path:** SaaS Manager → Accounts / Plans / Upgrade Requests
-
-### Accounts
-- Link **Login User**, **Plan**, **Start Date**, **End Date**
-- Review usage and freeze/expire handling
-
-### Plans
-- Configure limits and feature toggles listed above
-- Set website pricing display fields (list price, validity days, etc.)
-
-### Upgrade Requests
-- Organisers submit upgrade requests from the app
-- With `ac_saas_payment` enabled, upgrades can be **paid via Razorpay** (prorated) using **Pay & upgrade**
-- Managers can also approve manually where payment is not required
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 7.3 — Upgrade Request with Payment Summary        ║
-║  File: docs/screenshots/fig_7_3_upgrade_request.png          ║
-║  Capture: New plan price, prorated credit, amount to pay     ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 7.5 Paying for an Upgrade (Organiser)
-
-1. Open your upgrade / plan screen and choose the target plan.
-2. Review **Amount to pay** (proration shown when applicable).
-3. Click **Pay & upgrade**.
-4. Complete Razorpay checkout.
-5. After verification, the account plan updates and gated features unlock.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 7.4 — SaaS Upgrade Razorpay Checkout              ║
-║  File: docs/screenshots/fig_7_4_upgrade_checkout.png         ║
-║  Capture: Upgrade payment page before / during Razorpay      ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-> **Note:** If an account is frozen or expired, live auction screens may show a blocking page until renewal.
-
----
-
-# Chapter 8 – Website, Signup & Marketing Pages
-
-**Modules:** `auction_champ_website`, `ac_saas_payment`
-
-## 8.1 Public Pages
-
-| URL | Purpose |
-|-----|---------|
-| `/` | Marketing homepage (hero, features, pricing, FAQ, live tournaments) |
-| `/privacy-policy` | Privacy policy |
-| `/terms-and-conditions` | Terms & conditions |
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 8.1 — AuctionChamp Homepage Hero                  ║
-║  File: docs/screenshots/fig_8_1_homepage_hero.png            ║
-║  Capture: First viewport of public homepage                  ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 8.2 — Plans & Pricing / Get Started               ║
-║  File: docs/screenshots/fig_8_2_get_started.png              ║
-║  Capture: Pricing section with Get Started CTA               ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 8.2 Website Signup Flow (Paid)
-
-1. Visitor selects a plan and clicks **Get Started**.
-2. Enters signup details (name, email, phone, etc. as shown on the form).
-3. Pays via Razorpay.
-4. System creates the SaaS account + login user.
-5. Credentials are emailed; visitor lands on the success / done page.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 8.3 — Signup Form                                 ║
-║  File: docs/screenshots/fig_8_3_signup_form.png              ║
-║  Capture: Website plan signup form                           ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 8.4 — Signup Payment Success                      ║
-║  File: docs/screenshots/fig_8_4_signup_done.png              ║
-║  Capture: Post-payment confirmation / credentials notice     ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 8.3 Website Configurator (Admin)
-
-**Path:** Auction Settings → Configuration → Website Configurator
-
-Edit marketing content: hero, features, testimonials, pricing display flags, footer, etc.
-
-**Path:** Auction Settings → Configuration → Website FAQ
-
-Maintain FAQ Q&A shown on the public site.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 8.5 — Website Configurator Form                   ║
-║  File: docs/screenshots/fig_8_5_website_config.png           ║
-║  Capture: Backend Website Configurator                       ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
----
-
-# Chapter 9 – Tournament Management
-
-**Module:** `auction_module` (+ SaaS inheritance)
-
-## 9.1 Purpose
-
-A **Tournament** is the top-level container for teams, players, auction rules, registration, projector branding, and live session state.
-
-## 9.2 Navigation
-
-- **SaaS organisers:** Tournament(s) (own tournaments only)  
-- **Administrators:** Tournament(s) (all)
-
-## 9.3 Creating a Tournament
-
-1. Open **Tournament(s)** → **Create**.
-2. Fill **Tournament Info**:
-   - **Name** (required)
-   - **Short Description** (required)
-   - **Game / Sport:** Cricket or Football (Kabaddi is listed as Coming Soon)
-   - **Tournament Dates**
-   - **Logo**
-   - **Organizer Name / Contact**
-3. Choose **Player Call-Up Mode**:
-   - **Roll Call** — manual / dice number selection
-   - **Lucky Dip** — random next player **(Plan-dependent)**
-4. Choose **Theme** (player card / showcase skin; options limited by plan).
-5. Save.
-
-A unique **Tournament Code** (format `AC#` + digits) and **URL Slug** are generated automatically.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 9.1 — Create Tournament Form (Header)             ║
-║  File: docs/screenshots/fig_9_1_tournament_create.png        ║
-║  Capture: New tournament form with Name, Sport, Logo         ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 9.4 Tournament Form – Header Actions
-
-| Button | Purpose |
-|--------|---------|
-| **Set Auction Rules** | Opens Auction Rules Setup wizard |
-| **Auction Rules** | Opens existing rules |
-| **Export Sold / Unsold** | Excel export of sold & unsold players |
-| **Deactivate Tournament** | Soft-deactivate |
-| **Remove Duplicates** | Clean duplicate player records |
-| **Open / Close Registration** | Toggle public registration |
-| **Enable / Disable Live Board** | Toggle public live board stream |
-| **Open Registration Link** | Opens share URL |
-| **Payment Tracker** | Opens tracker for this tournament |
-| **Clear Stage** | Clears current on-stage player |
-| **Clear Auction History** | Clears history **(Warning)** |
-| **Share on WhatsApp** | Invite wizard (`ac_whatsapp`) |
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 9.2 — Tournament Form Status Buttons              ║
-║  File: docs/screenshots/fig_9_2_tournament_actions.png       ║
-║  Capture: Header buttons + registration/live board toggles   ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 9.5 Tournament Tabs
-
-### Players
-- Inline player list
-- **Upload Players** (Excel wizard)
-
-### Teams & Tiers
-- Team list with logos
-- Tier list (DEFAULT tier is created automatically)
-- **Upload Teams & Tiers**
-
-### Other Attributes *(Football only)*
-- Define Att-Labels used on cards and Excel upload columns
-
-### Presentation & Theme
-- Card theme
-- **Sold Screen Duration (seconds)**
-- **Next Player Countdown (seconds)**
-- **Quick-Select Points** (comma-separated sell modal presets)
-- **Unmask Player Contact?** (requires privacy agreement)
-- **Jersey Included?**
-- Player self-registration links & limits
-- Projector URL section
-
-### Poster & Payment Images
-- Tournament poster
-- Payment QR / scanner
-- Payment instructions text
-
-### Venue
-- Tournament venue
-- Auction date & auction venue (shown on projector)
-
-### Rules & Regulations
-- HTML rules text for display / sharing
-
-### Advertisers
-- Sponsor name + banner/logo for projector / boards
-
-### Pools and Fixtures
-- Download saved pool draw / fixture snapshots
-
-### Online Registration Payment (Razorpay) — `ac_payment_gateway`
-- **Include Registration Payment**
-- **Payment Requirement:** Optional / Mandatory
-- **Registration Currency** & **Registration Fee**
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 9.3 — Presentation & Theme Tab                    ║
-║  File: docs/screenshots/fig_9_3_presentation_theme.png       ║
-║  Capture: Theme + timing + registration URL fields           ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 9.4 — Razorpay Registration Payment Settings      ║
-║  File: docs/screenshots/fig_9_4_registration_payment.png     ║
-║  Capture: Include Registration Payment + fee fields          ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 9.6 Registration URL Format
-
-`{base_url}/{database}/{tournament_slug}/player/register`
-
-Share this link for player self-registration.
-
-## 9.7 Field Reference (Selected)
-
-| Field | Description |
-|-------|-------------|
-| Max points alloted for a team | Default purse reference |
-| Max registrations | Cap public registrations (0 = no cap UI behaviour per form) |
-| WhatsApp Group Link | Shown on registration success |
-| Live Board Active | Public board online/offline |
-| Break Time | Shows break screen on live board |
-| Auction declared complete | Marks auction finished for displays |
-
-> **Best Practice:** Complete Teams, Tiers, Themes, Poster, and Payment setup **before** opening registration.
-
----
-
-# Chapter 10 – Team Management
-
-## 10.1 Purpose
-
-Teams (franchises) bid using a purse (points). Each team appears on Auction Team(s), Owner Console, projector, and balance boards.
-
-## 10.2 Navigation
-
-**Path:** Auction Settings → Configuration → Team(s)  
-Also editable from Tournament → **Teams & Tiers**.
-
-## 10.3 Creating a Team
-
-1. Open Team(s) → Create (or add from tournament).
-2. Enter:
-   - **Team Name** (required)
-   - **Team Logo**
-   - **Owner** (manager name display)
-   - **Tournament**
-3. Save.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 10.1 — Team Form                                  ║
-║  File: docs/screenshots/fig_10_1_team_form.png               ║
-║  Capture: Team name, logo, owner fields                      ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 10.4 Bulk Upload Teams & Tiers
-
-From the tournament form click **Upload Teams & Tiers**, download the template if provided by the wizard, fill rows, and upload.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 10.2 — Upload Teams & Tiers Wizard                ║
-║  File: docs/screenshots/fig_10_2_upload_teams.png            ║
-║  Capture: Upload wizard dialog                               ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 10.5 Auction Team(s) Screen
-
-**Path:** Auction Settings → Auction → Auction Team(s)
-
-Shows each team’s auction purse configuration after rules are applied:
-
-- Total points / remaining points
-- Max players
-- Players purchased
-- Bid slabs & tier limits (via rules)
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 10.3 — Auction Team(s) List / Kanban              ║
-║  File: docs/screenshots/fig_10_3_auction_teams.png           ║
-║  Capture: Teams with remaining points visible                ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-> **Warning:** Changing purse mid-auction can invalidate ongoing bids. Prefer finalising rules before going live.
-
----
-
-# Chapter 11 – Player Registration & Management
-
-## 11.1 Player Lifecycle States
-
-| State | Meaning |
-|-------|---------|
-| **Draft** | Registered / entered but not in the live auction pool |
-| **In Auction** | Available to be called on stage |
-| **Sold** | Purchased by a team |
-| **Unsold** | Passed; can be brought back later |
-| **Icon / Key Player** | Special sold/icon designation (Icon Players menu) |
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 11.1 — Players Menu States                        ║
-║  File: docs/screenshots/fig_11_1_players_menus.png           ║
-║  Capture: Draft / In Auction / Sold / Unsold menus           ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 11.2 Public Player Registration
-
-1. Open Registration (tournament must have **Registration Open**).
-2. Player fills:
-   - **Player Photo** (required)
-   - **Full Name** (required)
-   - Sport-specific fields (Role / batting-bowling for cricket; position / foot for football)
-   - **Player Tier** (required when tiers are offered)
-   - **Mobile Number** (required)
-   - Optional: blood group, address, previous club, jersey fields (if enabled)
-   - Payment proof upload **or** Razorpay checkout (if online payment enabled)
-3. On success, player may download **Player Card PDF** and **Instagram Card JPG**, and join WhatsApp group if configured.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 11.2 — Public Registration Form                   ║
-║  File: docs/screenshots/fig_11_2_registration_form.png       ║
-║  Capture: Full registration page with poster sidebar         ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 11.3 — Registration Success Screen                ║
-║  File: docs/screenshots/fig_11_3_registration_success.png    ║
-║  Capture: Success + download buttons + WhatsApp join         ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-### Payment modes on registration
-
-| Mode | Behaviour |
-|------|-----------|
-| QR / proof (default) | Player uploads payment screenshot; organiser marks paid in Payment Tracker |
-| Razorpay **Optional** | Player can register now and pay later via checkout link |
-| Razorpay **Mandatory** | Player record is created only after successful payment |
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 11.4 — Razorpay Registration Checkout             ║
-║  File: docs/screenshots/fig_11_4_reg_razorpay.png            ║
-║  Capture: Registration payment checkout page                 ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 11.3 Creating Players Manually (Backend)
-
-**Path:** Auction Settings → Players → Draft → Create
-
-Key fields:
-
-- Name, Photo, Contact, Tier, Role / attributes
-- **Payment Received**
-- Jersey details (if group enabled)
-- Mystery player flag **(Plan-dependent)**
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 11.5 — Player Profile Form                        ║
-║  File: docs/screenshots/fig_11_5_player_form.png             ║
-║  Capture: Player Profile with photo and category             ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 11.4 Bulk Upload Players
-
-From Tournament → Players tab → **Upload Players**.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 11.6 — Upload Players Wizard                      ║
-║  File: docs/screenshots/fig_11_6_upload_players.png          ║
-║  Capture: Excel upload dialog                                ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 11.5 Moving Players Into Auction
-
-From Draft (or via bulk actions / wizards):
-
-- Move selected players to **In Auction**
-- Use **Bring to Auction** on Unsold players
-
-## 11.6 Player Actions by State
-
-| Action | When available |
-|--------|----------------|
-| **Sell to Team** | In Auction |
-| **Set to Unsold** | In Auction |
-| **Bring to Auction** | Unsold |
-| **Set as Icon Player** | Eligible sold flow |
-| **Revoke Icon Player** | Icon players |
-| **Recall to Auction** | Sold (non-icon) |
-| **Print** | Card print permission |
-| **Send WhatsApp confirm** | `ac_whatsapp` |
-| **Email card PDF** | `ac_whatsapp` / mail configured |
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 11.7 — Player List Action Buttons                 ║
-║  File: docs/screenshots/fig_11_7_player_actions.png          ║
-║  Capture: List/kanban showing Sell / Unsold / Recall         ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 11.7 Icon (Key) Players
-
-Use **Set as Icon Player** wizard to assign a player as a franchise icon with points/team as required by your event rules. Icon players appear under **Players → Icon Players**.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 11.8 — Set as Icon Player Wizard                  ║
-║  File: docs/screenshots/fig_11_8_icon_player_wizard.png      ║
-║  Capture: Icon player wizard dialog                          ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 11.8 Mystery Players *(Pro / Pro+)*
-
-Mark a player as mystery so the public display hides identity until the auctioneer **reveals** the player from the Auctioneer Console.
-
-> **Note:** Feature availability is enforced by the SaaS plan (`allow_mystery_players`).
-
----
-
-# Chapter 12 – Auction Configuration (Rules Setup)
-
-## 12.1 Purpose
-
-**Auction Rules Setup** defines purse, squad size, bid increment slabs, and per-tier recruitment limits for every team.
-
-**Path:** Auction Settings → Auction → Auction Rules Setup  
-Or Tournament → **Set Auction Rules**
-
-## 12.2 Procedure
-
-1. Open Auction Rules Setup.
-2. Set:
-   - **Total Purse Value** (`max_points`)
-   - **Max no of players**
-3. Review **Teams** included.
-4. Configure **Slab Setup**:
-   - **From** / **To** amount ranges
-   - **Increment** for that range
-5. Configure **Tier Limits**:
-   - Tier
-   - **Max Players per Team**
-   - **Base Point** (0 = use global base)
-   - **Max Call for a Player** (0 = unlimited)
-6. Click **Apply** and confirm.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 12.1 — Auction Rules Setup Wizard                 ║
-║  File: docs/screenshots/fig_12_1_auction_rules.png           ║
-║  Capture: Purse, slabs, tier limits filled                   ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-> **Warning:** Applying rules starts / refreshes the auction process for teams. Confirm values carefully before auction day.
-
-## 12.3 Example Bid Slab
-
-| From | To | Increment |
-|------|----|-----------|
-| 0 | 1000 | 50 |
-| 1001 | 5000 | 100 |
-| 5001 | 20000 | 250 |
-
-## 12.4 Validation Concepts
-
-- Bids cannot exceed a team’s **remaining points** while still leaving enough purse for remaining mandatory slots (system calculates max call / remaining players constraints).
-- Tier limits prevent over-recruiting a category.
-
-> **Best Practice:** Print or screenshot the final rules and share with owners before the auction starts.
-
----
-
-# Chapter 13 – Player Showcase & Live Auction
-
-## 13.1 Purpose
-
-**Player Showcase** is the primary stage controller for calling players, selling, marking unsold, and driving the projector.
-
-**Path:** Player Showcase app → `/auction/showcase`  
-(Requires auction rules to be ready; otherwise a rules-required page is shown.)
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 13.1 — Auction Rules Required Screen              ║
-║  File: docs/screenshots/fig_13_1_rules_required.png          ║
-║  Capture: Blocking page when rules not set                   ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 13.2 Opening Showcase
-
-1. Select the correct working tournament in the navbar.
-2. Open **Player Showcase**.
-3. Confirm projector URL is open on the display machine.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 13.2 — Player Showcase Main Screen                ║
-║  File: docs/screenshots/fig_13_2_showcase.png                ║
-║  Capture: Showcase with player queue / on-stage area         ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 13.3 Call-Up Modes
-
-### Roll Call
-- Pick a player from the list, or use dice / squad number flow synced to the projector.
-
-### Lucky Dip *(plan-dependent)*
-- System draws the next player randomly (**Next Player** style flow).
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 13.3 — Dice / Number Call-Up                      ║
-║  File: docs/screenshots/fig_13_3_dice_callup.png             ║
-║  Capture: Dice animation / number selection on showcase      ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 13.4 On-Stage Workflow
-
-1. Bring player on stage (`is_on_stage`).
-2. Announce base price / start bidding (via Auctioneer Console or manual sell).
-3. Finalise:
-   - **Sell** → choose team + points (quick-select points available)
-   - **Unsold** → mark passed
-4. Sold celebration screen displays for **Sold Screen Duration**.
-5. Next-player countdown overlay may appear before the following call-up.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 13.4 — Sell Player Modal                          ║
-║  File: docs/screenshots/fig_13_4_sell_modal.png              ║
-║  Capture: Sell modal with team + points + quick selects      ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 13.5 — Sold Celebration Overlay                   ║
-║  File: docs/screenshots/fig_13_5_sold_stamp.png              ║
-║  Capture: SOLD stamp / celebration on projector or showcase  ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 13.5 Break Time
-
-Enable **Break Time** on the tournament (or via live controls where available) to show a break holding screen on the live board / projector flow.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 13.6 — Break Time Screen                          ║
-║  File: docs/screenshots/fig_13_6_break_time.png              ║
-║  Capture: Break Time public display                          ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 13.6 Corrections
-
-- **Recall to Auction** for wrongly sold players
-- Sale correction endpoints / UI allow updating sold team/points when authorised
-- **Clear Stage** if the wrong player is showing
-
-> **Warning:** Correct during a pause; announce the correction publicly to avoid owner disputes.
-
----
-
-# Chapter 14 – Auctioneer Console
-
-**Module:** `auction_auctioneer`  
-**Permission:** Auctioneer group  
-**Plan:** Classic and above (`allow_auctioneer_console`)
-
-## 14.1 Purpose
-
-Full-screen console (no standard Odoo chrome) for the auctioneer to:
-
-- Drive showcase flow (Manual dice/numbers or Random Next Player)
-- See all teams and purse balances
-- See current player on stage
-- Place / increment bids per team
-- Reset bid, mark unsold, finalize sale
-- Reveal mystery players
-- Correct a bid amount
-
-**URLs:**
-- `/auction/auctioneer/console` (redirects to active tournament)
-- `/auction/auctioneer/console/<tournament_slug>`
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 14.1 — Auctioneer Console Overview                ║
-║  File: docs/screenshots/fig_14_1_auctioneer_console.png      ║
-║  Capture: Full console with teams grid + on-stage player     ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 14.2 Typical Bidding Flow
-
-1. Call / next player so the player is on stage (synced to projector).
-2. Click a **team** button.
-3. Confirm / adjust bid in the bid modal (increment follows slabs).
-4. Continue until hammer time.
-5. **Finalize** the sale (or **Mark Unsold**).
-6. Proceed to next player.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 14.2 — Place Bid Modal                            ║
-║  File: docs/screenshots/fig_14_2_place_bid_modal.png         ║
-║  Capture: Bid modal for a selected team                      ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 14.3 Console Actions Reference
-
-| Action | Effect |
-|--------|--------|
-| Dice / Call Player | Puts selected player on stage |
-| Next Player | Random/linear advance per mode |
-| Reveal Mystery | Unmasks mystery player |
-| Place Bid | Sets current bid for team |
-| Reset Bid | Clears current bid state |
-| Mark Unsold | Player → Unsold |
-| Finalize Bid | Completes sale to leading team |
-| Correct Bid | Adjusts locked/current bid value |
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 14.3 — Mystery Reveal Control                     ║
-║  File: docs/screenshots/fig_14_3_mystery_reveal.png          ║
-║  Capture: Mystery player pending reveal UI                   ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-> **Tip:** Run Auctioneer Console on a dedicated laptop; keep Player Showcase/projector on the display PC.
-
----
-
-# Chapter 15 – Owner Console
-
-**Module:** `auction_owner`  
-**Permission:** Owner group + team assignment  
-**Plan:** Pro / Pro+ (`allow_owner_bidding`)
-
-## 15.1 Purpose
-
-Mobile-friendly dashboard for franchise owners to:
-
-- Watch the live auction
-- See purse balance and squad
-- Place bids for their assigned team
-- Revoke their own bid when rules allow
-
-**URL:** `/auction/owner/console`  
-Owners landing on `/web` may be redirected straight to the Owner Console.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 15.1 — Owner Console (Mobile)                     ║
-║  File: docs/screenshots/fig_15_1_owner_console_mobile.png    ║
-║  Capture: Phone-width view with player + Bid button          ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 15.2 — Owner Console (Desktop)                    ║
-║  File: docs/screenshots/fig_15_2_owner_console_desktop.png   ║
-║  Capture: Desktop owner dashboard with squad list            ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 15.2 Placing a Bid
-
-1. Wait until a player is on stage and bidding is open.
-2. Tap **Bid** / place bid at the offered amount (next increment).
-3. Confirm success toast / UI state.
-4. Use **Revoke** only if your bid is still eligible to withdraw.
-
-> **Warning:** Budget validation applies. If the bid would break remaining-players purse rules, it is rejected.
-
-## 15.3 Counter / Live Bid Helpers
-
-Public helper endpoints support counter checks and live bid polling used by the console UI. Owners should refresh if the connection drops; re-login if session expires.
-
----
-
-# Chapter 16 – Projector Display & Public Live Board
-
-## 16.1 Projector Display
-
-Each tournament exposes a **Projector URL** (after auction rules exist):
-
-`{base}/{db}/{slug}/...` (open via tournament **Projector URL** field / Share URL)
-
-Shows:
-
-- Current player / mystery state
-- Current bid & leading team
-- Team balances
-- Advertiser banners
-- Sold / Unsold stamps
-- Optional pool draw / fixtures board modes
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 16.1 — Projector Live Player Screen               ║
-║  File: docs/screenshots/fig_16_1_projector_player.png        ║
-║  Capture: Full-bleed projector with player + bid             ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 16.2 — Projector with Sponsor Banner              ║
-║  File: docs/screenshots/fig_16_2_projector_sponsor.png       ║
-║  Capture: Advertiser banner visible on projector             ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-### Projector Board Modes
-
-| Mode | Use |
-|------|-----|
-| Hidden (idle) | Normal auction player flow |
-| Pool Draw | Show saved pools |
-| Fixtures | Show fixture schedule |
-
-## 16.2 Public Live Bid Board
-
-**Path:** Auction Settings → Auction → Public Live Bid Board  
-**Shortcut:** `/auction/my/live-board` (uses working tournament)
-
-- Must be **Live Board Active** on the tournament
-- May require **Tournament Code** unlock for public viewers
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 16.3 — Live Board Unlock Screen                   ║
-║  File: docs/screenshots/fig_16_3_live_board_unlock.png       ║
-║  Capture: Code entry unlock page                             ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 16.4 — Public Live Bid Board                      ║
-║  File: docs/screenshots/fig_16_4_live_board.png              ║
-║  Capture: Live board with current bid + balances             ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 16.3 Auction Bid Summary / Team Balance
-
-**Path:** Auction → Auction Bid Summary  
-Opens the team balance / points table view for sharing with stakeholders.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 16.5 — Team Balance / Points Table                ║
-║  File: docs/screenshots/fig_16_5_team_balance.png            ║
-║  Capture: All teams remaining points & player counts         ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
----
-
-# Chapter 17 – Payment Tracker & Registration Payments
-
-## 17.1 Payment Tracker
-
-**Path:** Payment Tracker app (root menu)  
-**Permission:** Auction group or **Payment Tracker** role + Active Tournament
-
-Use cases:
-
-- See registered players for the tournament
-- Mark / unmark **Payment Received**
-- Support cash desk on registration day
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 17.1 — Payment Tracker Screen                     ║
-║  File: docs/screenshots/fig_17_1_payment_tracker.png         ║
-║  Capture: Player list with paid/unpaid toggles               ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 17.2 Unpaid Players Menu
-
-**Path:** Auction Settings → Players → Unpaid Players  
-Filters players with payment not received for follow-up.
-
-## 17.3 Razorpay System Configuration (Admin)
-
-**Path:** Settings → Razorpay Payment Gateway (`ac_payment_gateway`)
-
-Configure:
-
-- Razorpay Key ID
-- Razorpay Key Secret
-- Razorpay Webhook Secret (if used)
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 17.2 — Razorpay Settings                          ║
-║  File: docs/screenshots/fig_17_2_razorpay_settings.png       ║
-║  Capture: Settings block with Key ID fields (mask secrets)   ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-> **Warning:** Never publish Key Secret in the user manual screenshots. Mask secrets before capture.
-
-## 17.4 SaaS Upgrade Payment Settings
-
-**Path:** Settings → SaaS Plan Upgrades (`ac_saas_payment`)
-
-Enables paid upgrades and website signup checkout behaviour tied to the same Razorpay credentials / SaaS payment sequences.
-
----
-
-# Chapter 18 – Reports & Exports
-
-## 18.1 Player Cards
-
-- Print from player kanban/form/list (**Player Card Print** permission)
-- Theme follows tournament **Theme** (Lemon, Vanilla, Butterscotch, Strawberry, Cherry, Pistah, Blackberry, Football variants)
-- Bulk image download via Players Card URL action where enabled
-- **Convert PDF to PNG** wizard for sheet-to-image packs
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 18.1 — Printed Player Card Sample                 ║
-║  File: docs/screenshots/fig_18_1_player_card.png             ║
-║  Capture: Sample PDF/card for one player                     ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 18.2 — Convert PDF to PNG Wizard                  ║
-║  File: docs/screenshots/fig_18_2_pdf_to_png.png              ║
-║  Capture: Upload PDF → download ZIP flow                     ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 18.2 Export Sold / Unsold
-
-From Tournament → **Export Sold / Unsold** to download Excel for settlement and notices.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 18.3 — Export Sold / Unsold Result                ║
-║  File: docs/screenshots/fig_18_3_export_sold_unsold.png      ║
-║  Capture: Excel open or download toast                       ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 18.3 Auction History
-
-Administrators can access **Auction History** under technical menus for audit of bidding events.
-
-## 18.4 Pool / Fixture Snapshots
-
-From Tournament → Pools and Fixtures, download PNG snapshots generated by Pool Generator.
-
----
-
-# Chapter 19 – WhatsApp & Notifications
-
-**Module:** `ac_whatsapp`
-
-## 19.1 System Configuration (Admin)
-
-**Path:** Settings → WhatsApp
-
-| Setting | Purpose |
-|---------|---------|
-| WhatsApp Provider | Twilio or Meta |
-| Twilio Account SID / Auth Token / From | Twilio WhatsApp sender |
-| Registration Content SID | Twilio content template for registration confirm |
-| Registration Content Variables (JSON) | Template variable mapping |
-| Inbound auto-reply text | Auto-reply for Twilio webhook `/ac_whatsapp/twilio/reply` |
-| Meta Access Token / Phone Number ID / WABA ID | Meta Cloud API |
-| Default country code | e.g. 91 |
-| Auto-send registration WhatsApp | Send confirm automatically after register |
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 19.1 — WhatsApp Settings                          ║
-║  File: docs/screenshots/fig_19_1_whatsapp_settings.png       ║
-║  Capture: Provider + Twilio/Meta fields (mask tokens)        ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 19.2 Share Tournament on WhatsApp
-
-From Tournament form → **Share on WhatsApp**:
-
-1. Enter recipient mobile numbers.
-2. Edit message caption (poster image used when API send is available).
-3. **Send via WhatsApp API** or **Open WhatsApp Web (text only)**.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 19.2 — Share on WhatsApp Wizard                   ║
-║  File: docs/screenshots/fig_19_2_share_whatsapp.png          ║
-║  Capture: Wizard with numbers + caption                      ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 19.3 Player Confirmation Actions
-
-On a player form:
-
-- **Send WhatsApp confirm**
-- **Email card PDF**
-
-Tracks flags such as **Registration Confirm Sent** / **Registration WhatsApp Sent**.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 19.3 — Player WhatsApp / Email Buttons            ║
-║  File: docs/screenshots/fig_19_3_player_notify_buttons.png   ║
-║  Capture: Player form header notify buttons                  ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 19.4 Registration Success WhatsApp Group
-
-Set **WhatsApp Group Link** on the tournament so successful registrants can join the community group from the success page.
-
----
-
-# Chapter 20 – Settings & Configuration
-
-## 20.1 Organiser Configuration Checklist
-
-| Area | Where |
-|------|-------|
-| Teams | Configuration → Team(s) |
-| Tiers | Configuration → Player Tier(s) |
-| Auction rules | Auction → Auction Rules Setup |
-| Theme / timing | Tournament → Presentation & Theme |
-| Registration | Tournament toggles + Poster & Payment |
-| Online fee | Tournament Razorpay section |
-| Live board | Enable Live Board + share code |
-| Owners / Auctioneer | Users → Access Rights + team link |
-| Website content | Configuration → Website Configurator (admin) |
-
-## 20.2 Player Tiers
-
-Create tiers such as DEFAULT, A, B, Icon categories. Tier limits in auction rules reference these records.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 20.1 — Player Tier Form                           ║
-║  File: docs/screenshots/fig_20_1_player_tier.png             ║
-║  Capture: Tier name + color                                  ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-## 20.3 Contact Privacy
-
-To show full mobile numbers on cards/displays:
-
-1. Open Tournament → Presentation & Theme → Player Contact.
-2. Click **Agree & Unmask Contacts** and accept the privacy wizard.
-3. Use **Remask Contacts** to hide numbers again.
-
-Agreement user, timestamp, and policy version are stored.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 20.2 — Expose Contact Privacy Wizard              ║
-║  File: docs/screenshots/fig_20_2_contact_privacy.png         ║
-║  Capture: Privacy agreement dialog                           ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
----
-
-# Chapter 21 – Pool Generator
-
-**Path:** Auction Settings → Auction → Pool Generator  
-**Permission / Plan:** Pool Generator group + plan flag `allow_pool_creator` (Pro+)
-
-## 21.1 Purpose
-
-Assign teams into pools and generate fixture schedules for projector display and downloads.
-
-## 21.2 High-Level Steps
-
-1. Open Pool Generator for the working tournament.
-2. Configure pools / assign teams.
-3. Generate fixtures as needed.
-4. Save — snapshots appear on Tournament → Pools and Fixtures.
-5. Switch projector board mode to Pool Draw or Fixtures when presenting.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 21.1 — Pool Generator Screen                      ║
-║  File: docs/screenshots/fig_21_1_pool_generator.png          ║
-║  Capture: Pool assignment UI                                 ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 21.2 — Projector Pool Draw Board                  ║
-║  File: docs/screenshots/fig_21_2_projector_pools.png         ║
-║  Capture: Projector showing pools                            ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-> **Note:** Opening Player Showcase / putting a player on stage clears projector board mode so the auction player view returns.
-
----
-
-# Chapter 22 – FAQs
-
-**Q1. I cannot open Player Showcase.**  
-Ensure auction rules are applied and your SaaS account is active (not frozen/expired). Confirm working tournament.
-
-**Q2. Lucky Dip / Random is missing.**  
-Your plan may not allow random mode (Standard). Upgrade to Classic or higher.
-
-**Q3. Auctioneer Console menu is missing.**  
-Need **Auctioneer** (or Administrator) rights and a plan that allows Auctioneer Console.
-
-**Q4. Owners cannot bid.**  
-Need Pro/Pro+ plan, Owner group, correct team assignment, and owner bidding enabled on plan.
-
-**Q5. Registration link shows closed.**  
-Click **Open Registration** on the tournament.
-
-**Q6. Live board shows offline.**  
-Enable **Live Board Active**. Viewers may also need the tournament code.
-
-**Q7. Razorpay payment succeeded but player missing (Mandatory mode).**  
-Check payment verification page/logs; ensure webhook/keys are correct. Contact support with payment reference.
-
-**Q8. WhatsApp confirm not sending.**  
-Verify provider credentials, Content SID, and player mobile with country code.
-
-**Q9. Why are contacts masked?**  
-By design. Unmask only after accepting the privacy agreement.
-
-**Q10. Can I run two tournaments on two devices?**  
-Parallel sessions require Pro/Pro+. Otherwise use one working tournament at a time.
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 22.1 — FAQ Section on Public Website              ║
-║  File: docs/screenshots/fig_22_1_website_faq.png             ║
-║  Capture: Public FAQ accordion                               ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
----
-
-# Chapter 23 – Troubleshooting
-
-| Symptom | Likely cause | What to try |
-|---------|--------------|-------------|
-| Showcase blocked | No auction rules | Set Auction Rules and Apply |
-| Wrong tournament on screen | Navbar working tournament | Switch tournament; reload |
-| Projector stuck on pools | Board mode not idle | Open showcase / clear board mode |
-| Bid rejected | Purse / tier / max players | Check remaining points & tier limits |
-| Owner sees blank console | No team on user | Assign tournament + team |
-| Images slow / huge PDFs | Large photos | Use compressed uploads; logo_card path for prints |
-| Payment Tracker empty | No active tournament / rights | Assign Active Tournament + Payment Tracker group |
-| Signup email missing | Mail server / spam | Check spam; resend from support |
-| Account frozen page | Plan expired | Renew / upgrade via SaaS payment |
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 FIGURE 23.1 — Frozen / Expired Account Page              ║
-║  File: docs/screenshots/fig_23_1_account_frozen.png          ║
-║  Capture: Blocking page shown to frozen accounts             ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
----
-
-# Chapter 24 – Best Practices
-
-1. **Dry-run** the full flow one day before the event (registration → showcase → sell → projector).
-2. Finalise **slabs and purse** before owners arrive.
-3. Pre-load **player photos**; reject blurry selfies at registration desk.
-4. Use **Auctioneer Console + Projector** on separate machines.
-5. Keep **Payment Tracker** staffed during registration.
-6. Share **Live Board** link + tournament code only with intended audience.
-7. Enable **Break Time** instead of leaving a stale player on screen during pauses.
-8. Export **Sold / Unsold** immediately after the auction for settlement.
-9. Do not unmask contacts unless your privacy process requires it.
-10. Upgrade plan early if you need Owner bidding or mystery players—don’t wait until auction morning.
-
----
-
-# Chapter 25 – Glossary
-
-| Term | Definition |
-|------|------------|
-| Tournament | Top-level event container |
-| Team / Franchise | Bidding entity with a purse |
-| Purse / Points | Virtual budget used for bids |
-| Tier | Player category used for limits and base prices |
-| Draft | Player not yet in auction pool |
-| In Auction | Player available to be called |
-| Sold / Unsold | Final outcomes for a called player |
-| Icon / Key Player | Special designated player for a team |
-| Bid Slab | Increment rule for a price range |
-| Player Showcase | Operator stage UI |
-| Auctioneer Console | Dedicated bidding console |
-| Owner Console | Mobile owner bidding UI |
-| Projector | Audience-facing display |
-| Live Board | Public web board of live bids |
-| Working Tournament | Active tournament in navbar switcher |
-| Mystery Player | Identity hidden until reveal |
-| SaaS Plan | Subscription tier with limits/features |
-| Registration Fee | Online fee collected via Razorpay |
-
----
-
-# Chapter 26 – Support
-
-| Channel | Details |
-|---------|---------|
-| Website | https://www.auctionchamp.live |
-| Email | auctionchamp.live@gmail.com |
-| In-app | Upgrade / plan screens may show **Contact Support for Higher** on Pro+ |
-
-When contacting support, include:
-
-- Tournament Code (`AC#…`)
-- Login email
-- Approximate time of issue
-- Screenshots of the error
-- Razorpay payment ID (if payment-related)
-
----
-
-## Appendix A – Screenshot Capture Checklist
-
-Use this list when gathering images for the final PDF/book layout. Tick when captured.
-
-| Fig | Title | File | Done |
-|-----|-------|------|------|
-| 5.1 | Login Screen | `fig_5_1_login.png` | ☐ |
-| 5.2 | Home / Apps Menu | `fig_5_2_home_apps.png` | ☐ |
-| 5.3 | Auction Settings Menu | `fig_5_3_auction_settings_menu.png` | ☐ |
-| 5.4 | Tournament Switcher | `fig_5_4_tournament_systray.png` | ☐ |
-| 6.1 | User Access Rights | `fig_6_1_user_groups.png` | ☐ |
-| 7.1 | Pricing Cards | `fig_7_1_pricing_plans.png` | ☐ |
-| 7.2 | SaaS Account | `fig_7_2_saas_account.png` | ☐ |
-| 7.3 | Upgrade Request | `fig_7_3_upgrade_request.png` | ☐ |
-| 7.4 | Upgrade Checkout | `fig_7_4_upgrade_checkout.png` | ☐ |
-| 8.1 | Homepage Hero | `fig_8_1_homepage_hero.png` | ☐ |
-| 8.2 | Get Started | `fig_8_2_get_started.png` | ☐ |
-| 8.3 | Signup Form | `fig_8_3_signup_form.png` | ☐ |
-| 8.4 | Signup Done | `fig_8_4_signup_done.png` | ☐ |
-| 8.5 | Website Configurator | `fig_8_5_website_config.png` | ☐ |
-| 9.1 | Create Tournament | `fig_9_1_tournament_create.png` | ☐ |
-| 9.2 | Tournament Actions | `fig_9_2_tournament_actions.png` | ☐ |
-| 9.3 | Presentation & Theme | `fig_9_3_presentation_theme.png` | ☐ |
-| 9.4 | Registration Payment | `fig_9_4_registration_payment.png` | ☐ |
-| 10.1 | Team Form | `fig_10_1_team_form.png` | ☐ |
-| 10.2 | Upload Teams | `fig_10_2_upload_teams.png` | ☐ |
-| 10.3 | Auction Team(s) | `fig_10_3_auction_teams.png` | ☐ |
-| 11.1 | Players Menus | `fig_11_1_players_menus.png` | ☐ |
-| 11.2 | Registration Form | `fig_11_2_registration_form.png` | ☐ |
-| 11.3 | Registration Success | `fig_11_3_registration_success.png` | ☐ |
-| 11.4 | Reg Razorpay | `fig_11_4_reg_razorpay.png` | ☐ |
-| 11.5 | Player Form | `fig_11_5_player_form.png` | ☐ |
-| 11.6 | Upload Players | `fig_11_6_upload_players.png` | ☐ |
-| 11.7 | Player Actions | `fig_11_7_player_actions.png` | ☐ |
-| 11.8 | Icon Player Wizard | `fig_11_8_icon_player_wizard.png` | ☐ |
-| 12.1 | Auction Rules | `fig_12_1_auction_rules.png` | ☐ |
-| 13.1 | Rules Required | `fig_13_1_rules_required.png` | ☐ |
-| 13.2 | Showcase | `fig_13_2_showcase.png` | ☐ |
-| 13.3 | Dice Call-Up | `fig_13_3_dice_callup.png` | ☐ |
-| 13.4 | Sell Modal | `fig_13_4_sell_modal.png` | ☐ |
-| 13.5 | Sold Stamp | `fig_13_5_sold_stamp.png` | ☐ |
-| 13.6 | Break Time | `fig_13_6_break_time.png` | ☐ |
-| 14.1 | Auctioneer Console | `fig_14_1_auctioneer_console.png` | ☐ |
-| 14.2 | Place Bid Modal | `fig_14_2_place_bid_modal.png` | ☐ |
-| 14.3 | Mystery Reveal | `fig_14_3_mystery_reveal.png` | ☐ |
-| 15.1 | Owner Console Mobile | `fig_15_1_owner_console_mobile.png` | ☐ |
-| 15.2 | Owner Console Desktop | `fig_15_2_owner_console_desktop.png` | ☐ |
-| 16.1 | Projector Player | `fig_16_1_projector_player.png` | ☐ |
-| 16.2 | Projector Sponsor | `fig_16_2_projector_sponsor.png` | ☐ |
-| 16.3 | Live Board Unlock | `fig_16_3_live_board_unlock.png` | ☐ |
-| 16.4 | Live Bid Board | `fig_16_4_live_board.png` | ☐ |
-| 16.5 | Team Balance | `fig_16_5_team_balance.png` | ☐ |
-| 17.1 | Payment Tracker | `fig_17_1_payment_tracker.png` | ☐ |
-| 17.2 | Razorpay Settings | `fig_17_2_razorpay_settings.png` | ☐ |
-| 18.1 | Player Card | `fig_18_1_player_card.png` | ☐ |
-| 18.2 | PDF to PNG | `fig_18_2_pdf_to_png.png` | ☐ |
-| 18.3 | Export Sold/Unsold | `fig_18_3_export_sold_unsold.png` | ☐ |
-| 19.1 | WhatsApp Settings | `fig_19_1_whatsapp_settings.png` | ☐ |
-| 19.2 | Share WhatsApp | `fig_19_2_share_whatsapp.png` | ☐ |
-| 19.3 | Player Notify Buttons | `fig_19_3_player_notify_buttons.png` | ☐ |
-| 20.1 | Player Tier | `fig_20_1_player_tier.png` | ☐ |
-| 20.2 | Contact Privacy | `fig_20_2_contact_privacy.png` | ☐ |
-| 21.1 | Pool Generator | `fig_21_1_pool_generator.png` | ☐ |
-| 21.2 | Projector Pools | `fig_21_2_projector_pools.png` | ☐ |
-| 22.1 | Website FAQ | `fig_22_1_website_faq.png` | ☐ |
-| 23.1 | Account Frozen | `fig_23_1_account_frozen.png` | ☐ |
-
-## Appendix B – Cover Page Placeholder (Book Layout)
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  📷 COVER — AuctionChamp User Manual                         ║
-║  File: docs/screenshots/cover_auctionchamp_user_manual.png   ║
-║  Capture / design: Branded cover with logo, title, version,  ║
-║  website URL, and year                                       ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-**Suggested cover text**
-
-- Title: **AuctionChamp User Manual**
-- Subtitle: Sports Player Auction Management Platform
-- Version 1.0 — July 2026
-- www.auctionchamp.live
-
----
-
-*End of AuctionChamp User Manual v1.0*

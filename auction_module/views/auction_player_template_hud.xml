@@ -238,14 +238,26 @@
               </t>
               <t t-if="player.batting_style">
                 <div class="hud-stat-row">
-                  <span class="hud-stat-key">Batting</span>
+                  <span class="hud-stat-key">Batting Style</span>
                   <span class="hud-stat-val"><t t-esc="player.batting_style"/></span>
                 </div>
               </t>
               <t t-if="player.bowling_style">
                 <div class="hud-stat-row">
-                  <span class="hud-stat-key">Bowling</span>
+                  <span class="hud-stat-key">Bowling Style</span>
                   <span class="hud-stat-val"><t t-esc="player.bowling_style"/></span>
+                </div>
+              </t>
+              <t t-if="player.current_team">
+                <div class="hud-stat-row">
+                  <span class="hud-stat-key">Club</span>
+                  <span class="hud-stat-val"><t t-esc="player.current_team"/></span>
+                </div>
+              </t>
+              <t t-if="player.jersy_number">
+                <div class="hud-stat-row">
+                  <span class="hud-stat-key">Jersey</span>
+                  <span class="hud-stat-val"><t t-esc="player.jersy_number"/></span>
                 </div>
               </t>
               <t t-if="player.age">

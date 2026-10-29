@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+    <title>Player Registration — professional preview</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&amp;family=Barlow+Condensed:wght@600;700&amp;family=Source+Sans+3:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="../../css/player_registration.css"/>
+    <link rel="stylesheet" href="../../css/player_registration_pro.css"/>
+    <style>
+        /* Vanilla theme tokens — same as live form default */
+        :root {
+            --reg-primary:        #111d2c;
+            --reg-primary-mid:    #162234;
+            --reg-accent:         #c9a227;
+            --reg-accent-rgb:     201, 162, 39;
+            --reg-accent-glow:    rgba(201, 162, 39, .38);
+            --reg-accent-light:   rgba(201, 162, 39, .10);
+            --reg-btn-text:       #111d2c;
+            --reg-bg-from:        #eee8d8;
+            --reg-bg-to:          #ddd3b6;
+            --reg-ghost-num:      rgba(0,0,0,.045);
+            --reg-input-border:   #dde1e9;
+            --reg-input-focus:    var(--reg-accent);
+            --reg-label-color:    #5a6276;
+            --reg-section-title:  #111d2c;
+            --reg-card-radius:    18px;
+            --reg-shadow:         0 12px 40px rgba(0,0,0,.12);
+        }
+        html[data-theme="standard"] {
+            --reg-primary: #1058B0; --reg-primary-mid: #0d4a96; --reg-accent: #F5A623;
+            --reg-accent-rgb: 245, 166, 35; --reg-btn-text: #1A202C;
+            --reg-bg-from: #eef4fb; --reg-bg-to: #d9e6f5; --reg-section-title: #1058B0;
+        }
+        html[data-theme="pistah"] {
+            --reg-primary: #0a3d12; --reg-primary-mid: #1b5e20; --reg-accent: #43a047;
+            --reg-accent-rgb: 67, 160, 71; --reg-btn-text: #fff;
+            --reg-bg-from: #dcf5e0; --reg-bg-to: #b3e0b8; --reg-section-title: #0a3d12;
+        }
+        html[data-theme="cherry"] {
+            --reg-primary: #4a0000; --reg-primary-mid: #7f0000; --reg-accent: #e53935;
+            --reg-accent-rgb: 229, 57, 53; --reg-btn-text: #fff;
+            --reg-bg-from: #ffe8e8; --reg-bg-to: #f5baba; --reg-section-title: #4a0000;
+        }
+        .preview-switcher { display: none !important; }
+        .preview-switcher button {
+            border: 1px solid rgba(255,255,255,.2); background: transparent; color: #fff;
+            border-radius: 999px; padding: 6px 10px; cursor: pointer; font: inherit;
+        }
+        .preview-switcher button.is-on { background: #c9a227; color: #111d2c; border-color: #c9a227; }
+        @media print { .preview-switcher { display: none; } }
+    </style>
+</head>
+<body class="reg-page reg-page--steps">
+<div class="preview-switcher" hidden>
+    <span>Theme</span>
+    <button type="button" class="is-on" data-theme="vanilla">Vanilla</button>
+    <button type="button" data-theme="standard">Standard</button>
+    <button type="button" data-theme="pistah">Pistah</button>
+    <button type="button" data-theme="cherry">Cherry</button>
+</div>
+<div class="reg-wrapper">
+    <div class="reg-header-card">
+        <div class="reg-header-top">
+            <div class="reg-tournament-logo-wrap">
+                <img src="../../assets/images/csk.svg" alt="Tournament logo"/>
+            </div>
+            <div class="reg-header-info">
+                <h1 class="reg-tournament-name">Royal Premier League 2026</h1>
+                <p class="reg-tournament-desc">Season 3 · Night auction · 8 franchise teams</p>
+                <span class="reg-page-label">Player Registration</span>
+            </div>
+            <div class="reg-header-tools">
+                <button type="button" class="reg-header-tool">
+                    <span>Registered</span>
+                    <strong>86</strong>
+                </button>
+            </div>
+        </div>
+        <div class="reg-hero-copy">
+            <p class="reg-hero-sub">
+                Team owners are building their squads — register now to enter the auction,
+                get your official player card, and give yourself a real shot at being picked.
+            </p>
+        </div>
+        <div class="reg-header-meta">
+            <div class="reg-meta-item reg-meta-item--highlight">
+                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <span>
+                    <span class="reg-meta-label">Date</span>
+                    <span class="reg-meta-val">12–14 Apr 2026</span>
+                </span>
+            </div>
+            <div class="reg-meta-item reg-meta-item--highlight">
+                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                    <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                </svg>
+                <span>
+                    <span class="reg-meta-label">Venue</span>
+                    <span class="reg-meta-val">Nehru Stadium, Chennai</span>
+                </span>
+            </div>
+            <div class="reg-meta-item">
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 8v4l3 3"/>
+                </svg>
+                <span><span class="reg-meta-label">Sport</span>CRICKET</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="reg-cta-stack">
+        <button type="button" class="reg-roster-cta">
+            <span class="reg-roster-cta-ic" aria-hidden="true">👥</span>
+            <span class="reg-roster-cta-copy">
+                <b>Players registered so far</b>
+                <span>See who has joined · find your friends</span>
+            </span>
+            <span class="reg-roster-cta-count">86</span>
+        </button>
+    </div>
+
+    <div class="reg-trustbar">
+        <a href="#reg-form-start" class="reg-trust-card reg-trust-card--cta">
+            <span class="reg-trust-ic">🔒</span>
+            <div class="reg-trust-tx"><b>Secure Registration</b><span>Tap to start the form</span></div>
+        </a>
+        <div class="reg-trust-card">
+            <span class="reg-trust-ic">🛡️</span>
+            <div class="reg-trust-tx"><b>Privacy Protected</b><span>Data never sold or shared</span></div>
+        </div>
+        <div class="reg-trust-card">
+            <span class="reg-trust-ic">🔐</span>
+            <div class="reg-trust-tx"><b>Data Encryption</b><span>Documents stored safely</span></div>
+        </div>
+        <div class="reg-trust-card">
+            <span class="reg-trust-ic">⚖️</span>
+            <div class="reg-trust-tx"><b>Fair Auction Rules</b><span>Transparent selection</span></div>
+        </div>
+        <div class="reg-trust-card">
+            <span class="reg-trust-ic">✔️</span>
+            <div class="reg-trust-tx"><b>Verified Tournament</b><span>Organiser-reviewed</span></div>
+        </div>
+        <div class="reg-trust-card">
+            <span class="reg-trust-ic">💬</span>
+            <div class="reg-trust-tx"><b>Support Available</b><span>Help before you submit</span></div>
+        </div>
+    </div>
+
+    <button type="button" class="reg-poster-mobile" id="regPosterOpen">
+        <span class="reg-poster-mobile-copy"><b>Tournament poster</b><span>View</span></span>
+    </button>
+    <div class="reg-layout">
+        <div class="reg-main">
+            <div class="reg-form-body" id="reg-form-start">
+                <nav class="reg-steps" id="regStepsNav" aria-label="Registration steps">
+                    <button type="button" class="reg-step is-on" data-step="1"><span class="reg-step-n">1</span><span class="reg-step-copy"><b>Player</b><span>Photo, name, contact</span></span></button>
+                    <button type="button" class="reg-step" data-step="2"><span class="reg-step-n">2</span><span class="reg-step-copy"><b>Game</b><span>Role, style, jersey</span></span></button>
+                    <button type="button" class="reg-step" data-step="3"><span class="reg-step-n">3</span><span class="reg-step-copy"><b>Pay &amp; submit</b><span>Proof, then register</span></span></button>
+                </nav>
+
+                <form id="playerRegisterForm">
+                    <div class="reg-returning" data-reg-step="1">
+                        <button type="button" class="reg-returning-toggle">
+                            <span class="reg-returning-toggle-label">Already on Auction Champ? <strong>Find my details</strong></span>
+                            <span class="reg-returning-toggle-hint">optional</span>
+                            <span class="reg-returning-chevron">▾</span>
+                        </button>
+                    </div>
+
+                    <div class="reg-section" data-reg-step="1">
+                        <div class="reg-section-header">
+                            <div class="reg-section-strip"></div>
+                            <h3>Player Identity</h3>
+                            <span class="reg-section-icon">👤</span>
+                            <span class="reg-section-num">01</span>
+                        </div>
+                        <div class="reg-section-body">
+                            <div style="margin-bottom:18px">
+                                <label class="reg-label">Player Photo <span class="req">*</span></label>
+                                <div class="reg-photo-upload">
+                                    <div class="reg-photo-frame has-photo">
+                                        <div class="reg-photo-circle">
+                                            <img src="../../background/player_registration_model.png" alt="Sample player photo" style="display:block;"/>
+                                        </div>
+                                    </div>
+                                    <div class="reg-file-meta">
+                                        <div class="reg-photo-actions">
+                                            <label class="reg-file-btn">
+                                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                                    <polyline points="17 8 12 3 7 8"/>
+                                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                                </svg>
+                                                <span class="reg-file-btn-text">Upload Photo</span>
+                                            </label>
+                                        </div>
+                                        <p class="reg-file-hint">JPG · PNG · WEBP · Max 5 MB</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="reg-grid">
+                                <div class="col-full">
+                                    <label class="reg-label">Full Name <span class="req">*</span></label>
+                                    <input type="text" class="reg-input" placeholder="e.g. Rahul Sharma" value="Rahul Sharma"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="reg-section" data-reg-step="2">
+                        <div class="reg-section-header">
+                            <div class="reg-section-strip"></div>
+                            <h3>Cricket Profile</h3>
+                            <span class="reg-section-icon">🏏</span>
+                            <span class="reg-section-num">02</span>
+                        </div>
+                        <div class="reg-section-body">
+                            <div style="margin-bottom:16px">
+                                <label class="reg-label">Role <span class="req">*</span></label>
+                                <div class="reg-role-group">
+                                    <input type="radio" class="reg-role-option" name="role" id="roleBatter" checked/>
+                                    <label class="reg-role-label" for="roleBatter">
+                                        <span class="reg-role-icon">🏏</span>
+                                        <span class="reg-role-text">Batter</span>
+                                    </label>
+                                    <input type="radio" class="reg-role-option" name="role" id="roleBowler"/>
+                                    <label class="reg-role-label" for="roleBowler">
+                                        <span class="reg-role-icon">⚡</span>
+                                        <span class="reg-role-text">Bowler</span>
+                                    </label>
+                                    <input type="radio" class="reg-role-option" name="role" id="roleAllrounder"/>
+                                    <label class="reg-role-label" for="roleAllrounder">
+                                        <span class="reg-role-icon">⭐</span>
+                                        <span class="reg-role-text">Allrounder</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="reg-grid">
+                                <div>
+                                    <label class="reg-label">Batting Style <span class="req">*</span></label>
+                                    <select class="reg-select">
+                                        <option>Right Handed</option>
+                                        <option>Left Handed</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="reg-label">Bowling Style</label>
+                                    <select class="reg-select">
+                                        <option>Right Arm Medium</option>
+                                        <option>Left Arm Orthodox</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="reg-section" data-reg-step="1">
+                        <div class="reg-section-header">
+                            <div class="reg-section-strip"></div>
+                            <h3>Contact Details</h3>
+                            <span class="reg-section-icon">📋</span>
+                            <span class="reg-section-num">03</span>
+                        </div>
+                        <div class="reg-section-body">
+                            <div class="reg-grid">
+                                <div>
+                                    <label class="reg-label">Mobile <span class="req">*</span></label>
+                                    <div class="reg-mobile-wrap">
+                                        <select class="reg-select reg-mobile-code"><option>🇮🇳 +91</option></select>
+                                        <input class="reg-input reg-mobile-num" value="9876543210"/>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="reg-label">City</label>
+                                    <input class="reg-input" value="Chennai"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="reg-section" data-reg-step="3">
+                        <div class="reg-section-header">
+                            <div class="reg-section-strip"></div>
+                            <h3>Payment Proof</h3>
+                            <span class="reg-section-icon">💳</span>
+                            <span class="reg-section-num">03</span>
+                        </div>
+                        <p class="reg-file-hint">Upload the payment screenshot after scanning the organiser QR.</p>
+                    </div>
+                    <div class="reg-consent-note" data-reg-step="3">Encrypted · Not shared · Organiser reviewed</div>
+                    <div class="reg-actions">
+                        <button type="button" class="reg-btn reg-btn-cancel" id="regStepBack">Back</button>
+                        <button type="button" class="reg-btn reg-btn-submit" id="regStepNext">Continue</button>
+                        <button type="submit" class="reg-btn reg-btn-submit" id="regStepSubmit">Submit Registration</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <aside class="reg-aside">
+            <div class="reg-aside-inner">
+                <div class="reg-aside-card reg-aside-poster" style="padding:0;overflow:hidden;">
+                    <div style="height:320px;background:repeating-linear-gradient(-45deg,#f3f0e6 0 12px,#ece7d8 12px 24px);display:flex;align-items:center;justify-content:center;font:600 14px Oswald,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#5c6778;">Tournament poster</div>
+                </div>
+                <div class="reg-aside-card reg-aside-benefits">
+                    <h4 class="reg-aside-title"><span>★</span> Why Register?</h4>
+                    <ul class="reg-benefit-list">
+                        <li><span class="reg-bl-ic">🏟️</span> Participate in verified tournaments</li>
+                        <li><span class="reg-bl-ic">⚖️</span> Transparent auction process</li>
+                        <li><span class="reg-bl-ic">🪪</span> Professional player profile</li>
+                        <li><span class="reg-bl-ic">🎴</span> Broadcast-quality digital player card</li>
+                        <li><span class="reg-bl-ic">📺</span> Live auction visibility</li>
+                    </ul>
+                </div>
+                <div class="reg-aside-card reg-aside-privacy">
+                    <h4 class="reg-aside-title"><span>🛡️</span> Privacy &amp; Security</h4>
+                    <p class="reg-aside-note">Your personal information is encrypted. AuctionChamp never shares player information with unauthorised third parties.</p>
+                </div>
+                <div class="reg-aside-card reg-aside-ethics">
+                    <h4 class="reg-aside-title"><span>⚖️</span> Fair Selection</h4>
+                    <div class="reg-ethics-chips">
+                        <span>No discrimination</span>
+                        <span>Equal opportunity</span>
+                        <span>Transparent auction</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <div class="reg-footer">
+        <img src="../../assets/images/logo.svg" alt="AuctionChamp"/>
+        Powered by AuctionChamp
+    </div>
+</div>
+<script>
+(function () {
+    document.querySelectorAll('.preview-switcher button').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.documentElement.setAttribute('data-theme', btn.getAttribute('data-theme'));
+            document.querySelectorAll('.preview-switcher button').forEach(function (b) {
+                b.classList.toggle('is-on', b === btn);
+            });
+        });
+    });
+})();
+</script>
+<script src="../../js/player_registration_steps.js"></script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>AuctionChamp Squad Poster — 4:5 design proposal</title>
+<style>
+@font-face{font-family:"AC Poster Display";src:url("../../assets/fonts/LiberationSansNarrow-Bold.ttf") format("truetype");font-weight:700}
+@font-face{font-family:"AC Poster Condensed";src:url("../../assets/fonts/LiberationSansNarrow-Regular.ttf") format("truetype");font-weight:400}
+@font-face{font-family:"AC Poster Condensed";src:url("../../assets/fonts/LiberationSansNarrow-Bold.ttf") format("truetype");font-weight:700}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1350px;overflow:hidden;background:#071428}
+.poster{
+  width:1080px;height:1350px;position:relative;overflow:hidden;color:#f4f7fb;
+  font-family:"AC Poster Condensed","Liberation Sans Narrow","Arial Narrow",sans-serif;
+  background:#071428;
+}
+.bg{position:absolute;inset:0;background:
+  radial-gradient(ellipse 68% 26% at 50% -6%, rgba(255,255,255,.18), transparent 58%),
+  radial-gradient(ellipse 38% 20% at 16% 10%, rgba(16,88,176,.38), transparent 70%),
+  radial-gradient(ellipse 38% 20% at 84% 10%, rgba(16,88,176,.26), transparent 70%),
+  radial-gradient(ellipse 90% 40% at 50% 110%, rgba(16,88,176,.24), transparent 64%),
+  linear-gradient(180deg,#0b2040 0%, #071428 40%, #040c18 100%)}
+.bg:after{content:"";position:absolute;inset:0;background:
+  repeating-linear-gradient(135deg, rgba(255,255,255,.018) 0 2px, transparent 2px 16px),
+  radial-gradient(ellipse 78% 68% at 50% 42%, transparent 48%, rgba(0,0,0,.46) 100%)}
+.sample{position:absolute;top:20px;right:32px;z-index:8;font:700 12px/1 "AC Poster Condensed",sans-serif;
+  letter-spacing:.2em;color:#d6e6ff;opacity:.78;border:1px solid rgba(214,230,255,.3);padding:7px 11px;border-radius:999px}
+.layer{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;padding:30px 38px 26px;gap:11px}
+.mast{display:grid;grid-template-columns:78px 1fr;gap:16px;align-items:center;padding-bottom:12px;border-bottom:2px solid rgba(16,88,176,.88)}
+.tlogo{width:78px;height:78px;border-radius:50%;background:linear-gradient(160deg,#1a4fa0,#0d1e3a);border:3px solid #4d8fe8;
+  display:flex;align-items:center;justify-content:center;font:700 20px/1 "AC Poster Display",sans-serif;letter-spacing:.08em}
+.tname{font-family:"AC Poster Display",sans-serif;font-size:38px;letter-spacing:.05em;line-height:.95;text-transform:uppercase}
+.tmeta{margin-top:7px;font-size:16px;letter-spacing:.16em;color:#d6e6ff;text-transform:uppercase}
+.hero{display:grid;grid-template-columns:1fr 120px;gap:16px;align-items:end;padding-top:4px}
+.team{font-family:"AC Poster Display",sans-serif;line-height:.84;text-transform:uppercase}
+.team .w1{font-size:98px;letter-spacing:.02em}
+.team .w2{font-size:76px;color:#7eb3ff;letter-spacing:.04em}
+.seal{width:120px;height:120px;border-radius:50%;border:4px solid #1058b0;background:#0a1429;
+  display:flex;align-items:center;justify-content:center;font:700 44px/1 "AC Poster Display",sans-serif;
+  box-shadow:0 0 0 6px rgba(16,88,176,.16),0 12px 28px rgba(0,0,0,.45)}
+.owner{display:flex;align-items:center;gap:12px}
+.owner-ph{width:58px;height:58px;border-radius:10px;border:2px solid #4d8fe8;background:linear-gradient(160deg,#1a3a68,#0d1e3a);
+  display:flex;align-items:center;justify-content:center;font:700 18px/1 "AC Poster Display",sans-serif}
+.owner-lbl{font-size:12px;letter-spacing:.2em;color:#4d8fe8;text-transform:uppercase}
+.owner-name{font-family:"AC Poster Display",sans-serif;font-size:24px;letter-spacing:.05em;text-transform:uppercase}
+.band{text-align:center;font-size:13px;letter-spacing:.24em;padding:7px 12px;color:#fff;text-transform:uppercase;
+  background:linear-gradient(90deg,transparent,#1058b0 12%,#1058b0 88%,transparent)}
+.heroes{display:flex;justify-content:center;align-items:flex-end;gap:18px;padding:2px 0 4px}
+.card{position:relative;overflow:hidden;border-radius:8px;background:#0a1429;box-shadow:0 14px 30px rgba(0,0,0,.45)}
+.card .ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,#1a4fa0 0%,#0a1c38 72%);
+  font-family:"AC Poster Display",sans-serif;letter-spacing:.04em;color:#d6e6ff}
+.card .meta{position:absolute;left:0;right:0;bottom:0;padding:30px 8px 10px;
+  background:linear-gradient(180deg,transparent,rgba(4,12,24,.94));text-align:center}
+.card .nm{font-family:"AC Poster Display",sans-serif;font-size:17px;letter-spacing:.06em;text-transform:uppercase}
+.card .rl{font-size:12px;letter-spacing:.16em;color:#7eb3ff;margin-top:3px;text-transform:uppercase}
+.badge{position:absolute;top:8px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(180deg,#d6e6ff,#1058b0);color:#071428;
+  font-size:11px;letter-spacing:.16em;padding:5px 10px;border-radius:999px;font-weight:700}
+.h-side{width:198px;height:198px}
+.h-main{width:238px;height:238px;order:2}
+.h-left{order:1}.h-right{order:3}
+.h-main .nm{font-size:21px}.h-main .rl{font-size:13px}.h-main .ph{font-size:78px}
+.grid{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;justify-content:center;gap:8px}
+.sq{width:188px;height:188px}
+.sq .nm{font-size:15px}.sq .rl{font-size:11px}
+.sq .ph{font-size:36px}
+.mark{position:absolute;top:8px;right:8px;font-size:9px;letter-spacing:.16em;opacity:.42}
+.foot{margin-top:auto;border-top:2px solid rgba(16,88,176,.7);padding-top:12px;display:flex;justify-content:space-between;align-items:center}
+.hash{font-family:"AC Poster Display",sans-serif;font-size:24px;letter-spacing:.08em;color:#7eb3ff}
+.brand{font-size:14px;letter-spacing:.18em;opacity:.78}
+</style>
+</head>
+<body>
+<div class="poster">
+  <div class="bg"></div>
+  <div class="sample">SAMPLE DESIGN · NOT A LIVE TEAM</div>
+  <div class="layer">
+    <header class="mast">
+      <div class="tlogo">APL</div>
+      <div>
+        <div class="tname">AuctionChamp Premier League</div>
+        <div class="tmeta">Season 2026 · Sample Edition</div>
+      </div>
+    </header>
+    <section class="hero">
+      <div class="team">
+        <div class="w1">Royal</div>
+        <div class="w2">Titans</div>
+      </div>
+      <div class="seal">RT</div>
+    </section>
+    <div class="owner">
+      <div class="owner-ph">SO</div>
+      <div>
+        <div class="owner-lbl">Team Owner</div>
+        <div class="owner-name">Sample Owner</div>
+      </div>
+    </div>
+    <div class="band">Icon Players</div>
+    <div class="heroes">
+      <article class="card h-side h-left"><div class="badge">ICON</div><div class="ph">SK</div><div class="meta"><div class="nm">S. Khan</div><div class="rl">Batter</div></div><div class="mark">SAMPLE</div></article>
+      <article class="card h-main"><div class="badge">ICON</div><div class="ph">AR</div><div class="meta"><div class="nm">A. Rahman</div><div class="rl">All Rounder</div></div><div class="mark">SAMPLE</div></article>
+      <article class="card h-side h-right"><div class="badge">ICON</div><div class="ph">VD</div><div class="meta"><div class="nm">V. Das</div><div class="rl">Bowler</div></div><div class="mark">SAMPLE</div></article>
+    </div>
+    <div class="band">Squad</div>
+    <div class="grid">
+      <div class="row">
+        <article class="card sq"><div class="ph">JM</div><div class="meta"><div class="nm">J. Mehta</div><div class="rl">Batter</div></div><div class="mark">SAMPLE</div></article>
+        <article class="card sq"><div class="ph">NP</div><div class="meta"><div class="nm">N. Patel</div><div class="rl">Wicket Keeper</div></div><div class="mark">SAMPLE</div></article>
+        <article class="card sq"><div class="ph">RL</div><div class="meta"><div class="nm">R. Lal</div><div class="rl">Bowler</div></div><div class="mark">SAMPLE</div></article>
+        <article class="card sq"><div class="ph">KS</div><div class="meta"><div class="nm">K. Singh</div><div class="rl">All Rounder</div></div><div class="mark">SAMPLE</div></article>
+        <article class="card sq"><div class="ph">AM</div><div class="meta"><div class="nm">A. Menon</div><div class="rl">Batter</div></div><div class="mark">SAMPLE</div></article>
+      </div>
+      <div class="row">
+        <article class="card sq"><div class="ph">TI</div><div class="meta"><div class="nm">T. Iyer</div><div class="rl">Bowler</div></div><div class="mark">SAMPLE</div></article>
+        <article class="card sq"><div class="ph">HB</div><div class="meta"><div class="nm">H. Bedi</div><div class="rl">Batter</div></div><div class="mark">SAMPLE</div></article>
+        <article class="card sq"><div class="ph">FG</div><div class="meta"><div class="nm">F. George</div><div class="rl">All Rounder</div></div><div class="mark">SAMPLE</div></article>
+        <article class="card sq"><div class="ph">PC</div><div class="meta"><div class="nm">P. Chawla</div><div class="rl">Bowler</div></div><div class="mark">SAMPLE</div></article>
+        <article class="card sq"><div class="ph">YN</div><div class="meta"><div class="nm">Y. Nair</div><div class="rl">Batter</div></div><div class="mark">SAMPLE</div></article>
+      </div>
+    </div>
+    <footer class="foot">
+      <div class="hash">#ROYALTITANS</div>
+      <div class="brand">AUCTIONCHAMP</div>
+    </footer>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Registration form — mock screens</title>
+    <style>
+        body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #f3efe4; color: #152033; }
+        header { padding: 28px 24px 8px; max-width: 1200px; margin: 0 auto; }
+        h1 { font-size: 1.4rem; margin: 0 0 6px; }
+        p { margin: 0 0 18px; color: #5c6778; }
+        .grid { max-width: 1200px; margin: 0 auto; padding: 0 24px 48px; display: grid; gap: 28px; }
+        figure { margin: 0; background: #fff; border-radius: 16px; padding: 16px; box-shadow: 0 10px 28px rgba(16,24,40,.08); }
+        figcaption { font-weight: 700; margin: 0 0 12px; letter-spacing: .04em; text-transform: uppercase; font-size: .78rem; color: #5c6778; }
+        img { width: 100%; height: auto; display: block; border-radius: 10px; background: #eee8d8; }
+        .pair { display: grid; grid-template-columns: 1fr 280px; gap: 28px; align-items: start; }
+        @media (max-width: 800px) { .pair { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Player registration — mock screens</h1>
+    <p>These are the proposed visual samples. Structure of the live form is unchanged.</p>
+</header>
+<div class="grid">
+    <figure>
+        <figcaption>Desktop · 1440px</figcaption>
+        <img src="desktop_1440.png" alt="Desktop registration form mock"/>
+    </figure>
+    <div class="pair">
+        <figure>
+            <figcaption>Desktop · full form</figcaption>
+            <img src="desktop_1440_full.png" alt="Full desktop registration form mock"/>
+        </figure>
+        <figure>
+            <figcaption>Mobile · 390px</figcaption>
+            <img src="mobile_390.png" alt="Mobile registration form mock"/>
+        </figure>
+    </div>
+    <figure style="max-width: 420px;">
+        <figcaption>Instagram 4:5 first screen</figcaption>
+        <img src="instagram_4x5.png" alt="Instagram 4:5 registration crop"/>
+    </figure>
+</div>
+</body>
+</html>

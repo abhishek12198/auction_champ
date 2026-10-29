@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>AuctionChamp Squad Poster — editor interface preview</title>
+<style>
+@font-face{font-family:"AC Poster Display";src:url("../../assets/fonts/LiberationSansNarrow-Bold.ttf") format("truetype");font-weight:700}
+@font-face{font-family:"AC Poster Condensed";src:url("../../assets/fonts/LiberationSansNarrow-Bold.ttf") format("truetype");font-weight:700}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1600px;height:1000px;overflow:hidden;background:#0a1429;color:#f4f7fb;font-family:"AC Poster Condensed","Liberation Sans Narrow","Arial Narrow",sans-serif}
+.app{display:flex;flex-direction:column;height:100%}
+.bar{height:64px;background:#0d1e3a;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;padding:0 18px;gap:12px}
+.title{flex:1;font-size:18px;letter-spacing:.12em;text-transform:uppercase}
+.btn{height:36px;padding:0 14px;border-radius:6px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;font:700 13px/36px "AC Poster Condensed",sans-serif;letter-spacing:.08em;text-transform:uppercase}
+.btn.p{background:linear-gradient(135deg,#1058b0,#0d1e3a);border-color:transparent}
+.body{flex:1;display:grid;grid-template-columns:1fr 440px;min-height:0}
+.stage{display:flex;align-items:center;justify-content:center;background:#071428;position:relative}
+.poster{width:432px;height:540px;border-radius:8px;overflow:hidden;position:relative;box-shadow:0 24px 60px rgba(0,0,0,.55);
+  background:linear-gradient(180deg,#0b2040,#071428 42%,#040c18);padding:18px 20px}
+.poster .t{font-size:13px;letter-spacing:.1em;opacity:.8;text-transform:uppercase}
+.poster .n{font-family:"AC Poster Display",sans-serif;font-size:42px;line-height:.86;margin:10px 0 14px;text-transform:uppercase}
+.poster .n span{display:block;color:#7eb3ff;font-size:32px}
+.heroes{display:flex;align-items:flex-end;justify-content:center;gap:8px;margin-bottom:10px}
+.ph{background:linear-gradient(180deg,#1a4fa0,#0a1c38);border-radius:6px;display:flex;align-items:flex-end;justify-content:center;
+  font:700 14px/1 "AC Poster Display",sans-serif;padding-bottom:8px;color:#d6e6ff}
+.ph.s{width:72px;height:72px}.ph.m{width:92px;height:92px;outline:2px solid #4d8fe8;box-shadow:0 0 0 9999px rgba(0,0,0,.22)}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.sq{height:52px;background:linear-gradient(180deg,#16386c,#0a1c38);border-radius:4px}
+.room{background:#071428;border-left:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column}
+.rh{padding:18px 20px 8px;display:flex;justify-content:space-between;align-items:center}
+.rname{font-family:"AC Poster Display",sans-serif;font-size:28px;letter-spacing:.05em;text-transform:uppercase}
+.rrole{font-size:13px;letter-spacing:.14em;color:#7eb3ff;margin-top:4px;text-transform:uppercase}
+.nav .btn{min-width:40px;padding:0 10px;font-size:20px}
+.stage2{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.crop{width:300px;height:300px;border:3px solid #1058b0;border-radius:10px;overflow:hidden;position:relative;background:#111;cursor:grab}
+.crop .face{position:absolute;left:-18px;top:-40px;width:360px;height:400px;background:linear-gradient(180deg,#1a4fa0,#0a1c38);
+  display:flex;align-items:center;justify-content:center;font:700 92px/1 "AC Poster Display",sans-serif;color:#d6e6ff}
+.crop .cross{position:absolute;inset:0;background:
+  linear-gradient(90deg,transparent 49.6%,rgba(255,255,255,.2) 49.6% 50.4%,transparent 50.4%),
+  linear-gradient(180deg,transparent 49.6%,rgba(255,255,255,.2) 49.6% 50.4%,transparent 50.4%)}
+.note{font-size:13px;letter-spacing:.1em;color:rgba(214,230,255,.74);text-transform:uppercase}
+.dock{background:#0d1e3a;padding:16px 18px 20px}
+.zoom{display:grid;grid-template-columns:40px 1fr 40px 56px;gap:8px;align-items:center;margin-bottom:12px}
+.zoom input{width:100%}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.acts .btn{height:42px;line-height:42px;text-align:center}
+.tag{position:absolute;top:16px;left:16px;font-size:12px;letter-spacing:.16em;border:1px solid rgba(214,230,255,.3);padding:6px 10px;border-radius:999px;opacity:.8;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="bar">
+    <div class="title">Crop photo · sample editor</div>
+    <div class="btn">Reset</div>
+    <div class="btn p">Done</div>
+  </div>
+  <div class="body">
+    <div class="stage">
+      <div class="tag">Poster preview · 4:5</div>
+      <div class="poster">
+        <div class="t">AuctionChamp Premier League</div>
+        <div class="n">Royal<span>Titans</span></div>
+        <div class="heroes">
+          <div class="ph s">SK</div>
+          <div class="ph m">AR</div>
+          <div class="ph s">VD</div>
+        </div>
+        <div class="grid">
+          <div class="sq"></div><div class="sq"></div><div class="sq"></div><div class="sq"></div><div class="sq"></div>
+          <div class="sq"></div><div class="sq"></div><div class="sq"></div><div class="sq"></div><div class="sq"></div>
+        </div>
+      </div>
+    </div>
+    <div class="room">
+      <div class="rh">
+        <div>
+          <div class="rname">A. Rahman</div>
+          <div class="rrole">Icon player · All rounder</div>
+        </div>
+        <div class="nav"><span class="btn">‹</span><span class="btn">›</span></div>
+      </div>
+      <div class="stage2">
+        <div class="crop">
+          <div class="face">AR</div>
+          <div class="cross"></div>
+        </div>
+        <div class="note">Drag photo inside the frame · zoom to crop</div>
+      </div>
+      <div class="dock">
+        <div class="zoom">
+          <div class="btn">−</div>
+          <input type="range" min="100" max="220" value="148"/>
+          <div class="btn">+</div>
+          <div>148%</div>
+        </div>
+        <div class="acts">
+          <div class="btn">Reset</div>
+          <div class="btn p">Done</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

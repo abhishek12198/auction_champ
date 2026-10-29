@@ -289,23 +289,6 @@
             </t>
           </section>
 
-          <t t-if="strike_force and strike_force.get('items')">
-            <section class="sp-strike">
-              <div class="sp-strike-rule"></div>
-              <div class="sp-strike-title" t-esc="strike_force.get('title') or 'THE STRIKE FORCE'"/>
-              <div class="sp-strike-tag" t-esc="strike_force.get('tagline') or 'ONE TEAM • ONE MISSION • ONE TROPHY'"/>
-              <div class="sp-strike-stats">
-                <t t-foreach="strike_force.get('items') or []" t-as="st">
-                  <div class="sp-strike-stat">
-                    <div class="sp-strike-num" t-esc="st.get('value') or '00'"/>
-                    <div class="sp-strike-lbl" t-esc="st.get('label') or ''"/>
-                  </div>
-                </t>
-              </div>
-              <div class="sp-strike-rule"></div>
-            </section>
-          </t>
-
           <t t-if="has_sponsors">
             <div class="sp-sponsors-block">
               <div class="sp-sponsors-lbl-row">
