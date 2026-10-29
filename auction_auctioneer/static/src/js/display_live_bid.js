@@ -78,6 +78,9 @@
         });
     }
     function toast(msg, err) {
+        /* Mobile already shows the live points in the hero. A bottom
+           confirmation covers Unsold / Sell / Next. Keep errors only. */
+        if (!err && isMobileLiveBid()) return;
         var el = toastEl();
         if (!el) return;
         el.textContent = msg;
@@ -353,9 +356,6 @@
             heroResultHold = null;
         }
         if (player && player.state === 'auction') {
-            if (heroResultHold && Number(heroResultHold.playerId) === Number(player.id)) {
-                return playerFromHold();
-            }
             heroResultHold = null;
             return player;
         }
@@ -394,10 +394,12 @@
         if (!payload) return;
         var p = payload.player || payload.current_player || null;
         var soldInfo = payload.sold_info || null;
-        var stamp = payload.stamp_state || (p && p.state) || '';
+        var stamp = (p && (p.state === 'sold' || p.state === 'unsold'))
+            ? p.state
+            : ((p && p.state === 'auction') ? '' : (payload.stamp_state || ''));
         var stageId = stagePlayerId();
-        var snapSold = !!(p && (stamp === 'sold' || stamp === 'unsold' || p.state === 'sold' || p.state === 'unsold'));
-        if (snapSold && stageId && Number(p.id) !== stageId) {
+        var snapSold = stamp === 'sold' || stamp === 'unsold';
+        if (snapSold && p && stageId && Number(p.id) !== stageId) {
             if (!heroResultHold || Number(heroResultHold.playerId) !== stageId) {
                 heroResultHold = null;
                 if (playerCache && Number(playerCache.id) !== stageId) playerCache = null;
@@ -436,15 +438,8 @@
         }
         if (p && p.state === 'auction') {
             var leavingSale = !playerCache || playerCache.state !== 'auction' || Number(playerCache.id) !== Number(p.id);
-            if (stageId && Number(p.id) === stageId) heroResultHold = null;
-            else if (!heroResultHold || Number(p.id) !== Number(heroResultHold.playerId)) {
-                heroResultHold = null;
-            }
-            if (heroResultHold) {
-                playerCache = playerFromHold();
-            } else {
-                playerCache = Object.assign({}, playerCache || {}, p);
-            }
+            heroResultHold = null;
+            playerCache = Object.assign({}, playerCache || {}, p);
             var live = playerCache;
             var liveLead = leadTeam(live);
             var liveAmt = live && live.state === 'sold'
@@ -466,6 +461,11 @@
         ensureHeroBadge(hero);
         var pos = scrollPos();
         var state = playerCache && playerCache.state;
+        var stageId = stagePlayerId();
+        if (stageId && playerCache && Number(playerCache.id) !== stageId
+                && (state === 'sold' || state === 'unsold')) {
+            state = '';
+        }
         var sold = state === 'sold';
         var unsold = state === 'unsold';
         var on = !unsold && !!(sold || (amount > 0 && lead));

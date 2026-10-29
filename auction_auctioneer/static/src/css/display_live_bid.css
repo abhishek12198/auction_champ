@@ -1210,6 +1210,10 @@ body[data-theme="dark"] .player-profession .ac-livebid-overlay {
 .ac-phone-id { display: none; }
 
 @media (max-width: 1024px) {
+    .ac-livebid-toast {
+        top: max(12px, env(safe-area-inset-top, 0px));
+        bottom: auto;
+    }
     /* No Auctioneer session: collapse Current Bid / Live Bid chrome completely. */
     body.ac-livebid-off .ac-bid-hero,
     body.ac-livebid-off #acLiveBidPad,

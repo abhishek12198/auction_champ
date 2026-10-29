@@ -82,11 +82,11 @@
             </div>
         </div>
         <div class="ac-livebid-toast" id="acLiveBidToast"></div>
-        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_live_bid.css?v=63"/>
+        <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_live_bid.css?v=64"/>
         <t t-if="not ac_livebid_rollcall">
             <link rel="stylesheet" href="/auction_auctioneer/static/src/css/display_showcase.css?v=17"/>
         </t>
-        <script src="/auction_auctioneer/static/src/js/display_live_bid.js?v=56"></script>
+        <script src="/auction_auctioneer/static/src/js/display_live_bid.js?v=58"></script>
     </template>
 
     <!-- Under player profile, above Unsold / Sell / Next.
