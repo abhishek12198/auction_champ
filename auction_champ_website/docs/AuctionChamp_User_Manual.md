@@ -207,7 +207,7 @@ On the sample tournament, registration is closed, the live board is stopped, and
 | Button | What it does |
 |--------|----------------|
 | **Add Player** | Opens Register Player for this tournament. Name is required. Leave mobile blank unless you are storing a number you are allowed to keep. |
-| **Upload Excel** | Opens the spreadsheet upload. A photo zip can travel with the sheet. Use sample-style names if the file will be shared. |
+| **Upload Excel** | Opens the spreadsheet upload. Download the blank template for new players, or export draft players in that same file. A photo zip can travel with the sheet: name each picture with the serial number (`4.jpg` updates serial 4). A matching serial updates that player only while the player is still Draft. Sold, unsold, and in-auction players are left unchanged. Use sample-style names if the file will be shared. |
 | **Sort categories** | Opens Player Categorization. You reorder tiers, move players between tiers, search the list, and resequence the call order. **Back** on that board returns here. |
 | **Export sold** | Opens Export Players. Choose Registered, Sold, Unsold, or Jersey, then **Generate Excel**. On a jersey export you can fill the sheet and **Import Jersey Updates**. |
 | **Print Player Cards** | Opens the print wizard described below. |
@@ -418,8 +418,8 @@ Pick a file on a card, then **Save**.
 | Field or switch | What it does |
 |-----------------|----------------|
 | **YouTube stream URL** | The stream address. **Save** stores it. |
-| **Sound on live bids** | Plays a sound when a live bid comes in. The switch saves itself. |
-| **Sound when a player is sold** | Plays the coin sound on the projector and live board after a confirmed sale. The switch saves itself. |
+| **Sound on live bids** | Plays a bell on the projector and live board each time a team bids. The switch saves itself. |
+| **Sound when a player is sold** | Plays a cash-register sound on the projector and live board after a confirmed sale. The bid summary still uses the coin sound. The switch saves itself. |
 | **Owner bid window** | Seconds other owners have to raise a bid. **0** turns the window off. **Save** stores the number. |
 
 #### Rules & extras

@@ -486,14 +486,15 @@ class AuctionTournament(models.Model):
     live_bid_sound = fields.Boolean(
         string='Live Bid Sound',
         default=True,
-        help='When enabled, the public Live Board and Projector play a coin clink '
+        help='When enabled, the public Live Board and Projector play a bell '
              'each time a team updates the live bid on the player on stage.',
     )
     sold_coin_sound = fields.Boolean(
-        string='Sold Coin Sound',
+        string='Sold Sound',
         default=True,
-        help='When enabled, the Projector and Live Board play a short coin sound '
-             'once when a player is confirmed sold and the winning bid is saved.',
+        help='When enabled, the Projector and Live Board play a cash-register '
+             'sound once when a player is confirmed sold and the winning bid is saved. '
+             'The bid summary still uses the coin sound.',
     )
     pool_draw_json = fields.Text(
         string='Saved Pool Draw',

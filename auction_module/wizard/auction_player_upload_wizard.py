@@ -68,8 +68,9 @@ class AuctionPlayerUploadWizard(models.TransientModel):
     excel_filename = fields.Char(string='Excel Filename')
     photos_zip = fields.Binary(
         string='Player Photos ZIP',
-        help='Optional. ZIP of photos named 1.jpg, 2.png, … matching Excel row order '
-             '(first data row = 1). Supports .jpg / .jpeg / .png (any case).')
+        help='Optional. ZIP of photos named with the Serial No: 4.jpg updates serial 4 '
+             'when that player is still Draft. Supports .jpg / .jpeg / .png (any case). '
+             'If Serial No is blank, the row order is used.')
     photos_zip_filename = fields.Char(string='ZIP Filename')
     template_file = fields.Binary(string='Download Template', readonly=True)
     template_filename = fields.Char(readonly=True)
@@ -77,6 +78,7 @@ class AuctionPlayerUploadWizard(models.TransientModel):
         [('draft', 'Upload'), ('done', 'Done')], default='draft')
     result_message = fields.Text(string='Result', readonly=True)
     created_count = fields.Integer(readonly=True)
+    updated_count = fields.Integer(readonly=True)
     photo_count = fields.Integer(readonly=True)
 
     def _cricket_columns(self):
@@ -170,21 +172,13 @@ class AuctionPlayerUploadWizard(models.TransientModel):
         ws = wb.active
         ws.title = 'Players'
 
-        header_fill = PatternFill('solid', fgColor='1B3F8F')
-        header_font = Font(color='FFFFFF', bold=True)
+        self._write_players_header(ws, columns)
         thin = Border(
             left=Side(style='thin', color='CCCCCC'),
             right=Side(style='thin', color='CCCCCC'),
             top=Side(style='thin', color='CCCCCC'),
             bottom=Side(style='thin', color='CCCCCC'),
         )
-        for col_idx, title in enumerate(columns, start=1):
-            cell = ws.cell(row=1, column=col_idx, value=title)
-            cell.fill = header_fill
-            cell.font = header_font
-            cell.alignment = Alignment(horizontal='center', wrap_text=True)
-            cell.border = thin
-            ws.column_dimensions[cell.column_letter].width = max(14, min(28, len(title) + 4))
 
         sample = {c: '' for c in columns}
         sample['Serial No'] = '1'
@@ -234,6 +228,53 @@ class AuctionPlayerUploadWizard(models.TransientModel):
             'template_file': base64.b64encode(buf.getvalue()),
             'template_filename': fname,
         })
+        return self._reopen()
+
+    def action_export_existing(self):
+        """Download current players in the same workbook the importer reads."""
+        self.ensure_one()
+        if Workbook is None:
+            raise UserError(_(
+                'openpyxl is not installed. Please run: pip install openpyxl'
+            ))
+        players = self._existing_players()
+        if not players:
+            raise UserError(_(
+                'This tournament has no draft players to export. '
+                'Sold, unsold, and in-auction players are left out of this file.'
+            ))
+        columns = self._excel_columns()
+        wb = Workbook()
+        ws = wb.active
+        ws.title = 'Players'
+        self._write_players_header(ws, columns)
+        thin = Border(
+            left=Side(style='thin', color='CCCCCC'),
+            right=Side(style='thin', color='CCCCCC'),
+            top=Side(style='thin', color='CCCCCC'),
+            bottom=Side(style='thin', color='CCCCCC'),
+        )
+        for row_idx, player in enumerate(players, start=2):
+            values = self._player_export_map(player, columns)
+            for col_idx, title in enumerate(columns, start=1):
+                cell = ws.cell(row=row_idx, column=col_idx, value=values.get(title, ''))
+                cell.border = thin
+        self._write_field_guide_sheet(wb)
+        self._write_reference_lists_sheet(wb)
+        buf = io.BytesIO()
+        wb.save(buf)
+        sport = self.tournament_id.tournament_type or 'players'
+        fname = 'player_existing_%s_%s.xlsx' % (
+            re.sub(r'[^\w\-]+', '_', self.tournament_id.name or 'tournament'),
+            sport,
+        )
+        self.write({
+            'template_file': base64.b64encode(buf.getvalue()),
+            'template_filename': fname,
+        })
+        return self._reopen()
+
+    def _reopen(self):
         return {
             'type': 'ir.actions.act_window',
             'res_model': self._name,
@@ -241,6 +282,79 @@ class AuctionPlayerUploadWizard(models.TransientModel):
             'view_mode': 'form',
             'target': 'new',
         }
+
+    def _existing_players(self):
+        self.ensure_one()
+        return self.env['auction.team.player'].sudo().search([
+            ('tournament_id', '=', self.tournament_id.id),
+            ('icon_player', '=', False),
+            ('state', '=', 'draft'),
+        ], order='sl_no asc, id asc')
+
+    def _write_players_header(self, ws, columns):
+        header_fill = PatternFill('solid', fgColor='1B3F8F')
+        header_font = Font(color='FFFFFF', bold=True)
+        thin = Border(
+            left=Side(style='thin', color='CCCCCC'),
+            right=Side(style='thin', color='CCCCCC'),
+            top=Side(style='thin', color='CCCCCC'),
+            bottom=Side(style='thin', color='CCCCCC'),
+        )
+        for col_idx, title in enumerate(columns, start=1):
+            cell = ws.cell(row=1, column=col_idx, value=title)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal='center', wrap_text=True)
+            cell.border = thin
+            ws.column_dimensions[cell.column_letter].width = max(14, min(28, len(title) + 4))
+
+    def _player_export_map(self, player, columns):
+        """One Players-sheet row, using the same headers the importer expects."""
+        sport = self.tournament_id.tournament_type
+        foot = {'left': 'Left', 'right': 'Right', 'both': 'Both'}
+        rate = {'low': 'Low', 'medium': 'Medium', 'high': 'High'}
+        data = {title: '' for title in columns}
+        data['Serial No'] = player.sl_no or ''
+        data['Name'] = player.name or ''
+        data['Contact'] = player.contact or ''
+        data['Blood Group'] = player.blood_group or ''
+        data['Location'] = player.address or ''
+        data['Tier'] = player.tier_id.name or ''
+        data['Base Price'] = player.base_price or ''
+        data['Jersey Name'] = player.jersy_name or ''
+        data['Jersey Number'] = player.jersy_number or ''
+        data['Jersey Size'] = player.jersy_size or ''
+        data['Jersey Sleeve'] = player.jersy_sleeve or ''
+        if sport == 'football':
+            pos = player.dominant_position_id
+            data['Playing Position'] = (pos.code or pos.name or '') if pos else ''
+            data['Secondary Positions'] = ', '.join(
+                (p.code or p.name) for p in player.secondary_position_ids
+                if (p.code or p.name)
+            )
+            data['Preferred Foot'] = foot.get(player.preferred_foot, '')
+            data['Age'] = player.age or ''
+            data['Height'] = player.height or ''
+            data['Weight'] = player.weight or ''
+            data['Playing Styles'] = ', '.join(player.playing_style_ids.mapped('name'))
+            data['Strengths'] = ', '.join(player.strength_ids.mapped('name'))
+            data['Work Rate'] = rate.get(player.work_rate, '')
+        elif sport == 'kabaddi':
+            data['Role'] = (
+                player.kabaddi_role_label() if player.kabaddi_role else (player.role or '')
+            )
+            data['Previous Club / Current Club'] = player.current_team or ''
+        else:
+            data['Role'] = player.role or ''
+            data['Batting Style'] = player.batting_style or ''
+            data['Bowling Style'] = player.bowling_style or ''
+        seen = set()
+        for attr in player.other_attribute_ids:
+            label = (attr.label or '').strip()
+            if label and label not in seen and label in data:
+                data[label] = attr.value or ''
+                seen.add(label)
+        return data
 
     def _write_field_guide_sheet(self, wb):
         """Column-by-column data entry guide (type + how to fill)."""
@@ -262,8 +376,11 @@ class AuctionPlayerUploadWizard(models.TransientModel):
             'Legend — Free text: type anything. Selection: only listed options. Many2one: one matching name. '
             'Many2many: one or more names, comma-separated.',
             'Name is required. All other columns are optional. Row 2 on Players is a sample — replace or delete it.',
-            'Photos ZIP (optional): files named 1.jpg, 2.png, 3.jpeg … matching Excel row order '
-            '(first data row after header = 1). PNG / JPG / JPEG supported.',
+            'Photos ZIP (optional): name each file with the Serial No — 4.jpg, 4.png, or 4.jpeg '
+            'updates the Draft player whose Serial No is 4. PNG / JPG / JPEG supported.',
+            'Export Existing Players writes draft players only, in this same layout. '
+            'Upload that file with a photos ZIP to update those draft players. Serial No is the identifier. '
+            'Sold, unsold, and in-auction players are not exported and are not changed on upload.',
         ]
         for i, line in enumerate(intro, start=1):
             cell = ws.cell(row=i, column=1, value=line)
@@ -300,9 +417,10 @@ class AuctionPlayerUploadWizard(models.TransientModel):
         common_start = [
             [
                 'Serial No',
-                'Free text / Number',
-                'Optional. Leave blank to auto-number in Excel order.',
-                'Used for display order and to match photo filenames (1.jpg = first data row).',
+                'Number',
+                'The identifier for this player. Keep it when updating an existing player.',
+                'Photo files use this number: 4.jpg updates serial 4, and only while that player is Draft. '
+                'A blank serial is numbered from the row and creates a new player.',
             ],
             [
                 'Name',
@@ -695,10 +813,12 @@ class AuctionPlayerUploadWizard(models.TransientModel):
         photo_map = self._parse_photos_zip()
         Player = self.env['auction.team.player'].sudo()
         created = 0
+        updated = 0
         photos_applied = 0
         errors = []
         warnings = []
         skipped_over_limit = []
+        skipped_locked = []
         data_row_no = 0
         tid = self.tournament_id.id
         max_players, plan_name = self._saas_max_players_per_tournament()
@@ -731,28 +851,60 @@ class AuctionPlayerUploadWizard(models.TransientModel):
                 continue
 
             try:
-                if max_players is not None and current_count >= max_players:
-                    skipped_over_limit.append(name)
-                    continue
+                serial_raw = cell(['serial no', 'serial', 'sl no', 'sl_no', '#'])
+                explicit_serial = None
+                if serial_raw:
+                    try:
+                        explicit_serial = int(float(serial_raw))
+                    except ValueError:
+                        explicit_serial = None
                 vals = self._row_to_player_vals(cell, name, data_row_no, header_map, raw)
-                photo_b64 = photo_map.get(data_row_no)
+                photo_key = explicit_serial or vals.get('sl_no') or data_row_no
+                photo_b64 = photo_map.get(int(photo_key))
                 if photo_b64:
                     vals['photo'] = photo_b64
-                Player.with_context(
-                    default_tournament_id=tid,
-                    saas_skip_quota_check=True,
-                ).create(vals)
-                created += 1
-                current_count += 1
+                existing, blocked = self._match_existing_player(explicit_serial)
+                if blocked:
+                    skipped_locked.append('%s (serial %s, %s)' % (
+                        name, explicit_serial, blocked,
+                    ))
+                    continue
+                if existing:
+                    vals.pop('state', None)
+                    attrs = vals.pop('other_attribute_ids', None)
+                    existing.write(vals)
+                    if attrs:
+                        existing.other_attribute_ids.unlink()
+                        existing.write({'other_attribute_ids': attrs})
+                    updated += 1
+                else:
+                    if max_players is not None and current_count >= max_players:
+                        skipped_over_limit.append(name)
+                        continue
+                    Player.with_context(
+                        default_tournament_id=tid,
+                        saas_skip_quota_check=True,
+                    ).create(vals)
+                    created += 1
+                    current_count += 1
                 if photo_b64:
                     photos_applied += 1
             except Exception as exc:
                 errors.append('Row %s (%s): %s' % (data_row_no, name, exc))
 
         msg_lines = [
-            'Imported %s player(s) into %s.' % (created, self.tournament_id.name),
+            'Updated %s draft player(s) in %s.' % (updated, self.tournament_id.name),
+            'Imported %s new player(s).' % created,
             'Photos attached: %s.' % photos_applied,
         ]
+        if skipped_locked:
+            warnings.append(
+                'Only Draft players can be updated. These were left unchanged: %s.'
+                % (
+                    ', '.join(skipped_locked[:12])
+                    + ('…' if len(skipped_locked) > 12 else ''),
+                )
+            )
         if skipped_over_limit:
             warnings.append(
                 'Your %(plan)s plan allows up to %(max)s player(s) per tournament. '
@@ -780,6 +932,7 @@ class AuctionPlayerUploadWizard(models.TransientModel):
         self.write({
             'state': 'done',
             'created_count': created,
+            'updated_count': updated,
             'photo_count': photos_applied,
             'result_message': '\n'.join(msg_lines),
         })
@@ -806,6 +959,43 @@ class AuctionPlayerUploadWizard(models.TransientModel):
 
     def action_close(self):
         return {'type': 'ir.actions.act_window_close'}
+
+    def _match_existing_player(self, sl_no):
+        """Match a Draft player by Serial No.
+
+        Returns (player, False) when one draft player has this serial,
+        (empty, state label) when the serial belongs only to a non-draft
+        player, and (empty, False) when nobody has it.
+        """
+        Player = self.env['auction.team.player'].sudo()
+        empty = Player.browse()
+        try:
+            number = int(sl_no)
+        except (TypeError, ValueError):
+            return empty, False
+        if number < 1:
+            return empty, False
+        found = Player.search([
+            ('tournament_id', '=', self.tournament_id.id),
+            ('icon_player', '=', False),
+            ('sl_no', '=', number),
+        ])
+        drafts = found.filtered(lambda player: player.state == 'draft')
+        if len(drafts) > 1:
+            raise UserError(_(
+                'Serial No %s matches more than one draft player. '
+                'Give each draft player a unique serial before updating photos.'
+            ) % number)
+        if drafts:
+            return drafts, False
+        if found:
+            labels = {
+                'auction': 'In Auction',
+                'sold': 'Sold',
+                'unsold': 'Unsold',
+            }
+            return empty, labels.get(found[0].state, found[0].state)
+        return empty, False
 
     @staticmethod
     def _norm_header(value):

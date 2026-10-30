@@ -2123,8 +2123,8 @@ html:not([data-theme="standard"]) .pj-recent-band{
   window.PJ_BOARD_SHOW_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/boards/show';
 </script>
 <script src="/auction_module/static/src/js/auction_sse_client.js"></script>
-<script src="/auction_module/static/src/js/live_bid_tick.js?v=3"></script>
-<script src="/auction_module/static/src/js/sold_coin_sound.js?v=2"></script>
+<script src="/auction_module/static/src/js/live_bid_tick.js?v=4"></script>
+<script src="/auction_module/static/src/js/sold_coin_sound.js?v=4"></script>
 <t t-call="auction_module.point_unit_bootstrap">
   <t t-set="pu_tournament" t-value="tournament"/>
 </t>
@@ -2180,7 +2180,7 @@ html:not([data-theme="standard"]) .pj-recent-band{
           </svg>
         </a>
       </div>
-      <button type="button" class="pj-coin-btn" id="pjCoinBtn" hidden="hidden" title="Sold coin sound" aria-label="Sold coin sound" aria-pressed="false">
+      <button type="button" class="pj-coin-btn" id="pjCoinBtn" hidden="hidden" title="Sold sound" aria-label="Sold sound" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path d="M4 10v4h3l4 3V7L7 10H4zm10.5 2a3.5 3.5 0 0 0-1.5-2.87v5.74A3.5 3.5 0 0 0 14.5 12zM13 5.1v1.8a6 6 0 0 1 0 10.2v1.8a8 8 0 0 0 0-13.8z"/>
         </svg>

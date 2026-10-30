@@ -1000,8 +1000,8 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                 '</div>',
                 '<div class="tsu-card tsu-field is-edit"><label>YouTube stream URL</label>' +
                     '<input type="url" class="tsu-input tsu-edit-input" data-field="youtube_url" value="' + esc(d.youtube_url) + '"/></div>',
-                this._switchCard('Sound on live bids', 'live_bid_sound', d.live_bid_sound, d.live_bid_sound ? 'On' : 'Off', 'Same live bid sound toggle'),
-                this._switchCard('Sound when a player is sold', 'sold_coin_sound', d.sold_coin_sound, d.sold_coin_sound ? 'On' : 'Off', 'Coin sound on the projector and live board after a confirmed sale'),
+                this._switchCard('Sound on live bids', 'live_bid_sound', d.live_bid_sound, d.live_bid_sound ? 'On' : 'Off', 'Bell on the projector and live board each time a team bids'),
+                this._switchCard('Sound when a player is sold', 'sold_coin_sound', d.sold_coin_sound, d.sold_coin_sound ? 'On' : 'Off', 'Cash-register sound on the projector and live board after a confirmed sale'),
                 this._editNumber(
                     'Owner bid window',
                     'owner_bid_timer_seconds',

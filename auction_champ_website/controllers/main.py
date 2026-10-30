@@ -143,19 +143,14 @@ class AuctionChampHomepage(Website):
 
         result = []
         for tournament in live_tournaments:
-            # Stamp-first: respect the sold/unsold stamp window
-            now_dt = fields.Datetime.now()
-            on_stage = None
-            if (tournament.stamp_expires_at
-                    and tournament.stamp_expires_at > now_dt
-                    and tournament.stamp_player_id):
-                on_stage = tournament.stamp_player_id
-            else:
-                found = env['auction.team.player'].sudo().search([
-                    ('is_on_stage', '=', True),
-                    ('tournament_id', '=', tournament.id),
-                ], limit=1)
-                on_stage = found or None
+            # Homepage shows a player only while they are in the auction.
+            Player = env['auction.team.player'].sudo()
+            on_stage = Player.search([
+                ('is_on_stage', '=', True),
+                ('tournament_id', '=', tournament.id),
+                ('state', '=', 'auction'),
+                ('icon_player', '=', False),
+            ], limit=1) or None
 
             # Latest auction history entry for this tournament
             latest_bid = env['auction.history'].sudo().search([
@@ -168,10 +163,35 @@ class AuctionChampHomepage(Website):
             ])
             teams_count = len(auctions)
             players_sold = sum(len(a.player_ids) for a in auctions)
-            players_in_auction = env['auction.team.player'].sudo().search_count([
+            real_players = [
                 ('tournament_id', '=', tournament.id),
-                ('state', '=', 'auction'),
-            ])
+                ('icon_player', '=', False),
+            ]
+            players_in_auction = Player.search_count(
+                real_players + [('state', '=', 'auction')]
+            )
+            draft_count = Player.search_count(
+                real_players + [('state', '=', 'draft')]
+            )
+            started_count = Player.search_count(
+                real_players + [('state', 'in', ('sold', 'unsold'))]
+            )
+            if not on_stage and players_in_auction == 1:
+                on_stage = Player.search(
+                    real_players + [('state', '=', 'auction')], limit=1
+                ) or None
+            awaiting_air = (
+                not on_stage
+                and players_in_auction == 0
+                and draft_count > 0
+                and started_count == 0
+            )
+            # Off only while the squad is still entirely Draft.
+            # One player left in Draft must not block a live auction.
+            watch_live = (players_in_auction + started_count) > 0
+            auction_date = ''
+            if tournament.auction_date:
+                auction_date = tournament.auction_date.strftime('%d %b %Y')
 
             # Current player detail
             current_player_data = None
@@ -235,6 +255,9 @@ class AuctionChampHomepage(Website):
                 'live_board_url': '/{}/{}/auction/live-board'.format(db_name, tournament.slug)
                                   if tournament.slug else '/auction/live-board',
                 'is_break': tournament.break_time_active,
+                'awaiting_air': awaiting_air,
+                'watch_live': watch_live,
+                'auction_date': auction_date,
                 'current_player': current_player_data,
                 'current_bid': current_bid_data,
                 'teams_count': teams_count,

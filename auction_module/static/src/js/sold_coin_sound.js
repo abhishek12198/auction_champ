@@ -1,9 +1,10 @@
-/* Sold-coin cue for Projector + Live Board.
-   sold_coin.wav is an original synthesis (no third-party sample).
+/* Cash-register cue for Projector + Live Board when a player is sold.
+   sold_kaching.mp3 is Pixabay sound effect 125042 (Cash Register Kaching),
+   free under the Pixabay Content License. The bid summary keeps the coin drop.
    One play per confirmed sale. Refresh and repeat polls do not replay it. */
 (function (w) {
     'use strict';
-    var SRC = '/auction_module/static/src/audio/sold_coin.wav?v=2';
+    var SRC = '/auction_module/static/src/audio/sold_kaching.mp3?v=1';
     var MUTE_KEY = 'acSoldCoinMuted';
     var PLAYED_KEY = 'acSoldCoinPlayed';
     var clip = null;
@@ -59,7 +60,7 @@
             btn.hidden = false;
             btn.classList.toggle('is-muted', muted);
             btn.classList.toggle('is-blocked', blocked && !muted);
-            var label = muted ? 'Sold coin sound off' : (blocked ? 'Enable sold coin sound' : 'Mute sold coin sound');
+            var label = muted ? 'Sold sound off' : (blocked ? 'Enable sold sound' : 'Mute sold sound');
             btn.title = label;
             btn.setAttribute('aria-label', label);
             btn.setAttribute('aria-pressed', muted ? 'true' : 'false');

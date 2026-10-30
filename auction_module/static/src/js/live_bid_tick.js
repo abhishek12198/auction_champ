@@ -1,69 +1,39 @@
-/* Coin-clink cue on each live bid for Live Board + Projector. Unlock on first gesture. */
+/* Bell cue on each live bid for Live Board + Projector.
+   bid_bell.mp3 is Pixabay sound effect 390294 (Bell Ring), free under the
+   Pixabay Content License. Unlock on first gesture. */
 (function (w) {
     'use strict';
-    var ctx;
-    function audioCtx() {
-        var AC = w.AudioContext || w.webkitAudioContext;
-        if (!AC) return null;
-        if (!ctx) ctx = new AC();
-        if (ctx.state === 'suspended') {
-            try { ctx.resume(); } catch (e) {}
+    var SRC = '/auction_module/static/src/audio/bid_bell.mp3?v=1';
+    var clip = null;
+    function audio() {
+        if (!clip) {
+            clip = new w.Audio(SRC);
+            clip.preload = 'auto';
+            clip.volume = 0.9;
+            try { clip.setAttribute('playsinline', 'true'); } catch (e) {}
+            try { clip.load(); } catch (e2) {}
         }
-        return ctx;
+        return clip;
     }
     function unlock() {
-        var c = audioCtx();
-        if (!c) return;
         try {
-            var buf = c.createBuffer(1, 1, 22050);
-            var src = c.createBufferSource();
-            src.buffer = buf;
-            src.connect(c.destination);
-            src.start(0);
+            var c = audio();
+            var p = c.play();
+            if (p && p.then) {
+                p.then(function () {
+                    c.pause();
+                    c.currentTime = 0;
+                }).catch(function () {});
+            }
         } catch (e) {}
     }
-    function ping(c, t, freq, dur, vol) {
-        var osc = c.createOscillator();
-        var g = c.createGain();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(freq, t);
-        osc.frequency.exponentialRampToValueAtTime(Math.max(180, freq * 0.55), t + dur);
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(vol, t + 0.008);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-        osc.connect(g);
-        g.connect(c.destination);
-        osc.start(t);
-        osc.stop(t + dur + 0.02);
-    }
-    function clinkNoise(c, t, dur, vol) {
-        var n = c.sampleRate * dur;
-        var buf = c.createBuffer(1, n, c.sampleRate);
-        var data = buf.getChannelData(0);
-        for (var i = 0; i < n; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / n);
-        var src = c.createBufferSource();
-        src.buffer = buf;
-        var bp = c.createBiquadFilter();
-        bp.type = 'highpass';
-        bp.frequency.value = 1800;
-        var g = c.createGain();
-        g.gain.setValueAtTime(vol, t);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-        src.connect(bp);
-        bp.connect(g);
-        g.connect(c.destination);
-        src.start(t);
-        src.stop(t + dur);
-    }
     function play() {
-        var c = audioCtx();
-        if (!c) return;
         try {
-            var t = c.currentTime;
-            clinkNoise(c, t, 0.05, 0.09);
-            ping(c, t, 1960, 0.09, 0.16);
-            ping(c, t + 0.045, 2620, 0.11, 0.14);
-            ping(c, t + 0.09, 3320, 0.08, 0.1);
+            var c = audio();
+            c.pause();
+            c.currentTime = 0;
+            var pending = c.play();
+            if (pending && pending.catch) pending.catch(function () {});
         } catch (e) {}
     }
     /* Key on player + bid amount only. The leading team can arrive in a later

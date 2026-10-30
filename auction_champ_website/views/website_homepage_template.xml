@@ -24,7 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Poppins:wght@400;500;600;700;800&amp;display=swap"
           rel="stylesheet"/>
     <!-- AuctionChamp custom styles -->
-    <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.57"/>
+    <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.59"/>
 </head>
 <body>
 
@@ -438,15 +438,14 @@
             <h2 class="ac-section-title-inv">Active <span class="hl-inv">Live Auctions</span></h2>
             <div class="ac-divider-inv"></div>
             <p class="ac-section-sub-inv">
-                These tournaments are conducting live player auctions at this moment.
-                Track the current player on stage, see the latest bid, and unlock the
-                live board with the tournament code from the organiser.
+                Live boards that are open now. The player on stage appears here
+                as soon as the auction starts.
             </p>
         </div>
 
         <div class="ac-live-grid" id="acLiveGrid">
             <t t-foreach="live_tournaments" t-as="lt">
-                <div t-att-class="'ac-live-card' + (' ac-live-break-mode' if lt.get('is_break') else '')"
+                <div t-att-class="'ac-live-card' + (' ac-live-break-mode' if lt.get('is_break') else '') + (' ac-live-soon' if lt.get('awaiting_air') and not lt.get('is_break') else '')"
                      t-att-data-tournament-id="lt.get('tournament_id')"
                      t-att-data-live-url="lt.get('live_board_url')">
 
@@ -465,9 +464,10 @@
                             </t>
                         </div>
                         <div class="ac-live-header-info">
-                            <div class="ac-live-badge">
+                            <div t-att-class="'ac-live-badge' + (' ac-live-badge-soon' if lt.get('awaiting_air') and not lt.get('is_break') else '')">
                                 <span class="ac-live-dot"></span>
-                                LIVE
+                                <t t-if="lt.get('awaiting_air') and not lt.get('is_break')">ON AIR SOON</t>
+                                <t t-else="">LIVE</t>
                             </div>
                             <h3 class="ac-live-name" t-esc="lt.get('name', '')"/>
                             <p class="ac-live-desc" t-esc="lt.get('description', '')"/>
@@ -521,22 +521,31 @@
                                 </div>
                             </div>
                         </t>
+                        <t t-elif="lt.get('awaiting_air')">
+                            <div class="ac-live-air">
+                                <i class="fas fa-broadcast-tower"></i>
+                                <span>On air soon</span>
+                                <t t-if="lt.get('auction_date')">
+                                    <small>Auction date <t t-esc="lt['auction_date']"/></small>
+                                </t>
+                                <t t-else="">
+                                    <small>Auction date to be announced</small>
+                                </t>
+                            </div>
+                        </t>
                         <t t-else="">
                             <div class="ac-live-waiting">
                                 <i class="fas fa-gavel"></i>
-                                <span>Auction in progress</span>
-                                <small>Next player coming up</small>
+                                <span>Next player coming up</span>
                             </div>
                         </t>
                     </div>
 
                     <!-- ── Latest bid / history message ── -->
-                    <t t-if="lt.get('current_bid') and lt['current_bid'].get('message')">
-                        <div class="ac-live-latest-bid">
-                            <i class="fas fa-history"></i>
-                            <span class="ac-live-bid-msg" t-esc="lt['current_bid']['message']"/>
-                        </div>
-                    </t>
+                    <div t-att-class="'ac-live-latest-bid' + ('' if lt.get('current_player') and lt.get('current_bid') and lt['current_bid'].get('message') else ' ac-live-latest-bid-off')">
+                        <i class="fas fa-history"></i>
+                        <span class="ac-live-bid-msg" t-esc="(lt.get('current_bid') or {}).get('message') or ''"/>
+                    </div>
 
                     <!-- ── Stats strip ── -->
                     <div class="ac-live-stats">
@@ -552,17 +561,25 @@
                         <div class="ac-live-stat-sep"></div>
                         <div class="ac-live-stat-item">
                             <span class="ac-live-stat-val" t-esc="str(lt.get('players_in_auction', 0))"/>
-                            <span class="ac-live-stat-lbl">In Pool</span>
+                            <span class="ac-live-stat-lbl">In Auction</span>
                         </div>
                     </div>
 
-                    <!-- ── Watch Live Board CTA ── -->
-                    <a t-att-href="lt.get('live_board_url', '/auction/live-board')"
+                    <!-- ── Watch Live: on only after every player has left Draft ── -->
+                    <a t-if="lt.get('watch_live')"
+                       t-att-href="lt.get('live_board_url', '/auction/live-board')"
                        class="ac-live-cta"
                        target="_blank" rel="noopener">
-                        <i class="fas fa-lock"></i>
-                        Enter Code &amp; Watch Live
+                        <i class="fas fa-play"></i>
+                        Watch Live
                     </a>
+                    <span t-else=""
+                          class="ac-live-cta ac-live-cta-off"
+                          aria-disabled="true"
+                          title="Watch Live opens once players are moved into the auction">
+                        <i class="fas fa-play"></i>
+                        Watch Live
+                    </span>
 
                 </div>
             </t>
@@ -1017,7 +1034,7 @@
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         crossorigin="anonymous"></script>
-<script src="/auction_champ_website/static/src/js/auction_website.js?v=1.0.57"></script>
+<script src="/auction_champ_website/static/src/js/auction_website.js?v=1.0.60"></script>
 
 </body>
 </html>

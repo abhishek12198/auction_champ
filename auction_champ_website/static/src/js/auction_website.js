@@ -117,10 +117,20 @@
                     + '</div>';
             }
             var p = lt.current_player;
+            if (!p && lt.awaiting_air) {
+                var dateLine = lt.auction_date
+                    ? '<small>Auction date ' + esc(lt.auction_date) + '</small>'
+                    : '<small>Auction date to be announced</small>';
+                return '<div class="ac-live-air">'
+                    + '<i class="fas fa-broadcast-tower"></i>'
+                    + '<span>On air soon</span>'
+                    + dateLine
+                    + '</div>';
+            }
             if (!p) {
                 return '<div class="ac-live-waiting">'
                     + '<i class="fas fa-gavel"></i>'
-                    + '<span>Auction in progress</span>'
+                    + '<span>Next player coming up</span>'
                     + '</div>';
             }
 
@@ -170,13 +180,49 @@
                         if (!lt) return;
 
                         card.classList.toggle('ac-live-break-mode', !!lt.is_break);
+                        card.classList.toggle('ac-live-soon', !!lt.awaiting_air && !lt.is_break);
+
+                        var badge = card.querySelector('.ac-live-badge');
+                        if (badge) {
+                            var soon = !!lt.awaiting_air && !lt.is_break;
+                            badge.classList.toggle('ac-live-badge-soon', soon);
+                            badge.innerHTML = '<span class="ac-live-dot"></span>'
+                                + (soon ? 'ON AIR SOON' : 'LIVE');
+                        }
 
                         var stage = card.querySelector('.ac-live-stage');
                         if (stage) { stage.innerHTML = buildStageHtml(lt); }
 
-                        var bidMsg = card.querySelector('.ac-live-bid-msg');
-                        if (bidMsg && lt.current_bid && lt.current_bid.message) {
-                            bidMsg.textContent = lt.current_bid.message;
+                        var bidRow = card.querySelector('.ac-live-latest-bid');
+                        var bidText = lt.current_bid && lt.current_bid.message;
+                        if (bidRow) {
+                            bidRow.classList.toggle('ac-live-latest-bid-off', !(lt.current_player && bidText));
+                            var bidMsg = bidRow.querySelector('.ac-live-bid-msg');
+                            if (bidMsg) {
+                                bidMsg.textContent = bidText || '';
+                            }
+                        }
+
+                        var cta = card.querySelector('.ac-live-cta');
+                        if (cta) {
+                            var open = !!lt.watch_live;
+                            var label = '<i class="fas fa-play"></i> Watch Live';
+                            if (open && cta.tagName !== 'A') {
+                                var link = document.createElement('a');
+                                link.className = 'ac-live-cta';
+                                link.target = '_blank';
+                                link.rel = 'noopener';
+                                link.href = lt.live_board_url || card.getAttribute('data-live-url') || '/auction/live-board';
+                                link.innerHTML = label;
+                                cta.replaceWith(link);
+                            } else if (!open && cta.tagName !== 'SPAN') {
+                                var locked = document.createElement('span');
+                                locked.className = 'ac-live-cta ac-live-cta-off';
+                                locked.setAttribute('aria-disabled', 'true');
+                                locked.title = 'Watch Live opens once players are moved into the auction';
+                                locked.innerHTML = label;
+                                cta.replaceWith(locked);
+                            }
                         }
 
                         var statVals = card.querySelectorAll('.ac-live-stat-val');

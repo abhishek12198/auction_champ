@@ -18,18 +18,30 @@
                             <b>Players</b> (data), <b>Field Guide</b> (column type: free text / selection / Many2one / Many2many),
                             and <b>Reference Lists</b> (exact allowed values from master data and this tournament's tiers).
                             Fill Players using those lists so Tier, Positions, Styles, Strengths, Preferred Foot, and Work Rate match.
-                            Photos ZIP optional: 1.jpg, 2.png … matching Excel row order.
+                            Export Existing Players downloads draft players only, in this same file.
+                            Photos ZIP: name each picture with the Serial No (4.jpg updates serial 4).
+                            A matching serial updates that player only while the player is still Draft.
+                            Sold, unsold, and in-auction players are left unchanged.
                         </div>
                         <div colspan="2" class="text-muted"
                              attrs="{'invisible': [('tournament_type', '!=', 'kabaddi')]}">
                             Download the Excel for this Kabaddi tournament. The file has three sheets:
                             <b>Players</b> (data), <b>Field Guide</b>, and <b>Reference Lists</b>.
                             Role must be Defender, Rider, or AllRounder. Previous Club / Current Club is free text.
-                            Photos ZIP optional: 1.jpg, 2.png … matching Excel row order.
+                            Export Existing Players downloads draft players only, in this same file.
+                            Photos ZIP: name each picture with the Serial No (4.jpg updates serial 4).
+                            A matching serial updates that player only while the player is still Draft.
+                            Sold, unsold, and in-auction players are left unchanged.
                         </div>
                         <button name="action_download_template"
                                 type="object"
                                 string="Download Excel Template"
+                                class="btn-secondary"
+                                icon="fa-download"
+                                colspan="2"/>
+                        <button name="action_export_existing"
+                                type="object"
+                                string="Export Existing Players"
                                 class="btn-secondary"
                                 icon="fa-download"
                                 colspan="2"/>
@@ -47,6 +59,7 @@
                 </group>
                 <group attrs="{'invisible': [('state', '!=', 'done')]}">
                     <field name="created_count"/>
+                    <field name="updated_count"/>
                     <field name="photo_count"/>
                     <field name="result_message" nolabel="1" colspan="2"/>
                 </group>
