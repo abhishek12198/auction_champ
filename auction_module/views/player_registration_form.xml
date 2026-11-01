@@ -20,7 +20,7 @@
 
     <!-- Registration form CSS -->
     <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.981"/>
-    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration_pro.css?v=1.5.996"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration_pro.css?v=1.6.1"/>
 
     <!-- ── Per-theme CSS custom properties ────────────────────── -->
     <style>
@@ -211,7 +211,8 @@
                             id="regRosterOpen"
                             t-att-data-url="'/%s/%s/player/register/players' % (db_name, tournament_slug)"
                             t-att-data-sport="tournament.tournament_type or 'cricket'"
-                            t-att-data-count="roster_count or 0">
+                            t-att-data-count="roster_count or 0"
+                            t-att-aria-label="'%s registered' % (roster_count or 0)">
                         <span>Registered</span>
                         <strong id="regRosterCount"><t t-esc="roster_count or 0"/></strong>
                     </button>
@@ -241,7 +242,13 @@
                             </button>
                         </t>
                     </div>
-                    <a href="#reg-form-start" class="reg-goto-form">Go to Registration form</a>
+                    <a href="#reg-form-start" class="reg-goto-form">
+                        <span>Go to Registration form</span>
+                        <svg class="reg-goto-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                            <polyline points="12 5 19 12 12 19"/>
+                        </svg>
+                    </a>
                 </t>
             </div>
         </div>
@@ -281,7 +288,7 @@
                 </div>
             </t>
             <t t-if="tournament and tournament.venue">
-                <div class="reg-meta-item reg-meta-item--highlight">
+                <div class="reg-meta-item reg-meta-item--highlight reg-meta-item--venue">
                     <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                         <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/>
                         <circle cx="12" cy="10" r="3"/>
@@ -294,9 +301,9 @@
             </t>
             <t t-if="tournament and tournament.tournament_type">
                 <div class="reg-meta-item">
-                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M12 8v4l3 3"/>
+                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                        <circle cx="12" cy="12" r="9"/>
+                        <path d="M12 3c2.2 2.6 2.2 15.4 0 18M12 3c-2.2 2.6-2.2 15.4 0 18M3.8 9.2h16.4M3.8 14.8h16.4"/>
                     </svg>
                     <span>
                         <span class="reg-meta-label">Sport</span>
@@ -513,21 +520,30 @@
             </t>
         </t>
 
-        <!-- ── Success state ── -->
+        <!-- ── Success state — same themed panel as “The Squad is Complete” ── -->
         <t t-if="success">
-            <div class="reg-success-body">
-                <div class="reg-success-check">✅</div>
-                <h2 style="font-family:'Bebas Neue',sans-serif;letter-spacing:3px;font-size:2.4rem;margin:.5rem 0;">
-                    Welcome to the Squad!
-                </h2>
-                <p style="max-width:500px;margin:.75rem auto 0;line-height:1.7;opacity:.85;">
-                    Your player profile has been submitted and is now <strong>under review</strong>.<br/>
-                    Once approved, you will appear on the auction roster.<br/>
+            <div t-attf-class="reg-locked{{'' if poster_src else ' reg-locked--solo'}}">
+                <t t-if="poster_src">
+                <button type="button" class="reg-locked-poster reg-poster-open" aria-haspopup="dialog" aria-label="Enlarge tournament poster">
+                    <img t-att-src="poster_src" alt="Tournament poster"/>
+                </button>
+                </t>
+            <section class="reg-locked-card reg-success-body" aria-labelledby="regSuccessTitle">
+                <div class="reg-locked-medal" aria-hidden="true">
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <circle cx="12" cy="12" r="9"/>
+                        <path d="M8 12.5l2.5 2.5L16 9.5"/>
+                    </svg>
+                </div>
+                <p class="reg-locked-kicker">Registration received</p>
+                <h2 id="regSuccessTitle">Welcome to the Squad</h2>
+                <p class="reg-locked-lead">
+                    Your player profile has been submitted and is now <strong>under review</strong>.
+                    Once approved, you will appear on the auction roster.
                     Keep an eye out for updates from the organiser.
                 </p>
                 <t t-if="tournament">
-                    <p style="margin-top:1.2rem;font-size:.85rem;font-weight:700;letter-spacing:1px;opacity:.6;text-transform:uppercase;"
-                       t-esc="tournament.name"/>
+                    <p class="reg-locked-lines" t-esc="tournament.name"/>
                 </t>
 
                 <!-- ── Player Card Preview ── -->
@@ -618,7 +634,16 @@
                         </a>
                     </div>
                 </t>
+            </section>
             </div>
+            <t t-if="poster_src">
+            <div class="reg-poster-overlay" id="regPosterOverlay" aria-hidden="true">
+                <div class="reg-poster-dialog" role="dialog" aria-modal="true" aria-label="Tournament poster">
+                    <button type="button" class="reg-poster-x" id="regPosterClose" aria-label="Close">&#215;</button>
+                    <img t-att-src="poster_src" alt="Tournament Poster" class="reg-poster-overlay-img"/>
+                </div>
+            </div>
+            </t>
         </t>
 
         <!-- ── Error ── -->

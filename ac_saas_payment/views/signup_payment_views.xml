@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ac_saas_signup_payment_tree" model="ir.ui.view">
+        <field name="name">ac.saas.signup.payment.tree</field>
+        <field name="model">ac.saas.signup.payment</field>
+        <field name="arch" type="xml">
+            <tree string="Signup Payments" create="false">
+                <field name="name"/>
+                <field name="invoice_number"/>
+                <field name="invoice_date"/>
+                <field name="buyer_name"/>
+                <field name="buyer_email"/>
+                <field name="plan_id"/>
+                <field name="amount"/>
+                <field name="currency_id" invisible="1"/>
+                <field name="state"/>
+                <field name="credentials_sent"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_ac_saas_signup_payment_form" model="ir.ui.view">
+        <field name="name">ac.saas.signup.payment.form</field>
+        <field name="model">ac.saas.signup.payment</field>
+        <field name="arch" type="xml">
+            <form string="Signup Payment" create="false">
+                <header>
+                    <button name="action_print_invoice" type="object"
+                            string="Download Invoice" class="oe_highlight"
+                            attrs="{'invisible': [('state', 'not in', ('paid', 'provisioned'))]}"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="pending,paid,provisioned"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Subscriber">
+                            <field name="buyer_name" readonly="1"/>
+                            <field name="buyer_email" readonly="1"/>
+                            <field name="buyer_phone" readonly="1"/>
+                            <field name="organization" readonly="1"/>
+                        </group>
+                        <group string="Subscription">
+                            <field name="plan_id" readonly="1"/>
+                            <field name="amount" readonly="1"/>
+                            <field name="currency_id" readonly="1"/>
+                            <field name="account_id" readonly="1"/>
+                            <field name="user_id" readonly="1"/>
+                            <field name="credentials_sent" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Invoice">
+                        <field name="invoice_number" readonly="1"/>
+                        <field name="invoice_date" readonly="1"/>
+                        <field name="supplier_gstin" readonly="1"/>
+                        <field name="gst_rate" readonly="1"/>
+                        <field name="taxable_amount" readonly="1"/>
+                        <field name="cgst_amount" readonly="1"/>
+                        <field name="sgst_amount" readonly="1"/>
+                        <field name="igst_amount" readonly="1"/>
+                        <field name="place_of_supply" readonly="1"/>
+                        <field name="buyer_gstin" readonly="1"/>
+                        <field name="buyer_state" readonly="1"/>
+                        <field name="razorpay_order_id" readonly="1"/>
+                        <field name="razorpay_payment_id" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_ac_saas_signup_payment" model="ir.actions.act_window">
+        <field name="name">Signup Payments</field>
+        <field name="res_model">ac.saas.signup.payment</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'create': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No website subscriptions yet</p>
+            <p>Paid signups from the website appear here, with an invoice you can download.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_ac_saas_signup_payments"
+              name="Signup Payments"
+              parent="ac_saas_manager.menu_ac_saas_root"
+              action="action_ac_saas_signup_payment"
+              sequence="12"
+              groups="ac_saas_manager.group_saas_manager,auction_module.group_auction_group_admin"/>
+</odoo>

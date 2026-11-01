@@ -10,6 +10,8 @@ from odoo import http, _
 from odoo.http import request
 from odoo.exceptions import UserError
 
+from odoo.addons.ac_saas_payment.models.indian_states import INDIAN_STATE_NAMES
+
 _logger = logging.getLogger(__name__)
 EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 
@@ -82,7 +84,10 @@ class SaasSignupPaymentController(http.Controller):
                 'buyer_name': '',
                 'buyer_email': '',
                 'buyer_phone': '',
+                'buyer_gstin': '',
+                'buyer_state': '',
             },
+            'indian_states': sorted(INDIAN_STATE_NAMES),
         }
 
         if request.httprequest.method == 'POST':
@@ -90,6 +95,8 @@ class SaasSignupPaymentController(http.Controller):
                 'buyer_name': post.get('buyer_name') or '',
                 'buyer_email': post.get('buyer_email') or '',
                 'buyer_phone': post.get('buyer_phone') or '',
+                'buyer_gstin': post.get('buyer_gstin') or '',
+                'buyer_state': post.get('buyer_state') or '',
             }
             ctx['form'] = form
             try:
@@ -97,6 +104,8 @@ class SaasSignupPaymentController(http.Controller):
                     form['buyer_name'],
                     form['buyer_email'],
                     form['buyer_phone'],
+                    gstin=form['buyer_gstin'],
+                    state=form['buyer_state'],
                 )
                 payment = Signup.create_for_plan(plan, buyer)
                 payment.action_create_razorpay_order()

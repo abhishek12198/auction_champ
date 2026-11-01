@@ -7,6 +7,7 @@
                 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
                 <meta name="robots" content="noindex, nofollow"/>
                 <title>AuctionChamp Organiser Manual</title>
+                <t t-call="auction_module.page_head_favicon"/>
                 <link rel="preconnect" href="https://fonts.googleapis.com"/>
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
                 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
@@ -47,7 +48,7 @@
                 </div>
 
                 <footer class="ac-manual-footer">
-                    © <t t-esc="current_year"/> AuctionChamp. Organiser manual.
+                    © Auction Champ. All Rights Reserved.
                 </footer>
 
                 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js" crossorigin="anonymous"></script>

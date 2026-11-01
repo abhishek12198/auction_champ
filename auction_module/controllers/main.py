@@ -4269,29 +4269,41 @@ class Auction(http.Controller):
         '/<string:db_name>/favicon.ico',
     ], type='http', auth='none', website=False, csrf=False, sitemap=False)
     def auction_root_favicon(self, db_name=None, **kw):
-        """Root favicon — same gavel mark as backend / frontend tabs."""
+        """Root favicon — same mark as the company tab icon."""
+        import base64
         import os
         from odoo.modules.module import get_resource_path
-        path = None
-        ctype = 'image/svg+xml'
-        for name, mime in (
-            ('favicon.png', 'image/png'),
-            ('favicon.svg', 'image/svg+xml'),
-        ):
-            cand = get_resource_path('auction_module', 'static', 'description', name)
-            if cand and os.path.exists(cand):
-                path = cand
-                ctype = mime
-                break
-        if not path:
-            return self._not_found()
-        with open(path, 'rb') as fav:
-            data = fav.read()
+        from odoo.tools.image import image_process
+        data = None
+        ctype = 'image/png'
+        try:
+            company = request.env['res.company'].sudo().search([], limit=1)
+            if company and company.favicon:
+                processed = image_process(company.favicon, size=(64, 64))
+                data = base64.b64decode(processed)
+        except Exception:
+            data = None
+        if not data:
+            path = None
+            ctype = 'image/svg+xml'
+            for name, mime in (
+                ('favicon.png', 'image/png'),
+                ('favicon.svg', 'image/svg+xml'),
+            ):
+                cand = get_resource_path('auction_module', 'static', 'description', name)
+                if cand and os.path.exists(cand):
+                    path = cand
+                    ctype = mime
+                    break
+            if not path:
+                return self._not_found()
+            with open(path, 'rb') as fav:
+                data = fav.read()
         etag = hashlib.md5(data).hexdigest()
         inm = (request.httprequest.headers.get('If-None-Match') or '').replace('"', '').strip()
         headers = [
             ('Content-Type', ctype),
-            ('Cache-Control', 'public, max-age=604800'),
+            ('Cache-Control', 'public, max-age=3600'),
             ('ETag', '"%s"' % etag),
         ]
         if inm == etag:

@@ -43,7 +43,7 @@
                                 <field name="stat_1_label" placeholder="Tournaments Managed"/>
                                 <field name="stat_2_label" placeholder="Players Registered"/>
                                 <field name="stat_3_label" placeholder="Teams Managed"/>
-                                <field name="stat_4_label" placeholder="Auction Automation"/>
+                                <field name="stat_4_label" placeholder="Live Auctions"/>
                             </group>
                         </page>
 

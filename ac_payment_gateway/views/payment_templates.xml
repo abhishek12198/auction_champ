@@ -177,7 +177,7 @@
   </xpath>
 
   <!-- Optional: pay CTA on success (in-page, no black screen) -->
-  <xpath expr="//t[@t-if='success']//div[contains(@class,'reg-success-body')]/div[contains(@class,'reg-success-check')]" position="after">
+  <xpath expr="//t[@t-if='success']//section[contains(@class,'reg-success-body')]/p[contains(@class,'reg-locked-lead')]" position="after">
     <t t-if="payment_just_completed">
       <p style="margin-top:1rem;color:#16a34a;font-weight:700;">Payment received. Registration confirmed.</p>
     </t>

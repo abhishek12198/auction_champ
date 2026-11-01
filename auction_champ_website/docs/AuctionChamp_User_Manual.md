@@ -1,10 +1,10 @@
 # AuctionChamp Organiser Manual
 
-**Version:** 2.5
+**Version:** 2.12
 
 ## Start here
 
-This guide is for the account created at signup. Read it in order, or jump from the chapter list. The path is one tournament: sign in, choose it, create it, add teams and players, set the rules, sell on Player Showcase, then correct a squad if a sale needs a change.
+This guide is for the account created at signup. Read it in order, or jump from the chapter list. The path is one tournament: sign in, choose it, create it, add teams and players, place an icon player and a mystery tier, set the rules, share the live board and bid summary, sell on Player Showcase, modify a squad if a sale needs a change, then export each team's roster and squad poster.
 
 - Every person in the figures is sample data. Leave a mobile blank unless you are allowed to store that number.
 - The signed-in account is not shown in the pictures.
@@ -16,7 +16,7 @@ This guide is for the account created at signup. Read it in order, or jump from 
 
 ## 1. What you can do
 
-After signup you have one login. That login chooses the working tournament, creates the tournament, adds teams and players, sets the purse and bid slabs, and runs the auction until the last player is sold or left unsold. Player Dashboard and Tournament Settings are where you read the counts and change a squad after a sale.
+After signup you have one login. That login chooses the working tournament, creates the tournament, adds teams and players, sets the purse and bid slabs, and runs the auction until the last player is sold or left unsold. Player Dashboard and Tournament Settings are where you read the counts and modify a squad after a sale.
 
 On the Starter account used for these figures, the home menu shows:
 
@@ -208,7 +208,7 @@ On the sample tournament, registration is closed, the live board is stopped, and
 |--------|----------------|
 | **Add Player** | Opens Register Player for this tournament. Name is required. Leave mobile blank unless you are storing a number you are allowed to keep. |
 | **Upload Excel** | Opens the spreadsheet upload. Download the blank template for new players, or export draft players in that same file. A photo zip can travel with the sheet: name each picture with the serial number (`4.jpg` updates serial 4). A matching serial updates that player only while the player is still Draft. Sold, unsold, and in-auction players are left unchanged. Use sample-style names if the file will be shared. |
-| **Sort categories** | Opens Player Categorization. You reorder tiers, move players between tiers, search the list, and resequence the call order. **Back** on that board returns here. |
+| **Sort categories** | Opens Player Categorization. You add an Icon tier or a Mystery tier, move players between tiers, assign an icon player to a team, and resequence the call order. The steps are in [Icon players and mystery players](#icon-players-and-mystery-players). **Back** on that board returns here. |
 | **Export sold** | Opens Export Players. Choose Registered, Sold, Unsold, or Jersey, then **Generate Excel**. On a jersey export you can fill the sheet and **Import Jersey Updates**. |
 | **Print Player Cards** | Opens the print wizard described below. |
 | **Remove Duplicates** | Same wizard as on Summary. Steps are below. |
@@ -302,7 +302,7 @@ The title on this tab is **Auction Team and Rules**.
 | **Top 5 Bid Posters** | Downloads one Instagram sheet of the five highest sold bids. It needs at least one sold player. |
 | **Upload teams** | Opens the team spreadsheet upload, with an optional logo zip. |
 | **Add Team** | Opens a short form. Team name and owner name are required. Save it, or the team is not stored. |
-| **Squad Modification** | Opens the sold-player board. Pencil edits the sold value, the exchange icon swaps with another team's player, the arrow moves the player, and undo recalls them to the auction. Full steps are in [Change a squad](#13-change-a-squad). |
+| **Squad Modification** | Opens the sold-player board. Pencil edits the sold value, the exchange icon swaps with another team's player, the arrow moves the player, and undo recalls them to the auction. Full steps are in [Modify Squad](#modify-squad). |
 | **Create Owner Users** | Shown when this account can issue team-owner logins and teams exist. Opens a wizard to create a login for an owner who does not have one yet. Skip it unless you mean to issue those logins. |
 | **Export Owner Logins** | Shown after owner logins exist. Downloads the login sheet. |
 | **Remove Owner Users** | Shown after owner logins exist. Opens a wizard to remove selected owner logins. |
@@ -314,8 +314,8 @@ Under the cards, each tier can be edited. Change the name, description, colour, 
 
 | Switch | What it does |
 |--------|----------------|
-| **Icon tier** | Marks the tier as the icon or key-player category. Icon tiers have no public register link. |
-| **Mystery** | Marks the tier as a mystery category. Mystery tiers have no public register link. |
+| **Icon tier** | Marks the tier as the icon or key-player category. Icon tiers have no public register link. Placing a player in that tier, and giving them a team, is done on Player Categorization. See [Icon players and mystery players](#icon-players-and-mystery-players). |
+| **Mystery** | Marks the tier as a mystery category. Mystery tiers have no public register link. A Starter plan cannot turn this on. The auction effect is in [Icon players and mystery players](#icon-players-and-mystery-players). |
 
 | Button on a tier | What it does |
 |------------------|----------------|
@@ -360,6 +360,8 @@ Gold cards can be changed. Tap the value, then **Save**. Grey cards are locked.
 ╚══════════════════════════════════════════════════════════════╝
 
 #### Registration
+
+How to open that form and send it to players is in [Give players the registration link](#give-players-the-registration-link).
 
 | Button | What it does |
 |--------|----------------|
@@ -415,6 +417,8 @@ Pick a file on a card, then **Save**.
 | **YouTube watch** | Opens the public watch page for the stream. |
 | **Open** or **Copy** on a link card | Opens or copies that address: projector, live board, bid summary, or YouTube overlay. |
 
+How to send the live board and the bid summary to people who are not signed in is in [Share the Bid Summary and Live URL](#share-the-bid-summary-and-live-url).
+
 | Field or switch | What it does |
 |-----------------|----------------|
 | **YouTube stream URL** | The stream address. **Save** stores it. |
@@ -434,7 +438,61 @@ The player-facing rules text is locked for this login. Ask AuctionChamp admin to
 
 ---
 
-## 8. Add teams
+## 8. Give players the registration link
+
+Do this after the tournament is saved and it is the working tournament. The link is the public form players open on their own phone. It is not the **Add Player** screen, and it is not **Admin add-player**. Those two are for you.
+
+1. On **Player Dashboard**, click **Tournament Settings**.
+2. Stay on **Summary**. Turn **Player registration** on. The switch saves itself. While it is off, anyone who opens the link sees that registration is closed.
+3. Click **Copy Registration Link**. That copies the form for the whole tournament.
+4. Paste the link into the message you send the players. On **More → Registration**, **WhatsApp** opens a share box with that same link. **Open** on the **Player registration** card opens the form so you can read it before you send it.
+5. A player who finishes the form is stored as **Draft**. They show on **Players → Registered** and on the Draft tile of Player Dashboard.
+
+The form has three steps:
+
+| Step | What the player fills |
+|------|------------------------|
+| **Player** | Photo, name, and contact. Name is required. Tell players to leave the mobile blank unless you are allowed to store that number. |
+| **Game** | Role, batting or bowling style, and jersey fields when **Jersey extras** is on under Look of the day. |
+| **Pay & submit** | Payment proof when **Proof required** is ticked under Poster & pay, then submit. |
+
+The pictures below are that public form, with **Player registration** on. The name in them is sample data and was not left on the roster. The mobile box is empty. The pale digits in that box are the hint, not a number that was typed. On this sample tournament **Jersey extras** is off, so Game has no jersey fields, and **Proof required** is off, so Pay & submit marks the receipt Optional. When that tick is on, the player cannot submit without a receipt.
+
+The capacity bar counts players already on the roster. The **Registered players** card on Summary counts drafts only.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 8.1 — Registration, Player                        ║
+║  File: docs/screenshots/fig_18_1_registration_player.png     ║
+║  Capture: Photo, name, and an empty mobile box               ║
+╚══════════════════════════════════════════════════════════════╝
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 8.2 — Registration, Game                          ║
+║  File: docs/screenshots/fig_18_2_registration_game.png       ║
+║  Capture: Role, batting style, bowling, and tier            ║
+╚══════════════════════════════════════════════════════════════╝
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 8.3 — Registration, Pay and submit                ║
+║  File: docs/screenshots/fig_18_3_registration_pay.png        ║
+║  Capture: Optional receipt, then Submit Registration         ║
+╚══════════════════════════════════════════════════════════════╝
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 8.4 — Registration complete                       ║
+║  File: docs/screenshots/fig_18_4_registration_done.png       ║
+║  Capture: Welcome screen and the player card preview        ║
+╚══════════════════════════════════════════════════════════════╝
+
+On the main link the player chooses a regular tier. **Copy Register URL** on a tier card under **Teams**, or **Copy URL** under **More → Registration**, copies a link that locks that one tier. Use a tier link only when that category should be the only choice. Icon tiers and mystery tiers have no public link.
+
+**Admin add-player** on Registration asks for the tournament code and is for you to type a player in. Do not send that address to the squad.
+
+When the tournament has reached Max Registrations, the public page closes and the **Player registration** switch turns off. Raise the cap, or remove a player you do not need, then turn **Player registration** on again before you share the link.
+
+---
+
+## 9. Add teams
 
 Open the **Teams & Tiers** tab. Each team belongs only to this tournament.
 
@@ -456,7 +514,7 @@ A **DEFAULT** player tier is created for you. Add more tiers later if categories
 
 ---
 
-## 9. Add players
+## 10. Add players
 
 Open the **Players** tab and click **Add Player**.
 
@@ -486,7 +544,116 @@ You can also use **Upload Players** on the same tab when the list is in a spread
 
 ---
 
-## 10. Set auction rules
+## 11. Icon players and mystery players
+
+Do this after the player is already on the tournament. **Add Player** stores them as Draft. Player Categorization is where you put them in an Icon tier or a Mystery tier.
+
+Open **Player Dashboard** → **Tournament Settings** → **Players** → **Sort categories**.
+
+The board is one column per tier. Tick a player, then tap the tier name in the bar under the search, or drag the row into the column. **◀** and **▶** on a column change the tier order. **Resequence by Tier** rewrites auction serials from left to right. **Back** in the breadcrumb returns to Tournament Settings.
+
+A tournament can have one Icon tier. After that tier exists, **+ New Tier** no longer offers the Icon Tier tick. Mystery is a separate tier. Do not tick both on the same tier.
+
+### Add an Icon tier and assign the player
+
+An icon player is a key player given to a team before the auction. They are not called on Player Showcase, and the team's purse is not charged.
+
+1. Click **+ New Tier**. On a narrow screen the button reads **+ Tier**.
+2. Type the tier name. The sample name is **Icon**.
+3. Tick **Icon Tier**. Leave **Mystery** off.
+4. Click **Create**. An Icon column appears.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 20.1 — Create the Icon tier                       ║
+║  File: docs/screenshots/fig_20_1_icon_tier.png               ║
+║  Capture: Icon Tier ticked, Mystery left off                 ║
+╚══════════════════════════════════════════════════════════════╝
+
+5. The player must already be in another column. In the sample, Vikram Das is in **DEFAULT**. Tick his row.
+6. Tap **Icon** in the move bar, or drag the row onto the Icon column.
+7. **Assign to Team** opens. An icon player cannot be saved without a team. Pick the team. The sample pick is **Royal XI**. Click **Confirm**. **Cancel** leaves the player in the previous column.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 20.2 — Assign the icon player                     ║
+║  File: docs/screenshots/fig_20_2_assign_team.png             ║
+║  Capture: Royal XI selected before Confirm                   ║
+╚══════════════════════════════════════════════════════════════╝
+
+8. The player sits in the Icon column with that team's name on the row. He is **Sold** to that team. No bid was entered. Royal XI's purse is unchanged. He does not appear on Player Showcase.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 20.3 — Icon player on the team                    ║
+║  File: docs/screenshots/fig_20_3_icon_assigned.png           ║
+║  Capture: Vikram Das in the Icon column, Royal XI            ║
+╚══════════════════════════════════════════════════════════════╝
+
+The Icon tile on Tournament Settings and on Player Dashboard counts these players. To take the assignment off, move the player out of the Icon column into a normal tier. He leaves the team and returns to **In Auction**.
+
+An Icon tier has no **Copy Register URL**. Players do not register themselves into it.
+
+### What a mystery player is
+
+A mystery player is called in the auction like anyone else, but the room does not see who it is. The photo, name, role, and serial stay hidden until you reveal them after the sale. The base price is still shown, and the sale still takes points from the buying team's purse.
+
+Mystery is included from the **Pro** plan upward. On a Starter login, **Create** with **Mystery** ticked is refused: Mystery players are not included in the Starter plan. Upgrade to Pro (or higher). The figures below are the screens once the plan includes Mystery.
+
+1. On the same board, click **+ New Tier**.
+2. Type the name. The sample name is **Mystery**.
+3. Tick **Mystery**. Do not tick **Icon Tier**.
+4. Click **Create**.
+
+The line under the ticks says that Mystery hides the player on the live stage until the player is sold.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 20.4 — Create the Mystery tier                    ║
+║  File: docs/screenshots/fig_20_4_mystery_tier.png            ║
+║  Capture: Mystery ticked on its own tier                     ║
+╚══════════════════════════════════════════════════════════════╝
+
+5. Tick the player in his current column. The sample player is Neel Joseph.
+6. Tap **Mystery** in the move bar, or drag the row into the Mystery column. No team is asked for. He stays unsold until the auction calls him.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 20.5 — Player in the Mystery tier                 ║
+║  File: docs/screenshots/fig_20_5_mystery_column.png          ║
+║  Capture: Neel Joseph in the Mystery column                  ║
+╚══════════════════════════════════════════════════════════════╝
+
+A Mystery tier has no public registration link.
+
+### How a mystery player changes the auction
+
+Open **Player Showcase** and call the player. The stage does not show the name, the photo, the role, or the serial. It shows a locked silhouette, **Player locked**, **Requires winning bid**, and the title **Mystery Player?**. The base price stays on the card.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 20.6 — Mystery player on stage                    ║
+║  File: docs/screenshots/fig_20_6_mystery_stage.png           ║
+║  Capture: Locked card, name hidden, base price still shown   ║
+╚══════════════════════════════════════════════════════════════╝
+
+**Sell to Team** still opens. The dialog says **Mystery Player**, not the real name. Choose the team and the points as for any other sale. Those points come off that team's purse.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 20.7 — Sell while the name is hidden              ║
+║  File: docs/screenshots/fig_20_7_mystery_sell.png            ║
+║  Capture: Sell dialog before the player is revealed          ║
+╚══════════════════════════════════════════════════════════════╝
+
+After the sale the card stays locked. **Reveal Player** is the step that shows the name, the photo, and the role. Until you reveal, **Set Unsold**, **Sell to Team**, and **Next Player** stay off, so the next player cannot be called.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 20.8 — Reveal after the sale                      ║
+║  File: docs/screenshots/fig_20_8_mystery_reveal.png          ║
+║  Capture: Reveal Player, with the other actions off          ║
+╚══════════════════════════════════════════════════════════════╝
+
+The public live board uses the same locked card. Click **Reveal Player** when the room should see who was bought. Only then call the next player.
+
+In the sample, Neel Joseph was sold and then recalled, and both Vikram Das and Neel Joseph were removed. The roster is the four players in [Sample data](#sample-data-used-in-the-figures). Royal XI still has Rohit Menon for 200. Blue Hawks still has Sana Pillai for 100.
+
+---
+
+## 12. Set auction rules
 
 Rules can be set only after the tournament has at least one team. In practice, select at least two teams. Rules can be created once. To change them later, the existing rule records have to be removed first.
 
@@ -519,7 +686,90 @@ Bring registered players into the auction before you open the showcase. From the
 
 ---
 
-## 11. Run the auction
+## 13. Share the Bid Summary and Live URL
+
+Do this after the auction rules are saved, and before you open Player Showcase. These two addresses are for people who are not signed in: the crowd, team owners on their phones, and anyone you message. They are not the projector. Keep the projector for the hall screen.
+
+1. On **Player Dashboard**, click **Tournament Settings**.
+2. Stay on **Summary**. Turn **Live board** on. The switch saves itself. While it is stopped, the live link shows **Broadcast Offline** and **Live Updates Are Not Active**. **Live Board** and **Bid Summary** stay locked, with the hint **Turn on Live board first**. You can still copy the addresses while they are locked.
+3. Leave **Board code** on when the live board should ask for a code. The sample tournament keeps it on. Turn it off only when anyone with the link should open the board with no code. The switch saves itself.
+4. Open **More → Auction day**.
+5. On **Public live board**, click **Copy**. That is the live URL. Paste it into the message you send.
+6. On **Bid Summary**, click **Copy**. Paste that address into the same message.
+7. If **Board code** is on, also send the **Tournament Code**. Open the tournament form. The code sits under the short description. It starts with **AC#**. Do not put that code in a message that you also send to people who should not see the board.
+
+An outsider who opens the live URL while the board is on, and **Board code** is on, sees **Enter Tournament Code**. They type the code and click **Unlock Live Board**. That device remembers it, so the next visit opens the board directly. A wrong code stays on that page.
+
+Once the board is open, the red **Live** mark means it is on air. The player on stage fills the top. Counts underneath are in auction, sold, unsold, and total. On this sample nobody is on stage and two players are still unsold, so the board reads **Loading from Unsold**. When a player is called, that player replaces the message.
+
+| Button | What it does |
+|--------|----------------|
+| **Feed** | Latest results. Sold and unsold lines, newest first. |
+| **Top Buys** | The highest points paid so far. |
+| **Teams** | Each team's squad from this screen. |
+| Speaker | Mutes the sold sound on this device only. The hall screen is unchanged. |
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 12.5 — Live board on air                          ║
+║  File: docs/screenshots/fig_19_3_live_on.png                 ║
+║  Capture: Live mark, loading from unsold, and the feed      ║
+╚══════════════════════════════════════════════════════════════╝
+
+The bid summary does not ask for the code. Anyone who has that link can open the purse cards. Send it only to the people who should see team budgets.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 12.4 — Bid Summary                                ║
+║  File: docs/screenshots/fig_19_2_bid_summary.png             ║
+║  Capture: Public purse cards for the sample teams            ║
+╚══════════════════════════════════════════════════════════════╝
+
+### Buttons on Bid Summary
+
+The page opens on **Summary**. Each team card shows purse left, players still needed, the highest bid that team can still make, and how much of the squad is filled. The coloured word is the purse state. On the sample both teams read **Comfortable**, because most of the purse is still left. The numbers move on their own while the auction is running.
+
+| Button | What it does |
+|--------|----------------|
+| **Summary** | Shows the team cards. This is the view in the figure. |
+| **Sold** | Lists players already sold, with the buying team and the points. The number on the button is the count. The sample shows **2**. |
+| **Unsold** | Lists players marked unsold. The sample shows **2**. |
+| **In auction** | Lists players still waiting to be called. A name on stage is marked **On stage**. The sample shows **0**. |
+| Eye on a team card | **View squad**. Opens that team's signed players and the points paid. **×** closes it. Nothing is sold or moved. |
+| The team card itself | Opens **Sold** for that one team. A line reads **Filtered:** and the team name. **Clear** shows every sold player again. Tap the card, not the eye. |
+
+**Sold**, **Unsold**, and **In auction** also have:
+
+| Control | What it does |
+|---------|----------------|
+| **Search** | Narrows that list. The hint is name, serial, phone, role, or team. Search by name or serial. A phone matches only if a number was stored. |
+| **Show more** | Appears when the list is longer than the first page, and loads the next names. Scrolling the list does the same. |
+
+On a wide screen the header has three more buttons. A phone hides them and keeps the cards.
+
+| Button | What it does |
+|--------|----------------|
+| **Grid** | Team cards, as in the figure. |
+| **List** | The same teams in a table: purse, needed, max bid, squad, and status. |
+| **Full** | Fills the screen. Click it again to leave fullscreen. |
+
+**Tiers** sits beside the eye when the tournament has more than one regular tier. It opens how many players of each tier that team has taken. The sample has only DEFAULT, so the button is not on the figure.
+
+The **Live** mark under the title means this page keeps refreshing. It is not the **Live board** switch. The purse cards still open when that switch is off.
+
+**Open** on those two cards is for you to read the page before you send it. It stays locked until **Live board** is on.
+
+Turn **Live board** off when the room should stop seeing the board. The copied links stay the same. They show offline until you turn the switch on again.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 12.3 — Live URL while the board is stopped        ║
+║  File: docs/screenshots/fig_19_1_live_offline.png            ║
+║  Capture: Broadcast Offline on the public live link          ║
+╚══════════════════════════════════════════════════════════════╝
+
+Do not send the projector address, or **Admin add-player**, in that message.
+
+---
+
+## 14. Run the auction
 
 Confirm the tournament is the active one, then open **Player Showcase** from the home menu.
 
@@ -579,7 +829,7 @@ Repeat sell or unsold until nobody is left to call. The console then shows **Auc
 
 ---
 
-## 12. After a sale
+## 15. After a sale
 
 Return to the tournament and open the **Players** tab. The tiles show how many players are registered, in auction, sold, unsold, or deleted.
 
@@ -597,15 +847,15 @@ Click **Sold** to open the sold cards. **Recall** puts that player back into the
 ║  Capture: Sold list for the sample tournament                ║
 ╚══════════════════════════════════════════════════════════════╝
 
-**Auction Rules** on the tournament opens the team cards again. **View Squad Summary** on a team card is the print view: roster, template, and squad poster. To change a sale, use **Squad Modification** in Tournament Settings, not this print view.
+**Auction Rules** on the tournament opens the team cards again. **View Squad Summary** on a team card is the print view: roster, template, and squad poster. To modify a squad, use **Squad Modification** in Tournament Settings, not this print view. The steps are in [Modify Squad](#modify-squad).
 
 **Payment Tracker** is for registration payments. It is separate from the bid points on the showcase.
 
 ---
 
-## 13. Change a squad
+## 16. Modify Squad
 
-Open **Player Dashboard → Tournament Settings → Teams → Squad Modification**. The breadcrumb is **Tournament Settings / Squad Modification**. Each team shows the squad filled, the points spent against the purse, **Print Squad Roster**, and **Squad Poster (Instagram)**.
+Open **Player Dashboard → Tournament Settings → Teams → Squad Modification**. The breadcrumb is **Tournament Settings / Squad Modification**. Each team shows the squad filled, the points spent against the purse, **Print Squad Roster**, and **Squad Poster**.
 
 Every sold player has four buttons under the name:
 
@@ -692,7 +942,47 @@ After a confirmed edit, swap, move, or recall, the squad meters and the purse on
 
 ---
 
-## 14. Sample data used in the figures
+## 17. Export each squad
+
+Stay on **Squad Modification**. Each team card has **Print Squad Roster** and **Squad Poster**. Those buttons belong to that team only. Royal XI and Blue Hawks each need their own click. Saving a file does not move a player or change a sale.
+
+The two buttons sit under the purse on the team card. Figure 17.1 shows them on Royal XI.
+
+### Print Squad Roster
+
+1. On the team card, click **Print Squad Roster**.
+2. The PDF opens or downloads. The file name is the team name plus **Squad Roster**, for example **Royal XI Squad Roster**.
+3. Repeat on the next team card. One PDF is one team.
+
+The sheet uses the tournament theme. On Manual Premier League that theme is Lemon, so the header is gold. It shows the tournament, the team, the owner, each sold player, the points, the role, the purse, and the bid slab. The **Mobile** column stays empty when the player has no contact stored.
+
+The sample sheet is Royal XI: owner Arjun Das, Rohit Menon at 200 points, Wicket Keeper, squad 1 of 2, 200 points spent.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 18.1 — Squad roster PDF                           ║
+║  File: docs/screenshots/fig_18_1_roster.png                  ║
+║  Capture: Royal XI roster, one team on the page             ║
+╚══════════════════════════════════════════════════════════════╝
+
+### Squad Poster
+
+1. On the same team card, click **Squad Poster**.
+2. A panel opens over the board. The title is **Squad Poster · Save & Share**.
+3. Click **Save image** for a PNG, or **Save JPG (fast)** for a smaller JPG. Either file is the poster for that team.
+4. To frame a face, tap the player photo, drag and zoom, then save again.
+5. Close the panel. The squad on the board is unchanged.
+
+On a wide window, **Print** sits with the save buttons. The sample poster is Royal XI: the tournament name, the crown crest, owner Arjun Das, and Rohit Menon. Open Blue Hawks and repeat the same two buttons for Sana Pillai.
+
+╔══════════════════════════════════════════════════════════════╗
+║  📷 FIGURE 18.2 — Squad poster                               ║
+║  File: docs/screenshots/fig_18_2_poster.png                  ║
+║  Capture: Royal XI poster with Save image and Save JPG      ║
+╚══════════════════════════════════════════════════════════════╝
+
+---
+
+## 18. Sample data used in the figures
 
 These names exist only so the screens can be shown. They are not real contacts.
 
@@ -717,6 +1007,11 @@ These names exist only so the screens can be shown. They are not real contacts.
 | Logos | Sample crests only: a gold trophy for the tournament, a crown for Royal XI, a hawk for Blue Hawks |
 | Player card | Lemon card for Rohit Menon, serial 4. Contact left blank, so the card has no mobile line |
 | Duplicates | Two draft copies of Arun Varma were opened in Remove Duplicates and not deleted from that wizard. They are not part of the auction. The four sample players above are unchanged |
+| Registration figures | Nikhil Rao on the public form. The entry was removed after the pictures, so the roster is unchanged |
+| Icon player | Vikram Das was placed in an Icon tier and assigned to Royal XI. No purse points were taken. He was removed afterwards. Royal XI still has only Rohit Menon |
+| Mystery player | Neel Joseph was placed in a Mystery tier, called on Player Showcase as Mystery Player?, sold, and recalled before Reveal. He was removed afterwards. Blue Hawks still has only Sana Pillai. Mystery tiers need the Pro plan or higher |
+| Shared links | One figure is the live board while it is on: Loading from Unsold, with the sample sales in the feed. Another is the same link while the board is stopped. Bid Summary shows Royal XI and Blue Hawks. No tournament code is in the figures |
+| Squad export | Print Squad Roster and Squad Poster were opened for Royal XI. The PDF and the poster show Rohit Menon. The squads were not changed |
 
 The account chip, login, and any phone number are not in the figures. When you run your own auction, type only the names and numbers you mean to store.
 
@@ -732,11 +1027,18 @@ The account chip, login, and any phone number are not in the figures. When you r
 | 2.3 | 29 October 2026 | How to print player cards, with a sample Lemon card. |
 | 2.4 | 29 October 2026 | How to remove duplicate players. |
 | 2.5 | 29 October 2026 | Standalone reader. The guide opens on the chapters. Edition notes sit at the end. |
+| 2.6 | 30 October 2026 | How to open the player registration link and send it to players, after Tournament Settings. |
+| 2.7 | 30 October 2026 | Player registration figures, from the open form through the welcome screen. |
+| 2.8 | 30 October 2026 | Share the Bid Summary and Live URL, before Run the auction. Change a squad renamed to Modify Squad. |
+| 2.9 | 30 October 2026 | What each button on the public Bid Summary does. |
+| 2.10 | 30 October 2026 | Live board figure while Live is on, beside the stopped-board figure. |
+| 2.11 | 31 October 2026 | How to add an Icon tier, assign that player to a team, and what a mystery player does on the auction. |
+| 2.12 | 31 October 2026 | After Modify Squad: print each team's squad roster, and save the squad poster. |
 
 ---
 
 ## Copyright
 
-© 2026 AuctionChamp. All Rights Reserved.
+© Auction Champ. All Rights Reserved.
 
 This document contains proprietary and confidential information belonging to AuctionChamp. No part of this publication may be reproduced, distributed, transmitted, stored in a retrieval system, or translated into any language in any form or by any means without prior written permission from AuctionChamp.

@@ -8,7 +8,7 @@
 ##############################################################################
 {
     'name': 'AuctionChamp SaaS Payment',
-    'version': '1.1.9',
+    'version': '1.2.1',
     'summary': 'Razorpay for SaaS upgrades and website plan signup',
     'sequence': 17,
     'description': """
@@ -17,7 +17,7 @@ AuctionChamp SaaS Payment (connector)
 Connects ac_saas_manager + ac_payment_gateway (+ website) for:
 
 * Paid in-app plan upgrades (prorated)
-* Website Plans & Pricing → Get Started → Razorpay → auto account + email credentials
+* Website Plans & Pricing → Get Started → Razorpay → account, invoice PDF, and welcome email
     """,
     'category': 'Auction/Payment',
     'depends': [
@@ -32,10 +32,12 @@ Connects ac_saas_manager + ac_payment_gateway (+ website) for:
     'data': [
         'security/ir.model.access.csv',
         'data/ir_sequence_data.xml',
+        'report/signup_invoice_report.xml',
         'views/res_config_settings_view.xml',
         'views/saas_upgrade_request_views.xml',
         'views/upgrade_payment_templates.xml',
         'views/signup_templates.xml',
+        'views/signup_payment_views.xml',
     ],
     'installable': True,
     'application': False,

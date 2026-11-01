@@ -84,7 +84,7 @@ class AuctionWebsiteConfig(models.Model):
     stat_1_label = fields.Char(string='Stat 1 — Label', default='Tournaments Managed')
     stat_2_label = fields.Char(string='Stat 2 — Label', default='Players Registered')
     stat_3_label = fields.Char(string='Stat 3 — Label', default='Teams Managed')
-    stat_4_label = fields.Char(string='Stat 4 — Label', default='Auction Automation')
+    stat_4_label = fields.Char(string='Stat 4 — Label', default='Live Auctions')
 
     # ── Testimonials ──────────────────────────────────────────────────────
     testimonial_1_text = fields.Text(
@@ -226,5 +226,5 @@ class AuctionWebsiteConfig(models.Model):
             'stat_3_label': config.stat_3_label or 'Teams Managed',
             # Live auction count when boards are active; "Live" when idle.
             'stat_4_value': str(live_auctions) if live_auctions else 'Live',
-            'stat_4_label': config.stat_4_label or 'Auction Automation',
+            'stat_4_label': config.stat_4_label or 'Live Auctions',
         }

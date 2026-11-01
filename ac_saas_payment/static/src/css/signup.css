@@ -250,7 +250,8 @@ body.ac-su-body {
   margin-bottom: 7px;
 }
 
-.ac-su-field input {
+.ac-su-field input,
+.ac-su-field select {
   width: 100%;
   border: 1px solid var(--ac-border);
   border-radius: 10px;
@@ -261,7 +262,8 @@ body.ac-su-body {
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.ac-su-field input:focus {
+.ac-su-field input:focus,
+.ac-su-field select:focus {
   outline: none;
   border-color: var(--ac-blue);
   box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.15);

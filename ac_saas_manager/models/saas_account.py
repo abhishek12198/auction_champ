@@ -4,17 +4,32 @@
 #  AuctionChamp SaaS Manager — One account = one login
 #
 ##############################################################################
+import base64
+import ipaddress
 import logging
+import os
 import secrets
 import string
 from datetime import timedelta
 from email.utils import make_msgid
+from html import escape as html_escape
 
 from odoo import api, fields, models, _
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tools import formataddr
 
 _logger = logging.getLogger(__name__)
+
+_SAAS_MONTHS = (
+    '', 'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+)
+SAAS_SUPPORT_EMAIL = 'auctionchamp.live@gmail.com'
+SAAS_SUPPORT_PHONE_DISPLAY = '+91 79940 64448'
+SAAS_SUPPORT_PHONE_TEL = '+917994064448'
+SAAS_SUPPORT_WHATSAPP = '917994064448'
+SAAS_PUBLIC_SITE = 'https://www.auctionchamp.live'
+SAAS_WELCOME_SUBJECT = 'Auction Champ™ | Your Complete Welcome & Setup Guide'
 
 
 class AcSaasAccount(models.Model):
@@ -656,12 +671,212 @@ class AcSaasAccount(models.Model):
         secrets.SystemRandom().shuffle(chars)
         return ''.join(chars)
 
-    def action_send_credentials_email(self, password=None, email_to=None):
-        """Email login credentials after paid signup (or admin resend).
+    @api.model
+    def _saas_format_date(self, value):
+        if not value:
+            return '—'
+        if isinstance(value, str):
+            value = fields.Date.to_date(value)
+        return '%d %s %d' % (value.day, _SAAS_MONTHS[value.month], value.year)
 
-        Called from website Get Started → Razorpay provision. Safe to call
-        multiple times with an explicit ``password``; without one, generates
-        a new temporary password and updates the login user.
+    @api.model
+    def _saas_public_base_url(self):
+        """Customer-facing origin. A laptop or LAN base URL is not used in mail."""
+        raw = (
+            self.env['ir.config_parameter'].sudo().get_param('web.base.url') or ''
+        ).strip().rstrip('/')
+        if not raw.startswith('https://'):
+            return SAAS_PUBLIC_SITE
+        host = raw.split('://', 1)[1].split('/')[0].split(':')[0].strip('[]').lower()
+        if not host or host == 'localhost' or host.endswith('.local') or host.endswith('.lan'):
+            return SAAS_PUBLIC_SITE
+        try:
+            ip = ipaddress.ip_address(host)
+        except ValueError:
+            ip = None
+        if ip and (ip.is_private or ip.is_loopback or ip.is_link_local):
+            return SAAS_PUBLIC_SITE
+        return raw
+
+    @api.model
+    def _saas_welcome_email_html(
+        self, name, plan, account, valid_until, login, password,
+        invoice_attached, login_url, manual_url,
+    ):
+        """Welcome letter sent after a subscription. Values are escaped here."""
+        e = html_escape
+        login_href = e(login_url or '', quote=True)
+        manual_href = e(manual_url or '', quote=True)
+        mailto = 'mailto:%s' % SAAS_SUPPORT_EMAIL
+        wa_href = 'https://wa.me/%s' % SAAS_SUPPORT_WHATSAPP
+        tel_href = 'tel:%s' % SAAS_SUPPORT_PHONE_TEL
+
+        if invoice_attached:
+            payment_note = (
+                '<p style="margin:0 0 14px;">We&rsquo;re pleased to confirm that your '
+                'payment has been received successfully. Your invoice is attached to '
+                'this email for your reference.</p>'
+            )
+        else:
+            payment_note = ''
+
+        rows = (
+            ('Plan', '<strong>%s</strong>' % e(plan or '—')),
+            ('Account Name', e(account or '—')),
+            ('Valid Until', e(valid_until or '—')),
+            (
+                'Login Portal',
+                '<a href="%s" style="color:#1565c0;text-decoration:none;">'
+                'Auction Management Panel</a>' % login_href,
+            ),
+            ('Username (Email)', '<strong>%s</strong>' % e(login or '—')),
+            (
+                'Temporary Password',
+                '<strong style="font-family:Consolas,Menlo,monospace;">%s</strong>'
+                % e(password or ''),
+            ),
+        )
+        row_html = []
+        for label, value in rows:
+            row_html.append(
+                '<tr>'
+                '<td style="padding:7px 10px 7px 0;color:#4a5568;vertical-align:top;'
+                'width:168px;">&bull;&nbsp;%s</td>'
+                '<td style="padding:7px 0;color:#1a202c;vertical-align:top;">%s</td>'
+                '</tr>' % (e(label), value)
+            )
+
+        return (
+            '<div style="margin:0;padding:24px 12px;background:#f4f7fb;">'
+            '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
+            'align="center" style="width:100%%;max-width:640px;background:#ffffff;'
+            'border:1px solid #e2e8f0;border-radius:12px;">'
+            '<tr><td style="padding:0;background:#1565c0;border-radius:12px 12px 0 0;'
+            'line-height:0;font-size:0;">'
+            '<img src="cid:ac-logo" width="640" height="74" alt="Auction Champ" '
+            'style="display:block;border:0;width:100%%;max-width:640px;height:auto;"/>'
+            '</td></tr>'
+            '<tr><td style="height:4px;background:#f5a623;font-size:0;line-height:0;">&nbsp;</td></tr>'
+            '<tr><td style="padding:28px 28px 8px;font-family:Arial,Helvetica,sans-serif;'
+            'font-size:15px;line-height:1.55;color:#1a202c;">'
+            '<h1 style="margin:0 0 18px;font-family:Georgia,Times New Roman,serif;'
+            'font-size:22px;line-height:1.35;color:#0d1b2a;font-weight:normal;">'
+            'Auction Champ&trade; | Your Complete Welcome &amp; Setup Guide</h1>'
+            '<p style="margin:0 0 14px;">Hi %s,</p>'
+            '<p style="margin:0 0 14px;">Welcome to Auction Champ!</p>'
+            '<p style="margin:0 0 14px;">Thank you for choosing Auction Champ to power '
+            'your tournament auctions.</p>'
+            '%s'
+            '<p style="margin:0 0 18px;">Your account is now active and ready to be '
+            'configured. Below are your subscription details and login credentials '
+            'to help you get started.</p>'
+            '<h2 style="margin:0 0 8px;font-family:Georgia,Times New Roman,serif;'
+            'font-size:18px;color:#0d1b2a;font-weight:normal;border-bottom:2px solid #f5a623;'
+            'padding-bottom:6px;">Your Subscription Details</h2>'
+            '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
+            'style="width:100%%;margin:0 0 16px;font-size:15px;">%s</table>'
+            '<p style="margin:0 0 18px;padding:12px 14px;background:#fff8e8;'
+            'border-left:3px solid #f5a623;">For security reasons, please log in using '
+            'the credentials provided above and change your temporary password '
+            'immediately after your first login.</p>'
+            '<h2 style="margin:0 0 8px;font-family:Georgia,Times New Roman,serif;'
+            'font-size:18px;color:#0d1b2a;font-weight:normal;">Get Started with Auction Champ</h2>'
+            '<p style="margin:0 0 10px;">Follow our easy-to-use User Manual to configure '
+            'your tournament, set auction rules, manage players, and conduct your auction.</p>'
+            '<p style="margin:0 0 10px;">The manual includes step-by-step instructions and '
+            'helpful solutions to common issues, ensuring a smooth auction experience.</p>'
+            '<p style="margin:0 0 18px;">User Manual: '
+            '<a href="%s" style="color:#1565c0;text-decoration:none;">%s</a></p>'
+            '<h2 style="margin:0 0 8px;font-family:Georgia,Times New Roman,serif;'
+            'font-size:18px;color:#0d1b2a;font-weight:normal;">We Are Here To HELP!</h2>'
+            '<p style="margin:0 0 8px;">Need assistance? Our support team is always happy '
+            'to help you.</p>'
+            '<p style="margin:0 0 12px;">If you encounter any issues during setup or while '
+            'conducting your auction, please feel free to reach out to us:</p>'
+            '<p style="margin:0 0 8px;">'
+            '<a href="%s" style="color:#1565c0;text-decoration:none;">'
+            '&#9993; %s</a></p>'
+            '<p style="margin:0 0 18px;">'
+            '<a href="%s" style="text-decoration:none;">'
+            '<img src="cid:ac-whatsapp" width="22" height="22" alt="WhatsApp" '
+            'style="border:0;vertical-align:middle;width:22px;height:22px;"/>'
+            '</a>'
+            '&nbsp;<a href="%s" style="color:#128C7E;text-decoration:none;'
+            'font-weight:bold;">WhatsApp</a>'
+            '&nbsp;&nbsp;'
+            '<a href="%s" style="text-decoration:none;">'
+            '<img src="cid:ac-phone" width="22" height="22" alt="Phone" '
+            'style="border:0;vertical-align:middle;width:22px;height:22px;"/>'
+            '</a>'
+            '&nbsp;<a href="%s" style="color:#1a202c;text-decoration:none;'
+            'font-weight:bold;">%s</a>'
+            '</p>'
+            '<p style="margin:0 0 14px;">We wish you a successful tournament and an '
+            'exciting auction experience with Auction Champ!</p>'
+            '<p style="margin:0 0 18px;">Thank you for being part of the Auction Champ '
+            'community.</p>'
+            '<p style="margin:0;">Warm regards,<br/>'
+            '<strong>Team Auction Champ</strong><br/>'
+            '<a href="%s" style="color:#1565c0;text-decoration:none;">www.auctionchamp.live</a>'
+            '</p>'
+            '</td></tr>'
+            '<tr><td style="padding:16px 28px 22px;font-family:Arial,Helvetica,sans-serif;'
+            'font-size:12px;color:#718096;">This message includes your temporary password. '
+            'Please keep it private.</td></tr>'
+            '</table></div>'
+        ) % (
+            e(name or 'there'),
+            payment_note,
+            ''.join(row_html),
+            manual_href,
+            e(manual_url or ''),
+            e(mailto, quote=True),
+            e(SAAS_SUPPORT_EMAIL),
+            e(wa_href, quote=True),
+            e(wa_href, quote=True),
+            e(tel_href, quote=True),
+            e(tel_href, quote=True),
+            e(SAAS_SUPPORT_PHONE_DISPLAY),
+            e(SAAS_PUBLIC_SITE, quote=True),
+        )
+
+    @api.model
+    def _saas_welcome_inline_images(self):
+        """Logo and contact icons embedded in the welcome mail.
+
+        The names start with ``cid:`` so the mail server sends them inline.
+        The letter then shows them without fetching the public website.
+        """
+        root = os.path.normpath(os.path.join(
+            os.path.dirname(__file__), '..', '..',
+            'ac_saas_payment', 'static', 'src', 'img', 'email',
+        ))
+        specs = (
+            ('cid:ac-logo.png', 'header_logo.png'),
+            ('cid:ac-whatsapp.png', 'whatsapp.png'),
+            ('cid:ac-phone.png', 'phone.png'),
+        )
+        found = []
+        for name, filename in specs:
+            path = os.path.join(root, filename)
+            try:
+                with open(path, 'rb') as handle:
+                    payload = handle.read()
+            except OSError:
+                _logger.warning('Welcome email image missing: %s', path)
+                continue
+            if payload:
+                found.append((name, payload, 'image/png'))
+        return found
+
+    def action_send_credentials_email(self, password=None, email_to=None, extra_attachments=None):
+        """Email the welcome letter and login credentials.
+
+        Called from website Get Started after payment, and from the manager
+        resend button. Without an explicit ``password``, a new temporary
+        password is generated. ``extra_attachments`` is a list of
+        ``(filename, raw_bytes, mimetype)`` — the website signup passes the
+        invoice PDF.
         """
         self.ensure_one()
         if 'mail.mail' not in self.env:
@@ -685,63 +900,78 @@ class AcSaasAccount(models.Model):
             plain = self._generate_temp_password()
             user.with_context(no_reset_password=True).write({'password': plain})
 
-        login_url = self._saas_login_url()
-        body = _(
-            '<p>Hi %(name)s,</p>'
-            '<p>Welcome to <strong>AuctionChamp</strong>! '
-            'Your payment was received and your account is ready.</p>'
-            '<ul>'
-            '<li>Plan: <strong>%(plan)s</strong></li>'
-            '<li>Account: %(account)s</li>'
-            '<li>Valid until: %(end)s</li>'
-            '<li>Login: <a href="%(url)s">Auction Management Panel</a></li>'
-            '<li>Username (email): <strong>%(login)s</strong></li>'
-            '<li>Temporary password: <strong>%(password)s</strong></li>'
-            '</ul>'
-            '<p>Please log in and change your password after first login.</p>'
-            '<p>— AuctionChamp Team</p>'
-        ) % {
-            'name': user.name or self.name,
-            'plan': self.plan_id.name,
-            'account': self.name,
-            'end': self.date_end or '—',
-            'url': login_url,
-            'login': user.login or email,
-            'password': plain,
-        }
+        attachments = []
+        for item in (extra_attachments or []):
+            if not item or len(item) < 2 or not item[1]:
+                continue
+            filename, payload = item[0], item[1]
+            mimetype = item[2] if len(item) > 2 else 'application/octet-stream'
+            attachments.append((filename, payload, mimetype))
+        attachments.extend(self._saas_welcome_inline_images())
+        invoice_attached = any(
+            len(item) > 2 and item[2] == 'application/pdf' for item in attachments
+        )
+
+        public_base = self._saas_public_base_url()
+        body = self._saas_welcome_email_html(
+            name=user.name or self.name,
+            plan=self.plan_id.name or '',
+            account=self.name or '',
+            valid_until=self._saas_format_date(self.date_end),
+            login=user.login or email,
+            password=plain,
+            invoice_attached=invoice_attached,
+            login_url='%s/web/login' % public_base,
+            manual_url='%s/user-manual' % public_base,
+        )
         try:
             mail_server = self._saas_mail_server()
             self._saas_ensure_mail_default_from()
+            sender = self._saas_sender_address()
+            try:
+                email_from = formataddr(('Auction Champ', sender))
+            except Exception:
+                email_from = sender
+            attachment_cmds = []
+            Attachment = self.env['ir.attachment'].sudo()
+            for filename, payload, mimetype in attachments:
+                att = Attachment.create({
+                    'name': filename,
+                    'datas': base64.b64encode(payload),
+                    'type': 'binary',
+                    'mimetype': mimetype,
+                    'res_model': 'ac.saas.account',
+                    'res_id': self.id,
+                })
+                attachment_cmds.append((4, att.id))
             mail = self.env['mail.mail'].sudo().create({
-                'subject': _('Your AuctionChamp account — %(plan)s') % {
-                    'plan': self.plan_id.name,
-                },
+                'subject': SAAS_WELCOME_SUBJECT,
                 'body_html': body,
-                'email_from': self._saas_email_from(),
-                'reply_to': self._saas_sender_address(),
+                'email_from': email_from,
+                'reply_to': sender,
                 'email_to': email,
                 'message_id': self._saas_message_id(),
                 'mail_server_id': mail_server.id if mail_server else False,
                 'auto_delete': False,
+                'attachment_ids': attachment_cmds,
             })
             mail.sudo().send()
             if mail.exists() and mail.state == 'exception':
                 _logger.error(
-                    'SaaS credentials mail exception for account %s to %s: %s',
+                    'SaaS welcome mail exception for account %s to %s: %s',
                     self.id, email, mail.failure_reason or mail.state,
                 )
                 return False
             _logger.info(
-                'SaaS credentials mailed account=%s to=%s from=%s message_id=%s state=%s',
+                'SaaS welcome mailed account=%s to=%s invoice_attached=%s state=%s',
                 self.id,
                 email,
-                mail.email_from if mail.exists() else '',
-                mail.message_id if mail.exists() else '',
+                invoice_attached,
                 mail.state if mail.exists() else 'gone',
             )
         except Exception:
             _logger.exception(
-                'Failed to email SaaS credentials for account %s to %s',
+                'Failed to email SaaS welcome for account %s to %s',
                 self.id, email,
             )
             return False

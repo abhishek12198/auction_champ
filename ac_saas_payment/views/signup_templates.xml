@@ -35,7 +35,7 @@
     <div class="ac-su-hero-inner">
       <div class="ac-su-label">Create your account</div>
       <h1>Start with <span class="hl" t-esc="plan.name"/></h1>
-      <p>Two details. Secure payment. Instant access emailed to you.</p>
+      <p>Two details. Secure payment. Your login and invoice are emailed to you.</p>
     </div>
   </section>
 
@@ -44,7 +44,7 @@
       <div class="ac-su-card">
         <div class="ac-su-card-body">
           <h2 class="ac-su-card-title">Your details</h2>
-          <p class="ac-su-card-sub">Name, email and contact number are enough to create your account.</p>
+          <p class="ac-su-card-sub">Name, email and contact number create the account. GSTIN and state are optional and are printed on the invoice.</p>
 
           <t t-if="error and not email_error">
             <div class="ac-su-error" t-esc="error"/>
@@ -78,6 +78,23 @@
                        t-att-value="form.get('buyer_phone') or ''"
                        placeholder="e.g. 9876543210"/>
               </div>
+              <div class="ac-su-field">
+                <label for="buyer_gstin">GSTIN (optional)</label>
+                <input type="text" id="buyer_gstin" name="buyer_gstin"
+                       maxlength="15" autocomplete="off"
+                       t-att-value="form.get('buyer_gstin') or ''"
+                       placeholder="15-character GSTIN"/>
+              </div>
+              <div class="ac-su-field">
+                <label for="buyer_state">State (optional)</label>
+                <select id="buyer_state" name="buyer_state">
+                  <option value="">Select state</option>
+                  <t t-foreach="indian_states" t-as="st">
+                    <option t-att-value="st" t-esc="st"
+                            t-att-selected="'selected' if form.get('buyer_state') == st else None"/>
+                  </t>
+                </select>
+              </div>
             </div>
             <div class="ac-su-actions">
               <button type="submit" class="ac-su-btn ac-su-btn-primary" id="acSuSubmitBtn">
@@ -89,7 +106,7 @@
             <p class="ac-su-fine">
               By continuing you agree to our
               <a href="/terms-and-conditions">Terms</a> and <a href="/privacy-policy">Privacy Policy</a>.
-              Password is generated and emailed after payment.
+              Password and invoice are emailed after payment.
             </p>
           </form>
           <script type="text/javascript">
@@ -240,7 +257,7 @@
     <div class="ac-su-hero-inner">
       <div class="ac-su-label">Secure checkout</div>
       <h1>Complete your <span class="hl">purchase</span></h1>
-      <p>Pay with Razorpay. Your login details are emailed right after payment.</p>
+      <p>Pay with Razorpay. Your login details and invoice are emailed right after payment.</p>
     </div>
   </section>
 
@@ -300,7 +317,7 @@
         <div class="ac-su-plan-body">
           <ul class="ac-su-plan-list">
             <li><i class="fas fa-check"/><span>Instant SaaS account activation</span></li>
-            <li><i class="fas fa-check"/><span>Login credentials emailed automatically</span></li>
+            <li><i class="fas fa-check"/><span>Login credentials and invoice emailed automatically</span></li>
             <li><i class="fas fa-check"/><span>Up to <t t-esc="plan.max_tournaments"/> tournaments</span></li>
             <li><i class="fas fa-check"/><span>Full auction management suite</span></li>
           </ul>
@@ -455,8 +472,8 @@
     <div class="ac-su-status-icon ok">✓</div>
     <h1>Check your email</h1>
     <p>
-      Login details were sent to <strong t-esc="login"/>.
-      Use the temporary password from that email to sign in.
+      Login details and your invoice were sent to <strong t-esc="login"/>.
+      Use the temporary password from that email to sign in. The invoice PDF is attached.
     </p>
     <div class="ac-su-row">
       <span class="k">Access</span>

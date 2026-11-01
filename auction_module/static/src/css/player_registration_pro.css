@@ -2342,3 +2342,516 @@ body.reg-page.reg-page--steps[data-reg-theme] .reg-header-tool strong {
         overflow-wrap: anywhere;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Compact registration header.
+   Identity, date / venue / sport, and the registration action stay
+   in the header. Theme colors come from the existing --da-* tokens.
+   ═══════════════════════════════════════════════════════════════════ */
+.reg-page--steps .reg-header-card {
+    display: grid;
+    align-items: center;
+    gap: 8px 12px;
+    margin-bottom: 12px;
+    padding: 12px !important;
+    border: 1px solid var(--da-line) !important;
+    border-radius: 14px !important;
+    background: color-mix(in srgb, var(--da-gold) 7%, var(--da-card)) !important;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, .05) !important;
+    clip-path: none !important;
+    overflow: hidden;
+}
+.reg-page--steps .reg-header-card::before {
+    height: 3px;
+    inset: 0 0 auto 0;
+    background: var(--da-gold);
+    opacity: .9;
+}
+.reg-page--steps .reg-header-top,
+.reg-page--steps .reg-header-info {
+    container-type: normal;
+    min-width: 0;
+}
+.reg-page--steps .reg-tournament-logo-wrap {
+    width: 56px;
+    height: 56px;
+    border: 1px solid var(--da-line);
+    border-radius: 10px;
+    background: var(--da-card);
+    overflow: hidden;
+    box-shadow: none;
+}
+.reg-page--steps .reg-tournament-logo-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 3px;
+    box-sizing: border-box;
+}
+.reg-page--steps .reg-header-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+    width: auto;
+    min-width: 0;
+    text-align: left;
+}
+.reg-page--steps .reg-edition {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0;
+    padding: 2px 7px;
+    border: 1px solid var(--da-line);
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--da-gold) 12%, transparent);
+    color: var(--da-gold2, var(--da-gold));
+    font-size: .62rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.reg-page--steps .reg-tournament-name,
+.reg-page--steps .reg-header-info h1 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    overflow: hidden;
+    color: var(--da-tx);
+    font-size: 1.12rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+    line-height: 1.05;
+    text-align: left;
+    text-overflow: unset;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+.reg-page--steps .reg-tournament-desc {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    width: 100%;
+    margin: 0;
+    overflow: hidden;
+    color: var(--da-dim, rgba(26, 10, 18, .62));
+    font-family: 'Barlow Condensed', 'Oswald', sans-serif;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    line-height: 1.25;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+.reg-page--steps .reg-tournament-desc::before,
+.reg-page--steps .reg-tournament-desc::after {
+    content: none;
+}
+.reg-page--steps .reg-mast-side {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    width: auto;
+    min-width: 0;
+    margin: 0;
+}
+.reg-page--steps .reg-lead-row,
+.reg-page--steps .reg-page-label--lead,
+.reg-page--steps .reg-roster-round {
+    display: none;
+}
+.reg-page--steps .reg-header-tools,
+.reg-page--steps .reg-header-tools:not(:has(#regIconsOpen)) {
+    display: flex;
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    width: auto;
+    margin: 0;
+}
+.reg-page--steps #regRosterOpen {
+    display: inline-flex;
+}
+body.reg-page.reg-page--steps[data-reg-theme] .reg-header-tool {
+    width: auto;
+    height: auto;
+    min-height: 32px;
+    margin: 0;
+    padding: 4px 8px;
+    gap: 5px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--da-line);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--da-gold) 10%, var(--da-card));
+    color: var(--da-gold);
+    box-shadow: none;
+}
+body.reg-page.reg-page--steps[data-reg-theme] .reg-header-tool span,
+body.reg-page.reg-page--steps[data-reg-theme] .reg-header-tool strong {
+    color: var(--da-gold);
+    opacity: 1;
+}
+body.reg-page.reg-page--steps[data-reg-theme] .reg-header-tool span {
+    font-size: .62rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+body.reg-page.reg-page--steps[data-reg-theme] .reg-header-tool strong {
+    font-size: .95rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    line-height: 1;
+    min-width: 0;
+}
+.reg-page--steps .reg-header-facts {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 6px 14px;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+.reg-page--steps .reg-header-facts .reg-meta-item,
+.reg-page--steps .reg-header-facts .reg-meta-item--highlight {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 6px;
+    width: auto;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--da-tx);
+    white-space: normal;
+}
+.reg-page--steps .reg-header-facts .reg-meta-item svg {
+    display: block;
+    width: 14px;
+    height: 14px;
+    flex: 0 0 14px;
+    margin-top: 1px;
+    color: var(--da-gold);
+}
+.reg-page--steps .reg-header-facts .reg-meta-item > span {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 4px 6px;
+    width: auto;
+    min-width: 0;
+    white-space: normal;
+}
+.reg-page--steps .reg-header-facts .reg-meta-label,
+.reg-page--steps .reg-header-facts .reg-meta-item--highlight .reg-meta-label {
+    display: inline;
+    margin: 0;
+    color: var(--da-gold2, var(--da-gold));
+    opacity: 1;
+    font-family: 'Barlow Condensed', 'Oswald', sans-serif;
+    font-size: .62rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+.reg-page--steps .reg-header-facts .reg-meta-val,
+.reg-page--steps .reg-header-facts .reg-meta-item--highlight .reg-meta-val {
+    display: inline;
+    min-width: 0;
+    max-width: 100%;
+    color: var(--da-tx);
+    font-family: 'Barlow Condensed', 'Oswald', sans-serif;
+    font-size: .84rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.25;
+    text-align: left;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    overflow-wrap: anywhere;
+}
+.reg-page--steps a.reg-goto-form {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-sizing: border-box;
+    width: auto;
+    max-width: 100%;
+    min-height: 40px;
+    margin: 0;
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--da-gold);
+    color: var(--da-on);
+    font-family: 'Barlow Condensed', 'Oswald', sans-serif;
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    line-height: 1;
+    text-align: center;
+    text-decoration: none;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.reg-page--steps a.reg-goto-form .reg-goto-arrow {
+    flex: 0 0 auto;
+}
+.reg-page--steps a.reg-goto-form:focus-visible {
+    outline: 2px solid var(--da-gold);
+    outline-offset: 2px;
+}
+.reg-page--steps .reg-tier-tags {
+    min-width: 0;
+}
+
+/* Phones: identity on one row, facts under it, full-width action. */
+@media (max-width: 767px) {
+    .reg-page--steps .reg-header-card {
+        grid-template-columns: 52px minmax(0, 1fr) auto;
+        grid-template-areas:
+            "logo info count"
+            "facts facts facts"
+            "cta cta cta";
+        column-gap: 10px;
+        row-gap: 8px;
+        padding: 12px !important;
+    }
+    .reg-page--steps .reg-header-top,
+    .reg-page--steps .reg-mast-side {
+        display: contents;
+    }
+    .reg-page--steps .reg-tournament-logo-wrap {
+        grid-area: logo;
+        align-self: center;
+        width: 52px;
+        height: 52px;
+    }
+    .reg-page--steps .reg-header-info { grid-area: info; }
+    .reg-page--steps .reg-header-tools { grid-area: count; align-self: start; }
+    .reg-page--steps .reg-header-facts {
+        grid-area: facts;
+        padding-top: 8px;
+        border-top: 1px solid color-mix(in srgb, var(--da-gold) 28%, transparent);
+    }
+    .reg-page--steps .reg-header-facts .reg-meta-item {
+        flex: 0 1 auto;
+        order: 1;
+    }
+    .reg-page--steps .reg-header-facts .reg-meta-item--venue {
+        flex: 1 1 100%;
+        order: 2;
+    }
+    .reg-page--steps a.reg-goto-form {
+        grid-area: cta;
+        width: 100%;
+        min-height: 44px;
+    }
+    .reg-page--steps .reg-tier-tags { grid-column: 1 / -1; }
+    .reg-page--steps .reg-tournament-name,
+    .reg-page--steps .reg-header-info h1 {
+        font-size: 1.02rem;
+    }
+    .reg-page--steps .reg-tournament-desc {
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+    }
+}
+@media (max-width: 375px) {
+    .reg-page--steps .reg-header-card {
+        grid-template-columns: 48px minmax(0, 1fr) auto;
+        padding: 12px !important;
+    }
+    .reg-page--steps .reg-tournament-logo-wrap {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+    }
+    .reg-page--steps .reg-tournament-name,
+    .reg-page--steps .reg-header-info h1 {
+        font-size: .98rem;
+    }
+    .reg-page--steps .reg-edition {
+        font-size: .58rem;
+        letter-spacing: .06em;
+        padding: 1px 6px;
+    }
+    .reg-page--steps #regRosterOpen {
+        max-width: 92px;
+    }
+    .reg-page--steps #regRosterOpen > span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .reg-page--steps a.reg-goto-form {
+        font-size: .74rem;
+        letter-spacing: .04em;
+        padding: 8px 10px;
+    }
+}
+@media (min-width: 376px) and (max-width: 767px) {
+    .reg-page--steps .reg-header-card {
+        grid-template-columns: 60px minmax(0, 1fr) auto;
+    }
+    .reg-page--steps .reg-tournament-logo-wrap {
+        width: 60px;
+        height: 60px;
+    }
+    .reg-page--steps .reg-tournament-name,
+    .reg-page--steps .reg-header-info h1 {
+        font-size: 1.12rem;
+    }
+}
+
+/* Tablet and desktop: one horizontal band. */
+@media (min-width: 768px) {
+    .reg-page--steps .reg-header-card {
+        grid-template-columns: 72px minmax(200px, 1fr) minmax(180px, 1.45fr) auto;
+        grid-template-areas: "logo info facts side";
+        align-items: center;
+        column-gap: 16px;
+        row-gap: 8px;
+        padding: 12px 16px !important;
+    }
+    .reg-page--steps .reg-header-top { display: contents; }
+    .reg-page--steps .reg-mast-side {
+        display: flex;
+        grid-area: side;
+        align-self: center;
+    }
+    .reg-page--steps .reg-tournament-logo-wrap {
+        grid-area: logo;
+        width: 72px;
+        height: 72px;
+    }
+    .reg-page--steps .reg-header-info { grid-area: info; }
+    .reg-page--steps .reg-header-facts {
+        grid-area: facts;
+        align-items: center;
+        align-self: center;
+    }
+    .reg-page--steps .reg-header-facts .reg-meta-item--venue {
+        flex: 1 1 8rem;
+    }
+    .reg-page--steps .reg-header-facts .reg-meta-item:not(:last-child)::after {
+        content: "";
+        width: 1px;
+        height: 14px;
+        flex: 0 0 1px;
+        align-self: center;
+        margin-left: 12px;
+        background: var(--da-line);
+    }
+    .reg-page--steps .reg-tournament-name,
+    .reg-page--steps .reg-header-info h1 {
+        font-size: clamp(1.15rem, 1.7vw, 1.55rem);
+    }
+    .reg-page--steps .reg-tier-tags { grid-column: 1 / -1; }
+    .reg-page--steps .reg-hero-strip .reg-header-meta { display: none !important; }
+    .reg-page--steps .reg-hero-strip:not(.reg-hero-strip--poster) { display: none !important; }
+}
+/* Large phones in landscape and tablets: keep the name readable,
+   with the facts on a compact second line. */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .reg-page--steps .reg-header-card {
+        grid-template-columns: 64px minmax(0, 1fr) auto;
+        grid-template-areas:
+            "logo info side"
+            "facts facts facts";
+        align-items: center;
+    }
+    .reg-page--steps .reg-tournament-logo-wrap {
+        width: 64px;
+        height: 64px;
+    }
+    .reg-page--steps .reg-header-facts {
+        align-items: center;
+        padding-top: 8px;
+        border-top: 1px solid color-mix(in srgb, var(--da-gold) 28%, transparent);
+    }
+    .reg-page--steps .reg-header-facts .reg-meta-item,
+    .reg-page--steps .reg-header-facts .reg-meta-item--venue {
+        flex: 0 1 auto;
+        order: 0;
+    }
+}
+@media (min-width: 961px) {
+    .reg-page--steps .reg-hero-strip { display: none !important; }
+}
+
+/* Success confirmation uses the Squad-is-Complete panel, not a white card. */
+.reg-page--steps .reg-success-body.reg-locked-card {
+    background: var(--reg-gloss), var(--reg-enamel);
+    color: var(--da-tx);
+    box-shadow: var(--reg-lacquer-edge), var(--reg-lacquer-drop);
+}
+.reg-page--steps .reg-success-body h2 {
+    color: var(--da-tx);
+    font-family: 'Oswald', var(--reg-font-display), sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.7rem);
+    font-weight: 600;
+    letter-spacing: .04em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+.reg-page--steps .reg-success-body p,
+.reg-page--steps .reg-success-body .reg-locked-lead,
+.reg-page--steps .reg-success-body .reg-locked-lines {
+    color: var(--da-dim);
+}
+.reg-page--steps .reg-success-body .reg-locked-kicker {
+    color: var(--da-gold);
+}
+.reg-page--steps .reg-success-body .reg-locked-lead strong {
+    color: var(--da-tx);
+}
+.reg-page--steps .reg-success-body .reg-success-dl-hint,
+.reg-page--steps .reg-success-body .reg-card-preview-label {
+    color: var(--da-dim) !important;
+}
+.reg-page--steps .reg-success-body .reg-success-another a {
+    color: var(--da-gold);
+    border-color: var(--da-line);
+    background: color-mix(in srgb, var(--da-gold) 12%, transparent);
+}
+.reg-page--steps .reg-success-body .reg-success-another a:hover {
+    background: color-mix(in srgb, var(--da-gold) 22%, transparent);
+    border-color: var(--da-gold);
+}

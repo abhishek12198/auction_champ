@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="paperformat_saas_invoice" model="report.paperformat">
+        <field name="name">Auction Champ Invoice</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="page_height">0</field>
+        <field name="page_width">0</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">12</field>
+        <field name="margin_bottom">12</field>
+        <field name="margin_left">12</field>
+        <field name="margin_right">12</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">96</field>
+    </record>
+
+    <record id="action_report_saas_signup_invoice" model="ir.actions.report">
+        <field name="name">Subscription Invoice</field>
+        <field name="model">ac.saas.signup.payment</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">ac_saas_payment.report_saas_signup_invoice</field>
+        <field name="report_file">ac_saas_payment.report_saas_signup_invoice</field>
+        <field name="paperformat_id" ref="paperformat_saas_invoice"/>
+        <field name="print_report_name">'AuctionChamp Invoice %s' % ((object.invoice_number or object.name or 'Invoice').replace('/', '-'))</field>
+        <field name="binding_model_id" ref="model_ac_saas_signup_payment"/>
+        <field name="binding_type">report</field>
+        <field name="groups_id" eval="[(4, ref('ac_saas_manager.group_saas_manager')), (4, ref('auction_module.group_auction_group_admin'))]"/>
+    </record>
+
+    <template id="report_saas_signup_invoice">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <div class="page" style="font-family: Arial, Helvetica, sans-serif; color: #1a202c; font-size: 12px;">
+                    <t t-set="logo_uri" t-value="doc._invoice_logo_data_uri()"/>
+                    <table style="width:100%; border-collapse:collapse; background-color:#1565c0;">
+                        <tr>
+                            <td style="padding:18px 20px; vertical-align:middle;">
+                                <img t-if="logo_uri" t-att-src="logo_uri" alt="Auction Champ"
+                                     style="height:48px; width:auto;"/>
+                            </td>
+                            <td style="padding:18px 20px; vertical-align:middle; text-align:right;">
+                                <div style="color:#f5a623; font-size:12px; letter-spacing:2px;">TAX INVOICE</div>
+                                <div style="color:#ffffff; font-size:18px; font-weight:bold; margin-top:4px;">
+                                    <t t-esc="doc.invoice_number or ''"/>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    <div style="height:4px; background:#f5a623;"/>
+
+                    <table style="width:100%; border-collapse:collapse; margin-top:18px;">
+                        <tr>
+                            <td style="width:52%; vertical-align:top; padding-right:16px;">
+                                <div style="font-size:11px; letter-spacing:1px; color:#718096;">FROM</div>
+                                <div style="font-size:15px; font-weight:bold; margin-top:4px;">
+                                    <t t-esc="doc.supplier_name or 'Auction Champ'"/>
+                                </div>
+                                <div t-if="doc.supplier_address" style="margin-top:4px; white-space:pre-line;">
+                                    <t t-esc="doc.supplier_address"/>
+                                </div>
+                                <div t-if="doc.supplier_gstin" style="margin-top:4px;">
+                                    GSTIN: <t t-esc="doc.supplier_gstin"/>
+                                </div>
+                                <div t-if="doc.supplier_state" style="margin-top:2px;">
+                                    State: <t t-esc="doc.supplier_state"/>
+                                </div>
+                            </td>
+                            <td style="width:48%; vertical-align:top;">
+                                <table style="width:100%; border-collapse:collapse;">
+                                    <tr>
+                                        <td style="padding:3px 0; color:#718096;">Invoice date</td>
+                                        <td style="padding:3px 0; text-align:right;"><t t-esc="doc._invoice_date_label()"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:3px 0; color:#718096;">Signup reference</td>
+                                        <td style="padding:3px 0; text-align:right;"><t t-esc="doc.name"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:3px 0; color:#718096;">Payment reference</td>
+                                        <td style="padding:3px 0; text-align:right;"><t t-esc="doc.razorpay_payment_id or '-'"/></td>
+                                    </tr>
+                                    <tr t-if="doc.place_of_supply">
+                                        <td style="padding:3px 0; color:#718096;">Place of supply</td>
+                                        <td style="padding:3px 0; text-align:right;"><t t-esc="doc.place_of_supply"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:3px 0; color:#718096;">Status</td>
+                                        <td style="padding:3px 0; text-align:right; color:#1b7f3a; font-weight:bold;">Paid</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div style="margin-top:18px; padding:12px 14px; background:#f4f7fb;">
+                        <div style="font-size:11px; letter-spacing:1px; color:#718096;">BILL TO</div>
+                        <div style="font-size:15px; font-weight:bold; margin-top:4px;">
+                            <t t-esc="doc.buyer_name"/>
+                        </div>
+                        <div t-if="doc.organization" style="margin-top:2px;"><t t-esc="doc.organization"/></div>
+                        <div style="margin-top:2px;"><t t-esc="doc.buyer_email"/></div>
+                        <div t-if="doc.buyer_phone"><t t-esc="doc.buyer_phone"/></div>
+                        <div t-if="doc.buyer_gstin" style="margin-top:2px;">GSTIN: <t t-esc="doc.buyer_gstin"/></div>
+                        <div t-if="doc.buyer_state">State: <t t-esc="doc.buyer_state"/></div>
+                    </div>
+
+                    <table style="width:100%; border-collapse:collapse; margin-top:18px;">
+                        <tr style="background:#1565c0; color:#ffffff;">
+                            <td style="padding:8px 10px;">Description</td>
+                            <td style="padding:8px 10px; width:80px;">SAC</td>
+                            <td style="padding:8px 10px; text-align:right; width:50px;">Qty</td>
+                            <td style="padding:8px 10px; text-align:right; width:130px;">Taxable value</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:12px 10px; border-bottom:1px solid #e2e8f0; vertical-align:top;">
+                                <div style="font-weight:bold;">
+                                    Auction Champ subscription - <t t-esc="doc.plan_id.name"/>
+                                </div>
+                                <div style="color:#4a5568; margin-top:4px;">
+                                    Account: <t t-esc="doc.account_id.name or doc.buyer_name"/>
+                                </div>
+                                <div t-if="doc._invoice_valid_until_label()" style="color:#4a5568; margin-top:2px;">
+                                    Valid until <t t-esc="doc._invoice_valid_until_label()"/>
+                                </div>
+                            </td>
+                            <td style="padding:12px 10px; border-bottom:1px solid #e2e8f0; vertical-align:top;">
+                                <t t-esc="doc.sac_code or ''"/>
+                            </td>
+                            <td style="padding:12px 10px; border-bottom:1px solid #e2e8f0; text-align:right; vertical-align:top;">1</td>
+                            <td style="padding:12px 10px; border-bottom:1px solid #e2e8f0; text-align:right; vertical-align:top;">
+                                <t t-esc="doc._format_money(doc.taxable_amount)"/>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <table style="width:280px; margin-left:auto; border-collapse:collapse; margin-top:8px;">
+                        <tr t-if="doc.cgst_amount">
+                            <td style="padding:4px 0; color:#4a5568;">
+                                CGST @ <t t-esc="doc._rate_label(doc.cgst_rate)"/>%
+                            </td>
+                            <td style="padding:4px 0; text-align:right;">
+                                <t t-esc="doc._format_money(doc.cgst_amount)"/>
+                            </td>
+                        </tr>
+                        <tr t-if="doc.sgst_amount">
+                            <td style="padding:4px 0; color:#4a5568;">
+                                SGST @ <t t-esc="doc._rate_label(doc.sgst_rate)"/>%
+                            </td>
+                            <td style="padding:4px 0; text-align:right;">
+                                <t t-esc="doc._format_money(doc.sgst_amount)"/>
+                            </td>
+                        </tr>
+                        <tr t-if="doc.igst_amount">
+                            <td style="padding:4px 0; color:#4a5568;">
+                                IGST @ <t t-esc="doc._rate_label(doc.igst_rate)"/>%
+                            </td>
+                            <td style="padding:4px 0; text-align:right;">
+                                <t t-esc="doc._format_money(doc.igst_amount)"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:8px 0 0; font-weight:bold; font-size:14px; border-top:2px solid #1565c0;">Amount paid</td>
+                            <td style="padding:8px 0 0; text-align:right; font-weight:bold; font-size:14px; border-top:2px solid #1565c0;">
+                                <t t-esc="doc._format_money(doc.amount)"/>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <p t-if="doc._invoice_amount_words()" style="margin-top:14px;">
+                        Amount in words: <t t-esc="doc._invoice_amount_words()"/>
+                    </p>
+                    <p t-if="doc.gst_rate" style="margin-top:8px; color:#4a5568;">
+                        GST is included in the amount paid. Payment received in full via Razorpay.
+                    </p>
+                    <p t-if="not doc.gst_rate" style="margin-top:8px; color:#4a5568;">
+                        Payment received in full via Razorpay.
+                    </p>
+
+                    <div style="margin-top:28px; border-top:1px solid #e2e8f0; padding-top:10px; color:#718096; font-size:11px;">
+                        Team Auction Champ | auctionchamp.live@gmail.com | +91 79940 64448 | www.auctionchamp.live
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

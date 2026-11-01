@@ -3,6 +3,7 @@ from . import saas_plan
 from . import saas_account
 from . import saas_upgrade_request
 from . import mail_mail
+from . import ir_mail_server
 from . import mail_message
 from . import res_users
 from . import res_users_session

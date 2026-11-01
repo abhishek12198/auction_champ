@@ -18,7 +18,7 @@ _logger = logging.getLogger(__name__)
 OG_WIDTH = 1200
 OG_HEIGHT = 630
 # Bump when JPEG layout changes (cache-bust for crawlers).
-OG_COMPOSE_VERSION = '3'
+OG_COMPOSE_VERSION = '4'
 SITE_NAME = 'Auction Champ'
 BRAND_TITLE = 'Auction Champ'
 BRAND_DESCRIPTION = (
@@ -499,43 +499,66 @@ def _wrap_text(draw, text, font, max_width):
 
 
 def _compose_logo_card(logo_im, title, subtitle):
-    from PIL import Image, ImageDraw
-    canvas = Image.new('RGB', (OG_WIDTH, OG_HEIGHT), (11, 29, 54))
-    draw = ImageDraw.Draw(canvas)
-    # Gold top bar
-    draw.rectangle([0, 0, OG_WIDTH, 8], fill=(212, 160, 23))
-    draw.rectangle([0, OG_HEIGHT - 8, OG_WIDTH, OG_HEIGHT], fill=(212, 160, 23))
+    """Light share card used when a page has no poster or tournament logo.
 
+    Browsers and chat apps show this JPEG when a link to the site is hovered
+    or unfurled. Match the public site (white page, blue bar) instead of a
+    full-bleed navy field with only the mark.
+    """
+    from PIL import Image, ImageDraw
+    blue = (21, 101, 192)
+    gold = (245, 166, 35)
+    paper = (244, 247, 251)
+    white = (255, 255, 255)
+    ink = (26, 32, 44)
+    muted = (74, 85, 104)
+    line = (226, 232, 240)
+    tile = (232, 241, 251)
+
+    canvas = Image.new('RGB', (OG_WIDTH, OG_HEIGHT), paper)
+    draw = ImageDraw.Draw(canvas)
+    draw.rectangle([0, 0, OG_WIDTH, 14], fill=blue)
+    draw.rectangle([0, 14, OG_WIDTH, 18], fill=gold)
+    draw.rounded_rectangle(
+        [48, 56, OG_WIDTH - 48, OG_HEIGHT - 48],
+        radius=28,
+        fill=white,
+        outline=line,
+        width=2,
+    )
+
+    tile_size = 220
+    tile_x = 96
+    tile_y = (OG_HEIGHT - tile_size) // 2 + 8
+    draw.rounded_rectangle(
+        [tile_x, tile_y, tile_x + tile_size, tile_y + tile_size],
+        radius=28,
+        fill=tile,
+    )
+    text_x = 360
     if logo_im:
         logo = logo_im.convert('RGBA')
-        max_side = 280
-        logo.thumbnail((max_side, max_side), Image.LANCZOS)
-        lx = (OG_WIDTH - logo.width) // 2
-        ly = 90
-        if logo.mode == 'RGBA':
-            canvas.paste(logo, (lx, ly), logo)
-        else:
-            canvas.paste(logo.convert('RGB'), (lx, ly))
-        text_y = ly + logo.height + 36
+        logo.thumbnail((148, 148), Image.LANCZOS)
+        lx = tile_x + (tile_size - logo.width) // 2
+        ly = tile_y + (tile_size - logo.height) // 2
+        canvas.paste(logo, (lx, ly), logo)
     else:
-        text_y = 220
+        text_x = 96
 
-    title_font = _font(48)
-    sub_font = _font(26)
-    lines = _wrap_text(draw, title or SITE_NAME, title_font, OG_WIDTH - 160)
-    for line in lines:
-        try:
-            tw = draw.textlength(line, font=title_font)
-        except Exception:
-            tw = len(line) * 20
-        draw.text(((OG_WIDTH - tw) / 2, text_y), line, font=title_font, fill=(255, 255, 255))
-        text_y += 58
+    max_w = OG_WIDTH - text_x - 96
+    y = 148
+    draw.text((text_x, y), SITE_NAME.upper(), font=_font(22), fill=blue)
+    y += 52
+    title_font = _font(44)
+    for line_text in _wrap_text(draw, title or SITE_NAME, title_font, max_w)[:2]:
+        draw.text((text_x, y), line_text, font=title_font, fill=ink)
+        y += 56
     if subtitle:
-        try:
-            sw = draw.textlength(subtitle, font=sub_font)
-        except Exception:
-            sw = 200
-        draw.text(((OG_WIDTH - sw) / 2, text_y + 8), subtitle, font=sub_font, fill=(212, 160, 23))
+        y += 16
+        sub_font = _font(24)
+        for line_text in _wrap_text(draw, subtitle, sub_font, max_w)[:2]:
+            draw.text((text_x, y), line_text, font=sub_font, fill=muted)
+            y += 34
     return canvas
 
 
@@ -569,7 +592,11 @@ def compose_og_jpeg(tournament=None):
                         return _jpeg_bytes(_compose_logo_only(im))
                     return _jpeg_bytes(_cover_crop_top(im, OG_WIDTH, OG_HEIGHT))
     icon = _load_brand_icon()
-    return _jpeg_bytes(_compose_logo_card(icon, SITE_NAME, 'Auction & Tournament Platform'))
+    return _jpeg_bytes(_compose_logo_card(
+        icon,
+        'Premier Sports Auction & Tournament Management',
+        'Registrations, live auctions, teams, and tournament operations.',
+    ))
 
 
 def _jpeg_bytes(im):

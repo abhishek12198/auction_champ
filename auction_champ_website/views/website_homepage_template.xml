@@ -142,7 +142,7 @@
                       t-att-data-target="hero_stats.get('stat_4_value') if hero_stats else 'Live'"
                       t-esc="hero_stats.get('stat_4_value') if hero_stats else 'Live'"/>
                 <span class="ac-stat-label"
-                      t-esc="(hero_stats.get('stat_4_label') if hero_stats else None) or config.stat_4_label or 'Auction Automation'"/>
+                      t-esc="(hero_stats.get('stat_4_label') if hero_stats else None) or config.stat_4_label or 'Live Auctions'"/>
             </div>
         </div>
     </div>

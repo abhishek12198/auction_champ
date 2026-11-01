@@ -1,17 +1,22 @@
 # -*- coding: utf-8 -*-
+import base64
 import hashlib
 import hmac
 import logging
+import os
 import re
 import secrets
 import string
 import uuid
 from datetime import timedelta
+from decimal import Decimal, ROUND_HALF_UP
 
 import requests
 
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError
+
+from .indian_states import GSTIN_RE, INDIAN_STATE_NAMES, normalize_gstin
 
 _logger = logging.getLogger(__name__)
 
@@ -57,6 +62,25 @@ class AcSaasSignupPayment(models.Model):
     user_id = fields.Many2one('res.users', readonly=True, copy=False)
     account_id = fields.Many2one('ac.saas.account', readonly=True, copy=False)
     credentials_sent = fields.Boolean(default=False, copy=False)
+    invoice_number = fields.Char(copy=False, index=True, readonly=True)
+    invoice_date = fields.Date(copy=False, readonly=True)
+    buyer_gstin = fields.Char(string='Buyer GSTIN', copy=False)
+    buyer_state = fields.Char(string='Buyer State', copy=False)
+    supplier_name = fields.Char(readonly=True, copy=False)
+    supplier_address = fields.Char(readonly=True, copy=False)
+    supplier_gstin = fields.Char(readonly=True, copy=False)
+    supplier_state = fields.Char(readonly=True, copy=False)
+    sac_code = fields.Char(readonly=True, copy=False)
+    gst_rate = fields.Float(readonly=True, copy=False, digits=(16, 2))
+    taxable_amount = fields.Monetary(readonly=True, copy=False, currency_field='currency_id')
+    cgst_rate = fields.Float(readonly=True, copy=False, digits=(16, 2))
+    cgst_amount = fields.Monetary(readonly=True, copy=False, currency_field='currency_id')
+    sgst_rate = fields.Float(readonly=True, copy=False, digits=(16, 2))
+    sgst_amount = fields.Monetary(readonly=True, copy=False, currency_field='currency_id')
+    igst_rate = fields.Float(readonly=True, copy=False, digits=(16, 2))
+    igst_amount = fields.Monetary(readonly=True, copy=False, currency_field='currency_id')
+    place_of_supply = fields.Char(readonly=True, copy=False)
+    tax_snapshotted = fields.Boolean(default=False, copy=False)
 
     @api.model
     def create(self, vals):
@@ -110,11 +134,13 @@ class AcSaasSignupPayment(models.Model):
         )
 
     @api.model
-    def _validate_buyer(self, name, email, phone=None, organization=None):
+    def _validate_buyer(self, name, email, phone=None, organization=None, gstin=None, state=None):
         """Fields for SaaS account: name + email login (+ optional phone)."""
         name = (name or '').strip()
         email = self._normalize_email(email)
         phone = (phone or '').strip()
+        gstin = normalize_gstin(gstin)
+        state = (state or '').strip()
         if not name:
             raise UserError(_('Please enter your full name.'))
         if not email or not EMAIL_RE.match(email):
@@ -127,11 +153,17 @@ class AcSaasSignupPayment(models.Model):
             raise UserError(_('Please enter your contact number.'))
         if len(re.sub(r'\D', '', phone)) < 7:
             raise UserError(_('Please enter a valid contact number.'))
+        if gstin and not GSTIN_RE.match(gstin):
+            raise UserError(_('Enter a valid 15-character GSTIN, or leave it blank.'))
+        if state and state not in INDIAN_STATE_NAMES:
+            raise UserError(_('Select a state from the list, or leave it blank.'))
         return {
             'buyer_name': name,
             'buyer_email': email,
             'buyer_phone': phone or False,
             'organization': (organization or '').strip() or False,
+            'buyer_gstin': gstin or False,
+            'buyer_state': state or False,
         }
 
     @api.model
@@ -366,6 +398,190 @@ class AcSaasSignupPayment(models.Model):
     def _login_url(self):
         return self.env['ac.saas.account']._saas_login_url()
 
+    def _assign_invoice(self):
+        """Give a paid website signup a stable invoice number, date, and GST split."""
+        for rec in self:
+            if rec.state not in ('paid', 'provisioned'):
+                continue
+            vals = {}
+            if not rec.invoice_number:
+                vals['invoice_number'] = (
+                    self.env['ir.sequence'].sudo().next_by_code('ac.saas.signup.invoice')
+                    or 'INV%s' % rec.id
+                )
+                vals['invoice_date'] = rec.invoice_date or fields.Date.context_today(rec)
+            if not rec.tax_snapshotted:
+                vals.update(rec._invoice_tax_snapshot())
+                vals['tax_snapshotted'] = True
+            if vals:
+                rec.write(vals)
+        return True
+
+    @api.model
+    def _money(self, amount):
+        return float(Decimal(str(amount or 0)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
+
+    def _invoice_tax_snapshot(self):
+        """GST included in the amount already paid. Frozen on the invoice."""
+        self.ensure_one()
+        ICP = self.env['ir.config_parameter'].sudo()
+        raw_rate = ICP.get_param('ac_saas_payment.invoice_gst_rate')
+        rate = 18.0 if raw_rate in (None, False, '') else float(raw_rate)
+        if rate < 0:
+            rate = 0.0
+        legal_name = (ICP.get_param('ac_saas_payment.invoice_legal_name') or '').strip() or 'Auction Champ'
+        address = (ICP.get_param('ac_saas_payment.invoice_address') or '').strip()
+        gstin = normalize_gstin(ICP.get_param('ac_saas_payment.invoice_gstin'))
+        supplier_state = (ICP.get_param('ac_saas_payment.invoice_state') or '').strip()
+        sac = (ICP.get_param('ac_saas_payment.invoice_sac') or '').strip() or '998313'
+        buyer_state = (self.buyer_state or '').strip()
+        total = self._money(self.amount)
+        if rate:
+            taxable = self._money(total * 100.0 / (100.0 + rate))
+            tax = self._money(total - taxable)
+        else:
+            taxable = total
+            tax = 0.0
+        interstate = bool(
+            buyer_state and supplier_state
+            and buyer_state.lower() != supplier_state.lower()
+        )
+        if interstate:
+            cgst = sgst = 0.0
+            igst = tax
+            cgst_rate = sgst_rate = 0.0
+            igst_rate = rate
+        else:
+            cgst = self._money(tax / 2.0)
+            sgst = self._money(tax - cgst)
+            igst = 0.0
+            half = rate / 2.0
+            cgst_rate = sgst_rate = half
+            igst_rate = 0.0
+        return {
+            'supplier_name': legal_name,
+            'supplier_address': address or False,
+            'supplier_gstin': gstin or False,
+            'supplier_state': supplier_state or False,
+            'sac_code': sac,
+            'gst_rate': rate,
+            'taxable_amount': taxable,
+            'cgst_rate': cgst_rate,
+            'cgst_amount': cgst,
+            'sgst_rate': sgst_rate,
+            'sgst_amount': sgst,
+            'igst_rate': igst_rate,
+            'igst_amount': igst,
+            'place_of_supply': buyer_state or supplier_state or False,
+        }
+
+    def _rate_label(self, rate):
+        rate = float(rate or 0.0)
+        if abs(rate - round(rate)) < 0.001:
+            return '%d' % int(round(rate))
+        text = ('%.2f' % rate).rstrip('0').rstrip('.')
+        return text
+
+    def _invoice_amount_words(self):
+        self.ensure_one()
+        currency = self.currency_id
+        if not currency:
+            return ''
+        try:
+            return currency.amount_to_text(self.amount or 0.0)
+        except Exception:
+            return ''
+
+    def _invoice_filename(self):
+        self.ensure_one()
+        safe = (self.invoice_number or self.name or 'invoice').replace('/', '-')
+        return 'AuctionChamp-Invoice-%s.pdf' % safe
+
+    def _format_money(self, amount):
+        self.ensure_one()
+        text = '{:,.2f}'.format(float(amount or 0.0))
+        currency = self.currency_id
+        symbol = (currency.symbol or '').strip()
+        if symbol and symbol.isascii():
+            if currency.position == 'after':
+                return '%s %s' % (text, symbol)
+            return '%s %s' % (symbol, text)
+        code = (currency.name or '').strip()
+        return '%s %s' % (code, text) if code else text
+
+    def _invoice_date_label(self):
+        self.ensure_one()
+        return self.env['ac.saas.account']._saas_format_date(self.invoice_date)
+
+    def _invoice_valid_until_label(self):
+        self.ensure_one()
+        account = self.account_id
+        if account and account.date_end:
+            return self.env['ac.saas.account']._saas_format_date(account.date_end)
+        if self.invoice_date and self.plan_id:
+            end = self.invoice_date + timedelta(days=int(self.plan_id.validity_days or 365))
+            return self.env['ac.saas.account']._saas_format_date(end)
+        return ''
+
+    def _invoice_logo_data_uri(self):
+        path = os.path.normpath(os.path.join(
+            os.path.dirname(__file__),
+            '..', 'static', 'src', 'img', 'invoice_wordmark.png',
+        ))
+        try:
+            with open(path, 'rb') as handle:
+                raw = handle.read()
+        except OSError:
+            return ''
+        return 'data:image/png;base64,%s' % base64.b64encode(raw).decode('ascii')
+
+    def _invoice_attachment(self):
+        """Render the subscription invoice and store it on this payment."""
+        self.ensure_one()
+        self._assign_invoice()
+        if not self.invoice_number:
+            return self.env['ir.attachment']
+        report = self.env.ref(
+            'ac_saas_payment.action_report_saas_signup_invoice',
+            raise_if_not_found=False,
+        )
+        if not report:
+            _logger.error('Subscription invoice report is not installed')
+            return self.env['ir.attachment']
+        pdf, _ctype = report.with_context(
+            ac_saas_invoice_internal=True,
+        )._render_qweb_pdf(self.ids)
+        filename = self._invoice_filename()
+        Attachment = self.env['ir.attachment'].sudo()
+        existing = Attachment.search([
+            ('res_model', '=', self._name),
+            ('res_id', '=', self.id),
+            ('name', '=', filename),
+        ], limit=1)
+        vals = {
+            'name': filename,
+            'type': 'binary',
+            'datas': base64.b64encode(pdf),
+            'mimetype': 'application/pdf',
+            'res_model': self._name,
+            'res_id': self.id,
+        }
+        if existing:
+            existing.write(vals)
+            return existing
+        return Attachment.create(vals)
+
+    def action_print_invoice(self):
+        self.ensure_one()
+        if self.state not in ('paid', 'provisioned'):
+            raise UserError(_(
+                'An invoice is created after the website subscription payment is received.'
+            ))
+        self._assign_invoice()
+        return self.env.ref(
+            'ac_saas_payment.action_report_saas_signup_invoice'
+        ).report_action(self)
+
     def _send_credentials_email(self, password):
         """Delegate to ac_saas_manager so credential mail lives on the account."""
         self.ensure_one()
@@ -409,6 +625,7 @@ class AcSaasSignupPayment(models.Model):
                 '<li>Organisation: %(org)s</li>'
                 '<li>Plan: %(plan)s</li>'
                 '<li>Amount: %(amount)s %(currency)s</li>'
+                '<li>Invoice: %(invoice)s</li>'
                 '<li>Razorpay: %(rzp)s</li>'
                 '</ul>'
             ) % {
@@ -419,6 +636,7 @@ class AcSaasSignupPayment(models.Model):
                 'plan': rec.plan_id.name,
                 'amount': rec.amount,
                 'currency': rec.currency_id.name or '',
+                'invoice': rec.invoice_number or '—',
                 'rzp': rec.razorpay_payment_id or '—',
             }
             for partner in partners:
@@ -439,3 +657,31 @@ class AcSaasSignupPayment(models.Model):
                         'Failed to notify SaaS manager %s about signup %s',
                         partner.email, rec.name,
                     )
+
+
+class ReportSaasSignupInvoice(models.AbstractModel):
+    _name = 'report.ac_saas_payment.report_saas_signup_invoice'
+    _description = 'Auction Champ subscription invoice'
+
+    @api.model
+    def _get_report_values(self, docids, data=None):
+        user = self.env.user
+        is_manager = (
+            user.has_group('ac_saas_manager.group_saas_manager')
+            or user.has_group('auction_module.group_auction_group_admin')
+        )
+        public_user = self.env.ref('base.public_user', raise_if_not_found=False)
+        website_checkout = bool(
+            self.env.context.get('ac_saas_invoice_internal')
+            and public_user
+            and user.id == public_user.id
+        )
+        if not is_manager and not website_checkout:
+            raise AccessError(_('You cannot download this invoice.'))
+        docs = self.env['ac.saas.signup.payment'].sudo().browse(docids)
+        docs._assign_invoice()
+        return {
+            'doc_ids': docids,
+            'doc_model': 'ac.saas.signup.payment',
+            'docs': docs,
+        }

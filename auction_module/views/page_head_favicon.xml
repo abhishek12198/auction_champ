@@ -6,8 +6,8 @@
     -->
     <template id="page_head_favicon" name="Page Head Favicon">
         <t t-set="fav_url" t-value="request.env['auction.tournament'].get_brand_favicon_url(favicon_db_name or db_name)"/>
-        <link rel="icon" id="ac-tab-favicon" t-att-href="fav_url" type="image/x-icon"/>
-        <link rel="shortcut icon" t-att-href="fav_url" type="image/x-icon"/>
+        <link rel="icon" id="ac-tab-favicon" t-att-href="fav_url" type="image/png"/>
+        <link rel="shortcut icon" t-att-href="fav_url" type="image/png"/>
         <link rel="apple-touch-icon" t-att-href="fav_url"/>
         <script type="text/javascript">
             (function () {

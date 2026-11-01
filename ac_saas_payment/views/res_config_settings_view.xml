@@ -42,6 +42,34 @@
                             </div>
                         </div>
                     </div>
+                    <h2>Subscription invoice</h2>
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="ac_saas_invoice_legal_name"/>
+                                <field name="ac_saas_invoice_legal_name"/>
+                                <label for="ac_saas_invoice_address" class="mt8"/>
+                                <field name="ac_saas_invoice_address"/>
+                                <label for="ac_saas_invoice_state" class="mt8"/>
+                                <field name="ac_saas_invoice_state"/>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="ac_saas_invoice_gstin"/>
+                                <field name="ac_saas_invoice_gstin" placeholder="15-character GSTIN"/>
+                                <label for="ac_saas_invoice_gst_rate" class="mt8"/>
+                                <field name="ac_saas_invoice_gst_rate"/>
+                                <label for="ac_saas_invoice_sac" class="mt8"/>
+                                <field name="ac_saas_invoice_sac"/>
+                                <div class="text-muted mt8">
+                                    The website package price is the amount the customer pays.
+                                    GST is included in that price and split out on the invoice.
+                                    Same state uses CGST and SGST. A different customer state uses IGST.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </xpath>
         </field>

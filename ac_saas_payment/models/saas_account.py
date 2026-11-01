@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
+import base64
+import logging
+
 from odoo import _, models
 from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
 
 
 class AcSaasAccount(models.Model):
@@ -113,3 +118,34 @@ class AcSaasAccount(models.Model):
             'url': '/saas/upgrade/pay/%s' % payment.access_token,
             'target': 'self',
         }
+
+    def action_send_credentials_email(self, password=None, email_to=None, extra_attachments=None):
+        """Attach the website signup invoice, then send the welcome letter."""
+        self.ensure_one()
+        attachments = list(extra_attachments or [])
+        signup = self.env['ac.saas.signup.payment'].sudo().search([
+            ('account_id', '=', self.id),
+            ('state', 'in', ('paid', 'provisioned')),
+        ], order='id desc', limit=1)
+        if signup and not any(
+            len(item) > 2 and item[2] == 'application/pdf' for item in attachments
+        ):
+            try:
+                stored = signup.with_context(bin_size=False)._invoice_attachment()
+                raw = stored.with_context(bin_size=False).datas if stored else False
+                if raw:
+                    attachments.append((
+                        stored.name,
+                        base64.b64decode(raw),
+                        'application/pdf',
+                    ))
+            except Exception:
+                _logger.exception(
+                    'Could not build the signup invoice for account %s (signup %s)',
+                    self.id, signup.name,
+                )
+        return super().action_send_credentials_email(
+            password=password,
+            email_to=email_to,
+            extra_attachments=attachments,
+        )

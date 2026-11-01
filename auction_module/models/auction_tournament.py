@@ -2288,16 +2288,42 @@ class AuctionTournament(models.Model):
             return 34
         return 28
 
-    @staticmethod
-    def _top_bid_team_size(name):
-        n = len((name or '').strip())
-        if n <= 12:
-            return 22
-        if n <= 18:
-            return 18
-        if n <= 24:
-            return 16
-        return 14
+    @classmethod
+    def _top_bid_text_width(cls, text, size):
+        """Pixel width of uppercase Teko at this size."""
+        cache = getattr(cls, '_top_bid_font_cache', None)
+        if cache is None:
+            cache = {}
+            cls._top_bid_font_cache = cache
+        font = cache.get(size)
+        if font is None:
+            import os
+            from PIL import ImageFont
+            path = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)),
+                'static', 'src', 'assets', 'fonts', 'Teko-ExtraBold.ttf',
+            )
+            font = ImageFont.truetype(path, int(size))
+            cache[size] = font
+        from PIL import Image, ImageDraw
+        draw = ImageDraw.Draw(Image.new('RGB', (4, 4)))
+        box = draw.textbbox((0, 0), text, font=font)
+        return box[2] - box[0]
+
+    @classmethod
+    def _top_bid_team_size(cls, name, max_width=400, max_size=22, min_size=13):
+        """Largest Teko size that keeps the whole team name inside the bar."""
+        text = (name or 'Team').strip().upper() or 'TEAM'
+        try:
+            width = cls._top_bid_text_width(text, max_size)
+        except Exception:
+            width = len(text) * max_size * 0.5
+        # wkhtml draws this face a little wider than the metric.
+        limit = int(max_width * 0.92)
+        if width <= limit:
+            return max_size
+        fitted = int(max_size * limit / float(width))
+        return max(min_size, min(max_size, fitted))
 
     def _top_bid_role(self, player):
         sport = self.tournament_type or 'cricket'
@@ -2313,8 +2339,8 @@ class AuctionTournament(models.Model):
             label = (player.role or '').strip()
         return (label or 'Player').upper()
 
-    def _top_bid_brand_svg(self):
-        """Official white AuctionChamp wordmark used on the public pages."""
+    def _top_bid_brand_svg(self, fill='#FFFFFF'):
+        """AuctionChamp wordmark, inked to match the display theme."""
         import os
         path = os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
@@ -2326,7 +2352,199 @@ class AuctionTournament(models.Model):
         except Exception:
             _logger.exception('AuctionChamp logo missing')
             return ''
+        raw = raw.replace('fill="white"', 'fill="%s"' % (fill or '#FFFFFF'))
         return raw.replace('<svg ', '<svg class="brand-logo" ', 1)
+
+    def _top_bid_palette(self):
+        """Same colour pair the live auction display uses for this theme."""
+        theme = (self.player_display_template or 'vanilla').strip().lower()
+        Player = self.env['auction.team.player']
+        paint = dict(Player._CARD_PAINTS.get(theme) or Player._CARD_PAINTS['vanilla'])
+        gold_dark = {
+            'butterscotch': '#C8960C',
+            'cherry': '#9F1239',
+            'vanilla': '#8A7D62',
+            'pistah': '#2E7D32',
+            'blueberry': '#1E3A8A',
+            'blackberry': '#4C1D95',
+            'lemon': '#8F7400',
+            'standard': '#0D47A1',
+            'strawberry': '#880E4F',
+        }
+        paint['gold_dark'] = gold_dark.get(theme, paint['ink'])
+        paint['light'] = theme in Player._CARD_LIGHT_THEMES
+        paint['key'] = theme
+        return paint
+
+    def _top_bid_theme_css(self, paint):
+        """Concrete colours for wkhtml. CSS variables are not reliable there."""
+        def rgba(hex_color, alpha):
+            h = (hex_color or '#000000').lstrip('#')
+            r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+            return 'rgba(%d,%d,%d,%.2f)' % (r, g, b, alpha)
+
+        paper = paint['paper']
+        if paint['light']:
+            stops = (0.50, 0.74, 0.90)
+        else:
+            stops = (0.04, 0.22, 0.55)
+        veil = '-webkit-linear-gradient(top, %s 0%%, %s 30%%, %s 100%%)' % (
+            rgba(paper, stops[0]), rgba(paper, stops[1]), rgba(paper, stops[2]))
+        flood = '-webkit-linear-gradient(left, %s 0%%, rgba(0,0,0,0) 32%%, rgba(0,0,0,0) 68%%, %s 100%%)' % (
+            rgba(paint['ink'], 0.34 if not paint['light'] else 0.16),
+            rgba(paint['bright'], 0.28 if not paint['light'] else 0.12),
+        )
+        price = (
+            '-webkit-linear-gradient(135deg, %s 0%%, %s 42%%, %s 100%%)'
+            % (paint['bright'], paint['ink'], paint['gold_dark'])
+        )
+        hatch_opacity = 0.34 if not paint['light'] else 0.20
+        hatch = (
+            "url(\"data:image/svg+xml;utf8,"
+            "<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22'>"
+            "<line x1='0' y1='22' x2='22' y2='0' stroke='%s' stroke-opacity='%.2f' stroke-width='1'/>"
+            "</svg>\")"
+        ) % (paint['ink'], hatch_opacity)
+        shade = '-webkit-linear-gradient(135deg, %s 0%%, rgba(0,0,0,0) 46%%, rgba(0,0,0,.28) 100%%)' % rgba(
+            paint['ink'], 0.38 if not paint['light'] else 0.18)
+        return (
+            "html,body{background:%(paper)s;}"
+            ".sheet{color:%(value)s;}"
+            ".veil{background-image:%(veil)s;}"
+            ".flood{background-image:%(flood)s;}"
+            ".tmark-ph,.tourn,.hero-name,.row-name,.row-tname{color:%(value)s;}"
+            ".hero-team{background-color:%(team_bar)s;border-color:%(ink)s;}"
+            ".hero-tname{color:%(bright)s;}"
+            ".tdesc,.hero-role,.row-role,.foot,.powered{color:%(label)s;}"
+            ".top5{color:%(ink)s;text-shadow:0 3px 0 %(gold_dark)s;}"
+            ".top5 .bids{color:%(value)s;text-shadow:none;}"
+            ".hero{border-color:%(ink)s;background:%(panel)s;"
+            "box-shadow:0 0 0 1px %(gold_dark)s, 0 16px 28px rgba(0,0,0,.45);}"
+            ".hero-photo,.hero-panel,.row{background:%(panel)s;}"
+            ".row{border-color:%(ink)s;box-shadow:0 0 0 1px %(gold_dark)s;}"
+            ".hero-shade{background-image:%(shade)s;}"
+            ".panel-hatch,.row-hatch{background-image:%(hatch)s;background-repeat:repeat;}"
+            ".hero-ph,.row-ph{color:%(label)s;background:%(paper)s;}"
+            ".hero-kicker{color:%(ink)s;}"
+            ".hero-kicker span{color:%(value)s;}"
+            ".hero-tph,.row-tph{background:%(paper)s;color:%(value)s;border-color:%(ink)s;}"
+            ".hero-price{background-color:%(ink)s;background-image:%(price)s;}"
+            ".price-slash{background:%(slash)s;}"
+            ".soldfor,.hero-amount{color:%(onbar)s;}"
+            ".row-sold,.row-amount{color:%(ink)s;}"
+        ) % {
+            'paper': paper,
+            'panel': paint['panel'],
+            'ink': paint['ink'],
+            'value': paint['value'],
+            'label': paint['label'],
+            'bright': paint['bright'],
+            'gold_dark': paint['gold_dark'],
+            'onbar': paint['onbar'],
+            'veil': veil,
+            'flood': flood,
+            'price': price,
+            'hatch': hatch,
+            'shade': shade,
+            'slash': rgba('#FFFFFF', 0.22),
+            'team_bar': rgba(paint['ink'], 0.22),
+        }
+
+    def _top_bid_medal_uri(self, metal, number, size=240):
+        """Gold, silver, or bronze medal with the rank on the face."""
+        cls = type(self)
+        cache = getattr(cls, '_top_bid_medal_cache', None)
+        if cache is None:
+            cache = {}
+            cls._top_bid_medal_cache = cache
+        key = (metal, int(number), int(size))
+        if key in cache:
+            return cache[key]
+        metals = {
+            'gold': {
+                'ribbon': (198, 40, 40, 255), 'ribbon2': (122, 20, 28, 255),
+                'ring': (122, 78, 12, 255), 'disc': (214, 154, 28, 255),
+                'mid': (246, 208, 92, 255), 'hi': (255, 248, 220, 150),
+                'ink': (48, 32, 4, 255),
+            },
+            'silver': {
+                'ribbon': (96, 110, 124, 255), 'ribbon2': (58, 68, 80, 255),
+                'ring': (120, 130, 142, 255), 'disc': (168, 178, 188, 255),
+                'mid': (232, 236, 241, 255), 'hi': (255, 255, 255, 160),
+                'ink': (22, 30, 40, 255),
+            },
+            'bronze': {
+                'ribbon': (150, 78, 40, 255), 'ribbon2': (96, 48, 22, 255),
+                'ring': (110, 64, 30, 255), 'disc': (184, 106, 48, 255),
+                'mid': (224, 156, 98, 255), 'hi': (255, 220, 180, 140),
+                'ink': (48, 24, 8, 255),
+            },
+        }
+        spec = metals.get(metal) or metals['gold']
+        try:
+            import os
+            from io import BytesIO
+            from PIL import Image, ImageDraw, ImageFont
+            scale = 4
+            canvas = int(size) * scale
+            im = Image.new('RGBA', (canvas, canvas), (0, 0, 0, 0))
+            draw = ImageDraw.Draw(im)
+            cx = canvas / 2.0
+            top = canvas * 0.03
+            bot = canvas * 0.42
+            draw.polygon([
+                (cx - canvas * 0.15, top), (cx - canvas * 0.015, top),
+                (cx - canvas * 0.055, bot), (cx - canvas * 0.20, bot),
+            ], fill=spec['ribbon'])
+            draw.polygon([
+                (cx + canvas * 0.015, top), (cx + canvas * 0.15, top),
+                (cx + canvas * 0.20, bot), (cx + canvas * 0.055, bot),
+            ], fill=spec['ribbon2'])
+            radius = canvas * 0.33
+            cy = canvas * 0.60
+            ring = canvas * 0.028
+            draw.ellipse(
+                [cx - radius - ring, cy - radius - ring, cx + radius + ring, cy + radius + ring],
+                fill=spec['ring'])
+            draw.ellipse([cx - radius, cy - radius, cx + radius, cy + radius], fill=spec['disc'])
+            inset = canvas * 0.045
+            draw.ellipse(
+                [cx - radius + inset, cy - radius + inset, cx + radius - inset, cy + radius - inset],
+                fill=spec['mid'])
+            shine = Image.new('RGBA', im.size, (0, 0, 0, 0))
+            shine_draw = ImageDraw.Draw(shine)
+            shine_draw.ellipse(
+                [cx - radius * 0.72, cy - radius * 0.78, cx - radius * 0.05, cy - radius * 0.18],
+                fill=spec['hi'])
+            im = Image.alpha_composite(im, shine)
+            draw = ImageDraw.Draw(im)
+            draw.ellipse(
+                [cx - radius + inset, cy - radius + inset, cx + radius - inset, cy + radius - inset],
+                outline=spec['ring'], width=max(2, int(canvas * 0.012)))
+            font_path = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)),
+                'static', 'src', 'assets', 'fonts', 'VarsityTeam-Bold.otf',
+            )
+            font = ImageFont.truetype(font_path, int(canvas * 0.30))
+            text = str(int(number))
+            bbox = draw.textbbox((0, 0), text, font=font)
+            tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+            draw.text(
+                (cx - tw / 2.0 - bbox[0], cy - th / 2.0 - bbox[1] - canvas * 0.012),
+                text, font=font, fill=spec['ink'])
+            try:
+                resample = Image.Resampling.LANCZOS
+            except AttributeError:
+                resample = Image.LANCZOS
+            im = im.resize((int(size), int(size)), resample)
+            out = BytesIO()
+            im.save(out, format='PNG')
+            uri = 'data:image/png;base64,' + base64.b64encode(out.getvalue()).decode('ascii')
+        except Exception:
+            _logger.exception('Top bid medal render failed')
+            uri = ''
+        cache[key] = uri
+        return uri
 
     @staticmethod
     def _top_bid_title_size(name):
@@ -2347,6 +2565,29 @@ class AuctionTournament(models.Model):
         if n <= 70:
             return 17
         return 15
+
+    def _top_bid_gavel_uri(self):
+        """Small auction gavel beside the Top 5 Bids heading."""
+        import os
+        from io import BytesIO
+        path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            'static', 'src', 'img', 'wooden_mallet.png',
+        )
+        try:
+            from PIL import Image
+            im = Image.open(path).convert('RGBA')
+            try:
+                resample = Image.Resampling.LANCZOS
+            except AttributeError:
+                resample = Image.LANCZOS
+            im.thumbnail((120, 86), resample)
+            out = BytesIO()
+            im.save(out, format='PNG')
+            return 'data:image/png;base64,' + base64.b64encode(out.getvalue()).decode('ascii')
+        except Exception:
+            _logger.exception('Top bid gavel missing')
+            return ''
 
     def _top_bid_stadium_uri(self):
         import os
@@ -2392,15 +2633,13 @@ class AuctionTournament(models.Model):
             'static', 'src', 'assets', 'fonts',
         )
         faces = (
-            ('TBTeko', 'Teko-ExtraBold.ttf'),
-            ('TBDisplay', 'BebasNeue-Regular.ttf'),
-            ('TBName', 'Oswald-Bold.ttf'),
-            ('TBPrice', 'Anton-Regular.ttf'),
-            ('TBTeam', 'Montserrat-Bold.ttf'),
-            ('TBLabel', 'Montserrat-SemiBold.ttf'),
+            ('TBDisplay', 'Teko-ExtraBold.ttf', 'truetype'),
+            ('TBStamp', 'BebasNeue-Regular.ttf', 'truetype'),
+            ('TBPrice', 'Anton-Regular.ttf', 'truetype'),
+            ('TBLabel', 'Oswald-Bold.ttf', 'truetype'),
         )
         css = []
-        for family, filename in faces:
+        for family, filename, fmt in faces:
             path = os.path.join(base, filename)
             try:
                 with open(path, 'rb') as fh:
@@ -2408,10 +2647,11 @@ class AuctionTournament(models.Model):
             except Exception:
                 _logger.exception('Top bid poster font missing: %s', path)
                 continue
+            mime = 'font/otf' if fmt == 'opentype' else 'font/ttf'
             css.append(
-                "@font-face{font-family:'%s';src:url('data:font/truetype;base64,%s') "
-                "format('truetype');font-weight:normal;font-style:normal;}"
-                % (family, raw)
+                "@font-face{font-family:'%s';src:url('data:%s;base64,%s') "
+                "format('%s');font-weight:normal;font-style:normal;}"
+                % (family, mime, raw, fmt)
             )
         return ''.join(css)
 
@@ -2497,33 +2737,34 @@ class AuctionTournament(models.Model):
                 'required to render the posters.'
             ))
 
-        # Rank badge fill and ink. Rank 1 is the hero portrait.
-        rank_meta = {
-            1: ('#f6c445', '#1a1404'),
-            2: ('#e8eef6', '#1a1404'),
-            3: ('#e0a06a', '#1a1404'),
-            4: ('#1c283c', '#f4f7fb'),
-            5: ('#1c283c', '#f4f7fb'),
-        }
+        paint = self._top_bid_palette()
+        medal_for = {1: 'gold', 2: 'silver', 3: 'bronze'}
+        if paint['light']:
+            plain_badge = 'background:%s;color:%s;border:2px solid %s;' % (
+                paint['panel'], paint['ink'], paint['ink'])
+        else:
+            plain_badge = 'background:%s;color:%s;border:2px solid %s;' % (
+                paint['paper'], paint['value'], paint['ink'])
         cards = []
         for index, line in enumerate(lines, start=1):
             player = line.player_id
             team = line.auction_id.team_id or player.assigned_team_id
-            badge, ink = rank_meta.get(index, rank_meta[5])
+            metal = medal_for.get(index)
             photo = player.photo
             player_name = (player.name or 'Player').upper()
             team_name = ((team.name if team else '') or 'Team').upper()
             points_display = self.format_points(line.points or 0)
             is_hero = index == 1
             if is_hero:
-                photo_box = (940, 1016)
+                photo_box = (900, 1096)
             else:
                 photo_box = (256, 256)
             cards.append({
                 'rank': index,
                 'is_hero': is_hero,
-                'row_style': 'top:%dpx;' % (774 + (index - 2) * 122),
-                'badge_style': 'background:%s;color:%s;' % (badge, ink),
+                'row_style': 'top:%dpx;' % (702 + (index - 2) * 118),
+                'medal_uri': self._top_bid_medal_uri(metal, index) if metal else '',
+                'badge_style': '' if metal else plain_badge,
                 'player_name': player_name,
                 'name_style': 'font-size:%dpx;' % (
                     self._top_bid_name_size(player_name) + (16 if is_hero else 0)
@@ -2532,8 +2773,12 @@ class AuctionTournament(models.Model):
                 'role': self._top_bid_role(player),
                 'photo_uri': self._top_bid_face_crop(photo, photo_box[0], photo_box[1]),
                 'team_name': team_name,
-                'team_style': 'font-size:%dpx;' % self._top_bid_team_size(team_name),
-                'team_logo_uri': self._top_bid_logo_box(team.logo, 160 if is_hero else 64) if team else '',
+                'team_style': 'font-size:%dpx;' % self._top_bid_team_size(
+                    team_name,
+                    400 if is_hero else 420,
+                    48 if is_hero else 22,
+                ),
+                'team_logo_uri': self._top_bid_logo_box(team.logo, 280 if is_hero else 64) if team else '',
                 'team_initials': self._top_bid_initials(team.name if team else 'Team'),
                 'points_display': points_display,
                 'amount_style': 'font-size:%dpx;' % max(
@@ -2548,12 +2793,14 @@ class AuctionTournament(models.Model):
         try:
             html = self.env['ir.qweb']._render('auction_module.top_bid_poster', {
                 'font_css': self._top_bid_font_css(),
+                'theme_css': self._top_bid_theme_css(paint),
                 'stadium_uri': self._top_bid_stadium_uri(),
-                'brand_logo_svg': self._top_bid_brand_svg(),
+                'brand_logo_svg': self._top_bid_brand_svg(paint['value']),
                 'tournament_name': tournament_name,
                 'title_style': 'font-size:%dpx;' % min(34, self._top_bid_title_size(tournament_name)),
+                'gavel_uri': self._top_bid_gavel_uri(),
                 'description': description,
-                'desc_style': 'font-size:%dpx;' % min(16, self._top_bid_desc_size(description)),
+                'desc_style': 'font-size:%dpx;' % min(15, self._top_bid_desc_size(description)),
                 'tournament_logo_uri': self._top_bid_logo_box(self.logo, 400),
                 'tournament_initials': self._top_bid_initials(tournament_name),
                 'cards': cards,
@@ -2579,8 +2826,9 @@ class AuctionTournament(models.Model):
         })
         return {
             'type': 'ir.actions.act_url',
-            'url': '/web/content/%s?download=true' % attachment.id,
-            'target': 'self',
+            'url': '/web/content/%s?download=true&unique=%s' % (
+                attachment.id, attachment.id),
+            'target': 'new',
         }
 
     def _rules_poster_auction(self):
@@ -3831,7 +4079,9 @@ class AuctionTournament(models.Model):
             if not company or not company.id:
                 company = self.env['res.company'].sudo().search([], limit=1)
             if company and company.id:
-                return '/web/image/res.company/%s/favicon' % company.id
+                # 64px PNG. The full company image is too large for a tab icon,
+                # so browsers ignore it and keep /favicon.ico (the old gavel).
+                return '/web/image/res.company/%s/favicon/64x64?v=3' % company.id
         except Exception:
             _logger.exception('get_brand_favicon_url failed')
         return seo.DEFAULT_FAVICON
