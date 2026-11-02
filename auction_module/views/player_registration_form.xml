@@ -2407,7 +2407,7 @@
                 }
                 showRegTopWarning(labelText, first);
             }
-            if (!e.defaultPrevented && window.acLockRegistrationSubmit) {
+            if (!e.defaultPrevented &amp;&amp; window.acLockRegistrationSubmit) {
                 window.acLockRegistrationSubmit();
             }
         });
