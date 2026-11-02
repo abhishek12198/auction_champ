@@ -17,6 +17,7 @@ from odoo import api, fields, models, _
 from odoo.exceptions import AccessError, UserError
 
 from .indian_states import GSTIN_RE, INDIAN_STATE_NAMES, normalize_gstin
+from .phone_countries import compose_signup_phone, split_signup_phone
 
 _logger = logging.getLogger(__name__)
 
@@ -151,8 +152,11 @@ class AcSaasSignupPayment(models.Model):
             ))
         if not phone:
             raise UserError(_('Please enter your contact number.'))
-        if len(re.sub(r'\D', '', phone)) < 7:
-            raise UserError(_('Please enter a valid contact number.'))
+        code, national = split_signup_phone(phone)
+        try:
+            phone = compose_signup_phone(code, national)
+        except ValueError as exc:
+            raise UserError(str(exc)) from exc
         if gstin and not GSTIN_RE.match(gstin):
             raise UserError(_('Enter a valid 15-character GSTIN, or leave it blank.'))
         if state and state not in INDIAN_STATE_NAMES:

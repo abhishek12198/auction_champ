@@ -10,13 +10,22 @@ from odoo import http, _
 from odoo.http import request
 from odoo.exceptions import UserError
 
-from odoo.addons.ac_saas_payment.models.indian_states import INDIAN_STATE_NAMES
+from odoo.addons.ac_saas_payment.models.phone_countries import (
+    detect_signup_country_code,
+    signup_phone_rows,
+    split_signup_phone,
+)
 
 _logger = logging.getLogger(__name__)
 EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 
 
 class SaasSignupPaymentController(http.Controller):
+
+    def _client_ip(self):
+        req = request.httprequest
+        forwarded = (req.headers.get('X-Forwarded-For') or '').split(',')[0].strip()
+        return forwarded or (req.remote_addr or '')
 
     def _get_signup(self, token):
         Signup = request.env['ac.saas.signup.payment'].sudo()
@@ -74,38 +83,42 @@ class SaasSignupPaymentController(http.Controller):
             })
 
         price_info = plan.get_website_price_display()
+        detected_code = detect_signup_country_code(self._client_ip())
         ctx = {
             'plan': plan,
             'amount_label': self._money(plan.currency_id, plan.list_price),
             'price_validity': price_info.get('validity') or '',
             'error': False,
             'email_error': False,
+            'phone_error': False,
             'form': {
                 'buyer_name': '',
                 'buyer_email': '',
-                'buyer_phone': '',
-                'buyer_gstin': '',
-                'buyer_state': '',
+                'buyer_country_code': detected_code,
+                'buyer_phone_national': '',
             },
-            'indian_states': sorted(INDIAN_STATE_NAMES),
+            'phone_countries': signup_phone_rows(detected_code),
         }
 
         if request.httprequest.method == 'POST':
+            country_code = post.get('buyer_country_code') or detected_code
+            national = post.get('buyer_phone_national') or ''
+            code, national_digits = split_signup_phone(
+                '%s%s' % (country_code, re.sub(r'\D', '', national))
+            )
             form = {
                 'buyer_name': post.get('buyer_name') or '',
                 'buyer_email': post.get('buyer_email') or '',
-                'buyer_phone': post.get('buyer_phone') or '',
-                'buyer_gstin': post.get('buyer_gstin') or '',
-                'buyer_state': post.get('buyer_state') or '',
+                'buyer_country_code': code,
+                'buyer_phone_national': national_digits,
             }
             ctx['form'] = form
+            ctx['phone_countries'] = signup_phone_rows(code)
             try:
                 buyer = Signup._validate_buyer(
                     form['buyer_name'],
                     form['buyer_email'],
-                    form['buyer_phone'],
-                    gstin=form['buyer_gstin'],
-                    state=form['buyer_state'],
+                    '%s%s' % (code, national_digits),
                 )
                 payment = Signup.create_for_plan(plan, buyer)
                 payment.action_create_razorpay_order()
@@ -117,6 +130,8 @@ class SaasSignupPaymentController(http.Controller):
                 ctx['error'] = msg
                 if 'already registered' in msg.lower() or 'already exists' in msg.lower():
                     ctx['email_error'] = msg
+                elif 'digit' in msg.lower() or 'contact number' in msg.lower() or 'country code' in msg.lower():
+                    ctx['phone_error'] = msg
             except Exception as exc:
                 _logger.exception('SaaS signup form failed')
                 ctx['error'] = str(exc)

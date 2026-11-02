@@ -288,6 +288,24 @@ body.ac-su-body {
   color: #c53030;
 }
 
+.ac-su-phone {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.ac-su-phone select.ac-su-phone-code {
+  width: auto;
+  min-width: 118px;
+  flex: 0 0 auto;
+  padding-right: 28px;
+}
+
+.ac-su-phone input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .ac-su-error {
   margin: 0 0 16px;
   padding: 11px 13px;

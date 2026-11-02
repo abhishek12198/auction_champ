@@ -44,7 +44,7 @@
       <div class="ac-su-card">
         <div class="ac-su-card-body">
           <h2 class="ac-su-card-title">Your details</h2>
-          <p class="ac-su-card-sub">Name, email and contact number create the account. GSTIN and state are optional and are printed on the invoice.</p>
+          <p class="ac-su-card-sub">Name, email and contact number create the account.</p>
 
           <t t-if="error and not email_error">
             <div class="ac-su-error" t-esc="error"/>
@@ -72,28 +72,29 @@
                    t-esc="email_error or ''"/>
               </div>
               <div class="ac-su-field">
-                <label for="buyer_phone">Contact number</label>
-                <input type="tel" id="buyer_phone" name="buyer_phone" required="required"
-                       autocomplete="tel"
-                       t-att-value="form.get('buyer_phone') or ''"
-                       placeholder="e.g. 9876543210"/>
-              </div>
-              <div class="ac-su-field">
-                <label for="buyer_gstin">GSTIN (optional)</label>
-                <input type="text" id="buyer_gstin" name="buyer_gstin"
-                       maxlength="15" autocomplete="off"
-                       t-att-value="form.get('buyer_gstin') or ''"
-                       placeholder="15-character GSTIN"/>
-              </div>
-              <div class="ac-su-field">
-                <label for="buyer_state">State (optional)</label>
-                <select id="buyer_state" name="buyer_state">
-                  <option value="">Select state</option>
-                  <t t-foreach="indian_states" t-as="st">
-                    <option t-att-value="st" t-esc="st"
-                            t-att-selected="'selected' if form.get('buyer_state') == st else None"/>
-                  </t>
-                </select>
+                <label for="buyer_phone_national">Contact number</label>
+                <div class="ac-su-phone">
+                  <select id="buyer_country_code" name="buyer_country_code"
+                          class="ac-su-phone-code" aria-label="Country calling code">
+                    <t t-foreach="phone_countries" t-as="country">
+                      <option t-att-value="country['code']"
+                              t-att-data-min="country['min']"
+                              t-att-data-max="country['max']"
+                              t-att-data-placeholder="country['placeholder']"
+                              t-att-selected="'selected' if country['selected'] else None"
+                              t-esc="country['label']"/>
+                    </t>
+                  </select>
+                  <input type="tel" id="buyer_phone_national" name="buyer_phone_national"
+                         required="required" inputmode="numeric" autocomplete="tel-national"
+                         t-att-class="'ac-su-input-error' if phone_error else None"
+                         t-att-value="form.get('buyer_phone_national') or ''"
+                         placeholder="98765 43210"/>
+                </div>
+                <p class="ac-su-field-hint" id="buyerPhoneHint">Enter the number without the country code.</p>
+                <p class="ac-su-field-hint ac-su-field-error" id="buyerPhoneError"
+                   t-att-style="'display:block;' if phone_error else 'display:none;'"
+                   t-esc="phone_error or ''"/>
               </div>
             </div>
             <div class="ac-su-actions">
@@ -179,11 +180,82 @@
               });
               emailInput.addEventListener('blur', checkEmail);
             }
+            var codeEl = document.getElementById('buyer_country_code');
+            var numEl = document.getElementById('buyer_phone_national');
+            var phoneHint = document.getElementById('buyerPhoneHint');
+            var phoneErr = document.getElementById('buyerPhoneError');
+
+            function phoneRules() {
+              var opt = codeEl &amp;&amp; codeEl.options[codeEl.selectedIndex];
+              var min = parseInt(opt &amp;&amp; opt.getAttribute('data-min'), 10);
+              var max = parseInt(opt &amp;&amp; opt.getAttribute('data-max'), 10);
+              if (!(min &gt; 0)) min = 10;
+              if (!(max &gt; 0)) max = min;
+              if (max &lt; min) max = min;
+              return {
+                min: min,
+                max: max,
+                placeholder: (opt &amp;&amp; opt.getAttribute('data-placeholder')) || ''
+              };
+            }
+
+            function applyPhoneRules() {
+              if (!numEl) return true;
+              var rules = phoneRules();
+              var digits = (numEl.value || '').replace(/\D/g, '');
+              if (digits.length &gt; rules.max) digits = digits.slice(0, rules.max);
+              numEl.value = digits;
+              numEl.setAttribute('maxlength', String(rules.max));
+              if (rules.placeholder) numEl.setAttribute('placeholder', rules.placeholder);
+              var ok = digits.length &gt;= rules.min &amp;&amp; digits.length &lt;= rules.max;
+              if (phoneHint) {
+                phoneHint.textContent = rules.min === rules.max
+                  ? ('Enter ' + rules.min + ' digits (without the country code).')
+                  : ('Enter ' + rules.min + '–' + rules.max + ' digits (without the country code).');
+              }
+              return ok;
+            }
+
+            function showPhoneError(msg) {
+              if (!phoneErr) return;
+              if (msg) {
+                phoneErr.style.display = 'block';
+                phoneErr.textContent = msg;
+              } else {
+                phoneErr.style.display = 'none';
+                phoneErr.textContent = '';
+              }
+              if (numEl) numEl.classList.toggle('ac-su-input-error', !!msg);
+            }
+
+            if (numEl) {
+              numEl.addEventListener('input', function () {
+                applyPhoneRules();
+                showPhoneError('');
+              });
+            }
+            if (codeEl) {
+              codeEl.addEventListener('change', function () {
+                applyPhoneRules();
+                showPhoneError('');
+              });
+            }
+            applyPhoneRules();
+
             if (form) {
               form.addEventListener('submit', function (e) {
                 if (emailTaken) {
                   e.preventDefault();
                   setHint('This email is already registered. Please log in or use a different email.', true);
+                  return;
+                }
+                var rules = phoneRules();
+                if (!applyPhoneRules()) {
+                  e.preventDefault();
+                  var msg = rules.min === rules.max
+                    ? ('Enter ' + rules.min + ' digits for the selected country.')
+                    : ('Enter ' + rules.min + ' to ' + rules.max + ' digits for the selected country.');
+                  showPhoneError(msg);
                 }
               });
             }
