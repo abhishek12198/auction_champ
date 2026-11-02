@@ -9,7 +9,13 @@ from werkzeug.exceptions import NotFound
 from odoo import http
 from odoo.http import request
 
-from odoo.addons.auction_module.controllers.main import Auction, _build_player_vals_from_post
+from odoo.addons.auction_module.controllers.main import (
+    Auction,
+    _build_player_vals_from_post,
+    _create_registration_player,
+    _find_recent_registration,
+    _registration_advisory_lock,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -66,10 +72,18 @@ class AuctionPaymentRegister(Auction):
             vals = _build_player_vals_from_post(request, tournament)
             # Online payment replaces QR / proof upload
             vals.pop('payment_proof', None)
+            token = vals.get('registration_token') or False
+            _registration_advisory_lock(
+                request.env.cr, tournament.id, token,
+                vals.get('name'), vals.get('contact'),
+            )
 
             if mode == 'mandatory':
-                tx = Tx.create_for_mandatory(tournament, vals)
-                tx.action_create_razorpay_order()
+                tx = self._ac_find_registration_tx(tournament, token, vals)
+                if not tx:
+                    tx = Tx.create_for_mandatory(tournament, vals)
+                if tx.state != 'paid' and not tx.razorpay_order_id:
+                    tx.action_create_razorpay_order()
                 # Stay on themed registration page; Razorpay opens as overlay.
                 return werkzeug.utils.redirect(
                     self._ac_register_pay_url(
@@ -79,10 +93,18 @@ class AuctionPaymentRegister(Auction):
                     303,
                 )
 
-            player = request.env['auction.team.player'].sudo().create(vals)
-            player.write({'amount_paid': False})
-            tx = Tx.create_for_optional(tournament, player)
-            tx.action_create_razorpay_order()
+            player, created = _create_registration_player(request.env, tournament, vals)
+            if created:
+                player.write({'amount_paid': False})
+            tx = Tx.search([
+                ('tournament_id', '=', tournament.id),
+                ('player_id', '=', player.id),
+                ('state', 'in', ('draft', 'pending', 'paid')),
+            ], limit=1, order='id desc')
+            if not tx:
+                tx = Tx.create_for_optional(tournament, player)
+            if tx.state != 'paid' and not tx.razorpay_order_id:
+                tx.action_create_razorpay_order()
             qs = urlencode({
                 'success': '1',
                 'player_id': player.id,
@@ -102,6 +124,43 @@ class AuctionPaymentRegister(Auction):
                 'registration_currency': tournament.registration_currency_id,
             }), lazy=False)
             return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
+
+    def _ac_find_registration_tx(self, tournament, token, vals):
+        """Payment session already opened for this same form submit."""
+        Tx = request.env['ac.payment.transaction'].sudo()
+        open_states = ('draft', 'pending', 'paid')
+        if token:
+            tx = Tx.search([
+                ('tournament_id', '=', tournament.id),
+                ('state', 'in', open_states),
+                ('player_vals_json', 'ilike', token),
+            ], limit=1, order='id desc')
+            if tx:
+                return tx
+            player = request.env['auction.team.player'].sudo().search([
+                ('tournament_id', '=', tournament.id),
+                ('registration_token', '=', token),
+            ], limit=1)
+            if player:
+                tx = Tx.search([
+                    ('tournament_id', '=', tournament.id),
+                    ('player_id', '=', player.id),
+                    ('state', 'in', open_states),
+                ], limit=1, order='id desc')
+            if tx:
+                return tx
+        player = _find_recent_registration(
+            request.env, tournament, token, vals.get('name'), vals.get('contact'),
+        )
+        if player:
+            tx = Tx.search([
+                ('tournament_id', '=', tournament.id),
+                ('player_id', '=', player.id),
+                ('state', 'in', open_states),
+            ], limit=1, order='id desc')
+            if tx:
+                return tx
+        return Tx.browse()
 
     def _registration_payment_get_ctx(self, ctx, tournament, kw):
         if not tournament.ac_razorpay_active():

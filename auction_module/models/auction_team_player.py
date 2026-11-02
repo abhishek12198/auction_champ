@@ -134,6 +134,11 @@ class AuctionTeamPlayer(models.Model):
             CREATE INDEX IF NOT EXISTS auction_team_player_tourney_state_idx
             ON auction_team_player (tournament_id, state)
         """)
+        cr.execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS auction_team_player_reg_token_uniq
+            ON auction_team_player (tournament_id, registration_token)
+            WHERE registration_token IS NOT NULL
+        """)
 
     @api.model
     def _get_next_tournament_sl_no(self, tournament_id):
@@ -204,6 +209,13 @@ class AuctionTeamPlayer(models.Model):
     sl_no = fields.Integer("Sl No")
     name = fields.Char(string="Name of the player", required=True)
     contact = fields.Char("Mobile Number")
+    registration_token = fields.Char(
+        string="Registration Token",
+        copy=False,
+        index=True,
+        help="One-time token from the public registration form. "
+             "A second submit with the same token reuses this player.",
+    )
     masked_contact = fields.Char(
         "Masked Mobile Number",
         compute='_compute_masked_contact',

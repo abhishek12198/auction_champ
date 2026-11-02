@@ -27,7 +27,104 @@
         });
     }
 
+    function installRegistrationGuard(regForm) {
+        if (!regForm || regForm.getAttribute('data-reg-guard') === '1') return;
+        regForm.setAttribute('data-reg-guard', '1');
+        var locked = false;
+
+        function tokenKey() {
+            return 'acRegToken:' + (location.pathname || '');
+        }
+        function freshToken() {
+            var token = 'r' + Date.now().toString(36)
+                + Math.random().toString(36).slice(2)
+                + Math.random().toString(36).slice(2);
+            token = token.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 48);
+            if (token.length < 16) token = (token + 'regtokenfallback00').slice(0, 24);
+            return token;
+        }
+        function ensureInput(token) {
+            var input = document.getElementById('regSubmitToken');
+            if (!input) {
+                input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'reg_token';
+                input.id = 'regSubmitToken';
+                regForm.appendChild(input);
+            }
+            input.value = token;
+        }
+        function remember(token) {
+            try { sessionStorage.setItem(tokenKey(), token); } catch (e) {}
+            ensureInput(token);
+        }
+        function currentToken() {
+            var token = '';
+            try { token = sessionStorage.getItem(tokenKey()) || ''; } catch (e) {}
+            if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) token = freshToken();
+            remember(token);
+            return token;
+        }
+        if (/[?&]success=1(?:&|$)/.test(location.search || '')) {
+            try { sessionStorage.removeItem(tokenKey()); } catch (e) {}
+        }
+        currentToken();
+        regForm.addEventListener('reset', function () {
+            setTimeout(function () { remember(freshToken()); }, 0);
+        });
+        regForm.addEventListener('submit', function (e) {
+            if (!locked) return;
+            e.preventDefault();
+            e.stopImmediatePropagation();
+        }, true);
+
+        window.acLockRegistrationSubmit = function () {
+            if (locked) return;
+            locked = true;
+            currentToken();
+            var submitBtn = document.getElementById('regStepSubmit');
+            if (submitBtn) {
+                submitBtn.setAttribute('aria-busy', 'true');
+                for (var i = 0; i < submitBtn.childNodes.length; i++) {
+                    var node = submitBtn.childNodes[i];
+                    if (node.nodeType === 3 && node.nodeValue && node.nodeValue.trim()) {
+                        node.nodeValue = 'Submitting… ';
+                        break;
+                    }
+                }
+            }
+            if (document.getElementById('regSubmitLock')) return;
+            var style = document.getElementById('regSubmitLockStyle');
+            if (!style) {
+                style = document.createElement('style');
+                style.id = 'regSubmitLockStyle';
+                style.textContent = ''
+                    + '#regSubmitLock{position:fixed;inset:0;z-index:2147483000;display:flex;'
+                    + 'align-items:center;justify-content:center;background:rgba(8,14,28,.72);'
+                    + 'padding:24px;}'
+                    + '#regSubmitLock .reg-lock-card{max-width:360px;width:100%;background:#fff;'
+                    + 'color:#142033;border-radius:16px;padding:28px 24px;text-align:center;'
+                    + 'box-shadow:0 18px 50px rgba(0,0,0,.35);font-family:inherit;}'
+                    + '#regSubmitLock strong{display:block;font-size:1.15rem;margin-top:14px;}'
+                    + '#regSubmitLock p{margin:.45rem 0 0;font-size:.92rem;line-height:1.4;color:#3d4d66;}'
+                    + '#regSubmitLock .reg-lock-spin{width:42px;height:42px;margin:0 auto;border-radius:50%;'
+                    + 'border:3px solid #d5deea;border-top-color:#1565c0;animation:regLockSpin .7s linear infinite;}'
+                    + '@keyframes regLockSpin{to{transform:rotate(360deg)}}';
+                document.head.appendChild(style);
+            }
+            var lock = document.createElement('div');
+            lock.id = 'regSubmitLock';
+            lock.setAttribute('role', 'alert');
+            lock.setAttribute('aria-live', 'assertive');
+            lock.innerHTML = '<div class="reg-lock-card"><div class="reg-lock-spin"></div>'
+                + '<strong>Submitting your registration</strong>'
+                + '<p>Please wait. Tapping again will not send a second entry.</p></div>';
+            document.body.appendChild(lock);
+        };
+    }
+
     var form = document.getElementById('playerRegisterForm');
+    installRegistrationGuard(form);
     if (!form || !document.body.classList.contains('reg-page--steps')) return;
     form.setAttribute('novalidate', 'novalidate');
 
@@ -316,7 +413,9 @@
 
         var issues = collectIssues();
         if (!issues.length) {
+            if (e.defaultPrevented) return;
             hideAlert();
+            if (window.acLockRegistrationSubmit) window.acLockRegistrationSubmit();
             return;
         }
         e.preventDefault();

@@ -2407,6 +2407,9 @@
                 }
                 showRegTopWarning(labelText, first);
             }
+            if (!e.defaultPrevented && window.acLockRegistrationSubmit) {
+                window.acLockRegistrationSubmit();
+            }
         });
     }
 })();
@@ -2994,7 +2997,7 @@
 </script>
 <script src="/auction_module/static/src/js/auction_sse_client.js"></script>
 <script src="/auction_module/static/src/js/player_registration_roster.js?v=1.5.661"></script>
-<script src="/auction_module/static/src/js/player_registration_steps.js?v=1.5.986"></script>
+<script src="/auction_module/static/src/js/player_registration_steps.js?v=1.5.987"></script>
 
 </body>
 </html>

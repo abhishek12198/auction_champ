@@ -6970,6 +6970,24 @@ class Auction(http.Controller):
                 # Ignore unlock-only posts that somehow reach here
                 if admin and request.params.get('admin_unlock'):
                     return werkzeug.utils.redirect(register_path, 303)
+                posted_token = _registration_submit_token(request.httprequest.form)
+                if posted_token:
+                    already = _find_recent_registration(
+                        request.env, tournament, posted_token, '', '',
+                    )
+                    if already:
+                        from urllib.parse import urlencode
+                        qs_params = {'success': '1', 'player_id': already.id}
+                        if 'ac.payment.transaction' in request.env:
+                            tx = request.env['ac.payment.transaction'].sudo().search([
+                                ('tournament_id', '=', tournament.id),
+                                ('player_id', '=', already.id),
+                                ('state', 'in', ('draft', 'pending', 'paid')),
+                            ], limit=1, order='id desc')
+                            if tx and tx.access_token:
+                                qs_params['pay_token'] = tx.access_token
+                        qs = urlencode(qs_params)
+                        return werkzeug.utils.redirect('%s?%s' % (register_path, qs), 303)
                 try:
                     # Re-check capacity under race before create
                     _om, _oc, _ol, overall_full_now = self._reg_capacity(tournament)
@@ -7007,17 +7025,20 @@ class Auction(http.Controller):
                                 'Please choose another category or contact the organiser.'
                                 % (post_tier.name or 'selected')
                             )
-                    player = request.env['auction.team.player'].sudo().create(vals)
-                    try:
-                        self._registration_after_create(player, db_name)
-                    except Exception:
-                        _logger.exception(
-                            'registration after-create hook failed for player %s',
-                            player.id,
-                        )
+                    player, created = _create_registration_player(
+                        request.env, tournament, vals,
+                    )
+                    if created:
+                        try:
+                            self._registration_after_create(player, db_name)
+                        except Exception:
+                            _logger.exception(
+                                'registration after-create hook failed for player %s',
+                                player.id,
+                            )
                     # Close public registration when allotment hits max
                     _om2, _oc2, _ol2, full_after = self._reg_capacity(tournament)
-                    if full_after and tournament.registration_open:
+                    if created and full_after and tournament.registration_open:
                         try:
                             tournament.sudo().write({'registration_open': False})
                         except Exception:
@@ -8880,6 +8901,81 @@ def _registration_profile_payload(player, tournament, db_name):
     return profile
 
 
+def _registration_submit_token(post):
+    """Stable id for one browser form. Rejects anything that is not a short token."""
+    raw = (post.get('reg_token') or '').strip()
+    if raw and re.fullmatch(r'[A-Za-z0-9_-]{12,64}', raw):
+        return raw
+    return False
+
+
+def _registration_advisory_lock(cr, tournament_id, token, name, contact):
+    """Serialize identical submissions until the first one commits."""
+    keys = []
+    if token:
+        keys.append('tok:%s:%s' % (tournament_id, token))
+    norm_name = (name or '').strip().lower()
+    norm_contact = contact or ''
+    if norm_name and norm_contact:
+        keys.append('who:%s:%s:%s' % (tournament_id, norm_name, norm_contact))
+    for key in sorted(keys):
+        digest = hashlib.sha256(key.encode('utf-8')).digest()
+        k1 = int.from_bytes(digest[:4], 'big') & 0x7fffffff
+        k2 = int.from_bytes(digest[4:8], 'big') & 0x7fffffff
+        cr.execute('SELECT pg_advisory_xact_lock(%s, %s)', (k1, k2))
+
+
+def _find_recent_registration(env, tournament, token, name, contact):
+    """Player already stored for this form, or the same person moments ago."""
+    Player = env['auction.team.player'].sudo()
+    if token and 'registration_token' in Player._fields:
+        found = Player.search([
+            ('tournament_id', '=', tournament.id),
+            ('registration_token', '=', token),
+        ], limit=1)
+        if found:
+            return found
+    norm_name = (name or '').strip()
+    norm_contact = contact or ''
+    if not norm_name or not norm_contact:
+        return Player.browse()
+    cutoff = fields.Datetime.now() - timedelta(seconds=120)
+    return Player.search([
+        ('tournament_id', '=', tournament.id),
+        ('contact', '=', norm_contact),
+        ('name', '=ilike', norm_name),
+        ('create_date', '>=', fields.Datetime.to_string(cutoff)),
+    ], order='id desc', limit=1)
+
+
+def _create_registration_player(env, tournament, vals):
+    """Create the player once. A repeated submit returns the first record."""
+    token = vals.get('registration_token') or False
+    name = vals.get('name') or ''
+    contact = vals.get('contact') or ''
+    _registration_advisory_lock(env.cr, tournament.id, token, name, contact)
+    existing = _find_recent_registration(env, tournament, token, name, contact)
+    if existing:
+        _logger.info(
+            'player_register: duplicate submit reused player %s (tournament %s)',
+            existing.id, tournament.id,
+        )
+        return existing, False
+    try:
+        with env.cr.savepoint():
+            player = env['auction.team.player'].sudo().create(vals)
+            return player, True
+    except Exception:
+        existing = _find_recent_registration(env, tournament, token, name, contact)
+        if existing:
+            _logger.info(
+                'player_register: duplicate submit reused player %s after conflict (tournament %s)',
+                existing.id, tournament.id,
+            )
+            return existing, False
+        raise
+
+
 def _build_player_vals_from_post(request, tournament, locked_tier=None):
     """Extract and validate POST form data into a dict for auction.team.player.create().
 
@@ -9068,6 +9164,10 @@ def _build_player_vals_from_post(request, tournament, locked_tier=None):
         vals['tier_id'] = tier_id
     if tournament:
         vals['tournament_id'] = tournament.id
+
+    reg_token = _registration_submit_token(post)
+    if reg_token and 'registration_token' in Player._fields:
+        vals['registration_token'] = reg_token
 
     # Jersey section (only if enabled for this tournament)
     if tournament and tournament.enable_jersey_section:
