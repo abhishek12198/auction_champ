@@ -143,7 +143,8 @@ class AuctionTournament(models.Model):
                  'saas_account_id.plan_id.allow_random_mode',
                  'saas_account_id.plan_id.allowed_player_templates',
                  'saas_account_id.plan_id.sequence',
-                 'saas_account_id.plan_id.max_players_per_tournament')
+                 'saas_account_id.plan_id.max_players_per_tournament',
+                 'saas_account_id.override_max_players')
     def _compute_saas_mode_hints(self):
         Account = self.env['ac.saas.account']
         Plan = self.env['ac.saas.plan']
@@ -193,13 +194,20 @@ class AuctionTournament(models.Model):
                     ('sequence', '>', plan.sequence),
                 ])
                 tournament.saas_can_request_upgrade = bool(higher)
-                tournament.saas_max_players = plan.max_players_per_tournament
-                tournament.saas_max_registrations_hint = _(
-                    '%(plan)s plan · max %(max)s registrations (unlimited not available)'
-                ) % {
-                    'plan': plan.name,
-                    'max': plan.max_players_per_tournament,
-                }
+                player_max = account._effective_player_limit()
+                tournament.saas_max_players = player_max
+                plan_players = int(plan.max_players_per_tournament or 0)
+                if player_max > plan_players:
+                    tournament.saas_max_registrations_hint = _(
+                        'Account allowance · max %(max)s registrations (unlimited not available)'
+                    ) % {'max': player_max}
+                else:
+                    tournament.saas_max_registrations_hint = _(
+                        '%(plan)s plan · max %(max)s registrations (unlimited not available)'
+                    ) % {
+                        'plan': plan.name,
+                        'max': player_max,
+                    }
             else:
                 tournament.saas_can_request_upgrade = False
                 tournament.saas_max_players = 0
@@ -218,7 +226,7 @@ class AuctionTournament(models.Model):
         account = self.env['ac.saas.account']._get_account_for_user()
         if account and account.plan_id:
             plan = account.plan_id
-            plan_max = int(plan.max_players_per_tournament or 0)
+            plan_max = account._effective_player_limit()
             if plan_max > 0 and (
                 'max_registrations' in fields_list
                 or not fields_list
@@ -246,11 +254,11 @@ class AuctionTournament(models.Model):
     def _saas_effective_max_registrations(self):
         """Registration ceiling used by /player/register (plan-capped for SaaS)."""
         self.ensure_one()
-        plan = self._saas_plan_for_tournament()
+        account = self.saas_account_id or self.env['ac.saas.account']._get_account_for_user()
         max_reg = int(self.max_registrations or 0)
-        if not plan:
+        if not account or not account.plan_id:
             return max_reg
-        plan_max = int(plan.max_players_per_tournament or 0)
+        plan_max = account._effective_player_limit()
         if plan_max <= 0:
             return max_reg
         # SaaS: never unlimited; never above plan
@@ -258,13 +266,14 @@ class AuctionTournament(models.Model):
             return plan_max
         return min(max_reg, plan_max)
 
-    def _saas_clamp_max_registrations(self, value, plan=None):
-        """Return a plan-safe max_registrations value (0/over → plan max)."""
+    def _saas_clamp_max_registrations(self, value, plan=None, account=None):
+        """Return a safe max_registrations value (0/over → account allowance)."""
         self.ensure_one()
-        plan = plan or self._saas_plan_for_tournament()
-        if not plan:
-            return int(value or 0)
-        plan_max = int(plan.max_players_per_tournament or 0)
+        account = account or self.saas_account_id or self.env['ac.saas.account']._get_account_for_user()
+        plan = plan or (account.plan_id if account else self._saas_plan_for_tournament())
+        plan_max = account._effective_player_limit() if account else 0
+        if plan_max <= 0 and plan:
+            plan_max = int(plan.max_players_per_tournament or 0)
         if plan_max <= 0:
             return int(value or 0)
         req = int(value or 0)
@@ -275,9 +284,10 @@ class AuctionTournament(models.Model):
     @api.onchange('max_registrations')
     def _onchange_saas_max_registrations(self):
         plan = self._saas_plan_for_tournament()
-        if not plan:
+        account = self.saas_account_id or self.env['ac.saas.account']._get_account_for_user()
+        if not plan or not account:
             return
-        plan_max = int(plan.max_players_per_tournament or 0)
+        plan_max = account._effective_player_limit()
         if plan_max <= 0:
             return
         req = int(self.max_registrations or 0)
@@ -291,12 +301,11 @@ class AuctionTournament(models.Model):
             self.max_registrations = plan_max
             return {
                 'warning': {
-                    'title': _('Plan registration limit'),
+                    'title': _('Registration limit'),
                     'message': _(
-                        'Your %(plan)s plan allows up to %(max)s player registrations '
+                        'This account allows up to %(max)s player registrations '
                         'per tournament.'
                     ) % {
-                        'plan': plan.name,
                         'max': plan_max,
                     },
                 }
@@ -465,7 +474,7 @@ class AuctionTournament(models.Model):
                 plan = account.get_plan()
                 vals['saas_account_id'] = account.id
                 # Cap registrations to plan max if missing / too high
-                max_p = plan.max_players_per_tournament
+                max_p = account._effective_player_limit()
                 if not vals.get('max_registrations') or vals.get('max_registrations', 0) <= 0:
                     vals['max_registrations'] = max_p
                 else:
@@ -539,7 +548,7 @@ class AuctionTournament(models.Model):
                 if not owner or not owner.plan_id:
                     continue
                 clamped_by_id[tournament.id] = tournament._saas_clamp_max_registrations(
-                    req, owner.plan_id
+                    req, owner.plan_id, account=owner
                 )
             if clamped_by_id:
                 if len(self) == 1:
@@ -590,7 +599,7 @@ class AuctionTournament(models.Model):
                 if 'max_registrations' not in vals:
                     for tournament in self:
                         capped = tournament._saas_clamp_max_registrations(
-                            tournament.max_registrations, plan
+                            tournament.max_registrations, plan, account=owner
                         )
                         if capped != tournament.max_registrations:
                             vals['max_registrations'] = capped
@@ -625,15 +634,15 @@ class AuctionTournament(models.Model):
             if 'team_ids' in vals:
                 new_cmds = [c for c in (vals.get('team_ids') or []) if c and c[0] == 0]
                 if new_cmds:
-                    plan = account.get_plan()
                     for tournament in self:
+                        owner = tournament.saas_account_id or account
+                        team_limit = owner._effective_team_limit()
                         current = len(tournament.team_ids)
-                        if current + len(new_cmds) > plan.max_teams_per_tournament:
+                        if current + len(new_cmds) > team_limit:
                             raise ValidationError(_(
-                                'Your %(plan)s plan allows up to %(max)s team(s) per tournament.'
+                                'This account allows up to %(max)s team(s) per tournament.'
                             ) % {
-                                'plan': plan.name,
-                                'max': plan.max_teams_per_tournament,
+                                'max': team_limit,
                             })
 
             return super(AuctionTournament, self.sudo()).write(vals)
@@ -688,14 +697,13 @@ class AuctionTournament(models.Model):
             if tournament.player_display_template:
                 plan.assert_template_allowed(tournament.player_display_template)
             plan.assert_random_mode_allowed(tournament.player_appearance_algorithm)
-            max_p = int(plan.max_players_per_tournament or 0)
+            max_p = account._effective_player_limit()
             max_reg = int(tournament.max_registrations or 0)
             if max_p and (max_reg <= 0 or max_reg > max_p):
                 raise ValidationError(_(
-                    'Max registrations must be between 1 and %(max)s on the %(plan)s plan '
+                    'Max registrations must be between 1 and %(max)s for this account '
                     '(unlimited is not available).'
                 ) % {
-                    'plan': plan.name,
                     'max': max_p,
                 })
 

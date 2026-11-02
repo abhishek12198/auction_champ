@@ -372,7 +372,7 @@ class AuctionTeamUploadWizard(models.TransientModel):
         if not account or not account.plan_id:
             return None, None
         plan = account.plan_id
-        return plan.max_teams_per_tournament, plan.name
+        return account._effective_team_limit(), plan.name
 
     def _import_teams_sheet(self, ws, logo_map):
         rows = list(ws.iter_rows(values_only=True))

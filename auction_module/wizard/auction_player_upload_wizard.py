@@ -955,7 +955,7 @@ class AuctionPlayerUploadWizard(models.TransientModel):
         if not account or not account.plan_id:
             return None, None
         plan = account.plan_id
-        return plan.max_players_per_tournament, plan.name
+        return account._effective_player_limit(), plan.name
 
     def action_close(self):
         return {'type': 'ir.actions.act_window_close'}

@@ -87,16 +87,42 @@ class AcSaasAccount(models.Model):
     player_count = fields.Integer(compute='_compute_usage')
 
     # Plan quota (related). Create cap after renewals is tournament_create_limit.
-    max_tournaments = fields.Integer(related='plan_id.max_tournaments', readonly=True)
+    max_tournaments = fields.Integer(
+        related='plan_id.max_tournaments', readonly=True,
+        string='Plan tournaments (one package)',
+    )
     tournament_create_limit = fields.Integer(
         compute='_compute_tournament_create_limit',
         string='Tournament slots',
-        help='Tournaments this account may create (plan quota × packages purchased).',
+        help='Tournaments this account may create. This is the plan total after renewals, or a higher number set on the account.',
     )
     max_teams_per_tournament = fields.Integer(
-        related='plan_id.max_teams_per_tournament', readonly=True)
+        related='plan_id.max_teams_per_tournament', readonly=True,
+        string='Plan teams per tournament',
+    )
     max_players_per_tournament = fields.Integer(
-        related='plan_id.max_players_per_tournament', readonly=True)
+        related='plan_id.max_players_per_tournament', readonly=True,
+        string='Plan players per tournament',
+    )
+    override_max_tournaments = fields.Integer(
+        string='Max Tournaments',
+        default=0,
+        help='Raise how many tournaments this account may create. '
+             'Leave 0 to keep the plan total (package size × purchases). '
+             'A number below that total is ignored.',
+    )
+    override_max_teams = fields.Integer(
+        string='Max Teams per tournament',
+        default=0,
+        help='Raise the team cap for each tournament on this account. '
+             'Leave 0 to keep the plan limit. A lower number is ignored.',
+    )
+    override_max_players = fields.Integer(
+        string='Max Players per tournament',
+        default=0,
+        help='Raise the player registration cap for each tournament on this account. '
+             'Leave 0 to keep the plan limit. A lower number is ignored.',
+    )
     allow_auctioneer_console = fields.Boolean(
         related='plan_id.allow_auctioneer_console',
         readonly=True,
@@ -125,7 +151,9 @@ class AcSaasAccount(models.Model):
          'Each login user can belong to only one SaaS account.'),
     ]
 
-    @api.depends('plan_id', 'plan_id.max_tournaments')
+    @api.depends(
+        'plan_id', 'plan_id.max_tournaments', 'override_max_tournaments',
+    )
     def _compute_tournament_create_limit(self):
         for acc in self:
             acc.tournament_create_limit = acc._effective_tournament_limit()
@@ -353,18 +381,53 @@ class AcSaasAccount(models.Model):
             ]
         return self.env['ac.saas.upgrade.request'].sudo().search_count(domain)
 
-    def _effective_tournament_limit(self):
-        """Total tournaments this account may create.
-
-        Signup grants one package (``plan.max_tournaments``). Each approved
-        renewal buys another package of the same size, so an existing
-        tournament from a previous purchase does not block the new one.
-        """
+    def _purchased_tournament_limit(self):
+        """Tournaments granted by the plan and later renewals, before an account raise."""
         self.ensure_one()
         plan_max = int(self.plan_id.max_tournaments or 0) if self.plan_id else 0
         if not plan_max:
             return 0
         return plan_max * (1 + self._approved_renewal_count())
+
+    def _effective_tournament_limit(self):
+        """Total tournaments this account may create.
+
+        Signup grants one package (``plan.max_tournaments``). Each approved
+        renewal buys another package of the same size. A SaaS admin can raise
+        that total on the account; a lower number does not reduce it.
+        """
+        self.ensure_one()
+        purchased = self._purchased_tournament_limit()
+        override = int(self.override_max_tournaments or 0)
+        return max(purchased, override)
+
+    def _effective_team_limit(self):
+        """Teams allowed on one tournament for this account."""
+        self.ensure_one()
+        plan_max = int(self.plan_id.max_teams_per_tournament or 0) if self.plan_id else 0
+        override = int(self.override_max_teams or 0)
+        return max(plan_max, override)
+
+    @api.constrains(
+        'override_max_tournaments', 'override_max_teams', 'override_max_players',
+    )
+    def _check_account_allowances(self):
+        for acc in self:
+            if (
+                acc.override_max_tournaments < 0
+                or acc.override_max_teams < 0
+                or acc.override_max_players < 0
+            ):
+                raise ValidationError(_(
+                    'Account allowances cannot be negative. Leave 0 to follow the plan.'
+                ))
+
+    def _effective_player_limit(self):
+        """Player registrations allowed on one tournament for this account."""
+        self.ensure_one()
+        plan_max = int(self.plan_id.max_players_per_tournament or 0) if self.plan_id else 0
+        override = int(self.override_max_players or 0)
+        return max(plan_max, override)
 
     def _tournament_count_for_quota(self):
         self.ensure_one()
@@ -464,7 +527,16 @@ class AcSaasAccount(models.Model):
         self.ensure_one()
         plan = self.get_plan()
         current = self._tournament_count_for_quota()
+        purchased = self._purchased_tournament_limit()
         limit = self._effective_tournament_limit()
+        if current >= limit and limit > purchased:
+            raise ValidationError(_(
+                'This account allows %(max)s tournament(s). You already have %(cur)s. '
+                'Ask AuctionChamp to raise the account limit.'
+            ) % {
+                'max': limit,
+                'cur': current,
+            })
         if current >= limit:
             raise ValidationError(_(
                 'Your %(plan)s plan allows %(max)s tournament(s) for the packages '
@@ -484,14 +556,15 @@ class AcSaasAccount(models.Model):
         current = self.env['auction.team'].sudo().search_count([
             ('tournament_id', '=', tournament.id),
         ])
-        if current >= plan.max_teams_per_tournament:
+        team_limit = self._effective_team_limit()
+        if current >= team_limit:
             raise ValidationError(_(
-                'Your %(plan)s plan allows up to %(max)s team(s) per tournament. '
+                'This account allows up to %(max)s team(s) per tournament. '
                 '"%(tournament)s" already has %(cur)s. '
-                'Switch to another tournament or upgrade your plan.'
+                'Switch to another tournament or ask AuctionChamp to raise the account limit.'
             ) % {
                 'plan': plan.name,
-                'max': plan.max_teams_per_tournament,
+                'max': team_limit,
                 'tournament': tournament.name,
                 'cur': current,
             })
@@ -503,14 +576,15 @@ class AcSaasAccount(models.Model):
             ('tournament_id', '=', tournament.id),
             ('icon_player', '=', False),
         ])
-        if current >= plan.max_players_per_tournament:
+        player_limit = self._effective_player_limit()
+        if current >= player_limit:
             raise ValidationError(_(
-                'Your %(plan)s plan allows up to %(max)s player registration(s) '
+                'This account allows up to %(max)s player registration(s) '
                 'per tournament. "%(tournament)s" already has %(cur)s. '
-                'Upgrade your plan or contact support.'
+                'Upgrade the plan or ask AuctionChamp to raise the account limit.'
             ) % {
                 'plan': plan.name,
-                'max': plan.max_players_per_tournament,
+                'max': player_limit,
                 'tournament': tournament.name,
                 'cur': current,
             })
@@ -1018,7 +1092,12 @@ class AcSaasAccount(models.Model):
             plan = self.env['ac.saas.plan'].browse(vals['plan_id'])
             if plan and not plan.allow_parallel_sessions:
                 vals['disable_parallel_sessions'] = False
+        previous_player_caps = {
+            acc.id: acc._effective_player_limit() for acc in self
+        }
         res = super().write(vals)
+        if any(k in vals for k in ('plan_id', 'override_max_players')):
+            self._raise_tournament_registration_caps(previous_player_caps)
         if any(k in vals for k in ('plan_id', 'state', 'active', 'user_id')):
             self._assign_account_user_group()
             self._sync_user_groups()
@@ -1026,6 +1105,22 @@ class AcSaasAccount(models.Model):
         if any(k in vals for k in ('state', 'active', 'user_id')):
             self._apply_login_access()
         return res
+
+    def _raise_tournament_registration_caps(self, previous_caps):
+        """Move tournaments that were sitting on the old player ceiling up to the new one."""
+        for acc in self:
+            cap = acc._effective_player_limit()
+            previous = int(previous_caps.get(acc.id) or 0)
+            if cap <= previous:
+                for tournament in acc.tournament_ids:
+                    current = int(tournament.max_registrations or 0)
+                    if cap > 0 and (current <= 0 or current > cap):
+                        tournament.sudo().write({'max_registrations': cap})
+                continue
+            for tournament in acc.tournament_ids:
+                current = int(tournament.max_registrations or 0)
+                if current <= 0 or current == previous or current > cap:
+                    tournament.sudo().write({'max_registrations': cap})
 
     def _sync_user_tournament_links(self):
         """Keep res.users.tournament_ids in sync for legacy record rules."""

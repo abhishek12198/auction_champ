@@ -72,10 +72,10 @@
                     </group>
                     <group string="Plan Limits">
                         <group>
-                            <field name="max_tournaments"/>
+                            <field name="max_tournaments" string="Plan tournaments (one package)"/>
                             <field name="tournament_create_limit"/>
-                            <field name="max_teams_per_tournament"/>
-                            <field name="max_players_per_tournament"/>
+                            <field name="max_teams_per_tournament" string="Plan teams per tournament"/>
+                            <field name="max_players_per_tournament" string="Plan players per tournament"/>
                             <field name="allow_auctioneer_console"/>
                             <field name="allow_pool_creator"/>
                         </group>
@@ -83,6 +83,19 @@
                             <field name="tournament_count"/>
                             <field name="team_count"/>
                             <field name="player_count"/>
+                        </group>
+                    </group>
+                    <group string="Account allowances"
+                           groups="ac_saas_manager.group_saas_manager,auction_module.group_auction_group_admin">
+                        <group>
+                            <field name="override_max_tournaments"/>
+                            <field name="override_max_teams"/>
+                            <field name="override_max_players"/>
+                        </group>
+                        <group>
+                            <div class="text-muted" colspan="2">
+                                Leave a box at 0 to follow the plan. A number only applies when it is higher than the plan. Tournament slots already bought with a renewal are kept.
+                            </div>
                         </group>
                     </group>
                     <notebook>

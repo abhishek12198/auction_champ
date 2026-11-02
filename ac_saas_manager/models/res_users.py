@@ -284,8 +284,8 @@ class ResUsers(models.Model):
                 'used': used,
                 'limit': limit,
             },
-            _('Teams / tournament: up to %s') % plan.max_teams_per_tournament,
-            _('Players / tournament: up to %s') % plan.max_players_per_tournament,
+            _('Teams / tournament: up to %s') % account._effective_team_limit(),
+            _('Players / tournament: up to %s') % account._effective_player_limit(),
             _('Random mode: %s') % (_('Yes') if plan.allow_random_mode else _('No')),
             _('Auctioneer console: %s') % (
                 _('Yes') if plan.allow_auctioneer_console else _('No')
