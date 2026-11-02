@@ -93,7 +93,7 @@
         </div>
 
         <h1>
-            <t t-esc="config.hero_headline or 'India\'s Complete Premier Sports Auction &amp; Tournament Management Platform'"/>
+            <t t-esc="config.hero_headline or 'The Ultimate Global Platform for Sports Auctions &amp; Tournament Management'"/>
         </h1>
 
         <p class="ac-hero-sub">
@@ -108,9 +108,9 @@
                     t-att-data-embed="how_to_start_id or None"
                     t-att-disabled="None if how_to_start_id else 'disabled'"
                     t-att-aria-disabled="'false' if how_to_start_id else 'true'"
-                    t-att-title="'How to start with AuctionChamp' if how_to_start_id else 'How to Start video coming soon'">
+                    t-att-title="'How to Subscribe' if how_to_start_id else 'How to Subscribe coming soon'">
                 <i class="fas fa-play"/>
-                How to Start
+                How to Subscribe
             </button>
         </div>
 
@@ -1017,14 +1017,14 @@
     <div class="ac-video-modal-backdrop" data-ac-video-close="1"></div>
     <div class="ac-video-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="acHowToStartTitle">
         <div class="ac-video-modal-head">
-            <h3 id="acHowToStartTitle">How to Start</h3>
+            <h3 id="acHowToStartTitle">How to Subscribe</h3>
             <button type="button" class="ac-video-modal-x" data-ac-video-close="1" aria-label="Close">
                 <i class="fas fa-times"/>
             </button>
         </div>
         <div class="ac-video-modal-frame">
             <iframe id="acHowToStartFrame"
-                    title="How to Start"
+                    title="How to Subscribe"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowfullscreen="allowfullscreen"></iframe>
         </div>

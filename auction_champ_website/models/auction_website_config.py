@@ -54,7 +54,7 @@ class AuctionWebsiteConfig(models.Model):
     # ── Hero ──────────────────────────────────────────────────────────────
     hero_headline = fields.Char(
         string='Hero Headline',
-        default="India's Complete Premier Sports Auction & Tournament Management Platform",
+        default="The Ultimate Global Platform for Sports Auctions & Tournament Management",
     )
     hero_subheading = fields.Text(
         string='Hero Sub-heading',
@@ -143,15 +143,21 @@ class AuctionWebsiteConfig(models.Model):
     )
 
     def _rebrand_cricket_auction_copy(self):
-        """Replace stored website copy that still says Cricket Auction."""
+        """Replace stored website copy that still uses retired wording."""
         replacements = (
+            (
+                "India's Complete Premier Sports Auction & Tournament Management Platform",
+                "The Ultimate Global Platform for Sports Auctions & Tournament Management",
+            ),
             ('Cricket Auctions', 'Premier Sports Auctions'),
             ('cricket auctions', 'premier sports auctions'),
             ('Cricket Auction', 'Premier Sports Auction'),
             ('cricket auction', 'premier sports auction'),
+            ('Auction Automation', 'Live Auctions'),
         )
         fields_list = (
             'hero_headline', 'hero_subheading', 'footer_tagline', 'about_us_text',
+            'stat_4_label',
         )
         for rec in self:
             vals = {}
