@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Public pricing detects the country and shows the amount only. -->
-    <delete model="ir.ui.view" id="homepage_regional_price"/>
+    <!-- homepage_regional_price was already removed; do not delete it again. -->
 </odoo>

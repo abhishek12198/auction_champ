@@ -1,0 +1,918 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="live_board_profile_template" name="Live Board Tournament Profile">
+<t t-set="theme_val" t-value="theme or 'vanilla'"/>
+<html t-att-data-theme="theme_val" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <t t-call="auction_module.social_preview_head">
+    <t t-set="og_page_key" t-value="'live_board'"/>
+    <t t-set="og_record" t-value="tournament"/>
+  </t>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&amp;family=Rajdhani:wght@600;700&amp;display=swap" rel="stylesheet"/>
+  <t t-call="auction_module.live_board_public_style"/>
+  <style>
+    [hidden] { display: none !important; }
+    /* Same palette as the player registration form for each tournament theme. */
+    html {
+      --tp-bg: #070B14; --tp-bg2: #0C1120; --tp-card: #0C1120;
+      --tp-ink: #ffffff; --tp-muted: rgba(255,255,255,.62);
+      --tp-accent: #F5C842; --tp-accent2: #FF9F1C; --tp-on: #070B14;
+      --tp-line: rgba(245,200,66,.42); --tp-field: #fff8dc; --tp-field-ink: #1a1208;
+    }
+    html[data-theme="butterscotch"] {
+      --tp-bg: #070B14; --tp-bg2: #0C1120; --tp-card: #0C1120;
+      --tp-ink: #ffffff; --tp-muted: rgba(255,255,255,.62);
+      --tp-accent: #F5C842; --tp-accent2: #FF9F1C; --tp-on: #070B14;
+      --tp-line: rgba(245,200,66,.42); --tp-field: #fff8dc; --tp-field-ink: #1a1208;
+    }
+    html[data-theme="cherry"] {
+      --tp-bg: #070104; --tp-bg2: #12060A; --tp-card: #12060A;
+      --tp-ink: #fff5f7; --tp-muted: rgba(255,245,247,.62);
+      --tp-accent: #E11D48; --tp-accent2: #FB7185; --tp-on: #ffffff;
+      --tp-line: rgba(225,29,72,.45); --tp-field: #ffe4e8; --tp-field-ink: #1a0408;
+    }
+    html[data-theme="vanilla"] {
+      --tp-bg: #0D1524; --tp-bg2: #142036; --tp-card: #142036;
+      --tp-ink: #eef2f8; --tp-muted: rgba(238,242,248,.64);
+      --tp-accent: #C4B8A0; --tp-accent2: #8AA6D4; --tp-on: #121820;
+      --tp-line: rgba(196,184,160,.4); --tp-field: #f4efe4; --tp-field-ink: #121820;
+    }
+    html[data-theme="pistah"] {
+      --tp-bg: #060E08; --tp-bg2: #0B1A0E; --tp-card: #0B1A0E;
+      --tp-ink: #e8f5e9; --tp-muted: rgba(232,245,233,.62);
+      --tp-accent: #6BBF4E; --tp-accent2: #A8E063; --tp-on: #061208;
+      --tp-line: rgba(107,191,78,.42); --tp-field: #e8f5e9; --tp-field-ink: #061208;
+    }
+    html[data-theme="blueberry"] {
+      --tp-bg: #050A14; --tp-bg2: #0A1220; --tp-card: #0A1220;
+      --tp-ink: #ffffff; --tp-muted: rgba(255,255,255,.62);
+      --tp-accent: #3B82F6; --tp-accent2: #93C5FD; --tp-on: #ffffff;
+      --tp-line: rgba(59,130,246,.45); --tp-field: #dbeafe; --tp-field-ink: #050A14;
+    }
+    html[data-theme="blackberry"] {
+      --tp-bg: #101113; --tp-bg2: #222328; --tp-card: #222328;
+      --tp-ink: #ffffff; --tp-muted: rgba(191,195,204,.72);
+      --tp-accent: #7629D9; --tp-accent2: #A77BFF; --tp-on: #ffffff;
+      --tp-line: rgba(167,123,255,.45); --tp-field: #f3e8ff; --tp-field-ink: #101113;
+    }
+    html[data-theme="lemon"] {
+      --tp-bg: #E8DDB8; --tp-bg2: #F4ECD0; --tp-card: #FFFEF8;
+      --tp-ink: #1F1A0A; --tp-muted: rgba(31,26,10,.62);
+      --tp-accent: #C9A400; --tp-accent2: #D9B820; --tp-on: #1F1A0A;
+      --tp-line: rgba(120,95,0,.4); --tp-field: #fff; --tp-field-ink: #1F1A0A;
+    }
+    html[data-theme="strawberry"] {
+      --tp-bg: #FFF0F5; --tp-bg2: #FCE4EC; --tp-card: #ffffff;
+      --tp-ink: #1A0A12; --tp-muted: rgba(26,10,18,.58);
+      --tp-accent: #C2185B; --tp-accent2: #E91E63; --tp-on: #ffffff;
+      --tp-line: rgba(194,24,91,.32); --tp-field: #fff; --tp-field-ink: #1A0A12;
+    }
+    html[data-theme="standard"] {
+      --tp-bg: #FFFFFF; --tp-bg2: #F4F7FB; --tp-card: #ffffff;
+      --tp-ink: #1A202C; --tp-muted: rgba(26,32,44,.62);
+      --tp-accent: #1058B0; --tp-accent2: #1058B0; --tp-on: #ffffff;
+      --tp-line: rgba(16,88,176,.28); --tp-field: #fff; --tp-field-ink: #1A202C;
+    }
+    /* Website calendar uses the public site palette, not a tournament theme. */
+    html[data-theme="website"] {
+      --tp-bg: #f4f7fb; --tp-bg2: #e8eef8; --tp-card: #ffffff;
+      --tp-ink: #1a202c; --tp-muted: #4a5568;
+      --tp-accent: #d4831a; --tp-accent2: #1565c0; --tp-on: #0d1b2a;
+      --tp-line: #e2e8f0; --tp-field: #ffffff; --tp-field-ink: #1a202c;
+    }
+    body.tp-body {
+      color: var(--tp-ink);
+      background:
+        radial-gradient(90% 55% at 12% -8%, color-mix(in srgb, var(--tp-accent) 22%, transparent), transparent 58%),
+        linear-gradient(165deg, var(--tp-bg2), var(--tp-bg));
+    }
+    body.tp-body::before { display: none; }
+    .tp {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 16px 16px 56px;
+    }
+    .tp-hero {
+      position: relative;
+      overflow: hidden;
+      border-radius: 22px;
+      color: #fff;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(255,255,255,0.16), transparent 26%),
+        radial-gradient(circle at 88% 0%, color-mix(in srgb, var(--tp-accent) 34%, transparent), transparent 32%),
+        linear-gradient(125deg, var(--tp-bg) 0%, var(--tp-card) 100%);
+      padding: 22px;
+      box-shadow: 0 16px 40px rgba(7,24,51,0.22);
+    }
+    .tp-hero-grid {
+      display: grid;
+      grid-template-columns: 148px minmax(0, 1fr);
+      gap: 18px;
+      align-items: center;
+    }
+    .tp-hero.has-poster { min-height: 280px; }
+    html[data-theme="website"] .tp-hero {
+      color: #fff;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(255,255,255,0.14), transparent 28%),
+        linear-gradient(135deg, #0d1b2a 0%, #1a3a6e 55%, #1565c0 100%);
+    }
+    html[data-theme="website"] .tp-btn-gold,
+    html[data-theme="website"] .tp-tab.is-on,
+    html[data-theme="website"] .tp-done {
+      background: linear-gradient(180deg, #f5a623, #d4831a);
+      color: #0d1b2a;
+      border-color: transparent;
+    }
+    html[data-theme="website"] .tp-price {
+      color: #9a5b0a;
+      background: rgba(245, 166, 35, 0.16);
+      border-color: rgba(212, 131, 26, 0.45);
+    }
+    html[data-theme="website"] .tp-role,
+    html[data-theme="website"] .tp-status,
+    html[data-theme="website"] .tp-jersey { color: #1565c0; }
+    .tp-cover {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: #071833;
+      cursor: zoom-in;
+    }
+    .tp-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+    }
+    .tp-hero-shade {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(7,16,40,0.28) 0%, rgba(7,16,40,0.5) 42%, rgba(7,16,40,0.9) 100%);
+      pointer-events: none;
+    }
+    .tp-cover-hint {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 2;
+      pointer-events: none;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(7,16,40,0.55);
+      border: 1px solid rgba(255,255,255,0.28);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+    .tp-hero.has-poster .tp-hero-grid {
+      position: relative;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .tp-hero.has-poster .tp-btn { pointer-events: auto; }
+    .tp-lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 16px;
+      background: rgba(6,10,20,0.9);
+    }
+    .tp-lightbox[hidden] { display: none; }
+    .tp-lightbox img {
+      max-width: min(520px, 100%);
+      max-height: calc(100vh - 72px);
+      object-fit: contain;
+      border-radius: 12px;
+      background: #050b18;
+    }
+    .tp-lightbox-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      min-height: 44px;
+      padding: 8px 14px;
+      border: 0;
+      border-radius: 999px;
+      background: #fff;
+      color: #142033;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .tp-mark, .tp-mark-ph {
+      width: 148px;
+      height: 148px;
+      border-radius: 18px;
+      object-fit: contain;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.16);
+    }
+    .tp-mark-ph {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 52px;
+    }
+    .tp-kicker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .tp-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.16);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+    .tp-done {
+      background: linear-gradient(180deg, var(--tp-accent2), var(--tp-accent));
+      color: var(--tp-on);
+      border-color: transparent;
+    }
+    h1.tp-title {
+      font-family: 'Rajdhani', 'Montserrat', sans-serif;
+      font-size: clamp(1.7rem, 4vw, 2.8rem);
+      line-height: 1.02;
+      margin: 0 0 6px;
+      letter-spacing: 0.01em;
+    }
+    .tp-season { margin: 0 0 10px; color: rgba(255,255,255,0.82); font-weight: 600; }
+    .tp-hero-meta { display: flex; flex-wrap: wrap; gap: 8px 16px; color: rgba(255,255,255,0.86); font-size: 0.92rem; }
+    .tp-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+    .tp-btn {
+      appearance: none;
+      border: 0;
+      cursor: pointer;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font: inherit;
+      font-weight: 800;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+    }
+    .tp-btn-gold { background: linear-gradient(180deg, var(--tp-accent2), var(--tp-accent)); color: var(--tp-on); }
+    .tp-btn-ghost { background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+    .tp-note { margin: 14px 0 0; color: rgba(255,255,255,0.78); font-size: 0.9rem; line-height: 1.5; max-width: 640px; }
+    .tp-strip, .tp-panel, .tp-stat, .tp-team, .tp-squad, .tp-sold {
+      background: var(--tp-card);
+      color: var(--tp-ink);
+      border: 1px solid var(--tp-line);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+    .tp-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+      border-radius: 18px;
+      padding: 8px;
+    }
+    .tp-fact { display: flex; gap: 10px; align-items: center; padding: 10px; min-width: 0; }
+    .tp-ico {
+      width: 38px; height: 38px; flex: 0 0 38px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      background: color-mix(in srgb, var(--tp-accent) 18%, transparent); color: var(--tp-accent);
+    }
+    .tp-fact b { display: block; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tp-muted); }
+    .tp-fact span { display: block; font-weight: 800; line-height: 1.3; overflow-wrap: anywhere; }
+    .tp-stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 14px 0;
+    }
+    .tp-stat { border-radius: 16px; padding: 14px; }
+    .tp-stat em { display: block; font-style: normal; font-size: 0.75rem; font-weight: 800; color: var(--tp-muted); }
+    .tp-stat strong { display: block; margin-top: 4px; font-size: 1.7rem; font-family: 'Rajdhani', sans-serif; }
+    .tp-stat.sold { box-shadow: inset 4px 0 0 var(--tp-accent); }
+    .tp-stat.unsold { box-shadow: inset 4px 0 0 var(--tp-accent2); }
+    .tp-stat.teams { box-shadow: inset 4px 0 0 var(--tp-accent2); }
+    .tp-stat.reg { box-shadow: inset 4px 0 0 var(--tp-accent); }
+    .tp-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 0 10px;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: var(--tp-bg);
+    }
+    .tp-tab {
+      flex: 0 0 auto;
+      border: 1px solid var(--tp-line);
+      background: var(--tp-card);
+      color: var(--tp-ink);
+      border-radius: 999px;
+      min-height: 42px;
+      padding: 8px 14px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .tp-tab.is-on { background: var(--tp-accent); color: var(--tp-on); border-color: transparent; }
+    .tp-panel { display: none; border-radius: 18px; padding: 16px; }
+    .tp-panel.is-on { display: block; }
+    .tp-split { display: grid; grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.2fr); gap: 16px; }
+    .tp-dl { margin: 0; display: grid; gap: 8px; }
+    .tp-dl div { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--tp-line); }
+    .tp-dl dt { color: var(--tp-muted); font-weight: 700; }
+    .tp-dl dd { margin: 0; font-weight: 800; text-align: right; overflow-wrap: anywhere; }
+    .tp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+    .tp-team { border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .tp-team img, .tp-team-ph { width: 64px; height: 64px; border-radius: 14px; object-fit: contain; background: var(--tp-field); }
+    .tp-team-ph { display: flex; align-items: center; justify-content: center; font-size: 28px; }
+    .tp-team h3 { margin: 0; font-size: 1.02rem; }
+    .tp-muted { color: var(--tp-muted); font-size: 0.84rem; line-height: 1.4; }
+    .tp-team .tp-btn { margin-top: auto; }
+    .tp-squad { border-radius: 16px; margin-bottom: 12px; overflow: hidden; }
+    .tp-squad-head {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-align: left;
+      background: transparent;
+      border: 0;
+      padding: 14px;
+      font: inherit;
+      color: inherit;
+      cursor: pointer;
+      min-height: 72px;
+    }
+    .tp-squad-head img, .tp-squad-ph { width: 52px; height: 52px; border-radius: 12px; object-fit: contain; background: var(--tp-field); flex: 0 0 52px; }
+    .tp-squad-ph { display: flex; align-items: center; justify-content: center; }
+    .tp-squad-head strong { display: block; }
+    .tp-caret { margin-left: auto; color: var(--tp-muted); }
+    .tp-squad-body { display: none; padding: 0 14px 14px; }
+    .tp-squad.is-open .tp-squad-body { display: block; }
+    .tp-players { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 12px; }
+    .tp-player { min-width: 0; }
+    .tp-player img, .tp-player-ph {
+      width: 100%; aspect-ratio: 1 / 1; object-fit: cover; object-position: center center;
+      border-radius: 14px; background: var(--tp-field); display: block;
+    }
+    .tp-player-ph { display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--tp-field-ink); }
+    .tp-player b, .tp-sold b {
+      display: block;
+      margin-top: 8px;
+      font-family: 'Rajdhani', 'Montserrat', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .tp-player b::after, .tp-sold b::after {
+      content: '';
+      display: block;
+      width: 22px;
+      height: 2px;
+      margin-top: 4px;
+      border-radius: 2px;
+      background: var(--tp-accent);
+    }
+    .tp-pmeta { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; margin-top: 4px; min-width: 0; }
+    .tp-roleline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px; max-width: 100%; }
+    .tp-jersey {
+      font-family: 'Rajdhani', 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      color: var(--tp-accent);
+    }
+    .tp-role, .tp-status {
+      font-size: 0.64rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--tp-accent2);
+      line-height: 1.2;
+    }
+    .tp-price {
+      display: inline-flex;
+      align-items: center;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--tp-accent) 20%, transparent);
+      border: 1px solid color-mix(in srgb, var(--tp-accent) 55%, transparent);
+      color: var(--tp-accent);
+      font-family: 'Rajdhani', 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 0.86rem;
+      letter-spacing: 0.03em;
+      line-height: 1.45;
+      font-variant-numeric: tabular-nums;
+    }
+    .tp-filters { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(140px, 0.8fr) minmax(140px, 0.8fr); gap: 8px; margin-bottom: 12px; }
+    .tp-filters input, .tp-filters select {
+      width: 100%; min-height: 44px; border-radius: 12px; border: 1px solid var(--tp-line);
+      padding: 8px 12px; font: inherit; background: var(--tp-field); color: var(--tp-field-ink);
+    }
+    .tp-sold-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+    .tp-sold { border-radius: 14px; padding: 10px; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 10px; align-items: center; }
+    .tp-sold img, .tp-sold-ph { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; object-position: center center; background: var(--tp-field); }
+    .tp-sold-ph { display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--tp-field-ink); }
+    .tp-sold b { margin-top: 0; }
+    .tp-teamline { display: flex; align-items: center; gap: 6px; color: var(--tp-muted); font-size: 0.8rem; }
+    .tp-teamline img { width: 18px; height: 18px; object-fit: contain; }
+    .tp-more, .tp-empty { margin-top: 12px; }
+    .tp-powered {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin-top: 28px;
+      padding-top: 18px;
+      border-top: 1px solid var(--tp-line);
+      color: var(--tp-muted);
+    }
+    .tp-powered span {
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+    .tp-powered img {
+      height: 26px;
+      width: auto;
+      max-width: 170px;
+      object-fit: contain;
+    }
+    html[data-theme="lemon"] .tp-powered img,
+    html[data-theme="strawberry"] .tp-powered img,
+    html[data-theme="standard"] .tp-powered img,
+    html[data-theme="website"] .tp-powered img {
+      filter: brightness(0);
+      opacity: 0.9;
+    }
+    .tp-toast {
+      position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+      background: #142033; color: #fff; border-radius: 999px; padding: 10px 16px;
+      font-weight: 700; display: none;
+    }
+    @media (max-width: 900px) {
+      .tp-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .tp-split, .tp-filters, .tp-strip { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 767px) {
+      .tp { padding: 8px 8px 28px; }
+      h1.tp-title { font-size: 1.28rem; }
+      .tp-season, .tp-hero-meta, .tp-note { font-size: 0.75rem; }
+      .tp-hero { padding: 12px; border-radius: 14px; }
+      .tp-hero.has-poster { min-height: 0; }
+      .tp-hero-grid { grid-template-columns: 56px minmax(0, 1fr); gap: 8px; }
+      .tp-mark, .tp-mark-ph { width: 56px; height: 56px; border-radius: 12px; }
+      .tp-chip { font-size: 0.62rem; padding: 4px 8px; }
+      .tp-btn { min-height: 38px; padding: 8px 10px; font-size: 0.78rem; }
+      .tp-actions { gap: 6px; margin-top: 10px; }
+      .tp-strip, .tp-panel, .tp-stat, .tp-team { border-radius: 12px; }
+      .tp-panel { padding: 10px; }
+      .tp-stat { padding: 8px 10px; }
+      .tp-stat em { font-size: 0.64rem; }
+      .tp-stat strong { font-size: 1.25rem; }
+      .tp-fact b { font-size: 0.6rem; }
+      .tp-ico { width: 30px; height: 30px; flex-basis: 30px; border-radius: 8px; }
+      .tp-tabs {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        overflow: visible;
+        gap: 6px;
+        padding-bottom: 8px;
+      }
+      .tp-tab {
+        min-height: 38px;
+        min-width: 0;
+        padding: 6px 4px;
+        font-size: 0.68rem;
+        line-height: 1.15;
+        white-space: normal;
+        text-align: center;
+        border-radius: 12px;
+      }
+      .tp-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .tp-players, .tp-sold-list {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+      }
+      .tp-team { padding: 8px; gap: 6px; }
+      .tp-team img, .tp-team-ph { width: 42px; height: 42px; border-radius: 10px; }
+      .tp-team h3 { font-size: 0.82rem; }
+      .tp-muted { font-size: 0.7rem; }
+      .tp-squad { margin-bottom: 8px; border-radius: 12px; }
+      .tp-squad-head { padding: 8px; min-height: 52px; gap: 8px; font-size: 0.82rem; }
+      .tp-squad-head img, .tp-squad-ph { width: 36px; height: 36px; flex-basis: 36px; border-radius: 8px; }
+      .tp-squad-body { padding: 0 6px 8px; }
+      .tp-player, .tp-sold { text-align: center; }
+      .tp-player b, .tp-sold b { margin-top: 4px; font-size: 0.72rem; line-height: 1.05; overflow-wrap: anywhere; }
+      .tp-player b::after, .tp-sold b::after { width: 14px; height: 2px; margin: 3px auto 0; }
+      .tp-pmeta, .tp-roleline { align-items: center; justify-content: center; }
+      .tp-role, .tp-status { font-size: 0.46rem; letter-spacing: 0.08em; }
+      .tp-jersey { font-size: 0.58rem; }
+      .tp-price {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        font-size: 0.58rem;
+        letter-spacing: 0;
+        padding: 0 2px;
+        line-height: 1.35;
+        white-space: nowrap;
+        text-align: center;
+      }
+      .tp-player img, .tp-player-ph { border-radius: 8px; }
+      .tp-sold {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        text-align: center;
+        padding: 4px;
+        gap: 4px;
+        min-width: 0;
+        overflow: hidden;
+        border-radius: 10px;
+      }
+      .tp-sold > img, .tp-sold-ph { width: 100%; height: auto; aspect-ratio: 1 / 1; border-radius: 8px; }
+      .tp-sold > div { min-width: 0; max-width: 100%; }
+      .tp-teamline {
+        justify-content: center;
+        font-size: 0.5rem;
+        max-width: 100%;
+        flex-wrap: wrap;
+        gap: 3px;
+      }
+      .tp-teamline img { width: 12px; height: 12px; flex: 0 0 12px; }
+      .tp-teamline span { min-width: 0; overflow-wrap: anywhere; }
+      .tp-filters input, .tp-filters select { min-height: 38px; font-size: 0.78rem; padding: 6px 8px; }
+    }
+  </style>
+</head>
+<body class="tp-body" t-att-data-share-url="profile_url" t-att-data-status-url="'/%s/%s/auction/live-board/data' % (db_name, tournament.slug)">
+  <main class="lb-wrap tp">
+    <section t-att-class="'tp-hero' + (' has-poster' if poster_url else '')">
+      <t t-if="poster_url">
+        <button type="button" class="tp-cover" id="tp-open-poster" aria-label="Open tournament poster">
+          <img t-att-src="poster_url" alt=""/>
+        </button>
+        <div class="tp-hero-shade"></div>
+        <span class="tp-cover-hint">View poster</span>
+      </t>
+      <div class="tp-hero-grid">
+        <t t-if="logo_url">
+          <img class="tp-mark" t-att-src="logo_url" t-att-alt="tournament.name"/>
+        </t>
+        <t t-else="">
+          <div class="tp-mark-ph">🏆</div>
+        </t>
+        <div>
+          <div class="tp-kicker">
+            <span class="tp-chip tp-done">✓ Auction completed</span>
+            <t t-if="sport_label"><span class="tp-chip"><t t-esc="sport_label"/></span></t>
+          </div>
+          <h1 class="tp-title"><t t-esc="tournament.name"/></h1>
+          <t t-if="season_label"><p class="tp-season"><t t-esc="season_label"/></p></t>
+          <div class="tp-hero-meta">
+            <span><t t-if="date_label"><t t-esc="date_label"/></t><t t-else="">Dates to be announced</t></span>
+            <span><t t-if="venue"><t t-esc="venue"/></t><t t-else="">Venue to be announced</t></span>
+          </div>
+          <div class="tp-actions">
+            <button type="button" class="tp-btn tp-btn-gold" data-tab-jump="squads">View teams and squads</button>
+            <button type="button" class="tp-btn tp-btn-ghost" id="tp-share">Share tournament</button>
+          </div>
+          <p class="tp-note">All auction activities have been completed. Explore the participating teams and their final squads.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="tp-strip">
+      <t t-if="organizer_name">
+        <div class="tp-fact">
+          <div class="tp-ico">👤</div>
+          <div><b>Organizer</b><span><t t-esc="organizer_name"/></span></div>
+        </div>
+      </t>
+      <div class="tp-fact">
+        <div class="tp-ico">📍</div>
+        <div><b>Venue</b><span><t t-if="venue"><t t-esc="venue"/></t><t t-else="">To be announced</t></span></div>
+      </div>
+      <div class="tp-fact">
+        <div class="tp-ico">📅</div>
+        <div><b>Tournament date</b><span><t t-if="date_label"><t t-esc="date_label"/></t><t t-else="">To be announced</t></span></div>
+      </div>
+    </section>
+
+    <section class="tp-stats">
+      <article class="tp-stat reg"><em>Registered players</em><strong><t t-esc="registrations"/></strong></article>
+      <article class="tp-stat sold"><em>Sold players</em><strong><t t-esc="sold_count"/></strong></article>
+      <article class="tp-stat unsold"><em>Unsold players</em><strong><t t-esc="unsold_count"/></strong></article>
+      <article class="tp-stat teams"><em>Participating teams</em><strong><t t-esc="team_count"/></strong></article>
+    </section>
+
+    <nav class="tp-tabs" aria-label="Tournament sections">
+      <button type="button" class="tp-tab is-on" data-tab="overview">Overview</button>
+      <button type="button" class="tp-tab" data-tab="squads">Teams and squads</button>
+      <button type="button" class="tp-tab" data-tab="sold">Sold players</button>
+    </nav>
+
+    <section class="tp-panel is-on" data-panel="overview">
+      <div class="tp-split">
+        <div>
+          <h2>Tournament details</h2>
+          <dl class="tp-dl">
+            <div><dt>Name</dt><dd><t t-esc="tournament.name"/></dd></div>
+            <t t-if="sport_label"><div><dt>Sport</dt><dd><t t-esc="sport_label"/></dd></div></t>
+            <div><dt>Start</dt><dd><t t-esc="date_start or 'To be announced'"/></dd></div>
+            <t t-if="date_end"><div><dt>End</dt><dd><t t-esc="date_end"/></dd></div></t>
+            <div><dt>Venue</dt><dd><t t-esc="venue or 'To be announced'"/></dd></div>
+            <t t-if="organizer_name"><div><dt>Organizer</dt><dd><t t-esc="organizer_name"/></dd></div></t>
+            <div><dt>Registered</dt><dd><t t-esc="registrations"/></dd></div>
+            <div><dt>Sold</dt><dd><t t-esc="sold_count"/></dd></div>
+            <div><dt>Unsold</dt><dd><t t-esc="unsold_count"/></dd></div>
+            <div><dt>Teams</dt><dd><t t-esc="team_count"/></dd></div>
+          </dl>
+        </div>
+        <div>
+          <h2>Participating teams</h2>
+          <t t-if="not teams"><p class="tp-muted">No teams have been added yet.</p></t>
+          <div class="tp-grid">
+            <t t-foreach="teams" t-as="team">
+              <article class="tp-team">
+                <t t-if="team.get('logo_url')">
+                  <img t-att-src="team.get('logo_url')" t-att-alt="team.get('name')"/>
+                </t>
+                <t t-else=""><div class="tp-team-ph">🛡️</div></t>
+                <h3><t t-esc="team.get('name')"/></h3>
+                <div class="tp-muted">
+                  <t t-if="team.get('owner_name')">Owner · <t t-esc="team.get('owner_name')"/><br/></t>
+                  Squad · <t t-esc="team.get('squad_count') or 0"/>
+                  <t t-if="team.get('max_players')"> / <t t-esc="team.get('max_players')"/></t>
+                  <t t-if="team.get('total_label')"><br/>Purse · <t t-esc="team.get('spent_label')"/> of <t t-esc="team.get('total_label')"/></t>
+                </div>
+                <button type="button" class="tp-btn tp-btn-gold" t-att-data-open-team="'team-%s' % team_index">View squad</button>
+              </article>
+            </t>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tp-panel" data-panel="squads">
+      <t t-if="not teams"><p class="tp-muted">No teams have been added yet.</p></t>
+      <t t-foreach="teams" t-as="team">
+        <article class="tp-squad" t-att-id="'team-%s' % team_index" t-att-class="'tp-squad' + (' is-open' if team_index == 0 else '')">
+          <button type="button" class="tp-squad-head" data-toggle-squad="1">
+            <t t-if="team.get('logo_url')">
+              <img t-att-src="team.get('logo_url')" alt=""/>
+            </t>
+            <t t-else=""><span class="tp-squad-ph">🛡️</span></t>
+            <span>
+              <strong><t t-esc="team.get('name')"/></strong>
+              <span class="tp-muted">
+                <t t-if="team.get('owner_name')"><t t-esc="team.get('owner_name')"/> · </t>
+                <t t-esc="team.get('squad_count') or 0"/> players
+              </span>
+            </span>
+            <span class="tp-caret">▾</span>
+          </button>
+          <div class="tp-squad-body">
+            <t t-if="team.get('players')">
+              <div class="tp-players">
+                <t t-foreach="team.get('players')" t-as="player">
+                  <article class="tp-player">
+                    <t t-if="player.get('photo_url')">
+                      <img t-att-data-src="player.get('photo_url')" t-att-alt="player.get('name')" loading="lazy"/>
+                    </t>
+                    <t t-else=""><div class="tp-player-ph"><t t-esc="(player.get('name') or '?')[:1]"/></div></t>
+                    <b><t t-esc="player.get('name')"/></b>
+                    <div class="tp-pmeta">
+                      <span class="tp-roleline">
+                        <span t-if="player.get('jersey')" class="tp-jersey">#<t t-esc="player.get('jersey')"/></span>
+                        <span t-if="player.get('role')" class="tp-role"><t t-esc="player.get('role')"/></span>
+                      </span>
+                      <span t-if="player.get('points_label')" class="tp-price"><t t-esc="player.get('points_label')"/></span>
+                      <span t-if="not player.get('points_label')" class="tp-status"><t t-esc="player.get('status') or 'Sold'"/></span>
+                    </div>
+                  </article>
+                </t>
+              </div>
+            </t>
+            <t t-else=""><p class="tp-empty tp-muted">No players in this squad yet.</p></t>
+          </div>
+        </article>
+      </t>
+    </section>
+
+    <section class="tp-panel" data-panel="sold">
+      <div class="tp-filters">
+        <input id="tp-search" type="search" placeholder="Search by player name" autocomplete="off"/>
+        <select id="tp-team">
+          <option value="">All teams</option>
+          <t t-foreach="teams" t-as="team">
+            <option t-att-value="team.get('name')"><t t-esc="team.get('name')"/></option>
+          </t>
+        </select>
+        <select id="tp-role">
+          <option value="">All categories</option>
+          <t t-foreach="roles" t-as="role">
+            <option t-att-value="role"><t t-esc="role"/></option>
+          </t>
+        </select>
+      </div>
+      <div class="tp-sold-list" id="tp-sold-list">
+        <t t-foreach="teams" t-as="team">
+          <t t-foreach="team.get('players')" t-as="player">
+            <article t-if="not player.get('is_icon')" class="tp-sold"
+                     t-att-data-name="(player.get('name') or '').lower()"
+                     t-att-data-team="team.get('name') or ''"
+                     t-att-data-role="player.get('role') or ''">
+              <t t-if="player.get('photo_url')">
+                <img t-att-data-src="player.get('photo_url')" alt="" loading="lazy"/>
+              </t>
+              <t t-else=""><div class="tp-sold-ph"><t t-esc="(player.get('name') or '?')[:1]"/></div></t>
+              <div>
+                <b><t t-esc="player.get('name')"/></b>
+                <div class="tp-pmeta">
+                  <span t-if="player.get('role')" class="tp-role"><t t-esc="player.get('role')"/></span>
+                  <span t-if="player.get('points_label')" class="tp-price"><t t-esc="player.get('points_label')"/></span>
+                  <span t-if="not player.get('points_label')" class="tp-status"><t t-esc="player.get('status') or 'Sold'"/></span>
+                </div>
+                <div class="tp-teamline">
+                  <t t-if="team.get('logo_url')"><img t-att-src="team.get('logo_url')" alt=""/></t>
+                  <span><t t-esc="team.get('name')"/></span>
+                </div>
+              </div>
+            </article>
+          </t>
+        </t>
+      </div>
+      <p class="tp-empty tp-muted" id="tp-sold-empty" hidden="hidden">No sold players match this search.</p>
+      <button type="button" class="tp-btn tp-btn-gold tp-more" id="tp-sold-more" hidden="hidden">Show more</button>
+    </section>
+
+    <footer class="tp-powered" aria-label="Powered by AuctionChamp">
+      <span>Powered by</span>
+      <img src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+    </footer>
+  </main>
+  <div class="tp-toast" id="tp-toast">Link copied</div>
+  <t t-if="poster_url">
+    <div class="tp-lightbox" id="tp-lightbox" hidden="hidden">
+      <button type="button" class="tp-lightbox-close" data-close-poster="1">Close</button>
+      <img t-att-src="poster_url" t-att-alt="tournament.name"/>
+    </div>
+  </t>
+  <script>
+    // <![CDATA[
+    (function () {
+      var PAGE = 24;
+      var shown = PAGE;
+      function panels() { return document.querySelectorAll('[data-panel]'); }
+      function tabs() { return document.querySelectorAll('[data-tab]'); }
+      var posterBtn = document.getElementById('tp-open-poster');
+      var lightbox = document.getElementById('tp-lightbox');
+      if (posterBtn && lightbox) {
+        posterBtn.addEventListener('click', function () { lightbox.hidden = false; });
+        lightbox.addEventListener('click', function (event) {
+          if (event.target === lightbox || event.target.getAttribute('data-close-poster')) {
+            lightbox.hidden = true;
+          }
+        });
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape') lightbox.hidden = true;
+        });
+      }
+      function revealPhotos(root) {
+        if (!root) return;
+        root.querySelectorAll('img[data-src]').forEach(function (img) {
+          if (!img.getAttribute('src')) img.src = img.getAttribute('data-src');
+        });
+      }
+      var soldReady = false;
+      function showTab(name) {
+        panels().forEach(function (panel) {
+          panel.classList.toggle('is-on', panel.getAttribute('data-panel') === name);
+        });
+        tabs().forEach(function (tab) {
+          tab.classList.toggle('is-on', tab.getAttribute('data-tab') === name);
+        });
+        if (name === 'squads') {
+          document.querySelectorAll('.tp-squad.is-open').forEach(revealPhotos);
+        }
+        if (name === 'sold') {
+          soldReady = true;
+          applySold();
+        }
+      }
+      function openTeam(id) {
+        showTab('squads');
+        var node = document.getElementById(id);
+        if (!node) return;
+        node.classList.add('is-open');
+        revealPhotos(node);
+        node.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      tabs().forEach(function (tab) {
+        tab.addEventListener('click', function () { showTab(tab.getAttribute('data-tab')); });
+      });
+      document.querySelectorAll('[data-tab-jump]').forEach(function (btn) {
+        btn.addEventListener('click', function () { showTab(btn.getAttribute('data-tab-jump')); });
+      });
+      document.querySelectorAll('[data-open-team]').forEach(function (btn) {
+        btn.addEventListener('click', function () { openTeam(btn.getAttribute('data-open-team')); });
+      });
+      document.querySelectorAll('[data-toggle-squad]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var squad = btn.parentNode;
+          squad.classList.toggle('is-open');
+          if (squad.classList.contains('is-open')) revealPhotos(squad);
+        });
+      });
+      var shareBtn = document.getElementById('tp-share');
+      if (shareBtn) {
+        shareBtn.addEventListener('click', function () {
+          var url = document.body.getAttribute('data-share-url') || window.location.href;
+          var title = document.querySelector('.tp-title');
+          var payload = { title: title ? title.textContent : 'Tournament', url: url };
+          if (navigator.share) {
+            navigator.share(payload).catch(function () {});
+            return;
+          }
+          var done = function () {
+            var toast = document.getElementById('tp-toast');
+            toast.style.display = 'block';
+            setTimeout(function () { toast.style.display = 'none'; }, 1600);
+          };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(done).catch(done);
+          } else {
+            done();
+          }
+        });
+      }
+      var search = document.getElementById('tp-search');
+      var teamSel = document.getElementById('tp-team');
+      var roleSel = document.getElementById('tp-role');
+      var more = document.getElementById('tp-sold-more');
+      var empty = document.getElementById('tp-sold-empty');
+      function cards() { return Array.prototype.slice.call(document.querySelectorAll('.tp-sold')); }
+      function applySold() {
+        var q = (search.value || '').toLowerCase().trim();
+        var team = teamSel.value;
+        var role = roleSel.value;
+        var matches = cards().filter(function (card) {
+          var okName = !q || (card.getAttribute('data-name') || '').indexOf(q) !== -1;
+          var okTeam = !team || card.getAttribute('data-team') === team;
+          var okRole = !role || card.getAttribute('data-role') === role;
+          return okName && okTeam && okRole;
+        });
+        cards().forEach(function (card) { card.hidden = true; });
+        matches.forEach(function (card, index) {
+          var visible = index < shown;
+          card.hidden = !visible;
+          if (visible && soldReady) revealPhotos(card);
+        });
+        empty.hidden = matches.length !== 0;
+        more.hidden = matches.length <= shown;
+      }
+      [search, teamSel, roleSel].forEach(function (node) {
+        node.addEventListener('input', function () { shown = PAGE; applySold(); });
+        node.addEventListener('change', function () { shown = PAGE; applySold(); });
+      });
+      more.addEventListener('click', function () { shown += PAGE; applySold(); });
+      applySold();
+      var dataUrl = document.body.getAttribute('data-status-url');
+      setInterval(function () {
+        fetch(dataUrl).then(function (r) { return r.json(); }).then(function (d) {
+          if (d.live_board_active || d.auction_complete === false) window.location.reload();
+        }).catch(function () {});
+      }, 15000);
+    })();
+    // ]]>
+  </script>
+</body>
+</html>
+</template>
+</odoo>

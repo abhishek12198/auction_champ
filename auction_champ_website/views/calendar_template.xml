@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="calendar_event_card" name="Calendar event card">
-        <article class="ac-cal-card">
+        <article t-att-class="'ac-cal-card' + (' is-openable' if ev.get('profile_url') else '')">
+            <a t-if="ev.get('profile_url')"
+               t-att-href="ev['profile_url']"
+               class="ac-cal-card-link"
+               t-att-aria-label="ev['name']"/>
             <div class="ac-cal-logo-wrap">
                 <t t-if="ev['logo_url']">
                     <img t-att-src="ev['logo_url']" t-att-alt="ev['name']" class="ac-cal-logo"/>
@@ -22,15 +26,9 @@
                 <h3 t-att-title="ev['name']" t-esc="ev['name']"/>
                 <p class="ac-cal-dates"><i class="fas fa-calendar-day"/><span t-esc="ev['date_display']"/></p>
                 <p class="ac-cal-venue"><i class="fas fa-map-marker-alt"/><span t-esc="ev['venue']"/></p>
-                <div class="ac-cal-actions">
-                    <t t-if="ev.get('squad_url')">
-                        <a t-att-href="ev['squad_url']" class="ac-cal-cta ac-cal-cta-squad"
-                           target="_blank" rel="noopener noreferrer">View Squads</a>
-                    </t>
-                    <t t-if="ev['live_url']">
-                        <a t-att-href="ev['live_url']" class="ac-cal-cta ac-cal-cta-live"
-                           target="_blank" rel="noopener noreferrer">Watch Live</a>
-                    </t>
+                <div class="ac-cal-actions" t-if="ev.get('live_url')">
+                    <a t-att-href="ev['live_url']" class="ac-cal-cta ac-cal-cta-live"
+                       target="_blank" rel="noopener noreferrer">Watch Live</a>
                 </div>
             </div>
         </article>
@@ -51,7 +49,7 @@
                 <link rel="preconnect" href="https://fonts.googleapis.com"/>
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
                 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Poppins:wght@400;500;600;700;800&amp;family=Teko:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
-                <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.56"/>
+                <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.63"/>
             </head>
             <body>
                 <nav class="ac-nav scrolled" id="acNav">
@@ -235,7 +233,7 @@
                     </div>
                 </div>
                 <script src="/auction_champ_website/static/src/js/auction_website.js"></script>
-                <script src="/auction_champ_website/static/src/js/calendar.js?v=1.0.56"></script>
+                <script src="/auction_champ_website/static/src/js/calendar.js?v=1.0.63"></script>
             </body>
         </html>
     </template>

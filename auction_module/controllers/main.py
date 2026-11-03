@@ -117,9 +117,59 @@ def _public_img_cache_put(key, val):
             _PUBLIC_IMG_CACHE.popitem(last=False)
 
 
+def _public_thumb_disk_path(dbname, etag):
+    """Persistent thumbnail path. Survives an Odoo restart, unlike the RAM cache."""
+    safe_db = ''.join(
+        ch if ch.isalnum() or ch in '-_' else '_' for ch in (dbname or 'db')
+    )
+    folder = os.path.join(
+        odoo.tools.config['data_dir'], 'auction_public_thumbs', safe_db,
+    )
+    return folder, os.path.join(folder, '%s.jpg' % etag)
+
+
+def _public_thumb_disk_get(dbname, etag):
+    _folder, path = _public_thumb_disk_path(dbname, etag)
+    try:
+        if os.path.isfile(path) and os.path.getsize(path) > 32:
+            with open(path, 'rb') as handle:
+                return handle.read()
+    except Exception:
+        _logger.debug('thumb disk cache read failed', exc_info=True)
+    return None
+
+
+def _public_thumb_disk_put(dbname, etag, data):
+    if not data or not etag:
+        return
+    folder, path = _public_thumb_disk_path(dbname, etag)
+    tmp = path + '.tmp'
+    try:
+        os.makedirs(folder, exist_ok=True)
+        with open(tmp, 'wb') as handle:
+            handle.write(data)
+        os.replace(tmp, path)
+    except Exception:
+        _logger.debug('thumb disk cache write failed', exc_info=True)
+        try:
+            if os.path.exists(tmp):
+                os.remove(tmp)
+        except Exception:
+            pass
+
+
+# Bump when the public squad face-crop changes, so browsers drop the old thumb.
+_SQ_CROP_VERSION = 'face3'
+_YUNET_LOCK = threading.Lock()
+_YUNET_DET = {}
+
+
 def _pj_photo_etag(model, record_id, field, write_date, sz):
+    extra = _SQ_CROP_VERSION if sz == 'sq' else ''
     return hashlib.md5(
-        ('%s:%s:%s:%s:%s' % (model, record_id, field, write_date or '', sz)).encode('utf-8')
+        ('%s:%s:%s:%s:%s:%s' % (
+            model, record_id, field, write_date or '', sz, extra,
+        )).encode('utf-8')
     ).hexdigest()
 
 
@@ -4045,19 +4095,26 @@ class Auction(http.Controller):
                             ).resize((384, 384), Image.LANCZOS)
                     except Exception:
                         cropped = None
+                if im is not None and max(im.size) > 960:
+                    from PIL import Image
+                    scale = 960.0 / float(max(im.size))
+                    im = im.resize((
+                        max(32, int(im.size[0] * scale)),
+                        max(32, int(im.size[1] * scale)),
+                    ), Image.BILINEAR)
                 if cropped is None and im is not None:
                     try:
-                        cropped = self._sp_face_fill_crop(im, out_w=384, out_h=384)
+                        cropped = self._sp_face_fill_crop(im, out_w=192, out_h=192)
                     except Exception:
                         cropped = None
                 if cropped is None and im is not None:
                     try:
-                        cropped = self._sp_roster_thumb_crop(im, out_w=384, out_h=384)
+                        cropped = self._sp_roster_thumb_crop(im, out_w=192, out_h=192)
                     except Exception:
                         cropped = None
                 if cropped is not None:
                     buf = BytesIO()
-                    cropped.convert('RGB').save(buf, format='JPEG', quality=88, optimize=True)
+                    cropped.convert('RGB').save(buf, format='JPEG', quality=74, optimize=False)
                     return buf.getvalue()
             except Exception:
                 _logger.warning('public image sz=sq face crop failed', exc_info=True)
@@ -4155,6 +4212,10 @@ class Auction(http.Controller):
         if sz in ('pj', 'bs', 'reg', 'rt', 'sq'):
             cache_key = (request.env.cr.dbname, model, record_id, field, sz, etag)
             hit = _public_img_cache_get(cache_key)
+            if not hit and sz == 'sq':
+                hit = _public_thumb_disk_get(request.env.cr.dbname, etag)
+                if hit:
+                    _public_img_cache_put(cache_key, hit)
             if hit:
                 return self._public_image_response(hit, etag=etag, immutable=True)
 
@@ -4186,16 +4247,10 @@ class Auction(http.Controller):
                 binary = None
         if not binary:
             return request.not_found()
+        # Poster frames are wide compositions. Forcing that rectangle into
+        # the square card starts at its top-left and leaves the face small
+        # or off to one side. The card always detects the face instead.
         crop_override = None
-        if sz == 'sq' and model == 'auction.team.player' and field == 'photo':
-            raw_crop = (getattr(record, 'squad_poster_crop', None) or '').strip()
-            if raw_crop:
-                try:
-                    parsed = json.loads(raw_crop)
-                    if isinstance(parsed, dict):
-                        crop_override = parsed
-                except Exception:
-                    crop_override = None
         try:
             if used_card:
                 image_bytes = self._public_image_raw_bytes(binary)
@@ -4219,6 +4274,8 @@ class Auction(http.Controller):
             return request.not_found()
         if cache_key:
             _public_img_cache_put(cache_key, image_bytes)
+            if sz == 'sq':
+                _public_thumb_disk_put(request.env.cr.dbname, etag, image_bytes)
         return self._public_image_response(image_bytes, etag=etag, immutable=immutable)
 
     @http.route('/auction/public/image/<string:model>/<int:record_id>/<string:field>',
@@ -4325,6 +4382,277 @@ class Auction(http.Controller):
             )
             return self._serve_social_preview_jpeg(tournament or None)
 
+    def _live_board_image_url(self, db_name, model, record_id, field, sz=''):
+        url = '/%s/auction/public/image/%s/%d/%s' % (db_name, model, record_id, field)
+        if sz:
+            url += '?sz=%s' % sz
+            if sz == 'sq':
+                url += '&v=%s' % _SQ_CROP_VERSION
+        return url
+
+    def _live_board_squad_teams(self, tournament, db_name):
+        """Sold and icon players grouped by team for the public squad page."""
+        Team = request.env['auction.team'].sudo().with_context(active_test=False)
+        Player = request.env['auction.team.player'].sudo().with_context(active_test=False)
+        teams = Team.search(
+            [('tournament_id', '=', tournament.id)],
+            order='name asc',
+        )
+        auctions = request.env['auction.auction'].sudo().with_context(
+            active_test=False,
+        ).search([
+            ('tournament_id', '=', tournament.id),
+        ])
+        lines = request.env['auction.auction.player'].sudo().search(
+            [('auction_id', 'in', auctions.ids)]
+        ) if auctions else request.env['auction.auction.player'].sudo().browse()
+        points_by_player = {}
+        team_by_player = {}
+        for line in lines:
+            player = line.player_id
+            team = line.auction_id.team_id
+            if not player or not team:
+                continue
+            points_by_player[player.id] = line.points or 0
+            team_by_player[player.id] = team.id
+
+        assigned = Player.search([
+            ('tournament_id', '=', tournament.id),
+            ('assigned_team_id', '!=', False),
+            '|', ('state', '=', 'sold'), ('icon_player', '=', True),
+        ])
+        by_team = {team.id: [] for team in teams}
+        seen = set()
+        is_football = tournament.tournament_type == 'football'
+
+        def _add(player, team_id):
+            if not player or not team_id or player.id in seen or team_id not in by_team:
+                return
+            seen.add(player.id)
+            is_icon = bool(player.icon_player)
+            role = player.role or ''
+            if is_football and player.dominant_position_id:
+                role = player.dominant_position_id.name or role
+            points = points_by_player.get(player.id) or 0
+            if is_icon:
+                points_label = 'Icon'
+            elif points:
+                try:
+                    points_label = tournament.format_points(points) or ''
+                except Exception:
+                    points_label = '{:,}'.format(int(points))
+            else:
+                points_label = ''
+            photo_url = ''
+            if _pj_has_binary(player, 'photo'):
+                photo_url = self._live_board_image_url(
+                    db_name, 'auction.team.player', player.id, 'photo', sz='sq',
+                )
+            by_team[team_id].append({
+                'name': player.name or '',
+                'role': role,
+                'points_label': points_label,
+                'photo_url': photo_url,
+                'is_icon': is_icon,
+                'jersey': (player.jersy_number or '').strip(),
+                'status': 'Icon' if is_icon else 'Sold',
+            })
+
+        for player in assigned:
+            _add(player, player.assigned_team_id.id)
+        for player_id, team_id in team_by_player.items():
+            if player_id in seen:
+                continue
+            _add(Player.browse(player_id), team_id)
+
+        auction_by_team = {}
+        for auc in auctions:
+            team_id = auc.team_id.id
+            if not team_id:
+                continue
+            current = auction_by_team.get(team_id)
+            if not current or (auc.active and not current.active):
+                auction_by_team[team_id] = auc
+
+        def _points_label(amount):
+            try:
+                return tournament.format_points(amount or 0) or '0'
+            except Exception:
+                return '{:,}'.format(int(amount or 0))
+
+        blocks = []
+        for team in teams:
+            players = by_team.get(team.id) or []
+            players.sort(key=lambda row: (0 if row['is_icon'] else 1, (row['name'] or '').lower()))
+            auc = auction_by_team.get(team.id)
+            total_points = int(auc.total_point or 0) if auc else 0
+            remaining = int(auc.remaining_points or 0) if auc else 0
+            spent_points = max(total_points - remaining, 0)
+            max_players = int(auc.max_players or 0) if auc else 0
+            owner = (team.manager or '').strip()
+            logo_url = ''
+            if _pj_has_binary(team, 'logo'):
+                logo_url = self._live_board_image_url(
+                    db_name, 'auction.team', team.id, 'logo',
+                )
+            owner_photo_url = ''
+            if owner and _pj_has_binary(team, 'owner_photo'):
+                owner_photo_url = self._live_board_image_url(
+                    db_name, 'auction.team', team.id, 'owner_photo',
+                )
+            blocks.append({
+                'name': team.name or 'Team',
+                'logo_url': logo_url,
+                'owner_name': owner,
+                'owner_photo_url': owner_photo_url,
+                'players': players,
+                'squad_count': len(players),
+                'max_players': max_players,
+                'total_label': _points_label(total_points),
+                'spent_label': _points_label(spent_points),
+            })
+        return blocks
+
+    def _live_board_auction_complete(self, tournament):
+        """True when the auction is finished and the public page should show squads.
+
+        Matches the projector: declared complete, or every player is already
+        sold and nothing is left in draft, auction, or unsold.
+        """
+        if not tournament:
+            return False
+        try:
+            phase = _pj_wait_phase(tournament, audience='viewers').get('phase')
+            return phase == 'completed'
+        except Exception:
+            _logger.debug('live board completion check failed', exc_info=True)
+            return bool(tournament.auction_declared_complete)
+
+    def _live_board_event_facts(self, tournament):
+        """Auction date and venue for the public teaser."""
+        date_label = ''
+        if tournament.auction_date:
+            try:
+                date_label = tournament.auction_date.strftime('%A, %d %b %Y')
+            except Exception:
+                date_label = str(tournament.auction_date)
+        elif tournament.tournament_date_display:
+            date_label = tournament.tournament_date_display
+        venue = (tournament.auction_venue or '').strip() or (tournament.get_venue_label() or '')
+        return date_label, venue
+
+    def _live_board_tournament_facts(self, tournament):
+        """Tournament date and venue for the public profile."""
+        date_label = ''
+        try:
+            date_label = tournament.format_tournament_dates() or ''
+        except Exception:
+            date_label = ''
+        if not date_label:
+            date_label = tournament.tournament_date_display or ''
+        if not date_label and tournament.auction_date:
+            try:
+                date_label = tournament.auction_date.strftime('%d %b %Y')
+            except Exception:
+                date_label = str(tournament.auction_date)
+        venue = (tournament.get_venue_label() or '').strip() or (tournament.auction_venue or '').strip()
+        return date_label, venue
+
+    def _live_board_profile_stats(self, tournament):
+        """Registrations, sold, and unsold counts for the public profile."""
+        Player = request.env['auction.team.player'].sudo().with_context(active_test=False)
+        domain = [
+            ('tournament_id', '=', tournament.id),
+            ('icon_player', '=', False),
+        ]
+        registrations = Player.search_count(domain + [
+            ('state', 'in', ('draft', 'auction', 'sold', 'unsold')),
+        ])
+        sold = Player.search_count(domain + [('state', '=', 'sold')])
+        unsold = Player.search_count(domain + [('state', '=', 'unsold')])
+        return registrations, sold, unsold
+
+    def _render_live_board_profile(self, tournament, db_name, theme, profile_url=None):
+        """Public tournament profile shown after the auction is finished."""
+        logo_url = ''
+        if _pj_has_binary(tournament, 'logo'):
+            logo_url = self._live_board_image_url(
+                db_name, 'auction.tournament', tournament.id, 'logo',
+            )
+        poster_url = ''
+        if _pj_has_binary(tournament, 'poster_image'):
+            poster_url = self._live_board_image_url(
+                db_name, 'auction.tournament', tournament.id, 'poster_image',
+            )
+        date_label, venue = self._live_board_tournament_facts(tournament)
+        dates = []
+        try:
+            dates = tournament._iter_tournament_dates() or []
+        except Exception:
+            dates = []
+        date_start = dates[0].strftime('%d %b %Y') if dates else date_label
+        date_end = dates[-1].strftime('%d %b %Y') if len(dates) > 1 else ''
+        sport_label = ''
+        try:
+            sport_label = dict(
+                tournament._fields['tournament_type'].selection or []
+            ).get(tournament.tournament_type) or ''
+        except Exception:
+            sport_label = tournament.tournament_type or ''
+        season = (tournament.description or '').strip()
+        if len(season) > 80:
+            season = ''
+        registrations, sold_count, unsold_count = self._live_board_profile_stats(tournament)
+        teams = self._live_board_squad_teams(tournament, db_name)
+        roles = sorted({
+            (player.get('role') or '').strip()
+            for team in teams
+            for player in team.get('players') or []
+            if not player.get('is_icon') and (player.get('role') or '').strip()
+        })
+        return request.render('auction_module.live_board_profile_template', {
+            'tournament': tournament,
+            'theme': theme,
+            'db_name': db_name,
+            'logo_url': logo_url,
+            'poster_url': poster_url,
+            'date_label': date_label,
+            'date_start': date_start,
+            'date_end': date_end,
+            'venue': venue,
+            'sport_label': sport_label,
+            'season_label': season,
+            'organizer_name': (tournament.organizer_name or '').strip(),
+            'registrations': registrations,
+            'sold_count': sold_count,
+            'unsold_count': unsold_count,
+            'team_count': len(teams),
+            'teams': teams,
+            'roles': roles,
+            'squads_url': '/%s/%s/auction/squads' % (db_name, tournament.slug),
+            'profile_url': profile_url or (
+                '/%s/%s/tournament/profile' % (db_name, tournament.slug)
+            ),
+        }, lazy=False)
+
+    def _render_live_board_squads(self, tournament, db_name, theme):
+        logo_url = ''
+        if _pj_has_binary(tournament, 'logo'):
+            logo_url = self._live_board_image_url(
+                db_name, 'auction.tournament', tournament.id, 'logo',
+            )
+        date_label, venue = self._live_board_tournament_facts(tournament)
+        return request.render('auction_module.live_board_squads_template', {
+            'tournament': tournament,
+            'theme': theme,
+            'db_name': db_name,
+            'teams': self._live_board_squad_teams(tournament, db_name),
+            'logo_url': logo_url,
+            'date_label': date_label,
+            'venue': venue,
+            'profile_url': '/%s/%s/tournament/profile' % (db_name, tournament.slug),
+        }, lazy=False)
+
     @http.route('/auction/live-board', type='http', auth='none', website=False)
     def auction_live_board_legacy(self, **kw):
         """Redirect legacy /auction/live-board URL to the db-slug-based URL."""
@@ -4378,19 +4706,38 @@ class Auction(http.Controller):
             has_players = env['auction.team.player'].sudo().search_count([]) > 0
             auction_ready = has_rules and has_players
 
-            if not auction_ready:
-                html = request.render('auction_module.welcome_message_template', {
-                    'tournament': tournament,
-                    'theme': theme,
-                    'db_name': db_name,
-                }, lazy=False)
-            elif not tournament.live_board_active:
-                html = request.render('auction_module.live_board_offline_template', {
-                    'tournament': tournament,
-                    'theme': theme,
-                    'db_name': db_name,
-                }, lazy=False)
+            declared_complete = self._live_board_auction_complete(tournament)
+            page_ctx = {
+                'tournament': tournament,
+                'theme': theme,
+                'db_name': db_name,
+            }
+            # Live feed stays up while the board is on. Otherwise:
+            # no rules → the existing waiting page, rules set → start teaser,
+            # declared complete → squads.
+            if tournament.live_board_active and auction_ready:
+                pass
+            elif declared_complete:
+                html = self._render_live_board_profile(tournament, db_name, theme)
+            elif has_rules:
+                logo_url = ''
+                if _pj_has_binary(tournament, 'logo'):
+                    logo_url = self._live_board_image_url(
+                        db_name, 'auction.tournament', tournament.id, 'logo',
+                    )
+                date_label, venue = self._live_board_event_facts(tournament)
+                html = request.render('auction_module.live_board_teaser_template', dict(
+                    page_ctx,
+                    logo_url=logo_url,
+                    date_label=date_label,
+                    venue=venue,
+                ), lazy=False)
+            elif not auction_ready:
+                html = request.render('auction_module.welcome_message_template', page_ctx, lazy=False)
             else:
+                html = request.render('auction_module.live_board_offline_template', page_ctx, lazy=False)
+
+            if tournament.live_board_active and auction_ready:
                 # Optional Tournament Code gate (see live_board_code_protected).
                 # When protected: unlock once, then remember via session + cookie.
                 if not self._live_board_access_granted(tournament):
@@ -4424,6 +4771,42 @@ class Auction(http.Controller):
                         'auction.sse.enabled', 'False'
                     ) in ('True', 'true', '1'),
                 }, lazy=False)
+        return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
+
+    @http.route('/<string:db_name>/<string:tournament_slug>/tournament/profile',
+                type='http', auth='none', website=False, sitemap=False)
+    def tournament_profile(self, db_name, tournament_slug, **kw):
+        """Public tournament profile. Same page the finished live-board link opens."""
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return self._not_found()
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('slug', '=', tournament_slug)], limit=1
+            )
+            if not tournament or not self._live_board_auction_complete(tournament):
+                return werkzeug.utils.redirect(
+                    '/%s/%s/auction/live-board' % (db_name, tournament_slug), 302,
+                )
+            theme = tournament.player_display_template or 'vanilla'
+            html = self._render_live_board_profile(tournament, db_name, theme)
+        return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
+
+    @http.route('/<string:db_name>/<string:tournament_slug>/auction/squads',
+                type='http', auth='none', website=False, sitemap=False)
+    def auction_squads(self, db_name, tournament_slug, **kw):
+        """Squad list reached from the completed-auction tournament profile."""
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return self._not_found()
+            tournament = request.env['auction.tournament'].sudo().search(
+                [('slug', '=', tournament_slug)], limit=1
+            )
+            if not tournament or not self._live_board_auction_complete(tournament):
+                return werkzeug.utils.redirect(
+                    '/%s/%s/auction/live-board' % (db_name, tournament_slug), 302,
+                )
+            theme = tournament.player_display_template or 'vanilla'
+            html = self._render_live_board_squads(tournament, db_name, theme)
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
     @http.route('/auction/live-board/data', type='http', auth='none', website=False, csrf=False)
@@ -4478,8 +4861,12 @@ class Auction(http.Controller):
 
             if not tournament.live_board_active:
                 return request.make_response(
-                    json.dumps({'live_board_active': False}),
-                    headers=[('Content-Type', 'application/json')]
+                    json.dumps({
+                        'live_board_active': False,
+                        'auction_complete': bool(self._live_board_auction_complete(tournament)),
+                        'has_rules': bool(self._tournament_auction_rules_ready(tournament)),
+                    }),
+                    headers=[('Content-Type', 'application/json'), ('Cache-Control', 'no-store')]
                 )
 
             if not self._live_board_access_granted(tournament):
@@ -5111,8 +5498,90 @@ class Auction(http.Controller):
             y = max(0, H - fh)
         return x, y, fw, fh
 
+    def _sp_detect_face_yunet(self, im):
+        """Return (x, y, w, h) from OpenCV YuNet, or None.
+
+        OpenCV 5 dropped Haar cascades, so the old detector always missed and
+        the squad crop fell back to the top of the photo.
+        """
+        try:
+            import cv2
+            import numpy as np
+        except Exception:
+            return None
+        if not hasattr(cv2, 'FaceDetectorYN'):
+            return None
+        try:
+            from odoo.modules.module import get_resource_path
+            model = get_resource_path(
+                'auction_module', 'data', 'face_detection_yunet_2023mar.onnx',
+            )
+            if not model or not os.path.exists(model):
+                return None
+            width, height = im.size
+            if width < 16 or height < 16:
+                return None
+            max_side = 800
+            scale = 1.0
+            work = im
+            if max(width, height) > max_side:
+                scale = max_side / float(max(width, height))
+                work = im.resize((
+                    max(32, int(width * scale)),
+                    max(32, int(height * scale)),
+                ))
+            nw, nh = work.size
+            rgb = np.asarray(work.convert('RGB'), dtype=np.uint8)
+            bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+            with _YUNET_LOCK:
+                det = _YUNET_DET.get('det')
+                if det is None:
+                    det = cv2.FaceDetectorYN.create(
+                        model, '', (nw, nh), 0.6, 0.3, 5000,
+                    )
+                    _YUNET_DET['det'] = det
+                else:
+                    det.setInputSize((nw, nh))
+                _ret, faces = det.detect(bgr)
+            if faces is None or len(faces) == 0:
+                return None
+            best = None
+            best_rank = -1.0
+            for row in faces:
+                x, y, fw, fh = float(row[0]), float(row[1]), float(row[2]), float(row[3])
+                score = float(row[-1])
+                if score < 0.6 or fw < 12 or fh < 12:
+                    continue
+                rank = fw * fh * score
+                if rank > best_rank:
+                    best_rank = rank
+                    best = (x, y, fw, fh)
+            if not best:
+                return None
+            x, y, fw, fh = best
+            if scale != 1.0:
+                inv = 1.0 / scale
+                x, y, fw, fh = x * inv, y * inv, fw * inv, fh * inv
+            x = int(round(x))
+            y = int(round(y))
+            fw = max(24, int(round(fw)))
+            fh = max(24, int(round(fh)))
+            x = max(0, min(x, width - 1))
+            y = max(0, min(y, height - 1))
+            fw = min(fw, width - x)
+            fh = min(fh, height - y)
+            if fw < 16 or fh < 16:
+                return None
+            return x, y, fw, fh
+        except Exception:
+            _logger.debug('YuNet face detection failed', exc_info=True)
+            return None
+
     def _sp_detect_face_opencv(self, im):
-        """Return (x,y,w,h) via Haar cascades, or None."""
+        """Return (x,y,w,h) via YuNet, then Haar cascades, or None."""
+        yunet_box = self._sp_detect_face_yunet(im)
+        if yunet_box:
+            return yunet_box
         try:
             import cv2
             import numpy as np
@@ -5385,11 +5854,10 @@ class Auction(http.Controller):
         fh = max(16, int(fh))
 
         face_cx = fx + fw / 2.0
-        eyes_y = fy + fh * 0.38
-        hair_y = max(0.0, fy - fh * 0.40)
-        face_span = max(fw, fh * 0.95, 1)
-
-        side = int(round(face_span / 0.40))
+        eyes_y = fy + fh * 0.42
+        face_span = max(fw, fh * 0.92, 1)
+        # Face fills about half the square so the head sits in the middle.
+        side = int(round(face_span / 0.52))
         side = max(96, side)
 
         def _cap(v):
@@ -5400,9 +5868,9 @@ class Auction(http.Controller):
 
         caps = [min(W, H), side]
         if eyes_y > 8:
-            caps.append(_cap(eyes_y / 0.34))
+            caps.append(_cap(eyes_y / 0.42))
         if (H - eyes_y) > 8:
-            caps.append(_cap((H - eyes_y) / 0.66))
+            caps.append(_cap((H - eyes_y) / 0.58))
         if face_cx > 8:
             caps.append(_cap(face_cx / 0.50))
         if (W - face_cx) > 8:
@@ -5410,9 +5878,7 @@ class Auction(http.Controller):
         side = max(48, min(caps))
 
         left = int(round(face_cx - side * 0.50))
-        top = int(round(eyes_y - side * 0.34))
-        if hair_y < top:
-            top = int(hair_y)
+        top = int(round(eyes_y - side * 0.42))
         left = max(0, min(left, W - side))
         top = max(0, min(top, H - side))
         return left, top, side

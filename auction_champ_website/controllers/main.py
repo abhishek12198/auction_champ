@@ -49,6 +49,7 @@ from odoo import http, fields
 from odoo.http import request
 from odoo.addons.website.controllers.main import Website
 from odoo.addons.web.controllers.main import ensure_db
+from odoo.addons.auction_module.controllers.main import Auction
 from odoo.addons.auction_login_theme.controllers.main import (
     AuctionLoginController,
     _safe_post_login_redirect,
@@ -327,7 +328,7 @@ class AuctionChampHomepage(Website):
                 if tournament.registration_open and tournament.registration_url
                 else ''
             ),
-            'squad_url': (
+            'profile_url': (
                 '/calendar/squad/%s' % tournament.id
                 if self._calendar_squads_visible(tournament) else ''
             ),
@@ -758,25 +759,13 @@ class AuctionChampHomepage(Website):
             or not self._calendar_squads_visible(tournament)
         ):
             return request.not_found()
-        type_labels = dict(
-            tournament._fields['tournament_type'].selection or []
+        html = Auction()._render_live_board_profile(
+            tournament,
+            request.env.cr.dbname,
+            'website',
+            profile_url='/calendar/squad/%s' % tournament.id,
         )
-        return request.render('auction_champ_website.calendar_squad_page', {
-            'current_year': date.today().year,
-            'tournament_name': tournament.name or 'Tournament',
-            'sport': type_labels.get(tournament.tournament_type, ''),
-            'date_display': (
-                tournament.format_tournament_dates()
-                or tournament.tournament_date_display
-                or ''
-            ),
-            'venue': tournament.get_venue_label(),
-            'logo_url': (
-                '/auction/public/image/auction.tournament/%d/logo' % tournament.id
-                if tournament.logo else ''
-            ),
-            'teams': self._get_public_squad_data(tournament),
-        })
+        return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
     @http.route('/calendar', type='http', auth='public', website=True, sitemap=True)
     def calendar(self, month=None, district=None, **kw):

@@ -5227,7 +5227,7 @@ html[data-theme] body.lbx #lb-brk-logo .lb-brk-logo-ph{font-size:calc(var(--u)*1
         fetch(dataUrl)
           .then(function(r){ return r.json(); })
           .then(function(d){
-            if (d.live_board_active !== false) {
+            if (d.live_board_active !== false || d.auction_complete || d.has_rules) {
               window.location.reload();
             }
           })

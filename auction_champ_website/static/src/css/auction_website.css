@@ -1848,12 +1848,25 @@ body.ac-cal-modal-open { overflow: hidden; }
 }
 
 .ac-cal-card {
+    position: relative;
     background: #fff;
     border-radius: 16px;
     border: 1px solid var(--ac-border);
     box-shadow: var(--ac-shadow);
     overflow: hidden;
     min-width: 0;
+}
+.ac-cal-card-link {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+}
+.ac-cal-card.is-openable { cursor: pointer; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.ac-cal-card.is-openable:hover {
+    border-color: var(--ac-gold);
+    box-shadow: var(--ac-shadow-lg);
+    transform: translateY(-2px);
 }
 .ac-cal-logo-wrap { display: flex; justify-content: center; padding: 18px 16px 0; }
 .ac-cal-logo {
@@ -1894,6 +1907,8 @@ body.ac-cal-modal-open { overflow: hidden; }
 .ac-cal-dates i, .ac-cal-venue i { color: var(--ac-blue); width: 16px; margin-top: 3px; }
 .ac-cal-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .ac-cal-cta {
+    position: relative;
+    z-index: 2;
     display: inline-block; padding: 8px 14px; border-radius: 8px;
     background: var(--ac-blue); color: #fff; font-weight: 700; font-size: 0.85rem;
 }
