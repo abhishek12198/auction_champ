@@ -432,6 +432,50 @@
       color: var(--tp-accent2);
       line-height: 1.2;
     }
+    .tp-photo { position: relative; }
+    .tp-photo > img, .tp-photo > .tp-player-ph, .tp-photo > .tp-sold-ph { width: 100%; }
+    .tp-mark-icon, .tp-mark-mystery {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      z-index: 1;
+      min-width: 22px;
+      height: 22px;
+      padding: 0 4px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      line-height: 1;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+    }
+    .tp-mark-icon { background: linear-gradient(180deg, #ffe08a, #f5a623); }
+    .tp-mark-mystery { background: #241433; }
+    .tp-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 0 8px;
+      border-radius: 999px;
+      font-family: 'Rajdhani', 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      line-height: 1.45;
+      text-transform: uppercase;
+    }
+    .tp-badge i { font-style: normal; line-height: 1; }
+    .tp-badge-icon {
+      color: #3a2500;
+      background: linear-gradient(180deg, #ffe08a, #f5a623);
+      border: 1px solid #d4831a;
+    }
+    .tp-badge-mystery {
+      color: #f8f1ff;
+      background: #3b1764;
+      border: 1px solid #c084fc;
+    }
     .tp-price {
       display: inline-flex;
       align-items: center;
@@ -454,6 +498,7 @@
     }
     .tp-sold-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
     .tp-sold { border-radius: 14px; padding: 10px; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 10px; align-items: center; }
+    .tp-sold .tp-photo { width: 64px; }
     .tp-sold img, .tp-sold-ph { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; object-position: center center; background: var(--tp-field); }
     .tp-sold-ph { display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--tp-field-ink); }
     .tp-sold b { margin-top: 0; }
@@ -566,6 +611,14 @@
         white-space: nowrap;
         text-align: center;
       }
+      .tp-mark-icon, .tp-mark-mystery {
+        top: 3px;
+        right: 3px;
+        min-width: 16px;
+        height: 16px;
+        font-size: 10px;
+      }
+      .tp-badge { font-size: 0.52rem; letter-spacing: 0.04em; padding: 0 4px; }
       .tp-player img, .tp-player-ph { border-radius: 8px; }
       .tp-sold {
         grid-template-columns: 1fr;
@@ -577,7 +630,8 @@
         overflow: hidden;
         border-radius: 10px;
       }
-      .tp-sold > img, .tp-sold-ph { width: 100%; height: auto; aspect-ratio: 1 / 1; border-radius: 8px; }
+      .tp-sold .tp-photo { width: 100%; }
+      .tp-sold .tp-photo > img, .tp-sold .tp-sold-ph { width: 100%; height: auto; aspect-ratio: 1 / 1; border-radius: 8px; }
       .tp-sold > div { min-width: 0; max-width: 100%; }
       .tp-teamline {
         justify-content: center;
@@ -728,19 +782,25 @@
             <t t-if="team.get('players')">
               <div class="tp-players">
                 <t t-foreach="team.get('players')" t-as="player">
-                  <article class="tp-player">
-                    <t t-if="player.get('photo_url')">
-                      <img t-att-data-src="player.get('photo_url')" t-att-alt="player.get('name')" loading="lazy"/>
-                    </t>
-                    <t t-else=""><div class="tp-player-ph"><t t-esc="(player.get('name') or '?')[:1]"/></div></t>
+                  <article t-att-class="'tp-player' + (' is-icon' if player.get('is_icon') else '') + (' is-mystery' if player.get('is_mystery') else '')">
+                    <div class="tp-photo">
+                      <t t-if="player.get('photo_url')">
+                        <img t-att-data-src="player.get('photo_url')" t-att-alt="player.get('name')" loading="lazy"/>
+                      </t>
+                      <t t-else=""><div class="tp-player-ph"><t t-esc="(player.get('name') or '?')[:1]"/></div></t>
+                      <span t-if="player.get('is_icon')" class="tp-mark-icon" aria-hidden="true">♛</span>
+                      <span t-elif="player.get('is_mystery')" class="tp-mark-mystery" aria-hidden="true">🎭</span>
+                    </div>
                     <b><t t-esc="player.get('name')"/></b>
                     <div class="tp-pmeta">
                       <span class="tp-roleline">
                         <span t-if="player.get('jersey')" class="tp-jersey">#<t t-esc="player.get('jersey')"/></span>
                         <span t-if="player.get('role')" class="tp-role"><t t-esc="player.get('role')"/></span>
                       </span>
-                      <span t-if="player.get('points_label')" class="tp-price"><t t-esc="player.get('points_label')"/></span>
-                      <span t-if="not player.get('points_label')" class="tp-status"><t t-esc="player.get('status') or 'Sold'"/></span>
+                      <span t-if="player.get('is_icon')" class="tp-badge tp-badge-icon"><i aria-hidden="true">♛</i> ICON</span>
+                      <span t-elif="player.get('is_mystery')" class="tp-badge tp-badge-mystery"><i aria-hidden="true">🎭</i> MYSTERY</span>
+                      <span t-if="player.get('points_label') and not player.get('is_icon')" class="tp-price"><t t-esc="player.get('points_label')"/></span>
+                      <span t-if="not player.get('points_label') and not player.get('is_icon') and not player.get('is_mystery')" class="tp-status"><t t-esc="player.get('status') or 'Sold'"/></span>
                     </div>
                   </article>
                 </t>
@@ -775,16 +835,20 @@
                      t-att-data-name="(player.get('name') or '').lower()"
                      t-att-data-team="team.get('name') or ''"
                      t-att-data-role="player.get('role') or ''">
-              <t t-if="player.get('photo_url')">
-                <img t-att-data-src="player.get('photo_url')" alt="" loading="lazy"/>
-              </t>
-              <t t-else=""><div class="tp-sold-ph"><t t-esc="(player.get('name') or '?')[:1]"/></div></t>
+              <div class="tp-photo">
+                <t t-if="player.get('photo_url')">
+                  <img t-att-data-src="player.get('photo_url')" alt="" loading="lazy"/>
+                </t>
+                <t t-else=""><div class="tp-sold-ph"><t t-esc="(player.get('name') or '?')[:1]"/></div></t>
+                <span t-if="player.get('is_mystery')" class="tp-mark-mystery" aria-hidden="true">🎭</span>
+              </div>
               <div>
                 <b><t t-esc="player.get('name')"/></b>
                 <div class="tp-pmeta">
                   <span t-if="player.get('role')" class="tp-role"><t t-esc="player.get('role')"/></span>
+                  <span t-if="player.get('is_mystery')" class="tp-badge tp-badge-mystery"><i aria-hidden="true">🎭</i> MYSTERY</span>
                   <span t-if="player.get('points_label')" class="tp-price"><t t-esc="player.get('points_label')"/></span>
-                  <span t-if="not player.get('points_label')" class="tp-status"><t t-esc="player.get('status') or 'Sold'"/></span>
+                  <span t-if="not player.get('points_label') and not player.get('is_mystery')" class="tp-status"><t t-esc="player.get('status') or 'Sold'"/></span>
                 </div>
                 <div class="tp-teamline">
                   <t t-if="team.get('logo_url')"><img t-att-src="team.get('logo_url')" alt=""/></t>

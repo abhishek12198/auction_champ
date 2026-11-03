@@ -4422,14 +4422,16 @@ class Auction(http.Controller):
             if not player or not team_id or player.id in seen or team_id not in by_team:
                 return
             seen.add(player.id)
-            is_icon = bool(player.icon_player)
+            tier = player.tier_id
+            is_icon = bool(player.icon_player) or bool(tier and tier.is_an_icon_tier)
+            is_mystery = bool(tier and tier.mystery) and not is_icon
+            tier_sequence = int(tier.sequence or 0) if tier else 0
+            tier_id = int(tier.id) if tier else 0
             role = player.role or ''
             if is_football and player.dominant_position_id:
                 role = player.dominant_position_id.name or role
             points = points_by_player.get(player.id) or 0
-            if is_icon:
-                points_label = 'Icon'
-            elif points:
+            if points and not is_icon:
                 try:
                     points_label = tournament.format_points(points) or ''
                 except Exception:
@@ -4447,8 +4449,11 @@ class Auction(http.Controller):
                 'points_label': points_label,
                 'photo_url': photo_url,
                 'is_icon': is_icon,
+                'is_mystery': is_mystery,
+                'tier_sequence': tier_sequence,
+                'tier_id': tier_id,
                 'jersey': (player.jersy_number or '').strip(),
-                'status': 'Icon' if is_icon else 'Sold',
+                'status': 'ICON' if is_icon else ('MYSTERY' if is_mystery else 'Sold'),
             })
 
         for player in assigned:
@@ -4476,7 +4481,20 @@ class Auction(http.Controller):
         blocks = []
         for team in teams:
             players = by_team.get(team.id) or []
-            players.sort(key=lambda row: (0 if row['is_icon'] else 1, (row['name'] or '').lower()))
+            def _squad_order(row):
+                if row.get('is_icon'):
+                    group = 0
+                elif row.get('is_mystery'):
+                    group = 1
+                else:
+                    group = 2
+                return (
+                    group,
+                    int(row.get('tier_sequence') or 0) if group == 2 else 0,
+                    int(row.get('tier_id') or 0) if group == 2 else 0,
+                    (row.get('name') or '').lower(),
+                )
+            players.sort(key=_squad_order)
             auc = auction_by_team.get(team.id)
             total_points = int(auc.total_point or 0) if auc else 0
             remaining = int(auc.remaining_points or 0) if auc else 0
