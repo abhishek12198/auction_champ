@@ -4572,7 +4572,7 @@ class Auction(http.Controller):
         unsold = Player.search_count(domain + [('state', '=', 'unsold')])
         return registrations, sold, unsold
 
-    def _render_live_board_profile(self, tournament, db_name, theme, profile_url=None):
+    def _render_live_board_profile(self, tournament, db_name, theme, profile_url=None, back_url=None):
         """Public tournament profile shown after the auction is finished."""
         logo_url = ''
         if _pj_has_binary(tournament, 'logo'):
@@ -4633,6 +4633,7 @@ class Auction(http.Controller):
             'profile_url': profile_url or (
                 '/%s/%s/tournament/profile' % (db_name, tournament.slug)
             ),
+            'back_url': back_url or '',
         }, lazy=False)
 
     def _render_live_board_squads(self, tournament, db_name, theme):

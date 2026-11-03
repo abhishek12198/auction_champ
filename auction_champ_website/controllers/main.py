@@ -764,6 +764,7 @@ class AuctionChampHomepage(Website):
             request.env.cr.dbname,
             'website',
             profile_url='/calendar/squad/%s' % tournament.id,
+            back_url='/calendar',
         )
         return request.make_response(html, [('Content-Type', 'text/html; charset=utf-8')])
 
