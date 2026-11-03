@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <function model="ac.saas.price.region" name="_activate_razorpay_currencies"/>
+    </data>
+</odoo>

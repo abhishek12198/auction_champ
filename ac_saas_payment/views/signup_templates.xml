@@ -72,6 +72,22 @@
                    t-esc="email_error or ''"/>
               </div>
               <div class="ac-su-field">
+                <label for="billing_country_code">Billing country</label>
+                <select id="billing_country_code" name="billing_country_code"
+                        t-att-data-plan-id="plan.id" aria-label="Billing country">
+                  <option value="__default__"
+                          t-att-selected="'selected' if billing_country_code == '__default__' else None">
+                    Standard price
+                  </option>
+                  <t t-foreach="billing_countries" t-as="bcountry">
+                    <option t-att-value="bcountry['code']"
+                            t-att-selected="'selected' if bcountry['selected'] else None"
+                            t-esc="bcountry['name']"/>
+                  </t>
+                </select>
+                <p class="ac-su-field-hint">The price follows this country, not the phone code.</p>
+              </div>
+              <div class="ac-su-field">
                 <label for="buyer_phone_national">Contact number</label>
                 <div class="ac-su-phone">
                   <select id="buyer_country_code" name="buyer_country_code"
@@ -240,6 +256,14 @@
                 showPhoneError('');
               });
             }
+            var billingEl = document.getElementById('billing_country_code');
+            if (billingEl) {
+              billingEl.addEventListener('change', function () {
+                var planId = billingEl.getAttribute('data-plan-id');
+                var code = billingEl.value || '__default__';
+                window.location = '/saas/signup/' + planId + '?country=' + encodeURIComponent(code);
+              });
+            }
             applyPhoneRules();
 
             if (form) {
@@ -272,6 +296,10 @@
         </div>
         <div class="ac-su-plan-body">
           <div class="ac-su-plan-price" t-esc="amount_label"/>
+          <p t-if="price_country_name" class="ac-su-plan-validity">
+            Price for <t t-esc="price_country_name"/>
+          </p>
+          <p t-if="card_note" class="ac-su-plan-validity" t-esc="card_note"/>
           <p t-if="price_validity" class="ac-su-plan-validity" t-esc="price_validity"/>
           <ul class="ac-su-plan-list">
             <li><i class="fas fa-check"/><span>Up to <t t-esc="plan.max_tournaments"/> tournaments</span></li>
@@ -365,6 +393,10 @@
             <div class="label">Amount due</div>
             <div class="value" t-esc="amount_label"/>
           </div>
+          <p t-if="payment.currency_id.name and payment.currency_id.name != 'INR'" class="ac-su-card-sub">
+            Charged in <t t-esc="payment.currency_id.name"/> by international card.
+            <t t-if="payment.buyer_country_id"> Price for <t t-esc="payment.buyer_country_id.name"/>.</t>
+          </p>
 
           <div class="ac-su-actions">
             <button type="button" class="ac-su-btn ac-su-btn-primary" id="acSaasPayBtn">

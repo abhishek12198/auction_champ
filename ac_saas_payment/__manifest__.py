@@ -8,7 +8,7 @@
 ##############################################################################
 {
     'name': 'AuctionChamp SaaS Payment',
-    'version': '1.2.1',
+    'version': '1.3.0',
     'summary': 'Razorpay for SaaS upgrades and website plan signup',
     'sequence': 17,
     'description': """
@@ -37,6 +37,7 @@ Connects ac_saas_manager + ac_payment_gateway (+ website) for:
         'views/saas_upgrade_request_views.xml',
         'views/upgrade_payment_templates.xml',
         'views/signup_templates.xml',
+        'views/website_pricing_templates.xml',
         'views/signup_payment_views.xml',
     ],
     'installable': True,

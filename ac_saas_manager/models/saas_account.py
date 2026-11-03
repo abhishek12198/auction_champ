@@ -73,6 +73,13 @@ class AcSaasAccount(models.Model):
         ondelete='restrict',
         index=True,
     )
+    billing_country_id = fields.Many2one(
+        'res.country',
+        string='Billing country',
+        help='Country locked at the first website purchase. Renewals and upgrades '
+             'keep using this country’s package price, so the currency stays the same. '
+             'Empty means the plan’s standard package price.',
+    )
     date_start = fields.Date(string='Start Date', default=fields.Date.context_today)
     date_end = fields.Date(string='End Date')
     notes = fields.Text()

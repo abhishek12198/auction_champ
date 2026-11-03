@@ -47,6 +47,12 @@
               action="action_ac_saas_plan"
               sequence="20"/>
 
+    <menuitem id="menu_ac_saas_price_regions"
+              name="Price Regions"
+              parent="menu_ac_saas_root"
+              action="action_ac_saas_price_region"
+              sequence="25"/>
+
     <menuitem id="menu_ac_saas_upgrade_requests"
               name="Upgrade Requests"
               parent="menu_ac_saas_root"

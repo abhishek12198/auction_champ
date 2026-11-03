@@ -16,8 +16,16 @@ class AcSaasAccount(models.Model):
         self.ensure_one()
         Payment = self.env['ac.saas.upgrade.payment']
         plan = self.plan_id
-        has_price = bool(plan and float(plan.list_price or 0.0) > 0.0)
-        if Payment.saas_upgrade_payment_active() and has_price:
+        quote = plan.get_price_for_country(self.billing_country_id) if plan else None
+        if Payment.saas_upgrade_payment_active() and quote and quote['matched_region'] and not quote['purchasable']:
+            raise UserError(_(
+                'Plan "%(plan)s" has no regional price for %(country)s. '
+                'Add it on the SaaS plan before renewing.'
+            ) % {
+                'plan': plan.name,
+                'country': self.billing_country_id.display_name,
+            })
+        if Payment.saas_upgrade_payment_active() and quote and quote['purchasable']:
             return self._saas_start_paid_renewal()
         return super().action_request_reactivation()
 
@@ -43,8 +51,18 @@ class AcSaasAccount(models.Model):
         if not plan:
             raise UserError(_('No SaaS plan is assigned to this account.'))
 
-        amount = float(plan.list_price or 0.0)
-        if amount <= 0:
+        quote = plan.get_price_for_country(self.billing_country_id)
+        amount = float(quote['amount'] or 0.0)
+        currency = quote['currency'] or self.env.company.currency_id
+        if not quote['purchasable'] or amount <= 0:
+            if quote['matched_region'] and self.billing_country_id:
+                raise UserError(_(
+                    'Plan "%(plan)s" has no regional price for %(country)s. '
+                    'Add it on the SaaS plan, or turn off Razorpay for plan upgrades.'
+                ) % {
+                    'plan': plan.name,
+                    'country': self.billing_country_id.display_name,
+                })
             raise UserError(_(
                 'Plan "%(plan)s" has no package price. Set Package price on the '
                 'SaaS plan, or turn off Razorpay for plan upgrades.'
@@ -80,8 +98,12 @@ class AcSaasAccount(models.Model):
                         'list_price_amount': amount,
                         'credit_amount': 0.0,
                         'proration_note': proration_note,
+                        'currency_id': currency.id,
                     }
-                    if abs((pay.amount or 0.0) - amount) > 0.001:
+                    if (
+                        abs((pay.amount or 0.0) - amount) > 0.001
+                        or pay.currency_id != currency
+                    ):
                         vals.update({'razorpay_order_id': False, 'state': 'draft'})
                     pay.write(vals)
                     if not pay.razorpay_order_id:
@@ -111,6 +133,7 @@ class AcSaasAccount(models.Model):
             list_price_amount=amount,
             credit_amount=0.0,
             proration_note=proration_note,
+            currency=currency,
         )
         payment.action_create_razorpay_order()
         return {

@@ -8,7 +8,7 @@
 ##############################################################################
 {
     'name': 'AuctionChamp SaaS Manager',
-    'version': '1.0.114',
+    'version': '1.0.115',
     'summary': 'Single-DB SaaS plans and account limits for AuctionChamp',
     'sequence': 5,
     'description': """
@@ -36,9 +36,11 @@ Overlay module (does not modify auction_module source).
         'data/saas_plan_redefine.xml',
         'data/saas_plan_parallel_sessions.xml',
         'data/saas_plan_mystery.xml',
+        'data/saas_currency_data.xml',
         'data/saas_sync_data.xml',
         'data/saas_upgrade_request_data.xml',
         'data/saas_expire_cron.xml',
+        'views/saas_price_region_views.xml',
         'views/saas_plan_views.xml',
         'views/saas_account_views.xml',
         'views/saas_upgrade_request_views.xml',

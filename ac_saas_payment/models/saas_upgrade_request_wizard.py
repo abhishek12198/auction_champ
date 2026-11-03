@@ -43,53 +43,125 @@ class AcSaasUpgradeRequestWizard(models.TransientModel):
             '1', 'true', 'yes',
         )
 
-    @api.model
+    def _account_billing_country(self):
+        self.ensure_one()
+        account = self.account_id
+        if account and account.billing_country_id:
+            return account.billing_country_id
+        return self.env['res.country']
+
     def _saas_plan_allows_free_request(self, plan):
         """Only custom-quote plans (price label, no package price) skip Razorpay.
 
         Note: ``contact_support`` means “beyond this plan, contact support” —
         it must NOT skip payment when upgrading *to* that plan.
+        A missing regional price is not a free upgrade.
         """
+        self.ensure_one()
         if not plan:
             return False
-        has_price = float(plan.list_price or 0.0) > 0.0
-        if has_price:
+        quote = plan.get_price_for_country(self._account_billing_country())
+        if quote['matched_region'] and not quote['purchasable']:
             return False
-        # No numeric price + marketing override like “Contact us”
+        if quote['purchasable']:
+            return False
         if (plan.price_label or '').strip():
             return True
         return False
 
+    def _regional_price_error(self, details):
+        """Message when the locked billing country cannot be priced. Else False."""
+        self.ensure_one()
+        country = self._account_billing_country()
+        country_name = country.display_name if country else _('this account')
+        if details.get('currency_mismatch'):
+            return _(
+                'The current plan and the new plan use different currencies for %(country)s. '
+                'Set both prices in the same currency on the SaaS plans.'
+            ) % {'country': country_name}
+        if details.get('unavailable') == 'target':
+            return _(
+                'Plan "%(plan)s" has no regional price for %(country)s. '
+                'Add it on the SaaS plan before taking payment.'
+            ) % {
+                'plan': self.requested_plan_id.name,
+                'country': country_name,
+            }
+        if details.get('unavailable') == 'current':
+            return _(
+                'The current plan has no regional price for %(country)s, so the unused '
+                'credit cannot be calculated. Add that price on the SaaS plan.'
+            ) % {'country': country_name}
+        return False
+
+    def _money_round(self, amount, currency):
+        if currency:
+            return currency.round(amount or 0.0)
+        return round(amount or 0.0, 2)
+
     def _saas_upgrade_proration(self):
         """Prorated upgrade: new package price minus unused credit on current package.
 
-        credit = current_list_price × (remaining_days / period_days)
-        amount = max(0, new_list_price − credit)
-
-        Same-day upgrade with full remaining validity ≈ new − current (not both full prices).
-        Expired / no remaining days → credit 0 → full new package price.
+        Prices follow the account’s billing country. No billing country, or a
+        country outside every region, uses each plan’s standard package price.
+        credit = current price × (remaining_days / period_days)
+        amount = max(0, new price − credit)
         """
         self.ensure_one()
         plan = self.requested_plan_id
         current = self.current_plan_id
         account = self.account_id
-        target = float(plan.list_price or 0.0) if plan else 0.0
-        current_price = float(current.list_price or 0.0) if current else 0.0
+        country = self._account_billing_country()
+        target_quote = plan.get_price_for_country(country) if plan else None
+        current_quote = current.get_price_for_country(country) if current else None
+        company_currency = self.env.company.currency_id
+        currency = (
+            (target_quote or {}).get('currency')
+            or company_currency
+        )
+        target = float((target_quote or {}).get('amount') or 0.0)
+        current_price = float((current_quote or {}).get('amount') or 0.0)
+        unavailable = False
+        currency_mismatch = False
+        renewal = self.trigger_feature == 'renewal'
+        if target_quote and target_quote['matched_region'] and not target_quote['purchasable']:
+            unavailable = 'target'
+            target = 0.0
+        elif (
+            not renewal
+            and current_quote
+            and current_quote['matched_region']
+            and not current_quote['purchasable']
+        ):
+            unavailable = 'current'
+            current_price = 0.0
+        if (
+            not renewal
+            and not unavailable
+            and target_quote and current_quote
+            and target_quote['purchasable'] and current_quote['purchasable']
+            and target_quote['currency'] and current_quote['currency']
+            and target_quote['currency'] != current_quote['currency']
+        ):
+            currency_mismatch = True
 
         today = fields.Date.context_today(self)
         period_days = 0
         remaining_days = 0
 
-        if self.trigger_feature == 'renewal':
+        if renewal:
             period_days = max(1, int((plan.validity_days if plan else 0) or 365))
             return {
                 'target': target,
                 'current_price': current_price,
                 'credit': 0.0,
-                'amount': round(target, 2),
+                'amount': self._money_round(target, currency),
                 'period_days': period_days,
                 'remaining_days': 0,
                 'ratio': 0.0,
+                'currency': currency,
+                'unavailable': unavailable,
+                'currency_mismatch': currency_mismatch,
             }
 
         if account and account.date_start and account.date_end:
@@ -104,8 +176,8 @@ class AcSaasUpgradeRequestWizard(models.TransientModel):
                 remaining_days = period_days
 
         ratio = min(1.0, float(remaining_days) / float(period_days)) if period_days else 0.0
-        credit = round(current_price * ratio, 2)
-        amount = round(max(0.0, target - credit), 2)
+        credit = self._money_round(current_price * ratio, currency)
+        amount = self._money_round(max(0.0, target - credit), currency)
 
         return {
             'target': target,
@@ -115,6 +187,9 @@ class AcSaasUpgradeRequestWizard(models.TransientModel):
             'period_days': period_days,
             'remaining_days': remaining_days,
             'ratio': ratio,
+            'currency': currency,
+            'unavailable': unavailable,
+            'currency_mismatch': currency_mismatch,
         }
 
     def _saas_upgrade_charge_amount(self):
@@ -125,10 +200,16 @@ class AcSaasUpgradeRequestWizard(models.TransientModel):
         'requested_plan_id.list_price',
         'requested_plan_id.currency_id',
         'requested_plan_id.price_label',
+        'requested_plan_id.price_ids.price',
+        'requested_plan_id.price_ids.currency_id',
         'current_plan_id',
         'current_plan_id.list_price',
+        'current_plan_id.currency_id',
         'current_plan_id.validity_days',
+        'current_plan_id.price_ids.price',
+        'current_plan_id.price_ids.currency_id',
         'account_id',
+        'account_id.billing_country_id',
         'account_id.date_start',
         'account_id.date_end',
         'trigger_feature',
@@ -138,17 +219,23 @@ class AcSaasUpgradeRequestWizard(models.TransientModel):
         for wiz in self:
             plan = wiz.requested_plan_id
             currency = plan.currency_id if plan else self.env.company.currency_id
-            free_ok = wiz._saas_plan_allows_free_request(plan)
+            free_ok = wiz._saas_plan_allows_free_request(plan) if plan else False
             details = wiz._saas_upgrade_proration() if plan and not free_ok else {
                 'target': 0.0, 'credit': 0.0, 'amount': 0.0,
                 'remaining_days': 0, 'period_days': 0,
+                'currency': currency, 'unavailable': False, 'currency_mismatch': False,
             }
+            currency = details.get('currency') or currency
+            blocked = bool(details.get('unavailable') or details.get('currency_mismatch'))
             wiz.payment_required = bool(setting_on and plan and not free_ok)
-            wiz.upgrade_list_price = details['target'] if wiz.payment_required else 0.0
-            wiz.upgrade_credit = details['credit'] if wiz.payment_required else 0.0
-            wiz.upgrade_amount = details['amount'] if wiz.payment_required else 0.0
+            wiz.upgrade_list_price = details['target'] if wiz.payment_required and not blocked else 0.0
+            wiz.upgrade_credit = details['credit'] if wiz.payment_required and not blocked else 0.0
+            wiz.upgrade_amount = details['amount'] if wiz.payment_required and not blocked else 0.0
             wiz.upgrade_currency_id = currency
-            if wiz.payment_required and currency and details['target'] > 0:
+            if blocked and wiz.payment_required:
+                wiz.upgrade_amount_label = _('Price not set for this country')
+                wiz.upgrade_proration_note = wiz._regional_price_error(details)
+            elif wiz.payment_required and currency and details['target'] > 0:
                 wiz.upgrade_amount_label = '%s %s' % (
                     currency.symbol or currency.name or '',
                     '{:,.2f}'.format(details['amount']),
@@ -183,6 +270,9 @@ class AcSaasUpgradeRequestWizard(models.TransientModel):
             return super().action_submit()
 
         details = self._saas_upgrade_proration()
+        price_error = self._regional_price_error(details)
+        if price_error and (details.get('unavailable') or details.get('currency_mismatch')):
+            raise UserError(price_error)
         if details['target'] <= 0:
             raise UserError(_(
                 'Plan "%(plan)s" has no package price. '
@@ -226,8 +316,12 @@ class AcSaasUpgradeRequestWizard(models.TransientModel):
                         'list_price_amount': details['target'],
                         'credit_amount': details['credit'],
                         'proration_note': self.upgrade_proration_note,
+                        'currency_id': details['currency'].id,
                     }
-                    if abs((pay.amount or 0.0) - amount) > 0.001:
+                    if (
+                        abs((pay.amount or 0.0) - amount) > 0.001
+                        or pay.currency_id != details['currency']
+                    ):
                         vals.update({'razorpay_order_id': False, 'state': 'draft'})
                     pay.write(vals)
                     if not pay.razorpay_order_id:
@@ -257,6 +351,7 @@ class AcSaasUpgradeRequestWizard(models.TransientModel):
             list_price_amount=details['target'],
             credit_amount=details['credit'],
             proration_note=self.upgrade_proration_note,
+            currency=details['currency'],
         )
         payment.action_create_razorpay_order()
 

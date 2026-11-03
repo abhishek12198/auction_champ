@@ -67,6 +67,9 @@
           <div class="label">Amount due</div>
           <div class="value" t-esc="amount_label"/>
         </div>
+        <p t-if="payment.currency_id.name and payment.currency_id.name != 'INR'" class="ac-upg-hint" style="margin-top:10px;">
+          Charged in <t t-esc="payment.currency_id.name"/> by international card.
+        </p>
         <p t-if="proration_note" class="ac-upg-hint" style="margin-top:10px;text-align:left;" t-esc="proration_note"/>
 
         <div class="ac-upg-actions">

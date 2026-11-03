@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ac_saas_price_region_tree" model="ir.ui.view">
+        <field name="name">ac.saas.price.region.tree</field>
+        <field name="model">ac.saas.price.region</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="currency_id"/>
+                <field name="country_ids" widget="many2many_tags"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_ac_saas_price_region_form" model="ir.ui.view">
+        <field name="name">ac.saas.price.region.form</field>
+        <field name="model">ac.saas.price.region</field>
+        <field name="arch" type="xml">
+            <form string="Price Region">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. United Arab Emirates"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="currency_id"/>
+                            <field name="sequence"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <p class="text-muted">
+                                Every country in this region shares one currency.
+                                A country can belong to only one active region.
+                                Set the amount for each plan on the plan itself.
+                                Visitors in a country that is not listed keep the
+                                standard package price. If a country is listed here
+                                but a plan has no price for this region, that plan
+                                cannot be bought online in those countries.
+                                Non-INR payments need International payments enabled
+                                on Razorpay. The customer pays this currency;
+                                Razorpay settles rupees to the Indian account.
+                            </p>
+                        </group>
+                    </group>
+                    <group string="Countries">
+                        <field name="country_ids" nolabel="1" widget="many2many_tags"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_ac_saas_price_region" model="ir.actions.act_window">
+        <field name="name">Price Regions</field>
+        <field name="res_model">ac.saas.price.region</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

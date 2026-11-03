@@ -63,6 +63,7 @@
                         </group>
                         <group string="Subscription">
                             <field name="plan_id"/>
+                            <field name="billing_country_id"/>
                             <field name="allow_parallel_sessions" invisible="1"/>
                             <field name="disable_parallel_sessions"
                                    attrs="{'invisible': [('allow_parallel_sessions', '=', False)]}"/>

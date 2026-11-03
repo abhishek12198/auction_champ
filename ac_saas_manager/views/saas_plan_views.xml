@@ -64,11 +64,26 @@
                                    placeholder="e.g. Contact us / Custom quote"/>
                             <field name="show_price_on_website"/>
                             <p class="text-muted">
-                                One-time package price for the tournament quota above.
-                                Website shows e.g. ₹500 with (₹167 per tournament) and
-                                “Valid for N days”.
+                                Standard package price. Visitors whose country is not
+                                in a price region see and pay this amount. Website shows
+                                it with the per-tournament amount and “Valid for N days”.
                             </p>
                         </group>
+                    </group>
+                    <group string="Regional prices">
+                        <field name="price_ids" nolabel="1">
+                            <tree editable="bottom">
+                                <field name="region_id"/>
+                                <field name="currency_id"/>
+                                <field name="price"/>
+                                <field name="price_per_tournament"/>
+                            </tree>
+                        </field>
+                        <p class="text-muted">
+                            Add a row only for regions that should pay a different amount.
+                            Leave this empty to keep the standard price everywhere.
+                            Create regions under SaaS Manager → Price Regions.
+                        </p>
                     </group>
                     <group>
                         <group string="Features">

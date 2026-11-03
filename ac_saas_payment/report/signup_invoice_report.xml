@@ -103,6 +103,7 @@
                         <div style="margin-top:2px;"><t t-esc="doc.buyer_email"/></div>
                         <div t-if="doc.buyer_phone"><t t-esc="doc.buyer_phone"/></div>
                         <div t-if="doc.buyer_gstin" style="margin-top:2px;">GSTIN: <t t-esc="doc.buyer_gstin"/></div>
+                        <div t-if="doc.buyer_country_id">Country: <t t-esc="doc.buyer_country_id.name"/></div>
                         <div t-if="doc.buyer_state">State: <t t-esc="doc.buyer_state"/></div>
                     </div>
 
@@ -174,7 +175,10 @@
                     <p t-if="doc.gst_rate" style="margin-top:8px; color:#4a5568;">
                         GST is included in the amount paid. Payment received in full via Razorpay.
                     </p>
-                    <p t-if="not doc.gst_rate" style="margin-top:8px; color:#4a5568;">
+                    <p t-if="not doc.gst_rate and doc.buyer_country_id.code and doc.buyer_country_id.code != 'IN'" style="margin-top:8px; color:#4a5568;">
+                        Export of services. GST is not charged. Payment received in full via Razorpay.
+                    </p>
+                    <p t-elif="not doc.gst_rate" style="margin-top:8px; color:#4a5568;">
                         Payment received in full via Razorpay.
                     </p>
 

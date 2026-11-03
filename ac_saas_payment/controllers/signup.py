@@ -15,6 +15,9 @@ from odoo.addons.ac_saas_payment.models.phone_countries import (
     signup_phone_rows,
     split_signup_phone,
 )
+from odoo.addons.ac_saas_payment.models.visitor_country import (
+    apply_country_cookie,
+)
 
 _logger = logging.getLogger(__name__)
 EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
@@ -35,10 +38,12 @@ class SaasSignupPaymentController(http.Controller):
         return rec
 
     def _money(self, currency, amount):
+        decimals = int(currency.decimal_places) if currency else 2
+        text = ('{:,.%df}' % max(0, decimals)).format(amount or 0)
         sym = ''
         if currency:
             sym = currency.symbol or currency.name or ''
-        return ('%s %s' % (sym, '{:,.2f}'.format(amount or 0))).strip()
+        return ('%s %s' % (sym, text)).strip()
 
     def _checkout_payload(self, payment):
         if not payment.razorpay_order_id:
@@ -72,22 +77,44 @@ class SaasSignupPaymentController(http.Controller):
                 'message': _('This plan is not available.'),
             })
 
-        if not Signup.website_signup_active() or not Signup.plan_is_purchasable(plan):
+        explicit = post.get('billing_country_code') or post.get('country') or ''
+        price_ctx = Signup.website_price_context(explicit or None)
+        country = price_ctx['country']
+        quote = plan.get_price_for_country(country)
+
+        if not Signup.website_signup_active() or not quote['purchasable']:
             config = request.env['auction.website.config'].sudo().get_singleton()
             email = (config.contact_email or '').strip() or 'support@auctionchamp.in'
-            return request.render('ac_saas_payment.saas_signup_error', {
-                'message': _(
+            if quote['matched_region'] and country:
+                message = _(
+                    'Online purchase of %(plan)s is not available in %(country)s yet. '
+                    'Please contact us at %(email)s.'
+                ) % {'plan': plan.name, 'country': country.name, 'email': email}
+            else:
+                message = _(
                     'Online purchase is not available for this plan. '
                     'Please contact us at %s.'
-                ) % email,
+                ) % email
+            return request.render('ac_saas_payment.saas_signup_error', {
+                'message': message,
             })
 
-        price_info = plan.get_website_price_display()
+        price_info = plan.get_website_price_display(country)
         detected_code = detect_signup_country_code(self._client_ip())
+        currency = quote['currency'] or plan.currency_id
+        card_note = False
+        if currency and (currency.name or '').upper() != 'INR':
+            card_note = _(
+                'You will pay by international card in %s.'
+            ) % currency.name
         ctx = {
             'plan': plan,
-            'amount_label': self._money(plan.currency_id, plan.list_price),
+            'amount_label': self._money(currency, quote['amount']),
             'price_validity': price_info.get('validity') or '',
+            'price_country_name': price_ctx['country_name'],
+            'billing_country_code': price_ctx['country_code'] or '__default__',
+            'billing_countries': price_ctx['countries'],
+            'card_note': card_note,
             'error': False,
             'email_error': False,
             'phone_error': False,
@@ -120,10 +147,13 @@ class SaasSignupPaymentController(http.Controller):
                     form['buyer_email'],
                     '%s%s' % (code, national_digits),
                 )
-                payment = Signup.create_for_plan(plan, buyer)
+                payment = Signup.create_for_plan(plan, buyer, country=country)
                 payment.action_create_razorpay_order()
-                return werkzeug.utils.redirect(
+                response = werkzeug.utils.redirect(
                     '/saas/signup/pay/%s' % payment.access_token, 303,
+                )
+                return apply_country_cookie(
+                    response, country.code if country else '__default__',
                 )
             except UserError as exc:
                 msg = str(exc)
@@ -136,7 +166,11 @@ class SaasSignupPaymentController(http.Controller):
                 _logger.exception('SaaS signup form failed')
                 ctx['error'] = str(exc)
 
-        return request.render('ac_saas_payment.saas_signup_form', ctx)
+        response = request.render('ac_saas_payment.saas_signup_form', ctx)
+        chosen = (post.get('country') or '').strip()
+        if request.httprequest.method == 'GET' and chosen:
+            apply_country_cookie(response, chosen)
+        return response
 
     @http.route(
         '/saas/signup/check_email',

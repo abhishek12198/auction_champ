@@ -223,12 +223,14 @@ class AcSaasUpgradePayment(models.Model):
     def create_for_upgrade_request(
         self, upgrade_request, amount=None,
         list_price_amount=None, credit_amount=None, proration_note=None,
+        currency=None,
     ):
         upgrade_request.ensure_one()
         plan = upgrade_request.requested_plan_id
         if amount is None:
             amount = plan.list_price or 0.0
-        currency = plan.currency_id or self.env.company.currency_id
+        if not currency:
+            currency = plan.currency_id or self.env.company.currency_id
         if amount <= 0:
             raise UserError(_(
                 'Plan %(plan)s has no payable upgrade amount after proration. '

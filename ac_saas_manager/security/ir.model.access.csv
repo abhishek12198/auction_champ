@@ -1,4 +1,10 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ac_saas_price_region_manager,ac.saas.price.region manager,model_ac_saas_price_region,ac_saas_manager.group_saas_manager,1,1,1,1
+access_ac_saas_price_region_user,ac.saas.price.region user,model_ac_saas_price_region,ac_saas_manager.group_saas_account_user,1,0,0,0
+access_ac_saas_price_region_admin,ac.saas.price.region admin,model_ac_saas_price_region,auction_module.group_auction_group_admin,1,1,1,1
+access_ac_saas_plan_price_manager,ac.saas.plan.price manager,model_ac_saas_plan_price,ac_saas_manager.group_saas_manager,1,1,1,1
+access_ac_saas_plan_price_user,ac.saas.plan.price user,model_ac_saas_plan_price,ac_saas_manager.group_saas_account_user,1,0,0,0
+access_ac_saas_plan_price_admin,ac.saas.plan.price admin,model_ac_saas_plan_price,auction_module.group_auction_group_admin,1,1,1,1
 access_ac_saas_plan_manager,ac.saas.plan manager,model_ac_saas_plan,ac_saas_manager.group_saas_manager,1,1,1,1
 access_ac_saas_plan_user,ac.saas.plan user,model_ac_saas_plan,ac_saas_manager.group_saas_account_user,1,0,0,0
 access_ac_saas_account_manager,ac.saas.account manager,model_ac_saas_account,ac_saas_manager.group_saas_manager,1,1,1,1

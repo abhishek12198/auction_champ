@@ -129,7 +129,13 @@ class AcSaasUpgradeRequestWizard(models.TransientModel):
             },
         }
 
-    @api.depends('requested_plan_id')
+    @api.depends(
+        'requested_plan_id',
+        'requested_plan_id.list_price',
+        'requested_plan_id.currency_id',
+        'requested_plan_id.price_ids.price',
+        'account_id.billing_country_id',
+    )
     def _compute_plan_preview(self):
         theme_meta = self._theme_meta()
         for wiz in self:
@@ -142,7 +148,8 @@ class AcSaasUpgradeRequestWizard(models.TransientModel):
             themes = plan.get_allowed_templates() or []
             random_yes = bool(plan.allow_random_mode)
             parallel_yes = bool(plan.allow_parallel_sessions)
-            price_info = plan.get_website_price_display()
+            country = wiz.account_id.billing_country_id if wiz.account_id else False
+            price_info = plan.get_website_price_display(country)
             bits = [b for b in (
                 price_info.get('amount'),
                 ('(%s)' % price_info['per_tournament']) if price_info.get('per_tournament') else False,

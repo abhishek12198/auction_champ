@@ -67,6 +67,12 @@ class AcSaasSignupPayment(models.Model):
     invoice_date = fields.Date(copy=False, readonly=True)
     buyer_gstin = fields.Char(string='Buyer GSTIN', copy=False)
     buyer_state = fields.Char(string='Buyer State', copy=False)
+    buyer_country_id = fields.Many2one(
+        'res.country',
+        string='Billing country',
+        copy=False,
+        help='Country chosen at checkout. Empty means the plan’s standard price.',
+    )
     supplier_name = fields.Char(readonly=True, copy=False)
     supplier_address = fields.Char(readonly=True, copy=False)
     supplier_gstin = fields.Char(readonly=True, copy=False)
@@ -106,15 +112,50 @@ class AcSaasSignupPayment(models.Model):
         return bool(key_id and key_secret)
 
     @api.model
-    def plan_is_purchasable(self, plan):
+    def plan_is_purchasable(self, plan, country=None):
         plan = plan.sudo()
         if not plan or not plan.active:
             return False
+        if country:
+            return bool(plan.get_price_for_country(country)['purchasable'])
         if float(plan.list_price or 0.0) <= 0:
             return False
         # Custom quote label without treating as payable when price also set is OK —
         # if list_price > 0 we still sell online.
         return True
+
+    @api.model
+    def website_price_context(self, explicit_code=None):
+        """Countries for the pricing selector, plus the resolved billing country."""
+        from odoo.http import request
+        from .visitor_country import resolve_country_iso
+
+        geoip_code = ''
+        httprequest = None
+        try:
+            httprequest = request.httprequest
+            geoip_code = (request.session.get('geoip') or {}).get('country_code') or ''
+        except RuntimeError:
+            httprequest = None
+        iso = ''
+        if httprequest is not None:
+            iso = resolve_country_iso(httprequest, explicit_code, geoip_code)
+        elif explicit_code and len((explicit_code or '').strip()) == 2:
+            iso = explicit_code.strip().upper()
+        Country = self.env['res.country'].sudo()
+        countries = Country.search([('code', '!=', False)], order='name')
+        selected = countries.filtered(lambda country: country.code == iso)[:1] if iso else Country.browse()
+        rows = [{
+            'code': country.code,
+            'name': country.name,
+            'selected': bool(selected) and country.id == selected.id,
+        } for country in countries]
+        return {
+            'country': selected,
+            'countries': rows,
+            'country_name': selected.name if selected else '',
+            'country_code': selected.code if selected else '',
+        }
 
     @api.model
     def _normalize_email(self, email):
@@ -171,22 +212,29 @@ class AcSaasSignupPayment(models.Model):
         }
 
     @api.model
-    def create_for_plan(self, plan, buyer_vals):
+    def create_for_plan(self, plan, buyer_vals, country=None):
         plan = plan.sudo()
         if not self.website_signup_active():
             raise UserError(_('Online plan purchase is not enabled.'))
-        if not self.plan_is_purchasable(plan):
+        quote = plan.get_price_for_country(country)
+        if not quote['purchasable']:
+            if quote['matched_region'] and country:
+                raise UserError(_(
+                    'Plan "%(plan)s" has no price for %(country)s. '
+                    'Please choose another country or contact sales.'
+                ) % {'plan': plan.name, 'country': country.name})
             raise UserError(_(
                 'Plan "%(plan)s" is not available for online purchase. '
                 'Please contact sales.'
             ) % {'plan': plan.name})
-        amount = float(plan.list_price or 0.0)
-        currency = plan.currency_id or self.env.company.currency_id
+        amount = float(quote['amount'] or 0.0)
+        currency = quote['currency'] or plan.currency_id or self.env.company.currency_id
         vals = dict(buyer_vals)
         vals.update({
             'plan_id': plan.id,
             'amount': amount,
             'currency_id': currency.id,
+            'buyer_country_id': country.id if country else False,
             'state': 'draft',
         })
         return self.sudo().create(vals)
@@ -222,6 +270,7 @@ class AcSaasSignupPayment(models.Model):
                 'purpose': 'saas_signup',
                 'plan_id': str(self.plan_id.id),
                 'email': self.buyer_email or '',
+                'country': self.buyer_country_id.code or '',
             },
         }
         try:
@@ -337,6 +386,8 @@ class AcSaasSignupPayment(models.Model):
             Account = self.env['ac.saas.account'].sudo()
             account = Account.search([('user_id', '=', existing.id)], limit=1)
             if account:
+                if self.buyer_country_id and not account.billing_country_id:
+                    account.write({'billing_country_id': self.buyer_country_id.id})
                 self.write({
                     'user_id': existing.id,
                     'account_id': account.id,
@@ -378,12 +429,15 @@ class AcSaasSignupPayment(models.Model):
             'name': self.buyer_name,
             'user_id': user.id,
             'plan_id': plan.id,
+            'billing_country_id': self.buyer_country_id.id or False,
             'state': 'active',
             'active': True,
             'date_start': today,
             'date_end': today + timedelta(days=validity),
             'notes': _('Created via website signup payment %s') % self.name,
         })
+        if self.buyer_country_id and partner:
+            partner.sudo().write({'country_id': self.buyer_country_id.id})
 
         self.write({
             'user_id': user.id,
@@ -429,8 +483,13 @@ class AcSaasSignupPayment(models.Model):
         """GST included in the amount already paid. Frozen on the invoice."""
         self.ensure_one()
         ICP = self.env['ir.config_parameter'].sudo()
+        foreign = bool(
+            self.buyer_country_id and (self.buyer_country_id.code or '') != 'IN'
+        )
         raw_rate = ICP.get_param('ac_saas_payment.invoice_gst_rate')
-        rate = 18.0 if raw_rate in (None, False, '') else float(raw_rate)
+        rate = 0.0 if foreign else (
+            18.0 if raw_rate in (None, False, '') else float(raw_rate)
+        )
         if rate < 0:
             rate = 0.0
         legal_name = (ICP.get_param('ac_saas_payment.invoice_legal_name') or '').strip() or 'Auction Champ'
@@ -476,7 +535,10 @@ class AcSaasSignupPayment(models.Model):
             'sgst_amount': sgst,
             'igst_rate': igst_rate,
             'igst_amount': igst,
-            'place_of_supply': buyer_state or supplier_state or False,
+            'place_of_supply': (
+                self.buyer_country_id.name if foreign
+                else (buyer_state or supplier_state or False)
+            ),
         }
 
     def _rate_label(self, rate):
@@ -503,8 +565,9 @@ class AcSaasSignupPayment(models.Model):
 
     def _format_money(self, amount):
         self.ensure_one()
-        text = '{:,.2f}'.format(float(amount or 0.0))
         currency = self.currency_id
+        decimals = int(currency.decimal_places if currency else 2)
+        text = ('{:,.%df}' % max(0, decimals)).format(float(amount or 0.0))
         symbol = (currency.symbol or '').strip()
         if symbol and symbol.isascii():
             if currency.position == 'after':

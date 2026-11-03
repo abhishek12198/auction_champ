@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from . import saas_price_region
 from . import saas_plan
 from . import saas_account
 from . import saas_upgrade_request

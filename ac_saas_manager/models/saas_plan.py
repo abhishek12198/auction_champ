@@ -136,6 +136,13 @@ class AcSaasPlan(models.Model):
     )
 
     account_count = fields.Integer(compute='_compute_account_count')
+    price_ids = fields.One2many(
+        'ac.saas.plan.price',
+        'plan_id',
+        string='Regional prices',
+        help='Package price charged when the buyer’s country is in that region. '
+             'Countries that are not in any region pay the standard package price above.',
+    )
 
     _sql_constraints = [
         ('code_uniq', 'unique(code)', 'Plan code must be unique.'),
@@ -162,9 +169,52 @@ class AcSaasPlan(models.Model):
             amount = float(plan.list_price or 0.0)
             plan.price_per_tournament = (amount / tournaments) if tournaments > 0 else 0.0
 
-    def _format_money(self, amount):
+    def get_price_for_country(self, country):
+        """Price a buyer in ``country`` pays for this package.
+
+        No country, or a country that is not in any region, uses the standard
+        package price. A country that is in a region uses that regional price.
+        If the region has no price on this plan, the package is not sold online
+        there (the standard price is not substituted).
+        """
         self.ensure_one()
-        currency = self.currency_id or self.env.company.currency_id
+        plan = self.sudo()
+        default_currency = plan.currency_id or self.env.company.currency_id
+        standard = {
+            'amount': float(plan.list_price or 0.0),
+            'currency': default_currency,
+            'region': self.env['ac.saas.price.region'],
+            'purchasable': float(plan.list_price or 0.0) > 0.0,
+            'matched_region': False,
+        }
+        if not country:
+            return standard
+        region = self.env['ac.saas.price.region'].sudo().search([
+            ('active', '=', True),
+            ('country_ids', 'in', country.ids),
+        ], order='sequence, id', limit=1)
+        if not region:
+            return standard
+        line = plan.price_ids.filtered(lambda price: price.region_id == region)[:1]
+        if not line or float(line.price or 0.0) <= 0.0:
+            return {
+                'amount': 0.0,
+                'currency': region.currency_id or default_currency,
+                'region': region,
+                'purchasable': False,
+                'matched_region': True,
+            }
+        return {
+            'amount': float(line.price),
+            'currency': line.currency_id or region.currency_id or default_currency,
+            'region': region,
+            'purchasable': True,
+            'matched_region': True,
+        }
+
+    def _format_money(self, amount, currency=None):
+        self.ensure_one()
+        currency = currency or self.currency_id or self.env.company.currency_id
         try:
             from odoo.tools.misc import formatLang
             return formatLang(self.env, amount, currency_obj=currency)
@@ -184,41 +234,52 @@ class AcSaasPlan(models.Model):
                 keys.append(key)
         return keys
 
-    def get_website_price_display(self):
+    def get_website_price_display(self, country=None):
         """Return package price display bits for public pricing cards.
 
-        Returns dict keys: amount, per_tournament, validity (any may be False).
+        ``country`` selects a regional price when one is configured.
+        Returns dict keys: amount, per_tournament, validity, purchasable.
         Example: ₹500  (₹167 per tournament)  Valid for 365 days
         """
         self.ensure_one()
+        validity = (
+            _('Valid for %s days') % self.validity_days
+            if self.validity_days else False
+        )
         if not self.show_price_on_website:
             return {
                 'amount': False,
                 'per_tournament': False,
                 'validity': False,
+                'purchasable': False,
             }
         if (self.price_label or '').strip():
             return {
                 'amount': self.price_label.strip(),
                 'per_tournament': False,
-                'validity': (
-                    _('Valid for %s days') % self.validity_days
-                    if self.validity_days else False
-                ),
+                'validity': validity,
+                'purchasable': float(self.list_price or 0.0) > 0.0,
             }
-        amount = float(self.list_price or 0.0)
+        quote = self.get_price_for_country(country)
+        amount = float(quote['amount'] or 0.0)
+        currency = quote['currency']
         tournaments = int(self.max_tournaments or 0)
+        if not quote['purchasable']:
+            return {
+                'amount': False,
+                'per_tournament': False,
+                'validity': validity,
+                'purchasable': False,
+            }
         per_tournament = False
-        if amount > 0 and tournaments > 0:
+        if tournaments > 0:
             per_unit = amount / float(tournaments)
-            per_tournament = _('%s per tournament') % self._format_money(per_unit)
+            per_tournament = _('%s per tournament') % self._format_money(per_unit, currency)
         return {
-            'amount': self._format_money(amount) if amount > 0 else False,
+            'amount': self._format_money(amount, currency),
             'per_tournament': per_tournament,
-            'validity': (
-                _('Valid for %s days') % self.validity_days
-                if self.validity_days else False
-            ),
+            'validity': validity,
+            'purchasable': True,
         }
 
     def assert_template_allowed(self, template_key):

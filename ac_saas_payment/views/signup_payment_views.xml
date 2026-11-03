@@ -62,7 +62,8 @@
                         <field name="igst_amount" readonly="1"/>
                         <field name="place_of_supply" readonly="1"/>
                         <field name="buyer_gstin" readonly="1"/>
-                        <field name="buyer_state" readonly="1"/>
+                            <field name="buyer_country_id" readonly="1"/>
+                            <field name="buyer_state" readonly="1"/>
                         <field name="razorpay_order_id" readonly="1"/>
                         <field name="razorpay_payment_id" readonly="1"/>
                     </group>
