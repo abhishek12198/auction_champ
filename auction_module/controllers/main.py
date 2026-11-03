@@ -159,7 +159,7 @@ def _public_thumb_disk_put(dbname, etag, data):
 
 
 # Bump when the public squad face-crop changes, so browsers drop the old thumb.
-_SQ_CROP_VERSION = 'face3'
+_SQ_CROP_VERSION = 'face4'
 _YUNET_LOCK = threading.Lock()
 _YUNET_DET = {}
 
@@ -4095,26 +4095,19 @@ class Auction(http.Controller):
                             ).resize((384, 384), Image.LANCZOS)
                     except Exception:
                         cropped = None
-                if im is not None and max(im.size) > 960:
-                    from PIL import Image
-                    scale = 960.0 / float(max(im.size))
-                    im = im.resize((
-                        max(32, int(im.size[0] * scale)),
-                        max(32, int(im.size[1] * scale)),
-                    ), Image.BILINEAR)
                 if cropped is None and im is not None:
                     try:
-                        cropped = self._sp_face_fill_crop(im, out_w=192, out_h=192)
+                        cropped = self._sp_face_fill_crop(im, out_w=384, out_h=384)
                     except Exception:
                         cropped = None
                 if cropped is None and im is not None:
                     try:
-                        cropped = self._sp_roster_thumb_crop(im, out_w=192, out_h=192)
+                        cropped = self._sp_roster_thumb_crop(im, out_w=384, out_h=384)
                     except Exception:
                         cropped = None
                 if cropped is not None:
                     buf = BytesIO()
-                    cropped.convert('RGB').save(buf, format='JPEG', quality=74, optimize=False)
+                    cropped.convert('RGB').save(buf, format='JPEG', quality=88, optimize=True)
                     return buf.getvalue()
             except Exception:
                 _logger.warning('public image sz=sq face crop failed', exc_info=True)
