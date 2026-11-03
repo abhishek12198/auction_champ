@@ -11,6 +11,7 @@
 import base64
 import hashlib
 import logging
+import os
 from io import BytesIO
 
 _logger = logging.getLogger(__name__)
@@ -18,7 +19,7 @@ _logger = logging.getLogger(__name__)
 OG_WIDTH = 1200
 OG_HEIGHT = 630
 # Bump when JPEG layout changes (cache-bust for crawlers).
-OG_COMPOSE_VERSION = '4'
+OG_COMPOSE_VERSION = '5'
 SITE_NAME = 'Auction Champ'
 BRAND_TITLE = 'Auction Champ'
 BRAND_DESCRIPTION = (
@@ -77,7 +78,7 @@ PAGE_COPY = {
     ),
     'website_home': (
         '',
-        BRAND_DESCRIPTION,
+        'Manage player registrations, premier sports auctions, teams, fixtures, and tournament operations from one platform.',
     ),
     'website_privacy': (
         'Privacy Policy',
@@ -580,6 +581,24 @@ def _compose_logo_only(logo_im):
     return canvas
 
 
+_HOME_SHARE_JPEG = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    'static', 'description', 'social_share_home.jpg',
+)
+
+
+def _home_share_jpeg():
+    """Homepage hero used as the brand cover on WhatsApp and other link previews."""
+    try:
+        with open(_HOME_SHARE_JPEG, 'rb') as handle:
+            data = handle.read()
+        if data[:2] == b'\xff\xd8' and len(data) > 1000:
+            return data
+    except Exception:
+        _logger.exception('Homepage social share image is missing')
+    return None
+
+
 def compose_og_jpeg(tournament=None):
     """Return JPEG bytes (1200×630) for WhatsApp / Open Graph."""
     if tournament and tournament.id:
@@ -591,6 +610,9 @@ def compose_og_jpeg(tournament=None):
                     if field == 'logo':
                         return _jpeg_bytes(_compose_logo_only(im))
                     return _jpeg_bytes(_cover_crop_top(im, OG_WIDTH, OG_HEIGHT))
+    home = _home_share_jpeg()
+    if home:
+        return home
     icon = _load_brand_icon()
     return _jpeg_bytes(_compose_logo_card(
         icon,
