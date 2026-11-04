@@ -159,9 +159,10 @@ def _public_thumb_disk_put(dbname, etag, data):
 
 
 # Bump when the public squad face-crop changes, so browsers drop the old thumb.
-_SQ_CROP_VERSION = 'face4'
+_SQ_CROP_VERSION = 'face5'
 _YUNET_LOCK = threading.Lock()
 _YUNET_DET = {}
+_YUNET_WARNED = False
 
 
 def _pj_photo_etag(model, record_id, field, write_date, sz):
@@ -5510,26 +5511,65 @@ class Auction(http.Controller):
             y = max(0, H - fh)
         return x, y, fw, fh
 
+    def _sp_yunet_detector(self):
+        """Return (factory, model path) for YuNet, or a reason it cannot run.
+
+        Production was cropping with the skin-color guess because this lookup
+        failed there, while the local venv found ``cv2.FaceDetectorYN``.
+        """
+        global _YUNET_WARNED
+        try:
+            import cv2
+        except Exception as exc:
+            reason = 'OpenCV is not installed (%s)' % exc
+        else:
+            factory = None
+            if hasattr(cv2, 'FaceDetectorYN') and hasattr(cv2.FaceDetectorYN, 'create'):
+                factory = cv2.FaceDetectorYN.create
+            elif hasattr(cv2, 'FaceDetectorYN_create'):
+                factory = cv2.FaceDetectorYN_create
+            else:
+                face_mod = getattr(cv2, 'face', None)
+                if face_mod is not None and hasattr(face_mod, 'FaceDetectorYN'):
+                    factory = face_mod.FaceDetectorYN.create
+            if factory is None:
+                reason = 'this OpenCV build has no FaceDetectorYN (%s)' % getattr(cv2, '__version__', '?')
+            else:
+                names = ('face_detection_yunet_2023mar.onnx',)
+                paths = []
+                try:
+                    from odoo.modules.module import get_resource_path
+                    found = get_resource_path('auction_module', 'data', names[0])
+                    if found:
+                        paths.append(found)
+                except Exception:
+                    pass
+                paths.append(os.path.abspath(os.path.join(
+                    os.path.dirname(__file__), '..', 'data', names[0],
+                )))
+                model = next((path for path in paths if path and os.path.isfile(path)), None)
+                if not model:
+                    reason = 'YuNet model file is missing from auction_module/data'
+                else:
+                    return factory, model
+        if not _YUNET_WARNED:
+            _YUNET_WARNED = True
+            _logger.warning('squad face centering is off: %s', reason)
+        return None
+
     def _sp_detect_face_yunet(self, im):
         """Return (x, y, w, h) from OpenCV YuNet, or None.
 
         OpenCV 5 dropped Haar cascades, so the old detector always missed and
         the squad crop fell back to the top of the photo.
         """
+        loaded = self._sp_yunet_detector()
+        if not loaded:
+            return None
+        factory, model = loaded
         try:
             import cv2
             import numpy as np
-        except Exception:
-            return None
-        if not hasattr(cv2, 'FaceDetectorYN'):
-            return None
-        try:
-            from odoo.modules.module import get_resource_path
-            model = get_resource_path(
-                'auction_module', 'data', 'face_detection_yunet_2023mar.onnx',
-            )
-            if not model or not os.path.exists(model):
-                return None
             width, height = im.size
             if width < 16 or height < 16:
                 return None
@@ -5547,11 +5587,10 @@ class Auction(http.Controller):
             bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
             with _YUNET_LOCK:
                 det = _YUNET_DET.get('det')
-                if det is None:
-                    det = cv2.FaceDetectorYN.create(
-                        model, '', (nw, nh), 0.6, 0.3, 5000,
-                    )
+                if det is None or _YUNET_DET.get('model') != model:
+                    det = factory(model, '', (nw, nh), 0.6, 0.3, 5000)
                     _YUNET_DET['det'] = det
+                    _YUNET_DET['model'] = model
                 else:
                     det.setInputSize((nw, nh))
                 _ret, faces = det.detect(bgr)
@@ -5586,7 +5625,10 @@ class Auction(http.Controller):
                 return None
             return x, y, fw, fh
         except Exception:
-            _logger.debug('YuNet face detection failed', exc_info=True)
+            global _YUNET_WARNED
+            if not _YUNET_WARNED:
+                _YUNET_WARNED = True
+                _logger.warning('squad face centering is off', exc_info=True)
             return None
 
     def _sp_detect_face_opencv(self, im):
@@ -5853,7 +5895,7 @@ class Auction(http.Controller):
         out = (cx, cy, conf)
         return out if with_confidence else out[:2]
 
-    def _sp_face_crop_box(self, im):
+    def _sp_face_crop_box(self, im, box=None):
         """Return (left, top, side) square crop box for a PIL image (face-centered)."""
         W, H = im.size
         if W < 4 or H < 4:
@@ -5861,7 +5903,10 @@ class Auction(http.Controller):
             return 0, 0, side
 
         src = im.convert('RGB')
-        fx, fy, fw, fh = self._sp_detect_face_box(src)
+        if box:
+            fx, fy, fw, fh = box
+        else:
+            fx, fy, fw, fh = self._sp_detect_face_box(src)
         fw = max(16, int(fw))
         fh = max(16, int(fh))
 
@@ -5936,7 +5981,12 @@ class Auction(http.Controller):
             return im.resize((out_w, out_h), Image.LANCZOS)
 
         src = im.convert('RGB')
-        left, top, side = self._sp_face_crop_box(src)
+        # Skin-color fallback locks onto trophies and walls. The public square
+        # uses YuNet only; without a face it keeps the upper square.
+        box = self._sp_detect_face_yunet(src)
+        if not box:
+            return self._sp_roster_thumb_crop(im, out_w, out_h)
+        left, top, side = self._sp_face_crop_box(src, box=box)
         side = max(1, min(side, src.size[0], src.size[1]))
         left = max(0, min(left, src.size[0] - side))
         top = max(0, min(top, src.size[1] - side))
