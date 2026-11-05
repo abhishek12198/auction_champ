@@ -914,15 +914,16 @@
                                                     Viewers on <strong>youtube.com</strong> only see what
                                                     OBS sends. AuctionChamp cannot draw graphics on
                                                     YouTube’s own page.<br/><br/>
-                                                    <strong>For YouTube Live viewers:</strong> add
-                                                    <strong>OBS Overlay URL</strong> as a Browser Source
-                                                    (1920×1080, transparent). It sits on the camera;
-                                                    OBS composites it into the stream. Then share the
-                                                    normal YouTube Live / Watch link — the overlay is
-                                                    already in the video.<br/><br/>
-                                                    OBS: FPS 30, Custom CSS empty, transparent
-                                                    background. Do not use YouTube Studio as a browser
-                                                    for this HTML.<br/><br/>
+                                                    <strong>For YouTube Live viewers:</strong> copy
+                                                    <strong>OBS Overlay URL</strong> and add it in OBS as a
+                                                    Browser Source. Width <strong>1920</strong>, height
+                                                    <strong>1080</strong>, FPS 30, Custom CSS empty,
+                                                    and <strong>transparent background</strong> checked.
+                                                    The page itself is transparent, so the auctioneer
+                                                    stays visible. Refresh that Browser Source after an
+                                                    upgrade. Open <strong>OBS Overlay</strong> here to
+                                                    test the graphics before you go live. Do not point
+                                                    OBS at YouTube Studio.<br/><br/>
                                                     <strong>AuctionChamp Watch URL:</strong> optional
                                                     second page. Paste the YouTube URL in the field
                                                     above, then share <em>this</em> Watch link (not

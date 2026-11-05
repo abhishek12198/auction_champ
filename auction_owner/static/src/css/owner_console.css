@@ -18,12 +18,29 @@
 }
 
 *{box-sizing:border-box}
+html{
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+    touch-action:manipulation;
+}
 html,body{margin:0;padding:0}
 .oc-body{
     min-height:100dvh;
     background:var(--page);
     color:var(--ink);
     font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+    touch-action:manipulation;
+}
+.oc-body button,
+.oc-body a,
+.oc-body input,
+.oc-body select,
+.oc-body textarea,
+.oc-body label{touch-action:manipulation}
+@media (hover:none) and (pointer:coarse){
+    .oc-body input,
+    .oc-body select,
+    .oc-body textarea{font-size:16px !important}
 }
 
 /* ── Header ─────────────────────────────────────────────── */
@@ -228,9 +245,19 @@ html,body{margin:0;padding:0}
 .oc-sold-amount{margin-top:4px;font-size:1.35rem;font-weight:800;color:var(--ok)}
 
 .oc-bid-timer{
-    margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;
+    width:100%;margin-top:10px;display:flex;flex-direction:column;align-items:center;gap:4px;
+    text-align:center;padding:8px 10px 10px;border-radius:14px;
+    border:2px solid transparent;background:transparent;
 }
-.oc-clock{position:relative;width:52px;height:52px}
+.oc-timer-banner{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    min-height:28px;padding:4px 12px;border-radius:999px;
+    font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+}
+.oc-timer-dot{
+    width:8px;height:8px;border-radius:50%;background:currentColor;flex:0 0 auto;
+}
+.oc-clock{position:relative;width:64px;height:64px}
 .oc-clock-svg{width:100%;height:100%;display:block}
 .oc-clock-track{fill:none;stroke:#e4ebf5;stroke-width:2.4}
 .oc-clock-arc{
@@ -248,13 +275,49 @@ html,body{margin:0;padding:0}
 @keyframes ocClockBlink{
     50%{opacity:.28}
 }
-.oc-clock-msg{font-size:.72rem;font-weight:700;color:var(--dim);line-height:1.3}
-.oc-bid-timer.is-held .oc-clock-msg{color:var(--ok)}
-.oc-bid-timer.is-paused .oc-clock-msg{color:#c48a12}
-.oc-bid-timer.is-paused .oc-clock-num{color:#c48a12}
-.oc-bid-timer.is-paused .oc-clock-arc{stroke:#e3b23c}
+.oc-clock-msg{font-size:.78rem;font-weight:700;color:var(--dim);line-height:1.3;min-height:1em}
+.oc-bid-timer.is-running{
+    background:#e8f6ee;border-color:#1e9e55;
+    box-shadow:0 0 0 4px rgba(30,158,85,.16);
+    animation:ocTimerLive 1.5s ease-in-out infinite;
+}
+.oc-bid-timer.is-running .oc-timer-banner{background:#1e9e55;color:#fff}
+.oc-bid-timer.is-running .oc-clock-num{color:#146b38}
+.oc-bid-timer.is-running .oc-clock-arc{stroke:#1e9e55;stroke-width:3.2}
+.oc-bid-timer.is-running .oc-clock-msg{color:#146b38}
+.oc-bid-timer.is-paused{
+    background:#fff4d6;border-color:#e3b23c;
+    box-shadow:0 0 0 5px rgba(227,178,60,.34);
+    animation:ocTimerHold 1.05s ease-in-out infinite;
+}
+.oc-bid-timer.is-paused .oc-timer-banner{background:#c48a12;color:#1a1404}
+.oc-bid-timer.is-paused .oc-timer-dot{animation:ocTimerDot 1.05s ease-in-out infinite}
+.oc-bid-timer.is-paused .oc-clock-num{color:#8a5a00;font-size:1.2rem}
+.oc-bid-timer.is-paused .oc-clock-arc{stroke:#e3b23c;stroke-width:3.4}
+.oc-bid-timer.is-paused .oc-clock-msg{color:#8a5a00}
+.oc-bid-timer.is-idle .oc-timer-banner,
+.oc-bid-timer.is-frozen .oc-timer-banner{background:#e8eef6;color:var(--dim)}
 .oc-bid-timer.is-idle .oc-clock-msg,
 .oc-bid-timer.is-frozen .oc-clock-msg{color:var(--dim)}
+.oc-bid-timer.is-frozen{background:#fdecee;border-color:#f3c3c7}
+.oc-bid-timer.is-frozen .oc-timer-banner{background:var(--danger);color:#fff}
+@keyframes ocTimerLive{
+    0%,100%{box-shadow:0 0 0 4px rgba(30,158,85,.14)}
+    50%{box-shadow:0 0 0 7px rgba(30,158,85,.28)}
+}
+@keyframes ocTimerHold{
+    0%,100%{box-shadow:0 0 0 4px rgba(227,178,60,.28)}
+    50%{box-shadow:0 0 0 9px rgba(227,178,60,.5)}
+}
+@keyframes ocTimerDot{
+    0%,100%{transform:scale(1);opacity:1}
+    50%{transform:scale(1.45);opacity:.55}
+}
+@media (prefers-reduced-motion: reduce){
+    .oc-bid-timer.is-running,
+    .oc-bid-timer.is-paused,
+    .oc-bid-timer.is-paused .oc-timer-dot{animation:none}
+}
 
 .oc-bid-box-current{
     text-align:center;padding:6px 0 0;cursor:pointer;user-select:none;
@@ -869,3 +932,202 @@ html,body{margin:0;padding:0}
     50%{box-shadow:0 0 0 5px rgba(30,136,229,.32),0 0 26px rgba(66,165,245,.85)}
 }
 @media (prefers-reduced-motion:reduce){.oc-pb-card.oc-pb-live{animation:none}}
+
+/* ── Player showcase (dark stadium card only) ───────────── */
+#ocShowcaseCard{
+    background:linear-gradient(180deg,#0B3470 0%,#061A3A 70%);
+    border:1px solid rgba(255,201,40,.35);
+    color:#fff;
+    box-shadow:0 10px 28px rgba(6,26,58,.35), inset 0 1px 0 rgba(255,255,255,.08);
+    padding:10px;
+}
+#ocShowcaseCard .oc-waiting-title{color:#fff}
+#ocShowcaseCard .oc-waiting-sub{color:#AFC4E4}
+#ocShowcaseCard .oc-player-wrap{gap:6px}
+#ocShowcaseCard .oc-hero{display:flex;align-items:center;gap:10px;min-width:0}
+#ocShowcaseCard .oc-player-photo-col{width:84px}
+#ocShowcaseCard .oc-player-photo-frame{position:relative}
+#ocShowcaseCard .oc-player-photo-ring{
+    border-radius:14px;padding:2px;
+    background:linear-gradient(145deg,#FFC928,#0B3470 55%,#FFC928) !important;
+}
+#ocShowcaseCard .oc-player-photo{background:#061A3A}
+#ocShowcaseCard .oc-jersey{
+    position:absolute;left:-4px;bottom:-4px;z-index:3;
+    min-width:22px;height:22px;padding:0 5px;border-radius:999px;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:#FFC928;color:#061A3A;font-size:.68rem;font-weight:800;
+    box-shadow:0 2px 6px rgba(0,0,0,.35);
+}
+#ocShowcaseCard .oc-jersey[hidden]{display:none}
+#ocShowcaseCard .oc-player-id{min-width:0;flex:1}
+#ocShowcaseCard .oc-name-row{display:flex;align-items:flex-start;gap:6px}
+#ocShowcaseCard .oc-player-name{
+    color:#fff;font-size:1.2rem;line-height:1.05;letter-spacing:.01em;
+}
+#ocShowcaseCard .oc-sl-no{color:#FFC928;font-size:.72rem;font-weight:800;margin-left:auto}
+#ocShowcaseCard .oc-player-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+#ocShowcaseCard .oc-tier-pill,#ocShowcaseCard .oc-chip{
+    background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(175,196,228,.35);
+    font-size:.62rem;padding:2px 7px;
+}
+#ocShowcaseCard .oc-chip-role{background:#FFC928;color:#061A3A;border-color:#FFC928}
+#ocShowcaseCard .oc-chip-icon{color:#FFC928;border-color:#FFC928}
+#ocShowcaseCard .oc-style-line{color:#AFC4E4;font-size:.68rem;font-weight:700;margin-top:2px;text-transform:uppercase}
+#ocShowcaseCard .oc-attr-grid{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;
+}
+#ocShowcaseCard .oc-attr{
+    min-width:0;padding:4px 6px;border-radius:8px;
+    background:rgba(6,26,58,.45);border:1px solid rgba(175,196,228,.18);
+}
+#ocShowcaseCard .oc-attr span{
+    display:block;color:#AFC4E4;font-size:.58rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+}
+#ocShowcaseCard .oc-attr strong{
+    display:block;color:#fff;font-size:.72rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+#ocShowcaseCard .oc-price-panel{
+    display:grid;grid-template-columns:1fr 1fr;border-radius:12px;overflow:hidden;
+    background:rgba(6,26,58,.55);border:1px solid rgba(175,196,228,.22);
+}
+#ocShowcaseCard .oc-price-cell{padding:6px 8px;text-align:center}
+#ocShowcaseCard .oc-price-cell + .oc-price-cell{border-left:1px solid rgba(175,196,228,.25)}
+#ocShowcaseCard .oc-price-cell span{
+    display:block;color:#AFC4E4;font-size:.6rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+}
+#ocShowcaseCard .oc-price-cell strong{display:block;color:#fff;font-size:.95rem;font-weight:800}
+#ocShowcaseCard #ocBaseMaxCall strong{color:#32D583}
+#ocShowcaseCard .oc-auction-row{display:flex;align-items:center;gap:8px}
+#ocShowcaseCard .oc-bid-timer{
+    width:auto;margin:0;padding:0;gap:2px;background:transparent;border:0;box-shadow:none;animation:none;
+}
+#ocShowcaseCard .oc-bid-timer.is-running,
+#ocShowcaseCard .oc-bid-timer.is-paused,
+#ocShowcaseCard .oc-bid-timer.is-frozen{
+    background:transparent;box-shadow:none;animation:none;
+}
+#ocShowcaseCard .oc-clock{width:58px;height:58px}
+#ocShowcaseCard .oc-clock-track{stroke:rgba(175,196,228,.25)}
+#ocShowcaseCard .oc-clock-arc{stroke:#FFC928;stroke-width:3}
+#ocShowcaseCard .oc-clock-num{color:#fff;font-size:1rem}
+#ocShowcaseCard .oc-timer-banner{min-height:20px;padding:2px 8px;font-size:.58rem;letter-spacing:.08em}
+#ocShowcaseCard .oc-clock-msg{font-size:.62rem;color:#AFC4E4;max-width:72px}
+#ocShowcaseCard .oc-bid-box-current{
+    cursor:default;
+    flex:1;margin:0;padding:8px 10px;border-radius:12px;text-align:left;
+    background:rgba(6,26,58,.55);border:1px solid rgba(255,201,40,.28);
+}
+#ocShowcaseCard .oc-bid-box-current.oc-qb-active{
+    cursor:pointer;
+    background:linear-gradient(180deg,rgba(255,201,40,.28),rgba(11,52,112,.72));
+    border:2px solid #FFC928;
+    box-shadow:0 0 0 3px rgba(255,201,40,.22),0 8px 22px rgba(255,201,40,.22);
+    animation:ocBidReady 1.6s ease-in-out infinite;
+}
+#ocShowcaseCard .oc-bid-box-current.oc-qb-active .oc-bid-box-lbl{color:#FFC928}
+#ocShowcaseCard .oc-bid-box-current.oc-qb-active .oc-bid-box-val{
+    color:#fff;text-shadow:0 0 14px rgba(255,201,40,.55);
+}
+#ocShowcaseCard .oc-bid-box-current.oc-qb-active .oc-qb-hint{
+    display:block;color:#FFC928;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+}
+@keyframes ocBidReady{
+    0%,100%{box-shadow:0 0 0 3px rgba(255,201,40,.18),0 6px 16px rgba(255,201,40,.12)}
+    50%{box-shadow:0 0 0 6px rgba(255,201,40,.42),0 10px 26px rgba(255,201,40,.36)}
+}
+@media (prefers-reduced-motion:reduce){
+    #ocShowcaseCard .oc-bid-box-current.oc-qb-active{animation:none}
+}
+#ocShowcaseCard .oc-qb-hint:empty{display:none}
+#ocShowcaseCard .oc-bid-box-lbl{color:#AFC4E4;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase}
+#ocShowcaseCard .oc-bid-box-val{color:#fff;font-size:1.45rem;line-height:1;font-weight:800}
+#ocShowcaseCard .oc-qb-hint{color:#AFC4E4;font-size:.62rem}
+#ocShowcaseCard .oc-raise{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+#ocShowcaseCard .oc-lead-warn{
+    margin:0;padding:4px 8px;border-radius:8px;background:rgba(50,213,131,.15);
+    color:#32D583;font-size:.7rem;font-weight:800;text-align:center;
+}
+#ocShowcaseCard .oc-leading-team{
+    display:flex;align-items:center;gap:8px;margin:0;padding:6px 8px;border-radius:12px;
+    background:linear-gradient(90deg,rgba(255,201,40,.22),rgba(255,201,40,.08));
+    border:1px solid rgba(255,201,40,.45);
+}
+#ocShowcaseCard .oc-leading-logo{width:28px;height:28px;border-color:#FFC928}
+#ocShowcaseCard .oc-leading-lbl{color:#FFC928;font-size:.58rem}
+#ocShowcaseCard .oc-leading-name{color:#fff;font-size:.95rem}
+#ocShowcaseCard .oc-bid-dock{display:flex;flex-direction:column;gap:6px}
+#ocShowcaseCard .oc-bid-limits{
+    display:flex;justify-content:space-between;gap:6px;color:#AFC4E4;font-size:.62rem;font-weight:700;
+}
+#ocShowcaseCard .oc-bid-limits strong{color:#fff}
+#ocShowcaseCard .oc-step{
+    width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,201,40,.45);
+    background:#0B3470;color:#FFC928;font-size:1.3rem;
+}
+#ocShowcaseCard .oc-bid-input{
+    height:40px;border-radius:10px;border:1px solid rgba(175,196,228,.35);
+    background:#061A3A;color:#fff;font-size:1.15rem;
+}
+#ocShowcaseCard .oc-quick-row{display:flex;align-items:center;gap:6px;min-width:0}
+#ocShowcaseCard .oc-presets-wrap{margin:0;flex:1;min-width:0}
+#ocShowcaseCard .oc-presets{flex-wrap:wrap;overflow:visible;gap:4px}
+#ocShowcaseCard .oc-preset-btn{
+    background:#0B3470;color:#fff;border-color:rgba(175,196,228,.3);
+    padding:6px 8px;font-size:.68rem;font-weight:800;
+}
+#ocShowcaseCard .oc-preset-max{
+    flex:none;background:#FFC928;color:#061A3A;border-color:#FFC928;
+}
+#ocShowcaseCard .oc-bid-cta{
+    margin:0;min-height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:8px;
+    background:linear-gradient(180deg,#ffe27a,#FFC928 45%,#e0a800);
+    color:#061A3A;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase;
+    box-shadow:0 6px 16px rgba(255,201,40,.28);
+}
+#ocShowcaseCard .oc-bid-cta svg{width:18px;height:18px}
+#ocShowcaseCard .oc-bid-cta:disabled{opacity:.45;box-shadow:none}
+#ocShowcaseCard .oc-revoke-btn{background:transparent;color:#ffb4b8;border-color:rgba(255,180,184,.45)}
+#ocShowcaseCard .oc-revoke-hint{color:#AFC4E4}
+#ocShowcaseCard .oc-bid-reason{font-size:.68rem;color:#AFC4E4}
+#ocShowcaseCard .oc-reason-err{color:#ffb4b8}
+#ocShowcaseCard .oc-reason-ok{color:#32D583}
+#ocShowcaseCard .oc-sold-card.is-sold{background:rgba(50,213,131,.12);border-color:rgba(50,213,131,.45)}
+#ocShowcaseCard .oc-sold-card.is-unsold{background:rgba(211,47,58,.16);border-color:rgba(211,47,58,.45)}
+#ocShowcaseCard .oc-sold-team-name,#ocShowcaseCard .oc-sold-amount{color:#fff}
+@media (min-width:900px){
+    .oc-live-layout{grid-template-columns:minmax(380px,460px) 1fr}
+    #ocShowcaseCard{padding:14px}
+    #ocShowcaseCard .oc-player-name{font-size:1.45rem}
+    #ocShowcaseCard .oc-player-photo-col{width:108px}
+    #ocShowcaseCard .oc-clock{width:72px;height:72px}
+    #ocShowcaseCard .oc-bid-box-val{font-size:1.8rem}
+}
+@media (max-width:430px),(max-height:780px){
+    .oc-main{padding:6px 8px 52px}
+    #ocShowcaseCard{padding:8px}
+    #ocShowcaseCard .oc-player-wrap{gap:4px}
+    #ocShowcaseCard .oc-player-name{font-size:1rem}
+    #ocShowcaseCard .oc-style-line{font-size:.6rem;margin-top:1px}
+    #ocShowcaseCard .oc-attr{padding:2px 4px}
+    #ocShowcaseCard .oc-attr strong{font-size:.66rem}
+    #ocShowcaseCard .oc-price-cell{padding:3px 6px}
+    #ocShowcaseCard .oc-price-cell strong{font-size:.82rem}
+    #ocShowcaseCard .oc-clock{width:46px;height:46px}
+    #ocShowcaseCard .oc-clock-msg{display:none}
+    #ocShowcaseCard .oc-bid-box{padding:6px 8px}
+    #ocShowcaseCard .oc-bid-box-val{font-size:1.15rem}
+    #ocShowcaseCard .oc-leading-team{padding:4px 6px}
+    #ocShowcaseCard .oc-leading-name{font-size:.86rem}
+    #ocShowcaseCard .oc-bid-dock{gap:4px}
+    #ocShowcaseCard .oc-bid-limits{font-size:.58rem}
+    #ocShowcaseCard .oc-step,#ocShowcaseCard .oc-bid-input{height:36px}
+    #ocShowcaseCard .oc-step{width:36px}
+    #ocShowcaseCard .oc-bid-cta{min-height:40px}
+}
+@media (max-width:430px){
+    #ocShowcaseCard .oc-hero{align-items:center;gap:8px}
+    #ocShowcaseCard .oc-player-photo-col{width:96px;max-width:96px;min-width:0;flex:none}
+    #ocShowcaseCard .oc-player-photo-ring{aspect-ratio:1}
+    #ocShowcaseCard .oc-player-id{justify-content:center}
+}

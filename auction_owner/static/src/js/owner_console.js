@@ -389,27 +389,95 @@ function paintPlayerFace(p) {
     if (styleEl) {
         const parts = [p.batting_style, p.bowling_style].filter(Boolean).map(up);
         styleEl.textContent = parts.join(' · ');
-        styleEl.style.display = parts.length ? '' : 'none';
+        styleEl.style.display = 'none';
     }
+    paintStyleLine('ocBatLine', 'Bat', p.batting_style);
+    paintStyleLine('ocBowlLine', 'Bowl', p.bowling_style);
+    paintJersey(p.jersey);
+    const iconPill = $('ocIconPill');
+    if (iconPill) {
+        var tierName = String(p.tier_name || '').toLowerCase();
+        iconPill.hidden = !p.icon_player || tierName.indexOf('icon') !== -1;
+    }
+    paintAttrGrid(p);
 
     const pill = $('ocTierPill');
-    if (pill) { pill.textContent = up(p.tier_name) || '—'; pill.style.background = p.tier_color || ''; }
-
-    const ring = $('ocPhotoRing');
-    if (ring) ring.style.background = p.tier_color ? `conic-gradient(${p.tier_color},#fff3,${p.tier_color})` : '';
+    if (pill) {
+        pill.textContent = up(p.tier_name) || '—';
+        pill.style.background = p.tier_color || '';
+        pill.style.color = '#fff';
+    }
 
     txt('ocSlNo', p.sl_no ? '#' + p.sl_no : '');
     txt('ocBasePrice', p.base_price ? fmtU(p.base_price) : '—');
     paintBaseMaxCall(S.myTeam, S.teams);
     txt('ocCurrentBid', p.current_bid ? fmtU(p.current_bid) : 'No bids yet');
 
-    const hasLeader = stageOpen(p) && p.current_bid_team && p.current_bid_team.name;
-    show('ocLeadingTeam', !!hasLeader);
+    const hasLeader = !!(p.current_bid_team && p.current_bid_team.name);
+    const showLead = stageOpen(p) || (p.state === 'sold' && hasLeader);
+    show('ocLeadingTeam', showLead);
+    const logo = $('ocLeadingLogo');
     if (hasLeader) {
+        if (logo) { logo.style.display = p.current_bid_team.logo_url ? '' : 'none'; }
         src('ocLeadingLogo', p.current_bid_team.logo_url);
         txt('ocLeadingName', p.current_bid_team.name);
+    } else if (showLead) {
+        if (logo) logo.style.display = 'none';
+        txt('ocLeadingName', 'Awaiting first bid');
     }
     syncStageChrome();
+}
+
+function paintStyleLine(id, label, value) {
+    var el = $(id);
+    if (!el) return;
+    if (!value) { el.textContent = ''; el.style.display = 'none'; return; }
+    el.style.display = '';
+    el.textContent = label + ' · ' + up(value);
+}
+
+function paintJersey(value) {
+    var el = $('ocJerseyBadge');
+    if (!el) return;
+    var text = value ? String(value).trim() : '';
+    el.textContent = text;
+    el.hidden = !text;
+}
+
+function escAttr(value) {
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function paintAttrGrid(p) {
+    var host = $('ocAttrGrid');
+    if (!host) return;
+    var rows = [];
+    function add(label, value) {
+        if (value === undefined || value === null || value === '' || value === false) return;
+        rows.push({ label: label, value: String(value) });
+    }
+    add('Age', p.age);
+    add('Location', p.location);
+    add('Height', p.height);
+    add('Weight', p.weight);
+    add('Foot', p.preferred_foot);
+    add('Hand', p.preferred_hand);
+    add('Kabaddi', p.kabaddi_role);
+    add('Club', p.previous_club);
+    add('Level', p.skill_level);
+    add('Style', p.badminton_style);
+    add('Group', p.badminton_category);
+    add('Blood', p.blood_group);
+    if (Array.isArray(p.other_attributes)) {
+        p.other_attributes.forEach(function (row) {
+            if (row && row.label && row.value) add(row.label, row.value);
+        });
+    }
+    host.innerHTML = rows.map(function (row) {
+        return '<div class="oc-attr"><span>' + escAttr(row.label) + '</span><strong>' + escAttr(row.value) + '</strong></div>';
+    }).join('');
+    host.style.display = rows.length ? '' : 'none';
 }
 
 // ── Render: bid panel ──────────────────────────────────────────────────
@@ -538,32 +606,34 @@ function renderBidPanel(myTeam, player) {
             reasonEl.textContent = lockReason;
             reasonEl.className = 'oc-bid-reason oc-reason-err';
         }
+        paintBidStepFloor(input, 0);
         renderPresets(slabPresetBids(myTeam), myTeam);
+        paintMaxButton(myTeam, false);
         renderQuickBidBox(false, lockReason, false);
     } else if (!myTeam.can_bid) {
         if (input) { input.disabled = true; input.value = ''; }
         if (bidBtn) bidBtn.disabled = true;
         if (reasonEl) { reasonEl.textContent = '🚫 '+( myTeam.can_bid_reason || 'Cannot bid'); reasonEl.className='oc-bid-reason oc-reason-err'; }
+        paintBidStepFloor(input, 0);
         renderPresets(slabPresetBids(myTeam), myTeam);
+        paintMaxButton(myTeam, false);
         renderQuickBidBox(false, myTeam.can_bid_reason || 'Cannot bid', myTeam.is_leading);
     } else {
         if (input) {
             const nextBidVal   = myTeam.next_bid || myTeam.effective_base || 1;
             const isNewPlayer  = !input.dataset.pid || input.dataset.pid !== String(player.id);
+            const focused = document.activeElement === input;
             const curInputVal  = parseInt(input.value, 10) || 0;
 
-            if (isNewPlayer) {
-                // Fresh player on stage — always reset to the server's next_bid
-                input.value = nextBidVal;
-                input.dataset.pid = String(player.id);
-            } else if (curInputVal < nextBidVal) {
-                // A rival raised the bid and the current input is now below the new minimum;
-                // bump it up so the owner can't accidentally submit a stale low value.
-                input.value = nextBidVal;
+            if (isNewPlayer || !focused) {
+                if (isNewPlayer || !curInputVal || curInputVal < nextBidVal) {
+                    input.value = nextBidVal;
+                }
+                if (isNewPlayer) input.dataset.pid = String(player.id);
             }
-            // If the owner manually typed a value above next_bid, leave it untouched.
             input.disabled = false;
-            input.min = myTeam.effective_base || 1;
+            input.min = nextBidVal;
+            paintBidStepFloor(input, nextBidVal);
         }
         if (bidBtn) bidBtn.disabled = false;
         if (reasonEl) {
@@ -571,6 +641,7 @@ function renderBidPanel(myTeam, player) {
             reasonEl.className = 'oc-bid-reason oc-reason-ok';
         }
         renderPresets(slabPresetBids(myTeam), myTeam);
+        paintMaxButton(myTeam, true);
         renderQuickBidBox(true, myTeam.next_bid || myTeam.effective_base || 1);
     }
     syncStageChrome();
@@ -626,18 +697,20 @@ function renderQuickBidBox(canBid, nextBidOrReason, isLeading) {
         if (canBid) {
             box.classList.add('oc-qb-active');
             box.classList.remove('oc-qb-disabled', 'oc-qb-leading');
-            if (hint) {
-                hint.textContent = ocIsTouchUi()
-                    ? 'Double-tap or hold the button for a custom bid'
-                    : 'Double-click the button for a custom bid';
-            }
+            box.setAttribute('role', 'button');
+            box.tabIndex = 0;
+            if (hint) hint.textContent = 'Tap to bid ' + fmtU(nextBidOrReason);
         } else if (isLeading) {
             box.classList.add('oc-qb-leading');
             box.classList.remove('oc-qb-active', 'oc-qb-disabled');
+            box.removeAttribute('role');
+            box.tabIndex = -1;
             if (hint) hint.textContent = '';
         } else {
             box.classList.add('oc-qb-disabled');
             box.classList.remove('oc-qb-active', 'oc-qb-leading');
+            box.removeAttribute('role');
+            box.tabIndex = -1;
             if (hint) hint.textContent = '';
         }
     }
@@ -753,15 +826,49 @@ function hideClock() {
     clock.classList.remove('is-blink');
 }
 
+function setTimerStatus(label, detail) {
+    var kicker = $('ocTimerKicker');
+    var msg = $('ocClockMsg');
+    if (kicker && kicker.textContent !== label) kicker.textContent = label;
+    if (msg && msg.textContent !== (detail || '')) msg.textContent = detail || '';
+}
+
+function lockBidsForHold() {
+    if (!S.myTeam || S._bidTimerHeld) return;
+    S._bidTimerHeld = true;
+    S._bidTimerPrev = {
+        can_bid: !!S.myTeam.can_bid,
+        reason: S.myTeam.can_bid_reason || '',
+    };
+    S.myTeam.can_bid = false;
+    S.myTeam.can_bid_reason = 'Timer on hold';
+    renderBidPanel(S.myTeam, S.player);
+    renderRevoke();
+}
+
+function releaseBidsFromHold() {
+    if (!S._bidTimerHeld || !S.myTeam) {
+        S._bidTimerHeld = false;
+        return;
+    }
+    var prev = S._bidTimerPrev || {};
+    S._bidTimerHeld = false;
+    S._bidTimerPrev = null;
+    if ((S.myTeam.can_bid_reason || '') === 'Timer on hold') {
+        S.myTeam.can_bid = !!prev.can_bid;
+        S.myTeam.can_bid_reason = prev.reason || '';
+        renderBidPanel(S.myTeam, S.player);
+        renderRevoke();
+    }
+}
 function paintBidTimer() {
     const el = $('ocBidTimer');
-    const msg = $('ocClockMsg');
     if (!el) return;
-    function say(text) { if (msg) msg.textContent = text || ''; }
     if (S.player && !stageOpen(S.player)) {
         el.style.display = 'none';
         hideClock();
         clockBeep(false);
+        releaseBidsFromHold();
         syncStageChrome();
         return;
     }
@@ -770,7 +877,8 @@ function paintBidTimer() {
         el.style.display = 'none';
         hideClock();
         clockBeep(false);
-        say('');
+        setTimerStatus('TIMER', '');
+        releaseBidsFromHold();
         return;
     }
     el.style.display = '';
@@ -780,22 +888,16 @@ function paintBidTimer() {
         el.className = 'oc-bid-timer is-paused';
         paintClock(heldLeft, t.seconds || heldLeft, false);
         clockBeep(false);
-        say('Timer on hold');
-        if (S.myTeam && !S._bidTimerHeld) {
-            S._bidTimerHeld = true;
-            S.myTeam.can_bid = false;
-            S.myTeam.can_bid_reason = 'Timer on hold';
-            renderBidPanel(S.myTeam, S.player);
-            renderRevoke();
-        }
+        setTimerStatus('TIMER ON HOLD', 'Bidding is paused');
+        lockBidsForHold();
         return;
     }
-    S._bidTimerHeld = false;
+    releaseBidsFromHold();
     if (!t.running && !t.frozen) {
         el.className = 'oc-bid-timer is-idle';
         hideClock();
         clockBeep(false);
-        say('Waiting for the player');
+        setTimerStatus('PAUSED', 'Waiting for the player');
         return;
     }
     const left = t.frozen ? 0 : Math.max(0, (t.remainUntil - Date.now()) / 1000);
@@ -804,13 +906,10 @@ function paintBidTimer() {
         t.running = false;
         hideClock();
         clockBeep(false);
-        if (leading) {
-            el.className = 'oc-bid-timer is-held';
-            say('Your bid stands. Other owners are closed.');
-        } else {
-            el.className = 'oc-bid-timer is-frozen';
-            say('Time up. You can no longer bid.');
-        }
+        el.className = 'oc-bid-timer is-frozen';
+        setTimerStatus('PAUSED', leading
+            ? 'Your bid stands. Other owners are closed.'
+            : 'You can no longer bid.');
         if (!S._bidTimerFroze && S.myTeam && S.player && !leading) {
             S._bidTimerFroze = true;
             S.myTeam.can_bid = false;
@@ -827,22 +926,14 @@ function paintBidTimer() {
     var blink = shown <= warnAt;
     paintClock(left, total, blink);
     clockBeep(blink, shown, S.player && S.player.id);
-    if (leading) {
-        el.className = 'oc-bid-timer is-held';
-        say('Others can still raise');
-        return;
-    }
-    el.className = 'oc-bid-timer is-running';
-    say('');
+    el.className = 'oc-bid-timer is-running' + (leading ? ' is-leading' : '');
+    setTimerStatus('LIVE', leading ? 'Others can still raise' : 'Place your bid before it ends');
 }
 
 function syncBidTimer(timer) {
     timer = timer || {};
     var epoch = Number(timer.epoch || 0);
     if (epoch && S._timerEpoch && epoch + 0.0001 < S._timerEpoch) return;
-    if (S.bidTimer && S.bidTimer.held && timer.running && !timer.held) {
-        if ((Number(timer.remaining) || 0) + 0.6 < (Number(S.bidTimer.remaining) || 0)) return;
-    }
     if (epoch) S._timerEpoch = epoch;
     if (!timer.enabled) {
         S.bidTimer = {enabled: false, frozen: false, running: false, held: false, seconds: 0};
@@ -902,6 +993,8 @@ window.ocQuickBid = function() {
     let placed = false;
     if (box) box.classList.add('oc-qb-placing');
     if (raise) raise.disabled = true;
+    var placeBtn = $('ocBidCta');
+    if (placeBtn) placeBtn.disabled = true;
 
     fetch('/auction/owner/place-bid', {
         method:  'POST',
@@ -976,8 +1069,24 @@ function slabPresetBids(myTeam) {
 window.ocOpenCustomBid = function () {
     if (!stageOpen(S.player) || !S.myTeam || S.myTeam.is_leading) return;
     renderBidPanel(S.myTeam, S.player);
-    var ov = $('ocCustomBidOverlay');
-    if (ov) ov.style.display = 'flex';
+    var input = $('ocBidInput');
+    if (input && !input.disabled) {
+        try { input.focus(); } catch (e) {}
+    }
+};
+window.ocPlaceBid = function () {
+    var input = $('ocBidInput');
+    var amount = parseInt((input && input.value) || '0', 10);
+    var next = Number((S.myTeam && (S.myTeam.next_bid || S.myTeam.effective_base)) || 0);
+    if (amount && next && amount === next) {
+        window.ocQuickBid();
+        return;
+    }
+    window.ocOpenBidConfirm();
+};
+window.ocBidMax = function () {
+    if (!S.myTeam || !(S.myTeam.max_call > 0)) return;
+    window.ocSetPreset(S.myTeam.max_call);
 };
 window.ocCloseCustomBid = function () {
     var ov = $('ocCustomBidOverlay');
@@ -989,6 +1098,24 @@ function ocIsTouchUi() {
         window.matchMedia('(pointer: coarse)').matches ||
         window.matchMedia('(hover: none)').matches
     );
+}
+
+function bindQuickBidTap(el) {
+    if (!el || el._ocQuickBound) return;
+    el._ocQuickBound = true;
+    function placeNext() {
+        if (!stageOpen(S.player) || !S.myTeam || !S.myTeam.can_bid || S.myTeam.is_leading) return;
+        window.ocQuickBid();
+    }
+    el.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        placeNext();
+    });
+    el.addEventListener('keydown', function (ev) {
+        if (ev.key !== 'Enter' && ev.key !== ' ') return;
+        ev.preventDefault();
+        placeNext();
+    });
 }
 
 function bindBidGestures(el) {
@@ -1067,11 +1194,20 @@ function bindBidGestures(el) {
     });
 }
 
+function paintMaxButton(myTeam, enabled) {
+    var btn = $('ocBidMax');
+    if (!btn) return;
+    var max = Number(myTeam && myTeam.max_call) || 0;
+    btn.hidden = !max;
+    btn.disabled = !enabled || !max;
+}
+
 function renderPresets(presets, myTeam) {
     const wrap  = $('ocPresetsWrap');
     const inner = $('ocPresets');
     if (!wrap || !inner) return;
     if (!presets || presets.length === 0) { wrap.style.display = 'none'; inner.innerHTML = ''; return; }
+    const locked = !!($('ocBidInput') && $('ocBidInput').disabled);
 
     const nextBid = myTeam.next_bid   || myTeam.effective_base || 1;
     const maxCall = myTeam.max_call   || 0;
@@ -1090,7 +1226,7 @@ function renderPresets(presets, myTeam) {
             cls += ' oc-preset-ok';
         }
         var on = (pt === nextBid) ? ' oc-preset-on' : '';
-        return '<button type="button" class="'+cls+on+'" title="'+title+'" onclick="ocSetPreset('+pt+')">'+fmtU(pt)+'</button>';
+        return '<button type="button" '+(locked?'disabled ':'')+'class="'+cls+on+'" title="'+title+'" onclick="ocSetPreset('+pt+')">'+fmtU(pt)+'</button>';
     }).join('');
     wrap.style.display = 'flex';
 }
@@ -1364,6 +1500,18 @@ function snapToSlab(amount, slabs) {
     return amount;
 }
 
+function paintBidStepFloor(input, floor) {
+    var minus = document.querySelector('#ocBidRow .oc-step');
+    if (!minus) return;
+    if (!input || input.disabled) { minus.disabled = true; return; }
+    var cur = parseInt(input.value, 10) || 0;
+    minus.disabled = !cur || cur <= floor;
+}
+
+function nextBidFloor(myTeam) {
+    return Number((myTeam && (myTeam.next_bid || myTeam.effective_base)) || 1);
+}
+
 // ── Bid input step ─────────────────────────────────────────────────────
 window.ocChangeBid = function(delta) {
     const input = $('ocBidInput');
@@ -1372,32 +1520,32 @@ window.ocChangeBid = function(delta) {
     if (!myTeam) return;
     let cur = parseInt(input.value, 10) || 0;
     const slabs = S.slabs;
-    const effectiveBase = myTeam.effective_base || 1;
+    const floor = nextBidFloor(myTeam);
 
     if (delta > 0) {
-        // If at or below current live bid, jump straight to the server's
-        // pre-computed next_bid (already slab-correct); otherwise add one
-        // slab step to whatever value the user has typed.
-        if (S.player && cur <= (S.player.current_bid || 0)) {
-            cur = myTeam.next_bid;
-        } else {
-            cur = cur + slabStep(cur, slabs);
-        }
+        if (cur < floor) cur = floor;
+        else cur = cur + (slabStep(cur, slabs) || 1);
     } else {
-        // Step back one slab increment, then snap to the nearest valid
-        // slab boundary so the resulting value is always auction-legal.
-        const step = slabStep(cur, slabs);
-        const decreased = cur - step;
-        cur = Math.max(effectiveBase, snapToSlab(Math.max(0, decreased), slabs));
+        if (cur <= floor) {
+            input.value = floor;
+            paintBidStepFloor(input, floor);
+            return;
+        }
+        const step = slabStep(cur, slabs) || 1;
+        cur = Math.max(floor, snapToSlab(Math.max(0, cur - step), slabs));
     }
     input.value = cur;
+    paintBidStepFloor(input, floor);
 };
 
 // Set bid input directly from a preset button
 window.ocSetPreset = function(amount) {
     if (!stageOpen(S.player)) return;
     const input = $('ocBidInput');
-    if (input && !input.disabled) input.value = amount;
+    const floor = nextBidFloor(S.myTeam);
+    if (!input || input.disabled || amount < floor) return;
+    input.value = amount;
+    paintBidStepFloor(input, floor);
 };
 
 // ── Bid confirm ────────────────────────────────────────────────────────
@@ -1412,8 +1560,8 @@ window.ocOpenBidConfirm = function() {
     if (!myTeam || !player) return;
     const input = $('ocBidInput');
     const amount = parseInt((input&&input.value)||'0', 10);
-    if (!amount || amount < (myTeam.effective_base||1)) {
-        toast('Bid must be at least '+fmtU(myTeam.effective_base), 'err'); return;
+    if (!amount || amount < nextBidFloor(myTeam)) {
+        toast('Bid must be at least '+fmtU(nextBidFloor(myTeam)), 'err'); return;
     }
     if (myTeam.max_call>0 && amount>myTeam.max_call) {
         toast('Exceeds your max call of '+fmtU(myTeam.max_call), 'err'); return;
@@ -1595,7 +1743,24 @@ function playerFromProjector(payload) {
         batting_style: raw.batting_style,
         bowling_style: raw.bowling_style,
         team_name: raw.team_name,
-        team_logo_url: raw.team_logo_url
+        team_logo_url: raw.team_logo_url,
+        age: raw.age || '',
+        location: raw.location || '',
+        mobile: raw.mobile || '',
+        height: raw.height || '',
+        weight: raw.weight || '',
+        jersey: raw.jersey || '',
+        icon_player: !!raw.icon_player,
+        preferred_foot: raw.preferred_foot || '',
+        preferred_hand: raw.preferred_hand || '',
+        kabaddi_role: raw.kabaddi_role || '',
+        previous_club: raw.previous_club || '',
+        badminton_category: raw.badminton_category || '',
+        badminton_style: raw.badminton_style || '',
+        skill_level: raw.skill_level || '',
+        blood_group: raw.blood_group || '',
+        tournament_type: raw.tournament_type || '',
+        other_attributes: raw.other_attributes || raw.extra_attributes || []
     };
 }
 
@@ -1624,6 +1789,10 @@ function syncMyTeamFromLive(player) {
     }
     if (S.revoke && S.revoke.feature_on) {
         S.revoke.can_revoke = S.revoke.remaining > 0 && leading && player.state === 'auction';
+    }
+    if (ownerTimerHeld()) {
+        S.myTeam.can_bid = false;
+        S.myTeam.can_bid_reason = 'Timer on hold';
     }
 }
 
@@ -2010,7 +2179,20 @@ document.addEventListener('DOMContentLoaded', () => {
     var logoutBtn = $('ocLogoutBtn');
     if (logoutBtn) logoutBtn.addEventListener('click', window.ocAskLogout);
     bindBidGestures($('ocRaiseBtn'));
-    bindBidGestures($('ocCurrentBidBox'));
+    bindQuickBidTap($('ocCurrentBidBox'));
+    var bidInput = $('ocBidInput');
+    if (bidInput && !bidInput._ocFloorBound) {
+        bidInput._ocFloorBound = true;
+        var keepBidFloor = function () {
+            if (bidInput.disabled || !S.myTeam) return;
+            var floor = nextBidFloor(S.myTeam);
+            var cur = parseInt(bidInput.value, 10) || 0;
+            if (!cur || cur < floor) bidInput.value = floor;
+            paintBidStepFloor(bidInput, floor);
+        };
+        bidInput.addEventListener('change', keepBidFloor);
+        bidInput.addEventListener('blur', keepBidFloor);
+    }
     fetchData();
     startOwnerSse();
     startBidTimerPoll();

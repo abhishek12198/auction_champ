@@ -46,6 +46,64 @@ from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
 
+_OWNER_PASSWORD_UPPER = ''.join(ch for ch in string.ascii_uppercase if ch not in 'OI')
+_OWNER_PASSWORD_LOWER = ''.join(ch for ch in string.ascii_lowercase if ch not in 'lo')
+_OWNER_PASSWORD_DIGITS = '23456789'
+
+
+def _owner_random_password(length=8):
+    """8 characters from upper, lower, and digits. No symbols or look-alikes."""
+    length = max(int(length or 8), 3)
+    alphabet = _OWNER_PASSWORD_UPPER + _OWNER_PASSWORD_LOWER + _OWNER_PASSWORD_DIGITS
+    chars = [
+        secrets.choice(_OWNER_PASSWORD_UPPER),
+        secrets.choice(_OWNER_PASSWORD_LOWER),
+        secrets.choice(_OWNER_PASSWORD_DIGITS),
+    ]
+    chars.extend(secrets.choice(alphabet) for _ in range(length - 3))
+    for index in range(len(chars) - 1, 0, -1):
+        swap = secrets.randbelow(index + 1)
+        chars[index], chars[swap] = chars[swap], chars[index]
+    return ''.join(chars)
+
+
+def _owner_team_key(name):
+    """Short key from a team name. Several words use initials; one word uses 4 letters."""
+    parts = re.findall(r'[a-z0-9]+', (name or '').lower())
+    if not parts:
+        return 'tm'
+    if len(parts) == 1:
+        return parts[0][:4]
+    return ''.join(part[0] for part in parts)[:4]
+
+
+def _owner_pin_from_digits(digits, other_digits):
+    """Shortest tail of this tournament code that no other tournament ends with.
+
+    Starts at 4 digits and grows only when another tournament shares that ending.
+    """
+    digits = digits or ''
+    start = 4 if len(digits) >= 4 else len(digits)
+    for size in range(start, len(digits) + 1):
+        tail = digits[-size:]
+        if not any(other.endswith(tail) for other in other_digits):
+            return tail
+    return digits
+
+
+def _owner_login_stem(name, sibling_pairs, team_id, pin):
+    """``key_pin``, or ``key2_pin`` when an earlier team in the tournament shares the key."""
+    key = _owner_team_key(name)
+    same = [pair for pair in sibling_pairs if _owner_team_key(pair[0]) == key]
+    same.sort(key=lambda pair: ((pair[0] or '').lower(), pair[1] or 0))
+    index = 0
+    for position, pair in enumerate(same):
+        if pair[1] == team_id:
+            index = position
+            break
+    suffix = '' if index == 0 else str(index + 1)
+    return '%s%s_%s' % (key, suffix, pin)
+
 
 class AuctionTeamOwnerUser(models.Model):
     _inherit = 'auction.team'
@@ -76,31 +134,47 @@ class AuctionTeamOwnerUser(models.Model):
     )
 
     @staticmethod
-    def _random_password(length=12):
-        chars = string.ascii_letters + string.digits + '!@#$%'
-        return ''.join(secrets.choice(chars) for _ in range(length))
+    def _random_password(length=8):
+        return _owner_random_password(length)
 
-    @staticmethod
-    def _owner_login_slug(text, separator='_'):
-        value = (text or '').strip().lower()
-        value = re.sub(r'[^a-z0-9]+', separator, value).strip(separator)
-        return value
+    def _owner_digit_rows(self):
+        """(tournament id, digits) for every tournament that has a code."""
+        tournaments = self.env['auction.tournament'].sudo().with_context(
+            active_test=False,
+        ).search([])
+        rows = []
+        for tournament in tournaments:
+            digits = re.sub(r'\D', '', tournament.tournament_code or '')
+            if digits:
+                rows.append((tournament.id, digits))
+        return rows
 
-    def _owner_login_base(self, team):
-        """Login stem: tournament unique code + team name."""
+    def _owner_login_base(self, team, digit_rows=None):
+        """Login stem: team key + same-tournament number + tournament pin.
+
+        ``mi_3237`` is Mumbai Indians in the tournament whose code ends in 3237.
+        A second team in that tournament with the same key becomes ``mi2_3237``.
+        The same team name in another tournament gets that tournament's pin.
+        """
         tournament = team.tournament_id
-        code = self._owner_login_slug(
-            tournament.tournament_code if tournament else '',
-            separator='',
-        )
-        if not code:
+        digits = re.sub(r'\D', '', (tournament.tournament_code or '') if tournament else '')
+        if not digits:
             raise UserError(
                 _('Team "%s" has no tournament unique code. '
                   'Set the tournament code before creating the owner user.')
                 % (team.name or '')
             )
-        team_slug = self._owner_login_slug(team.name) or 'team'
-        return '%s_%s' % (code, team_slug)
+        if digit_rows is None:
+            digit_rows = self._owner_digit_rows()
+        others = [other for tid, other in digit_rows if tid != tournament.id]
+        pin = _owner_pin_from_digits(digits, others)
+        siblings = tournament.sudo().with_context(
+            auction_skip_tournament_security=True,
+        )._tournament_team_records()
+        pairs = [(sibling.name, sibling.id) for sibling in siblings]
+        if team.id not in {pair[1] for pair in pairs}:
+            pairs.append((team.name, team.id))
+        return _owner_login_stem(team.name, pairs, team.id, pin)
 
     def action_create_owner_user(self):
         owner_group = self.env.ref('auction_owner.group_auction_owner')
@@ -115,6 +189,7 @@ class AuctionTeamOwnerUser(models.Model):
             )
 
         results = []
+        digit_rows = self._owner_digit_rows()
         for team in self:
             password = self._random_password()
 
@@ -130,10 +205,10 @@ class AuctionTeamOwnerUser(models.Model):
                 team.write({'owner_password': password})
                 results.append(_('"%s": password reset (login: %s)') % (team.name, team.owner_user_id.login))
             else:
-                # Login: tournament unique code + team name (e.g. ac123456789012_mumbai_indians)
-                base_login = self._owner_login_base(team)
+                # Login: team key + tournament pin (e.g. mi_3237, bc2_3809).
+                base_login = self._owner_login_base(team, digit_rows)
                 login = base_login
-                counter = 1
+                counter = 2
                 while self.env['res.users'].sudo().with_context(active_test=False).search(
                         [('login', '=', login)], limit=1):
                     login = '%s_%d' % (base_login, counter)

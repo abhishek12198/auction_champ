@@ -515,6 +515,10 @@ def build_projector_payload(env, tournament, db_name):
                 'name': team_name,
                 'logo_url': team_logo_url,
             }
+    masked = is_mystery and not mystery_revealed
+    player_payload['icon_player'] = False if masked else bool(getattr(player, 'icon_player', False))
+    jersey = '' if masked else str(getattr(player, 'jersy_number', '') or '').strip()
+    player_payload['jersey'] = jersey
     if hasattr(player, 'current_bid') and player.current_bid:
         player_payload['current_bid'] = int(player.current_bid or 0)
         cteam = getattr(player, 'current_bid_team_id', False)

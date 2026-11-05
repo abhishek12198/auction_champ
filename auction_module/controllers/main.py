@@ -8538,7 +8538,14 @@ def _pj_progress(tournament, current_player=None, env=None):
         else:
             current = min(done + 1, total) if total else 0
     label = ('%s of %s' % (current, total)) if total else ''
-    return {'current': current, 'total': total, 'label': label}
+    sold = counts['sold']
+    return {
+        'current': current,
+        'total': total,
+        'label': label,
+        'sold': sold,
+        'remaining': max(total - sold, 0),
+    }
 
 
 def _pj_wait_phase(tournament, audience='projector', env=None):

@@ -483,6 +483,19 @@ class AuctionOwnerController(http.Controller):
                     [('player_id', '=', current_player.id)], order='id desc', limit=1)
                 sold_points = int(sale.points or 0) if sale else int(current_player.current_bid or 0)
 
+            profile = {}
+            mystery_hidden = bool(
+                current_player.tier_id and current_player.tier_id.mystery
+                and not current_player.mystery_revealed
+            )
+            if not mystery_hidden:
+                try:
+                    from odoo.addons.auction_module.controllers.main import (
+                        _football_display_payload,
+                    )
+                    profile = _football_display_payload(current_player) or {}
+                except Exception:
+                    profile = {}
             result['current_player'] = {
                 'id': current_player.id,
                 'name': current_player.name or '',
@@ -497,9 +510,26 @@ class AuctionOwnerController(http.Controller):
                 'current_bid_team': current_bid_team,
                 'sold_team': sold_team,
                 'sold_points': sold_points,
-                'batting_style': current_player.batting_style or '',
-                'bowling_style': current_player.bowling_style or '',
+                'batting_style': '' if mystery_hidden else (current_player.batting_style or ''),
+                'bowling_style': '' if mystery_hidden else (current_player.bowling_style or ''),
                 'bid_timer': current_player.get_owner_bid_timer_state(),
+                'age': '' if mystery_hidden else (profile.get('age') or ''),
+                'location': '' if mystery_hidden else (profile.get('location') or ''),
+                'mobile': '' if mystery_hidden else (profile.get('mobile') or ''),
+                'height': '' if mystery_hidden else (profile.get('height') or ''),
+                'weight': '' if mystery_hidden else (profile.get('weight') or ''),
+                'preferred_foot': '' if mystery_hidden else (profile.get('preferred_foot') or ''),
+                'preferred_hand': '' if mystery_hidden else (profile.get('preferred_hand') or ''),
+                'kabaddi_role': '' if mystery_hidden else (profile.get('kabaddi_role') or ''),
+                'previous_club': '' if mystery_hidden else (profile.get('previous_club') or ''),
+                'badminton_category': '' if mystery_hidden else (profile.get('badminton_category') or ''),
+                'badminton_style': '' if mystery_hidden else (profile.get('badminton_style') or ''),
+                'skill_level': '' if mystery_hidden else (profile.get('skill_level') or ''),
+                'blood_group': '' if mystery_hidden else (profile.get('blood_group') or ''),
+                'tournament_type': profile.get('tournament_type') or '',
+                'other_attributes': [] if mystery_hidden else (profile.get('other_attributes') or []),
+                'jersey': '' if mystery_hidden else str(getattr(current_player, 'jersy_number', '') or '').strip(),
+                'icon_player': False if mystery_hidden else bool(getattr(current_player, 'icon_player', False)),
             }
 
         # ── Teams ─────────────────────────────────────────────────────────
