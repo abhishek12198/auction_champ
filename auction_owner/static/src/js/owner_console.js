@@ -134,7 +134,10 @@ function showSoldOverlay(soldData) {
 }
 function hideSoldOverlay() {
     var overlay = $('ocPhotoStatus');
-    if (overlay) overlay.classList.remove('oc-status-show');
+    if (!overlay) return;
+    overlay.classList.remove('oc-status-show');
+    setSealArcText('ocSealArcTopText', '');
+    setSealArcText('ocSealArcBotText', '');
 }
 function showUnsoldOverlay() {
     showPhotoStatus('unsold', null);
@@ -1714,9 +1717,15 @@ function handleCounter(counter) {
 
 function playerFromProjector(payload) {
     var raw = payload && (payload.player || payload.current_player);
-    var stamp = (payload && payload.stamp_state) || (raw && raw.state) || '';
     if (!raw) return null;
-    var state = (stamp === 'sold' || stamp === 'unsold') ? stamp : (raw.state || 'auction');
+    var rawState = raw.state || '';
+    var stamp = (payload && payload.stamp_state) || '';
+    // A SOLD/UNSOLD stamp stays on the tournament after the next player is
+    // called. It must not be painted onto that new player.
+    var state = rawState || 'auction';
+    if ((stamp === 'sold' || stamp === 'unsold') && rawState !== 'auction') {
+        state = stamp;
+    }
     var team = raw.current_bid_team || null;
     var soldInfo = payload.sold_info || null;
     if (state === 'sold' && !team && (raw.team_name || raw.team_logo_url || (soldInfo && soldInfo.team_name))) {
@@ -1821,15 +1830,36 @@ function applyOwnerSnapshot(payload) {
     var incoming = playerFromProjector(payload);
     if (!incoming) return;
     var prevId = S.player && S.player.id;
+    var playerChanged = !!(incoming.id && prevId && Number(incoming.id) !== Number(prevId));
+    if (playerChanged) {
+        // Drop the previous player's sold lock and frozen timer so the new
+        // player's bid controls can show before the next full refresh.
+        S._timerEpoch = 0;
+        S._bidTimerFroze = false;
+        S._bidTimerHeld = false;
+        if (S.bidTimer) {
+            S.bidTimer.frozen = false;
+            S.bidTimer.held = false;
+            S.bidTimer.running = false;
+            S.bidTimer.enabled = false;
+        }
+        if (S.myTeam && incoming.state === 'auction') {
+            var reason = S.myTeam.can_bid_reason || '';
+            if (/time up|waiting for the next|timer on hold|only the last bid/i.test(reason)) {
+                S.myTeam.can_bid = true;
+                S.myTeam.can_bid_reason = '';
+            }
+        }
+        hideSoldOverlay();
+    }
     noteLiveBid(incoming);
     S.player = Object.assign({}, S.player || {}, incoming);
     syncMyTeamFromLive(S.player);
     renderPlayer(S.player);
     renderBidPanel(S.myTeam, S.player);
     renderRevoke();
-    if (incoming.id && prevId && Number(incoming.id) !== Number(prevId) && incoming.state === 'auction') {
-        fetchData();
-    }
+    paintBidTimer();
+    if (playerChanged) fetchData();
 }
 
 // ── Poll ───────────────────────────────────────────────────────────────
@@ -1878,8 +1908,11 @@ window.addEventListener('storage', e => {
         // Show SOLD overlay immediately with the team/pts info from the event
         try {
             const soldData = e.newValue ? JSON.parse(e.newValue) : null;
+            var soldPid = soldData && (soldData.player_id || soldData.id);
+            if (soldPid && S.player && Number(soldPid) !== Number(S.player.id)) return;
+            if (S.player && S.player.state === 'auction' && soldPid && Number(soldPid) !== Number(S.player.id)) return;
             if (soldData) showSoldOverlay(soldData);
-            if (S.player) S.player.state = 'sold';
+            if (S.player && (!soldPid || Number(soldPid) === Number(S.player.id))) S.player.state = 'sold';
             closeOwnerBids();
         } catch (_) {}
         // Rapid-poll burst to detect the next player quickly (same pattern as live-board)
