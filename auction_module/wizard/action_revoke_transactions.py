@@ -81,7 +81,8 @@ class AuctionRevokeTransactionsWizard(models.TransientModel):
         string='Where should restored players go?',
         default='auction',
         required=True,
-        help='Pick one destination for sold and unsold players you ticked above.',
+        help='Pick one destination for sold and unsold players you ticked above. '
+             'Draft also moves players still In Auction into Draft.',
     )
     accept_warning = fields.Boolean(
         string='I understand this cannot be undone',
@@ -233,6 +234,17 @@ class AuctionRevokeTransactionsWizard(models.TransientModel):
                 else:
                     unsold.with_context(**restore_ctx).action_auction()
             parts.append(_('%s unsold player(s) moved to %s') % (len(unsold), dest_label))
+
+        if target == 'draft' and (self.revoke_sold or self.revoke_unsold):
+            in_auction = self._players('auction')
+            if in_auction:
+                if hasattr(in_auction, '_clear_live_bid'):
+                    in_auction._clear_live_bid()
+                in_auction.with_context(
+                    auction_skip_live_snapshot=True,
+                    mass_update=True,
+                ).write({'state': 'draft', 'is_on_stage': False})
+            parts.append(_('%s in-auction player(s) moved to Draft') % len(in_auction))
 
         if self.clear_stage:
             tournament.action_clear_stage()

@@ -93,7 +93,7 @@
                     <div class="rt-dest-kicker">Step 2 — pick one</div>
                     <div class="rt-dest-title">Where should those restored players go?</div>
                     <div class="rt-dest-hint">
-                        Switch this if you want restored sold / unsold players in Draft instead of the live queue.
+                        Switch this if you want restored sold and unsold players, plus anyone still In Auction, in Draft instead of the live queue.
                     </div>
                     <div class="rt-toggle" role="radiogroup" aria-label="Where restored players go">
                         <div class="rt-toggle-btn is-on" data-value="auction" role="button">
