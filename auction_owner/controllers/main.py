@@ -440,8 +440,7 @@ class AuctionOwnerController(http.Controller):
                 limit=1,
             )
         current_player = env['auction.team.player'].sudo().browse()
-        if (on_stage and on_stage.state == 'auction'
-                and (not stamp_player or stamp_player.id != on_stage.id)):
+        if on_stage and on_stage.state == 'auction':
             current_player = on_stage
         elif stamp_player:
             current_player = stamp_player
@@ -466,7 +465,8 @@ class AuctionOwnerController(http.Controller):
                     'logo_url': self._pub_img('auction.team', t.id, 'logo') if t.logo else '',
                 }
             player_state = current_player.state
-            if (stamp_player and stamp_player.id == current_player.id
+            if (player_state in ('sold', 'unsold')
+                    and stamp_player and stamp_player.id == current_player.id
                     and tournament.stamp_state in ('sold', 'unsold')):
                 player_state = tournament.stamp_state
             sold_team = None
@@ -605,7 +605,8 @@ class AuctionOwnerController(http.Controller):
             'can_revoke':  revoke_feature_on and revokes_remaining > 0 and is_leading,
         }
         if tournament:
-            result['stamp_state'] = tournament.stamp_state or None
+            shown_state = ((result.get('current_player') or {}).get('state'))
+            result['stamp_state'] = shown_state if shown_state in ('sold', 'unsold') else None
             result['stamp_expires_at'] = (
                 odoo_fields.Datetime.to_string(tournament.stamp_expires_at)
                 if tournament.stamp_expires_at else None

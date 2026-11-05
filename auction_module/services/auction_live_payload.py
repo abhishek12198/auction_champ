@@ -131,8 +131,9 @@ def build_live_board_payload(env, tournament, db_name):
     # stamp from the previous player. Otherwise the live board stays on the sold
     # face until the next sale even after the operator calls the next player.
     current_player = None
-    if (on_stage and on_stage.state == 'auction'
-            and (not stamp_player or stamp_player.id != on_stage.id)):
+    # A player in auction is being bid on. A previous SOLD/UNSOLD stamp must
+    # not replace them or mark them sold.
+    if on_stage and on_stage.state == 'auction':
         current_player = on_stage
     elif stamp_player:
         current_player = stamp_player
@@ -355,7 +356,12 @@ def build_live_board_payload(env, tournament, db_name):
     }
     result['wait_phase'] = ctrl._pj_wait_phase(tournament, audience='viewers', env=env)
     result['stamp_expires_at'] = _stamp_iso(tournament)
-    result['stamp_state'] = (tournament.stamp_state if tournament else None) or None
+    shown = (result.get('current_player') or {}).get('state')
+    # Keep the stamp only while that sold/unsold player is the one on screen.
+    if shown in ('sold', 'unsold'):
+        result['stamp_state'] = (tournament.stamp_state if tournament else None) or shown
+    else:
+        result['stamp_state'] = None
     result['live_board_active'] = bool(tournament.live_board_active) if tournament else False
     return result
 
@@ -423,8 +429,7 @@ def build_projector_payload(env, tournament, db_name):
     if dice_state == 'rolling':
         return _idle()
 
-    if (on_stage and on_stage.state == 'auction'
-            and (not stamp_player or stamp_player.id != on_stage.id)):
+    if on_stage and on_stage.state == 'auction':
         player = on_stage
         state_override = None
     elif stamp_player:
@@ -546,7 +551,11 @@ def build_projector_payload(env, tournament, db_name):
         'advertisers': ctrl._pj_advertisers(tournament, db_name),
         'boards': boards,
         'stamp_expires_at': _stamp_iso(tournament),
-        'stamp_state': (tournament.stamp_state if tournament else None) or None,
+        'stamp_state': (
+            (state_override or player.state)
+            if (state_override or player.state) in ('sold', 'unsold')
+            else None
+        ),
         'next_photo_urls': ctrl._pj_next_photo_urls(
             tournament, db_name, player, env=env,
         ),

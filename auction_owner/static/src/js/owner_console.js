@@ -212,6 +212,7 @@ function paintSoldCard(p) {
     var unsold = !!(p && p.state === 'unsold');
     if (!sold && !unsold) {
         card.style.display = 'none';
+        card.className = 'oc-sold-card';
         return;
     }
     card.style.display = 'block';
@@ -1894,6 +1895,11 @@ function fetchData() {
         if (liveBadge) liveBadge.className = 'oc-live-badge';
 
         const incoming  = data.current_player || null;
+        if (incoming && incoming.state !== 'sold' && incoming.state !== 'unsold') {
+            incoming.state = incoming.state || 'auction';
+            incoming.sold_team = null;
+            incoming.sold_points = 0;
+        }
         if (closedOtherPlayer(incoming)) return;
         noteLiveBid(incoming);
 
