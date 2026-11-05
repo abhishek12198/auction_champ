@@ -144,9 +144,10 @@ function showUnsoldOverlay() {
 }
 function hideUnsoldOverlay() {
     var overlay = $('ocPhotoStatus');
-    if (overlay && overlay.getAttribute('data-kind') === 'unsold') {
-        overlay.classList.remove('oc-status-show');
-    }
+    if (!overlay || overlay.getAttribute('data-kind') !== 'unsold') return;
+    overlay.classList.remove('oc-status-show');
+    setSealArcText('ocSealArcTopText', '');
+    setSealArcText('ocSealArcBotText', '');
 }
 
 // ── Tab switching ──────────────────────────────────────────────────────
@@ -321,6 +322,7 @@ function applyPlayerPhoto(p) {
 }
 
 // ── Render: player showcase ────────────────────────────────────────────
+var _ocPaintSeq = 0;
 function renderPlayer(p) {
     if (!p) {
         show('ocWaiting', true); show('ocPlayerWrap', false);
@@ -328,12 +330,18 @@ function renderPlayer(p) {
         paintSoldCard(null);
         return;
     }
+    var paintSeq = ++_ocPaintSeq;
     var nextId = p.id;
     var changed = !!(_ocShownPid && nextId && String(nextId) !== String(_ocShownPid));
     var wrap = $('ocPlayerWrap');
     var wasHidden = !wrap || wrap.style.display === 'none';
+    if (p.state !== 'sold' && p.state !== 'unsold') {
+        hideSoldOverlay();
+        hideUnsoldOverlay();
+    }
 
     function reveal() {
+        if (paintSeq !== _ocPaintSeq) return;
         show('ocWaiting', false);
         show('ocPlayerWrap', true);
         paintPlayerFace(p);
@@ -1718,14 +1726,11 @@ function handleCounter(counter) {
 function playerFromProjector(payload) {
     var raw = payload && (payload.player || payload.current_player);
     if (!raw) return null;
-    var rawState = raw.state || '';
-    var stamp = (payload && payload.stamp_state) || '';
-    // A SOLD/UNSOLD stamp stays on the tournament after the next player is
-    // called. It must not be painted onto that new player.
-    var state = rawState || 'auction';
-    if ((stamp === 'sold' || stamp === 'unsold') && rawState !== 'auction') {
-        state = stamp;
-    }
+    // stamp_state stays on the tournament after the next player is called.
+    // The player object already carries its own state, so the envelope stamp
+    // must not be copied onto whoever is on stage.
+    var state = raw.state || 'auction';
+    if (state !== 'sold' && state !== 'unsold' && state !== 'auction') state = 'auction';
     var team = raw.current_bid_team || null;
     var soldInfo = payload.sold_info || null;
     if (state === 'sold' && !team && (raw.team_name || raw.team_logo_url || (soldInfo && soldInfo.team_name))) {
@@ -1748,7 +1753,9 @@ function playerFromProjector(payload) {
         current_bid: Number(raw.current_bid || 0) || 0,
         current_bid_team: team,
         sold_team: state === 'sold' ? (raw.sold_team || team) : null,
-        sold_points: Number(raw.sold_points || (soldInfo && soldInfo.amount) || raw.current_bid || 0) || 0,
+        sold_points: state === 'sold'
+            ? (Number(raw.sold_points || (soldInfo && soldInfo.amount) || raw.current_bid || 0) || 0)
+            : 0,
         batting_style: raw.batting_style,
         bowling_style: raw.bowling_style,
         team_name: raw.team_name,
@@ -1825,10 +1832,21 @@ function noteLiveBid(incoming) {
         : { playerId: null, bid: 0, teamId: null };
 }
 
+function closedOtherPlayer(incoming) {
+    if (!incoming || !S.player || !incoming.id || !S.player.id) return false;
+    if (Number(incoming.id) === Number(S.player.id)) return false;
+    var incomingClosed = incoming.state === 'sold' || incoming.state === 'unsold';
+    return S.player.state === 'auction' && incomingClosed;
+}
+
 function applyOwnerSnapshot(payload) {
     if (!payload) return;
     var incoming = playerFromProjector(payload);
     if (!incoming) return;
+    if (closedOtherPlayer(incoming)) return;
+    var seq = Number(payload.seq || 0);
+    if (seq && S._seenSeq && seq < S._seenSeq) return;
+    if (seq) S._seenSeq = seq;
     var prevId = S.player && S.player.id;
     var playerChanged = !!(incoming.id && prevId && Number(incoming.id) !== Number(prevId));
     if (playerChanged) {
@@ -1863,16 +1881,20 @@ function applyOwnerSnapshot(payload) {
 }
 
 // ── Poll ───────────────────────────────────────────────────────────────
+var _fetchGen = 0;
 function fetchData() {
+    var gen = ++_fetchGen;
     fetch('/auction/owner/data', {cache:'no-store'})
     .then(r => r.ok ? r.json() : Promise.reject(r.status))
     .then(data => {
+        if (gen !== _fetchGen) return;
         applyPointUnit((data.tournament && data.tournament.point_unit) || null);
         startOwnerSse(data);
         const liveBadge = $('ocLiveBadge');
         if (liveBadge) liveBadge.className = 'oc-live-badge';
 
         const incoming  = data.current_player || null;
+        if (closedOtherPlayer(incoming)) return;
         noteLiveBid(incoming);
 
         updatePlayerCounts(data.player_counts, incoming && incoming.id);
@@ -2169,33 +2191,26 @@ function pollBidTimer() {
 function startBidTimerPoll() {
     if (!S._bidTimerPoll) S._bidTimerPoll = setInterval(pollBidTimer, 1000);
 }
-function startHttpPoll() {
-    if (!S.pollTimer) S.pollTimer = setInterval(fetchData, 3000);
-}
-function stopHttpPoll() {
-    if (S.pollTimer) { clearInterval(S.pollTimer); S.pollTimer = null; }
+function startOwnerRefresh() {
+    if (!S.pollTimer) S.pollTimer = setInterval(fetchData, 2000);
 }
 function startOwnerSse(data) {
+    startOwnerRefresh();
     if (S._sseStarted) return;
     var url = projectorSseUrl(data);
-    if (!url || typeof EventSource === 'undefined') {
-        startHttpPoll();
-        return;
-    }
+    if (!url || typeof EventSource === 'undefined') return;
     S._sseStarted = true;
     var es;
     try { es = new EventSource(url); }
-    catch (e) { startHttpPoll(); return; }
+    catch (e) { return; }
     function onEvt(ev) {
-        stopHttpPoll();
         var payload = null;
         try { payload = ev && ev.data ? JSON.parse(ev.data) : null; } catch (e1) { payload = null; }
         applyOwnerSnapshot(payload);
     }
     es.addEventListener('snapshot', onEvt);
     es.addEventListener('auction.update', onEvt);
-    es.onopen = function () { stopHttpPoll(); };
-    es.onerror = function () { startHttpPoll(); };
+    es.onerror = function () { startOwnerRefresh(); };
 }
 
 window.ocAskLogout = function () {
