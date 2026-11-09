@@ -15,7 +15,7 @@ class AuctionChampHomepageSignup(AuctionChampHomepage):
     def _get_public_pricing_plans(self):
         cards = super()._get_public_pricing_plans()
         Signup = request.env['ac.saas.signup.payment'].sudo()
-        price_ctx = Signup.website_price_context()
+        price_ctx = Signup.website_price_context(AUTO_TOKEN)
         country = price_ctx['country']
         signup_on = Signup.website_signup_active()
         Plan = request.env['ac.saas.plan'].sudo()
@@ -29,10 +29,7 @@ class AuctionChampHomepageSignup(AuctionChampHomepage):
             card['price_per_tournament'] = info.get('per_tournament') or ''
             card['price_validity'] = info.get('validity') or ''
             if signup_on and Signup.plan_is_purchasable(plan, country or None):
-                url = '/saas/signup/%s' % plan.id
-                if country:
-                    url += '?country=%s' % country.code
-                card['contact_url'] = url
+                card['contact_url'] = '/saas/signup/%s' % plan.id
                 card['cta_label'] = 'Get Started'
                 card['cta_buy'] = True
             else:

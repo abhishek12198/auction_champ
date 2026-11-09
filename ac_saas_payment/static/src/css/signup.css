@@ -294,11 +294,25 @@ body.ac-su-body {
   align-items: stretch;
 }
 
-.ac-su-phone select.ac-su-phone-code {
+.ac-su-phone select.ac-su-phone-code,
+.ac-su-phone-lock {
   width: auto;
   min-width: 118px;
   flex: 0 0 auto;
   padding-right: 28px;
+}
+
+.ac-su-phone-lock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border: 1px solid var(--ac-border);
+  border-radius: 10px;
+  background: var(--ac-light);
+  color: var(--ac-text);
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .ac-su-phone input {

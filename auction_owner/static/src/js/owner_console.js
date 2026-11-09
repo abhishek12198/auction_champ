@@ -645,6 +645,11 @@ function renderBidPanel(myTeam, player) {
             }
             input.disabled = false;
             input.min = nextBidVal;
+            var ceiling = nextBidCeiling(myTeam);
+            if (ceiling) input.max = ceiling;
+            else input.removeAttribute('max');
+            var shown = parseInt(input.value, 10) || 0;
+            if (ceiling && shown > ceiling) input.value = ceiling;
             paintBidStepFloor(input, nextBidVal);
         }
         if (bidBtn) bidBtn.disabled = false;
@@ -1238,7 +1243,8 @@ function renderPresets(presets, myTeam) {
             cls += ' oc-preset-ok';
         }
         var on = (pt === nextBid) ? ' oc-preset-on' : '';
-        return '<button type="button" '+(locked?'disabled ':'')+'class="'+cls+on+'" title="'+title+'" onclick="ocSetPreset('+pt+')">'+fmtU(pt)+'</button>';
+        var over = maxCall > 0 && pt > maxCall;
+        return '<button type="button" '+((locked || over)?'disabled ':'')+'class="'+cls+on+'" title="'+title+'" onclick="ocSetPreset('+pt+')">'+fmtU(pt)+'</button>';
     }).join('');
     wrap.style.display = 'flex';
 }
@@ -1513,15 +1519,37 @@ function snapToSlab(amount, slabs) {
 }
 
 function paintBidStepFloor(input, floor) {
-    var minus = document.querySelector('#ocBidRow .oc-step');
-    if (!minus) return;
-    if (!input || input.disabled) { minus.disabled = true; return; }
+    var steps = document.querySelectorAll('#ocBidRow .oc-step');
+    var minus = steps[0];
+    var plus = steps[1];
+    var ceiling = nextBidCeiling(S.myTeam);
+    if (!minus && !plus) return;
+    if (!input || input.disabled) {
+        if (minus) minus.disabled = true;
+        if (plus) plus.disabled = true;
+        return;
+    }
     var cur = parseInt(input.value, 10) || 0;
-    minus.disabled = !cur || cur <= floor;
+    if (minus) minus.disabled = !cur || cur <= floor;
+    if (plus) plus.disabled = !!(ceiling && cur >= ceiling);
 }
 
 function nextBidFloor(myTeam) {
     return Number((myTeam && (myTeam.next_bid || myTeam.effective_base)) || 1);
+}
+
+function nextBidCeiling(myTeam) {
+    var max = Number(myTeam && myTeam.max_call) || 0;
+    return max > 0 ? max : 0;
+}
+
+function clampBidAmount(amount, myTeam) {
+    var floor = nextBidFloor(myTeam);
+    var ceiling = nextBidCeiling(myTeam);
+    var cur = parseInt(amount, 10) || 0;
+    if (!cur || cur < floor) cur = floor;
+    if (ceiling && cur > ceiling) cur = ceiling;
+    return cur;
 }
 
 // ── Bid input step ─────────────────────────────────────────────────────
@@ -1535,8 +1563,15 @@ window.ocChangeBid = function(delta) {
     const floor = nextBidFloor(myTeam);
 
     if (delta > 0) {
+        var ceiling = nextBidCeiling(myTeam);
+        if (ceiling && cur >= ceiling) {
+            input.value = ceiling;
+            paintBidStepFloor(input, floor);
+            return;
+        }
         if (cur < floor) cur = floor;
         else cur = cur + (slabStep(cur, slabs) || 1);
+        if (ceiling && cur > ceiling) cur = ceiling;
     } else {
         if (cur <= floor) {
             input.value = floor;
@@ -1555,7 +1590,9 @@ window.ocSetPreset = function(amount) {
     if (!stageOpen(S.player)) return;
     const input = $('ocBidInput');
     const floor = nextBidFloor(S.myTeam);
+    const ceiling = nextBidCeiling(S.myTeam);
     if (!input || input.disabled || amount < floor) return;
+    if (ceiling && amount > ceiling) return;
     input.value = amount;
     paintBidStepFloor(input, floor);
 };
@@ -2237,15 +2274,22 @@ document.addEventListener('DOMContentLoaded', () => {
     var bidInput = $('ocBidInput');
     if (bidInput && !bidInput._ocFloorBound) {
         bidInput._ocFloorBound = true;
-        var keepBidFloor = function () {
+        var keepBidInRange = function () {
             if (bidInput.disabled || !S.myTeam) return;
-            var floor = nextBidFloor(S.myTeam);
-            var cur = parseInt(bidInput.value, 10) || 0;
-            if (!cur || cur < floor) bidInput.value = floor;
-            paintBidStepFloor(bidInput, floor);
+            bidInput.value = clampBidAmount(bidInput.value, S.myTeam);
+            paintBidStepFloor(bidInput, nextBidFloor(S.myTeam));
         };
-        bidInput.addEventListener('change', keepBidFloor);
-        bidInput.addEventListener('blur', keepBidFloor);
+        bidInput.addEventListener('input', function () {
+            if (bidInput.disabled || !S.myTeam) return;
+            var ceiling = nextBidCeiling(S.myTeam);
+            var typed = parseInt(bidInput.value, 10) || 0;
+            if (ceiling && typed > ceiling) {
+                bidInput.value = ceiling;
+                paintBidStepFloor(bidInput, nextBidFloor(S.myTeam));
+            }
+        });
+        bidInput.addEventListener('change', keepBidInRange);
+        bidInput.addEventListener('blur', keepBidInRange);
     }
     fetchData();
     startOwnerSse();

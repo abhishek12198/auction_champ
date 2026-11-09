@@ -41,7 +41,10 @@
                                      style="height:48px; width:auto;"/>
                             </td>
                             <td style="padding:18px 20px; vertical-align:middle; text-align:right;">
-                                <div style="color:#f5a623; font-size:12px; letter-spacing:2px;">TAX INVOICE</div>
+                                <div style="color:#f5a623; font-size:12px; letter-spacing:2px;">
+                                    <t t-if="doc.gst_rate">TAX INVOICE</t>
+                                    <t t-else="">INVOICE</t>
+                                </div>
                                 <div style="color:#ffffff; font-size:18px; font-weight:bold; margin-top:4px;">
                                     <t t-esc="doc.invoice_number or ''"/>
                                 </div>
@@ -70,8 +73,16 @@
                             <td style="width:48%; vertical-align:top;">
                                 <table style="width:100%; border-collapse:collapse;">
                                     <tr>
+                                        <td style="padding:3px 0; color:#718096;">Date of purchase</td>
+                                        <td style="padding:3px 0; text-align:right;"><t t-esc="doc._purchase_date_label()"/></td>
+                                    </tr>
+                                    <tr t-if="doc.invoice_date and doc.purchase_date and doc.invoice_date != doc.purchase_date">
                                         <td style="padding:3px 0; color:#718096;">Invoice date</td>
                                         <td style="padding:3px 0; text-align:right;"><t t-esc="doc._invoice_date_label()"/></td>
+                                    </tr>
+                                    <tr t-if="doc.supplier_gstin">
+                                        <td style="padding:3px 0; color:#718096;">GSTIN</td>
+                                        <td style="padding:3px 0; text-align:right;"><t t-esc="doc.supplier_gstin"/></td>
                                     </tr>
                                     <tr>
                                         <td style="padding:3px 0; color:#718096;">Signup reference</td>
@@ -112,7 +123,10 @@
                             <td style="padding:8px 10px;">Description</td>
                             <td style="padding:8px 10px; width:80px;">SAC</td>
                             <td style="padding:8px 10px; text-align:right; width:50px;">Qty</td>
-                            <td style="padding:8px 10px; text-align:right; width:130px;">Taxable value</td>
+                            <td style="padding:8px 10px; text-align:right; width:130px;">
+                                <t t-if="doc.gst_rate">Taxable value</t>
+                                <t t-else="">Amount</t>
+                            </td>
                         </tr>
                         <tr>
                             <td style="padding:12px 10px; border-bottom:1px solid #e2e8f0; vertical-align:top;">

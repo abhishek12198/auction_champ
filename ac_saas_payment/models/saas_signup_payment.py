@@ -65,6 +65,12 @@ class AcSaasSignupPayment(models.Model):
     credentials_sent = fields.Boolean(default=False, copy=False)
     invoice_number = fields.Char(copy=False, index=True, readonly=True)
     invoice_date = fields.Date(copy=False, readonly=True)
+    purchase_date = fields.Date(
+        string='Date of Purchase',
+        compute='_compute_purchase_date',
+        store=True,
+        readonly=True,
+    )
     buyer_gstin = fields.Char(string='Buyer GSTIN', copy=False)
     buyer_state = fields.Char(string='Buyer State', copy=False)
     buyer_country_id = fields.Many2one(
@@ -88,6 +94,22 @@ class AcSaasSignupPayment(models.Model):
     igst_amount = fields.Monetary(readonly=True, copy=False, currency_field='currency_id')
     place_of_supply = fields.Char(readonly=True, copy=False)
     tax_snapshotted = fields.Boolean(default=False, copy=False)
+
+    @api.depends('create_date')
+    def _compute_purchase_date(self):
+        for rec in self:
+            rec.purchase_date = rec._local_purchase_date()
+
+    def _local_purchase_date(self):
+        """Calendar date of create_date in India, which is the purchase date."""
+        self.ensure_one()
+        if not self.create_date:
+            return False
+        localized = fields.Datetime.context_timestamp(
+            self.with_context(tz=self.env.user.tz or 'Asia/Kolkata'),
+            self.create_date,
+        )
+        return localized.date()
 
     @api.model
     def create(self, vals):
@@ -176,13 +198,17 @@ class AcSaasSignupPayment(models.Model):
         )
 
     @api.model
-    def _validate_buyer(self, name, email, phone=None, organization=None, gstin=None, state=None):
+    def _validate_buyer(self, name, email, phone=None, organization=None, gstin=None, state=None, country=None):
         """Fields for SaaS account: name + email login (+ optional phone)."""
         name = (name or '').strip()
         email = self._normalize_email(email)
         phone = (phone or '').strip()
         gstin = normalize_gstin(gstin)
         state = (state or '').strip()
+        india = not country or (country.code or '') == 'IN'
+        if not india:
+            gstin = ''
+            state = ''
         if not name:
             raise UserError(_('Please enter your full name.'))
         if not email or not EMAIL_RE.match(email):
@@ -201,7 +227,7 @@ class AcSaasSignupPayment(models.Model):
         if gstin and not GSTIN_RE.match(gstin):
             raise UserError(_('Enter a valid 15-character GSTIN, or leave it blank.'))
         if state and state not in INDIAN_STATE_NAMES:
-            raise UserError(_('Select a state from the list, or leave it blank.'))
+            raise UserError(_('Select a state from the list.'))
         return {
             'buyer_name': name,
             'buyer_email': email,
@@ -467,10 +493,13 @@ class AcSaasSignupPayment(models.Model):
                     self.env['ir.sequence'].sudo().next_by_code('ac.saas.signup.invoice')
                     or 'INV%s' % rec.id
                 )
-                vals['invoice_date'] = rec.invoice_date or fields.Date.context_today(rec)
+            if not rec.invoice_date:
+                vals['invoice_date'] = rec.purchase_date or rec._local_purchase_date() or fields.Date.context_today(rec)
             if not rec.tax_snapshotted:
                 vals.update(rec._invoice_tax_snapshot())
                 vals['tax_snapshotted'] = True
+            else:
+                vals.update(rec._invoice_supplier_identity())
             if vals:
                 rec.write(vals)
         return True
@@ -479,25 +508,56 @@ class AcSaasSignupPayment(models.Model):
     def _money(self, amount):
         return float(Decimal(str(amount or 0)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
 
+    def _buyer_in_india(self):
+        """No billing country means the standard (India) price."""
+        self.ensure_one()
+        country = self.buyer_country_id
+        if not country:
+            return True
+        return (country.code or '').upper() == 'IN'
+
+    def _invoice_supplier_profile(self):
+        ICP = self.env['ir.config_parameter'].sudo()
+        return {
+            'supplier_name': (ICP.get_param('ac_saas_payment.invoice_legal_name') or '').strip() or 'Auction Champ',
+            'supplier_address': (ICP.get_param('ac_saas_payment.invoice_address') or '').strip() or False,
+            'supplier_gstin': normalize_gstin(ICP.get_param('ac_saas_payment.invoice_gstin')) or False,
+            'supplier_state': (ICP.get_param('ac_saas_payment.invoice_state') or '').strip() or 'Kerala',
+            'sac_code': (ICP.get_param('ac_saas_payment.invoice_sac') or '').strip() or '998313',
+        }
+
+    def _invoice_supplier_identity(self):
+        """Fill a missing supplier GSTIN on an invoice that was already issued."""
+        self.ensure_one()
+        profile = self._invoice_supplier_profile()
+        vals = {}
+        if profile['supplier_gstin'] and not self.supplier_gstin:
+            vals['supplier_gstin'] = profile['supplier_gstin']
+        if profile['supplier_state'] and not self.supplier_state:
+            vals['supplier_state'] = profile['supplier_state']
+        if profile['supplier_name'] and not self.supplier_name:
+            vals['supplier_name'] = profile['supplier_name']
+        return vals
+
     def _invoice_tax_snapshot(self):
-        """GST included in the amount already paid. Frozen on the invoice."""
+        """GST included in the amount already paid. Frozen on the invoice.
+
+        Kerala (same state as the supplier): CGST + SGST.
+        Another state in India: IGST only.
+        Outside India: no GST. The bill shows the amount collected.
+        """
         self.ensure_one()
         ICP = self.env['ir.config_parameter'].sudo()
-        foreign = bool(
-            self.buyer_country_id and (self.buyer_country_id.code or '') != 'IN'
-        )
+        foreign = not self._buyer_in_india()
         raw_rate = ICP.get_param('ac_saas_payment.invoice_gst_rate')
         rate = 0.0 if foreign else (
             18.0 if raw_rate in (None, False, '') else float(raw_rate)
         )
         if rate < 0:
             rate = 0.0
-        legal_name = (ICP.get_param('ac_saas_payment.invoice_legal_name') or '').strip() or 'Auction Champ'
-        address = (ICP.get_param('ac_saas_payment.invoice_address') or '').strip()
-        gstin = normalize_gstin(ICP.get_param('ac_saas_payment.invoice_gstin'))
-        supplier_state = (ICP.get_param('ac_saas_payment.invoice_state') or '').strip()
-        sac = (ICP.get_param('ac_saas_payment.invoice_sac') or '').strip() or '998313'
+        profile = self._invoice_supplier_profile()
         buyer_state = (self.buyer_state or '').strip()
+        supplier_state = profile['supplier_state']
         total = self._money(self.amount)
         if rate:
             taxable = self._money(total * 100.0 / (100.0 + rate))
@@ -505,15 +565,12 @@ class AcSaasSignupPayment(models.Model):
         else:
             taxable = total
             tax = 0.0
-        interstate = bool(
-            buyer_state and supplier_state
-            and buyer_state.lower() != supplier_state.lower()
-        )
-        if interstate:
+        same_state = (not buyer_state) or buyer_state.lower() == supplier_state.lower()
+        if foreign or not rate or not same_state:
             cgst = sgst = 0.0
-            igst = tax
+            igst = 0.0 if (foreign or not rate) else tax
             cgst_rate = sgst_rate = 0.0
-            igst_rate = rate
+            igst_rate = 0.0 if (foreign or not rate) else rate
         else:
             cgst = self._money(tax / 2.0)
             sgst = self._money(tax - cgst)
@@ -522,11 +579,11 @@ class AcSaasSignupPayment(models.Model):
             cgst_rate = sgst_rate = half
             igst_rate = 0.0
         return {
-            'supplier_name': legal_name,
-            'supplier_address': address or False,
-            'supplier_gstin': gstin or False,
-            'supplier_state': supplier_state or False,
-            'sac_code': sac,
+            'supplier_name': profile['supplier_name'],
+            'supplier_address': profile['supplier_address'],
+            'supplier_gstin': profile['supplier_gstin'],
+            'supplier_state': supplier_state,
+            'sac_code': profile['sac_code'],
             'gst_rate': rate,
             'taxable_amount': taxable,
             'cgst_rate': cgst_rate,
@@ -579,6 +636,11 @@ class AcSaasSignupPayment(models.Model):
     def _invoice_date_label(self):
         self.ensure_one()
         return self.env['ac.saas.account']._saas_format_date(self.invoice_date)
+
+    def _purchase_date_label(self):
+        self.ensure_one()
+        purchased = self.purchase_date or self._local_purchase_date()
+        return self.env['ac.saas.account']._saas_format_date(purchased)
 
     def _invoice_valid_until_label(self):
         self.ensure_one()

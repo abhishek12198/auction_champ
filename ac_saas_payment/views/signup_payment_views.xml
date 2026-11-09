@@ -6,6 +6,7 @@
         <field name="arch" type="xml">
             <tree string="Signup Payments" create="false">
                 <field name="name"/>
+                <field name="purchase_date"/>
                 <field name="invoice_number"/>
                 <field name="invoice_date"/>
                 <field name="buyer_name"/>
@@ -43,6 +44,7 @@
                             <field name="organization" readonly="1"/>
                         </group>
                         <group string="Subscription">
+                            <field name="purchase_date" readonly="1"/>
                             <field name="plan_id" readonly="1"/>
                             <field name="amount" readonly="1"/>
                             <field name="currency_id" readonly="1"/>

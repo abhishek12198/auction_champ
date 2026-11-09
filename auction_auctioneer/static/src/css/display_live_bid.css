@@ -1171,10 +1171,12 @@ body[data-theme="dark"] .player-profession .ac-livebid-overlay {
     .ac-livebid-off { font-size: 8.5px; }
 }
 
-/* Desktop only: constrain expanded grid height (mobile uses page scroll). */
-@media (min-width: 1025px) {
-    #acLiveBidPad.is-expanded .ac-livebid-grid {
-        max-height: min(32vh, 312px);
+/* The team dock is two rows. It does not grow with the squad count. */
+@media (min-width: 768px) {
+    #acLiveBidPad.is-expanded .ac-livebid-grid,
+    #acLiveBidPad.is-open .ac-livebid-grid {
+        max-height: none;
+        overflow: visible;
     }
 }
 
@@ -1209,7 +1211,7 @@ body[data-theme="dark"] .player-profession .ac-livebid-overlay {
 
 .ac-phone-id { display: none; }
 
-@media (max-width: 1024px) {
+@media (max-width: 767px) {
     .ac-livebid-toast {
         top: max(12px, env(safe-area-inset-top, 0px));
         bottom: auto;
@@ -1454,8 +1456,8 @@ body[data-theme="dark"] .player-profession .ac-livebid-overlay {
 
 }
 
-/* Desktop: lock the mockup 3-band column (profile | bid pad | actions) */
-@media (min-width: 1025px) {
+/* Tablet and up: photo beside the profile. Phone stays stacked. */
+@media (min-width: 768px) {
     .bb-stage:has(#acLiveBidPad),
     .pt-stage:has(#acLiveBidPad),
     .lm-stage:has(#acLiveBidPad),
@@ -1482,17 +1484,16 @@ body[data-theme="dark"] .player-profession .ac-livebid-overlay {
     #acLiveBidPad.is-on.is-open {
         display: flex !important;
         flex-direction: column !important;
-        flex: 1 1 auto !important;
-        min-height: 140px;
-        max-height: none;
-        overflow: hidden;
-    }
-    #acLiveBidPad.is-on.is-open .ac-livebid-grid {
-        flex: 1 1 auto;
+        flex: 0 0 auto !important;
         min-height: 0;
         max-height: none;
-        overflow-x: hidden;
-        overflow-y: auto;
+        overflow: visible;
+    }
+    #acLiveBidPad.is-on.is-open .ac-livebid-grid {
+        flex: 0 0 auto;
+        min-height: 0;
+        max-height: none;
+        overflow: visible;
     }
     .bb-right-col:has(#acLiveBidPad) .bb-info-panel,
     .pt-right-col:has(#acLiveBidPad) .pt-info-panel,
@@ -1500,9 +1501,9 @@ body[data-theme="dark"] .player-profession .ac-livebid-overlay {
     .sw-info-col:has(#acLiveBidPad) .sw-stats-wrap,
     .hud-info-col:has(#acLiveBidPad) .hud-stats,
     .cr-stats-col:has(#acLiveBidPad) .ac-fb-grid {
-        flex: 1 1 auto !important;
+        flex: 1 1 0 !important;
         min-height: 0 !important;
-        max-height: 62% !important;
+        max-height: none !important;
         overflow-x: hidden !important;
         overflow-y: auto !important;
     }
@@ -1520,7 +1521,7 @@ body[data-theme="dark"] .player-profession .ac-livebid-overlay {
 }
 
 /* Short laptop windows: keep Sell / Unsold / Next inside the stage. */
-@media (min-width: 1025px) and (max-height: 860px) {
+@media (min-width: 768px) and (max-height: 860px) {
     .bb-right-col:has(#acLiveBidPad) .bb-info-panel,
     .pt-right-col:has(#acLiveBidPad) .pt-info-panel,
     .lm-info-col:has(#acLiveBidPad) .lm-stats-wrap,
@@ -1528,7 +1529,7 @@ body[data-theme="dark"] .player-profession .ac-livebid-overlay {
     .hud-info-col:has(#acLiveBidPad) .hud-stats,
     .cr-stats-col:has(#acLiveBidPad) .ac-fb-grid {
         min-height: 0 !important;
-        max-height: 48% !important;
+        max-height: none !important;
         overflow-y: auto !important;
     }
     #acLiveBidPad.is-on.is-open {
@@ -1586,4 +1587,140 @@ body[data-theme="dark"] .player-profession .ac-livebid-overlay {
     #pcLiveBidWrap .ac-bid-hero-pts {
         overflow-anchor: none;
     }
+}
+
+/* Current bid is one strip. Every team stays on this screen as a short tile. */
+body.ac-livebid-allowed .ac-bid-hero {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    margin: 6px 10px !important;
+    padding: 6px 10px !important;
+    border-radius: 10px !important;
+}
+body.ac-livebid-allowed .ac-bid-hero-head {
+    flex: 0 1 auto !important;
+    width: auto !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+}
+body.ac-livebid-allowed .ac-bid-hero-badge {
+    padding: 3px 8px 3px 6px !important;
+}
+body.ac-livebid-allowed .ac-bid-hero-pts {
+    width: auto !important;
+    flex: 0 0 auto !important;
+    font-size: clamp(1.25rem, 2.2vw, 1.7rem) !important;
+    line-height: 1 !important;
+    text-align: left !important;
+}
+body.ac-livebid-allowed .ac-bid-hero.is-on .ac-bid-hero-team-row {
+    display: flex !important;
+    width: auto !important;
+    flex: 1 1 auto !important;
+    margin-left: auto !important;
+    justify-content: flex-end !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
+body.ac-livebid-allowed .ac-bid-hero-logo {
+    width: 22px !important;
+    height: 22px !important;
+    border-width: 1px !important;
+    box-shadow: none !important;
+}
+body.ac-livebid-allowed .ac-bid-hero-team {
+    font-size: 13px !important;
+    -webkit-line-clamp: 1 !important;
+}
+body.ac-livebid-allowed .ac-bid-hero-wait {
+    flex: 1 1 auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    justify-content: flex-start !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+body.ac-livebid-allowed .ac-bid-hero.is-unsold {
+    flex-wrap: wrap !important;
+}
+body.ac-livebid-allowed .ac-bid-hero.is-unsold .ac-bid-hero-wait {
+    flex: 1 1 100% !important;
+    white-space: normal !important;
+}
+body.ac-livebid-allowed .ac-bid-hero.is-unsold .ac-bid-hero-pts,
+body.ac-livebid-allowed .ac-bid-hero.is-sold .ac-bid-hero-pts {
+    width: auto !important;
+}
+#acLiveBidToggle,
+#acLiveBidPager { display: none !important; }
+#acLiveBidPad.is-on.is-open .ac-livebid-grid {
+    display: grid !important;
+    grid-auto-rows: minmax(0, auto) !important;
+    align-content: start !important;
+    gap: 4px !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+.ac-livebid-tile {
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 4px 6px !important;
+    gap: 2px !important;
+    border-radius: 8px !important;
+}
+.ac-livebid-head {
+    grid-template-columns: 20px minmax(0, 1fr) auto !important;
+    gap: 4px !important;
+    min-height: 0 !important;
+}
+.ac-livebid-logo,
+.ac-livebid-ph {
+    width: 20px !important;
+    height: 20px !important;
+}
+.ac-livebid-ph { font-size: 10px !important; }
+.ac-livebid-name { font-size: 10px !important; letter-spacing: .02em !important; }
+.ac-livebid-chip,
+.ac-livebid-leadamt,
+.ac-livebid-tile.is-lead .ac-livebid-chip--lead,
+.ac-livebid-tile.is-lead .ac-livebid-leadamt {
+    min-height: 18px !important;
+    height: 18px !important;
+    max-height: 18px !important;
+    min-width: 0 !important;
+    padding: 0 5px !important;
+    font-size: 10px !important;
+}
+.ac-livebid-purse-bar { height: 2px !important; }
+.ac-livebid-meta,
+.ac-livebid-purse,
+.ac-livebid-squad,
+.ac-livebid-max,
+.ac-livebid-off {
+    height: auto !important;
+    font-size: 9px !important;
+    line-height: 1.1 !important;
+}
+@media (max-width: 767px) {
+    .ac-livebid-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+}
+@media (min-width: 768px) and (max-width: 1099px) {
+    .ac-livebid-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+}
+@media (min-width: 1100px) and (max-width: 1499px) {
+    .ac-livebid-grid { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
+}
+@media (min-width: 1500px) {
+    .ac-livebid-grid { grid-template-columns: repeat(8, minmax(0, 1fr)) !important; }
 }

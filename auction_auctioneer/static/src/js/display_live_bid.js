@@ -536,7 +536,6 @@
         var reason = (bidReason(team) || '').toLowerCase();
         return reason.indexOf('squad full') !== -1;
     }
-
     function render(data) {
         var pad = padEl();
         var grid = gridEl();
@@ -609,8 +608,6 @@
                         + team.id + '" data-lead-custom="1" title="Edit custom points">'
                         + fmt(leadPts) + '</span>';
                 } else if (isMobileLiveBid()) {
-                    /* Mobile: amount is display-only — tap the team tile to bid next.
-                       Opening custom here steals focus/scroll away from the team box. */
                     foot = '<span class="ac-livebid-chip" title="Tap team to bid">' + fmt(team.next_bid) + '</span>';
                 } else {
                     foot = '<span class="ac-livebid-chip" data-custom="' + team.id + '" title="Enter custom points">' + fmt(team.next_bid) + '</span>';
@@ -988,9 +985,6 @@
         var chip = ev.target.closest('#acLiveBidGrid [data-custom]');
         if (chip) {
             var leadCustom = chip.getAttribute('data-lead-custom') === '1';
-            /* On small screens keep the tap on the team tile (quick next bid),
-               except the highlighted/leading team's points chip — that opens
-               the custom editor so the auctioneer can correct the live amount. */
             if (isMobileLiveBid() && !leadCustom) {
                 ev.preventDefault();
                 ev.stopPropagation();

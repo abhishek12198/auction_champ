@@ -64,8 +64,10 @@
                                 <field name="ac_saas_invoice_sac"/>
                                 <div class="text-muted mt8">
                                     The website package price is the amount the customer pays.
-                                    GST is included in that price and split out on the invoice.
-                                    Same state uses CGST and SGST. A different customer state uses IGST.
+                                    GST is included in that price. A Kerala customer is billed
+                                    CGST and SGST. A customer in another Indian state is billed
+                                    IGST only. A customer outside India is billed the amount
+                                    collected, with no GST.
                                 </div>
                             </div>
                         </div>

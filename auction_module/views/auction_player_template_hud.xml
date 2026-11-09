@@ -254,12 +254,6 @@
                   <span class="hud-stat-val"><t t-esc="player.current_team"/></span>
                 </div>
               </t>
-              <t t-if="player.jersy_number">
-                <div class="hud-stat-row">
-                  <span class="hud-stat-key">Jersey</span>
-                  <span class="hud-stat-val"><t t-esc="player.jersy_number"/></span>
-                </div>
-              </t>
               <t t-if="player.age">
                 <div class="hud-stat-row">
                   <span class="hud-stat-key">Age</span>
@@ -321,23 +315,49 @@
         var v = getComputedStyle(document.documentElement).getPropertyValue(name);
         return (v &amp;&amp; v.trim()) ? v.trim() : fallback;
       }
-      async function changeImage(skipOverlay) {
+      function acInstallPlayerZone(zone, newZone) {
+        if (!zone || !newZone) return;
+        var nodes = Array.prototype.slice.call(newZone.childNodes);
+        if (typeof zone.replaceChildren === 'function') {
+          zone.replaceChildren.apply(zone, nodes);
+        } else {
+          while (zone.firstChild) zone.removeChild(zone.firstChild);
+          for (var i = 0; i &lt; nodes.length; i++) zone.appendChild(nodes[i]);
+        }
+      }
+      function acWarmNextPhoto(doc) {
+        return new Promise(function(resolve) {
+          var img = doc &amp;&amp; doc.getElementById &amp;&amp; doc.getElementById('loadImage');
+          var src = img &amp;&amp; img.getAttribute('src');
+          if (!src) { resolve(); return; }
+          var pre = new Image();
+          var done = false;
+          function finish() { if (done) return; done = true; resolve(); }
+          pre.onload = finish;
+          pre.onerror = finish;
+          setTimeout(finish, 1500);
+          pre.src = src;
+        });
+      }
+      async function changeImage(skipOverlay, readyHtml) {
         var currentPlayerId = document.body.getAttribute('data-player-id');
         var countSecs = Math.max(1, parseInt(document.body.getAttribute('data-next-countdown') || '5'));
         var overlay = document.getElementById('ac-next-overlay');
         var countEl = document.getElementById('ac-next-count');
         var mainDiv = document.getElementById('ac-next-main');
         var lastDiv = document.getElementById('ac-next-last');
-        var html;
-        try {
-          var fetchUrl = window.location.href.split('?')[0] + '?exclude=' + currentPlayerId + '&amp;preview=1';
-          var r = await fetch(fetchUrl, {cache: 'no-store'});
-          if (!r.ok) throw new Error('HTTP ' + r.status);
-          html = await r.text();
-        } catch(e) {
-          console.error('Next player load failed:', e);
-          window.location.reload();
-          return;
+        var html = (typeof readyHtml === 'string' &amp;&amp; readyHtml) ? readyHtml : '';
+        if (!html) {
+          try {
+            var fetchUrl = window.location.href.split('?')[0] + '?exclude=' + currentPlayerId + '&amp;preview=1';
+            var r = await fetch(fetchUrl, {cache: 'no-store'});
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            html = await r.text();
+          } catch(e) {
+            console.error('Next player load failed:', e);
+            window.location.reload();
+            return;
+          }
         }
         var parser = new DOMParser();
         var newDoc = parser.parseFromString(html, 'text/html');
@@ -364,7 +384,8 @@
           var _mf = (newDoc.body &amp;&amp; newDoc.body.getAttribute('data-is-mystery')) || '0';
           document.body.setAttribute('data-is-mystery', _mf);
           document.body.removeAttribute('data-mystery-revealed');
-          if (zone &amp;&amp; newZone) { zone.innerHTML = newZone.innerHTML; }
+          await acWarmNextPhoto(newDoc);
+          acInstallPlayerZone(zone, newZone);
           if (typeof window.acMysteryApplyFromBody === 'function') { window.acMysteryApplyFromBody(); }
           if (typeof window.acCommitPlayerOnStage === 'function') {
             await window.acCommitPlayerOnStage(newPlayerId);
@@ -395,7 +416,7 @@
         var _mf2 = (newDoc.body &amp;&amp; newDoc.body.getAttribute('data-is-mystery')) || '0';
         document.body.setAttribute('data-is-mystery', _mf2);
         document.body.removeAttribute('data-mystery-revealed');
-        if (zone &amp;&amp; newZone) { zone.innerHTML = newZone.innerHTML; }
+        acInstallPlayerZone(zone, newZone);
         if (typeof window.acMysteryApplyFromBody === 'function') { window.acMysteryApplyFromBody(); }
         if (typeof window.acCommitPlayerOnStage === 'function') {
           await window.acCommitPlayerOnStage(newPlayerId);
@@ -474,11 +495,12 @@
           return;
         }
         var secs = Math.max(1, parseInt(displaySeconds, 10) || 5);
+        var prefetchId = document.body.getAttribute('data-player-id');
+        var prefetchHtml = fetch(window.location.href.split('?')[0] + '?exclude=' + prefetchId + '&amp;preview=1', {cache: 'no-store'})
+          .then(function(r) { return r.ok ? r.text() : ''; })
+          .catch(function() { return ''; });
         setTimeout(function() {
-          if (typeof window.acClearResultStampOnPhoto === 'function') {
-            window.acClearResultStampOnPhoto();
-          }
-          changeImage(true);
+          prefetchHtml.then(function(html) { changeImage(true, html); });
         }, secs * 1000);
       }
       function resolveAuctionPanelUrl(kind) {
@@ -606,7 +628,7 @@
       </div>
     </div>
 
-    <script src="/auction_module/static/src/js/player_drawer.js?v=3"></script>
+    <script src="/auction_module/static/src/js/player_drawer.js?v=4"></script>
     <script src="/auction_module/static/src/js/bid_clock.js?v=5"></script>
     <t t-call="auction_module.player_break_pause_assets"/>
     <t t-call="auction_module.player_mystery_controls"/>

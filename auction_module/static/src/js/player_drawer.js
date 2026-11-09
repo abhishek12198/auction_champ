@@ -144,9 +144,16 @@
                 return;
             }
             var secs = Math.max(1, parseInt(displaySeconds, 10) || 5);
+            var prefetchId = d.body && d.body.getAttribute('data-player-id');
+            var prefetchHtml = prefetchId
+                ? w.fetch(w.location.href.split('?')[0] + '?exclude=' + encodeURIComponent(prefetchId) + '&preview=1', { cache: 'no-store' })
+                    .then(function (r) { return r.ok ? r.text() : ''; })
+                    .catch(function () { return ''; })
+                : Promise.resolve('');
             setTimeout(function () {
-                acClearResultStampOnPhoto();
-                if (typeof w.changeImage === 'function') w.changeImage(true);
+                prefetchHtml.then(function (html) {
+                    if (typeof w.changeImage === 'function') w.changeImage(true, html);
+                });
             }, secs * 1000);
         };
         w.showUnsoldStamp._drawerSeal = true;

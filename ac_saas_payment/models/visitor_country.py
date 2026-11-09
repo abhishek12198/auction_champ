@@ -10,6 +10,7 @@ import logging
 import time
 from urllib.parse import quote
 
+from .indian_states import match_indian_state
 from .phone_countries import _fetch_json, _ip_is_private
 
 _logger = logging.getLogger(__name__)
@@ -19,6 +20,7 @@ DEFAULT_TOKEN = '__default__'
 AUTO_TOKEN = '__auto__'
 COOKIE_MAX_AGE = 90 * 24 * 3600
 _ISO_CACHE = {}
+_PLACE_CACHE = {}
 _ISO_TTL = 6 * 3600
 
 
@@ -38,28 +40,66 @@ def client_ip(httprequest):
 
 def detect_visitor_iso(ip):
     """ISO country from a public IP. Empty when unknown. Cached per worker."""
+    return detect_visitor_place(ip)['country']
+
+
+def detect_visitor_place(ip):
+    """Country ISO and, for India, the billing state. Empty when unknown."""
     ip = (ip or '').strip()
+    blank = {'country': '', 'state': ''}
     if not ip or _ip_is_private(ip):
-        return ''
+        return blank
     now = time.monotonic()
-    hit = _ISO_CACHE.get(ip)
+    hit = _PLACE_CACHE.get(ip)
     if hit and now - hit[0] < _ISO_TTL:
         return hit[1]
-    iso = ''
+    country, state = '', ''
     safe_ip = quote(ip, safe='')
     data = _fetch_json(
-        'http://ip-api.com/json/%s?fields=status,countryCode' % safe_ip,
+        'http://ip-api.com/json/%s?fields=status,countryCode,region,regionName' % safe_ip,
     )
     if data.get('status') == 'success':
-        iso = _iso(data.get('countryCode'))
-    if not iso:
+        country = _iso(data.get('countryCode'))
+        if country == 'IN':
+            state = match_indian_state(data.get('region'), data.get('regionName'))
+    if not country:
         data = _fetch_json('https://ipwho.is/%s' % safe_ip)
         if data.get('success'):
-            iso = _iso(data.get('country_code'))
-    if len(_ISO_CACHE) > 4000:
+            country = _iso(data.get('country_code'))
+            if country == 'IN':
+                state = match_indian_state(data.get('region_code'), data.get('region'))
+    place = {'country': country, 'state': state if country == 'IN' else ''}
+    if len(_PLACE_CACHE) > 4000:
+        _PLACE_CACHE.clear()
         _ISO_CACHE.clear()
-    _ISO_CACHE[ip] = (now, iso)
-    return iso
+    _PLACE_CACHE[ip] = (now, place)
+    _ISO_CACHE[ip] = (now, country)
+    return place
+
+
+def resolve_visitor_place(httprequest, geoip_code=None):
+    """Country and Indian state from the request, never from a form or cookie."""
+    country = ''
+    for header in ('CF-IPCountry', 'CloudFront-Viewer-Country'):
+        code = _iso(httprequest.headers.get(header))
+        if code and code not in ('XX', 'T1'):
+            country = code
+            break
+    if not country:
+        country = _iso(geoip_code)
+    region_code = (
+        httprequest.headers.get('CloudFront-Viewer-Country-Region')
+        or httprequest.headers.get('CF-Region-Code')
+        or ''
+    )
+    region_name = httprequest.headers.get('CF-Region') or ''
+    state = match_indian_state(region_code, region_name) if country == 'IN' else ''
+    if country and (country != 'IN' or state):
+        return {'country': country, 'state': state}
+    looked = detect_visitor_place(client_ip(httprequest))
+    if country and not looked['country']:
+        return {'country': country, 'state': state}
+    return looked
 
 
 def _detected_iso(httprequest, geoip_code=None):

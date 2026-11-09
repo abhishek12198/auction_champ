@@ -71,41 +71,28 @@
                    t-att-style="'display:block;' if email_error else 'display:none;'"
                    t-esc="email_error or ''"/>
               </div>
-              <div class="ac-su-field">
-                <label for="billing_country_code">Billing country</label>
-                <select id="billing_country_code" name="billing_country_code"
-                        t-att-data-plan-id="plan.id" aria-label="Billing country">
-                  <option value="__default__"
-                          t-att-selected="'selected' if billing_country_code == '__default__' else None">
-                    Standard price
-                  </option>
-                  <t t-foreach="billing_countries" t-as="bcountry">
-                    <option t-att-value="bcountry['code']"
-                            t-att-selected="'selected' if bcountry['selected'] else None"
-                            t-esc="bcountry['name']"/>
-                  </t>
-                </select>
-                <p class="ac-su-field-hint">The price follows this country, not the phone code.</p>
-              </div>
+              <t t-if="show_india_tax">
+                <div class="ac-su-field">
+                  <label for="buyer_gstin">GSTIN (optional)</label>
+                  <input type="text" id="buyer_gstin" name="buyer_gstin"
+                         maxlength="15" autocomplete="off"
+                         t-att-value="form.get('buyer_gstin') or ''"
+                         placeholder="15-character GSTIN"/>
+                  <p class="ac-su-field-hint">Leave blank if you do not have a GSTIN. It is printed on the invoice when provided.</p>
+                </div>
+              </t>
               <div class="ac-su-field">
                 <label for="buyer_phone_national">Contact number</label>
                 <div class="ac-su-phone">
-                  <select id="buyer_country_code" name="buyer_country_code"
-                          class="ac-su-phone-code" aria-label="Country calling code">
-                    <t t-foreach="phone_countries" t-as="country">
-                      <option t-att-value="country['code']"
-                              t-att-data-min="country['min']"
-                              t-att-data-max="country['max']"
-                              t-att-data-placeholder="country['placeholder']"
-                              t-att-selected="'selected' if country['selected'] else None"
-                              t-esc="country['label']"/>
-                    </t>
-                  </select>
+                  <span class="ac-su-phone-lock" t-esc="phone_spec['label']"/>
                   <input type="tel" id="buyer_phone_national" name="buyer_phone_national"
                          required="required" inputmode="numeric" autocomplete="tel-national"
+                         t-att-data-min="phone_spec['min']"
+                         t-att-data-max="phone_spec['max']"
+                         t-att-data-placeholder="phone_spec['placeholder']"
                          t-att-class="'ac-su-input-error' if phone_error else None"
                          t-att-value="form.get('buyer_phone_national') or ''"
-                         placeholder="98765 43210"/>
+                         t-att-placeholder="phone_spec['placeholder']"/>
                 </div>
                 <p class="ac-su-field-hint" id="buyerPhoneHint">Enter the number without the country code.</p>
                 <p class="ac-su-field-hint ac-su-field-error" id="buyerPhoneError"
@@ -196,22 +183,20 @@
               });
               emailInput.addEventListener('blur', checkEmail);
             }
-            var codeEl = document.getElementById('buyer_country_code');
             var numEl = document.getElementById('buyer_phone_national');
             var phoneHint = document.getElementById('buyerPhoneHint');
             var phoneErr = document.getElementById('buyerPhoneError');
 
             function phoneRules() {
-              var opt = codeEl &amp;&amp; codeEl.options[codeEl.selectedIndex];
-              var min = parseInt(opt &amp;&amp; opt.getAttribute('data-min'), 10);
-              var max = parseInt(opt &amp;&amp; opt.getAttribute('data-max'), 10);
+              var min = parseInt(numEl &amp;&amp; numEl.getAttribute('data-min'), 10);
+              var max = parseInt(numEl &amp;&amp; numEl.getAttribute('data-max'), 10);
               if (!(min &gt; 0)) min = 10;
               if (!(max &gt; 0)) max = min;
               if (max &lt; min) max = min;
               return {
                 min: min,
                 max: max,
-                placeholder: (opt &amp;&amp; opt.getAttribute('data-placeholder')) || ''
+                placeholder: (numEl &amp;&amp; numEl.getAttribute('data-placeholder')) || ''
               };
             }
 
@@ -250,20 +235,6 @@
                 showPhoneError('');
               });
             }
-            if (codeEl) {
-              codeEl.addEventListener('change', function () {
-                applyPhoneRules();
-                showPhoneError('');
-              });
-            }
-            var billingEl = document.getElementById('billing_country_code');
-            if (billingEl) {
-              billingEl.addEventListener('change', function () {
-                var planId = billingEl.getAttribute('data-plan-id');
-                var code = billingEl.value || '__default__';
-                window.location = '/saas/signup/' + planId + '?country=' + encodeURIComponent(code);
-              });
-            }
             applyPhoneRules();
 
             if (form) {
@@ -296,9 +267,6 @@
         </div>
         <div class="ac-su-plan-body">
           <div class="ac-su-plan-price" t-esc="amount_label"/>
-          <p t-if="price_country_name" class="ac-su-plan-validity">
-            Price for <t t-esc="price_country_name"/>
-          </p>
           <p t-if="card_note" class="ac-su-plan-validity" t-esc="card_note"/>
           <p t-if="price_validity" class="ac-su-plan-validity" t-esc="price_validity"/>
           <ul class="ac-su-plan-list">

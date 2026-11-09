@@ -338,10 +338,46 @@ ul   { list-style: none; }
 }
 .ac-hero-inner {
     max-width: 900px;
+    width: 100%;
     margin: 0 auto;
     text-align: center;
     position: relative;
     z-index: 1;
+}
+.ac-hero-inner::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 42%;
+    z-index: -1;
+    width: min(860px, 108%);
+    height: 86%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(ellipse at center, rgba(13, 27, 42, .72) 0%, rgba(13, 27, 42, .34) 52%, transparent 76%);
+    pointer-events: none;
+}
+.ac-hero h1,
+.ac-hero-sub {
+    text-shadow: 0 2px 22px rgba(13, 27, 42, .55);
+}
+.ac-hero-visual {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+.ac-hero-visual img {
+    width: min(1500px, 132%);
+    max-width: none;
+    height: auto;
+    flex-shrink: 0;
+    opacity: .48;
+    -webkit-mask-image: radial-gradient(ellipse 62% 58% at 50% 42%, #000 0%, transparent 72%);
+    mask-image: radial-gradient(ellipse 62% 58% at 50% 42%, #000 0%, transparent 72%);
 }
 .ac-hero-badge {
     display: inline-flex;
@@ -407,6 +443,13 @@ ul   { list-style: none; }
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(245,166,35,.38);
 }
+.ac-btn-how {
+    padding: 8px 16px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    gap: 6px;
+}
+#pricing { scroll-margin-top: calc(var(--ac-nav-h) + 12px); }
 .ac-btn-watch-demo:disabled,
 .ac-btn-watch-demo[aria-disabled="true"] {
     opacity: .55;
@@ -960,6 +1003,7 @@ body.ac-video-modal-open { overflow: hidden; }
     .ac-nav-toggle          { display: flex; }
 
     .ac-hero                { padding: calc(var(--ac-nav-h) + 30px) 16px 48px; }
+    .ac-hero-visual img     { width: 168%; opacity: .40; transform: translateY(-72px); }
     .ac-hero-stats          { grid-template-columns: repeat(2, 1fr); }
     .ac-stat-item           { border-right: none; border-bottom: 1px solid rgba(255,255,255,.12); }
     .ac-stat-item:nth-child(2n)   { border-right: none; }
@@ -980,6 +1024,7 @@ body.ac-video-modal-open { overflow: hidden; }
 @media (max-width: 480px) {
     .ac-hero-btns           { flex-direction: column; align-items: center; }
     .ac-btn                 { width: 100%; max-width: 300px; justify-content: center; }
+    .ac-hero-btns .ac-btn-how { width: auto; max-width: none; }
     .ac-cta-btns            { flex-direction: column; align-items: center; }
     .ac-steps               { grid-template-columns: 1fr 1fr; }
     .ac-section-sub         { margin-bottom: 36px; }

@@ -31,6 +31,19 @@ _CODES_LONGEST_FIRST = tuple(sorted(_BY_CODE, key=len, reverse=True))
 DEFAULT_SIGNUP_CODE = '+91'
 
 
+def phone_spec_for_iso(iso):
+    """Calling-code rules for a detected country. Unknown countries stay on +91."""
+    code = _BY_ISO.get((iso or '').upper()) or DEFAULT_SIGNUP_CODE
+    spec = _BY_CODE[code]
+    return {
+        'code': spec[0],
+        'label': '%s %s' % (spec[2], spec[0]),
+        'min': spec[4],
+        'max': spec[5],
+        'placeholder': spec[6],
+    }
+
+
 def signup_phone_rows(selected_code=None):
     selected = selected_code if selected_code in _BY_CODE else DEFAULT_SIGNUP_CODE
     rows = []

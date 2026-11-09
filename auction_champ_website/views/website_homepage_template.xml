@@ -24,7 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Poppins:wght@400;500;600;700;800&amp;display=swap"
           rel="stylesheet"/>
     <!-- AuctionChamp custom styles -->
-    <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.59"/>
+    <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.67"/>
 </head>
 <body>
 
@@ -86,6 +86,11 @@
      HERO SECTION
      ================================================================ -->
 <section class="ac-hero" id="home">
+    <figure class="ac-hero-visual">
+        <img src="/auction_champ_website/static/src/img/hero_demo_premier_league.webp?v=2"
+             alt=""
+             width="1400" height="788"/>
+    </figure>
     <div class="ac-hero-inner">
         <!-- Hidden for now — set t-if="True" (or remove t-if) to show again -->
         <div class="ac-hero-badge" t-if="False">
@@ -101,10 +106,11 @@
         </p>
 
         <div class="ac-hero-btns">
+            <a href="#pricing" class="ac-btn ac-btn-primary">Subscribe</a>
             <t t-set="how_to_start_id" t-value="config.how_to_start_embed_id() if config else ''"/>
             <button type="button"
                     id="acHowToStartBtn"
-                    class="ac-btn ac-btn-primary ac-btn-watch-demo"
+                    class="ac-btn ac-btn-outline ac-btn-how ac-btn-watch-demo"
                     t-att-data-embed="how_to_start_id or None"
                     t-att-disabled="None if how_to_start_id else 'disabled'"
                     t-att-aria-disabled="'false' if how_to_start_id else 'true'"
