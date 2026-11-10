@@ -54,6 +54,18 @@
   #sellModal[data-theme="standard"] .sm-sold-team-name { color: #1A202C; }
   #sellModal[data-theme="standard"] .sm-sold-points { color: rgba(26,32,44,.72); }
   #sellModal[data-theme="standard"] .sm-sold-points span { color: #1058B0; }
+  #sellModal[data-theme="standard"] .sm-countdown-label { color: rgba(26,32,44,.72); }
+  #sellModal[data-theme="standard"] .sm-countdown-label strong { color: #1A202C; }
+  #sellModal[data-theme="standard"] .sm-progress-track { background: rgba(26,32,44,.14); }
+  #sellModal[data-theme="standard"] .sm-skip-btn {
+    background: rgba(16,88,176,.08);
+    border-color: rgba(16,88,176,.45);
+    color: #1058B0;
+  }
+  #sellModal[data-theme="standard"] .sm-skip-btn:hover {
+    background: rgba(16,88,176,.16);
+    border-color: #1058B0;
+  }
   /* ── Lemon ─────────────────────────────────────────────────── */
   #sellModal[data-theme="lemon"] {
     --sm-header-bg:       linear-gradient(135deg,#F4ECD0 0%,#E8DDB8 100%);

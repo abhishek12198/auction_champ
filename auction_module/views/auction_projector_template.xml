@@ -1847,6 +1847,58 @@ html:not([data-theme="standard"]) .pj-recent-band{
 .pj-col-tname{font-family:var(--pj-font-ui);font-weight:700;letter-spacing:.06em;text-transform:uppercase;
   font-size:clamp(1.5rem,4.6vh,3rem);line-height:1.05;color:var(--tx);
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pj-highest-line{
+  display:none;box-sizing:border-box;
+  width:100%;margin:.2rem 0 0;padding:0;
+  border:none;border-radius:0;background:none;box-shadow:none;
+  color:#5CFF9A;font-family:var(--pj-font-ui);font-weight:800;
+  letter-spacing:.06em;text-transform:uppercase;text-align:center;
+  font-size:clamp(1.2rem,2.55vh,1.75rem);line-height:1.2;white-space:normal;
+  text-shadow:0 0 8px rgba(92,255,154,.95), 0 0 18px rgba(0,220,90,.8), 0 0 32px rgba(0,180,70,.45);
+}
+.pj-highest-line.is-on{
+  display:block;
+  animation:pjHighestPop .7s cubic-bezier(.2,.8,.2,1.15) both, pjHighestPulse 1.7s ease-in-out .7s infinite;
+}
+[data-theme="standard"] .pj-highest-line,
+[data-theme="lemon"] .pj-highest-line,
+[data-theme="strawberry"] .pj-highest-line,
+[data-mode="light"] .pj-highest-line{
+  color:#0C9A3C;
+  text-shadow:0 0 8px rgba(12,154,60,.55), 0 0 16px rgba(18,184,74,.4);
+}
+.pj-highest-crown{
+  display:none;position:absolute;top:.45rem;right:.45rem;z-index:16;
+  width:clamp(4.4rem,10vw,7.6rem);height:auto;pointer-events:none;
+  filter:drop-shadow(0 8px 10px rgba(0,0,0,.45)) drop-shadow(0 0 14px rgba(255,196,40,.85));
+}
+.pj-highest-crown.is-on{
+  display:block;
+  animation:pjCrownIn .85s cubic-bezier(.2,.85,.25,1.25) both, pjCrownGlow 1.8s ease-in-out .85s infinite;
+}
+.pj-highest-crown svg{width:100%;height:auto;display:block}
+@keyframes pjHighestPop{
+  0%{opacity:0;transform:translateY(-10px) scale(.86)}
+  70%{opacity:1;transform:translateY(1px) scale(1.04)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes pjHighestPulse{
+  0%,100%{text-shadow:0 0 6px rgba(92,255,154,.7), 0 0 14px rgba(0,220,90,.45)}
+  50%{text-shadow:0 0 12px rgba(120,255,170,1), 0 0 26px rgba(0,230,100,.9), 0 0 40px rgba(0,200,80,.55)}
+}
+@keyframes pjCrownIn{
+  0%{opacity:0;transform:translateY(-28px) rotate(-18deg) scale(.4)}
+  65%{opacity:1;transform:translateY(4px) rotate(6deg) scale(1.08)}
+  100%{opacity:1;transform:translateY(0) rotate(0) scale(1)}
+}
+@keyframes pjCrownGlow{
+  0%,100%{filter:drop-shadow(0 8px 10px rgba(0,0,0,.45)) drop-shadow(0 0 10px rgba(255,196,40,.55));transform:translateY(0)}
+  50%{filter:drop-shadow(0 8px 10px rgba(0,0,0,.45)) drop-shadow(0 0 22px rgba(255,214,80,1));transform:translateY(-3px)}
+}
+@media (prefers-reduced-motion: reduce){
+  .pj-highest-line.is-on,
+  .pj-highest-crown.is-on{animation:none}
+}
 .pj-col-tdesc{font-family:var(--pj-font-ui);font-weight:500;letter-spacing:.04em;
   font-size:clamp(1.05rem,2.9vh,1.9rem);line-height:1.2;color:var(--tx2);
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -2363,6 +2415,23 @@ html:not([data-theme="standard"]) .pj-recent-band{
           </div>
         </div>
         <div class="pj-photo-ph" id="pjPhotoPh">&#128100;</div>
+        <div class="pj-highest-crown" id="pjHighestCrown" aria-hidden="true">
+          <svg viewBox="0 0 72 56" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="pjCrownGold" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#FFF6D2"/>
+                <stop offset="42%" stop-color="#F5C542"/>
+                <stop offset="100%" stop-color="#A8740A"/>
+              </linearGradient>
+            </defs>
+            <path fill="url(#pjCrownGold)" stroke="#6E4E0C" stroke-width="1.6" stroke-linejoin="round"
+                  d="M6 42 L14 16 L26 30 L36 6 L46 30 L58 16 L66 42 Z"/>
+            <rect x="6" y="42" width="60" height="8" rx="2" fill="url(#pjCrownGold)" stroke="#6E4E0C" stroke-width="1.6"/>
+            <circle cx="14" cy="15" r="3.3" fill="#FFF8DC" stroke="#6E4E0C" stroke-width="1.2"/>
+            <circle cx="36" cy="7" r="3.5" fill="#FFF8DC" stroke="#6E4E0C" stroke-width="1.2"/>
+            <circle cx="58" cy="15" r="3.3" fill="#FFF8DC" stroke="#6E4E0C" stroke-width="1.2"/>
+          </svg>
+        </div>
         <div class="pj-serial-wm" id="pjSerialWm"></div>
         <!-- Mystery reveal teaser overlay -->
         <div class="pj-reveal-intro" id="pjRevealIntro" aria-live="polite" aria-hidden="true">
@@ -2425,6 +2494,7 @@ html:not([data-theme="standard"]) .pj-recent-band{
             <t t-if="tournament and tournament.description">
               <div class="pj-col-tdesc"><t t-esc="tournament.description"/></div>
             </t>
+            <div class="pj-highest-line" id="pjHighestLine">Congratulations! Highest Bid So Far</div>
             <div class="pj-col-tinfo">
               <span class="pj-col-info-item" id="pjColVenueWrap" t-att-style="'display:none' if not (tournament and tournament.auction_venue) else None">
                 <span class="pj-col-k">Venue</span> <span id="pjColVenue"><t t-if="tournament and tournament.auction_venue"><t t-esc="tournament.auction_venue"/></t></span>
@@ -3131,6 +3201,20 @@ html:not([data-theme="standard"]) .pj-recent-band{
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
   })();
 
+  function paintHighestBid(on) {
+    var want = !!on;
+    ['pjHighestCrown', 'pjHighestLine'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      if (want && el.classList.contains('is-on')) return;
+      el.classList.remove('is-on');
+      if (want) {
+        void el.offsetWidth;
+        el.classList.add('is-on');
+      }
+    });
+  }
+
   function renderPlayer(p, opts) {
     opts = opts || {};
     var mysteryHidden = !!(p.is_mystery && !p.mystery_revealed);
@@ -3617,6 +3701,7 @@ html:not([data-theme="standard"]) .pj-recent-band{
       hidePhotoStatus();
       clearSealFade();
     }
+    paintHighestBid(p.state === 'sold' && !!p.highest_bid);
     updateStatusRibbon(p);
 
     if (isRevealIntro) {
@@ -3652,6 +3737,7 @@ html:not([data-theme="standard"]) .pj-recent-band{
   }
 
   function showWaiting() {
+    paintHighestBid(false);
     hideMysteryRevealIntro();
     cancelIdentityReveal();
     _pjShownIdentityId = null;

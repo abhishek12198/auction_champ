@@ -53,6 +53,17 @@ from odoo.tools.image import image_data_uri
 import werkzeug
 import werkzeug.exceptions
 
+
+def _get_default_team_logo(self):
+    """Badge used when a team is saved without an uploaded logo."""
+    img_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        'static', 'img', 'default_team_logo.png',
+    )
+    with open(img_path, 'rb') as handle:
+        return base64.b64encode(handle.read())
+
+
 class AuctionTeam(models.Model):
     _name = 'auction.team'
     _description = 'Auction Team'
@@ -76,10 +87,26 @@ class AuctionTeam(models.Model):
                 defaults['tournament_id'] = user_tournament.id
         return defaults
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        prepared = []
+        default_logo = None
+        for vals in vals_list:
+            vals = dict(vals)
+            if not vals.get('logo'):
+                if default_logo is None:
+                    default_logo = _get_default_team_logo(self)
+                vals['logo'] = default_logo
+            prepared.append(vals)
+        return super().create(prepared)
+
     active = fields.Boolean(default=True)
     name = fields.Char(string="Team Name", required=True)
-    logo = fields.Binary(string="Team Logo",
-                            help="Add team logo")
+    logo = fields.Binary(
+        string="Team Logo",
+        default=_get_default_team_logo,
+        help="Add team logo. A default badge is saved when this is left empty.",
+    )
     tournament_id = fields.Many2one('auction.tournament', 'Tournament')
     manager = fields.Char('Owner')
     owner_photo = fields.Binary(

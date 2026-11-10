@@ -163,9 +163,16 @@
         if (typeof w.changeImage !== 'function' || w.changeImage._drawerWrapped) return;
         var original = w.changeImage;
         w.changeImage = function () {
-            acClearResultStampOnPhoto();
-            acMarkWaitingNextPlayer(false);
-            return original.apply(this, arguments);
+            var result = original.apply(this, arguments);
+            return Promise.resolve(result).then(function (value) {
+                acClearResultStampOnPhoto();
+                acMarkWaitingNextPlayer(false);
+                return value;
+            }, function (err) {
+                acClearResultStampOnPhoto();
+                acMarkWaitingNextPlayer(false);
+                throw err;
+            });
         };
         w.changeImage._drawerWrapped = true;
     }

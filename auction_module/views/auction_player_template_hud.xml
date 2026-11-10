@@ -628,7 +628,7 @@
       </div>
     </div>
 
-    <script src="/auction_module/static/src/js/player_drawer.js?v=4"></script>
+    <script src="/auction_module/static/src/js/player_drawer.js?v=5"></script>
     <script src="/auction_module/static/src/js/bid_clock.js?v=5"></script>
     <t t-call="auction_module.player_break_pause_assets"/>
     <t t-call="auction_module.player_mystery_controls"/>

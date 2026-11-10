@@ -366,6 +366,39 @@ def build_live_board_payload(env, tournament, db_name):
     return result
 
 
+# The highest-bid crown starts once five players have been called.
+_HIGHEST_BID_MIN_PLAYERS = 5
+
+
+def _projector_highest_bid(env, tournament, player, sold_points, shown_state):
+    """True when this sold player holds the top price so far.
+
+    Players marked sold or unsold count as called. The crown stays off
+    until the fifth call, then appears when this sale is at least as
+    high as every other sale in the tournament.
+    """
+    if not tournament or not player or shown_state != 'sold':
+        return False
+    try:
+        amount = int(sold_points or 0)
+    except (TypeError, ValueError):
+        amount = 0
+    if amount <= 0:
+        return False
+    called = env['auction.team.player'].sudo().search_count([
+        ('tournament_id', '=', tournament.id),
+        ('state', 'in', ('sold', 'unsold')),
+    ])
+    if called < _HIGHEST_BID_MIN_PLAYERS:
+        return False
+    top = env['auction.auction.player'].sudo().search([
+        ('auction_id.tournament_id', '=', tournament.id),
+        ('player_id', '!=', player.id),
+    ], order='points desc', limit=1)
+    other_max = int(top.points or 0) if top else 0
+    return amount >= other_max
+
+
 def build_projector_payload(env, tournament, db_name):
     """Projector JSON dict (type='json' route). Additive seq/stamp keys only."""
     ctrl = _helpers()
@@ -481,6 +514,9 @@ def build_projector_payload(env, tournament, db_name):
         'is_mystery': is_mystery,
         'mystery_revealed': mystery_revealed,
     }
+    player_payload['highest_bid'] = _projector_highest_bid(
+        env, tournament, player, sold_points, state_override or player.state,
+    )
     player_payload.update(ctrl._football_display_payload(player))
     if is_mystery and not mystery_revealed:
         player_payload.update({

@@ -423,15 +423,9 @@
       if (window.AUCTION_IS_MYSTERY && window.AUCTION_MYSTERY_AWAITING_REVEAL && !window.AUCTION_MYSTERY_REVEALED) {
         return;
       }
-      var zone = document.querySelector('[data-player-zone]');
-      if (zone) zone.style.visibility = 'hidden';
-      try {
-        var result = await original.apply(this, arguments);
-        window.acMysteryApplyFromBody();
-        return result;
-      } finally {
-        if (zone) zone.style.visibility = '';
-      }
+      var result = await original.apply(this, arguments);
+      window.acMysteryApplyFromBody();
+      return result;
     };
     window.changeImage._mysteryWrapped = true;
   }
